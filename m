@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC351C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 15:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4E20C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 15:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C939020734
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 15:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D24220734
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 15:21:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="IhAyd+yr"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="FQIRWB6O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730122AbgFJPVc (ORCPT
+        id S1730124AbgFJPVd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Jun 2020 11:21:32 -0400
-Received: from mail-eopbgr750110.outbound.protection.outlook.com ([40.107.75.110]:38746
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        Wed, 10 Jun 2020 11:21:33 -0400
+Received: from mail-eopbgr700104.outbound.protection.outlook.com ([40.107.70.104]:36321
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729987AbgFJPVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1730106AbgFJPVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 10 Jun 2020 11:21:31 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WPLurr1KbJgmRqxMElL0ne40uChl8ZwCnyHGZT7u48gTPcgray7dgoyyOsSIqRSCM60GBf/LZQrDfbIjgW4sHioqrw0uYRTRReH97hiFbwNwywfelSk63/dbivGU+qbzckHOGGlmijg0+X4Bax3/mku3ZPo3gMFzrYHCS862KDNrrCSJyC0EknXFo31FgXWxC08A0/Cg80VxDB6Bj89rvuaSmsOEA64naTqZwVPlJltFJPirAIJfIeplv1pbyRlF2szfOu35veJzORDatGSRdO5TzcgMVSi3AEzyDL8CRoIlyMnJBMZ/UHtZvf9BwO8EMmQjRh2NshQtMu8e50nydg==
+ b=CvHibWaTyDtC/nmqdZKqcCyr+7aCNmaxm17H3TTNJocRkJsD7fz3QbsZufQl1joXUqiKarvxBv1LIG1r4biY0XUgyho9xSS1rlmg5ayvyj13AnFY6WRO8Mx1+Di6nLlF1dl8T0u/kAD7vjsRF2rqFooyDloSZwSzuQXzn+VSK7ajtJIoP+ZScAdvVateIRsCzdzNhyfNdFIQ6x0Le0FZwLUPJ4oNtqtgXt6xcwdareiNeY0+cU2bQGCRsgzLucAgL5CXERC9VboUiHnKcrLXSiN552bsJoXkXPXTwbX3Wn+H7bS0ZIlGmN/5MXHFpp51bKDAVYtxkpXXH4YGDlGa7w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9oTcvlhQieqo502sxUGI7vgIZdSYAA2sHcjDKoWqD0A=;
- b=npsmg4YbcmwhpB4TFUh7YfKM+tbqB/36zvw4snE+KlMh3eFsCE+ckaEnNBzHod7roEhekXHfdr1bMgZyH0e7pRpwT7uLNM6F9LxEoMMVV5FDuNl5fOXFS9N103rHYt8myg9rshBSSnOsHBaZw+g511xZZvJNO5Z8a4pUV6pvy+NT/b56OpWoPBN3YoQD3w7qvzlq6PdewTADaJtJ/8BDU6JQxomHyx2X86Rxnncl9F14T1LU7AUxIC/UbDCdLB6Yq01BapsxmxyVdC09KWX74mf+6olnZiT11G7XpCBWdM/ZxHDnb8MFQnFStZZSBi8wHi9Z6n3JjfujMn4OrmJk+g==
+ bh=gnGTJGIUbPjb/3tbGz/NsAiSFlHk0P+ln5+n0bI1Z4o=;
+ b=LpYtMP6zfiVKpnVu/LvlSpsayVezztocf60xLENPf1zjk2UTLKw6zl8UzCsZ8vIykYBrZkouDdvp/UrPnaajA1I0EK3bZ4fiXTtK96KifIaYJMMqnvHNB+TiJr9tF3f2I9xX8c9qjI/YPuFIF943Rq5BFjnWD643NW3HxfWjXV5ys2bAEajVDlB9KRzK6BkBEQcfiEANTQYdzpD5QCdw8jQLBSfzXN80lXsH+SviJ9t+HlTOQeaTm6axwJDdAW0AWdXnI2UurCVQXvFiftCMC0bbvfmhitSil+3lOdhXV1xHNtKU8D88Livv8/2HdsuD6TUqb8VFDK0hzI+NghPsmg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
  dkim=pass header.d=cypress.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9oTcvlhQieqo502sxUGI7vgIZdSYAA2sHcjDKoWqD0A=;
- b=IhAyd+yrsUcfMvlTgUEgnynN9hp8ItX66QJpE39YUePpXjSBwf4g/tuAHehGIszcAux5u57oztznr+4LyzSdPqvdqvBOqp1Hf4frxUaFYjr8CCoNrTF4+yzEp7kUePMfPEeUu+2eDxUKTmvwk9HLUSynQZW0tGsSnYeXg8H3sm8=
+ bh=gnGTJGIUbPjb/3tbGz/NsAiSFlHk0P+ln5+n0bI1Z4o=;
+ b=FQIRWB6OK0MwwR0XVZNZkCZP86iniuB/K6byn7ThkGdhEUtn+UjqU6QQAqj/2n3VPi9h6DE/0lQh2BGh52d6PtRD+AWgKcz7MBbW2dZg6OtLqIRKwafuzX4Nzr0emKgm4mb3rKCPFdkr3JHf4yMqEatGjGkAYBLynvyIRdo7BI0=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none
  header.from=cypress.com;
 Received: from BYAPR06MB4901.namprd06.prod.outlook.com (2603:10b6:a03:7a::30)
- by BYAPR06MB5621.namprd06.prod.outlook.com (2603:10b6:a03:ab::16) with
+ by BYAPR06MB3912.namprd06.prod.outlook.com (2603:10b6:a02:86::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.22; Wed, 10 Jun
- 2020 15:21:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.18; Wed, 10 Jun
+ 2020 15:21:29 +0000
 Received: from BYAPR06MB4901.namprd06.prod.outlook.com
  ([fe80::b972:c25d:c8fc:fc0e]) by BYAPR06MB4901.namprd06.prod.outlook.com
  ([fe80::b972:c25d:c8fc:fc0e%7]) with mapi id 15.20.3088.018; Wed, 10 Jun 2020
- 15:21:24 +0000
+ 15:21:29 +0000
 From:   Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
@@ -58,11 +58,11 @@ Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH V2 4/6] brcmfmac: update tx status flags to sync with firmware
-Date:   Wed, 10 Jun 2020 10:21:04 -0500
-Message-Id: <20200610152106.175257-5-chi-hsien.lin@cypress.com>
+        Joseph Chuang <joseph.chuang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH V2 6/6] brcmfmac: initialize the requested dwell time
+Date:   Wed, 10 Jun 2020 10:21:06 -0500
+Message-Id: <20200610152106.175257-7-chi-hsien.lin@cypress.com>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200610152106.175257-1-chi-hsien.lin@cypress.com>
 References: <20200610152106.175257-1-chi-hsien.lin@cypress.com>
@@ -73,83 +73,88 @@ X-ClientProxiedBy: MN2PR08CA0019.namprd08.prod.outlook.com
  (2603:10b6:a03:7a::30)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from aremote02.aus.cypress.com (12.110.209.245) by MN2PR08CA0019.namprd08.prod.outlook.com (2603:10b6:208:239::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3088.21 via Frontend Transport; Wed, 10 Jun 2020 15:21:22 +0000
+Received: from aremote02.aus.cypress.com (12.110.209.245) by MN2PR08CA0019.namprd08.prod.outlook.com (2603:10b6:208:239::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3088.21 via Frontend Transport; Wed, 10 Jun 2020 15:21:27 +0000
 X-Mailer: git-send-email 2.25.0
 X-Originating-IP: [12.110.209.245]
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 5e8201d8-02db-4eb9-a47b-08d80d51efef
-X-MS-TrafficTypeDiagnostic: BYAPR06MB5621:
+X-MS-Office365-Filtering-Correlation-Id: 4eadc90d-3c77-4e10-f1e9-08d80d51f263
+X-MS-TrafficTypeDiagnostic: BYAPR06MB3912:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BYAPR06MB56219BCF908AF2CE38EFE708BB830@BYAPR06MB5621.namprd06.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
+X-Microsoft-Antispam-PRVS: <BYAPR06MB39122AB9D9DAADDD7F440C5BBB830@BYAPR06MB3912.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:862;
 X-Forefront-PRVS: 0430FA5CB7
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ILGOpp6QnLYsB2sdOb8ucpfCrrSFWOJTvaKjcBkY5Lb1KJLNN56Lvl4Hv9bGFdw3bgOsGxrLU/aPa+iWUXEUUNv4qXKRDfXqTXKUcpm2b/cdds0imn8acZ0ERLPu43DIl79FAGMGjU4K3kYSFrKCHX55kmyko96f1D1a8iEdUW5HqVE8mLilLJ7PWZDxNd+ywczcy5tT4TOawIJY0ZgJkv+AcbBDtRPYJ+f5s6m6pdJhTCrPH4ZpSHcAyuhgCYmYxxmhAX7QtlGYvg9LQS5MEkrihmXbT23swsyQgaRVzuLvf40eZ4degYiBOC63ij5D2obmxwOG25QaPwNcODUpaQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR06MB4901.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(396003)(366004)(136003)(39860400002)(346002)(376002)(16526019)(107886003)(2616005)(956004)(8936002)(26005)(1076003)(6916009)(316002)(6486002)(186003)(6666004)(2906002)(8676002)(7696005)(86362001)(66556008)(4326008)(36756003)(52116002)(54906003)(66476007)(15650500001)(5660300002)(478600001)(83380400001)(66946007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: vbSSorH5Qc4TROJncqrhIzqwz+QW5t9J+2bfrMX7xCdDb73pUxv5YL1wP+gruBcRyuR8TVtiM0a4IgJ6R7z4nSsSg12VSs218CwI1y/k06bnVS1pZaX+oavSACRnAXGnqFg485ct5m7ToaGX+z9IYnRT1/SVf11huoxJpE7TEIdwRlPa1oSsiIcncy4DB/gSe4T0YzKOMG03o+kJ/9UHyoE8TIZ7k9X0KRKTdCvBJhaNKotw+A+8vjwuepEyYL188qRBo8JZEvk+MRFP0X6y61wnVLkSpXHrJlfCHfWr5Nb/t5nkbQIAGrA+QueM2fg/bFe40oFT7iY9AWsDGx7VTov/CpTXUKBBv+JeauDL0HaF+oKssw2UWZlOV4FIgE4vOID2m7M9er90wszjGXnVXPiO7ciM2rMn95k9UmMs9cOc8ONGWeSYuPJkKvwIB1mnSu4SNZ6atFymTKq6K2yq5CP6N6PEXjbtvYo+amfKXuDZIIeO4ohRYH7pYaHMgVtY
+X-Microsoft-Antispam-Message-Info: G3bFChFrmjecpL3PlsajNcJBho030E8W2T6GV0lSJNBnso2A1EjPX3sAUBXQvde1/Zv1GOLqOSvmVyWy7FcqWmUx37qv6MpJNdwQqwPoDJwYfrI33KsKKSr9/Qxp19r+bav907l5N4HhthChS39we+28syUrGU4+yq6vWtELcz0tLUbQlngrb06FObJcHRb3wPCtPEk9P7+8GmmLSvxlAgkE1I4WM1gete1o8SHR1KVgzecoMZaBQkDt44QgUQ8hOJd+2lANTp49k5sNRYmpanMhry6cCbUTaH+VwF3CS7ZpaxxgzOIDv9bCJObKtLQO8W1i5U7ed5bDHvPSFiTqQA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR06MB4901.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(346002)(376002)(366004)(396003)(39860400002)(136003)(6666004)(4326008)(52116002)(316002)(478600001)(1076003)(7696005)(86362001)(83380400001)(54906003)(6916009)(107886003)(186003)(5660300002)(956004)(2906002)(36756003)(26005)(8676002)(66476007)(6486002)(8936002)(66556008)(2616005)(66946007)(16526019);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: 1OncAySsqHrtrkKfqUFr+58ScBXeAKy/gbmwtjx0wWmXsXOqbFF54H9sxi8lNFbyBC/eoEOpZsNG/g5u3yqsuVIViHdaPNAXbIktwpyEkfKyWlBf/gWivTZMinTczB9x2rSEFxn0u8VKHFxmeSIX9vwGjUz2elHE6E3YGwoSuidQEdTFDxeR5Rzd+PpnhhTYbxGZrckzkSy9ku/oYGfUJqqUBAFNtllD7AVe5VDFnzLLce3oPxGPxoBE80uAGSpORhPY4D5K6PJXMgQiF8cZRcp1HHDILVXbqlVcaI3dh8MljlD9ycsVpL0CZjBkdYiVRe34nCnYW4TusFzzTzk7TYbkyzvO9s27Um7Rzm4AxdHg+oKN8iIZCh0wmp9QYsCTw9XZGu6SoIe80O16WwLm1sY4sMJQ3KtUHAxFmZ6JTTPzotYsbttzPRdOR3z1em/WojQmbGBAr0excCwcvDFg0dq9l6J5WFlWVL6oYHJ+h2wBZQ0kB+yiO43+ReJ6IqhT
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5e8201d8-02db-4eb9-a47b-08d80d51efef
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jun 2020 15:21:24.7403
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4eadc90d-3c77-4e10-f1e9-08d80d51f263
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jun 2020 15:21:28.9689
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PJdAem5VuW1x4nyA6yQi2Q6DciEGq/MquqFCQGWvSHu8id3U9WsBfZdunxn9WTeS5Hpd/kBmd39GpJaTeniEwA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR06MB5621
+X-MS-Exchange-CrossTenant-UserPrincipalName: fxCENsRbEi7werv5Uys/+aqYVZvlxeG6Zgi/SmgtLWWDFOkCT/IgL5reL5AIfYi0kNNwys8EA+BK5YW9FS4lTA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR06MB3912
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+From: Joseph Chuang <joseph.chuang@cypress.com>
 
-There is a mismatch of tx status flag values between host and firmware.
-It makes the host mistake the flags and have incorrect behavior of credit
-returns. So update the flags to sync with the firmware ones.
+Commit 9c29da3f4e7e
+("brcmfmac: Fix P2P Group Formation failure via Go-neg method") did not
+initialize requested_dwell properly, resulting in an always-false dwell
+time overflow check. Fix it by setting the correct requested_dwell
+value.
 
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+Fixes: 4905432b28b7 ("brcmfmac: Fix P2P Group Formation failure via Go-neg method")
+Signed-off-by: Joseph Chuang <joseph.chuang@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/fwsignal.c    | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 5 ++---
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index d7c36af4b566..ce8c6ceafc58 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -323,6 +323,10 @@ struct brcmf_skbuff_cb {
-  *	firmware suppress the packet as device is already in PS mode.
-  * @BRCMF_FWS_TXSTATUS_FW_TOSSED:
-  *	firmware tossed the packet.
-+ * @BRCMF_FWS_TXSTATUS_FW_DISCARD_NOACK:
-+ *	firmware tossed the packet after retries.
-+ * @BRCMF_FWS_TXSTATUS_FW_SUPPRESS_ACKED:
-+ *	firmware wrongly reported suppressed previously, now fixing to acked.
-  * @BRCMF_FWS_TXSTATUS_HOST_TOSSED:
-  *	host tossed the packet.
-  */
-@@ -331,6 +335,8 @@ enum brcmf_fws_txstatus {
- 	BRCMF_FWS_TXSTATUS_CORE_SUPPRESS,
- 	BRCMF_FWS_TXSTATUS_FW_PS_SUPPRESS,
- 	BRCMF_FWS_TXSTATUS_FW_TOSSED,
-+	BRCMF_FWS_TXSTATUS_FW_DISCARD_NOACK,
-+	BRCMF_FWS_TXSTATUS_FW_SUPPRESS_ACKED,
- 	BRCMF_FWS_TXSTATUS_HOST_TOSSED
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index a757abd7a599..bddd23240609 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5129,7 +5129,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 					      &freq);
+ 		chan_nr = ieee80211_frequency_to_channel(freq);
+ 		af_params->channel = cpu_to_le32(chan_nr);
+-
++		af_params->dwell_time = cpu_to_le32(params->wait);
+ 		memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+ 		       le16_to_cpu(action_frame->len));
  
-@@ -1455,6 +1461,10 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
- 		remove_from_hanger = false;
- 	} else if (flags == BRCMF_FWS_TXSTATUS_FW_TOSSED)
- 		fws->stats.txs_tossed += compcnt;
-+	else if (flags == BRCMF_FWS_TXSTATUS_FW_DISCARD_NOACK)
-+		fws->stats.txs_discard += compcnt;
-+	else if (flags == BRCMF_FWS_TXSTATUS_FW_SUPPRESS_ACKED)
-+		fws->stats.txs_discard += compcnt;
- 	else if (flags == BRCMF_FWS_TXSTATUS_HOST_TOSSED)
- 		fws->stats.txs_host_tossed += compcnt;
- 	else
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index d2795dc17c46..debd887e159e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -1700,7 +1700,7 @@ static s32 brcmf_p2p_pub_af_tx(struct brcmf_cfg80211_info *cfg,
+ 	return err;
+ }
+ 
+-static bool brcmf_p2p_check_dwell_overflow(s32 requested_dwell,
++static bool brcmf_p2p_check_dwell_overflow(u32 requested_dwell,
+ 					   unsigned long dwell_jiffies)
+ {
+ 	if ((requested_dwell & CUSTOM_RETRY_MASK) &&
+@@ -1738,8 +1738,7 @@ bool brcmf_p2p_send_action_frame(struct brcmf_cfg80211_info *cfg,
+ 	unsigned long dwell_jiffies = 0;
+ 	bool dwell_overflow = false;
+ 
+-	s32 requested_dwell = af_params->dwell_time;
+-
++	u32 requested_dwell = le32_to_cpu(af_params->dwell_time);
+ 	action_frame = &af_params->action_frame;
+ 	action_frame_len = le16_to_cpu(action_frame->len);
+ 
 -- 
 2.25.0
 
