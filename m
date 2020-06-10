@@ -1,75 +1,109 @@
-Return-Path: <SRS0=eW0r=7W=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=fyxI=7X=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03597C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 15:42:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC506C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 00:25:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B54C22074B
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 15:42:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8974B206D5
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 00:25:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pX3sRh7G"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tp9IGK5B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730906AbgFIPmd (ORCPT
+        id S1725963AbgFJAZ5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Jun 2020 11:42:33 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:36912 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730898AbgFIPmc (ORCPT
+        Tue, 9 Jun 2020 20:25:57 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:62355 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725927AbgFJAZ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jun 2020 11:42:32 -0400
-X-UUID: 4b3fcf2c12a44c779b14f4bbe838d64d-20200609
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=FaqckNT5+HtjSY6/rvoPe2BiCCGh3bWGAkSGRDWsxjU=;
-        b=pX3sRh7GIIWlMfVYlBb5wSG725cLFp3+Od576Lo31c4Vn6ag+1Whj35NlgK7QLfp6AWOv3f35jhJF33sQ8IrlvGAlqCJDy5v0+dyDj1PvqKXzDlf/FprBGQ6eSS075YIiIMvtTWzTxrUqVoSxBC7tFNaTp5kT+Z9WkjUKDIm30E=;
-X-UUID: 4b3fcf2c12a44c779b14f4bbe838d64d-20200609
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 2105775564; Tue, 09 Jun 2020 23:42:29 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 9 Jun 2020 23:42:19 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 9 Jun 2020 23:42:19 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <ryder.lee@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH] mt76: mt7615: fix up typo in Kconfig for MT7663U
-Date:   Tue, 9 Jun 2020 23:42:21 +0800
-Message-ID: <4714529e2d7d557b6ac8dedb66a59101b3ca7a4b.1591716798.git.sean.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
+        Tue, 9 Jun 2020 20:25:57 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1591748756; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Sjs7aqO/Uq4zHDq9mzyvKnW1+H8FVQcNYuTrCV+bXd4=;
+ b=tp9IGK5B8vJtg9VA9ynJ+0uqasejo3mPJReVhu7ZX83HRQdIbSu2BcDWlrVHHuT4tD5YkTMB
+ Fx5lnv1sRQQIiOQaeIQ+oLt0YR8KS2hYqgaA7Q1OfH9X0AAkjPB/2uW6oou2UX9DFWG3NqHJ
+ uBHRIV7RwNiMEqZMoHfHEmovpwk=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
+ 5ee028930206ad41d1792b96 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 10 Jun 2020 00:25:55
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1154EC433CB; Wed, 10 Jun 2020 00:25:55 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: rmanohar)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9A4CFC433CA;
+        Wed, 10 Jun 2020 00:25:54 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 09 Jun 2020 17:25:54 -0700
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     John Crispin <john@phrozen.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 01/12] nl80211: add basic multiple bssid support
+In-Reply-To: <20200604070952.15481-2-john@phrozen.org>
+References: <20200604070952.15481-1-john@phrozen.org>
+ <20200604070952.15481-2-john@phrozen.org>
+Message-ID: <95d452bacbeba285c9dad7f037f78078@codeaurora.org>
+X-Sender: rmanohar@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KDQpGaXggdXAgdHlwbyBp
-biBLY29uZmlnIHdpdGggaW5kaWNhdGluZyBNVDc2NjNVIGlzIGFuIDgwMi4xMWFjIGRldmljZQ0K
-DQpGaXhlczogZWI5OWNjOTVjM2I2ICgibXQ3NjogbXQ3NjE1OiBpbnRyb2R1Y2UgbXQ3NjYzdSBz
-dXBwb3J0IikNClNpZ25lZC1vZmYtYnk6IFNlYW4gV2FuZyA8c2Vhbi53YW5nQG1lZGlhdGVrLmNv
-bT4NCi0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L0tjb25m
-aWcgfCAyICstDQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0p
-DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYx
-NS9LY29uZmlnIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvS2Nv
-bmZpZw0KaW5kZXggZTI1ZGIxMTM1ZWRhLi5jMDk0MjYwYjBmODkgMTAwNjQ0DQotLS0gYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9LY29uZmlnDQorKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9LY29uZmlnDQpAQCAtMzUsNiAr
-MzUsNiBAQCBjb25maWcgTVQ3NjYzVQ0KIAlkZXBlbmRzIG9uIE1BQzgwMjExDQogCWRlcGVuZHMg
-b24gVVNCDQogCWhlbHANCi0JICBUaGlzIGFkZHMgc3VwcG9ydCBmb3IgTVQ3NjYzVSA4MDIuMTFh
-eCAyeDI6MiB3aXJlbGVzcyBkZXZpY2VzLg0KKwkgIFRoaXMgYWRkcyBzdXBwb3J0IGZvciBNVDc2
-NjNVIDgwMi4xMWFjIDJ4MjoyIHdpcmVsZXNzIGRldmljZXMuDQogDQogCSAgVG8gY29tcGlsZSB0
-aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hvb3NlIE0gaGVyZS4NCi0tIA0KMi4yNS4xDQo=
+On 2020-06-04 00:09, John Crispin wrote:
+[...]
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -663,6 +663,10 @@ const struct nla_policy
+> nl80211_policy[NUM_NL80211_ATTR] = {
+>  	[NL80211_ATTR_CONTROL_PORT_NO_PREAUTH] = { .type = NLA_FLAG },
+>  	[NL80211_ATTR_PMK_LIFETIME] = NLA_POLICY_MIN(NLA_U32, 1),
+>  	[NL80211_ATTR_PMK_REAUTH_THRESHOLD] = NLA_POLICY_RANGE(NLA_U8, 1, 
+> 100),
+> +	[NL80211_ATTR_MULTI_BSSID_MODE] = NLA_POLICY_RANGE(NLA_U8,
+> +					NL80211_MULTIPLE_BSSID_LEGACY,
+> +					NL80211_MULTIPLE_BSSID_NON_TRANSMITTED),
+> +	[NL80211_ATTR_MULTI_BSSID_PARENT] = { .type = NLA_U32 },
+> 
+If it is read as u8, better define as NLA_U8.
 
+>  };
+> 
+>  /* policy for the key attributes */
+> @@ -3756,6 +3760,16 @@ static int nl80211_new_interface(struct sk_buff
+> *skb, struct genl_info *info)
+>  	if (err < 0)
+>  		return err;
+> 
+> +	if (info->attrs[NL80211_ATTR_MULTI_BSSID_MODE])
+> +		params.multi_bssid_mode =
+> +			nla_get_u8(info->attrs[NL80211_ATTR_MULTI_BSSID_MODE]);
+> +	if (info->attrs[NL80211_ATTR_MULTI_BSSID_PARENT])
+> +		params.multi_bssid_parent =
+> +			nla_get_u8(info->attrs[NL80211_ATTR_MULTI_BSSID_PARENT]);
+> +	if (params.multi_bssid_mode == NL80211_MULTIPLE_BSSID_NON_TRANSMITTED 
+> &&
+> +	    !params.multi_bssid_parent)
+> +		return -EOPNOTSUPP;
+> +
+Are you expecting BSSID or ifindex in multi_bssid_parent? If it is 
+ifindex, it can be 0. no
+
+-Rajkumar
