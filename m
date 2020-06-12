@@ -2,37 +2,39 @@ Return-Path: <SRS0=YkEg=7Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD9DC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 15:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2F2C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 15:58:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AAFF207F7
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 15:58:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 187D220835
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 15:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726269AbgFLP6q (ORCPT
+        id S1726275AbgFLP6r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Jun 2020 11:58:46 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51230 "EHLO
+        Fri, 12 Jun 2020 11:58:47 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51236 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726112AbgFLP6q (ORCPT
+        with ESMTP id S1726108AbgFLP6q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 12 Jun 2020 11:58:46 -0400
 Received: from legolas.fritz.box (unknown [87.147.49.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 909FB580060;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id D9954580078;
         Fri, 12 Jun 2020 17:58:44 +0200 (CEST)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v2 0/2] Fixes for 802.1X in mesh mode
-Date:   Fri, 12 Jun 2020 17:58:34 +0200
-Message-Id: <20200612155836.1207234-1-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v2 2/2] mac80211: allow rx of mesh eapol frames with default rx key
+Date:   Fri, 12 Jun 2020 17:58:36 +0200
+Message-Id: <20200612155836.1207234-3-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200612155836.1207234-1-markus.theil@tu-ilmenau.de>
+References: <20200612155836.1207234-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -40,22 +42,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to support 802.1X in mesh mode, userspace should be able
-to rx and tx eapol frames, after an initial MPM, before a second AMPE.
+Without this patch, eapol frames cannot be received in mesh
+mode, when 802.1X should be used. Initially only a MGTK is
+defined, which is found and set as rx->key, when there are
+no other keys set. ieee80211_drop_unencrypted would then
+drop these eapol frames, as they are data frames without
+encryption and there exists some rx->key.
 
-Some checks regarding mesh forwarding were conflicting with this.
-Therefore this little series adds some checks for control port frames
-and disables mesh path lookups on the tx side or drop of unencrypted
-frames on the rx side.
+Fix this by differentiating between mesh eapol frames and
+other data frames with existing rx->key. Allow mesh mesh
+eapol frames only if they are for our vif address.
 
-Markus Theil (2):
-  mac80211: skip mpath lookup also for control port tx
-  mac80211: allow rx of mesh eapol frames with default rx key
+With this patch in-place, ieee80211_rx_h_mesh_fwding continues
+after the ieee80211_drop_unencrypted check and notices, that
+these eapol frames have to be delivered locally, as they should.
 
- net/mac80211/rx.c | 27 +++++++++++++++++++++++++++
- net/mac80211/tx.c | 13 ++++++++++---
- 2 files changed, 37 insertions(+), 3 deletions(-)
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ net/mac80211/rx.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 21854a61a2b7..e1368c99fa8f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2396,6 +2396,7 @@ static int ieee80211_802_1x_port_control(struct ieee80211_rx_data *rx)
+ 
+ static int ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
+ {
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 
+@@ -2406,12 +2407,36 @@ static int ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
+ 	if (status->flag & RX_FLAG_DECRYPTED)
+ 		return 0;
+ 
++	/* check mesh EAPOL frames first */
++	if (unlikely(rx->sta && ieee80211_vif_is_mesh(&rx->sdata->vif) && ieee80211_is_data(fc))) {
++		struct ieee80211s_hdr *mesh_hdr;
++		u16 hdr_len = ieee80211_hdrlen(fc);
++		u16 ethertype_offset;
++		__be16 ethertype;
++
++		/* make sure fixed part of mesh header is there, also checks skb len */
++		if (!pskb_may_pull(rx->skb, hdr_len + 6))
++			return -EACCES;
++
++		mesh_hdr = (struct ieee80211s_hdr *)(skb->data + hdr_len);
++		ethertype_offset = hdr_len + ieee80211_get_mesh_hdrlen(mesh_hdr)
++				 + sizeof(rfc1042_header);
++		if (!pskb_may_pull(rx->skb, ethertype_offset + sizeof(ethertype)) ||
++		    !ether_addr_equal(hdr->addr1, rx->sdata->vif.addr))
++			return -EACCES;
++
++		skb_copy_bits(rx->skb, ethertype_offset, &ethertype, 2);
++		if (ethertype == rx->sdata->control_port_protocol)
++			goto out;
++	}
++
+ 	/* Drop unencrypted frames if key is set. */
+ 	if (unlikely(!ieee80211_has_protected(fc) &&
+ 		     !ieee80211_is_any_nullfunc(fc) &&
+ 		     ieee80211_is_data(fc) && rx->key))
+ 		return -EACCES;
+ 
++out:
+ 	return 0;
+ }
+ 
 -- 
 2.27.0
 
