@@ -1,131 +1,103 @@
-Return-Path: <SRS0=YkEg=7Z=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=yGsr=72=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24062C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 18:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1790C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Jun 2020 19:23:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 054A0207F7
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jun 2020 18:30:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 898C1207DD
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Jun 2020 19:23:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Wqnor2oq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SgeH6+vq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726444AbgFLSaV (ORCPT
+        id S1726466AbgFMTXl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Jun 2020 14:30:21 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:25983 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726268AbgFLSaU (ORCPT
+        Sat, 13 Jun 2020 15:23:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38200 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726304AbgFMTXl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jun 2020 14:30:20 -0400
-X-UUID: adbde9ef1a1f4a3ab3374e9ff56e5482-20200613
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=JxTFWJL4FzVni1vcpjh/rOjeJslVOPGx/DPcX62rsJw=;
-        b=Wqnor2oqVUHh1vu0fXKIV2JSFzQthB6cZFf3W5lGzTLfY/haFy7JAqGvi76Sk7tKBDd6YlIBQ7iz4BPHLU08uSLaDmG68O7kX2KhrUZmVPhAgzYz8BclXcgfiYGjp34qYkfGj9AYrCsegBZTYFTlpGkHrYvfsQPcinA8asIQH3U=;
-X-UUID: adbde9ef1a1f4a3ab3374e9ff56e5482-20200613
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 321210405; Sat, 13 Jun 2020 02:30:15 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 13 Jun 2020 02:30:13 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 13 Jun 2020 02:30:10 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2 2/3] mt76: mt7915: add a fixed AC queue mapping
-Date:   Sat, 13 Jun 2020 02:30:09 +0800
-Message-ID: <97c1001126f8decddb5c05d2b3a0926806d169c6.1591983283.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <2863c9a7e14c791202738597184f4a6b75d5bc07.1591983283.git.ryder.lee@mediatek.com>
-References: <2863c9a7e14c791202738597184f4a6b75d5bc07.1591983283.git.ryder.lee@mediatek.com>
+        Sat, 13 Jun 2020 15:23:41 -0400
+Received: from mail-oo1-xc2e.google.com (mail-oo1-xc2e.google.com [IPv6:2607:f8b0:4864:20::c2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19004C03E96F
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2020 12:23:41 -0700 (PDT)
+Received: by mail-oo1-xc2e.google.com with SMTP id v3so2619034oot.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2020 12:23:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=0EzX6imgHUWXqf11CvCZwDze/NEEFAYYy7w+xbz+Y+Q=;
+        b=SgeH6+vqRErM7xg3AN0Z93kDLj5Gs6hZJeS9A2skyh8HkFO7uPZX0yKJOWgUMUbzVy
+         b5RzRFaV6S2qFwrPl9loDFMdX5jfNMXBH2ZKRT9DGs347JhLaERjjbkXnC5LHqi9aYox
+         u3HiV8C+deU/xsy79/L4rAZjO37b8poe7JqEq5iCSusbV4Jl7NrYi9icsYpnpwcJ4Mg3
+         ogbfHkCstDCMfzheHGxQhTXHMsbEa70Apl51aaN8nD4Et+TQLmKvT1M/ZokJjs/RbgFT
+         XsscmBBMhA1RmKulSWOPnnXJ90ALQBWpdPTPgHacsTGo97Bz4TrAVsj/AcO1oNH5sbla
+         KyYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=0EzX6imgHUWXqf11CvCZwDze/NEEFAYYy7w+xbz+Y+Q=;
+        b=h+j5LIEmZo4Wi2xePrurO1gnnJ5mpreKFwH5U3FpVT9lZ/Dmafiy0svVRVvTTSVCGu
+         FYhhWZrKuUblIXkavGANQUFaAY/S88uVQONnNtLQW4rtOD9oSOdV1NmqqCux1h3WUk0x
+         aihQBfg/H7jKNU+vDlG+2RHKb2mNcPE/pD2XdKVh5oRkGAweEWDf6fyMA9Fj+R2YUZaU
+         SIEQCqM0DPoAB/DmLzVD7gx6NuFOO5jPPB1IM1qDa51NOWDgAMguPfiuylFjYJXgsQM4
+         u2+4SKVaI12tGrPklzESg9UGCIuQv4GpV5ppxkt2VwNFMpFo3T9WulUfithyQsLhICYE
+         vXeA==
+X-Gm-Message-State: AOAM531nvyqQfqDmCYpKqD9D3ftadHXSDSnx6YVkk1/5GrltOF8oZiLJ
+        JvyardZoNxPtCLJvUpWpSR8yMhSkdIMNCt3sjaOt+eUY
+X-Google-Smtp-Source: ABdhPJxsleSLE7TkH8ZG3MDxpF1eobDSa51dsuCvbVl6f2IgbTQ1hVhfU5p6VQp0FXPCDnmBx6bBelsb3VMj3J6l/k4=
+X-Received: by 2002:a4a:3947:: with SMTP id x7mr15723051oog.55.1592076219603;
+ Sat, 13 Jun 2020 12:23:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 55B4746C594CF56C9C8149BD1FAF50673313E3C51F3C52911B7A94EF757395362000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Received: by 2002:a05:6838:940e:0:0:0:0 with HTTP; Sat, 13 Jun 2020 12:23:39
+ -0700 (PDT)
+From:   My Nigga <anomalousanonymousarmadillo@gmail.com>
+Date:   Sun, 14 Jun 2020 00:53:39 +0530
+Message-ID: <CALqii0=iXM_5pQFZU4sinB5soDkNzVLG45W=HJ6=NxaytHiybQ@mail.gmail.com>
+Subject: [BUG] rtw88: WiFi speed drops randomly, timed out to flush queue 1
+To:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SW4gTVQ3OTE1LCBoYXJkd2FyZSBxdWV1ZSBtYXAgaXMgZmxleGlibGUuIEhvd2V2ZXIsIGNlcnRh
-aW4gZmlybXdhcmUgbW9kdWxlcw0KbGlrZSBNVSBhbmQgVS1BUFNEIHByZXN1bWUgYSBmaXhlZCBx
-dWV1ZSBvcmRlciB0byBhZGFwdCBzb21lIGRldmljZXMgdGhhdCBoYXZlDQpETUEgc2NoZWR1bGVy
-IHdpdGggYSBzdHJpY3Qgb3JkZXIsIHNvIHRoaXMgcGF0Y2ggY2FuIGhlbHAgaW4gdGhlIGxvbmcg
-cnVuLg0KDQpTaWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+
-DQotLS0NCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21hYy5jICAgfCAg
-MiArLQ0KIC4uLi9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmggICB8IDEw
-IC0tLS0tLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMg
-IHwgIDMgKysrDQogLi4uL3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oICAg
-IHwgMjUgKysrKysrKysrKysrKysrKysrKw0KIDQgZmlsZXMgY2hhbmdlZCwgMjkgaW5zZXJ0aW9u
-cygrKSwgMTEgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
-dGVrL210NzYvbXQ3OTE1L21hYy5jDQppbmRleCBhMjY0ZTMwNGEzZGYuLjY2MGUxODIwY2NjZiAx
-MDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21h
-Yy5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMu
-Yw0KQEAgLTU5Myw3ICs1OTMsNyBAQCB2b2lkIG10NzkxNV9tYWNfd3JpdGVfdHh3aShzdHJ1Y3Qg
-bXQ3OTE1X2RldiAqZGV2LCBfX2xlMzIgKnR4d2ksDQogDQogCWlmIChpZWVlODAyMTFfaXNfZGF0
-YShmYykgfHwgaWVlZTgwMjExX2lzX2J1ZmZlcmFibGVfbW1wZHUoZmMpKSB7DQogCQlxX2lkeCA9
-IHdtbV9pZHggKiBNVDc5MTVfTUFYX1dNTV9TRVRTICsNCi0JCQlza2JfZ2V0X3F1ZXVlX21hcHBp
-bmcoc2tiKTsNCisJCQltdDc5MTVfbG1hY19tYXBwaW5nKGRldiwgc2tiX2dldF9xdWV1ZV9tYXBw
-aW5nKHNrYikpOw0KIAkJcF9mbXQgPSBNVF9UWF9UWVBFX0NUOw0KIAl9IGVsc2UgaWYgKGJlYWNv
-bikgew0KIAkJcV9pZHggPSBNVF9MTUFDX0JDTjA7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmggYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMuaA0KaW5kZXggYjliYzhiMjViMDMxLi40YjA4NzFh
-YjI0MTQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210
-NzkxNS9tYWMuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5
-MTUvbWFjLmgNCkBAIC0xNDksMTYgKzE0OSw2IEBAIGVudW0gdHhfcGt0X3R5cGUgew0KIAlNVF9U
-WF9UWVBFX0ZXLA0KIH07DQogDQotZW51bSB0eF9wa3RfcXVldWVfaWR4IHsNCi0JTVRfTE1BQ19B
-QzAwLA0KLQlNVF9MTUFDX0FDMDEsDQotCU1UX0xNQUNfQUMwMiwNCi0JTVRfTE1BQ19BQzAzLA0K
-LQlNVF9MTUFDX0FMVFgwID0gMHgxMCwNCi0JTVRfTE1BQ19CTUMwID0gMHgxMCwNCi0JTVRfTE1B
-Q19CQ04wID0gMHgxMiwNCi19Ow0KLQ0KIGVudW0gdHhfcG9ydF9pZHggew0KIAlNVF9UWF9QT1JU
-X0lEWF9MTUFDLA0KIAlNVF9UWF9QT1JUX0lEWF9NQ1UNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMNCmluZGV4IDA1YjU2NTBjNTZjOC4uZTA5
-ODk5NzQ4YzliIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
-Ni9tdDc5MTUvbWFpbi5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2
-L210NzkxNS9tYWluLmMNCkBAIC0zNTAsOSArMzUwLDEyIEBAIHN0YXRpYyBpbnQNCiBtdDc5MTVf
-Y29uZl90eChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0IGllZWU4MDIxMV92aWYgKnZp
-ZiwgdTE2IHF1ZXVlLA0KIAkgICAgICAgY29uc3Qgc3RydWN0IGllZWU4MDIxMV90eF9xdWV1ZV9w
-YXJhbXMgKnBhcmFtcykNCiB7DQorCXN0cnVjdCBtdDc5MTVfZGV2ICpkZXYgPSBtdDc5MTVfaHdf
-ZGV2KGh3KTsNCiAJc3RydWN0IG10NzkxNV92aWYgKm12aWYgPSAoc3RydWN0IG10NzkxNV92aWYg
-Kil2aWYtPmRydl9wcml2Ow0KIA0KIAkvKiBubyBuZWVkIHRvIHVwZGF0ZSByaWdodCBhd2F5LCB3
-ZSdsbCBnZXQgQlNTX0NIQU5HRURfUU9TICovDQorCXF1ZXVlID0gbXQ3OTE1X2xtYWNfbWFwcGlu
-ZyhkZXYsIHF1ZXVlKTsNCisNCiAJbXZpZi0+d21tW3F1ZXVlXS5jd19taW4gPSBwYXJhbXMtPmN3
-X21pbjsNCiAJbXZpZi0+d21tW3F1ZXVlXS5jd19tYXggPSBwYXJhbXMtPmN3X21heDsNCiAJbXZp
-Zi0+d21tW3F1ZXVlXS5haWZzID0gcGFyYW1zLT5haWZzOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmgNCmluZGV4IDg1ZDc0ZWNkMDM1
-MS4uNjRlYTFlMGExZmIwIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
-ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
-dGVrL210NzYvbXQ3OTE1L210NzkxNS5oDQpAQCAtMTk5LDYgKzE5OSwxNiBAQCBlbnVtIHsNCiAJ
-RVhUX0JTU0lEX0VORA0KIH07DQogDQorZW51bSB7DQorCU1UX0xNQUNfQUMwMCwNCisJTVRfTE1B
-Q19BQzAxLA0KKwlNVF9MTUFDX0FDMDIsDQorCU1UX0xNQUNfQUMwMywNCisJTVRfTE1BQ19BTFRY
-MCA9IDB4MTAsDQorCU1UX0xNQUNfQk1DMCA9IDB4MTAsDQorCU1UX0xNQUNfQkNOMCA9IDB4MTIs
-DQorfTsNCisNCiBlbnVtIHsNCiAJTVRfUlhfU0VMMCwNCiAJTVRfUlhfU0VMMSwNCkBAIC0yNTQs
-NiArMjY0LDIxIEBAIG10NzkxNV9leHRfcGh5KHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYpDQogCXJl
-dHVybiBwaHktPnByaXY7DQogfQ0KIA0KK3N0YXRpYyBpbmxpbmUgdTggbXQ3OTE1X2xtYWNfbWFw
-cGluZyhzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCB1OCBhYykNCit7DQorCXN0YXRpYyBjb25zdCB1
-OCBsbWFjX3F1ZXVlX21hcFtdID0gew0KKwkJW0lFRUU4MDIxMV9BQ19CS10gPSBNVF9MTUFDX0FD
-MDAsDQorCQlbSUVFRTgwMjExX0FDX0JFXSA9IE1UX0xNQUNfQUMwMSwNCisJCVtJRUVFODAyMTFf
-QUNfVkldID0gTVRfTE1BQ19BQzAyLA0KKwkJW0lFRUU4MDIxMV9BQ19WT10gPSBNVF9MTUFDX0FD
-MDMsDQorCX07DQorDQorCWlmIChXQVJOX09OX09OQ0UoYWMgPj0gQVJSQVlfU0laRShsbWFjX3F1
-ZXVlX21hcCkpKQ0KKwkJcmV0dXJuIE1UX0xNQUNfQUMwMTsgLyogQkUgKi8NCisNCisJcmV0dXJu
-IGxtYWNfcXVldWVfbWFwW2FjXTsNCit9DQorDQogc3RhdGljIGlubGluZSB2b2lkDQogbXQ3OTE1
-X3NldF9hZ2dyX3N0YXRlKHN0cnVjdCBtdDc5MTVfc3RhICptc3RhLCB1OCB0aWQsDQogCQkgICAg
-ICBlbnVtIG10NzkxNV9hbXBkdV9zdGF0ZSBzdGF0ZSkNCi0tIA0KMi4xOC4wDQo=
+Info about my system:
+I have an=C2=A0ASUS TUF Gaming FX505DD=C2=A0laptop with the RTL8822BE WiFi
+adapter. I use Arch Linux (Linux 5.7.2-arch1-1 #1 SMP PREEMPT Wed, 10
+Jun 2020 20:36:24 +0000) with the rtw88 driver. I have NetworkManager
+installed.
 
+When it happens:
+When I do not have a really strong WiFi signal, my WiFi speed just
+drops by a lot, sometimes to zero, randomly. It doesn't happen (at
+all, as far as I know) when I am right next to my WiFi modem.This
+issue has been there since day 1 of me installing arch, I've seen
+"failed to send h2c command" pop up in the live boot environment too.
+
+Logs:
+Whenever this happens, this=C2=A0message is spammed when I run dmesg (it
+prints like 2-3 times per second):
+[Sun Jun 14 00:10:47 2020] rtw_pci 0000:03:00.0: timed out to flush queue 1
+
+sometimes it shows
+[Sun Jun 14 00:01:05 2020] rtw_pci 0000:03:00.0: firmware failed to
+restore hardware setting
+
+and rarely it shows
+[Sat Jun 13 23:38:08 2020] rtw_pci 0000:03:00.0: failed to send h2c command
+
+There's also a stack trace sometimes, like this=C2=A0https://pastebin.com/S=
+DhKpBdd=C2=A0.
+NetworkManager logs don't show anything when this happens.
+
+I'm sorry if this does not have enough info or if I mailed this to the
+wrong place, this is the first bug report I've made.
