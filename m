@@ -2,115 +2,156 @@ Return-Path: <SRS0=h/PO=75=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF937C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 18:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B37F8C433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 19:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2A7420810
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 18:54:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 938CF20776
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 19:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730183AbgFPSyB (ORCPT
+        id S1730823AbgFPTZq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jun 2020 14:54:01 -0400
-Received: from smtprelay0159.hostedemail.com ([216.40.44.159]:58294 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726805AbgFPSyA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jun 2020 14:54:00 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 1290410050792;
-        Tue, 16 Jun 2020 18:53:58 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: cent55_291055a26e01
-X-Filterd-Recvd-Size: 3364
-Received: from XPS-9350.home (unknown [47.151.136.130])
-        (Authenticated sender: joe@perches.com)
-        by omf13.hostedemail.com (Postfix) with ESMTPA;
-        Tue, 16 Jun 2020 18:53:51 +0000 (UTC)
-Message-ID: <fe3b9a437be4aeab3bac68f04193cb6daaa5bee4.camel@perches.com>
-Subject: Re: [PATCH v4 0/3] mm, treewide: Rename kzfree() to
- kfree_sensitive()
-From:   Joe Perches <joe@perches.com>
-To:     Waiman Long <longman@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>
-Cc:     Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        David Sterba <dsterba@suse.cz>,
-        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-Date:   Tue, 16 Jun 2020 11:53:50 -0700
-In-Reply-To: <20200616015718.7812-1-longman@redhat.com>
-References: <20200616015718.7812-1-longman@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.2-0ubuntu1 
+        Tue, 16 Jun 2020 15:25:46 -0400
+Received: from p54ae948c.dip0.t-ipconnect.de ([84.174.148.140]:51982 "EHLO
+        maeck.local" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730691AbgFPTZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jun 2020 15:25:45 -0400
+Received: by maeck.local (Postfix, from userid 501)
+        id B1F518E50DD4; Tue, 16 Jun 2020 21:25:44 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     shayne.chen@mediatek.com, evelyn.tsai@mediatek.com
+Subject: [PATCH v2 3/4] mt76: extend DT rate power limits to support 11ax devices
+Date:   Tue, 16 Jun 2020 21:25:43 +0200
+Message-Id: <20200616192544.97938-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20200616192544.97938-1-nbd@nbd.name>
+References: <20200616192544.97938-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2020-06-15 at 21:57 -0400, Waiman Long wrote:
->  v4:
->   - Break out the memzero_explicit() change as suggested by Dan Carpenter
->     so that it can be backported to stable.
->   - Drop the "crypto: Remove unnecessary memzero_explicit()" patch for
->     now as there can be a bit more discussion on what is best. It will be
->     introduced as a separate patch later on after this one is merged.
+From: Shayne Chen <shayne.chen@mediatek.com>
 
-To this larger audience and last week without reply:
-https://lore.kernel.org/lkml/573b3fbd5927c643920e1364230c296b23e7584d.camel@perches.com/
+Enable parsing per-rate txpower limits from DT for 11ax chipsets.
 
-Are there _any_ fastpath uses of kfree or vfree?
+Co-developed-by: Felix Fietkau <nbd@nbd.name>
+Tested-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+v2: clean up rate array handling, simplify
+ drivers/net/wireless/mediatek/mt76/eeprom.c | 62 +++++++++++++--------
+ drivers/net/wireless/mediatek/mt76/mt76.h   |  1 +
+ 2 files changed, 40 insertions(+), 23 deletions(-)
 
-Many patches have been posted recently to fix mispairings
-of specific types of alloc and free functions.
-
-To eliminate these mispairings at a runtime cost of four
-comparisons, should the kfree/vfree/kvfree/kfree_const
-functions be consolidated into a single kfree?
-
-Something like the below:
-
-   void kfree(const void *addr)
-   {
-   	if (is_kernel_rodata((unsigned long)addr))
-   		return;
-
-   	if (is_vmalloc_addr(addr))
-   		_vfree(addr);
-   	else
-   		_kfree(addr);
-   }
-
-   #define kvfree		kfree
-   #define vfree		kfree
-   #define kfree_const	kfree
-
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index 7deb3c90c113..17a1a3ccc9dd 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -221,6 +221,36 @@ mt76_apply_array_limit(s8 *pwr, size_t pwr_len, const __be32 *data,
+ 	}
+ }
+ 
++static void
++mt76_apply_multi_array_limit(s8 *pwr, size_t pwr_len, s8 pwr_num,
++			     const __be32 *data, size_t len, s8 target_power,
++			     s8 nss_delta, s8 *max_power)
++{
++	int i, cur;
++
++	if (!data)
++		return;
++
++	len /= 4;
++	cur = be32_to_cpu(data[0]);
++	for (i = 0; i < pwr_num; i++) {
++		if (len < pwr_len + 1)
++			break;
++
++		mt76_apply_array_limit(pwr + pwr_len * i, pwr_len, data + 1,
++				       target_power, nss_delta, max_power);
++		if (--cur > 0)
++			continue;
++
++		data += pwr_len + 1;
++		len -= pwr_len + 1;
++		if (!len)
++			break;
++
++		cur = be32_to_cpu(data[0]);
++	}
++}
++
+ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 			      struct ieee80211_channel *chan,
+ 			      struct mt76_power_limits *dest,
+@@ -231,9 +261,9 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 	const __be32 *val;
+ 	char name[16];
+ 	u32 mcs_rates = dev->drv->mcs_rates;
++	u32 ru_rates = ARRAY_SIZE(dest->ru[0]);
+ 	char band;
+ 	size_t len;
+-	int i, cur;
+ 	s8 max_power = 0;
+ 	s8 txs_delta;
+ 
+@@ -280,28 +310,14 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 			       target_power, txs_delta, &max_power);
+ 
+ 	val = mt76_get_of_array(np, "mcs", &len, mcs_rates + 1);
+-	if (!val)
+-		return max_power;
+-
+-	len /= 4;
+-	cur = be32_to_cpu(val[0]);
+-	for (i = 0; i < ARRAY_SIZE(dest->mcs); i++) {
+-		if (len < mcs_rates + 1)
+-			break;
+-
+-		mt76_apply_array_limit(dest->mcs[i], ARRAY_SIZE(dest->mcs[i]),
+-				       val + 1, target_power, txs_delta,
+-				       &max_power);
+-		if (--cur > 0)
+-			continue;
+-
+-		val += mcs_rates + 1;
+-		len -= mcs_rates + 1;
+-		if (!len)
+-			break;
+-
+-		cur = be32_to_cpu(val[0]);
+-	}
++	mt76_apply_multi_array_limit(dest->mcs[0], ARRAY_SIZE(dest->mcs[0]),
++				     ARRAY_SIZE(dest->mcs), val, len,
++				     target_power, txs_delta, &max_power);
++
++	val = mt76_get_of_array(np, "ru", &len, ru_rates + 1);
++	mt76_apply_multi_array_limit(dest->ru[0], ARRAY_SIZE(dest->ru[0]),
++				     ARRAY_SIZE(dest->ru), val, len,
++				     target_power, txs_delta, &max_power);
+ 
+ 	return max_power;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 9c5488ffbe5e..d50871653de1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -584,6 +584,7 @@ struct mt76_power_limits {
+ 	s8 cck[4];
+ 	s8 ofdm[8];
+ 	s8 mcs[4][10];
++	s8 ru[7][12];
+ };
+ 
+ enum mt76_phy_type {
+-- 
+2.24.0
 
