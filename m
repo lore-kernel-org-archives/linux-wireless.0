@@ -2,114 +2,104 @@ Return-Path: <SRS0=h/PO=75=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1114FC433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 19:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96039C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 20:01:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA04B20B1F
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 19:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62F8B206F1
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 20:01:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="auHBa5AE"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="GmsD9FU5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731239AbgFPTrH (ORCPT
+        id S1731064AbgFPUB2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jun 2020 15:47:07 -0400
-Received: from mail.zx2c4.com ([192.95.5.64]:59205 "EHLO mail.zx2c4.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730609AbgFPTrE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jun 2020 15:47:04 -0400
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTP id f0c01c92;
-        Tue, 16 Jun 2020 19:29:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=zx2c4.com; h=mime-version
-        :references:in-reply-to:from:date:message-id:subject:to:cc
-        :content-type; s=mail; bh=7vGnD2Fc5hFa6zE6l8I/6fYFWTE=; b=auHBa5
-        AEe5pm5r80dgWM49RbxNg2b1wePIyReSMQ0Rz/3L8Yx5mFtqdklxmmgnU69XYlJN
-        hUBaHFgVJALywQiz6/SIkttoZgX1tGyz+Zg+VQcgVldFachBs52tuPslyyMFQ0LX
-        thiKjEu3HP7G7pjaS6Q85sWuiJrjwSZZouMci0xDSFLn39VuLeRw1x/kWL7uYtnC
-        q9lJ9u4WEJkyqJPlHNMFgYZ8GQhbEM4aqhZNPWgxeSvHzabhX4d1A2W++bIgoNgb
-        5POprpu6DVgEzddWZ80fiiLd2tnSpz4DTk3KcXvzj6IQwWQeVy1VhdN6Y6LpuXnz
-        67qrTsLtz03/PXLw==
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id def91afe (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-        Tue, 16 Jun 2020 19:29:00 +0000 (UTC)
-Received: by mail-io1-f50.google.com with SMTP id s18so3192212ioe.2;
-        Tue, 16 Jun 2020 12:46:59 -0700 (PDT)
-X-Gm-Message-State: AOAM532ICgqzUljjLdMiLJDrmaM6G2P2VuQ5E+2Wa9rsZgiZCLicoMk2
-        6gPasqRds+Zf64jDUyn/ObteEMB32F2gp413H0M=
-X-Google-Smtp-Source: ABdhPJxC2pRunaModJX8LCWHauaz4Ko5hXWZ58PHme1+4UYNCmQGIC+iarFUNAqn+rNJyw3DywT6LsxlwSFMRJ3z3pU=
-X-Received: by 2002:a6b:6705:: with SMTP id b5mr4346341ioc.29.1592336817452;
- Tue, 16 Jun 2020 12:46:57 -0700 (PDT)
+        Tue, 16 Jun 2020 16:01:28 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:27173 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731054AbgFPUB1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jun 2020 16:01:27 -0400
+X-UUID: bc6c4d0c87504244a47a0ed20b80494c-20200617
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=MPlbLoYu4SxADLEwOMGhe4GB3UlXiF6xAyq5JyY/ozM=;
+        b=GmsD9FU5gHLOUA6G0lHFkD9wCztwFVYZKbhmyvviFzug5/nW4Xy/T2XMIkfZKx4S3m3ufqF3gnxIJN0lHKv+WQxuQjudWGTBetPFGkIoeaWQvZGhMBn/XmyrWRqQzBRbds8UQO8UG0V5CoLz6mA0HbaXBy+zFBRsqu6mwGHrKI0=;
+X-UUID: bc6c4d0c87504244a47a0ed20b80494c-20200617
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1327581873; Wed, 17 Jun 2020 04:01:21 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 17 Jun 2020 04:01:16 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 17 Jun 2020 04:01:17 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Sean Wang <sean.wang@mediatek.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v2 2/2] mt76: mt7615: fix different licenses in same driver
+Date:   Wed, 17 Jun 2020 04:01:18 +0800
+Message-ID: <dae8a31520c0f30741f6e3bde76b7d4c8cf18de3.1592337119.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <f878543ad56fa3b74f5bfcb49e2112d3e4cc92ee.1592337119.git.ryder.lee@mediatek.com>
+References: <f878543ad56fa3b74f5bfcb49e2112d3e4cc92ee.1592337119.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-References: <20200616015718.7812-1-longman@redhat.com> <fe3b9a437be4aeab3bac68f04193cb6daaa5bee4.camel@perches.com>
-In-Reply-To: <fe3b9a437be4aeab3bac68f04193cb6daaa5bee4.camel@perches.com>
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date:   Tue, 16 Jun 2020 13:46:46 -0600
-X-Gmail-Original-Message-ID: <CAHmME9rCD1KJNguthAhZ+OAVZTpBwEvGRLRV0tvQjBaEYG1bHQ@mail.gmail.com>
-Message-ID: <CAHmME9rCD1KJNguthAhZ+OAVZTpBwEvGRLRV0tvQjBaEYG1bHQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/3] mm, treewide: Rename kzfree() to kfree_sensitive()
-To:     Joe Perches <joe@perches.com>
-Cc:     Waiman Long <longman@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        David Sterba <dsterba@suse.cz>, Linux-MM <linux-mm@kvack.org>,
-        keyrings@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        linux-pm@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org,
-        Netdev <netdev@vger.kernel.org>, linux-ppp@vger.kernel.org,
-        WireGuard mailing list <wireguard@lists.zx2c4.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        ecryptfs@vger.kernel.org, kasan-dev@googlegroups.com,
-        linux-bluetooth@vger.kernel.org, linux-wpan@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net,
-        linux-security-module <linux-security-module@vger.kernel.org>,
-        linux-integrity@vger.kernel.org,
-        David Miller <davem@davemloft.net>,
-        Steffen Klassert <steffen.klassert@secunet.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jun 16, 2020 at 12:54 PM Joe Perches <joe@perches.com> wrote:
->
-> On Mon, 2020-06-15 at 21:57 -0400, Waiman Long wrote:
-> >  v4:
-> >   - Break out the memzero_explicit() change as suggested by Dan Carpenter
-> >     so that it can be backported to stable.
-> >   - Drop the "crypto: Remove unnecessary memzero_explicit()" patch for
-> >     now as there can be a bit more discussion on what is best. It will be
-> >     introduced as a separate patch later on after this one is merged.
->
-> To this larger audience and last week without reply:
-> https://lore.kernel.org/lkml/573b3fbd5927c643920e1364230c296b23e7584d.camel@perches.com/
->
-> Are there _any_ fastpath uses of kfree or vfree?
+QXZvaWQgdXNpbmcgZGlmZmVyZW50IGxpY2Vuc2VzIGluIHRoZSBzYW1lIGRyaXZlci4NCg0KU2ln
+bmVkLW9mZi1ieTogUnlkZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KLS0tDQpAU2Vh
+biBATG9yZW56bzogRm9yIG10NzYxNSwgSSBuZWVkIHRvIGdhdGhlciBBQ0sgZnJvbSBhbGwgcGVv
+cGxlIGludm9sdmVkIHdpdGggdGhlIGNvZGUuIA0KLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvS2NvbmZpZyAgICB8IDIgKy0NCiBkcml2ZXJzL25ldC93aXJl
+bGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tbWlvLmMgICAgIHwgMyArKysNCiBkcml2ZXJzL25l
+dC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS91c2JfaW5pdC5jIHwgMiArLQ0KIGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYl9tY3UuYyAgfCAyICstDQog
+NCBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9LY29uZmln
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvS2NvbmZpZw0KaW5k
+ZXggZTI1ZGIxMTM1ZWRhLi5kODQ1NDhkNWUwMDAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9LY29uZmlnDQorKysgYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9LY29uZmlnDQpAQCAtMSw0ICsxLDQgQEANCi0j
+IFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwtMi4wLW9ubHkNCisjIFNQRFgtTGljZW5zZS1J
+ZGVudGlmaWVyOiBJU0MNCiANCiBjb25maWcgTVQ3NjE1X0NPTU1PTg0KIAl0cmlzdGF0ZQ0KZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21taW8u
+YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21taW8uYw0KaW5k
+ZXggMmU5OTg0NWI5Yzk2Li4zOWI3ZGI4NzFmYzEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tbWlvLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21taW8uYw0KQEAgLTEsMyArMSw2IEBADQorLy8g
+U1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IElTQw0KKy8qIENvcHlyaWdodCAoQykgMjAyMCBNZWRp
+YVRlayBJbmMuICovDQorDQogI2luY2x1ZGUgPGxpbnV4L2tlcm5lbC5oPg0KICNpbmNsdWRlIDxs
+aW51eC9tb2R1bGUuaD4NCiAjaW5jbHVkZSA8bGludXgvcGxhdGZvcm1fZGV2aWNlLmg+DQpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvdXNiX2lu
+aXQuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYl9pbml0
+LmMNCmluZGV4IDE5YTE1ZjM1M2UxZS4uMjcxMzZmZjFhYWM5IDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvdXNiX2luaXQuYw0KKysrIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvdXNiX2luaXQuYw0KQEAgLTEs
+NCArMSw0IEBADQotLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjANCisvLyBTUERY
+LUxpY2Vuc2UtSWRlbnRpZmllcjogSVNDDQogLyogQ29weXJpZ2h0IChDKSAyMDE5IE1lZGlhVGVr
+IEluYy4NCiAgKg0KICAqIEF1dGhvcjogRmVsaXggRmlldGthdSA8bmJkQG5iZC5uYW1lPg0KZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYl9t
+Y3UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYl9tY3Uu
+Yw0KaW5kZXggY2Q3MDlmZDYxN2RiLi4zNmM0NzUwMGViNWIgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS91c2JfbWN1LmMNCisrKyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYl9tY3UuYw0KQEAgLTEsNCAr
+MSw0IEBADQotLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjANCisvLyBTUERYLUxp
+Y2Vuc2UtSWRlbnRpZmllcjogSVNDDQogLyogQ29weXJpZ2h0IChDKSAyMDE5IE1lZGlhVGVrIElu
+Yy4NCiAgKg0KICAqIEF1dGhvcjogRmVsaXggRmlldGthdSA8bmJkQG5iZC5uYW1lPg0KLS0gDQoy
+LjE4LjANCg==
 
-The networking stack has various places where there will be a quick
-kmalloc followed by a kfree for an incoming or outgoing packet. One
-place that comes to mind would be esp_alloc_tmp, which does a quick
-allocation of some temporary kmalloc memory, processes some packet
-things inside of that, and then frees it, sometimes in the same
-function, and sometimes later in an async callback. I don't know how
-"fastpath" you consider this, but usually packet processing is
-something people want to do with minimal overhead, considering how
-fast NICs are these days.
