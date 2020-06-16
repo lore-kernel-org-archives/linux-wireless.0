@@ -2,104 +2,148 @@ Return-Path: <SRS0=h/PO=75=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.7 required=3.0 tests=DATE_IN_PAST_03_06,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA85C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:02:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EB4C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:10:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE8E32071A
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:02:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="O7tdYLuc"
+	by mail.kernel.org (Postfix) with ESMTP id CB8F7206F1
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:10:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729136AbgFPOCC (ORCPT
+        id S1729648AbgFPOK6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jun 2020 10:02:02 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:44251 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729248AbgFPOCB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jun 2020 10:02:01 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1592316121; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=yh4iyx929/Ij0GsACWXzhnS2zyNE8Hbr9B209Z8JTk4=; b=O7tdYLucqlEm+4sfmUlCeYVpi1bTlnfOFY3Tj4AOPYpGHRSStlNoQEteXCyCdu77PmVhAFBV
- HzfzX5fBZh+lxQcGQZ+Dza7wg6m/+r/3EFw3NaBA06q4vDB35d5G/ChiasqU5I82XtbJmqiH
- CCST6Z3YHTKMc9gvK1dtD5rQImc=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5ee8d0b4fe1db4db8915b3a3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 16 Jun 2020 14:01:24
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id ECBB6C43387; Tue, 16 Jun 2020 14:01:23 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8625BC433C9;
-        Tue, 16 Jun 2020 14:01:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8625BC433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 12/12] ath11k: remove define ATH11K_QMI_DEFAULT_CAL_FILE_NAME
-Date:   Tue, 16 Jun 2020 17:00:55 +0300
-Message-Id: <1592316055-24958-13-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1592316055-24958-1-git-send-email-kvalo@codeaurora.org>
-References: <1592316055-24958-1-git-send-email-kvalo@codeaurora.org>
+        Tue, 16 Jun 2020 10:10:58 -0400
+Received: from p54ae948c.dip0.t-ipconnect.de ([84.174.148.140]:49551 "EHLO
+        maeck.local" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729003AbgFPOK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jun 2020 10:10:57 -0400
+X-Greylist: delayed 1021 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Jun 2020 10:10:57 EDT
+Received: by maeck.local (Postfix, from userid 501)
+        id 433CD8E33D0B; Tue, 16 Jun 2020 11:40:55 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mt76: mt7615: re-enable offloading of sequence number assignment
+Date:   Tue, 16 Jun 2020 11:40:55 +0200
+Message-Id: <20200616094055.4070-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It's just a duplicate of ATH11K_DEFAULT_CAL_FILE.
+Preparation for supporting more offload features
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/ath11k/qmi.c | 5 ++---
- drivers/net/wireless/ath/ath11k/qmi.h | 1 -
- 2 files changed, 2 insertions(+), 4 deletions(-)
+v2: fix WTBL address offset
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   | 44 +++++++++++++++----
+ .../net/wireless/mediatek/mt76/mt7615/main.c  |  5 +++
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  1 +
+ 3 files changed, 41 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index c890f85ffd5c..f5c4d69fbb98 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -1810,11 +1810,10 @@ ath11k_qmi_prepare_bdf_download(struct ath11k_base *ab, int type,
- 		ath11k_core_free_bdf(ab, &bd);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index d97315ec7265..d150fac50c00 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -617,16 +617,19 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
+ 	}
+ 
+ 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
+-	if (ieee80211_is_data_qos(hdr->frame_control)) {
+-		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+-		val |= MT_TXD3_SN_VALID;
+-	} else if (ieee80211_is_back_req(hdr->frame_control)) {
+-		struct ieee80211_bar *bar = (struct ieee80211_bar *)skb->data;
+-
+-		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(bar->start_seq_num));
+-		val |= MT_TXD3_SN_VALID;
++	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
++		seqno = le16_to_cpu(hdr->seq_ctrl);
++
++		if (ieee80211_is_back_req(hdr->frame_control)) {
++			struct ieee80211_bar *bar;
++
++			bar = (struct ieee80211_bar *)skb->data;
++			seqno = le16_to_cpu(bar->start_seq_num);
++		}
++
++		val |= MT_TXD3_SN_VALID |
++		       FIELD_PREP(MT_TXD3_SEQ, IEEE80211_SEQ_TO_SN(seqno));
+ 	}
+-	val |= FIELD_PREP(MT_TXD3_SEQ, seqno);
+ 
+ 	txwi[3] |= cpu_to_le32(val);
+ 
+@@ -893,6 +896,29 @@ mt7615_mac_queue_rate_update(struct mt7615_phy *phy, struct mt7615_sta *sta,
+ 	return 0;
+ }
+ 
++u32 mt7615_mac_get_sta_tid_sn(struct mt7615_dev *dev, int wcid, u8 tid)
++{
++	u32 addr, val, val2;
++	u8 offset;
++
++	addr = mt7615_mac_wtbl_addr(dev, wcid) + 11 * 4;
++
++	offset = tid * 12;
++	addr += 4 * (offset / 32);
++	offset %= 32;
++
++	val = mt76_rr(dev, addr);
++	val >>= (tid % 32);
++
++	if (offset > 20) {
++		addr += 4;
++		val2 = mt76_rr(dev, addr);
++		val |= val2 << (32 - offset);
++	}
++
++	return val & GENMASK(11, 0);
++}
++
+ void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
+ 			  struct ieee80211_tx_rate *probe_rate,
+ 			  struct ieee80211_tx_rate *rates)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index beaca8127680..dfebf86b86d6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -660,6 +660,9 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		mtxq->aggr = true;
+ 		mtxq->send_bar = false;
+ 		mt7615_mcu_add_tx_ba(dev, params, true);
++		ssn = mt7615_mac_get_sta_tid_sn(dev, msta->wcid.idx, tid);
++		ieee80211_send_bar(vif, sta->addr, tid,
++				   IEEE80211_SN_TO_SEQ(ssn));
  		break;
- 	case ATH11K_QMI_FILE_TYPE_CALDATA:
--		fw_entry = ath11k_core_firmware_request(ab,
--							ATH11K_QMI_DEFAULT_CAL_FILE_NAME);
-+		fw_entry = ath11k_core_firmware_request(ab, ATH11K_DEFAULT_CAL_FILE);
- 		if (ret) {
- 			ath11k_warn(ab, "failed to load %s: %d\n",
--				    ATH11K_QMI_DEFAULT_CAL_FILE_NAME, ret);
-+				    ATH11K_DEFAULT_CAL_FILE, ret);
- 			goto out;
- 		}
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+@@ -667,6 +670,8 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		mt7615_mcu_add_tx_ba(dev, params, false);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
++		ssn = mt7615_mac_get_sta_tid_sn(dev, msta->wcid.idx, tid);
++		params->ssn = ssn;
+ 		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(ssn);
+ 		ret = IEEE80211_AMPDU_TX_START_IMMEDIATE;
+ 		break;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 3e7d51bf42a4..640ff8b9b266 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -516,6 +516,7 @@ int mt7615_mac_wtbl_update_key(struct mt7615_dev *dev,
+ 			       enum mt7615_cipher_type cipher,
+ 			       enum set_key_cmd cmd);
+ void mt7615_mac_reset_work(struct work_struct *work);
++u32 mt7615_mac_get_sta_tid_sn(struct mt7615_dev *dev, int wcid, u8 tid);
  
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index a7a0a189cbe4..3307be5be687 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -22,7 +22,6 @@
- #define ATH11K_QMI_RESP_LEN_MAX			8192
- #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	32
- #define ATH11K_QMI_CALDB_SIZE			0x480000
--#define ATH11K_QMI_DEFAULT_CAL_FILE_NAME	"caldata.bin"
- 
- #define QMI_WLFW_REQUEST_MEM_IND_V01		0x0035
- #define QMI_WLFW_FW_MEM_READY_IND_V01		0x0037
+ int mt7615_mcu_wait_response(struct mt7615_dev *dev, int cmd, int seq);
+ int mt7615_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
 -- 
-2.7.4
+2.24.0
 
