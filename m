@@ -2,148 +2,122 @@ Return-Path: <SRS0=h/PO=75=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EB4C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:10:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A80E6C433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:28:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB8F7206F1
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:10:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EBB020882
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jun 2020 14:28:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WvEeJyFm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729648AbgFPOK6 (ORCPT
+        id S1729090AbgFPO2E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jun 2020 10:10:58 -0400
-Received: from p54ae948c.dip0.t-ipconnect.de ([84.174.148.140]:49551 "EHLO
-        maeck.local" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729003AbgFPOK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jun 2020 10:10:57 -0400
-X-Greylist: delayed 1021 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Jun 2020 10:10:57 EDT
-Received: by maeck.local (Postfix, from userid 501)
-        id 433CD8E33D0B; Tue, 16 Jun 2020 11:40:55 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mt76: mt7615: re-enable offloading of sequence number assignment
-Date:   Tue, 16 Jun 2020 11:40:55 +0200
-Message-Id: <20200616094055.4070-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+        Tue, 16 Jun 2020 10:28:04 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:44784 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726405AbgFPO2B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jun 2020 10:28:01 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05GELOZQ057447;
+        Tue, 16 Jun 2020 14:26:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=UepsmQC/DlQFZ6+UxfaNjoC9RmBOSxOKZ2W1AkmRQd8=;
+ b=WvEeJyFmKL8HM4eLekulNPcOb25Sw7YajmFzrepd+1TsQe+PNe2o6it9fFwXghV3FsHv
+ QdrFGubdjTeCc6kAWKTDSEoqMv3it70YtNHwfwRr3qSfXcxJVIBcqm6X7SGsetYqkHWx
+ H7ruRtQFUVaMSNzeIOu+jnB9ul0qpA74I5CLeOsjFOWmZFGD+qOJ1lRDn7UN2JHhoajF
+ f/9ecfn6gkdb7upj+cJi6IY4VZZEPZcXh9vvLg7+i5e+33eQa6zJ2K1MWUsjTMUYhONT
+ ZCDycK9k04JLa7cAHqpl868otcTeoTLOGNWMgNDyB7bEprwRuViNVIe1IhKb+72uVtQ1 Lw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31p6e5y3y1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 16 Jun 2020 14:26:56 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05GEODoW027404;
+        Tue, 16 Jun 2020 14:26:56 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 31p6s7kbhq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 Jun 2020 14:26:56 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05GEQfNL026862;
+        Tue, 16 Jun 2020 14:26:42 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 16 Jun 2020 07:26:41 -0700
+Date:   Tue, 16 Jun 2020 17:26:24 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Waiman Long <longman@redhat.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Joe Perches <joe@perches.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        David Rientjes <rientjes@google.com>,
+        Michal Hocko <mhocko@suse.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        David Sterba <dsterba@suse.cz>,
+        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
+        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-amlogic@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
+        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
+        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
+        linux-security-module@vger.kernel.org,
+        linux-integrity@vger.kernel.org
+Subject: Re: [PATCH v4 2/3] mm, treewide: Rename kzfree() to kfree_sensitive()
+Message-ID: <20200616142624.GO4282@kadam>
+References: <20200616015718.7812-1-longman@redhat.com>
+ <20200616015718.7812-3-longman@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200616015718.7812-3-longman@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ mlxlogscore=886 adultscore=0 phishscore=0 bulkscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006160106
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ mlxscore=0 phishscore=0 mlxlogscore=893 lowpriorityscore=0 clxscore=1011
+ suspectscore=0 spamscore=0 bulkscore=0 malwarescore=0 impostorscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006160106
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Preparation for supporting more offload features
+Last time you sent this we couldn't decide which tree it should go
+through.  Either the crypto tree or through Andrew seems like the right
+thing to me.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
-v2: fix WTBL address offset
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 44 +++++++++++++++----
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  5 +++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  1 +
- 3 files changed, 41 insertions(+), 9 deletions(-)
+Also the other issue is that it risks breaking things if people add
+new kzfree() instances while we are doing the transition.  Could you
+just add a "#define kzfree kfree_sensitive" so that things continue to
+compile and we can remove it in the next kernel release?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index d97315ec7265..d150fac50c00 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -617,16 +617,19 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
- 	}
- 
- 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
--	if (ieee80211_is_data_qos(hdr->frame_control)) {
--		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
--		val |= MT_TXD3_SN_VALID;
--	} else if (ieee80211_is_back_req(hdr->frame_control)) {
--		struct ieee80211_bar *bar = (struct ieee80211_bar *)skb->data;
--
--		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(bar->start_seq_num));
--		val |= MT_TXD3_SN_VALID;
-+	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
-+		seqno = le16_to_cpu(hdr->seq_ctrl);
-+
-+		if (ieee80211_is_back_req(hdr->frame_control)) {
-+			struct ieee80211_bar *bar;
-+
-+			bar = (struct ieee80211_bar *)skb->data;
-+			seqno = le16_to_cpu(bar->start_seq_num);
-+		}
-+
-+		val |= MT_TXD3_SN_VALID |
-+		       FIELD_PREP(MT_TXD3_SEQ, IEEE80211_SEQ_TO_SN(seqno));
- 	}
--	val |= FIELD_PREP(MT_TXD3_SEQ, seqno);
- 
- 	txwi[3] |= cpu_to_le32(val);
- 
-@@ -893,6 +896,29 @@ mt7615_mac_queue_rate_update(struct mt7615_phy *phy, struct mt7615_sta *sta,
- 	return 0;
- }
- 
-+u32 mt7615_mac_get_sta_tid_sn(struct mt7615_dev *dev, int wcid, u8 tid)
-+{
-+	u32 addr, val, val2;
-+	u8 offset;
-+
-+	addr = mt7615_mac_wtbl_addr(dev, wcid) + 11 * 4;
-+
-+	offset = tid * 12;
-+	addr += 4 * (offset / 32);
-+	offset %= 32;
-+
-+	val = mt76_rr(dev, addr);
-+	val >>= (tid % 32);
-+
-+	if (offset > 20) {
-+		addr += 4;
-+		val2 = mt76_rr(dev, addr);
-+		val |= val2 << (32 - offset);
-+	}
-+
-+	return val & GENMASK(11, 0);
-+}
-+
- void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
- 			  struct ieee80211_tx_rate *probe_rate,
- 			  struct ieee80211_tx_rate *rates)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index beaca8127680..dfebf86b86d6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -660,6 +660,9 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		mtxq->aggr = true;
- 		mtxq->send_bar = false;
- 		mt7615_mcu_add_tx_ba(dev, params, true);
-+		ssn = mt7615_mac_get_sta_tid_sn(dev, msta->wcid.idx, tid);
-+		ieee80211_send_bar(vif, sta->addr, tid,
-+				   IEEE80211_SN_TO_SEQ(ssn));
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-@@ -667,6 +670,8 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		mt7615_mcu_add_tx_ba(dev, params, false);
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
-+		ssn = mt7615_mac_get_sta_tid_sn(dev, msta->wcid.idx, tid);
-+		params->ssn = ssn;
- 		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(ssn);
- 		ret = IEEE80211_AMPDU_TX_START_IMMEDIATE;
- 		break;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 3e7d51bf42a4..640ff8b9b266 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -516,6 +516,7 @@ int mt7615_mac_wtbl_update_key(struct mt7615_dev *dev,
- 			       enum mt7615_cipher_type cipher,
- 			       enum set_key_cmd cmd);
- void mt7615_mac_reset_work(struct work_struct *work);
-+u32 mt7615_mac_get_sta_tid_sn(struct mt7615_dev *dev, int wcid, u8 tid);
- 
- int mt7615_mcu_wait_response(struct mt7615_dev *dev, int cmd, int seq);
- int mt7615_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
--- 
-2.24.0
+regards,
+dan carpenter
 
