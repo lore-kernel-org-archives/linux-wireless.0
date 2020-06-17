@@ -2,119 +2,137 @@ Return-Path: <SRS0=BEmV=76=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA87C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 07:29:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D60F5C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 07:31:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 758DA20DD4
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 07:29:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1C4D2082F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 07:31:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=c0d3.blue header.i=@c0d3.blue header.b="gIefJYvX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726341AbgFQH3q (ORCPT
+        id S1726628AbgFQHbV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Jun 2020 03:29:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbgFQH3p (ORCPT
+        Wed, 17 Jun 2020 03:31:21 -0400
+Received: from mail.aperture-lab.de ([138.201.29.205]:52660 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725894AbgFQHbU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jun 2020 03:29:45 -0400
-Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42879C061573
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2020 00:29:45 -0700 (PDT)
-Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jlSVu-0003WR-Hl; Wed, 17 Jun 2020 09:29:38 +0200
-Date:   Wed, 17 Jun 2020 09:29:38 +0200
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "kernel@iuliancostan.com" <kernel@iuliancostan.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "i@outv.im" <i@outv.im>,
-        "trevor@shartrec.com" <trevor@shartrec.com>
-Subject: Re: [PATCH v1] rtw88: pci: disable aspm for platform inter-op with
- module parameter
-Message-ID: <20200617072938.dx56qsvcrpmtrrgu@linutronix.de>
-References: <20200605074703.32726-1-yhchuang@realtek.com>
- <20200610213720.3sopcuimas375xl2@linutronix.de>
- <a2aac609b5e2416b899c5842817da4bb@realtek.com>
- <20200616133531.7eyfu6jniywhak7h@linutronix.de>
- <fbf8d9cb6b864004b11372f6d70b734b@realtek.com>
+        Wed, 17 Jun 2020 03:31:20 -0400
+From:   =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=c0d3.blue; s=2018;
+        t=1592379078;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ru3cQ/v1mcerqDaVdnD06xJ1izSX7soULZYp2swV5ng=;
+        b=gIefJYvXz2+cJzBjhZw27vpRrOPkjrcCJud8dX/EKnZmImJz/LN1k0PzmRPEPZousUcorx
+        zR6uXVH7T2Mbqw2/6sIrSOMRQAw+YDDgxR1CtxqbAALGe6FjM696ODH3rCw8SvmutunlgC
+        JWm0K3fr6Bcvv4FsKs/8AJ6+yUXauX1G/kainC6+l09oSQozMsVdWbHRC+xkfs6UphbXv7
+        l9GQl2CwVt7Qj/8idjUnKB5MBidfjK+ULyjGIL4ADZjx6pIEBbLOOWYp83mULEYn20p2IY
+        XT1agm9cSiSRGh9mTZ5uHLqsKTBdU+vC2bRG8p/0i+gw5/4qdRUHYZGlHFfO4g==
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org, b.a.t.m.a.n@lists.open-mesh.org,
+        =?UTF-8?q?Linus=20L=C3=BCssing?= <ll@simonwunderlich.de>,
+        Sven Eckelmann <sven@narfation.org>,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH v3] iw: mesh: add mesh_param "mesh_nolearn" to skip path discovery
+Date:   Wed, 17 Jun 2020 09:30:34 +0200
+Message-Id: <20200617073034.26149-2-linus.luessing@c0d3.blue>
+In-Reply-To: <20200617073034.26149-1-linus.luessing@c0d3.blue>
+References: <20200617073034.26149-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <fbf8d9cb6b864004b11372f6d70b734b@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Authentication-Results: ORIGINATING;
+        auth=pass smtp.auth=linus.luessing@c0d3.blue smtp.mailfrom=linus.luessing@c0d3.blue
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-06-17 05:30:22 [+0000], Tony Chuang wrote:
-> 0000], Tony Chuang wrote:
-> > > > On 2020-06-05 15:47:03 [+0800], yhchuang@realtek.com wrote:
-> > > > > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> > > > >
-> > > > > Some platforms cannot read the DBI register successfully for the
-> > > > > ASPM settings. After the read failed, the bus could be unstable,
-> > > > > and the device just became unavailable [1]. For those platforms,
-> > > > > the ASPM should be disabled. But as the ASPM can help the driver
-> > > > > to save the power consumption in power save mode, the ASPM is still
-> > > > > needed. So, add a module parameter for them to disable it, then
-> > > > > the device can still work, while others can benefit from the less
-> > > > > power consumption that brings by ASPM enabled.
-> > > >
-> > > > Can you set disable_aspm if rtw_dbi_read8() fails? Or make a test if it
-> > > > is save to use?
-> > > >
-> > > > If someone notices the warning they still have to search for the warning
-> > > > in order to make the link towards loading the module with the
-> > > > disable_aspm=1 paramter.
-> > > > Is it known what causes the failure?
-> > > >
-> > >
-> > > I think as long as the rtw_dbi_read() fails, the consequent register
-> > > operation will also fail, and still get an error read/write the register.
-> > > And this is some sort of PCI issue, and I am not really familiar with it.
-> > > Such as the root cause or how it fails.
-> > 
-> > Then it does not sound safe to enable it by default.
-> 
-> We have had a discussion about this, but I cannot find the thread now.
-> People suggested that the module parameter should not be used.
-> And they think that if the ASPM can help for power consumption, then
-> it should be default enabled. But I think it should be based on that the
-> other platforms will not just fail to bring up the device. However, the
-> platforms are less than the others, not sure if default enable or disable
-> is better.
+From: Linus Lüssing <ll@simonwunderlich.de>
 
-What I fail to understand is if this error affects other PCI devices as
-well or just this one. And if it is possible to reset the wifi device
-and everything gets back no normal. Or is it just the register reading,
-that spams the log and would affect the system otherwise if you would
-just avoided after the first fail.
+Currently, before being able to forward a packet between two 802.11s
+nodes, both a PLINK handshake is performed upon receiving a beacon and
+then later a PREQ/PREP exchange for path discovery is performed on
+demand upon receiving a data frame to forward.
 
-> > > If we can default disable it, then we can help those platforms, but
-> > > then other platform will suffer from higher power consumption.
-> > 
-> > So for those platform, where the error occurs, you expect that the user
-> > manages to read the error message (a backtrace from rtw_dbi_read8()) and
-> > connects this the need to set a certain module option.
-> 
-> Yes, we can discuss if it should be default enabled or not. Otherwise the
-> people with those platforms can only do that to prevent this. Really bad.
+When running a mesh protocol on top of an 802.11s interface, like
+batman-adv, we do not need the multi-hop mesh routing capabilities of
+802.11s and usually set mesh_fwding=0. However, even with mesh_fwding=0
+the PREQ/PREP path discovery is still performed on demand. Even though
+in this scenario the next hop PREQ/PREP will determine is always the
+direct 11s neighbor node.
 
-It would be good to know the root cause of this. So then default enable
-would depend on it.
-You could have a allow/forbid list based on DMI once you identified
-good/bad systems but this includes additional maintenance.
+The new mesh_nolearn parameter allows to skip the PREQ/PREP exchange in
+this scenario, leading to a reduced delay, reduced packet buffering and
+simplifies HWMP in general.
 
-I think that at the very least, if the read fails you should give the
-user additional information how to stop this from happening again. And
-either stop issuing the commands again or skip driver loading (depending
-what it means for device stability).
+mesh_nolearn is still rather conservative in that if the packet destination
+is not a direct 11s neighbor, it will fall back to PREQ/PREP path
+discovery.
 
-> Yen-Hsuan
+For normal, multi-hop 802.11s mesh routing it is usually not advisable
+to enable mesh_nolearn as a transmission to a direct but distant neighbor
+might be worse than reaching that same node via a more robust /
+higher throughput etc. multi-hop path.
 
-Sebastian
+Cc: Sven Eckelmann <sven@narfation.org>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+---
+
+Changelog v2/v3:
+* unchanged
+
+ mesh.c    | 2 ++
+ nl80211.h | 7 +++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/mesh.c b/mesh.c
+index 0650d0c..48bbc3f 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -264,6 +264,8 @@ static const struct mesh_param_descr _mesh_param_descrs[] =
+ 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
+ 	{"mesh_plink_timeout", NL80211_MESHCONF_PLINK_TIMEOUT,
+ 	_my_nla_put_u32, _parse_u32, _print_u32_in_seconds},
++	{"mesh_nolearn", NL80211_MESHCONF_NOLEARN,
++	_my_nla_put_u8, _parse_u8_as_bool, _print_u8},
+ };
+ 
+ static void print_all_mesh_param_descr(void)
+diff --git a/nl80211.h b/nl80211.h
+index c14666b..4c55e89 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -4228,6 +4228,12 @@ enum nl80211_mesh_power_mode {
+  *	field.  If left unset then the mesh formation field will only
+  *	advertise such if there is an active root mesh path.
+  *
++ * @NL80211_MESHCONF_NOLEARN: Try to avoid multi-hop path discovery (e.g.
++ *	PREQ/PREP for HWMP) if the destination is a direct neighbor. Note that
++ *	this might not be the optimal decision as a multi-hop route might be
++ *	better. So if using this setting you will likely also want to disable
++ *	dot11MeshForwarding and use another mesh routing protocol on top.
++ *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  */
+ enum nl80211_meshconf_params {
+@@ -4261,6 +4267,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_AWAKE_WINDOW,
+ 	NL80211_MESHCONF_PLINK_TIMEOUT,
+ 	NL80211_MESHCONF_CONNECTED_TO_GATE,
++	NL80211_MESHCONF_NOLEARN,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+-- 
+2.27.0
+
