@@ -2,103 +2,97 @@ Return-Path: <SRS0=BEmV=76=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9DCBC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 08:27:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD530C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 08:43:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B562520C09
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 08:27:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DBF02073E
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Jun 2020 08:43:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="D6r91UgF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726629AbgFQI1G (ORCPT
+        id S1726964AbgFQInM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Jun 2020 04:27:06 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:49905 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726025AbgFQI1F (ORCPT
+        Wed, 17 Jun 2020 04:43:12 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:14812 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726634AbgFQInM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jun 2020 04:27:05 -0400
-Received: from legolas.fritz.box (unknown [87.147.49.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Wed, 17 Jun 2020 04:43:12 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1592383391; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=nB2sUVjfGPEdYQepVHohnfo2rl/Qh32Jwyl/hlaijGc=; b=D6r91UgFvoGC2bntuLtakr+K12LqrSpxelJRw8dhQrKLuBA1OqQu31EKkNlZHht1cZXa3IcU
+ XJ8xkuW4NsVreaBuRmgobeJ7NZ+cHoNXxDjCDtq0pR8/13mWVVVckfGo9yEeCVkPYysFEM6l
+ U87yBqir/7yPSqcoCeIuzXr6KKU=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n08.prod.us-east-1.postgun.com with SMTP id
+ 5ee9d7868fe116ddd9c6c091 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Jun 2020 08:42:46
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 62A79C43391; Wed, 17 Jun 2020 08:42:45 +0000 (UTC)
+Received: from ssreeela-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 257AF580073;
-        Wed, 17 Jun 2020 10:27:03 +0200 (CEST)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
+        (Authenticated sender: ppranees)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3F55CC433CB;
+        Wed, 17 Jun 2020 08:42:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3F55CC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=ppranees@codeaurora.org
+From:   P Praneesh <ppranees@codeaurora.org>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v3 1/2] mac80211: skip mpath lookup also for control port tx
-Date:   Wed, 17 Jun 2020 10:26:36 +0200
-Message-Id: <20200617082637.22670-2-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200617082637.22670-1-markus.theil@tu-ilmenau.de>
-References: <20200617082637.22670-1-markus.theil@tu-ilmenau.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        P Praneesh <ppranees@codeaurora.org>
+Subject: [PATCH] mac80211: avoid bss color setting in non-he mode
+Date:   Wed, 17 Jun 2020 14:12:28 +0530
+Message-Id: <1592383348-19266-1-git-send-email-ppranees@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using 802.1X over mesh networks, at first an ordinary
-mesh peering is established, then the 802.1X EAPOL dialog
-happens, afterwards an authenticated mesh peering exchange
-(AMPE) happens, finally the peering is complete and we can
-set the STA authorized flag.
+Adding bss-color configuration for HE mode alone.
+Earlier we have enabled it by default, irrespective
+of capabilities. But bss-color feature is only for
+HE mode. Hence avoiding this by adding bss-color flag
+only for HE mode.
 
-As 802.1X is an intermediate step here and key material is
-not yet exchanged for stations we have to skip mesh path lookup
-for these EAPOL frames. Otherwise the already configure mesh
-group encryption key would be used to send a mesh path request
-which no one can decipher, because we didn't already establish
-key material on both peers, like with SAE and directly using AMPE.
-
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Signed-off-by: P Praneesh <ppranees@codeaurora.org>
 ---
- net/mac80211/tx.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e9ce658141f5..bd86f85a5b73 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3933,6 +3933,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	struct sk_buff *next;
-+	u32 ctrl_flags_adapted;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 548a384..2c5847d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -992,8 +992,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		      BSS_CHANGED_P2P_PS |
+ 		      BSS_CHANGED_TXPOWER |
+ 		      BSS_CHANGED_TWT |
+-		      BSS_CHANGED_HE_OBSS_PD |
+-		      BSS_CHANGED_HE_BSS_COLOR;
++		      BSS_CHANGED_HE_OBSS_PD;
+ 	int i, err;
+ 	int prev_beacon_int;
  
- 	if (unlikely(skb->len < ETH_HLEN)) {
- 		kfree_skb(skb);
-@@ -3996,8 +3997,12 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	skb_list_walk_safe(skb, skb, next) {
- 		skb_mark_not_on_list(skb);
+@@ -1019,6 +1018,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		sdata->vif.bss_conf.frame_time_rts_th =
+ 			le32_get_bits(params->he_oper->he_oper_params,
+ 			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
++		changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 	}
  
-+		ctrl_flags_adapted = ctrl_flags;
-+		if (sdata->control_port_protocol == skb->protocol)
-+			ctrl_flags_adapted |= IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP;
-+
- 		skb = ieee80211_build_hdr(sdata, skb, info_flags,
--					  sta, ctrl_flags, cookie);
-+					  sta, ctrl_flags_adapted, cookie);
- 		if (IS_ERR(skb)) {
- 			kfree_skb_list(next);
- 			goto out;
-@@ -5370,8 +5375,10 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	    proto != cpu_to_be16(ETH_P_PREAUTH))
- 		return -EINVAL;
- 
--	if (proto == sdata->control_port_protocol)
--		ctrl_flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
-+	if (proto == sdata->control_port_protocol) {
-+		ctrl_flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO |
-+			      IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP;
-+	}
- 
- 	if (unencrypted)
- 		flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	mutex_lock(&local->mtx);
 -- 
-2.27.0
+2.7.4
 
