@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BCC3C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 16:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CA8C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 16:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD7A120776
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 16:08:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7E6C20776
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 16:08:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="UD84f3t4"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="Ztnvvo1w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731921AbgFRQIC (ORCPT
+        id S1731887AbgFRQII (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Jun 2020 12:08:02 -0400
+        Thu, 18 Jun 2020 12:08:08 -0400
 Received: from mail-eopbgr760112.outbound.protection.outlook.com ([40.107.76.112]:7750
         "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731674AbgFRQIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jun 2020 12:08:00 -0400
+        id S1731908AbgFRQID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jun 2020 12:08:03 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gx0RSXJqWfQH0Zt8AkB1JkMfDq3B5T/PuUXCa6YzYULMNBxytJUPjpvF+MrGRcw83mSfmxHg6oT7aAi4P86Sa98z3uF+P5BvSJi6JnYwrHVLNgtVRTOaz0tsvlAiuqv3gKdxPU8X0JhLbHN1gwxu16rrkTL6C0BEol1YjuJ/hXaxqPKVBWVDFAOeVSxYZLTBLWggudU/XPgrwjfUzGilVIcEJCakbmomlC6Mjj+UW0Wkdi2GOa8SzOEN905qUHEiHSETgYPYZFi076n6c7fOutrPFOCMiq9dv7dKDnEmGlm22ptdnSP/E3YBa6p2bpctnapj9kEUkkHhv1tv8Hg6mg==
+ b=joGDlrviDJFnofGW7DEod/QV7fJmB6ng7zv9424c90uJ1rb/o/frhiFy9mka6mzq4LzCvXycSHyqpMmULjDT9RyYOuur4z/BiR6JqcdL1emhP4Q35nUTz+H8O6gRZxPoGWWe5jWdcHCPKH83Lm8REdIyICbzFeIhraYDLydxyD/wo4cDx2VgGx7Y3p+iWKJ7LPZH299XPNlQ8nWPoChJ/P9NCC4RAlmreMA+ykzrgDnp/1brvFv37aVZK/DXJPCf5jMtQLkHh7DLZhjAJIx0A8e/0CH5VbVZF66CkghX128UVIlD1qWg/icFLFMg9tZvQUTFvRxFKCZSfWSkw+i5wg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BMmeJhq8cVm18APXEJqjyDDjf/ynFwRURp3iakrr+nI=;
- b=bNyvlyMa+Q6hi4LpDrexYdXZ3QwXHHxecwQGlY5zU/bMjBqX7Uzim4YmMNiaRb0HooHUQNwXqxwAc/5LKzJpzvDv7ntpQJm0VpLwaxpH890XdW469jIrEt5SPYrSjevKRqUOBLX/lafLW47p9cWDUu9/7M2LJXeSn5zyfUZ3ymwht9AcESicIeIy+Jyl1gn8v0R2DRTyz8I8pmZr70RY4cGjZi2r/ThTmzVwn7aprgALYp5hYZ/hVrT+CA7ZiEo041PnHxfhSiwtDTzRTU3gH97xHDsIF0nq1VfTrqmj2FSgb2RkdLlMsPizD82WrBVI9U3UaOqaJAXbRmmUFwcs/A==
+ bh=X+SVmunytF6+GF3Pj/HA4/SoInC8aZpfSxK/8Ql8K5A=;
+ b=Tqe/IzBanziyETfogE+0Lv26KWBmAkREBk6cqAW2Sf2H6W3e93DFDI1OYao8KfdC0Cs1SC/T6Vw2V9LoX09OKw7NLgQz76DwRUv/Wqy5ga2mGSjjrAVXE9oZ4e0IqUD8ofxY6EieDOy1euqzjq38EQ8Tw1KP/2Fqzx2+L1TjWQxWf/oAa290t9GScBlVI3wDNNlzTO3HF9KGRM9XcW04ez57HGtZYO45sXp1fIsARuMHx/WAWUx/0GjXaqY0lq2bFABg5MC6SRDL9Xx9UeSl0c+IsbkccCAP7v1GLzFoCoiop+MNeLwNjaaM+IhURzw+A3SHMgNR+e/skKwdXbFymg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
  dkim=pass header.d=cypress.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BMmeJhq8cVm18APXEJqjyDDjf/ynFwRURp3iakrr+nI=;
- b=UD84f3t4M6zYqmf8SBaOKh6gu1WL8K2O30ukSDpSnh9aNFNxdDiNEhT3VDwajzRZCzJtA3qXZrIut0uowdFiv/WUTj4qx0nVjATa+RiHkOZoenCql48WW226l6pM6X9K01jBaWMaX8pHBXYZr870WZbJVTMF0AZM0+4JQnK4IZc=
+ bh=X+SVmunytF6+GF3Pj/HA4/SoInC8aZpfSxK/8Ql8K5A=;
+ b=Ztnvvo1wBRg9J+5C++0RP6KBxVtXde4drMW/OuNuVLj6JddxVWyiA/7ku1UJ0rwTzm0W94i/iPz3jkkN8FlgfTUcYU4FdybyqO7s0l3lTTZaLM3R5EwCc49Yc930x1j/3wBEJRDU/pUcWTaxn7OkgubfPT8eC394vRoYVF+jH1c=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none
  header.from=cypress.com;
@@ -45,11 +45,11 @@ Received: from BYAPR06MB4901.namprd06.prod.outlook.com (2603:10b6:a03:7a::30)
  by BYAPR06MB4549.namprd06.prod.outlook.com (2603:10b6:a03:4d::31) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Thu, 18 Jun
- 2020 16:07:54 +0000
+ 2020 16:07:57 +0000
 Received: from BYAPR06MB4901.namprd06.prod.outlook.com
  ([fe80::b972:c25d:c8fc:fc0e]) by BYAPR06MB4901.namprd06.prod.outlook.com
  ([fe80::b972:c25d:c8fc:fc0e%7]) with mapi id 15.20.3088.029; Thu, 18 Jun 2020
- 16:07:54 +0000
+ 16:07:57 +0000
 From:   Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
@@ -58,11 +58,11 @@ Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Soontak Lee <soontak.lee@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH 1/3] brcmfmac: Fix for unable to return to visible SSID
-Date:   Thu, 18 Jun 2020 11:07:37 -0500
-Message-Id: <20200618160739.21457-2-chi-hsien.lin@cypress.com>
+        Able Liao <Able.Liao@cypress.com>,
+        Chi-hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH 3/3] brcmfmac: do not disconnect for disassoc frame from unconnected AP
+Date:   Thu, 18 Jun 2020 11:07:39 -0500
+Message-Id: <20200618160739.21457-4-chi-hsien.lin@cypress.com>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200618160739.21457-1-chi-hsien.lin@cypress.com>
 References: <20200618160739.21457-1-chi-hsien.lin@cypress.com>
@@ -73,72 +73,66 @@ X-ClientProxiedBy: BYAPR08CA0051.namprd08.prod.outlook.com
  (2603:10b6:a03:7a::30)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from aremote02.aus.cypress.com (12.110.209.245) by BYAPR08CA0051.namprd08.prod.outlook.com (2603:10b6:a03:117::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22 via Frontend Transport; Thu, 18 Jun 2020 16:07:53 +0000
+Received: from aremote02.aus.cypress.com (12.110.209.245) by BYAPR08CA0051.namprd08.prod.outlook.com (2603:10b6:a03:117::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22 via Frontend Transport; Thu, 18 Jun 2020 16:07:55 +0000
 X-Mailer: git-send-email 2.25.0
 X-Originating-IP: [12.110.209.245]
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: ac1eaa66-9867-47c6-f134-08d813a1c1d7
+X-MS-Office365-Filtering-Correlation-Id: 2b0bb82a-bf46-423b-1486-08d813a1c3c2
 X-MS-TrafficTypeDiagnostic: BYAPR06MB4549:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BYAPR06MB45490CB7D9BFFACFD8EE02E7BB9B0@BYAPR06MB4549.namprd06.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:605;
+X-Microsoft-Antispam-PRVS: <BYAPR06MB4549260FCCD8B957227B91B8BB9B0@BYAPR06MB4549.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2000;
 X-Forefront-PRVS: 0438F90F17
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: T+0UiwDHuVF0m4TNbtCvQT+Q+Itl6NCQqkNLQyTyqDuHkk1C0u29wjilz3wi+adPMBCxCUxjYploYRpttlOJPY3n9J3jWooz/S2khpMAc6b1tG6o5LM9Kz4fkhhXpzXqImlbFxJmr+T1vFQMTCo1MKztYRRprsEBJrkivFRoLKeQ4oJtJNo9/eGrWQm1JhSGY5UiZF6KndIhI8G1C8x/n2YOZA9pjAwV49IdyVPmYuW20cY6ZPmIktWiR2JAhOPJZlkOouEYpujj4QcrAHxaT0Myy+89nwdIJNFXeQig1beRqXnfNKFulhDYqmDdzNhHEgynt968Jf3HBVUNo7MEoA==
+X-Microsoft-Antispam-Message-Info: plV7UwlsRsvpftohrOD5hdlucMO2h1AHQygEuf0ZIkbv83bUsYOtPiejb0eWLdt+k63LJoZ/Aj4xMkToSyyoVrszlEikSRXYj4SQFZ8BB/T3wkQOeSGGg7HNqVIzw7oIvPYgeyTZMGlrqCYxDnPyCdW8hz+U0U48qEM0vNWrbgOsl8EzqFjs+DBRIQ3bsfdSVFuHZ2BURnKaG03VW3daVVgswXWv0KVq12ugb3S2d0HqTtyCzjBAZa+E6yaSckYGwXQWeOEQlQ5OwMYozobZBk6h+gTkZ57161jxNmy7Pwu+UpCJaDa/XCz8NHMdLYbjm0cCabzoJkZfeo0qfM8zzQ==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR06MB4901.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(346002)(376002)(136003)(396003)(39860400002)(107886003)(5660300002)(316002)(86362001)(6666004)(16526019)(186003)(4326008)(1076003)(54906003)(26005)(66946007)(2616005)(6916009)(8676002)(6486002)(7696005)(66476007)(478600001)(66556008)(36756003)(83380400001)(956004)(2906002)(8936002)(52116002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: qiQOwBiiNLZhptf8AAqaTRUaMTAjlwNXUAfoxlO9GzZZjOOp+TTL2eLLlanTscDSJ8LNDhhLYnv4m17wHYEGrKiFgV9kfF2uL3Q/jxdd6U6XT9eeeEBGJHq6bAPlpwkN4BRwKNFLG26IjtJYETaVsitLmPngNKPxznCffXqAKWdb/qCy9+FNfYZ04J2KD6nVaoX8JIpMEyhrxCPL+c9eShCixQpRCbvV/eaxmNP2gUUchZhDmGfgkEgBFIV+AauMHEut8k4rCzDewSopc6zBr1mSjeXxyurZqdvVEiKjhkCubpdJasZT7/2NXu8WzLnBaVOs8Plhgsps4aG70TFJV8YEY00hvxtwfRVsHA8vR4nhbdxYIL/Okd1iBWYYwu854vHpGicVlqdKqmj9jknja97/fAki99TcqM1cCVRUcKkDms5H1ON79Jgn6uXHS7K7d/UX7wPf+FbCtoozFgSqyCQR4oQ2+99oCLYBTVnC0H9kO52sr0xaBloKbjNFcMKV
+X-MS-Exchange-AntiSpam-MessageData: HHXVPzBYiR5eAeLBqe106C8VX/qg9XYpBEP0qijLxHvjHQAvo1sKzNIg90HqVak+wCMyoftDzEJ++3u5rw6ZxnGPHpYCZSQSf3rxQYJdsT5AIaDKzlTd4zC3qdQrrgkbh7uLzb/IXnkdIJgtHICF8heo0K8zY7exnwSbh24AcMIL3tPvQlHHK6lda2BTBvY5pGXmBeXgRxbjOkLDu03RWCRJJ914u7VdBtVK4GNVxUNGwLdm+/dnldUWjVc9SpthmWeu9p1bQdFgmWAnZ+DEx6huwAX7OWrsvaVF4hJCEXtunTRbOSE8GSnJQfOkr/mv6VicdH8MlWbjaSo3GWHMhm7Dt6vAy8rcOQQKkVtqJep1c7wq2Tx60Q6eENcJTA6RfnardO+sfKPHXM3wqRDH0aHIfegH8KHiqPsS2LbmRvvBefA98akLOdknkDouLKQ1V2XWsRjkLd9g7eGN2Vryt2xWuU3IirbP30bRaPrB7ZMqEyd91ALBZKzWOyIn+Xmm
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac1eaa66-9867-47c6-f134-08d813a1c1d7
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2020 16:07:54.2138
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b0bb82a-bf46-423b-1486-08d813a1c3c2
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2020 16:07:57.5859
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /8m2FBl8CFRa66Q8hzR74Tl/WqSCkI8azcG/Di+JMPZ//FF6phXRaNF3tbGPOOX8uqeuAPWrPRHAkGmCmNMT7A==
+X-MS-Exchange-CrossTenant-UserPrincipalName: axhf3Q/b8tJM5AeWq3PbabHoYt5KGRNsayl2tstbzJns8ztmLQsUawW6CS9RifA2opDaZw1NSsruXVKkX9ZQrg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR06MB4549
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Soontak Lee <soontak.lee@cypress.com>
+From: Able Liao <Able.Liao@cypress.com>
 
-Unable to change back to visiable SSID because there is
-no disable hidden ssid routine.
+Ignore FW event if the event's BSSID is different form the BSSID of the
+currently connected AP. Check interface state is connected or not, if
+state is not connected that can ignore link down event.
 
-Signed-off-by: Soontak Lee <soontak.lee@cypress.com>
-Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Signed-off-by: Able Liao <Able.Liao@cypress.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index a757abd7a599..d3d1100d56a7 100644
+index 4717867949bb..ac28fb943471 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4835,12 +4835,14 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			goto exit;
- 		}
- 
--		if (settings->hidden_ssid) {
--			err = brcmf_fil_iovar_int_set(ifp, "closednet", 1);
--			if (err) {
--				bphy_err(drvr, "closednet error (%d)\n", err);
--				goto exit;
--			}
-+		err = brcmf_fil_iovar_int_set(ifp, "closednet",
-+					      settings->hidden_ssid);
-+		if (err) {
-+			bphy_err(drvr, "%s closednet error (%d)\n",
-+				 settings->hidden_ssid ?
-+				 "enabled" : "disabled",
-+				 err);
-+			goto exit;
- 		}
- 
- 		brcmf_dbg(TRACE, "AP mode configuration complete\n");
+@@ -6027,7 +6027,12 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 		brcmf_net_setcarrier(ifp, true);
+ 	} else if (brcmf_is_linkdown(e)) {
+ 		brcmf_dbg(CONN, "Linkdown\n");
+-		if (!brcmf_is_ibssmode(ifp->vif)) {
++		if (!brcmf_is_ibssmode(ifp->vif) &&
++		    test_bit(BRCMF_VIF_STATUS_CONNECTED,
++			     &ifp->vif->sme_state)) {
++			if (memcmp(profile->bssid, e->addr, ETH_ALEN))
++				return err;
++
+ 			brcmf_bss_connect_done(cfg, ndev, e, false);
+ 			brcmf_link_down(ifp->vif,
+ 					brcmf_map_fw_linkdown_reason(e),
 -- 
 2.25.0
 
