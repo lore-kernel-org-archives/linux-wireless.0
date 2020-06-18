@@ -2,268 +2,311 @@ Return-Path: <SRS0=fa1V=77=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1FDC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 06:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FADFC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 09:06:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52C812100A
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 06:22:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E39AE214DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Jun 2020 09:06:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="eoBFUJzu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QtMvigq4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbgFRGWJ (ORCPT
+        id S1728945AbgFRJGK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Jun 2020 02:22:09 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:39380 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726964AbgFRGWJ (ORCPT
+        Thu, 18 Jun 2020 05:06:10 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:37338 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728406AbgFRJGG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jun 2020 02:22:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1592461327; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=mHyqyuE7hqO5EXa14HY9Qt6B/ijgFCavBKLTuZne2HM=; b=eoBFUJzuf/lPxCL3sT0ihNtbvlmdVQNVj4MjtQ478O7Ifx4m7O9xRa8fMXD2WsJL6mrabWI8
- giAusywWMndBpDwJurL+1/99ir1iFgDlexwQed+1JmZf7/1holPogNoLBoeE4/XBugKpw71k
- flP4TOkSqfie156AMwgMxuh5yhc=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
- 5eeb0805e144dd51152627cf (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 18 Jun 2020 06:21:57
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id ECDCCC433C9; Thu, 18 Jun 2020 06:21:56 +0000 (UTC)
-Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DD121C433CA;
-        Thu, 18 Jun 2020 06:21:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DD121C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=alokad@codeaurora.org
-From:   Aloka Dixit <alokad@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Aloka Dixit <alokad@codeaurora.org>
-Subject: [PATCH v2 1/2] nl80211: Unsolicited broadcast probe response support
-Date:   Wed, 17 Jun 2020 23:21:49 -0700
-Message-Id: <20200618062150.21130-2-alokad@codeaurora.org>
-X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20200618062150.21130-1-alokad@codeaurora.org>
-References: <20200618062150.21130-1-alokad@codeaurora.org>
+        Thu, 18 Jun 2020 05:06:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592471163;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=8+6yu/x63A8JNPDDG24GnqbRutaJYdNpzGAAuIIzQpc=;
+        b=QtMvigq4BClEFInUvj7/tWyXG02xAoguZ0g7gLTKrEW0fNOqgkI4q2mt4MZZyGbDSF0pYM
+        43I5GIqoNrpJPA5HGmjTj7iotyR/NdWV+5Rg8bS9RHNBiTxiiHTtwbYjOQG7YOyQqZOfsz
+        hFfur3bq0sE2jTjAkGtSHkfgOwlaaw0=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-436-bqJz4YdJP-SrdQQS1a59Qw-1; Thu, 18 Jun 2020 05:06:01 -0400
+X-MC-Unique: bqJz4YdJP-SrdQQS1a59Qw-1
+Received: by mail-ej1-f69.google.com with SMTP id g6so1054742ejo.18
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2020 02:06:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:content-transfer-encoding;
+        bh=8+6yu/x63A8JNPDDG24GnqbRutaJYdNpzGAAuIIzQpc=;
+        b=lo3v5urVTJfTa2NAYqZcxizoSNNEndwNA5epNZPrXj3KIZitjeEbDrr9Kh0w1DOD5h
+         UMLWtGaBbY1ppoJuZ5yjFH3Up/bORPpiTZVJZgQp3JDU2GLRkw7/4krsUASlFlRG0P/B
+         LtPhe79UQcU1ZTMMh9p7fzqmqh1lewHe8oU+0tbX9hkWFpez68F/IAANbaj5WooT2kRW
+         Gg8Lf/3vEUgif7traQaRHhAE23sGlkbS3hm9aBjR4vDGxDF4fwkKnca7WiVdnHeZJ/lB
+         wn4rFTEBowCZt+uhYcNOx4WPMSbMvb5d15CUAMzBpClK9zzdRpQr+klofN4RlbiFlEBf
+         TDyw==
+X-Gm-Message-State: AOAM531BjOUxr/IUvr3G74N1jefMJ3HgV/YTW0AUwocT9YNkeXIJcE6I
+        xjixTK5UhTDXZ2fHRWP7EpRydFQxZ71v+OmQ9M+s91rzWdaGZw/5HgJYImGQFxWqkOed5E7rwRA
+        QboTlPPM+8s0y4jVpn5kb8550XMo=
+X-Received: by 2002:a50:e14e:: with SMTP id i14mr2926292edl.279.1592471158863;
+        Thu, 18 Jun 2020 02:05:58 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz2wUOr8xyEWG9/PeDteraN07me4t//OcPVrYa6R1sI8XQ69VG5AHblLgBb8E5pIcRlchzffw==
+X-Received: by 2002:a50:e14e:: with SMTP id i14mr2926264edl.279.1592471158493;
+        Thu, 18 Jun 2020 02:05:58 -0700 (PDT)
+Received: from localhost (home.natalenko.name. [151.237.229.131])
+        by smtp.gmail.com with ESMTPSA id bt11sm1639299edb.48.2020.06.18.02.05.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Jun 2020 02:05:57 -0700 (PDT)
+Date:   Thu, 18 Jun 2020 11:05:56 +0200
+From:   Oleksandr Natalenko <oleksandr@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, Ryder Lee <ryder.lee@mediatek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: mt7612 suspend/resume issue
+Message-ID: <20200618090556.pepjdbnba2gqzcbe@butterfly.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds new attributes to support FILS unsolicited broadcast
-probe response transmission used for in-band
-discovery in 6GHz band (IEEE P802.11ax/D6.0 26.17.2.3.2, AP behavior for
-fast passive scanning).
-The new attribute, NL80211_ATTR_UNSOL_BCAST_PROBE_RESP, is nested which
-supports following parameters:
-(1) NL80211_UNSOL_BCAST_PROBE_RESP_INT - Packet interval
-(2) NL80211_UNSOL_BCAST_PROBE_RESP_TMPL - Template data
+Hello, Lorenzo et al.
 
-Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
----
-v2: Removed flag for 'enable', and changed frequency for 6GHz as per
-    IEEE P802.11ax/D6.1.
+I'm using MT7612 mini-PCIE cards as both AP in a home server and as a clien=
+t in
+a laptop. The AP works perfectly (after some fixing from your side; thanks =
+for
+that!), and so does the client modulo it has issues during system resume.
 
- include/net/cfg80211.h       | 18 +++++++++++++
- include/uapi/linux/nl80211.h | 32 ++++++++++++++++++++++
- net/wireless/nl80211.c       | 51 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 101 insertions(+)
+So, the card is installed in my aging Dell Vostro 3360. The system always
+suspends fine, but on resume this can happen occasionally:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc7e8807838d..884050bf5c74 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1047,6 +1047,22 @@ struct cfg80211_acl_data {
- 	struct mac_address mac_addrs[];
- };
- 
-+/**
-+ * struct cfg80211_unsol_bcast_probe_resp - Unsolicited broadcast probe
-+ *	response parameters in 6GHz.
-+ *
-+ * @interval: Packet interval in TUs. Maximum allowed is 20 TU, as mentioned
-+ *	in IEEE P802.11ax/D6.0 26.17.2.3.2 - AP behavior for fast passive
-+ *	scanning
-+ * @tmpl_len: Template length
-+ * @tmpl: Template data for probe response
-+ */
-+struct cfg80211_unsol_bcast_probe_resp {
-+	u32 interval;
-+	size_t tmpl_len;
-+	const u8 *tmpl;
-+};
-+
- /**
-  * enum cfg80211_ap_settings_flags - AP settings flags
-  *
-@@ -1094,6 +1110,7 @@ enum cfg80211_ap_settings_flags {
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_bss_color: BSS Color settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-+ * @unsol_bcast_probe_resp: Unsolicited broadcast probe response parameters
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -1124,6 +1141,7 @@ struct cfg80211_ap_settings {
- 	u32 flags;
- 	struct ieee80211_he_obss_pd he_obss_pd;
- 	struct cfg80211_he_bss_color he_bss_color;
-+	struct cfg80211_unsol_bcast_probe_resp unsol_bcast_probe_resp;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4e6339ab1fce..e65aa9f21b02 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2505,6 +2505,10 @@ enum nl80211_commands {
-  * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
-  *	association request when used with NL80211_CMD_NEW_STATION).
-  *
-+ * @NL80211_ATTR_UNSOL_BCAST_PROBE_RESP: Optional parameter to configure
-+ *	unsolicited broadcast probe response. It is a nested attribute, see
-+ *	&enum nl80211_unsol_bcast_probe_resp_attributes.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2987,6 +2991,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_HE_6GHZ_CAPABILITY,
- 
-+	NL80211_ATTR_UNSOL_BCAST_PROBE_RESP,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -6922,4 +6928,30 @@ enum nl80211_iftype_akm_attributes {
- 	NL80211_IFTYPE_AKM_ATTR_MAX = __NL80211_IFTYPE_AKM_ATTR_LAST - 1,
- };
- 
-+/**
-+ * enum nl80211_unsol_bcast_probe_resp_attributes - Unsolicited broadcast probe
-+ *	response configuration. Applicable only in 6GHz.
-+ *
-+ * @__NL80211_FILS_DISC_BCAST_PRESP_INVALID: Invalid
-+ *
-+ * @NL80211_UNSOL_BCAST_PROBE_RESP_INT: Maximum packet interval (u32, TU).
-+ *	Allowed range: 0..20 (TU = Time Unit). IEEE P802.11ax/D6.0
-+ *	26.17.2.3.2 (AP behavior for fast passive scanning.
-+ * @NL80211_UNSOL_BCAST_PROBE_RESP_TMPL: Unsolicited broadcast probe response
-+ *	frame template (binary).
-+ *
-+ * @__NL80211_UNSOL_BCAST_PROBE_RESP_LAST: Internal
-+ * @NL80211_UNSOL_BCAST_PROBE_RESP_MAX: highest attribute
-+ */
-+enum nl80211_unsol_bcast_probe_resp_attributes {
-+	__NL80211_UNSOL_BCAST_PROBE_RESP_INVALID,
-+
-+	NL80211_UNSOL_BCAST_PROBE_RESP_INT,
-+	NL80211_UNSOL_BCAST_PROBE_RESP_TMPL,
-+
-+	/* keep last */
-+	__NL80211_UNSOL_BCAST_PROBE_RESP_LAST,
-+	NL80211_UNSOL_BCAST_PROBE_RESP_MAX =
-+		__NL80211_UNSOL_BCAST_PROBE_RESP_LAST - 1
-+};
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 263ae395ad44..4ecced79b394 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -338,6 +338,13 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
- 	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
- };
- 
-+static const struct nla_policy
-+unsol_bcast_probe_resp_policy[NL80211_UNSOL_BCAST_PROBE_RESP_MAX + 1] = {
-+	[NL80211_UNSOL_BCAST_PROBE_RESP_INT] = NLA_POLICY_MAX(NLA_U32, 20),
-+	[NL80211_UNSOL_BCAST_PROBE_RESP_TMPL] = { .type = NLA_BINARY,
-+						  .len = IEEE80211_MAX_DATA_LEN }
-+};
-+
- static const struct nla_policy
- nl80211_tid_config_attr_policy[NL80211_TID_CONFIG_ATTR_MAX + 1] = {
- 	[NL80211_TID_CONFIG_ATTR_VIF_SUPP] = { .type = NLA_U64 },
-@@ -658,6 +665,9 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 		.type = NLA_EXACT_LEN,
- 		.len = sizeof(struct ieee80211_he_6ghz_capa),
- 	},
-+
-+	[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP] =
-+		NLA_POLICY_NESTED(unsol_bcast_probe_resp_policy),
- };
- 
- /* policy for the key attributes */
-@@ -4721,6 +4731,39 @@ static int nl80211_parse_he_bss_color(struct nlattr *attrs,
- 	return 0;
- }
- 
-+static int
-+nl80211_parse_unsol_bcast_probe_resp(struct nlattr *attrs,
-+				     struct cfg80211_ap_settings *params)
-+{
-+	struct nlattr *tmpl;
-+	struct nlattr *tb[NL80211_UNSOL_BCAST_PROBE_RESP_MAX + 1];
-+	int ret;
-+	struct cfg80211_unsol_bcast_probe_resp *presp =
-+					&params->unsol_bcast_probe_resp;
-+
-+	if (params->chandef.center_freq1 <= 5950 ||
-+	    params->chandef.center_freq1 >= 7115)
-+		return -EOPNOTSUPP;
-+
-+	ret = nla_parse_nested(tb, NL80211_UNSOL_BCAST_PROBE_RESP_MAX, attrs,
-+			       unsol_bcast_probe_resp_policy, NULL);
-+	if (ret)
-+		return ret;
-+
-+	if (!tb[NL80211_UNSOL_BCAST_PROBE_RESP_INT])
-+		return -EINVAL;
-+
-+	presp->interval = nla_get_u32(tb[NL80211_UNSOL_BCAST_PROBE_RESP_INT]);
-+
-+	tmpl = tb[NL80211_UNSOL_BCAST_PROBE_RESP_TMPL];
-+	if (tmpl) {
-+		presp->tmpl = nla_data(tmpl);
-+		presp->tmpl_len = nla_len(tmpl);
-+	}
-+
-+	return 0;
-+}
-+
- static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- 					    const u8 *rates)
- {
-@@ -5027,6 +5070,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP]) {
-+		err = nl80211_parse_unsol_bcast_probe_resp(
-+			info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP],
-+			&params);
-+		if (err)
-+			return err;
-+	}
-+
- 	nl80211_calculate_ap_params(&params);
- 
- 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
--- 
-2.25.0
+=3D=3D=3D
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: MCU message 2 (seq=
+ 11) timed out
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: MCU message 30 (se=
+q 12) timed out
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: MCU message 30 (se=
+q 13) timed out
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: Firmware Version: =
+0.0.00
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: Build: 1
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: Build Time: 201507=
+311614____
+=C4=8Den 15 20:21:07 spock kernel: mt76x2e 0000:01:00.0: Firmware running!
+=C4=8Den 15 20:21:07 spock kernel: ieee80211 phy0: Hardware restart was req=
+uested
+=C4=8Den 15 20:21:08 spock kernel: mt76x2e 0000:01:00.0: MCU message 2 (seq=
+ 1) timed out
+=C4=8Den 15 20:21:09 spock kernel: mt76x2e 0000:01:00.0: MCU message 30 (se=
+q 2) timed out
+=C4=8Den 15 20:21:10 spock kernel: mt76x2e 0000:01:00.0: MCU message 30 (se=
+q 3) timed out
+=C4=8Den 15 20:21:10 spock kernel: mt76x2e 0000:01:00.0: Firmware Version: =
+0.0.00
+=C4=8Den 15 20:21:10 spock kernel: mt76x2e 0000:01:00.0: Build: 1
+=C4=8Den 15 20:21:10 spock kernel: mt76x2e 0000:01:00.0: Build Time: 201507=
+311614____
+=C4=8Den 15 20:21:10 spock kernel: mt76x2e 0000:01:00.0: Firmware running!
+=C4=8Den 15 20:21:10 spock kernel: ieee80211 phy0: Hardware restart was req=
+uested
+=C4=8Den 15 20:21:11 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 5) timed out
+=C4=8Den 15 20:21:12 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 6) timed out
+=C4=8Den 15 20:21:13 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 7) timed out
+=C4=8Den 15 20:21:14 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 8) timed out
+=C4=8Den 15 20:21:15 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 9) timed out
+=C4=8Den 15 20:21:16 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 10) timed out
+=C4=8Den 15 20:21:17 spock kernel: mt76x2e 0000:01:00.0: MCU message 31 (se=
+q 11) timed out
+=C4=8Den 15 20:21:17 spock kernel: mt76x2e 0000:01:00.0: Firmware Version: =
+0.0.00
+=C4=8Den 15 20:21:17 spock kernel: mt76x2e 0000:01:00.0: Build: 1
+=C4=8Den 15 20:21:17 spock kernel: mt76x2e 0000:01:00.0: Build Time: 201507=
+311614____
+=C4=8Den 15 20:21:17 spock kernel: mt76x2e 0000:01:00.0: Firmware running!
+=C4=8Den 15 20:21:17 spock kernel: ieee80211 phy0: Hardware restart was req=
+uested
+=C4=8Den 15 20:21:18 spock kernel: ------------[ cut here ]------------
+=C4=8Den 15 20:21:18 spock kernel: WARNING: CPU: 3 PID: 11956 at net/mac802=
+11/util.c:2270 ieee80211_reconfig+0x234/0x1700 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: Modules linked in: pl2303 md4 nls_utf8 c=
+ifs dns_resolver fscache libdes cmac ccm bridge stp llc nft_ct nf_conntrack=
+ nf_defrag_ipv6 nf_defrag_ipv4 nf_tables tun nfnetlink msr nls_iso8859_1 nl=
+s_cp437 vfat fat snd_hda_codec_hdmi mt76x2e snd_hda_codec_cirrus snd_hda_co=
+dec_generic mt76x2_common mt76x02_lib mt76 snd_hda_intel intel_rapl_msr snd=
+_intel_dspcfg mei_hdcp dell_wmi iTCO_wdt mac80211 iTCO_vendor_support intel=
+_rapl_common sparse_keymap wmi_bmof snd_hda_codec x86_pkg_temp_thermal rtsx=
+_usb_ms intel_powerclamp dell_laptop coretemp ledtrig_audio dell_smbios mem=
+stick kvm_intel kvm snd_hda_core dell_wmi_descriptor dcdbas snd_hwdep dell_=
+smm_hwmon cfg80211 snd_pcm irqbypass mousedev intel_cstate psmouse joydev i=
+ntel_uncore intel_rapl_perf input_leds snd_timer i2c_i801 snd mei_me alx rf=
+kill mei libarc4 lpc_ich mdio soundcore battery wmi evdev mac_hid dell_smo8=
+800 ac tcp_bbr crypto_user ip_tables x_tables xfs dm_thin_pool dm_persisten=
+t_data dm_bio_prison dm_bufio libcrc32c
+=C4=8Den 15 20:21:18 spock kernel:  crc32c_generic dm_crypt hid_logitech_hi=
+dpp hid_logitech_dj hid_generic usbhid hid rtsx_usb_sdmmc mmc_core rtsx_usb=
+ dm_mod crct10dif_pclmul crc32_pclmul crc32c_intel raid10 ghash_clmulni_int=
+el serio_raw atkbd libps2 md_mod aesni_intel crypto_simd cryptd glue_helper=
+ xhci_pci xhci_hcd ehci_pci ehci_hcd i8042 serio i915 intel_gtt i2c_algo_bi=
+t drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops cec rc_core =
+drm agpgart
+=C4=8Den 15 20:21:18 spock kernel: CPU: 3 PID: 11956 Comm: kworker/3:1 Not =
+tainted 5.7.0-pf2 #1
+=C4=8Den 15 20:21:18 spock kernel: Hardware name: Dell Inc.          Vostro=
+ 3360/0F5DWF, BIOS A18 09/25/2013
+=C4=8Den 15 20:21:18 spock kernel: Workqueue: events_freezable ieee80211_re=
+start_work [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: RIP: 0010:ieee80211_reconfig+0x234/0x170=
+0 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: Code: 83 b8 0b 00 00 83 e0 fd 83 f8 04 7=
+4 e6 48 8b 83 90 04 00 00 a8 01 74 db 48 89 de 48 89 ef e8 03 dc fb ff 41 8=
+9 c7 85 c0 74 c9 <0f> 0b 48 8b 5b 08 4c 8b 24 24 48 3b 1c 24 75 12 e9 51 fe=
+ ff ff 48
+=C4=8Den 15 20:21:18 spock kernel: RSP: 0018:ffffb803c23ffdf0 EFLAGS: 00010=
+286
+=C4=8Den 15 20:21:18 spock kernel: RAX: 00000000fffffff0 RBX: ffff9595a7564=
+900 RCX: 0000000000000008
+=C4=8Den 15 20:21:18 spock kernel: RDX: 0000000000000000 RSI: 0000000000000=
+100 RDI: 0000000000000100
+=C4=8Den 15 20:21:18 spock kernel: RBP: ffff9595a7ec07e0 R08: 0000000000000=
+000 R09: 0000000000000001
+=C4=8Den 15 20:21:18 spock kernel: R10: 0000000000000001 R11: 0000000000000=
+000 R12: ffff9595a7ec18d0
+=C4=8Den 15 20:21:18 spock kernel: R13: 00000000ffffffff R14: 0000000000000=
+000 R15: 00000000fffffff0
+=C4=8Den 15 20:21:18 spock kernel: FS:  0000000000000000(0000) GS:ffff9595a=
+f2c0000(0000) knlGS:0000000000000000
+=C4=8Den 15 20:21:18 spock kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000=
+080050033
+=C4=8Den 15 20:21:18 spock kernel: CR2: 000055e56d7de000 CR3: 000000042200a=
+001 CR4: 00000000001706e0
+=C4=8Den 15 20:21:18 spock kernel: Call Trace:
+=C4=8Den 15 20:21:18 spock kernel:  ieee80211_restart_work+0xb7/0xe0 [mac80=
+211]
+=C4=8Den 15 20:21:18 spock kernel:  process_one_work+0x1d4/0x3c0
+=C4=8Den 15 20:21:18 spock kernel:  worker_thread+0x228/0x470
+=C4=8Den 15 20:21:18 spock kernel:  ? process_one_work+0x3c0/0x3c0
+=C4=8Den 15 20:21:18 spock kernel:  kthread+0x19c/0x1c0
+=C4=8Den 15 20:21:18 spock kernel:  ? __kthread_init_worker+0x30/0x30
+=C4=8Den 15 20:21:18 spock kernel:  ret_from_fork+0x35/0x40
+=C4=8Den 15 20:21:18 spock kernel: ---[ end trace d8e4d40f48014382 ]---
+=C4=8Den 15 20:21:18 spock kernel: ------------[ cut here ]------------
+=C4=8Den 15 20:21:18 spock kernel: wlp1s0:  Failed check-sdata-in-driver ch=
+eck, flags: 0x0
+=C4=8Den 15 20:21:18 spock kernel: WARNING: CPU: 3 PID: 11956 at net/mac802=
+11/driver-ops.h:17 drv_remove_interface+0x11f/0x130 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: Modules linked in: pl2303 md4 nls_utf8 c=
+ifs dns_resolver fscache libdes cmac ccm bridge stp llc nft_ct nf_conntrack=
+ nf_defrag_ipv6 nf_defrag_ipv4 nf_tables tun nfnetlink msr nls_iso8859_1 nl=
+s_cp437 vfat fat snd_hda_codec_hdmi mt76x2e snd_hda_codec_cirrus snd_hda_co=
+dec_generic mt76x2_common mt76x02_lib mt76 snd_hda_intel intel_rapl_msr snd=
+_intel_dspcfg mei_hdcp dell_wmi iTCO_wdt mac80211 iTCO_vendor_support intel=
+_rapl_common sparse_keymap wmi_bmof snd_hda_codec x86_pkg_temp_thermal rtsx=
+_usb_ms intel_powerclamp dell_laptop coretemp ledtrig_audio dell_smbios mem=
+stick kvm_intel kvm snd_hda_core dell_wmi_descriptor dcdbas snd_hwdep dell_=
+smm_hwmon cfg80211 snd_pcm irqbypass mousedev intel_cstate psmouse joydev i=
+ntel_uncore intel_rapl_perf input_leds snd_timer i2c_i801 snd mei_me alx rf=
+kill mei libarc4 lpc_ich mdio soundcore battery wmi evdev mac_hid dell_smo8=
+800 ac tcp_bbr crypto_user ip_tables x_tables xfs dm_thin_pool dm_persisten=
+t_data dm_bio_prison dm_bufio libcrc32c
+=C4=8Den 15 20:21:18 spock kernel:  crc32c_generic dm_crypt hid_logitech_hi=
+dpp hid_logitech_dj hid_generic usbhid hid rtsx_usb_sdmmc mmc_core rtsx_usb=
+ dm_mod crct10dif_pclmul crc32_pclmul crc32c_intel raid10 ghash_clmulni_int=
+el serio_raw atkbd libps2 md_mod aesni_intel crypto_simd cryptd glue_helper=
+ xhci_pci xhci_hcd ehci_pci ehci_hcd i8042 serio i915 intel_gtt i2c_algo_bi=
+t drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops cec rc_core =
+drm agpgart
+=C4=8Den 15 20:21:18 spock kernel: CPU: 3 PID: 11956 Comm: kworker/3:1 Tain=
+ted: G        W         5.7.0-pf2 #1
+=C4=8Den 15 20:21:18 spock kernel: Hardware name: Dell Inc.          Vostro=
+ 3360/0F5DWF, BIOS A18 09/25/2013
+=C4=8Den 15 20:21:18 spock kernel: Workqueue: events_freezable ieee80211_re=
+start_work [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: RIP: 0010:drv_remove_interface+0x11f/0x1=
+30 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel: Code: a0 27 d2 da e9 4b ff ff ff 48 8b 8=
+6 78 04 00 00 48 8d b6 98 04 00 00 48 c7 c7 e8 1f f7 c0 48 85 c0 48 0f 45 f=
+0 e8 59 fe db da <0f> 0b 5b 5d 41 5c c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f=
+ 44 00 00
+=C4=8Den 15 20:21:18 spock kernel: RSP: 0018:ffffb803c23ffc80 EFLAGS: 00010=
+282
+=C4=8Den 15 20:21:18 spock kernel: RAX: 0000000000000000 RBX: ffff9595a7564=
+900 RCX: 0000000000000000
+=C4=8Den 15 20:21:18 spock kernel: RDX: 0000000000000001 RSI: 0000000000000=
+082 RDI: 00000000ffffffff
+=C4=8Den 15 20:21:18 spock kernel: RBP: ffff9595a7ec1930 R08: 0000000000000=
+4b6 R09: 0000000000000001
+=C4=8Den 15 20:21:18 spock kernel: R10: 0000000000000001 R11: 0000000000006=
+f08 R12: ffff9595a7ec1000
+=C4=8Den 15 20:21:18 spock kernel: R13: ffff9595a75654b8 R14: ffff9595a7ec0=
+ca0 R15: ffff9595a7ec07e0
+=C4=8Den 15 20:21:18 spock kernel: FS:  0000000000000000(0000) GS:ffff9595a=
+f2c0000(0000) knlGS:0000000000000000
+=C4=8Den 15 20:21:18 spock kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000=
+080050033
+=C4=8Den 15 20:21:18 spock kernel: CR2: 000055e56d7de000 CR3: 000000042200a=
+001 CR4: 00000000001706e0
+=C4=8Den 15 20:21:18 spock kernel: Call Trace:
+=C4=8Den 15 20:21:18 spock kernel:  ieee80211_do_stop+0x5af/0x8c0 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel:  ieee80211_stop+0x16/0x20 [mac80211]
+=C4=8Den 15 20:21:18 spock kernel:  __dev_close_many+0xaa/0x120
+=C4=8Den 15 20:21:18 spock kernel:  dev_close_many+0xa1/0x2b0
+=C4=8Den 15 20:21:18 spock kernel:  dev_close+0x6d/0x90
+=C4=8Den 15 20:21:18 spock kernel:  cfg80211_shutdown_all_interfaces+0x71/0=
+xd0 [cfg80211]
+=C4=8Den 15 20:21:18 spock kernel:  ieee80211_reconfig+0xa2/0x1700 [mac8021=
+1]
+=C4=8Den 15 20:21:18 spock kernel:  ieee80211_restart_work+0xb7/0xe0 [mac80=
+211]
+=C4=8Den 15 20:21:18 spock kernel:  process_one_work+0x1d4/0x3c0
+=C4=8Den 15 20:21:18 spock kernel:  worker_thread+0x228/0x470
+=C4=8Den 15 20:21:18 spock kernel:  ? process_one_work+0x3c0/0x3c0
+=C4=8Den 15 20:21:18 spock kernel:  kthread+0x19c/0x1c0
+=C4=8Den 15 20:21:18 spock kernel:  ? __kthread_init_worker+0x30/0x30
+=C4=8Den 15 20:21:18 spock kernel:  ret_from_fork+0x35/0x40
+=C4=8Den 15 20:21:18 spock kernel: ---[ end trace d8e4d40f48014383 ]---
+=3D=3D=3D
+
+The Wi-Fi becomes unusable from this point. If I `modprobe -r` the "mt76x2e=
+" module
+after this splat, the system hangs completely.
+
+If the system resumes fine, the resume itself takes quite some time (more t=
+han
+10 seconds).
+
+I've found a workaround for this, though. It seems the system behaves fine =
+if I
+do `modprobe -r mt76x2e` before it goes to sleep, and then `modprobe mt76x2=
+e`
+after resume. Also, the resume time improves greatly.
+
+I cannot say if it is some regression or not. I've installed the card
+just recently, and used it with v5.7 kernel series only.
+
+Do you have any idea what could go wrong and how to approach the issue?
+
+Thanks.
+
+--=20
+  Best regards,
+    Oleksandr Natalenko (post-factum)
+    Principal Software Maintenance Engineer
 
