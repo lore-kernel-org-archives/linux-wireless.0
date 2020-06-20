@@ -2,61 +2,60 @@ Return-Path: <SRS0=1Z/u=AB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D4FC433E4
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64557C433E2
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB18223137
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:30:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4345C2312F
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="j8nQ3B7F"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="KNzYUO4e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732972AbgFTDam (ORCPT
+        id S1733011AbgFTDbC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Jun 2020 23:30:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58250 "EHLO
+        Fri, 19 Jun 2020 23:31:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732861AbgFTDa0 (ORCPT
+        with ESMTP id S1733010AbgFTDay (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jun 2020 23:30:26 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81946C06125F
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id n2so4793230pld.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
+        Fri, 19 Jun 2020 23:30:54 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02488C0619DC
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:24 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id n2so4793298pld.13
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Fi8ab2CkfvIdd/5P+r0S5dxyJT2k4tSVWykkUvi99fU=;
-        b=j8nQ3B7FpehCsunpSEVQSYjhSIMs22zucCRygwZBlcD7nkUj3GKDredCjm7jP++dYB
-         i7TY+cL1cZ8JWvzIZIwoGoSA4hKFNbTalPofMuwWJS+BqEcADvjf61J9SbvMWxiL2Qla
-         oIQyEGAM0IVcrPLyW1oKnN6H6KktioV1Ny5ps=
+        bh=LXS1lS0MPNgS4WVNAlrLifcWTqk+ZnaP0JF9yck56S4=;
+        b=KNzYUO4ep4rSo36cd4JIipsr8ASXyCCE8oRhdqmyCQcuRLJ54mD8w7eqAHCckRiIrw
+         zeaxkRx9uGiqPdDalv+zlc8I0e8YcRGOpFBzI5ChxOgtMC4BYU3IZf3IjdWLPyBA6Rj4
+         DV1OCfy3eEHniZxll4RRMXN1skYl+SLO+aH1g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Fi8ab2CkfvIdd/5P+r0S5dxyJT2k4tSVWykkUvi99fU=;
-        b=jXoIgJxTCSy53bfdV5FzstJ/yLd7AuMeBBr6/E/UxZvlSciMePZ+lKip1kl67Ncvgo
-         CXtDsX46CXkTqKjG4bbJAv24BgbhYjEQiW3Lc1Efoclq5MdM12/h2aqj5ySU2nlgpzuH
-         dEWYPSbLNxdeh9ga6O6JQFtfRMBWRoTbJyIGRmaLSNb7YJwKviIE8j76OM2rok7kVGg4
-         6Wy+DJOiDH1LqlIkr8wp973boLspHs1/pB0JmMobdvzyCZDdyfnom5e7zNeO8tt0v9+C
-         R5+jyIqPEcFBXbppSQrBmEGfPGobPjcewkSCjy0dwDQ6OVSqIRojwu5VdAxZkm7cyCIp
-         vUng==
-X-Gm-Message-State: AOAM5304t0RKrkL+mYtBeyTkmUiV1EP6FLXaQMRYXpULjYdgrjXb1hIT
-        SQaJP9O2FSv+qopAQfZtnmWk4Q==
-X-Google-Smtp-Source: ABdhPJzKykKp69oTsLEAQ228A8aBga9uw6xzilqOJlYhvnET2ogoJrzcYkicI+7HggPAmmAR7pqRqg==
-X-Received: by 2002:a17:90b:3614:: with SMTP id ml20mr6333214pjb.41.1592623820052;
-        Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
+        bh=LXS1lS0MPNgS4WVNAlrLifcWTqk+ZnaP0JF9yck56S4=;
+        b=ZOtNdXWZcVGgLpyulauzZCHFvym8HXm6ZrsWAJOZWD3fO7vF9HQATPEvR1Zhd6U/il
+         c5BH20YK+DaLiIZ8LjYAbXo37KKfcFyRdg9lsz5lBlsjYgc4btn2uCE/CSs7D5yr+gAb
+         /siEOcc6TpIXMz/bkpVySI4ZxEROelhR9cVoot3VBiKMlQHd8nLYw3690FtgvQ1jCc8Z
+         2Kk1hUfWIJR6N4Tz3tHkFfyJOxzAvLYzC4i0NoW7KP943k5Atuuog8dM1CGNXQGvrW04
+         PELKI8H8V1pHHXqDM/X/AKOE1xww+7Tlhy6rPyTA0uWf/VAYp05XMC53mEN7fVXA6t8V
+         w/Og==
+X-Gm-Message-State: AOAM531Pg93MsLQbxI6H8fe/N1CkfgFgbDB+EKBulzqZWM6Tyspn0QQn
+        gih0DtReJpG7AZ7+br+nPSG8iA==
+X-Google-Smtp-Source: ABdhPJx80kRDNx563OHfs0qDYxTj+Nz7KdjHEYiCrGu68V9ia3oYlRYDFTGjYW28UCia8fkYF0XLCw==
+X-Received: by 2002:a17:90b:50d:: with SMTP id r13mr6472339pjz.94.1592623823547;
+        Fri, 19 Jun 2020 20:30:23 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id p19sm7198155pff.116.2020.06.19.20.30.16
+        by smtp.gmail.com with ESMTPSA id h8sm7134891pfo.67.2020.06.19.20.30.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Jun 2020 20:30:17 -0700 (PDT)
+        Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -71,9 +70,9 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-spi@vger.kernel.org, linux-mm@kvack.org,
         clang-built-linux@googlegroups.com
-Subject: [PATCH v2 01/16] docs: deprecated.rst: Add uninitialized_var()
-Date:   Fri, 19 Jun 2020 20:29:52 -0700
-Message-Id: <20200620033007.1444705-2-keescook@chromium.org>
+Subject: [PATCH v2 09/16] clk: spear: Remove uninitialized_var() usage
+Date:   Fri, 19 Jun 2020 20:30:00 -0700
+Message-Id: <20200620033007.1444705-10-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200620033007.1444705-1-keescook@chromium.org>
 References: <20200620033007.1444705-1-keescook@chromium.org>
@@ -84,43 +83,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Nothing should be using this macro, and the entire idea of tricking the
-compiler into silencing such warnings is a mistake.
+Using uninitialized_var() is dangerous as it papers over real bugs[1]
+(or can in the future), and suppresses unrelated compiler warnings (e.g.
+"unused variable"). If the compiler thinks it is uninitialized, either
+simply initialize the variable or make compiler changes. As a precursor
+to removing[2] this[3] macro[4], initialize "i" to zero. The compiler
+warning was not a false positive, since clk_pll_set_rate()'s call to
+clk_pll_round_rate_index() will always fail (since "prate" is NULL), so
+"i" was never being initialized.
 
+[1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
+[2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
+[3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
+[4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
+
+Fixes: 7d4998f71b29 ("clk: SPEAr: Vco-pll: Fix compilation warning")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- Documentation/process/deprecated.rst | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/clk/spear/clk-vco-pll.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/process/deprecated.rst b/Documentation/process/deprecated.rst
-index 652e2aa02a66..943a926ecbbb 100644
---- a/Documentation/process/deprecated.rst
-+++ b/Documentation/process/deprecated.rst
-@@ -51,6 +51,24 @@ to make sure their systems do not continue running in the face of
- "unreachable" conditions. (For example, see commits like `this one
- <https://git.kernel.org/linus/d4689846881d160a4d12a514e991a740bcb5d65a>`_.)
+diff --git a/drivers/clk/spear/clk-vco-pll.c b/drivers/clk/spear/clk-vco-pll.c
+index c08dec30bfa6..fed194169666 100644
+--- a/drivers/clk/spear/clk-vco-pll.c
++++ b/drivers/clk/spear/clk-vco-pll.c
+@@ -147,7 +147,7 @@ static int clk_pll_set_rate(struct clk_hw *hw, unsigned long drate,
+ 	struct clk_pll *pll = to_clk_pll(hw);
+ 	struct pll_rate_tbl *rtbl = pll->vco->rtbl;
+ 	unsigned long flags = 0, val;
+-	int uninitialized_var(i);
++	int i = 0;
  
-+uninitialized_var()
-+-------------------
-+For any compiler warnings about uninitialized variables, just add
-+an initializer. Using the uninitialized_var() macro (or similar
-+warning-silencing tricks) is dangerous as it papers over `real bugs
-+<https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/>`_
-+(or can in the future), and suppresses unrelated compiler warnings
-+(e.g. "unused variable"). If the compiler thinks it is uninitialized,
-+either simply initialize the variable or make compiler changes. Keep in
-+mind that in most cases, if an initialization is obviously redundant,
-+the compiler's dead-store elimination pass will make sure there are no
-+needless variable writes.
-+
-+As Linus has said, this macro
-+`must <https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/>`_
-+`be <https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/>`_
-+`removed <https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/>`_.
-+
- open-coded arithmetic in allocator arguments
- --------------------------------------------
- Dynamic size calculations (especially multiplication) should not be
+ 	clk_pll_round_rate_index(hw, drate, NULL, &i);
+ 
 -- 
 2.25.1
 
