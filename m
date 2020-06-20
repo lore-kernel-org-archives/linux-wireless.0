@@ -2,65 +2,63 @@ Return-Path: <SRS0=1Z/u=AB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA67C433E0
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:32:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76B73C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:32:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7CB523359
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:32:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52ED523371
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jun 2020 03:32:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Rutn4YPk"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NXIjEZzm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387506AbgFTDcV (ORCPT
+        id S1733077AbgFTDcf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Jun 2020 23:32:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58206 "EHLO
+        Fri, 19 Jun 2020 23:32:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733131AbgFTDbK (ORCPT
+        with ESMTP id S1733100AbgFTDbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jun 2020 23:31:10 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C1F8C0610E4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:26 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id i4so5297160pjd.0
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:26 -0700 (PDT)
+        Fri, 19 Jun 2020 23:31:02 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD1B6C061A03
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:25 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id a127so5357365pfa.12
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2020 20:30:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=I53/n5ydJ9yzbnxtmoDriMZB814XLzfic4sznaesD40=;
-        b=Rutn4YPkcmqXLdEaPjRwH0N9ohbI/CzpH9cf5y9vG4nYpAw1nQr5aBkVvJ5iC9ui6q
-         cLu5pHW/44+v6JlX39sxqMfNukxEy6S08EOmpnYgt90MBK4lvmz1Qm66oVfcHJZShxiQ
-         h7SFiaUV2yA5KII9Om+c9u+JdAg6xNa2K9JLA=
+        bh=7ExlyNd4C6Vtqo5InL4xGzXnaPAWUSdxdUBoxlRz8EM=;
+        b=NXIjEZzmAlY5fdC/DwXct9GYDHogfeUCrjSkTO4JXjF9UTv+cR2dEUWt3FWlTNaAHp
+         ArVHLS7GaAaX0GRdppC6MVL4iulBAnXl0RDRkmjEpohR99AIp9TcfcZKNXy8KweQ5j+M
+         qKbddjlMm6r/UiOtSlPQhvc966Inhn9BIPgP4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=I53/n5ydJ9yzbnxtmoDriMZB814XLzfic4sznaesD40=;
-        b=nuja8r5PRbde/xH39EHb8L9gtxOvRdt9aqShgl64WtuInNGrcdOHty0sTb1OEdm/mQ
-         OwXf9sgQlz7nfkeDNC7SFTahRLjO7TW0aWMlJ+19sGL7yvxyd28AZVwzIuGIfHY6Xgfh
-         OgoVZNDhJwvQoQ54bs8vxEl96l1eGqmg4YUYCsXOW50QcemXoc1IuR8moiaiM7BUl5Ic
-         DB8/P4zhmlxAxI21SIk5Ls41a7AxDAvf8vivHKOo1a/KCICTUN325KO7+1aiqosOtgzv
-         Z/hLkVHyxC2k6nfyiQ6vpv/WpW+L+6nZF/dkSpBxGPZXu+4TqN2n/6da9ntrWiwad6f5
-         rbQw==
-X-Gm-Message-State: AOAM530WYaCEvvee9lrBx3uFClDhEsdYHiTvWDuiDkRgclYU/WggKQds
-        0PlBx/WmuzUJ40p3DlGgVLLR+Q==
-X-Google-Smtp-Source: ABdhPJzDpg8kRLeVgrehMBlr+1UwoiUH6XXfWvLx404+vNnybEp9T2mmhskRjq6n4U4EQRsEK9B3AQ==
-X-Received: by 2002:a17:902:ff06:: with SMTP id f6mr10351618plj.22.1592623826055;
-        Fri, 19 Jun 2020 20:30:26 -0700 (PDT)
+        bh=7ExlyNd4C6Vtqo5InL4xGzXnaPAWUSdxdUBoxlRz8EM=;
+        b=UtmGdj1iI75m0WRH+MW1zgyc7XxVbn0QdG0u29X+aYjFeBOZf/5B1WSPqYG2WZSaI0
+         IyDtKJHAm6mR6f8ozgbkRWa6FIAJVrr/T7Gu/nACzuFejBenS/faWJ9dtrjVYZyGW+rL
+         ahDoHUwLTH1s8SGJlm1vbSL7i1wxrgpzw3mpY5qEEokRf1fu+003G1V60OiN6W/dVkKQ
+         y7E6PNw9lxnL6mfanSzPwV+s4qVFUvRelzK1p/MgqTL9zutqMADrHYkRgRXAw+0FC/Xe
+         FBCJhtBjPODWCX4ZojONB1uwYFxtm3ITGJRBViclJjq3APv300zM6g/HV0CDJtJZBOHI
+         Jbgg==
+X-Gm-Message-State: AOAM531wShmyhLeu+hkuw+dTSgvenGEx8jq6dceUDMkNvMcjg5X24O3Q
+        zJ0mkEjkgJddEY1J6m6muaz0AQ==
+X-Google-Smtp-Source: ABdhPJyAJ8Da6kpj1cpdp7acRpdjHPEasdxnBrzutMhIZjw6K4AKJtCbSzx12+H3IHWiTttzpZGpTg==
+X-Received: by 2002:a63:dd42:: with SMTP id g2mr5615212pgj.442.1592623825373;
+        Fri, 19 Jun 2020 20:30:25 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 17sm7373750pfn.19.2020.06.19.20.30.20
+        by smtp.gmail.com with ESMTPSA id n69sm7060385pjc.25.2020.06.19.20.30.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>, Jason Yan <yanaijie@huawei.com>,
-        Chao Yu <yuchao0@huawei.com>,
+Cc:     Kees Cook <keescook@chromium.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
         Alexander Potapenko <glider@google.com>,
@@ -72,9 +70,9 @@ Cc:     Kees Cook <keescook@chromium.org>, Jason Yan <yanaijie@huawei.com>,
         linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-spi@vger.kernel.org, linux-mm@kvack.org,
         clang-built-linux@googlegroups.com
-Subject: [PATCH v2 12/16] f2fs: Eliminate usage of uninitialized_var() macro
-Date:   Fri, 19 Jun 2020 20:30:03 -0700
-Message-Id: <20200620033007.1444705-13-keescook@chromium.org>
+Subject: [PATCH v2 11/16] media: sur40: Remove uninitialized_var() usage
+Date:   Fri, 19 Jun 2020 20:30:02 -0700
+Message-Id: <20200620033007.1444705-12-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200620033007.1444705-1-keescook@chromium.org>
 References: <20200620033007.1444705-1-keescook@chromium.org>
@@ -85,56 +83,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jason Yan <yanaijie@huawei.com>
+Using uninitialized_var() is dangerous as it papers over real bugs[1]
+(or can in the future), and suppresses unrelated compiler warnings (e.g.
+"unused variable"). If the compiler thinks it is uninitialized, either
+simply initialize the variable or make compiler changes. As a precursor
+to removing[2] this[3] macro[4], just remove this variable since it was
+actually unused:
 
-This is an effort to eliminate the uninitialized_var() macro[1].
+drivers/input/touchscreen/sur40.c:459:6: warning: variable 'packet_id' set but not used [-Wunused-but-set-variable]
+  459 |  u32 packet_id;
+      |      ^~~~~~~~~
 
-The use of this macro is the wrong solution because it forces off ANY
-analysis by the compiler for a given variable. It even masks "unused
-variable" warnings.
+However, in keeping with the documentation desires outlined in commit
+335abaea7a27 ("Input: sur40 - silence unnecessary noisy debug output"),
+comment out the assignment instead of removing it.
 
-Quoted from Linus[2]:
+[1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
+[2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
+[3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
+[4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
 
-"It's a horrible thing to use, in that it adds extra cruft to the
-source code, and then shuts up a compiler warning (even the _reliable_
-warnings from gcc)."
-
-Fix it by remove this variable since it is not needed at all.
-
-[1] https://github.com/KSPP/linux/issues/81
-[2] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
-
-Suggested-by: Chao Yu <yuchao0@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Reviewed-by: Chao Yu <yuchao0@huawei.com>
-Link: https://lore.kernel.org/r/20200615085132.166470-1-yanaijie@huawei.com
+Fixes: 335abaea7a27 ("Input: sur40 - silence unnecessary noisy debug output")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- fs/f2fs/data.c | 4 +---
+ drivers/input/touchscreen/sur40.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 326c63879ddc..3753ba06531b 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -2856,7 +2856,6 @@ static int f2fs_write_cache_pages(struct address_space *mapping,
- 	};
- #endif
- 	int nr_pages;
--	pgoff_t uninitialized_var(writeback_index);
- 	pgoff_t index;
- 	pgoff_t end;		/* Inclusive */
- 	pgoff_t done_index;
-@@ -2875,8 +2874,7 @@ static int f2fs_write_cache_pages(struct address_space *mapping,
- 		clear_inode_flag(mapping->host, FI_HOT_DATA);
+diff --git a/drivers/input/touchscreen/sur40.c b/drivers/input/touchscreen/sur40.c
+index 34d31c7ec8ba..620cdd7d214a 100644
+--- a/drivers/input/touchscreen/sur40.c
++++ b/drivers/input/touchscreen/sur40.c
+@@ -456,8 +456,6 @@ static void sur40_poll(struct input_dev *input)
+ {
+ 	struct sur40_state *sur40 = input_get_drvdata(input);
+ 	int result, bulk_read, need_blobs, packet_blobs, i;
+-	u32 uninitialized_var(packet_id);
+-
+ 	struct sur40_header *header = &sur40->bulk_in_buffer->header;
+ 	struct sur40_blob *inblob = &sur40->bulk_in_buffer->blobs[0];
  
- 	if (wbc->range_cyclic) {
--		writeback_index = mapping->writeback_index; /* prev offset */
--		index = writeback_index;
-+		index = mapping->writeback_index; /* prev offset */
- 		end = -1;
- 	} else {
- 		index = wbc->range_start >> PAGE_SHIFT;
+@@ -491,7 +489,7 @@ static void sur40_poll(struct input_dev *input)
+ 		if (need_blobs == -1) {
+ 			need_blobs = le16_to_cpu(header->count);
+ 			dev_dbg(sur40->dev, "need %d blobs\n", need_blobs);
+-			packet_id = le32_to_cpu(header->packet_id);
++			/* packet_id = le32_to_cpu(header->packet_id); */
+ 		}
+ 
+ 		/*
 -- 
 2.25.1
 
