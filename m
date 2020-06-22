@@ -2,139 +2,106 @@ Return-Path: <SRS0=2yIc=AD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96340C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 09:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB347C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 12:35:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7140C206C1
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 09:07:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="byUv3cY+"
+	by mail.kernel.org (Postfix) with ESMTP id B10F42071A
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 12:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726751AbgFVJHZ (ORCPT
+        id S1728189AbgFVMfq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Jun 2020 05:07:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725952AbgFVJHZ (ORCPT
+        Mon, 22 Jun 2020 08:35:46 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:57732 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728139AbgFVMfp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jun 2020 05:07:25 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96812C061794;
-        Mon, 22 Jun 2020 02:07:24 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id u13so18597462iol.10;
-        Mon, 22 Jun 2020 02:07:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=Q5S8rsZFww2RQBPdBUO2Ls9OyyX7I+zxItrTRXSG0Dc=;
-        b=byUv3cY+AOOV8gBuW1AflMUjWv5hGVN35Q9Puu+2+t56nc7VxjmYosOJG1J+HkPYXS
-         3TZxW1V6K6ebV03vKgzZrhV1bNWxEGJ5UehJHU4zA10lNahWo0JSu66sUiWH8hJRMcW8
-         0cAibGMRjdGlKjMMTw4Nsxq4CiHO5PyxWYzhDwz1a7N+yvueYFxdG5WwKEsQxjotkVAA
-         woFysNO8jzVb9O5LFFBPb3F5iLNRl/0IayvoEqgk8TZE6VLrmrSa8+XJdlpq9+29XBpc
-         4s6HD3c4+svqyGMv4cn+41pcfMqBcYZ21Ep9jDMR6pCISERYGxSxKOue3BQZbSUIQcwi
-         V2jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=Q5S8rsZFww2RQBPdBUO2Ls9OyyX7I+zxItrTRXSG0Dc=;
-        b=cY6HEeSXp+AV7ry2wyjWEimpN0nkA6K0BeJVIFyVBkQXtL4ZM0WcjkmKIrkt7b95vz
-         UNiqP4KV7o8Shkf7aHTwSpLvRO7cbZYvzrO1qvsjX9y/I0H2pjMepSmQsQgd36rC2ahA
-         88VquX2pHcDsqhJeuCHsP14f9baGusPjyjruc+kTCPb4I/MkVvcCQf9XylNhSEuh9jv1
-         ahsqDAb37FTk3+eeNamPG2ZIjbHRD6ag/Gl88FCC99s6nRwqEpkLK3FqPy6lnReczKZK
-         o6Q7canfHcuiWV3Jz/wK7BnZUax+UqF4QqORpZXLfJg2XXlFmAc/ZZxVnO1g20QdUip8
-         W3ow==
-X-Gm-Message-State: AOAM530qYGiPJP7z2Or4q3Z6bhvbGTLyVdPJH0EsbrkS7HPOivJnuSBr
-        4MAQwBflUEqPTLtaMzvOaUXUnEhxO/PoZIXDhjA=
-X-Google-Smtp-Source: ABdhPJwOiPKxd4xAeSQ6KNxpRqMrnK69wq8YYDF8YwjNAfHrsblHFiobqwkDYYJqyfrnzy4dcsM3nJ1AWGyTJWxwexs=
-X-Received: by 2002:a6b:780d:: with SMTP id j13mr18940211iom.66.1592816843974;
- Mon, 22 Jun 2020 02:07:23 -0700 (PDT)
+        Mon, 22 Jun 2020 08:35:45 -0400
+Received: from legolas.fritz.box (unknown [79.211.69.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id E7A04580060;
+        Mon, 22 Jun 2020 14:35:43 +0200 (CEST)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, j@w1.fi,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH v3] mac80211: fix control port tx status check
+Date:   Mon, 22 Jun 2020 14:35:42 +0200
+Message-Id: <20200622123542.173695-1-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-References: <20200620033007.1444705-1-keescook@chromium.org>
- <CA+icZUWpHRR7ukyepiUH1dR3r4GMi-s2crfwR5vTszdt1SUTQw@mail.gmail.com> <202006200854.B2D8F21@keescook>
-In-Reply-To: <202006200854.B2D8F21@keescook>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Mon, 22 Jun 2020 11:07:14 +0200
-Message-ID: <CA+icZUV-gBgUnrm6pF2MHWC2SnK_ZBatAa9VrEJ2VbdARi1YBw@mail.gmail.com>
-Subject: Re: [PATCH v2 00/16] Remove uninitialized_var() macro
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-mm@kvack.org,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 5:57 PM Kees Cook <keescook@chromium.org> wrote:
->
-> On Sat, Jun 20, 2020 at 09:03:34AM +0200, Sedat Dilek wrote:
-> > On Sat, Jun 20, 2020 at 5:30 AM Kees Cook <keescook@chromium.org> wrote:
-> > >
-> > > v2:
-> > > - more special-cased fixes
-> > > - add reviews
-> > > v1: https://lore.kernel.org/lkml/20200603233203.1695403-1-keescook@chromium.org
-> > >
-> > > Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> > > (or can in the future), and suppresses unrelated compiler warnings
-> > > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
-> > > either simply initialize the variable or make compiler changes.
-> > >
-> > > As recommended[2] by[3] Linus[4], remove the macro.
-> > >
-> > > Most of the 300 uses don't cause any warnings on gcc 9.3.0, so they're in
-> > > a single treewide commit in this series. A few others needed to actually
-> > > get cleaned up, and I broke those out into individual patches.
-> > >
-> > > The tree is:
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/log/?h=kspp/uninit/macro
-> > >
-> > > -Kees
-> > >
-> >
-> > Hi Kees,
-> >
-> > thanks for doing a v2 of your patchset.
-> >
-> > As I saw Jason Yan providing some "uninitialized_var() macro" patches
-> > to the MLs I pointen him to your tree "v1".
->
-> Thanks!
->
-> > BTW, I have tested your "v1" against Linux v5.7 (see [1]) - just
-> > yesterday with Linux v5.7.5-rc1.
-> >
-> > Is it possible to have a v2 of this patchset on top od Linux v5.7 - if
-> > you do not mind.
->
-> Since it's only going to be for post-v5.8, I'm fine skipping the v5.7
-> testing. Mainly I'm looking at v5.8 and linux-next.
->
-> Thanks for looking at it!
->
+The initial control port tx status patch assumed, that
+we have IEEE 802.11 frames, but actually ethernet frames
+are stored in the ack skb. Fix this by checking for the
+correct ethertype and skb protocol 802.3.
 
-Thanks for the feedback.
+Also allow tx status reports for ETH_P_PREAUTH, as preauth
+frames can also be send over the nl80211 control port.
 
-"I knew you'd say that."
-( Judge Dredd )
+Fixes: a7528198add8 ("mac80211: support control port TX status reporting")
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+v3: also check for ETH_P_PREAUTH
+v2: use __be16, as suggested by Johannes Berg
+ net/mac80211/status.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-- Sedat -
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 7b1bacac39c6..7d1bc3ca389a 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -639,11 +639,23 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
+ 		u64 cookie = IEEE80211_SKB_CB(skb)->ack.cookie;
+ 		struct ieee80211_sub_if_data *sdata;
+ 		struct ieee80211_hdr *hdr = (void *)skb->data;
++		__be16 ethertype = 0xffff;
++
++		if (skb->len >= ETH_HLEN && skb->protocol == cpu_to_be16(ETH_P_802_3))
++			skb_copy_bits(skb, 2 * ETH_ALEN, &ethertype, ETH_TLEN);
+
+ 		rcu_read_lock();
+ 		sdata = ieee80211_sdata_from_skb(local, skb);
+ 		if (sdata) {
+-			if (ieee80211_is_any_nullfunc(hdr->frame_control))
++			if (ethertype == sdata->control_port_protocol ||
++			    ethertype == cpu_to_be16(ETH_P_PREAUTH))
++				cfg80211_control_port_tx_status(&sdata->wdev,
++								cookie,
++								skb->data,
++								skb->len,
++								acked,
++								GFP_ATOMIC);
++			else if (ieee80211_is_any_nullfunc(hdr->frame_control))
+ 				cfg80211_probe_status(sdata->dev, hdr->addr1,
+ 						      cookie, acked,
+ 						      info->status.ack_signal,
+@@ -654,12 +666,8 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
+ 							skb->data, skb->len,
+ 							acked, GFP_ATOMIC);
+ 			else
+-				cfg80211_control_port_tx_status(&sdata->wdev,
+-								cookie,
+-								skb->data,
+-								skb->len,
+-								acked,
+-								GFP_ATOMIC);
++				pr_warn("Unknown status report in ack skb\n");
++
+ 		}
+ 		rcu_read_unlock();
+
+--
+2.27.0
+
