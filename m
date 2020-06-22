@@ -2,67 +2,61 @@ Return-Path: <SRS0=2yIc=AD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3561CC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 14:18:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53325C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 14:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14B70206E2
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 14:18:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30E0E20720
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 14:21:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="swvn7pny"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="gDvg5VTf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729225AbgFVOSW (ORCPT
+        id S1729096AbgFVOVO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Jun 2020 10:18:22 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:11019 "EHLO
+        Mon, 22 Jun 2020 10:21:14 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:29426 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728328AbgFVOSW (ORCPT
+        by vger.kernel.org with ESMTP id S1728987AbgFVOVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jun 2020 10:18:22 -0400
+        Mon, 22 Jun 2020 10:21:13 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1592835501; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1592835673; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=owZAZzzevo2vEHh+id5TiUQlxWbVBRunCY0q/fkSbg8=; b=swvn7pnyDSUFaAsFlJg8SiwoAG7uFFm7PJJ6fmU6SjSCzYgMGZftATX10u8EolKq0hxAB2Yo
- aiRuD9ckI3T8zzGDnHz1oKrUd18ZUwSbvaI20zl/1u3DXIWJG13oBhwqYLB4mR96k4m1xuFC
- q9qmoZFh8mV0eGMB2MQWCE01fO0=
+ bh=oObGm0B9jh/uf5s3EJ3x+nhNB00UTbtnSd4CI5ZXPbM=; b=gDvg5VTfLdPoSZSXkRIx49kkqS/Zi6fEMMJfrD5L/WRue1Wb4ENEibnzuWIAqs+m6bkzdGks
+ pelY3tAp7VvZwmMtarGgAzxhfB15iHp1vlBQxTTAu19BwFOLhTm9tos9KykGeQX00iZl4dPw
+ dmmSmTvkaOvSfAPv8LYgfOrFfxM=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5ef0bda3fe1db4db89d85247 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 22 Jun 2020 14:18:11
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5ef0be506f2ee827dae1ec01 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 22 Jun 2020 14:21:04
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1E4D2C433CB; Mon, 22 Jun 2020 14:18:11 +0000 (UTC)
+        id 0652CC433C8; Mon, 22 Jun 2020 14:21:04 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A2DC6C433C8;
-        Mon, 22 Jun 2020 14:18:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A2DC6C433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E00DBC433C6;
+        Mon, 22 Jun 2020 14:21:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E00DBC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Flavio Suligoi <f.suligoi@asem.it>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Johan Hovold <johan@kernel.org>,
-        Aditya Pakki <pakki001@umn.edu>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] net: wireless: intersil: orinoco: fix spelling mistake
-References: <20200619093102.29487-1-f.suligoi@asem.it>
-Date:   Mon, 22 Jun 2020 17:18:05 +0300
-In-Reply-To: <20200619093102.29487-1-f.suligoi@asem.it> (Flavio Suligoi's
-        message of "Fri, 19 Jun 2020 11:31:02 +0200")
-Message-ID: <87wo3zfale.fsf@codeaurora.org>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name,
+        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com
+Subject: Re: [PATCH v2 wireless-drivers] mt76: mt7663u: fix memory leaks in mt7663u_probe
+References: <e4098f0c8a9ac51997de07f38c2bcdf7042d6db1.1592755166.git.lorenzo@kernel.org>
+Date:   Mon, 22 Jun 2020 17:20:58 +0300
+In-Reply-To: <e4098f0c8a9ac51997de07f38c2bcdf7042d6db1.1592755166.git.lorenzo@kernel.org>
+        (Lorenzo Bianconi's message of "Sun, 21 Jun 2020 18:03:38 +0200")
+Message-ID: <87sgenfagl.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -71,16 +65,15 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Flavio Suligoi <f.suligoi@asem.it> writes:
+Lorenzo Bianconi <lorenzo@kernel.org> writes:
 
-> Fix typo: "EZUSB_REQUEST_TRIGER" --> "EZUSB_REQUEST_TRIGGER"
->
-> Signed-off-by: Flavio Suligoi <f.suligoi@asem.it>
-> ---
->  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Fix the two following memory leaks in mt7663u_probe:
+> 1- if device power-own times out, remove ieee80211 hw device.
+> 2- if mt76u queues allocation fails, remove pending urbs.
 
-The prefix should be "orinoco_usb: ", but I can fix that.
+One logical change per patch, please. If you have to create a list of
+changes in the commit log that's a good sign that you need to split the
+patch :)
 
 -- 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
