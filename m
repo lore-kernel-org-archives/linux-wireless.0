@@ -4,36 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB347C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 12:35:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D2BDC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 13:38:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B10F42071A
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 12:35:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6283020716
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jun 2020 13:38:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728189AbgFVMfq (ORCPT
+        id S1729257AbgFVNiI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Jun 2020 08:35:46 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:57732 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728139AbgFVMfp (ORCPT
+        Mon, 22 Jun 2020 09:38:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49096 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729256AbgFVNiI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jun 2020 08:35:45 -0400
-Received: from legolas.fritz.box (unknown [79.211.69.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id E7A04580060;
-        Mon, 22 Jun 2020 14:35:43 +0200 (CEST)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, j@w1.fi,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v3] mac80211: fix control port tx status check
-Date:   Mon, 22 Jun 2020 14:35:42 +0200
-Message-Id: <20200622123542.173695-1-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.27.0
+        Mon, 22 Jun 2020 09:38:08 -0400
+X-Greylist: delayed 941 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 22 Jun 2020 06:38:07 PDT
+Received: from mxout017.mail.hostpoint.ch (mxout017.mail.hostpoint.ch [IPv6:2a00:d70:0:e::317])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3FA2C061795
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2020 06:38:07 -0700 (PDT)
+Received: from [10.0.2.46] (helo=asmtp013.mail.hostpoint.ch)
+        by mxout017.mail.hostpoint.ch with esmtp (Exim 4.92.3 (FreeBSD))
+        (envelope-from <code@reto-schneider.ch>)
+        id 1jnMPb-000LiO-KA; Mon, 22 Jun 2020 15:22:59 +0200
+Received: from [2a02:168:6182:1:4840:f038:bf12:aa10] (helo=ryzen2700.dss.husqvarnagroup.com)
+        by asmtp013.mail.hostpoint.ch with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
+        (Exim 4.92.3 (FreeBSD))
+        (envelope-from <code@reto-schneider.ch>)
+        id 1jnMPb-0006GV-27; Mon, 22 Jun 2020 15:22:59 +0200
+X-Authenticated-Sender-Id: reto-schneider@reto-schneider.ch
+From:   Reto Schneider <code@reto-schneider.ch>
+To:     linux-wireless@vger.kernel.org
+Cc:     Larry.Finger@lwfinger.net, Reto Schneider <code@reto-schneider.ch>
+Subject: [PATCH 2/3] rtl8192cu: Prevent leaking urb
+Date:   Mon, 22 Jun 2020 15:21:12 +0200
+Message-Id: <20200622132113.14508-3-code@reto-schneider.ch>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200622132113.14508-1-code@reto-schneider.ch>
+References: <20200622132113.14508-1-code@reto-schneider.ch>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -41,67 +51,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The initial control port tx status patch assumed, that
-we have IEEE 802.11 frames, but actually ethernet frames
-are stored in the ack skb. Fix this by checking for the
-correct ethertype and skb protocol 802.3.
+If usb_submit_urb fails the allocated urb should be unanchored and
+released.
 
-Also allow tx status reports for ETH_P_PREAUTH, as preauth
-frames can also be send over the nl80211 control port.
-
-Fixes: a7528198add8 ("mac80211: support control port TX status reporting")
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Signed-off-by: Reto Schneider <code@reto-schneider.ch>
 ---
-v3: also check for ETH_P_PREAUTH
-v2: use __be16, as suggested by Johannes Berg
- net/mac80211/status.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 7b1bacac39c6..7d1bc3ca389a 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -639,11 +639,23 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
- 		u64 cookie = IEEE80211_SKB_CB(skb)->ack.cookie;
- 		struct ieee80211_sub_if_data *sdata;
- 		struct ieee80211_hdr *hdr = (void *)skb->data;
-+		__be16 ethertype = 0xffff;
-+
-+		if (skb->len >= ETH_HLEN && skb->protocol == cpu_to_be16(ETH_P_802_3))
-+			skb_copy_bits(skb, 2 * ETH_ALEN, &ethertype, ETH_TLEN);
-
- 		rcu_read_lock();
- 		sdata = ieee80211_sdata_from_skb(local, skb);
- 		if (sdata) {
--			if (ieee80211_is_any_nullfunc(hdr->frame_control))
-+			if (ethertype == sdata->control_port_protocol ||
-+			    ethertype == cpu_to_be16(ETH_P_PREAUTH))
-+				cfg80211_control_port_tx_status(&sdata->wdev,
-+								cookie,
-+								skb->data,
-+								skb->len,
-+								acked,
-+								GFP_ATOMIC);
-+			else if (ieee80211_is_any_nullfunc(hdr->frame_control))
- 				cfg80211_probe_status(sdata->dev, hdr->addr1,
- 						      cookie, acked,
- 						      info->status.ack_signal,
-@@ -654,12 +666,8 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
- 							skb->data, skb->len,
- 							acked, GFP_ATOMIC);
- 			else
--				cfg80211_control_port_tx_status(&sdata->wdev,
--								cookie,
--								skb->data,
--								skb->len,
--								acked,
--								GFP_ATOMIC);
-+				pr_warn("Unknown status report in ack skb\n");
-+
- 		}
- 		rcu_read_unlock();
-
---
-2.27.0
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index d3bbfc0171f6..1a9fcb2697bf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -720,8 +720,11 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
+ 
+ 		usb_anchor_urb(urb, &rtlusb->rx_submitted);
+ 		err = usb_submit_urb(urb, GFP_KERNEL);
+-		if (err)
++		if (err) {
++			usb_unanchor_urb(urb);
++			usb_free_urb(urb);
+ 			goto err_out;
++		}
+ 		usb_free_urb(urb);
+ 	}
+ 	return 0;
+-- 
+2.20.1
 
