@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D62C433E2
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Jun 2020 11:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29563C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Jun 2020 11:00:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52A6320738
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Jun 2020 11:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC5A220738
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Jun 2020 11:00:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="C5DQqvJC";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="o1ER7FmM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="d9X8xAJK";
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="LvXQeqDG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732437AbgFWLAp (ORCPT
+        id S1732440AbgFWLAq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Jun 2020 07:00:45 -0400
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:4694 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732375AbgFWLAS (ORCPT
+        Tue, 23 Jun 2020 07:00:46 -0400
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:41136 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732393AbgFWLAT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jun 2020 07:00:18 -0400
+        Tue, 23 Jun 2020 07:00:19 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1592910017; x=1624446017;
+  t=1592910018; x=1624446018;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=8PJrsLF/c6dMd6KmLAX597GFPqGtPfnYkhuJbVSxBLo=;
-  b=C5DQqvJCyyK/9itzi3nNahfJ/ndNEqgIDfOW0sM24/Ed0I0CxagOp1Et
-   o5p5A/GqLCOQNjnLiuiREskJIHIzrLCySUgslQBys6k/4e+29HGbi95p2
-   bHOU5PtJbNAObDVEjk2Pl71kOzxJZtd+MFXy5wWqhC32QuJ9XCygaU6/v
-   snigcIh1Gdvjv9YPkT5GCSk0RpXFzlOBjbUc5XkRxwidbnLAr/e/O8yQP
-   n9g0y6m+BQ0EFK/ZZ0nr/mYN125g29AHDCqMimrHbNAPfNdSFAe3RXpg2
-   iY7ZrrptNx165VcZkx3r51zZAx7koE4hB3DuCbYFYmnw42oJG4jSxokux
+  bh=IOdoR3Fjixrp0rJvAi3hoewULl05FAcv6GHCILzPB4M=;
+  b=d9X8xAJKbEipdeh+EtG4IIjQ4ncAx4ySdDl8e0zSFSBMARzJy4jyTZpz
+   6ivtOBf50bYuMhVM8IV6iCc4Vz/qKQ4YqJJl7SvwqPV++hL2EPQ5eVIy0
+   khLc7SmSoV9EOipghvJhyKr0cB3cjHsULcJpiM+Z+qYVHQgLMo6Xbc8sE
+   0nlR0JJZ83uMyVuj2i/nN/wqXV94BZ+ty66twgbnPtDuKXJC8VN4alNPc
+   C2tLg65RuTdGqrgb2IUYTGe+wHrvlCEQ4bMiYOTSsMC2Heu/zdnUvw1Tx
+   jD9AcxIc/7WdDRZVbZtn/b6skiY1yxIhWqD6xXUV0/27sc0yDGmGysgUV
    A==;
-IronPort-SDR: DGqYishPbdOvt6Rb3T1Zc4NmKH1FB793tShD29G0tR1WhywE1/IX+WZBgEObUNYl0LqqtgQGq+
- JkCjhtRbRCM0uarCnc0tEJPhm5ipu/Ovozv8hrEn54W8B/a5qaoDVzLkW8dVuK102iIqFSZ7Hx
- dAl+jkx/nUQHeMuWzYw2847vVgLg/UZ2DnWAyZtYxm7pGW+zqCQUbRbyg5wQv+jmetvRpTQ0jn
- sv9G8w/A/FJiX74h31tSJQKLQ1GUX1F0XlBB3V5WGhLgk+xqKf7X82r1b6kvO46LiPSqpeoyS9
- KE8=
+IronPort-SDR: d+B65JwKE66pXN7ojYbvtPCbiU55zNszdrX/8sxNhdwHkUFsWG3eJJ/AMtpdWc3pQQ+wD+xGOV
+ JEqj4qe+mqecbZcAT47cW7qYqA+GODzYdU+oDaLQ25Pif52fCGZAPpO/PipiL3r5sHxD5zLzJn
+ CFlR1Hap7DtfykpWfdPl66VAJ+ksJJUGk9quVsFHNtfsTTwByHmxPTpzp3TJPQHwCxL2LcONYP
+ 2/p5hYfnnJyFtVF2LDSpwkUUaatm3CmUgl7L73NEDC/ABiY5ZlO7hE72XyVqY/g2Iv+09QasNN
+ xDY=
 X-IronPort-AV: E=Sophos;i="5.75,271,1589266800"; 
-   d="scan'208";a="77540376"
+   d="scan'208";a="80543431"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Jun 2020 04:00:17 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Jun 2020 04:00:09 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 23 Jun 2020 04:00:05 -0700
+ 15.1.1979.3; Tue, 23 Jun 2020 03:59:58 -0700
 Received: from NAM02-CY1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Tue, 23 Jun 2020 04:00:05 -0700
+ email.microchip.com (10.10.87.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
+ via Frontend Transport; Tue, 23 Jun 2020 04:00:09 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CLInGdUWlAsfYKHYde3mDnUzFfm8YanJMHBpJK6piM9DfTBE7Thy+xkHow0+tofqqr0nJOXLyQ7bfCOQSS0bS438SHxYWINYfmqLjbjJXx1qUIcer47abMLNJrU8gS4Ofg/pdOIByyUM6txl5PGjQpQZvvQ72WY7Tm5koHp1UrjFD2VJCwSaDVD414cCNXqp643wFF5eDe+zlHw/nJIdezOPhMQ9191l/d4n15G1MwK/TCqfU+s6xtOIrWmXFngiJJw4QNDXvAfjumPnP3tDhXeFnFQ0w7/uO1JwVjEAErE0Hr0h003ZnV+Fm85XmhdapmlN4+gjZKLGRitRBSRyHQ==
+ b=ODKRwtTcKGQggbk6WL5ezugjbPpi8gwxc9bhSsZOw+uG3vefVAAwoloGH1sfZfP8fd7TnNNrctdfhr5uh7gGnpGFdFqU7w3sJNAUBC2wRDqBSvS5tBksF4vjkcGx3VwnoXDIjAfVEEaWs9rz/PdBoU2N7tfnSwKZNYkTHy4wOwNbbJZKCq26p0UbSxRQzC5f1rQfQ+CDspXeJBsM9U+wzNh4BCSV0bgMCoTFRhAGijnT8+AWyUeAmNA/D4e/ivhF8yzqTSm6+ZVYstFgdugxUqEZA+C+BOlvqPhe/xoZLiy5CmHbdERX11WOyRdzDkrpX2xHRP6G+E0wLnZo0XwlxA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Jf3t/5MFB/CSijnJK4XtO9fCTjGZSy+D+RGg+/Bom0Y=;
- b=KraYtBY0nBJuVjso68h0/0X0AEJITLDnCRvi+NJSmQanKH3r082zmRijwvxf7eOYvpheom2imM5GnlVAhPLmO10xynUoncvtltT8cP2JJE4ST9LI3yiCtkIXNGnDijL6uqcYkDn5yziLa4lB53eV+9TQFvWfjqbBxeQf0CW10nIYvF0tieGRRYFVcsK4ws74a6rHU7Ma0uiPdMs6obYmugiPMQtRqXQw/Hu5dsxeKMcfjbK6xxDGA2Xf2s0cz7L/0Ax2q8JZ7ajKbuzr4FbZqClCqztmPDZBmdhq3z2fbbNCiSrr6jDeHQZi3ArnghiH44HPT4bcAl/r1jLoC+X82g==
+ bh=R2hyFijpSxD8B1vp9pfBnZgARrhmzsNY8CIUqsPqbr4=;
+ b=b2YaLF3J0LF0nhS94pt84BypwcGCxmkAHTM6te9Yy1Zx3e7cZmkZDXxfDbX8Igj4dBmoFyxjdhqZOSOzn83Y9KvEdlf2ht1NAQ6kULnPyrXupOsNeKm96+ieuNxJwmwHnnf4XW03H4FP2HtlxYeTqI3+cS8at7H/N2EwaogtNCqylubZcgipGQqI2pcTiC/OTH6KlRvOEKzxzFCL76wIclZBf0U96pqQM9HNT/QhEVtwmA9Vq6+6CzyLvEHOEAe0EKBnPoN4zIZxN4122WTnk9me1oedWj5Sye9e7/4d21udfiUA87NZ8/qW8mlBJXgkmmmy2xoakt+wkT3WTM1GeA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -68,28 +68,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Jf3t/5MFB/CSijnJK4XtO9fCTjGZSy+D+RGg+/Bom0Y=;
- b=o1ER7FmMZw+cfNJF/dw21LgIZqIvMJropWgwNTnA3KfhL+bFjeTZdXG4mEc1YiHbW/KvVZMcrQgMmovjWB0VYIfttUCO3/D2+vooPEPmTvPaOwM7GOdZLJs+SEewFcjqER74MCCXw7nnMRI+qj698aFSBrQw4JywosUcXF26QEA=
+ bh=R2hyFijpSxD8B1vp9pfBnZgARrhmzsNY8CIUqsPqbr4=;
+ b=LvXQeqDG46zxudIqhavU4wi5xSnm3IOYF9PPK7yThf4k49nwbKeJ1i06DqM4mAOgArbo9LtroWA+/hg+qxpmzvW76YDyOBWVyEpyUZwEARTISJQRFhy7d6AIjme81GYeCYfWz1dduRcTa8iuMsMPdcJVR644R1kdOlxG3ZIwpgw=
 Received: from MN2PR11MB4030.namprd11.prod.outlook.com (2603:10b6:208:156::32)
  by MN2PR11MB3551.namprd11.prod.outlook.com (2603:10b6:208:ea::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Tue, 23 Jun
- 2020 11:00:11 +0000
+ 2020 11:00:06 +0000
 Received: from MN2PR11MB4030.namprd11.prod.outlook.com
  ([fe80::3874:6ace:6aec:deed]) by MN2PR11MB4030.namprd11.prod.outlook.com
  ([fe80::3874:6ace:6aec:deed%7]) with mapi id 15.20.3109.027; Tue, 23 Jun 2020
- 11:00:11 +0000
+ 11:00:06 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <johannes@sipsolutions.net>, <Nicolas.Ferre@microchip.com>,
         <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>,
         <Venkateswara.Kaja@microchip.com>, <Ajay.Kathat@microchip.com>
-Subject: [PATCH v7 11/17] wilc1000: add spi.c
-Thread-Topic: [PATCH v7 11/17] wilc1000: add spi.c
-Thread-Index: AQHWSU13nYMaH2g5V0m1GqMJ+E2+hw==
-Date:   Tue, 23 Jun 2020 11:00:11 +0000
-Message-ID: <20200623110000.31559-12-ajay.kathat@microchip.com>
+Subject: [PATCH v7 03/17] wilc1000: add wlan_if.h
+Thread-Topic: [PATCH v7 03/17] wilc1000: add wlan_if.h
+Thread-Index: AQHWSU10uRc43FvfO0qSa0afiiYVhA==
+Date:   Tue, 23 Jun 2020 11:00:06 +0000
+Message-ID: <20200623110000.31559-4-ajay.kathat@microchip.com>
 References: <20200623110000.31559-1-ajay.kathat@microchip.com>
 In-Reply-To: <20200623110000.31559-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -102,28 +102,28 @@ authentication-results: vger.kernel.org; dkim=none (message not signed)
  header.from=microchip.com;
 x-originating-ip: [49.207.200.183]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: da95c806-e792-40de-0d2d-08d8176499a5
+x-ms-office365-filtering-correlation-id: c28e8799-585f-4b6c-bc17-08d8176496c8
 x-ms-traffictypediagnostic: MN2PR11MB3551:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR11MB355183EF20ECD08B4D4F5B99E3940@MN2PR11MB3551.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <MN2PR11MB355156C4337EC3D6840377FCE3940@MN2PR11MB3551.namprd11.prod.outlook.com>
 x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:185;
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
 x-forefront-prvs: 04433051BF
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 6aHNDEInDR4/2b+iTq9fbqfNPqjFSCmo/D4Ppv7KgiyCBbMjCADk+Re+X1O45DDIaSpNY0dAfIHr9Tbl3AUI7a57eY4/bz1Hr5Md1lwNemZLJlJKQT13hP+dGdmTVSM2NhdPATWuUt5sAVBRaWNoGIfW9/eUW9feCIYPF/W8Ixg57zQm4nVxnw7ZGG3LtZD17z8wFRxlm6VNBF/iYLBenmkBgBmuvpLnaBIq8ubjPaqxJFCYHFZsxaNcxNEWuYTi2BZQvkb/+XtgHYAP45hroEUN9kB4kKGrFuRa8RYEhsFBLpIaOqXPMjWxa67DrZsaVb8AGXLlw/Q4ihY0Rod9PA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB4030.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(136003)(346002)(396003)(376002)(39860400002)(8676002)(83380400001)(36756003)(2906002)(186003)(6506007)(86362001)(2616005)(4326008)(107886003)(26005)(6486002)(6916009)(5660300002)(55236004)(1076003)(30864003)(478600001)(66446008)(66476007)(66556008)(64756008)(91956017)(76116006)(66946007)(6512007)(54906003)(316002)(71200400001)(8936002)(579004);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: ONMdEMF/en/HhCK1pbi+KLnus0LfWWIMAz70yAjchfB521qY1L2blDgzjXrlSnUjrFpmztijRE7m6Pawbc/sIcrFvE70iY6OGVjk+Gx+Z+BoViU1+0mLc1MNe6gEt0L7bJ70PrCgB5gVcWx4hggYylEb785B0hZ0cbhXsIUfD3Db1u2cUA+h/d7hEIElREEYVLIgZKs/wSR2I6r2QDW1CsbWGrkyraiCBR6jaiJFDas/BITQ1B/kmY5FLeKYgJg8mQSv2v4CNY8vvQkDcRGud0eUjKTcYPVEcqpuqjckROCskOLbpOpNaZ8nDNXESJbm+mXcl11ueCFaYPb29guZFHxztHS851OIXCmJ327jJMcDIntg3O7G2uPrWkXcChgBzu5MPMr+ta9DTWJoLhcXk7vPQDMkqlYRv+ppKspHJxJKirreYA0C8Da7xD8MJOwebUoiwPM9tgH4KnClP6FgrQNiXYKH3VHYE1EWjufj+SrtHMQefGCLvioQH/Swu4IE
+x-microsoft-antispam-message-info: NKFgsvFevm+8aQQ+Chpkl3D8rhRYYQL2y5JFPJWWs2N/bsEa4tcQOAtO44Eo50EqCXQCz+7JTrvs+CDiPPp2jctmUqHx/mXl/nBUF1Xgfzb0G4esmnQoi+WBcv4Et72KM6LjKDFfuKHAN9CX6qG5z002oN0ugN/z+MgotdZ8FDTsO3oHOrdR4seTwhDaOK5SbbFDVGzr+mL1ZL3P/q/nzyzKfuu0Y2joNz267qHkc/wobWiIQT1FSPKmr5JYO6EqlLgb+M8Kb88CVkVbk+EVRItrzjus5+XT7buHTUcjartiDbeFlnnLmDWvuHSLlgFexvdOfh/O3e38mMMUukJnfg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB4030.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(136003)(346002)(396003)(376002)(39860400002)(8676002)(83380400001)(36756003)(2906002)(186003)(6506007)(86362001)(2616005)(4326008)(107886003)(26005)(6486002)(6916009)(5660300002)(55236004)(1076003)(30864003)(478600001)(66446008)(66476007)(66556008)(64756008)(91956017)(76116006)(66946007)(6512007)(54906003)(316002)(71200400001)(8936002)(559001)(579004);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: CA0yoAawPKwDQTI4OW/hBpb7IpuruG06jf3JvMC4aH4gEYuostPebwFIuSPyb1+iVu+MCLqPlnlLzSpsLBbviTRAK/zZYchDIlmG1JxZVAqbUkeL5z5U6gDv8k1UsWcd5kovEgxE7HB5Xhi2SLi5k59VqrDczh7sMOh7H1NpQuuwRvghPiT8ZkRNRZxi83JkgLq3zOHg3tCtLQCgtAjqQTHkrbELM6TUN1zMNwydMIYMZcWJgc6e9wu5IQCRxR62xA5PIUtQhcukr1KKDxkDVSsvL14JLX/37vTCo3cgIpHieOEMjLmYQ3mhX1iBhC575f5cUWPKNklvDfMjzr0m1pIy7Xeo+Bx788dwK84VDQHPU0O8yZUTJKHza+q+1jPZZKxhu1PUr6Ac0m5gjMbFyKFbQ90HJLaHvmf19sXm2Ut9dieTbpsHUYRWHskDouqjyZjsqVfNP6DI5g92qN20e45edZNfsvA7r+PnF1HLSKG6T4KYW+dcoD4ZncF7+8eM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: da95c806-e792-40de-0d2d-08d8176499a5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jun 2020 11:00:11.3555
+X-MS-Exchange-CrossTenant-Network-Message-Id: c28e8799-585f-4b6c-bc17-08d8176496c8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jun 2020 11:00:06.5402
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: GTTlqbxIJAFnsoXK+Irgl5OpmE3ZKW4jpBbx67orqgiVdp5cZjXy9rwAlMhVd40qRZNblJ1bpoogTBlIOAmBGgQizE/5ILv7Sj1mK9PrRwA=
+X-MS-Exchange-CrossTenant-userprincipalname: 9yOPzykUB4C21VaoSD83on0dRAXB8gUtPffcGwByhxq/5zQfQhF7961s9cW/chSWCssN2UNpaTrfeu42Z02HxEYmjEzzRgr0W4UIRT8PBSI=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB3551
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -132,971 +132,825 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Moved 'drivers/staging/wilc1000/spi.c' to
-'drivers/net/wireless/microchip/wilc1000/spi.c'.
+Moved 'drivers/staging/wilc1000/wlan_if.h' to
+'drivers/net/wireless/microchip/wilc1000/wlan_if.h'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/microchip/wilc1000/spi.c | 945 ++++++++++++++++++
- 1 file changed, 945 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc1000/spi.c
+ .../net/wireless/microchip/wilc1000/wlan_if.h | 803 ++++++++++++++++++
+ 1 file changed, 803 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc1000/wlan_if.h
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wi=
-reless/microchip/wilc1000/spi.c
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan_if.h b/drivers/ne=
+t/wireless/microchip/wilc1000/wlan_if.h
 new file mode 100644
-index 000000000000..3f19e3f38a39
+index 000000000000..f85fd575136d
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -0,0 +1,945 @@
-+// SPDX-License-Identifier: GPL-2.0
++++ b/drivers/net/wireless/microchip/wilc1000/wlan_if.h
+@@ -0,0 +1,803 @@
++/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiari=
 es.
 + * All rights reserved.
 + */
 +
-+#include <linux/clk.h>
-+#include <linux/spi/spi.h>
-+#include <linux/crc7.h>
++#ifndef WILC_WLAN_IF_H
++#define WILC_WLAN_IF_H
 +
-+#include "netdev.h"
-+#include "cfg80211.h"
-+
-+struct wilc_spi {
-+	int crc_off;
-+};
-+
-+static const struct wilc_hif_func wilc_hif_spi;
++#include <linux/netdevice.h>
++#include "fw.h"
 +
 +/********************************************
 + *
-+ *      Spi protocol Function
++ *      Wlan Configuration ID
 + *
 + ********************************************/
 +
-+#define CMD_DMA_WRITE				0xc1
-+#define CMD_DMA_READ				0xc2
-+#define CMD_INTERNAL_WRITE			0xc3
-+#define CMD_INTERNAL_READ			0xc4
-+#define CMD_TERMINATE				0xc5
-+#define CMD_REPEAT				0xc6
-+#define CMD_DMA_EXT_WRITE			0xc7
-+#define CMD_DMA_EXT_READ			0xc8
-+#define CMD_SINGLE_WRITE			0xc9
-+#define CMD_SINGLE_READ				0xca
-+#define CMD_RESET				0xcf
-+
-+#define DATA_PKT_SZ_256				256
-+#define DATA_PKT_SZ_512				512
-+#define DATA_PKT_SZ_1K				1024
-+#define DATA_PKT_SZ_4K				(4 * 1024)
-+#define DATA_PKT_SZ_8K				(8 * 1024)
-+#define DATA_PKT_SZ				DATA_PKT_SZ_8K
-+
-+#define USE_SPI_DMA				0
-+
-+#define WILC_SPI_COMMAND_STAT_SUCCESS		0
-+#define WILC_GET_RESP_HDR_START(h)		(((h) >> 4) & 0xf)
-+
-+struct wilc_spi_cmd {
-+	u8 cmd_type;
-+	union {
-+		struct {
-+			u8 addr[3];
-+			u8 crc[];
-+		} __packed simple_cmd;
-+		struct {
-+			u8 addr[3];
-+			u8 size[2];
-+			u8 crc[];
-+		} __packed dma_cmd;
-+		struct {
-+			u8 addr[3];
-+			u8 size[3];
-+			u8 crc[];
-+		} __packed dma_cmd_ext;
-+		struct {
-+			u8 addr[2];
-+			__be32 data;
-+			u8 crc[];
-+		} __packed internal_w_cmd;
-+		struct {
-+			u8 addr[3];
-+			__be32 data;
-+			u8 crc[];
-+		} __packed w_cmd;
-+	} u;
-+} __packed;
-+
-+struct wilc_spi_read_rsp_data {
-+	u8 rsp_cmd_type;
-+	u8 status;
-+	u8 resp_header;
-+	u8 resp_data[4];
-+	u8 crc[];
-+} __packed;
-+
-+struct wilc_spi_rsp_data {
-+	u8 rsp_cmd_type;
-+	u8 status;
-+} __packed;
-+
-+static int wilc_bus_probe(struct spi_device *spi)
-+{
-+	int ret;
-+	struct wilc *wilc;
-+	struct wilc_spi *spi_priv;
-+
-+	spi_priv =3D kzalloc(sizeof(*spi_priv), GFP_KERNEL);
-+	if (!spi_priv)
-+		return -ENOMEM;
-+
-+	ret =3D wilc_cfg80211_init(&wilc, &spi->dev, WILC_HIF_SPI, &wilc_hif_spi)=
-;
-+	if (ret) {
-+		kfree(spi_priv);
-+		return ret;
-+	}
-+
-+	spi_set_drvdata(spi, wilc);
-+	wilc->dev =3D &spi->dev;
-+	wilc->bus_data =3D spi_priv;
-+	wilc->dev_irq_num =3D spi->irq;
-+
-+	wilc->rtc_clk =3D devm_clk_get(&spi->dev, "rtc_clk");
-+	if (PTR_ERR_OR_ZERO(wilc->rtc_clk) =3D=3D -EPROBE_DEFER)
-+		return -EPROBE_DEFER;
-+	else if (!IS_ERR(wilc->rtc_clk))
-+		clk_prepare_enable(wilc->rtc_clk);
-+
-+	return 0;
-+}
-+
-+static int wilc_bus_remove(struct spi_device *spi)
-+{
-+	struct wilc *wilc =3D spi_get_drvdata(spi);
-+
-+	if (!IS_ERR(wilc->rtc_clk))
-+		clk_disable_unprepare(wilc->rtc_clk);
-+
-+	wilc_netdev_cleanup(wilc);
-+	return 0;
-+}
-+
-+static const struct of_device_id wilc_of_match[] =3D {
-+	{ .compatible =3D "microchip,wilc1000", },
-+	{ /* sentinel */ }
++enum bss_types {
++	WILC_FW_BSS_TYPE_INFRA =3D 0,
++	WILC_FW_BSS_TYPE_INDEPENDENT,
++	WILC_FW_BSS_TYPE_AP,
 +};
-+MODULE_DEVICE_TABLE(of, wilc_of_match);
 +
-+static struct spi_driver wilc_spi_driver =3D {
-+	.driver =3D {
-+		.name =3D MODALIAS,
-+		.of_match_table =3D wilc_of_match,
-+	},
-+	.probe =3D  wilc_bus_probe,
-+	.remove =3D wilc_bus_remove,
++enum {
++	WILC_FW_OPER_MODE_B_ONLY =3D 0,	 /* 1, 2 M, otherwise 5, 11 M */
++	WILC_FW_OPER_MODE_G_ONLY,	 /* 6,12,24 otherwise 9,18,36,48,54 */
++	WILC_FW_OPER_MODE_G_MIXED_11B_1, /* 1,2,5.5,11 otherwise all on */
++	WILC_FW_OPER_MODE_G_MIXED_11B_2, /* 1,2,5,11,6,12,24 otherwise all on */
 +};
-+module_spi_driver(wilc_spi_driver);
-+MODULE_LICENSE("GPL");
 +
-+static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int ret;
-+	struct spi_message msg;
-+
-+	if (len > 0 && b) {
-+		struct spi_transfer tr =3D {
-+			.tx_buf =3D b,
-+			.len =3D len,
-+			.delay =3D {
-+				.value =3D 0,
-+				.unit =3D SPI_DELAY_UNIT_USECS
-+			},
-+		};
-+		char *r_buffer =3D kzalloc(len, GFP_KERNEL);
-+
-+		if (!r_buffer)
-+			return -ENOMEM;
-+
-+		tr.rx_buf =3D r_buffer;
-+		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi =3D spi;
-+		msg.is_dma_mapped =3D USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret =3D spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+
-+		kfree(r_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't write data with the following length: %d\n",
-+			len);
-+		ret =3D -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr =3D {
-+			.rx_buf =3D rb,
-+			.len =3D rlen,
-+			.delay =3D {
-+				.value =3D 0,
-+				.unit =3D SPI_DELAY_UNIT_USECS
-+			},
-+
-+		};
-+		char *t_buffer =3D kzalloc(rlen, GFP_KERNEL);
-+
-+		if (!t_buffer)
-+			return -ENOMEM;
-+
-+		tr.tx_buf =3D t_buffer;
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi =3D spi;
-+		msg.is_dma_mapped =3D USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret =3D spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+		kfree(t_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret =3D -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr =3D {
-+			.rx_buf =3D rb,
-+			.tx_buf =3D wb,
-+			.len =3D rlen,
-+			.bits_per_word =3D 8,
-+			.delay =3D {
-+				.value =3D 0,
-+				.unit =3D SPI_DELAY_UNIT_USECS
-+			},
-+
-+		};
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi =3D spi;
-+		msg.is_dma_mapped =3D USE_SPI_DMA;
-+
-+		spi_message_add_tail(&tr, &msg);
-+		ret =3D spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret =3D -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	int ix, nbytes;
-+	int result =3D 0;
-+	u8 cmd, order, crc[2] =3D {0};
-+
-+	/*
-+	 * Data
-+	 */
-+	ix =3D 0;
-+	do {
-+		if (sz <=3D DATA_PKT_SZ) {
-+			nbytes =3D sz;
-+			order =3D 0x3;
-+		} else {
-+			nbytes =3D DATA_PKT_SZ;
-+			if (ix =3D=3D 0)
-+				order =3D 0x1;
-+			else
-+				order =3D 0x02;
-+		}
-+
-+		/*
-+		 * Write command
-+		 */
-+		cmd =3D 0xf0;
-+		cmd |=3D order;
-+
-+		if (wilc_spi_tx(wilc, &cmd, 1)) {
-+			dev_err(&spi->dev,
-+				"Failed data block cmd write, bus error...\n");
-+			result =3D -EINVAL;
-+			break;
-+		}
-+
-+		/*
-+		 * Write data
-+		 */
-+		if (wilc_spi_tx(wilc, &b[ix], nbytes)) {
-+			dev_err(&spi->dev,
-+				"Failed data block write, bus error...\n");
-+			result =3D -EINVAL;
-+			break;
-+		}
-+
-+		/*
-+		 * Write Crc
-+		 */
-+		if (!spi_priv->crc_off) {
-+			if (wilc_spi_tx(wilc, crc, 2)) {
-+				dev_err(&spi->dev, "Failed data block crc write, bus error...\n");
-+				result =3D -EINVAL;
-+				break;
-+			}
-+		}
-+
-+		/*
-+		 * No need to wait for response
-+		 */
-+		ix +=3D nbytes;
-+		sz -=3D nbytes;
-+	} while (sz);
-+
-+	return result;
-+}
-+
-+/********************************************
-+ *
-+ *      Spi Internal Read/Write Function
-+ *
-+ ********************************************/
-+static u8 wilc_get_crc7(u8 *buffer, u32 len)
-+{
-+	return crc7_be(0xfe, buffer, len);
-+}
-+
-+static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *=
-b,
-+				u8 clockless)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	u8 wb[32], rb[32];
-+	int cmd_len, resp_len;
-+	u8 crc[2];
-+	struct wilc_spi_cmd *c;
-+	struct wilc_spi_read_rsp_data *r;
-+
-+	memset(wb, 0x0, sizeof(wb));
-+	memset(rb, 0x0, sizeof(rb));
-+	c =3D (struct wilc_spi_cmd *)wb;
-+	c->cmd_type =3D cmd;
-+	if (cmd =3D=3D CMD_SINGLE_READ) {
-+		c->u.simple_cmd.addr[0] =3D adr >> 16;
-+		c->u.simple_cmd.addr[1] =3D adr >> 8;
-+		c->u.simple_cmd.addr[2] =3D adr;
-+	} else if (cmd =3D=3D CMD_INTERNAL_READ) {
-+		c->u.simple_cmd.addr[0] =3D adr >> 8;
-+		if (clockless =3D=3D 1)
-+			c->u.simple_cmd.addr[0] |=3D BIT(7);
-+		c->u.simple_cmd.addr[1] =3D adr;
-+		c->u.simple_cmd.addr[2] =3D 0x0;
-+	} else {
-+		dev_err(&spi->dev, "cmd [%x] not supported\n", cmd);
-+		return -EINVAL;
-+	}
-+
-+	cmd_len =3D offsetof(struct wilc_spi_cmd, u.simple_cmd.crc);
-+	resp_len =3D sizeof(*r);
-+	if (!spi_priv->crc_off) {
-+		c->u.simple_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
-+		cmd_len +=3D 1;
-+		resp_len +=3D 2;
-+	}
-+
-+	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
-+		dev_err(&spi->dev,
-+			"spi buffer size too small (%d) (%d) (%zu)\n",
-+			cmd_len, resp_len, ARRAY_SIZE(wb));
-+		return -EINVAL;
-+	}
-+
-+	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
-+		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
-+		return -EINVAL;
-+	}
-+
-+	r =3D (struct wilc_spi_read_rsp_data *)&rb[cmd_len];
-+	if (r->rsp_cmd_type !=3D cmd) {
-+		dev_err(&spi->dev,
-+			"Failed cmd response, cmd (%02x), resp (%02x)\n",
-+			cmd, r->rsp_cmd_type);
-+		return -EINVAL;
-+	}
-+
-+	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
-+		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
-+			r->status);
-+		return -EINVAL;
-+	}
-+
-+	if (WILC_GET_RESP_HDR_START(r->resp_header) !=3D 0xf) {
-+		dev_err(&spi->dev, "Error, data read response (%02x)\n",
-+			r->resp_header);
-+		return -EINVAL;
-+	}
-+
-+	if (b)
-+		memcpy(b, r->resp_data, 4);
-+
-+	if (!spi_priv->crc_off)
-+		memcpy(crc, r->crc, 2);
-+
-+	return 0;
-+}
-+
-+static int wilc_spi_write_cmd(struct wilc *wilc, u8 cmd, u32 adr, u32 data=
-,
-+			      u8 clockless)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	u8 wb[32], rb[32];
-+	int cmd_len, resp_len;
-+	struct wilc_spi_cmd *c;
-+	struct wilc_spi_rsp_data *r;
-+
-+	memset(wb, 0x0, sizeof(wb));
-+	memset(rb, 0x0, sizeof(rb));
-+	c =3D (struct wilc_spi_cmd *)wb;
-+	c->cmd_type =3D cmd;
-+	if (cmd =3D=3D CMD_INTERNAL_WRITE) {
-+		c->u.internal_w_cmd.addr[0] =3D adr >> 8;
-+		if (clockless =3D=3D 1)
-+			c->u.internal_w_cmd.addr[0] |=3D BIT(7);
-+
-+		c->u.internal_w_cmd.addr[1] =3D adr;
-+		c->u.internal_w_cmd.data =3D cpu_to_be32(data);
-+		cmd_len =3D offsetof(struct wilc_spi_cmd, u.internal_w_cmd.crc);
-+		if (!spi_priv->crc_off)
-+			c->u.internal_w_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
-+	} else if (cmd =3D=3D CMD_SINGLE_WRITE) {
-+		c->u.w_cmd.addr[0] =3D adr >> 16;
-+		c->u.w_cmd.addr[1] =3D adr >> 8;
-+		c->u.w_cmd.addr[2] =3D adr;
-+		c->u.w_cmd.data =3D cpu_to_be32(data);
-+		cmd_len =3D offsetof(struct wilc_spi_cmd, u.w_cmd.crc);
-+		if (!spi_priv->crc_off)
-+			c->u.w_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
-+	} else {
-+		dev_err(&spi->dev, "write cmd [%x] not supported\n", cmd);
-+		return -EINVAL;
-+	}
-+
-+	if (!spi_priv->crc_off)
-+		cmd_len +=3D 1;
-+
-+	resp_len =3D sizeof(*r);
-+
-+	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
-+		dev_err(&spi->dev,
-+			"spi buffer size too small (%d) (%d) (%zu)\n",
-+			cmd_len, resp_len, ARRAY_SIZE(wb));
-+		return -EINVAL;
-+	}
-+
-+	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
-+		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
-+		return -EINVAL;
-+	}
-+
-+	r =3D (struct wilc_spi_rsp_data *)&rb[cmd_len];
-+	if (r->rsp_cmd_type !=3D cmd) {
-+		dev_err(&spi->dev,
-+			"Failed cmd response, cmd (%02x), resp (%02x)\n",
-+			cmd, r->rsp_cmd_type);
-+		return -EINVAL;
-+	}
-+
-+	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
-+		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
-+			r->status);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_spi_dma_rw(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 =
-sz)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	u8 wb[32], rb[32];
-+	int cmd_len, resp_len;
-+	int retry, ix =3D 0;
-+	u8 crc[2];
-+	struct wilc_spi_cmd *c;
-+	struct wilc_spi_rsp_data *r;
-+
-+	memset(wb, 0x0, sizeof(wb));
-+	memset(rb, 0x0, sizeof(rb));
-+	c =3D (struct wilc_spi_cmd *)wb;
-+	c->cmd_type =3D cmd;
-+	if (cmd =3D=3D CMD_DMA_WRITE || cmd =3D=3D CMD_DMA_READ) {
-+		c->u.dma_cmd.addr[0] =3D adr >> 16;
-+		c->u.dma_cmd.addr[1] =3D adr >> 8;
-+		c->u.dma_cmd.addr[2] =3D adr;
-+		c->u.dma_cmd.size[0] =3D sz >> 8;
-+		c->u.dma_cmd.size[1] =3D sz;
-+		cmd_len =3D offsetof(struct wilc_spi_cmd, u.dma_cmd.crc);
-+		if (!spi_priv->crc_off)
-+			c->u.dma_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
-+	} else if (cmd =3D=3D CMD_DMA_EXT_WRITE || cmd =3D=3D CMD_DMA_EXT_READ) {
-+		c->u.dma_cmd_ext.addr[0] =3D adr >> 16;
-+		c->u.dma_cmd_ext.addr[1] =3D adr >> 8;
-+		c->u.dma_cmd_ext.addr[2] =3D adr;
-+		c->u.dma_cmd_ext.size[0] =3D sz >> 16;
-+		c->u.dma_cmd_ext.size[1] =3D sz >> 8;
-+		c->u.dma_cmd_ext.size[2] =3D sz;
-+		cmd_len =3D offsetof(struct wilc_spi_cmd, u.dma_cmd_ext.crc);
-+		if (!spi_priv->crc_off)
-+			c->u.dma_cmd_ext.crc[0] =3D wilc_get_crc7(wb, cmd_len);
-+	} else {
-+		dev_err(&spi->dev, "dma read write cmd [%x] not supported\n",
-+			cmd);
-+		return -EINVAL;
-+	}
-+	if (!spi_priv->crc_off)
-+		cmd_len +=3D 1;
-+
-+	resp_len =3D sizeof(*r);
-+
-+	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
-+		dev_err(&spi->dev, "spi buffer size too small (%d)(%d) (%zu)\n",
-+			cmd_len, resp_len, ARRAY_SIZE(wb));
-+		return -EINVAL;
-+	}
-+
-+	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
-+		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
-+		return -EINVAL;
-+	}
-+
-+	r =3D (struct wilc_spi_rsp_data *)&rb[cmd_len];
-+	if (r->rsp_cmd_type !=3D cmd) {
-+		dev_err(&spi->dev,
-+			"Failed cmd response, cmd (%02x), resp (%02x)\n",
-+			cmd, r->rsp_cmd_type);
-+		return -EINVAL;
-+	}
-+
-+	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
-+		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
-+			r->status);
-+		return -EINVAL;
-+	}
-+
-+	if (cmd =3D=3D CMD_DMA_WRITE || cmd =3D=3D CMD_DMA_EXT_WRITE)
-+		return 0;
-+
-+	while (sz > 0) {
-+		int nbytes;
-+		u8 rsp;
-+
-+		if (sz <=3D DATA_PKT_SZ)
-+			nbytes =3D sz;
-+		else
-+			nbytes =3D DATA_PKT_SZ;
-+
-+		/*
-+		 * Data Response header
-+		 */
-+		retry =3D 100;
-+		do {
-+			if (wilc_spi_rx(wilc, &rsp, 1)) {
-+				dev_err(&spi->dev,
-+					"Failed resp read, bus err\n");
-+				return -EINVAL;
-+			}
-+			if (WILC_GET_RESP_HDR_START(rsp) =3D=3D 0xf)
-+				break;
-+		} while (retry--);
-+
-+		/*
-+		 * Read bytes
-+		 */
-+		if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
-+			dev_err(&spi->dev,
-+				"Failed block read, bus err\n");
-+			return -EINVAL;
-+		}
-+
-+		/*
-+		 * Read Crc
-+		 */
-+		if (!spi_priv->crc_off && wilc_spi_rx(wilc, crc, 2)) {
-+			dev_err(&spi->dev,
-+				"Failed block crc read, bus err\n");
-+			return -EINVAL;
-+		}
-+
-+		ix +=3D nbytes;
-+		sz -=3D nbytes;
-+	}
-+	return 0;
-+}
-+
-+static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+	u8 cmd =3D CMD_SINGLE_READ;
-+	u8 clockless =3D 0;
-+
-+	if (addr < WILC_SPI_CLOCKLESS_ADDR_LIMIT) {
-+		/* Clockless register */
-+		cmd =3D CMD_INTERNAL_READ;
-+		clockless =3D 1;
-+	}
-+
-+	result =3D wilc_spi_single_read(wilc, cmd, addr, data, clockless);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed cmd, read reg (%08x)...\n", addr);
-+		return result;
-+	}
-+
-+	le32_to_cpus(data);
-+
-+	return 0;
-+}
-+
-+static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+
-+	if (size <=3D 4)
-+		return -EINVAL;
-+
-+	result =3D wilc_spi_dma_rw(wilc, CMD_DMA_EXT_READ, addr, buf, size);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed cmd, read block (%08x)...\n", addr);
-+		return result;
-+	}
-+
-+	return 0;
-+}
-+
-+static int spi_internal_write(struct wilc *wilc, u32 adr, u32 dat)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+
-+	result =3D wilc_spi_write_cmd(wilc, CMD_INTERNAL_WRITE, adr, dat, 0);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed internal write cmd...\n");
-+		return result;
-+	}
-+
-+	return 0;
-+}
-+
-+static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+
-+	result =3D wilc_spi_single_read(wilc, CMD_INTERNAL_READ, adr, data, 0);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed internal read cmd...\n");
-+		return result;
-+	}
-+
-+	le32_to_cpus(data);
-+
-+	return 0;
-+}
-+
-+/********************************************
-+ *
-+ *      Spi interfaces
-+ *
-+ ********************************************/
-+
-+static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+	u8 cmd =3D CMD_SINGLE_WRITE;
-+	u8 clockless =3D 0;
-+
-+	if (addr < WILC_SPI_CLOCKLESS_ADDR_LIMIT) {
-+		/* Clockless register */
-+		cmd =3D CMD_INTERNAL_WRITE;
-+		clockless =3D 1;
-+	}
-+
-+	result =3D wilc_spi_write_cmd(wilc, cmd, addr, data, clockless);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed cmd, write reg (%08x)...\n", addr);
-+		return result;
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	int result;
-+
-+	/*
-+	 * has to be greated than 4
-+	 */
-+	if (size <=3D 4)
-+		return -EINVAL;
-+
-+	result =3D wilc_spi_dma_rw(wilc, CMD_DMA_EXT_WRITE, addr, NULL, size);
-+	if (result) {
-+		dev_err(&spi->dev,
-+			"Failed cmd, write block (%08x)...\n", addr);
-+		return result;
-+	}
-+
-+	/*
-+	 * Data
-+	 */
-+	result =3D spi_data_write(wilc, buf, size);
-+	if (result) {
-+		dev_err(&spi->dev, "Failed block data write...\n");
-+		return result;
-+	}
-+
-+	return 0;
-+}
-+
-+/********************************************
-+ *
-+ *      Bus interfaces
-+ *
-+ ********************************************/
-+
-+static int wilc_spi_deinit(struct wilc *wilc)
-+{
-+	/*
-+	 * TODO:
-+	 */
-+	return 0;
-+}
-+
-+static int wilc_spi_init(struct wilc *wilc, bool resume)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	u32 reg;
-+	u32 chipid;
-+	static int isinit;
-+	int ret;
-+
-+	if (isinit) {
-+		ret =3D wilc_spi_read_reg(wilc, WILC_CHIPID, &chipid);
-+		if (ret)
-+			dev_err(&spi->dev, "Fail cmd read chip id...\n");
-+
-+		return ret;
-+	}
-+
-+	/*
-+	 * configure protocol
-+	 */
-+
-+	/*
-+	 * TODO: We can remove the CRC trials if there is a definite
-+	 * way to reset
-+	 */
-+	/* the SPI to it's initial value. */
-+	ret =3D spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg);
-+	if (ret) {
-+		/*
-+		 * Read failed. Try with CRC off. This might happen when module
-+		 * is removed but chip isn't reset
-+		 */
-+		spi_priv->crc_off =3D 1;
-+		dev_err(&spi->dev,
-+			"Failed read with CRC on, retrying with CRC off\n");
-+		ret =3D spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg);
-+		if (ret) {
-+			/*
-+			 * Read failed with both CRC on and off,
-+			 * something went bad
-+			 */
-+			dev_err(&spi->dev, "Failed internal read protocol\n");
-+			return ret;
-+		}
-+	}
-+	if (spi_priv->crc_off =3D=3D 0) {
-+		reg &=3D ~0xc; /* disable crc checking */
-+		reg &=3D ~0x70;
-+		reg |=3D (0x5 << 4);
-+		ret =3D spi_internal_write(wilc, WILC_SPI_PROTOCOL_OFFSET, reg);
-+		if (ret) {
-+			dev_err(&spi->dev,
-+				"[wilc spi %d]: Failed internal write reg\n",
-+				__LINE__);
-+			return ret;
-+		}
-+		spi_priv->crc_off =3D 1;
-+	}
-+
-+	/*
-+	 * make sure can read back chip id correctly
-+	 */
-+	ret =3D wilc_spi_read_reg(wilc, WILC_CHIPID, &chipid);
-+	if (ret) {
-+		dev_err(&spi->dev, "Fail cmd read chip id...\n");
-+		return ret;
-+	}
-+
-+	isinit =3D 1;
-+
-+	return 0;
-+}
-+
-+static int wilc_spi_read_size(struct wilc *wilc, u32 *size)
-+{
-+	int ret;
-+
-+	ret =3D spi_internal_read(wilc,
-+				WILC_SPI_INT_STATUS - WILC_SPI_REG_BASE, size);
-+	*size =3D FIELD_GET(IRQ_DMA_WD_CNT_MASK, *size);
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
-+{
-+	return spi_internal_read(wilc, WILC_SPI_INT_STATUS - WILC_SPI_REG_BASE,
-+				 int_status);
-+}
-+
-+static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
-+{
-+	return spi_internal_write(wilc, WILC_SPI_INT_CLEAR - WILC_SPI_REG_BASE,
-+				  val);
-+}
-+
-+static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	u32 reg;
-+	int ret, i;
-+
-+	if (nint > MAX_NUM_INT) {
-+		dev_err(&spi->dev, "Too many interrupts (%d)...\n", nint);
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * interrupt pin mux select
-+	 */
-+	ret =3D wilc_spi_read_reg(wilc, WILC_PIN_MUX_0, &reg);
-+	if (ret) {
-+		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+			WILC_PIN_MUX_0);
-+		return ret;
-+	}
-+	reg |=3D BIT(8);
-+	ret =3D wilc_spi_write_reg(wilc, WILC_PIN_MUX_0, reg);
-+	if (ret) {
-+		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+			WILC_PIN_MUX_0);
-+		return ret;
-+	}
-+
-+	/*
-+	 * interrupt enable
-+	 */
-+	ret =3D wilc_spi_read_reg(wilc, WILC_INTR_ENABLE, &reg);
-+	if (ret) {
-+		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+			WILC_INTR_ENABLE);
-+		return ret;
-+	}
-+
-+	for (i =3D 0; (i < 5) && (nint > 0); i++, nint--)
-+		reg |=3D (BIT((27 + i)));
-+
-+	ret =3D wilc_spi_write_reg(wilc, WILC_INTR_ENABLE, reg);
-+	if (ret) {
-+		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+			WILC_INTR_ENABLE);
-+		return ret;
-+	}
-+	if (nint) {
-+		ret =3D wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
-+		if (ret) {
-+			dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+				WILC_INTR2_ENABLE);
-+			return ret;
-+		}
-+
-+		for (i =3D 0; (i < 3) && (nint > 0); i++, nint--)
-+			reg |=3D BIT(i);
-+
-+		ret =3D wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
-+		if (ret) {
-+			dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+				WILC_INTR2_ENABLE);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/* Global spi HIF function table */
-+static const struct wilc_hif_func wilc_hif_spi =3D {
-+	.hif_init =3D wilc_spi_init,
-+	.hif_deinit =3D wilc_spi_deinit,
-+	.hif_read_reg =3D wilc_spi_read_reg,
-+	.hif_write_reg =3D wilc_spi_write_reg,
-+	.hif_block_rx =3D wilc_spi_read,
-+	.hif_block_tx =3D wilc_spi_write,
-+	.hif_read_int =3D wilc_spi_read_int,
-+	.hif_clear_int_ext =3D wilc_spi_clear_int_ext,
-+	.hif_read_size =3D wilc_spi_read_size,
-+	.hif_block_tx_ext =3D wilc_spi_write,
-+	.hif_block_rx_ext =3D wilc_spi_read,
-+	.hif_sync_ext =3D wilc_spi_sync_ext,
++enum {
++	WILC_FW_PREAMBLE_SHORT =3D 0,	/* Short Preamble */
++	WILC_FW_PREAMBLE_LONG =3D 1,	/* Long Preamble */
++	WILC_FW_PREAMBLE_AUTO =3D 2,	/* Auto Preamble Selection */
 +};
++
++enum {
++	WILC_FW_PASSIVE_SCAN =3D 0,
++	WILC_FW_ACTIVE_SCAN =3D 1,
++};
++
++enum {
++	WILC_FW_NO_POWERSAVE =3D 0,
++	WILC_FW_MIN_FAST_PS =3D 1,
++	WILC_FW_MAX_FAST_PS =3D 2,
++	WILC_FW_MIN_PSPOLL_PS =3D 3,
++	WILC_FW_MAX_PSPOLL_PS =3D 4
++};
++
++enum chip_ps_states {
++	WILC_CHIP_WAKEDUP =3D 0,
++	WILC_CHIP_SLEEPING_AUTO =3D 1,
++	WILC_CHIP_SLEEPING_MANUAL =3D 2
++};
++
++enum bus_acquire {
++	WILC_BUS_ACQUIRE_ONLY =3D 0,
++	WILC_BUS_ACQUIRE_AND_WAKEUP =3D 1,
++};
++
++enum bus_release {
++	WILC_BUS_RELEASE_ONLY =3D 0,
++	WILC_BUS_RELEASE_ALLOW_SLEEP =3D 1,
++};
++
++enum {
++	WILC_FW_NO_ENCRYPT =3D 0,
++	WILC_FW_ENCRYPT_ENABLED =3D BIT(0),
++	WILC_FW_WEP =3D BIT(1),
++	WILC_FW_WEP_EXTENDED =3D BIT(2),
++	WILC_FW_WPA =3D BIT(3),
++	WILC_FW_WPA2 =3D BIT(4),
++	WILC_FW_AES =3D BIT(5),
++	WILC_FW_TKIP =3D BIT(6)
++};
++
++enum {
++	WILC_FW_SEC_NO =3D WILC_FW_NO_ENCRYPT,
++	WILC_FW_SEC_WEP =3D WILC_FW_WEP | WILC_FW_ENCRYPT_ENABLED,
++	WILC_FW_SEC_WEP_EXTENDED =3D WILC_FW_WEP_EXTENDED | WILC_FW_SEC_WEP,
++	WILC_FW_SEC_WPA =3D WILC_FW_WPA | WILC_FW_ENCRYPT_ENABLED,
++	WILC_FW_SEC_WPA_AES =3D WILC_FW_AES | WILC_FW_SEC_WPA,
++	WILC_FW_SEC_WPA_TKIP =3D WILC_FW_TKIP | WILC_FW_SEC_WPA,
++	WILC_FW_SEC_WPA2 =3D WILC_FW_WPA2 | WILC_FW_ENCRYPT_ENABLED,
++	WILC_FW_SEC_WPA2_AES =3D WILC_FW_AES | WILC_FW_SEC_WPA2,
++	WILC_FW_SEC_WPA2_TKIP =3D WILC_FW_TKIP | WILC_FW_SEC_WPA2
++};
++
++enum authtype {
++	WILC_FW_AUTH_OPEN_SYSTEM =3D 1,
++	WILC_FW_AUTH_SHARED_KEY =3D 2,
++	WILC_FW_AUTH_ANY =3D 3,
++	WILC_FW_AUTH_IEEE8021 =3D 5
++};
++
++enum site_survey {
++	WILC_FW_SITE_SURVEY_1CH =3D 0,
++	WILC_FW_SITE_SURVEY_ALL_CH =3D 1,
++	WILC_FW_SITE_SURVEY_OFF =3D 2
++};
++
++enum {
++	WILC_FW_ACK_POLICY_NORMAL =3D 0,
++	WILC_FW_ACK_NO_POLICY,
++};
++
++enum {
++	WILC_FW_REKEY_POLICY_DISABLE =3D 1,
++	WILC_FW_REKEY_POLICY_TIME_BASE,
++	WILC_FW_REKEY_POLICY_PKT_BASE,
++	WILC_FW_REKEY_POLICY_TIME_PKT_BASE
++};
++
++enum {
++	WILC_FW_FILTER_NO =3D 0x00,
++	WILC_FW_FILTER_AP_ONLY =3D 0x01,
++	WILC_FW_FILTER_STA_ONLY =3D 0x02
++};
++
++enum {
++	WILC_FW_11N_PROT_AUTO =3D 0,	/* Auto */
++	WILC_FW_11N_NO_PROT,		/* Do not use any protection */
++	WILC_FW_11N_PROT_ERP,		/* Protect all ERP frame exchanges */
++	WILC_FW_11N_PROT_HT,		/* Protect all HT frame exchanges  */
++	WILC_FW_11N_PROT_GF		/* Protect all GF frame exchanges  */
++};
++
++enum {
++	WILC_FW_ERP_PROT_SELF_CTS,
++	WILC_FW_ERP_PROT_RTS_CTS,
++};
++
++enum {
++	WILC_FW_11N_OP_MODE_HT_MIXED =3D 1,
++	WILC_FW_11N_OP_MODE_HT_ONLY_20MHZ,
++	WILC_FW_11N_OP_MODE_HT_ONLY_20_40MHZ,
++};
++
++enum {
++	WILC_FW_OBBS_NONHT_NO_DETECT =3D 0,
++	WILC_FW_OBBS_NONHT_DETECT_ONLY =3D 1,
++	WILC_FW_OBBS_NONHT_DETECT_PROTECT =3D 2,
++	WILC_FW_OBBS_NONHT_DETECT_PROTECT_REPORT =3D 3,
++};
++
++enum {
++	WILC_FW_HT_PROT_RTS_CTS_NONHT =3D 0,  /* RTS-CTS at non-HT rate */
++	WILC_FW_HT_PROT_FIRST_FRAME_NONHT,  /* First frame at non-HT rate */
++	WILC_FW_HT_PROT_LSIG_TXOP,	    /* LSIG TXOP Protection */
++	WILC_FW_HT_PROT_FIRST_FRAME_MIXED,  /* First frame at Mixed format */
++};
++
++enum {
++	WILC_FW_SMPS_MODE_STATIC =3D 1,
++	WILC_FW_SMPS_MODE_DYNAMIC =3D 2,
++	WILC_FW_SMPS_MODE_MIMO =3D 3,	/* power save disable */
++};
++
++enum {
++	WILC_FW_TX_RATE_AUTO =3D 0,
++	WILC_FW_TX_RATE_MBPS_1 =3D 1,
++	WILC_FW_TX_RATE_MBPS_2 =3D 2,
++	WILC_FW_TX_RATE_MBPS_5_5 =3D 5,
++	WILC_FW_TX_RATE_MBPS_11 =3D 11,
++	WILC_FW_TX_RATE_MBPS_6 =3D 6,
++	WILC_FW_TX_RATE_MBPS_9 =3D 9,
++	WILC_FW_TX_RATE_MBPS_12 =3D 12,
++	WILC_FW_TX_RATE_MBPS_18 =3D 18,
++	WILC_FW_TX_RATE_MBPS_24 =3D 24,
++	WILC_FW_TX_RATE_MBPS_36 =3D 36,
++	WILC_FW_TX_RATE_MBPS_48 =3D 48,
++	WILC_FW_TX_RATE_MBPS_54 =3D 54
++};
++
++enum {
++	WILC_FW_DEFAULT_SCAN =3D 0,
++	WILC_FW_USER_SCAN =3D BIT(0),
++	WILC_FW_OBSS_PERIODIC_SCAN =3D BIT(1),
++	WILC_FW_OBSS_ONETIME_SCAN =3D BIT(2)
++};
++
++enum {
++	WILC_FW_ACTION_FRM_IDX =3D 0,
++	WILC_FW_PROBE_REQ_IDX =3D 1
++};
++
++enum wid_type {
++	WID_CHAR		=3D 0,
++	WID_SHORT		=3D 1,
++	WID_INT			=3D 2,
++	WID_STR			=3D 3,
++	WID_BIN_DATA		=3D 4,
++	WID_BIN			=3D 5,
++};
++
++struct wid {
++	u16 id;
++	enum wid_type type;
++	s32 size;
++	s8 *val;
++};
++
++enum {
++	WID_NIL				=3D 0xffff,
++
++	/*
++	 *  BSS Type
++	 *  -----------------------------------------------------------
++	 *  Configuration : Infrastructure   Independent   Access Point
++	 *  Values to set :         0               1            2
++	 *  -----------------------------------------------------------
++	 */
++	WID_BSS_TYPE			=3D 0x0000,
++
++	/*
++	 *  Transmit Rate
++	 *  -----------------------------------------------------------
++	 *  Configuration : 1  2  5.5  11  6  9  12  18  24  36  48  54
++	 *  Values to set : 1  2    5  11  6  9  12  18  24  36  48  54
++	 *  -----------------------------------------------------------
++	 */
++	WID_CURRENT_TX_RATE		=3D 0x0001,
++
++	/*
++	 *  Channel
++	 *  -----------------------------------------------------------
++	 *  Configuration(g) : 1  2  3  4  5  6  7  8  9 10 11 12 13 14
++	 *  Values to set    : 1  2  3  4  5  6  7  8  9 10 11 12 13 14
++	 *  -----------------------------------------------------------
++	 */
++	WID_CURRENT_CHANNEL		=3D 0x0002,
++
++	/*
++	 *  Preamble
++	 *  -----------------------------------------------------------
++	 *  Configuration :    short    long      Auto
++	 *  Values to set :       0       1         2
++	 *  -----------------------------------------------------------
++	 */
++	WID_PREAMBLE			=3D 0x0003,
++
++	/*
++	 * 11g operating mode (ignored if 11g not present)
++	 *  -----------------------------------------------------------
++	 *  Configuration :   HighPerf  Compat(RSet #1) Compat(RSet #2)
++	 *  Values to set :          1               2               3
++	 *  -----------------------------------------------------------
++	 */
++	WID_11G_OPERATING_MODE		=3D 0x0004,
++
++	/*
++	 *  Mac status (response only)
++	 *  -----------------------------------------------------------
++	 *  Configuration :   disconnect  connect
++	 *  Values to get :          0       1
++	 *  -----------------------------------------------------------
++	 */
++	WID_STATUS			=3D 0x0005,
++
++	/*
++	 *  Scan type
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Passive Scanning   Active Scanning
++	 *  Values to set :                  0                 1
++	 *  -----------------------------------------------------------
++	 */
++	WID_SCAN_TYPE			=3D 0x0007,
++
++	/*
++	 *  Key Id (WEP default key Id)
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Any value between 0 to 3
++	 *  Values to set :   Same value. Default is 0
++	 *  -----------------------------------------------------------
++	 */
++	WID_KEY_ID			=3D 0x0009,
++
++	/*
++	 *  QoS Enable
++	 *  -----------------------------------------------------------
++	 *  Configuration :   QoS Disable   WMM Enable
++	 *  Values to set :   0             1
++	 *  -----------------------------------------------------------
++	 */
++	WID_QOS_ENABLE			=3D 0x000A,
++
++	/*
++	 *  Power Management
++	 *  -----------------------------------------------------------
++	 *  Configuration : NO_POWERSAVE MIN_POWERSAVE MAX_POWERSAVE
++	 *  Values to set : 0            1             2
++	 *  -----------------------------------------------------------
++	 */
++	WID_POWER_MANAGEMENT		=3D 0x000B,
++
++	/*
++	 *  WEP/802 11I Configuration
++	 *  -----------------------------------------------------------
++	 *  Configuration:Disable WP40 WP104 WPA-AES WPA-TKIP RSN-AES RSN-TKIP
++	 *  Values (0x)  :   00     03   07     29       49       31      51
++	 *  Configuration:WPA-AES+TKIP RSN-AES+TKIP
++	 *  Values (0x)  :      69        71
++	 *  -----------------------------------------------------------
++	 */
++	WID_11I_MODE			=3D 0x000C,
++
++	/*
++	 *  WEP Configuration: Used in BSS STA mode only when WEP is enabled
++	 *  -----------------------------------------------------------
++	 *  Configuration : Open System Shared Key Any Type | 802.1x Auth
++	 *  Values (0x)   :    01             02         03 |    BIT2
++	 *  -----------------------------------------------------------
++	 */
++	WID_AUTH_TYPE			=3D 0x000D,
++
++	/*
++	 *  Site Survey Type
++	 *  -----------------------------------------------------------
++	 *  Configuration       :  Values to set
++	 *  Survey 1 Channel    :  0
++	 *  survey all Channels :  1
++	 *  Disable Site Survey :  2
++	 *  -----------------------------------------------------------
++	 */
++	WID_SITE_SURVEY			=3D 0x000E,
++
++	/*
++	 *  Listen Interval
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Any value between 1 to 255
++	 *  Values to set :   Same value. Default is 3
++	 *  -----------------------------------------------------------
++	 */
++	WID_LISTEN_INTERVAL		=3D 0x000F,
++
++	/*
++	 *  DTIM Period
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Any value between 1 to 255
++	 *  Values to set :   Same value. Default is 3
++	 *  -----------------------------------------------------------
++	 */
++	WID_DTIM_PERIOD			=3D 0x0010,
++
++	/*
++	 *  ACK Policy
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Normal Ack            No Ack
++	 *  Values to set :       0                   1
++	 *  -----------------------------------------------------------
++	 */
++	WID_ACK_POLICY			=3D 0x0011,
++
++	/*
++	 *  Reset MAC (Set only)
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Don't Reset	Reset	No Request
++	 *  Values to set :       0               1	    2
++	 *  -----------------------------------------------------------
++	 */
++	WID_RESET			=3D 0x0012,
++
++	/*
++	 *  Broadcast SSID Option: Setting this will adhere to "" SSID element
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Enable             Disable
++	 *  Values to set :   1                  0
++	 *  -----------------------------------------------------------
++	 */
++	WID_BCAST_SSID			=3D 0x0015,
++
++	/*
++	 *  Disconnect (Station)
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Association ID
++	 *  Values to set :   Association ID
++	 *  -----------------------------------------------------------
++	 */
++	WID_DISCONNECT			=3D 0x0016,
++
++	/*
++	 *  11a Tx Power Level
++	 *  -----------------------------------------------------------
++	 *  Configuration : Sets TX Power (Higher the value greater the power)
++	 *  Values to set : Any value between 0 and 63 (inclusive Default 48)
++	 *  -----------------------------------------------------------
++	 */
++	WID_TX_POWER_LEVEL_11A		=3D 0x0018,
++
++	/*
++	 *  Group Key Update Policy Selection
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disabled timeBased packetBased timePacketBased
++	 *  Values to set :   1            2          3              4
++	 *  -----------------------------------------------------------
++	 */
++	WID_REKEY_POLICY		=3D 0x0019,
++
++	/*
++	 *  Allow Short Slot
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disallow Short Slot      Allow Short Slot
++	 *          (Enable Only Long Slot) (Enable Short Slot if applicable)
++	 *  Values to set :    0         1
++	 *  -----------------------------------------------------------
++	 */
++	WID_SHORT_SLOT_ALLOWED		=3D 0x001A,
++
++	WID_PHY_ACTIVE_REG		=3D 0x001B,
++
++	/*
++	 *  11b Tx Power Level
++	 *  -----------------------------------------------------------
++	 *  Configuration : Sets TX Power (Higher the value greater the power)
++	 *  Values to set : Any value between 0 and 63 (inclusive Default 48)
++	 *  -----------------------------------------------------------
++	 */
++	WID_TX_POWER_LEVEL_11B		=3D 0x001D,
++
++	/*
++	 *  Scan Request
++	 *  -----------------------------------------------------------
++	 *  Configuration : Request default scan
++	 *  Values to set : 0
++	 *  -----------------------------------------------------------
++	 */
++	WID_START_SCAN_REQ		=3D 0x001E,
++
++	/*
++	 *  Rssi (get only)
++	 *  -----------------------------------------------------------
++	 *  Configuration :
++	 *  Values to get : Rssi value
++	 *  -----------------------------------------------------------
++	 */
++	WID_RSSI			=3D 0x001F,
++
++	/*
++	 * Join Request
++	 *  -----------------------------------------------------------
++	 *  Configuration : Request to join
++	 *  Values to set : index of scan result
++	 *  -----------------------------------------------------------
++	 */
++	WID_JOIN_REQ			=3D 0x0020,
++
++	WID_LINKSPEED			=3D 0x0026,
++
++	/*
++	 *  Enable User Control of TX Power
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disable                  Enable
++	 *  Values to set :    0                       1
++	 *  -----------------------------------------------------------
++	 */
++	WID_USER_CONTROL_ON_TX_POWER	=3D 0x0027,
++
++	WID_MEMORY_ACCESS_8BIT		=3D 0x0029,
++
++	/*
++	 *  Enable Auto RX Sensitivity feature
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disable                  Enable
++	 *  Values to set :    0                       1
++	 *  -----------------------------------------------------------
++	 */
++	WID_AUTO_RX_SENSITIVITY		=3D 0x0032,
++
++	/*
++	 *  Receive Buffer Based Ack
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disable                  Enable
++	 *  Values to set :    0                       1
++	 *  -----------------------------------------------------------
++	 */
++	WID_DATAFLOW_CONTROL		=3D 0x0033,
++
++	/*
++	 *  Scan Filter
++	 *  -----------------------------------------------------------
++	 *  Configuration : Class       No filter   AP only   Station Only
++	 *  Values to set :                0           1           2
++	 *  Configuration : Priority    High Rssi   Low Rssi     Detect
++	 *  Values to set :                0          0x4         0x0
++	 *  Configuration : Channel     filter off  filter on
++	 *  Values to set :                0          0x10
++	 *  -----------------------------------------------------------
++	 */
++	WID_SCAN_FILTER			=3D 0x0036,
++
++	/*
++	 *  Link Loss Threshold (measure in the beacon period)
++	 *  -----------------------------------------------------------
++	 *  Configuration : Any value between 10 and 254(Set to 255 disable)
++	 *  Values to set : Same value. Default is 10
++	 *  -----------------------------------------------------------
++	 */
++	WID_LINK_LOSS_THRESHOLD		=3D 0x0037,
++
++	WID_ABORT_RUNNING_SCAN		=3D 0x003E,
++
++	/* NMAC Character WID list */
++	WID_WPS_START			=3D 0x0043,
++
++	/*
++	 *  Protection mode for MAC
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Auto  No protection  ERP    HT    GF
++	 *  Values to set :  0     1              2      3     4
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_PROT_MECH		=3D 0x0080,
++
++	/*
++	 *  ERP Protection type for MAC
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Self-CTS   RTS-CTS
++	 *  Values to set :  0          1
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_ERP_PROT_TYPE		=3D 0x0081,
++
++	/*
++	 *  HT Option Enable
++	 *  -----------------------------------------------------------
++	 *  Configuration :   HT Enable          HT Disable
++	 *  Values to set :   1                  0
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_ENABLE			=3D 0x0082,
++
++	/*
++	 *  11n Operating mode (Note that 11g operating mode will also be
++	 *  used in addition to this, if this is set to HT Mixed mode)
++	 *  -----------------------------------------------------------
++	 *   Configuration :  HT Mixed  HT Only-20MHz   HT Only-20/40MHz
++	 *  Values to set :     1         2               3
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_OPERATING_MODE		=3D 0x0083,
++
++	/*
++	 *  11n OBSS non-HT STA Detection flag
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Do not detect
++	 *  Values to set :  0
++	 *  Configuration :  Detect, do not protect or report
++	 *  Values to set :  1
++	 *  Configuration :  Detect, protect and do not report
++	 *  Values to set :  2
++	 *  Configuration :  Detect, protect and report to other BSS
++	 *  Values to set :  3
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_OBSS_NONHT_DETECTION	=3D 0x0084,
++
++	/*
++	 *  11n HT Protection Type
++	 *  -----------------------------------------------------------
++	 *  Configuration :  RTS-CTS   First Frame Exchange at non-HT-rate
++	 *  Values to set :  0         1
++	 *  Configuration :  LSIG TXOP First Frame Exchange in Mixed Fmt
++	 *  Values to set :  2         3
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_HT_PROT_TYPE		=3D 0x0085,
++
++	/*
++	 *  11n RIFS Protection Enable Flag
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Disable    Enable
++	 *  Values to set :  0          1
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_RIFS_PROT_ENABLE	=3D 0x0086,
++
++	/*
++	 *  SMPS Mode
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Static   Dynamic   MIMO (Power Save Disabled)
++	 *  Values to set :  1        2         3
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_SMPS_MODE		=3D 0x0087,
++
++	/*
++	 *  Current transmit MCS
++	 *  -----------------------------------------------------------
++	 *  Configuration :  MCS Index for data rate
++	 *  Values to set :  0 to 7
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_CURRENT_TX_MCS		=3D 0x0088,
++
++	WID_11N_PRINT_STATS		=3D 0x0089,
++
++	/*
++	 *  11n Short GI Enable Flag
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Disable    Enable
++	 *  Values to set :  0          1
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_SHORT_GI_ENABLE		=3D 0x008D,
++
++	/*
++	 *  11n RIFS Enable Flag
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Disable    Enable
++	 *  Values to set :  0          1
++	 *  -----------------------------------------------------------
++	 */
++	WID_RIFS_MODE			=3D 0x0094,
++
++	/*
++	 *  TX Abort Feature
++	 *  -----------------------------------------------------------
++	 *  Configuration :  Disable Self CTS    Enable Self CTS
++	 *  Values to set :             0                      1
++	 *  Configuration :  Disable TX Abort    Enable TX Abort
++	 *  Values to set :             2                      3
++	 *  Configuration :  Enable HW TX Abort Enable SW TX Abort
++	 *  Values to set :             4                      5
++	 *  -----------------------------------------------------------
++	 */
++	WID_TX_ABORT_CONFIG		=3D 0x00A1,
++
++	WID_REG_TSSI_11B_VALUE		=3D 0x00A6,
++	WID_REG_TSSI_11G_VALUE		=3D 0x00A7,
++	WID_REG_TSSI_11N_VALUE		=3D 0x00A8,
++	WID_TX_CALIBRATION		=3D 0x00A9,
++	WID_DSCR_TSSI_11B_VALUE		=3D 0x00AA,
++	WID_DSCR_TSSI_11G_VALUE		=3D 0x00AB,
++	WID_DSCR_TSSI_11N_VALUE		=3D 0x00AC,
++
++	/*
++	 *  Immediate Block-Ack Support
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disable                  Enable
++	 *  Values to set :    0                       1
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_IMMEDIATE_BA_ENABLED	=3D 0x00AF,
++
++	/*
++	 *  TXOP Disable Flag
++	 *  -----------------------------------------------------------
++	 *  Configuration : Disable                  Enable
++	 *  Values to set :    1                        0
++	 *  -----------------------------------------------------------
++	 */
++	WID_11N_TXOP_PROT_DISABLE	=3D 0x00B0,
++
++	WID_TX_POWER_LEVEL_11N		=3D 0x00B1,
++
++	/* Custom Character WID list */
++	/* SCAN Complete notification WID*/
++	WID_SCAN_COMPLETE		=3D 0x00C9,
++
++	WID_DEL_BEACON			=3D 0x00CA,
++
++	WID_LOG_TERMINAL_SWITCH		=3D 0x00CD,
++	WID_TX_POWER			=3D 0x00CE,
++	/*  EMAC Short WID list */
++	/*  RTS Threshold */
++	/*
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Any value between 256 to 2347
++	 *  Values to set :   Same value. Default is 2347
++	 *  -----------------------------------------------------------
++	 */
++	WID_RTS_THRESHOLD		=3D 0x1000,
++
++	/*
++	 *  Fragmentation Threshold
++	 *  -----------------------------------------------------------
++	 *  Configuration :   Any value between 256 to 2346
++	 *  Values to set :   Same value. Default is 2346
++	 *  -----------------------------------------------------------
++	 */
++	WID_FRAG_THRESHOLD		=3D 0x1001,
++
++	WID_SHORT_RETRY_LIMIT		=3D 0x1002,
++	WID_LONG_RETRY_LIMIT		=3D 0x1003,
++	WID_BEACON_INTERVAL		=3D 0x1006,
++	WID_MEMORY_ACCESS_16BIT		=3D 0x1008,
++	WID_PASSIVE_SCAN_TIME           =3D 0x100D,
++	WID_JOIN_START_TIMEOUT		=3D 0x100F,
++	WID_ASOC_TIMEOUT		=3D 0x1011,
++	WID_11I_PROTOCOL_TIMEOUT	=3D 0x1012,
++	WID_EAPOL_RESPONSE_TIMEOUT	=3D 0x1013,
++
++	/* NMAC Short WID list */
++	WID_11N_SIG_QUAL_VAL		=3D 0x1085,
++	WID_CCA_THRESHOLD		=3D 0x1087,
++
++	/* Custom Short WID list */
++
++	/* EMAC Integer WID list */
++	WID_FAILED_COUNT		=3D 0x2000,
++	WID_RETRY_COUNT			=3D 0x2001,
++	WID_MULTIPLE_RETRY_COUNT	=3D 0x2002,
++	WID_FRAME_DUPLICATE_COUNT	=3D 0x2003,
++	WID_ACK_FAILURE_COUNT		=3D 0x2004,
++	WID_RECEIVED_FRAGMENT_COUNT	=3D 0x2005,
++	WID_MCAST_RECEIVED_FRAME_COUNT	=3D 0x2006,
++	WID_FCS_ERROR_COUNT		=3D 0x2007,
++	WID_SUCCESS_FRAME_COUNT		=3D 0x2008,
++	WID_HUT_TX_COUNT		=3D 0x200A,
++	WID_TX_FRAGMENT_COUNT		=3D 0x200B,
++	WID_TX_MULTICAST_FRAME_COUNT	=3D 0x200C,
++	WID_RTS_SUCCESS_COUNT		=3D 0x200D,
++	WID_RTS_FAILURE_COUNT		=3D 0x200E,
++	WID_WEP_UNDECRYPTABLE_COUNT	=3D 0x200F,
++	WID_REKEY_PERIOD		=3D 0x2010,
++	WID_REKEY_PACKET_COUNT		=3D 0x2011,
++	WID_1X_SERV_ADDR		=3D 0x2012,
++	WID_STACK_IP_ADDR		=3D 0x2013,
++	WID_STACK_NETMASK_ADDR		=3D 0x2014,
++	WID_HW_RX_COUNT			=3D 0x2015,
++	WID_MEMORY_ADDRESS		=3D 0x201E,
++	WID_MEMORY_ACCESS_32BIT		=3D 0x201F,
++
++	/* NMAC Integer WID list */
++	/* Custom Integer WID list */
++	WID_GET_INACTIVE_TIME		=3D 0x2084,
++	/* EMAC String WID list */
++	WID_SSID			=3D 0x3000,
++	WID_FIRMWARE_VERSION		=3D 0x3001,
++	WID_OPERATIONAL_RATE_SET	=3D 0x3002,
++	WID_BSSID			=3D 0x3003,
++	WID_WEP_KEY_VALUE		=3D 0x3004,
++	WID_11I_PSK			=3D 0x3008,
++	WID_11E_P_ACTION_REQ		=3D 0x3009,
++	WID_1X_KEY			=3D 0x300A,
++	WID_HARDWARE_VERSION		=3D 0x300B,
++	WID_MAC_ADDR			=3D 0x300C,
++	WID_HUT_DEST_ADDR		=3D 0x300D,
++	WID_PHY_VERSION			=3D 0x300F,
++	WID_SUPP_USERNAME		=3D 0x3010,
++	WID_SUPP_PASSWORD		=3D 0x3011,
++	WID_SITE_SURVEY_RESULTS		=3D 0x3012,
++	WID_RX_POWER_LEVEL		=3D 0x3013,
++	WID_SET_STA_MAC_INACTIVE_TIME	=3D 0x3017,
++	WID_ADD_WEP_KEY			=3D 0x3019,
++	WID_REMOVE_WEP_KEY		=3D 0x301A,
++	WID_ADD_PTK			=3D 0x301B,
++	WID_ADD_RX_GTK			=3D 0x301C,
++	WID_ADD_TX_GTK			=3D 0x301D,
++	WID_REMOVE_KEY			=3D 0x301E,
++	WID_ASSOC_REQ_INFO		=3D 0x301F,
++	WID_ASSOC_RES_INFO		=3D 0x3020,
++	WID_MANUFACTURER		=3D 0x3026, /* Added for CAPI tool */
++	WID_MODEL_NAME			=3D 0x3027, /* Added for CAPI tool */
++	WID_MODEL_NUM			=3D 0x3028, /* Added for CAPI tool */
++	WID_DEVICE_NAME			=3D 0x3029, /* Added for CAPI tool */
++
++	/* NMAC String WID list */
++	WID_SET_OPERATION_MODE		=3D 0x3079,
++	WID_11N_P_ACTION_REQ		=3D 0x3080,
++	WID_HUT_TEST_ID			=3D 0x3081,
++	WID_PMKID_INFO			=3D 0x3082,
++	WID_FIRMWARE_INFO		=3D 0x3083,
++	WID_REGISTER_FRAME		=3D 0x3084,
++	WID_DEL_ALL_STA			=3D 0x3085,
++	WID_REMAIN_ON_CHAN		=3D 0x3996,
++	WID_SSID_PROBE_REQ		=3D 0x3997,
++	WID_JOIN_REQ_EXTENDED		=3D 0x3998,
++
++	WID_IP_ADDRESS			=3D 0x3999,
++
++	/* Custom String WID list */
++
++	/* EMAC Binary WID list */
++	WID_UAPSD_CONFIG		=3D 0x4001,
++	WID_UAPSD_STATUS		=3D 0x4002,
++	WID_WMM_AP_AC_PARAMS		=3D 0x4003,
++	WID_WMM_STA_AC_PARAMS		=3D 0x4004,
++	WID_NETWORK_INFO		=3D 0x4005,
++	WID_STA_JOIN_INFO		=3D 0x4006,
++	WID_CONNECTED_STA_LIST		=3D 0x4007,
++
++	/* NMAC Binary WID list */
++	WID_11N_AUTORATE_TABLE		=3D 0x4080,
++
++	WID_SCAN_CHANNEL_LIST		=3D 0x4084,
++
++	WID_INFO_ELEMENT_PROBE		=3D 0x4085,
++	WID_INFO_ELEMENT_ASSOCIATE	=3D 0x4086,
++	WID_ADD_STA			=3D 0X4087,
++	WID_REMOVE_STA			=3D 0X4088,
++	WID_EDIT_STA			=3D 0X4089,
++	WID_ADD_BEACON			=3D 0x408a,
++
++	WID_SETUP_MULTICAST_FILTER	=3D 0x408b,
++
++	/* Miscellaneous WIDs */
++	WID_ALL				=3D 0x7FFE,
++	WID_MAX				=3D 0xFFFF
++};
++
++#endif
 --=20
 2.24.0
