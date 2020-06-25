@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BCD6C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FAAFC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 338A12072E
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 336B32072E
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404945AbgFYNJK (ORCPT
+        id S2404967AbgFYNJL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Jun 2020 09:09:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
+        Thu, 25 Jun 2020 09:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404944AbgFYNI4 (ORCPT
+        with ESMTP id S2404938AbgFYNIz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jun 2020 09:08:56 -0400
+        Thu, 25 Jun 2020 09:08:55 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 424D2C08C5DD
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2020 06:08:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8B27C08C5C1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2020 06:08:55 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1joRcc-00BrnC-HO; Thu, 25 Jun 2020 15:08:54 +0200
+        id 1joRcb-00BrnC-Sg; Thu, 25 Jun 2020 15:08:54 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     me@bcopeland.com
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/9] wmediumd: add the ability to write a pcapng file
-Date:   Thu, 25 Jun 2020 15:08:42 +0200
-Message-Id: <20200625150754.554b7fc226a1.I14409b6cb5998e7bd087c1329952fbfa1a30d45e@changeid>
+Subject: [PATCH 5/9] wmediumd: add a control message to the API socket
+Date:   Thu, 25 Jun 2020 15:08:40 +0200
+Message-Id: <20200625150754.3fedd2006214.Icb9b997529c82a8b4339fb63f8c798c9b1d9dc4f@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200625130844.22893-1-johannes@sipsolutions.net>
 References: <20200625130844.22893-1-johannes@sipsolutions.net>
@@ -46,197 +46,292 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add the ability to write a pcapng file containing all the data.
-The radiotap header is currently very minimal with only the
-frequency and the signal strength.
+Add a control message indicating two things:
+ * TX start should be notified
+ * all RX frames should be sent over
+
+If all RX frames are reported, then we include the
+HWSIM_ATTR_COOKIE attribute when reflecting the frame
+back to the sender client, so it can identify this
+(and which frame it was, if needed.)
 
 ---
- wmediumd/wmediumd.c | 119 +++++++++++++++++++++++++++++++++++++++++++-
- wmediumd/wmediumd.h |   2 +
- 2 files changed, 120 insertions(+), 1 deletion(-)
+ wmediumd/api.h      |  36 ++++++++++++++++
+ wmediumd/wmediumd.c | 103 ++++++++++++++++++++++++++++++++++++++------
+ wmediumd/wmediumd.h |   5 +++
+ 3 files changed, 130 insertions(+), 14 deletions(-)
 
+diff --git a/wmediumd/api.h b/wmediumd/api.h
+index 6ecaa7bd94b9..24e9548defdb 100644
+--- a/wmediumd/api.h
++++ b/wmediumd/api.h
+@@ -5,6 +5,7 @@
+  */
+ #ifndef _WMEDIUMD_API_H
+ #define _WMEDIUMD_API_H
++#include <stdint.h>
+ 
+ enum wmediumd_message {
+ 	/* invalid message */
+@@ -26,6 +27,15 @@ enum wmediumd_message {
+ 	 * netlink format, to avoid having a special format
+ 	 */
+ 	WMEDIUMD_MSG_NETLINK,
++
++	/* control message, see struct wmediumd_message_control */
++	WMEDIUMD_MSG_SET_CONTROL,
++
++	/*
++	 * Indicates TX start if WMEDIUMD_RX_CTL_NOTIFY_TX_START is set,
++	 * with struct wmediumd_tx_start as the payload.
++	 */
++	WMEDIUMD_MSG_TX_START,
+ };
+ 
+ struct wmediumd_message_header {
+@@ -38,4 +48,30 @@ struct wmediumd_message_header {
+ 	uint8_t data[];
+ };
+ 
++enum wmediumd_control_flags {
++	WMEDIUMD_CTL_NOTIFY_TX_START		= 1 << 0,
++	WMEDIUMD_CTL_RX_ALL_FRAMES		= 1 << 1,
++};
++
++struct wmediumd_message_control {
++	uint32_t flags;
++
++	/*
++	 * For compatibility, wmediumd is meant to understand shorter
++	 * (and ignore unknown parts of longer) control messages than
++	 * what's sent to it, so always take care to have defaults as
++	 * zero since that's what it assumes.
++	 */
++};
++
++struct wmediumd_tx_start {
++	/*
++	 * The cookie is set only when telling the sender, otherwise
++	 * it's set to 0.
++	 */
++	uint64_t cookie;
++	uint32_t freq;
++	uint32_t reserved[3];
++};
++
+ #endif /* _WMEDIUMD_API_H */
 diff --git a/wmediumd/wmediumd.c b/wmediumd/wmediumd.c
-index afc4f16d9ae9..5304931fbf74 100644
+index d7ffd8396d8a..aa169e1602be 100644
 --- a/wmediumd/wmediumd.c
 +++ b/wmediumd/wmediumd.c
-@@ -36,6 +36,7 @@
- #include <limits.h>
- #include <unistd.h>
- #include <stdarg.h>
-+#include <endian.h>
- #include <usfstl/loop.h>
- #include <usfstl/sched.h>
- #include <usfstl/schedctrl.h>
-@@ -309,6 +310,48 @@ static void wmediumd_notify_frame_start(struct usfstl_job *job)
- 	}
+@@ -274,6 +274,41 @@ static void wmediumd_wait_for_client_ack(struct wmediumd *ctx,
+ 		usfstl_loop_wait_and_handle();
  }
  
-+static void log2pcap(struct wmediumd *ctx, struct frame *frame, uint64_t ts)
++static void wmediumd_notify_frame_start(struct usfstl_job *job)
 +{
++	struct frame *frame = container_of(job, struct frame, start_job);
++	struct wmediumd *ctx = job->data;
++	struct client *client;
 +	struct {
-+		uint8_t it_version;
-+		uint8_t it_pad;
-+		uint16_t it_len;
-+		uint32_t it_present;
-+		struct {
-+			uint16_t freq, flags;
-+		} channel;
-+		uint8_t signal;
-+	} __attribute__((packed)) radiotap_hdr = {
-+		.it_len = htole16(sizeof(radiotap_hdr)),
-+		.it_present = htole32(1 << 3 /* channel */ |
-+				      1 << 5 /* signal dBm */),
-+		.channel.freq = htole16(frame->freq),
-+		.signal = frame->signal,
++		struct wmediumd_message_header hdr;
++		struct wmediumd_tx_start start;
++	} __attribute__((packed)) msg = {
++		.hdr.type = WMEDIUMD_MSG_TX_START,
++		.hdr.data_len = sizeof(msg.start),
++		.start.freq = frame->freq,
 +	};
-+	struct {
-+		uint32_t type, blocklen, ifidx, ts_hi, ts_lo, caplen, pktlen;
-+	} __attribute__((packed)) blockhdr = {
-+		.type = 6,
-+		.ts_hi = ts / (1ULL << 32),
-+		.ts_lo = ts,
-+		.caplen = frame->data_len + sizeof(radiotap_hdr),
-+		.pktlen = frame->data_len + sizeof(radiotap_hdr),
-+	};
-+	static const uint8_t pad[3];
-+	uint32_t sz, align;
 +
-+	sz = blockhdr.caplen + sizeof(blockhdr) + sizeof(uint32_t);
-+	blockhdr.blocklen = (sz + 3) & ~3;
-+	align = blockhdr.blocklen - sz;
++	if (ctx->ctrl)
++		usfstl_sched_ctrl_sync_to(ctx->ctrl);
 +
-+	fwrite(&blockhdr, sizeof(blockhdr), 1, ctx->pcap_file);
-+	fwrite(&radiotap_hdr, sizeof(radiotap_hdr), 1, ctx->pcap_file);
-+	fwrite(frame->data, frame->data_len, 1, ctx->pcap_file);
-+	fwrite(pad, align, 1, ctx->pcap_file);
-+	fwrite(&blockhdr.blocklen, sizeof(blockhdr.blocklen), 1, ctx->pcap_file);
-+	fflush(ctx->pcap_file);
++	list_for_each_entry(client, &ctx->clients, list) {
++		if (!(client->flags & WMEDIUMD_CTL_NOTIFY_TX_START))
++			continue;
++
++		if (client == frame->src)
++			msg.start.cookie = frame->cookie;
++		else
++			msg.start.cookie = 0;
++
++		/* must be API socket since flags cannot otherwise be set */
++		assert(client->type == CLIENT_API_SOCK);
++
++		write(client->loop.fd, &msg, sizeof(msg));
++
++		wmediumd_wait_for_client_ack(ctx, client);
++	}
 +}
 +
  static void queue_frame(struct wmediumd *ctx, struct station *station,
  			struct frame *frame)
  {
-@@ -438,6 +481,29 @@ static void queue_frame(struct wmediumd *ctx, struct station *station,
- 		}
- 	}
- 
-+	if (ctx->pcap_file) {
-+		log2pcap(ctx, frame, target);
-+
-+		if (is_acked && !noack) {
-+			struct {
-+				struct frame frame;
-+				uint16_t fc;
-+				uint16_t dur;
-+				uint8_t ra[6];
-+			} __attribute__((packed, aligned(8))) ack = {
-+				.fc = htole16(0xd4),
-+				.dur = htole16(ack_time_usec),
-+			};
-+
-+			memcpy(&ack.frame, frame, sizeof(ack.frame));
-+			ack.frame.data_len = 10;
-+			memcpy(ack.ra, frame->data + 10, 6);
-+
-+			log2pcap(ctx, &ack.frame,
-+				 target + send_time - ack_time_usec);
-+		}
-+	}
-+
- 	target += send_time;
+@@ -407,6 +442,15 @@ static void queue_frame(struct wmediumd *ctx, struct station *station,
  
  	frame->duration = send_time;
-@@ -1141,10 +1207,58 @@ static void print_help(int exval)
- 	printf("  -u socket       expose vhost-user socket, don't use netlink\n");
- 	printf("  -a socket       expose wmediumd API socket\n");
- 	printf("  -n              force netlink use even with vhost-user\n");
-+	printf("  -p FILE         log packets to pcapng file FILE\n");
+ 	frame->src = station->client;
++
++	if (ctx->need_start_notify) {
++		frame->start_job.start = target - send_time;
++		frame->start_job.callback = wmediumd_notify_frame_start;
++		frame->start_job.data = ctx;
++		frame->start_job.name = "frame-start";
++		usfstl_sched_add_job(&scheduler, &frame->start_job);
++	}
++
+ 	frame->job.start = target;
+ 	frame->job.callback = wmediumd_deliver_frame;
+ 	frame->job.data = ctx;
+@@ -473,6 +517,10 @@ static void wmediumd_remove_client(struct wmediumd *ctx, struct client *client)
  
- 	exit(exval);
+ 	if (!list_empty(&client->list))
+ 		list_del(&client->list);
++
++	if (client->flags & WMEDIUMD_CTL_NOTIFY_TX_START)
++		ctx->need_start_notify--;
++
+ 	free(client);
  }
  
-+static void init_pcapng(struct wmediumd *ctx, const char *filename)
-+{
-+	struct {
-+		uint32_t type, blocklen, byte_order;
-+		uint16_t ver_maj, ver_min;
-+		uint64_t seclen;
-+		uint32_t blocklen2;
-+	} __attribute__((packed)) blockhdr = {
-+		.type = 0x0A0D0D0A,
-+		.blocklen = sizeof(blockhdr),
-+		.byte_order = 0x1A2B3C4D,
-+		.ver_maj = 1,
-+		.ver_min = 0,
-+		.seclen = -1,
-+		.blocklen2 = sizeof(blockhdr),
-+	};
-+	struct {
-+		uint32_t type, blocklen;
-+		uint16_t linktype, reserved;
-+		uint32_t snaplen;
-+		struct {
-+			uint16_t code, len;
-+			uint8_t val, pad[3];
-+		} opt_if_tsresol;
-+		struct {
-+			uint16_t code, len;
-+		} opt_endofopt;
-+		uint32_t blocklen2;
-+	} __attribute__((packed)) idb = {
-+		.type = 1,
-+		.blocklen = sizeof(idb),
-+		.linktype = 127, // radiotap
-+		.snaplen = -1,
-+		.opt_if_tsresol.code = 9,
-+		.opt_if_tsresol.len = 1,
-+		.opt_if_tsresol.val = 6, // usec
-+		.blocklen2 = sizeof(idb),
-+	};
-+
-+	if (!filename)
-+		return;
-+
-+	ctx->pcap_file = fopen(filename, "w+");
-+	fwrite(&blockhdr, sizeof(blockhdr), 1, ctx->pcap_file);
-+	fwrite(&idb, sizeof(idb), 1, ctx->pcap_file);
-+}
-+
- int main(int argc, char *argv[])
+@@ -519,11 +567,13 @@ out:
+ /*
+  * Send a data frame to the kernel for reception at a specific radio.
+  */
+-static void send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
+-				  u8 *data, int data_len, int rate_idx,
+-				  int signal, int freq)
++static void send_cloned_frame_msg(struct wmediumd *ctx, struct client *src,
++				  struct station *dst, u8 *data, int data_len,
++				  int rate_idx, int signal, int freq,
++				  uint64_t cookie)
  {
- 	int opt;
-@@ -1174,7 +1288,7 @@ int main(int argc, char *argv[])
- 	unsigned long int parse_log_lvl;
- 	char* parse_end_token;
+-	struct nl_msg *msg;
++	struct client *client;
++	struct nl_msg *msg, *cmsg = NULL;
  
--	while ((opt = getopt(argc, argv, "hVc:l:x:t:u:a:n")) != -1) {
-+	while ((opt = getopt(argc, argv, "hVc:l:x:t:u:a:np:")) != -1) {
- 		switch (opt) {
- 		case 'h':
- 			print_help(EXIT_SUCCESS);
-@@ -1218,6 +1332,9 @@ int main(int argc, char *argv[])
- 		case 'n':
- 			force_netlink = true;
- 			break;
-+		case 'p':
-+			init_pcapng(&ctx, optarg);
-+			break;
- 		case '?':
- 			printf("wmediumd: Error - No such option: "
- 			       "`%c'\n\n", optopt);
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+@@ -554,17 +604,25 @@ static void send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
+ 	if (ctx->ctrl)
+ 		usfstl_sched_ctrl_sync_to(ctx->ctrl);
+ 
+-	if (dst->client) {
+-		wmediumd_send_to_client(ctx, dst->client, msg);
+-	} else {
+-		struct client *client;
+-
+-		list_for_each_entry(client, &ctx->clients, list)
++	list_for_each_entry(client, &ctx->clients, list) {
++		if (client->flags & WMEDIUMD_CTL_RX_ALL_FRAMES) {
++			if (!cmsg) {
++				cmsg = nlmsg_convert(nlmsg_hdr(msg));
++				if (!cmsg)
++					continue;
++				nla_put_u64(msg, HWSIM_ATTR_COOKIE, cookie);
++			}
++			wmediumd_send_to_client(ctx, client,
++						src == client ? cmsg : msg);
++		} else if (!dst->client || dst->client == client) {
+ 			wmediumd_send_to_client(ctx, client, msg);
++		}
+ 	}
+ 
+ out:
+ 	nlmsg_free(msg);
++	if (cmsg)
++		nlmsg_free(cmsg);
+ }
+ 
+ static void wmediumd_deliver_frame(struct usfstl_job *job)
+@@ -620,11 +678,13 @@ static void wmediumd_deliver_frame(struct usfstl_job *job)
+ 					continue;
+ 				}
+ 
+-				send_cloned_frame_msg(ctx, station,
++				send_cloned_frame_msg(ctx, frame->sender->client,
++						      station,
+ 						      frame->data,
+ 						      frame->data_len,
+ 						      1, signal,
+-						      frame->freq);
++						      frame->freq,
++						      frame->cookie);
+ 
+ 			} else if (station_has_addr(station, dest)) {
+ 				if (set_interference_duration(ctx,
+@@ -632,11 +692,13 @@ static void wmediumd_deliver_frame(struct usfstl_job *job)
+ 					frame->signal))
+ 					continue;
+ 
+-				send_cloned_frame_msg(ctx, station,
++				send_cloned_frame_msg(ctx, frame->sender->client,
++						      station,
+ 						      frame->data,
+ 						      frame->data_len,
+ 						      1, frame->signal,
+-						      frame->freq);
++						      frame->freq,
++						      frame->cookie);
+ 			}
+ 		}
+ 	} else
+@@ -865,6 +927,7 @@ static void wmediumd_api_handler(struct usfstl_loop_entry *entry)
+ 	struct wmediumd *ctx = entry->data;
+ 	struct wmediumd_message_header hdr;
+ 	enum wmediumd_message response = WMEDIUMD_MSG_ACK;
++	struct wmediumd_message_control control = {};
+ 	struct nl_msg *nlmsg;
+ 	unsigned char *data;
+ 	ssize_t len;
+@@ -925,6 +988,18 @@ static void wmediumd_api_handler(struct usfstl_loop_entry *entry)
+ 
+ 		nlmsg_free(nlmsg);
+ 		break;
++	case WMEDIUMD_MSG_SET_CONTROL:
++		/* copy what we get and understand, leave the rest zeroed */
++		memcpy(&control, data,
++		       min(sizeof(control), hdr.data_len));
++
++		if (client->flags & WMEDIUMD_CTL_NOTIFY_TX_START)
++			ctx->need_start_notify--;
++		if (control.flags & WMEDIUMD_CTL_NOTIFY_TX_START)
++			ctx->need_start_notify++;
++
++		client->flags = control.flags;
++		break;
+ 	case WMEDIUMD_MSG_ACK:
+ 		abort();
+ 	default:
 diff --git a/wmediumd/wmediumd.h b/wmediumd/wmediumd.h
-index 6319bb70c8f6..8619e28cbe9a 100644
+index 2360da75cdb2..6319bb70c8f6 100644
 --- a/wmediumd/wmediumd.h
 +++ b/wmediumd/wmediumd.h
-@@ -227,6 +227,8 @@ struct wmediumd {
- 	u8 log_lvl;
- 
- 	u32 need_start_notify;
+@@ -184,6 +184,8 @@ struct client {
+ 	/* for API socket */
+ 	struct usfstl_loop_entry loop;
+ 	bool wait_for_ack;
 +
-+	FILE *pcap_file;
++	u32 flags;
+ };
+ 
+ struct wmediumd {
+@@ -223,6 +225,8 @@ struct wmediumd {
+ 	int (*get_fading_signal)(struct wmediumd *);
+ 
+ 	u8 log_lvl;
++
++	u32 need_start_notify;
  };
  
  struct hwsim_tx_rate {
+@@ -233,6 +237,7 @@ struct hwsim_tx_rate {
+ struct frame {
+ 	struct list_head list;		/* frame queue list */
+ 	struct usfstl_job job;
++	struct usfstl_job start_job;
+ 	struct client *src;
+ 	bool acked;
+ 	u64 cookie;
 -- 
 2.26.2
 
