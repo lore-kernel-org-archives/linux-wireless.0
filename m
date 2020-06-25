@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A128EC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A35C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F2FE20702
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6E932072E
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404964AbgFYNI7 (ORCPT
+        id S2404893AbgFYNI5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Jun 2020 09:08:59 -0400
+        Thu, 25 Jun 2020 09:08:57 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404949AbgFYNI5 (ORCPT
+        with ESMTP id S2404926AbgFYNIz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jun 2020 09:08:57 -0400
+        Thu, 25 Jun 2020 09:08:55 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0067BC08C5C1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2020 06:08:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05001C08C5DD
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2020 06:08:55 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1joRcd-00BrnC-4E; Thu, 25 Jun 2020 15:08:55 +0200
+        id 1joRcb-00BrnC-8C; Thu, 25 Jun 2020 15:08:53 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     me@bcopeland.com
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 9/9] wmediumd: lib: wallclock: fix timerfd handling
-Date:   Thu, 25 Jun 2020 15:08:44 +0200
-Message-Id: <20200625150754.61ba963a8ccf.I2aa70a3d80eba03d766b354a4ba05e8fb15e8287@changeid>
+Subject: [PATCH 3/9] wmediumd: sync with external scheduler on API socket
+Date:   Thu, 25 Jun 2020 15:08:38 +0200
+Message-Id: <20200625150754.c7dd5cb194aa.Icb95242975e6e6952a14e5ae1337245496489a6b@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200625130844.22893-1-johannes@sipsolutions.net>
 References: <20200625130844.22893-1-johannes@sipsolutions.net>
@@ -46,63 +46,72 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When we have a timerfd for wallclock integration, it is possible
-that the following scenario happens:
- * we insert an event in to the scheduler at time T
- * some job handling handles the event loop and the fd
-   becomes readable and the read is handled
- * we go back to the scheduler, now waiting for time T,
-   but the fd doesn't become readable because it already
-   had
+If there's a non-control message on the API socket, sync time
+from the external scheduler to update the internal time and
+handle updates correctly.
 
-This causes the scheduler to lose synchronization and nothing
-really works - this manifested for example when having virtual
-ethernet with a low latency, where the real processing time
-may be more than the latency.
-
-Fix this by keeping the loop entry only active when we need it,
-so that the fd becomes readable we don't handle it until we're
-in a situation where we actually want to.
+Also synchronize time to the external scheduler when we send
+anything to the API socket, in case we were free-running for
+a while.
 
 ---
- wmediumd/lib/wallclock.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ wmediumd/wmediumd.c | 9 +++++++++
+ wmediumd/wmediumd.h | 2 ++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/wmediumd/lib/wallclock.c b/wmediumd/lib/wallclock.c
-index 4f62a5894329..3fb09accba61 100644
---- a/wmediumd/lib/wallclock.c
-+++ b/wmediumd/lib/wallclock.c
-@@ -56,9 +56,13 @@ void usfstl_sched_wallclock_wait(struct usfstl_scheduler *sched)
- {
- 	sched->wallclock.timer_triggered = 0;
+diff --git a/wmediumd/wmediumd.c b/wmediumd/wmediumd.c
+index 8a9d97b6a427..0f45c75be9c9 100644
+--- a/wmediumd/wmediumd.c
++++ b/wmediumd/wmediumd.c
+@@ -508,6 +508,8 @@ static void send_tx_info_frame_nl(struct wmediumd *ctx, struct frame *frame)
+ 		goto out;
+ 	}
  
-+	usfstl_loop_register(&sched->wallclock.entry);
++	if (ctx->ctrl)
++		usfstl_sched_ctrl_sync_to(ctx->ctrl);
+ 	wmediumd_send_to_client(ctx, frame->src, msg);
+ 
+ out:
+@@ -549,6 +551,9 @@ static void send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
+ 	w_logf(ctx, LOG_DEBUG, "cloned msg dest " MAC_FMT " (radio: " MAC_FMT ") len %d\n",
+ 		   MAC_ARGS(dst->addr), MAC_ARGS(dst->hwaddr), data_len);
+ 
++	if (ctx->ctrl)
++		usfstl_sched_ctrl_sync_to(ctx->ctrl);
 +
- 	while (!sched->wallclock.timer_triggered)
- 		usfstl_loop_wait_and_handle();
- 
-+	usfstl_loop_unregister(&sched->wallclock.entry);
+ 	if (dst->client) {
+ 		wmediumd_send_to_client(ctx, dst->client, msg);
+ 	} else {
+@@ -904,6 +909,9 @@ static void wmediumd_api_handler(struct usfstl_loop_entry *entry)
+ 		list_del_init(&client->list);
+ 		break;
+ 	case WMEDIUMD_MSG_NETLINK:
++		if (ctx->ctrl)
++			usfstl_sched_ctrl_sync_from(ctx->ctrl);
 +
- 	usfstl_sched_set_time(sched, sched->prev_external_sync);
- }
+ 		if (!nlmsg_ok((const struct nlmsghdr *)data, len)) {
+ 			response = WMEDIUMD_MSG_INVALID;
+ 			break;
+@@ -1180,6 +1188,7 @@ int main(int argc, char *argv[])
+ 				      &scheduler);
+ 		vusrv.scheduler = &scheduler;
+ 		vusrv.ctrl = &ctrl;
++		ctx.ctrl = &ctrl;
+ 	} else {
+ 		usfstl_sched_wallclock_init(&scheduler, 1000);
+ 	}
+diff --git a/wmediumd/wmediumd.h b/wmediumd/wmediumd.h
+index fb7b47a43574..2360da75cdb2 100644
+--- a/wmediumd/wmediumd.h
++++ b/wmediumd/wmediumd.h
+@@ -192,6 +192,8 @@ struct wmediumd {
+ 	struct nl_sock *sock;
+ 	struct usfstl_loop_entry nl_loop;
  
-@@ -76,8 +80,6 @@ void usfstl_sched_wallclock_init(struct usfstl_scheduler *sched,
- 	sched->wallclock.entry.handler = usfstl_sched_wallclock_handle_fd;
- 
- 	sched->wallclock.nsec_per_tick = ns_per_tick;
--
--	usfstl_loop_register(&sched->wallclock.entry);
- }
- 
- void usfstl_sched_wallclock_exit(struct usfstl_scheduler *sched)
-@@ -87,8 +89,6 @@ void usfstl_sched_wallclock_exit(struct usfstl_scheduler *sched)
- 
- 	sched->external_request = NULL;
- 	sched->external_wait = NULL;
--
--	usfstl_loop_unregister(&sched->wallclock.entry);
- 	close(sched->wallclock.entry.fd);
- }
++	struct usfstl_sched_ctrl *ctrl;
++
+ 	struct list_head clients;
+ 	struct client nl_client;
  
 -- 
 2.26.2
