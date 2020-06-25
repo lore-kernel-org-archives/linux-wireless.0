@@ -2,41 +2,57 @@ Return-Path: <SRS0=3AJD=AG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C81C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22034C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 16:07:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A81B20702
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 13:09:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1BE120CC7
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jun 2020 16:07:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593101269;
+	bh=QubKcWc+CTAGsj/zoI+CVXhnO4FPR3/tYHewrnyJwXQ=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=LanwScs/l/rTDWJWiJvnhxPvm5Yx67Vko+DfKYlMHiFMHARVL7nopZdKPC32YpbGB
+	 MLXZbs7i4JTm0Ii7mCDgGoRvSkO9B+6AKpM401BXC4UxEZX3jMsT0/3aHsrx0J/upG
+	 sGWzWnxxtRWJqfnJmiv7N8yy/Dfs7lEAnmFmnGhY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404932AbgFYNJP (ORCPT
+        id S2405815AbgFYQHo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Jun 2020 09:09:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34156 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404922AbgFYNIz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jun 2020 09:08:55 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA22EC08C5C1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2020 06:08:54 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1joRca-00BrnC-JO; Thu, 25 Jun 2020 15:08:52 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     me@bcopeland.com
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/9] wmediumd: add -lstdc++ for SANITIZE=1
-Date:   Thu, 25 Jun 2020 15:08:36 +0200
-Message-Id: <20200625150754.5b773d0f5e50.I3d0915b84d33b5a770cef1c1273bd33ac4e72d7b@changeid>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200625130844.22893-1-johannes@sipsolutions.net>
-References: <20200625130844.22893-1-johannes@sipsolutions.net>
+        Thu, 25 Jun 2020 12:07:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52176 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2403863AbgFYQHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jun 2020 12:07:43 -0400
+Received: from ziggy.de (unknown [213.195.114.138])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0396E2082F;
+        Thu, 25 Jun 2020 16:07:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593101263;
+        bh=QubKcWc+CTAGsj/zoI+CVXhnO4FPR3/tYHewrnyJwXQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=lYZ6hFaNv/WLDbYsEQ2xr/TmakMNyTlO8fwWj9FdUcFXRBrK7Lnb7oDBcN4sImSR8
+         64q9gZZzKSiT05qa2cSzk3chMrKJ7bdjgu9BYfUmSkNnItnMewiPHUfQEV9fboDn4c
+         cU4toUHFA+Om/IMeK+n5KXxV6kLoyNAA1g/CgVss=
+From:   matthias.bgg@kernel.org
+To:     arend.vanspriel@broadcom.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org
+Cc:     franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        mbrugger@suse.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, matthias.bgg@kernel.org,
+        hdegoede@redhat.com
+Subject: [PATCH] brcmfmac: Transform compatible string for FW loading
+Date:   Thu, 25 Jun 2020 18:07:25 +0200
+Message-Id: <20200625160725.31581-1-matthias.bgg@kernel.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -44,29 +60,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Matthias Brugger <mbrugger@suse.com>
 
-It appears that in some scenarios this is necessary to get
-the right version of the library, otherwise some runtime
-linking can fail. Add -lstdc++ as required by -lasan.
+The driver relies on the compatible string from DT to determine which
+FW configuration file it should load. The DTS spec allows for '/' as
+part of the compatible string. We change this to '-' so that we will
+still be able to load the config file, even when the compatible has a
+'/'. This fixes explicitly the firmware loading for
+"solidrun,cubox-i/q".
 
+Signed-off-by: Matthias Brugger <mbrugger@suse.com>
 ---
- wmediumd/Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/of.c  | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/wmediumd/Makefile b/wmediumd/Makefile
-index f75c4e8b4e3e..fa94eb01fbc2 100644
---- a/wmediumd/Makefile
-+++ b/wmediumd/Makefile
-@@ -56,7 +56,7 @@ OBJECTS += lib/uds.o lib/vhost.o lib/wallclock.o
- ifeq ($(SANITIZE),1)
- CFLAGS += -fsanitize=undefined,address
- # apparently these have to come first for some reason
--override LDFLAGS := -lasan -lubsan $(LDFLAGS)
-+override LDFLAGS := -lasan -lubsan -lstdc++ $(LDFLAGS)
- endif
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+index b886b56a5e5a..8a41b7f9cad3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+@@ -17,7 +17,6 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ {
+ 	struct brcmfmac_sdio_pd *sdio = &settings->bus.sdio;
+ 	struct device_node *root, *np = dev->of_node;
+-	struct property *prop;
+ 	int irq;
+ 	u32 irqf;
+ 	u32 val;
+@@ -25,8 +24,21 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ 	/* Set board-type to the first string of the machine compatible prop */
+ 	root = of_find_node_by_path("/");
+ 	if (root) {
+-		prop = of_find_property(root, "compatible", NULL);
+-		settings->board_type = of_prop_next_string(prop, NULL);
++		int i;
++		char *board_type;
++		const char *tmp;
++
++		of_property_read_string_index(root, "compatible", 0, &tmp);
++
++		/* get rid of '/' in the compatible string to be able to find the FW */
++		board_type = devm_kzalloc(dev, strlen(tmp), GFP_KERNEL);
++		strncpy(board_type, tmp, strlen(tmp));
++		for (i = 0; i < strlen(board_type); i++) {
++			if (board_type[i] == '/')
++				board_type[i] = '-';
++		}
++		settings->board_type = board_type;
++
+ 		of_node_put(root);
+ 	}
  
- all: wmediumd 
 -- 
-2.26.2
+2.27.0
 
