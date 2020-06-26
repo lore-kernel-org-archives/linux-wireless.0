@@ -2,98 +2,79 @@ Return-Path: <SRS0=B3tD=AH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D943C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:02:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 977C6C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:11:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FDA620707
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:02:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A4D620836
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:11:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="SFAEFk+q"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vaes/ZI3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726601AbgFZSCA (ORCPT
+        id S1725803AbgFZSLx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Jun 2020 14:02:00 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:48209 "EHLO m43-7.mailgun.net"
+        Fri, 26 Jun 2020 14:11:53 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:30848 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726430AbgFZSB7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jun 2020 14:01:59 -0400
+        id S1725275AbgFZSLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jun 2020 14:11:53 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1593194519; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=15E3EBWgkpqHyG0i3ekmSzkKZMNaIq6VeUHweIaRUYA=; b=SFAEFk+q5Ppy5Gg0G5LVxVLU/U/Skfe78mcmwqXnLi+w6m4w3M6CnzmMFlzcy0izFBADB94b
- iXZGMu/pCthQSTmuPTRhuD+8xl4JEGIoPSTsV9dhbfePuag2Anrcl50YYQ415SQUX4SUy7kk
- ZBKhhhPtNIyfFYj1jnHzpt6Rbgs=
+ s=smtp; t=1593195112; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=ulJKfi5lN2v1zpPbbJV+leSuXmEAIHWHEqi7KXrscX4=; b=vaes/ZI3xYFj8GJJc+oTjrNPFVxichi/4FEtkpqn1YSEAbgZcKItPluFiKGLgzcClkLcTyUZ
+ LsGYpFEj+2IbKtJJQaio/lRVEEh/LMnQsNpVmc/yH+gsmUn01Uffoiq6SCqhdWs8vCEA2rJz
+ S1pYZywCfeLNMsmOpz/b4I3bYCQ=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n15.prod.us-west-2.postgun.com with SMTP id
- 5ef63810e144dd5115a0e61b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Jun 2020 18:01:52
+ 5ef63a68ad153efa346ff9b3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Jun 2020 18:11:52
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 84ECAC433C6; Fri, 26 Jun 2020 18:01:52 +0000 (UTC)
+        id 11B76C433C6; Fri, 26 Jun 2020 18:11:52 +0000 (UTC)
 Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pillair)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 55B8CC433C6;
-        Fri, 26 Jun 2020 18:01:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 55B8CC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 55522C433C8;
+        Fri, 26 Jun 2020 18:11:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 55522C433C8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
 From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     ath10k@lists.infradead.org, devicetree@vger.kernel.org
+To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH 1/2] dt: bindings: Add new regulator as optional property for WCN3990
-Date:   Fri, 26 Jun 2020 23:31:41 +0530
-Message-Id: <1593194502-13164-2-git-send-email-pillair@codeaurora.org>
+Subject: [PATCH 0/2] ath10k: Fixes during subsystem recovery
+Date:   Fri, 26 Jun 2020 23:41:38 +0530
+Message-Id: <1593195100-24654-1-git-send-email-pillair@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
-References: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add an additional regulator supply as an optional
-property for WCN3990.
+This patch series includes some fixes when the device
+is in recovery mode, i.e. when the firmware goes down.
 
-Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
+- Pausing TX queues when FW goes down
+- Removed unwanted/extra error logging in pkt TX path
+- Skipping wait for FW response for delete cmds
+- Handling the -ESHUTDOWN error code in case of SSR.
 
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Rakesh Pillai (2):
+  ath10k: Pause the tx queues when firmware is down
+  ath10k: Skip wait for delete response if firmware is down
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 65ee68e..b7188d3 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -65,7 +65,8 @@ Optional properties:
- 				     the length can vary between hw versions.
- - <supply-name>-supply: handle to the regulator device tree node
- 			   optional "supply-name" are "vdd-0.8-cx-mx",
--			   "vdd-1.8-xo", "vdd-1.3-rfa" and "vdd-3.3-ch0".
-+			   "vdd-1.8-xo", "vdd-1.3-rfa", "vdd-3.3-ch0"
-+			   and "vdd-3.3-ch1".
- - memory-region:
- 	Usage: optional
- 	Value type: <phandle>
-@@ -204,6 +205,7 @@ wifi@18000000 {
- 		vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
- 		vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
- 		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
-+		vdd-3.3-ch1-supply = <&vreg_l26a_3p3>;
- 		memory-region = <&wifi_msa_mem>;
- 		iommus = <&apps_smmu 0x0040 0x1>;
- 		qcom,msa-fixed-perm;
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 36 ++++++++++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/snoc.c |  3 +++
+ 3 files changed, 28 insertions(+), 12 deletions(-)
+
 -- 
 2.7.4
 
