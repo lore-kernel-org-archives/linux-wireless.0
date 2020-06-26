@@ -2,75 +2,89 @@ Return-Path: <SRS0=B3tD=AH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CACC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18F5FC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9CF1206B7
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:01:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC594206B7
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jun 2020 18:02:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oGrjQhyB"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="DJTlCCBn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726110AbgFZSBy (ORCPT
+        id S1725816AbgFZSCE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Jun 2020 14:01:54 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:30409 "EHLO
+        Fri, 26 Jun 2020 14:02:04 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:60098 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725890AbgFZSBy (ORCPT
+        by vger.kernel.org with ESMTP id S1726616AbgFZSCD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jun 2020 14:01:54 -0400
+        Fri, 26 Jun 2020 14:02:03 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1593194513; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=3jBIQeSeWIXTNigOUBSApAntBRRgxn7gCDEW1Xz+o8A=; b=oGrjQhyB3DPr6UmnF8nIhqyJU4l27m5b9AlRyRxY5nmI32Yoyfv/oiynv6egaOw2djas6+Xn
- YpWYnEe2QWzhDXxWPI8+HH0gnqBL+KK/VN3OdbxtZNEeECK1sFAVgA7RzimyN9kbcDbJKx/l
- pwiwI5T+nXYnph+nfenVlzWqC18=
+ s=smtp; t=1593194522; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=3V6V+HkJ2nno4gRDGUehKUmSrGtSiALI3MCiAJYXmzs=; b=DJTlCCBnsCkKJXXVVQM9xLPMj1SVEKGZGjqlGu4Erzy0V243ahmtDvZVeeKt+UA2njypfmn0
+ x1VSOULg5tACmz4lYZtCgzjwEj3ZZjXx+8y2vpHROY46N6J43l2/bia7O4VoKB/xJDuiwPzZ
+ 6Edf4Io5/NjFjN1en+jTR1tRvm0=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
- 5ef6380e4c9690533a604e26 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Jun 2020 18:01:50
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 5ef63812f3deea03f3b37f62 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Jun 2020 18:01:54
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 015E2C433CA; Fri, 26 Jun 2020 18:01:50 +0000 (UTC)
+        id 922A5C433CA; Fri, 26 Jun 2020 18:01:54 +0000 (UTC)
 Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pillair)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 09E3BC433C8;
-        Fri, 26 Jun 2020 18:01:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 09E3BC433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9C634C433C8;
+        Fri, 26 Jun 2020 18:01:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9C634C433C8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
 From:   Rakesh Pillai <pillair@codeaurora.org>
 To:     ath10k@lists.infradead.org, devicetree@vger.kernel.org
 Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH 0/2] ath10k: Add chain-1 voltage regulator voting
-Date:   Fri, 26 Jun 2020 23:31:40 +0530
-Message-Id: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
+Subject: [PATCH 2/2] ath10k: Add support for chain1 regulator supply voting
+Date:   Fri, 26 Jun 2020 23:31:42 +0530
+Message-Id: <1593194502-13164-3-git-send-email-pillair@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
+References: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the support to vote for the chain-1
-voltage regulator for WCN3990. This is
-added as an optional property.
+Add support to vote for chain-1 voltage regulator
+in WCN3990.
 
-Rakesh Pillai (2):
-  dt: bindings: Add new regulator as optional property for WCN3990
-  ath10k: Add support for chain1 regulator supply voting
+Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
 
- Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 4 +++-
- drivers/net/wireless/ath/ath10k/snoc.c                         | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 645ed5f..407a074 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -45,6 +45,7 @@ static const char * const ath10k_regulators[] = {
+ 	"vdd-1.8-xo",
+ 	"vdd-1.3-rfa",
+ 	"vdd-3.3-ch0",
++	"vdd-3.3-ch1",
+ };
+ 
+ static const char * const ath10k_clocks[] = {
 -- 
 2.7.4
 
