@@ -2,39 +2,82 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B62DC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD82C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:59:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31D1D206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:58:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BB16206F1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:59:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JuiLzS0z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390009AbgF2U62 (ORCPT
+        id S2390030AbgF2U6p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:58:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43394 "EHLO
+        Mon, 29 Jun 2020 16:58:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731254AbgF2TND (ORCPT
+        with ESMTP id S1730900AbgF2TNC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:13:03 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CFFC02E2F3;
-        Mon, 29 Jun 2020 07:27:30 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jpukp-00EEym-98; Mon, 29 Jun 2020 16:27:27 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2020-06-29
-Date:   Mon, 29 Jun 2020 16:27:17 +0200
-Message-Id: <20200629142718.31257-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Mon, 29 Jun 2020 15:13:02 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D67CC0A8885;
+        Mon, 29 Jun 2020 00:26:59 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id l63so7881169pge.12;
+        Mon, 29 Jun 2020 00:26:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7pdRoNIQxLUhqhAFVYUae+IUaVMSVu90O9pRkmyfRUE=;
+        b=JuiLzS0zVQSOd+UUTJ7mOtebFxRFdBiNafjWxnlDAgjAIi4FP8mQvUBX4RTUsGhJ9u
+         M1O+2ZjIiWp6WnxSmrN0Ezi63VoPfJyCr/E09Eu7bQzC2p7LR9ji+m8g5w1dDOWiNnCT
+         4mBOsK6LxSDeqvEuW/FcqUwzS7I8GkcW+qsJLgyAFZNIei+6Z0i5829HkhAXSPIMGmlW
+         g5WcWgJ65NJW8LDtKlj7eoEn3gQtFqT3ca+CS1zBgsQUepwpFr9fCGD5xuF/fkMbH2bS
+         8r58BKminK+dXqEFbOo1nT1dNz3RFpKNidlE8WKLwwm3BK2kp91N8wJtmsJK02nzuuqI
+         PV0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7pdRoNIQxLUhqhAFVYUae+IUaVMSVu90O9pRkmyfRUE=;
+        b=UfcGC0d5MkmWXYvXlfVCoipYdzf7P1tR0Is10GADU6mAEwUNVzXHj24OO/UUAjnxP1
+         MtvuRJSUl6DLysCQZfRAwYyNlZZJIvh4h43aiyk7bLeS7LQHLkGjwcYsbV3IYPa6qP+I
+         8JvEoU6QdRv57M2iEVo5CQR8vCY1Juk30ZWRKzaT7wxqNs6kXAlHlU2ZleaTlawOvevb
+         fwk0xBo7nWFAygRdI6PcSVwG5CdjuAA6Wl5qtb9AZRfdlJ3jMuKRAmbpbrRFJj7fqkyx
+         S421GqBEktSE80dkGrGSnTWaXqENw8W8QJyoStDNN8wMU7ruQjjVECjXMYlLSKA16Pze
+         ZLfg==
+X-Gm-Message-State: AOAM5318BHMaF2gLgihixlH7tYwQ9CIk5QzjHQlEBVA6L2X0l+s34Sba
+        8yll9Sh4uI7tjChiz6CyjUw=
+X-Google-Smtp-Source: ABdhPJw9RqhHyzdGNEHd4aWcBpOcun7fKsft5rfVhdinTZwJdFgedUacmTFMJS3AyuFqwGKw2yEeiQ==
+X-Received: by 2002:a63:3603:: with SMTP id d3mr8271436pga.200.1593415618423;
+        Mon, 29 Jun 2020 00:26:58 -0700 (PDT)
+Received: from varodek.iballbatonwifi.com ([103.105.153.57])
+        by smtp.gmail.com with ESMTPSA id q10sm34637627pfk.86.2020.06.29.00.26.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jun 2020 00:26:57 -0700 (PDT)
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v1 1/2] ipw2100: use generic power management
+Date:   Mon, 29 Jun 2020 12:55:24 +0530
+Message-Id: <20200629072525.156154-2-vaibhavgupta40@gmail.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200629072525.156154-1-vaibhavgupta40@gmail.com>
+References: <20200629072525.156154-1-vaibhavgupta40@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,64 +85,109 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+With legacy PM, drivers themselves were responsible for managing the
+device's power states and takes care of register states.
 
-We've got a couple of fixes here, and I took the liberty to include a
-small code cleanup of some really stupid code, and a patch that adds
-new AKM suites so we can use them in the drivers more easily.
+After upgrading to the generic structure, PCI core will take care of
+required tasks and drivers should do only device-specific operations.
 
-Please pull and let me know if there's any problem.
+The driver was invoking PCI helper functions like pci_save/restore_state(),
+pci_enable/disable_device() and pci_set_power_state(), which is not
+recommended.
 
-Thanks,
-johannes
+Compile-tested only.
 
+Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 31 +++++---------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-
-The following changes since commit eb2932b00fc75a154bb4607773dc0666924116ad:
-
-  Merge branch 'net-bcmgenet-use-hardware-padding-of-runt-frames' (2020-06-24 21:51:03 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2020-06-29
-
-for you to fetch changes up to 60a0121f8fa64b0f4297aa6fef8207500483a874:
-
-  nl80211: fix memory leak when parsing NL80211_ATTR_HE_BSS_COLOR (2020-06-26 11:52:57 +0200)
-
-----------------------------------------------------------------
-Couple of fixes/small things:
- * TX control port status check fixed to not assume frame format
- * mesh control port fixes
- * error handling/leak fixes when starting AP, with HE attributes
- * fix broadcast packet handling with encapsulation offload
- * add new AKM suites
- * and a small code cleanup
-
-----------------------------------------------------------------
-Luca Coelho (2):
-      nl80211: don't return err unconditionally in nl80211_start_ap()
-      nl80211: fix memory leak when parsing NL80211_ATTR_HE_BSS_COLOR
-
-Markus Theil (3):
-      mac80211: fix control port tx status check
-      mac80211: skip mpath lookup also for control port tx
-      mac80211: allow rx of mesh eapol frames with default rx key
-
-Pavel Machek (1):
-      mac80211: simplify mesh code
-
-Seevalamuthu Mariappan (1):
-      mac80211: Fix dropping broadcast packets in 802.11 encap
-
-Veerendranath Jakkam (1):
-      ieee80211: Add missing and new AKM suite selector definitions
-
- include/linux/ieee80211.h |  4 ++++
- net/mac80211/mesh_hwmp.c  |  7 ++-----
- net/mac80211/rx.c         | 26 ++++++++++++++++++++++++++
- net/mac80211/status.c     | 22 +++++++++++++++-------
- net/mac80211/tx.c         |  8 ++++++--
- net/wireless/nl80211.c    |  5 +++--
- 6 files changed, 56 insertions(+), 16 deletions(-)
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index 624fe721e2b5..57ce55728808 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -6397,10 +6397,9 @@ static void ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 	IPW_DEBUG_INFO("exit\n");
+ }
+ 
+-#ifdef CONFIG_PM
+-static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
++static int __maybe_unused ipw2100_suspend(struct device *dev_d)
+ {
+-	struct ipw2100_priv *priv = pci_get_drvdata(pci_dev);
++	struct ipw2100_priv *priv = dev_get_drvdata(dev_d);
+ 	struct net_device *dev = priv->net_dev;
+ 
+ 	IPW_DEBUG_INFO("%s: Going into suspend...\n", dev->name);
+@@ -6414,10 +6413,6 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
+ 	/* Remove the PRESENT state of the device */
+ 	netif_device_detach(dev);
+ 
+-	pci_save_state(pci_dev);
+-	pci_disable_device(pci_dev);
+-	pci_set_power_state(pci_dev, PCI_D3hot);
+-
+ 	priv->suspend_at = ktime_get_boottime_seconds();
+ 
+ 	mutex_unlock(&priv->action_mutex);
+@@ -6425,11 +6420,11 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
+ 	return 0;
+ }
+ 
+-static int ipw2100_resume(struct pci_dev *pci_dev)
++static int __maybe_unused ipw2100_resume(struct device *dev_d)
+ {
++	struct pci_dev *pci_dev = to_pci_dev(dev_d);
+ 	struct ipw2100_priv *priv = pci_get_drvdata(pci_dev);
+ 	struct net_device *dev = priv->net_dev;
+-	int err;
+ 	u32 val;
+ 
+ 	if (IPW2100_PM_DISABLED)
+@@ -6439,16 +6434,6 @@ static int ipw2100_resume(struct pci_dev *pci_dev)
+ 
+ 	IPW_DEBUG_INFO("%s: Coming out of suspend...\n", dev->name);
+ 
+-	pci_set_power_state(pci_dev, PCI_D0);
+-	err = pci_enable_device(pci_dev);
+-	if (err) {
+-		printk(KERN_ERR "%s: pci_enable_device failed on resume\n",
+-		       dev->name);
+-		mutex_unlock(&priv->action_mutex);
+-		return err;
+-	}
+-	pci_restore_state(pci_dev);
+-
+ 	/*
+ 	 * Suspend/Resume resets the PCI configuration space, so we have to
+ 	 * re-disable the RETRY_TIMEOUT register (0x41) to keep PCI Tx retries
+@@ -6473,7 +6458,6 @@ static int ipw2100_resume(struct pci_dev *pci_dev)
+ 
+ 	return 0;
+ }
+-#endif
+ 
+ static void ipw2100_shutdown(struct pci_dev *pci_dev)
+ {
+@@ -6539,15 +6523,14 @@ static const struct pci_device_id ipw2100_pci_id_table[] = {
+ 
+ MODULE_DEVICE_TABLE(pci, ipw2100_pci_id_table);
+ 
++static SIMPLE_DEV_PM_OPS(ipw2100_pm_ops, ipw2100_suspend, ipw2100_resume);
++
+ static struct pci_driver ipw2100_pci_driver = {
+ 	.name = DRV_NAME,
+ 	.id_table = ipw2100_pci_id_table,
+ 	.probe = ipw2100_pci_init_one,
+ 	.remove = ipw2100_pci_remove_one,
+-#ifdef CONFIG_PM
+-	.suspend = ipw2100_suspend,
+-	.resume = ipw2100_resume,
+-#endif
++	.driver.pm = &ipw2100_pm_ops,
+ 	.shutdown = ipw2100_shutdown,
+ };
+ 
+-- 
+2.27.0
 
