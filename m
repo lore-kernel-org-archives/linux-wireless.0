@@ -2,154 +2,108 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D98C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:38:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A9DC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:39:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D6D920672
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:38:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D9D220672
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:39:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=verdurent-com.20150623.gappssmtp.com header.i=@verdurent-com.20150623.gappssmtp.com header.b="ttB2j8Ew"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ETUdifcZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733200AbgF2Uio (ORCPT
+        id S2389563AbgF2UjM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:38:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43390 "EHLO
+        Mon, 29 Jun 2020 16:39:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731746AbgF2TOS (ORCPT
+        with ESMTP id S1731724AbgF2TOP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:14:18 -0400
-Received: from mail-vs1-xe42.google.com (mail-vs1-xe42.google.com [IPv6:2607:f8b0:4864:20::e42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2A05C02C3FC
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 00:20:02 -0700 (PDT)
-Received: by mail-vs1-xe42.google.com with SMTP id p25so888388vsg.4
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 00:20:02 -0700 (PDT)
+        Mon, 29 Jun 2020 15:14:15 -0400
+Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C690C0A8884;
+        Mon, 29 Jun 2020 00:26:50 -0700 (PDT)
+Received: by mail-pj1-x1042.google.com with SMTP id c1so384101pja.5;
+        Mon, 29 Jun 2020 00:26:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=verdurent-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FLsjiHozNvDgrzZmIQ2WouKu5DGkcV6Zi4pLil1Ar3w=;
-        b=ttB2j8EwlPtN89bjJxgTu6zN6r9fAS6dOKjdEH5q5VgMNoawKPbasYLeO6Wib3Imiu
-         Txm/pUueF19FSodecKaZf3ZCJfrG2w/E1RbAWvWvaWLmozbRr0o+MyQ7Vxyu66mUVwFe
-         /MZk9rP3wex38QGJdlpG8PBJhrr5KQXRJnt7Ook8usx2iRD6oBwGhzP3MrMOF9jCbkfq
-         eSr9Kpja5TQMUcLHo5FvLvaFIOmhzprhE5iUWmMHkVkAKT40wuc3HhlD8Mu+pYd20+vk
-         8fp8IK3heEU6zqUmyhzEWQIjcRkJvNFJ8lZm1mu5e2bjNw9dQXVcD8D+oPj0s/f4WY+P
-         5OuQ==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fYJKmE7yRo1ixIz8HpJIKtPVneklCF0ayYZCHIK8EeE=;
+        b=ETUdifcZaxHgQ48Wde9ZIvalgHRr2IpHQLLiZnWHytAq24TQ8K7zASRVrF/+skVFqn
+         RKlKDVZkTI8ZndVkU4DtGQdNSA/BgX4OjdoC4bH9ACkvNJn49fDp7fwLatM1xLWxK7bE
+         +W5+Pb3Vvtlsh5ZuB1W+gN2cnZc0HrLFU2+1Xc13CDA14a19fcbXdz3sBiLikw5PhSt5
+         x+ah6FfNTa9hRJkIBleZu2Rl1eD5ZE6pEqMU3Zjm0GBgWzAeoHtZzf9SFMr9pXRId/dG
+         VKnZmRR0yJGFOc4F0BEuxTdI7I58coK4BOSc4QHoHu7baAKr+2QP9qscaIPVxo7ynAev
+         B/AA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=FLsjiHozNvDgrzZmIQ2WouKu5DGkcV6Zi4pLil1Ar3w=;
-        b=BKPnYSM/cCaqtsMTr4dxEoFqdtIX77p8gbnIVhrE0mqnLzdwa/CTmUvwqN1p2AtNKO
-         5/peJxIy+M3R41ZuAOYkk59UuUH0b861SE+IWjujXGl8Xd9rqI/1DyRFoUKgzdaXse8P
-         N5+JP8A0w/Q372jaCAp90IplOzwHMke8pyqxBUTD+5MIFK2i25EroWanJbE6i0fXMy5y
-         AvZ/xJPZM/ed6eyv17PI3+UVcaAf0Vi5Se8pKAVnOPhNS5DmevEKwsGbJGbo72C75T3C
-         2rFP5IjeLDdALctx9hJPfmasGfwTM21GinNb+LG1Nnufo2YPlhm+Q/KBa5QcLTNT45YZ
-         Vwcw==
-X-Gm-Message-State: AOAM533eWRFY4Sn/HkxddcwzsKMx/IyjWO7fHkZIUn/ncE92kWEnfZjC
-        1j+FtpdFYC/qkDIlc9JNeuAG+qOekNNnmfuzz+6+3g==
-X-Google-Smtp-Source: ABdhPJw1dMYfsxBM8+BKZp4XBDpFgIheslKYpyoIyIHIog2rFo9mF/XWUJd4HbD/zb2zQFhnhGkGFwPawu8DZjqwdrU=
-X-Received: by 2002:a67:7f04:: with SMTP id a4mr5058336vsd.9.1593415201875;
- Mon, 29 Jun 2020 00:20:01 -0700 (PDT)
-MIME-Version: 1.0
-References: <9cbffad6-69e4-0b33-4640-fde7c4f6a6e7@linaro.org>
- <20200626173755.26379-1-andrzej.p@collabora.com> <20200626173755.26379-4-andrzej.p@collabora.com>
-In-Reply-To: <20200626173755.26379-4-andrzej.p@collabora.com>
-From:   Amit Kucheria <amit.kucheria@verdurent.com>
-Date:   Mon, 29 Jun 2020 12:49:51 +0530
-Message-ID: <CAHLCerNXcst72EDWf-xRTdUJ78jMDhhxpf31MO2WPgtJxzv6bA@mail.gmail.com>
-Subject: Re: [PATCH v5 03/11] thermal: Add current mode to thermal zone device
-To:     Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-Cc:     Linux PM list <linux-pm@vger.kernel.org>,
-        linux-acpi@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        lakml <linux-arm-kernel@lists.infradead.org>,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fYJKmE7yRo1ixIz8HpJIKtPVneklCF0ayYZCHIK8EeE=;
+        b=Dwh6sGrHYcdT5MV+Lmxz9hGu840fiG9X1RCfL2tvQ8ma0x4JNifMTSnFpU/Mr44EMK
+         um6VBNC8BEakORCO1ixnjSDHWvLkub43sSyhuwa5SKDAjprAMj0MF/8haWEajk4yVJJl
+         AUut8wrnO4EqcDcjBf5l6j+UbFSFoqp2GDn1FPvKvFAiTNmsbkhC2kPTk0Y2wwqoY+WL
+         OI/TLwBJPqphPaQCPYWOcH0edptjO6KliFaGKPp5sch4AWdVQBxKp2UzQqAPFpD3FEj+
+         lLsEaUHVxl0Sh4oWYNbBT5l0sh9CEr1QBagMSS3NWG5vaygwUWdFhsx8Nu6+4j4/LDZ3
+         /xbg==
+X-Gm-Message-State: AOAM532xjudPrj2wIoEqhgW2lki7KT8NMuCsLJmJ+fLi7/yL4xEIW9w+
+        eKpun0HnHhJYZhoRqPz2A+s=
+X-Google-Smtp-Source: ABdhPJw7/Ns0hjjDKLsAKA2XwfV4jnOl/CKEE+c4gdUObP9BqDcFYIDHPoFLlO72Kc3GEdrw8wp7Mw==
+X-Received: by 2002:a17:902:710d:: with SMTP id a13mr11960415pll.71.1593415609467;
+        Mon, 29 Jun 2020 00:26:49 -0700 (PDT)
+Received: from varodek.iballbatonwifi.com ([103.105.153.57])
+        by smtp.gmail.com with ESMTPSA id q10sm34637627pfk.86.2020.06.29.00.26.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jun 2020 00:26:48 -0700 (PDT)
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Peter Kaestle <peter@piie.net>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Allison Randal <allison@lohutok.net>,
-        Enrico Weigelt <info@metux.net>,
-        Gayatri Kammela <gayatri.kammela@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        kernel@collabora.com
-Content-Type: text/plain; charset="UTF-8"
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v1 0/2] ipw2x00: use generic power management
+Date:   Mon, 29 Jun 2020 12:55:23 +0530
+Message-Id: <20200629072525.156154-1-vaibhavgupta40@gmail.com>
+X-Mailer: git-send-email 2.27.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jun 26, 2020 at 11:08 PM Andrzej Pietrasiewicz
-<andrzej.p@collabora.com> wrote:
->
-> Prepare for changing the place where the mode is stored: now it is in
-> drivers, which might or might not implement get_mode()/set_mode() methods.
-> A lot of cleanup can be done thanks to storing it in struct tzd. The
-> get_mode() methods will become redundant.
->
-> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-> Reviewed-by: Guenter Roeck <linux@roeck-us.net>
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Linux Kernel Mentee: Remove Legacy Power Management.
 
-Reviewed-by: Amit Kucheria <amit.kucheria@linaro.org>
+The purpose of this patch series is to remove legacy power management callbacks
+from amd ethernet drivers.
 
+The callbacks performing suspend() and resume() operations are still calling
+pci_save_state(), pci_set_power_state(), etc. and handling the power management
+themselves, which is not recommended.
 
-> ---
->  include/linux/thermal.h | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/include/linux/thermal.h b/include/linux/thermal.h
-> index 216185bb3014..5f91d7f04512 100644
-> --- a/include/linux/thermal.h
-> +++ b/include/linux/thermal.h
-> @@ -128,6 +128,7 @@ struct thermal_cooling_device {
->   * @trip_temp_attrs:   attributes for trip points for sysfs: trip temperature
->   * @trip_type_attrs:   attributes for trip points for sysfs: trip type
->   * @trip_hyst_attrs:   attributes for trip points for sysfs: trip hysteresis
-> + * @mode:              current mode of this thermal zone
->   * @devdata:   private pointer for device private data
->   * @trips:     number of trip points the thermal zone supports
->   * @trips_disabled;    bitmap for disabled trips
-> @@ -170,6 +171,7 @@ struct thermal_zone_device {
->         struct thermal_attr *trip_temp_attrs;
->         struct thermal_attr *trip_type_attrs;
->         struct thermal_attr *trip_hyst_attrs;
-> +       enum thermal_device_mode mode;
->         void *devdata;
->         int trips;
->         unsigned long trips_disabled;   /* bitmap for disabled trips */
-> --
-> 2.17.1
->
+The conversion requires the removal of the those function calls and change the
+callback definition accordingly and make use of dev_pm_ops structure.
+
+All patches are compile-tested only.
+
+Vaibhav Gupta (2):
+  ipw2100: use generic power management
+  ipw2200: use generic power management
+
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 31 +++++---------------
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 30 +++++--------------
+ 2 files changed, 14 insertions(+), 47 deletions(-)
+
+-- 
+2.27.0
+
