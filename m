@@ -2,65 +2,167 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF949C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81DACC433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C467C255DC
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:35:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6417C2225F
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:38:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DMRKm+PE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726076AbgF2SfM (ORCPT
+        id S1728012AbgF2SiU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 14:35:12 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:50561 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725994AbgF2SfM (ORCPT
+        Mon, 29 Jun 2020 14:38:20 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:31569 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727999AbgF2SiS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:35:12 -0400
-Received: from [192.168.178.24] (unknown [91.53.47.40])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 3CF94580076
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 19:40:03 +0200 (CEST)
-To:     linux-wireless@vger.kernel.org
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: RFC: Remote Off-Channel CAC for DFS
-Message-ID: <c49513d5-9da7-5545-02e1-ff368f9f6961@tu-ilmenau.de>
-Date:   Mon, 29 Jun 2020 19:40:02 +0200
+        Mon, 29 Jun 2020 14:38:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593455896;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=R99ss63BUFWwoVTJOpLbdpSFm6kFyzl0vl5jaR1UOQE=;
+        b=DMRKm+PEWXYJ1h6K3HIVDNTLDQpexLqfYit6j/PTzrpGjmShfYaT0QS3iACoEjIbxgBlIu
+        Jr/I9aMi7ywCdU0h15VmgEfUWn4ykaGE/NdOjDEqIam6mHn5G7jCHHk17kMFD59Pmh+Xob
+        6gw0o9FXKAf9MCqsAwBxVO2TA66b+3Q=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-181-40u70_MXOkiL-jAvMmbJPw-1; Mon, 29 Jun 2020 07:35:55 -0400
+X-MC-Unique: 40u70_MXOkiL-jAvMmbJPw-1
+Received: by mail-ed1-f72.google.com with SMTP id h5so13970173edl.7
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 04:35:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=R99ss63BUFWwoVTJOpLbdpSFm6kFyzl0vl5jaR1UOQE=;
+        b=kzPOmzLdZCQIHlRXuZSmldYWwsrvc3bLKuAFpjEMo/2ccjFeM6peByTxCzetCZTpjP
+         9ihmt/5ERJD8/XhckVzPnunkqGbVX05p/vMn1ZuIpDlX1GB4g14CFwseE+kKDtwxs2aP
+         iMZEU14H6FpGTt85djlJDj5R5b1VUXm60wOpMrUHxMW4JyuaEhzK+3ahYaIlQkWhBR+N
+         uZEQMFCnzXQ6xJLJisF1TpwRz+Shuvjsear4RIPgE3hrRw1VmPBdY4Kb+5jXZGAdJhfI
+         z/O1Vu2MQmMz8VdnFXoMElsnuhtNavin+jJv9txk5EeuA21WeQ4t9n0AZjHVM6ZRJnYR
+         oY2A==
+X-Gm-Message-State: AOAM531On3iO202dZpCumpwC2sbes3+h4TrsK/b/TCyv5cg2fB4Ht3eg
+        nQXHDypMk2QmynzcPJRtmO/e6B0WL+2rA1wt/wCW6YnV8CDkjRIvk3U1QNUUMHq6tCvqi0qOtEd
+        ODbyCYFpd+REuSXMKH+f3hza3TyA=
+X-Received: by 2002:a50:e883:: with SMTP id f3mr17440222edn.220.1593430553975;
+        Mon, 29 Jun 2020 04:35:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzwJIGYRCpIxnD23fTjHfHV6n5mRstLkCBYdh8pYGwyaMC4yak38mPYlTddmtbQZ9eVQCpEeg==
+X-Received: by 2002:a50:e883:: with SMTP id f3mr17440192edn.220.1593430553710;
+        Mon, 29 Jun 2020 04:35:53 -0700 (PDT)
+Received: from x1.localdomain (2001-1c00-0c0c-fe00-d2ea-f29d-118b-24dc.cable.dynamic.v6.ziggo.nl. [2001:1c00:c0c:fe00:d2ea:f29d:118b:24dc])
+        by smtp.gmail.com with ESMTPSA id q21sm24104189ejd.30.2020.06.29.04.35.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Jun 2020 04:35:53 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Transform compatible string for FW loading
+To:     matthias.bgg@kernel.org, arend.vanspriel@broadcom.com,
+        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc:     brcm80211-dev-list.pdl@broadcom.com, mbrugger@suse.com,
+        netdev@vger.kernel.org, chi-hsien.lin@cypress.com,
+        linux-wireless@vger.kernel.org, hante.meuleman@broadcom.com,
+        linux-kernel@vger.kernel.org, wright.feng@cypress.com,
+        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com
+References: <20200629110141.22419-1-matthias.bgg@kernel.org>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <c96ec748-ded7-7e3e-e00c-222d80bde152@redhat.com>
+Date:   Mon, 29 Jun 2020 13:35:52 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20200629110141.22419-1-matthias.bgg@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using DFS channels, it would be nice, if I could dedicate a small
-amount of interfaces only to CAC checking channels and set them
-available or unavailable on multiple other remote APs/Mesh Points in
-order to use them, when switching to lower utilized channels without
-going through a full CAC.
+Hi,
 
-Whats the opinion on the mailing list about adding a new command to
-nl80211 in order to set the DFS state of a currently not used channel
-after a Off-Channel CAC on another device nearby, but not on the same
-host? The parameters would roughly be the same as for a channel switch
-and an additional DFS channel state. Internally, I would trigger the DFS
-state sync code between multiple interfaces.
+On 6/29/20 1:01 PM, matthias.bgg@kernel.org wrote:
+> From: Matthias Brugger <mbrugger@suse.com>
+> 
+> The driver relies on the compatible string from DT to determine which
+> FW configuration file it should load. The DTS spec allows for '/' as
+> part of the compatible string. We change this to '-' so that we will
+> still be able to load the config file, even when the compatible has a
+> '/'. This fixes explicitly the firmware loading for
+> "solidrun,cubox-i/q".
+> 
+> Signed-off-by: Matthias Brugger <mbrugger@suse.com>
+> 
+> ---
+> 
+> Changes in v2:
+> - use strscpy instead of strncpy (Hans de Goede)
+> - use strlen(tmp) + 1 for allocation (Hans de Goede, kernel test robot)
+> 
+>   .../wireless/broadcom/brcm80211/brcmfmac/of.c  | 18 +++++++++++++++---
+>   1 file changed, 15 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> index b886b56a5e5a..5f0ebaf4d64e 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> @@ -17,7 +17,6 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+>   {
+>   	struct brcmfmac_sdio_pd *sdio = &settings->bus.sdio;
+>   	struct device_node *root, *np = dev->of_node;
+> -	struct property *prop;
+>   	int irq;
+>   	u32 irqf;
+>   	u32 val;
+> @@ -25,8 +24,21 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+>   	/* Set board-type to the first string of the machine compatible prop */
+>   	root = of_find_node_by_path("/");
+>   	if (root) {
+> -		prop = of_find_property(root, "compatible", NULL);
+> -		settings->board_type = of_prop_next_string(prop, NULL);
+> +		int i;
+> +		char *board_type;
+> +		const char *tmp;
+> +
+> +		of_property_read_string_index(root, "compatible", 0, &tmp);
+> +
+> +		/* get rid of '/' in the compatible string to be able to find the FW */
+> +		board_type = devm_kzalloc(dev, strlen(tmp) + 1, GFP_KERNEL);
+> +		strscpy(board_type, tmp, sizeof(board_type));
 
-Please note, that a malicious user, can misuse this and circumvent the
-initial CAC, but this possibility is always there by patching the kernel
-and all distribution kernels I'm aware off, are compiled without DFS
-support configured. Therefore a malicious user has already put in some
-energy and knows what he has to do. In my opinion this is therefore
-negligible.
+sizeof(board_type) == sizeof(char *) == 4 or 8 bytes, which is not what you
+want. Maybe store strlen() + 1 in an int len to avoid having to call it 2 times?
+
+> +		for (i = 0; i < strlen(board_type); i++) {
+
+And here you probably want to use:
+
+		for (i = 0; board_type[i]; i++) {
+
+Rather then calling strlen many times again (in theory each step
+through the loop).
 
 Regards,
-Markus
+
+Hans
+
+
+
+> +			if (board_type[i] == '/')
+> +				board_type[i] = '-';
+> +		}
+> +		settings->board_type = board_type;
+> +
+>   		of_node_put(root);
+>   	}
+>   
+> 
 
