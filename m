@@ -2,31 +2,30 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCEBEC433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:12:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D1D9C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:12:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C355C206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:12:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 143C9206F1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388557AbgF2VL7 (ORCPT
+        id S1732138AbgF2VMc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 17:11:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40892 "EHLO
+        Mon, 29 Jun 2020 17:12:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730168AbgF2S5p (ORCPT
+        with ESMTP id S1730157AbgF2S5o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:57:45 -0400
+        Mon, 29 Jun 2020 14:57:44 -0400
 Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13E70C00F80A;
-        Mon, 29 Jun 2020 05:29:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63229C00F807;
+        Mon, 29 Jun 2020 05:29:44 -0700 (PDT)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (Authenticated sender: andrzej.p)
-        with ESMTPSA id 03B7B2A2D9B
+        with ESMTPSA id BF6522A2D72
 From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -71,50 +70,74 @@ Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v7 03/11] thermal: Add current mode to thermal zone device
-Date:   Mon, 29 Jun 2020 14:29:17 +0200
-Message-Id: <20200629122925.21729-4-andrzej.p@collabora.com>
+Subject: [PATCH v7 00/11] Stop monitoring disabled devices
+Date:   Mon, 29 Jun 2020 14:29:14 +0200
+Message-Id: <20200629122925.21729-1-andrzej.p@collabora.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200629122925.21729-1-andrzej.p@collabora.com>
-References: <20200629122925.21729-1-andrzej.p@collabora.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Prepare for changing the place where the mode is stored: now it is in
-drivers, which might or might not implement get_mode()/set_mode() methods.
-A lot of cleanup can be done thanks to storing it in struct tzd. The
-get_mode() methods will become redundant.
+A respin of v6 with these changes:
 
-Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-Reviewed-by: Guenter Roeck <linux@roeck-us.net>
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Reviewed-by: Amit Kucheria <amit.kucheria@linaro.org>
----
- include/linux/thermal.h | 2 ++
- 1 file changed, 2 insertions(+)
+v6..v7:
+- removed duplicate S-o-b line from patch 6/11
 
-diff --git a/include/linux/thermal.h b/include/linux/thermal.h
-index 216185bb3014..5f91d7f04512 100644
---- a/include/linux/thermal.h
-+++ b/include/linux/thermal.h
-@@ -128,6 +128,7 @@ struct thermal_cooling_device {
-  * @trip_temp_attrs:	attributes for trip points for sysfs: trip temperature
-  * @trip_type_attrs:	attributes for trip points for sysfs: trip type
-  * @trip_hyst_attrs:	attributes for trip points for sysfs: trip hysteresis
-+ * @mode:		current mode of this thermal zone
-  * @devdata:	private pointer for device private data
-  * @trips:	number of trip points the thermal zone supports
-  * @trips_disabled;	bitmap for disabled trips
-@@ -170,6 +171,7 @@ struct thermal_zone_device {
- 	struct thermal_attr *trip_temp_attrs;
- 	struct thermal_attr *trip_type_attrs;
- 	struct thermal_attr *trip_hyst_attrs;
-+	enum thermal_device_mode mode;
- 	void *devdata;
- 	int trips;
- 	unsigned long trips_disabled;	/* bitmap for disabled trips */
+v5..v6:
+- staticized thermal_zone_device_set_mode() (kbuild test robot)
+
+v4..v5:
+
+- EXPORT_SYMBOL -> EXPORT_SYMBOL_GPL (Daniel)
+- dropped unnecessary thermal_zone_device_enable() in int3400_thermal.c
+and in thermal_of.c (Bartlomiej)
+
+Andrzej Pietrasiewicz (11):
+  acpi: thermal: Fix error handling in the register function
+  thermal: Store thermal mode in a dedicated enum
+  thermal: Add current mode to thermal zone device
+  thermal: Store device mode in struct thermal_zone_device
+  thermal: remove get_mode() operation of drivers
+  thermal: Add mode helpers
+  thermal: Use mode helpers in drivers
+  thermal: Explicitly enable non-changing thermal zone devices
+  thermal: core: Stop polling DISABLED thermal devices
+  thermal: Simplify or eliminate unnecessary set_mode() methods
+  thermal: Rename set_mode() to change_mode()
+
+ drivers/acpi/thermal.c                        | 75 +++++----------
+ .../ethernet/chelsio/cxgb4/cxgb4_thermal.c    |  8 ++
+ .../ethernet/mellanox/mlxsw/core_thermal.c    | 91 ++++---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |  9 +-
+ drivers/platform/x86/acerhdf.c                | 33 +++----
+ drivers/platform/x86/intel_mid_thermal.c      |  6 ++
+ drivers/power/supply/power_supply_core.c      |  9 +-
+ drivers/thermal/armada_thermal.c              |  6 ++
+ drivers/thermal/da9062-thermal.c              | 16 +---
+ drivers/thermal/dove_thermal.c                |  6 ++
+ drivers/thermal/hisi_thermal.c                |  6 +-
+ drivers/thermal/imx_thermal.c                 | 57 ++++--------
+ .../intel/int340x_thermal/int3400_thermal.c   | 38 ++------
+ .../int340x_thermal/int340x_thermal_zone.c    |  5 +
+ drivers/thermal/intel/intel_pch_thermal.c     |  5 +
+ .../thermal/intel/intel_quark_dts_thermal.c   | 34 ++-----
+ drivers/thermal/intel/intel_soc_dts_iosf.c    |  3 +
+ drivers/thermal/intel/x86_pkg_temp_thermal.c  |  6 ++
+ drivers/thermal/kirkwood_thermal.c            |  7 ++
+ drivers/thermal/rcar_thermal.c                |  9 +-
+ drivers/thermal/rockchip_thermal.c            |  6 +-
+ drivers/thermal/spear_thermal.c               |  7 ++
+ drivers/thermal/sprd_thermal.c                |  6 +-
+ drivers/thermal/st/st_thermal.c               |  5 +
+ drivers/thermal/thermal_core.c                | 76 ++++++++++++++--
+ drivers/thermal/thermal_of.c                  | 41 +--------
+ drivers/thermal/thermal_sysfs.c               | 37 +-------
+ include/linux/thermal.h                       | 19 +++-
+ 28 files changed, 275 insertions(+), 351 deletions(-)
+
+
+base-commit: 9ebcfadb0610322ac537dd7aa5d9cbc2b2894c68
 -- 
 2.17.1
 
