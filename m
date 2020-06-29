@@ -2,147 +2,104 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A125C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B62DC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:58:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48D9920720
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:57:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IdgTjlbU"
+	by mail.kernel.org (Postfix) with ESMTP id 31D1D206F1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731278AbgF2U4s (ORCPT
+        id S2390009AbgF2U62 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:56:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43366 "EHLO
+        Mon, 29 Jun 2020 16:58:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731279AbgF2TNJ (ORCPT
+        with ESMTP id S1731254AbgF2TND (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:13:09 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AFE5C00E3EF
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:08:47 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id g75so15119065wme.5
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:08:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=68BNwhrvCD89eE+cp4wiVMJAGjlUssBHliBw0yeTncY=;
-        b=IdgTjlbUeXAflc75EIxsNdwIaYTkdpBR1e0ABbhEtcFT6se9ayn3CRIw5AgjMCyty+
-         t1copcc5AWHQ+spbmtU7MN1oUUZNYyIRgg/viQ+yr8woWJI/9urJNVYmSYIDHu5qA1zp
-         6Nt6i+1nEHX7g3moqDr2jjkQxoYiZqU2aRmel1UxU9PFQHkZ4ulEBKZIMUxJk4gRPiw6
-         Mnp1YtIiwjKLeWUHyHwrwZWDT6qGnxZspNOLBDpI78OHXeOUu7jVM+3C8RFrAGCjmaOs
-         Y8VmUfEPwPUhtPXjrABEMb3VFGENgBJCkvVDD5y61tbrBs23SvZwCgQua26J3lRfNGeS
-         lPBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=68BNwhrvCD89eE+cp4wiVMJAGjlUssBHliBw0yeTncY=;
-        b=GVfxcn0bO4myWH/saHLLKZ/7we1euLp/EbFDX7euQV4FEOEzNhi/5eCsFpAwY8sFoH
-         OtyCRZDnk1Gfu3dEV5Gyy6ieNAK+3D7g9lpEznuLlZS3uKNmBE/zFnOyVjKdeCWBpzcP
-         RN2EsbWcW97feV12sKMRvHoVuXGjO5A8DMNITcnJ8eR91H/3uMxqXB2yBPixIo9Fj7ig
-         iszt8g0yndM4N2FB7R9qnrnCzYiuqEF2D4h09aMQVxRVys7zIWXB310YU4lQckPLHCbc
-         D2sM8YXMeQmxgAFmoiRAy8OOXRawmbaS2EpYsVKYfR7zIV1JKo4+mdSoQwC+b3mRhyea
-         xMGA==
-X-Gm-Message-State: AOAM530vnYX2YmjU/MbzeL5A8Y/SL2KdYf7s4ho5L3rcikEYewI14tl7
-        X+ZPcJ5Zs8cueQHcSllHi2ipIw==
-X-Google-Smtp-Source: ABdhPJwy03g4x3aV2XQQGgmeV08Ic9EdB03Rjh42PiyDcmKqRhbp8rvEOqtPqrbM2yk/voBeySrtHQ==
-X-Received: by 2002:a1c:4408:: with SMTP id r8mr16435045wma.100.1593432525398;
-        Mon, 29 Jun 2020 05:08:45 -0700 (PDT)
-Received: from ?IPv6:2a01:e34:ed2f:f020:a5b5:45c4:c00e:7063? ([2a01:e34:ed2f:f020:a5b5:45c4:c00e:7063])
-        by smtp.googlemail.com with ESMTPSA id 65sm30057812wma.48.2020.06.29.05.08.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Jun 2020 05:08:43 -0700 (PDT)
-Subject: Re: [PATCH v6 06/11] thermal: Add mode helpers
-To:     Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
-        linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Peter Kaestle <peter@piie.net>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Amit Kucheria <amit.kucheria@verdurent.com>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Allison Randal <allison@lohutok.net>,
-        Enrico Weigelt <info@metux.net>,
-        Gayatri Kammela <gayatri.kammela@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        kernel@collabora.com, kernel test robot <lkp@intel.com>
-References: <CAHLCerO2XOOX9akEwaTu_cjSqRycFpNmoVxkSe36L8B4ALWidA@mail.gmail.com>
- <20200629111615.18131-1-andrzej.p@collabora.com>
- <20200629111615.18131-7-andrzej.p@collabora.com>
-From:   Daniel Lezcano <daniel.lezcano@linaro.org>
-Message-ID: <23060170-b78b-5717-1215-826488c04981@linaro.org>
-Date:   Mon, 29 Jun 2020 14:08:38 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        Mon, 29 Jun 2020 15:13:03 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CFFC02E2F3;
+        Mon, 29 Jun 2020 07:27:30 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jpukp-00EEym-98; Mon, 29 Jun 2020 16:27:27 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2020-06-29
+Date:   Mon, 29 Jun 2020 16:27:17 +0200
+Message-Id: <20200629142718.31257-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <20200629111615.18131-7-andrzej.p@collabora.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 29/06/2020 13:16, Andrzej Pietrasiewicz wrote:
-> Prepare for making the drivers not access tzd's private members.
-> 
-> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> [EXPORT_SYMBOL -> EXPORT_SYMBOL_GPL]
-> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-> [staticize thermal_zone_device_set_mode()]
-> Signed-off-by: kernel test robot <lkp@intel.com>
+Hi Dave,
 
-Duplicate signed-off line.
+We've got a couple of fixes here, and I took the liberty to include a
+small code cleanup of some really stupid code, and a patch that adds
+new AKM suites so we can use them in the drivers more easily.
 
-Please resend a V7 without a reply-to, so the series will be correctly
-handled by patchwork and that will make my life easier.
+Please pull and let me know if there's any problem.
 
-Thanks
+Thanks,
+johannes
 
 
 
--- 
-<http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
+The following changes since commit eb2932b00fc75a154bb4607773dc0666924116ad:
 
-Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
-<http://twitter.com/#!/linaroorg> Twitter |
-<http://www.linaro.org/linaro-blog/> Blog
+  Merge branch 'net-bcmgenet-use-hardware-padding-of-runt-frames' (2020-06-24 21:51:03 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2020-06-29
+
+for you to fetch changes up to 60a0121f8fa64b0f4297aa6fef8207500483a874:
+
+  nl80211: fix memory leak when parsing NL80211_ATTR_HE_BSS_COLOR (2020-06-26 11:52:57 +0200)
+
+----------------------------------------------------------------
+Couple of fixes/small things:
+ * TX control port status check fixed to not assume frame format
+ * mesh control port fixes
+ * error handling/leak fixes when starting AP, with HE attributes
+ * fix broadcast packet handling with encapsulation offload
+ * add new AKM suites
+ * and a small code cleanup
+
+----------------------------------------------------------------
+Luca Coelho (2):
+      nl80211: don't return err unconditionally in nl80211_start_ap()
+      nl80211: fix memory leak when parsing NL80211_ATTR_HE_BSS_COLOR
+
+Markus Theil (3):
+      mac80211: fix control port tx status check
+      mac80211: skip mpath lookup also for control port tx
+      mac80211: allow rx of mesh eapol frames with default rx key
+
+Pavel Machek (1):
+      mac80211: simplify mesh code
+
+Seevalamuthu Mariappan (1):
+      mac80211: Fix dropping broadcast packets in 802.11 encap
+
+Veerendranath Jakkam (1):
+      ieee80211: Add missing and new AKM suite selector definitions
+
+ include/linux/ieee80211.h |  4 ++++
+ net/mac80211/mesh_hwmp.c  |  7 ++-----
+ net/mac80211/rx.c         | 26 ++++++++++++++++++++++++++
+ net/mac80211/status.c     | 22 +++++++++++++++-------
+ net/mac80211/tx.c         |  8 ++++++--
+ net/wireless/nl80211.c    |  5 +++--
+ 6 files changed, 56 insertions(+), 16 deletions(-)
+
