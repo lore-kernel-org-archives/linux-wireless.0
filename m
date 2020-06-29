@@ -2,147 +2,147 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97BE6C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A125C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:57:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73BC4206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:56:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48D9920720
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:57:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u2R2A9TN"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IdgTjlbU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733027AbgF2U4K (ORCPT
+        id S1731278AbgF2U4s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:56:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43362 "EHLO
+        Mon, 29 Jun 2020 16:56:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731283AbgF2TNJ (ORCPT
+        with ESMTP id S1731279AbgF2TNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 29 Jun 2020 15:13:09 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09CDBC03E979;
-        Sun, 28 Jun 2020 20:52:58 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id b16so7293971pfi.13;
-        Sun, 28 Jun 2020 20:52:57 -0700 (PDT)
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AFE5C00E3EF
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:08:47 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id g75so15119065wme.5
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:08:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=mMGxHvmMYl6KmBYcQsFExMxRkPUqi7/TV9d4rzWRr7k=;
-        b=u2R2A9TNTrjVPaCWT+EtNeCfx976UM0/uvyxC3814IxJ3BmtNIBpFQ0ICCey/EcQGc
-         C2eS5fpQk4UcCXH1AL8vjaVjN962La5SVUBbXE9DUXpkS2EulFeP7MKv0QrS30LgmQyA
-         cQ2YIx5Dt2G8V0SVUKirabbIOS+ctzsLxrqbXTTe6FbjXEnT9K169K/WjAZx+6ZX270m
-         k++SJlX43a5xXxXOD4YsBZgNqOf3YZSfrFwcvunodSnyOzYfknDpa3lYOFOoZY8PdBi8
-         RgNZnFHUk+mC3uA38MgCHbsb3oJAcFv/T6tdXFqj0DgTQqEKKIGlhuti9b9huZHg99il
-         aDTw==
+        d=linaro.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=68BNwhrvCD89eE+cp4wiVMJAGjlUssBHliBw0yeTncY=;
+        b=IdgTjlbUeXAflc75EIxsNdwIaYTkdpBR1e0ABbhEtcFT6se9ayn3CRIw5AgjMCyty+
+         t1copcc5AWHQ+spbmtU7MN1oUUZNYyIRgg/viQ+yr8woWJI/9urJNVYmSYIDHu5qA1zp
+         6Nt6i+1nEHX7g3moqDr2jjkQxoYiZqU2aRmel1UxU9PFQHkZ4ulEBKZIMUxJk4gRPiw6
+         Mnp1YtIiwjKLeWUHyHwrwZWDT6qGnxZspNOLBDpI78OHXeOUu7jVM+3C8RFrAGCjmaOs
+         Y8VmUfEPwPUhtPXjrABEMb3VFGENgBJCkvVDD5y61tbrBs23SvZwCgQua26J3lRfNGeS
+         lPBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=mMGxHvmMYl6KmBYcQsFExMxRkPUqi7/TV9d4rzWRr7k=;
-        b=Oj00TvbRgLoUUi5gmJh70uj/58twygrgn7n5JHCKtXPhCE+aDBEFZDjqLrvUpb7jeu
-         yzy4IHuGYvOZg/KblKHYtsSUQK7mSI7oD42jYNKOAVv63bIV/Zc8lohqCxSaJOF1g/se
-         o9l1RvR4mq76eswFlzv4jxaId3C29Y0wLV081BwpT2H/MZAYS1B2/7G7kYKN2IIrp7A7
-         Zd1B1mbQ6cMv6TT/c2bRjmqScUTbTvueeMh4Xnt0+3DF4tSz0LYV5M12GqxzFn+zgd/B
-         6OAagL9esXnOJfoWa5GwS7lqjV21ZISDUJl8uOHqp8kPLxNLpZFncGwPCbX1RZ7UAXEu
-         jGCA==
-X-Gm-Message-State: AOAM5328Pso4MS3TVeS5DW09NaDy0WZ5/GD3dukJB2xTzXc+LK2x83Ti
-        9FDFX8OseeBRuAPMAMrbvZg=
-X-Google-Smtp-Source: ABdhPJydbdI8co0v0o/sBZ2cRFoABhFdoGlHqU5hKHlqf4wT6H8b7R/olOtLPlXq7tzCb6hpIsCqjw==
-X-Received: by 2002:a62:1716:: with SMTP id 22mr12030455pfx.99.1593402777406;
-        Sun, 28 Jun 2020 20:52:57 -0700 (PDT)
-Received: from varodek.iballbatonwifi.com ([103.105.153.57])
-        by smtp.gmail.com with ESMTPSA id b191sm28757684pga.13.2020.06.28.20.52.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Jun 2020 20:52:56 -0700 (PDT)
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
-        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skhan@linuxfoundation.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v1] adm8211: use generic power management
-Date:   Mon, 29 Jun 2020 09:20:32 +0530
-Message-Id: <20200629035031.169670-1-vaibhavgupta40@gmail.com>
-X-Mailer: git-send-email 2.27.0
+        bh=68BNwhrvCD89eE+cp4wiVMJAGjlUssBHliBw0yeTncY=;
+        b=GVfxcn0bO4myWH/saHLLKZ/7we1euLp/EbFDX7euQV4FEOEzNhi/5eCsFpAwY8sFoH
+         OtyCRZDnk1Gfu3dEV5Gyy6ieNAK+3D7g9lpEznuLlZS3uKNmBE/zFnOyVjKdeCWBpzcP
+         RN2EsbWcW97feV12sKMRvHoVuXGjO5A8DMNITcnJ8eR91H/3uMxqXB2yBPixIo9Fj7ig
+         iszt8g0yndM4N2FB7R9qnrnCzYiuqEF2D4h09aMQVxRVys7zIWXB310YU4lQckPLHCbc
+         D2sM8YXMeQmxgAFmoiRAy8OOXRawmbaS2EpYsVKYfR7zIV1JKo4+mdSoQwC+b3mRhyea
+         xMGA==
+X-Gm-Message-State: AOAM530vnYX2YmjU/MbzeL5A8Y/SL2KdYf7s4ho5L3rcikEYewI14tl7
+        X+ZPcJ5Zs8cueQHcSllHi2ipIw==
+X-Google-Smtp-Source: ABdhPJwy03g4x3aV2XQQGgmeV08Ic9EdB03Rjh42PiyDcmKqRhbp8rvEOqtPqrbM2yk/voBeySrtHQ==
+X-Received: by 2002:a1c:4408:: with SMTP id r8mr16435045wma.100.1593432525398;
+        Mon, 29 Jun 2020 05:08:45 -0700 (PDT)
+Received: from ?IPv6:2a01:e34:ed2f:f020:a5b5:45c4:c00e:7063? ([2a01:e34:ed2f:f020:a5b5:45c4:c00e:7063])
+        by smtp.googlemail.com with ESMTPSA id 65sm30057812wma.48.2020.06.29.05.08.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Jun 2020 05:08:43 -0700 (PDT)
+Subject: Re: [PATCH v6 06/11] thermal: Add mode helpers
+To:     Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
+        linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Peter Kaestle <peter@piie.net>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Allison Randal <allison@lohutok.net>,
+        Enrico Weigelt <info@metux.net>,
+        Gayatri Kammela <gayatri.kammela@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        kernel@collabora.com, kernel test robot <lkp@intel.com>
+References: <CAHLCerO2XOOX9akEwaTu_cjSqRycFpNmoVxkSe36L8B4ALWidA@mail.gmail.com>
+ <20200629111615.18131-1-andrzej.p@collabora.com>
+ <20200629111615.18131-7-andrzej.p@collabora.com>
+From:   Daniel Lezcano <daniel.lezcano@linaro.org>
+Message-ID: <23060170-b78b-5717-1215-826488c04981@linaro.org>
+Date:   Mon, 29 Jun 2020 14:08:38 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
+In-Reply-To: <20200629111615.18131-7-andrzej.p@collabora.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With legacy PM, drivers themselves were responsible for managing the
-device's power states and takes care of register states.
+On 29/06/2020 13:16, Andrzej Pietrasiewicz wrote:
+> Prepare for making the drivers not access tzd's private members.
+> 
+> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> [EXPORT_SYMBOL -> EXPORT_SYMBOL_GPL]
+> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+> [staticize thermal_zone_device_set_mode()]
+> Signed-off-by: kernel test robot <lkp@intel.com>
 
-After upgrading to the generic structure, PCI core will take care of
-required tasks and drivers should do only device-specific operations.
+Duplicate signed-off line.
 
-In the case of adm8211, after removing PCI helper functions, .suspend()
-and .resume() became empty-body functions. Hence, define them NULL and
-use dev_pm_ops.
+Please resend a V7 without a reply-to, so the series will be correctly
+handled by patchwork and that will make my life easier.
 
-Compile-tested only.
+Thanks
 
-Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
----
- drivers/net/wireless/admtek/adm8211.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
-index ba326f6c1214..22f9f2f8af10 100644
---- a/drivers/net/wireless/admtek/adm8211.c
-+++ b/drivers/net/wireless/admtek/adm8211.c
-@@ -1976,35 +1976,20 @@ static void adm8211_remove(struct pci_dev *pdev)
- }
- 
- 
--#ifdef CONFIG_PM
--static int adm8211_suspend(struct pci_dev *pdev, pm_message_t state)
--{
--	pci_save_state(pdev);
--	pci_set_power_state(pdev, pci_choose_state(pdev, state));
--	return 0;
--}
--
--static int adm8211_resume(struct pci_dev *pdev)
--{
--	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
--	return 0;
--}
--#endif /* CONFIG_PM */
--
-+#define adm8211_suspend NULL
-+#define adm8211_resume NULL
- 
- MODULE_DEVICE_TABLE(pci, adm8211_pci_id_table);
- 
-+static SIMPLE_DEV_PM_OPS(adm8211_pm_ops, adm8211_suspend, adm8211_resume);
-+
- /* TODO: implement enable_wake */
- static struct pci_driver adm8211_driver = {
- 	.name		= "adm8211",
- 	.id_table	= adm8211_pci_id_table,
- 	.probe		= adm8211_probe,
- 	.remove		= adm8211_remove,
--#ifdef CONFIG_PM
--	.suspend	= adm8211_suspend,
--	.resume		= adm8211_resume,
--#endif /* CONFIG_PM */
-+	.driver.pm	= &adm8211_pm_ops,
- };
- 
- module_pci_driver(adm8211_driver);
+
 -- 
-2.27.0
+<http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
 
+Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
+<http://twitter.com/#!/linaroorg> Twitter |
+<http://www.linaro.org/linaro-blog/> Blog
