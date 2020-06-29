@@ -2,144 +2,155 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B81E2C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 19:23:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D06C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 19:29:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 977F3206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 19:23:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A3A22065F
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 19:29:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="flWt2co8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EUEHx4LS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731301AbgF2TXo (ORCPT
+        id S1729727AbgF2T26 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:23:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45104 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732283AbgF2TWo (ORCPT
+        Mon, 29 Jun 2020 15:28:58 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:20190 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1732698AbgF2T2t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:22:44 -0400
-Received: from mail-vk1-xa42.google.com (mail-vk1-xa42.google.com [IPv6:2607:f8b0:4864:20::a42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4955C02E2F8
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 07:33:33 -0700 (PDT)
-Received: by mail-vk1-xa42.google.com with SMTP id v26so770220vkn.2
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 07:33:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YNkvAElAdlylwMX22qVeO6w3DffRcKTQ6SjWLKbis1A=;
-        b=flWt2co8UrsGAn5eM02MB8ewGt+er7i6cSZMso4fN8Fq6W1kWGiTyiiCwMe3Y9kVcr
-         o+jJR0GQp8fWNAU8gkgJ7rGcfEMIpoyg3d1Cfas9VtcRMa9pJIE3zkVz+qW3GOh4y1VQ
-         tz4wtTIW837O3y69hcCAC0FmgG92kdYfWdPf0=
+        Mon, 29 Jun 2020 15:28:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593458929;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Af4KpIzEgr4pIiV2LebnToq75R4GNH67/fmvTzeBA6Q=;
+        b=EUEHx4LSroOAMC/JIU7nE3pcMOvs75KEXiDClm4nYn8NVcfgsuPJnS4Dr+NDkqstRizX6P
+        4too6K2x6xGVP+EmziX6pBT4ErUEWAALbM5HzBk1CtMEv/fyTazrUIbvt4BwXjXDxPJu5Y
+        7vvBpN0XHNNETXctwGv06uL78ddQ2eU=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-83-Jj84R5d3Nt-xjj-Ek8ziNg-1; Mon, 29 Jun 2020 06:26:02 -0400
+X-MC-Unique: Jj84R5d3Nt-xjj-Ek8ziNg-1
+Received: by mail-qk1-f199.google.com with SMTP id z1so1870637qkz.3
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 03:26:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YNkvAElAdlylwMX22qVeO6w3DffRcKTQ6SjWLKbis1A=;
-        b=ba5tu9BlMED2IznQmRJ8NglT9HlauB38RH6pBOhOqnDJxi4ZM1rdw4H9ch/dOZB3FL
-         tuO4nRhkb6de1M8l5sZ9yG8zncHaXRZ4LLLeFQMZNgszdJ+WGzH+EMFqd8geELQubZt7
-         mqTSlwOjl6pnk8Wr2mHWE/KX3AFITAAlyuuzxdlDwC1sRGkHlym99kq6cBOosPvj49Ys
-         fz6UcBVf0hB4IF+EtYFONfzWpBsDaX/QHZz+VXJDrUv3sX6pwfa5/9ZlBRZ7+CT/NFU4
-         FhCPevn2FindykShs+9xl/my2ZWgk/vSd4d2aCGfF3fvL+zm3OV1WKF3nnWpQOFviUHy
-         FoVg==
-X-Gm-Message-State: AOAM53149H1VeE/HrJ+N4Ol6s0q9XU/vPFlcTqFYeZ7xBYCKJfiDc7W3
-        4f1ZpfVMek6DCuqrFChDXPFLOtRMbu4=
-X-Google-Smtp-Source: ABdhPJxi7Xssbs/aYxAsO559yB3hWZxYo45xrbIVV5clhvCY6uxvsGgEjPRQ7djewIaYfhEqHys1Ew==
-X-Received: by 2002:a1f:a913:: with SMTP id s19mr10205024vke.13.1593441212685;
-        Mon, 29 Jun 2020 07:33:32 -0700 (PDT)
-Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com. [209.85.222.44])
-        by smtp.gmail.com with ESMTPSA id 140sm18950vkx.20.2020.06.29.07.33.30
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Jun 2020 07:33:31 -0700 (PDT)
-Received: by mail-ua1-f44.google.com with SMTP id b13so5389720uav.3
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 07:33:30 -0700 (PDT)
-X-Received: by 2002:ab0:29c1:: with SMTP id i1mr10886058uaq.120.1593441210383;
- Mon, 29 Jun 2020 07:33:30 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=Af4KpIzEgr4pIiV2LebnToq75R4GNH67/fmvTzeBA6Q=;
+        b=MKiw7sLdoRUP1X15+FCcp8nASkNcXydMf6a7/me7CvXZ/W/yuja8aj2hABPMJ5ciKy
+         2YEYx4/whceltGnX1Pel9V+I5zQOef+jYVZpuCk1iin3Fjt7ju16z0i8IOVC5pMNxjaM
+         xX+rcYuqkJyFUiqdAiEdhSsWG+IoO9Xcsy6fA1lpm1st2A9mIUsBmQopqvD2LXSRqPfC
+         cofnvw9EGXNYNpN10iZTOReQRRpwlpelctDVPbWXTq6YN+LP35PVQVvcGtYX8cFu2QDH
+         FD/LySYbVH7iyV417ctwOMUZBUxARmccf3GQgYHM5eUTk148QTLY2kuOXmkiBMPm8P3Q
+         NyKw==
+X-Gm-Message-State: AOAM530KbsiUll3DeDjmYrHthZ1KN8i9R2D7zBfuKKUrz7C0jnQTEoJv
+        o77tlYGsMIjJWCtbX7b/0A6QbOl1PkrGxY5HHjyZZjR8bkYpfm4qVAFubtHFsAKhAjr+XR0XCQu
+        e7R4tcFyRSJHoNfNpY7hDaNz1HmE=
+X-Received: by 2002:a37:4d0f:: with SMTP id a15mr14187679qkb.313.1593426361503;
+        Mon, 29 Jun 2020 03:26:01 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxVNgQ/1N8oN2928Xm86slDPHkUprPaGNArIarkd0p/jTYrFZfUMeJZ6rsi2b4L6AaDaOvVEw==
+X-Received: by 2002:a37:4d0f:: with SMTP id a15mr14187663qkb.313.1593426361130;
+        Mon, 29 Jun 2020 03:26:01 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id d135sm3005834qkg.117.2020.06.29.03.25.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jun 2020 03:26:00 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 04E011808CF; Mon, 29 Jun 2020 12:25:56 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Miguel Catalan Cid <miguel.catalan@i2cat.net>
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [Make-wifi-fast] Support for airtime scheduling using ath10k
+In-Reply-To: <CAMHmoouFjdOSBAq00SMeauO2GvEnXMvJG+vEMwhYUD4rdW9rxg@mail.gmail.com>
+References: <CAMHmoovK_m=Yd4uUPhsdHZ588+d1DF-fyS+uGKdRWvd33Q2u+A@mail.gmail.com> <87zh8uruou.fsf@toke.dk> <CAMHmoouFjdOSBAq00SMeauO2GvEnXMvJG+vEMwhYUD4rdW9rxg@mail.gmail.com>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Mon, 29 Jun 2020 12:25:56 +0200
+Message-ID: <87366ei2x7.fsf@toke.dk>
 MIME-Version: 1.0
-References: <1593194502-13164-1-git-send-email-pillair@codeaurora.org>
- <1593194502-13164-3-git-send-email-pillair@codeaurora.org>
- <CAD=FV=V1C2Lu31n8xQ8HPf21fNo_Da2SLtZAeStFBEou9+geEA@mail.gmail.com> <000301d64e0e$b9e32c70$2da98550$@codeaurora.org>
-In-Reply-To: <000301d64e0e$b9e32c70$2da98550$@codeaurora.org>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Mon, 29 Jun 2020 07:33:18 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=U_qfbCQDy7DOn8VNQU+7yNn0cjS8YD232UFTXW3w3wrw@mail.gmail.com>
-Message-ID: <CAD=FV=U_qfbCQDy7DOn8VNQU+7yNn0cjS8YD232UFTXW3w3wrw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath10k: Add support for chain1 regulator supply voting
-To:     Rakesh Pillai <pillair@codeaurora.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Miguel Catalan Cid <miguel.catalan@i2cat.net> writes:
 
-On Mon, Jun 29, 2020 at 5:14 AM Rakesh Pillai <pillair@codeaurora.org> wrote:
+> El mar., 23 jun. 2020 a las 11:35, Toke H=C3=B8iland-J=C3=B8rgensen
+> (<toke@redhat.com>) escribi=C3=B3:
+>>
+>> Miguel Catalan Cid <miguel.catalan@i2cat.net> writes:
+>>
+>> > Hi,
+>> >
+>> > we are trying to apply different airtime weights to different stations=
+ in
+>> > order to have some prioritization among connected stations. While this=
+ is
+>> > working pretty well with ath9k, with ath10k we always obtain a fair
+>> > distribution of the airtime (i.e. 50%-50% in the case of two stations),
+>> > regardless of the airtime weight specified.
+>> >
+>> > E.g. STA1:
+>> > RX: 0 us
+>> > TX: 2295610622 us
+>> >
+>> > *Weight: 200*Deficit: VO: 256 us VI: 256 us BE: 34 us BK: 256 us
+>> >
+>> > E.g. STA2:
+>> > RX: 0 us
+>> > TX: 162597077 us
+>>
+>> 2295610622/162597077 ~=3D 14
+>>
+>> which is not *too* far from the 20/1 ratio you've configured? Does the
+>> ratio change at all when you change the weights (i.e., if they are
+>> equal, do you get closer to a 50/50 split?).
+>>
+>> Do the two stations have roughly the same signal strength / rate?
 >
+> In this case I started the STA1 a bit earlier, so it had a higher
+> airtime aggregate. Indeed, to compare the airtime share, I was
+> continuously monitoring the "airtime rate" (i.e. the difference
+> between Airtime(now) and Airtime (now-4s)) and the results of both
+> STAs were the same (i.e. 50/50 split) independently of the weight
+> being used. But when using ath9k the same test runs perfectly
+> according to the weights.
 >
+>>
+>> > *Weight: 10*Deficit: VO: 256 us VI: 256 us BE: 9 us BK: 256 us
+>> >
+>> > We are using Compex WLE650V5-18A cards.
+>> >
+>> > So, does ath10k support airtime scheduling? In such a case, do we need
+>> > specific Wi-Fi cards?
+>>
+>> It should. My guess would be that maybe you're not getting enough
+>> backpressure for the scheduler to actually enforce things correctly. You
+>> could try to look at the TXQ output and see if you actually have any
+>> drops ('iw dev wlan0 station dump -v' and look at the drops/marks
+>> columns).
 >
-> > -----Original Message-----
-> > From: Doug Anderson <dianders@chromium.org>
-> > Sent: Saturday, June 27, 2020 3:22 AM
-> > To: Rakesh Pillai <pillair@codeaurora.org>; Kalle Valo
-> > <kvalo@codeaurora.org>
-> > Cc: ath10k@lists.infradead.org; open list:OPEN FIRMWARE AND FLATTENED
-> > DEVICE TREE BINDINGS <devicetree@vger.kernel.org>; linux-wireless <linux-
-> > wireless@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>
-> > Subject: Re: [PATCH 2/2] ath10k: Add support for chain1 regulator supply
-> > voting
-> >
-> > Hi,
-> >
-> > On Fri, Jun 26, 2020 at 11:02 AM Rakesh Pillai <pillair@codeaurora.org> wrote:
-> > >
-> > > Add support to vote for chain-1 voltage regulator
-> > > in WCN3990.
-> > >
-> > > Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
-> > >
-> > > Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> > > ---
-> > >  drivers/net/wireless/ath/ath10k/snoc.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/drivers/net/wireless/ath/ath10k/snoc.c
-> > b/drivers/net/wireless/ath/ath10k/snoc.c
-> > > index 645ed5f..407a074 100644
-> > > --- a/drivers/net/wireless/ath/ath10k/snoc.c
-> > > +++ b/drivers/net/wireless/ath/ath10k/snoc.c
-> > > @@ -45,6 +45,7 @@ static const char * const ath10k_regulators[] = {
-> > >         "vdd-1.8-xo",
-> > >         "vdd-1.3-rfa",
-> > >         "vdd-3.3-ch0",
-> > > +       "vdd-3.3-ch1",
-> >
-> > Reviewed-by: Douglas Anderson <dianders@chromium.org>
-> >
-> > ...with the slight nit that ${SUBJECT} and description should probably
-> > call it "chan1" and not "chain1".  Presumably the maintainer can fix
-> > when applying.
-> >
-> > -Doug
->
-> Hi Doug,
->
-> It has to be chain1 only, not chan1.
-> This is the power supply rail for the wlan-chain1
+> ok, i will check!
 
-Whoa, really?  "ch1" stands for "chain1", not "chan1"?  That is
-seriously weird (at least to me), but I find at least one document
-that agrees with you.  Sorry for the mistake!
+Another thing to check is the value of 'new_flows' in the TXQ output; if
+that is high, it indicates that the queues run empty a lot, which can
+prevent the airtime fairness scheduler from working properly.
 
--Doug
+>> What kernel version are you running? If it's not new enough to have AQL,
+>> that might help moving the backlog to where the scheduler can do more
+>> with it.
+>
+> Kernel 5.5.5.
+
+Hmm, that should have AQL, actually.
+
+-Toke
+
