@@ -2,124 +2,136 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90F5FC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D47EC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:54:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 711EB206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:53:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iqGHhWSb"
+	by mail.kernel.org (Postfix) with ESMTP id 63090206E2
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:54:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387741AbgF2Uxi (ORCPT
+        id S1731329AbgF2Uxs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:53:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43350 "EHLO
+        Mon, 29 Jun 2020 16:53:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731271AbgF2TNV (ORCPT
+        with ESMTP id S1731326AbgF2TNU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:13:21 -0400
-Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B96C00861F;
-        Mon, 29 Jun 2020 03:40:14 -0700 (PDT)
-Received: by mail-ed1-x542.google.com with SMTP id z17so12390218edr.9;
-        Mon, 29 Jun 2020 03:40:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=FW5uuzpZIcFHloIfRx2mV3Q4O9gtnLF6GA6PBU0vnk8=;
-        b=iqGHhWSblMuDs6IMzv34bSi1zEjJ+bzX0WJoEVJdZL4cCExAUrdJjmtPtPjfoCRhO+
-         r4WLmmBS6fP4qQMezE4KKoQGS1BCY08B+N4uAKG0wt0+obJAlOiH7XkWYl74x3/se2dN
-         j1IHtoex6TmCkFXVORpDTrZNKYq7FaT+Bn8CtE2ZJrf08o4PXmCF6i9Trb9zlGY4EQdQ
-         beq9WOFKSogv7rPW2Vbv5qVwPDadUzb4xojHrRZ1pFPrSAF2ZEIP99a/q5VnR4JdUBw2
-         qFp8+l24efMen96u3viwb+IkkbLw1hEirYZmLCugHle5XZOb80DHb4JbOmLlv/RQ+ycF
-         c8og==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=FW5uuzpZIcFHloIfRx2mV3Q4O9gtnLF6GA6PBU0vnk8=;
-        b=t5fxUeHHGT5x5pBkrmiSjKdPPxePhiID9SFTtZ5SGWTVpS2qYmMsr1NB8GkOVWo6/i
-         MRs4QIoXmcif1jvAilHdsHBqOrjDIg19Yv9T5g+mEfgtbP+LQnlGLyBo9zM03Kd1R3IA
-         8AWSvFW64n1Tz8v/kDCoW9ygbS07os77WgYkChTdFEc5R3cdCXGN3cBUw44s3+XrQlI+
-         zNt2o4DV++dMJ7eTeCH+OWYbk7J4pvqeezsxP4mxuQxmb+h8L/B+j1K+jbZW/Q6iT6qs
-         R9p9b+W5v68GOAZnKHdMruCU4DIlkHwwHLSKG0GXxD2gkACvVEwmzT7CMGNRRGxPC6j4
-         0Kvw==
-X-Gm-Message-State: AOAM533eLOEMCHnIH99mFq3ZWnktCCgnsExn7QmjiHQU1W+uRZpPUjzA
-        cqN8t+cCTjyzmW4jNXysHbk=
-X-Google-Smtp-Source: ABdhPJx8yG3u2DN7M9KoPEgDVF3CYbC6iiicJVoUyynOlTfr2a28mbHZ6/emmMLVQyv6VCGIT8aO0w==
-X-Received: by 2002:aa7:db4f:: with SMTP id n15mr1292645edt.193.1593427213599;
-        Mon, 29 Jun 2020 03:40:13 -0700 (PDT)
-Received: from localhost.localdomain ([2a02:a03f:b7f9:7600:cb8:1ada:8c2d:413])
-        by smtp.gmail.com with ESMTPSA id l4sm7443503edw.10.2020.06.29.03.40.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2020 03:40:13 -0700 (PDT)
-From:   Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-To:     Nicolas Ferre <nicolas.ferre@microchip.com>,
-        Adham Abozaeid <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Subject: [PATCH] wilc1000: let wilc_mac_xmit() return NETDEV_TX_OK
-Date:   Mon, 29 Jun 2020 12:40:09 +0200
-Message-Id: <20200629104009.84077-1-luc.vanoostenryck@gmail.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <8a2f50dc-2cbe-64e4-438c-4320bb574f4f@microchip.com>
-References: <8a2f50dc-2cbe-64e4-438c-4320bb574f4f@microchip.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Mon, 29 Jun 2020 15:13:20 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA52AC0085AF;
+        Mon, 29 Jun 2020 04:16:41 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: andrzej.p)
+        with ESMTPSA id E6EC627D8DE
+From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Peter Kaestle <peter@piie.net>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        =?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Allison Randal <allison@lohutok.net>,
+        Enrico Weigelt <info@metux.net>,
+        Gayatri Kammela <gayatri.kammela@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
+        kernel@collabora.com
+Subject: [PATCH v6 09/11] thermal: core: Stop polling DISABLED thermal devices
+Date:   Mon, 29 Jun 2020 13:16:13 +0200
+Message-Id: <20200629111615.18131-10-andrzej.p@collabora.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200629111615.18131-1-andrzej.p@collabora.com>
+References: <CAHLCerO2XOOX9akEwaTu_cjSqRycFpNmoVxkSe36L8B4ALWidA@mail.gmail.com>
+ <20200629111615.18131-1-andrzej.p@collabora.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-which is a typedef for an enum type defining 'NETDEV_TX_OK' but this
-driver returns '0' instead of 'NETDEV_TX_OK'.
+Polling DISABLED devices is not desired, as all such "disabled" devices
+are meant to be handled by userspace. This patch introduces and uses
+should_stop_polling() to decide whether the device should be polled or not.
 
-Fix this by returning 'NETDEV_TX_OK' instead of '0'.
-
-Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/net/wireless/microchip/wilc1000/netdev.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/thermal/thermal_core.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index fda0ab97b02c..be3ae5486f44 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -678,14 +678,14 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 
- 	if (skb->dev != ndev) {
- 		netdev_err(ndev, "Packet not destined to this device\n");
--		return 0;
-+		return NETDEV_TX_OK;
- 	}
- 
- 	tx_data = kmalloc(sizeof(*tx_data), GFP_ATOMIC);
- 	if (!tx_data) {
- 		dev_kfree_skb(skb);
- 		netif_wake_queue(ndev);
--		return 0;
-+		return NETDEV_TX_OK;
- 	}
- 
- 	tx_data->buff = skb->data;
-@@ -710,7 +710,7 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 		srcu_read_unlock(&wilc->srcu, srcu_idx);
- 	}
- 
--	return 0;
-+	return NETDEV_TX_OK;
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
+index 52d136780577..e613f5c07bad 100644
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -301,13 +301,22 @@ static void thermal_zone_device_set_polling(struct thermal_zone_device *tz,
+ 		cancel_delayed_work(&tz->poll_queue);
  }
  
- static int wilc_mac_close(struct net_device *ndev)
++static inline bool should_stop_polling(struct thermal_zone_device *tz)
++{
++	return !thermal_zone_device_is_enabled(tz);
++}
++
+ static void monitor_thermal_zone(struct thermal_zone_device *tz)
+ {
++	bool stop;
++
++	stop = should_stop_polling(tz);
++
+ 	mutex_lock(&tz->lock);
+ 
+-	if (tz->passive)
++	if (!stop && tz->passive)
+ 		thermal_zone_device_set_polling(tz, tz->passive_delay);
+-	else if (tz->polling_delay)
++	else if (!stop && tz->polling_delay)
+ 		thermal_zone_device_set_polling(tz, tz->polling_delay);
+ 	else
+ 		thermal_zone_device_set_polling(tz, 0);
+@@ -517,6 +526,9 @@ void thermal_zone_device_update(struct thermal_zone_device *tz,
+ {
+ 	int count;
+ 
++	if (should_stop_polling(tz))
++		return;
++
+ 	if (atomic_read(&in_suspend))
+ 		return;
+ 
 -- 
-2.27.0
+2.17.1
 
