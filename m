@@ -2,70 +2,81 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 800E4C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4EFC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:29:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C6EE20672
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:00:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58FD3206A1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 20:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388177AbgF2UAT (ORCPT
+        id S2387742AbgF2U2j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:00:19 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51012 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388573AbgF2UAI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 16:00:08 -0400
-Received: from [192.168.178.24] (unknown [91.53.47.40])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id AAFFB580076;
-        Mon, 29 Jun 2020 22:00:06 +0200 (CEST)
-Subject: Re: RFC: Remote Off-Channel CAC for DFS
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <c49513d5-9da7-5545-02e1-ff368f9f6961@tu-ilmenau.de>
- <99ae192566a7c5ae91c6ee92b8c4ddb41a29e34e.camel@sipsolutions.net>
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-Message-ID: <9f36bb56-8aa6-e759-5024-cfe5e58e41cf@tu-ilmenau.de>
-Date:   Mon, 29 Jun 2020 22:00:06 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        Mon, 29 Jun 2020 16:28:39 -0400
+Received: from mga04.intel.com ([192.55.52.120]:36329 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732500AbgF2TZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:25:23 -0400
+IronPort-SDR: jxIgeswT0RQcxiq5i90ukunWtKqg5ZGGIJuZgQDDsIPNsrh7OHZAPW5SAzB/8hrHrRI9ie4Icn
+ MB1yn56ptvEw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9666"; a="143414451"
+X-IronPort-AV: E=Sophos;i="5.75,294,1589266800"; 
+   d="scan'208";a="143414451"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2020 03:03:31 -0700
+IronPort-SDR: 4YqE72cLuVtXbqx2btrSflq7dheUQuyC8fcvBY4alz9zIVYF8Iws2pMmeRrszZZPHleRbd8uit
+ b9cZgPpk5RBw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,294,1589266800"; 
+   d="scan'208";a="312995672"
+Received: from lkp-server01.sh.intel.com (HELO 28879958b202) ([10.239.97.150])
+  by fmsmga002.fm.intel.com with ESMTP; 29 Jun 2020 03:03:30 -0700
+Received: from kbuild by 28879958b202 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1jpqdN-0000vY-O6; Mon, 29 Jun 2020 10:03:29 +0000
+Date:   Mon, 29 Jun 2020 18:02:53 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Tamizh Chelvam <tamizhr@codeaurora.org>, ath10k@lists.infradead.org
+Cc:     kbuild-all@lists.01.org, linux-wireless@vger.kernel.org,
+        Tamizh Chelvam <tamizhr@codeaurora.org>
+Subject: [RFC PATCH] ath10k: ath10k_mac_set_tid_config() can be static
+Message-ID: <20200629100253.GA83675@930a38d91fed>
+References: <1593363718-5148-4-git-send-email-tamizhr@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <99ae192566a7c5ae91c6ee92b8c4ddb41a29e34e.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1593363718-5148-4-git-send-email-tamizhr@codeaurora.org>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 6/29/20 9:35 PM, Johannes Berg wrote:
-> Hi,
->
-> On Mon, 2020-06-29 at 19:40 +0200, Markus Theil wrote:
->> When using DFS channels, it would be nice, if I could dedicate a small
->> amount of interfaces only to CAC checking channels and set them
->> available or unavailable on multiple other remote APs/Mesh Points in
->> order to use them, when switching to lower utilized channels without
->> going through a full CAC.
->>
->> Whats the opinion on the mailing list about adding a new command to
->> nl80211 in order to set the DFS state of a currently not used channel
->> after a Off-Channel CAC on another device nearby, but not on the same
->> host? The parameters would roughly be the same as for a channel switch
->> and an additional DFS channel state. Internally, I would trigger the DFS
->> state sync code between multiple interfaces.
-> But wait, don't we already sync this within the kernel?
-Yes, the kernel already syncs this between interfaces on the same host.
-I'd just like to sync between multiple hosts, in order to make use of
-fast switches to other DFS channels in a mesh network (in my case), if
-some other node nearby already had performed a DFS CAC of a particular
-channel and sync this state between hosts.
-> johannes
->
+
+Signed-off-by: kernel test robot <lkp@intel.com>
+---
+ mac.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b1a89c5869a01..8025c9115e3d6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6861,9 +6861,9 @@ ath10k_mac_tid_bitrate_config(struct ath10k *ar,
+ 	return 0;
+ }
+ 
+-int ath10k_mac_set_tid_config(struct ath10k *ar, struct ieee80211_sta *sta,
+-			      struct ieee80211_vif *vif, u32 changed,
+-			      struct wmi_per_peer_per_tid_cfg_arg *arg)
++static int ath10k_mac_set_tid_config(struct ath10k *ar, struct ieee80211_sta *sta,
++				     struct ieee80211_vif *vif, u32 changed,
++				     struct wmi_per_peer_per_tid_cfg_arg *arg)
+ {
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+ 	struct ath10k_sta *arsta;
