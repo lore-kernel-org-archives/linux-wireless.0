@@ -2,122 +2,88 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9656C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA133C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADE2F208DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A854A207FF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:31:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593466292;
+	bh=m/iiSCx+pGoofNGY4QOfyGseGMXlhswPQHcWfiNnN1E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=yda2Nshc1RxAhZVHkO8Hp0XsEmk2HkMrFNF/0NrIleGXIavTGjusUbrBkKEPCfVnq
+	 1w5OvNH3SSKiheAILJhGGJM5AnqlJb+A7WS6mnmcjRwzKoriEdeYmfjlxfzRfw3bP8
+	 IN7istUwmja80z31SZSApVKPkDN7gVnv58+FnHD8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391071AbgF2V30 (ORCPT
+        id S1728812AbgF2Vba (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 17:29:26 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40480 "EHLO mx2.suse.de"
+        Mon, 29 Jun 2020 17:31:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60656 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728890AbgF2SlZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:41:25 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3DA10AC12;
-        Mon, 29 Jun 2020 17:29:20 +0000 (UTC)
-Message-ID: <18c8d37bd02dd163fc5ba7d1ee69b341cf42e9aa.camel@suse.de>
-Subject: 5GHz inbound connection latency spikes on Raspberry Pi
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        linux-rpi-kernel <linux-rpi-kernel@lists.infradead.org>
-Date:   Mon, 29 Jun 2020 19:29:18 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-jQFVCaWKrmLwbeEqE53B"
-User-Agent: Evolution 3.36.3 
+        id S1728809AbgF2SlR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jun 2020 14:41:17 -0400
+Received: from localhost (unknown [151.48.138.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A90F6233A2;
+        Mon, 29 Jun 2020 09:19:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593422364;
+        bh=m/iiSCx+pGoofNGY4QOfyGseGMXlhswPQHcWfiNnN1E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Usm1byau/LGXrbc+GPk/jIjDZmdUrcv8x9RdyrjH6gxci18C9D1RYnlMhtGAgpGmB
+         ZkH3qW6Fz/VH2SXisHf3cfCflRvtLJLSHIkZRntHi9b94NQ64PO0SHSstfeGQTRnHO
+         90wlGnrhqr4afzFIyg0Xwib8uVJjttPQTmRk0Ecs=
+Date:   Mon, 29 Jun 2020 11:19:19 +0200
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     James <bjlockie@lockie.ca>
+Cc:     Mathy Vanhoef <vanhoefm@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Alfa AWUS036ACM (Mediatek MT7612U) AP problem
+Message-ID: <20200629091919.GA10533@localhost.localdomain>
+References: <ba64416e-d34b-9bdd-d482-6ea722e3d6b9@lockie.ca>
+ <CAFXAJYwgRPAbY4i8XHNGzcyJg-11BwOSdDS6098eh_CEzxeEUQ@mail.gmail.com>
+ <9c44f87b-eaa5-afcb-b830-30b2b36232d5@lockie.ca>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
+Content-Disposition: inline
+In-Reply-To: <9c44f87b-eaa5-afcb-b830-30b2b36232d5@lockie.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
---=-jQFVCaWKrmLwbeEqE53B
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hi all,
-I'm seeing latency spikes on inbound 5GHz connections with brcmfmac on RPi4=
-.
-For example, this is me pinging an idle RPi4 running today's linux-next bui=
-ld
-from my work computer (although I can reproduce this with older kernels and=
-/or
-RPi3):
+> Kernel 5.4.48 is better so far:
+> Uptime
+> 1d 18h 6m 32s
+> It sounds like it is only a matter of time since you have the problem on a
+> later kernel.
+> I did get rid of a cable and use a powered USB 3 hub.
 
-	nico@linux-9qgx:~> ping 192.168.1.18
-	PING 192.168.1.18 (192.168.1.18) 56(84) bytes of data.
-	64 bytes from 192.168.1.18: icmp_seq=3D1 ttl=3D64 time=3D306 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D2 ttl=3D64 time=3D1351 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D3 ttl=3D64 time=3D326 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D4 ttl=3D64 time=3D175 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D5 ttl=3D64 time=3D1431 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D6 ttl=3D64 time=3D425 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D7 ttl=3D64 time=3D1457 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D8 ttl=3D64 time=3D441 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D9 ttl=3D64 time=3D360 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D10 ttl=3D64 time=3D1395 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D11 ttl=3D64 time=3D388 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D12 ttl=3D64 time=3D1431 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D13 ttl=3D64 time=3D416 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D14 ttl=3D64 time=3D1272 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D15 ttl=3D64 time=3D257 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D16 ttl=3D64 time=3D1291 ms
-	64 bytes from 192.168.1.18: icmp_seq=3D17 ttl=3D64 time=3D277 ms
-
-It turns out that if I disable the low power mode on the wireless network
-interface: 'iwconfig wlan0 power off', everything behaves as expected, with
-latencies between averaging 10ms. I've also found this patch[1] from RPi's
-downstream kernel tree which tweaks the LPM entry delay and makes things a
-little better. With it, SSHing into the machine is bearable.
-
-I can understand that tweak not being OK for all brcmfmac users so I figure=
-d I
-could apply it conditionally on RPi's compatible strings. That said, before
-doing anything I wonder if you have a better solution in mind.
-
-Also note that latencies on 2GHz connections are also visible, but in the o=
-rder
-of 150-200ms, which is more acceptable.
+Can you please try to load the mt76_usb module with disable_usb_sg=1?
 
 Regards,
-Nicolas
+Lorenzo
 
-[1]=20
-https://github.com/raspberrypi/linux/commit/3e0d7cb39d3229a00f06de5b3e60bd7=
-acf0ece3f#diff-1b8fac2d29272755e8f53049866fc1e5
-
-
---=-jQFVCaWKrmLwbeEqE53B
+--tThc/1wpZn/ma/RB
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl76JO8ACgkQlfZmHno8
-x/6SbggApJERYtm8BstgLfwEcQpLAfZ2DY2xL7BB2fSmrQ/5Gf/KUOEHqgDs3se0
-zM5muczJATP1SvIRZVU06Ss+cJjKxXqqIUIJK9nt5OitSYmuciFWQCTy15mM4qTt
-e3IUsm4dep49K2+Kcx11/v9BYwLGAAhbHsaVUQ4E2VQWVI9SSlfQXFZtks+km39z
-Z3molekb9yVDllufwyRlrTil7TpzEr1WKC550qqLwB+84HIKvfPHCGazWuxzwEKP
-+UG/2XYwQm4opBk7LTzuPF07jYiWmYXl8AM2llJQ5glKQXQ5g0Va8iRyqvlWjAqC
-DVpYaKokfygKc96kkEX6JWd5JM9BGw==
-=N34j
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXvmyFAAKCRA6cBh0uS2t
+rDD0AP42HhxaAH9pCerPqWpGh3U0BFZ/9lXFQ37KN5dovIoy+wD9HcZcyReJehE8
+QnbS0LF1sMcRpoFLoKw1uBPI2sjEJgg=
+=XI/x
 -----END PGP SIGNATURE-----
 
---=-jQFVCaWKrmLwbeEqE53B--
-
+--tThc/1wpZn/ma/RB--
