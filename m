@@ -2,88 +2,72 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA133C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFFBEC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:33:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A854A207FF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:31:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF00F206A1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:33:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593466292;
-	bh=m/iiSCx+pGoofNGY4QOfyGseGMXlhswPQHcWfiNnN1E=;
+	s=default; t=1593466392;
+	bh=hOJIPbJXPvorQtrhgyqOIr37k404XP7JJGNJCE8s+Y8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=yda2Nshc1RxAhZVHkO8Hp0XsEmk2HkMrFNF/0NrIleGXIavTGjusUbrBkKEPCfVnq
-	 1w5OvNH3SSKiheAILJhGGJM5AnqlJb+A7WS6mnmcjRwzKoriEdeYmfjlxfzRfw3bP8
-	 IN7istUwmja80z31SZSApVKPkDN7gVnv58+FnHD8=
+	b=buG6l1ZJ9yaS0D37wLXN2QQJz/cHEpH9EJ78+hDPZWjbZWnMhaNw8DrYrY5fpaetr
+	 PLO/RMOdRMIZm+cVPcExyCMFyJhDw469MXws71t9RS1EfbT4LFfEBENwKuJdRABKpx
+	 IsiN2FXClMyIyuqEyj7n7Om9ta9fdXg24i3Y5zf0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728812AbgF2Vba (ORCPT
+        id S1727109AbgF2VdI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 17:31:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60656 "EHLO mail.kernel.org"
+        Mon, 29 Jun 2020 17:33:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60606 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728809AbgF2SlR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:41:17 -0400
-Received: from localhost (unknown [151.48.138.186])
+        id S1728638AbgF2SlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jun 2020 14:41:03 -0400
+Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A90F6233A2;
-        Mon, 29 Jun 2020 09:19:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 32DDC23D6A;
+        Mon, 29 Jun 2020 13:26:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593422364;
-        bh=m/iiSCx+pGoofNGY4QOfyGseGMXlhswPQHcWfiNnN1E=;
+        s=default; t=1593437175;
+        bh=hOJIPbJXPvorQtrhgyqOIr37k404XP7JJGNJCE8s+Y8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Usm1byau/LGXrbc+GPk/jIjDZmdUrcv8x9RdyrjH6gxci18C9D1RYnlMhtGAgpGmB
-         ZkH3qW6Fz/VH2SXisHf3cfCflRvtLJLSHIkZRntHi9b94NQ64PO0SHSstfeGQTRnHO
-         90wlGnrhqr4afzFIyg0Xwib8uVJjttPQTmRk0Ecs=
-Date:   Mon, 29 Jun 2020 11:19:19 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     James <bjlockie@lockie.ca>
-Cc:     Mathy Vanhoef <vanhoefm@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Alfa AWUS036ACM (Mediatek MT7612U) AP problem
-Message-ID: <20200629091919.GA10533@localhost.localdomain>
-References: <ba64416e-d34b-9bdd-d482-6ea722e3d6b9@lockie.ca>
- <CAFXAJYwgRPAbY4i8XHNGzcyJg-11BwOSdDS6098eh_CEzxeEUQ@mail.gmail.com>
- <9c44f87b-eaa5-afcb-b830-30b2b36232d5@lockie.ca>
+        b=MAX6lR6wO0zARsIgVfVNexIL/S+5tt+gFwta5XG+JfKdCl2/tbJ4ltJxUO2OPNrKa
+         GixHl/5xiVLA0/rMJNNFIA3gXA3qacdPqgt4MG48tHiIWMumQBXzIHFPtRCObTrojs
+         IE9fAP73j8zkayeTR3FtmWStj0DR0SLZ9TEq4/3I=
+Received: by pali.im (Postfix)
+        id EE3E381F; Mon, 29 Jun 2020 15:26:12 +0200 (CEST)
+Date:   Mon, 29 Jun 2020 15:26:12 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Ajay.Kathat@microchip.com
+Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        gregkh@linuxfoundation.org, johannes@sipsolutions.net,
+        Nicolas.Ferre@microchip.com, Claudiu.Beznea@microchip.com,
+        Sripad.Balwadgi@microchip.com, Venkateswara.Kaja@microchip.com
+Subject: Re: [PATCH v7 00/17] wilc1000: move out of staging
+Message-ID: <20200629132612.nl6rfpihzlii6ilh@pali>
+References: <20200623110000.31559-1-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9c44f87b-eaa5-afcb-b830-30b2b36232d5@lockie.ca>
+In-Reply-To: <20200623110000.31559-1-ajay.kathat@microchip.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Tuesday 23 June 2020 11:00:04 Ajay.Kathat@microchip.com wrote:
+> This patch series is to review and move wilc1000 driver out of staging.
+> Most of the review comments received in [1] & [2] are addressed in the
+> latest code.
+> Please review and provide your inputs.
 
---tThc/1wpZn/ma/RB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Hello Ajay! Could you please move SDIO vendor/device ID definitions from
+driver code wilc1000/sdio.c to common file include/linux/mmc/sdio_ids.h?
 
-> Kernel 5.4.48 is better so far:
-> Uptime
-> 1d 18h 6m 32s
-> It sounds like it is only a matter of time since you have the problem on a
-> later kernel.
-> I did get rid of a cable and use a powered USB 3 hub.
-
-Can you please try to load the mt76_usb module with disable_usb_sg=1?
-
-Regards,
-Lorenzo
-
---tThc/1wpZn/ma/RB
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXvmyFAAKCRA6cBh0uS2t
-rDD0AP42HhxaAH9pCerPqWpGh3U0BFZ/9lXFQ37KN5dovIoy+wD9HcZcyReJehE8
-QnbS0LF1sMcRpoFLoKw1uBPI2sjEJgg=
-=XI/x
------END PGP SIGNATURE-----
-
---tThc/1wpZn/ma/RB--
+Similar cleanup was recently finished for all existing non-staging drivers:
+https://lore.kernel.org/linux-mmc/20200522144412.19712-1-pali@kernel.org/
