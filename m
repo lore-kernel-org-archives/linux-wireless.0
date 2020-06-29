@@ -2,170 +2,58 @@ Return-Path: <SRS0=lFlT=AK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F3AC433E2
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E8FC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 23:59:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 433ED20656
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 21:46:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=verdurent-com.20150623.gappssmtp.com header.i=@verdurent-com.20150623.gappssmtp.com header.b="UI0fGaRC"
+	by mail.kernel.org (Postfix) with ESMTP id 7236C20760
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 23:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727840AbgF2Vqy (ORCPT
+        id S1726962AbgF2X67 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 17:46:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37580 "EHLO
+        Mon, 29 Jun 2020 19:58:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727798AbgF2Shp (ORCPT
+        with ESMTP id S1726199AbgF2X66 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:37:45 -0400
-Received: from mail-vs1-xe43.google.com (mail-vs1-xe43.google.com [IPv6:2607:f8b0:4864:20::e43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B0E6C00F829
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:46:51 -0700 (PDT)
-Received: by mail-vs1-xe43.google.com with SMTP id f24so9165813vsg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2020 05:46:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=verdurent-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=3mjyd6r9Z8NRgSnG+P9PSoNzsHa0OVoXa5dJDxRkCYk=;
-        b=UI0fGaRCmq5A6fZ2aN3n8WBb3g7VvOCURSeOI/vJzfqMe8q0IkabtA9TAG27ldXDI4
-         z+qW6f7rvAAhml7TWg3s6TCc3UwBj8qbwNL/MoBsGqaL93xt/lMkkNwHR7FZDnRdUe26
-         IJTGZwp8wFrDid5i4wCANbEQxqmks/buB/LqOLygjOkSAS569gUFnJm1iu7wSqU6J4mi
-         WaUPsQa5oFkBDxtSoUnrhRPFtXhTMn7YFowZMtA/btLIDP7fV053z75lagCKW3U3sf9y
-         A8ESITsuDw5aZvkzmvkyodLVZ6crbpaei0phkK3XLxRzXsByhgG8E5nSjNXa6qVAk8Nh
-         57xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=3mjyd6r9Z8NRgSnG+P9PSoNzsHa0OVoXa5dJDxRkCYk=;
-        b=mqaJwZIoIZC1mTXDiXN7K5bdLuK3+SDW1v8k6EYkCcLqhdxLbZdCsDW7zSgsaMgkur
-         FiPApuFb0yeIQC2tGHIAwMpJKt+QZmMYcaPYODcr6RAWMIaBzpEWD8pgwAZGZk9Jwecs
-         0WhdwEilFO2MHak3Y4+H9UCTg6FVE0Se3uipY4XSIfcI5qUJYQ1Z0MPLAEFQ5FVRtl52
-         zF2FbBj9vqd/1bDBuTfkrrkAA0WSlQr4DKbB/5whd79KP/T9HGtYER0UxBmkQp+1rT1L
-         Uy3ONwiMQl2SdQF1SZNyhNvxuMOMJeOjtu2jA7A7HG8LhgLPVgJ47DDFUfVbgvbl2mfV
-         kSFw==
-X-Gm-Message-State: AOAM5310SWTaWvmLubBQSZrHmAJdb7bNZnnmLD8Sv7ECeg8JYhUz++vR
-        R+kKmt0n4SgoK2ycjVKQUttxm0qxLFLDcPiieEVa8g==
-X-Google-Smtp-Source: ABdhPJy1QcNgfU4ZI0hGPqS1qMQ8m9mfv0gvwG3ncZShGHd/Tn9b42wi7vNTUL7hBQwk2F/xnYQAVj7TYIYTHORozvE=
-X-Received: by 2002:a67:ea98:: with SMTP id f24mr10128329vso.159.1593434810843;
- Mon, 29 Jun 2020 05:46:50 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200629122925.21729-1-andrzej.p@collabora.com> <20200629122925.21729-10-andrzej.p@collabora.com>
-In-Reply-To: <20200629122925.21729-10-andrzej.p@collabora.com>
-From:   Amit Kucheria <amit.kucheria@verdurent.com>
-Date:   Mon, 29 Jun 2020 18:16:39 +0530
-Message-ID: <CAHLCerNsXrkJqU5_Tw_PA8YQLGsHzDg7POrBRtvisBtJixU+CA@mail.gmail.com>
-Subject: Re: [PATCH v7 09/11] thermal: core: Stop polling DISABLED thermal devices
-To:     Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-Cc:     Linux PM list <linux-pm@vger.kernel.org>,
-        linux-acpi@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        lakml <linux-arm-kernel@lists.infradead.org>,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Peter Kaestle <peter@piie.net>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Allison Randal <allison@lohutok.net>,
-        Enrico Weigelt <info@metux.net>,
-        Gayatri Kammela <gayatri.kammela@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        kernel@collabora.com
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 29 Jun 2020 19:58:58 -0400
+Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEEBFC061755;
+        Mon, 29 Jun 2020 16:58:58 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 392F6127B77E7;
+        Mon, 29 Jun 2020 16:58:57 -0700 (PDT)
+Date:   Mon, 29 Jun 2020 16:58:54 -0700 (PDT)
+Message-Id: <20200629.165854.2191252805621997190.davem@davemloft.net>
+To:     johannes@sipsolutions.net
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2020-06-29
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200629142718.31257-1-johannes@sipsolutions.net>
+References: <20200629142718.31257-1-johannes@sipsolutions.net>
+X-Mailer: Mew version 6.8 on Emacs 26.3
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 29 Jun 2020 16:58:57 -0700 (PDT)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jun 29, 2020 at 6:00 PM Andrzej Pietrasiewicz
-<andrzej.p@collabora.com> wrote:
->
-> Polling DISABLED devices is not desired, as all such "disabled" devices
-> are meant to be handled by userspace. This patch introduces and uses
-> should_stop_polling() to decide whether the device should be polled or not.
->
-> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 29 Jun 2020 16:27:17 +0200
 
-Reviewed-by: Amit Kucheria <amit.kucheria@linaro.org>
+> We've got a couple of fixes here, and I took the liberty to include a
+> small code cleanup of some really stupid code, and a patch that adds
+> new AKM suites so we can use them in the drivers more easily.
+> 
+> Please pull and let me know if there's any problem.
 
-> ---
->  drivers/thermal/thermal_core.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
-> index 52d136780577..e613f5c07bad 100644
-> --- a/drivers/thermal/thermal_core.c
-> +++ b/drivers/thermal/thermal_core.c
-> @@ -301,13 +301,22 @@ static void thermal_zone_device_set_polling(struct thermal_zone_device *tz,
->                 cancel_delayed_work(&tz->poll_queue);
->  }
->
-> +static inline bool should_stop_polling(struct thermal_zone_device *tz)
-> +{
-> +       return !thermal_zone_device_is_enabled(tz);
-> +}
-> +
->  static void monitor_thermal_zone(struct thermal_zone_device *tz)
->  {
-> +       bool stop;
-> +
-> +       stop = should_stop_polling(tz);
-> +
->         mutex_lock(&tz->lock);
->
-> -       if (tz->passive)
-> +       if (!stop && tz->passive)
->                 thermal_zone_device_set_polling(tz, tz->passive_delay);
-> -       else if (tz->polling_delay)
-> +       else if (!stop && tz->polling_delay)
->                 thermal_zone_device_set_polling(tz, tz->polling_delay);
->         else
->                 thermal_zone_device_set_polling(tz, 0);
-> @@ -517,6 +526,9 @@ void thermal_zone_device_update(struct thermal_zone_device *tz,
->  {
->         int count;
->
-> +       if (should_stop_polling(tz))
-> +               return;
-> +
->         if (atomic_read(&in_suspend))
->                 return;
->
-> --
-> 2.17.1
->
+Looks good, pulled, thanks!
