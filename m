@@ -4,379 +4,238 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F2D2C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9905FC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60709206A1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:50:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E927204EC
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Jun 2020 18:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729526AbgF2SuX (ORCPT
+        id S1730186AbgF2S5s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Jun 2020 14:50:23 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:34467 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728786AbgF2SuW (ORCPT
+        Mon, 29 Jun 2020 14:57:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40924 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730153AbgF2S5o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jun 2020 14:50:22 -0400
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 05T5o9Bw9011317, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 05T5o9Bw9011317
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 29 Jun 2020 13:50:10 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 29 Jun 2020 13:50:09 +0800
-Received: from localhost.localdomain (172.21.69.213) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 29 Jun 2020 13:50:09 +0800
-From:   <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>, <joe@perches.com>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 1/2] rtlwifi: Use const in 8188ee/8723be/8821ae swing_table declarations
-Date:   Mon, 29 Jun 2020 13:49:34 +0800
-Message-ID: <20200629054935.25107-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+        Mon, 29 Jun 2020 14:57:44 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E5BAC00F812;
+        Mon, 29 Jun 2020 05:30:07 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: andrzej.p)
+        with ESMTPSA id C716F2A2D98
+From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Peter Kaestle <peter@piie.net>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        =?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Allison Randal <allison@lohutok.net>,
+        Enrico Weigelt <info@metux.net>,
+        Gayatri Kammela <gayatri.kammela@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
+        kernel@collabora.com
+Subject: [PATCH v7 11/11] thermal: Rename set_mode() to change_mode()
+Date:   Mon, 29 Jun 2020 14:29:25 +0200
+Message-Id: <20200629122925.21729-12-andrzej.p@collabora.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200629122925.21729-1-andrzej.p@collabora.com>
+References: <20200629122925.21729-1-andrzej.p@collabora.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Joe Perches <joe@perches.com>
+set_mode() is only called when tzd's mode is about to change. Actual
+setting is performed in thermal_core, in thermal_zone_device_set_mode().
+The meaning of set_mode() callback is actually to notify the driver about
+the mode being changed and giving the driver a chance to oppose such
+change.
 
-Reduce data usage about 1KB by using const.
+To better reflect the purpose of the method rename it to change_mode()
 
-Signed-off-by: Joe Perches <joe@perches.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+[for acerhdf]
+Acked-by: Peter Kaestle <peter@piie.net>
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
-  v1 -> v2: no change
----
- .../wireless/realtek/rtlwifi/rtl8188ee/dm.c   |   4 +-
- .../wireless/realtek/rtlwifi/rtl8723be/dm.c   |   4 +-
- .../wireless/realtek/rtlwifi/rtl8821ae/dm.c   | 114 +++++++++---------
- 3 files changed, 64 insertions(+), 58 deletions(-)
+ drivers/platform/x86/acerhdf.c                          | 6 +++---
+ drivers/thermal/imx_thermal.c                           | 8 ++++----
+ drivers/thermal/intel/int340x_thermal/int3400_thermal.c | 6 +++---
+ drivers/thermal/intel/intel_quark_dts_thermal.c         | 6 +++---
+ drivers/thermal/thermal_core.c                          | 4 ++--
+ include/linux/thermal.h                                 | 2 +-
+ 6 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-index dceb04a9b3f5..1ffa188a65c9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-@@ -870,11 +870,11 @@ static void dm_txpower_track_cb_therm(struct ieee80211_hw *hw)
- 	/*0.1 the following TWO tables decide the
- 	 *final index of OFDM/CCK swing table
- 	 */
--	s8 delta_swing_table_idx[2][15]  = {
-+	static const s8 delta_swing_table_idx[2][15]  = {
- 		{0, 0, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11},
- 		{0, 0, -1, -2, -3, -4, -4, -4, -4, -5, -7, -8, -9, -9, -10}
- 	};
--	u8 thermal_threshold[2][15] = {
-+	static const u8 thermal_threshold[2][15] = {
- 		{0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 27},
- 		{0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 25, 25}
- 	};
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-index b13fd3c0c832..c9b3d9d09c48 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-@@ -736,11 +736,11 @@ static void rtl8723be_dm_txpower_tracking_callback_thermalmeter(
- 	u8 ofdm_min_index = 6;
- 	u8 index_for_channel = 0;
- 
--	s8 delta_swing_table_idx_tup_a[TXSCALE_TABLE_SIZE] = {
-+	static const s8 delta_swing_table_idx_tup_a[TXSCALE_TABLE_SIZE] = {
- 		0, 0, 1, 2, 2, 2, 3, 3, 3, 4,  5,
- 		5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 10,
- 		10, 11, 11, 12, 12, 13, 14, 15};
--	s8 delta_swing_table_idx_tdown_a[TXSCALE_TABLE_SIZE] = {
-+	static const s8 delta_swing_table_idx_tdown_a[TXSCALE_TABLE_SIZE] = {
- 		0, 0, 1, 2, 2, 2, 3, 3, 3, 4,  5,
- 		5, 6, 6, 6, 6, 7, 7, 7, 8, 8,  9,
- 		9, 10, 10, 11, 12, 13, 14, 15};
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-index f57e8794f0ec..e8fb9354cf19 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-@@ -115,47 +115,47 @@ static const u32 edca_setting_ul[PEER_MAX] = {
- 	0x5ea44f,	/* 7 MARV */
- };
- 
--static u8 rtl8818e_delta_swing_table_idx_24gb_p[] = {
-+static const u8 rtl8818e_delta_swing_table_idx_24gb_p[] = {
- 	0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4,
- 	4, 4, 4, 5, 5, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9};
- 
--static u8 rtl8818e_delta_swing_table_idx_24gb_n[] = {
-+static const u8 rtl8818e_delta_swing_table_idx_24gb_n[] = {
- 	0, 0, 0, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6,
- 	7, 7, 7, 7, 8, 8, 9, 9, 10, 10, 10, 11, 11, 11, 11};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gb_n[]  = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gb_n[]  = {
- 	0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6,
- 	6, 6, 7, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gb_p[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gb_p[] = {
- 	0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6,
- 	6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24ga_n[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24ga_n[] = {
- 	0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6,
- 	6, 6, 7, 8, 8, 9, 9, 9, 10, 10, 10, 10, 11, 11};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24ga_p[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24ga_p[] = {
- 	0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6,
- 	6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gcckb_n[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gcckb_n[] = {
- 	0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6,
- 	6, 6, 7, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gcckb_p[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gcckb_p[] = {
- 	0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6,
- 	6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gccka_n[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gccka_n[] = {
- 	0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6,
- 	6, 6, 7, 8, 8, 9, 9, 9, 10, 10, 10, 10, 11, 11};
- 
--static u8 rtl8812ae_delta_swing_table_idx_24gccka_p[] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_24gccka_p[] = {
- 	0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6,
- 	6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9};
- 
--static u8 rtl8812ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
- 	{0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7,
- 	7, 8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 13},
- 	{0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7,
-@@ -164,7 +164,7 @@ static u8 rtl8812ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
- 	12, 12, 13, 14, 14, 14, 15, 16, 17, 17, 17, 18, 18, 18},
- };
- 
--static u8 rtl8812ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
- 	{0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11},
- 	{0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-@@ -173,7 +173,7 @@ static u8 rtl8812ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
- 	9, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
- };
- 
--static u8 rtl8812ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
- 	{0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 13, 13, 13},
- 	{0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 8, 9,
-@@ -182,7 +182,7 @@ static u8 rtl8812ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
- 	12, 13, 14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 18, 18},
- };
- 
--static u8 rtl8812ae_delta_swing_table_idx_5ga_p[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8812ae_delta_swing_table_idx_5ga_p[][DEL_SW_IDX_SZ] = {
- 	{0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11},
- 	{0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-@@ -191,39 +191,39 @@ static u8 rtl8812ae_delta_swing_table_idx_5ga_p[][DEL_SW_IDX_SZ] = {
- 	10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
- };
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gb_n[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gb_n[] = {
- 	0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6,
- 	6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gb_p[]  = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gb_p[]  = {
- 	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 12};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24ga_n[]  = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24ga_n[]  = {
- 	0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6,
- 	6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24ga_p[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24ga_p[] = {
- 	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 12};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gcckb_n[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gcckb_n[] = {
- 	0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6,
- 	6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gcckb_p[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gcckb_p[] = {
- 	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 12};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gccka_n[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gccka_n[] = {
- 	0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6,
- 	6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
- 
--static u8 rtl8821ae_delta_swing_table_idx_24gccka_p[] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_24gccka_p[] = {
- 	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
- 	8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 12};
- 
--static u8 rtl8821ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
-@@ -232,7 +232,7 @@ static u8 rtl8821ae_delta_swing_table_idx_5gb_n[][DEL_SW_IDX_SZ] = {
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- };
- 
--static u8 rtl8821ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
-@@ -241,7 +241,7 @@ static u8 rtl8821ae_delta_swing_table_idx_5gb_p[][DEL_SW_IDX_SZ] = {
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- };
- 
--static u8 rtl8821ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
-@@ -250,7 +250,7 @@ static u8 rtl8821ae_delta_swing_table_idx_5ga_n[][DEL_SW_IDX_SZ] = {
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- };
- 
--static u8 rtl8821ae_delta_swing_table_idx_5ga_p[][DEL_SW_IDX_SZ] = {
-+static const u8 rtl8821ae_delta_swing_table_idx_5ga_p[][DEL_SW_IDX_SZ] = {
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
- 	12, 12, 13, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16},
- 	{0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11,
-@@ -962,8 +962,10 @@ static void rtl8821ae_dm_iq_calibrate(struct ieee80211_hw *hw)
- }
- 
- static void rtl8812ae_get_delta_swing_table(struct ieee80211_hw *hw,
--					    u8 **up_a, u8 **down_a,
--					    u8 **up_b, u8 **down_b)
-+					    const u8 **up_a,
-+					    const u8 **down_a,
-+					    const u8 **up_b,
-+					    const u8 **down_b)
+diff --git a/drivers/platform/x86/acerhdf.c b/drivers/platform/x86/acerhdf.c
+index 76323855c80c..f816a8a13039 100644
+--- a/drivers/platform/x86/acerhdf.c
++++ b/drivers/platform/x86/acerhdf.c
+@@ -413,8 +413,8 @@ static inline void acerhdf_enable_kernelmode(void)
+  *          the temperature and the fan.
+  * disabled: the BIOS takes control of the fan.
+  */
+-static int acerhdf_set_mode(struct thermal_zone_device *thermal,
+-			    enum thermal_device_mode mode)
++static int acerhdf_change_mode(struct thermal_zone_device *thermal,
++			       enum thermal_device_mode mode)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
-@@ -999,10 +1001,10 @@ static void rtl8812ae_get_delta_swing_table(struct ieee80211_hw *hw,
- 		*up_b = rtl8812ae_delta_swing_table_idx_5gb_p[2];
- 		*down_b = rtl8812ae_delta_swing_table_idx_5gb_n[2];
- 	} else {
--	    *up_a = (u8 *)rtl8818e_delta_swing_table_idx_24gb_p;
--	    *down_a = (u8 *)rtl8818e_delta_swing_table_idx_24gb_n;
--	    *up_b = (u8 *)rtl8818e_delta_swing_table_idx_24gb_p;
--	    *down_b = (u8 *)rtl8818e_delta_swing_table_idx_24gb_n;
-+		*up_a = rtl8818e_delta_swing_table_idx_24gb_p;
-+		*down_a = rtl8818e_delta_swing_table_idx_24gb_n;
-+		*up_b = rtl8818e_delta_swing_table_idx_24gb_p;
-+		*down_b = rtl8818e_delta_swing_table_idx_24gb_n;
- 	}
+ 	if (mode == THERMAL_DEVICE_DISABLED && kernelmode)
+ 		acerhdf_revert_to_bios_mode();
+@@ -473,7 +473,7 @@ static struct thermal_zone_device_ops acerhdf_dev_ops = {
+ 	.bind = acerhdf_bind,
+ 	.unbind = acerhdf_unbind,
+ 	.get_temp = acerhdf_get_ec_temp,
+-	.set_mode = acerhdf_set_mode,
++	.change_mode = acerhdf_change_mode,
+ 	.get_trip_type = acerhdf_get_trip_type,
+ 	.get_trip_hyst = acerhdf_get_trip_hyst,
+ 	.get_trip_temp = acerhdf_get_trip_temp,
+diff --git a/drivers/thermal/imx_thermal.c b/drivers/thermal/imx_thermal.c
+index a02398118d88..9700ae39feb7 100644
+--- a/drivers/thermal/imx_thermal.c
++++ b/drivers/thermal/imx_thermal.c
+@@ -330,8 +330,8 @@ static int imx_get_temp(struct thermal_zone_device *tz, int *temp)
+ 	return 0;
  }
  
-@@ -1492,17 +1494,17 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 	/* 1. The following TWO tables decide
- 	 * the final index of OFDM/CCK swing table.
- 	 */
--	u8 *delta_swing_table_idx_tup_a;
--	u8 *delta_swing_table_idx_tdown_a;
--	u8 *delta_swing_table_idx_tup_b;
--	u8 *delta_swing_table_idx_tdown_b;
-+	const u8 *delta_swing_table_idx_tup_a;
-+	const u8 *delta_swing_table_idx_tdown_a;
-+	const u8 *delta_swing_table_idx_tup_b;
-+	const u8 *delta_swing_table_idx_tdown_b;
- 
- 	/*2. Initilization ( 7 steps in total )*/
- 	rtl8812ae_get_delta_swing_table(hw,
--		(u8 **)&delta_swing_table_idx_tup_a,
--		(u8 **)&delta_swing_table_idx_tdown_a,
--		(u8 **)&delta_swing_table_idx_tup_b,
--		(u8 **)&delta_swing_table_idx_tdown_b);
-+		&delta_swing_table_idx_tup_a,
-+		&delta_swing_table_idx_tdown_a,
-+		&delta_swing_table_idx_tup_b,
-+		&delta_swing_table_idx_tdown_b);
- 
- 	rtldm->txpower_trackinginit = true;
- 
-@@ -1830,8 +1832,11 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 		 "<===rtl8812ae_dm_txpower_tracking_callback_thermalmeter\n");
- }
- 
--static void rtl8821ae_get_delta_swing_table(struct ieee80211_hw *hw, u8 **up_a,
--					    u8 **down_a, u8 **up_b, u8 **down_b)
-+static void rtl8821ae_get_delta_swing_table(struct ieee80211_hw *hw,
-+					    const u8 **up_a,
-+					    const u8 **down_a,
-+					    const u8 **up_b,
-+					    const u8 **down_b)
+-static int imx_set_mode(struct thermal_zone_device *tz,
+-			enum thermal_device_mode mode)
++static int imx_change_mode(struct thermal_zone_device *tz,
++			   enum thermal_device_mode mode)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
-@@ -1867,10 +1872,10 @@ static void rtl8821ae_get_delta_swing_table(struct ieee80211_hw *hw, u8 **up_a,
- 		*up_b = rtl8821ae_delta_swing_table_idx_5gb_p[2];
- 		*down_b = rtl8821ae_delta_swing_table_idx_5gb_n[2];
- 	} else {
--	    *up_a = (u8 *)rtl8818e_delta_swing_table_idx_24gb_p;
--	    *down_a = (u8 *)rtl8818e_delta_swing_table_idx_24gb_n;
--	    *up_b = (u8 *)rtl8818e_delta_swing_table_idx_24gb_p;
--	    *down_b = (u8 *)rtl8818e_delta_swing_table_idx_24gb_n;
-+		*up_a = rtl8818e_delta_swing_table_idx_24gb_p;
-+		*down_a = rtl8818e_delta_swing_table_idx_24gb_n;
-+		*up_b = rtl8818e_delta_swing_table_idx_24gb_p;
-+		*down_b = rtl8818e_delta_swing_table_idx_24gb_n;
- 	}
- 	return;
- }
-@@ -2075,16 +2080,17 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 	/* 1. The following TWO tables decide the final
- 	 * index of OFDM/CCK swing table.
+ 	struct imx_thermal_data *data = tz->devdata;
+ 	struct regmap *map = data->tempmon;
+@@ -447,7 +447,7 @@ static struct thermal_zone_device_ops imx_tz_ops = {
+ 	.bind = imx_bind,
+ 	.unbind = imx_unbind,
+ 	.get_temp = imx_get_temp,
+-	.set_mode = imx_set_mode,
++	.change_mode = imx_change_mode,
+ 	.get_trip_type = imx_get_trip_type,
+ 	.get_trip_temp = imx_get_trip_temp,
+ 	.get_crit_temp = imx_get_crit_temp,
+@@ -860,7 +860,7 @@ static int __maybe_unused imx_thermal_suspend(struct device *dev)
+ 	 * Need to disable thermal sensor, otherwise, when thermal core
+ 	 * try to get temperature before thermal sensor resume, a wrong
+ 	 * temperature will be read as the thermal sensor is powered
+-	 * down. This is done in set_mode() operation called from
++	 * down. This is done in change_mode() operation called from
+ 	 * thermal_zone_device_disable()
  	 */
--	u8 *delta_swing_table_idx_tup_a;
--	u8 *delta_swing_table_idx_tdown_a;
--	u8 *delta_swing_table_idx_tup_b;
--	u8 *delta_swing_table_idx_tdown_b;
-+	const u8 *delta_swing_table_idx_tup_a;
-+	const u8 *delta_swing_table_idx_tdown_a;
-+	const u8 *delta_swing_table_idx_tup_b;
-+	const u8 *delta_swing_table_idx_tdown_b;
+ 	ret = thermal_zone_device_disable(data->tz);
+diff --git a/drivers/thermal/intel/int340x_thermal/int3400_thermal.c b/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
+index ce49d3b100d5..d3732f624913 100644
+--- a/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
++++ b/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
+@@ -377,8 +377,8 @@ static int int3400_thermal_get_temp(struct thermal_zone_device *thermal,
+ 	return 0;
+ }
  
- 	/*2. Initilization ( 7 steps in total )*/
--	rtl8821ae_get_delta_swing_table(hw, (u8 **)&delta_swing_table_idx_tup_a,
--					(u8 **)&delta_swing_table_idx_tdown_a,
--					(u8 **)&delta_swing_table_idx_tup_b,
--					(u8 **)&delta_swing_table_idx_tdown_b);
-+	rtl8821ae_get_delta_swing_table(hw,
-+					&delta_swing_table_idx_tup_a,
-+					&delta_swing_table_idx_tdown_a,
-+					&delta_swing_table_idx_tup_b,
-+					&delta_swing_table_idx_tdown_b);
+-static int int3400_thermal_set_mode(struct thermal_zone_device *thermal,
+-				enum thermal_device_mode mode)
++static int int3400_thermal_change_mode(struct thermal_zone_device *thermal,
++				       enum thermal_device_mode mode)
+ {
+ 	struct int3400_thermal_priv *priv = thermal->devdata;
+ 	int result = 0;
+@@ -399,7 +399,7 @@ static int int3400_thermal_set_mode(struct thermal_zone_device *thermal,
  
- 	rtldm->txpower_trackinginit = true;
+ static struct thermal_zone_device_ops int3400_thermal_ops = {
+ 	.get_temp = int3400_thermal_get_temp,
+-	.set_mode = int3400_thermal_set_mode,
++	.change_mode = int3400_thermal_change_mode,
+ };
  
+ static struct thermal_zone_params int3400_thermal_params = {
+diff --git a/drivers/thermal/intel/intel_quark_dts_thermal.c b/drivers/thermal/intel/intel_quark_dts_thermal.c
+index e29c3e330b17..3eafc6b0e6c3 100644
+--- a/drivers/thermal/intel/intel_quark_dts_thermal.c
++++ b/drivers/thermal/intel/intel_quark_dts_thermal.c
+@@ -298,8 +298,8 @@ static int sys_get_curr_temp(struct thermal_zone_device *tzd,
+ 	return 0;
+ }
+ 
+-static int sys_set_mode(struct thermal_zone_device *tzd,
+-				enum thermal_device_mode mode)
++static int sys_change_mode(struct thermal_zone_device *tzd,
++			   enum thermal_device_mode mode)
+ {
+ 	int ret;
+ 
+@@ -319,7 +319,7 @@ static struct thermal_zone_device_ops tzone_ops = {
+ 	.get_trip_type = sys_get_trip_type,
+ 	.set_trip_temp = sys_set_trip_temp,
+ 	.get_crit_temp = sys_get_crit_temp,
+-	.set_mode = sys_set_mode,
++	.change_mode = sys_change_mode,
+ };
+ 
+ static void free_soc_dts(struct soc_sensor_entry *aux_entry)
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
+index e613f5c07bad..a61e91513584 100644
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -482,8 +482,8 @@ static int thermal_zone_device_set_mode(struct thermal_zone_device *tz,
+ 		return ret;
+ 	}
+ 
+-	if (tz->ops->set_mode)
+-		ret = tz->ops->set_mode(tz, mode);
++	if (tz->ops->change_mode)
++		ret = tz->ops->change_mode(tz, mode);
+ 
+ 	if (!ret)
+ 		tz->mode = mode;
+diff --git a/include/linux/thermal.h b/include/linux/thermal.h
+index df013c39ba9b..b9efaa780d88 100644
+--- a/include/linux/thermal.h
++++ b/include/linux/thermal.h
+@@ -76,7 +76,7 @@ struct thermal_zone_device_ops {
+ 		       struct thermal_cooling_device *);
+ 	int (*get_temp) (struct thermal_zone_device *, int *);
+ 	int (*set_trips) (struct thermal_zone_device *, int, int);
+-	int (*set_mode) (struct thermal_zone_device *,
++	int (*change_mode) (struct thermal_zone_device *,
+ 		enum thermal_device_mode);
+ 	int (*get_trip_type) (struct thermal_zone_device *, int,
+ 		enum thermal_trip_type *);
 -- 
-2.21.0
+2.17.1
 
