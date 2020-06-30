@@ -2,86 +2,123 @@ Return-Path: <SRS0=sar6=AL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E80C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFA85C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:17:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDDE42073E
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:14:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 824AB20759
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:17:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593501427;
+	bh=5synz2C3U8p1pf1ipeeJ9gOueO9mxDSTwbasc+QhT74=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=GtBL5+GGAn2ZdAY7RrU8pLMEDD0PbmLBUO/ULujFkL6hNIXWuQysrrwPUea8SBogq
+	 QG8x5lt6MuINHh4jAfBG98LTE7s9snPe+eXBLxb0SwFHD8A0AJ8rac77w0YE4I29UX
+	 fkwVF3hMkOQ5B3R4csHP6DutJhHcY9/z+5KCl0/8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730635AbgF3HOQ (ORCPT
+        id S1730705AbgF3HRG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jun 2020 03:14:16 -0400
-Received: from smtp23.cstnet.cn ([159.226.251.23]:53978 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730538AbgF3HOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jun 2020 03:14:15 -0400
-X-Greylist: delayed 585 seconds by postgrey-1.27 at vger.kernel.org; Tue, 30 Jun 2020 03:14:03 EDT
-Received: from localhost (unknown [159.226.5.99])
-        by APP-03 (Coremail) with SMTP id rQCowAC3OPjl4_peKEhOAQ--.46047S2;
-        Tue, 30 Jun 2020 15:04:05 +0800 (CST)
-From:   Chen Ni <vulab@iscas.ac.cn>
-To:     dsd@gentoo.org, kune@deine-taler.de, kvalo@codeaurora.org,
-        davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Xu Wang <vulab@iscas.ac.cn>
-Subject: [PATCH] net: zydas: remove needless check before usb_free_coherent()
-Date:   Tue, 30 Jun 2020 07:04:04 +0000
-Message-Id: <20200630070404.8207-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: rQCowAC3OPjl4_peKEhOAQ--.46047S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFWrZw4UGr47GFWDGFyDWrg_yoWfKrg_Gr
-        Z7WFnxXry5Jw109rWUAay3Z39Yya93Xws5WrsaqrW5Wayjq3sxAw1jyry7JrsrGFnYvFnx
-        Gw1kJFW8JFySqjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbfxYjsxI4VW3JwAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I
-        6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM2
-        8CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0
-        cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z2
-        80aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAK
-        zVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_ZcC_Gr8dMc
-        vjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjcxG6xCI17CEII8vrVW3JVW8
-        Jr1lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW8CwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxK
-        x2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-        AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0ziiIDnUUUUU=
-X-Originating-IP: [159.226.5.99]
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiAxADA13qZLQmfQAAsv
+        Tue, 30 Jun 2020 03:17:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43636 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730636AbgF3HRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jun 2020 03:17:06 -0400
+Received: from localhost (unknown [151.48.138.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 67F2F2073E;
+        Tue, 30 Jun 2020 07:17:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593501426;
+        bh=5synz2C3U8p1pf1ipeeJ9gOueO9mxDSTwbasc+QhT74=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QTc7sF9dri+9YwUbUHXmXr2Y/sQZhmYmAVlC7jghbeRA8/Jz2fy95Lv4DsSVDu1NI
+         TZPhXe26/2or6G3dNUUx8zOEMo/yqqNoxUC2pqe/BDFsBIFx90dcKOKAjHLLzAp3C/
+         5Hs79htAzqv9egFUqOZU7ap90JhU0O7ZqNDG69c4=
+Date:   Tue, 30 Jun 2020 09:17:01 +0200
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     sean.wang@mediatek.com
+Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 3/3] mt76: mt7615: fix potential memory leak in mcu
+ message handler
+Message-ID: <20200630071701.GC2169@localhost.localdomain>
+References: <5e8786d9cf0ccd09dd9c13c24c48ce441afbf0ff.1593491298.git.sean.wang@mediatek.com>
+ <b1dc67b62bcc53ad02e86099ac0aab312109094b.1593491298.git.sean.wang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="32u276st3Jlj2kUU"
+Content-Disposition: inline
+In-Reply-To: <b1dc67b62bcc53ad02e86099ac0aab312109094b.1593491298.git.sean.wang@mediatek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Xu Wang <vulab@iscas.ac.cn>
 
-usb_free_coherent() is safe with NULL addr and this check is
-not required.
+--32u276st3Jlj2kUU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Xu Wang <vulab@iscas.ac.cn>
----
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> From: Sean Wang <sean.wang@mediatek.com>
+>=20
+> Fix potential memory leak in mcu message handler on error condition.
+>=20
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-index 8ff0374126e4..65b5985ad402 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-@@ -600,9 +600,7 @@ void zd_usb_disable_int(struct zd_usb *usb)
- 	dev_dbg_f(zd_usb_dev(usb), "urb %p killed\n", urb);
- 	usb_free_urb(urb);
- 
--	if (buffer)
--		usb_free_coherent(udev, USB_MAX_EP_INT_BUFFER,
--				  buffer, buffer_dma);
-+	usb_free_coherent(udev, USB_MAX_EP_INT_BUFFER, buffer, buffer_dma);
- }
- 
- static void handle_rx_packet(struct zd_usb *usb, const u8 *buffer,
--- 
-2.17.1
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
+> Fixes: 0e6a29e477f3 ("mt76: mt7615: add support to read temperature from =
+mcu")
+> Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/ne=
+t/wireless/mediatek/mt76/mt7615/mcu.c
+> index 1b46cccd93c5..58e3838a3dba 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> @@ -183,8 +183,10 @@ mt7615_mcu_parse_response(struct mt7615_dev *dev, in=
+t cmd,
+>  	struct mt7615_mcu_rxd *rxd =3D (struct mt7615_mcu_rxd *)skb->data;
+>  	int ret =3D 0;
+> =20
+> -	if (seq !=3D rxd->seq)
+> -		return -EAGAIN;
+> +	if (seq !=3D rxd->seq) {
+> +		ret =3D -EAGAIN;
+> +		goto out;
+> +	}
+> =20
+>  	switch (cmd) {
+>  	case MCU_CMD_PATCH_SEM_CONTROL:
+> @@ -215,6 +217,7 @@ mt7615_mcu_parse_response(struct mt7615_dev *dev, int=
+ cmd,
+>  	default:
+>  		break;
+>  	}
+> +out:
+>  	dev_kfree_skb(skb);
+> =20
+>  	return ret;
+> --=20
+> 2.25.1
+
+--32u276st3Jlj2kUU
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXvrm6gAKCRA6cBh0uS2t
+rDXrAPsGccYGcgDDRw98f6tuG0QktsFKLRJItNtuQG+mGY2YjgEA4FLMj9tcQOx3
+Mz+xeYKB+byp9MDd87Yju/h2fQV1Xws=
+=zdsp
+-----END PGP SIGNATURE-----
+
+--32u276st3Jlj2kUU--
