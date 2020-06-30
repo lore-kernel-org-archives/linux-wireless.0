@@ -2,453 +2,180 @@ Return-Path: <SRS0=sar6=AL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C17C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F79C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:43:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11BBA206C0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:42:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mLSj87st"
+	by mail.kernel.org (Postfix) with ESMTP id 994AC206C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:43:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387827AbgF3NmF (ORCPT
+        id S2387790AbgF3Nn2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jun 2020 09:42:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46236 "EHLO
+        Tue, 30 Jun 2020 09:43:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387769AbgF3NmC (ORCPT
+        with ESMTP id S2387429AbgF3Nn1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jun 2020 09:42:02 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57AA9C061755
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2020 06:42:02 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id k6so20246108wrn.3
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2020 06:42:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Fx9nae/6WzpXryyNcZSeFEglCrL7UJrEuIEv78+aKLY=;
-        b=mLSj87stl2FXjYzeleYKc05BOBQ2FHGqw8cdzUMOFesOy6jXKrwu6HaPCKsqhzSDDM
-         gIopOKjOpvmQ5iYuGPqvlWMxOJOT8D54a5m8LeHNGUXO6Fm9OFPTyfms//CYzsri6MW3
-         L3MhzRSoCF6bq5Sl6+7SUVjkh4nrKx+8WOG3Tis3/0lS32cAtCYeqH+g8Fp/3lF8frZS
-         Jt8Q8R9ghUGiS696BNVe8ctwlbPglO+WmPj/S1l6e9AiN1oKOOxDtwF49C62gAlKLDls
-         jUhz5NYp3DGfW6qqE3pOTrJK3G0bAoAQyHbfaBdZOz6h0dyRLK8riIY/uM3Uj7LJ08CO
-         oD2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Fx9nae/6WzpXryyNcZSeFEglCrL7UJrEuIEv78+aKLY=;
-        b=KIPmfzU36xoxq/7+LNeH+bTwM7wcInhBDGIwDNqwkszVicbs0/xusFFZQGsgBF2iJM
-         DYLDXP9jWOtE0YTx2Wa4b7eGiGs5J9sHK5TQNW+4GxX9rb9eKYqfar2+8QmJeuMI/adw
-         Rrq41kC5LMp5AFI4G/lJ00rzf/8WDQWfroe4wZ9z0CdE4c30/tyGIkwJRPSD+rAScJge
-         t/ssCSmX2Scf02Ym6GKwTSnHgQqQuErracsz78nmCJtPV+ij/Xsqr+6r6ZkdR/T/jBoV
-         bdBvsm17+t+g1Hj72+p6ZuP+9IWCmFnoIad9mPiuh8JppGjPLRdnIBKVxXk+v0L/beah
-         TMHA==
-X-Gm-Message-State: AOAM530uU8oViKexwEzEjg9uSUkqVgj5nIExxjS8hUymYdf9ykt17PSW
-        qq2faA7NA7yCPP7J+qKjq2N5BHhOenLOZQ==
-X-Google-Smtp-Source: ABdhPJxksvSM092blY5OBSpaoI5kaDjJm6TH3JPa1e8Yzc/I6p6abK+dbnDZtujVH4XJn0k8/5HLhQ==
-X-Received: by 2002:adf:de0a:: with SMTP id b10mr21431321wrm.72.1593524520849;
-        Tue, 30 Jun 2020 06:42:00 -0700 (PDT)
-Received: from localhost.localdomain ([88.122.66.28])
-        by smtp.gmail.com with ESMTPSA id l18sm3803411wrm.52.2020.06.30.06.41.59
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jun 2020 06:42:00 -0700 (PDT)
-From:   Loic Poulain <loic.poulain@linaro.org>
-To:     kvalo@codeaurora.org
-Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH 4/4] wcn36xx: Fix software-driven scan
-Date:   Tue, 30 Jun 2020 15:47:01 +0200
-Message-Id: <1593524821-32115-4-git-send-email-loic.poulain@linaro.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1593524821-32115-1-git-send-email-loic.poulain@linaro.org>
-References: <1593524821-32115-1-git-send-email-loic.poulain@linaro.org>
+        Tue, 30 Jun 2020 09:43:27 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63520C061755;
+        Tue, 30 Jun 2020 06:43:27 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: andrzej.p)
+        with ESMTPSA id EDD2D2A4A92
+Subject: Re: [PATCH v7 00/11] Stop monitoring disabled devices
+To:     Daniel Lezcano <daniel.lezcano@linaro.org>,
+        linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Peter Kaestle <peter@piie.net>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Allison Randal <allison@lohutok.net>,
+        Enrico Weigelt <info@metux.net>,
+        Gayatri Kammela <gayatri.kammela@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        kernel@collabora.com
+References: <20200629122925.21729-1-andrzej.p@collabora.com>
+ <aab40d90-3f72-657c-5e14-e53a34c4b420@linaro.org>
+From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+Message-ID: <3d03d1a2-ac06-b69b-93cb-e0203be62c10@collabora.com>
+Date:   Tue, 30 Jun 2020 15:43:20 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+In-Reply-To: <aab40d90-3f72-657c-5e14-e53a34c4b420@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For software-driven scan, rely on mac80211 software scan instead
-of internal driver implementation. The internal implementation
-cause connection trouble since it keeps the antenna busy during
-the entire scan duration, moreover it's only a passive scanning
-(no probe request). Therefore, let mac80211 manages sw scan.
+Hi Daniel,
 
-Note: we fallback to software scan if firmware does not report
-scan offload support or if we need to scan the 5Ghz band (currently
-not supported by the offload scan...).
+I am reading the logs and can't find anything specific to thermal.
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c    | 162 +++++++++++++++--------------
- drivers/net/wireless/ath/wcn36xx/smd.c     |  23 +++-
- drivers/net/wireless/ath/wcn36xx/smd.h     |   8 +-
- drivers/net/wireless/ath/wcn36xx/txrx.c    |  11 +-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   6 +-
- 5 files changed, 117 insertions(+), 93 deletions(-)
+What I can see is
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index c19648f..78a4164 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -354,8 +354,6 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop\n");
- 
--	cancel_work_sync(&wcn->scan_work);
--
- 	mutex_lock(&wcn->scan_lock);
- 	if (wcn->scan_req) {
- 		struct cfg80211_scan_info scan_info = {
-@@ -378,12 +376,37 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
- 	kfree(wcn->hal_buf);
- }
- 
--static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
-+static void wcn36xx_change_ps(struct wcn36xx *wcn, bool enable)
- {
--	struct wcn36xx *wcn = hw->priv;
- 	struct ieee80211_vif *vif = NULL;
- 	struct wcn36xx_vif *tmp;
- 
-+	list_for_each_entry(tmp, &wcn->vif_list, list) {
-+		vif = wcn36xx_priv_to_vif(tmp);
-+		if (enable && !wcn->sw_scan) {
-+			if (vif->bss_conf.ps) /* ps allowed ? */
-+				wcn36xx_pmc_enter_bmps_state(wcn, vif);
-+		} else {
-+			wcn36xx_pmc_exit_bmps_state(wcn, vif);
-+		}
-+	}
-+}
-+
-+static void wcn36xx_change_opchannel(struct wcn36xx *wcn, int ch)
-+{
-+	struct ieee80211_vif *vif = NULL;
-+	struct wcn36xx_vif *tmp;
-+
-+	list_for_each_entry(tmp, &wcn->vif_list, list) {
-+		vif = wcn36xx_priv_to_vif(tmp);
-+		wcn36xx_smd_switch_channel(wcn, vif, ch);
-+	}
-+}
-+
-+static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x\n", changed);
- 
- 	mutex_lock(&wcn->conf_mutex);
-@@ -392,24 +415,30 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
- 		int ch = WCN36XX_HW_CHANNEL(wcn);
- 		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d\n",
- 			    ch);
--		list_for_each_entry(tmp, &wcn->vif_list, list) {
--			vif = wcn36xx_priv_to_vif(tmp);
--			wcn36xx_smd_switch_channel(wcn, vif, ch);
--		}
--	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_PS) {
--		list_for_each_entry(tmp, &wcn->vif_list, list) {
--			vif = wcn36xx_priv_to_vif(tmp);
--			if (hw->conf.flags & IEEE80211_CONF_PS) {
--				if (vif->bss_conf.ps) /* ps allowed ? */
--					wcn36xx_pmc_enter_bmps_state(wcn, vif);
--			} else {
--				wcn36xx_pmc_exit_bmps_state(wcn, vif);
--			}
-+		if (wcn->sw_scan_opchannel == ch) {
-+			/* If channel is the initial operating channel, we may
-+			 * want to receive/transmit regular data packets, then
-+			 * simply stop the scan session and return into
-+			 * operating mode.
-+			 */
-+			wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN,
-+						wcn->sw_scan_vif, ch);
-+		} else if (wcn->sw_scan) {
-+			/* A scan is ongoing, do not change the operating
-+			 * channel, but start a scan session on the channel.
-+			 */
-+			wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN,
-+					      wcn->sw_scan_vif);
-+			wcn36xx_smd_start_scan(wcn, ch);
-+		} else {
-+			wcn36xx_change_opchannel(wcn, ch);
- 		}
- 	}
- 
-+	if (changed & IEEE80211_CONF_CHANGE_PS)
-+		wcn36xx_change_ps(wcn, hw->conf.flags & IEEE80211_CONF_PS);
-+
- 	mutex_unlock(&wcn->conf_mutex);
- 
- 	return 0;
-@@ -614,55 +643,26 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	return ret;
- }
- 
--static void wcn36xx_hw_scan_worker(struct work_struct *work)
-+static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif,
-+			   struct ieee80211_scan_request *hw_req)
- {
--	struct wcn36xx *wcn = container_of(work, struct wcn36xx, scan_work);
--	struct cfg80211_scan_request *req = wcn->scan_req;
--	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS_EX];
--	struct cfg80211_scan_info scan_info = {};
--	bool aborted = false;
-+	struct wcn36xx *wcn = hw->priv;
- 	int i;
- 
--	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 scan %d channels worker\n", req->n_channels);
--
--	for (i = 0; i < req->n_channels; i++)
--		channels[i] = req->channels[i]->hw_value;
--
--	wcn36xx_smd_update_scan_params(wcn, channels, req->n_channels);
--
--	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN);
--	for (i = 0; i < req->n_channels; i++) {
--		mutex_lock(&wcn->scan_lock);
--		aborted = wcn->scan_aborted;
--		mutex_unlock(&wcn->scan_lock);
--
--		if (aborted)
--			break;
--
--		wcn->scan_freq = req->channels[i]->center_freq;
--		wcn->scan_band = req->channels[i]->band;
--
--		wcn36xx_smd_start_scan(wcn, req->channels[i]->hw_value);
--		msleep(30);
--		wcn36xx_smd_end_scan(wcn, req->channels[i]->hw_value);
--
--		wcn->scan_freq = 0;
-+	if (!get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
-+		/* fallback to mac80211 software scan */
-+		return 1;
- 	}
--	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN);
- 
--	scan_info.aborted = aborted;
--	ieee80211_scan_completed(wcn->hw, &scan_info);
--
--	mutex_lock(&wcn->scan_lock);
--	wcn->scan_req = NULL;
--	mutex_unlock(&wcn->scan_lock);
--}
-+	/* For unknown reason, the hardware offloaded scan only works with
-+	 * 2.4Ghz channels, fallback to software scan in other cases.
-+	 */
-+	for (i = 0; i < hw_req->req.n_channels; i++) {
-+		if (hw_req->req.channels[i]->band != NL80211_BAND_2GHZ)
-+			return 1;
-+	}
- 
--static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
--			   struct ieee80211_vif *vif,
--			   struct ieee80211_scan_request *hw_req)
--{
--	struct wcn36xx *wcn = hw->priv;
- 	mutex_lock(&wcn->scan_lock);
- 	if (wcn->scan_req) {
- 		mutex_unlock(&wcn->scan_lock);
-@@ -674,12 +674,6 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
- 
- 	mutex_unlock(&wcn->scan_lock);
- 
--	if (!get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
--		/* legacy manual/sw scan */
--		schedule_work(&wcn->scan_work);
--		return 0;
--	}
--
- 	return wcn36xx_smd_start_hw_scan(wcn, vif, &hw_req->req);
- }
- 
-@@ -696,16 +690,32 @@ static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
- 		/* ieee80211_scan_completed will be called on FW scan
- 		 * indication */
- 		wcn36xx_smd_stop_hw_scan(wcn);
--	} else {
--		struct cfg80211_scan_info scan_info = {
--			.aborted = true,
--		};
--
--		cancel_work_sync(&wcn->scan_work);
--		ieee80211_scan_completed(wcn->hw, &scan_info);
- 	}
- }
- 
-+static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  const u8 *mac_addr)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+
-+	wcn->sw_scan = true;
-+	wcn->sw_scan_vif = vif;
-+	wcn->sw_scan_opchannel = WCN36XX_HW_CHANNEL(wcn);
-+}
-+
-+static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+
-+	/* ensure that any scan session is finished */
-+	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN, wcn->sw_scan_vif,
-+				wcn->sw_scan_opchannel);
-+	wcn->sw_scan = false;
-+	wcn->sw_scan_opchannel = 0;
-+}
-+
- static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
- 					 enum nl80211_band band)
- {
-@@ -1151,6 +1161,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 	.set_key		= wcn36xx_set_key,
- 	.hw_scan		= wcn36xx_hw_scan,
- 	.cancel_hw_scan		= wcn36xx_cancel_hw_scan,
-+	.sw_scan_start		= wcn36xx_sw_scan_start,
-+	.sw_scan_complete	= wcn36xx_sw_scan_complete,
- 	.bss_info_changed	= wcn36xx_bss_info_changed,
- 	.set_rts_threshold	= wcn36xx_set_rts_threshold,
- 	.sta_add		= wcn36xx_sta_add,
-@@ -1329,8 +1341,6 @@ static int wcn36xx_probe(struct platform_device *pdev)
- 		goto out_wq;
- 	}
- 
--	INIT_WORK(&wcn->scan_work, wcn36xx_hw_scan_worker);
--
- 	wcn->smd_channel = qcom_wcnss_open_channel(wcnss, "WLAN_CTRL", wcn36xx_smd_rsp_process, hw);
- 	if (IS_ERR(wcn->smd_channel)) {
- 		wcn36xx_err("failed to open WLAN_CTRL channel\n");
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 3fc2d46..e58b038 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -517,8 +517,10 @@ int wcn36xx_smd_stop(struct wcn36xx *wcn)
- 	return ret;
- }
- 
--int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode)
-+int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode,
-+			  struct ieee80211_vif *vif)
- {
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_hal_init_scan_req_msg msg_body;
- 	int ret;
- 
-@@ -526,6 +528,13 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode)
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ);
- 
- 	msg_body.mode = mode;
-+	if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX) {
-+		/* Notify BSSID with null DATA packet */
-+		msg_body.frame_type = 2;
-+		msg_body.notify = 1;
-+		msg_body.scan_entry.bss_index[0] = vif_priv->bss_index;
-+		msg_body.scan_entry.active_bss_count = 1;
-+	}
- 
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
-@@ -607,8 +616,10 @@ int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 scan_channel)
- }
- 
- int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
--			    enum wcn36xx_hal_sys_mode mode)
-+			    enum wcn36xx_hal_sys_mode mode,
-+			    struct ieee80211_vif *vif, u8 channel)
- {
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_hal_finish_scan_req_msg msg_body;
- 	int ret;
- 
-@@ -616,6 +627,14 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ);
- 
- 	msg_body.mode = mode;
-+	if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX) {
-+		/* Notify BSSID with null data packet */
-+		msg_body.notify = 1;
-+		msg_body.frame_type = 2;
-+		msg_body.oper_channel = channel;
-+		msg_body.scan_entry.bss_index[0] = vif_priv->bss_index;
-+		msg_body.scan_entry.active_bss_count = 1;
-+	}
- 
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 68c59df..ffe8b0c 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -59,11 +59,13 @@ void wcn36xx_smd_close(struct wcn36xx *wcn);
- int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
- int wcn36xx_smd_start(struct wcn36xx *wcn);
- int wcn36xx_smd_stop(struct wcn36xx *wcn);
--int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode);
- int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 scan_channel);
- int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 scan_channel);
--int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
--			    enum wcn36xx_hal_sys_mode mode);
-+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode,
-+			    struct ieee80211_vif *vif, u8 channel);
-+int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode,
-+			  struct ieee80211_vif *vif);
-+
- int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn, u8 *channels, size_t channel_count);
- int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			      struct cfg80211_scan_request *req);
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index dcc2ec0..c9cf3db 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -49,15 +49,8 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
- 	fc = __le16_to_cpu(hdr->frame_control);
- 	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
- 
--	/* When scanning associate beacons to this */
--	if (ieee80211_is_beacon(hdr->frame_control) && wcn->scan_freq) {
--		status.freq = wcn->scan_freq;
--		status.band = wcn->scan_band;
--	} else {
--		status.freq = WCN36XX_CENTER_FREQ(wcn);
--		status.band = WCN36XX_BAND(wcn);
--	}
--
-+	status.freq = WCN36XX_CENTER_FREQ(wcn);
-+	status.band = WCN36XX_BAND(wcn);
- 	status.mactime = 10;
- 	status.signal = -get_rssi0(bd);
- 	status.antenna = 1;
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 2d89849..3221fed 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -223,10 +223,10 @@ struct wcn36xx {
- 	spinlock_t		hal_ind_lock;
- 	struct list_head	hal_ind_queue;
- 
--	struct work_struct	scan_work;
- 	struct cfg80211_scan_request *scan_req;
--	int			scan_freq;
--	int			scan_band;
-+	bool			sw_scan;
-+	u8			sw_scan_opchannel;
-+	struct ieee80211_vif	*sw_scan_vif;
- 	struct mutex		scan_lock;
- 	bool			scan_aborted;
- 
--- 
-2.7.4
+"random: crng init done"
+
+with large times (~200s) and then e.g.
+
+'auto-login-action timed out after 283 seconds'
+
+I'm looking at e.g. 
+https://storage.kernelci.org/thermal/testing/v5.8-rc3-11-gf5e50bf4d3ef/arm/multi_v7_defconfig/gcc-8/lab-baylibre/baseline-imx6q-sabrelite.html
+
+Is there anywhere else I can look at?
+
+Andrzej
+
+W dniu 30.06.2020 o 14:57, Daniel Lezcano pisze:
+> 
+> Hi Andrzej,
+> 
+> I've tested your series with kernelci and there are 3 regressions for
+> the imx6.
+> 
+> https://kernelci.org/test/job/thermal/branch/testing/kernel/v5.8-rc3-11-gf5e50bf4d3ef/plan/baseline/
+> 
+> 
+> On 29/06/2020 14:29, Andrzej Pietrasiewicz wrote:
+>> A respin of v6 with these changes:
+>>
+>> v6..v7:
+>> - removed duplicate S-o-b line from patch 6/11
+>>
+>> v5..v6:
+>> - staticized thermal_zone_device_set_mode() (kbuild test robot)
+>>
+>> v4..v5:
+>>
+>> - EXPORT_SYMBOL -> EXPORT_SYMBOL_GPL (Daniel)
+>> - dropped unnecessary thermal_zone_device_enable() in int3400_thermal.c
+>> and in thermal_of.c (Bartlomiej)
+>>
+>> Andrzej Pietrasiewicz (11):
+>>    acpi: thermal: Fix error handling in the register function
+>>    thermal: Store thermal mode in a dedicated enum
+>>    thermal: Add current mode to thermal zone device
+>>    thermal: Store device mode in struct thermal_zone_device
+>>    thermal: remove get_mode() operation of drivers
+>>    thermal: Add mode helpers
+>>    thermal: Use mode helpers in drivers
+>>    thermal: Explicitly enable non-changing thermal zone devices
+>>    thermal: core: Stop polling DISABLED thermal devices
+>>    thermal: Simplify or eliminate unnecessary set_mode() methods
+>>    thermal: Rename set_mode() to change_mode()
+>>
+>>   drivers/acpi/thermal.c                        | 75 +++++----------
+>>   .../ethernet/chelsio/cxgb4/cxgb4_thermal.c    |  8 ++
+>>   .../ethernet/mellanox/mlxsw/core_thermal.c    | 91 ++++---------------
+>>   drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |  9 +-
+>>   drivers/platform/x86/acerhdf.c                | 33 +++----
+>>   drivers/platform/x86/intel_mid_thermal.c      |  6 ++
+>>   drivers/power/supply/power_supply_core.c      |  9 +-
+>>   drivers/thermal/armada_thermal.c              |  6 ++
+>>   drivers/thermal/da9062-thermal.c              | 16 +---
+>>   drivers/thermal/dove_thermal.c                |  6 ++
+>>   drivers/thermal/hisi_thermal.c                |  6 +-
+>>   drivers/thermal/imx_thermal.c                 | 57 ++++--------
+>>   .../intel/int340x_thermal/int3400_thermal.c   | 38 ++------
+>>   .../int340x_thermal/int340x_thermal_zone.c    |  5 +
+>>   drivers/thermal/intel/intel_pch_thermal.c     |  5 +
+>>   .../thermal/intel/intel_quark_dts_thermal.c   | 34 ++-----
+>>   drivers/thermal/intel/intel_soc_dts_iosf.c    |  3 +
+>>   drivers/thermal/intel/x86_pkg_temp_thermal.c  |  6 ++
+>>   drivers/thermal/kirkwood_thermal.c            |  7 ++
+>>   drivers/thermal/rcar_thermal.c                |  9 +-
+>>   drivers/thermal/rockchip_thermal.c            |  6 +-
+>>   drivers/thermal/spear_thermal.c               |  7 ++
+>>   drivers/thermal/sprd_thermal.c                |  6 +-
+>>   drivers/thermal/st/st_thermal.c               |  5 +
+>>   drivers/thermal/thermal_core.c                | 76 ++++++++++++++--
+>>   drivers/thermal/thermal_of.c                  | 41 +--------
+>>   drivers/thermal/thermal_sysfs.c               | 37 +-------
+>>   include/linux/thermal.h                       | 19 +++-
+>>   28 files changed, 275 insertions(+), 351 deletions(-)
+>>
+>>
+>> base-commit: 9ebcfadb0610322ac537dd7aa5d9cbc2b2894c68
+>>
+> 
+> 
 
