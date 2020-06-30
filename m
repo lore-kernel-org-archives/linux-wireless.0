@@ -2,151 +2,145 @@ Return-Path: <SRS0=sar6=AL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26AC3C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 06:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5827AC433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 039EF20759
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 06:26:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pF9+VBLH"
+	by mail.kernel.org (Postfix) with ESMTP id 319C520759
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 07:07:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593500852;
+	bh=dPzQ1b+X74tG/VK6jGk6QBhiIJidaJbrfTaR58NFdtE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=RS7toZ+M3HRSU88pr09S6voWFCQC5jctuv604r7QoH5KVKUyGcJPaTZGvC9+SNDXY
+	 Seo5as4hab+L2djyvFWCdcosHeVxGDluLTOgCAXVWwwtRz24hAXUUZDvy5tK3BTyFD
+	 PWJ4Cson2oC5v53z1IyJ1TrjgELApzA49mNjALpk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729954AbgF3G01 (ORCPT
+        id S1730561AbgF3HHb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jun 2020 02:26:27 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:41282 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725845AbgF3G00 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jun 2020 02:26:26 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1593498386; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=bik6olVsHFxI7ynOd4CnDIW+0YcHOHLWVBwDqD735N4=; b=pF9+VBLHFQzi1owwEUhxU5+7xwNTLDxGzoFmfWk9+jhF6fbPrsOhLageClq0b20wo8xoQXHJ
- 3+lAg8zHTCt6vBie8sK9jx7JprN68iNKiozVpLO4Uceq6X5QqItvrAD/TS0fwqipN4C46FCW
- DlygIY9M3FBqEkHID1pA892qYTE=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5efadb11567385e8e7a54499 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 30 Jun 2020 06:26:25
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DB849C433CA; Tue, 30 Jun 2020 06:26:24 +0000 (UTC)
-Received: from vmaloo-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Tue, 30 Jun 2020 03:07:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40294 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730386AbgF3HHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jun 2020 03:07:31 -0400
+Received: from localhost (unknown [151.48.138.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: vmaloo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 75337C433C6;
-        Tue, 30 Jun 2020 06:26:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 75337C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=vmaloo@codeaurora.org
-From:   "Vinita S. Maloo" <vmaloo@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Add support to get BIP failure counters
-Date:   Tue, 30 Jun 2020 11:56:21 +0530
-Message-Id: <1593498381-9337-1-git-send-email-vmaloo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        by mail.kernel.org (Postfix) with ESMTPSA id 1B9812073E;
+        Tue, 30 Jun 2020 07:07:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593500850;
+        bh=dPzQ1b+X74tG/VK6jGk6QBhiIJidaJbrfTaR58NFdtE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GUtETFoPUrpqTbY5pabj5+jnOVxqsjl6/jlBjhJhlJlDkFKLNYm0rF+TLFkVOAPdR
+         pe/teLzD/xFSVvhtjoSKAl83IvtAGBB4yVoLLl+ICdR1aRetFmSW3EfVHKFJhzUlB/
+         KF/X7ad/Pz2VXoGOdSlGGlyC5O25ExeseEMzcIno=
+Date:   Tue, 30 Jun 2020 09:07:25 +0200
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     sean.wang@mediatek.com
+Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 1/3] mt76: mt7663u: fix memory leak in set key
+Message-ID: <20200630070725.GA2169@localhost.localdomain>
+References: <5e8786d9cf0ccd09dd9c13c24c48ce441afbf0ff.1593491298.git.sean.wang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="pWyiEgJYm5f9v55/"
+Content-Disposition: inline
+In-Reply-To: <5e8786d9cf0ccd09dd9c13c24c48ce441afbf0ff.1593491298.git.sean.wang@mediatek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to get number of MIC errors, missing MME incidents and
-packet replay incidents observed while using IGTK/BIGTK keys when
-PMF and/or beacon protection features are enabled.
 
-Signed-off-by: Vinita S. Maloo <vmaloo@codeaurora.org>
+--pWyiEgJYm5f9v55/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e2dbc9c0..ade5ade 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1556,6 +1556,16 @@ struct cfg80211_tid_stats {
-  *	an FCS error. This counter should be incremented only when TA of the
-  *	received packet with an FCS error matches the peer MAC address.
-  * @airtime_link_metric: mesh airtime link metric.
-+ * @bip_mic_error_count: number of group addressed robust mgmt. frames received
-+ *	from this station with invalid MIC or missing MME when PMF is enabled.
-+ * @bip_replay_count: number of group addressed robust mgmt. frames received
-+ *	from this station with packet number less than or equal to the last
-+ *	received packet number (Replay packets) when PMF is enabled.
-+ * @beacon_mic_error_count: number of beacons received from this station with
-+ *	invalid MIC or missing MME when beacon protection is enabled.
-+ * @beacon_replay_count: number of beacons received from this station with
-+ *	packet number less than or equal to the last received packet number
-+ *	(Replay packets) when beacon protection is enabled.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1613,6 +1623,11 @@ struct station_info {
- 	u32 fcs_err_count;
- 
- 	u32 airtime_link_metric;
-+
-+	u32 bip_mic_error_count;
-+	u32 bip_replay_count;
-+	u32 beacon_mic_error_count;
-+	u32 beacon_replay_count;
- };
- 
- #if IS_ENABLED(CONFIG_CFG80211)
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c14666b..a06b2c4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3365,6 +3365,18 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_AIRTIME_LINK_METRIC: airtime link metric for mesh station
-  * @NL80211_STA_INFO_ASSOC_AT_BOOTTIME: Timestamp (CLOCK_BOOTTIME, nanoseconds)
-  *	of STA's association
-+ * @NL80211_STA_INFO_BIP_MIC_ERROR_COUNT: number of group addressed robust mgmt.
-+ *	frames received from this station with invalid MIC or missing MME when
-+ *	PMF is enabled (u32).
-+ * @NL80211_STA_INFO_BIP_REPLAY_COUNT: number of group addressed robust mgmt.
-+ *	frames received from this station with packet number less than or equal
-+ *	to the last received packet number when PMF is enabled (u32)
-+ * @NL80211_STA_INFO_BEACON_MIC_ERROR_COUNT: number of beacons received from
-+ *	this station with invalid MIC or missing MME when beacon protection is
-+ *	enabled (u32)
-+ * @NL80211_STA_INFO_BEACON_REPLAY_COUNT: number of beacons received from this
-+ *	station with packet number less than or equal to the last received
-+ *	packet number when beacon protection is enabled (u32)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -3412,6 +3424,10 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_AIRTIME_WEIGHT,
- 	NL80211_STA_INFO_AIRTIME_LINK_METRIC,
- 	NL80211_STA_INFO_ASSOC_AT_BOOTTIME,
-+	NL80211_STA_INFO_BIP_MIC_ERROR_COUNT,
-+	NL80211_STA_INFO_BIP_REPLAY_COUNT,
-+	NL80211_STA_INFO_BEACON_MIC_ERROR_COUNT,
-+	NL80211_STA_INFO_BEACON_REPLAY_COUNT,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 22c4d13..bc6767c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5409,6 +5409,10 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
- 	PUT_SINFO(RX_MPDUS, rx_mpdu_count, u32);
- 	PUT_SINFO(FCS_ERROR_COUNT, fcs_err_count, u32);
-+	PUT_SINFO(BIP_MIC_ERROR_COUNT, bip_mic_error_count, u32);
-+	PUT_SINFO(BIP_REPLAY_COUNT, bip_replay_count, u32);
-+	PUT_SINFO(BEACON_MIC_ERROR_COUNT, beacon_mic_error_count, u32);
-+	PUT_SINFO(BEACON_REPLAY_COUNT, beacon_replay_count, u32);
- 	if (wiphy_ext_feature_isset(&rdev->wiphy,
- 				    NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT)) {
- 		PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
--- 
-2.7.4
+> From: Sean Wang <sean.wang@mediatek.com>
+>=20
+> Fix memory leak in set key.
+>=20
 
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
+
+> Fixes: eb99cc95c3b6 ("mt76: mt7615: introduce mt7663u support")
+> Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+> ---
+>  .../net/wireless/mediatek/mt76/mt7615/usb.c   | 22 +++++++++++++------
+>  1 file changed, 15 insertions(+), 7 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/ne=
+t/wireless/mediatek/mt76/mt7615/usb.c
+> index 0ba28d37c414..96a081be108e 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+> @@ -165,12 +165,16 @@ __mt7663u_mac_set_key(struct mt7615_dev *dev,
+> =20
+>  	lockdep_assert_held(&dev->mt76.mutex);
+> =20
+> -	if (!sta)
+> -		return -EINVAL;
+> +	if (!sta) {
+> +		err =3D -EINVAL;
+> +		goto out;
+> +	}
+> =20
+>  	cipher =3D mt7615_mac_get_cipher(key->cipher);
+> -	if (cipher =3D=3D MT_CIPHER_NONE)
+> -		return -EOPNOTSUPP;
+> +	if (cipher =3D=3D MT_CIPHER_NONE) {
+> +		err =3D -EOPNOTSUPP;
+> +		goto out;
+> +	}
+> =20
+>  	wcid =3D &wd->sta->wcid;
+> =20
+> @@ -178,19 +182,23 @@ __mt7663u_mac_set_key(struct mt7615_dev *dev,
+>  	err =3D mt7615_mac_wtbl_update_key(dev, wcid, key->key, key->keylen,
+>  					 cipher, key->cmd);
+>  	if (err < 0)
+> -		return err;
+> +		goto out;
+> =20
+>  	err =3D mt7615_mac_wtbl_update_pk(dev, wcid, cipher, key->keyidx,
+>  					key->cmd);
+>  	if (err < 0)
+> -		return err;
+> +		goto out;
+> =20
+>  	if (key->cmd =3D=3D SET_KEY)
+>  		wcid->cipher |=3D BIT(cipher);
+>  	else
+>  		wcid->cipher &=3D ~BIT(cipher);
+> =20
+> -	return 0;
+> +out:
+> +	kfree(key->key);
+> +	kfree(wd);
+> +
+> +	return err;
+>  }
+> =20
+>  void mt7663u_wtbl_work(struct work_struct *work)
+> --=20
+> 2.25.1
+
+--pWyiEgJYm5f9v55/
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXvrkqgAKCRA6cBh0uS2t
+rJW7AQDzRpCy7iO+dgNKsP9qclqjjH70wDijsS5eb5HzUjqt9QD7BkwTOimphjKz
+/KpwjRwlo2567sM+026yGKzrds1wgAk=
+=YUPq
+-----END PGP SIGNATURE-----
+
+--pWyiEgJYm5f9v55/--
