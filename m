@@ -3,179 +3,121 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F79C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:43:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEAE6C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 14:40:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 994AC206C0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 13:43:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4F56206BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jun 2020 14:40:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387790AbgF3Nn2 (ORCPT
+        id S1731761AbgF3Ok6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jun 2020 09:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46460 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387429AbgF3Nn1 (ORCPT
+        Tue, 30 Jun 2020 10:40:58 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:57511 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726699AbgF3Ok5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jun 2020 09:43:27 -0400
-Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63520C061755;
-        Tue, 30 Jun 2020 06:43:27 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: andrzej.p)
-        with ESMTPSA id EDD2D2A4A92
-Subject: Re: [PATCH v7 00/11] Stop monitoring disabled devices
-To:     Daniel Lezcano <daniel.lezcano@linaro.org>,
-        linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Peter Kaestle <peter@piie.net>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Amit Kucheria <amit.kucheria@verdurent.com>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Allison Randal <allison@lohutok.net>,
-        Enrico Weigelt <info@metux.net>,
-        Gayatri Kammela <gayatri.kammela@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        kernel@collabora.com
-References: <20200629122925.21729-1-andrzej.p@collabora.com>
- <aab40d90-3f72-657c-5e14-e53a34c4b420@linaro.org>
-From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-Message-ID: <3d03d1a2-ac06-b69b-93cb-e0203be62c10@collabora.com>
-Date:   Tue, 30 Jun 2020 15:43:20 +0200
+        Tue, 30 Jun 2020 10:40:57 -0400
+Received: from [141.24.111.129] (unknown [141.24.111.129])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 52257580080
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2020 16:40:54 +0200 (CEST)
+To:     linux-wireless@vger.kernel.org
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: BUG: HE CAP IE is build on hw without HE support in mesh mode
+Message-ID: <6d0293f4-20ae-1069-0221-dbc2f7254682@tu-ilmenau.de>
+Date:   Tue, 30 Jun 2020 16:40:54 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <aab40d90-3f72-657c-5e14-e53a34c4b420@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Daniel,
+Hi,
 
-I am reading the logs and can't find anything specific to thermal.
+I was able to trigger the following warning with the current
+wireless-testing git as of 2020-06-30.
+wpa_supplicant joins a mesh on ath10k hw without HE support and
+therefore should not run into this warning.
 
-What I can see is
-
-"random: crng init done"
-
-with large times (~200s) and then e.g.
-
-'auto-login-action timed out after 283 seconds'
-
-I'm looking at e.g. 
-https://storage.kernelci.org/thermal/testing/v5.8-rc3-11-gf5e50bf4d3ef/arm/multi_v7_defconfig/gcc-8/lab-baylibre/baseline-imx6q-sabrelite.html
-
-Is there anywhere else I can look at?
-
-Andrzej
-
-W dniu 30.06.2020 o 14:57, Daniel Lezcano pisze:
-> 
-> Hi Andrzej,
-> 
-> I've tested your series with kernelci and there are 3 regressions for
-> the imx6.
-> 
-> https://kernelci.org/test/job/thermal/branch/testing/kernel/v5.8-rc3-11-gf5e50bf4d3ef/plan/baseline/
-> 
-> 
-> On 29/06/2020 14:29, Andrzej Pietrasiewicz wrote:
->> A respin of v6 with these changes:
->>
->> v6..v7:
->> - removed duplicate S-o-b line from patch 6/11
->>
->> v5..v6:
->> - staticized thermal_zone_device_set_mode() (kbuild test robot)
->>
->> v4..v5:
->>
->> - EXPORT_SYMBOL -> EXPORT_SYMBOL_GPL (Daniel)
->> - dropped unnecessary thermal_zone_device_enable() in int3400_thermal.c
->> and in thermal_of.c (Bartlomiej)
->>
->> Andrzej Pietrasiewicz (11):
->>    acpi: thermal: Fix error handling in the register function
->>    thermal: Store thermal mode in a dedicated enum
->>    thermal: Add current mode to thermal zone device
->>    thermal: Store device mode in struct thermal_zone_device
->>    thermal: remove get_mode() operation of drivers
->>    thermal: Add mode helpers
->>    thermal: Use mode helpers in drivers
->>    thermal: Explicitly enable non-changing thermal zone devices
->>    thermal: core: Stop polling DISABLED thermal devices
->>    thermal: Simplify or eliminate unnecessary set_mode() methods
->>    thermal: Rename set_mode() to change_mode()
->>
->>   drivers/acpi/thermal.c                        | 75 +++++----------
->>   .../ethernet/chelsio/cxgb4/cxgb4_thermal.c    |  8 ++
->>   .../ethernet/mellanox/mlxsw/core_thermal.c    | 91 ++++---------------
->>   drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |  9 +-
->>   drivers/platform/x86/acerhdf.c                | 33 +++----
->>   drivers/platform/x86/intel_mid_thermal.c      |  6 ++
->>   drivers/power/supply/power_supply_core.c      |  9 +-
->>   drivers/thermal/armada_thermal.c              |  6 ++
->>   drivers/thermal/da9062-thermal.c              | 16 +---
->>   drivers/thermal/dove_thermal.c                |  6 ++
->>   drivers/thermal/hisi_thermal.c                |  6 +-
->>   drivers/thermal/imx_thermal.c                 | 57 ++++--------
->>   .../intel/int340x_thermal/int3400_thermal.c   | 38 ++------
->>   .../int340x_thermal/int340x_thermal_zone.c    |  5 +
->>   drivers/thermal/intel/intel_pch_thermal.c     |  5 +
->>   .../thermal/intel/intel_quark_dts_thermal.c   | 34 ++-----
->>   drivers/thermal/intel/intel_soc_dts_iosf.c    |  3 +
->>   drivers/thermal/intel/x86_pkg_temp_thermal.c  |  6 ++
->>   drivers/thermal/kirkwood_thermal.c            |  7 ++
->>   drivers/thermal/rcar_thermal.c                |  9 +-
->>   drivers/thermal/rockchip_thermal.c            |  6 +-
->>   drivers/thermal/spear_thermal.c               |  7 ++
->>   drivers/thermal/sprd_thermal.c                |  6 +-
->>   drivers/thermal/st/st_thermal.c               |  5 +
->>   drivers/thermal/thermal_core.c                | 76 ++++++++++++++--
->>   drivers/thermal/thermal_of.c                  | 41 +--------
->>   drivers/thermal/thermal_sysfs.c               | 37 +-------
->>   include/linux/thermal.h                       | 19 +++-
->>   28 files changed, 275 insertions(+), 351 deletions(-)
->>
->>
->> base-commit: 9ebcfadb0610322ac537dd7aa5d9cbc2b2894c68
->>
-> 
-> 
-
+[ 3138.720146] WARNING: CPU: 1 PID: 1897 at net/mac80211/util.c:2878
+ieee80211_ie_build_he_6ghz_cap+0x149/0x150 [mac80211]
+[ 3138.720149] Modules linked in: esp4 poly1305_generic libpoly1305
+poly1305_x86_64 chacha_generic chacha_x86_64 libchacha chacha20poly1305
+xfrm_user xfrm_algo mt76x2u mt76x2_common mt76x02_usb mt76_usb
+ath10k_pci mt76x02_lib mt76 ath10k_core vrf dummy bridge ath stp llc
+mac80211 amd64_edac_mod edac_mce_amd kvm_amd kvm cfg80211 irqbypass
+crct10dif_pclmul crc32_pclmul pcengines_apuv2 ghash_clmulni_intel
+aesni_intel gpio_keys_polled crypto_simd gpio_amd_fch cryptd glue_helper
+igb pcspkr k10temp sp5100_tco fam15h_power i2c_piix4 ccp i2c_algo_bit
+rfkill rng_core dca libarc4 uio_pdrv_genirq evdev leds_gpio uio
+pinctrl_amd mac_hid coreboot_table acpi_cpufreq drm usbip_host
+usbip_core agpgart ip_tables x_tables ext4 crc32c_generic crc16 mbcache
+jbd2 sdhci_pci cqhci sdhci xhci_pci crc32c_intel ehci_pci xhci_hcd
+mmc_core ehci_hcd gpio_keys
+[ 3138.720292] CPU: 1 PID: 1897 Comm: wpa_supplicant Tainted: G       
+W         5.8.0-rc2-wt-9 #27
+[ 3138.720295] Hardware name: PC Engines apu2/apu2, BIOS v4.10.0.3
+11/07/2019
+[ 3138.720298] RIP: 0010:ieee80211_ie_build_he_6ghz_cap+0x149/0x150
+[mac80211]
+[ 3138.720319] Code: 75 d4 0f 0b eb ca 41 bc 08 00 00 00 e9 0a ff ff ff
+66 41 81 cc 00 02 eb bd 0f 0b 5b 5d 41 5c 41 5d 41 5e e9 59 f1 5f d0 0f
+0b <0f> 0b eb c6 0f 1f 00 0f 1f 44 00 00 41 56 45 89 c6 41 55 41 89 cd
+[ 3138.720334] RSP: 0018:ffffa4ae8101f870 EFLAGS: 00010246
+[ 3138.720338] RAX: ffff8fae5def02e0 RBX: ffff8fae5c1fe900 RCX:
+0000000000000007
+[ 3138.720341] RDX: 0000000000000000 RSI: ffff8fae5def2fd0 RDI:
+ffff8fae5da6bd00
+[ 3138.720344] RBP: ffff8fae57e5d800 R08: 0000000000000000 R09:
+0000000000000005
+[ 3138.720346] R10: 0000000000000004 R11: 0000000000000000 R12:
+0000000000000007
+[ 3138.720349] R13: 0000000000000001 R14: ffff8fae5def07c0 R15:
+0000000000000001
+[ 3138.720352] FS:  00007f4d717f1840(0000) GS:ffff8fae6ac80000(0000)
+knlGS:0000000000000000
+[ 3138.720354] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 3138.720357] CR2: 00006210000aecf0 CR3: 0000000117ee6000 CR4:
+00000000000406e0
+[ 3138.720358] Call Trace:
+[ 3138.720361]  ieee80211_mesh_build_beacon+0x462/0x530 [mac80211]
+[ 3138.720363]  ieee80211_start_mesh+0xa8/0xf0 [mac80211]
+[ 3138.720365]  __cfg80211_join_mesh+0x122/0x3e0 [cfg80211]
+[ 3138.720368]  nl80211_join_mesh+0x3d3/0x510 [cfg80211]
+[ 3138.720370]  genl_rcv_msg+0x1b7/0x310
+[ 3138.720372]  ? genl_family_rcv_msg_attrs_parse.isra.0+0x100/0x100
+[ 3138.720374]  netlink_rcv_skb+0x75/0x140
+[ 3138.720376]  genl_rcv+0x24/0x40
+[ 3138.720378]  netlink_unicast+0x242/0x340
+[ 3138.720380]  netlink_sendmsg+0x243/0x480
+[ 3138.720382]  sock_sendmsg+0x5e/0x60
+[ 3138.720384]  ____sys_sendmsg+0x25a/0x2a0
+[ 3138.720386]  ? copy_msghdr_from_user+0x6e/0xa0
+[ 3138.720388]  ___sys_sendmsg+0x97/0xe0
+[ 3138.720390]  __sys_sendmsg+0x81/0xd0
+[ 3138.720392]  do_syscall_64+0x44/0x70
+[ 3138.720394]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 3138.720396] RIP: 0033:0x7f4d71d4e137
+[ 3138.720398] Code: Bad RIP value.
+[ 3138.720400] RSP: 002b:00007ffee453c468 EFLAGS: 00000246 ORIG_RAX:
+000000000000002e
+[ 3138.720405] RAX: ffffffffffffffda RBX: 0000606000000200 RCX:
+00007f4d71d4e137
+[ 3138.720407] RDX: 0000000000000000 RSI: 00007ffee453c4d0 RDI:
+0000000000000007
+[ 3138.720410] RBP: 00007ffee453c4d0 R08: 0000000000000004 R09:
+0000000000000011
+[ 3138.720413] R10: 00007ffee453c620 R11: 0000000000000246 R12:
+0000607000010be0
+[ 3138.720415] R13: 00007ffee453c4d0 R14: 00007ffee453c5e0 R15:
+0000000000000000
+[ 3138.720418] ---[ end trace 3bdd113d937ace9f ]---
