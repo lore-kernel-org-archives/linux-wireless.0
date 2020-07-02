@@ -2,34 +2,37 @@ Return-Path: <SRS0=etsy=AN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E52DC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jul 2020 16:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D80C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jul 2020 16:29:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3E0120720
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jul 2020 16:29:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1DEA20720
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jul 2020 16:29:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbgGBQ3z (ORCPT
+        id S1726893AbgGBQ37 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Jul 2020 12:29:55 -0400
-Received: from muru.com ([72.249.23.125]:60382 "EHLO muru.com"
+        Thu, 2 Jul 2020 12:29:59 -0400
+Received: from muru.com ([72.249.23.125]:60398 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726140AbgGBQ3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Jul 2020 12:29:55 -0400
+        id S1726791AbgGBQ36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Jul 2020 12:29:58 -0400
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 63CA98062;
-        Thu,  2 Jul 2020 16:30:48 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 059F98062;
+        Thu,  2 Jul 2020 16:30:50 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
         linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org
-Subject: [PATCHv2 0/4] Improvments for wlcore irq and resume for v5.9
-Date:   Thu,  2 Jul 2020 09:29:47 -0700
-Message-Id: <20200702162951.45392-1-tony@atomide.com>
+Subject: [PATCH 3/4] wlcore: Use spin_trylock in wlcore_irq() to see if we need to queue tx
+Date:   Thu,  2 Jul 2020 09:29:50 -0700
+Message-Id: <20200702162951.45392-4-tony@atomide.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200702162951.45392-1-tony@atomide.com>
+References: <20200702162951.45392-1-tony@atomide.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -37,31 +40,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+We currently have a collection of flags and locking between the
+threaded irq and tx work:
 
-Here are few improvments for wlcore resume ELP handling and interrupt
-handling for v5.9.
+- wl->flags bitops
+- wl->mutex
+- wl->wl_lock spinlock
 
-Regards,
+The bitops flags do not need a spinlock around them, and we only need
+the spinlock to see if we need to queue tx work or not. And wlcore_irq()
+holds the mutex.
 
-Tony
+To simplify the locking, we can use spin_trylock and always queue tx
+work unless we know there's nothing to do.
 
-Changes since v1:
+Let's also update the comment a bit while at it.
 
-- Update patch descriptions for simplifying the complicated locking
-  between interrupt handler and tx
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-- Change patch order for the ELP handling to be the first change
-  as the others are mostly clean-up type improvments
-
-Tony Lindgren (4):
-  wlcore: Simplify runtime resume ELP path
-  wlcore: Use spin_trylock in wlcore_irq_locked() for running the queue
-  wlcore: Use spin_trylock in wlcore_irq() to see if we need to queue tx
-  wlcore: Remove pointless spinlock
-
- drivers/net/wireless/ti/wlcore/main.c | 84 +++++++++++++--------------
- 1 file changed, 39 insertions(+), 45 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -652,6 +652,7 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
+ 	int ret;
+ 	unsigned long flags;
+ 	struct wl1271 *wl = cookie;
++	bool queue_tx_work = true;
+ 
+ 	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 
+@@ -684,13 +685,17 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
+ 	if (ret)
+ 		wl12xx_queue_recovery_work(wl);
+ 
+-	spin_lock_irqsave(&wl->wl_lock, flags);
+-	/* In case TX was not handled here, queue TX work */
++	/* In case TX was not handled in wlcore_irq_locked(), queue TX work */
+ 	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
+-	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
+-	    wl1271_tx_total_queue_count(wl) > 0)
+-		ieee80211_queue_work(wl->hw, &wl->tx_work);
+-	spin_unlock_irqrestore(&wl->wl_lock, flags);
++	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags)) {
++		if (spin_trylock_irqsave(&wl->wl_lock, flags)) {
++			if (!wl1271_tx_total_queue_count(wl))
++				queue_tx_work = false;
++			spin_unlock_irqrestore(&wl->wl_lock, flags);
++		}
++		if (queue_tx_work)
++			ieee80211_queue_work(wl->hw, &wl->tx_work);
++	}
+ 
+ 	mutex_unlock(&wl->mutex);
+ 
 -- 
 2.27.0
