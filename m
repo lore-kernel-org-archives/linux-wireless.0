@@ -7,23 +7,26 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73993C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE75C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DFF620723
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B44520723
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgGCKoL (ORCPT
+        id S1726290AbgGCKoJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jul 2020 06:44:11 -0400
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:42136 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726063AbgGCKoJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 3 Jul 2020 06:44:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36718 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726244AbgGCKoH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Jul 2020 06:44:07 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B6DEC08C5C1;
+        Fri,  3 Jul 2020 03:44:07 -0700 (PDT)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (Authenticated sender: andrzej.p)
-        with ESMTPSA id 72A552A63E6
+        with ESMTPSA id 2E6282A63E2
 From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -68,9 +71,9 @@ Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH 2/3] thermal: imx: Use driver's local data to decide whether to run a measurement
-Date:   Fri,  3 Jul 2020 12:43:53 +0200
-Message-Id: <20200703104354.19657-3-andrzej.p@collabora.com>
+Subject: [PATCH 1/3] acpi: thermal: Don't call thermal_zone_device_is_enabled()
+Date:   Fri,  3 Jul 2020 12:43:52 +0200
+Message-Id: <20200703104354.19657-2-andrzej.p@collabora.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200703104354.19657-1-andrzej.p@collabora.com>
 References: <20200703104354.19657-1-andrzej.p@collabora.com>
@@ -79,41 +82,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use driver's local data to evaluate the need to run or not to run a
-measurement.
+thermal_zone_device_update() can now handle disabled thermal zones, so
+the check here is not needed.
 
 Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 ---
- drivers/thermal/imx_thermal.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/acpi/thermal.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/thermal/imx_thermal.c b/drivers/thermal/imx_thermal.c
-index 9700ae39feb7..c0efa7bc48e2 100644
---- a/drivers/thermal/imx_thermal.c
-+++ b/drivers/thermal/imx_thermal.c
-@@ -252,10 +252,11 @@ static int imx_get_temp(struct thermal_zone_device *tz, int *temp)
- 	const struct thermal_soc_data *soc_data = data->socdata;
- 	struct regmap *map = data->tempmon;
- 	unsigned int n_meas;
--	bool wait;
-+	bool wait, run_measurement;
- 	u32 val;
+diff --git a/drivers/acpi/thermal.c b/drivers/acpi/thermal.c
+index 29a2b73fe035..12c0ece746f0 100644
+--- a/drivers/acpi/thermal.c
++++ b/drivers/acpi/thermal.c
+@@ -499,9 +499,6 @@ static void acpi_thermal_check(void *data)
+ {
+ 	struct acpi_thermal *tz = data;
  
--	if (thermal_zone_device_is_enabled(tz)) {
-+	run_measurement = !data->irq_enabled;
-+	if (!run_measurement) {
- 		/* Check if a measurement is currently in progress */
- 		regmap_read(map, soc_data->temp_data, &val);
- 		wait = !(val & soc_data->temp_valid_mask);
-@@ -282,7 +283,7 @@ static int imx_get_temp(struct thermal_zone_device *tz, int *temp)
- 
- 	regmap_read(map, soc_data->temp_data, &val);
- 
--	if (!thermal_zone_device_is_enabled(tz)) {
-+	if (run_measurement) {
- 		regmap_write(map, soc_data->sensor_ctrl + REG_CLR,
- 			     soc_data->measure_temp_mask);
- 		regmap_write(map, soc_data->sensor_ctrl + REG_SET,
+-	if (!thermal_zone_device_is_enabled(tz->thermal_zone))
+-		return;
+-
+ 	thermal_zone_device_update(tz->thermal_zone,
+ 				   THERMAL_EVENT_UNSPECIFIED);
+ }
 -- 
 2.17.1
 
