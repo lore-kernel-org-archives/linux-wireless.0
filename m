@@ -2,51 +2,51 @@ Return-Path: <SRS0=qJMY=AO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90AF8C433E2
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB08C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B455207DA
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56103207FF
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593764191;
-	bh=BiZERL4ReZj8xSnCihCITNO1DsQRIwcuC06sShjEOlU=;
+	s=default; t=1593764193;
+	bh=UBes1j4vjYhY4PDH2ZniNzUObt9xb2hHJ5Z92aAHH1c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DyYaXUkLuNiozi790LIpkf2Z65cVMz5XG51iQ8X0UtN+knm7BYh4DSZKdY0hJLn0e
-	 PN9fyrAEKzVLtBpLeQnT7ehyV+Jf909yfng8L3j84wfWQMystOWUe4R72b6mCAAeRP
-	 fPijGYeBQPDdtUEN/5GnYloq8M1ymDPPe0S1X49I=
+	b=1aRSWSUKLruAyoOQW1uW/aBLEMDCzk+mWP3bBBmjQpacEdZ9ZmD2IVSh5RItp63EJ
+	 FmKFeusbRpZQU9NjvEMmXQ81rlLrkSQH7AUUSQvbp198YJzNDme6ZvgXIFF7sCqDtl
+	 MwdN5hL7OVEgsp+CBR4dAQdnpZmoH7EHp5SxtZuA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbgGCIQ3 (ORCPT
+        id S1726751AbgGCIQc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jul 2020 04:16:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45764 "EHLO mail.kernel.org"
+        Fri, 3 Jul 2020 04:16:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45808 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726609AbgGCIQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jul 2020 04:16:27 -0400
+        id S1726739AbgGCIQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Jul 2020 04:16:30 -0400
 Received: from lore-desk.lan (unknown [151.48.138.186])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A6D95206A1;
-        Fri,  3 Jul 2020 08:16:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 79821207FF;
+        Fri,  3 Jul 2020 08:16:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593764186;
-        bh=BiZERL4ReZj8xSnCihCITNO1DsQRIwcuC06sShjEOlU=;
+        s=default; t=1593764189;
+        bh=UBes1j4vjYhY4PDH2ZniNzUObt9xb2hHJ5Z92aAHH1c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ND53uu0M1tb1wuhFL6QMX0ntUBDC3luebY8z5reBsm9dt/EQI4lq9bd0jf0vrLoYo
-         3wUKqu3BYJqcY+zarv3BoIb7LPoLkXmL63WhnUBgbIryYchCAiA9T5/gL06EN/yWCB
-         f6YXqSbJkRZjl5uziM9/bNUB+BldJm6qSwsl+wqY=
+        b=ax1NaOkU6d7dw9/ixGrB5hlKqHuYasmWKRlXC6+3ERmtT+B+R6qf4olvnNMxvgLOE
+         g3/pKrZ1EpHnjaQelmQczPi0613Ns8h1ZNmw/DlgM/YYoVihOrs/3CTznzWQojUeFl
+         xKHeNEELtRV1LYuAq5GgIHDMrRL5v39HE9zCBe5w=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         ryder.lee@mediatek.com, sean.wang@mediatek.com,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 03/22] mt76: mt7615: add mt7615_pm_wake utility routine
-Date:   Fri,  3 Jul 2020 10:15:42 +0200
-Message-Id: <0bda930bba3b61477e9063779e7eff7c8c1a3463.1593763584.git.lorenzo@kernel.org>
+Subject: [PATCH v2 05/22] mt76: mt7615: wake device before accessing regmap in debugfs
+Date:   Fri,  3 Jul 2020 10:15:44 +0200
+Message-Id: <13592f72b6da4ded4ebf96477cc5fb6a9d318cd8.1593763584.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1593763584.git.lorenzo@kernel.org>
 References: <cover.1593763584.git.lorenzo@kernel.org>
@@ -57,209 +57,107 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce mt7615_pm_wake utility routine to wake the device from
-runtime low-power state (lower-power state is currently supported by
-offload firmware for pcie devices).
+Make sure the device is in full-power before reading regs in debugfs
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  3 ++
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 42 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  2 +
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 25 ++++++++---
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  8 ++++
- 6 files changed, 75 insertions(+), 6 deletions(-)
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   | 25 ++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f7be1d5f71a0..265ee55d22f1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -291,6 +291,7 @@ enum {
- 	MT76_STATE_POWER_OFF,
- 	MT76_STATE_SUSPEND,
- 	MT76_STATE_ROC,
-+	MT76_STATE_PM,
- };
- 
- struct mt76_hw_cap {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 7daaab277b26..b5632c71cbbd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -444,6 +444,9 @@ void mt7615_init_device(struct mt7615_dev *dev)
- 	dev->phy.dev = dev;
- 	dev->phy.mt76 = &dev->mt76.phy;
- 	dev->mt76.phy.priv = &dev->phy;
-+
-+	INIT_WORK(&dev->pm.wake_work, mt7615_pm_wake_work);
-+	init_completion(&dev->pm.wake_cmpl);
- 	INIT_DELAYED_WORK(&dev->phy.mac_work, mt7615_mac_work);
- 	INIT_DELAYED_WORK(&dev->phy.scan_work, mt7615_scan_work);
- 	skb_queue_head_init(&dev->phy.scan_event_list);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index c1a802366172..4d8cd88473dd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1808,6 +1808,48 @@ mt7615_mac_update_mib_stats(struct mt7615_phy *phy)
- 	}
- }
- 
-+void mt7615_pm_wake_work(struct work_struct *work)
-+{
-+	struct mt7615_dev *dev;
-+	struct mt76_phy *mphy;
-+
-+	dev = (struct mt7615_dev *)container_of(work, struct mt7615_dev,
-+						pm.wake_work);
-+	mphy = dev->phy.mt76;
-+
-+	if (mt7615_driver_own(dev))
-+		dev_err(mphy->dev->dev, "failed to wake device\n");
-+
-+	complete_all(&dev->pm.wake_cmpl);
-+}
-+
-+int mt7615_pm_wake(struct mt7615_dev *dev)
-+{
-+	struct mt76_phy *mphy = dev->phy.mt76;
-+
-+	if (!mt7615_firmware_offload(dev))
-+		return 0;
-+
-+	if (!mt76_is_mmio(mphy->dev))
-+		return 0;
-+
-+	if (!test_bit(MT76_STATE_PM, &mphy->state))
-+		return 0;
-+
-+	if (test_bit(MT76_HW_SCANNING, &mphy->state) ||
-+	    test_bit(MT76_HW_SCHED_SCANNING, &mphy->state))
-+		return 0;
-+
-+	if (queue_work(dev->mt76.wq, &dev->pm.wake_work))
-+		reinit_completion(&dev->pm.wake_cmpl);
-+
-+	if (!wait_for_completion_timeout(&dev->pm.wake_cmpl, 3 * HZ))
-+		return -ETIMEDOUT;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt7615_pm_wake);
-+
- void mt7615_mac_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+index 8bb7c64db738..8894a0ab407b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+@@ -6,11 +6,16 @@ static int
+ mt7615_radar_pattern_set(void *data, u64 val)
  {
- 	struct mt7615_phy *phy;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 3bcbd13c26d7..1e7f7b9b1388 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -74,6 +74,8 @@ static void mt7615_stop(struct ieee80211_hw *hw)
- 	del_timer_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
+ 	struct mt7615_dev *dev = data;
++	int err;
  
-+	cancel_work_sync(&dev->pm.wake_work);
+ 	if (!mt7615_wait_for_mcu_init(dev))
+ 		return 0;
+ 
+-	return mt7615_mcu_rdd_send_pattern(dev);
++	mt7615_mutex_acquire(dev);
++	err = mt7615_mcu_rdd_send_pattern(dev);
++	mt7615_mutex_release(dev);
 +
- 	mutex_lock(&dev->mt76.mutex);
- 
- 	mt76_testmode_reset(&dev->mt76, true);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 89a09745df08..b72c824e5c15 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -1916,28 +1916,36 @@ static void mt7622_trigger_hif_int(struct mt7615_dev *dev, bool en)
- 
- int mt7615_driver_own(struct mt7615_dev *dev)
- {
-+	struct mt76_phy *mphy = &dev->mt76.phy;
- 	struct mt76_dev *mdev = &dev->mt76;
-+	int err = 0;
- 	u32 addr;
- 
-+	mt7622_trigger_hif_int(dev, true);
-+
- 	addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
- 	mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
- 
--	mt7622_trigger_hif_int(dev, true);
--
- 	addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
- 	if (!mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000)) {
- 		dev_err(dev->mt76.dev, "Timeout for driver own\n");
--		return -EIO;
-+		err = -EIO;
-+		goto out;
- 	}
- 
-+	clear_bit(MT76_STATE_PM, &mphy->state);
-+
-+out:
- 	mt7622_trigger_hif_int(dev, false);
- 
--	return 0;
 +	return err;
  }
- EXPORT_SYMBOL_GPL(mt7615_driver_own);
  
- int mt7615_firmware_own(struct mt7615_dev *dev)
- {
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	int err = 0;
- 	u32 addr;
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_radar_pattern, NULL,
+@@ -84,7 +89,10 @@ mt7615_fw_debug_set(void *data, u64 val)
+ 		return 0;
  
- 	addr = is_mt7663(&dev->mt76) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
-@@ -1949,11 +1957,16 @@ int mt7615_firmware_own(struct mt7615_dev *dev)
- 	    !mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN,
- 			    MT_CFG_LPCR_HOST_FW_OWN, 300)) {
- 		dev_err(dev->mt76.dev, "Timeout for firmware own\n");
--		return -EIO;
-+		err = -EIO;
-+		goto out;
- 	}
+ 	dev->fw_debug = val;
 +
-+	set_bit(MT76_STATE_PM, &mphy->state);
-+
-+out:
- 	mt7622_trigger_hif_int(dev, false);
++	mt7615_mutex_acquire(dev);
+ 	mt7615_mcu_fw_log_2_host(dev, dev->fw_debug ? 2 : 0);
++	mt7615_mutex_release(dev);
  
--	return 0;
-+	return err;
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(mt7615_firmware_own);
+@@ -111,6 +119,8 @@ mt7615_reset_test_set(void *data, u64 val)
+ 	if (!mt7615_wait_for_mcu_init(dev))
+ 		return 0;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 1ae6ea5b4f16..194ae43091d6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -4,6 +4,7 @@
- #ifndef __MT7615_H
- #define __MT7615_H
- 
-+#include <linux/completion.h>
- #include <linux/interrupt.h>
- #include <linux/ktime.h>
- #include <linux/regmap.h>
-@@ -296,6 +297,11 @@ struct mt7615_dev {
- 		s8 last_wb_rssi;
- 	} test;
- #endif
++	mt7615_mutex_acquire(dev);
 +
-+	struct {
-+		struct work_struct wake_work;
-+		struct completion wake_cmpl;
-+	} pm;
- };
+ 	skb = alloc_skb(1, GFP_KERNEL);
+ 	if (!skb)
+ 		return -ENOMEM;
+@@ -118,6 +128,8 @@ mt7615_reset_test_set(void *data, u64 val)
+ 	skb_put(skb, 1);
+ 	mt76_tx_queue_skb_raw(dev, 0, skb, 0);
  
- enum tx_pkt_queue_idx {
-@@ -425,6 +431,8 @@ bool mt7615_wait_for_mcu_init(struct mt7615_dev *dev);
- void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
- 			  struct ieee80211_tx_rate *probe_rate,
- 			  struct ieee80211_tx_rate *rates);
-+void mt7615_pm_wake_work(struct work_struct *work);
-+int mt7615_pm_wake(struct mt7615_dev *dev);
- int mt7615_mcu_del_wtbl_all(struct mt7615_dev *dev);
- int mt7615_mcu_set_chan_info(struct mt7615_phy *phy, int cmd);
- int mt7615_mcu_set_wmm(struct mt7615_dev *dev, u8 queue,
++	mt7615_mutex_release(dev);
++
+ 	return 0;
+ }
+ 
+@@ -167,9 +179,13 @@ mt7615_ampdu_stat_read(struct seq_file *file, void *data)
+ {
+ 	struct mt7615_dev *dev = file->private;
+ 
++	mt7615_mutex_acquire(dev);
++
+ 	mt7615_ampdu_stat_read_phy(&dev->phy, file);
+ 	mt7615_ampdu_stat_read_phy(mt7615_ext_phy(dev), file);
+ 
++	mt7615_mutex_release(dev);
++
+ 	return 0;
+ }
+ 
+@@ -221,7 +237,10 @@ static int mt7615_read_temperature(struct seq_file *s, void *data)
+ 		return 0;
+ 
+ 	/* cpu */
++	mt7615_mutex_acquire(dev);
+ 	temp = mt7615_mcu_get_temperature(dev, 0);
++	mt7615_mutex_release(dev);
++
+ 	seq_printf(s, "Temperature: %d\n", temp);
+ 
+ 	return 0;
+@@ -233,6 +252,8 @@ mt7615_queues_acq(struct seq_file *s, void *data)
+ 	struct mt7615_dev *dev = dev_get_drvdata(s->private);
+ 	int i;
+ 
++	mt7615_mutex_acquire(dev);
++
+ 	for (i = 0; i < 16; i++) {
+ 		int j, wmm_idx = i % MT7615_MAX_WMM_SETS;
+ 		int acs = i / MT7615_MAX_WMM_SETS;
+@@ -253,6 +274,8 @@ mt7615_queues_acq(struct seq_file *s, void *data)
+ 		seq_printf(s, "AC%d%d: queued=%d\n", wmm_idx, acs, qlen);
+ 	}
+ 
++	mt7615_mutex_release(dev);
++
+ 	return 0;
+ }
+ 
 -- 
 2.26.2
 
