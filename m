@@ -2,27 +2,28 @@ Return-Path: <SRS0=qJMY=AO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 135ABC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2DB7C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE49A20723
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AD1620723
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 10:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726100AbgGCKoH (ORCPT
+        id S1726358AbgGCKoM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jul 2020 06:44:07 -0400
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:42032 "EHLO
+        Fri, 3 Jul 2020 06:44:12 -0400
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:42184 "EHLO
         bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725915AbgGCKoH (ORCPT
+        with ESMTP id S1725915AbgGCKoK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jul 2020 06:44:07 -0400
+        Fri, 3 Jul 2020 06:44:10 -0400
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (Authenticated sender: andrzej.p)
-        with ESMTPSA id CFB3C2A251D
+        with ESMTPSA id BDDD92A63E7
 From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -67,42 +68,72 @@ Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH 0/3] Fixes for stop monitoring disabled devices series
-Date:   Fri,  3 Jul 2020 12:43:51 +0200
-Message-Id: <20200703104354.19657-1-andrzej.p@collabora.com>
+Subject: [PATCH 3/3] thermal: Make thermal_zone_device_is_enabled() available to core only
+Date:   Fri,  3 Jul 2020 12:43:54 +0200
+Message-Id: <20200703104354.19657-4-andrzej.p@collabora.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200703104354.19657-1-andrzej.p@collabora.com>
+References: <20200703104354.19657-1-andrzej.p@collabora.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This short series contains fixes for "Stop monitoring disabled devices"
-series https://www.spinics.net/lists/arm-kernel/msg817861.html
+This function is not needed by drivers.
 
-Invocation of thermal_zone_device_is_enabled() in acpi/thermal is now
-redundant, because thermal_zone_device_update() now is capable of
-handling disabled devices.
-
-In imx's ->get_temp() the lock must not be taken, otherwise a deadlock
-happens. The decision whether explicitly running a measurement cycle
-is needed is taken based on driver's local irq_enabled variable.
-
-Finally, thermal_zone_device_is_enabled() is made available to the
-core only, as there are no driver users of it.
-
-Andrzej Pietrasiewicz (3):
-  acpi: thermal: Don't call thermal_zone_device_is_enabled()
-  thermal: imx: Use driver's local data to decide whether to run a
-    measurement
-  thermal: Make thermal_zone_device_is_enabled() available to core only
-
- drivers/acpi/thermal.c         | 3 ---
- drivers/thermal/imx_thermal.c  | 7 ++++---
+Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+---
  drivers/thermal/thermal_core.c | 1 -
  drivers/thermal/thermal_core.h | 2 ++
  include/linux/thermal.h        | 5 -----
- 5 files changed, 6 insertions(+), 12 deletions(-)
+ 3 files changed, 2 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
+index a61e91513584..052343c59b0a 100644
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -519,7 +519,6 @@ int thermal_zone_device_is_enabled(struct thermal_zone_device *tz)
+ 
+ 	return mode == THERMAL_DEVICE_ENABLED;
+ }
+-EXPORT_SYMBOL_GPL(thermal_zone_device_is_enabled);
+ 
+ void thermal_zone_device_update(struct thermal_zone_device *tz,
+ 				enum thermal_notify_event event)
+diff --git a/drivers/thermal/thermal_core.h b/drivers/thermal/thermal_core.h
+index c95689586e19..b1464b3a21e2 100644
+--- a/drivers/thermal/thermal_core.h
++++ b/drivers/thermal/thermal_core.h
+@@ -166,4 +166,6 @@ of_thermal_get_trip_points(struct thermal_zone_device *tz)
+ }
+ #endif
+ 
++int thermal_zone_device_is_enabled(struct thermal_zone_device *tz);
++
+ #endif /* __THERMAL_CORE_H__ */
+diff --git a/include/linux/thermal.h b/include/linux/thermal.h
+index b9efaa780d88..108251f23e5c 100644
+--- a/include/linux/thermal.h
++++ b/include/linux/thermal.h
+@@ -418,7 +418,6 @@ void thermal_cdev_update(struct thermal_cooling_device *);
+ void thermal_notify_framework(struct thermal_zone_device *, int);
+ int thermal_zone_device_enable(struct thermal_zone_device *tz);
+ int thermal_zone_device_disable(struct thermal_zone_device *tz);
+-int thermal_zone_device_is_enabled(struct thermal_zone_device *tz);
+ #else
+ static inline struct thermal_zone_device *thermal_zone_device_register(
+ 	const char *type, int trips, int mask, void *devdata,
+@@ -472,10 +471,6 @@ static inline int thermal_zone_device_enable(struct thermal_zone_device *tz)
+ 
+ static inline int thermal_zone_device_disable(struct thermal_zone_device *tz)
+ { return -ENODEV; }
+-
+-static inline int
+-thermal_zone_device_is_enabled(struct thermal_zone_device *tz)
+-{ return -ENODEV; }
+ #endif /* CONFIG_THERMAL */
+ 
+ #endif /* __THERMAL_H__ */
 -- 
 2.17.1
 
