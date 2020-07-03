@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B05EC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA45C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F73120884
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9793320826
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593764195;
-	bh=i/P2xdEkqGxE9To+bO0Ue/nBR35UyDkm4uABqmr0tOk=;
+	s=default; t=1593764197;
+	bh=NwFHdarlsNaJlUi/KIKifaoAqMuSWtyiUxMzZHRiKjo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mPLVNXsNr+WjWx8P0O2CvpokzWXq83CZrKXsvT22FSk8TUCPBytLpmjuhiZQ+OAel
-	 aqxKFJsv/j8eyTB47HElPMUFvQc2UAK+su4X3tv0W0OVglNrbnjMzuJfsqvaswC9zY
-	 9S8L0Xf2DUUU7vLs5QbxEV/GmfHK/pYIFNrbeC5I=
+	b=JMLhIdV58QRty0EnU1e4j9cCs1FCyZjbsCWyNwNcD7unPWcxu+lgEaLQMd2why5y4
+	 uGcG5PSCiNWU/QdJVcRz9OXzYPLH5rkjs3OH41OX5G5jyUBIx8AK8TcefCdMNOPa0I
+	 lkYXK57mYD3d4FtCGnvvHnFQI7NWbvsgHrFu6FIY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726762AbgGCIQd (ORCPT
+        id S1726776AbgGCIQg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jul 2020 04:16:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45896 "EHLO mail.kernel.org"
+        Fri, 3 Jul 2020 04:16:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726749AbgGCIQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jul 2020 04:16:32 -0400
+        id S1726749AbgGCIQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Jul 2020 04:16:35 -0400
 Received: from lore-desk.lan (unknown [151.48.138.186])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4AC19206A1;
-        Fri,  3 Jul 2020 08:16:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D8A1B206A1;
+        Fri,  3 Jul 2020 08:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593764191;
-        bh=i/P2xdEkqGxE9To+bO0Ue/nBR35UyDkm4uABqmr0tOk=;
+        s=default; t=1593764195;
+        bh=NwFHdarlsNaJlUi/KIKifaoAqMuSWtyiUxMzZHRiKjo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BkQAxXmYHbhBlWQeiA9XJkJJJo8aLrQkjs2FJpg6KarY/Sdb4P6z1hww1nvHX9HJj
-         7Fchk2n+Vc918QU46tzsIkRm1NX+x0e0soJ36imCI0WGWvNY6h9apUOuy1TkktiB53
-         R87scwShr4VIvFmnvCocARLpUeTOMJ3WPyfUpA5c=
+        b=gW+0/2PSvQbR20djFS+kbKIHM7VJxzJhU+wDvo+SdTsy/esJhRkhraN+2QfCbwXnE
+         5T4NGom4ARQipgBJmUv8oisYKgQb7a85uzUWTVuAb02eOFlBI++48GCfXxf/MhnCSy
+         Mr9yOPZBHBr9LKmG/GVzxjHXDyMBkmS9eu7q3F1k=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         ryder.lee@mediatek.com, sean.wang@mediatek.com,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 06/22] mt76: mt7615: wake device before configuring hw keys
-Date:   Fri,  3 Jul 2020 10:15:45 +0200
-Message-Id: <ebb32b3fc8eb1a36a65d3d56bb16c5ae377ea35a.1593763584.git.lorenzo@kernel.org>
+Subject: [PATCH v2 08/22] mt76: mt7615: wake device in mt7615_update_channel before access regmap
+Date:   Fri,  3 Jul 2020 10:15:47 +0200
+Message-Id: <818fc3c210f149cb44dcd608f4ac2582398dcfee.1593763584.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1593763584.git.lorenzo@kernel.org>
 References: <cover.1593763584.git.lorenzo@kernel.org>
@@ -57,51 +57,110 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make sure the device is in full-power before uploading keys to the hw
+Introduce mt7615_update_survey utility routine in order to compute
+survey stats without waking up the device since it runs holding mt76 lock.
+Run mt7615_pm_wake directly in mt7615_update_channel since it can run
+with mt76.mutex held if called by mac80211
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/main.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  4 +--
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   | 30 +++++++++++++++++--
+ 3 files changed, 30 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 5f2c50a2449b..3c230479b36c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -336,7 +336,7 @@ static int mt7615_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	struct mt7615_sta *msta = sta ? (struct mt7615_sta *)sta->drv_priv :
- 				  &mvif->sta;
- 	struct mt76_wcid *wcid = &msta->wcid;
--	int idx = key->keyidx;
-+	int idx = key->keyidx, err;
- 
- 	/* The hardware does not support per-STA RX GTK, fallback
- 	 * to software mode for these.
-@@ -366,6 +366,8 @@ static int mt7615_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return -EOPNOTSUPP;
- 	}
- 
-+	mt7615_mutex_acquire(dev);
-+
- 	if (cmd == SET_KEY) {
- 		key->hw_key_idx = wcid->idx;
- 		wcid->hw_key_idx = idx;
-@@ -376,9 +378,13 @@ static int mt7615_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			    cmd == SET_KEY ? key : NULL);
- 
- 	if (mt76_is_usb(&dev->mt76))
--		return mt7615_queue_key_update(dev, cmd, msta, key);
-+		err = mt7615_queue_key_update(dev, cmd, msta, key);
-+	else
-+		err = mt7615_mac_wtbl_set_key(dev, wcid, key, cmd);
- 
--	return mt7615_mac_wtbl_set_key(dev, wcid, key, cmd);
-+	mt7615_mutex_release(dev);
-+
-+	return err;
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 6aa3efa8f55e..f340af40f8f4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -560,8 +560,7 @@ mt76_channel_state(struct mt76_phy *phy, struct ieee80211_channel *c)
+ 	return &msband->chan[idx];
  }
  
- static int mt7615_config(struct ieee80211_hw *hw, u32 changed)
+-static void
+-mt76_update_survey_active_time(struct mt76_phy *phy, ktime_t time)
++void mt76_update_survey_active_time(struct mt76_phy *phy, ktime_t time)
+ {
+ 	struct mt76_channel_state *state = phy->chan_state;
+ 
+@@ -569,6 +568,7 @@ mt76_update_survey_active_time(struct mt76_phy *phy, ktime_t time)
+ 						  phy->survey_time));
+ 	phy->survey_time = time;
+ }
++EXPORT_SYMBOL_GPL(mt76_update_survey_active_time);
+ 
+ void mt76_update_survey(struct mt76_dev *dev)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 265ee55d22f1..c6e44283bd5f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -893,6 +893,7 @@ void mt76_release_buffered_frames(struct ieee80211_hw *hw,
+ bool mt76_has_tx_pending(struct mt76_phy *phy);
+ void mt76_set_channel(struct mt76_phy *phy);
+ void mt76_update_survey(struct mt76_dev *dev);
++void mt76_update_survey_active_time(struct mt76_phy *phy, ktime_t time);
+ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ 		    struct survey_info *survey);
+ void mt76_set_stream_caps(struct mt76_phy *phy, bool vht);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 2411fa66efa3..f62e7de81bd5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1747,9 +1747,9 @@ mt7615_phy_update_channel(struct mt76_phy *mphy, int idx)
+ 	state->noise = -(phy->noise >> 4);
+ }
+ 
+-void mt7615_update_channel(struct mt76_dev *mdev)
++static void __mt7615_update_channel(struct mt7615_dev *dev)
+ {
+-	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
++	struct mt76_dev *mdev = &dev->mt76;
+ 
+ 	mt7615_phy_update_channel(&mdev->phy, 0);
+ 	if (mdev->phy2)
+@@ -1758,8 +1758,32 @@ void mt7615_update_channel(struct mt76_dev *mdev)
+ 	/* reset obss airtime */
+ 	mt76_set(dev, MT_WF_RMAC_MIB_TIME0, MT_WF_RMAC_MIB_RXTIME_CLR);
+ }
++
++void mt7615_update_channel(struct mt76_dev *mdev)
++{
++	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
++
++	if (mt7615_pm_wake(dev))
++		return;
++
++	__mt7615_update_channel(dev);
++	mt7615_pm_power_save_sched(dev);
++}
+ EXPORT_SYMBOL_GPL(mt7615_update_channel);
+ 
++static void mt7615_update_survey(struct mt7615_dev *dev)
++{
++	struct mt76_dev *mdev = &dev->mt76;
++	ktime_t cur_time;
++
++	__mt7615_update_channel(dev);
++	cur_time = ktime_get_boottime();
++
++	mt76_update_survey_active_time(&mdev->phy, cur_time);
++	if (mdev->phy2)
++		mt76_update_survey_active_time(mdev->phy2, cur_time);
++}
++
+ static void
+ mt7615_mac_update_mib_stats(struct mt7615_phy *phy)
+ {
+@@ -1888,7 +1912,7 @@ void mt7615_mac_work(struct work_struct *work)
+ 
+ 	mt7615_mutex_acquire(phy->dev);
+ 
+-	mt76_update_survey(mdev);
++	mt7615_update_survey(phy->dev);
+ 	if (++phy->mac_work_count == 5) {
+ 		phy->mac_work_count = 0;
+ 
 -- 
 2.26.2
 
