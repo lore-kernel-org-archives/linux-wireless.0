@@ -7,53 +7,54 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4193CC433E1
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jul 2020 15:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB49C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jul 2020 15:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1932E21534
+	by mail.kernel.org (Postfix) with ESMTP id E359D20936
 	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jul 2020 15:14:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="X5rEmQ0Z"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="O9oMFndV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbgGDPOc (ORCPT
+        id S1727081AbgGDPOc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 4 Jul 2020 11:14:32 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:25797 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727017AbgGDPOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+Received: from mail29.static.mailgun.info ([104.130.122.29]:29843 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726639AbgGDPOb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 4 Jul 2020 11:14:31 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
  s=smtp; t=1593875669; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=WwXmyHLWLwsNy2lm+rW+H1gvukmWcJozWJWVdoiyuRc=; b=X5rEmQ0ZGwfbrh1V7awS4ZsF2rpgpjR8XnDdbIWN3IjFoNj5doCYR+mk7No5w3Gpl2dS9RaX
- FFPXF93ehDUFfvwNoWGHyUtd32imK49eGddOuyWSx6HfqIjc4yx0nmaSmNtkSymfveCplYoa
- GUTmyiUsnc7y7Qy6GSCbvfDndVk=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ bh=oJ2jzm5iGHk/oc2OMS3YZaYRoD2Rs7gDw0GDbYZsvcs=; b=O9oMFndVkQiTHj63fTEsOcO0FFpZvxMm4Yrd+qB5cEbzdjS5+O/bNeMc9uipHZkyh0maDmoW
+ neP/8AKlr20LXYDmdiFfSowxyVvtqgsQ2JUcA7O1lUGBPEnAcZDe2wKGkMXV/d2UuIN2UfnV
+ DU/3XAuXm076etLlPFYyv8NvGHw=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n19.prod.us-west-2.postgun.com with SMTP id
- 5f009cc54c9690533adc4f80 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 04 Jul 2020 15:14:13
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5f009ccb6f2ee827da4c1a4d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 04 Jul 2020 15:14:19
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 570DBC433C8; Sat,  4 Jul 2020 15:14:13 +0000 (UTC)
+        id 007DBC433C8; Sat,  4 Jul 2020 15:14:18 +0000 (UTC)
 Received: from tamizhr-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A2CBCC433CA;
-        Sat,  4 Jul 2020 15:14:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A2CBCC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 28CCBC433CA;
+        Sat,  4 Jul 2020 15:14:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 28CCBC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh Chelvam <tamizhr@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Tamizh Chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2 1/4] ath10k: Add wmi command support for station specific TID config
-Date:   Sat,  4 Jul 2020 20:43:31 +0530
-Message-Id: <1593875614-5683-2-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCHv2 4/4] ath10k: Add new api to support reset TID config
+Date:   Sat,  4 Jul 2020 20:43:34 +0530
+Message-Id: <1593875614-5683-5-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1593875614-5683-1-git-send-email-tamizhr@codeaurora.org>
 References: <1593875614-5683-1-git-send-email-tamizhr@codeaurora.org>
@@ -62,213 +63,178 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds WMI interface to configure station specific
-TID configuration . Host needs to send station's MAC address
-along with TID number and its configuration to target through
-WMI_10_4_PER_PEER_PER_TID_CONFIG_CMDID.
-
-WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT flag is added to advertise
-this support.
+Add ops for reset_tid_config to support reset TID
+configuration. This send default configuration to the
+target for the TIDs and stores default value in the host.
 
 Tested-on: QCA9984 hw1.0 PCI 10.4-3.9.0.2-00021
 
 Signed-off-by: Tamizh Chelvam <tamizhr@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 19 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c     | 32 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     | 52 +++++++++++++++++++++++++++++++
- 3 files changed, 103 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 88 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 89 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 0dd484f..fc9e3ae 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -224,6 +224,8 @@ struct wmi_ops {
- 	struct sk_buff *(*gen_bb_timing)
- 			(struct ath10k *ar,
- 			 const struct wmi_bb_timing_cfg_arg *arg);
-+	struct sk_buff *(*gen_per_peer_per_tid_cfg)(struct ath10k *ar,
-+				const struct wmi_per_peer_per_tid_cfg_arg *arg);
- 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 939cf01..4cf5bd4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -633,6 +633,7 @@ struct ath10k_vif {
+ 	u8 rate_ctrl[ATH10K_TID_MAX];
+ 	u32 rate_code[ATH10K_TID_MAX];
+ 	int rtscts[ATH10K_TID_MAX];
++	u32 tids_rst;
  };
  
-@@ -1656,4 +1658,21 @@ struct wmi_ops {
- 	return ath10k_wmi_cmd_send(ar, skb,
- 				   ar->wmi.cmd->set_bb_timing_cmdid);
- }
-+
-+static inline int
-+ath10k_wmi_set_per_peer_per_tid_cfg(struct ath10k *ar,
-+				const struct wmi_per_peer_per_tid_cfg_arg *arg)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_per_peer_per_tid_cfg)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_per_peer_per_tid_cfg(ar, arg);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->per_peer_per_tid_config_cmdid);
-+}
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index a81a1ab..4316551 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -740,6 +740,7 @@
- 	.tdls_peer_update_cmdid = WMI_10_4_TDLS_PEER_UPDATE_CMDID,
- 	.tdls_set_offchan_mode_cmdid = WMI_10_4_TDLS_SET_OFFCHAN_MODE_CMDID,
- 	.radar_found_cmdid = WMI_10_4_RADAR_FOUND_CMDID,
-+	.per_peer_per_tid_config_cmdid = WMI_10_4_PER_PEER_PER_TID_CONFIG_CMDID,
+ struct ath10k_vif_iter {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 991f274..594e7af 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6689,6 +6689,7 @@ static int ath10k_sta_set_txpwr(struct ieee80211_hw *hw,
+ struct ath10k_mac_iter_tid_conf_data {
+ 	struct ieee80211_vif *curr_vif;
+ 	struct ath10k *ar;
++	bool reset_config;
  };
  
- static struct wmi_peer_param_map wmi_peer_param_map = {
-@@ -9005,6 +9006,36 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ static bool
+@@ -7071,6 +7072,54 @@ static int ath10k_mac_set_tid_config(struct ath10k *ar, struct ieee80211_sta *st
+ 	return ret;
  }
  
- static struct sk_buff *
-+ath10k_wmi_10_4_gen_per_peer_per_tid_cfg(struct ath10k *ar,
-+				const struct wmi_per_peer_per_tid_cfg_arg *arg)
++static int ath10k_mac_reset_tid_config(struct ath10k *ar,
++				       struct ieee80211_sta *sta,
++				       struct ath10k_vif *arvif,
++				       u8 tids)
 +{
-+	struct wmi_peer_per_tid_cfg_cmd *cmd;
-+	struct sk_buff *skb;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct wmi_per_peer_per_tid_cfg_arg arg;
++	int ret = 0, i = 0;
 +
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
++	arg.vdev_id = arvif->vdev_id;
++	while (i < ATH10K_TID_MAX) {
++		if (!(tids & BIT(i))) {
++			i++;
++			continue;
++		}
 +
-+	memset(skb->data, 0, sizeof(*cmd));
++		arg.tid = i;
++		arg.ack_policy = WMI_PEER_TID_CONFIG_ACK;
++		arg.retry_count = ATH10K_MAX_RETRY_COUNT;
++		arg.rate_ctrl = WMI_TID_CONFIG_RATE_CONTROL_AUTO;
++		arg.aggr_control = WMI_TID_CONFIG_AGGR_CONTROL_ENABLE;
++		arg.rtscts_ctrl = WMI_TID_CONFIG_RTSCTS_CONTROL_ENABLE;
++		arg.ext_tid_cfg_bitmap = WMI_EXT_TID_RTS_CTS_CONFIG;
++		ether_addr_copy(arg.peer_macaddr.addr, sta->addr);
++		ret = ath10k_wmi_set_per_peer_per_tid_cfg(ar, &arg);
++		if (ret)
++			return ret;
 +
-+	cmd = (struct wmi_peer_per_tid_cfg_cmd *)skb->data;
-+	cmd->vdev_id = cpu_to_le32(arg->vdev_id);
-+	ether_addr_copy(cmd->peer_macaddr.addr, arg->peer_macaddr.addr);
-+	cmd->tid = cpu_to_le32(arg->tid);
-+	cmd->ack_policy = cpu_to_le32(arg->ack_policy);
-+	cmd->aggr_control = cpu_to_le32(arg->aggr_control);
-+	cmd->rate_control = cpu_to_le32(arg->rate_ctrl);
-+	cmd->retry_count = cpu_to_le32(arg->retry_count);
-+	cmd->rcode_flags = cpu_to_le32(arg->rcode_flags);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi noack tid %d vdev id %d ack_policy %d aggr %u rate_ctrl %u rcflag %u retry_count %d mac_addr %pM\n",
-+		   arg->tid, arg->vdev_id, arg->ack_policy, arg->aggr_control, arg->rate_ctrl,
-+		   arg->rcode_flags, arg->retry_count, arg->peer_macaddr.addr);
-+	return skb;
++		if (!arvif->tids_rst) {
++			arsta->retry_long[i] = -1;
++			arsta->noack[i] = -1;
++			arsta->ampdu[i] = -1;
++			arsta->rate_code[i] = -1;
++			arsta->rate_ctrl[i] = 0;
++			arsta->rtscts[i] = -1;
++		} else {
++			arvif->retry_long[i] = 0;
++			arvif->noack[i] = 0;
++			arvif->ampdu[i] = 0;
++			arvif->rate_code[i] = 0;
++			arvif->rate_ctrl[i] = 0;
++			arvif->rtscts[i] = 0;
++		}
++		i++;
++	}
++	return ret;
 +}
 +
-+static struct sk_buff *
- ath10k_wmi_op_gen_echo(struct ath10k *ar, u32 value)
+ static void ath10k_sta_tid_cfg_wk(struct work_struct *wk)
  {
- 	struct wmi_echo_cmd *cmd;
-@@ -9413,6 +9444,7 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	.gen_pdev_get_tpc_table_cmdid =
- 			ath10k_wmi_10_4_op_gen_pdev_get_tpc_table_cmdid,
- 	.gen_radar_found = ath10k_wmi_10_4_gen_radar_found,
-+	.gen_per_peer_per_tid_cfg = ath10k_wmi_10_4_gen_per_peer_per_tid_cfg,
+ 	struct wmi_per_peer_per_tid_cfg_arg arg = {};
+@@ -7089,6 +7138,12 @@ static void ath10k_sta_tid_cfg_wk(struct work_struct *wk)
  
- 	/* shared with 10.2 */
- 	.pull_echo_ev = ath10k_wmi_op_pull_echo_ev,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 511144b..7fed735 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -203,6 +203,7 @@ enum wmi_service {
- 	WMI_SERVICE_SYNC_DELETE_CMDS,
- 	WMI_SERVICE_TX_PWR_PER_PEER,
- 	WMI_SERVICE_SUPPORT_EXTEND_ADDRESS,
-+	WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT,
+ 	mutex_lock(&ar->conf_mutex);
  
- 	/* Remember to add the new value to wmi_service_name()! */
++	if (arvif->tids_rst) {
++		ret = ath10k_mac_reset_tid_config(ar, sta, arvif,
++						  arvif->tids_rst);
++		goto exit;
++	}
++
+ 	ether_addr_copy(arg.peer_macaddr.addr, sta->addr);
+ 	for (i = 0; i < ATH10K_TID_MAX; i++) {
+ 		config_apply = false;
+@@ -7177,6 +7232,7 @@ static void ath10k_sta_tid_cfg_wk(struct work_struct *wk)
+ 		arg.rcode_flags = 0;
+ 	}
  
-@@ -503,6 +504,7 @@ static inline char *wmi_service_name(enum wmi_service service_id)
- 	SVCSTR(WMI_SERVICE_SYNC_DELETE_CMDS);
- 	SVCSTR(WMI_SERVICE_TX_PWR_PER_PEER);
- 	SVCSTR(WMI_SERVICE_SUPPORT_EXTEND_ADDRESS);
-+	SVCSTR(WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT);
- 
- 	case WMI_SERVICE_MAX:
- 		return NULL;
-@@ -834,6 +836,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_TX_PWR_PER_PEER, len);
- 	SVCMAP(WMI_10_4_SERVICE_RESET_CHIP,
- 	       WMI_SERVICE_RESET_CHIP, len);
-+	SVCMAP(WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
-+	       WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT, len);
++exit:
+ 	mutex_unlock(&ar->conf_mutex);
  }
  
- #undef SVCMAP
-@@ -1036,6 +1040,7 @@ struct wmi_cmd_map {
- 	u32 tdls_set_offchan_mode_cmdid;
- 	u32 radar_found_cmdid;
- 	u32 set_bb_timing_cmdid;
-+	u32 per_peer_per_tid_config_cmdid;
- };
+@@ -9078,6 +9134,7 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
+ 	mutex_lock(&ar->conf_mutex);
+ 	arg.vdev_id = arvif->vdev_id;
  
- /*
-@@ -1877,6 +1882,8 @@ enum wmi_10_4_cmd_id {
- 	WMI_10_4_PDEV_SET_BRIDGE_MACADDR_CMDID,
- 	WMI_10_4_ATF_GROUP_WMM_AC_CONFIG_REQUEST_CMDID,
- 	WMI_10_4_RADAR_FOUND_CMDID,
-+	WMI_10_4_PEER_CFR_CAPTURE_CMDID,
-+	WMI_10_4_PER_PEER_PER_TID_CONFIG_CMDID,
- 	WMI_10_4_PDEV_UTF_CMDID = WMI_10_4_END_CMDID - 1,
- };
++	arvif->tids_rst = 0;
+ 	memset(arvif->tid_conf_changed, 0, sizeof(arvif->tid_conf_changed));
  
-@@ -7220,6 +7227,51 @@ struct wmi_tdls_peer_event {
- 	__le32 vdev_id;
- } __packed;
+ 	for (i = 0; i < tid_config->n_tid_conf; i++) {
+@@ -9092,6 +9149,7 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
+ 		goto exit;
  
-+enum wmi_tid_aggr_control_conf {
-+	WMI_TID_CONFIG_AGGR_CONTROL_IGNORE,
-+	WMI_TID_CONFIG_AGGR_CONTROL_ENABLE,
-+	WMI_TID_CONFIG_AGGR_CONTROL_DISABLE,
-+};
+ 	ret = 0;
++	arvif->tids_rst = 0;
+ 	data.curr_vif = vif;
+ 	data.ar = ar;
+ 
+@@ -9103,6 +9161,35 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
++static int ath10k_mac_op_reset_tid_config(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif,
++					  struct ieee80211_sta *sta,
++					  u8 tids)
++{
++	struct ath10k_vif *arvif = (void *)vif->drv_priv;
++	struct ath10k_mac_iter_tid_conf_data data = {};
++	struct ath10k *ar = hw->priv;
++	int ret = 0;
 +
-+enum wmi_noack_tid_conf {
-+	WMI_NOACK_TID_CONFIG_IGNORE_ACK_POLICY,
-+	WMI_PEER_TID_CONFIG_ACK,
-+	WMI_PEER_TID_CONFIG_NOACK,
-+};
++	mutex_lock(&ar->conf_mutex);
 +
-+enum wmi_tid_rate_ctrl_conf {
-+	WMI_TID_CONFIG_RATE_CONTROL_IGNORE,
-+	WMI_TID_CONFIG_RATE_CONTROL_AUTO,
-+	WMI_TID_CONFIG_RATE_CONTROL_FIXED_RATE,
-+	WMI_TID_CONFIG_RATE_CONTROL_DEFAULT_LOWEST_RATE,
-+};
++	if (sta) {
++		arvif->tids_rst = 0;
++		ret = ath10k_mac_reset_tid_config(ar, sta, arvif, tids);
++		goto exit;
++	}
 +
-+struct wmi_per_peer_per_tid_cfg_arg {
-+	u32 vdev_id;
-+	struct wmi_mac_addr peer_macaddr;
-+	u32 tid;
-+	enum wmi_noack_tid_conf ack_policy;
-+	enum wmi_tid_aggr_control_conf aggr_control;
-+	u8 rate_ctrl;
-+	u32 retry_count;
-+	u32 rcode_flags;
-+};
++	arvif->tids_rst = tids;
++	data.curr_vif = vif;
++	data.ar = ar;
++	ieee80211_iterate_stations_atomic(hw, ath10k_mac_vif_stations_tid_conf,
++					  &data);
 +
-+struct wmi_peer_per_tid_cfg_cmd {
-+	__le32 vdev_id;
-+	struct wmi_mac_addr peer_macaddr;
-+	__le32 tid;
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
 +
-+	/* see enum wmi_noack_tid_conf */
-+	__le32 ack_policy;
-+	/* see enum wmi_tid_aggr_control_conf */
-+	__le32 aggr_control;
-+	/* see enum wmi_tid_rate_ctrl_conf */
-+	__le32 rate_control;
-+	__le32 rcode_flags;
-+	__le32 retry_count;
-+} __packed;
-+
- enum wmi_txbf_conf {
- 	WMI_TXBF_CONF_UNSUPPORTED,
- 	WMI_TXBF_CONF_BEFORE_ASSOC,
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_mac_op_tx,
+ 	.wake_tx_queue			= ath10k_mac_op_wake_tx_queue,
+@@ -9147,6 +9234,7 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
+ 	.sta_pre_rcu_remove		= ath10k_mac_op_sta_pre_rcu_remove,
+ 	.sta_statistics			= ath10k_sta_statistics,
+ 	.set_tid_config			= ath10k_mac_op_set_tid_config,
++	.reset_tid_config		= ath10k_mac_op_reset_tid_config,
+ 
+ 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
+ 
 -- 
 1.9.1
 
