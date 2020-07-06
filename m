@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2121CC433E2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB7DC433DF
 	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 11:52:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0496120720
+	by mail.kernel.org (Postfix) with ESMTP id B306F20720
 	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 11:52:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729006AbgGFLwd (ORCPT
+        id S1729019AbgGFLwi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jul 2020 07:52:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59652 "EHLO
+        Mon, 6 Jul 2020 07:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728414AbgGFLwc (ORCPT
+        with ESMTP id S1728414AbgGFLwd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jul 2020 07:52:32 -0400
+        Mon, 6 Jul 2020 07:52:33 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 152C8C08C5DF
-        for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2020 04:52:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D6F8C08C5DF
+        for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2020 04:52:33 -0700 (PDT)
 Received: from [134.101.131.141] (helo=localhost.localdomain)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1jsPfh-000600-IH; Mon, 06 Jul 2020 13:52:29 +0200
+        id 1jsPfi-000600-HQ; Mon, 06 Jul 2020 13:52:30 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V2 03/10] mac80211: add multiple bssid support
-Date:   Mon,  6 Jul 2020 13:52:12 +0200
-Message-Id: <20200706115219.663650-3-john@phrozen.org>
+Subject: [PATCH V2 07/10] ath11k: add a struct to pass parameters into ath11k_wmi_vdev_up
+Date:   Mon,  6 Jul 2020 13:52:16 +0200
+Message-Id: <20200706115219.663650-7-john@phrozen.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200706115219.663650-1-john@phrozen.org>
 References: <20200706115219.663650-1-john@phrozen.org>
@@ -44,226 +44,185 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When bringing up multi bssid APs we need to track the parent-child relation
-of non-transmitting and transmitting VAPs.
-
-The patch warns when
-* a parent is deleted while it has children
-* a parent is opened before all children are opened
-* a child is closed when its parent is open
-
-This patch checks the above by using a linked list to track the relations.
+When setting up a multiple bssid we need to pass additional parameters to
+the FW. Doing this as individual parameters would make the call signature
+very long. Use an intermediate struct instead and adjust all callees to
+make use of it.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- include/net/mac80211.h | 20 +++++++++++++
- net/mac80211/cfg.c     | 68 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/iface.c   | 19 ++++++++++++
- net/mac80211/util.c    | 27 +++++++++++++++++
- 4 files changed, 134 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 38 ++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath11k/wmi.c | 17 +++++++-----
+ drivers/net/wireless/ath/ath11k/wmi.h | 12 +++++++--
+ 3 files changed, 53 insertions(+), 14 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 11d5610d2ad5..3617a2742c4d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6558,4 +6558,24 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
-  */
- bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 498f9a15d0e4..65a77f6c27e1 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -657,9 +657,13 @@ void ath11k_mac_peer_cleanup_all(struct ath11k *ar)
  
-+/**
-+ * ieee80211_get_multi_bssid_mode - get a vifs multi bssid mode.
-+ *
-+ * This function is used to help look up the multi bssid mode which is tracked
-+ * inside the wdev.
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ */
-+enum nl80211_multi_bssid_mode ieee80211_get_multi_bssid_mode(struct ieee80211_vif *vif);
+ static int ath11k_monitor_vdev_up(struct ath11k *ar, int vdev_id)
+ {
++	struct vdev_up_params params = {
++		.vdev_id = vdev_id,
++		.bssid = ar->mac_addr,
++	};
+ 	int ret = 0;
+ 
+-	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
+ 			    vdev_id, ret);
+@@ -724,6 +728,13 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 				     struct ieee80211_bss_conf *info)
+ {
+ 	struct ath11k *ar = arvif->ar;
++	struct ieee80211_vif *parent;
++	struct vdev_up_params params = {
++		.vdev_id = arvif->vdev_id,
++		.bssid = arvif->bssid,
++		.profile_num = info->multi_bssid.count,
++		.profile_idx = info->multi_bssid.index,
++	};
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
+@@ -751,9 +762,15 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 	arvif->aid = 0;
+ 
+ 	ether_addr_copy(arvif->bssid, info->bssid);
++	parent = ieee80211_get_multi_bssid_parent(arvif->vif);
++	if (parent) {
++		struct ath11k_vif *pvif = (struct ath11k_vif *)parent->drv_priv;
 +
-+/**
-+ * ieee80211_get_multi_bssid_parent - get a vifs multi bssid parent.
-+ *
-+ * This function is used to help look up the multi bssid parent which is tracked
-+ * inside the wdev.
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ */
-+struct ieee80211_vif *ieee80211_get_multi_bssid_parent(struct ieee80211_vif *vif);
++		params.trans_bssid = pvif->bssid;
++	}
 +
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9b360544ad6f..d315120799c0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -111,6 +111,42 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
- 	return 0;
+ 
+-	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-				 arvif->bssid);
++	ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
+ 			    arvif->vdev_id, ret);
+@@ -1569,6 +1586,11 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	struct ath11k *ar = hw->priv;
+ 	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+ 	struct peer_assoc_params peer_arg;
++	struct vdev_up_params params = {
++		.vdev_id = arvif->vdev_id,
++		.bssid = bss_conf->bssid,
++		.aid = bss_conf->aid,
++	};
+ 	struct ieee80211_sta *ap_sta;
+ 	int ret;
+ 
+@@ -1617,7 +1639,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	arvif->aid = bss_conf->aid;
+ 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -4895,6 +4917,8 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 	/* TODO: Update ar->rx_channel */
+ 
+ 	for (i = 0; i < n_vifs; i++) {
++		struct vdev_up_params params;
++
+ 		arvif = (void *)vifs[i].vif->drv_priv;
+ 
+ 		if (WARN_ON(!arvif->is_started))
+@@ -4915,8 +4939,10 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 			continue;
+ 		}
+ 
+-		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-					 arvif->bssid);
++		params.vdev_id = arvif->vdev_id,
++		params.bssid = arvif->bssid,
++		params.aid = arvif->aid,
++		ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
+ 				    arvif->vdev_id, ret);
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 90c68d1d9087..b7a4913228bc 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -862,7 +862,7 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 	return ret;
  }
  
-+static int ieee80211_set_multi_bssid_options(struct ieee80211_sub_if_data *sdata,
-+					     struct vif_params *params)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct wiphy *wiphy = local->hw.wiphy;
-+	struct net_device *parent;
-+
-+	if (params->multi_bssid_mode &&
-+	    !ieee80211_hw_check(&local->hw, SUPPORTS_MULTI_BSSID))
-+		return -ENOTSUPP;
-+
-+	switch (params->multi_bssid_mode) {
-+	case NL80211_MULTIPLE_BSSID_NON_TRANSMITTED:
-+		parent = __dev_get_by_index(wiphy_net(wiphy),
-+					    params->multi_bssid_parent);
-+		if (!parent || !parent->ieee80211_ptr ||
-+		    parent->ieee80211_ptr->multi_bssid_mode !=
-+					NL80211_MULTIPLE_BSSID_TRANSMITTED)
-+			return -EINVAL;
-+		sdata->wdev.multi_bssid_parent = parent->ieee80211_ptr;
-+		list_add(&sdata->wdev.multi_bssid_list,
-+			 &parent->ieee80211_ptr->multi_bssid_list);
-+		break;
-+
-+	case NL80211_MULTIPLE_BSSID_TRANSMITTED:
-+		INIT_LIST_HEAD(&sdata->wdev.multi_bssid_list);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+	sdata->wdev.multi_bssid_mode = params->multi_bssid_mode;
-+
-+	return 0;
-+}
-+
- static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 						const char *name,
- 						unsigned char name_assign_type,
-@@ -136,11 +172,43 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 		}
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params)
+ {
+ 	struct ath11k_pdev_wmi *wmi = ar->wmi;
+ 	struct wmi_vdev_up_cmd *cmd;
+@@ -877,10 +877,14 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_VDEV_UP_CMD) |
+ 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+-	cmd->vdev_id = vdev_id;
+-	cmd->vdev_assoc_id = aid;
++	cmd->vdev_id = params->vdev_id;
++	cmd->vdev_assoc_id = params->aid;
++	cmd->profile_idx = params->profile_idx;
++	cmd->profile_num = params->profile_num;
+ 
+-	ether_addr_copy(cmd->vdev_bssid.addr, bssid);
++	if (params->trans_bssid)
++		ether_addr_copy(cmd->trans_bssid.addr, params->trans_bssid);
++	ether_addr_copy(cmd->vdev_bssid.addr, params->bssid);
+ 
+ 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_UP_CMDID);
+ 	if (ret) {
+@@ -889,8 +893,9 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
  	}
  
-+	if (type == NL80211_IFTYPE_AP) {
-+		err = ieee80211_set_multi_bssid_options(sdata, params);
-+		if (err) {
-+			ieee80211_if_remove(sdata);
-+			return NULL;
-+		}
-+	}
-+
- 	return wdev;
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+-		   "WMI mgmt vdev up id 0x%x assoc id %d bssid %pM\n",
+-		   vdev_id, aid, bssid);
++		   "WMI mgmt vdev up id 0x%x assoc id %d idx %d num %d bssid %pM trans_bssid %pM\n",
++		   params->vdev_id, params->aid, params->profile_idx, params->profile_num,
++		   params->bssid, params->trans_bssid);
+ 
+ 	return ret;
  }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index fa6665584caf..1a436e1885bc 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2453,6 +2453,15 @@ struct wmi_vdev_delete_cmd {
+ 	u32 vdev_id;
+ } __packed;
  
- static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
-+	struct ieee80211_sub_if_data *sdata;
-+	struct wireless_dev *child, *tmp;
++struct vdev_up_params {
++	u32 vdev_id;
++	u16 aid;
++	u32 profile_idx;
++	u32 profile_num;
++	const u8 *bssid;
++	u8 *trans_bssid;
++};
 +
-+	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	switch (sdata->wdev.multi_bssid_mode) {
-+	case NL80211_MULTIPLE_BSSID_TRANSMITTED:
-+		if (list_empty(&sdata->wdev.multi_bssid_list))
-+			break;
-+		sdata_info(sdata, "deleting while non-transmitting children still exist\n");
-+		list_for_each_entry_safe(child, tmp, &sdata->wdev.multi_bssid_list,
-+					 multi_bssid_list) {
-+			list_del(&child->multi_bssid_list);
-+			child->multi_bssid_parent = NULL;
-+		}
-+		break;
-+
-+	case NL80211_MULTIPLE_BSSID_NON_TRANSMITTED:
-+		list_del(&sdata->wdev.multi_bssid_list);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
- 	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
- 
- 	return 0;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f900c84fb40f..777b530e38d0 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -535,6 +535,18 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		}
- 	case NL80211_IFTYPE_AP:
- 		sdata->bss = &sdata->u.ap;
-+		if (wdev->multi_bssid_mode == NL80211_MULTIPLE_BSSID_TRANSMITTED) {
-+			struct wireless_dev *child;
-+			int children_down = 0;
-+
-+			/* check if all children are already up */
-+			list_for_each_entry(child, &wdev->multi_bssid_list,
-+					    multi_bssid_list)
-+				if (!wdev_running(child))
-+					children_down = 1;
-+			if (children_down)
-+				sdata_info(sdata, "non-transmitting children are not up yet\n");
-+		}
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_STATION:
-@@ -800,6 +812,7 @@ static int ieee80211_open(struct net_device *dev)
- static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			      bool going_down)
- {
-+	struct wireless_dev *wdev = ieee80211_vif_to_wdev(&sdata->vif);
- 	struct ieee80211_local *local = sdata->local;
- 	unsigned long flags;
- 	struct sk_buff *skb, *tmp;
-@@ -810,6 +823,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	bool cancel_scan;
- 	struct cfg80211_nan_func *func;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    wdev->multi_bssid_mode == NL80211_MULTIPLE_BSSID_NON_TRANSMITTED)
-+		/* make sure the parent is already down */
-+		if (wdev->multi_bssid_parent && wdev_running(wdev->multi_bssid_parent))
-+			sdata_info(sdata, "transmitting parent is still up\n");
-+
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
- 	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 21c94094a699..3e4308c8f690 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -847,6 +847,33 @@ struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif)
- }
- EXPORT_SYMBOL_GPL(ieee80211_vif_to_wdev);
- 
-+enum nl80211_multi_bssid_mode ieee80211_get_multi_bssid_mode(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	if (!vif)
-+		return 0;
-+
-+	sdata = vif_to_sdata(vif);
-+
-+	return sdata->wdev.multi_bssid_mode;
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_get_multi_bssid_mode);
-+
-+struct ieee80211_vif *ieee80211_get_multi_bssid_parent(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	if (!vif)
-+		return NULL;
-+
-+	sdata = vif_to_sdata(vif);
-+	if (sdata->wdev.multi_bssid_parent)
-+		return wdev_to_ieee80211_vif(sdata->wdev.multi_bssid_parent);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_get_multi_bssid_parent);
-+
- /*
-  * Nothing should have been stuffed into the workqueue during
-  * the suspend->resume cycle. Since we can't check each caller
+ struct wmi_vdev_up_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -4845,8 +4854,7 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 			struct ieee80211_mutable_offsets *offs,
+ 			struct sk_buff *bcn);
+ int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
+-		       const u8 *bssid);
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
+ int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
+ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 			  bool restart);
 -- 
 2.25.1
 
