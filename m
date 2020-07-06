@@ -2,299 +2,274 @@ Return-Path: <SRS0=AxV3=AR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_DIGITS,
-	FROM_LOCAL_HEX,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6D3C433E2
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 15:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2901C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 17:06:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC9FC206CD
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 15:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81938212CC
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jul 2020 17:06:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729467AbgGFPWg (ORCPT
+        id S1729600AbgGFRGc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jul 2020 11:22:36 -0400
-Received: from mail-il1-f199.google.com ([209.85.166.199]:42469 "EHLO
-        mail-il1-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729197AbgGFPW2 (ORCPT
+        Mon, 6 Jul 2020 13:06:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52104 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729386AbgGFRGc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jul 2020 11:22:28 -0400
-Received: by mail-il1-f199.google.com with SMTP id d3so28061373ilq.9
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2020 08:22:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=Gb4RgcknZMkUgaAzsU/N7n1yCgbCMvtJjS9ILFoCYNM=;
-        b=JRqDb+Vf17kHSDOTR1aU1qORX5r9yNfE03MFntG6hMOcorX/O1hWsBNRyasnUaG6sL
-         kbnn+T05d+bk8hywH+VMX0aeeqqIu8al+EXLPHj37O7YULao8Ki0xB5tBSKApewrtqjQ
-         SZi2rEYxtDi3yUU8UIvheKYQF2OJkDiAVwpeexb+hcHRpIN0V072v+MxEbdDP9Z8uL88
-         J2JixT6sGFdprLt4fT2rV2HGIvDje8mWS/FMjp7+donWCe9zQ9+e0hZaXQrDapqy61Ke
-         mo7oUu4Ms5fns1jgy0aMcx0EzLCR7OgV7a4fhbV3quhj7NOJRqmZitOD9gpHdnX7XKTK
-         Cfzg==
-X-Gm-Message-State: AOAM533ShtE/qEQpCjGmK9UpNKqsaypKR/GrZw/MgAuvCPPwylx6MaNF
-        uYipdSiy92y3x7ChX+GhoZEXc0yR5jt0HzjGdafWsGVJ6egs
-X-Google-Smtp-Source: ABdhPJzxZFfQ9jxAGcQKfaaN9cjzlJ8XtC2kIauSqwA0u+MTvvWtmQAPSh2OS+auUyfpl2lAZtcE+ASAcGoL/0YidMjJ8gl/8yel
+        Mon, 6 Jul 2020 13:06:32 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24B58C061755
+        for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2020 10:06:32 -0700 (PDT)
+Received: from [134.101.131.141] (helo=bertha9.lan)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1jsUZY-0000u0-1s; Mon, 06 Jul 2020 19:06:28 +0200
+From:   John Crispin <john@phrozen.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH V2 3/3] ath11k: add support for BSS coloring
+Date:   Mon,  6 Jul 2020 19:06:16 +0200
+Message-Id: <20200706170616.1764626-3-john@phrozen.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200706170616.1764626-1-john@phrozen.org>
+References: <20200706170616.1764626-1-john@phrozen.org>
 MIME-Version: 1.0
-X-Received: by 2002:a92:c0c8:: with SMTP id t8mr32100276ilf.229.1594048946297;
- Mon, 06 Jul 2020 08:22:26 -0700 (PDT)
-Date:   Mon, 06 Jul 2020 08:22:26 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000032e30505a9c771e3@google.com>
-Subject: INFO: task hung in ath6kl_usb_power_off
-From:   syzbot <syzbot+2d6ac90723742279e101@syzkaller.appspotmail.com>
-To:     andreyknvl@google.com, davem@davemloft.net, kuba@kernel.org,
-        kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Whenever the MAC detects a color collision or any of its associated station
+detects one the FW will send out an event. Add the code to parse and handle
+this event. and pass the data up to mac80211.
 
-syzbot found the following crash on:
+The FW does not provide an offload feature such as the one used for CSA. The
+CCA process is hence triggered via the beacon offload tx completion events
+sent out by the FW.
 
-HEAD commit:    c8d141ce USB: Fix up terminology in include files
-git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git usb-testing
-console output: https://syzkaller.appspot.com/x/log.txt?x=15d1a9a7100000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=999be4eb2478ffa5
-dashboard link: https://syzkaller.appspot.com/bug?extid=2d6ac90723742279e101
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-
-Unfortunately, I don't have any reproducer for this crash yet.
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+2d6ac90723742279e101@syzkaller.appspotmail.com
-
-INFO: task kworker/0:6:3087 blocked for more than 143 seconds.
-      Not tainted 5.8.0-rc3-syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/0:6     D24216  3087      2 0x80004000
-Workqueue: usb_hub_wq hub_event
-Call Trace:
- context_switch kernel/sched/core.c:3453 [inline]
- __schedule+0x88a/0x1cb0 kernel/sched/core.c:4178
- schedule+0xcd/0x2b0 kernel/sched/core.c:4253
- schedule_timeout+0x1d8/0x250 kernel/time/timer.c:1873
- do_wait_for_common kernel/sched/completion.c:85 [inline]
- __wait_for_common kernel/sched/completion.c:106 [inline]
- wait_for_common kernel/sched/completion.c:117 [inline]
- wait_for_completion+0x168/0x270 kernel/sched/completion.c:138
- flush_workqueue+0x3ff/0x13e0 kernel/workqueue.c:2832
- flush_scheduled_work include/linux/workqueue.h:597 [inline]
- ath6kl_usb_flush_all drivers/net/wireless/ath/ath6kl/usb.c:476 [inline]
- hif_detach_htc drivers/net/wireless/ath/ath6kl/usb.c:856 [inline]
- ath6kl_usb_power_off+0xbe/0xf0 drivers/net/wireless/ath/ath6kl/usb.c:1055
- ath6kl_hif_power_off drivers/net/wireless/ath/ath6kl/hif-ops.h:143 [inline]
- ath6kl_core_init drivers/net/wireless/ath/ath6kl/core.c:255 [inline]
- ath6kl_core_init+0x236/0x10d0 drivers/net/wireless/ath/ath6kl/core.c:66
- ath6kl_usb_probe+0xc30/0x11d0 drivers/net/wireless/ath/ath6kl/usb.c:1155
- usb_probe_interface+0x315/0x7f0 drivers/usb/core/driver.c:374
- really_probe+0x291/0xc90 drivers/base/dd.c:525
- driver_probe_device+0x26b/0x3d0 drivers/base/dd.c:701
- __device_attach_driver+0x1d1/0x290 drivers/base/dd.c:807
- bus_for_each_drv+0x15f/0x1e0 drivers/base/bus.c:431
- __device_attach+0x28d/0x430 drivers/base/dd.c:873
- bus_probe_device+0x1e4/0x290 drivers/base/bus.c:491
- device_add+0xb09/0x1b40 drivers/base/core.c:2680
- usb_set_configuration+0xf05/0x18a0 drivers/usb/core/message.c:2032
- usb_generic_driver_probe+0xba/0xf2 drivers/usb/core/generic.c:241
- usb_probe_device+0xd9/0x250 drivers/usb/core/driver.c:272
- really_probe+0x291/0xc90 drivers/base/dd.c:525
- driver_probe_device+0x26b/0x3d0 drivers/base/dd.c:701
- __device_attach_driver+0x1d1/0x290 drivers/base/dd.c:807
- bus_for_each_drv+0x15f/0x1e0 drivers/base/bus.c:431
- __device_attach+0x28d/0x430 drivers/base/dd.c:873
- bus_probe_device+0x1e4/0x290 drivers/base/bus.c:491
- device_add+0xb09/0x1b40 drivers/base/core.c:2680
- usb_new_device.cold+0x71d/0xfd4 drivers/usb/core/hub.c:2554
- hub_port_connect drivers/usb/core/hub.c:5208 [inline]
- hub_port_connect_change drivers/usb/core/hub.c:5348 [inline]
- port_event drivers/usb/core/hub.c:5494 [inline]
- hub_event+0x2361/0x4390 drivers/usb/core/hub.c:5576
- process_one_work+0x94c/0x15f0 kernel/workqueue.c:2269
- worker_thread+0x64c/0x1120 kernel/workqueue.c:2415
- kthread+0x392/0x470 kernel/kthread.c:291
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:293
-INFO: task kworker/0:7:3122 blocked for more than 143 seconds.
-      Not tainted 5.8.0-rc3-syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/0:7     D24656  3122      2 0x80004000
-Workqueue: events request_firmware_work_func
-Call Trace:
- context_switch kernel/sched/core.c:3453 [inline]
- __schedule+0x88a/0x1cb0 kernel/sched/core.c:4178
- schedule+0xcd/0x2b0 kernel/sched/core.c:4253
- schedule_preempt_disabled+0xc/0x20 kernel/sched/core.c:4312
- __mutex_lock_common kernel/locking/mutex.c:1033 [inline]
- __mutex_lock+0x3e2/0x10a0 kernel/locking/mutex.c:1103
- device_lock include/linux/device.h:768 [inline]
- ath9k_hif_usb_firmware_fail drivers/net/wireless/ath/ath9k/hif_usb.c:1108 [inline]
- ath9k_hif_usb_firmware_cb+0x3ac/0x530 drivers/net/wireless/ath/ath9k/hif_usb.c:1241
- request_firmware_work_func+0x126/0x250 drivers/base/firmware_loader/main.c:1001
- process_one_work+0x94c/0x15f0 kernel/workqueue.c:2269
- worker_thread+0x64c/0x1120 kernel/workqueue.c:2415
- kthread+0x392/0x470 kernel/kthread.c:291
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:293
-
-Showing all locks held in the system:
-3 locks held by kworker/1:1/21:
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881da317da8 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d4439218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d4439218 (&dev->mutex){....}-{3:3}, at: hub_event+0x1c5/0x4390 drivers/usb/core/hub.c:5522
-1 lock held by khungtaskd/23:
- #0: ffffffff873124a0 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x53/0x264 kernel/locking/lockdep.c:5779
-3 locks held by kworker/1:2/68:
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881d5b3fda8 ((work_completion)(&fw_work->work)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d4531218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d4531218 (&dev->mutex){....}-{3:3}, at: ath9k_hif_usb_firmware_fail drivers/net/wireless/ath/ath9k/hif_usb.c:1108 [inline]
- #2: ffff8881d4531218 (&dev->mutex){....}-{3:3}, at: ath9k_hif_usb_firmware_cb+0x3ac/0x530 drivers/net/wireless/ath/ath9k/hif_usb.c:1241
-1 lock held by in:imklog/244:
- #0: ffff8881c8675270 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0xe9/0x100 fs/file.c:826
-2 locks held by agetty/252:
- #0: ffff8881cfef0098 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x22/0x80 drivers/tty/tty_ldisc.c:267
- #1: ffffc900009f62e8 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x223/0x1a30 drivers/tty/n_tty.c:2156
-5 locks held by kworker/0:6/3087:
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881c6627da8 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d4471218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d4471218 (&dev->mutex){....}-{3:3}, at: hub_event+0x1c5/0x4390 drivers/usb/core/hub.c:5522
- #3: ffff8881cd548218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #3: ffff8881cd548218 (&dev->mutex){....}-{3:3}, at: __device_attach+0x7a/0x430 drivers/base/dd.c:850
- #4: ffff8881d22c31a8 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #4: ffff8881d22c31a8 (&dev->mutex){....}-{3:3}, at: __device_attach+0x7a/0x430 drivers/base/dd.c:850
-5 locks held by kworker/1:3/3121:
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881cd83fda8 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d44d1218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d44d1218 (&dev->mutex){....}-{3:3}, at: hub_event+0x1c5/0x4390 drivers/usb/core/hub.c:5522
- #3: ffff8881d44d4588 (&port_dev->status_lock){+.+.}-{3:3}, at: usb_lock_port drivers/usb/core/hub.c:3012 [inline]
- #3: ffff8881d44d4588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_port_connect drivers/usb/core/hub.c:5139 [inline]
- #3: ffff8881d44d4588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_port_connect_change drivers/usb/core/hub.c:5348 [inline]
- #3: ffff8881d44d4588 (&port_dev->status_lock){+.+.}-{3:3}, at: port_event drivers/usb/core/hub.c:5494 [inline]
- #3: ffff8881d44d4588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_event+0x217c/0x4390 drivers/usb/core/hub.c:5576
- #4: ffff8881d4f69b68 (hcd->address0_mutex){+.+.}-{3:3}, at: hub_port_init+0x1b6/0x2e80 drivers/usb/core/hub.c:4563
-3 locks held by kworker/0:7/3122:
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881da028d38 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881cd477da8 ((work_completion)(&fw_work->work)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d4471218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d4471218 (&dev->mutex){....}-{3:3}, at: ath9k_hif_usb_firmware_fail drivers/net/wireless/ath/ath9k/hif_usb.c:1108 [inline]
- #2: ffff8881d4471218 (&dev->mutex){....}-{3:3}, at: ath9k_hif_usb_firmware_cb+0x3ac/0x530 drivers/net/wireless/ath/ath9k/hif_usb.c:1241
-3 locks held by kworker/0:8/3125:
-6 locks held by kworker/1:5/3225:
-5 locks held by kworker/1:6/3235:
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:856 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:616 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:643 [inline]
- #0: ffff8881d88a6138 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x82b/0x15f0 kernel/workqueue.c:2240
- #1: ffff8881c90c7da8 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x85f/0x15f0 kernel/workqueue.c:2244
- #2: ffff8881d4491218 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:768 [inline]
- #2: ffff8881d4491218 (&dev->mutex){....}-{3:3}, at: hub_event+0x1c5/0x4390 drivers/usb/core/hub.c:5522
- #3: ffff8881d4494588 (&port_dev->status_lock){+.+.}-{3:3}, at: usb_lock_port drivers/usb/core/hub.c:3012 [inline]
- #3: ffff8881d4494588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_port_connect drivers/usb/core/hub.c:5139 [inline]
- #3: ffff8881d4494588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_port_connect_change drivers/usb/core/hub.c:5348 [inline]
- #3: ffff8881d4494588 (&port_dev->status_lock){+.+.}-{3:3}, at: port_event drivers/usb/core/hub.c:5494 [inline]
- #3: ffff8881d4494588 (&port_dev->status_lock){+.+.}-{3:3}, at: hub_event+0x217c/0x4390 drivers/usb/core/hub.c:5576
- #4: ffff8881d4f54b68 (hcd->address0_mutex){+.+.}-{3:3}, at: hub_port_init+0x1b6/0x2e80 drivers/usb/core/hub.c:4563
-2 locks held by agetty/6439:
- #0: ffff8881ce39d098 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x22/0x80 drivers/tty/tty_ldisc.c:267
- #1: ffffc9000fc9d2e8 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x223/0x1a30 drivers/tty/n_tty.c:2156
-
-=============================================
-
-NMI backtrace for cpu 0
-CPU: 0 PID: 23 Comm: khungtaskd Not tainted 5.8.0-rc3-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xf6/0x16e lib/dump_stack.c:118
- nmi_cpu_backtrace.cold+0x74/0xb6 lib/nmi_backtrace.c:101
- nmi_trigger_cpumask_backtrace+0x1da/0x1f4 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:146 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:209 [inline]
- watchdog+0xd6a/0xfd0 kernel/hung_task.c:295
- kthread+0x392/0x470 kernel/kthread.c:291
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:293
-Sending NMI from CPU 0 to CPUs 1:
-NMI backtrace for cpu 1
-CPU: 1 PID: 3235 Comm: kworker/1:6 Not tainted 5.8.0-rc3-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Workqueue: usb_hub_wq hub_event
-RIP: 0010:io_serial_in+0x60/0x80 drivers/tty/serial/8250/8250_port.c:447
-Code: 0f b6 8d f1 00 00 00 48 8d 7d 40 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 d3 e3 80 3c 02 00 75 13 03 5d 40 89 da ec <5b> 0f b6 c0 5d c3 e8 c5 6a 42 ff eb c9 e8 ee 6a 42 ff eb e6 66 90
-RSP: 0018:ffff8881c90c7418 EFLAGS: 00000002
-RAX: dffffc0000000060 RBX: 00000000000003fd RCX: 0000000000000000
-RDX: 00000000000003fd RSI: ffffffff8226e15c RDI: ffffffff8a2a3be0
-RBP: ffffffff8a2a3ba0 R08: 0000000000000001 R09: 0000000000000003
-R10: 000000000000000a R11: 0000000000000007 R12: 0000000000000020
-R13: fffffbfff14547c6 R14: fffffbfff145477e R15: dffffc0000000000
-FS:  0000000000000000(0000) GS:ffff8881db300000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f7a9b574000 CR3: 00000001c7596000 CR4: 00000000001406e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- serial_in drivers/tty/serial/8250/8250.h:113 [inline]
- wait_for_xmitr+0x9a/0x210 drivers/tty/serial/8250/8250_port.c:2060
- serial8250_console_putchar+0x1b/0x50 drivers/tty/serial/8250/8250_port.c:3197
- uart_console_write+0x59/0x100 drivers/tty/serial/serial_core.c:1949
- serial8250_console_write+0x8c5/0xa90 drivers/tty/serial/8250/8250_port.c:3269
- call_console_drivers kernel/printk/printk.c:1816 [inline]
- console_unlock+0x87a/0xcd0 kernel/printk/printk.c:2493
- vprintk_emit+0x1b2/0x460 kernel/printk/printk.c:2021
- dev_vprintk_emit+0x3eb/0x436 drivers/base/core.c:3883
- dev_printk_emit+0xba/0xf1 drivers/base/core.c:3894
- __dev_printk+0xcf/0xf5 drivers/base/core.c:3906
- _dev_info+0xd7/0x109 drivers/base/core.c:3952
- hub_port_init.cold+0x264/0x32f drivers/usb/core/hub.c:4628
- hub_port_connect drivers/usb/core/hub.c:5140 [inline]
- hub_port_connect_change drivers/usb/core/hub.c:5348 [inline]
- port_event drivers/usb/core/hub.c:5494 [inline]
- hub_event+0x2191/0x4390 drivers/usb/core/hub.c:5576
- process_one_work+0x94c/0x15f0 kernel/workqueue.c:2269
- worker_thread+0x64c/0x1120 kernel/workqueue.c:2415
- kthread+0x392/0x470 kernel/kthread.c:291
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:293
-
-
+Signed-off-by: John Crispin <john@phrozen.org>
 ---
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Changes in V2
+* properly set the BSS color to avoid duplicate events
+* turn the collision warning into a dbg message
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+ drivers/net/wireless/ath/ath11k/mac.c | 36 +++++++++++++++++
+ drivers/net/wireless/ath/ath11k/mac.h |  1 +
+ drivers/net/wireless/ath/ath11k/wmi.c | 57 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h | 14 +++++++
+ 4 files changed, 108 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 2836a0f197ab..9fc20ba15818 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -720,6 +720,22 @@ static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
+ 	return ret;
+ }
+ 
++void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif)
++{
++	struct ieee80211_vif *vif = arvif->vif;
++
++	if (!vif->cca_active)
++		return;
++
++	if (ieee80211_cca_is_complete(vif)) {
++		ieee80211_cca_finish(vif);
++		return;
++	}
++
++	ieee80211_cca_update_counter(vif);
++	ath11k_mac_setup_bcn_tmpl(arvif);
++}
++
+ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 				     struct ieee80211_bss_conf *info)
+ {
+@@ -1974,6 +1990,24 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (ret)
+ 				ath11k_warn(ar->ab, "failed to set bss color collision on vdev %i: %d\n",
+ 					    arvif->vdev_id,  ret);
++
++			param_id = WMI_VDEV_PARAM_BSS_COLOR;
++			if (info->he_bss_color.disabled)
++				param_value = IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED;
++			else
++				param_value = info->he_bss_color.color <<
++						IEEE80211_HE_OPERATION_BSS_COLOR_OFFSET;
++
++			ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++							    param_id,
++							    param_value);
++			if (ret)
++				ath11k_warn(ar->ab,
++					    "failed to set bss color param on vdev %i: %d\n",
++					    arvif->vdev_id,  ret);
++
++			ath11k_info(ar->ab, "bss color param 0x%x set on vdev %i\n",
++				    param_value, arvif->vdev_id);
+ 		} else if (vif->type == NL80211_IFTYPE_STATION) {
+ 			ret = ath11k_wmi_send_bss_color_change_enable_cmd(ar,
+ 									  arvif->vdev_id,
+@@ -5883,6 +5917,8 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
+ 				   NL80211_FEATURE_AP_SCAN;
+ 
++	ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_BSS_COLOR;
++
+ 	ar->max_num_stations = TARGET_NUM_STATIONS;
+ 	ar->max_num_peers = TARGET_NUM_PEERS_PDEV;
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
+index 0607479774a9..55978744e170 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.h
++++ b/drivers/net/wireless/ath/ath11k/mac.h
+@@ -146,4 +146,5 @@ int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
+ u8 ath11k_mac_bw_to_mac80211_bw(u8 bw);
+ enum ath11k_supported_bw ath11k_mac_mac80211_bw_to_ath11k_bw(enum rate_info_bw bw);
+ enum hal_encrypt_type ath11k_dp_tx_get_encrypt_type(u32 cipher);
++void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index c2a972377687..210d230bc146 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -97,6 +97,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		= { .min_len = sizeof(struct wmi_stats_event) },
+ 	[WMI_TAG_PDEV_CTL_FAILSAFE_CHECK_EVENT]
+ 		= { .min_len = sizeof(struct wmi_pdev_ctl_failsafe_chk_event) },
++	[WMI_TAG_OBSS_COLOR_COLLISION_EVT]
++		= { .min_len = sizeof(struct wmi_obss_color_collision_event) },
+ };
+ 
+ #define PRIMAP(_hw_mode_) \
+@@ -2925,6 +2927,49 @@ int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id,
+ 	return ret;
+ }
+ 
++static void
++ath11k_wmi_obss_color_collision_event(struct ath11k_base *ab, struct sk_buff *skb)
++{
++	const void **tb;
++	const struct wmi_obss_color_collision_event *ev;
++	struct ath11k_vif *arvif;
++	int ret;
++
++	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ret = PTR_ERR(tb);
++		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
++		return;
++	}
++
++	ev = tb[WMI_TAG_OBSS_COLOR_COLLISION_EVT];
++	if (!ev) {
++		ath11k_warn(ab, "failed to fetch obss color collision ev");
++		goto exit;
++	}
++
++	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, ev->vdev_id);
++	switch (ev->evt_type) {
++	case WMI_BSS_COLOR_COLLISION_DETECTION:
++		break;
++	case WMI_BSS_COLOR_COLLISION_DISABLE:
++	case WMI_BSS_COLOR_FREE_SLOT_TIMER_EXPIRY:
++	case WMI_BSS_COLOR_FREE_SLOT_AVAILABLE:
++		goto exit;
++	default:
++		ath11k_warn(ab, "received unknown obss color collision detetction event\n");
++		goto exit;
++	}
++
++	ieeee80211_obss_color_collision_notify(arvif->vif, ev->obss_color_bitmap);
++
++	ath11k_dbg(ab, ATH11K_DBG_WMI,
++		   "OBSS color collision detected vdev:%d, event:%d, bitmap:%08llx\n",
++		   ev->vdev_id, ev->evt_type, ev->obss_color_bitmap);
++exit:
++	kfree(tb);
++}
++
+ static void
+ ath11k_fill_band_to_mac_param(struct ath11k_base  *soc,
+ 			      struct wmi_host_pdev_band_to_mac *band_to_mac)
+@@ -5118,6 +5163,7 @@ static void ath11k_vdev_start_resp_event(struct ath11k_base *ab, struct sk_buff
+ 
+ static void ath11k_bcn_tx_status_event(struct ath11k_base *ab, struct sk_buff *skb)
+ {
++	struct ath11k_vif *arvif;
+ 	u32 vdev_id, tx_status;
+ 
+ 	if (ath11k_pull_bcn_tx_status_ev(ab, skb->data, skb->len,
+@@ -5125,6 +5171,14 @@ static void ath11k_bcn_tx_status_event(struct ath11k_base *ab, struct sk_buff *s
+ 		ath11k_warn(ab, "failed to extract bcn tx status");
+ 		return;
+ 	}
++
++	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, vdev_id);
++	if (!arvif) {
++		ath11k_warn(ab, "invalid vdev id %d in bcn_tx_status",
++			    vdev_id);
++		return;
++	}
++	ath11k_mac_bcn_tx_event(arvif);
+ }
+ 
+ static void ath11k_vdev_stopped_event(struct ath11k_base *ab, struct sk_buff *skb)
+@@ -5994,6 +6048,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ 	case WMI_PDEV_TEMPERATURE_EVENTID:
+ 		ath11k_wmi_pdev_temperature_event(ab, skb);
+ 		break;
++	case WMI_OBSS_COLOR_COLLISION_DETECTION_EVENTID:
++		ath11k_wmi_obss_color_collision_event(ab, skb);
++		break;
+ 	/* add Unsupported events here */
+ 	case WMI_TBTTOFFSET_EXT_UPDATE_EVENTID:
+ 	case WMI_VDEV_DELETE_RESP_EVENTID:
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index b9f3e559ced7..5676ae3d5454 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -723,6 +723,7 @@ enum wmi_tlv_event_id {
+ 	WMI_MDNS_STATS_EVENTID = WMI_TLV_CMD(WMI_GRP_MDNS_OFL),
+ 	WMI_SAP_OFL_ADD_STA_EVENTID = WMI_TLV_CMD(WMI_GRP_SAP_OFL),
+ 	WMI_SAP_OFL_DEL_STA_EVENTID,
++	WMI_OBSS_COLOR_COLLISION_DETECTION_EVENTID = WMI_EVT_GRP_START_ID(WMI_GRP_OBSS_OFL),
+ 	WMI_OCB_SET_CONFIG_RESP_EVENTID = WMI_TLV_CMD(WMI_GRP_OCB),
+ 	WMI_OCB_GET_TSF_TIMER_RESP_EVENTID,
+ 	WMI_DCC_GET_STATS_RESP_EVENTID,
+@@ -4705,6 +4706,13 @@ struct wmi_obss_spatial_reuse_params_cmd {
+ #define ATH11K_BSS_COLOR_COLLISION_DETECTION_STA_PERIOD_MS	10000
+ #define ATH11K_BSS_COLOR_COLLISION_DETECTION_AP_PERIOD_MS	5000
+ 
++enum wmi_bss_color_collision {
++	WMI_BSS_COLOR_COLLISION_DISABLE = 0,
++	WMI_BSS_COLOR_COLLISION_DETECTION,
++	WMI_BSS_COLOR_FREE_SLOT_TIMER_EXPIRY,
++	WMI_BSS_COLOR_FREE_SLOT_AVAILABLE,
++};
++
+ struct wmi_obss_color_collision_cfg_params_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -4722,6 +4730,12 @@ struct wmi_bss_color_change_enable_params_cmd {
+ 	u32 enable;
+ } __packed;
+ 
++struct wmi_obss_color_collision_event {
++	u32 vdev_id;
++	u32 evt_type;
++	u64 obss_color_bitmap;
++} __packed;
++
+ #define ATH11K_IPV4_TH_SEED_SIZE 5
+ #define ATH11K_IPV6_TH_SEED_SIZE 11
+ 
+-- 
+2.25.1
+
