@@ -2,87 +2,194 @@ Return-Path: <SRS0=SX74=AS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6604C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jul 2020 19:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA6DDC433DF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jul 2020 20:23:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B951B206E9
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jul 2020 19:17:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="XVo/B7sn"
+	by mail.kernel.org (Postfix) with ESMTP id 8E1CA206BE
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jul 2020 20:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728866AbgGGTRB (ORCPT
+        id S1728471AbgGGUXH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jul 2020 15:17:01 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:40254 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728858AbgGGTRB (ORCPT
+        Tue, 7 Jul 2020 16:23:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51172 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727995AbgGGUXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jul 2020 15:17:01 -0400
-X-UUID: f330164182ec492bb7d2d01260bf9607-20200708
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=2sll/Y485e+JNsrlD/BIKIwTJsEpJPT8Kwje84O+F/g=;
-        b=XVo/B7sna3yn2Bnjv2ZnEAx+SuxoQHSNUJVBLUynozxX0xfyiIvpcQM6XP9lJGzwrAZ+6s+pgwbgTbj8q6X/0Uz99AfU3Ihpy5thGXdpPiDL8GskpteNrCpgr0aLcTk00E8sD26x/ZZo1oeDXiJcAmnz3BNcD0D1FUpTrewaOEw=;
-X-UUID: f330164182ec492bb7d2d01260bf9607-20200708
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 928126492; Wed, 08 Jul 2020 03:16:57 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 8 Jul 2020 03:16:45 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 8 Jul 2020 03:16:46 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <ryder.lee@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v2 1/3] mt76: mt7663u: fix memory leak in set key
-Date:   Wed, 8 Jul 2020 03:16:46 +0800
-Message-ID: <57b81f8efe7e767616a0d5957728756cbfdfa235.1594148548.git.sean.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
+        Tue, 7 Jul 2020 16:23:07 -0400
+Received: from mout3.freenet.de (mout3.freenet.de [IPv6:2001:748:100:40::2:5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 442D9C061755;
+        Tue,  7 Jul 2020 13:23:07 -0700 (PDT)
+Received: from [195.4.92.165] (helo=mjail2.freenet.de)
+        by mout3.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (port 25) (Exim 4.92 #3)
+        id 1jsu7K-0000A1-Nx; Tue, 07 Jul 2020 22:23:02 +0200
+Received: from [::1] (port=52196 helo=mjail2.freenet.de)
+        by mjail2.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (Exim 4.92 #3)
+        id 1jsu7K-000585-Jf; Tue, 07 Jul 2020 22:23:02 +0200
+Received: from sub3.freenet.de ([195.4.92.122]:43090)
+        by mjail2.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (Exim 4.92 #3)
+        id 1jsu5B-0004K3-Rf; Tue, 07 Jul 2020 22:20:49 +0200
+Received: from p200300e707178b006cb2a2fb62f37f24.dip0.t-ipconnect.de ([2003:e7:717:8b00:6cb2:a2fb:62f3:7f24]:58184 helo=[127.0.0.1])
+        by sub3.freenet.de with esmtpsa (ID viktor.jaegerskuepper@freenet.de) (TLSv1.2:ECDHE-RSA-CHACHA20-POLY1305:256) (port 465) (Exim 4.92 #3)
+        id 1jsu5B-0001wA-Mf; Tue, 07 Jul 2020 22:20:49 +0200
+Subject: Re: ath9k broken [was: Linux 5.7.3]
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gabriel C <nix.or.die@googlemail.com>
+Cc:     Jiri Slaby <jirislaby@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        stable <stable@vger.kernel.org>, lwn@lwn.net,
+        angrypenguinpoland@gmail.com, Qiujun Huang <hqjagain@gmail.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1592410366125160@kroah.com>
+ <CAEJqkgjV8p6LtBV8YUGbNb0vYzKOQt4-AMAvYw5mzFr3eicyTg@mail.gmail.com>
+ <b7993e83-1df7-0c93-f6dd-dba9dc10e27a@kernel.org>
+ <CAEJqkggG2ZB8De_zbP2W7Z9eRYve2br8jALaLRhjC33ksLZpTw@mail.gmail.com>
+ <CAEJqkgj4LS7M3zYK51Vagt4rWC9A7uunA+7CvX0Qv=57Or3Ngg@mail.gmail.com>
+ <CAEJqkghJWGsLCj2Wvt-yhzMewjXwrXhSEDpar6rbDpbSA6R8kQ@mail.gmail.com>
+ <20200626133959.GA4024297@kroah.com>
+ <CAEJqkgiACMar-iWsWQgJPAViBBURaNpcOD4FKtp6M8Aw_D4FOw@mail.gmail.com>
+ <CAEJqkgg4Ka8oNL7ELoJrR0-Abz3=caLns48KyDC=DQcym6SRvA@mail.gmail.com>
+ <20200707141100.GE4064836@kroah.com>
+From:   =?UTF-8?B?VmlrdG9yIErDpGdlcnNrw7xwcGVy?= 
+        <viktor_jaegerskuepper@freenet.de>
+Message-ID: <07c8d8fa-8bbc-0b4e-191c-b2635214e8b9@freenet.de>
+Date:   Tue, 7 Jul 2020 22:20:41 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20200707141100.GE4064836@kroah.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US-large
+Content-Transfer-Encoding: 7bit
+X-Originated-At: 2003:e7:717:8b00:6cb2:a2fb:62f3:7f24!58184
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KDQpGaXggbWVtb3J5IGxl
-YWsgaW4gc2V0IGtleS4NCg0KdjEgLT4gdjI6DQoJLSByZW1vdmUgdW5uZWVkZWQga2ZyZWUNCg0K
-Rml4ZXM6IGViOTljYzk1YzNiNiAoIm10NzY6IG10NzYxNTogaW50cm9kdWNlIG10NzY2M3Ugc3Vw
-cG9ydCIpDQpTaWduZWQtb2ZmLWJ5OiBTZWFuIFdhbmcgPHNlYW4ud2FuZ0BtZWRpYXRlay5jb20+
-DQotLS0NCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYi5jICAgfCAy
-MSArKysrKysrKysrKystLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMoKyks
-IDcgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
-YXRlay9tdDc2L210NzYxNS91c2IuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
-NzYvbXQ3NjE1L3VzYi5jDQppbmRleCAwYmEyOGQzN2M0MTQuLmYzYzNhZDM1MDljOCAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3VzYi5jDQor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS91c2IuYw0KQEAg
-LTE2NSwxMiArMTY1LDE2IEBAIF9fbXQ3NjYzdV9tYWNfc2V0X2tleShzdHJ1Y3QgbXQ3NjE1X2Rl
-diAqZGV2LA0KIA0KIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZkZXYtPm10NzYubXV0ZXgpOw0KIA0K
-LQlpZiAoIXN0YSkNCi0JCXJldHVybiAtRUlOVkFMOw0KKwlpZiAoIXN0YSkgew0KKwkJZXJyID0g
-LUVJTlZBTDsNCisJCWdvdG8gb3V0Ow0KKwl9DQogDQogCWNpcGhlciA9IG10NzYxNV9tYWNfZ2V0
-X2NpcGhlcihrZXktPmNpcGhlcik7DQotCWlmIChjaXBoZXIgPT0gTVRfQ0lQSEVSX05PTkUpDQot
-CQlyZXR1cm4gLUVPUE5PVFNVUFA7DQorCWlmIChjaXBoZXIgPT0gTVRfQ0lQSEVSX05PTkUpIHsN
-CisJCWVyciA9IC1FT1BOT1RTVVBQOw0KKwkJZ290byBvdXQ7DQorCX0NCiANCiAJd2NpZCA9ICZ3
-ZC0+c3RhLT53Y2lkOw0KIA0KQEAgLTE3OCwxOSArMTgyLDIyIEBAIF9fbXQ3NjYzdV9tYWNfc2V0
-X2tleShzdHJ1Y3QgbXQ3NjE1X2RldiAqZGV2LA0KIAllcnIgPSBtdDc2MTVfbWFjX3d0YmxfdXBk
-YXRlX2tleShkZXYsIHdjaWQsIGtleS0+a2V5LCBrZXktPmtleWxlbiwNCiAJCQkJCSBjaXBoZXIs
-IGtleS0+Y21kKTsNCiAJaWYgKGVyciA8IDApDQotCQlyZXR1cm4gZXJyOw0KKwkJZ290byBvdXQ7
-DQogDQogCWVyciA9IG10NzYxNV9tYWNfd3RibF91cGRhdGVfcGsoZGV2LCB3Y2lkLCBjaXBoZXIs
-IGtleS0+a2V5aWR4LA0KIAkJCQkJa2V5LT5jbWQpOw0KIAlpZiAoZXJyIDwgMCkNCi0JCXJldHVy
-biBlcnI7DQorCQlnb3RvIG91dDsNCiANCiAJaWYgKGtleS0+Y21kID09IFNFVF9LRVkpDQogCQl3
-Y2lkLT5jaXBoZXIgfD0gQklUKGNpcGhlcik7DQogCWVsc2UNCiAJCXdjaWQtPmNpcGhlciAmPSB+
-QklUKGNpcGhlcik7DQogDQotCXJldHVybiAwOw0KK291dDoNCisJa2ZyZWUoa2V5LT5rZXkpOw0K
-Kw0KKwlyZXR1cm4gZXJyOw0KIH0NCiANCiB2b2lkIG10NzY2M3Vfd3RibF93b3JrKHN0cnVjdCB3
-b3JrX3N0cnVjdCAqd29yaykNCi0tIA0KMi4yNS4xDQo=
+Greg Kroah-Hartman wrote:
+> On Fri, Jun 26, 2020 at 04:40:18PM +0200, Gabriel C wrote:
+>> Am Fr., 26. Juni 2020 um 15:51 Uhr schrieb Gabriel C
+>> <nix.or.die@googlemail.com>:
+>>>
+>>> Am Fr., 26. Juni 2020 um 15:40 Uhr schrieb Greg Kroah-Hartman
+>>> <gregkh@linuxfoundation.org>:
+>>>>
+>>>> On Fri, Jun 26, 2020 at 01:48:59PM +0200, Gabriel C wrote:
+>>>>> Am Do., 25. Juni 2020 um 12:52 Uhr schrieb Gabriel C
+>>>>> <nix.or.die@googlemail.com>:
+>>>>>>
+>>>>>> Am Do., 25. Juni 2020 um 12:48 Uhr schrieb Gabriel C
+>>>>>> <nix.or.die@googlemail.com>:
+>>>>>>>
+>>>>>>> Am Do., 25. Juni 2020 um 06:57 Uhr schrieb Jiri Slaby <jirislaby@kernel.org>:
+>>>>>>>>
+>>>>>>>> On 25. 06. 20, 0:05, Gabriel C wrote:
+>>>>>>>>> Am Mi., 17. Juni 2020 um 18:13 Uhr schrieb Greg Kroah-Hartman
+>>>>>>>>> <gregkh@linuxfoundation.org>:
+>>>>>>>>>>
+>>>>>>>>>> I'm announcing the release of the 5.7.3 kernel.
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> Hello Greg,
+>>>>>>>>>
+>>>>>>>>>> Qiujun Huang (5):
+>>>>>>>>>>       ath9k: Fix use-after-free Read in htc_connect_service
+>>>>>>>>>>       ath9k: Fix use-after-free Read in ath9k_wmi_ctrl_rx
+>>>>>>>>>>       ath9k: Fix use-after-free Write in ath9k_htc_rx_msg
+>>>>>>>>>>       ath9x: Fix stack-out-of-bounds Write in ath9k_hif_usb_rx_cb
+>>>>>>>>>>       ath9k: Fix general protection fault in ath9k_hif_usb_rx_cb
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> We got a report on IRC about 5.7.3+ breaking a USB ath9k Wifi Dongle,
+>>>>>>>>> while working fine on <5.7.3.
+>>>>>>>>>
+>>>>>>>>> I don't have myself such HW, and the reported doesn't have any experience
+>>>>>>>>> in bisecting the kernel, so we build kernels, each with one of the
+>>>>>>>>> above commits reverted,
+>>>>>>>>> to find the bad commit.
+>>>>>>>>>
+>>>>>>>>> The winner is:
+>>>>>>>>>
+>>>>>>>>> commit 6602f080cb28745259e2fab1a4cf55eeb5894f93
+>>>>>>>>> Author: Qiujun Huang <hqjagain@gmail.com>
+>>>>>>>>> Date:   Sat Apr 4 12:18:38 2020 +0800
+>>>>>>>>>
+>>>>>>>>>     ath9k: Fix general protection fault in ath9k_hif_usb_rx_cb
+>>>>>>>>>
+>>>>>>>>>     commit 2bbcaaee1fcbd83272e29f31e2bb7e70d8c49e05 upstream.
+>>>>>>>>> ...
+>>>>>>>>>
+>>>>>>>>> Reverting this one fixed his problem.
+>>>>>>>>
+>>>>>>>> Obvious question: is 5.8-rc1 (containing the commit) broken too?
+>>>>>>>
+>>>>>>> Yes, it does, just checked.
+>>>>>>>
+>>>>>>> git tag --contains 2bbcaaee1fcbd83272e29f31e2bb7e70d8c49e05
+>>>>>>> v5.8-rc1
+>>>>>>> v5.8-rc2
+>>>>>>>
+>>>>>>
+>>>>>> Sorry, I read the wrong, I just woke up.
+>>>>>>
+>>>>>> We didn't test 5.8-rc{1,2} yet but we will today and let you know.
+>>>>>>
+>>>>>
+>>>>> We tested 5.8-rc2 and it is broken too.
+>>>>>
+>>>>> The exact HW name is:
+>>>>>
+>>>>> TP-link tl-wn722n (Atheros AR9271 chip)
+>>>>
+>>>> Great!
+>>>>
+>>>> Can you work with the developers to fix this in Linus's tree first?
+>>>
+>>> I'm the man in the middle, but sure we will try patches or any suggestions
+>>> from developers to identify and fix the problem.
+>>>
+>>>>
+>>>> I bet they want to see the output of 'lsusb -v' for this device to see
+>>>> if the endpoint calculations are correct...
+>>>>
+>>>
+>>> Working on it. As soon the reporter gives me the output, I will post it here.
+>>> I've told him to run it on a broken and one working kernel.
+>>
+>> That is from a good kernel with reverted commit
+>> https://gist.github.com/AngryPenguinPL/07c8e2abd3b103eaf8978a39ad8577d1
+>>
+>> That is from the broken kernel without the commit reverted
+>> https://gist.github.com/AngryPenguinPL/5cdc0dd16ce5e59ff3c32c048e2f5111
+>>
+>> This is from 5.7.5 kernel, I don't have yet a 5.8-rc2 package with the
+>> reverted commit.
+> 
+> Did this ever get resolved?
+> 
+> thanks,
+> 
+> greg k-h
+> 
 
+This bug was also reported on the thread where it had been posted originally:
+https://lore.kernel.org/linux-wireless/20200621020428.6417d6fb@natsu/
+
+I am waiting for Kalle Valo to accept my patch (v2) which reverts the above
+mentioned commit and which looks correct according to him. He wrote that he
+would take a closer look at this as soon as he could.
+
+I don't know how busy Kalle is, especially under the current circumstances.
+I will remind him on Thursday (one week after his last e-mail). At the latest
+I want this to be fixed with the 5.8 release. I think that the patch has to land
+in several networking trees before it reaches the mainline kernel, so if I can
+do anything to speed things up, just tell me.
+
+Thanks,
+Viktor
