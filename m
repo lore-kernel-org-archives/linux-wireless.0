@@ -2,165 +2,219 @@ Return-Path: <SRS0=pikF=AU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F2EC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 14:39:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CEDC433E2
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 15:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10E942074A
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 14:39:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 112F4207FC
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 15:22:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="jzrlJ6Ps"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726806AbgGIOjK (ORCPT
+        id S1728119AbgGIPWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Jul 2020 10:39:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48232 "EHLO
+        Thu, 9 Jul 2020 11:22:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726410AbgGIOjK (ORCPT
+        with ESMTP id S1728108AbgGIPWT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Jul 2020 10:39:10 -0400
-Received: from mout1.freenet.de (mout1.freenet.de [IPv6:2001:748:100:40::2:3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 614EEC08C5CE;
-        Thu,  9 Jul 2020 07:39:10 -0700 (PDT)
-Received: from [195.4.92.163] (helo=mjail0.freenet.de)
-        by mout1.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (port 25) (Exim 4.92 #3)
-        id 1jtXhY-0000fE-Jj; Thu, 09 Jul 2020 16:39:04 +0200
-Received: from localhost ([::1]:43698 helo=mjail0.freenet.de)
-        by mjail0.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (Exim 4.92 #3)
-        id 1jtXhY-0001zB-HJ; Thu, 09 Jul 2020 16:39:04 +0200
-Received: from sub4.freenet.de ([195.4.92.123]:55558)
-        by mjail0.freenet.de with esmtpa (ID viktor.jaegerskuepper@freenet.de) (Exim 4.92 #3)
-        id 1jtXf7-0000ot-KE; Thu, 09 Jul 2020 16:36:33 +0200
-Received: from p200300e7072d05009530c91dafb9c844.dip0.t-ipconnect.de ([2003:e7:72d:500:9530:c91d:afb9:c844]:35596 helo=[127.0.0.1])
-        by sub4.freenet.de with esmtpsa (ID viktor.jaegerskuepper@freenet.de) (TLSv1.2:ECDHE-RSA-CHACHA20-POLY1305:256) (port 465) (Exim 4.92 #3)
-        id 1jtXf7-0006kg-GW; Thu, 09 Jul 2020 16:36:33 +0200
-Subject: Re: [PATCH] Revert "ath9k: Fix general protection fault in
- ath9k_hif_usb_rx_cb"
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Roman Mamedov <rm@romanrm.net>, Qiujun Huang <hqjagain@gmail.com>,
-        ath9k-devel@qca.qualcomm.com, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, anenbupt@gmail.com,
-        syzkaller-bugs@googlegroups.com
-References: <20200404041838.10426-1-hqjagain@gmail.com>
- <20200404041838.10426-6-hqjagain@gmail.com> <20200621020428.6417d6fb@natsu>
- <87lfkff9qe.fsf@codeaurora.org>
- <53940af0-d156-3117-ac86-2f3ccaee9513@freenet.de>
- <87imf6beo0.fsf@codeaurora.org>
-From:   =?UTF-8?B?VmlrdG9yIErDpGdlcnNrw7xwcGVy?= 
-        <viktor_jaegerskuepper@freenet.de>
-Message-ID: <abb99acd-e001-6e80-4d46-fae5ad3887f6@freenet.de>
-Date:   Thu, 9 Jul 2020 16:36:24 +0200
+        Thu, 9 Jul 2020 11:22:19 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40B9FC08E6DC
+        for <linux-wireless@vger.kernel.org>; Thu,  9 Jul 2020 08:22:19 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id u18so1150936pfk.10
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2020 08:22:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=RMOOBkt6BiuVxgQAzukgH1LpqaS9kRk1p3gI+ObCk8A=;
+        b=jzrlJ6Psxebm3YoLPTkaCJx36p17IwBdX/2XjTuRBRRB7pQyapYp/sG9EN0nHWGwNN
+         vTpGQwaR5D/X4WAW9zWuimP4reSpSYzoU72J9th6SMGqr3DkvaI2YWujtefDul6v33Vn
+         Dw5mzLDK4K2Y3STydiNqmQRAxhAmjM2rsISlU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=RMOOBkt6BiuVxgQAzukgH1LpqaS9kRk1p3gI+ObCk8A=;
+        b=rHQ7gSN+wfaeQB61m21HDo6qXGH0nam3sQ4g9bErf4rv7rJqi84NYTr5H9RtalucYw
+         r58cJio7CRClevZHnIlmXDKaVQNM8lBhYbCZamAMor8IVdOeCopafmtQkJstnQN2lemY
+         Q1Z5UklXN6OO/zjTcPvoZAQDvdxlUSMATaxBvYYSzqtAoB1nDn9U8z5iLVDTmgSaejEN
+         iIn/fX1BQj5mFXYHOLPRxzoX78asZ2XEmndsIKXokJGSiEyDJxGISJ55+DsyMkWlsNVc
+         isMdTu7FnvZ+ZwpghcSJM4hNZlMA3xsQX6VawNvqbw1vs/x/5OqVUrizj71+UZblDJQL
+         QD+g==
+X-Gm-Message-State: AOAM532WkYk93Xkaa1XyO6ajW28y0zFpMVqPjTvrEq6MkNXoN9FDnGDa
+        3B0WnpMrQ/C+t/cuVg771szN7g==
+X-Google-Smtp-Source: ABdhPJy/6mLFNsMrvrosVpNqu0HDjvO0HrWBNowFAIRcw5RHr2ZKshxCYnHJzeZ3fr3oioRfz/bZOw==
+X-Received: by 2002:a62:ae0d:: with SMTP id q13mr50726036pff.89.1594308138738;
+        Thu, 09 Jul 2020 08:22:18 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:42b0:34ff:fe3d:58e6])
+        by smtp.gmail.com with ESMTPSA id 137sm3116462pgg.72.2020.07.09.08.22.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Jul 2020 08:22:18 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     kvalo@codeaurora.org, ath10k@lists.infradead.org
+Cc:     linux-arm-msm@vger.kernel.org, briannorris@chromium.org,
+        saiprakash.ranjan@codeaurora.org, linux-wireless@vger.kernel.org,
+        pillair@codeaurora.org, kuabhs@google.com,
+        Douglas Anderson <dianders@chromium.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH v2 2/2] ath10k: Get rid of "per_ce_irq" hw param
+Date:   Thu,  9 Jul 2020 08:21:05 -0700
+Message-Id: <20200709082024.v2.2.I083faa4e62e69f863311c89ae5eb28ec5a229b70@changeid>
+X-Mailer: git-send-email 2.27.0.383.g050319c2ae-goog
+In-Reply-To: <20200709082024.v2.1.I4d2f85ffa06f38532631e864a3125691ef5ffe06@changeid>
+References: <20200709082024.v2.1.I4d2f85ffa06f38532631e864a3125691ef5ffe06@changeid>
 MIME-Version: 1.0
-In-Reply-To: <87imf6beo0.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US-large
 Content-Transfer-Encoding: 8bit
-X-Originated-At: 2003:e7:72d:500:9530:c91d:afb9:c844!35596
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo wrote:
-> Viktor Jägersküpper <viktor_jaegerskuepper@freenet.de> writes:
-> 
->> Kalle Valo writes:
->>> Roman Mamedov <rm@romanrm.net> writes:
->>>
->>>> On Sat,  4 Apr 2020 12:18:38 +0800
->>>> Qiujun Huang <hqjagain@gmail.com> wrote:
->>>>
->>>>> In ath9k_hif_usb_rx_cb interface number is assumed to be 0.
->>>>> usb_ifnum_to_if(urb->dev, 0)
->>>>> But it isn't always true.
->>>>>
->>>>> The case reported by syzbot:
->>>>> https://lore.kernel.org/linux-usb/000000000000666c9c05a1c05d12@google.com
->>>>> usb 2-1: new high-speed USB device number 2 using dummy_hcd
->>>>> usb 2-1: config 1 has an invalid interface number: 2 but max is 0
->>>>> usb 2-1: config 1 has no interface number 0
->>>>> usb 2-1: New USB device found, idVendor=0cf3, idProduct=9271, bcdDevice=
->>>>> 1.08
->>>>> usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
->>>>> general protection fault, probably for non-canonical address
->>>>> 0xdffffc0000000015: 0000 [#1] SMP KASAN
->>>>> KASAN: null-ptr-deref in range [0x00000000000000a8-0x00000000000000af]
->>>>> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.6.0-rc5-syzkaller #0
->>>>>
->>>>> Call Trace
->>>>> __usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
->>>>> usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
->>>>> dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
->>>>> call_timer_fn+0x195/0x6f0 kernel/time/timer.c:1404
->>>>> expire_timers kernel/time/timer.c:1449 [inline]
->>>>> __run_timers kernel/time/timer.c:1773 [inline]
->>>>> __run_timers kernel/time/timer.c:1740 [inline]
->>>>> run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
->>>>> __do_softirq+0x21e/0x950 kernel/softirq.c:292
->>>>> invoke_softirq kernel/softirq.c:373 [inline]
->>>>> irq_exit+0x178/0x1a0 kernel/softirq.c:413
->>>>> exiting_irq arch/x86/include/asm/apic.h:546 [inline]
->>>>> smp_apic_timer_interrupt+0x141/0x540 arch/x86/kernel/apic/apic.c:1146
->>>>> apic_timer_interrupt+0xf/0x20 arch/x86/entry/entry_64.S:829
->>>>>
->>>>> Reported-and-tested-by: syzbot+40d5d2e8a4680952f042@syzkaller.appspotmail.com
->>>>> Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
->>>>
->>>> This causes complete breakage of ath9k operation across all the stable kernel
->>>> series it got backported to, and I guess the mainline as well. Please see:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=208251
->>>> https://bugzilla.redhat.com/show_bug.cgi?id=1848631
->>>
->>> So there's no fix for this? I was under impression that someone fixed
->>> this, but maybe I'm mixing with something else.
->>>
->>> If this is not fixed can someone please submit a patch to revert the
->>> offending commit (or commits) so that we get ath9k working again?
->>>
->>
->> This reverts commit 2bbcaaee1fcbd83272e29f31e2bb7e70d8c49e05 ("ath9k: Fix general protection fault
->> in ath9k_hif_usb_rx_cb") because the driver gets stuck like this:
->>
->>   [    5.778803] usb 1-5: Manufacturer: ATHEROS
->>   [   21.697488] usb 1-5: ath9k_htc: Firmware ath9k_htc/htc_9271-1.4.0.fw requested
->>   [   21.701377] usbcore: registered new interface driver ath9k_htc
->>   [   22.053705] usb 1-5: ath9k_htc: Transferred FW: ath9k_htc/htc_9271-1.4.0.fw, size: 51008
->>   [   22.306182] ath9k_htc 1-5:1.0: ath9k_htc: HTC initialized with 33 credits
->>   [  115.708513] ath9k_htc: Failed to initialize the device
->>   [  115.708683] usb 1-5: ath9k_htc: USB layer deinitialized
->>
->> Reported-by: Roman Mamedov <rm@romanrm.net>
->> Ref: https://bugzilla.kernel.org/show_bug.cgi?id=208251
->> Fixes: 2bbcaaee1fcb ("ath9k: Fix general protection fault in ath9k_hif_usb_rx_cb")
->> Tested-by: Viktor Jägersküpper <viktor_jaegerskuepper@freenet.de>
->> Signed-off-by: Viktor Jägersküpper <viktor_jaegerskuepper@freenet.de>
->> ---
->>
->> I couldn't find any fix for this, so here is the patch which reverts the
->> offending commit. I have tested it with 5.8.0-rc3 and with 5.7.4.
->>
->> Feel free to change the commit message if it is necessary or appropriate, I am
->> just a user affected by this bug.
-> 
-> This was badly formatted:
-> 
-> https://patchwork.kernel.org/patch/11636783/
-> 
-> But v2 looks correct:
-> 
-> https://patchwork.kernel.org/patch/11637341/
-> 
-> Thanks, I'll take a closer look at this as soon as I can.
-> 
+As of the patch ("ath10k: Keep track of which interrupts fired, don't
+poll them") we now have no users of this hardware parameter.  Remove
+it.
 
-Hi Kalle,
+Suggested-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+---
 
-it seems you didn't have time for this so far. If you don't have time at the
-moment, is there someone else who can fix this? Reverting the commit is just the
-first and easy option and fixing this properly can be done after that.
+Changes in v2:
+- Patch ("ath10k: Get rid of "per_ce_irq" hw param") new for v2.
 
-Thanks,
-Viktor
+ drivers/net/wireless/ath/ath10k/core.c | 13 -------------
+ drivers/net/wireless/ath/ath10k/hw.h   |  3 ---
+ 2 files changed, 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 22b6937ac225..9104496a5125 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -119,7 +119,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -155,7 +154,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -220,7 +218,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -255,7 +252,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -290,7 +286,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -328,7 +323,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -369,7 +363,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -417,7 +410,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -462,7 +454,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -497,7 +488,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -534,7 +524,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -603,7 +592,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+-		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
+ 		.hw_filter_reset_required = true,
+@@ -631,7 +619,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.num_wds_entries = TARGET_HL_TLV_NUM_WDS_ENTRIES,
+ 		.target_64bit = true,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL_DUAL_MAC,
+-		.per_ce_irq = true,
+ 		.shadow_reg_support = true,
+ 		.rri_on_ddr = true,
+ 		.hw_filter_reset_required = false,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f16edcb9f326..c6ded21f5ed6 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -593,9 +593,6 @@ struct ath10k_hw_params {
+ 	/* Target rx ring fill level */
+ 	u32 rx_ring_fill_level;
+ 
+-	/* target supporting per ce IRQ */
+-	bool per_ce_irq;
+-
+ 	/* target supporting shadow register for ce write */
+ 	bool shadow_reg_support;
+ 
+-- 
+2.27.0.383.g050319c2ae-goog
+
