@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 984F8C433E2
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 07:29:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E57AEC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 07:29:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7353820786
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 07:29:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE9B62078D
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jul 2020 07:29:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594279746;
-	bh=PPRYyPzFgEQd/S0my9eZqPg1khA8SuW8iSpAIEhQJIg=;
+	s=default; t=1594279770;
+	bh=QYSGAmbCCxKq7PeNXIOIYLZvnbzZZuWLOEUVbks30dw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pIDY/x0zmt7HpjRFMVT69SMUuXjIwz4gNx11GCbMKzYKK0MEn78JG6Kv33AvVS+Rl
-	 HCYFDQi531qbYNEYQ5bOuWVsUi/qyd0dy1VU8ECVgsABixKEm9oFzXej0ri+nNOXBS
-	 9+yfnN45lZju0nzRW6UpsEbhlBL1xXc6PgZ1iI9k=
+	b=VKkNFUozDxlb0kpng9LewqVWWunMwveTNoyoNjl39rJgUT6hjcFHtIyv1r7KR8Jbc
+	 G5xSNQyBxBXovrHkEB/3Kfav8nf2LXXlxgxoSYulLvRyvQP2dtf+SVvMYEud4um+dU
+	 DmhaeL+eTKmPFR3hNq+hKsgP5gVSoU2czdFOGEgQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726446AbgGIH3E (ORCPT
+        id S1726606AbgGIH3Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Jul 2020 03:29:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42290 "EHLO mail.kernel.org"
+        Thu, 9 Jul 2020 03:29:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42590 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726006AbgGIH3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Jul 2020 03:29:02 -0400
+        id S1726006AbgGIH3O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Jul 2020 03:29:14 -0400
 Received: from kozik-lap.mshome.net (unknown [194.230.155.195])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 77F3A2076C;
-        Thu,  9 Jul 2020 07:28:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 50C8120786;
+        Thu,  9 Jul 2020 07:29:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594279741;
-        bh=PPRYyPzFgEQd/S0my9eZqPg1khA8SuW8iSpAIEhQJIg=;
+        s=default; t=1594279754;
+        bh=QYSGAmbCCxKq7PeNXIOIYLZvnbzZZuWLOEUVbks30dw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TE+E1mygHKpDDz+vTu6xBC2QUC3lSi9Kyhm+NAP/iTV4pKdkDFA351l0CVwvFKojz
-         fgrqdj2NK+sADlikZDA1PJuLdZcwlvBTz8yQucbglb5FgscFkKwdNVLPDQJnwOwJzU
-         43hErax8KIzFAhKEsfvJoCvkSfkSbRpNtiaQY7yo=
+        b=1Vq5Rv+mJ7JMcX+20xViqkzmfdNd9iFeiU157MTdQIU4+8aph9P1UPl4B25DGwWL5
+         hrvyew5GekUMVukmUmyVH1Uef1LLdOT9JBeKJZeXTdMus5SGdjIAF3SIv5q2RYQIiw
+         p9JIqnDhZP52EWTpOYsrInFFCFBgKwGPUHdFeSTk=
 From:   Krzysztof Kozlowski <krzk@kernel.org>
 To:     Richard Henderson <rth@twiddle.net>,
         Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
@@ -67,9 +67,9 @@ To:     Richard Henderson <rth@twiddle.net>,
         virtualization@lists.linux-foundation.org,
         linux-arch@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzk@kernel.org>
-Subject: [PATCH v3 2/4] rtl818x: Constify ioreadX() iomem argument (as in generic implementation)
-Date:   Thu,  9 Jul 2020 09:28:35 +0200
-Message-Id: <20200709072837.5869-3-krzk@kernel.org>
+Subject: [PATCH v3 4/4] virtio: pci: Constify ioreadX() iomem argument (as in generic implementation)
+Date:   Thu,  9 Jul 2020 09:28:37 +0200
+Message-Id: <20200709072837.5869-5-krzk@kernel.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200709072837.5869-1-krzk@kernel.org>
 References: <20200709072837.5869-1-krzk@kernel.org>
@@ -87,33 +87,31 @@ consistency among architectures.
 
 Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
 Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8180.h | 6 +++---
+ drivers/virtio/virtio_pci_modern.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8180.h
-index 7948a2da195a..2ff00800d45b 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8180.h
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8180.h
-@@ -150,17 +150,17 @@ void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
- void rtl8180_set_anaparam(struct rtl8180_priv *priv, u32 anaparam);
- void rtl8180_set_anaparam2(struct rtl8180_priv *priv, u32 anaparam2);
- 
--static inline u8 rtl818x_ioread8(struct rtl8180_priv *priv, u8 __iomem *addr)
-+static inline u8 rtl818x_ioread8(struct rtl8180_priv *priv, const u8 __iomem *addr)
+diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+index db93cedd262f..90eff165a719 100644
+--- a/drivers/virtio/virtio_pci_modern.c
++++ b/drivers/virtio/virtio_pci_modern.c
+@@ -27,16 +27,16 @@
+  * method, i.e. 32-bit accesses for 32-bit fields, 16-bit accesses
+  * for 16-bit fields and 8-bit accesses for 8-bit fields.
+  */
+-static inline u8 vp_ioread8(u8 __iomem *addr)
++static inline u8 vp_ioread8(const u8 __iomem *addr)
  {
  	return ioread8(addr);
  }
- 
--static inline u16 rtl818x_ioread16(struct rtl8180_priv *priv, __le16 __iomem *addr)
-+static inline u16 rtl818x_ioread16(struct rtl8180_priv *priv, const __le16 __iomem *addr)
+-static inline u16 vp_ioread16 (__le16 __iomem *addr)
++static inline u16 vp_ioread16 (const __le16 __iomem *addr)
  {
  	return ioread16(addr);
  }
  
--static inline u32 rtl818x_ioread32(struct rtl8180_priv *priv, __le32 __iomem *addr)
-+static inline u32 rtl818x_ioread32(struct rtl8180_priv *priv, const __le32 __iomem *addr)
+-static inline u32 vp_ioread32(__le32 __iomem *addr)
++static inline u32 vp_ioread32(const __le32 __iomem *addr)
  {
  	return ioread32(addr);
  }
