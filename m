@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2528BC433FB
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE7CC433F4
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA9F720720
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7912B2078B
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594385814;
-	bh=qs5i7tZLRTmalWubHewkZVi9GtpErQ319SXkiXORw1w=;
+	s=default; t=1594385807;
+	bh=3MKomN4ffupIByaVtXHkKn9R30CoYl7aywGFLx8bvfc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0Gv7Ovkop0tz3xOQP2/Jf8FSa3TxHkHQ7nFqWf4P4S4bPmih6yU9aNh1bn64GYrTG
-	 kWClXIGYhWY5uFMVP5O68NgKfNxbEX/7PuHZimN0CgzOtboJ2o2Ai/wysazpTeFRuw
-	 FWSH1+RFDwnN08Zpz7MLpAzzSvCPJsaTj6A1uZ4k=
+	b=M04qZtIwosJ6Miwbb9AXy3ZEjvMWMa+Q9wXGFUvwj/prY1Obt14XWIeHOj9Tx5V59
+	 ClpqirbkB+kCvPJu7NtRWVz1N9cnOBlJaVefholSD/D3vc6Y5M32NLRRBkZtdnj96r
+	 4RY1iPEe2aL8FQPJG0Vn4JrN4xnNSSwE8uD90kic=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727975AbgGJM4x (ORCPT
+        id S1727966AbgGJM4q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jul 2020 08:56:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42984 "EHLO mail.kernel.org"
+        Fri, 10 Jul 2020 08:56:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42834 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727932AbgGJM4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jul 2020 08:56:50 -0400
+        id S1727961AbgGJM4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Jul 2020 08:56:43 -0400
 Received: from localhost.localdomain.com (unknown [151.48.133.17])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 17DAE20772;
-        Fri, 10 Jul 2020 12:56:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7B7D320772;
+        Fri, 10 Jul 2020 12:56:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594385808;
-        bh=qs5i7tZLRTmalWubHewkZVi9GtpErQ319SXkiXORw1w=;
+        s=default; t=1594385802;
+        bh=3MKomN4ffupIByaVtXHkKn9R30CoYl7aywGFLx8bvfc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m33Xudlx616DY3GK1sY7vh1gAqivkRQOGEo4qaCVvzhZ7GtLbgP9NPzxh6YSbQHkX
-         fQO5mxo96j+uTbbF44lfWGdyFVCNN81c5PwEjKbFtCKhR/7R3IIxN0DdOEUy6i9TWU
-         Au1ZrsDVOu8kg7hbN/P/wcudAI7/H14iPIuGjluw=
+        b=NY/9pd/RbWsn3352SZfc3h2oeIGB8nWV4ixwlJjZxswRvtYcDx/OQTHw8DP57ML5m
+         Y8iOXAbK2FGVgtrRzwnwofLQBe4+38eV/EUb0yzSev08u7tWj3dnVEQBJI/D8oNmz0
+         pSKADi4BY5+7JQKXrj8Y7q9J/C2Mv//0Fb940VwM=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
         ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH 6/6] mt76: mt7615: introduce mt7663s support
-Date:   Fri, 10 Jul 2020 14:56:20 +0200
-Message-Id: <747c6f2b823f97953f86e1685959309956d59c88.1594384887.git.lorenzo@kernel.org>
+Subject: [PATCH 4/6] mt76: mt7615: introduce mt7663-common module
+Date:   Fri, 10 Jul 2020 14:56:18 +0200
+Message-Id: <8ab37f2e29cfe05f8630fc14cd16a19e945e65a3.1594384887.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1594384887.git.lorenzo@kernel.org>
 References: <cover.1594384887.git.lorenzo@kernel.org>
@@ -57,638 +57,936 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Introduce mt7663-common module as container for shared code between usb
+and sdio driver.
 
-Introduce support for mt7663s 802.11ac 2x2:2 chipset to mt7615 driver.
-
-Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/Kconfig |  11 +
- .../wireless/mediatek/mt76/mt7615/Makefile    |   2 +
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  42 +++-
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  10 +
- .../net/wireless/mediatek/mt76/mt7615/mmio.c  |   1 +
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |   7 +
- .../net/wireless/mediatek/mt76/mt7615/regs.h  |  12 ++
- .../net/wireless/mediatek/mt76/mt7615/sdio.c  | 204 ++++++++++++++++++
- .../wireless/mediatek/mt76/mt7615/sdio_mcu.c  | 161 ++++++++++++++
- .../wireless/mediatek/mt76/mt7615/usb_sdio.c  |   1 +
- 10 files changed, 450 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
+ .../net/wireless/mediatek/mt76/mt7615/Kconfig |   6 +-
+ .../wireless/mediatek/mt76/mt7615/Makefile    |   4 +-
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  13 +-
+ .../net/wireless/mediatek/mt76/mt7615/usb.c   | 255 +-----------
+ .../wireless/mediatek/mt76/mt7615/usb_init.c  | 145 -------
+ .../wireless/mediatek/mt76/mt7615/usb_sdio.c  | 390 ++++++++++++++++++
+ 6 files changed, 424 insertions(+), 389 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/usb_init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/Kconfig b/drivers/net/wireless/mediatek/mt76/mt7615/Kconfig
-index f844b374754d..0f921639d948 100644
+index c094260b0f89..f844b374754d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/Kconfig
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/Kconfig
-@@ -42,3 +42,14 @@ config MT7663U
- 	  This adds support for MT7663U 802.11ac 2x2:2 wireless devices.
+@@ -28,10 +28,14 @@ config MT7622_WMAC
+ 	  which has the same feature set as a MT7615, but limited to
+ 	  2.4 GHz only.
  
- 	  To compile this driver as a module, choose M here.
++config MT7663_COMMON
++	tristate
++	select MT7615_COMMON
 +
-+config MT7663S
-+	tristate "MediaTek MT7663S (SDIO) support"
-+	select MT76_SDIO
+ config MT7663U
+ 	tristate "MediaTek MT7663U (USB) support"
+ 	select MT76_USB
+-	select MT7615_COMMON
 +	select MT7663_COMMON
-+	depends on MAC80211
-+	depends on MMC
-+	help
-+	  This adds support for MT7663S 802.11ac 2x2:2 wireless devices.
-+
-+	  To compile this driver as a module, choose M here.
+ 	depends on MAC80211
+ 	depends on USB
+ 	help
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/Makefile b/drivers/net/wireless/mediatek/mt76/mt7615/Makefile
-index 889b6719064a..09a3c834fb16 100644
+index d2ad84cb5244..889b6719064a 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/Makefile
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/Makefile
-@@ -4,6 +4,7 @@ obj-$(CONFIG_MT7615_COMMON) += mt7615-common.o
+@@ -2,6 +2,7 @@
+ 
+ obj-$(CONFIG_MT7615_COMMON) += mt7615-common.o
  obj-$(CONFIG_MT7615E) += mt7615e.o
- obj-$(CONFIG_MT7663_COMMON) += mt7663-common.o
++obj-$(CONFIG_MT7663_COMMON) += mt7663-common.o
  obj-$(CONFIG_MT7663U) += mt7663u.o
-+obj-$(CONFIG_MT7663S) += mt7663s.o
  
  CFLAGS_trace.o := -I$(src)
+@@ -13,4 +14,5 @@ mt7615-common-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ mt7615e-y := pci.o pci_init.o dma.o pci_mac.o mmio.o
+ mt7615e-$(CONFIG_MT7622_WMAC) += soc.o
  
-@@ -16,3 +17,4 @@ mt7615e-$(CONFIG_MT7622_WMAC) += soc.o
- 
- mt7663-common-y := usb_sdio.o
- mt7663u-y := usb.o usb_mcu.o
-+mt7663s-y := sdio.o sdio_mcu.o
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 11293ea10898..554f8fa4f0b7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -146,7 +146,10 @@ void mt7615_mcu_fill_msg(struct mt7615_dev *dev, struct sk_buff *skb,
- 		mcu_txd->cid = mcu_cmd;
- 		break;
- 	case MCU_CE_PREFIX:
--		mcu_txd->set_query = MCU_Q_SET;
-+		if (cmd & MCU_QUERY_MASK)
-+			mcu_txd->set_query = MCU_Q_QUERY;
-+		else
-+			mcu_txd->set_query = MCU_Q_SET;
- 		mcu_txd->cid = mcu_cmd;
- 		break;
- 	default:
-@@ -214,6 +217,14 @@ mt7615_mcu_parse_response(struct mt7615_dev *dev, int cmd,
- 		ret = le32_to_cpu(event->status);
- 		break;
- 	}
-+	case MCU_CMD_REG_READ: {
-+		struct mt7615_mcu_reg_event *event;
-+
-+		skb_pull(skb, sizeof(*rxd));
-+		event = (struct mt7615_mcu_reg_event *)skb->data;
-+		ret = (int)le32_to_cpu(event->val);
-+		break;
-+	}
- 	default:
- 		break;
- 	}
-@@ -3945,3 +3956,32 @@ int mt7615_mcu_set_p2p_oppps(struct ieee80211_hw *hw,
- 	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_P2P_OPPPS,
- 				   &req, sizeof(req), false);
- }
-+
-+u32 mt7615_mcu_reg_rr(struct mt76_dev *dev, u32 offset)
-+{
-+	struct {
-+		__le32 addr;
-+		__le32 val;
-+	} __packed req = {
-+		.addr = cpu_to_le32(offset),
-+	};
-+
-+	return __mt76_mcu_send_msg(dev, MCU_CMD_REG_READ,
-+				   &req, sizeof(req), true);
-+}
-+EXPORT_SYMBOL_GPL(mt7615_mcu_reg_rr);
-+
-+void mt7615_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val)
-+{
-+	struct {
-+		__le32 addr;
-+		__le32 val;
-+	} __packed req = {
-+		.addr = cpu_to_le32(offset),
-+		.val = cpu_to_le32(val),
-+	};
-+
-+	__mt76_mcu_send_msg(dev, MCU_CMD_REG_WRITE,
-+			    &req, sizeof(req), false);
-+}
-+EXPORT_SYMBOL_GPL(mt7615_mcu_reg_wr);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index e8c7aa5c35ce..7b856e9eee1e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -81,6 +81,7 @@ enum {
- 	MCU_EVENT_GENERIC = 0x01,
- 	MCU_EVENT_ACCESS_REG = 0x02,
- 	MCU_EVENT_MT_PATCH_SEM = 0x04,
-+	MCU_EVENT_REG_ACCESS = 0x05,
- 	MCU_EVENT_SCAN_DONE = 0x0d,
- 	MCU_EVENT_ROC = 0x10,
- 	MCU_EVENT_BSS_ABSENCE  = 0x11,
-@@ -242,6 +243,8 @@ enum {
- #define MCU_CMD_MASK		~(MCU_FW_PREFIX | MCU_UNI_PREFIX |	\
- 				  MCU_CE_PREFIX | MCU_QUERY_PREFIX)
- 
-+#define MCU_QUERY_MASK		BIT(16)
-+
- enum {
- 	MCU_CMD_TARGET_ADDRESS_LEN_REQ = MCU_FW_PREFIX | 0x01,
- 	MCU_CMD_FW_START_REQ = MCU_FW_PREFIX | 0x02,
-@@ -429,6 +432,11 @@ struct nt7615_sched_scan_done {
- 	__le16 pad;
- } __packed;
- 
-+struct mt7615_mcu_reg_event {
-+	__le32 reg;
-+	__le32 val;
-+} __packed;
-+
- struct mt7615_mcu_bss_event {
- 	u8 bss_idx;
- 	u8 is_absent;
-@@ -581,6 +589,8 @@ enum {
- 	MCU_CMD_SET_P2P_OPPPS = MCU_CE_PREFIX | 0x33,
- 	MCU_CMD_SCHED_SCAN_ENABLE = MCU_CE_PREFIX | 0x61,
- 	MCU_CMD_SCHED_SCAN_REQ = MCU_CE_PREFIX | 0x62,
-+	MCU_CMD_REG_WRITE = MCU_CE_PREFIX | 0xc0,
-+	MCU_CMD_REG_READ = MCU_CE_PREFIX | MCU_QUERY_MASK | 0xc0,
- };
- 
- #define MCU_CMD_ACK		BIT(0)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-index 461ac6c42271..133f93a6ed1b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-@@ -43,6 +43,7 @@ const u32 mt7663e_reg_map[] = {
- 	[MT_CSR_BASE]		= 0x07000,
- 	[MT_PLE_BASE]		= 0x08000,
- 	[MT_PSE_BASE]		= 0x0c000,
-+	[MT_PP_BASE]            = 0x0e000,
- 	[MT_CFG_BASE]		= 0x20000,
- 	[MT_AGG_BASE]		= 0x22000,
- 	[MT_TMAC_BASE]		= 0x24000,
+-mt7663u-y := usb.o usb_mcu.o usb_init.o
++mt7663-common-y := usb_sdio.o
++mt7663u-y := usb.o usb_mcu.o
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 097cd150d879..0d7690819527 100644
+index f70d49cbc027..097cd150d879 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -656,6 +656,8 @@ int mt7615_mcu_update_arp_filter(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *info);
+@@ -409,6 +409,7 @@ extern struct ieee80211_rate mt7615_rates[12];
+ extern const struct ieee80211_ops mt7615_ops;
+ extern const u32 mt7615e_reg_map[__MT_BASE_MAX];
+ extern const u32 mt7663e_reg_map[__MT_BASE_MAX];
++extern const u32 mt7663_usb_sdio_reg_map[__MT_BASE_MAX];
+ extern struct pci_driver mt7615_pci_driver;
+ extern struct platform_driver mt7622_wmac_driver;
+ extern const struct mt76_testmode_ops mt7615_testmode_ops;
+@@ -657,8 +658,16 @@ int mt7615_mcu_update_arp_filter(struct ieee80211_hw *hw,
  int __mt7663_load_firmware(struct mt7615_dev *dev);
-+u32 mt7615_mcu_reg_rr(struct mt76_dev *dev, u32 offset);
-+void mt7615_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val);
  
  /* usb */
- int mt7663_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
-@@ -670,4 +672,9 @@ void mt7663_usb_sdio_wtbl_work(struct work_struct *work);
- int mt7663_usb_sdio_register_device(struct mt7615_dev *dev);
+-void mt7663u_wtbl_work(struct work_struct *work);
++int mt7663_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
++				   enum mt76_txq_id qid, struct mt76_wcid *wcid,
++				   struct ieee80211_sta *sta,
++				   struct mt76_tx_info *tx_info);
++bool mt7663_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update);
++void mt7663_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
++				     enum mt76_txq_id qid,
++				     struct mt76_queue_entry *e);
++void mt7663_usb_sdio_wtbl_work(struct work_struct *work);
++int mt7663_usb_sdio_register_device(struct mt7615_dev *dev);
  int mt7663u_mcu_init(struct mt7615_dev *dev);
+-int mt7663u_register_device(struct mt7615_dev *dev);
  
-+/* sdio */
-+int mt7663s_mcu_init(struct mt7615_dev *dev);
-+int mt7663s_driver_own(struct mt7615_dev *dev);
-+int mt7663s_firmware_own(struct mt7615_dev *dev);
-+
  #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-index 8d2c54918e68..8b21c025fd46 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-@@ -28,6 +28,7 @@ enum mt7615_reg_base {
- 	MT_PCIE_REMAP_BASE2,
- 	MT_TOP_MISC_BASE,
- 	MT_EFUSE_ADDR_BASE,
-+	MT_PP_BASE,
- 	__MT_BASE_MAX,
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+index aba926f1eeb5..f1b4a6316db3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+@@ -15,30 +15,6 @@
+ #include "mcu.h"
+ #include "regs.h"
  
-@@ -152,6 +153,8 @@ enum mt7615_reg_base {
+-static const u32 mt7663u_reg_map[] = {
+-	[MT_TOP_CFG_BASE]	= 0x80020000,
+-	[MT_HW_BASE]		= 0x80000000,
+-	[MT_DMA_SHDL_BASE]	= 0x5000a000,
+-	[MT_HIF_BASE]		= 0x50000000,
+-	[MT_CSR_BASE]		= 0x40000000,
+-	[MT_EFUSE_ADDR_BASE]	= 0x78011000,
+-	[MT_TOP_MISC_BASE]	= 0x81020000,
+-	[MT_PLE_BASE]		= 0x82060000,
+-	[MT_PSE_BASE]		= 0x82068000,
+-	[MT_WTBL_BASE_ADDR]	= 0x820e0000,
+-	[MT_CFG_BASE]		= 0x820f0000,
+-	[MT_AGG_BASE]		= 0x820f2000,
+-	[MT_ARB_BASE]		= 0x820f3000,
+-	[MT_TMAC_BASE]		= 0x820f4000,
+-	[MT_RMAC_BASE]		= 0x820f5000,
+-	[MT_DMA_BASE]		= 0x820f7000,
+-	[MT_PF_BASE]		= 0x820f8000,
+-	[MT_WTBL_BASE_ON]	= 0x820f9000,
+-	[MT_WTBL_BASE_OFF]	= 0x820f9800,
+-	[MT_LPON_BASE]		= 0x820fb000,
+-	[MT_MIB_BASE]		= 0x820fd000,
+-};
+-
+ static const struct usb_device_id mt7615_device_table[] = {
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0e8d, 0x7663, 0xff, 0xff, 0xff) },
+ 	{ },
+@@ -63,221 +39,19 @@ static void mt7663u_cleanup(struct mt7615_dev *dev)
+ 	mt76u_queues_deinit(&dev->mt76);
+ }
  
- #define MT_PLE(ofs)			((dev)->reg_map[MT_PLE_BASE] + (ofs))
+-static void
+-mt7663u_mac_write_txwi(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+-		       enum mt76_txq_id qid, struct ieee80211_sta *sta,
+-		       struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_key_conf *key = info->control.hw_key;
+-	__le32 *txwi;
+-	int pid;
+-
+-	if (!wcid)
+-		wcid = &dev->mt76.global_wcid;
+-
+-	pid = mt76_tx_status_skb_add(&dev->mt76, wcid, skb);
+-
+-	txwi = (__le32 *)(skb->data - MT_USB_TXD_SIZE);
+-	memset(txwi, 0, MT_USB_TXD_SIZE);
+-	mt7615_mac_write_txwi(dev, txwi, skb, wcid, sta, pid, key, false);
+-	skb_push(skb, MT_USB_TXD_SIZE);
+-}
+-
+-static int
+-__mt7663u_mac_set_rates(struct mt7615_dev *dev,
+-			struct mt7615_wtbl_desc *wd)
+-{
+-	struct mt7615_rate_desc *rate = &wd->rate;
+-	struct mt7615_sta *sta = wd->sta;
+-	u32 w5, w27, addr, val;
+-
+-	lockdep_assert_held(&dev->mt76.mutex);
+-
+-	if (!sta)
+-		return -EINVAL;
+-
+-	if (!mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000))
+-		return -ETIMEDOUT;
+-
+-	addr = mt7615_mac_wtbl_addr(dev, sta->wcid.idx);
+-
+-	w27 = mt76_rr(dev, addr + 27 * 4);
+-	w27 &= ~MT_WTBL_W27_CC_BW_SEL;
+-	w27 |= FIELD_PREP(MT_WTBL_W27_CC_BW_SEL, rate->bw);
+-
+-	w5 = mt76_rr(dev, addr + 5 * 4);
+-	w5 &= ~(MT_WTBL_W5_BW_CAP | MT_WTBL_W5_CHANGE_BW_RATE |
+-		MT_WTBL_W5_MPDU_OK_COUNT |
+-		MT_WTBL_W5_MPDU_FAIL_COUNT |
+-		MT_WTBL_W5_RATE_IDX);
+-	w5 |= FIELD_PREP(MT_WTBL_W5_BW_CAP, rate->bw) |
+-	      FIELD_PREP(MT_WTBL_W5_CHANGE_BW_RATE,
+-			 rate->bw_idx ? rate->bw_idx - 1 : 7);
+-
+-	mt76_wr(dev, MT_WTBL_RIUCR0, w5);
+-
+-	mt76_wr(dev, MT_WTBL_RIUCR1,
+-		FIELD_PREP(MT_WTBL_RIUCR1_RATE0, rate->probe_val) |
+-		FIELD_PREP(MT_WTBL_RIUCR1_RATE1, rate->val[0]) |
+-		FIELD_PREP(MT_WTBL_RIUCR1_RATE2_LO, rate->val[1]));
+-
+-	mt76_wr(dev, MT_WTBL_RIUCR2,
+-		FIELD_PREP(MT_WTBL_RIUCR2_RATE2_HI, rate->val[1] >> 8) |
+-		FIELD_PREP(MT_WTBL_RIUCR2_RATE3, rate->val[1]) |
+-		FIELD_PREP(MT_WTBL_RIUCR2_RATE4, rate->val[2]) |
+-		FIELD_PREP(MT_WTBL_RIUCR2_RATE5_LO, rate->val[2]));
+-
+-	mt76_wr(dev, MT_WTBL_RIUCR3,
+-		FIELD_PREP(MT_WTBL_RIUCR3_RATE5_HI, rate->val[2] >> 4) |
+-		FIELD_PREP(MT_WTBL_RIUCR3_RATE6, rate->val[3]) |
+-		FIELD_PREP(MT_WTBL_RIUCR3_RATE7, rate->val[3]));
+-
+-	mt76_wr(dev, MT_WTBL_UPDATE,
+-		FIELD_PREP(MT_WTBL_UPDATE_WLAN_IDX, sta->wcid.idx) |
+-		MT_WTBL_UPDATE_RATE_UPDATE |
+-		MT_WTBL_UPDATE_TX_COUNT_CLEAR);
+-
+-	mt76_wr(dev, addr + 27 * 4, w27);
+-
+-	sta->rate_probe = sta->rateset[rate->rateset].probe_rate.idx != -1;
+-
+-	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_MODE); /* TSF read */
+-	val = mt76_rr(dev, MT_LPON_UTTR0);
+-	sta->rate_set_tsf = (val & ~BIT(0)) | rate->rateset;
+-
+-	if (!(sta->wcid.tx_info & MT_WCID_TX_INFO_SET))
+-		mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000);
+-
+-	sta->rate_count = 2 * MT7615_RATE_RETRY * sta->n_rates;
+-	sta->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+-
+-	return 0;
+-}
+-
+-static int
+-__mt7663u_mac_set_key(struct mt7615_dev *dev,
+-		      struct mt7615_wtbl_desc *wd)
+-{
+-	struct mt7615_key_desc *key = &wd->key;
+-	struct mt7615_sta *sta = wd->sta;
+-	enum mt7615_cipher_type cipher;
+-	struct mt76_wcid *wcid;
+-	int err;
+-
+-	lockdep_assert_held(&dev->mt76.mutex);
+-
+-	if (!sta) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+-	cipher = mt7615_mac_get_cipher(key->cipher);
+-	if (cipher == MT_CIPHER_NONE) {
+-		err = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	wcid = &wd->sta->wcid;
+-
+-	mt7615_mac_wtbl_update_cipher(dev, wcid, cipher, key->cmd);
+-	err = mt7615_mac_wtbl_update_key(dev, wcid, key->key, key->keylen,
+-					 cipher, key->cmd);
+-	if (err < 0)
+-		goto out;
+-
+-	err = mt7615_mac_wtbl_update_pk(dev, wcid, cipher, key->keyidx,
+-					key->cmd);
+-	if (err < 0)
+-		goto out;
+-
+-	if (key->cmd == SET_KEY)
+-		wcid->cipher |= BIT(cipher);
+-	else
+-		wcid->cipher &= ~BIT(cipher);
+-
+-out:
+-	kfree(key->key);
+-
+-	return err;
+-}
+-
+-void mt7663u_wtbl_work(struct work_struct *work)
++static void mt7663u_init_work(struct work_struct *work)
+ {
+-	struct mt7615_wtbl_desc *wd, *wd_next;
+-	struct list_head wd_list;
+ 	struct mt7615_dev *dev;
  
-+#define MT_PLE_PG_HIF0_GROUP		MT_PLE(0x110)
-+#define MT_HIF0_MIN_QUOTA		GENMASK(11, 0)
- #define MT_PLE_FL_Q0_CTRL		MT_PLE(0x1b0)
- #define MT_PLE_FL_Q1_CTRL		MT_PLE(0x1b4)
- #define MT_PLE_FL_Q2_CTRL		MT_PLE(0x1b8)
-@@ -161,6 +164,10 @@ enum mt7615_reg_base {
- 					       ((n) << 2))
- 
- #define MT_PSE(ofs)			((dev)->reg_map[MT_PSE_BASE] + (ofs))
-+#define MT_PSE_PG_HIF0_GROUP		MT_PSE(0x110)
-+#define MT_HIF0_MIN_QUOTA		GENMASK(11, 0)
-+#define MT_PSE_PG_HIF1_GROUP		MT_PSE(0x118)
-+#define MT_HIF1_MIN_QUOTA		GENMASK(11, 0)
- #define MT_PSE_QUEUE_EMPTY		MT_PSE(0x0b4)
- #define MT_HIF_0_EMPTY_MASK		BIT(16)
- #define MT_HIF_1_EMPTY_MASK		BIT(17)
-@@ -168,6 +175,11 @@ enum mt7615_reg_base {
- #define MT_PSE_PG_INFO			MT_PSE(0x194)
- #define MT_PSE_SRC_CNT			GENMASK(27, 16)
- 
-+#define MT_PP(ofs)			((dev)->reg_map[MT_PP_BASE] + (ofs))
-+#define MT_PP_TXDWCNT			MT_PP(0x0)
-+#define MT_PP_TXDWCNT_TX0_ADD_DW_CNT	GENMASK(7, 0)
-+#define MT_PP_TXDWCNT_TX1_ADD_DW_CNT	GENMASK(15, 8)
-+
- #define MT_WF_PHY_BASE			0x82070000
- #define MT_WF_PHY(ofs)			(MT_WF_PHY_BASE + (ofs))
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-new file mode 100644
-index 000000000000..a58c650dddaf
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-@@ -0,0 +1,204 @@
-+// SPDX-License-Identifier: ISC
-+/* Copyright (C) 2020 MediaTek Inc.
-+ *
-+ * Author: Felix Fietkau <nbd@nbd.name>
-+ *	   Lorenzo Bianconi <lorenzo@kernel.org>
-+ *	   Sean Wang <sean.wang@mediatek.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/iopoll.h>
-+#include <linux/module.h>
-+
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio_func.h>
-+
-+#include "mt7615.h"
-+#include "mac.h"
-+#include "mcu.h"
-+#include "regs.h"
-+
-+static const struct sdio_device_id mt7663s_table[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, 0x7603) },
-+	{ }	/* Terminating entry */
-+};
-+
-+static void mt7663s_init_work(struct work_struct *work)
-+{
-+	struct mt7615_dev *dev;
-+
+-	dev = (struct mt7615_dev *)container_of(work, struct mt7615_dev,
+-						wtbl_work);
+-
+-	INIT_LIST_HEAD(&wd_list);
+-	spin_lock_bh(&dev->mt76.lock);
+-	list_splice_init(&dev->wd_head, &wd_list);
+-	spin_unlock_bh(&dev->mt76.lock);
+-
+-	list_for_each_entry_safe(wd, wd_next, &wd_list, node) {
+-		list_del(&wd->node);
+-
+-		mt7615_mutex_acquire(dev);
+-
+-		switch (wd->type) {
+-		case MT7615_WTBL_RATE_DESC:
+-			__mt7663u_mac_set_rates(dev, wd);
+-			break;
+-		case MT7615_WTBL_KEY_DESC:
+-			__mt7663u_mac_set_key(dev, wd);
+-			break;
+-		}
+-
+-		mt7615_mutex_release(dev);
+-
+-		kfree(wd);
+-	}
+-}
+-
+-static void
+-mt7663u_tx_complete_skb(struct mt76_dev *mdev, enum mt76_txq_id qid,
+-			struct mt76_queue_entry *e)
+-{
+-	skb_pull(e->skb, MT_USB_HDR_SIZE + MT_USB_TXD_SIZE);
+-	mt76_tx_complete_skb(mdev, e->skb);
+-}
+-
+-static int
+-mt7663u_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+-		       enum mt76_txq_id qid, struct mt76_wcid *wcid,
+-		       struct ieee80211_sta *sta,
+-		       struct mt76_tx_info *tx_info)
+-{
+-	struct mt7615_sta *msta = container_of(wcid, struct mt7615_sta, wcid);
+-	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
+-	struct sk_buff *skb = tx_info->skb;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-
+-	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) &&
+-	    !msta->rate_probe) {
+-		/* request to configure sampling rate */
+-		spin_lock_bh(&dev->mt76.lock);
+-		mt7615_mac_set_rates(&dev->phy, msta, &info->control.rates[0],
+-				     msta->rates);
+-		spin_unlock_bh(&dev->mt76.lock);
+-	}
+-	mt7663u_mac_write_txwi(dev, wcid, qid, sta, skb);
+-
+-	put_unaligned_le32(skb->len, skb_push(skb, sizeof(skb->len)));
+-	return mt76_skb_adjust_pad(skb);
+-}
+-
+-static bool mt7663u_tx_status_data(struct mt76_dev *mdev, u8 *update)
+-{
+-	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
+-
+-	mt7615_mutex_acquire(dev);
+-	mt7615_mac_sta_poll(dev);
+-	mt7615_mutex_release(dev);
 +	dev = container_of(work, struct mt7615_dev, mcu_work);
-+	if (mt7663s_mcu_init(dev))
++	if (mt7663u_mcu_init(dev))
 +		return;
-+
+ 
+-	return 0;
 +	mt7615_mcu_set_eeprom(dev);
 +	mt7615_mac_init(dev);
 +	mt7615_phy_init(dev);
 +	mt7615_mcu_del_wtbl_all(dev);
 +	mt7615_check_offload_capability(dev);
-+}
-+
-+static int mt7663s_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta)
-+{
-+	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
-+	struct mt76_sdio *sdio = &mdev->sdio;
-+	u32 pse, ple;
-+	int err;
-+
-+	err = mt7615_mac_sta_add(mdev, vif, sta);
-+	if (err < 0)
-+		return err;
-+
-+	/* init sched data quota */
-+	pse = mt76_get_field(dev, MT_PSE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
-+	ple = mt76_get_field(dev, MT_PLE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
-+
-+	mutex_lock(&sdio->sched.lock);
-+	sdio->sched.pse_data_quota = pse;
-+	sdio->sched.ple_data_quota = ple;
-+	mutex_unlock(&sdio->sched.lock);
-+
-+	return 0;
-+}
-+
-+static int mt7663s_probe(struct sdio_func *func,
-+			 const struct sdio_device_id *id)
-+{
-+	static const struct mt76_driver_ops drv_ops = {
-+		.txwi_size = MT_USB_TXD_SIZE,
-+		.drv_flags = MT_DRV_RX_DMA_HDR | MT_DRV_HW_MGMT_TXQ,
+ }
+ 
+ static int mt7663u_probe(struct usb_interface *usb_intf,
+@@ -286,9 +60,9 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ 	static const struct mt76_driver_ops drv_ops = {
+ 		.txwi_size = MT_USB_TXD_SIZE,
+ 		.drv_flags = MT_DRV_RX_DMA_HDR | MT_DRV_HW_MGMT_TXQ,
+-		.tx_prepare_skb = mt7663u_tx_prepare_skb,
+-		.tx_complete_skb = mt7663u_tx_complete_skb,
+-		.tx_status_data = mt7663u_tx_status_data,
 +		.tx_prepare_skb = mt7663_usb_sdio_tx_prepare_skb,
 +		.tx_complete_skb = mt7663_usb_sdio_tx_complete_skb,
 +		.tx_status_data = mt7663_usb_sdio_tx_status_data,
-+		.rx_skb = mt7615_queue_rx_skb,
-+		.sta_ps = mt7615_sta_ps,
-+		.sta_add = mt7663s_sta_add,
-+		.sta_remove = mt7615_mac_sta_remove,
-+		.update_survey = mt7615_update_channel,
-+	};
-+	struct ieee80211_ops *ops;
-+	struct mt7615_dev *dev;
-+	struct mt76_dev *mdev;
-+	int ret;
-+
-+	ops = devm_kmemdup(&func->dev, &mt7615_ops, sizeof(mt7615_ops),
-+			   GFP_KERNEL);
-+	if (!ops)
-+		return -ENOMEM;
-+
-+	mdev = mt76_alloc_device(&func->dev, sizeof(*dev), ops, &drv_ops);
-+	if (!mdev)
-+		return -ENOMEM;
-+
-+	dev = container_of(mdev, struct mt7615_dev, mt76);
-+
-+	INIT_WORK(&dev->mcu_work, mt7663s_init_work);
+ 		.rx_skb = mt7615_queue_rx_skb,
+ 		.sta_ps = mt7615_sta_ps,
+ 		.sta_add = mt7615_mac_sta_add,
+@@ -318,7 +92,8 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ 
+ 	usb_set_intfdata(usb_intf, dev);
+ 
+-	dev->reg_map = mt7663u_reg_map;
++	INIT_WORK(&dev->mcu_work, mt7663u_init_work);
 +	dev->reg_map = mt7663_usb_sdio_reg_map;
-+	dev->ops = ops;
-+	sdio_set_drvdata(func, dev);
-+
-+	ret = mt76s_init(mdev, func);
-+	if (ret < 0)
-+		goto err_free;
-+
-+	mdev->rev = (mt76_rr(dev, MT_HW_CHIPID) << 16) |
-+		    (mt76_rr(dev, MT_HW_REV) & 0xff);
-+	dev_dbg(mdev->dev, "ASIC revision: %04x\n", mdev->rev);
-+
-+	ret = mt76s_alloc_queues(&dev->mt76);
-+	if (ret)
-+		goto err_deinit;
-+
+ 	dev->ops = ops;
+ 	ret = mt76u_init(mdev, usb_intf, true);
+ 	if (ret < 0)
+@@ -356,7 +131,7 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ 	if (ret)
+ 		goto error;
+ 
+-	ret = mt7663u_register_device(dev);
 +	ret = mt7663_usb_sdio_register_device(dev);
-+	if (ret)
-+		goto err_deinit;
-+
-+	return 0;
-+
-+err_deinit:
-+	mt76s_deinit(&dev->mt76);
-+err_free:
-+	mt76_free_device(&dev->mt76);
-+
-+	return ret;
-+}
-+
-+static void mt7663s_remove(struct sdio_func *func)
-+{
-+	struct mt7615_dev *dev = sdio_get_drvdata(func);
-+
-+	if (!test_and_clear_bit(MT76_STATE_INITIALIZED, &dev->mphy.state))
-+		return;
-+
-+	ieee80211_unregister_hw(dev->mt76.hw);
-+	mt76s_deinit(&dev->mt76);
-+	mt76_free_device(&dev->mt76);
-+}
-+
-+#ifdef CONFIG_PM
-+static int mt7663s_suspend(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct mt7615_dev *mdev = sdio_get_drvdata(func);
-+
-+	if (!test_bit(MT76_STATE_SUSPEND, &mdev->mphy.state) &&
-+	    mt7615_firmware_offload(mdev)) {
-+		int err;
-+
-+		err = mt7615_mcu_set_hif_suspend(mdev, true);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	mt76s_stop_txrx(&mdev->mt76);
-+
-+	return mt7663s_firmware_own(mdev);
-+}
-+
-+static int mt7663s_resume(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct mt7615_dev *mdev = sdio_get_drvdata(func);
-+	int err;
-+
-+	err = mt7663s_driver_own(mdev);
-+	if (err)
-+		return err;
-+
-+	if (!test_bit(MT76_STATE_SUSPEND, &mdev->mphy.state) &&
-+	    mt7615_firmware_offload(mdev))
-+		err = mt7615_mcu_set_hif_suspend(mdev, false);
-+
-+	return err;
-+}
-+
-+static const struct dev_pm_ops mt7663s_pm_ops = {
-+	.suspend = mt7663s_suspend,
-+	.resume = mt7663s_resume,
-+};
-+#endif
-+
-+MODULE_DEVICE_TABLE(sdio, mt7663s_table);
-+MODULE_FIRMWARE(MT7663_OFFLOAD_FIRMWARE_N9);
-+MODULE_FIRMWARE(MT7663_OFFLOAD_ROM_PATCH);
-+MODULE_FIRMWARE(MT7663_FIRMWARE_N9);
-+MODULE_FIRMWARE(MT7663_ROM_PATCH);
-+
-+static struct sdio_driver mt7663s_driver = {
-+	.name		= KBUILD_MODNAME,
-+	.probe		= mt7663s_probe,
-+	.remove		= mt7663s_remove,
-+	.id_table	= mt7663s_table,
-+#ifdef CONFIG_PM
-+	.drv = {
-+		.pm = &mt7663s_pm_ops,
-+	}
-+#endif
-+};
-+module_sdio_driver(mt7663s_driver);
-+
-+MODULE_AUTHOR("Sean Wang <sean.wang@mediatek.com>");
-+MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
+ 	if (ret)
+ 		goto error_freeq;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_init.c
+deleted file mode 100644
+index 1fbc9601391d..000000000000
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_init.c
++++ /dev/null
+@@ -1,145 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/* Copyright (C) 2019 MediaTek Inc.
+- *
+- * Author: Felix Fietkau <nbd@nbd.name>
+- *	   Lorenzo Bianconi <lorenzo@kernel.org>
+- *	   Sean Wang <sean.wang@mediatek.com>
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-
+-#include "mt7615.h"
+-#include "mac.h"
+-#include "regs.h"
+-
+-static int mt7663u_dma_sched_init(struct mt7615_dev *dev)
+-{
+-	int i;
+-
+-	mt76_rmw(dev, MT_DMA_SHDL(MT_DMASHDL_PKT_MAX_SIZE),
+-		 MT_DMASHDL_PKT_MAX_SIZE_PLE | MT_DMASHDL_PKT_MAX_SIZE_PSE,
+-		 FIELD_PREP(MT_DMASHDL_PKT_MAX_SIZE_PLE, 1) |
+-		 FIELD_PREP(MT_DMASHDL_PKT_MAX_SIZE_PSE, 8));
+-
+-	/* disable refill group 5 - group 15 and raise group 2
+-	 * and 3 as high priority.
+-	 */
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_REFILL), 0xffe00006);
+-	mt76_clear(dev, MT_DMA_SHDL(MT_DMASHDL_PAGE), BIT(16));
+-
+-	for (i = 0; i < 5; i++)
+-		mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_GROUP_QUOTA(i)),
+-			FIELD_PREP(MT_DMASHDL_GROUP_QUOTA_MIN, 0x3) |
+-			FIELD_PREP(MT_DMASHDL_GROUP_QUOTA_MAX, 0x1ff));
+-
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(0)), 0x42104210);
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(1)), 0x42104210);
+-
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(2)), 0x4444);
+-
+-	/* group pririority from high to low:
+-	 * 15 (cmd groups) > 4 > 3 > 2 > 1 > 0.
+-	 */
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_SCHED_SET0), 0x6501234f);
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_SCHED_SET1), 0xedcba987);
+-	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_OPTIONAL), 0x7004801c);
+-
+-	mt76_wr(dev, MT_UDMA_WLCFG_1,
+-		FIELD_PREP(MT_WL_TX_TMOUT_LMT, 80000) |
+-		FIELD_PREP(MT_WL_RX_AGG_PKT_LMT, 1));
+-
+-	/* setup UDMA Rx Flush */
+-	mt76_clear(dev, MT_UDMA_WLCFG_0, MT_WL_RX_FLUSH);
+-	/* hif reset */
+-	mt76_set(dev, MT_HIF_RST, MT_HIF_LOGIC_RST_N);
+-
+-	mt76_set(dev, MT_UDMA_WLCFG_0,
+-		 MT_WL_RX_AGG_EN | MT_WL_RX_EN | MT_WL_TX_EN |
+-		 MT_WL_RX_MPSZ_PAD0 | MT_TICK_1US_EN |
+-		 MT_WL_TX_TMOUT_FUNC_EN);
+-	mt76_rmw(dev, MT_UDMA_WLCFG_0, MT_WL_RX_AGG_LMT | MT_WL_RX_AGG_TO,
+-		 FIELD_PREP(MT_WL_RX_AGG_LMT, 32) |
+-		 FIELD_PREP(MT_WL_RX_AGG_TO, 100));
+-
+-	return 0;
+-}
+-
+-static int mt7663u_init_hardware(struct mt7615_dev *dev)
+-{
+-	int ret, idx;
+-
+-	ret = mt7615_eeprom_init(dev, MT_EFUSE_BASE);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = mt7663u_dma_sched_init(dev);
+-	if (ret)
+-		return ret;
+-
+-	set_bit(MT76_STATE_INITIALIZED, &dev->mphy.state);
+-
+-	/* Beacon and mgmt frames should occupy wcid 0 */
+-	idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7615_WTBL_STA - 1);
+-	if (idx)
+-		return -ENOSPC;
+-
+-	dev->mt76.global_wcid.idx = idx;
+-	dev->mt76.global_wcid.hw_key_idx = -1;
+-	rcu_assign_pointer(dev->mt76.wcid[idx], &dev->mt76.global_wcid);
+-
+-	return 0;
+-}
+-
+-static void mt7663u_init_work(struct work_struct *work)
+-{
+-	struct mt7615_dev *dev;
+-
+-	dev = container_of(work, struct mt7615_dev, mcu_work);
+-	if (mt7663u_mcu_init(dev))
+-		return;
+-
+-	mt7615_mcu_set_eeprom(dev);
+-	mt7615_mac_init(dev);
+-	mt7615_phy_init(dev);
+-	mt7615_mcu_del_wtbl_all(dev);
+-	mt7615_check_offload_capability(dev);
+-}
+-
+-int mt7663u_register_device(struct mt7615_dev *dev)
+-{
+-	struct ieee80211_hw *hw = mt76_hw(dev);
+-	int err;
+-
+-	INIT_WORK(&dev->wtbl_work, mt7663u_wtbl_work);
+-	INIT_WORK(&dev->mcu_work, mt7663u_init_work);
+-	INIT_LIST_HEAD(&dev->wd_head);
+-	mt7615_init_device(dev);
+-
+-	err = mt7663u_init_hardware(dev);
+-	if (err)
+-		return err;
+-
+-	hw->extra_tx_headroom += MT_USB_HDR_SIZE + MT_USB_TXD_SIZE;
+-	/* check hw sg support in order to enable AMSDU */
+-	hw->max_tx_fragments = dev->mt76.usb.sg_en ? MT_HW_TXP_MAX_BUF_NUM : 1;
+-
+-	err = mt76_register_device(&dev->mt76, true, mt7615_rates,
+-				   ARRAY_SIZE(mt7615_rates));
+-	if (err < 0)
+-		return err;
+-
+-	if (!dev->mt76.usb.sg_en) {
+-		struct ieee80211_sta_vht_cap *vht_cap;
+-
+-		/* decrease max A-MSDU size if SG is not supported */
+-		vht_cap = &dev->mphy.sband_5g.sband.vht_cap;
+-		vht_cap->cap &= ~IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454;
+-	}
+-
+-	ieee80211_queue_work(hw, &dev->mcu_work);
+-	mt7615_init_txpower(dev, &dev->mphy.sband_2g.sband);
+-	mt7615_init_txpower(dev, &dev->mphy.sband_5g.sband);
+-
+-	return mt7615_init_debugfs(dev);
+-}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
 new file mode 100644
-index 000000000000..a61de4df09c3
+index 000000000000..610cc1fbec5b
 --- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-@@ -0,0 +1,161 @@
-+// SPDX-License-Identifier: GPL-2.0
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+@@ -0,0 +1,390 @@
++// SPDX-License-Identifier: ISC
 +/* Copyright (C) 2020 MediaTek Inc.
 + *
-+ * Author: Felix Fietkau <nbd@nbd.name>
-+ *	   Lorenzo Bianconi <lorenzo@kernel.org>
++ * Author: Lorenzo Bianconi <lorenzo@kernel.org>
 + *	   Sean Wang <sean.wang@mediatek.com>
 + */
++
 +#include <linux/kernel.h>
-+#include <linux/mmc/sdio_func.h>
 +#include <linux/module.h>
++#include <linux/usb.h>
 +
 +#include "mt7615.h"
 +#include "mac.h"
 +#include "mcu.h"
 +#include "regs.h"
-+#include "../sdio.h"
 +
-+static int mt7663s_mcu_init_sched(struct mt7615_dev *dev)
++const u32 mt7663_usb_sdio_reg_map[] = {
++	[MT_TOP_CFG_BASE]	= 0x80020000,
++	[MT_HW_BASE]		= 0x80000000,
++	[MT_DMA_SHDL_BASE]	= 0x5000a000,
++	[MT_HIF_BASE]		= 0x50000000,
++	[MT_CSR_BASE]		= 0x40000000,
++	[MT_EFUSE_ADDR_BASE]	= 0x78011000,
++	[MT_TOP_MISC_BASE]	= 0x81020000,
++	[MT_PLE_BASE]		= 0x82060000,
++	[MT_PSE_BASE]		= 0x82068000,
++	[MT_WTBL_BASE_ADDR]	= 0x820e0000,
++	[MT_CFG_BASE]		= 0x820f0000,
++	[MT_AGG_BASE]		= 0x820f2000,
++	[MT_ARB_BASE]		= 0x820f3000,
++	[MT_TMAC_BASE]		= 0x820f4000,
++	[MT_RMAC_BASE]		= 0x820f5000,
++	[MT_DMA_BASE]		= 0x820f7000,
++	[MT_PF_BASE]		= 0x820f8000,
++	[MT_WTBL_BASE_ON]	= 0x820f9000,
++	[MT_WTBL_BASE_OFF]	= 0x820f9800,
++	[MT_LPON_BASE]		= 0x820fb000,
++	[MT_MIB_BASE]		= 0x820fd000,
++};
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_reg_map);
++
++static void
++mt7663_usb_sdio_write_txwi(struct mt7615_dev *dev, struct mt76_wcid *wcid,
++			   enum mt76_txq_id qid, struct ieee80211_sta *sta,
++			   struct sk_buff *skb)
 +{
-+	struct mt76_sdio *sdio = &dev->mt76.sdio;
-+	u32 pse0, ple, pse1, txdwcnt;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_key_conf *key = info->control.hw_key;
++	__le32 *txwi;
++	int pid;
 +
-+	pse0 = mt76_get_field(dev, MT_PSE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
-+	pse1 = mt76_get_field(dev, MT_PSE_PG_HIF1_GROUP, MT_HIF1_MIN_QUOTA);
-+	ple = mt76_get_field(dev, MT_PLE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
-+	txdwcnt = mt76_get_field(dev, MT_PP_TXDWCNT,
-+				 MT_PP_TXDWCNT_TX1_ADD_DW_CNT);
++	if (!wcid)
++		wcid = &dev->mt76.global_wcid;
 +
-+	mutex_lock(&sdio->sched.lock);
++	pid = mt76_tx_status_skb_add(&dev->mt76, wcid, skb);
 +
-+	sdio->sched.pse_data_quota = pse0;
-+	sdio->sched.ple_data_quota = ple;
-+	sdio->sched.pse_mcu_quota = pse1;
-+	sdio->sched.deficit = txdwcnt << 2;
++	txwi = (__le32 *)(skb->data - MT_USB_TXD_SIZE);
++	memset(txwi, 0, MT_USB_TXD_SIZE);
++	mt7615_mac_write_txwi(dev, txwi, skb, wcid, sta, pid, key, false);
++	skb_push(skb, MT_USB_TXD_SIZE);
++}
 +
-+	mutex_unlock(&sdio->sched.lock);
++static int
++mt7663_usb_sdio_set_rates(struct mt7615_dev *dev,
++			  struct mt7615_wtbl_desc *wd)
++{
++	struct mt7615_rate_desc *rate = &wd->rate;
++	struct mt7615_sta *sta = wd->sta;
++	u32 w5, w27, addr, val;
++
++	lockdep_assert_held(&dev->mt76.mutex);
++
++	if (!sta)
++		return -EINVAL;
++
++	if (!mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000))
++		return -ETIMEDOUT;
++
++	addr = mt7615_mac_wtbl_addr(dev, sta->wcid.idx);
++
++	w27 = mt76_rr(dev, addr + 27 * 4);
++	w27 &= ~MT_WTBL_W27_CC_BW_SEL;
++	w27 |= FIELD_PREP(MT_WTBL_W27_CC_BW_SEL, rate->bw);
++
++	w5 = mt76_rr(dev, addr + 5 * 4);
++	w5 &= ~(MT_WTBL_W5_BW_CAP | MT_WTBL_W5_CHANGE_BW_RATE |
++		MT_WTBL_W5_MPDU_OK_COUNT |
++		MT_WTBL_W5_MPDU_FAIL_COUNT |
++		MT_WTBL_W5_RATE_IDX);
++	w5 |= FIELD_PREP(MT_WTBL_W5_BW_CAP, rate->bw) |
++	      FIELD_PREP(MT_WTBL_W5_CHANGE_BW_RATE,
++			 rate->bw_idx ? rate->bw_idx - 1 : 7);
++
++	mt76_wr(dev, MT_WTBL_RIUCR0, w5);
++
++	mt76_wr(dev, MT_WTBL_RIUCR1,
++		FIELD_PREP(MT_WTBL_RIUCR1_RATE0, rate->probe_val) |
++		FIELD_PREP(MT_WTBL_RIUCR1_RATE1, rate->val[0]) |
++		FIELD_PREP(MT_WTBL_RIUCR1_RATE2_LO, rate->val[1]));
++
++	mt76_wr(dev, MT_WTBL_RIUCR2,
++		FIELD_PREP(MT_WTBL_RIUCR2_RATE2_HI, rate->val[1] >> 8) |
++		FIELD_PREP(MT_WTBL_RIUCR2_RATE3, rate->val[1]) |
++		FIELD_PREP(MT_WTBL_RIUCR2_RATE4, rate->val[2]) |
++		FIELD_PREP(MT_WTBL_RIUCR2_RATE5_LO, rate->val[2]));
++
++	mt76_wr(dev, MT_WTBL_RIUCR3,
++		FIELD_PREP(MT_WTBL_RIUCR3_RATE5_HI, rate->val[2] >> 4) |
++		FIELD_PREP(MT_WTBL_RIUCR3_RATE6, rate->val[3]) |
++		FIELD_PREP(MT_WTBL_RIUCR3_RATE7, rate->val[3]));
++
++	mt76_wr(dev, MT_WTBL_UPDATE,
++		FIELD_PREP(MT_WTBL_UPDATE_WLAN_IDX, sta->wcid.idx) |
++		MT_WTBL_UPDATE_RATE_UPDATE |
++		MT_WTBL_UPDATE_TX_COUNT_CLEAR);
++
++	mt76_wr(dev, addr + 27 * 4, w27);
++
++	sta->rate_probe = sta->rateset[rate->rateset].probe_rate.idx != -1;
++
++	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_MODE); /* TSF read */
++	val = mt76_rr(dev, MT_LPON_UTTR0);
++	sta->rate_set_tsf = (val & ~BIT(0)) | rate->rateset;
++
++	if (!(sta->wcid.tx_info & MT_WCID_TX_INFO_SET))
++		mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000);
++
++	sta->rate_count = 2 * MT7615_RATE_RETRY * sta->n_rates;
++	sta->wcid.tx_info |= MT_WCID_TX_INFO_SET;
 +
 +	return 0;
 +}
 +
 +static int
-+mt7663s_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
-+			 int cmd, bool wait_resp)
++mt7663_usb_sdio_set_key(struct mt7615_dev *dev,
++			struct mt7615_wtbl_desc *wd)
++{
++	struct mt7615_key_desc *key = &wd->key;
++	struct mt7615_sta *sta = wd->sta;
++	enum mt7615_cipher_type cipher;
++	struct mt76_wcid *wcid;
++	int err;
++
++	lockdep_assert_held(&dev->mt76.mutex);
++
++	if (!sta) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	cipher = mt7615_mac_get_cipher(key->cipher);
++	if (cipher == MT_CIPHER_NONE) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	wcid = &wd->sta->wcid;
++
++	mt7615_mac_wtbl_update_cipher(dev, wcid, cipher, key->cmd);
++	err = mt7615_mac_wtbl_update_key(dev, wcid, key->key, key->keylen,
++					 cipher, key->cmd);
++	if (err < 0)
++		goto out;
++
++	err = mt7615_mac_wtbl_update_pk(dev, wcid, cipher, key->keyidx,
++					key->cmd);
++	if (err < 0)
++		goto out;
++
++	if (key->cmd == SET_KEY)
++		wcid->cipher |= BIT(cipher);
++	else
++		wcid->cipher &= ~BIT(cipher);
++out:
++	kfree(key->key);
++
++	return err;
++}
++
++void mt7663_usb_sdio_wtbl_work(struct work_struct *work)
++{
++	struct mt7615_wtbl_desc *wd, *wd_next;
++	struct list_head wd_list;
++	struct mt7615_dev *dev;
++
++	dev = (struct mt7615_dev *)container_of(work, struct mt7615_dev,
++						wtbl_work);
++
++	INIT_LIST_HEAD(&wd_list);
++	spin_lock_bh(&dev->mt76.lock);
++	list_splice_init(&dev->wd_head, &wd_list);
++	spin_unlock_bh(&dev->mt76.lock);
++
++	list_for_each_entry_safe(wd, wd_next, &wd_list, node) {
++		list_del(&wd->node);
++
++		mt7615_mutex_acquire(dev);
++
++		switch (wd->type) {
++		case MT7615_WTBL_RATE_DESC:
++			mt7663_usb_sdio_set_rates(dev, wd);
++			break;
++		case MT7615_WTBL_KEY_DESC:
++			mt7663_usb_sdio_set_key(dev, wd);
++			break;
++		}
++
++		mt7615_mutex_release(dev);
++
++		kfree(wd);
++	}
++}
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_wtbl_work);
++
++bool mt7663_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update)
 +{
 +	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
-+	int ret, seq;
 +
-+	mutex_lock(&mdev->mcu.mutex);
++	mt7615_mutex_acquire(dev);
++	mt7615_mac_sta_poll(dev);
++	mt7615_mutex_release(dev);
 +
-+	mt7615_mcu_fill_msg(dev, skb, cmd, &seq);
-+	ret = mt76_tx_queue_skb_raw(dev, MT_TXQ_MCU, skb, 0);
-+	if (ret)
-+		goto out;
-+
-+	mt76_queue_kick(dev, mdev->q_tx[MT_TXQ_MCU].q);
-+	if (wait_resp)
-+		ret = mt7615_mcu_wait_response(dev, cmd, seq);
-+
-+out:
-+	mutex_unlock(&mdev->mcu.mutex);
-+
-+	return ret;
++	return 0;
 +}
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_tx_status_data);
 +
-+int mt7663s_driver_own(struct mt7615_dev *dev)
++void mt7663_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
++				     enum mt76_txq_id qid,
++				     struct mt76_queue_entry *e)
 +{
-+	struct sdio_func *func = dev->mt76.sdio.func;
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	u32 status;
-+	int ret;
++	unsigned int headroom = MT_USB_TXD_SIZE;
 +
-+	if (!test_and_clear_bit(MT76_STATE_PM, &mphy->state))
-+		goto out;
++	if (mt76_is_usb(mdev))
++		headroom += MT_USB_HDR_SIZE;
++	skb_pull(e->skb, headroom);
 +
-+	sdio_claim_host(func);
++	mt76_tx_complete_skb(mdev, e->skb);
++}
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_tx_complete_skb);
 +
-+	sdio_writel(func, WHLPCR_FW_OWN_REQ_CLR, MCR_WHLPCR, 0);
++int mt7663_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
++				   enum mt76_txq_id qid, struct mt76_wcid *wcid,
++				   struct ieee80211_sta *sta,
++				   struct mt76_tx_info *tx_info)
++{
++	struct mt7615_sta *msta = container_of(wcid, struct mt7615_sta, wcid);
++	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
++	struct sk_buff *skb = tx_info->skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 +
-+	ret = readx_poll_timeout(mt76s_read_pcr, &dev->mt76, status,
-+				 status & WHLPCR_IS_DRIVER_OWN, 2000, 1000000);
-+	if (ret < 0) {
-+		dev_err(dev->mt76.dev, "Cannot get ownership from device");
-+		set_bit(MT76_STATE_PM, &mphy->state);
-+		sdio_release_host(func);
-+
-+		return ret;
++	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) &&
++	    !msta->rate_probe) {
++		/* request to configure sampling rate */
++		spin_lock_bh(&dev->mt76.lock);
++		mt7615_mac_set_rates(&dev->phy, msta, &info->control.rates[0],
++				     msta->rates);
++		spin_unlock_bh(&dev->mt76.lock);
 +	}
 +
-+	sdio_release_host(func);
++	mt7663_usb_sdio_write_txwi(dev, wcid, qid, sta, skb);
++	if (mt76_is_usb(mdev))
++		put_unaligned_le32(skb->len, skb_push(skb, sizeof(skb->len)));
 +
-+out:
-+	dev->pm.last_activity = jiffies;
++	return mt76_skb_adjust_pad(skb);
++}
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_tx_prepare_skb);
++
++static int mt7663u_dma_sched_init(struct mt7615_dev *dev)
++{
++	int i;
++
++	mt76_rmw(dev, MT_DMA_SHDL(MT_DMASHDL_PKT_MAX_SIZE),
++		 MT_DMASHDL_PKT_MAX_SIZE_PLE | MT_DMASHDL_PKT_MAX_SIZE_PSE,
++		 FIELD_PREP(MT_DMASHDL_PKT_MAX_SIZE_PLE, 1) |
++		 FIELD_PREP(MT_DMASHDL_PKT_MAX_SIZE_PSE, 8));
++
++	/* disable refill group 5 - group 15 and raise group 2
++	 * and 3 as high priority.
++	 */
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_REFILL), 0xffe00006);
++	mt76_clear(dev, MT_DMA_SHDL(MT_DMASHDL_PAGE), BIT(16));
++
++	for (i = 0; i < 5; i++)
++		mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_GROUP_QUOTA(i)),
++			FIELD_PREP(MT_DMASHDL_GROUP_QUOTA_MIN, 0x3) |
++			FIELD_PREP(MT_DMASHDL_GROUP_QUOTA_MAX, 0x1ff));
++
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(0)), 0x42104210);
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(1)), 0x42104210);
++
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_Q_MAP(2)), 0x4444);
++
++	/* group pririority from high to low:
++	 * 15 (cmd groups) > 4 > 3 > 2 > 1 > 0.
++	 */
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_SCHED_SET0), 0x6501234f);
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_SCHED_SET1), 0xedcba987);
++	mt76_wr(dev, MT_DMA_SHDL(MT_DMASHDL_OPTIONAL), 0x7004801c);
++
++	mt76_wr(dev, MT_UDMA_WLCFG_1,
++		FIELD_PREP(MT_WL_TX_TMOUT_LMT, 80000) |
++		FIELD_PREP(MT_WL_RX_AGG_PKT_LMT, 1));
++
++	/* setup UDMA Rx Flush */
++	mt76_clear(dev, MT_UDMA_WLCFG_0, MT_WL_RX_FLUSH);
++	/* hif reset */
++	mt76_set(dev, MT_HIF_RST, MT_HIF_LOGIC_RST_N);
++
++	mt76_set(dev, MT_UDMA_WLCFG_0,
++		 MT_WL_RX_AGG_EN | MT_WL_RX_EN | MT_WL_TX_EN |
++		 MT_WL_RX_MPSZ_PAD0 | MT_TICK_1US_EN |
++		 MT_WL_TX_TMOUT_FUNC_EN);
++	mt76_rmw(dev, MT_UDMA_WLCFG_0, MT_WL_RX_AGG_LMT | MT_WL_RX_AGG_TO,
++		 FIELD_PREP(MT_WL_RX_AGG_LMT, 32) |
++		 FIELD_PREP(MT_WL_RX_AGG_TO, 100));
 +
 +	return 0;
 +}
 +
-+int mt7663s_firmware_own(struct mt7615_dev *dev)
++static int mt7663_usb_sdio_init_hardware(struct mt7615_dev *dev)
 +{
-+	struct sdio_func *func = dev->mt76.sdio.func;
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	u32 status;
-+	int ret;
++	int ret, idx;
 +
-+	if (test_and_set_bit(MT76_STATE_PM, &mphy->state))
-+		return 0;
++	ret = mt7615_eeprom_init(dev, MT_EFUSE_BASE);
++	if (ret < 0)
++		return ret;
 +
-+	sdio_claim_host(func);
-+
-+	sdio_writel(func, WHLPCR_FW_OWN_REQ_SET, MCR_WHLPCR, 0);
-+
-+	ret = readx_poll_timeout(mt76s_read_pcr, &dev->mt76, status,
-+				 !(status & WHLPCR_IS_DRIVER_OWN), 2000, 1000000);
-+	if (ret < 0) {
-+		dev_err(dev->mt76.dev, "Cannot set ownership to device");
-+		clear_bit(MT76_STATE_PM, &mphy->state);
++	if (mt76_is_usb(&dev->mt76)) {
++		ret = mt7663u_dma_sched_init(dev);
++		if (ret)
++			return ret;
 +	}
 +
-+	sdio_release_host(func);
++	set_bit(MT76_STATE_INITIALIZED, &dev->mphy.state);
 +
-+	return ret;
-+}
++	/* Beacon and mgmt frames should occupy wcid 0 */
++	idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7615_WTBL_STA - 1);
++	if (idx)
++		return -ENOSPC;
 +
-+int mt7663s_mcu_init(struct mt7615_dev *dev)
-+{
-+	static const struct mt76_mcu_ops mt7663s_mcu_ops = {
-+		.headroom = sizeof(struct mt7615_mcu_txd),
-+		.tailroom = MT_USB_TAIL_SIZE,
-+		.mcu_skb_send_msg = mt7663s_mcu_send_message,
-+		.mcu_send_msg = mt7615_mcu_msg_send,
-+		.mcu_restart = mt7615_mcu_restart,
-+		.mcu_rr = mt7615_mcu_reg_rr,
-+		.mcu_wr = mt7615_mcu_reg_wr,
-+	};
-+	int ret;
-+
-+	ret = mt7663s_driver_own(dev);
-+	if (ret)
-+		return ret;
-+
-+	dev->mt76.mcu_ops = &mt7663s_mcu_ops,
-+
-+	ret = mt76_get_field(dev, MT_CONN_ON_MISC, MT_TOP_MISC2_FW_N9_RDY);
-+	if (ret) {
-+		mt7615_mcu_restart(&dev->mt76);
-+		if (!mt76_poll_msec(dev, MT_CONN_ON_MISC,
-+				    MT_TOP_MISC2_FW_N9_RDY, 0, 500))
-+			return -EIO;
-+	}
-+
-+	ret = __mt7663_load_firmware(dev);
-+	if (ret)
-+		return ret;
-+
-+	ret = mt7663s_mcu_init_sched(dev);
-+	if (ret)
-+		return ret;
-+
-+	set_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state);
++	dev->mt76.global_wcid.idx = idx;
++	dev->mt76.global_wcid.hw_key_idx = -1;
++	rcu_assign_pointer(dev->mt76.wcid[idx], &dev->mt76.global_wcid);
 +
 +	return 0;
 +}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-index 50009bc5ee8d..6dffdaaa9ad5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
-@@ -24,6 +24,7 @@ const u32 mt7663_usb_sdio_reg_map[] = {
- 	[MT_TOP_MISC_BASE]	= 0x81020000,
- 	[MT_PLE_BASE]		= 0x82060000,
- 	[MT_PSE_BASE]		= 0x82068000,
-+	[MT_PP_BASE]		= 0x8206c000,
- 	[MT_WTBL_BASE_ADDR]	= 0x820e0000,
- 	[MT_CFG_BASE]		= 0x820f0000,
- 	[MT_AGG_BASE]		= 0x820f2000,
++
++int mt7663_usb_sdio_register_device(struct mt7615_dev *dev)
++{
++	struct ieee80211_hw *hw = mt76_hw(dev);
++	int err;
++
++	INIT_WORK(&dev->wtbl_work, mt7663_usb_sdio_wtbl_work);
++	INIT_LIST_HEAD(&dev->wd_head);
++	mt7615_init_device(dev);
++
++	err = mt7663_usb_sdio_init_hardware(dev);
++	if (err)
++		return err;
++
++	/* check hw sg support in order to enable AMSDU */
++	hw->max_tx_fragments = dev->mt76.usb.sg_en ? MT_HW_TXP_MAX_BUF_NUM : 1;
++	hw->extra_tx_headroom += MT_USB_TXD_SIZE;
++	if (mt76_is_usb(&dev->mt76))
++		hw->extra_tx_headroom += MT_USB_HDR_SIZE;
++
++	err = mt76_register_device(&dev->mt76, true, mt7615_rates,
++				   ARRAY_SIZE(mt7615_rates));
++	if (err < 0)
++		return err;
++
++	if (!dev->mt76.usb.sg_en) {
++		struct ieee80211_sta_vht_cap *vht_cap;
++
++		/* decrease max A-MSDU size if SG is not supported */
++		vht_cap = &dev->mphy.sband_5g.sband.vht_cap;
++		vht_cap->cap &= ~IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454;
++	}
++
++	ieee80211_queue_work(hw, &dev->mcu_work);
++	mt7615_init_txpower(dev, &dev->mphy.sband_2g.sband);
++	mt7615_init_txpower(dev, &dev->mphy.sband_5g.sband);
++
++	return mt7615_init_debugfs(dev);
++}
++EXPORT_SYMBOL_GPL(mt7663_usb_sdio_register_device);
++
++MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
++MODULE_AUTHOR("Sean Wang <sean.wang@mediatek.com>");
++MODULE_LICENSE("Dual BSD/GPL");
 -- 
 2.26.2
 
