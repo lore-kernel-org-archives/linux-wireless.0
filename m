@@ -2,51 +2,54 @@ Return-Path: <SRS0=HO9U=AV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA46C433E6
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 513E3C433E7
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD6722078B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D81820720
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 12:56:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594385795;
-	bh=zEuVCwMPtcmeOrD97rEoLQftJ9vTfb19Y2/O838xjmQ=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=OLKEiVm90mGUmpmjc/WBZ8lbolhx0pTz4erFSCFZstZCd2fZYVDJgXT66/1EV2ZzQ
-	 GkchO6Rpfvy1dUii1y0506Z0fjYW9AjuNVp/fuaBadabUH/ekZ6VG0p//CG6iF1EUt
-	 jOZYcalcU5ZLxohCvabwBRwprrdO/m+WNrsGT9F8=
+	s=default; t=1594385799;
+	bh=INrxJce8wnjRmOKZo8VgPo9cOequhPcM5DfO4gr3Y+U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=AyPrHnCNVd/TyvASgTIhJcHNtVDO8i6Wv3YHZpx8U2RAxmInilqtSFnnbQKCTb0rO
+	 fdqXUGoyzoLdPhTNliCHEkSwM+7nZtpq09cUj6Hcf4Xf9PTf/FNdiTNuML6pxKUyoM
+	 UqQosQw34zVmYka1mwA0qvWbJ4n5EvL2jPuka2r8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727873AbgGJM4c (ORCPT
+        id S1727914AbgGJM4i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jul 2020 08:56:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42598 "EHLO mail.kernel.org"
+        Fri, 10 Jul 2020 08:56:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42716 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727861AbgGJM43 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jul 2020 08:56:29 -0400
+        id S1727871AbgGJM4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Jul 2020 08:56:37 -0400
 Received: from localhost.localdomain.com (unknown [151.48.133.17])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7B94620772;
-        Fri, 10 Jul 2020 12:56:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3CFD620772;
+        Fri, 10 Jul 2020 12:56:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594385788;
-        bh=zEuVCwMPtcmeOrD97rEoLQftJ9vTfb19Y2/O838xjmQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iJb5IRo7LIsk+gt6Jbd3t4MdAN1na6880DGZv+LSv5/CdJqrO41t5qoikkbeM1u5a
-         DOlO5eF2bPJVwAxFdy8AaCTXO9lJMrpu0jSxiY5pkFdDshG8q1IKeGjMZFs5uVlccA
-         T9Kz0nK+mKqOXu2nFQA2eE2EQUTvQs1J7/bL/Q9A=
+        s=default; t=1594385796;
+        bh=INrxJce8wnjRmOKZo8VgPo9cOequhPcM5DfO4gr3Y+U=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=wLn/EUvRTd7fdTtvFvE86CQ9C6wR9QKRiOifJOybB0QLR3bbSrxYFRWK2/UWAAlLh
+         OP4f3EvzFgdUY82zrqCX3ByHR6FGKOYDQaNxpXEQQbvulEXJI2y2/RHCku2toOef9C
+         iX4UeAfhYzkqz8wGnKCR+Z14h1VR5oTXUd9zk2BQ=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
         ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH 0/6] introduce support for mt7663s devices
-Date:   Fri, 10 Jul 2020 14:56:14 +0200
-Message-Id: <cover.1594384887.git.lorenzo@kernel.org>
+Subject: [PATCH 2/6] mt76: mt76u: add mt76_skb_adjust_pad utility routine
+Date:   Fri, 10 Jul 2020 14:56:16 +0200
+Message-Id: <a68408cc6dcb838a16c40f6a4207141ed76a6c6e.1594384887.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <cover.1594384887.git.lorenzo@kernel.org>
+References: <cover.1594384887.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,53 +57,166 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce support for mt7663s 802.11ac 2x2:2 chipset to mt7615 driver.
-Introduce mt76_sdio module as common sdio layer.
-Introduce mt7663-common module as container for shared code between usb and
-sdio mt7663 drivers
+Introduce mt76_skb_adjust_pad to reuse the code adding sdio support to
+mt7615 driver and remove code duplication. Move 4B header configuration
+for usb devices out of mt76_skb_adjust_pad
 
-Lorenzo Bianconi (4):
-  mt76: mt7615: take into account sdio bus configuring txwi
-  mt76: mt76u: add mt76_skb_adjust_pad utility routine
-  mt76: mt7615: sdio code must access rate/key regs in preocess context
-  mt76: mt7615: introduce mt7663-common module
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 +-
+ .../net/wireless/mediatek/mt76/mt7615/usb.c   |  8 +++--
+ .../wireless/mediatek/mt76/mt7615/usb_mcu.c   |  3 +-
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c |  3 +-
+ drivers/net/wireless/mediatek/mt76/tx.c       | 29 +++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/usb.c      | 29 -------------------
+ 6 files changed, 39 insertions(+), 35 deletions(-)
 
-Sean Wang (2):
-  mt76: introduce mt76_sdio module
-  mt76: mt7615: introduce mt7663s support
-
- drivers/net/wireless/mediatek/mt76/Kconfig    |   4 +
- drivers/net/wireless/mediatek/mt76/Makefile   |   2 +
- drivers/net/wireless/mediatek/mt76/mac80211.c |   6 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  34 +-
- .../net/wireless/mediatek/mt76/mt7615/Kconfig |  17 +-
- .../wireless/mediatek/mt76/mt7615/Makefile    |   6 +-
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  20 +-
- .../net/wireless/mediatek/mt76/mt7615/main.c  |   6 +-
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  42 +-
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  10 +
- .../net/wireless/mediatek/mt76/mt7615/mmio.c  |   1 +
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  20 +-
- .../net/wireless/mediatek/mt76/mt7615/regs.h  |  12 +
- .../net/wireless/mediatek/mt76/mt7615/sdio.c  | 204 ++++
- .../wireless/mediatek/mt76/mt7615/sdio_mcu.c  | 161 +++
- .../net/wireless/mediatek/mt76/mt7615/usb.c   | 253 +----
- .../wireless/mediatek/mt76/mt7615/usb_init.c  | 145 ---
- .../wireless/mediatek/mt76/mt7615/usb_mcu.c   |   3 +-
- .../wireless/mediatek/mt76/mt7615/usb_sdio.c  | 394 ++++++++
- .../wireless/mediatek/mt76/mt76x02_usb_core.c |   3 +-
- drivers/net/wireless/mediatek/mt76/sdio.c     | 948 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/sdio.h     | 111 ++
- drivers/net/wireless/mediatek/mt76/tx.c       |  29 +
- drivers/net/wireless/mediatek/mt76/usb.c      |  29 -
- 24 files changed, 2026 insertions(+), 434 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/usb_init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/sdio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/sdio.h
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index c6e44283bd5f..e6a402c0f5eb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1024,7 +1024,7 @@ mt76u_bulk_msg(struct mt76_dev *dev, void *data, int len, int *actual_len,
+ 	return usb_bulk_msg(udev, pipe, data, len, actual_len, timeout);
+ }
+ 
+-int mt76u_skb_dma_info(struct sk_buff *skb, u32 info);
++int mt76_skb_adjust_pad(struct sk_buff *skb);
+ int mt76u_vendor_request(struct mt76_dev *dev, u8 req,
+ 			 u8 req_type, u16 val, u16 offset,
+ 			 void *buf, size_t len);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+index 1f1578895ed5..aba926f1eeb5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+@@ -252,7 +252,8 @@ mt7663u_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ {
+ 	struct mt7615_sta *msta = container_of(wcid, struct mt7615_sta, wcid);
+ 	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_info->skb);
++	struct sk_buff *skb = tx_info->skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) &&
+ 	    !msta->rate_probe) {
+@@ -262,9 +263,10 @@ mt7663u_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 				     msta->rates);
+ 		spin_unlock_bh(&dev->mt76.lock);
+ 	}
+-	mt7663u_mac_write_txwi(dev, wcid, qid, sta, tx_info->skb);
++	mt7663u_mac_write_txwi(dev, wcid, qid, sta, skb);
+ 
+-	return mt76u_skb_dma_info(tx_info->skb, tx_info->skb->len);
++	put_unaligned_le32(skb->len, skb_push(skb, sizeof(skb->len)));
++	return mt76_skb_adjust_pad(skb);
+ }
+ 
+ static bool mt7663u_tx_status_data(struct mt76_dev *mdev, u8 *update)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_mcu.c
+index 39cd7dd95c9c..0b33df3e3bfe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_mcu.c
+@@ -28,7 +28,8 @@ mt7663u_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 	else
+ 		ep = MT_EP_OUT_AC_BE;
+ 
+-	ret = mt76u_skb_dma_info(skb, skb->len);
++	put_unaligned_le32(skb->len, skb_push(skb, sizeof(skb->len)));
++	ret = mt76_skb_adjust_pad(skb);
+ 	if (ret < 0)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index 0180b6200b17..37321e656776 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -56,8 +56,9 @@ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags)
+ 	 */
+ 	info = FIELD_PREP(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
+ 	       FIELD_PREP(MT_TXD_INFO_DPORT, port) | flags;
++	put_unaligned_le32(info, skb_push(skb, sizeof(info)));
+ 
+-	return mt76u_skb_dma_info(skb, info);
++	return mt76_skb_adjust_pad(skb);
+ }
+ 
+ int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 5adf92d7a9f3..3afd89ecd6c9 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -677,3 +677,32 @@ u8 mt76_ac_to_hwq(u8 ac)
+ 	return wmm_queue_map[ac];
+ }
+ EXPORT_SYMBOL_GPL(mt76_ac_to_hwq);
++
++int mt76_skb_adjust_pad(struct sk_buff *skb)
++{
++	struct sk_buff *iter, *last = skb;
++	u32 pad;
++
++	/* Add zero pad of 4 - 7 bytes */
++	pad = round_up(skb->len, 4) + 4 - skb->len;
++
++	/* First packet of a A-MSDU burst keeps track of the whole burst
++	 * length, need to update length of it and the last packet.
++	 */
++	skb_walk_frags(skb, iter) {
++		last = iter;
++		if (!iter->next) {
++			skb->data_len += pad;
++			skb->len += pad;
++			break;
++		}
++	}
++
++	if (skb_pad(last, pad))
++		return -ENOMEM;
++
++	__skb_put(last, pad);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mt76_skb_adjust_pad);
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 84e2fd0a4fc1..5f19f9e51d9c 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -904,35 +904,6 @@ mt76u_tx_setup_buffers(struct mt76_dev *dev, struct sk_buff *skb,
+ 	return urb->num_sgs;
+ }
+ 
+-int mt76u_skb_dma_info(struct sk_buff *skb, u32 info)
+-{
+-	struct sk_buff *iter, *last = skb;
+-	u32 pad;
+-
+-	put_unaligned_le32(info, skb_push(skb, sizeof(info)));
+-	/* Add zero pad of 4 - 7 bytes */
+-	pad = round_up(skb->len, 4) + 4 - skb->len;
+-
+-	/* First packet of a A-MSDU burst keeps track of the whole burst
+-	 * length, need to update length of it and the last packet.
+-	 */
+-	skb_walk_frags(skb, iter) {
+-		last = iter;
+-		if (!iter->next) {
+-			skb->data_len += pad;
+-			skb->len += pad;
+-			break;
+-		}
+-	}
+-
+-	if (skb_pad(last, pad))
+-		return -ENOMEM;
+-	__skb_put(last, pad);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(mt76u_skb_dma_info);
+-
+ static int
+ mt76u_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 		   struct sk_buff *skb, struct mt76_wcid *wcid,
 -- 
 2.26.2
 
