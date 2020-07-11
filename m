@@ -1,207 +1,90 @@
-Return-Path: <SRS0=HO9U=AV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=UimY=AW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA65CC4345E
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29326C433E1
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jul 2020 04:35:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9AD720786
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jul 2020 22:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D083A2078B
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jul 2020 04:35:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E/WvXIbd"
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="iw9hzNEq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726480AbgGJWUM (ORCPT
+        id S1726786AbgGKEf1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jul 2020 18:20:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60130 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbgGJWUL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jul 2020 18:20:11 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38B1EC08C5DC;
-        Fri, 10 Jul 2020 15:20:11 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id z2so7351704wrp.2;
-        Fri, 10 Jul 2020 15:20:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=sQSNR/BugIoJc6hRmCvyOY2T/BtHesGbyrXiTgar9dI=;
-        b=E/WvXIbdBLzBijEIrHjy3ROSLzxYB5kRcgXlTWV5s6nTjk0sIxLxLV8dtFIH5vEf/H
-         U3eWv/xfzqF2tIQrGPbwIRR+9fsr3gC+Af8kb4EapkgW9zT1y/O6QsdJtedCfC+yuMe/
-         KhighYvpRyQnvVu4JLLuQojc1o28CCTGSLa/Vc7qo5GY/zFYL/85uWjW98zmkPmndBES
-         mAL7VvNIpEqvxJ1y9qrWHkQw7gdl6GJkw3mcT+pmgsizutcBpX00cH6+jfPFxCmME6bi
-         I2ZMDOM7hADKIDhEsG+aR5z3LW8kLVbqkzK9d8Ey3Xa9e5RkgEjZbSXxXl+6egvtEr7E
-         enFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=sQSNR/BugIoJc6hRmCvyOY2T/BtHesGbyrXiTgar9dI=;
-        b=NWjnB7x1qLoeEAwuCZ8FziB5NmWpP255Qkg5QSm43J9pQ8337MUeMASzfTeiB01wYo
-         edZ2mahnv6jHoCbgox8yIew4l2YMnX2V0Sgh316SNH0cqqqVm2QDG0SV6yBMMRDquWoK
-         ZWpUuxeq6PAE6PRMJ2YIGHQQFTP/SIMUKeYVP8vhcZ+Z1A8/ulDIKF/jYufT0B+dRYyn
-         CDbIdHrvHQWm80TOvNszuqOFfQN1NlLx4W48yfemfIi4444AK0nKCVjbBl9Hf+Xc1TMo
-         E8HTGdR8mN9WUsbMamoj+ytUXlcCXbREONkmwm3DzMr8HDFuLQnfDUW1CerTWAmUlfHi
-         U3mw==
-X-Gm-Message-State: AOAM531NHqKYLsqRGBpnHKdZgNeDXA8k3xw/nNzO4sHvtCaKXARR1Ibd
-        izLvHuCU0uXw1xr12BJmjzs=
-X-Google-Smtp-Source: ABdhPJzS+uPpTiLsWNHg6xiOAW9CUTiS8ft4sXtfvWRv8joGH8d+W+t6FJyQoDufDDsZv9lKN31XXA==
-X-Received: by 2002:adf:ef4d:: with SMTP id c13mr67998573wrp.315.1594419608520;
-        Fri, 10 Jul 2020 15:20:08 -0700 (PDT)
-Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id l18sm12170281wrm.52.2020.07.10.15.20.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jul 2020 15:20:07 -0700 (PDT)
-From:   Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
-To:     helgaas@kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        linux-acpi@vger.kernel.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 0/14 v3] PCI: Remove '*val = 0' from pcie_capability_read_*()
-Date:   Fri, 10 Jul 2020 23:20:12 +0200
-Message-Id: <20200710212026.27136-1-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
+        Sat, 11 Jul 2020 00:35:27 -0400
+Received: from mout01.posteo.de ([185.67.36.65]:59486 "EHLO mout01.posteo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726671AbgGKEf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Jul 2020 00:35:26 -0400
+Received: from submission (posteo.de [89.146.220.130]) 
+        by mout01.posteo.de (Postfix) with ESMTPS id 7AC3416005C
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Jul 2020 06:35:24 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
+        t=1594442124; bh=0ctE+bpyS5tnIfYE4wskqtGvHRlRDTGqPaJ9OIOnNDs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iw9hzNEqM378iP/dgqv3UEMUY8UKvKbO8PGhpKn/vCH/gAGiBnLhl9F2UUImhQWXx
+         lzGvjm4NeQxMZSyI7LCtj9auKjKc2Sefj1sloddDstVfrO9BEkdicf/J026++wGCq1
+         GFVB5OQthsM9QHIxfpg2loi76RSvemF7wANCPmpJ0Cr/1R3rptC/BW5t0Lua4KDhVK
+         Oxy6KXi3QZEYrFOeHD3aGh53ptIwG3Dy5R0RoWoGYQRw+hfGRWhSqoFiFdmYQ84xAM
+         zzOACfNMs1F240J4FOdlzD6mOZ3tbIIj14LFRF1EXuVkdS4ZLSunP4QbXek/5aIwIF
+         1Fse7GagYQnzw==
+Received: from customer (localhost [127.0.0.1])
+        by submission (posteo.de) with ESMTPSA id 4B3cXV2fc9z6tmH;
+        Sat, 11 Jul 2020 06:35:22 +0200 (CEST)
+From:   Mark O'Donovan <shiftee@posteo.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org, jaegerskuepper@freenet.de,
+        hqjagain@gmail.com, ath9k-devel@qca.qualcomm.com,
+        davem@davemloft.net, kuba@kernel.org,
+        Mark O'Donovan <shiftee@posteo.net>
+Subject: [PATCH 1/1] ath9k: Fix regression with Atheros 9271
+Date:   Sat, 11 Jul 2020 05:33:24 +0100
+Message-Id: <20200711043324.8079-1-shiftee@posteo.net>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+This fix allows ath9k_htc modules to connect to WLAN once again.
 
-v3 CHANGES:
-- Split previous PATCH 6/13 into two : PATCH 6/14 and PATCH 7/14
-- Fix commit message of PATCH 5/14
-- Update Patch numbering and Commit messages
-- Add 'Acked by Greg KH' to PATCH 2/14
-- Add PATCH version
+Fixes: 2bbcaaee1fcb (ath9k: Fix general protection fault in
+ath9k_hif_usb_rx_cb )
 
-v2 CHANGES:
-- Fix missing comma, causing the email cc error
-- Fix typos and numbering errors in commit messages
-- Add commit message to 13/13
-- Add two more patches: PATCH 3/13 and PATCH 4/13
+https://bugzilla.kernel.org/show_bug.cgi?id=208251
 
-MERGING:
-Patch 7/14 depends on Patch 6/14. However Patch 6/14 has no dependency.
-Please, merge PATCH 7/14 only after Patch 6/14.
-Patch 14/14 depend on all preceeding patchs. Except for Patch 6/14 and
-Patch 7/14, all other patches are independent of one another. Hence,
-please merge Patch 14/14 only after other patches in this series have
-been merged.
+Signed-off-by: Mark O'Donovan <shiftee@posteo.net>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-
-PATCH 6/14:
-Make the function set status to "Power On" by default and only set to
-Set "Power Off" only if pcie_capability_read_word() is successful and
-(slot_ctrl & PCI_EXP_SLTCTL_PCC) == PCI_EXP_SLTCTL_PWR_OFF. 
-
-PATCH 1/14 to 13/14:
-Check the return value of pcie_capability_read_*() to ensure success or
-confirm failure. While maintaining these functions, this ensures that the
-changes in PATCH 14/14 does not introduce any bug. 
-
-PATCH 14/14:
-There are several reasons why a PCI capability read may fail whether the
-device is present or not. If this happens, pcie_capability_read_*() will
-return -EINVAL/PCIBIOS_BAD_REGISTER_NUMBER or PCIBIOS_DEVICE_NOT_FOUND
-and *val is set to 0.
-
-This behaviour if further ensured by this code inside
-pcie_capability_read_*()
-
- ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
- /*
-  * Reset *val to 0 if pci_read_config_dword() fails, it may
-  * have been written as 0xFFFFFFFF if hardware error happens
-  * during pci_read_config_dword().
-  */
- if (ret)
-	 *val = 0;
- return ret;
-
-a) Since all pci_generic_config_read() does is read a register value,
-it may return success after reading a ~0 which *may* have been fabricated
-by the PCI host bridge due to a read timeout. Hence pci_read_config_*() 
-will return success with a fabricated ~0 in *val, indicating a problem.
-In this case, the assumed behaviour of  pcie_capability_read_*() will be
-wrong. To avoid error slipping through, more checks are necessary.
-
-b) pci_read_config_*() will return PCIBIOS_DEVICE_NOT_FOUND only if 
-dev->error_state = pci_channel_io_perm_failure (i.e. 
-pci_dev_is_disconnected()) or if pci_generic_config_read() can't find the
-device. In both cases *val is initially set to ~0 but as shown in the code
-above pcie_capability_read_*() resets it back to 0. Even with this effort,
-drivers still have to perform validation checks more so if 0 is a valid
-value.
-
-Most drivers only consider the case (b) and in some cases, there is the 
-expectation that on timeout *val has a fabricated value of ~0, which *may*
-not always be true as explained in (a).
-
-In any case, checks need to be done to validate the value read and maybe
-confirm which error has occurred. It is better left to the drivers to do.
-
-Check the return value of pcie_capability_read_dword() to ensure success
-and avoid bug as a result of Patch 14/14.
-Remove the reset of *val to 0 when pci_read_config_*() fails.
-
-
-Bolarinwa Olayemi Saheed (14):
-  IB/hfi1: Check the return value of pcie_capability_read_*()
-  misc: rtsx: Check the return value of pcie_capability_read_*()
-  ath9k: Check the return value of pcie_capability_read_*()
-  iwlegacy: Check the return value of pcie_capability_read_*()
-  PCI: pciehp: Check the return value of pcie_capability_read_*()
-  PCI: pciehp: Make "Power On" the default 
-  PCI: pciehp: Check the return value of pcie_capability_read_*()
-  PCI/ACPI: Check the return value of pcie_capability_read_*()
-  PCI: pciehp: Check the return value of pcie_capability_read_*()
-  PCI: Check the return value of pcie_capability_read_*()
-  PCI/PM: Check return value of pcie_capability_read_*()
-  PCI/AER: Check the return value of pcie_capability_read_*()
-  PCI/ASPM: Check the return value of pcie_capability_read_*()
-  PCI: Remove '*val = 0' from pcie_capability_read_*()
-
- drivers/net/wireless/ath/ath9k/pci.c         | 5 +++--
- drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
- drivers/infiniband/hw/hfi1/aspm.c | 7 ++++---
- drivers/misc/cardreader/rts5227.c | 5 +++--
- drivers/misc/cardreader/rts5249.c | 5 +++--
- drivers/misc/cardreader/rts5260.c | 5 +++--
- drivers/misc/cardreader/rts5261.c | 5 +++--
- drivers/pci/pcie/aer.c  |  5 +++--
- drivers/pci/pcie/aspm.c | 33 +++++++++++++++++----------------
- drivers/pci/hotplug/pciehp_hpc.c | 47 ++++++++++++++++----------------
- drivers/pci/pci-acpi.c           | 10 ++++---
- drivers/pci/probe.c              | 29 ++++++++++++--------
- drivers/pci/access.c | 14 --------------
- 13 files changed, 87 insertions(+), 87 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 4ed21dad6a8e..3f563e02d17d 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -733,11 +733,13 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 			return;
+ 		}
+ 
++		rx_buf->skb = nskb;
++
+ 		usb_fill_int_urb(urb, hif_dev->udev,
+ 				 usb_rcvintpipe(hif_dev->udev,
+ 						 USB_REG_IN_PIPE),
+ 				 nskb->data, MAX_REG_IN_BUF_SIZE,
+-				 ath9k_hif_usb_reg_in_cb, nskb, 1);
++				 ath9k_hif_usb_reg_in_cb, rx_buf, 1);
+ 	}
+ 
+ resubmit:
 -- 
-2.18.2
+2.25.1
 
