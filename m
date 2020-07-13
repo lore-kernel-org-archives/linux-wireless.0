@@ -2,81 +2,114 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B0FEC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 11:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 171EAC43462
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BB0A2072D
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 11:51:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA3C5206F0
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:24:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.b="K9z4OQXg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RYu8pxNg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729578AbgGMLvk (ORCPT
+        id S1729962AbgGMNXF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 07:51:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59896 "EHLO
+        Mon, 13 Jul 2020 09:23:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729492AbgGMLvk (ORCPT
+        with ESMTP id S1729941AbgGMNXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 07:51:40 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C118BC061794
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 04:51:39 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id dr13so16725361ejc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 04:51:39 -0700 (PDT)
+        Mon, 13 Jul 2020 09:23:03 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53618C061755;
+        Mon, 13 Jul 2020 06:23:03 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id g20so13695316edm.4;
+        Mon, 13 Jul 2020 06:23:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=N/DHlb+/nZGG7qN0r183zUnGDtK3Lw0uwrnh4HpX2MQ=;
-        b=K9z4OQXgZqe68WhodObjskXGXhCveTrRy/diBpkEHckhZqpZTCKRqwWhv8gL/c0eJQ
-         HE/ddd4Que9btx6TMvG1ZAjd5MQ39PL1LEH6CtGVG0IrQy0m2Ri/anZu1dieNaHGnA5Q
-         95BZwQjw2WGS50mSmx9I5AIEuFbYZ51P7KjRs=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=ExF6es49alDYSdqAf6nfQyrFV/rkp6/B8fioIMr76uI=;
+        b=RYu8pxNgdnsOJ+hiYOZPlgYabzTbyLX+KMaw5u1yC21ZGr8PmNJw4tVllr1m9KBdW6
+         e1yZPoxl4y5vSPwSff+H5xY+hBFKa0xapp3KqR4lMOytc87Cu0xtS6UAQ4fu6FzUAJfZ
+         pRYjhi9Q0FHBszC+QXNaDkBU76r+evf62OFLkBk6jgs5Kkgdu9YNMR8DApOdJrkbmxIX
+         n9TgJiTaWqPLAjmiPdhuOA+y8c3N0T4ztzYJqgMxaTrD6ZraQP9RiV9P1137SC4/OST6
+         tP3QAy3RnsKQrlXqfirjGAvj0zomjFPkEZf9F1WuUKjG9Zo92zd6cdt1pPsPih+31Wya
+         V/3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=N/DHlb+/nZGG7qN0r183zUnGDtK3Lw0uwrnh4HpX2MQ=;
-        b=fsM5fYpjKl9Eg2WqdzoiiDa/cmkYEb0kCnenlRKlqj9TxwxBDBOJ5pms7Flz87FG3w
-         P7jAUtryGzDUzi5VWnh2PB9IwVLkItAsvgGN89wlVnVgIjqkX1mDKjKLR4joRfn4IzGL
-         W79Zz9xoCek2rfaxygms0V3EuoIXKzZAu+xtVpOIvo5BfgXG981yFYoi+H5iNHxXYwmd
-         fdc0g5zFHB8aF4/BJU5ixJ3jJa2ozYWBU92gVwB79KnN0Ugvr9DAEpNygysm3NKxw2Um
-         HUwUwrztqAgcJT24n/90W6vV0Eel3NzabCA9lscOv3WIXyn6s4IWNw2+qakFSHn8s8g6
-         lD7Q==
-X-Gm-Message-State: AOAM531Jk0whUy6YsA+5iIakGv0Ejqj07qz8Q3/+1w/wmnvm+ShCHncp
-        iZxvERhURWmo6IemROYPYHzCvT7nWlmFsQ==
-X-Google-Smtp-Source: ABdhPJyPC6ve+saeYmK+j2jidO9325RIY86E6K3eIRiMv5vbBmkdi1CVDxd1dgGuDRIoWh87T+IKCQ==
-X-Received: by 2002:a17:907:94cf:: with SMTP id dn15mr78740469ejc.457.1594641098243;
-        Mon, 13 Jul 2020 04:51:38 -0700 (PDT)
-Received: from localhost ([2620:10d:c093:400::5:ef88])
-        by smtp.gmail.com with ESMTPSA id s1sm11306128edy.1.2020.07.13.04.51.37
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=ExF6es49alDYSdqAf6nfQyrFV/rkp6/B8fioIMr76uI=;
+        b=la+pUI9C1DVBeCYXdzPy/VsdDA979SrjVlmLv0KKvfufNTyQ9n8oEHqTRsglILY+Ow
+         g22ySiwACOC/DhB/W6gZNyne6WGf+LlhF2azslTVI3DEJnfIXg6+U1YlDblKCRURxrIs
+         zUFnvQVISaao9lnz8x6uFEfBL13f3W7vOEuWorJ69FozkBHvhHwhBSS2CSm0Reo0Ak+6
+         fgtqpU9TaCa0cXq4F0mMXGz6YP03bMBa8DuNEFaZDyei2JgQoOBN2lQWmQXw9NQXxRHf
+         FUF7h9Hatq7TxxC3EkSxSlh9/av0K+83EiRxCueDbc453m/6BDVq+W9gcr7/qfz9jH/J
+         HvPQ==
+X-Gm-Message-State: AOAM531IRihLEU0dNUXC2y5Z7udV8J6tZO7zAofiPFSmJxTvMRdNXA/c
+        8FqMgEgJobDeLJ3RJ5hUN16pb2aj0+K2Qg==
+X-Google-Smtp-Source: ABdhPJx62O4aj0c9a5CqnQR0S5T4oeckXkZ/F5P2u6F1htBXN0jjErRFVTWu9CQ+3ieaAac56zRjXw==
+X-Received: by 2002:a05:6402:1805:: with SMTP id g5mr80230354edy.357.1594646582069;
+        Mon, 13 Jul 2020 06:23:02 -0700 (PDT)
+Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
+        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.23.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 04:51:37 -0700 (PDT)
-Date:   Mon, 13 Jul 2020 12:51:37 +0100
-From:   Chris Down <chris@chrisdown.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: Don't IWL_WARN on FW reconfiguration
-Message-ID: <20200713115137.GA1065134@chrisdown.name>
-References: <20191017144841.GA16393@chrisdown.name>
- <20191017145321.GA1609@chrisdown.name>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20191017145321.GA1609@chrisdown.name>
-User-Agent: Mutt/1.14.5 (2020-06-23)
+        Mon, 13 Jul 2020 06:23:01 -0700 (PDT)
+From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+To:     helgaas@kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 18/35] bcma: Change PCIBIOS_SUCCESSFUL to 0
+Date:   Mon, 13 Jul 2020 14:22:30 +0200
+Message-Id: <20200713122247.10985-19-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.2
+In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
+References: <20200713122247.10985-1-refactormyself@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Just to check in again since this is still happening: is this expected?
+In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
+Their scope should be limited within arch/x86.
 
-I expect that if this is IWL_WARN, it should indicate some unexpected or 
-non-ideal state, but the card seems to operate just fine afterwards.
+Change all PCIBIOS_SUCCESSFUL to 0
+
+Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+---
+ drivers/bcma/driver_pci_host.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index 88a93c266c19..b64ba68bdc8a 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -244,7 +244,7 @@ static int bcma_core_pci_hostmode_read_config(struct pci_bus *bus,
+ 				     PCI_FUNC(devfn), reg, val, size);
+ 	spin_unlock_irqrestore(&pc_host->cfgspace_lock, flags);
+ 
+-	return err ? PCIBIOS_DEVICE_NOT_FOUND : PCIBIOS_SUCCESSFUL;
++	return err ? PCIBIOS_DEVICE_NOT_FOUND : 0;
+ }
+ 
+ static int bcma_core_pci_hostmode_write_config(struct pci_bus *bus,
+@@ -264,7 +264,7 @@ static int bcma_core_pci_hostmode_write_config(struct pci_bus *bus,
+ 				      PCI_FUNC(devfn), reg, &val, size);
+ 	spin_unlock_irqrestore(&pc_host->cfgspace_lock, flags);
+ 
+-	return err ? PCIBIOS_DEVICE_NOT_FOUND : PCIBIOS_SUCCESSFUL;
++	return err ? PCIBIOS_DEVICE_NOT_FOUND : 0;
+ }
+ 
+ /* return cap_offset if requested capability exists in the PCI config space */
+-- 
+2.18.2
+
