@@ -2,89 +2,127 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76504C433E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:29:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA730C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:35:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AEEB20738
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:29:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DF59206F0
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:35:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HVHCGlJR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726318AbgGMS3s (ORCPT
+        id S1726364AbgGMSfp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 14:29:48 -0400
-Received: from mout.kundenserver.de ([212.227.126.135]:59107 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726058AbgGMS3r (ORCPT
+        Mon, 13 Jul 2020 14:35:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39584 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726058AbgGMSfp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 14:29:47 -0400
-Received: from mail-qv1-f53.google.com ([209.85.219.53]) by
- mrelayeu.kundenserver.de (mreue009 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1M7JvQ-1jwACL2XAy-007jq4; Mon, 13 Jul 2020 20:29:45 +0200
-Received: by mail-qv1-f53.google.com with SMTP id t11so6252212qvk.1;
-        Mon, 13 Jul 2020 11:29:45 -0700 (PDT)
-X-Gm-Message-State: AOAM533j3JPy3Ncsg/8q6JhWZdRrSaQksOF+12rtD69PyFnWA5POxaKL
-        Fq7Kj5YaMpqYckG/HXhGsXlpvRJbHwr/bTXKaRQ=
-X-Google-Smtp-Source: ABdhPJwfhnh/6z+B3GNkz2O7U2CT1SIj0CHjYLjBXDThJSFXF+6qowbSkHtAc8ui9FKSnAQealaXP5kFF1JbDar0pbQ=
-X-Received: by 2002:a0c:f802:: with SMTP id r2mr733004qvn.197.1594664984224;
- Mon, 13 Jul 2020 11:29:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200713122247.10985-1-refactormyself@gmail.com>
- <20200713122247.10985-3-refactormyself@gmail.com> <70e57af0-6a8c-a893-67c9-0181af16ae2b@lwfinger.net>
- <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
-In-Reply-To: <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Mon, 13 Jul 2020 20:29:27 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a0Qfojg==hiAGx0BvS1zmOEy+1vchXzcudw4EQZ4YwU4A@mail.gmail.com>
-Message-ID: <CAK8P3a0Qfojg==hiAGx0BvS1zmOEy+1vchXzcudw4EQZ4YwU4A@mail.gmail.com>
+        Mon, 13 Jul 2020 14:35:45 -0400
+Received: from mail-oi1-x241.google.com (mail-oi1-x241.google.com [IPv6:2607:f8b0:4864:20::241])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50679C061755;
+        Mon, 13 Jul 2020 11:35:45 -0700 (PDT)
+Received: by mail-oi1-x241.google.com with SMTP id e4so11835306oib.1;
+        Mon, 13 Jul 2020 11:35:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=pfifxRNrRUR2T4uYGwKiE9RMe487XzOwMSNlNFzce1k=;
+        b=HVHCGlJRjYfmXT7uQQTMqziIBypODRZa7gCfW4kTMKTzzuv3te+ebl9nfo5ikRkY3g
+         ZZBk3lmPazFumhe2INJfkq16MDSGwl3YCJbANDNbzBuY440EXwvbyuBmTTeWi27pcykR
+         m9FfjxokzGaBlJ4wGVcVYTMGaZ2uin1SB7zCs+pU/gAj8SGFpjX4B0mf3i5NSVriEFty
+         713nUE12sid3xqDCL4x2RfdeME6g9f674IZLzWyNgUGKfpplb0VOozAdowMbcfVrLu4/
+         M91CXZTtp1kK1zfoa5Bh0AM+tWHWWrIev+fp8655BD3GtZtFknvVp93t1EYQ0apE+d23
+         kKhA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=pfifxRNrRUR2T4uYGwKiE9RMe487XzOwMSNlNFzce1k=;
+        b=IlfE3o/MAlf2nSFY5uJZjnNzlUXdoPqereaz6dRBBdkoDyqgMHsoN8qaO1OQUqe3Uk
+         9qd/DMhUkF7L28DeAD1YgGe4d2PlLxw1KDU9Lzqp6FkegFUFonvQ8N85beXkPim2ohM6
+         jfz+YCk1Ujc/AXEdkrUMZ7rbBk3JZUwqpILOksex0ppL/Oy4FEjU3DcvQXO67B9ryCAS
+         I8naNuADhf2sb384Mk8aJS4jQeULwpasxhL1z9GS/DyoVIHj3MKXLTmZ0P8yakfS/Csm
+         9gHiMxrWaB+wTz9ekPp/ZdEUC/AfMUvHTaH5bqvJO6I0s4tkbHtpEAhDsZCCNwCwoSNU
+         HK3w==
+X-Gm-Message-State: AOAM531l62gD34w9kLLFqPOFofaBrnyF2FXmIc2ZKAxK9dl43meOg5ox
+        kyEWtAyW3KgRMFWtTYUeAs+xCjl4
+X-Google-Smtp-Source: ABdhPJz3GQ+85yUO/+PkLfsc+YTRMOpRwB45jn1PhyabY7CvTaSczcOYsYChj491oYeq1eXtgklM+g==
+X-Received: by 2002:aca:4e16:: with SMTP id c22mr648602oib.53.1594665344656;
+        Mon, 13 Jul 2020 11:35:44 -0700 (PDT)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id n84sm2957528oih.9.2020.07.13.11.35.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Jul 2020 11:35:44 -0700 (PDT)
 Subject: Re: [RFC PATCH 02/35] ssb: Change PCIBIOS_SUCCESSFUL to 0
-To:     Saheed Bolarinwa <refactormyself@gmail.com>
-Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Bjorn Helgaas <helgaas@kernel.org>, Michael Buesch <m@bues.ch>,
-        bjorn@helgaas.com, Shuah Khan <skhan@linuxfoundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
+To:     Saheed Bolarinwa <refactormyself@gmail.com>, helgaas@kernel.org,
+        Michael Buesch <m@bues.ch>
+Cc:     bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:cwA87ZKTx/TqHmtu2pquWpCsnWi683BgVk2yjLlCYf4OdS0eGfN
- yZwspqV8na9IQ8+uOCpzSsHWSja9Xdlt53kL4dTJdWyauKsdyeEU1yPdFYBkjlXz43W3zHl
- WW7npIH8I3q8Q/xlRy8jUirCrTdMs2NG7b1rTErVgGrN1/2eg8cDnwK0vNNibl2GEkC0Wk9
- aphjnw2M2VoWjOySne/mQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:sJBJH9zz6SY=:Q34SfpS+Nis/J66pNVL/X3
- 06d27R9niq5bvN1nzFR7zhF0iomgrxl2Ff8SRacEZ7jR+l5XipT2gVuv5kf1FNf+uJOngFLHx
- 6HjSb2PedGfo33Og5N9pKNDEGhiqzqqZ9+QsOCZqzLwxge7M8zW/ydQmiZq3nzY/Lojv/KA2v
- 9/ElgzPJx7Uh1xhR3lp0++SUfxNKG9+S02eusiJ0984C18jWAcY48ab3uWgl/5tOdtSHQS5tz
- SB8LrcEfHjJkiDHczrQzHNqIWtJvIwv/x1Fr7K0mD8pbvs5uTd+Ja3Sw8J2PjWULfzV5pw0fd
- SzgDxjm+iO/sZbjdeUKunG2AKvemrrSYhuMVgRNpOoqINUntKorYyfULOh3MYt0ErYakRS8HY
- 4BU/yzgU1DRuaXrmDnEWWjOh/v2co8yv7AH5D/7pw36Jdl0H9aCtYhSrCsn2pFVTgeniBSY1c
- mLWZKV0o4xi7YXByFBg2r5FeeT/0EMUaWQBzBZLariRRQGm8hbfQKu+gPhqir/79cUV18VQuG
- kHpTRycq4zQby6+VfTnl0pH2PQDn5VrTBsl7cXXy+wmFArNbFfasdRqlwwlSpZU4K/DTkWCsl
- 3Y6qUWebUTqkwHxXoctiGZV94lV0xV69SKLm4iKGDw/P8c2eNLEtX6GEXXxIutYkfMtOXUHYb
- oKfoVdn/WYHCxk5G63oC2CzgSR2PLOmvXCJ/u6Q4JKg54moMcs1LUWelbxrOasLhbzR8MdhY3
- 3h2/hy5xR3haS2XfqVqfij7nRTaP5ODbSD4MytXEYWf7sMbani3U/w0CjqTVU13cJP6KFx4wz
- 43vq8dEyoGQA5uWMU39cc5aBbxcTQJwQBXI9E61Di1vJIeQvongxJNFYmuOhr8ZXP9EUmNckK
- k548JTyIka6Ft32t10zoAJjxxPbJ/r0dJ8lYlgVC3het7Yr7KLMqYLPCRxvEWycZ2O4FVq6fZ
- YFbrtqq55DEPflZZPmIloyx7e80Czg6dw4KlCq+AhIzAiUjg3UttM
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20200713122247.10985-1-refactormyself@gmail.com>
+ <20200713122247.10985-3-refactormyself@gmail.com>
+ <70e57af0-6a8c-a893-67c9-0181af16ae2b@lwfinger.net>
+ <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <886881ac-37c6-596e-5f68-07242ed1d2e0@lwfinger.net>
+Date:   Mon, 13 Jul 2020 13:35:43 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <78b52ad5-015f-4452-0cd0-dbb2c8597672@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jul 13, 2020 at 8:13 PM Saheed Bolarinwa
-<refactormyself@gmail.com> wrote:
+On 7/13/20 2:13 PM, Saheed Bolarinwa wrote:
+> Hello Larry,
+> 
 > On 7/13/20 7:16 PM, Larry Finger wrote:
->
-> > Why is your name inside quotes in your s-o-b?
-> >
+>> On 7/13/20 7:22 AM, Saheed O. Bolarinwa wrote:
+>>> In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
+>>> Their scope should be limited within arch/x86.
+>>>
+>>> Change all PCIBIOS_SUCCESSFUL to 0
+>>>
+>>> Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+>>
+>> Could you please tell me what difference this makes? It looks like source 
+>> churn rather than a substantive change. The symbol is defined in pci.h and is 
+>> used in many architures. Certainly, PCIBIOS_SUCCESSFUL indicates success even 
+>> more clearly than 0 does.
+>>
+> It is a trivial first step towards a probably significant task. I explained in 
+> the Cover Letter, I can see it didn't get through but I Cc linux-wireless 
+> (properly this time). Probably, too many addresses.
+> 
+> I have resent it. It is here 
+> https://lore.kernel.org/linux-wireless/20200713185559.31967-1-refactormyself@gmail.com/T/#u 
+> 
+> 
+>> Why is your name inside quotes in your s-o-b?
+>>
 > To keep me company before I get to know my way within the kernel.
->
+> 
 > I saw people with >2 names do it, so I did! Please let me know if it is odd.
+> 
 
-It's required for a proper email header if you have a dor (.) in your cleartext
-name, but it is not required in a Signed-off-by tag, though a number of people
-still do it out of habit. I'm sure it's fine either way.
+Thank you for the explanations. The cover letter did help.
 
-     Arnd
+For both SSB and BMCA changes,
+
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
+
