@@ -2,114 +2,119 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE6BC433FC
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 16:55:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22514C433E5
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:02:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E8E52067D
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 16:55:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC17720738
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:02:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NSPewnin"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uvaZmiBx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730397AbgGMQza (ORCPT
+        id S1729849AbgGMRCB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 12:55:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52264 "EHLO
+        Mon, 13 Jul 2020 13:02:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730293AbgGMQzP (ORCPT
+        with ESMTP id S1729751AbgGMRCB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 12:55:15 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF7B7C061755;
-        Mon, 13 Jul 2020 09:55:14 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id dg28so14289441edb.3;
-        Mon, 13 Jul 2020 09:55:14 -0700 (PDT)
+        Mon, 13 Jul 2020 13:02:01 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B251DC061755
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 10:02:00 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id ga4so18038011ejb.11
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 10:02:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=e583Pj41mbGa0akKyeW2rYwc3SOFBc4BRiRYVhykVn0=;
-        b=NSPewnin+umq+Hpw1VWQZYiIMe8GpYsUXwfzptgWDWoPiRg5JdRkQnTxGPG5XIcKLi
-         UUpNEzCE0J/2F+81HVw1NIlylHNjNmYp+qtI8ey59l45x6EqCxhfqzxJLFlE3ViR3tt4
-         zBgFSTsenkoT784l1whYtML/oIG5HU9WWWJbol4bUzzLcgUnuK4xRLw49BMrPrYf1CkA
-         Jn3hbTiIT1KUEph4CzyOnMiLetZlrOxRM6l/pkEpJA0NtPVqY/sMvCdJVyBd8cwBBf92
-         GmQLYC2DxDBpG/6rydAcun+L5sogjQM9CykfTBM+Yux9ijI2LhF9iQWN1rXROIgt8JRC
-         jKWw==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=dBpWhohA4qCjmIGT5bfMOr9NwEjL/Z4UnFbenETGipg=;
+        b=uvaZmiBxASuL2qzi+AMjmoPfNhR7BvV8tWOl6pu9wjXtyelMwr3EjAiUFgMNNmB/kd
+         Yuu+jpVTuXk71FabOPEBD1NgCHw/0a4zO7weAValbJikPkjiB5qkWis8dRREoHDPkLlD
+         pxsY2nfaUbZOC2TbbR3I60OY8KT470AOucKyLH/2vrWW/QJ3WcUPITBY7lAM+TqC0xvI
+         Ljwu9L2A/k7L6sRzQVFXgfSMpwoVm3rgAeTrfoXt+wWQk/XHuy5ejU4azzLaZwTDUu8a
+         1k31T2iev6hVeGdzWR4VWK6DGsf5GULtt3aRz00WmndkzUz7z/sSAnQhpu3ConoGskFv
+         ureQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=e583Pj41mbGa0akKyeW2rYwc3SOFBc4BRiRYVhykVn0=;
-        b=Y5T7XbmRbFhwcPiKkHZEXRJ5hFHruyYt9oNxePjN0BLA5s/rkQVkI7I/TdoXbK5UEz
-         2Op5eeoGSecMFHbTq8LJDPY90kFj8MIO9hQs9tb6ngGSEe5+BVt21ys2tlDOXDd8CSpY
-         nzSS8y30wQF1xtQ1euVsINiytnPxOkrZ7lWZdprawX5jasxmgvv8n0hBM0DDUV9K1t33
-         4QHxRL0PvNPCd34GTA5OWIetD9Q91QwsFOSug24fVPNotiQgs4uxL2Ijyhcs246ftkKl
-         xruh/U/PktLm8YkgQH9xN+sAh2+gCp09lW9HrX7SOfqDWfCKHroyAZ64dlzLydhSoTnD
-         b17w==
-X-Gm-Message-State: AOAM533dQ3qo8xg0uXSZJdQU5lRTWUkBGjlx13qHe/SLGlIZbHsWmbwz
-        bIJ0joHUX7J56hR1MrEs6I4=
-X-Google-Smtp-Source: ABdhPJzFuefoL/4Rxcgaj8jw3dS3fKhP7a3GskQbwngqBSIPoeJgKGthmRz4CpvHrLMQeri2oZC1DQ==
-X-Received: by 2002:a05:6402:b86:: with SMTP id cf6mr358151edb.42.1594659313535;
-        Mon, 13 Jul 2020 09:55:13 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=dBpWhohA4qCjmIGT5bfMOr9NwEjL/Z4UnFbenETGipg=;
+        b=bsc+fX/c6nCQf1Y+bsa03WyJad4m0fQCiPHuWrwrcBZEhgAX2pkKjXlazpOZ0LWqtE
+         XoPacVoOpS7TLPDD85wxlxPzc+arwljoiVBcLla2EtyrlZYHzG1jHpepZIdQFsaFnj/G
+         HAYvPKBySeTN1n4GmS2Dvh5SEpnC3iJiHRMe/H3hkTzhSpp8QMTkM2XPER2uOQXXuQj1
+         y+YBXSll36i414AnFxo4dFUSRORZqF0RcICuAnsAraDUcol2VqSCVNC1+J1veyDtRt+2
+         cnxXwA2nhC3RNrj9tbxexqDamLGAkhhZZzze6uOrGNbmujTadHRDCMPE5/GWnc1MNbAD
+         ekyg==
+X-Gm-Message-State: AOAM530g3IocVLDHN8HnYoOTQytKkBNM3LVews8Bs7CePSD70FMI8ifz
+        0s4Rawmsl47kcKuqQ/vAeAwQobgFSMg7jQ==
+X-Google-Smtp-Source: ABdhPJwJ+M9ROc70wUCp7GjyxAJGbscyNjvG6NmOnMoxorDMJhuztFffg+0QpGN6jAm68PEU55Hm/w==
+X-Received: by 2002:a17:907:2654:: with SMTP id ar20mr656650ejc.62.1594659718837;
+        Mon, 13 Jul 2020 10:01:58 -0700 (PDT)
 Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id w3sm11838938edq.65.2020.07.13.09.55.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 09:55:13 -0700 (PDT)
-From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     skhan@linuxfoundation.org, linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, Stanislaw Gruszka <stf_xl@wp.pl>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 4/14 v3] iwlegacy: Check the return value of pcie_capability_read_*()
-Date:   Mon, 13 Jul 2020 19:55:27 +0200
-Message-Id: <20200713175529.29715-3-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20200713175529.29715-1-refactormyself@gmail.com>
-References: <20200713175529.29715-1-refactormyself@gmail.com>
+        by smtp.gmail.com with ESMTPSA id z11sm6069100ejx.17.2020.07.13.10.01.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Jul 2020 10:01:58 -0700 (PDT)
+Subject: Re: [PATCH 4/14 v3] iwlegacy: Check the return value of
+ pcie_capability_read_*()
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, bjorn@helgaas.com,
+        linux-wireless@vger.kernel.org
+References: <20200710212026.27136-1-refactormyself@gmail.com>
+ <20200710212026.27136-5-refactormyself@gmail.com>
+ <87wo37a5s5.fsf@codeaurora.org>
+From:   Saheed Bolarinwa <refactormyself@gmail.com>
+Message-ID: <fa99aee8-86ee-558f-cb6f-761519c13159@gmail.com>
+Date:   Mon, 13 Jul 2020 20:02:20 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <87wo37a5s5.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+Fixed
 
-On failure pcie_capability_read_dword() sets it's last parameter, val
-to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
-failure. This would introduce a bug because (x & x) == (~0 & x).
-
-This bug can be avoided without changing the function's behaviour if the
-return value of pcie_capability_read_dword is checked to confirm success.
-
-Check the return value of pcie_capability_read_dword() to ensure success.
-
-Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-
----
- drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 348c17ce72f5..f78e062df572 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4286,8 +4286,8 @@ il_apm_init(struct il_priv *il)
- 	 *    power savings, even without L1.
- 	 */
- 	if (il->cfg->set_l0s) {
--		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
--		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
-+		ret = pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
-+		if (!ret && (lctl & PCI_EXP_LNKCTL_ASPM_L1)) {
- 			/* L1-ASPM enabled; disable(!) L0S  */
- 			il_set_bit(il, CSR_GIO_REG,
- 				   CSR_GIO_REG_VAL_L0S_ENABLED);
--- 
-2.18.2
-
+On 7/13/20 3:44 PM, Kalle Valo wrote:
+> + linux-wireless
+>
+> Saheed Olayemi Bolarinwa <refactormyself@gmail.com> writes:
+>
+>> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+>>
+>> Cc: bjorn@helgaas.com,
+>> 	skhan@linuxfoundation.org,
+>> 	linux-pci@vger.kernel.org,
+>> 	linux-kernel-mentees@lists.linuxfoundation.org,
+>> 	linux-kernel@vger.kernel.org,
+>> 	Stanislaw Gruszka <stf_xl@wp.pl>,
+>> 	linux-wireless@vger.kernel.org,
+>> 	netdev@vger.kernel.org
+>>
+>> On failure pcie_capability_read_dword() sets it's last parameter, val
+>> to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
+>> failure. This would introduce a bug because (x & x) == (~0 & x).
+>>
+>> This bug can be avoided without changing the function's behaviour if the
+>> return value of pcie_capability_read_dword is checked to confirm success.
+>>
+>> Check the return value of pcie_capability_read_dword() to ensure success.
+>>
+>> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+>> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+> Please check your setup, linux-wireless was not in Cc field.
+>
+Thank you for letting me know. I have fixed it and resent to the missing 
+addresses.
