@@ -2,136 +2,100 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FBC4C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 826B9C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFD52206F0
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:25:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D8E82072D
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 13:44:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aynnQr9y"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wwk3RIgb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729878AbgGMNWm (ORCPT
+        id S1729819AbgGMNoc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 09:22:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47464 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729873AbgGMNWk (ORCPT
+        Mon, 13 Jul 2020 09:44:32 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:53194 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728950AbgGMNoc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 09:22:40 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7206C061755;
-        Mon, 13 Jul 2020 06:22:39 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id b15so13646400edy.7;
-        Mon, 13 Jul 2020 06:22:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=wIKAQlJ5EJGoiOmdek0QEY4ROpHfaSKBPeLwiXvsVhs=;
-        b=aynnQr9yYe4ZZ1ZrHtzXBl8SSf7HblZmsshVDBYFj9NrSxrnGirktKY/HZ6DlVUMRo
-         zNvyjcCe47FefuyS03sMQ0xLJU58XwtxM5ihWJNrNC2+oGFM0+m4u9grTzP5heNWjczx
-         46yKHiCd0qOYmibGFbP82US3V33mP0Qz0BbBs7sHjirydyTG/dP5i0Hb0YjsXuMO4BrB
-         FQjDcLEEkoFdmrx7ZqmJHkTM8sy+pfx+sQgIDDFcPfSILhRS0uByhwHVIsHH5nCCoqc+
-         N7S6TcWUMbpn/D7sJPLW9GfWUJxg0hVocp07mU4YHB2kVH1+fvOOX+9UChqHzqBvN4sx
-         oxcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=wIKAQlJ5EJGoiOmdek0QEY4ROpHfaSKBPeLwiXvsVhs=;
-        b=TMO7W0v4izcH8IU1teIvmLINxxWIHJMa/uS4KmSKTyCt5tIDMFJKNm9itwixb5PZjM
-         4hCTXbnRS7XqZl6esxnkr/yEfrEFU5fham745vJ4ln5jMOwE8d3lZDHKMFZboN2RaASE
-         ck6xZF9bPCVJ7Dqau7XE/3DU4OaZdE61FpXfqc1ZJMUpvIDa2R9tbIgbiHhAyeKSoq6i
-         1XWl/MxmKMNJeqX9m0MjyGKSheyECrwYxITWCwJdFHHpPmAQGwuDE06VXv8ivpOuTSEU
-         GKR3futvxf6y0n8HIlo7pWJEFCo6zPfjoecOH7vRVfHgndmzAjFL85IM4+j43/AnPNRm
-         rx5Q==
-X-Gm-Message-State: AOAM531tMMnmPL7YrxpQWsDxg3kuh+7DW+sJ5+BF0818wvdB0HzWsZkX
-        V9sveeXEek6WEDc8ahBPzludaHebV2RsBA==
-X-Google-Smtp-Source: ABdhPJwUad8FS77l0N6XR9hbRFDjoFcDuPDZlPtaI+ROx0M/Xa+ASTlCW28qVdgQnqcUOGj6m510DA==
-X-Received: by 2002:a05:6402:1ca6:: with SMTP id cz6mr70528395edb.171.1594646558717;
-        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
-Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id n9sm11806540edr.46.2020.07.13.06.22.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 06:22:38 -0700 (PDT)
-From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Michael Buesch <m@bues.ch>
-Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        bjorn@helgaas.com, skhan@linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 02/35] ssb: Change PCIBIOS_SUCCESSFUL to 0
-Date:   Mon, 13 Jul 2020 14:22:14 +0200
-Message-Id: <20200713122247.10985-3-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20200713122247.10985-1-refactormyself@gmail.com>
-References: <20200713122247.10985-1-refactormyself@gmail.com>
+        Mon, 13 Jul 2020 09:44:32 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594647871; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=oE5b6st5zFOL6uFm/6SHOr6+vQonImRge0LAfmuZgBY=; b=wwk3RIgbKV3trk9GkRKkLKsAncwEEjVgSJMbc+K8/i79bXC8Id4YuYb/HAkQKEANJqoDR6/p
+ v9Odv075usiqZwdDoLOrFIWAPGxXMnsemWA4CNynMm8WnZaKLa6LqPC2ye8ujvvWaVThPVux
+ x5qZakrl18Xu/VKwHyQBEnsyvQc=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n16.prod.us-west-2.postgun.com with SMTP id
+ 5f0c653fc9bd2efa2ecffdef (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 13 Jul 2020 13:44:31
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id BA9FCC43391; Mon, 13 Jul 2020 13:44:30 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5FF84C433C8;
+        Mon, 13 Jul 2020 13:44:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5FF84C433C8
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Saheed Olayemi Bolarinwa <refactormyself@gmail.com>
+Cc:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, bjorn@helgaas.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/14 v3] iwlegacy: Check the return value of pcie_capability_read_*()
+References: <20200710212026.27136-1-refactormyself@gmail.com>
+        <20200710212026.27136-5-refactormyself@gmail.com>
+Date:   Mon, 13 Jul 2020 16:44:26 +0300
+In-Reply-To: <20200710212026.27136-5-refactormyself@gmail.com> (Saheed Olayemi
+        Bolarinwa's message of "Fri, 10 Jul 2020 23:20:16 +0200")
+Message-ID: <87wo37a5s5.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
-Their scope should be limited within arch/x86.
++ linux-wireless
 
-Change all PCIBIOS_SUCCESSFUL to 0
+Saheed Olayemi Bolarinwa <refactormyself@gmail.com> writes:
 
-Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
----
- drivers/ssb/driver_gige.c    | 4 ++--
- drivers/ssb/driver_pcicore.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+>
+> Cc: bjorn@helgaas.com,
+> 	skhan@linuxfoundation.org,
+> 	linux-pci@vger.kernel.org,
+> 	linux-kernel-mentees@lists.linuxfoundation.org,
+> 	linux-kernel@vger.kernel.org,
+> 	Stanislaw Gruszka <stf_xl@wp.pl>,
+> 	linux-wireless@vger.kernel.org,
+> 	netdev@vger.kernel.org
+>
+> On failure pcie_capability_read_dword() sets it's last parameter, val
+> to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
+> failure. This would introduce a bug because (x & x) == (~0 & x).
+>
+> This bug can be avoided without changing the function's behaviour if the
+> return value of pcie_capability_read_dword is checked to confirm success.
+>
+> Check the return value of pcie_capability_read_dword() to ensure success.
+>
+> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-diff --git a/drivers/ssb/driver_gige.c b/drivers/ssb/driver_gige.c
-index ebee6b0e3c34..ccb4a35715bf 100644
---- a/drivers/ssb/driver_gige.c
-+++ b/drivers/ssb/driver_gige.c
-@@ -134,7 +134,7 @@ static int ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
- 	}
- 	spin_unlock_irqrestore(&dev->lock, flags);
- 
--	return PCIBIOS_SUCCESSFUL;
-+	return 0;
- }
- 
- static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
-@@ -164,7 +164,7 @@ static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
- 	}
- 	spin_unlock_irqrestore(&dev->lock, flags);
- 
--	return PCIBIOS_SUCCESSFUL;
-+	return 0;
- }
- 
- static int ssb_gige_probe(struct ssb_device *sdev,
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index c1186415896b..1b67af1097c8 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -212,7 +212,7 @@ static int ssb_pcicore_read_config(struct pci_bus *bus, unsigned int devfn,
- 				     PCI_FUNC(devfn), reg, val, size);
- 	spin_unlock_irqrestore(&cfgspace_lock, flags);
- 
--	return err ? PCIBIOS_DEVICE_NOT_FOUND : PCIBIOS_SUCCESSFUL;
-+	return err ? PCIBIOS_DEVICE_NOT_FOUND : 0;
- }
- 
- static int ssb_pcicore_write_config(struct pci_bus *bus, unsigned int devfn,
-@@ -226,7 +226,7 @@ static int ssb_pcicore_write_config(struct pci_bus *bus, unsigned int devfn,
- 				      PCI_FUNC(devfn), reg, &val, size);
- 	spin_unlock_irqrestore(&cfgspace_lock, flags);
- 
--	return err ? PCIBIOS_DEVICE_NOT_FOUND : PCIBIOS_SUCCESSFUL;
-+	return err ? PCIBIOS_DEVICE_NOT_FOUND : 0;
- }
- 
- static struct pci_ops ssb_pcicore_pciops = {
+Please check your setup, linux-wireless was not in Cc field.
+
 -- 
-2.18.2
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
