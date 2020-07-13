@@ -2,103 +2,81 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2393C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:51:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7DC9C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 23:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99C522067D
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 18:51:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594666280;
-	bh=2u4NzwccIq+s0JWCd50cqYM7N/biSOkqRNZOgiHeIlo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=o2f1xydGNrjOPrRpvtxG2nCN9DFgpHLC/jaNfyHtPMLg0VplgbO3+ZVyySU8oQH1o
-	 JayojRq2HIOffXmjPTWLlaaxe/3ENwtRApxF6be7PzllWxyRDZdPlSojmq4s7+JfJR
-	 qYhkU1uvNCiUz8NnsP/nRsA+WKerQr1ajj1TvHbU=
+	by mail.kernel.org (Postfix) with ESMTP id 896DC2184D
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 23:57:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="f3eub0dO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbgGMSvT (ORCPT
+        id S1726356AbgGMX53 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 14:51:19 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:41211 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbgGMSvT (ORCPT
+        Mon, 13 Jul 2020 19:57:29 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:56872 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726339AbgGMX52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 14:51:19 -0400
-Received: by mail-io1-f66.google.com with SMTP id p205so6085693iod.8;
-        Mon, 13 Jul 2020 11:51:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=5I3GK8ON13ZeITKAZxa8BAwViFRoyB1EmrHHm5nafuM=;
-        b=sDbrTxu26JAuW+34nXMIIaZmsFnn4ZiLW0uJfG6ZLc7lDWEDKxc+dVlV+eQ8e6rgOj
-         J+xtEW3vwcDjkSC9An+aqBC4aHoffjsnJsTi9RnVQDsl7fDSc+nrgeR9CGdoFy9RVo42
-         kyqLeTfu97tv9yyxmO6Juw6WTTl7lrEv+YcqFrTKs4hz1f3VR+nMmz4G6WKEyuVzoR+V
-         gtJG5tlljbM52r47v/64slZmGq+nLQPdOJBFJ19JVPpyBvqaogxQV4Getb34Go1daSJ8
-         6n9T2ptNUs9UYbmS40k8wCtjC18EY6R1JCPtu8tXCz0CjhzOOUlwaEqR5YoJfSeqDIzx
-         aNNQ==
-X-Gm-Message-State: AOAM530r2B+I94hmmiRwMeKepsMPVvE8APWE7GzdBPcb1yLwpi1vS9Kt
-        4GtzuioEMsyUx4BG7qT9lA==
-X-Google-Smtp-Source: ABdhPJxY7MYG7dgnOcq01GdR3ZrbB5Uuy2jWOltjU1O5UTSsTNwiMZ5UDwXUhFl0bCkNgc8pjKQkMw==
-X-Received: by 2002:a05:6602:1544:: with SMTP id h4mr1235724iow.24.1594666278319;
-        Mon, 13 Jul 2020 11:51:18 -0700 (PDT)
-Received: from xps15 ([64.188.179.252])
-        by smtp.gmail.com with ESMTPSA id f18sm7978542ion.47.2020.07.13.11.51.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 11:51:17 -0700 (PDT)
-Received: (nullmailer pid 531387 invoked by uid 1000);
-        Mon, 13 Jul 2020 18:51:16 -0000
-Date:   Mon, 13 Jul 2020 12:51:16 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Anilkumar Kolli <akolli@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] dt: bindings: net: update compatible for ath11k
-Message-ID: <20200713185116.GB529968@bogus>
-References: <1592458104-2961-1-git-send-email-akolli@codeaurora.org>
- <1592458104-2961-2-git-send-email-akolli@codeaurora.org>
+        Mon, 13 Jul 2020 19:57:28 -0400
+Received: from [192.168.254.5] (unknown [50.34.202.127])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 22FC013C2B0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 16:57:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 22FC013C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1594684648;
+        bh=rzbB0GpJXvzZKA5XtWvgLhPpwrGm2LQZ7Hq9FaLM+qo=;
+        h=To:From:Subject:Date:From;
+        b=f3eub0dOasunYcyBnjgX8UrRK88qLwCmMSOs5QhOIreLSOpsZUZzKeNBBgxUoK6PX
+         9uk7xoNuv1dxvFGncSrqutUoq0Yz+rwW3h7K+tzIDSdAg6mWa2DUo5IySD4HMAniq3
+         wHLQ5gj+ODrMJPLzlIKGH/FHqyepyrQkL+eHEncc=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: ax200, fw crashes, and sdata-in-driver
+Organization: Candela Technologies
+Message-ID: <bb23b798-f347-7559-b3dc-d8f713899d26@candelatech.com>
+Date:   Mon, 13 Jul 2020 16:57:27 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1592458104-2961-2-git-send-email-akolli@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 10:58:22AM +0530, Anilkumar Kolli wrote:
-> Add IPQ6018 wireless driver support,
-> its based on ath11k driver.
-> 
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> ---
-> V3:
->  - Use 'enum' rather than oneOf+const.
-> 
->  Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-> index a1717db36dba..b22cde6f3594 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-> @@ -17,7 +17,11 @@ description: |
->  
->  properties:
->    compatible:
-> -    const: qcom,ipq8074-wifi
-> +    oneOf:
-> +      - items:
-> +          - enum:
-> +              - qcom,ipq8074-wifi
-> +              - qcom,ipq6018-wifi
+Hello,
 
-Just need:
+I larded up my 5.4 kernel with KASAN and lockdep, and ran some tests.  This is with my
+patch that keeps from busy-spinning forever (see previous ignored patch).
 
-enum:
-  - qcom,ipq8074-wifi
-  - qcom,ipq6018-wifi
+After a few restarts and FW crashes, the ax200 could not recover firmware.  There
+were lots of sdata-in-driver errors, and then KASAN hit a use-after-free issue
+related to ax200 accessing sta object that was previously deleted.
+
+Now, I think I know why:
+
+In the ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
+method, it will clear the SDATA_IN_DRIVER flag, and according to comments,
+this is run when firmware cannot be recovered.  But, just because FW is
+dead does not mean that the driver itself has cleaned up its state.
+
+So question is, should ax200 (and all drivers) be responsible for cleaning
+up all state when FW cannot be recovered, or should instead mac80211 do cleanup
+in this case by, among other things, not clearing that flag (and probably
+not doing the ctx->driver_present = false; config as well)?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
