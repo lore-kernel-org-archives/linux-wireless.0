@@ -2,119 +2,101 @@ Return-Path: <SRS0=uAqM=AY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22514C433E5
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1361C433E3
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:16:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC17720738
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:02:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A95F620663
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jul 2020 17:16:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uvaZmiBx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gFu1qFbD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729849AbgGMRCB (ORCPT
+        id S1729835AbgGMRQY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jul 2020 13:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53350 "EHLO
+        Mon, 13 Jul 2020 13:16:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729751AbgGMRCB (ORCPT
+        with ESMTP id S1728466AbgGMRQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jul 2020 13:02:01 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B251DC061755
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 10:02:00 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id ga4so18038011ejb.11
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2020 10:02:00 -0700 (PDT)
+        Mon, 13 Jul 2020 13:16:24 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CA8DC061755;
+        Mon, 13 Jul 2020 10:16:24 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id a21so10075835otq.8;
+        Mon, 13 Jul 2020 10:16:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=dBpWhohA4qCjmIGT5bfMOr9NwEjL/Z4UnFbenETGipg=;
-        b=uvaZmiBxASuL2qzi+AMjmoPfNhR7BvV8tWOl6pu9wjXtyelMwr3EjAiUFgMNNmB/kd
-         Yuu+jpVTuXk71FabOPEBD1NgCHw/0a4zO7weAValbJikPkjiB5qkWis8dRREoHDPkLlD
-         pxsY2nfaUbZOC2TbbR3I60OY8KT470AOucKyLH/2vrWW/QJ3WcUPITBY7lAM+TqC0xvI
-         Ljwu9L2A/k7L6sRzQVFXgfSMpwoVm3rgAeTrfoXt+wWQk/XHuy5ejU4azzLaZwTDUu8a
-         1k31T2iev6hVeGdzWR4VWK6DGsf5GULtt3aRz00WmndkzUz7z/sSAnQhpu3ConoGskFv
-         ureQ==
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=zyBbRluQ5lYnUX7KFT5ZGZlRL0DFuI68QfOqM4RCzdA=;
+        b=gFu1qFbDmtup0YSpFIfNaHM0a48eh0Ul1xSKNTnWGxWxCcBWiJ9n6R78PekE3f8A7p
+         JtyBKwiVNIPBHsm1iLpcnuAI0d7JLvtXpcO2cPmP2Y/1z2LNW8bn0o3s7tgh3ZFU6b2s
+         rYAWZryk+LgjPlE7o2+DXW7bCV12FqJAwCESb5liZr9Gxj0/Tl4/+tGlQjUz/iqYICFF
+         R+RprQ6Xn5hWYnV3XgizYrw5LtuKlYa2H3jLOaZr2I4xgAgwckrkDkpSTcemOFp085ki
+         yPBScHeFWTT5WT96kmmb5qlPZuhyRlVOk8bHWSEAQe+f2EQyzg9XgzSPG+7m3XzozbWW
+         OJvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=dBpWhohA4qCjmIGT5bfMOr9NwEjL/Z4UnFbenETGipg=;
-        b=bsc+fX/c6nCQf1Y+bsa03WyJad4m0fQCiPHuWrwrcBZEhgAX2pkKjXlazpOZ0LWqtE
-         XoPacVoOpS7TLPDD85wxlxPzc+arwljoiVBcLla2EtyrlZYHzG1jHpepZIdQFsaFnj/G
-         HAYvPKBySeTN1n4GmS2Dvh5SEpnC3iJiHRMe/H3hkTzhSpp8QMTkM2XPER2uOQXXuQj1
-         y+YBXSll36i414AnFxo4dFUSRORZqF0RcICuAnsAraDUcol2VqSCVNC1+J1veyDtRt+2
-         cnxXwA2nhC3RNrj9tbxexqDamLGAkhhZZzze6uOrGNbmujTadHRDCMPE5/GWnc1MNbAD
-         ekyg==
-X-Gm-Message-State: AOAM530g3IocVLDHN8HnYoOTQytKkBNM3LVews8Bs7CePSD70FMI8ifz
-        0s4Rawmsl47kcKuqQ/vAeAwQobgFSMg7jQ==
-X-Google-Smtp-Source: ABdhPJwJ+M9ROc70wUCp7GjyxAJGbscyNjvG6NmOnMoxorDMJhuztFffg+0QpGN6jAm68PEU55Hm/w==
-X-Received: by 2002:a17:907:2654:: with SMTP id ar20mr656650ejc.62.1594659718837;
-        Mon, 13 Jul 2020 10:01:58 -0700 (PDT)
-Received: from net.saheed (54007186.dsl.pool.telekom.hu. [84.0.113.134])
-        by smtp.gmail.com with ESMTPSA id z11sm6069100ejx.17.2020.07.13.10.01.57
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=zyBbRluQ5lYnUX7KFT5ZGZlRL0DFuI68QfOqM4RCzdA=;
+        b=c+D7xGPGxS3L5Lknb+0Xz6Kfz9L1JK9hhxvgMxkg6vHrsdamLMwiEUwNzwg3Zv2P8h
+         XgK3tLlgDASQMgp55YHX4kS7CDjZ4/KFLRV8LQieaycZzq9OLwzjzABjcC5DlQWChrp6
+         llrXAENAzeqxw+4hyzemobUq5JHgtNj+yzt+PKviXFGZdUcqvR25TEk8fr/vRle8R/ol
+         ge7Uiq78VQ9ug9k/J5rw/boQNKYpOexKnqF10ilXcCBwhvnFUKKGB81WeVe3/5VPcAe/
+         W7OqYtZSt+a4a7p7Wae4Rq47WJiAlm/U+D1Z6yqc00a09FAd/EyvNZxBX7v3h0oV99fj
+         pjHA==
+X-Gm-Message-State: AOAM5328Cx84uwL0oUNjoPBMTCMeFMBk0RtF0qy4tBU3pRMpqV25oohP
+        ONa9yOt+A4WNWPDk+hKGcx0yCn2c
+X-Google-Smtp-Source: ABdhPJzJONrB+kPTWhVu9FhPTJ3Uhjr1/qB3HON7hdP7A8eAITLGJ3+s1k4xTNEcxUfwaaXa3lhIsg==
+X-Received: by 2002:a9d:7a4c:: with SMTP id z12mr595958otm.126.1594660583279;
+        Mon, 13 Jul 2020 10:16:23 -0700 (PDT)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id a16sm2824303oid.14.2020.07.13.10.16.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Jul 2020 10:01:58 -0700 (PDT)
-Subject: Re: [PATCH 4/14 v3] iwlegacy: Check the return value of
- pcie_capability_read_*()
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, bjorn@helgaas.com,
-        linux-wireless@vger.kernel.org
-References: <20200710212026.27136-1-refactormyself@gmail.com>
- <20200710212026.27136-5-refactormyself@gmail.com>
- <87wo37a5s5.fsf@codeaurora.org>
-From:   Saheed Bolarinwa <refactormyself@gmail.com>
-Message-ID: <fa99aee8-86ee-558f-cb6f-761519c13159@gmail.com>
-Date:   Mon, 13 Jul 2020 20:02:20 +0200
+        Mon, 13 Jul 2020 10:16:22 -0700 (PDT)
+Subject: Re: [RFC PATCH 02/35] ssb: Change PCIBIOS_SUCCESSFUL to 0
+To:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        helgaas@kernel.org, Michael Buesch <m@bues.ch>
+Cc:     bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20200713122247.10985-1-refactormyself@gmail.com>
+ <20200713122247.10985-3-refactormyself@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <70e57af0-6a8c-a893-67c9-0181af16ae2b@lwfinger.net>
+Date:   Mon, 13 Jul 2020 12:16:21 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <87wo37a5s5.fsf@codeaurora.org>
+In-Reply-To: <20200713122247.10985-3-refactormyself@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixed
+On 7/13/20 7:22 AM, Saheed O. Bolarinwa wrote:
+> In reference to the PCI spec (Chapter 2), PCIBIOS* is an x86 concept.
+> Their scope should be limited within arch/x86.
+> 
+> Change all PCIBIOS_SUCCESSFUL to 0
+> 
+> Signed-off-by: "Saheed O. Bolarinwa" <refactormyself@gmail.com>
 
-On 7/13/20 3:44 PM, Kalle Valo wrote:
-> + linux-wireless
->
-> Saheed Olayemi Bolarinwa <refactormyself@gmail.com> writes:
->
->> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
->>
->> Cc: bjorn@helgaas.com,
->> 	skhan@linuxfoundation.org,
->> 	linux-pci@vger.kernel.org,
->> 	linux-kernel-mentees@lists.linuxfoundation.org,
->> 	linux-kernel@vger.kernel.org,
->> 	Stanislaw Gruszka <stf_xl@wp.pl>,
->> 	linux-wireless@vger.kernel.org,
->> 	netdev@vger.kernel.org
->>
->> On failure pcie_capability_read_dword() sets it's last parameter, val
->> to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
->> failure. This would introduce a bug because (x & x) == (~0 & x).
->>
->> This bug can be avoided without changing the function's behaviour if the
->> return value of pcie_capability_read_dword is checked to confirm success.
->>
->> Check the return value of pcie_capability_read_dword() to ensure success.
->>
->> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
->> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
-> Please check your setup, linux-wireless was not in Cc field.
->
-Thank you for letting me know. I have fixed it and resent to the missing 
-addresses.
+Could you please tell me what difference this makes? It looks like source churn 
+rather than a substantive change. The symbol is defined in pci.h and is used in 
+many architures. Certainly, PCIBIOS_SUCCESSFUL indicates success even more 
+clearly than 0 does.
+
+Why is your name inside quotes in your s-o-b?
+
+Larry
