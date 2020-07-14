@@ -1,195 +1,96 @@
-Return-Path: <SRS0=1uwz=AX=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=SSFa=AZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E359C433E1
-	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jul 2020 13:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE82AC433E4
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 17:49:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5442220674
-	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jul 2020 13:17:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B34C722582
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 17:49:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uZLm5AvI"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bDXIRIo/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728834AbgGLNR6 (ORCPT
+        id S1728117AbgGNRtP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 12 Jul 2020 09:17:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50444 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728686AbgGLNR5 (ORCPT
+        Tue, 14 Jul 2020 13:49:15 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:19863 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726817AbgGNRtN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Jul 2020 09:17:57 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33AF1C061794
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2020 06:17:57 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id l2so10358017wmf.0
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2020 06:17:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=WiO8m3reEtbAs5WwDH/QNK8BneK0/E/6I2Kwl4JBBIs=;
-        b=uZLm5AvIVRwpxw+cp8/zvoVWOktrXae6KdK+ZXEbiLsZ30+Ik0lXcSiu5F8dx4k+h4
-         LI5XDDpHdGtJbCn2lNrzhUPgTLNOxj58VFxAxJ3OHT4eWvYy20TCLg8Oo5kNmtZhL6EW
-         96deVk9UvHpbLNQQ5bAWlP57H83QcghhKPDMxkqP65dSkNJMEkpy37/Dp90W/sEPScBM
-         TKYXpnXGoknGAn5TBcrLhJvAOBx3+1iVlwMTX7J71AzRCbeYbzkPH89p6rjo8iceREXL
-         2Ze0rtCdxUfRQBKt/tPpmHa1iueFnG/H0lcHQZQrEHKaK3MBTxt5qAFDcvLqIOpC6DjD
-         aiCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=WiO8m3reEtbAs5WwDH/QNK8BneK0/E/6I2Kwl4JBBIs=;
-        b=U8UQOw3qbJGtWAS1BPU0Zdq3VC27ctwCNHYYpve4n8hSsV0kSH2lU46UNb9LHUxwFP
-         S87REFJSe43pDKeDK4BFrw+HstpEnv8adIcS8QQZQqunjfmzMY5bw53Nb+u5+7E0x8qP
-         q8ueFitde7F8v+BQ33Vi/nZrCSQk3C6ToL70W9wUgdVF039gyNSPFPuGftr3QxnlZqwn
-         nV8tRbhc2nyIf3G4f89jmj0Z/a24cC4N3r8kAmz61eStKaOVjbbNNZkO7qBIwJ9uSJc4
-         YhYQRApNPqCC8c1aBJDUKV6GapGBb/LYzApTJnY+PtBWWluMHCUCgj09oPVOoTLzrQcU
-         ZFRg==
-X-Gm-Message-State: AOAM531kC63961qz/Hp+iLb69t5J035vwqIgF+GHsw/wkJdK9rJCINrT
-        or//8F9t8SUzSh9msPm/AaHPV1lj0o0MOcSkwLK38FlQo6A=
-X-Google-Smtp-Source: ABdhPJw/CY9VZSsG+YSSST6qZ0iWTx0+N+6q0ooeD+/oI55OjJzNRkd4CjjO6yGdFKyJK0O7ApDyxQG1JMVwjWZzsq4=
-X-Received: by 2002:a1c:f609:: with SMTP id w9mr14386923wmc.150.1594559875341;
- Sun, 12 Jul 2020 06:17:55 -0700 (PDT)
+        Tue, 14 Jul 2020 13:49:13 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594748952; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=HvsG3hhsmb4gPVoc6UyHgNH5M3ItFOz74uIV5eiJe8Y=; b=bDXIRIo/ghe7A9VLsAFEBxQmC1vBuzr0SRoTLqcty9Te3c7bXUbgxlwo1vDemsLON/pFOtdf
+ 9iJUE3KB9lKcE7/vQ7EpDnObc9kTEDprZPi0FdkrojJZW8xHvDKoeNwJm2RFKwv8KB2LWjDp
+ 3lgx7pTAOPUps27tg/W3a4YbJV8=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n18.prod.us-west-2.postgun.com with SMTP id
+ 5f0df01675eeb235f6006cc0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 14 Jul 2020 17:49:10
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id EE35BC433C8; Tue, 14 Jul 2020 17:49:09 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB94DC433CA;
+        Tue, 14 Jul 2020 17:49:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DB94DC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     Wireless <linux-wireless@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Joseph Chuang <joseph.chuang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: Re: linux-next: Fixes tag needs some work in the wireless-drivers-next tree
+References: <20200714205942.26248f1c@canb.auug.org.au>
+Date:   Tue, 14 Jul 2020 20:49:05 +0300
+In-Reply-To: <20200714205942.26248f1c@canb.auug.org.au> (Stephen Rothwell's
+        message of "Tue, 14 Jul 2020 20:59:42 +1000")
+Message-ID: <87mu429ecu.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-From:   Tony Thuitai <thuitaitony@gmail.com>
-Date:   Sun, 12 Jul 2020 16:17:44 +0300
-Message-ID: <CAHgcA=v0NyqEA1tc5WvgpXOS3MAX_10uBtWZVi3be+8s_6ygPg@mail.gmail.com>
-Subject: 
-To:     linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary="000000000000f1da4e05aa3e6673"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000f1da4e05aa3e6673
-Content-Type: text/plain; charset="UTF-8"
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-Linux Distro: Linux Mint 20 Cinnamon
-PC: HP Notebook 15-bs1xx
+> Hi all,
+>
+> In commit
+>
+>   ad96bc27032c ("brcmfmac: initialize the requested dwell time")
+>
+> Fixes tag
+>
+>   Fixes: 4905432b28b7 ("brcmfmac: Fix P2P Group Formation failure via Go-neg method")
+>
+> has these problem(s):
+>
+>   - Target SHA1 does not exist
+>
+>
+> Maybe you meant
+>
+> Fixes: 9c29da3f4e7e ("brcmfmac: Fix P2P Group Formation failure via Go-neg method")
 
-Network Devices:
-Realtek RTL8111/8168/8411 PCI Express Gigabit Ethernet driver: r8169
-Device-2: Realtek RTL8723DE 802.11b/g/n PCIe Adapter driver: rtw_pci
-Device-3: Realtek 802.11n WLAN Adapter type: USB driver: btusb
+Heh, I noticed this and I even fixed it but maybe forgot to save my edit
+or something. I'll need to be more careful next time.
 
-I suspect snapd to be the cause of the errors. The errors also occur
-when using rtw_8723de driver from lwfinger's rtw88 (lwfinger's
-rtlwifi_new discontinued and rtw88 branch moved to lwfinger's rtw88
-repo) GitHub repo. When installing snapd for the first time and when
-snapd is still installed: updating network related packages, changing
-a setting in a network related configuration file, disabling bluetooth
-via systemd and creating a startup script/command via Startup
-applications in Cinnamon desktop and rebooting to confirm the changes
-cause the driver to fail and become unavailable. The errors that are
-logged every time the driver fails are in the attached 'driver fail 1'
-file and in 'driver fail 2' file contains some errors that have
-occurred at least once when the driver fails. In the 'driver working
-with error' log contains an error that is repeated which seems to be a
-firmware issue
-
---000000000000f1da4e05aa3e6673
-Content-Type: application/octet-stream; name=driver fail 1
-Content-Disposition: attachment; filename=driver fail 1
-Content-Transfer-Encoding: base64
-Content-ID: <f_kcj3rmu00>
-X-Attachment-Id: f_kcj3rmu00
-
-MTI6NDg6MTIgd3BhX3N1cHBsaWNhbnQ6IHdsbzE6IEZhaWxlZCB0byBpbml0aWFsaXplIGRyaXZl
-ciBpbnRlcmZhY2UKMTI6NDg6MTIga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVk
-IHRvIHBvd2VyIG9uIG1hYwoxMjo0ODoxMiBOZXR3b3JrTWFuYWdlcjogPGVycm9yPiBbMTU5NDU0
-NzI5Mi42ODQ5XSBzdXAtaWZhY2VbMHg1NWFlNGJjZDczZDAsd2xvMV06IGVycm9yIGFkZGluZyBp
-bnRlcmZhY2U6IHdwYV9zdXBwbGljYW50IGNvdWxkbid0IGdyYWIgdGhpcyBpbnRlcmZhY2UuCjEy
-OjQ4OjEyIHdwYV9zdXBwbGljYW50OiBDb3VsZCBub3Qgc2V0IGludGVyZmFjZSB3bG8xIGZsYWdz
-IChVUCk6IEludmFsaWQgYXJndW1lbnQKMTI6NDg6MDYga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6
-MDAuMDogZmFpbGVkIHRvIHBvd2VyIG9uIG1hYwoxMjo0ODowNiB3cGFfc3VwcGxpY2FudDogbmw4
-MDIxMTogQ291bGQgbm90IHNldCBpbnRlcmZhY2UgJ3dsbzEnIFVQCjEyOjQ3OjUwIGtlcm5lbDog
-cnR3X3BjaSAwMDAwOjBkOjAwLjA6IGZhaWxlZCB0byBwb3dlciBvbiBtYWMKMTI6NDc6NTAgd3Bh
-X3N1cHBsaWNhbnQ6IHdsbzE6IEZhaWxlZCB0byBpbml0aWFsaXplIGRyaXZlciBpbnRlcmZhY2UK
-MTI6NDc6NTAgTmV0d29ya01hbmFnZXI6IDxlcnJvcj4gWzE1OTQ1NDcyNzAuNzAwNl0gc3VwLWlm
-YWNlWzB4NTVhZTRiY2Q3MmUwLHdsbzFdOiBlcnJvciBhZGRpbmcgaW50ZXJmYWNlOiB3cGFfc3Vw
-cGxpY2FudCBjb3VsZG4ndCBncmFiIHRoaXMgaW50ZXJmYWNlLgoxMjo0Nzo1MCB3cGFfc3VwcGxp
-Y2FudDogV0VYVDogQ291bGQgbm90IHNldCBpbnRlcmZhY2UgJ3dsbzEnIFVQCjEyOjQ3OjQ0IGtl
-cm5lbDogcnR3X3BjaSAwMDAwOjBkOjAwLjA6IGZhaWxlZCB0byBwb3dlciBvbiBtYWMKMTI6NDc6
-NDQgd3BhX3N1cHBsaWNhbnQ6IG5sODAyMTE6IENvdWxkIG5vdCBzZXQgaW50ZXJmYWNlICd3bG8x
-JyBVUAoxMjo0NzoyOCBrZXJuZWw6IHJ0d19wY2kgMDAwMDowZDowMC4wOiBmYWlsZWQgdG8gcG93
-ZXIgb24gbWFjCjEyOjQ3OjI4IHdwYV9zdXBwbGljYW50OiB3bG8xOiBGYWlsZWQgdG8gaW5pdGlh
-bGl6ZSBkcml2ZXIgaW50ZXJmYWNlCjEyOjQ3OjI4IE5ldHdvcmtNYW5hZ2VyOiA8ZXJyb3I+IFsx
-NTk0NTQ3MjQ4LjcyODhdIHN1cC1pZmFjZVsweDU1YWU0YmNkNzFmMCx3bG8xXTogZXJyb3IgYWRk
-aW5nIGludGVyZmFjZTogd3BhX3N1cHBsaWNhbnQgY291bGRuJ3QgZ3JhYiB0aGlzIGludGVyZmFj
-ZS4KMTI6NDc6Mjggd3BhX3N1cHBsaWNhbnQ6IFdFWFQ6IENvdWxkIG5vdCBzZXQgaW50ZXJmYWNl
-ICd3bG8xJyBVUAoxMjo0NzoyMiBwdWxzZWF1ZGlvOiAgIGh3X3B0ciAgICAgICA6IDQyNjY4OAox
-Mjo0NzoyMiB3cGFfc3VwcGxpY2FudDogbmw4MDIxMTogQ291bGQgbm90IHNldCBpbnRlcmZhY2Ug
-J3dsbzEnIFVQCjEyOjQ3OjIyIHB1bHNlYXVkaW86IHNuZF9wY21fYXZhaWwoKSByZXR1cm5lZCBh
-IHZhbHVlIHRoYXQgaXMgZXhjZXB0aW9uYWxseSBsYXJnZTogMTExNzI4MCBieXRlcyAoNjMzMyBt
-cykuCjEyOjQ3OjIyIHdwYV9zdXBwbGljYW50OiBDb3VsZCBub3Qgc2V0IGludGVyZmFjZSB3bG8x
-IGZsYWdzIChVUCk6IEludmFsaWQgYXJndW1lbnQKMTI6NDc6MjIga2VybmVsOiBydHdfcGNpIDAw
-MDA6MGQ6MDAuMDogZmFpbGVkIHRvIHBvd2VyIG9uIG1hYwoxMjo0NzowNiBOZXR3b3JrTWFuYWdl
-cjogPGVycm9yPiBbMTU5NDU0NzIyNi4zNjI2XSBzdXAtaWZhY2VbMHg1NWFlNGJjZDcxMDAsd2xv
-MV06IGVycm9yIGFkZGluZyBpbnRlcmZhY2U6IHdwYV9zdXBwbGljYW50IGNvdWxkbid0IGdyYWIg
-dGhpcyBpbnRlcmZhY2UuCjEyOjQ3OjA2IHdwYV9zdXBwbGljYW50OiB3bG8xOiBGYWlsZWQgdG8g
-aW5pdGlhbGl6ZSBkcml2ZXIgaW50ZXJmYWNlCjEyOjQ3OjA2IGtlcm5lbDogcnR3X3BjaSAwMDAw
-OjBkOjAwLjA6IGZhaWxlZCB0byBwb3dlciBvbiBtYWMKMTI6NDc6MDYgd3BhX3N1cHBsaWNhbnQ6
-IENvdWxkIG5vdCBzZXQgaW50ZXJmYWNlIHdsbzEgZmxhZ3MgKFVQKTogSW52YWxpZCBhcmd1bWVu
-dAoxMjo0NzowMyBrZXJuZWw6IHVzYiB1c2IyLXBvcnQ0OiB1bmFibGUgdG8gZW51bWVyYXRlIFVT
-QiBkZXZpY2UKMTI6NDc6MDAgd3BhX3N1cHBsaWNhbnQ6IG5sODAyMTE6IENvdWxkIG5vdCBzZXQg
-aW50ZXJmYWNlICd3bG8xJyBVUAoxMjo0NzowMCBrZXJuZWw6IHJ0d19wY2kgMDAwMDowZDowMC4w
-OiBmYWlsZWQgdG8gcG93ZXIgb24gbWFjCjEyOjQ3OjAwIHdwYV9zdXBwbGljYW50OiBDb3VsZCBu
-b3Qgc2V0IGludGVyZmFjZSB3bG8xIGZsYWdzIChVUCk6IEludmFsaWQgYXJndW1lbnQKMTI6NDY6
-NTQga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHBvd2VyIG9uIG1hYwox
-Mjo0Njo1MCBrZXJuZWw6IHVzYiAyLTQ6IGRldmljZSBub3QgYWNjZXB0aW5nIGFkZHJlc3MgMiwg
-ZXJyb3IgLTcxCg==
---000000000000f1da4e05aa3e6673
-Content-Type: application/octet-stream; name=driver working with error
-Content-Disposition: attachment; filename=driver working with error
-Content-Transfer-Encoding: base64
-Content-ID: <f_kcj3rmyj2>
-X-Attachment-Id: f_kcj3rmyj2
-
-MTU6Mzg6MjYga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHNlbmQgaDJj
-IGNvbW1hbmQKMTU6MzA6Mzkga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRv
-IHNlbmQgaDJjIGNvbW1hbmQKMTU6MzA6Mzkga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDog
-ZmFpbGVkIHRvIHNlbmQgaDJjIGNvbW1hbmQKMTU6MzA6MzYga2VybmVsOiBydHdfcGNpIDAwMDA6
-MGQ6MDAuMDogZmFpbGVkIHRvIHNlbmQgaDJjIGNvbW1hbmQKMTU6MzA6MjMga2VybmVsOiBydHdf
-cGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHNlbmQgaDJjIGNvbW1hbmQKMTU6MzA6MjIga2Vy
-bmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHNlbmQgaDJjIGNvbW1hbmQK
---000000000000f1da4e05aa3e6673
-Content-Type: application/octet-stream; name=driver fail 2
-Content-Disposition: attachment; filename=driver fail 2
-Content-Transfer-Encoding: base64
-Content-ID: <f_kcj3rmww1>
-X-Attachment-Id: f_kcj3rmww1
-
-MTI6Mzg6NTEga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHBvd2VyIG9u
-IG1hYwoxMjozODo1MSBOZXR3b3JrTWFuYWdlcjogPGVycm9yPiBbMTU5NDU0NjczMS43MjE4XSBz
-dXAtaWZhY2VbMHg1NjM5ZDEyMTFhZTAsd2xvMV06IGVycm9yIGFkZGluZyBpbnRlcmZhY2U6IHdw
-YV9zdXBwbGljYW50IGNvdWxkbid0IGdyYWIgdGhpcyBpbnRlcmZhY2UuCjEyOjM4OjUxIHdwYV9z
-dXBwbGljYW50OiB3bG8xOiBGYWlsZWQgdG8gaW5pdGlhbGl6ZSBkcml2ZXIgaW50ZXJmYWNlCjEy
-OjM4OjQ1IGtlcm5lbDogcnR3X3BjaSAwMDAwOjBkOjAwLjA6IGZhaWxlZCB0byBwb3dlciBvbiBt
-YWMKMTI6Mzg6NDUgd3BhX3N1cHBsaWNhbnQ6IG5sODAyMTE6IENvdWxkIG5vdCBzZXQgaW50ZXJm
-YWNlICd3bG8xJyBVUAoxMjozODoyOSBOZXR3b3JrTWFuYWdlcjogPGVycm9yPiBbMTU5NDU0Njcw
-OS43NDE3XSBzdXAtaWZhY2VbMHg1NjM5ZDEyMTE5ZjAsd2xvMV06IGVycm9yIGFkZGluZyBpbnRl
-cmZhY2U6IHdwYV9zdXBwbGljYW50IGNvdWxkbid0IGdyYWIgdGhpcyBpbnRlcmZhY2UuCjEyOjM4
-OjI5IHdwYV9zdXBwbGljYW50OiB3bG8xOiBGYWlsZWQgdG8gaW5pdGlhbGl6ZSBkcml2ZXIgaW50
-ZXJmYWNlCjEyOjM4OjI5IGtlcm5lbDogcnR3X3BjaSAwMDAwOjBkOjAwLjA6IGZhaWxlZCB0byBw
-b3dlciBvbiBtYWMKMTI6Mzg6MjMgd3BhX3N1cHBsaWNhbnQ6IG5sODAyMTE6IENvdWxkIG5vdCBz
-ZXQgaW50ZXJmYWNlICd3bG8xJyBVUAoxMjozODoyMyBrZXJuZWw6IHJ0d19wY2kgMDAwMDowZDow
-MC4wOiBmYWlsZWQgdG8gcG93ZXIgb24gbWFjCjEyOjM4OjIzIHdwYV9zdXBwbGljYW50OiBDb3Vs
-ZCBub3Qgc2V0IGludGVyZmFjZSB3bG8xIGZsYWdzIChVUCk6IEludmFsaWQgYXJndW1lbnQKMTI6
-Mzg6MDcgd3BhX3N1cHBsaWNhbnQ6IHdsbzE6IEZhaWxlZCB0byBpbml0aWFsaXplIGRyaXZlciBp
-bnRlcmZhY2UKMTI6Mzg6MDcgTmV0d29ya01hbmFnZXI6IDxlcnJvcj4gWzE1OTQ1NDY2ODcuMjc5
-Nl0gc3VwLWlmYWNlWzB4NTYzOWQxMjExOTAwLHdsbzFdOiBlcnJvciBhZGRpbmcgaW50ZXJmYWNl
-OiB3cGFfc3VwcGxpY2FudCBjb3VsZG4ndCBncmFiIHRoaXMgaW50ZXJmYWNlLgoxMjozODowNyB3
-cGFfc3VwcGxpY2FudDogQ291bGQgbm90IHNldCBpbnRlcmZhY2Ugd2xvMSBmbGFncyAoVVApOiBJ
-bnZhbGlkIGFyZ3VtZW50CjEyOjM4OjA3IGtlcm5lbDogcnR3X3BjaSAwMDAwOjBkOjAwLjA6IGZh
-aWxlZCB0byBwb3dlciBvbiBtYWMKMTI6Mzg6MDEgd3BhX3N1cHBsaWNhbnQ6IG5sODAyMTE6IENv
-dWxkIG5vdCBzZXQgaW50ZXJmYWNlICd3bG8xJyBVUAoxMjozODowMSBrZXJuZWw6IHJ0d19wY2kg
-MDAwMDowZDowMC4wOiBmYWlsZWQgdG8gcG93ZXIgb24gbWFjCjEyOjM4OjAxIHdwYV9zdXBwbGlj
-YW50OiBDb3VsZCBub3Qgc2V0IGludGVyZmFjZSB3bG8xIGZsYWdzIChVUCk6IEludmFsaWQgYXJn
-dW1lbnQKMTI6Mzc6NTUga2VybmVsOiBydHdfcGNpIDAwMDA6MGQ6MDAuMDogZmFpbGVkIHRvIHBv
-d2VyIG9uIG1hYwoxMjozNzo1MyBrZXJuZWw6IHVzYiB1c2IyLXBvcnQ0OiB1bmFibGUgdG8gZW51
-bWVyYXRlIFVTQiBkZXZpY2UK
---000000000000f1da4e05aa3e6673--
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
