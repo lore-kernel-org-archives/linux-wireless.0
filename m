@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6C5C4345A
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 14:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2072C43460
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 14:42:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB2AF208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 14:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 938E72064B
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jul 2020 14:42:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594737714;
-	bh=xifNgLzE//dVOjkKwDmRmsYcKoMZQEEAF3yKPXDq0V0=;
+	s=default; t=1594737748;
+	bh=04hSxckEE+xLDBkj4UTbZjGpGuuD88fIQvilD+Jlc+s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Xg0IMW743E+lYHi6TcX6V1ofe5pn9L5TJftfRL1aI0ZLWjBEvIADRY6XVo20cJ7Z9
-	 vZpwUNoILA12o1ssTg11BlLOP6eY8eUPUw3GwZf4wWE9fiQHwdTYvjlOoLPumt7jUB
-	 WjmKzHwJNiAaMmMrcIdV8GvqbjwTfPxPKKLj88pg=
+	b=HJDv/2CgK/SW61eoPf+4Mv5oH6025kyjESXCFMjccLMM53WXjIIpzmK9eMHFM3TC+
+	 a/Vx8i7zbsFaTiyvfZuZuTwavGUoXQ/zmzQ52lJNZWa35HTmS9vDxSqLipqS7+ENAZ
+	 A2VwvsI7LX0kLe3GNmZEM87uJi5A2iuWhLI1f+Xw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729527AbgGNOlt (ORCPT
+        id S1729204AbgGNOkC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:41:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55976 "EHLO mail.kernel.org"
+        Tue, 14 Jul 2020 10:40:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729283AbgGNOkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Jul 2020 10:40:14 -0400
+        id S1729193AbgGNOkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:40:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D5E3C22519;
-        Tue, 14 Jul 2020 14:40:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6C2A422574;
+        Tue, 14 Jul 2020 14:39:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594737613;
-        bh=xifNgLzE//dVOjkKwDmRmsYcKoMZQEEAF3yKPXDq0V0=;
+        s=default; t=1594737600;
+        bh=04hSxckEE+xLDBkj4UTbZjGpGuuD88fIQvilD+Jlc+s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EzCxW88LtuS9WdR5t9uqN5H2/c8/k2msZy3LGWeBUJgwAdZ76Xku3d9ZeHDV3LdXN
-         uxvdjMjJ1qU5Ri7JSSmkVAMtO2lBv3YE0tbHzc9wK5+woLNpjx7lSKvp3qe5AwYX+C
-         +9AwWDhCKXbbr5JDSlfykewHwguX9onOXAdqk7Sk=
+        b=UOVoSvKJSwPRZdwYZGEOqCS3iWZj+1XINTepS8pkqQDA1Xha/X14fFdxs+3WOSULs
+         UT3fIxSnpbW8m81xboGVJzap8IJogBSC+nHnzZ0zSB2ewyHUdKXEtGnG4Jg/Bcr8SS
+         RIVUUClRY1N55O5zet5C64fyKMzWlWl4ouR4JDHs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 02/10] mac80211: allow rx of mesh eapol frames with default rx key
-Date:   Tue, 14 Jul 2020 10:40:02 -0400
-Message-Id: <20200714144010.4035987-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/12] mac80211: allow rx of mesh eapol frames with default rx key
+Date:   Tue, 14 Jul 2020 10:39:46 -0400
+Message-Id: <20200714143954.4035840-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200714144010.4035987-1-sashal@kernel.org>
-References: <20200714144010.4035987-1-sashal@kernel.org>
+In-Reply-To: <20200714143954.4035840-1-sashal@kernel.org>
+References: <20200714143954.4035840-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -89,10 +89,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 26 insertions(+)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d3334fd84ca20..9be82ed02e0e5 100644
+index 56d7a3dfa543b..04ae9de55d74b 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2098,6 +2098,7 @@ static int ieee80211_802_1x_port_control(struct ieee80211_rx_data *rx)
+@@ -2120,6 +2120,7 @@ static int ieee80211_802_1x_port_control(struct ieee80211_rx_data *rx)
  
  static int ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
  {
@@ -100,7 +100,7 @@ index d3334fd84ca20..9be82ed02e0e5 100644
  	struct sk_buff *skb = rx->skb;
  	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
  
-@@ -2108,6 +2109,31 @@ static int ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
+@@ -2130,6 +2131,31 @@ static int ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
  	if (status->flag & RX_FLAG_DECRYPTED)
  		return 0;
  
