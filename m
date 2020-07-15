@@ -7,63 +7,60 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B597C433E2
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 09:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A418EC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 09:11:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB92220672
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 09:11:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 749A420672
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 09:11:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZRTe9uWz"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="b/7ISoAM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730106AbgGOJLA (ORCPT
+        id S1730169AbgGOJLv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Jul 2020 05:11:00 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:33885 "EHLO
+        Wed, 15 Jul 2020 05:11:51 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:62435 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728206AbgGOJK7 (ORCPT
+        by vger.kernel.org with ESMTP id S1729098AbgGOJLv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Jul 2020 05:10:59 -0400
+        Wed, 15 Jul 2020 05:11:51 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1594804259; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1594804310; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=5ja9tDhHKqdxkv48zPzy76y1NrN/fkGHvNsEgvXr6Tc=;
- b=ZRTe9uWzJ75XMnrj/WrbSvV8pZCA+lYP1wuiOy9MhKkyVbkyYwMhFDVgRJ3tr4hy5u+v/Llq
- 9YDxVh/71pUrUriwDOvHNZzHKdVHU7e5mTiL7VvtvQzv+fpKg7zb7OLmMxl6Mw0pHdrCFr6w
- q1NK9yuIG//7Xdz/0cDS3lzJ+g0=
+ Content-Type: Sender; bh=JWTEo7AOK2t98LjFXKWRzURHx39B2viKa4Eu5tu66As=;
+ b=b/7ISoAMkJ0F1Go7mIQBRNP4eac90uGgZNE2vbQlYAJsw/ztnB6JEDGsX55wlhbLQ8mafNHV
+ 3A1eZQMSro2mz8RZjGPrBGn8PN1Jp5hGS8Erq4jISXYmBf1FKwRDDTJUiOc+InctCFTfTD0V
+ 4mrUKnr7wGXJ/y/y+zjOR5oPS+k=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
- 5f0ec81f8e36ecda303a4cf6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 09:10:55
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 5f0ec8551012768490ba50d7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 09:11:49
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E08E7C433C9; Wed, 15 Jul 2020 09:10:54 +0000 (UTC)
+        id D3548C433CB; Wed, 15 Jul 2020 09:11:48 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6B9CBC433CA;
-        Wed, 15 Jul 2020 09:10:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6B9CBC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BD980C433CA;
+        Wed, 15 Jul 2020 09:11:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BD980C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v1] rtw88: pci: disable aspm for platform inter-op with
- module
- parameter
+Subject: Re: [PATCH] rtw88: 8822c: add new RFE type 6
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200605074703.32726-1-yhchuang@realtek.com>
-References: <20200605074703.32726-1-yhchuang@realtek.com>
+In-Reply-To: <20200623072014.31631-1-yhchuang@realtek.com>
+References: <20200623072014.31631-1-yhchuang@realtek.com>
 To:     <yhchuang@realtek.com>
-Cc:     <kernel@iuliancostan.com>, <linux-wireless@vger.kernel.org>,
-        <i@outv.im>, <trevor@shartrec.com>
+Cc:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200715091054.E08E7C433C9@smtp.codeaurora.org>
-Date:   Wed, 15 Jul 2020 09:10:54 +0000 (UTC)
+Message-Id: <20200715091148.D3548C433CB@smtp.codeaurora.org>
+Date:   Wed, 15 Jul 2020 09:11:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -73,27 +70,17 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > 
-> Some platforms cannot read the DBI register successfully for the
-> ASPM settings. After the read failed, the bus could be unstable,
-> and the device just became unavailable [1]. For those platforms,
-> the ASPM should be disabled. But as the ASPM can help the driver
-> to save the power consumption in power save mode, the ASPM is still
-> needed. So, add a module parameter for them to disable it, then
-> the device can still work, while others can benefit from the less
-> power consumption that brings by ASPM enabled.
+> A new RFE type 6 of RTL8822CE is released, add it in the RFE type
+> definition.
 > 
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=206411
-> [2] Note that my lenovo T430 is the same.
-> 
-> Fixes: 3dff7c6e3749 ("rtw88: allows to enable/disable HCI link PS mechanism")
 > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-68aa716b7dd3 rtw88: pci: disable aspm for platform inter-op with module parameter
+84c2e47aeb16 rtw88: 8822c: add new RFE type 6
 
 -- 
-https://patchwork.kernel.org/patch/11589181/
+https://patchwork.kernel.org/patch/11619899/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
