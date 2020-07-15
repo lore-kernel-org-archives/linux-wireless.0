@@ -2,58 +2,60 @@ Return-Path: <SRS0=DhnA=A2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7703CC433E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21635C433E3
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50E7B2065D
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E806A2065D
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="iq3XZaf2"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="X/zwb2xZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727075AbgGOXFj (ORCPT
+        id S1727062AbgGOXFi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Jul 2020 19:05:39 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:64626 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726578AbgGOXFj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Jul 2020 19:05:39 -0400
+        Wed, 15 Jul 2020 19:05:38 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:29139 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727052AbgGOXFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Jul 2020 19:05:37 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1594854338; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=53cGYSM8uY4jfeXy+EYGCa0iHjd8RkyABxLd7Fas/BQ=; b=iq3XZaf26bwfGy3Rm5nRqlOknEi4umtFffKXYnmrGX2bWSPQ5b1/Ig6tm7sRsY37sDipmMtg
- D9EEa0UlhGOBOM32o+cIQiHKgkB9htDKR3aseMObQyfNVx/qYVctaFYTdeaA5qRyoZq7p/46
- HnVUs/Z5BI+cuw/R4yILKOhR49w=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ s=smtp; t=1594854336; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=jJ6NB6aA6Xn8jtjz9aW5q6j4CNP4ZixXdxJZyC7N24Q=; b=X/zwb2xZqg+xflABr+6qb6JbFOWU9brvi6MwzYnux01vE5ttkld2HyPW38UH7+Z0LE8o7aT3
+ V+H7f+vGBOev7Nsc6reP6EvuEywrPyNs3lt/sT+BtL1jO8Hy4WUTcPzyvXQp/V5QzGT2Hapx
+ 5sIITP/M3l0DUeejOYPVy9cofNM=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n18.prod.us-east-1.postgun.com with SMTP id
- 5f0f8bb08423214e137ba240 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 23:05:20
+ smtp-out-n16.prod.us-west-2.postgun.com with SMTP id
+ 5f0f8bb3166c1c54942f1439 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 23:05:23
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7B7D1C433CB; Wed, 15 Jul 2020 23:05:19 +0000 (UTC)
+        id 552E5C433C9; Wed, 15 Jul 2020 23:05:23 +0000 (UTC)
 Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB3EEC433CA;
-        Wed, 15 Jul 2020 23:05:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DB3EEC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9AA9AC433C6;
+        Wed, 15 Jul 2020 23:05:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9AA9AC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=alokad@codeaurora.org
 From:   Aloka Dixit <alokad@codeaurora.org>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org, Aloka Dixit <alokad@codeaurora.org>
-Subject: [PATCH v3 0/2] Unsolicited broadcast probe resp support
-Date:   Wed, 15 Jul 2020 16:05:12 -0700
-Message-Id: <20200715230514.26792-1-alokad@codeaurora.org>
+Subject: [PATCH v3 2/2] mac80211: Unsolicited broadcast probe response support
+Date:   Wed, 15 Jul 2020 16:05:14 -0700
+Message-Id: <20200715230514.26792-3-alokad@codeaurora.org>
 X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200715230514.26792-1-alokad@codeaurora.org>
+References: <20200715230514.26792-1-alokad@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -61,28 +63,226 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Unsolicited broadcast probe response tranmission is used for in-band
-discovery in 6GHz band (IEEE P802.11ax/D6.0 26.17.2.3.2, AP behavior for
-fast passive scanning).
+This patch adds mac80211 support to configure unsolicited
+broadcast probe response transmission for in-band discovery in 6GHz.
 
-v3: Rebased. Removed check for 6Ghz, drivers should add that check.
+Changes include functions to store and retrieve probe response template,
+and packet interval (0 - 20 TUs).
+Setting interval to 0 disables the unsolicited broadcast probe response
+transmission.
 
-v2: Removed flag 'enabled' and changed 6GHz frequency range as per
-    IEEE P802.11ax/D6.1.
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+ include/net/mac80211.h     | 21 +++++++++++++++++++
+ net/mac80211/cfg.c         | 42 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  7 +++++++
+ net/mac80211/tx.c          | 26 +++++++++++++++++++++++
+ 4 files changed, 96 insertions(+)
 
-Aloka Dixit (2):
-  nl80211: Unsolicited broadcast probe response support
-  mac80211: Unsolicited broadcast probe response support
-
- include/net/cfg80211.h       | 18 ++++++++++++++
- include/net/mac80211.h       | 21 ++++++++++++++++
- include/uapi/linux/nl80211.h | 32 ++++++++++++++++++++++++
- net/mac80211/cfg.c           | 42 ++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h   |  7 ++++++
- net/mac80211/tx.c            | 26 ++++++++++++++++++++
- net/wireless/nl80211.c       | 47 ++++++++++++++++++++++++++++++++++++
- 7 files changed, 193 insertions(+)
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 11d5610d2ad5..90800558725c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -317,6 +317,8 @@ struct ieee80211_vif_chanctx_switch {
+  * @BSS_CHANGED_TWT: TWT status changed
+  * @BSS_CHANGED_HE_OBSS_PD: OBSS Packet Detection status changed.
+  * @BSS_CHANGED_HE_BSS_COLOR: BSS Color has changed
++ * @BSS_CHANGED_UNSOL_BCAST_PROBE_RESP: Unsolicited broadcast probe response
++ *	status changed.
+  *
+  */
+ enum ieee80211_bss_change {
+@@ -350,6 +352,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_TWT			= 1<<27,
+ 	BSS_CHANGED_HE_OBSS_PD		= 1<<28,
+ 	BSS_CHANGED_HE_BSS_COLOR	= 1<<29,
++	BSS_CHANGED_UNSOL_BCAST_PROBE_RESP = 1<<30,
+ 
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -607,6 +610,8 @@ struct ieee80211_ftm_responder_params {
+  * @he_oper: HE operation information of the AP we are connected to
+  * @he_obss_pd: OBSS Packet Detection parameters.
+  * @he_bss_color: BSS coloring settings, if BSS supports HE
++ * @unsol_bcast_probe_resp_interval: Unsolicited broadcast probe response
++ *	interval.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -674,6 +679,7 @@ struct ieee80211_bss_conf {
+ 	} he_oper;
+ 	struct ieee80211_he_obss_pd he_obss_pd;
+ 	struct cfg80211_he_bss_color he_bss_color;
++	u32 unsol_bcast_probe_resp_interval;
+ };
+ 
+ /**
+@@ -6558,4 +6564,19 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
+  */
+ bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
+ 
++
++/**
++ * ieee80211_get_unsol_bcast_probe_resp_tmpl - Get unsolicited broadcast
++ *	probe response template.
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * The driver is responsible for freeing the returned skb.
++ *
++ * Return: Unsolicited broadcast probe response template. %NULL on error.
++ */
++struct sk_buff *
++ieee80211_get_unsol_bcast_probe_resp_tmpl(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9b360544ad6f..3db24325f545 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -837,6 +837,32 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++static int
++ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
++				     struct cfg80211_unsol_bcast_probe_resp *params)
++{
++	struct unsol_bcast_probe_resp_data *new, *old = NULL;
++
++	sdata->vif.bss_conf.unsol_bcast_probe_resp_interval =
++							params->interval;
++
++	if (!params->tmpl || !params->tmpl_len) /* Optional template */
++		return 0;
++
++	old = sdata_dereference(sdata->u.ap.unsol_bcast_probe_resp, sdata);
++	new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
++	if (!new)
++		return -ENOMEM;
++	new->len = params->tmpl_len;
++	memcpy(new->data, params->tmpl, params->tmpl_len);
++	rcu_assign_pointer(sdata->u.ap.unsol_bcast_probe_resp, new);
++
++	if (old)
++		kfree_rcu(old, rcu_head);
++
++	return 0;
++}
++
+ static int ieee80211_set_ftm_responder_params(
+ 				struct ieee80211_sub_if_data *sdata,
+ 				const u8 *lci, size_t lci_len,
+@@ -1103,6 +1129,15 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 	changed |= err;
+ 
++	err = ieee80211_set_unsol_bcast_probe_resp(sdata,
++						   &params->unsol_bcast_probe_resp);
++	if (err < 0) {
++		ieee80211_vif_release_channel(sdata);
++		return err;
++	} else if (err == 0) {
++		changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
++	}
++
+ 	err = drv_start_ap(sdata->local, sdata);
+ 	if (err) {
+ 		old = sdata_dereference(sdata->u.ap.beacon, sdata);
+@@ -1158,6 +1193,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct beacon_data *old_beacon;
+ 	struct probe_resp *old_probe_resp;
++	struct unsol_bcast_probe_resp_data *old_unsol_bcast_probe_resp;
+ 	struct cfg80211_chan_def chandef;
+ 
+ 	sdata_assert_lock(sdata);
+@@ -1166,6 +1202,9 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	if (!old_beacon)
+ 		return -ENOENT;
+ 	old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
++	old_unsol_bcast_probe_resp =
++		sdata_dereference(sdata->u.ap.unsol_bcast_probe_resp,
++				  sdata);
+ 
+ 	/* abort any running channel switch */
+ 	mutex_lock(&local->mtx);
+@@ -1189,9 +1228,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	/* remove beacon and probe response */
+ 	RCU_INIT_POINTER(sdata->u.ap.beacon, NULL);
+ 	RCU_INIT_POINTER(sdata->u.ap.probe_resp, NULL);
++	RCU_INIT_POINTER(sdata->u.ap.unsol_bcast_probe_resp, NULL);
+ 	kfree_rcu(old_beacon, rcu_head);
+ 	if (old_probe_resp)
+ 		kfree_rcu(old_probe_resp, rcu_head);
++	if (old_unsol_bcast_probe_resp)
++		kfree_rcu(old_unsol_bcast_probe_resp, rcu_head);
+ 
+ 	kfree(sdata->vif.bss_conf.ftmr_params);
+ 	sdata->vif.bss_conf.ftmr_params = NULL;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ec1a71ac65f2..b54108ef3560 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -272,6 +272,12 @@ struct probe_resp {
+ 	u8 data[];
+ };
+ 
++struct unsol_bcast_probe_resp_data {
++	struct rcu_head rcu_head;
++	int len;
++	u8 data[];
++};
++
+ struct ps_data {
+ 	/* yes, this looks ugly, but guarantees that we can later use
+ 	 * bitmap_empty :)
+@@ -287,6 +293,7 @@ struct ps_data {
+ struct ieee80211_if_ap {
+ 	struct beacon_data __rcu *beacon;
+ 	struct probe_resp __rcu *probe_resp;
++	struct unsol_bcast_probe_resp_data __rcu *unsol_bcast_probe_resp;
+ 
+ 	/* to be used after channel switch. */
+ 	struct cfg80211_beacon_data *next_beacon;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e9ce658141f5..3657dc799ca5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4998,6 +4998,32 @@ struct sk_buff *ieee80211_proberesp_get(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_proberesp_get);
+ 
++struct sk_buff *
++ieee80211_get_unsol_bcast_probe_resp_tmpl(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif)
++{
++	struct sk_buff *skb = NULL;
++	struct unsol_bcast_probe_resp_data *tmpl = NULL;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	if (sdata->vif.type != NL80211_IFTYPE_AP)
++		return NULL;
++
++	rcu_read_lock();
++	tmpl = rcu_dereference(sdata->u.ap.unsol_bcast_probe_resp);
++	if (!tmpl) {
++		rcu_read_unlock();
++		return NULL;
++	}
++
++	skb = dev_alloc_skb(tmpl->len);
++	if (skb)
++		skb_put_data(skb, tmpl->data, tmpl->len);
++	rcu_read_unlock();
++	return skb;
++}
++EXPORT_SYMBOL(ieee80211_get_unsol_bcast_probe_resp_tmpl);
++
+ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
 -- 
 2.25.0
 
