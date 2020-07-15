@@ -2,90 +2,261 @@ Return-Path: <SRS0=DhnA=A2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B04B6C433E6
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 21:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5DDC433E2
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 898AF2067D
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 21:52:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594849947;
-	bh=Rlc9uBbdMh8nPCQYPMiL8KMBXH5cVcB8gLYx9jlnqeY=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=LN15XqV+em15v2UXyhm5soZTIvEYqth1FkhsJmRuiHTcAYJr4O1/iaI/EXnAwOwvr
-	 i6gCvht+CKlewoCITIQL5rq2IKYXDJ+65OQ0y1AMOzRrKIcW0oWTU+MyGYYiua1o+T
-	 6jxvCaJff9BgHbrPrerHZw1D+TrgSmKKtX3uihLs=
+	by mail.kernel.org (Postfix) with ESMTP id 08C1A2067D
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 23:05:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AOJnCstK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727828AbgGOVwX (ORCPT
+        id S1726986AbgGOXF3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Jul 2020 17:52:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57404 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726356AbgGOVwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Jul 2020 17:52:22 -0400
-Received: from embeddedor (unknown [201.162.227.232])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Wed, 15 Jul 2020 19:05:29 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:64626 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726578AbgGOXF2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Jul 2020 19:05:28 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594854327; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=fVm5bhZrXZ3cqvDPhcIHbSekphBXcIX4s/OyZPjhb5E=; b=AOJnCstKqHcbtQER5FO3UoZ+tEEemwW02367WWlWdwDIl59WdCJJ1sAWoCUnRPfgkC4m0dyd
+ X5sePHhWI3LrkncaIIZLoqMYJeLQpawJ0XyMhdc1LRYgfSXpSIULFCUVjI9OJQDPx0I8DXpi
+ rtKSMn+r04MnyyLP/uqfKY1j/To=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n20.prod.us-west-2.postgun.com with SMTP id
+ 5f0f8bb12991e765cdde6e13 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 23:05:21
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 54FFDC433C9; Wed, 15 Jul 2020 23:05:21 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 07CB320657;
-        Wed, 15 Jul 2020 21:52:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594849942;
-        bh=Rlc9uBbdMh8nPCQYPMiL8KMBXH5cVcB8gLYx9jlnqeY=;
-        h=Date:From:To:Cc:Subject:From;
-        b=Uw+r3Sy4sRy1EaQREl16g0VNZH5ZmLBQiBuzR6f5/v3MSijrfDu8gXbf41JcJWusm
-         yX6ck+MB1iuXDf8+NG8TWBCD7TW5TfcvbBzT239a7RU+eWBXDburG/fTmOej5UhEXg
-         JCd0SeL/O9ZlQF2hyTa9pJghV7EFVR06+URmFhE8=
-Date:   Wed, 15 Jul 2020 16:57:55 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Maya Erez <merez@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH][next] wil6210: Avoid the use of one-element array
-Message-ID: <20200715215755.GA21716@embeddedor>
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3BF2BC433CA;
+        Wed, 15 Jul 2020 23:05:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3BF2BC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=alokad@codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, Aloka Dixit <alokad@codeaurora.org>
+Subject: [PATCH v3 1/2] nl80211: Unsolicited broadcast probe response support
+Date:   Wed, 15 Jul 2020 16:05:13 -0700
+Message-Id: <20200715230514.26792-2-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200715230514.26792-1-alokad@codeaurora.org>
+References: <20200715230514.26792-1-alokad@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-One-element arrays are being deprecated[1]. Replace the one-element
-array with a simple value type 'u8 reserved'[2], once this is just
-a placeholder for alignment.
+This patch adds new attributes to support unsolicited broadcast
+probe response transmission used for in-band
+discovery in 6GHz band (IEEE P802.11ax/D6.0 26.17.2.3.2, AP behavior for
+fast passive scanning).
+The new attribute, NL80211_ATTR_UNSOL_BCAST_PROBE_RESP, is nested which
+supports following parameters:
+(1) NL80211_UNSOL_BCAST_PROBE_RESP_INT - Packet interval
+(2) NL80211_UNSOL_BCAST_PROBE_RESP_TMPL - Template data
 
-[1] https://github.com/KSPP/linux/issues/79
-[2] https://github.com/KSPP/linux/issues/86
-
-Tested-by: kernel test robot <lkp@intel.com>
-Link: https://github.com/GustavoARSilva/linux-hardening/blob/master/cii/0-day/wil6210-20200715.md
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/cfg80211.h       | 18 ++++++++++++++
+ include/uapi/linux/nl80211.h | 32 ++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 47 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 9affa4525609..beb53cac329b 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -3086,7 +3086,7 @@ struct wmi_scheduling_scheme_event {
- 	/* wmi_sched_scheme_failure_type */
- 	u8 failure_type;
- 	/* alignment to 32b */
--	u8 reserved[1];
-+	u8 reserved;
- } __packed;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fc7e8807838d..884050bf5c74 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1047,6 +1047,22 @@ struct cfg80211_acl_data {
+ 	struct mac_address mac_addrs[];
+ };
  
- /* WMI_RS_CFG_CMDID - deprecated */
++/**
++ * struct cfg80211_unsol_bcast_probe_resp - Unsolicited broadcast probe
++ *	response parameters in 6GHz.
++ *
++ * @interval: Packet interval in TUs. Maximum allowed is 20 TU, as mentioned
++ *	in IEEE P802.11ax/D6.0 26.17.2.3.2 - AP behavior for fast passive
++ *	scanning
++ * @tmpl_len: Template length
++ * @tmpl: Template data for probe response
++ */
++struct cfg80211_unsol_bcast_probe_resp {
++	u32 interval;
++	size_t tmpl_len;
++	const u8 *tmpl;
++};
++
+ /**
+  * enum cfg80211_ap_settings_flags - AP settings flags
+  *
+@@ -1094,6 +1110,7 @@ enum cfg80211_ap_settings_flags {
+  * @he_obss_pd: OBSS Packet Detection settings
+  * @he_bss_color: BSS Color settings
+  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
++ * @unsol_bcast_probe_resp: Unsolicited broadcast probe response parameters
+  */
+ struct cfg80211_ap_settings {
+ 	struct cfg80211_chan_def chandef;
+@@ -1124,6 +1141,7 @@ struct cfg80211_ap_settings {
+ 	u32 flags;
+ 	struct ieee80211_he_obss_pd he_obss_pd;
+ 	struct cfg80211_he_bss_color he_bss_color;
++	struct cfg80211_unsol_bcast_probe_resp unsol_bcast_probe_resp;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4e6339ab1fce..f3e6a37f0df8 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2505,6 +2505,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
+  *	association request when used with NL80211_CMD_NEW_STATION).
+  *
++ * @NL80211_ATTR_UNSOL_BCAST_PROBE_RESP: Optional parameter to configure
++ *	unsolicited broadcast probe response. It is a nested attribute, see
++ *	&enum nl80211_unsol_bcast_probe_resp_attributes.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2987,6 +2991,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_HE_6GHZ_CAPABILITY,
+ 
++	NL80211_ATTR_UNSOL_BCAST_PROBE_RESP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -6922,4 +6928,30 @@ enum nl80211_iftype_akm_attributes {
+ 	NL80211_IFTYPE_AKM_ATTR_MAX = __NL80211_IFTYPE_AKM_ATTR_LAST - 1,
+ };
+ 
++/**
++ * enum nl80211_unsol_bcast_probe_resp_attributes - Unsolicited broadcast probe
++ *	response configuration. Applicable only in 6GHz.
++ *
++ * @__NL80211_UNSOL_BCAST_PROBE_RESP_INVALID: Invalid
++ *
++ * @NL80211_UNSOL_BCAST_PROBE_RESP_INT: Maximum packet interval (u32, TU).
++ *	Allowed range: 0..20 (TU = Time Unit). IEEE P802.11ax/D6.0
++ *	26.17.2.3.2 (AP behavior for fast passive scanning.
++ * @NL80211_UNSOL_BCAST_PROBE_RESP_TMPL: Unsolicited broadcast probe response
++ *	frame template (binary).
++ *
++ * @__NL80211_UNSOL_BCAST_PROBE_RESP_LAST: Internal
++ * @NL80211_UNSOL_BCAST_PROBE_RESP_MAX: highest attribute
++ */
++enum nl80211_unsol_bcast_probe_resp_attributes {
++	__NL80211_UNSOL_BCAST_PROBE_RESP_INVALID,
++
++	NL80211_UNSOL_BCAST_PROBE_RESP_INT,
++	NL80211_UNSOL_BCAST_PROBE_RESP_TMPL,
++
++	/* keep last */
++	__NL80211_UNSOL_BCAST_PROBE_RESP_LAST,
++	NL80211_UNSOL_BCAST_PROBE_RESP_MAX =
++		__NL80211_UNSOL_BCAST_PROBE_RESP_LAST - 1
++};
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 263ae395ad44..d42056421e55 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -338,6 +338,13 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
+ };
+ 
++static const struct nla_policy
++unsol_bcast_probe_resp_policy[NL80211_UNSOL_BCAST_PROBE_RESP_MAX + 1] = {
++	[NL80211_UNSOL_BCAST_PROBE_RESP_INT] = NLA_POLICY_MAX(NLA_U32, 20),
++	[NL80211_UNSOL_BCAST_PROBE_RESP_TMPL] = { .type = NLA_BINARY,
++						  .len = IEEE80211_MAX_DATA_LEN }
++};
++
+ static const struct nla_policy
+ nl80211_tid_config_attr_policy[NL80211_TID_CONFIG_ATTR_MAX + 1] = {
+ 	[NL80211_TID_CONFIG_ATTR_VIF_SUPP] = { .type = NLA_U64 },
+@@ -658,6 +665,9 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 		.type = NLA_EXACT_LEN,
+ 		.len = sizeof(struct ieee80211_he_6ghz_capa),
+ 	},
++
++	[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP] =
++		NLA_POLICY_NESTED(unsol_bcast_probe_resp_policy),
+ };
+ 
+ /* policy for the key attributes */
+@@ -4721,6 +4731,35 @@ static int nl80211_parse_he_bss_color(struct nlattr *attrs,
+ 	return 0;
+ }
+ 
++static int
++nl80211_parse_unsol_bcast_probe_resp(struct nlattr *attrs,
++				     struct cfg80211_ap_settings *params)
++{
++	struct nlattr *tmpl;
++	struct nlattr *tb[NL80211_UNSOL_BCAST_PROBE_RESP_MAX + 1];
++	int ret;
++	struct cfg80211_unsol_bcast_probe_resp *presp =
++					&params->unsol_bcast_probe_resp;
++
++	ret = nla_parse_nested(tb, NL80211_UNSOL_BCAST_PROBE_RESP_MAX, attrs,
++			       unsol_bcast_probe_resp_policy, NULL);
++	if (ret)
++		return ret;
++
++	if (!tb[NL80211_UNSOL_BCAST_PROBE_RESP_INT])
++		return -EINVAL;
++
++	presp->interval = nla_get_u32(tb[NL80211_UNSOL_BCAST_PROBE_RESP_INT]);
++
++	tmpl = tb[NL80211_UNSOL_BCAST_PROBE_RESP_TMPL];
++	if (tmpl) {
++		presp->tmpl = nla_data(tmpl);
++		presp->tmpl_len = nla_len(tmpl);
++	}
++
++	return 0;
++}
++
+ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ 					    const u8 *rates)
+ {
+@@ -5027,6 +5066,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP]) {
++		err = nl80211_parse_unsol_bcast_probe_resp(
++			info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP],
++			&params);
++		if (err)
++			return err;
++	}
++
+ 	nl80211_calculate_ap_params(&params);
+ 
+ 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
 -- 
-2.27.0
+2.25.0
 
