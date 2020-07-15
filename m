@@ -2,99 +2,104 @@ Return-Path: <SRS0=DhnA=A2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1AE2C433FB
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 12:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC49C433E4
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 12:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C93BF20578
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 12:49:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 692E620657
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 12:52:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b="AEuBZRjn"
+	dkim=pass (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b="TXxh4qKs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731213AbgGOMsp (ORCPT
+        id S1730868AbgGOMwI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Jul 2020 08:48:45 -0400
-Received: from perceval.ideasonboard.com ([213.167.242.64]:60138 "EHLO
-        perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728861AbgGOMsp (ORCPT
+        Wed, 15 Jul 2020 08:52:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36288 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726479AbgGOMwH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Jul 2020 08:48:45 -0400
-Received: from Q.local (cpc89242-aztw30-2-0-cust488.18-1.cable.virginm.net [86.31.129.233])
-        by perceval.ideasonboard.com (Postfix) with ESMTPSA id 80E1A564;
-        Wed, 15 Jul 2020 14:48:42 +0200 (CEST)
+        Wed, 15 Jul 2020 08:52:07 -0400
+Received: from perceval.ideasonboard.com (perceval.ideasonboard.com [IPv6:2001:4b98:dc2:55:216:3eff:fef7:d647])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67981C061755;
+        Wed, 15 Jul 2020 05:52:07 -0700 (PDT)
+Received: from [192.168.0.20] (cpc89242-aztw30-2-0-cust488.18-1.cable.virginm.net [86.31.129.233])
+        by perceval.ideasonboard.com (Postfix) with ESMTPSA id A585E564;
+        Wed, 15 Jul 2020 14:52:04 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ideasonboard.com;
-        s=mail; t=1594817323;
-        bh=ymuoWEsdbUlRYdGRMk/tboXnTJb8BaO8toTY5V7aRxQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=AEuBZRjnvuPz8LxH97+ubyzGhBWRm59auYKmPT7gIsDbBuH51n63LTcwmXGcVRXdE
-         0U4O3VpTWs52HfRNy7JUD+ERwUwTMLaiOzatgXen2TVLE7ZrKjuYP/yNhw577sJOJ3
-         +S7VQe5cZRnY2yRUe74ZRksgY3MbUoCTr5ilMKHM=
+        s=mail; t=1594817525;
+        bh=SoEmbpkNZkembnmkPfdAOrZOiv4yoC/24TU3qWemlqw=;
+        h=Reply-To:Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=TXxh4qKsDyfzzPZBpGyVHCp+0hGT2fD3gq6DsqNeDllH5KDjlNPP/ZptFy1ZSJ0B0
+         Sgzp+9SIZ4xPKXIEWouiFjKgqTBvnhMczgmSrRnJpRPifpY5VzdpcJRKl3ojBgKIOe
+         0S5lGfBRp/7wQt01/nMlVffif4LhDzZEYdfjJsuQ=
+Reply-To: kieran.bingham+renesas@ideasonboard.com
+Subject: Re: [PATCH 05/17] drivers: net: Fix trivial spelling
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Kieran Bingham <kieran.bingham@ideasonboard.com>,
+        linux-renesas-soc@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jiri Kosina <trivial@kernel.org>,
+        Martin Habets <mhabets@solarflare.com>,
+        Shannon Nelson <snelson@pensando.io>,
+        Colin Ian King <colin.king@canonical.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Eric Dumazet <edumazet@google.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Ard Biesheuvel <ardb@kernel.org>,
+        Alexey Dobriyan <adobriyan@gmail.com>,
+        Wenwen Wang <wenwen@cs.uga.edu>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" 
+        <ath10k@lists.infradead.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>
+References: <20200609124610.3445662-6-kieran.bingham+renesas@ideasonboard.com>
+ <20200715102209.C9012C433A1@smtp.codeaurora.org>
 From:   Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
-To:     trivial@kernel.org
-Cc:     Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-input@vger.kernel.org, netdev@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org
-Subject: [PATCH v2 0/8] spelling.txt: /decriptors/descriptors/
-Date:   Wed, 15 Jul 2020 13:48:31 +0100
-Message-Id: <20200715124839.252822-1-kieran.bingham+renesas@ideasonboard.com>
-X-Mailer: git-send-email 2.25.1
+Organization: Ideas on Board
+Message-ID: <f32e309f-a214-87c3-68fe-66882b949794@ideasonboard.com>
+Date:   Wed, 15 Jul 2020 13:52:01 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200715102209.C9012C433A1@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I wouldn't normally go through spelling fixes, but I caught sight of
-this typo twice, and then foolishly grepped the tree for it, and saw how
-pervasive it was.
+Hi Kalle,
 
-so here I am ... fixing a typo globally... but with an addition in
-scripts/spelling.txt so it shouldn't re-appear ;-)
+On 15/07/2020 11:22, Kalle Valo wrote:
+> Kieran Bingham <kieran.bingham+renesas@ideasonboard.com> wrote:
+> 
+>> The word 'descriptor' is misspelled throughout the tree.
+>>
+>> Fix it up accordingly:
+>>     decriptors -> descriptors
+>>
+>> Signed-off-by: Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
+> 
+> I recommend splitting wan and wireless changes to separate patches as I
+> cannot take changes to wan subsystem.
+> 
+> Patch set to Changes Requested.
 
-V2: Posting before the merge windows close to pick up the last few
-non-merged patches, and ideally - to get the actaul spelling.txt entry
-picked up, and this time including trivial@kernel.org to let these get
-head through that tree if required.
+Thanks, I've split this and resent the remaining outstanding patches.
 
-Cc: trivial@kernel.org
-Cc: linux-arm-kernel@lists.infradead.org (moderated list:ARM SUB-ARCHITECTURES)
-Cc: linux-kernel@vger.kernel.org (open list)
-Cc: linux-input@vger.kernel.org (open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)...)
-Cc: netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-Cc: ath10k@lists.infradead.org (open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER)
-Cc: linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS))
-Cc: virtualization@lists.linux-foundation.org (open list:VIRTIO BALLOON)
-Cc: linux-mm@kvack.org (open list:MEMORY MANAGEMENT)
+--
+Kieran
 
-Kieran Bingham (17):
-  arch: arm: mach-davinci: Fix trivial spelling
-  drivers: input: joystick: Fix trivial spelling
-  drivers: net: wan: Fix trivial spelling
-  drivers: net: wireless: Fix trivial spelling
-  include: dynamic_debug.h: Fix trivial spelling
-  kernel: trace: Fix trivial spelling
-  mm/balloon_compaction: Fix trivial spelling
-  scripts/spelling.txt: Add descriptors correction
 
- arch/arm/mach-davinci/board-da830-evm.c | 2 +-
- drivers/input/joystick/spaceball.c      | 2 +-
- drivers/net/wan/lmc/lmc_main.c          | 2 +-
- drivers/net/wireless/ath/ath10k/usb.c   | 2 +-
- drivers/net/wireless/ath/ath6kl/usb.c   | 2 +-
- drivers/net/wireless/cisco/airo.c       | 2 +-
- include/linux/dynamic_debug.h           | 2 +-
- kernel/trace/trace_events.c             | 2 +-
- mm/balloon_compaction.c                 | 4 ++--
- scripts/spelling.txt                    | 2 ++
- 10 files changed, 12 insertions(+), 10 deletions(-)
-
--- 
-2.25.1
 
