@@ -6,81 +6,87 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF45C433F7
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 10:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C33DC433F1
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 10:40:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DD5E20656
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 10:40:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D7A720656
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Jul 2020 10:40:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ArzoTwlp"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="YBA7gks7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731300AbgGOKkk (ORCPT
+        id S1731276AbgGOKkQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Jul 2020 06:40:40 -0400
+        Wed, 15 Jul 2020 06:40:16 -0400
 Received: from mail29.static.mailgun.info ([104.130.122.29]:64604 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731221AbgGOKkk (ORCPT
+        by vger.kernel.org with ESMTP id S1725852AbgGOKkQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Jul 2020 06:40:40 -0400
+        Wed, 15 Jul 2020 06:40:16 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1594809639; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1594809615; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=sLdqw6vO/Dx5gVEAynTfPJwz0Jq0muScd1+nrlQdM8c=;
- b=ArzoTwlpQEAxCDcCi2x/6QXPXLZXLf4PHPY3BnFUtwJ9IgnyXXrSrOHjZ0twhysquqE8SBgY
- tEhJjwQq59ZVteAyyt09i443h7gAXY/7yheJz2Y6VEYt3KYYlGiX50QBaSVoPiOJdcXpWdpp
- ify0vr8XqdZbuvDMwXm8+TIxfWs=
+ Content-Type: Sender; bh=rhesm/uxAsVx8OaDzy9XmswXBa8f6uDYdnz29ayNJX4=;
+ b=YBA7gks73ekTcJAXrq5LMGPWQ6BWe7W8CQJPhdBWXP2GzjR9MI8B+KCmJ9lAJtkGDtDuh2HE
+ ZtDGxigLt+GRaC0Q6qiQbyRO//+tkXBhEq81/1O/JtbnqcDCHbFsKQaXrhNJm6grAB0YuXx3
+ mOsgvDnIta59umqf3fnAVoTPqig=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f0edd27e3bee12510d09f71 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 10:40:39
+ smtp-out-n14.prod.us-west-2.postgun.com with SMTP id
+ 5f0edd0fc9bd2efa2e289c07 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 10:40:15
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7B85BC433C9; Wed, 15 Jul 2020 10:40:38 +0000 (UTC)
+        id 4BE75C43391; Wed, 15 Jul 2020 10:40:15 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 728C1C433CB;
-        Wed, 15 Jul 2020 10:40:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 728C1C433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 06901C433C9;
+        Wed, 15 Jul 2020 10:40:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 06901C433C9
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] airo: use set_current_state macro
+Subject: Re: [PATCH] iwlegacy: remove redundant initialization of variable
+ tid
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200702015701.8606-1-vulab@iscas.ac.cn>
-References: <20200702015701.8606-1-vulab@iscas.ac.cn>
-To:     Xu Wang <vulab@iscas.ac.cn>
-Cc:     davem@davemloft.net, kuba@kernel.org, mpe@ellerman.id.au,
-        akpm@linux-foundation.org, wenwen@cs.uga.edu, adobriyan@gmail.com,
-        dan.carpenter@oracle.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Xu Wang <vulab@iscas.ac.cn>
+In-Reply-To: <20200701135221.549700-1-colin.king@canonical.com>
+References: <20200701135221.549700-1-colin.king@canonical.com>
+To:     Colin King <colin.king@canonical.com>
+Cc:     Stanislaw Gruszka <stf_xl@wp.pl>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200715104038.7B85BC433C9@smtp.codeaurora.org>
-Date:   Wed, 15 Jul 2020 10:40:38 +0000 (UTC)
+Message-Id: <20200715104015.4BE75C43391@smtp.codeaurora.org>
+Date:   Wed, 15 Jul 2020 10:40:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Xu Wang <vulab@iscas.ac.cn> wrote:
+Colin King <colin.king@canonical.com> wrote:
 
-> Use set_current_state macro instead of current->state = TASK_RUNNING.
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Xu Wang <vulab@iscas.ac.cn>
+> The variable tid is being initialized with a value that is never read
+> and it is being updated later with a new value.  The initialization is
+> redundant and can be removed.
+> 
+> Addresses-Coverity: ("Unused value")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-b28bd97c1c19 airo: use set_current_state macro
+ddfa943f246a iwlegacy: remove redundant initialization of variable tid
 
 -- 
-https://patchwork.kernel.org/patch/11637715/
+https://patchwork.kernel.org/patch/11636467/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
