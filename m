@@ -6,96 +6,158 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEBEC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jul 2020 09:35:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD1CC433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jul 2020 11:48:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 151FE20656
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jul 2020 09:35:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69F2220657
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jul 2020 11:48:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="EDvCxBw/"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="afqonq6f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726960AbgGPJfw (ORCPT
+        id S1727030AbgGPLss (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jul 2020 05:35:52 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:31091 "EHLO m43-7.mailgun.net"
+        Thu, 16 Jul 2020 07:48:48 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:27793 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726080AbgGPJfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jul 2020 05:35:51 -0400
+        id S1726383AbgGPLsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jul 2020 07:48:47 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1594892150; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=cwAdL2e64yzgFjj539N3ydAG0e0xPKPZGtX+8xLGIPA=; b=EDvCxBw/CzG160jn7LpsW4kwxNc7KLEKJxeZuDriSJtw4y5k0TzQoH3vKVZDQAjdjhQZqOUK
- VFLQDDDHmAmqRG1s5hSRDHNUhzTP/TZL8EUhYlarPMZvTx5sFjs4TMvya704/xY8twtzD4CD
- QVKI6ytyKIgxdyuXpjVF6PwALM4=
+ s=smtp; t=1594900126; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: Date: Subject: In-Reply-To: References: Cc:
+ To: From: Sender; bh=aM87sqkNzeJ/91w1iSJM0tfB/by6oEdZCg93yCjk6SY=; b=afqonq6f32+okWB6/ED8G16abACkWuBzgpwjEpeCHK1Upf5tYgYG/71aJJM+fgIjYG9JAyqv
+ zfilN/NVYOPVwFY3E4DjXKfgCB6BONynjXZ9oXtT99+TL+ZCMCgZ8gg4L5rA0jjhM34o4URT
+ aza5N5a0mkUikdyWoDY3iJ46reE=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n11.prod.us-west-2.postgun.com with SMTP id
- 5f101f5d75eeb235f69c7843 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Jul 2020 09:35:25
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f103e91d3d65084220a4410 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Jul 2020 11:48:33
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2EBC3C43395; Thu, 16 Jul 2020 09:35:25 +0000 (UTC)
-Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id DA00CC43395; Thu, 16 Jul 2020 11:48:32 +0000 (UTC)
+Received: from Pillair (unknown [183.83.71.149])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EB92AC433C9;
-        Thu, 16 Jul 2020 09:35:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EB92AC433C9
+        (Authenticated sender: pillair)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5140DC433C9;
+        Thu, 16 Jul 2020 11:48:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5140DC433C9
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-        Pkshih <pkshih@realtek.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/2] nl80211: vendor-cmd: qca: add dynamic SAR power limits
-References: <1576684108-30177-1-git-send-email-kvalo@codeaurora.org>
-        <1576684108-30177-2-git-send-email-kvalo@codeaurora.org>
-        <1576748692.7758.17.camel@realtek.com> <20191219154828.GA12287@w1.fi>
-        <CA+ASDXMTYLGbEkBPHSqtyitMEvY5o_MjU0s+NoWdnN_ORy1gDw@mail.gmail.com>
-        <20191219185522.GA16010@w1.fi>
-        <CA+ASDXNOxkrZTxL0Jo4ONR2YtL83BVc_w-rBXc6ggBLdwUpDZw@mail.gmail.com>
-        <871rpqly6a.fsf@kamboji.qca.qualcomm.com>
-        <e8908eafd8e6050eef8782c6a7019e318d14f65f.camel@sipsolutions.net>
-        <CA+ASDXMf7iXuE9hQ-XitPPfvXP0EK5FchJLCu2+5Ag=ZC=0H0w@mail.gmail.com>
-Date:   Thu, 16 Jul 2020 12:35:20 +0300
-In-Reply-To: <CA+ASDXMf7iXuE9hQ-XitPPfvXP0EK5FchJLCu2+5Ag=ZC=0H0w@mail.gmail.com>
-        (Brian Norris's message of "Mon, 1 Jun 2020 18:32:31 -0700")
-Message-ID: <87lfjjx0o7.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   "Rakesh Pillai" <pillair@codeaurora.org>
+To:     "'Ben Greear'" <greearb@candelatech.com>,
+        <ath10k@lists.infradead.org>
+Cc:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1593238973-23237-1-git-send-email-pillair@codeaurora.org> <926301ed-e27f-0d8f-0177-6484bfffa40c@candelatech.com> <000201d64d0a$b3d39d10$1b7ad730$@codeaurora.org> <859a8ffb-6108-81f3-b379-4a0adfa064fe@candelatech.com>
+In-Reply-To: <859a8ffb-6108-81f3-b379-4a0adfa064fe@candelatech.com>
+Subject: RE: [PATCH] ath10k: Add history for tracking certain events
+Date:   Thu, 16 Jul 2020 17:18:22 +0530
+Message-ID: <008501d65b67$0743a0c0$15cae240$@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+        charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJ0JDYcv05C8nhyAbHgeWn72AC7twKruW4sAhHRnKMBmbwe6KebyyaA
+Content-Language: en-us
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> writes:
 
-> Really, I could live with per-vendor APIs. My primary goal is to get
-> these upstream in some form, so vendors can stop using things like
-> this as a reason for shipping us non-upstream code, and so we can
-> reduce the delta between upstream and Chrome OS kernels.
->
-> I also think that, for the cases that warrant it (i.e., the option 2
-> -- Realtek and Qualcomm cases, so far), it would be good to have a
-> common API, but that's a somewhat secondary concern for me.
 
-So to me it feels like the best solution forward is to go with the
-vendor API, do you agree? We can, of course, later switch to the common
-API if we manage to create one which is usable for everyone.
+> -----Original Message-----
+> From: Ben Greear <greearb@candelatech.com>
+> Sent: Sunday, June 28, 2020 10:56 PM
+> To: Rakesh Pillai <pillair@codeaurora.org>; ath10k@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] ath10k: Add history for tracking certain events
+> 
+> 
+> 
+> On 06/27/2020 10:12 PM, Rakesh Pillai wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Ben Greear <greearb@candelatech.com>
+> >> Sent: Saturday, June 27, 2020 8:58 PM
+> >> To: Rakesh Pillai <pillair@codeaurora.org>; ath10k@lists.infradead.org
+> >> Cc: linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org
+> >> Subject: Re: [PATCH] ath10k: Add history for tracking certain events
+> >>
+> >>
+> >>
+> >> On 06/26/2020 11:22 PM, Rakesh Pillai wrote:
+> >>> For debugging many issues, a history of the
+> >>> below mentioned events can help get an idea
+> >>> of what exactly was going on just before any
+> >>> issue occurred in the system. These event
+> >>> history will be collected only when the host
+> >>> driver is run in debug mode (i.e. with the
+> >>> config ATH10K_DEBUG enabled).
+> >>
+> >> This should be disabled by default unless user specifically pokes some
+> >> debugfs
+> >> value to turn it on so that it does not impact performance.
+> >
+> > Hi Ben,
+> > This history is enabled only if the user compiles the kernel with
+> > ATH10K_DEBUG.
+> > Making it runtime, adds a lot of "if" conditions for this history
+record.
+> > Do you suggest to add support to enable/disable it runtime even in
+> > ATH10K_DEBUG ?
+> 
+> Yes, because you are adding lots of locks/unlocks.  That is way more
+> expensive
+> than an if statement.  You can add an 'unlikely' to the if check as well,
+so
+> compiler will optimize for this feature not being enabled.
 
-> Also, Kalle had some concerns about stable ABI questions: shouldn't we
-> bake in some kind of "check for support" feature to these kinds of
-> APIs [3]? That would help ease transition, if we do start with a
-> vendor API and move to a common one in the future.
 
-Yeah, that sounds like a good idea but I don't think that should block
-these patches.
+Hi Ben,
+I missed this mail somehow.
+Yes sure, I will make the necessary changes and upload a new patchset.
 
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+Rakesh Pillai.
+
+
+> 
+> Thanks,
+> Ben
+> 
+> >
+> >>
+> >> Thanks,
+> >> Ben
+> >>
+> >>>
+> >>> Add history for tracking the below events
+> >>> - register read
+> >>> - register write
+> >>> - IRQ trigger
+> >>> - IRQ Enable
+> >>> - IRQ Disable
+> >>> - NAPI poll
+> >>> - CE service
+> >>> - WMI cmd
+> >>> - WMI event
+> >>> - WMI tx completion
+> >>>
+> >>> This will help in debugging any crash or any
+> >>> improper behaviour.
+> >>
+> >>
+> >> --
+> >> Ben Greear <greearb@candelatech.com>
+> >> Candela Technologies Inc  http://www.candelatech.com
+> >
+> 
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+
