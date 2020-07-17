@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 079F2C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B26C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4C1320781
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A421320775
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726907AbgGQGuF (ORCPT
+        id S1726963AbgGQGuG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jul 2020 02:50:05 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:55023 "EHLO
+        Fri, 17 Jul 2020 02:50:06 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:55021 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726817AbgGQGuF (ORCPT
+        with ESMTP id S1726656AbgGQGuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 17 Jul 2020 02:50:05 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 06H6o0N01028960, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 06H6o0Mx9028960, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 06H6o0N01028960
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 06H6o0Mx9028960
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Jul 2020 14:50:01 +0800
+        Fri, 17 Jul 2020 14:50:00 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -34,13 +34,13 @@ Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Jul 2020 14:50:00 +0800
+ 15.1.1779.2; Fri, 17 Jul 2020 14:49:59 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/7] rtw88: add h2c command in debugfs
-Date:   Fri, 17 Jul 2020 14:49:37 +0800
-Message-ID: <20200717064937.27966-8-yhchuang@realtek.com>
+Subject: [PATCH 4/7] rtw88: coex: only skip coex triggered by BT info
+Date:   Fri, 17 Jul 2020 14:49:34 +0800
+Message-ID: <20200717064937.27966-5-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200717064937.27966-1-yhchuang@realtek.com>
 References: <20200717064937.27966-1-yhchuang@realtek.com>
@@ -54,104 +54,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-It's very useful to send H2C command for debug usage. Add an entry
-for sending H2C command to firmware.
+The coex mechanism used to skip upon the freeze flag is raised.
+That will cause the coex mechanism being skipped unexpectedly.
+Coex only wanted to keep the TDMA table from being changed by
+BT side.
 
-usage example:
-echo 42,00,00,43,02,00,00,00 > /sys/kernel/debug/ieee80211/phyX/rtw88
+So, check the freeze and reason, if the coex reason is coming
+from BT info, skip it, to make sure the coex triggered by Wifi
+itself can work.
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+This is required for the AP mode, while the control flow is
+different with STA mode. When starting an AP mode, the AP mode
+needs to start working immedaitely after leaving IPS, and the
+freeze flag could be raised. If the coex info is skipped, then
+the AP mode will not set the antenna owner, leads to TX stuck.
+
+Fixes: 4136214f7c46 ("rtw88: add BT co-existence support")
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 30 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/fw.c    |  5 ++++
- drivers/net/wireless/realtek/rtw88/fw.h    |  2 ++
- 3 files changed, 37 insertions(+)
+ drivers/net/wireless/realtek/rtw88/coex.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 09f04feb8fe1..f769c982cc91 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -344,6 +344,31 @@ static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
- 	return count;
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 3abae32341c4..aa08fd7d9fcd 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -1962,7 +1962,8 @@ static void rtw_coex_run_coex(struct rtw_dev *rtwdev, u8 reason)
+ 	if (coex_stat->wl_under_ips)
+ 		return;
  
-+static ssize_t rtw_debugfs_set_h2c(struct file *filp,
-+				   const char __user *buffer,
-+				   size_t count, loff_t *loff)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u8 param[8];
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
-+
-+	num = sscanf(tmp, "%hhx,%hhx,%hhx,%hhx,%hhx,%hhx,%hhx,%hhx",
-+		     &param[0], &param[1], &param[2], &param[3],
-+		     &param[4], &param[5], &param[6], &param[7]);
-+	if (num != 8) {
-+		rtw_info(rtwdev, "invalid H2C command format for debug\n");
-+		return -EINVAL;
-+	}
-+
-+	rtw_fw_h2c_cmd_dbg(rtwdev, param);
-+
-+	return count;
-+}
-+
- static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
- 					const char __user *buffer,
- 					size_t count, loff_t *loff)
-@@ -808,6 +833,10 @@ static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
- 	.cb_write = rtw_debugfs_set_write_reg,
- };
+-	if (coex->freeze && !coex_stat->bt_setup_link)
++	if (coex->freeze && coex_dm->reason == COEX_RSN_BTINFO &&
++	    !coex_stat->bt_setup_link)
+ 		return;
  
-+static struct rtw_debugfs_priv rtw_debug_priv_h2c = {
-+	.cb_write = rtw_debugfs_set_h2c,
-+};
-+
- static struct rtw_debugfs_priv rtw_debug_priv_rf_write = {
- 	.cb_write = rtw_debugfs_set_rf_write,
- };
-@@ -877,6 +906,7 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
- 	rtw_debugfs_add_r(phy_info);
- 	rtw_debugfs_add_r(coex_info);
- 	rtw_debugfs_add_rw(coex_enable);
-+	rtw_debugfs_add_w(h2c);
- 	rtw_debugfs_add_r(mac_0);
- 	rtw_debugfs_add_r(mac_1);
- 	rtw_debugfs_add_r(mac_2);
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index c922b4bb8d72..63b00bc19000 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -253,6 +253,11 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 	spin_unlock(&rtwdev->h2c.lock);
- }
- 
-+void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-+{
-+	rtw_fw_send_h2c_command(rtwdev, h2c);
-+}
-+
- static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 470e1809645a..686dcd3bbda6 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -563,4 +563,6 @@ void rtw_fw_set_nlo_info(struct rtw_dev *rtwdev, bool enable);
- void rtw_fw_update_pkt_probe_req(struct rtw_dev *rtwdev,
- 				 struct cfg80211_ssid *ssid);
- void rtw_fw_channel_switch(struct rtw_dev *rtwdev, bool enable);
-+void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c);
-+
- #endif
+ 	coex_stat->cnt_wl[COEX_CNT_WL_COEXRUN]++;
 -- 
 2.17.1
 
