@@ -2,185 +2,156 @@ Return-Path: <SRS0=dC3w=A4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9284CC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 05:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 079F2C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67C882070A
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 05:11:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="JA7wUbCM";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="W4ZtP4XS"
+	by mail.kernel.org (Postfix) with ESMTP id E4C1320781
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726060AbgGQFLn (ORCPT
+        id S1726907AbgGQGuF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jul 2020 01:11:43 -0400
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57471 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725300AbgGQFLm (ORCPT
+        Fri, 17 Jul 2020 02:50:05 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:55023 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726817AbgGQGuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jul 2020 01:11:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1594962703; x=1626498703;
-  h=from:to:cc:subject:date:message-id:
-   content-transfer-encoding:mime-version;
-  bh=LsQg5S8CEAj3Yq45I3Mdgw00v1olwHEMQkEnmsbJo58=;
-  b=JA7wUbCMoUvNkuyS9lkGqCBhTapJJs/YvWt2lp5DzCiqaHy1H4Nvzke5
-   24NSHUmaKIp0MP5QyYpt7MX5Ciy9tCPI4tuXVY9vtYozShvqdLMk90XNs
-   nbFotH1xK2LPNRgaE6Z2MdmCsDdh1vGPvrT4J7M0jLeU4I4YFwHiOEbHn
-   wDyF+8vSktJO+ydoooKm7uyIoUcIG+V8kDrubUBGT+fpuEdQjhJiLvX5n
-   nHixWkYp5XUFvs0HUlcnJ/bCwK6ZZrCqFU16ARioFuqFuRHn/lLa15/ZL
-   kMcRH+pPicbg4ODmPsKu6QLJ31FNNo8XzctliEnfaRZlpmYU0H2ocnM4p
-   A==;
-IronPort-SDR: w5KTxSdL77hRA9p1pCqGqMhbxFt5PuimsDAZjHDlIj0qVZRcLspZgCIAkFHCliz8DkF+cKjN+/
- DXe+YQrmc6/fmaFs9SpIVKCp88KqtT/50zFmfUrYZMuRNp8T3jILQeh57QOK1d0TNI5WQaawgc
- N44rD4gwHG/NE30Mnu/qJrPEriCFqWO1MB5ZcCa4YgzWjpAdrvcwo3gyj2Um8/Vuos3lpqlpr/
- gOrxbe/bJoJtz6t4cT2NRqwf0q5TsldQg5Mk+E7CEpCOFpMw17ec2vWhGevu+qtdNCkqY3frTr
- rG8=
-X-IronPort-AV: E=Sophos;i="5.75,361,1589266800"; 
-   d="scan'208";a="83531683"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 16 Jul 2020 22:11:42 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+        Fri, 17 Jul 2020 02:50:05 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 06H6o0N01028960, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 06H6o0N01028960
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 17 Jul 2020 14:50:01 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Thu, 16 Jul 2020 22:11:41 -0700
-Received: from NAM02-BL2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Thu, 16 Jul 2020 22:11:41 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=j+YvJgxYn5BbmscTfDgIT29JrQuo1VSBTA4J2QGWfnJ0+q9Ikz63LPVOzPQVjjZxHbSvby76HtRh4m+uR9YSFKxTBsR6VeE0uaUiG3bsFOfaPaaOV0zz50yajE5efLIdxYS3DfZ8rv6WiIZFjSIxt5pwXYbImrlV8lGL5OJ+nInX6UbyH2MoTIvJJC9tP6ZZpni6w/jHyeCaVCi/hOrN4ylbkvneFWmBQVPGnCOjm5aVy/O84pjYEHq+GPQQTBi6Mz2Qvg20lycW/V7ZJPR/XnxfKyMGcckzKxCHLzFNyMsQwUNZQ/4fZC7q/CbtXXK4Ohh5HqGfTocJj0T5XOS6Tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ooeFrmbbikyeVrTNwEY60zPLehfDkF5Uzw/67b45kOk=;
- b=CXWYuxxYOtuGUT3rMxQDX3SjN+SbjzFMC1+0O9dZJ0WBkUp4n2Z2YBlYDD/e5930tni5xIPswLAJ1jBkj0a6Kf+EuJEGBFGCJgpwsL0flMd8GwoYxjrfciFWmkkSyuQXSsp14Dk9tQiP6RPhQPbVUatl0ipvCsPZLSxoSWFyVApjeg/mDVNdHmeZy+IJRHd/GU4+9OSqB3Ent8gr5epgog2hp2tSpGTM146Q4eCiu1QrVtKf1S3+87u8MJfM1HMsqxa4iYXW/2we7WyMn5d0IIlpLNjuxiZQo/KYf+jprsNUXreg3MB1qW8pe9hmMiKWXREDepgigs5E/KSqHao7OQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ooeFrmbbikyeVrTNwEY60zPLehfDkF5Uzw/67b45kOk=;
- b=W4ZtP4XSvjN2uH6TjErT/s1i2v4m+D9tqsAKjsGFzCmrzYvyENYAn05PQ20LDb6r6yq2Yj86s4sFdcFsOx6CXURVYsg+2wkf0eMc+9SWqjv+73zHSon5qTZ2Dq2gKxh8zUB2VEhbK0l4YS51JTlx+CXsFlQtx7WT5x4JE6MBms8=
-Received: from MN2PR11MB4030.namprd11.prod.outlook.com (2603:10b6:208:156::32)
- by MN2PR11MB4144.namprd11.prod.outlook.com (2603:10b6:208:13a::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.21; Fri, 17 Jul
- 2020 05:11:38 +0000
-Received: from MN2PR11MB4030.namprd11.prod.outlook.com
- ([fe80::3874:6ace:6aec:deed]) by MN2PR11MB4030.namprd11.prod.outlook.com
- ([fe80::3874:6ace:6aec:deed%7]) with mapi id 15.20.3174.025; Fri, 17 Jul 2020
- 05:11:38 +0000
-From:   <Ajay.Kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>,
-        <ulf.hansson@linaro.org>, <pali@kernel.org>,
-        <Ajay.Kathat@microchip.com>
-Subject: [PATCH] wilc1000: Move wilc1000 SDIO ID's from driver source to
- common header file
-Thread-Topic: [PATCH] wilc1000: Move wilc1000 SDIO ID's from driver source to
- common header file
-Thread-Index: AQHWW/i/AKFAAT2qFUW4iObkjBIzvw==
-Date:   Fri, 17 Jul 2020 05:11:38 +0000
-Message-ID: <20200717051134.19160-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.17.1
-authentication-results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=microchip.com;
-x-originating-ip: [49.207.204.128]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 55094e65-c0b3-48d4-705f-08d82a0fe265
-x-ms-traffictypediagnostic: MN2PR11MB4144:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR11MB4144C286471AF135E1E99510E37C0@MN2PR11MB4144.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:2150;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: mvF0vIwXpuaQ340ryy+nDlLg11e0+koZctHVjH86oJHetXcrmWVfJyLgtZ92n6HMhRbzk9z/SqYRry74QjJYxB1O5+u5bcwnbZZQYwA2anVcT/eR1WmQmYQsoc7Ui41K2GcOO7AT5Iolhi1GA7B5a1N8DX/fh2jRLeKEWMWo2TaOocBetQ87MDbyDvhL0VrIQSuzda/8fxBkbJQvtHGsMRUYSg8kbVMkP50bsdL5CnPY/zhzJGL5f7VjLKy4hEdqz04fGds5eF7wcDSvUcTuAW+jLJym54S7ydF4JaqTNG6qR67qNFWmmGnHnPeeVpB+
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB4030.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(376002)(136003)(366004)(39860400002)(396003)(346002)(71200400001)(54906003)(6486002)(1076003)(2906002)(107886003)(5660300002)(55236004)(6506007)(4326008)(186003)(66946007)(8936002)(64756008)(6916009)(76116006)(66556008)(8676002)(26005)(91956017)(83380400001)(478600001)(36756003)(2616005)(66476007)(6512007)(66446008)(86362001)(316002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: 33aW6TV0BW4W3wOcbocTzmawrG3/Uic/hVdJ4svfsMff70vgZkzwStozC0nGbINXwCZx0afRPrXySOPyTOLYeJ8JEQLZVsGyNyOZDX6yVL7EEJwqx/MdtEMAzZQXMxAyeq6gtnlC5etwRKpQn+ok9n1Qzyub3bTXWfE3RjP8/lI0uYWzBK18+xIISEsM7P7aT2CcY9JkgGhGEXVO4MCKBsoVzQnF4dSL/LVYUBrWY9w8BJOKuTNWHHVRae5HObXK0bGfszHpghKbOqugEK1DQ51e3eN1H1OzypS6A9keODvyD442bGasS6BDFNfObAXWTsTr+682ziXk0SwUu6/A14vPkHMGi5V+W9USpsDBtj6UHUMlZB+1UI0PfOeQ13Csa0qsILLnIzmisdvlfxYeV5iI7J2MczF3TevqX+lEi8I9l85YD97vjrL/TmYscKlsI7Rkvcl/5qk+xQ77rIg6DUn7S5EvtJCluUhjBBwP2tLwtyh2OMigCFsjziDxYmPW
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+ 15.1.1779.2; Fri, 17 Jul 2020 14:50:00 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 17 Jul 2020 14:50:00 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/7] rtw88: add h2c command in debugfs
+Date:   Fri, 17 Jul 2020 14:49:37 +0800
+Message-ID: <20200717064937.27966-8-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200717064937.27966-1-yhchuang@realtek.com>
+References: <20200717064937.27966-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR11MB4030.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 55094e65-c0b3-48d4-705f-08d82a0fe265
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jul 2020 05:11:38.2760
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: cWGXOlxqX2rgjumq8kE3vzZ02+0K5xRMreqEzBWt1+eC89ozJsfqLdNAyQor5Fbgs2VK98K112iTFmcUQXPcy6yWgzseJZDF3nBa/PoiT40=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4144
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-Moved macros used for Vendor/Device ID from wilc1000 driver to common
-header file and changed macro name for consistency with other macros.
+It's very useful to send H2C command for debug usage. Add an entry
+for sending H2C command to firmware.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+usage example:
+echo 42,00,00,43,02,00,00,00 > /sys/kernel/debug/ieee80211/phyX/rtw88
+
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/microchip/wilc1000/sdio.c | 6 ++----
- include/linux/mmc/sdio_ids.h                   | 3 +++
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/debug.c | 30 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/fw.c    |  5 ++++
+ drivers/net/wireless/realtek/rtw88/fw.h    |  2 ++
+ 3 files changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/sdio.c b/drivers/net/w=
-ireless/microchip/wilc1000/sdio.c
-index 36eb589263bf..3ece7b0b0392 100644
---- a/drivers/net/wireless/microchip/wilc1000/sdio.c
-+++ b/drivers/net/wireless/microchip/wilc1000/sdio.c
-@@ -6,6 +6,7 @@
-=20
- #include <linux/clk.h>
- #include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/host.h>
- #include <linux/mmc/sdio.h>
- #include <linux/of_irq.h>
-@@ -15,11 +16,8 @@
-=20
- #define SDIO_MODALIAS "wilc1000_sdio"
-=20
--#define SDIO_VENDOR_ID_WILC 0x0296
--#define SDIO_DEVICE_ID_WILC 0x5347
--
- static const struct sdio_device_id wilc_sdio_ids[] =3D {
--	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_MICROCHIP_WILC, SDIO_DEVICE_ID_MICROCHIP_WIL=
-C1000) },
- 	{ },
- };
-=20
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 15ed8ce9d394..519820d18e62 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -105,6 +105,9 @@
- #define SDIO_DEVICE_ID_MEDIATEK_MT7663		0x7663
- #define SDIO_DEVICE_ID_MEDIATEK_MT7668		0x7668
-=20
-+#define SDIO_VENDOR_ID_MICROCHIP_WILC		0x0296
-+#define SDIO_DEVICE_ID_MICROCHIP_WILC1000	0x5347
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index 09f04feb8fe1..f769c982cc91 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -344,6 +344,31 @@ static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
+ 	return count;
+ }
+ 
++static ssize_t rtw_debugfs_set_h2c(struct file *filp,
++				   const char __user *buffer,
++				   size_t count, loff_t *loff)
++{
++	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u8 param[8];
++	int num;
 +
- #define SDIO_VENDOR_ID_SIANO			0x039a
- #define SDIO_DEVICE_ID_SIANO_NOVA_B0		0x0201
- #define SDIO_DEVICE_ID_SIANO_NICE		0x0202
---=20
-2.24.0
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
++
++	num = sscanf(tmp, "%hhx,%hhx,%hhx,%hhx,%hhx,%hhx,%hhx,%hhx",
++		     &param[0], &param[1], &param[2], &param[3],
++		     &param[4], &param[5], &param[6], &param[7]);
++	if (num != 8) {
++		rtw_info(rtwdev, "invalid H2C command format for debug\n");
++		return -EINVAL;
++	}
++
++	rtw_fw_h2c_cmd_dbg(rtwdev, param);
++
++	return count;
++}
++
+ static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
+ 					const char __user *buffer,
+ 					size_t count, loff_t *loff)
+@@ -808,6 +833,10 @@ static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
+ 	.cb_write = rtw_debugfs_set_write_reg,
+ };
+ 
++static struct rtw_debugfs_priv rtw_debug_priv_h2c = {
++	.cb_write = rtw_debugfs_set_h2c,
++};
++
+ static struct rtw_debugfs_priv rtw_debug_priv_rf_write = {
+ 	.cb_write = rtw_debugfs_set_rf_write,
+ };
+@@ -877,6 +906,7 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
+ 	rtw_debugfs_add_r(phy_info);
+ 	rtw_debugfs_add_r(coex_info);
+ 	rtw_debugfs_add_rw(coex_enable);
++	rtw_debugfs_add_w(h2c);
+ 	rtw_debugfs_add_r(mac_0);
+ 	rtw_debugfs_add_r(mac_1);
+ 	rtw_debugfs_add_r(mac_2);
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index c922b4bb8d72..63b00bc19000 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -253,6 +253,11 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ 	spin_unlock(&rtwdev->h2c.lock);
+ }
+ 
++void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
++{
++	rtw_fw_send_h2c_command(rtwdev, h2c);
++}
++
+ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
+ {
+ 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index 470e1809645a..686dcd3bbda6 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -563,4 +563,6 @@ void rtw_fw_set_nlo_info(struct rtw_dev *rtwdev, bool enable);
+ void rtw_fw_update_pkt_probe_req(struct rtw_dev *rtwdev,
+ 				 struct cfg80211_ssid *ssid);
+ void rtw_fw_channel_switch(struct rtw_dev *rtwdev, bool enable);
++void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c);
++
+ #endif
+-- 
+2.17.1
+
