@@ -2,87 +2,148 @@ Return-Path: <SRS0=dC3w=A4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B7D7C433E6
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 412E6C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19F182076A
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:50:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 227E32076A
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jul 2020 06:53:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="HVSNQOpL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727050AbgGQGuL (ORCPT
+        id S1726603AbgGQGxm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jul 2020 02:50:11 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:55024 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726856AbgGQGuF (ORCPT
+        Fri, 17 Jul 2020 02:53:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58450 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726180AbgGQGxm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jul 2020 02:50:05 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 06H6o0Mz9028960, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 06H6o0Mz9028960
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Jul 2020 14:50:00 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Jul 2020 14:50:00 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Jul 2020 14:50:00 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] rtw88: allows driver to enable/disable beacon
-Date:   Fri, 17 Jul 2020 14:49:36 +0800
-Message-ID: <20200717064937.27966-7-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200717064937.27966-1-yhchuang@realtek.com>
-References: <20200717064937.27966-1-yhchuang@realtek.com>
+        Fri, 17 Jul 2020 02:53:42 -0400
+Received: from ozlabs.org (ozlabs.org [IPv6:2401:3900:2:1::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF4A2C061755;
+        Thu, 16 Jul 2020 23:53:41 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4B7MKF4Q8Vz9sRN;
+        Fri, 17 Jul 2020 16:53:37 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1594968819;
+        bh=TW11RH4a+EN4x+mZM4SOcko8dhOIwqkcGt1Dnpx8oYA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=HVSNQOpLpJwIgiuS61jiO0pV6IbvtgVlvz/39c28XQefQoj1lHloubT8yHiQP4Yyf
+         +uw8sNfuFdx5swECB8zWHXGocWhtH9h4+INLFCNoKX0IoQbyddCSg8jxDRPRLeWEz1
+         7YhsEiOJMV85YoYd8IMvEqfruDfmUwXt7pFF2zrgLtWikfWg9g/GyeVLZXJqQ2TOgu
+         X/ZDeT+3BIkP1nakkpTLv2InLVHyHVT8zGhGM9WgnRrc5VxpmIaTMvuCxsgYFBbWvF
+         bbIEk4GW77C0RQ5mNcwHAPO2THkc4uHRZeUWL1iVnO+vuBL1WpNzY9Sgd8ln45oHJa
+         K1FrQ/WFqtGtQ==
+Date:   Fri, 17 Jul 2020 16:53:36 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Vinod Koul <vkoul@kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ludovic Desroches <ludovic.desroches@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>,
+        Vladimir Oltean <vladimir.oltean@nxp.com>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: linux-next: manual merge of the dmaengine tree with the
+ wireless-drivers-next and Linus' trees
+Message-ID: <20200717165336.312dcf09@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+Content-Type: multipart/signed; boundary="Sig_/Uf/BJuEv2ixcmi=SB=JFSm5";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+--Sig_/Uf/BJuEv2ixcmi=SB=JFSm5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Enable/disable beacon accordingly when the BSS info changed.
+Hi all,
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/mac80211.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Today's linux-next merge of the dmaengine tree got a conflict in:
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index bb82b044ff82..6b199152abcf 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -390,6 +390,15 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BEACON)
- 		rtw_fw_download_rsvd_page(rtwdev);
- 
-+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-+		if (conf->enable_beacon)
-+			rtw_write32_set(rtwdev, REG_FWHW_TXQ_CTRL,
-+					BIT_EN_BCNQ_DL);
-+		else
-+			rtw_write32_clr(rtwdev, REG_FWHW_TXQ_CTRL,
-+					BIT_EN_BCNQ_DL);
-+	}
-+
- 	if (changed & BSS_CHANGED_MU_GROUPS)
- 		rtw_chip_set_gid_table(rtwdev, vif, conf);
- 
--- 
-2.17.1
+  MAINTAINERS
 
+between commit:
+
+  5625f965d764 ("wilc1000: move wilc driver out of staging")
+
+from the wireless-drivers-next tree, commit:
+
+  6e701c299469 ("MAINTAINERS: merge entries for felix and ocelot drivers")
+
+from Linus' tree and commit:
+
+  c3846c4cce15 ("MAINTAINERS: dmaengine: Microchip: add Tudor Ambarus as co=
+-maintainer")
+
+from the dmaengine tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+diff --cc MAINTAINERS
+index 07d6eae16e77,9af8f81f726d..000000000000
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@@ -11399,20 -11364,14 +11401,13 @@@ L:	linux-arm-kernel@lists.infradead.or
+  S:	Supported
+  F:	drivers/usb/gadget/udc/atmel_usba_udc.*
+ =20
+ -MICROSEMI ETHERNET SWITCH DRIVER
+ -M:	Alexandre Belloni <alexandre.belloni@bootlin.com>
+ -M:	Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>
+ -L:	netdev@vger.kernel.org
+ +MICROCHIP WILC1000 WIFI DRIVER
+ +M:	Ajay Singh <ajay.kathat@microchip.com>
+ +M:	Claudiu Beznea <claudiu.beznea@microchip.com>
+ +L:	linux-wireless@vger.kernel.org
+  S:	Supported
+ -F:	drivers/net/ethernet/mscc/
+ -F:	include/soc/mscc/ocelot*
+ +F:	drivers/net/wireless/microchip/wilc1000/
+ =20
+- MICROCHIP XDMA DRIVER
+- M:	Ludovic Desroches <ludovic.desroches@microchip.com>
+- L:	linux-arm-kernel@lists.infradead.org
+- L:	dmaengine@vger.kernel.org
+- S:	Supported
+- F:	drivers/dma/at_xdmac.c
+-=20
+  MICROSEMI MIPS SOCS
+  M:	Alexandre Belloni <alexandre.belloni@bootlin.com>
+  M:	Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>
+
+--Sig_/Uf/BJuEv2ixcmi=SB=JFSm5
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl8RSvAACgkQAVBC80lX
+0GzJ4gf/QE464SKG+82DKbBdRf9XtK6X9hLGlMfWpWIsJWwHhbHrzEPQEs1eTmL/
+T6idIqQ6cfw9gM7TMDaAmZd1h9K1+dZQN1bZ3k2PMn6DfYngEyeCqb3XYDTyw8cu
+kApO94RiZIcipPdrx8pr4DfBEERSdBu8mSevYgxyYAhrNrCjoe/LdWEoBZ/kO+CN
+KxtB9AypNLgtp5fio4UtR8x1tQwo/SoRMLUAYp6zJrQYJ5imDuCBZcefiBvjIohJ
+uARPLWu5lnipjj3HVc+VFgBX2mnb6TjW1Dgllp1BrONTVliAXftUOgYU7vi4s3+D
+RldGA0ZWeu/DLx1ysGcELkoXSmEIPw==
+=0EUF
+-----END PGP SIGNATURE-----
+
+--Sig_/Uf/BJuEv2ixcmi=SB=JFSm5--
