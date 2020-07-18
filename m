@@ -7,44 +7,46 @@ X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F3AC433E2
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Jul 2020 14:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25987C433E2
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Jul 2020 15:20:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7F5D20657
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Jul 2020 14:49:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0361C20657
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Jul 2020 15:20:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="oU+m9PD+"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="G8EsF2cF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726863AbgGROt1 (ORCPT
+        id S1726453AbgGRPUr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Jul 2020 10:49:27 -0400
-Received: from mout.web.de ([212.227.17.12]:58669 "EHLO mout.web.de"
+        Sat, 18 Jul 2020 11:20:47 -0400
+Received: from mout.web.de ([217.72.192.78]:55883 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726574AbgGROt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Jul 2020 10:49:27 -0400
+        id S1726175AbgGRPUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Jul 2020 11:20:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1595083735;
-        bh=yi6X3Espd5sqSuTZxmewLW+HuDxFJ98WpdvVZq3n+xo=;
+        s=dbaedf251592; t=1595085611;
+        bh=IyxbL1zU07mof8eJC+WHF+sz18Phyd5JcwgRAU12by0=;
         h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
-        b=oU+m9PD+nRG+MaaKhAGUrVmXlvBn7KIetTTOXuZ6hoFzoz1qRqrpVHQh2iX1N+5Pr
-         hJxehk4LPWQkTcm7a3S5H5DqkOc6ynQh1jwAPSO+iL7mCSWF18hAe2YV8xornUxCJg
-         uWFY1lWfu68qX2P6MlAJdKyN/qpoCSquD6VRs+l4=
+        b=G8EsF2cFN4LYRw7k/aTHi1cciBYepan5//oLCGr8ERifLdZ3JBdQb4q/k0Iflns4E
+         VEt1Gb1BtvzepPpSeYReEOjPzuHk5R2yyQkWs0mhUlHodxGnY8oumXNXld44hsXZN2
+         6KjhrFyPqdhKvGBUzhngweULsGPJZavNhjivfoD0=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from [192.168.1.2] ([2.243.120.168]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MbTL1-1kY3dm2yVd-00bVdw; Sat, 18
- Jul 2020 16:48:55 +0200
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MWi5i-1kL6o63xhw-00XR95; Sat, 18
+ Jul 2020 17:20:11 +0200
 To:     Navid Emamdoost <navid.emamdoost@gmail.com>,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
 Cc:     Navid Emamdoost <emamd001@umn.edu>,
+        Ryder Lee <ryder.lee@mediatek.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>, Felix Fietkau <nbd@nbd.name>,
         "David S. Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: add missing release on skb in
- mt7601u_mcu_msg_send
+Subject: Re: [PATCH] mt76: mt76u: add missing release on skb in
+ __mt76x02u_mcu_send_msg
 From:   Markus Elfring <Markus.Elfring@web.de>
 Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
@@ -89,62 +91,55 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-Message-ID: <080cc1d6-cbe2-65c7-fc78-861292bd46b9@web.de>
-Date:   Sat, 18 Jul 2020 16:48:52 +0200
+Message-ID: <b480613d-9ff5-79de-1066-2ece999d516d@web.de>
+Date:   Sat, 18 Jul 2020 17:20:06 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-GB
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:xGd5zp427AZNVcvL0N6vop3uRwIGOzf5KsveZJhnWmHKhgAIkQK
- 6FoGgX2XGpgWjbbxfvlxFwEz9IzDY0ue5YQTXPbMJ9aNrrXuM+ucI5oVQ4RE6/wybsu1FaE
- D+LUzkoOv9OFlatbzVFtGNd57az+LbgFQFLc2LtK7HMiYr9GyDPs3+6VcqYBEwmAWTTEN0l
- L4pSOGpiURVIxdwG55FhQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:MC+N+UBDk9E=:8iDVDj7jP1s7OiZ2PhbEBO
- zIelheL8VSespmvapmnRtGe5WeHQi2/Xi426hQ3lICgpTAv8Q/9W6N8f8aAZaJporxL284yec
- m7O2LFBMlVWlBxyOIgCcpO3GhX/yl3D6fFRwpPqx50dRULSi7dsWq5NO6BJIdvFEEv0C4nvuF
- twEsyQmzXWKCo1Qx10GUCqEbov2pHB5vLy5NCZIGIITfL2aMS/l6NPTVmg3TVetWqon4prBD8
- iT7zYIQzkbq9AJFEyR4jHrSqjhXmmZMJGrDjJ9OHPXCjGl1Yk3bDuu9X65mMcXa6un7wRExC3
- yiy3MtxvO96dvaJJ+NuTEs1WRDRNGipPe5LWhXRudaW0uAfrpFadn/kDBJnTfdnMA3Y2eGDAv
- 8D+SC3FtZzb1xKUM967wwmwrAzqRSu9XQkDSGIp19jeRljL1EECAlGsPtv1uN/jLhjtQ69Oq1
- 53kvvN9tLAdtUJdYpoS+AeuCKBWXtV6wUAu67Bkp2Sh+9ZW/+fXa/dpvIl1VbMOLRIIAQQYlL
- 3Uy5P8uuTMLNPEddkZrXimWpCqIpMTUs69j/5h7WR4+BxWRDHoQgUdOT3OsDqru3LhJI/Lqjj
- 0KgUgs2dwGFqlS1f+HrMd1izz2rBK5ySxqpeChY3XqJg57vRYzyVHCoifVsCnxf4g4rVQGyMC
- paZ+B8rUpCpH732KXQWTgETVv8dl439I3LNPi9xMJxfHoojkXNmMiBtXCQc/Ju+Z4qH5/Pjhx
- OItC0yTCuAC/OZuXQR39nbCj78kG4gJoo4NCtMBYdixuKKEjvBFwzyLdK531z2DXDfbU2vtIW
- 6QYBZ3HADHr+lsTWCuZCaQtw/xFZ6UfQWYULkJG8GtsyWy90Ligmv3x9C1llgIJQf9YrqjH9Z
- 73Ah2p/AckbRQImTo659ls+GzoqjS2iSSBXoBjIj4TUQAjcOBB5Diq/zcyxp3E8HRwWJYMMgh
- md5mRe6x35pgB+IclfX5/6J1jg57iKhSL7yf/MXYdN0eVWY+8p3UhEdfbGLZds0uU5EkeEVvg
- 5p1ElXiPG/2U1zd9LaMTZQtOiC5HzLbSelVOTbUYC5pgS44X3Vu84gJyxxITiHj7IfUAskVPA
- frWahzqCqBgW+ZTRWfS/zJfliM0xPZ+Koasx2CMmG0rQmEMGkfejYtPVWkusfrkaZ05LKG7I9
- +C45fcowqbn1yEMlBDZ2ScbiSiHj60Qfz4y2Soz0RZ0JcFJTNjLBEZGYfccOaGunIj1m4XGZo
- 5yFlA0hjr5nNAB5Yypn/P3p8UdtvxyO1B+a4abQ==
+X-Provags-ID: V03:K1:69mwo9rNqPcINw1ozFY10lAPovPQK9fXOUGp4GFTTV4tLe/qWC3
+ 95CqizS015kpzGv03t3bsoeCKGlGnOYYr6IbDDAmVpjnx5+PZhqdAYLPTQNEEqWgO+lcNfY
+ 1EZ4qFFedVGOoXhHStwW+a/gWENtW0Dk0j+BlxXitWb+FRxQh8+Y3zyfmj3hmGPIpKF1/Sc
+ RBUba0mTnAv6FX1DXm3Zw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:HC7GFijEuYc=:J56CkoGGsWNyEWiNWQHATD
+ Nwrh+JqrtAWLbnvFHg/w/mJU0o4/EDvcBX/yi8867ofxfjAdYmeAdML7zUO5RLkVZC02CY1Et
+ 3Fm6JzX24UooB42tSWPOzkeLV7y0Ou7O6twPpcfeERB79/pzJflTNCdH0WUFw+j1v3IkGXWhS
+ ub/CzsdB/t+QelFVDTX46rQgiZau5mDGoju1+3PTjXOjsLx7sgPj3i3OlItlyVD4zyk+170Z8
+ yu+ETwjWi+f9c533MVCBHqovtJeyrZQvgOTRbJV7vaMtrP93RES2/jbnNDoA4spJDFdVfIZLh
+ +CYp32FhGqdwzP0F96CXWSKkbtMuKquvTqvU36ATGh1ohUVHRGkpZcedKuqUHW53/oEAW/UGo
+ qNFN58V8wUQE3n/9Dv5o3g2dAOR9AHFOYRZ5kRGti73ab+VYj22sMDOAl8XZiPsHNknSlZFpr
+ tz1Fo8uD4iP3VRSuJu6jk5uCeUMFgAFn7a/RxlQ1s+sKGr5TEAQ+7KkrPcMqeoqB5y5zFyNV2
+ VY0pyzRJXEx4OXn531Ra7BwpVfAW7dJJLMghy5qx8Y95PekDBKAORWFsjTPmVgBQ8ECq/i3xD
+ 8EBWPS+Sb8CMvnFxx76h2dgfRknp4b5iFFDy3p/v2VTJwMfG0gfPfTz8aNg6AHoF6pQcRY23e
+ jS3V0qNXzcP0ZZ5senLluVjWPzLeuKYaL0x+okfljwBLNodR7SSk1mJtloWkD40r8aAkWH0xY
+ mXcdH4hLuhcOFYFPup805Vo3qqky8VEeG1D0/w2JUfqDn618Y6ni9hb9L6ou+FFtEBP9NXGWC
+ f/1myLZovNBOIgblcn3ZM9hAYfpTlPdpFvhe1dCIU1eFWB3pClDKkFqIarRQ6yBBRnkMFVAbz
+ ydVqSuyWsLFMdH12JRtqfi142/QXTHpSwPSiAPV5PqcuEASf/Zm0gETYINk2ETOQ/1dA6nJGS
+ SpGM4wUYNodlCaO6X0G0eai++g0QtGIJYC9Ci4VuW9pZ4p2NMWBX4bjmn2d/zG0syqCKDKljA
+ QKyeMqW+pxgKICCyEqfXbc4HGAJsZJ/imivDrZ9AOYfx7p405rLGg8cknT6C+R2VUAM75fdyM
+ gZCP+kAS79/c+osl0xyLVqELWCAJKGHroYNr/Pl8zmQeT8+PtJJVmHDIY9IOPNXMFL38Ek8Sa
+ oUboQSW/fwQNLjyKsbYPZtgDDre80u7i/eI1pnbV6NWWYA8HSfQE6+1sRORw67CCJ94Ceh74q
+ 420W2T5IylhxjjJjhUqsxQDMR5k1VuBWEH2LB6A==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 =E2=80=A6
-> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-> @@ -116,8 +116,10 @@ mt7601u_mcu_msg_send(struct mt7601u_dev *dev, struc=
-t sk_buff *skb,
->  	int sent, ret;
->  	u8 seq =3D 0;
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+=E2=80=A6
+> @@ -111,6 +113,7 @@ __mt76x02u_mcu_send_msg(struct mt76_dev *dev, struct=
+ sk_buff *skb,
+>  	if (wait_resp)
+>  		ret =3D mt76x02u_mcu_wait_resp(dev, seq);
 >
-> -	if (test_bit(MT7601U_STATE_REMOVED, &dev->state))
-> +	if (test_bit(MT7601U_STATE_REMOVED, &dev->state)) {
-> +		consume_skb(skb);
->  		return 0;
-> +	}
+> +out:
+>  	consume_skb(skb);
 =E2=80=A6
 
-How do you think about to use the the following statements instead
-in the if branch?
-
-		ret =3D 0;
-		goto consume_skb;
-
+I suggest to use the label =E2=80=9Cconsume_skb=E2=80=9D.
 
 Would you like to add the tag =E2=80=9CFixes=E2=80=9D to the commit messag=
 e?
