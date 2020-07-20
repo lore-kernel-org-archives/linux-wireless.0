@@ -2,86 +2,116 @@ Return-Path: <SRS0=4aWb=A7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF93FC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 14:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA2E9C433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 15:03:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE3FE22B4E
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 14:52:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A621D22C9C
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 15:03:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.cipht.net header.i=@mg.cipht.net header.b="gmitZM1K"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yI3IJWEJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728500AbgGTOwJ (ORCPT
+        id S1726716AbgGTPDw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Jul 2020 10:52:09 -0400
-Received: from m42-7.mailgun.net ([69.72.42.7]:17119 "EHLO m42-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726437AbgGTOwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Jul 2020 10:52:08 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.cipht.net; q=dns/txt;
- s=mailo; t=1595256728; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=phX0axoq3uT/fW4P3Mg+Pdgs/5gJncqzSjzV8Av9Mms=; b=gmitZM1KYjaMG2jgyN32UkT4ZdLGqJ48hCx7BuxDsjPn3Q5PdVqXukp+BGKWFs3y97meyFhd
- YDHwAhIsd0tgXwmJQkBoFRzTCpbh/0U5Njkz6j/gkqDqvq9J0co8RHI1A1iPxqWjJQitxVGJ
- 85xEM+0wh4vsj0z5GOsvcLhgcgY=
-X-Mailgun-Sending-Ip: 69.72.42.7
-X-Mailgun-Sid: WyJlMWU0MyIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiZDFjMTNjIl0=
-Received: from quelaan.hitronhub.home
- (CPE84948c4ba0f3-CM84948c4ba0f0.cpe.net.cable.rogers.com [174.117.215.139])
- by smtp-out-n18.prod.us-west-2.postgun.com with SMTP id
- 5f15af90d50c36e7295529e7 (version=TLS1.3, cipher=TLS_AES_128_GCM_SHA256);
- Mon, 20 Jul 2020 14:52:00 GMT
-From:   Julian Squires <julian@cipht.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, Julian Squires <julian@cipht.net>
-Subject: [PATCH] cfg80211: allow vendor dumpit to terminate by returning 0
-Date:   Mon, 20 Jul 2020 12:20:35 -0230
-Message-Id: <20200720145033.401307-1-julian@cipht.net>
-X-Mailer: git-send-email 2.27.0
+        Mon, 20 Jul 2020 11:03:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33432 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbgGTPDv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Jul 2020 11:03:51 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 727C7C061794
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2020 08:03:51 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id f2so18172327wrp.7
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2020 08:03:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=WsZ3b5EwA+XYQ8T9G5wJcefwB0ujsGqeq6v3Egs7+Ho=;
+        b=yI3IJWEJIKD+ADPNjTuaegdrqgDg6pFT8Acs+AoLi1GhE3GzaJyn6QTju346cepQUL
+         qrKkKdbPvACmtXW/etJVFvIG/uqtXHK02htGZ31mY3b4gwx6A8WBB+vELmM409i86OXP
+         PnX51ep4jhgOhER6fmVdNRnInEg0Q7SndPM8q5p9giqgNIHr/QLBcnNHfWxIY/5/9h3h
+         NxkRk2OaVwdev8+7+KbyJdP/3im7GFgygYfly0LattGpIGo7xiHDBp8kIo0BMfuXL8xP
+         yOGLsAf7qLKZJNWhiDhdWgr5fJDOPfaUnow3WaE4wal1w4SG/8U33MTp/XH8q9swiYqq
+         Bekw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=WsZ3b5EwA+XYQ8T9G5wJcefwB0ujsGqeq6v3Egs7+Ho=;
+        b=AEpUgVgcvBypkLTf9VxTgmQ71G8CsEAprs8Lau4QQo8At+qDYk9B0sllh+MLRkA1dD
+         ZiemuHfvZYu3YZHZmWAXK9gUyYmuDYko7OxyvCzWGU0NrKzXIaLVSDM8ww6BO//kZQAo
+         yANr5b5KAZu0yE4+jFkk56jxRNvwR5ApwUj5qnmrESYANBs44K7vYt3VIn7P7Sm51MBi
+         9yZ6RATUf6VBXE+4MaPJLweiCFeE2Zpd3kC96C3ZoZhi697xVyPwAJSRwehKC0dwCURA
+         O5vysmXTKpm5WOoQXUpc8aet2nypGF6SgyXCpNJuUxzgri6/qjx/sTRTmGa6sokLMvGC
+         x5VQ==
+X-Gm-Message-State: AOAM531VRlVBEBv0KLajCk6XM6Grq6tXFLkj5sgFnEMBI1AcGXXoH/2p
+        FrAxFjdbCiuolP+lR9m4vFhz0hQHRZg=
+X-Google-Smtp-Source: ABdhPJx2udXdLYC3OBvwUxSdxVGGoR/au69dx75tlUGf4OdR5os1xLssrPAHHh9YBm76IuVgcy4Czg==
+X-Received: by 2002:a5d:5084:: with SMTP id a4mr23352558wrt.191.1595257429835;
+        Mon, 20 Jul 2020 08:03:49 -0700 (PDT)
+Received: from [192.168.0.38] ([176.61.57.127])
+        by smtp.gmail.com with ESMTPSA id z10sm33643676wrm.21.2020.07.20.08.03.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Jul 2020 08:03:49 -0700 (PDT)
+Subject: Re: [PATCH 1/4] wcn36xx: Fix multiple AMPDU sessions support
+To:     Loic Poulain <loic.poulain@linaro.org>, kvalo@codeaurora.org
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1593524821-32115-1-git-send-email-loic.poulain@linaro.org>
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Message-ID: <190b95a9-a5cd-f009-b696-31922198b47d@linaro.org>
+Date:   Mon, 20 Jul 2020 16:04:34 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1593524821-32115-1-git-send-email-loic.poulain@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Although it's likely that I'm misunderstanding the intended interface
-for vendor command dumpit, I couldn't find any detailed documentation
-on it, or examples of drivers implementing it, so I'm sending in this
-patch hoping it will at least lead to clarification.
+On 30/06/2020 14:46, Loic Poulain wrote:
+> Several AMPDU sessions can be started, e.g. for different TIDs.
+> Currently the driver does not take care of the session ID when
+> requesting block-ack (statically set to 0), which leads to never
+> block-acked packet with sessions other than 0.
+> 
+> Fix this by saving the session id when creating the ba session and
+> use it in subsequent ba operations.
+> 
+> This issue can be reproduced with iperf in two steps (tid 0 strem
+> then tid 6 stream).
+> 
+> 1.0 iperf -s                                # wcn36xx side
+> 1.1 iperf -c ${IP_ADDR}                     # host side
+> 
+> Then
+> 
+> 2.0 iperf -s -u -S 0xC0                     # wcn36xx side
+> 2.1 iperf -c ${IP_ADDR} -u -S 0xC0 -l 2000  # host side
+> 
+> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> ---
 
-It seems to me that dumpit, like netlink_callback->dump, should signal
-successful completion by returning 0.
+Getting a few checkpatch errors here
 
-Currently, that will just cause dumpit to be called again, possibly
-many times until an error occurs.  Since skb->len is never going to be
-0 by the time dumpit is called, the only way for dumpit to signal
-completion is by returning an error.  If it returns a positive value,
-the current message is cancelled, but that positive value is returned
-and nl80211_vendor_cmd_dump gets called again.
+CHECK: No space is necessary after a cast
+#44: FILE: drivers/net/wireless/ath/wcn36xx/smd.c:2112:
++	rsp = (struct wcn36xx_hal_add_ba_session_rsp_msg *) buf;
 
-Signed-off-by: Julian Squires <julian@cipht.net>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+WARNING: Comparisons should place the constant on the right side of the test
+#45: FILE: drivers/net/wireless/ath/wcn36xx/smd.c:2113:
++	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 78442fc4fc01..229d48ccf57f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13156,7 +13156,7 @@ static int nl80211_vendor_cmd_dump(struct sk_buff *skb,
- 		if (err == -ENOBUFS || err == -ENOENT) {
- 			genlmsg_cancel(skb, hdr);
- 			break;
--		} else if (err) {
-+		} else if (err <= 0) {
- 			genlmsg_cancel(skb, hdr);
- 			goto out;
- 		}
--- 
-2.27.0
+total: 0 errors, 1 warnings, 1 checks, 116 lines checked
+
 
