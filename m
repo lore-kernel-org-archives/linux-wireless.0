@@ -4,93 +4,115 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61092C433E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 17:09:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E33C433E2
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 17:11:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 394682176B
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 17:09:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2920D2176B
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 17:11:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="M5YTGz+z"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Fh8Vy1+6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730765AbgGTRJz (ORCPT
+        id S1730969AbgGTRLm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Jul 2020 13:09:55 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:44519 "EHLO m43-7.mailgun.net"
+        Mon, 20 Jul 2020 13:11:42 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:57390 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729744AbgGTRJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Jul 2020 13:09:54 -0400
+        id S1729039AbgGTRLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Jul 2020 13:11:42 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595264993; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1595265101; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=pEBC16t+YV4FGYaWikogHtEEGJZCLsu+AxuloV4iKJY=;
- b=M5YTGz+zsn0TjjzLP60McRuO2SOD2jK9cLke+LsnaGWfnmHYJga6heeb+L1gbUhJl7Wls7KU
- u2to3r8CGYqibuAR8oJHLrD8S0x5EPZEHBP6n2G25y9sVP/EVuvleWoJD1k0veArZKglSp05
- GwcFyB1KmjFz7BL3GM2rslLWGnU=
+ Content-Type: Sender; bh=73j4gslEkdDhJgDflelmYGo9052nEeU1c8WAVbCoH1Q=;
+ b=Fh8Vy1+6fIpxmgQKk3ols2Iq9gwNelPNtCQqV1qC+nDZm6bhDGfWRGQ6t3fPaGwOzyvsmmjO
+ DU28uLCTP5oQlzrRkqzhdsGaTwinaMKzCtVcbq3+oGfnDMfgTUnX8n+Qg44mf0AbtzNw6gGn
+ XWbc0TThB5k8e3mS4lmC4Omtpbs=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5f15cfdfeef925b694313ec6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Jul 2020 17:09:51
+ smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
+ 5f15d00b0cb8533c3b749f9e (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Jul 2020 17:10:35
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3BFFDC433C9; Mon, 20 Jul 2020 17:09:51 +0000 (UTC)
+        id 89558C433CB; Mon, 20 Jul 2020 17:10:35 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CCB1CC433C9;
-        Mon, 20 Jul 2020 17:09:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CCB1CC433C9
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1A178C433C9;
+        Mon, 20 Jul 2020 17:10:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1A178C433C9
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 3/14 v3] ath9k: Check the return value of
- pcie_capability_read_*()
+Subject: Re: [PATCH] net: ath10k: fix OOB: __ath10k_htt_rx_ring_fill_n
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200713175529.29715-2-refactormyself@gmail.com>
-References: <20200713175529.29715-2-refactormyself@gmail.com>
-To:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-Cc:     skhan@linuxfoundation.org, linux-pci@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-kernel@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+In-Reply-To: <20200623221105.3486-1-bruceshenzk@gmail.com>
+References: <20200623221105.3486-1-bruceshenzk@gmail.com>
+To:     Zekun Shen <bruceshenzk@gmail.com>
+Cc:     unlisted-recipients:; (no To-header on input) security@kernel.org,
+        Zekun Shen <bruceshenzk@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+        linux-kernel@vger.kernel.org
+Illegal-Object: Syntax error in Cc: address found on vger.kernel.org:
+        Cc:     unlisted-recipients:; (no To-header on input)security@kernel.org
+                                                                     ^-missing end of address
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200720170951.3BFFDC433C9@smtp.codeaurora.org>
-Date:   Mon, 20 Jul 2020 17:09:51 +0000 (UTC)
+Message-Id: <20200720171035.89558C433CB@smtp.codeaurora.org>
+Date:   Mon, 20 Jul 2020 17:10:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Saheed O. Bolarinwa" <refactormyself@gmail.com> wrote:
+Zekun Shen <bruceshenzk@gmail.com> wrote:
 
-> On failure pcie_capability_read_dword() sets it's last parameter, val
-> to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
-> failure. This would introduce a bug because (x & x) == (~0 & x).
+> The idx in __ath10k_htt_rx_ring_fill_n function lives in
+> consistent dma region writable by the device. Malfunctional
+> or malicious device could manipulate such idx to have a OOB
+> write. Either by
+>     htt->rx_ring.netbufs_ring[idx] = skb;
+> or by
+>     ath10k_htt_set_paddrs_ring(htt, paddr, idx);
 > 
-> This bug can be avoided without changing the function's behaviour if the
-> return value of pcie_capability_read_dword is checked to confirm success.
+> The idx can also be negative as it's signed, giving a large
+> memory space to write to.
 > 
-> Check the return value of pcie_capability_read_dword() to ensure success.
+> It's possibly exploitable by corruptting a legit pointer with
+> a skb pointer. And then fill skb with payload as rougue object.
 > 
-> Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-> Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+> Part of the log here. Sometimes it appears as UAF when writing
+> to a freed memory by chance.
+> 
+>  [   15.594376] BUG: unable to handle page fault for address: ffff887f5c1804f0
+>  [   15.595483] #PF: supervisor write access in kernel mode
+>  [   15.596250] #PF: error_code(0x0002) - not-present page
+>  [   15.597013] PGD 0 P4D 0
+>  [   15.597395] Oops: 0002 [#1] SMP KASAN PTI
+>  [   15.597967] CPU: 0 PID: 82 Comm: kworker/u2:2 Not tainted 5.6.0 #69
+>  [   15.598843] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+>  BIOS rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
+>  [   15.600438] Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
+>  [   15.601389] RIP: 0010:__ath10k_htt_rx_ring_fill_n
+>  (linux/drivers/net/wireless/ath/ath10k/htt_rx.c:173) ath10k_core
+> 
+> Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-9a8ab2bfb678 ath9k: Check the return value of pcie_capability_read_*()
+bad60b8d1a71 ath10k: check idx validity in __ath10k_htt_rx_ring_fill_n()
 
 -- 
-https://patchwork.kernel.org/patch/11660731/
+https://patchwork.kernel.org/patch/11621899/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
