@@ -2,91 +2,88 @@ Return-Path: <SRS0=4aWb=A7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6137DC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 09:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18043C433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 09:49:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A780206F2
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 09:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE339208E4
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jul 2020 09:49:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="grt5bBuo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727908AbgGTJPc convert rfc822-to-8bit (ORCPT
+        id S1728063AbgGTJt2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Jul 2020 05:15:32 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:58012 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726666AbgGTJPc (ORCPT
+        Mon, 20 Jul 2020 05:49:28 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:10352 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727972AbgGTJt2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Jul 2020 05:15:32 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 06K9FJEa8013205, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 06K9FJEa8013205
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 20 Jul 2020 17:15:19 +0800
-Received: from RTEXMB01.realtek.com.tw (172.21.6.94) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Jul 2020 17:15:19 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Jul 2020 17:15:19 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::941:6388:7d34:5c44]) by
- RTEXMB04.realtek.com.tw ([fe80::941:6388:7d34:5c44%3]) with mapi id
- 15.01.1779.005; Mon, 20 Jul 2020 17:15:19 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Andy Huang" <tehuang@realtek.com>,
-        "bigeasy@linutronix.de" <bigeasy@linutronix.de>
-Subject: RE: [PATCH v2] rtw88: 8821c: coex: add functions and parameters
-Thread-Topic: [PATCH v2] rtw88: 8821c: coex: add functions and parameters
-Thread-Index: AQHWXjraTvh3jbCqrkKUH2C7bzlC1KkQLkeKgAABtmA=
-Date:   Mon, 20 Jul 2020 09:15:19 +0000
-Message-ID: <33152a8d95804ef5bb68579c8b40ebe3@realtek.com>
-References: <20200720020924.2254-1-yhchuang@realtek.com>
- <87lfje7dv1.fsf@codeaurora.org>
-In-Reply-To: <87lfje7dv1.fsf@codeaurora.org>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.175]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Mon, 20 Jul 2020 05:49:28 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1595238567; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=vfSYH5wuauFN0yvMZ+Uhpt1wFYnJrhTjMM2NSzbwkmQ=; b=grt5bBuoOm+zePlaI/sRQCrGDrugpP7/Fs+td56UwfcflEnUjhjBK7Fwla8rBszHKaNjpTGW
+ D3litzidL8hgqZ6VlsISWqo76yPewJWzf2v8OEeqCNYwEYX2X2d9hwduCcAp3/UUfBh7hE81
+ U1IcWI5w016HB7iwijCbIuyj+9M=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5f15689b0cb8533c3b7d9a40 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Jul 2020 09:49:15
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 62E6BC43395; Mon, 20 Jul 2020 09:49:15 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 84EB3C433CA;
+        Mon, 20 Jul 2020 09:49:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 84EB3C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+Cc:     Ajay.Kathat@microchip.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Claudiu.Beznea@microchip.com, Sripad.Balwadgi@microchip.com,
+        Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>
+Subject: Re: [PATCH] wilc1000: Move wilc1000 SDIO ID's from driver source to common header file
+References: <20200717051134.19160-1-ajay.kathat@microchip.com>
+        <CAPDyKFp5-6QeHLTE4gtc5u6moMsLFhOBZckDZBTD+B1RV28Z3g@mail.gmail.com>
+Date:   Mon, 20 Jul 2020 12:49:11 +0300
+In-Reply-To: <CAPDyKFp5-6QeHLTE4gtc5u6moMsLFhOBZckDZBTD+B1RV28Z3g@mail.gmail.com>
+        (Ulf Hansson's message of "Sat, 18 Jul 2020 11:28:52 +0200")
+Message-ID: <87blkabjoo.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> <yhchuang@realtek.com> writes:
-> 
-> > From: Ping-Cheng Chen <pc.chen@realtek.com>
-> >
-> > Without this patch, RTL8821CE will not have coex support,
-> > and will crash the system because of the NULL pointers
-> > for the coex functions.
-> >
-> > While RTL8822C series are WiFi + BT combo chips, it needs
-> > the co-existence mechanism for the device to work on both
-> > WiFi and BT without interfering each other. And the coex
-> > support has already been added before, most of the mechanisms
-> > are implemented. The driver should just add corresponding
-> > functions to operate on different types of chips and its
-> > coex parameters.
-> >
-> > Fixes: f745eb9ca5bf ("rtw88: 8821c: Add 8821CE to Kconfig and Makefile")
-> > Signed-off-by: Ping-Cheng Chen <pc.chen@realtek.com>
-> > Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-> > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> What changed from v1?
-> 
+Ulf Hansson <ulf.hansson@linaro.org> writes:
 
-Just the name of the author, nothing else :)
+> On Fri, 17 Jul 2020 at 07:11, <Ajay.Kathat@microchip.com> wrote:
+>>
+>> From: Ajay Singh <ajay.kathat@microchip.com>
+>>
+>> Moved macros used for Vendor/Device ID from wilc1000 driver to common
+>> header file and changed macro name for consistency with other macros.
+>>
+>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+>
+> Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-Yen-Hsuan
+Just so that I have understood correctly, so the plan is to take this
+via wireless-drivers-next?
+
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
