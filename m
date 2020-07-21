@@ -7,45 +7,44 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2A6C433F7
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7331DC433E8
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 507D6206E9
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CDAC206E9
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uZR/0Nb+"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qwi1HOvk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729946AbgGURPE (ORCPT
+        id S1730796AbgGURPJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jul 2020 13:15:04 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:16979 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730728AbgGURPD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jul 2020 13:15:03 -0400
+        Tue, 21 Jul 2020 13:15:09 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:14780 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730715AbgGURPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Jul 2020 13:15:05 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595351702; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1595351704; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=h4XrQmS1jTUM0qC0Ip95PyLtIHFfuNdHLgMI5cV20Ck=; b=uZR/0Nb+Tm7OcBrLLi6Sh1zsFkqzFZlmLCkofdeQtmvi5mx1HjdjWMkueHkDXs3VtNjUIC0r
- B2Kdy/HOQmpXRRsOq145WntfJDQpr9KorOinppjYiXlb/hvBMSr81JXxdSR2/7CNu5gxw9Jn
- wcuNoooyOPjosyXRrTNQ5FAws5g=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ bh=z+QV2LXb5rbvImIDmNfj9kPQzvqQTO89wCls0vl+oAI=; b=qwi1HOvkz1frPb1kkchVktCZRkkU0dtRK0/Rxh/WAa9tRwuIVkA2tpY7s4cVWa8bq7p1ClsS
+ LbhNBpfHd8R+mrrvJH7Lb5MhUg8Uib8ZCShrihzQVYBGlGwFRdT6wsuspx8IPnrRFwdXug77
+ 44swAm6OxSbKge8mkSsNMA6AIAU=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n17.prod.us-west-2.postgun.com with SMTP id
- 5f17228b3dbcb593a96a8948 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:14:51
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f172297eef925b694dc15d9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:15:03
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CC58DC433CA; Tue, 21 Jul 2020 17:14:50 +0000 (UTC)
+        id 3AF6DC43395; Tue, 21 Jul 2020 17:15:03 +0000 (UTC)
 Received: from pillair-linux.qualcomm.com (unknown [202.46.22.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pillair)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B2DBEC43395;
-        Tue, 21 Jul 2020 17:14:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B2DBEC43395
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BB288C4339C;
+        Tue, 21 Jul 2020 17:14:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BB288C4339C
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
 From:   Rakesh Pillai <pillair@codeaurora.org>
@@ -55,9 +54,9 @@ Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
         dianders@chromium.org, evgreen@chromium.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Subject: [RFC 2/7] ath10k: Add support to process rx packet in thread
-Date:   Tue, 21 Jul 2020 22:44:21 +0530
-Message-Id: <1595351666-28193-3-git-send-email-pillair@codeaurora.org>
+Subject: [RFC 5/7] ath10k: Handle the rx packet processing in thread
+Date:   Tue, 21 Jul 2020 22:44:24 +0530
+Message-Id: <1595351666-28193-6-git-send-email-pillair@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
 References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
@@ -66,200 +65,198 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-NAPI instance gets scheduled on a CPU core on which
-the IRQ was triggered. The processing of rx packets
-can be CPU intensive and since NAPI cannot be moved
-to a different CPU core, to get better performance,
-its better to move the gist of rx packet processing
-in a high priority thread.
-
-Add the init/deinit part for a thread to process the
-receive packets.
+Add the support to handle the receive packet and
+the tx completion processing in a thread context
+if the feature has been enabled via module parameter.
 
 Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
 
 Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 33 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h | 23 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.c | 41 ++++++++++++++++++++++++++++++++++
- 3 files changed, 97 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.c   |  8 ++++++
+ drivers/net/wireless/ath/ath10k/core.h   |  4 +++
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 46 +++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/snoc.c   | 12 +++++++--
+ 5 files changed, 64 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 9104496..2b520a0 100644
+index 2b520a0..4064fa2 100644
 --- a/drivers/net/wireless/ath/ath10k/core.c
 +++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -668,6 +668,39 @@ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+@@ -668,6 +668,14 @@ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
  	return scnprintf(buf, buf_len, "%s", ath10k_core_fw_feature_str[feat]);
  }
  
-+int ath10k_core_thread_shutdown(struct ath10k *ar,
-+				struct ath10k_thread *thread)
++void ath10k_core_thread_post_event(struct ath10k_thread *thread,
++				   enum ath10k_thread_events event)
 +{
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "shutting down %s\n", thread->name);
-+	set_bit(ATH10K_THREAD_EVENT_SHUTDOWN, thread->event_flags);
-+	wake_up_process(thread->task);
-+	wait_for_completion(&thread->shutdown);
-+	ath10k_info(ar, "thread %s exited\n", thread->name);
-+
-+	return 0;
++	set_bit(event, thread->event_flags);
++	wake_up(&thread->wait_q);
 +}
-+EXPORT_SYMBOL(ath10k_core_thread_shutdown);
++EXPORT_SYMBOL(ath10k_core_thread_post_event);
 +
-+int ath10k_core_thread_init(struct ath10k *ar,
-+			    struct ath10k_thread *thread,
-+			    int (*handler)(void *data),
-+			    char *thread_name)
-+{
-+	thread->task = kthread_create(handler, thread, thread_name);
-+	if (IS_ERR(thread->task))
-+		return -EINVAL;
-+
-+	init_waitqueue_head(&thread->wait_q);
-+	init_completion(&thread->shutdown);
-+	memcpy(thread->name, thread_name, ATH10K_THREAD_NAME_SIZE_MAX);
-+	clear_bit(ATH10K_THREAD_EVENT_SHUTDOWN, thread->event_flags);
-+	ath10k_info(ar, "Starting thread %s\n", thread_name);
-+	wake_up_process(thread->task);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath10k_core_thread_init);
-+
- void ath10k_core_get_fw_features_str(struct ath10k *ar,
- 				     char *buf,
- 				     size_t buf_len)
+ int ath10k_core_thread_shutdown(struct ath10k *ar,
+ 				struct ath10k_thread *thread)
+ {
 diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 5c18f6c..96919e8 100644
+index 59bdf11..596d31b 100644
 --- a/drivers/net/wireless/ath/ath10k/core.h
 +++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -970,6 +970,22 @@ struct ath10k_bus_params {
- 	bool hl_msdu_ids;
+@@ -974,6 +974,8 @@ struct ath10k_bus_params {
+ 
+ enum ath10k_thread_events {
+ 	ATH10K_THREAD_EVENT_SHUTDOWN,
++	ATH10K_THREAD_EVENT_RX_POST,
++	ATH10K_THREAD_EVENT_TX_POST,
+ 	ATH10K_THREAD_EVENT_MAX,
  };
  
-+#define ATH10K_THREAD_NAME_SIZE_MAX	32
-+
-+enum ath10k_thread_events {
-+	ATH10K_THREAD_EVENT_SHUTDOWN,
-+	ATH10K_THREAD_EVENT_MAX,
-+};
-+
-+struct ath10k_thread {
-+	struct ath10k *ar;
-+	struct task_struct *task;
-+	struct completion shutdown;
-+	wait_queue_head_t wait_q;
-+	DECLARE_BITMAP(event_flags, ATH10K_THREAD_EVENT_MAX);
-+	char name[ATH10K_THREAD_NAME_SIZE_MAX];
-+};
-+
- struct ath10k {
- 	struct ath_common ath_common;
- 	struct ieee80211_hw *hw;
-@@ -982,6 +998,7 @@ struct ath10k {
- 	} msa;
- 	u8 mac_addr[ETH_ALEN];
- 
-+	struct ath10k_thread rx_thread;
- 	enum ath10k_hw_rev hw_rev;
- 	u16 dev_id;
- 	u32 chip_id;
-@@ -1276,6 +1293,12 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
+@@ -1294,6 +1296,8 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
  
  extern unsigned long ath10k_coredump_mask;
  
-+int ath10k_core_thread_shutdown(struct ath10k *ar,
-+				struct ath10k_thread *thread);
-+int ath10k_core_thread_init(struct ath10k *ar,
-+			    struct ath10k_thread *thread,
-+			    int (*handler)(void *data),
-+			    char *thread_name);
- struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 				  enum ath10k_bus bus,
- 				  enum ath10k_hw_rev hw_rev,
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 1ef5fdb..463c34e 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -909,6 +909,31 @@ static void ath10k_snoc_buffer_cleanup(struct ath10k *ar)
- 	}
- }
++void ath10k_core_thread_post_event(struct ath10k_thread *thread,
++				   enum ath10k_thread_events event);
+ int ath10k_core_thread_shutdown(struct ath10k *ar,
+ 				struct ath10k_thread *thread);
+ int ath10k_core_thread_init(struct ath10k *ar,
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index cad5949..e3cb723 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1970,6 +1970,8 @@ struct ath10k_htt {
+ 		spinlock_t lock;
+ 	} rx_ring;
  
-+int ath10k_snoc_rx_thread_loop(void *data)
++	/* Protects access to in order indication queue */
++	spinlock_t rx_in_ord_q_lock;
+ 	unsigned int prefetch_len;
+ 
+ 	/* Protects access to pending_tx, num_pending_tx */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a4a6618..becbd56 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -796,6 +796,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	timer_setup(timer, ath10k_htt_rx_ring_refill_retry, 0);
+ 
+ 	spin_lock_init(&htt->rx_ring.lock);
++	spin_lock_init(&htt->rx_in_ord_q_lock);
+ 
+ 	htt->rx_ring.fill_cnt = 0;
+ 	htt->rx_ring.sw_rd_idx.msdu_payld = 0;
+@@ -2702,10 +2703,17 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 		 */
+ 		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
+ 			ath10k_txrx_tx_unref(htt, &tx_done);
+-		} else if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
+-			ath10k_warn(ar, "txdone fifo overrun, msdu_id %d status %d\n",
+-				    tx_done.msdu_id, tx_done.status);
+-			ath10k_txrx_tx_unref(htt, &tx_done);
++		} else {
++			if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
++				ath10k_warn(ar, "txdone fifo overrun, msdu_id %d status %d\n",
++					    tx_done.msdu_id, tx_done.status);
++				ath10k_txrx_tx_unref(htt, &tx_done);
++				continue;
++			}
++			if (ar->rx_thread_enable)
++				ath10k_core_thread_post_event(
++					&ar->rx_thread,
++					ATH10K_THREAD_EVENT_TX_POST);
+ 		}
+ 	}
+ 
+@@ -3903,7 +3911,16 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND: {
+-		skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
++		if (!ar->rx_thread_enable) {
++			skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
++		} else {
++			spin_lock_bh(&htt->rx_in_ord_q_lock);
++			skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
++			spin_unlock_bh(&htt->rx_in_ord_q_lock);
++			ath10k_core_thread_post_event(
++				&ar->rx_thread,
++				ATH10K_THREAD_EVENT_RX_POST);
++		}
+ 		return false;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND: {
+@@ -4032,6 +4049,23 @@ int ath10k_htt_rx_hl_indication(struct ath10k *ar, int budget)
+ }
+ EXPORT_SYMBOL(ath10k_htt_rx_hl_indication);
+ 
++static inline struct sk_buff *
++ath10k_htt_dequeue_in_ord_q(struct ath10k_htt *htt)
 +{
-+	struct ath10k_thread *rx_thread = data;
-+	struct ath10k *ar = rx_thread->ar;
-+	bool shutdown = false;
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb = NULL;
 +
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "rx thread started\n");
-+	set_user_nice(current, -1);
-+
-+	while (!shutdown) {
-+		wait_event_interruptible(
-+			rx_thread->wait_q,
-+			(test_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
-+				  rx_thread->event_flags)));
-+		if (test_and_clear_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
-+				       rx_thread->event_flags))
-+			shutdown = true;
++	if (ar->rx_thread_enable) {
++		spin_lock_bh(&htt->rx_in_ord_q_lock);
++		skb = skb_dequeue(&htt->rx_in_ord_compl_q);
++		spin_unlock_bh(&htt->rx_in_ord_q_lock);
++	} else {
++		skb = skb_dequeue(&htt->rx_in_ord_compl_q);
 +	}
 +
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "rx thread exiting\n");
-+	complete(&rx_thread->shutdown);
-+
-+	do_exit(0);
++	return skb;
 +}
 +
- static void ath10k_snoc_hif_stop(struct ath10k *ar)
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
  {
- 	if (!test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
-@@ -916,6 +941,7 @@ static void ath10k_snoc_hif_stop(struct ath10k *ar)
- 
- 	napi_synchronize(&ar->napi);
- 	napi_disable(&ar->napi);
-+	ath10k_core_thread_shutdown(ar, &ar->rx_thread);
- 	ath10k_snoc_buffer_cleanup(ar);
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif stop\n");
- }
-@@ -923,9 +949,19 @@ static void ath10k_snoc_hif_stop(struct ath10k *ar)
- static int ath10k_snoc_hif_start(struct ath10k *ar)
- {
- 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	int ret;
- 
- 	bitmap_clear(ar_snoc->pending_ce_irqs, 0, CE_COUNT_MAX);
- 	napi_enable(&ar->napi);
-+
-+	ret = ath10k_core_thread_init(ar, &ar->rx_thread,
-+				      ath10k_snoc_rx_thread_loop,
-+				      "ath10k_rx_thread");
-+	if (ret) {
-+		ath10k_err(ar, "failed to start rx thread\n");
-+		goto rx_thread_fail;
-+	}
-+
- 	ath10k_snoc_irq_enable(ar);
- 	ath10k_snoc_rx_post(ar);
- 
-@@ -934,6 +970,10 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
- 
- 	return 0;
-+
-+rx_thread_fail:
-+	napi_disable(&ar->napi);
-+	return ret;
- }
- 
- static int ath10k_snoc_init_pipes(struct ath10k *ar)
-@@ -1652,6 +1692,7 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
- 		return -ENOMEM;
+ 	struct ath10k_htt *htt = &ar->htt;
+@@ -4053,7 +4087,7 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ 		goto exit;
  	}
  
-+	ar->rx_thread.ar = ar;
- 	ar_snoc = ath10k_snoc_priv(ar);
- 	ar_snoc->dev = pdev;
- 	platform_set_drvdata(pdev, ar);
+-	while ((skb = skb_dequeue(&htt->rx_in_ord_compl_q))) {
++	while ((skb = ath10k_htt_dequeue_in_ord_q(htt))) {
+ 		spin_lock_bh(&htt->rx_ring.lock);
+ 		ret = ath10k_htt_rx_in_ord_ind(ar, skb);
+ 		spin_unlock_bh(&htt->rx_ring.lock);
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index f01725b..3eb5eac 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -920,6 +920,7 @@ int ath10k_snoc_rx_thread_loop(void *data)
+ 	struct ath10k_thread *rx_thread = data;
+ 	struct ath10k *ar = rx_thread->ar;
+ 	bool shutdown = false;
++	u32 thread_budget = 8192;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "rx thread started\n");
+ 	set_user_nice(current, -1);
+@@ -927,8 +928,14 @@ int ath10k_snoc_rx_thread_loop(void *data)
+ 	while (!shutdown) {
+ 		wait_event_interruptible(
+ 			rx_thread->wait_q,
+-			(test_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
++			(test_and_clear_bit(ATH10K_THREAD_EVENT_RX_POST,
++					    rx_thread->event_flags) ||
++			 test_and_clear_bit(ATH10K_THREAD_EVENT_TX_POST,
++					    rx_thread->event_flags) ||
++			 test_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
+ 				  rx_thread->event_flags)));
++
++		ath10k_htt_txrx_compl_task(ar, thread_budget);
+ 		if (test_and_clear_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
+ 				       rx_thread->event_flags))
+ 			shutdown = true;
+@@ -1235,7 +1242,8 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
+ 			ath10k_ce_enable_interrupt(ar, ce_id);
+ 		}
+ 
+-	done = ath10k_htt_txrx_compl_task(ar, budget);
++	if (!ar->rx_thread_enable)
++		done = ath10k_htt_txrx_compl_task(ar, budget);
+ 
+ 	if (done < budget)
+ 		napi_complete(ctx);
 -- 
 2.7.4
 
