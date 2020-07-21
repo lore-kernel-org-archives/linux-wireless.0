@@ -7,45 +7,44 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 107D1C433F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC7BC433ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4F7120717
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7AB8206E9
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ik8J7tET"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="BwJ5pO4w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730861AbgGURPa (ORCPT
+        id S1730763AbgGURPB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jul 2020 13:15:30 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:39508 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730816AbgGURPS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jul 2020 13:15:18 -0400
+        Tue, 21 Jul 2020 13:15:01 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:14780 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730716AbgGURO7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Jul 2020 13:14:59 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595351718; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1595351698; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=PuxwKGt35tpiRMfDgkpJSCtxDJb7QR6bGP5l0QXwvfc=; b=Ik8J7tET8O55cc09LJc6txOcWHF8GMysuoUqSew4l81xBAPTJKzLll3c9QheET2dOAfCGza9
- Stu/Xlb9FxcZq7MqkcqgGPaubJkPOH1TGE4/ZuUtpV+2Rw8CCnSKFMcOmL7rnXOBtnTxo9F6
- SiBgv7fdG6vaENh+QWwInwdGYTY=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ bh=wMU4DbU33JbajyG3cP1sY2UVCv9Nr6xvONZ479ljK6o=; b=BwJ5pO4wNqTd3ENB6lQV5Ni850eFRHpfxnuLudOcpGI8Jk3l8lqhdED9s0E2R7orYbtYzTDh
+ m/a6brb6rQrX9sCZK1iDKc6jLtRwGbwnDOzTHE+yQTwAvY3XLwmfw5p5dOmWyOCRkF6XpSZ6
+ bR8KzY6AJ1eOAJ4rRCutItke6tY=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
- 5f17229b3dbcb593a96abfda (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:15:07
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 5f172292f9ca681bd08d75ca (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:14:58
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5D4D7C433C9; Tue, 21 Jul 2020 17:15:07 +0000 (UTC)
+        id 0A83DC433B1; Tue, 21 Jul 2020 17:14:57 +0000 (UTC)
 Received: from pillair-linux.qualcomm.com (unknown [202.46.22.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pillair)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 71AECC433CA;
-        Tue, 21 Jul 2020 17:15:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 71AECC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB20FC433C6;
+        Tue, 21 Jul 2020 17:14:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DB20FC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
 From:   Rakesh Pillai <pillair@codeaurora.org>
@@ -55,9 +54,9 @@ Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
         dianders@chromium.org, evgreen@chromium.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Subject: [RFC 6/7] ath10k: Add deliver to stack from thread context
-Date:   Tue, 21 Jul 2020 22:44:25 +0530
-Message-Id: <1595351666-28193-7-git-send-email-pillair@codeaurora.org>
+Subject: [RFC 4/7] ath10k: Do not exhaust budget on process tx completion
+Date:   Tue, 21 Jul 2020 22:44:23 +0530
+Message-Id: <1595351666-28193-5-git-send-email-pillair@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
 References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
@@ -66,35 +65,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When the receive packets are submitted to the stack
-from a thread context, the NAPI handle should be passed
-as NULL to the function ieee80211_rx_napi. This will
-make sure that the packets are submitted to stack via
-non-napi method
+Currently the entire NAPI budget is marked as exhausted
+if any tx completion is processed.
+In scenarios of bi-directional traffic, this leads to a
+situation where the irqs are never enabled and the NAPI
+is rescheuled again and again.
+
+Increase the work done quota by the number of tx completions
+which are processed in the NAPI context.
 
 Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
 
 Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index becbd56..85c169c 100644
+index cac05e7..a4a6618 100644
 --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
 +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1321,7 +1321,10 @@ static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
- 	trace_ath10k_rx_hdr(ar, skb->data, skb->len);
- 	trace_ath10k_rx_payload(ar, skb->data, skb->len);
+@@ -4077,21 +4077,18 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ 	/* Deliver received data after processing data from hardware */
+ 	quota = ath10k_htt_rx_deliver_msdu(ar, quota, budget);
  
--	ieee80211_rx_napi(ar->hw, NULL, skb, &ar->napi);
-+	if (in_serving_softirq())
-+		ieee80211_rx_napi(ar->hw, NULL, skb, &ar->napi);
-+	else
-+		ieee80211_rx_napi(ar->hw, NULL, skb, NULL);
- }
+-	/* From NAPI documentation:
+-	 *  The napi poll() function may also process TX completions, in which
+-	 *  case if it processes the entire TX ring then it should count that
+-	 *  work as the rest of the budget.
+-	 */
+-	if ((quota < budget) && !kfifo_is_empty(&htt->txdone_fifo))
+-		quota = budget;
+-
+ 	/* kfifo_get: called only within txrx_tasklet so it's neatly serialized.
+ 	 * From kfifo_get() documentation:
+ 	 *  Note that with only one concurrent reader and one concurrent writer,
+ 	 *  you don't need extra locking to use these macro.
+ 	 */
+-	while (kfifo_get(&htt->txdone_fifo, &tx_done))
++	while (kfifo_get(&htt->txdone_fifo, &tx_done)) {
+ 		ath10k_txrx_tx_unref(htt, &tx_done);
++		quota++;
++	}
++
++	if (quota > budget)
++		resched_napi = true;
  
- static int ath10k_htt_rx_nwifi_hdrlen(struct ath10k *ar,
+ 	ath10k_mac_tx_push_pending(ar);
+ 
 -- 
 2.7.4
 
