@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE4AC433E7
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 107D1C433F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB143206E9
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4F7120717
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 17:15:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vateL62j"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ik8J7tET"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730846AbgGURPQ (ORCPT
+        id S1730861AbgGURPa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jul 2020 13:15:16 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:14780 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730832AbgGURPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jul 2020 13:15:14 -0400
+        Tue, 21 Jul 2020 13:15:30 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:39508 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730816AbgGURPS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Jul 2020 13:15:18 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595351713; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1595351718; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=gBDtbC3k7fmgMEBji3WDa1vS2HhVYXF0ZlougiQfyKI=; b=vateL62jR89d8yju2u9mw9YLWeuEZa18sLFjG+uYJ1L3cUAiLXo1lGH3/o6V39fO+Nva6Z7q
- ePE7tQrh6YyI+KtdKVB8+IbIYFWSC7WNMEC/Tz6NhMxQnbI8AohBFDo0Q28nctGGvAqQYzJI
- m4cVHppPqf1RMR3WiEt5xGStcFg=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ bh=PuxwKGt35tpiRMfDgkpJSCtxDJb7QR6bGP5l0QXwvfc=; b=Ik8J7tET8O55cc09LJc6txOcWHF8GMysuoUqSew4l81xBAPTJKzLll3c9QheET2dOAfCGza9
+ Stu/Xlb9FxcZq7MqkcqgGPaubJkPOH1TGE4/ZuUtpV+2Rw8CCnSKFMcOmL7rnXOBtnTxo9F6
+ SiBgv7fdG6vaENh+QWwInwdGYTY=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-east-1.postgun.com with SMTP id
- 5f1722a1f9ca681bd08d9cc2 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:15:13
+ smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
+ 5f17229b3dbcb593a96abfda (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 17:15:07
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8CB73C433B2; Tue, 21 Jul 2020 17:15:12 +0000 (UTC)
+        id 5D4D7C433C9; Tue, 21 Jul 2020 17:15:07 +0000 (UTC)
 Received: from pillair-linux.qualcomm.com (unknown [202.46.22.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pillair)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7D497C433A1;
-        Tue, 21 Jul 2020 17:15:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7D497C433A1
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 71AECC433CA;
+        Tue, 21 Jul 2020 17:15:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 71AECC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
 From:   Rakesh Pillai <pillair@codeaurora.org>
@@ -54,9 +55,9 @@ Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
         dianders@chromium.org, evgreen@chromium.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Subject: [RFC 7/7] ath10k: Handle rx thread suspend and resume
-Date:   Tue, 21 Jul 2020 22:44:26 +0530
-Message-Id: <1595351666-28193-8-git-send-email-pillair@codeaurora.org>
+Subject: [RFC 6/7] ath10k: Add deliver to stack from thread context
+Date:   Tue, 21 Jul 2020 22:44:25 +0530
+Message-Id: <1595351666-28193-7-git-send-email-pillair@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
 References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
@@ -65,176 +66,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-During the system suspend or resume, the rx thread
-also needs to be suspended or resume respectively.
-
-Handle the rx thread as well during the system
-suspend and resume.
+When the receive packets are submitted to the stack
+from a thread context, the NAPI handle should be passed
+as NULL to the function ieee80211_rx_napi. This will
+make sure that the packets are submitted to stack via
+non-napi method
 
 Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
 
 Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 23 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |  5 ++++
- drivers/net/wireless/ath/ath10k/snoc.c | 44 +++++++++++++++++++++++++++++++++-
- 3 files changed, 71 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4064fa2..b82b355 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -668,6 +668,27 @@ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
- 	return scnprintf(buf, buf_len, "%s", ath10k_core_fw_feature_str[feat]);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index becbd56..85c169c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1321,7 +1321,10 @@ static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	trace_ath10k_rx_hdr(ar, skb->data, skb->len);
+ 	trace_ath10k_rx_payload(ar, skb->data, skb->len);
+ 
+-	ieee80211_rx_napi(ar->hw, NULL, skb, &ar->napi);
++	if (in_serving_softirq())
++		ieee80211_rx_napi(ar->hw, NULL, skb, &ar->napi);
++	else
++		ieee80211_rx_napi(ar->hw, NULL, skb, NULL);
  }
  
-+int ath10k_core_thread_suspend(struct ath10k_thread *thread)
-+{
-+	ath10k_dbg(thread->ar, ATH10K_DBG_BOOT, "Suspending thread %s\n",
-+		   thread->name);
-+	set_bit(ATH10K_THREAD_EVENT_SUSPEND, thread->event_flags);
-+	wait_for_completion(&thread->suspend);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath10k_core_thread_suspend);
-+
-+int ath10k_core_thread_resume(struct ath10k_thread *thread)
-+{
-+	ath10k_dbg(thread->ar, ATH10K_DBG_BOOT, "Resuming thread %s\n",
-+		   thread->name);
-+	complete(&thread->resume);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath10k_core_thread_resume);
-+
- void ath10k_core_thread_post_event(struct ath10k_thread *thread,
- 				   enum ath10k_thread_events event)
- {
-@@ -700,6 +721,8 @@ int ath10k_core_thread_init(struct ath10k *ar,
- 
- 	init_waitqueue_head(&thread->wait_q);
- 	init_completion(&thread->shutdown);
-+	init_completion(&thread->suspend);
-+	init_completion(&thread->resume);
- 	memcpy(thread->name, thread_name, ATH10K_THREAD_NAME_SIZE_MAX);
- 	clear_bit(ATH10K_THREAD_EVENT_SHUTDOWN, thread->event_flags);
- 	ath10k_info(ar, "Starting thread %s\n", thread_name);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 596d31b..df65e75 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -976,6 +976,7 @@ enum ath10k_thread_events {
- 	ATH10K_THREAD_EVENT_SHUTDOWN,
- 	ATH10K_THREAD_EVENT_RX_POST,
- 	ATH10K_THREAD_EVENT_TX_POST,
-+	ATH10K_THREAD_EVENT_SUSPEND,
- 	ATH10K_THREAD_EVENT_MAX,
- };
- 
-@@ -983,6 +984,8 @@ struct ath10k_thread {
- 	struct ath10k *ar;
- 	struct task_struct *task;
- 	struct completion shutdown;
-+	struct completion suspend;
-+	struct completion resume;
- 	wait_queue_head_t wait_q;
- 	DECLARE_BITMAP(event_flags, ATH10K_THREAD_EVENT_MAX);
- 	char name[ATH10K_THREAD_NAME_SIZE_MAX];
-@@ -1296,6 +1299,8 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
- 
- extern unsigned long ath10k_coredump_mask;
- 
-+int ath10k_core_thread_suspend(struct ath10k_thread *thread);
-+int ath10k_core_thread_resume(struct ath10k_thread *thread);
- void ath10k_core_thread_post_event(struct ath10k_thread *thread,
- 				   enum ath10k_thread_events event);
- int ath10k_core_thread_shutdown(struct ath10k *ar,
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 3eb5eac..a373b2b 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -932,13 +932,31 @@ int ath10k_snoc_rx_thread_loop(void *data)
- 					    rx_thread->event_flags) ||
- 			 test_and_clear_bit(ATH10K_THREAD_EVENT_TX_POST,
- 					    rx_thread->event_flags) ||
-+			 test_bit(ATH10K_THREAD_EVENT_SUSPEND,
-+				  rx_thread->event_flags) ||
- 			 test_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
- 				  rx_thread->event_flags)));
- 
-+		if (test_and_clear_bit(ATH10K_THREAD_EVENT_SUSPEND,
-+				       rx_thread->event_flags)) {
-+			complete(&rx_thread->suspend);
-+			ath10k_info(ar, "rx thread suspend\n");
-+			wait_for_completion(&rx_thread->resume);
-+			ath10k_info(ar, "rx thread resume\n");
-+		}
-+
- 		ath10k_htt_txrx_compl_task(ar, thread_budget);
- 		if (test_and_clear_bit(ATH10K_THREAD_EVENT_SHUTDOWN,
- 				       rx_thread->event_flags))
- 			shutdown = true;
-+
-+		if (test_and_clear_bit(ATH10K_THREAD_EVENT_SUSPEND,
-+				       rx_thread->event_flags)) {
-+			complete(&rx_thread->suspend);
-+			ath10k_info(ar, "rx thread suspend\n");
-+			wait_for_completion(&rx_thread->resume);
-+			ath10k_info(ar, "rx thread resume\n");
-+		}
- 	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "rx thread exiting\n");
-@@ -1133,15 +1151,30 @@ static int ath10k_snoc_hif_suspend(struct ath10k *ar)
- 	if (!device_may_wakeup(ar->dev))
- 		return -EPERM;
- 
-+	if (ar->rx_thread_enable) {
-+		ret = ath10k_core_thread_suspend(&ar->rx_thread);
-+		if (ret) {
-+			ath10k_err(ar, "failed to suspend rx_thread, %d\n",
-+				   ret);
-+			return ret;
-+		}
-+	}
-+
- 	ret = enable_irq_wake(ar_snoc->ce_irqs[ATH10K_SNOC_WAKE_IRQ].irq_line);
- 	if (ret) {
- 		ath10k_err(ar, "failed to enable wakeup irq :%d\n", ret);
--		return ret;
-+		goto fail;
- 	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc device suspended\n");
- 
- 	return ret;
-+
-+fail:
-+	if (ar->rx_thread_enable)
-+		ath10k_core_thread_resume(&ar->rx_thread);
-+
-+	return ret;
- }
- 
- static int ath10k_snoc_hif_resume(struct ath10k *ar)
-@@ -1158,6 +1191,15 @@ static int ath10k_snoc_hif_resume(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	if (ar->rx_thread_enable) {
-+		ret = ath10k_core_thread_resume(&ar->rx_thread);
-+		if (ret) {
-+			ath10k_err(ar, "failed to suspend rx_thread, %d\n",
-+				   ret);
-+			return ret;
-+		}
-+	}
-+
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc device resumed\n");
- 
- 	return ret;
+ static int ath10k_htt_rx_nwifi_hdrlen(struct ath10k *ar,
 -- 
 2.7.4
 
