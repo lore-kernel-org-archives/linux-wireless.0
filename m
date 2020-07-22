@@ -1,96 +1,102 @@
-Return-Path: <SRS0=5LI1=BA=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=b555=BB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABAE9C433E3
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 21:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E13FC433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Jul 2020 08:43:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80AF420709
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jul 2020 21:55:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="eX7hbHZH"
+	by mail.kernel.org (Postfix) with ESMTP id 75A4C20787
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Jul 2020 08:43:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1595407399;
+	bh=s/e1oHLfy/0U3pQlcZlH8vpNwublw/OdcKL1UE5F7XU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=sDZMyh+jg4Kr1EcliLJ3UCvB1dV8JJRMgv3D6iVwF3y1Q6H8wFZrnnrYi1pjnv54P
+	 tVA4gT05iOHrecTOLVNeM1q5pw3OwkPKK1apbgnp1DVAeVA2phCl5ODy+8EkQwQLZq
+	 xKCHF3j/4gMjFWJkUFU+ya4JG4HkSkpPElZH75Dc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728816AbgGUVzA (ORCPT
+        id S1726807AbgGVInS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jul 2020 17:55:00 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:19430 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727113AbgGUVzA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jul 2020 17:55:00 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595368499; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=cTVnp84kHulZAyJfBfdGXQ0sjsqMEUuo2dnBObkq9Vk=;
- b=eX7hbHZHBzf63EOp2/WAk55yFXTsSl5AjMobeutAHwXLBuJeAdBlL3pCClUnj4DuHAJzSACF
- CSYkGfQTaroRg+GKpCN7ZEuoozOEjr9Xp8x92Z7sH9M0M0fMTrAX5tI0YslWPMs4fNjaR9hb
- XPyBZfcQ6hLfgjCBmHKXnZSkKMQ=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f1763d01e603dbb4422667a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 21:53:20
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C6D69C4339C; Tue, 21 Jul 2020 21:53:19 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        Wed, 22 Jul 2020 04:43:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42794 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726526AbgGVInS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Jul 2020 04:43:18 -0400
+Received: from pali.im (pali.im [31.31.79.79])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4E8F3C433C9;
-        Tue, 21 Jul 2020 21:53:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BE4F2205CB;
+        Wed, 22 Jul 2020 08:43:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1595407397;
+        bh=s/e1oHLfy/0U3pQlcZlH8vpNwublw/OdcKL1UE5F7XU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mM8q8PwhMk7jSa4VFtWuITJ3EJSiVQyQsg3M2AcS6LztI6jCCiZk2L2ZuulOtmGDX
+         +WGyXoNfbnmuKENTe5sMi37uQXlha5l/+MifKUg85OXppjxGXnqWli0ciaMAp69bkg
+         MY72DEc4e+CjkY8E/PWQ3Si1zZexBnQGsAxCoH0k=
+Received: by pali.im (Postfix)
+        id 75CD67F8; Wed, 22 Jul 2020 10:43:15 +0200 (CEST)
+Date:   Wed, 22 Jul 2020 10:43:15 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Add ath9k-devel archives to lore?
+Message-ID: <20200722084315.nlvxigt3t6ifcbbm@pali>
+References: <20200710200025.GA75493@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 21 Jul 2020 14:53:19 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     Rakesh Pillai <pillair@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
-        johannes@sipsolutions.net, davem@davemloft.net, kuba@kernel.org,
-        netdev@vger.kernel.org, dianders@chromium.org,
-        evgreen@chromium.org, linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC 2/7] ath10k: Add support to process rx packet in thread
-In-Reply-To: <1595351666-28193-3-git-send-email-pillair@codeaurora.org>
-References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
- <1595351666-28193-3-git-send-email-pillair@codeaurora.org>
-Message-ID: <13573549c277b34d4c87c471ff1a7060@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200710200025.GA75493@bjorn-Precision-5520>
+User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-07-21 10:14, Rakesh Pillai wrote:
-> NAPI instance gets scheduled on a CPU core on which
-> the IRQ was triggered. The processing of rx packets
-> can be CPU intensive and since NAPI cannot be moved
-> to a different CPU core, to get better performance,
-> its better to move the gist of rx packet processing
-> in a high priority thread.
+On Friday 10 July 2020 15:00:25 Bjorn Helgaas wrote:
+> The ath9k-devel mailing list was closed in 2017 in favor of
+> linux-wireless (per
+> https://wireless.wiki.kernel.org/en/users/Drivers/ath9k), but the
+> archives contain information that may still be useful.
 > 
-> Add the init/deinit part for a thread to process the
-> receive packets.
+> For instance, Pali just sent me a link
+> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg07529.html)
+> about an issue with PCI enumeration.
+
+I would like to see ath9k-devel archive available in some searchable and
+indexed form too! pipermail is not really usable.
+
+> The ath9k-devel archive still seems to exist at
+> https://lists.ath9k.org/pipermail/ath9k-devel/ and
+> https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/
 > 
-IMHO this defeat the whole purpose of NAPI. Originally in ath10k
-irq processing happened in tasklet (high priority) context which in
-turn push more data to net core even though net is unable to process
-driver data as both happen in different context (fast producer - slow 
-consumer)
-issue. Why can't CPU governor schedule the interrupts in less loaded CPU 
-core?
-Otherwise you can play with different RPS and affinity settings to meet 
-your
-requirement.
+> https://korg.docs.kernel.org/lore.html says pipermail archives *can*
+> be used, but it's better to start with something else.  
+> 
+> Is anybody interested in adding the ath9k-devel archives to lore?  If
+> so, does anybody have an archive to start with?
 
-IMO introducing high priority tasklets/threads is not viable solution.
+In most cases, pipermail/mailman is configured to save unmodified copy
+(with all attachments and headers) of every incoming email to some mbox
+archive stored on server, which is available to server admins. This mbox
+archive is not available for download via web interface, so it is not
+public and some SSH access to server is required for obtaining it.
 
--Rajkumar
+Admins of lists.ath9k.org could have access to full ath9k-devel mbox
+archive which is suitable for importing into any indexing service, like
+lore.
+
+Public pipermail archive has downloadable GZIP version of all emails,
+but it is stripped of all attachments and have mangled all strings in
+headers and body which may look like an email address. So this public
+pipermail archive is not very usable.
+
+In past I did some research work on topic how to archive, parse and
+index emails from mailing lists and I have scripts which could de-mangle
+pipermail public archives and generate from it valid mbox archive.
