@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BA5C433FC
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 20:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1811DC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 20:43:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9757120792
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 20:43:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C142320792
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 20:43:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dY7SFDBB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qjF2q5OV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728071AbgGWUnE (ORCPT
+        id S1728080AbgGWUnH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jul 2020 16:43:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50866 "EHLO
+        Thu, 23 Jul 2020 16:43:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728060AbgGWUnC (ORCPT
+        with ESMTP id S1728009AbgGWUm7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Jul 2020 16:43:02 -0400
-Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BEC2C0619D3
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 13:43:02 -0700 (PDT)
-Received: by mail-ot1-x343.google.com with SMTP id g37so5374355otb.9
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 13:43:02 -0700 (PDT)
+        Thu, 23 Jul 2020 16:42:59 -0400
+Received: from mail-oi1-x244.google.com (mail-oi1-x244.google.com [IPv6:2607:f8b0:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64810C0619D3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 13:42:59 -0700 (PDT)
+Received: by mail-oi1-x244.google.com with SMTP id k6so6181369oij.11
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 13:42:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2gNK66zjmYOgkkw5W5bWV+3XCh+Q0fQzYGM4RlAkrro=;
-        b=dY7SFDBBoKQQgTPXf3qU5TjWKLeafGYwggiPmjdyFo/OtuFEcwoRp8uvSSdZcljftp
-         +A87UmrXQ6lOx1ZD/CKNm0d43PRhyrI/AgsnmY4ZboWZ/+JLLFI2spmmEDjXbc0Z0fLy
-         jda9Rr7mkuynWwRevhj2XU9AGlznB2rhSTj75kN3S1o20wGVYwiZtiSYQXPOr94lvFqx
-         O08BBgNhnJaO76b2nX9Uq/8ZL2EzrnzoxLxdyrUJgov5U3K+nmT0IcHvPvYiJGahq51V
-         vLJe19oMLJP9X0BH4bXUQsVrPIQYraY4AOPWxkxzfqOCxvVRjAGSgDyhv105u7blqrbx
-         lZAg==
+        bh=jLY885LUNWrr9seSkcshgs/CjXaNz9TOHG2B/JMKilI=;
+        b=qjF2q5OVmOvE1SL9JlHTnCzwnLN1QERbhPm2sUgKlmlceJ8qV6pZckBVEsQigftYZg
+         zb9AyQlCJnJwBByKxqvCrDRd7rg9NlRpjQXV6XoIG+1/qCvvQw/cv6mI73yqqGwAmlSx
+         EHsV4lux9vIiWyWxdVojb93H4U0trw6hld5cu5okY2Yw3GF8yinSR+g166pzh3jSDAL0
+         FEh3SHoc2UAH1eTaNG5dP4ho+Fb/pYFCDV/68dytw9t5BfyU/Av/E41I2kaYZQ2jo07O
+         49ECjcW+gjSKG629P5JsV04h7Y+x2zMPaKHHmfs/urqyjiwkUBu/nZ409VdrobPTDuTL
+         KSBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=2gNK66zjmYOgkkw5W5bWV+3XCh+Q0fQzYGM4RlAkrro=;
-        b=g+qp9YN7RRPQSLQ6Opx13gvfdYV81sLKm3Ou2XGwRMoGIGIvwhg6MD93BX7xeRwCie
-         kkFv+WcveEUhQoilVdy2iBsgOSSCYCaPbqUXCNZK8ljNATf5xRsG9ZWldXOfBu1TnF1O
-         OE/0aA9owqPBOTxGqNjZvhfjavf7ei67G4Sb2dVqgmL2lwi4hF9RRzPBgNwrSfeSwxrL
-         iSoCLQjI2e4BzzLcOQb9BAu31kZSJ//jEFjwEn8Dbhnyso9EcExBh2CpWG/gfFTou++j
-         b/rtfvGhhwn5L4QGgU4Nh0OcVJu2CfP6dfn5yYlMeWVbOi/CIJDTjrpT2E1LECb2OKKD
-         aXrQ==
-X-Gm-Message-State: AOAM532E1dI7VBjJSMAwqwGcJXfLop2aXTDN3ieBl2Q5KqcyEBYts9T9
-        14Sq6k8DLrWySkGwRioa7QKPvVaA
-X-Google-Smtp-Source: ABdhPJxHjslmmv23jgJ4xMo+OO35F7PILtXK+bDHvTrHzEegz8ak0TptvjhZ5sRfcma8M84UOlyhAg==
-X-Received: by 2002:a05:6830:4aa:: with SMTP id l10mr5644586otd.214.1595536980472;
-        Thu, 23 Jul 2020 13:43:00 -0700 (PDT)
+        bh=jLY885LUNWrr9seSkcshgs/CjXaNz9TOHG2B/JMKilI=;
+        b=GqMe01Kj5ShVOm1m7ULOMuoSk/kV0g8z9ih9bizMPXhNiRxF7RBDtQV3oJf/lcgV3M
+         Ajlt/NOpk+QTL/8FyVDK0Xy3JNmGgEQbKWHAraCzX7CzXiad4fijBGWmrzPV6EDhCe8V
+         xUpFXWvVP1PtdZ6izsiD9+3QNMIqdv0RHD4pC/IFttjp9zdtVxnDi5WfdpZCu++yAhWh
+         kNjXGATwNKRKQk0YYWwvjf2Jj+j2WygSKtaSUBO+nLDDJJ/oz8jWCOf5Vxt/9aWLP0EB
+         DUHjTt7X8R8Hex8zKO9mgYByhUFIA2jp2FsNDgwyWS5gPFLbnNQVD11Wna21+t+pA3Ol
+         wTlQ==
+X-Gm-Message-State: AOAM533HDHF/XkSKkHd9DVHZKCgnHXFDO3MF1ruiyyL+EFpHf8V+n/vB
+        f3F13uzmVW4y1iUmhEFMahs=
+X-Google-Smtp-Source: ABdhPJxOlqKGCaxpJh50JjfSdmmqhPom3n+rTW6mJ4nPfzyOIb9lDoeWsnWDO8So8Cto6+bWbUAJmA==
+X-Received: by 2002:aca:4b88:: with SMTP id y130mr5393111oia.36.1595536977810;
+        Thu, 23 Jul 2020 13:42:57 -0700 (PDT)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id x9sm857498ota.9.2020.07.23.13.42.59
+        by smtp.gmail.com with ESMTPSA id x9sm857498ota.9.2020.07.23.13.42.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 13:42:59 -0700 (PDT)
+        Thu, 23 Jul 2020 13:42:57 -0700 (PDT)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH v2 14/15] rtlwifi: rtl8821ae: Rename RT_TRACE to rtl_dbg
-Date:   Thu, 23 Jul 2020 15:42:43 -0500
-Message-Id: <20200723204244.24457-15-Larry.Finger@lwfinger.net>
+Subject: [PATCH v2 11/15] rtlwifi: rtl8723ae Rename RT_TRACE to rtl_dbg
+Date:   Thu, 23 Jul 2020 15:42:40 -0500
+Message-Id: <20200723204244.24457-12-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200723204244.24457-1-Larry.Finger@lwfinger.net>
 References: <20200723204244.24457-1-Larry.Finger@lwfinger.net>
@@ -77,1293 +77,244 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Change the misleading macro name to one that is more descriptive for
-rtl8821ae. Changes suggested by ckeckpatch.pl have been made.
+rtl8723ae. Changes suggested by ckeckpatch.pl have been made.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 v2 - rtl_dbg is used rather than RTL_DEBUG
 ---
- .../wireless/realtek/rtlwifi/rtl8821ae/dm.c   | 826 +++++++++---------
- .../wireless/realtek/rtlwifi/rtl8821ae/fw.c   | 130 +--
- .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 458 +++++-----
- .../wireless/realtek/rtlwifi/rtl8821ae/led.c  |  32 +-
- .../wireless/realtek/rtlwifi/rtl8821ae/phy.c  | 530 +++++------
- .../wireless/realtek/rtlwifi/rtl8821ae/rf.c   |   6 +-
- .../wireless/realtek/rtlwifi/rtl8821ae/trx.c  |  56 +-
- 7 files changed, 1020 insertions(+), 1018 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8723ae/dm.c   | 162 ++---
+ .../wireless/realtek/rtlwifi/rtl8723ae/fw.c   |  64 +-
+ .../rtlwifi/rtl8723ae/hal_bt_coexist.c        | 150 ++--
+ .../realtek/rtlwifi/rtl8723ae/hal_btc.c       | 649 +++++++++---------
+ .../wireless/realtek/rtlwifi/rtl8723ae/hw.c   | 232 +++----
+ .../wireless/realtek/rtlwifi/rtl8723ae/led.c  |  12 +-
+ .../wireless/realtek/rtlwifi/rtl8723ae/phy.c  | 357 +++++-----
+ .../wireless/realtek/rtlwifi/rtl8723ae/rf.c   |   6 +-
+ .../wireless/realtek/rtlwifi/rtl8723ae/trx.c  |  14 +-
+ 9 files changed, 823 insertions(+), 823 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-index 97a30ccf0b27..89fc4d9a0313 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-@@ -437,26 +437,26 @@ static void rtl8821ae_dm_find_minimum_rssi(struct ieee80211_hw *hw)
- 		    mac->opmode == NL80211_IFTYPE_ADHOC) {
- 			rtl_dm_dig->min_undec_pwdb_for_dm =
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+index c61a92df9d73..8ada31380efa 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+@@ -82,16 +82,16 @@ static void rtl8723e_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
+ 	rtl_set_bbreg(hw, RCCK0_FALSEALARMREPORT, 0x0000c000, 0);
+ 	rtl_set_bbreg(hw, RCCK0_FALSEALARMREPORT, 0x0000c000, 2);
+ 
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "cnt_parity_fail = %d, cnt_rate_illegal = %d, cnt_crc8_fail = %d, cnt_mcs_fail = %d\n",
+-		 falsealm_cnt->cnt_parity_fail,
+-		 falsealm_cnt->cnt_rate_illegal,
+-		 falsealm_cnt->cnt_crc8_fail, falsealm_cnt->cnt_mcs_fail);
+-
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "cnt_ofdm_fail = %x, cnt_cck_fail = %x, cnt_all = %x\n",
+-		 falsealm_cnt->cnt_ofdm_fail,
+-		 falsealm_cnt->cnt_cck_fail, falsealm_cnt->cnt_all);
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"cnt_parity_fail = %d, cnt_rate_illegal = %d, cnt_crc8_fail = %d, cnt_mcs_fail = %d\n",
++		falsealm_cnt->cnt_parity_fail,
++		falsealm_cnt->cnt_rate_illegal,
++		falsealm_cnt->cnt_crc8_fail, falsealm_cnt->cnt_mcs_fail);
++
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"cnt_ofdm_fail = %x, cnt_cck_fail = %x, cnt_all = %x\n",
++		falsealm_cnt->cnt_ofdm_fail,
++		falsealm_cnt->cnt_cck_fail, falsealm_cnt->cnt_all);
+ }
+ 
+ static void rtl92c_dm_ctrl_initgain_by_fa(struct ieee80211_hw *hw)
+@@ -150,9 +150,9 @@ static void rtl92c_dm_ctrl_initgain_by_rssi(struct ieee80211_hw *hw)
+ 		dm_digtable->cur_igvalue = dm_digtable->rssi_val_min + 10 -
+ 		    dm_digtable->back_val;
+ 
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "rssi_val_min = %x back_val %x\n",
+-		  dm_digtable->rssi_val_min, dm_digtable->back_val);
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"rssi_val_min = %x back_val %x\n",
++		dm_digtable->rssi_val_min, dm_digtable->back_val);
+ 
+ 	rtl8723e_dm_write_dig(hw);
+ }
+@@ -201,10 +201,10 @@ static void rtl8723e_dm_initial_gain_multi_sta(struct ieee80211_hw *hw)
+ 		rtl8723e_dm_write_dig(hw);
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "curmultista_cstate = %x dig_ext_port_stage %x\n",
+-		 dm_digtable->curmultista_cstate,
+-		 dm_digtable->dig_ext_port_stage);
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"curmultista_cstate = %x dig_ext_port_stage %x\n",
++		dm_digtable->curmultista_cstate,
++		dm_digtable->dig_ext_port_stage);
+ }
+ 
+ static void rtl8723e_dm_initial_gain_sta(struct ieee80211_hw *hw)
+@@ -212,10 +212,10 @@ static void rtl8723e_dm_initial_gain_sta(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+ 
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "presta_cstate = %x, cursta_cstate = %x\n",
+-		  dm_digtable->presta_cstate,
+-		  dm_digtable->cursta_cstate);
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"presta_cstate = %x, cursta_cstate = %x\n",
++		dm_digtable->presta_cstate,
++		dm_digtable->cursta_cstate);
+ 
+ 	if (dm_digtable->presta_cstate == dm_digtable->cursta_cstate ||
+ 	    dm_digtable->cursta_cstate == DIG_STA_BEFORE_CONNECT ||
+@@ -296,8 +296,8 @@ static void rtl8723e_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
+ 		dm_digtable->pre_cck_pd_state = dm_digtable->cur_cck_pd_state;
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
+-		 "CCKPDStage=%x\n", dm_digtable->cur_cck_pd_state);
++	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
++		"CCKPDStage=%x\n", dm_digtable->cur_cck_pd_state);
+ 
+ }
+ 
+@@ -354,8 +354,8 @@ static void rtl8723e_dm_dynamic_txpower(struct ieee80211_hw *hw)
+ 
+ 	if ((mac->link_state < MAC80211_LINKED) &&
+ 	    (rtlpriv->dm.entry_min_undec_sm_pwdb == 0)) {
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
+-			 "Not connected to any\n");
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
++			"Not connected to any\n");
+ 
+ 		rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_NORMAL;
+ 
+@@ -367,47 +367,47 @@ static void rtl8723e_dm_dynamic_txpower(struct ieee80211_hw *hw)
+ 		if (mac->opmode == NL80211_IFTYPE_ADHOC) {
+ 			undec_sm_pwdb =
  			    rtlpriv->dm.entry_min_undec_sm_pwdb;
--			RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
+-			RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
 -				 "AP Client PWDB = 0x%lx\n",
--				 rtlpriv->dm.entry_min_undec_sm_pwdb);
-+			rtl_dbg(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
+-				  undec_sm_pwdb);
++			rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
 +				"AP Client PWDB = 0x%lx\n",
-+				rtlpriv->dm.entry_min_undec_sm_pwdb);
++				undec_sm_pwdb);
  		} else {
- 			rtl_dm_dig->min_undec_pwdb_for_dm =
+ 			undec_sm_pwdb =
  			    rtlpriv->dm.undec_sm_pwdb;
--			RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
--				 "STA Default Port PWDB = 0x%x\n",
--				 rtl_dm_dig->min_undec_pwdb_for_dm);
-+			rtl_dbg(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
-+				"STA Default Port PWDB = 0x%x\n",
-+				rtl_dm_dig->min_undec_pwdb_for_dm);
+-			RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-				 "STA Default Port PWDB = 0x%lx\n",
+-				  undec_sm_pwdb);
++			rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++				"STA Default Port PWDB = 0x%lx\n",
++				undec_sm_pwdb);
  		}
  	} else {
- 		rtl_dm_dig->min_undec_pwdb_for_dm =
+ 		undec_sm_pwdb =
  		    rtlpriv->dm.entry_min_undec_sm_pwdb;
--		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
--			 "AP Ext Port or disconnect PWDB = 0x%x\n",
--			 rtl_dm_dig->min_undec_pwdb_for_dm);
-+		rtl_dbg(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
-+			"AP Ext Port or disconnect PWDB = 0x%x\n",
-+			rtl_dm_dig->min_undec_pwdb_for_dm);
+ 
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "AP Ext Port PWDB = 0x%lx\n",
+-			  undec_sm_pwdb);
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++			"AP Ext Port PWDB = 0x%lx\n",
++			undec_sm_pwdb);
  	}
+ 
+ 	if (undec_sm_pwdb >= TX_POWER_NEAR_FIELD_THRESH_LVL2) {
+ 		rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_LEVEL1;
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "TXHIGHPWRLEVEL_LEVEL1 (TxPwr=0x0)\n");
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++			"TXHIGHPWRLEVEL_LEVEL1 (TxPwr=0x0)\n");
+ 	} else if ((undec_sm_pwdb <
+ 		    (TX_POWER_NEAR_FIELD_THRESH_LVL2 - 3)) &&
+ 		   (undec_sm_pwdb >=
+ 		    TX_POWER_NEAR_FIELD_THRESH_LVL1)) {
+ 		rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_LEVEL1;
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "TXHIGHPWRLEVEL_LEVEL1 (TxPwr=0x10)\n");
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++			"TXHIGHPWRLEVEL_LEVEL1 (TxPwr=0x10)\n");
+ 	} else if (undec_sm_pwdb <
+ 		   (TX_POWER_NEAR_FIELD_THRESH_LVL1 - 5)) {
+ 		rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_NORMAL;
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "TXHIGHPWRLEVEL_NORMAL\n");
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++			"TXHIGHPWRLEVEL_NORMAL\n");
+ 	}
+ 
+ 	if (rtlpriv->dm.dynamic_txhighpower_lvl != rtlpriv->dm.last_dtp_lvl) {
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "PHY_SetTxPowerLevel8192S() Channel = %d\n",
+-			  rtlphy->current_channel);
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
++			"PHY_SetTxPowerLevel8192S() Channel = %d\n",
++			rtlphy->current_channel);
+ 		rtl8723e_phy_set_txpower_level(hw, rtlphy->current_channel);
+ 	}
+ 
+@@ -419,10 +419,10 @@ void rtl8723e_dm_write_dig(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+ 
 -	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "MinUndecoratedPWDBForDM =%d\n",
--		 rtl_dm_dig->min_undec_pwdb_for_dm);
+-		 "cur_igvalue = 0x%x, pre_igvalue = 0x%x, back_val = %d\n",
+-		  dm_digtable->cur_igvalue, dm_digtable->pre_igvalue,
+-		  dm_digtable->back_val);
 +	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"MinUndecoratedPWDBForDM =%d\n",
-+		rtl_dm_dig->min_undec_pwdb_for_dm);
++		"cur_igvalue = 0x%x, pre_igvalue = 0x%x, back_val = %d\n",
++		dm_digtable->cur_igvalue, dm_digtable->pre_igvalue,
++		dm_digtable->back_val);
+ 
+ 	if (dm_digtable->pre_igvalue != dm_digtable->cur_igvalue) {
+ 		rtl_set_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f,
+@@ -521,9 +521,9 @@ static void rtl8723e_dm_initialize_txpower_tracking_thermalmeter(
+ 	rtlpriv->dm.txpower_tracking = true;
+ 	rtlpriv->dm.txpower_trackinginit = false;
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-		 "pMgntInfo->txpower_tracking = %d\n",
+-		  rtlpriv->dm.txpower_tracking);
++	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
++		"pMgntInfo->txpower_tracking = %d\n",
++		rtlpriv->dm.txpower_tracking);
  }
  
- static void  rtl8812ae_dm_rssi_dump_to_register(struct ieee80211_hw *hw)
-@@ -626,11 +626,11 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 	u8 dm_dig_max, dm_dig_min, offset;
- 	u8 current_igi = dm_digtable->cur_igvalue;
- 
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "\n");
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "\n");
- 
- 	if (mac->act_scanning) {
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Return: In Scan Progress\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"Return: In Scan Progress\n");
- 		return;
- 	}
- 
-@@ -666,10 +666,10 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 			dm_digtable->rx_gain_max =
- 				dm_digtable->rssi_val_min + offset;
- 
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "dm_digtable->rssi_val_min=0x%x,dm_digtable->rx_gain_max = 0x%x\n",
--			 dm_digtable->rssi_val_min,
--			 dm_digtable->rx_gain_max);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"dm_digtable->rssi_val_min=0x%x,dm_digtable->rx_gain_max = 0x%x\n",
-+			dm_digtable->rssi_val_min,
-+			dm_digtable->rx_gain_max);
- 		if (rtlpriv->dm.one_entry_only) {
- 			offset = 0;
- 
-@@ -682,22 +682,22 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 				dig_min_0 =
- 					dm_digtable->rssi_val_min - offset;
- 
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "bOneEntryOnly=TRUE, dig_min_0=0x%x\n",
--				 dig_min_0);
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"bOneEntryOnly=TRUE, dig_min_0=0x%x\n",
-+				dig_min_0);
- 		} else {
- 			dig_min_0 = dm_dig_min;
- 		}
- 	} else {
- 		dm_digtable->rx_gain_max = dm_dig_max;
- 		dig_min_0 = dm_dig_min;
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "No Link\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"No Link\n");
- 	}
- 
- 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Abnormally false alarm case.\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"Abnormally false alarm case.\n");
- 
- 		if (dm_digtable->large_fa_hit != 3)
- 			dm_digtable->large_fa_hit++;
-@@ -728,23 +728,23 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 						dig_min_0;
- 					dm_digtable->rx_gain_min =
- 						dig_min_0;
--					RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--						 "Normal Case: At Lower Bound\n");
-+					rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+						"Normal Case: At Lower Bound\n");
- 				} else {
- 					dm_digtable->forbidden_igi--;
- 					dm_digtable->rx_gain_min =
- 					  (dm_digtable->forbidden_igi + 1);
--					RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--						 "Normal Case: Approach Lower Bound\n");
-+					rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+						"Normal Case: Approach Lower Bound\n");
- 				}
- 			} else {
- 				dm_digtable->large_fa_hit = 0;
- 			}
- 		}
- 	}
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "pDM_DigTable->LargeFAHit=%d\n",
--		 dm_digtable->large_fa_hit);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"pDM_DigTable->LargeFAHit=%d\n",
-+		dm_digtable->large_fa_hit);
- 
- 	if (rtlpriv->dm.dbginfo.num_qry_beacon_pkt < 10)
- 		dm_digtable->rx_gain_min = dm_dig_min;
-@@ -754,15 +754,15 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 
- 	/*Adjust initial gain by false alarm*/
- 	if (mac->link_state >= MAC80211_LINKED) {
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "DIG AfterLink\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"DIG AfterLink\n");
- 		if (first_connect) {
- 			if (dm_digtable->rssi_val_min <= dig_max_of_min)
- 				current_igi = dm_digtable->rssi_val_min;
- 			else
- 				current_igi = dig_max_of_min;
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "First Connect\n");
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"First Connect\n");
- 		} else {
- 			if (rtlpriv->falsealm_cnt.cnt_all > DM_DIG_FA_TH2)
- 				current_igi = current_igi + 4;
-@@ -774,17 +774,17 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 			if ((rtlpriv->dm.dbginfo.num_qry_beacon_pkt < 10) &&
- 			    (rtlpriv->falsealm_cnt.cnt_all < DM_DIG_FA_TH1)) {
- 				current_igi = dm_digtable->rx_gain_min;
--				RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--					 "Beacon is less than 10 and FA is less than 768, IGI GOES TO 0x1E!!!!!!!!!!!!\n");
-+				rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+					"Beacon is less than 10 and FA is less than 768, IGI GOES TO 0x1E!!!!!!!!!!!!\n");
- 			}
- 		}
- 	} else {
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "DIG BeforeLink\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"DIG BeforeLink\n");
- 		if (first_disconnect) {
- 			current_igi = dm_digtable->rx_gain_min;
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "First DisConnect\n");
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"First DisConnect\n");
- 		} else {
- 			/* 2012.03.30 LukeLee: enable DIG before
- 			 * link but with very high thresholds
-@@ -799,11 +799,11 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 			if (current_igi >= 0x3e)
- 				current_igi = 0x3e;
- 
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "England DIG\n");
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "England DIG\n");
- 		}
- 	}
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "DIG End Adjust IGI\n");
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"DIG End Adjust IGI\n");
- 	/* Check initial gain by upper/lower bound*/
- 
- 	if (current_igi > dm_digtable->rx_gain_max)
-@@ -811,13 +811,13 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 	if (current_igi < dm_digtable->rx_gain_min)
- 		current_igi = dm_digtable->rx_gain_min;
- 
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "rx_gain_max=0x%x, rx_gain_min=0x%x\n",
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"rx_gain_max=0x%x, rx_gain_min=0x%x\n",
- 		dm_digtable->rx_gain_max, dm_digtable->rx_gain_min);
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "TotalFA=%d\n", rtlpriv->falsealm_cnt.cnt_all);
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--		 "CurIGValue=0x%x\n", current_igi);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"TotalFA=%d\n", rtlpriv->falsealm_cnt.cnt_all);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+		"CurIGValue=0x%x\n", current_igi);
- 
- 	rtl8821ae_dm_write_dig(hw, current_igi);
- 	dm_digtable->media_connect_0 =
-@@ -880,12 +880,12 @@ static void rtl8821ae_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
- 	rtl_set_bbreg(hw, ODM_REG_CCK_FA_RST_11AC, BIT(15), 0);
- 	rtl_set_bbreg(hw, ODM_REG_CCK_FA_RST_11AC, BIT(15), 1);
- 
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "Cnt_Cck_fail=%d\n",
--		 falsealm_cnt->cnt_cck_fail);
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "cnt_ofdm_fail=%d\n",
--		 falsealm_cnt->cnt_ofdm_fail);
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "Total False Alarm=%d\n",
--		 falsealm_cnt->cnt_all);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "Cnt_Cck_fail=%d\n",
-+		falsealm_cnt->cnt_cck_fail);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "cnt_ofdm_fail=%d\n",
-+		falsealm_cnt->cnt_ofdm_fail);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "Total False Alarm=%d\n",
-+		falsealm_cnt->cnt_all);
- }
- 
- static void rtl8812ae_dm_check_txpower_tracking_thermalmeter(
-@@ -896,13 +896,13 @@ static void rtl8812ae_dm_check_txpower_tracking_thermalmeter(
- 	if (!rtlpriv->dm.tm_trigger) {
- 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER_88E,
- 			      BIT(17) | BIT(16), 0x03);
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "Trigger 8812 Thermal Meter!!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"Trigger 8812 Thermal Meter!!\n");
- 		rtlpriv->dm.tm_trigger = 1;
- 		return;
- 	}
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "Schedule TxPowerTracking direct call!!\n");
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"Schedule TxPowerTracking direct call!!\n");
- 	rtl8812ae_dm_txpower_tracking_callback_thermalmeter(hw);
- }
- 
-@@ -981,8 +981,8 @@ void rtl8821ae_dm_update_init_rate(struct ieee80211_hw *hw, u8 rate)
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	u8 p = 0;
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "Get C2H Command! Rate=0x%x\n", rate);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"Get C2H Command! Rate=0x%x\n", rate);
- 
- 	rtldm->tx_rate = rate;
- 
-@@ -1145,9 +1145,9 @@ u8 rtl8821ae_hw_rate_to_mrate(struct ieee80211_hw *hw, u8 rate)
- 		ret_rate = MGN_VHT2SS_MCS9;
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "HwRateToMRate8812(): Non supported Rate [%x]!!!\n",
--			 rate);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"HwRateToMRate8812(): Non supported Rate [%x]!!!\n",
-+			rate);
- 		break;
- 	}
- 	return ret_rate;
-@@ -1187,8 +1187,8 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 		tx_rate =
- 			rtl8821ae_hw_rate_to_mrate(hw, rtldm->tx_rate);
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "===>rtl8812ae_dm_txpwr_track_set_pwr\n");
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"===>%s\n", __func__);
- 	/*20130429 Mimic Modify High Rate BBSwing Limit.*/
- 	if (tx_rate != 0xFF) {
- 		/*CCK*/
-@@ -1259,13 +1259,13 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 		else
- 			pwr_tracking_limit = 24;
- 	}
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "TxRate=0x%x, PwrTrackingLimit=%d\n",
--		 tx_rate, pwr_tracking_limit);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"TxRate=0x%x, PwrTrackingLimit=%d\n",
-+		tx_rate, pwr_tracking_limit);
- 
- 	if (method == BBSWING) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "===>rtl8812ae_dm_txpwr_track_set_pwr\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"===>%s\n", __func__);
- 
- 		if (rf_path == RF90_PATH_A) {
- 			u32 tmp;
-@@ -1276,10 +1276,10 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				pwr_tracking_limit :
- 				rtldm->ofdm_index[RF90_PATH_A];
- 			tmp = final_swing_idx[RF90_PATH_A];
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_A]=%d,pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_A]=%d\n",
--				 rtldm->ofdm_index[RF90_PATH_A],
--				 final_swing_idx[RF90_PATH_A]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_A]=%d,pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_A]=%d\n",
-+				rtldm->ofdm_index[RF90_PATH_A],
-+				final_swing_idx[RF90_PATH_A]);
- 
- 			rtl_set_bbreg(hw, RA_TXSCALE, 0xFFE00000,
- 				      txscaling_tbl[tmp]);
-@@ -1292,20 +1292,20 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				pwr_tracking_limit :
- 				rtldm->ofdm_index[RF90_PATH_B];
- 			tmp = final_swing_idx[RF90_PATH_B];
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_B]=%d, pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_B]=%d\n",
--				 rtldm->ofdm_index[RF90_PATH_B],
--				 final_swing_idx[RF90_PATH_B]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_B]=%d, pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_B]=%d\n",
-+				rtldm->ofdm_index[RF90_PATH_B],
-+				final_swing_idx[RF90_PATH_B]);
- 
- 			rtl_set_bbreg(hw, RB_TXSCALE, 0xFFE00000,
- 				      txscaling_tbl[tmp]);
- 		}
- 	} else if (method == MIX_MODE) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "pDM_Odm->DefaultOfdmIndex=%d, pDM_Odm->Absolute_OFDMSwingIdx[RFPath]=%d, RF_Path = %d\n",
--			 rtldm->default_ofdm_index,
--			 rtldm->absolute_ofdm_swing_idx[rf_path],
--			 rf_path);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"pDM_Odm->DefaultOfdmIndex=%d, pDM_Odm->Absolute_OFDMSwingIdx[RFPath]=%d, RF_Path = %d\n",
-+			rtldm->default_ofdm_index,
-+			rtldm->absolute_ofdm_swing_idx[rf_path],
-+			rf_path);
- 
- 		final_ofdm_swing_index = rtldm->default_ofdm_index +
- 				rtldm->absolute_ofdm_swing_idx[rf_path];
-@@ -1333,10 +1333,10 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 					rtlphy->current_channel,
- 					RF90_PATH_A);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_A Over BBSwing Limit ,PwrTrackingLimit = %d ,Remnant TxAGC Value = %d\n",
--					 pwr_tracking_limit,
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Over BBSwing Limit ,PwrTrackingLimit = %d ,Remnant TxAGC Value = %d\n",
-+					pwr_tracking_limit,
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else if (final_ofdm_swing_index < 0) {
- 				rtldm->remnant_cck_idx = final_ofdm_swing_index;
- 				/* CCK Follow the same compensate value as Path A*/
-@@ -1352,15 +1352,15 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				rtl8821ae_phy_set_txpower_level_by_path(hw,
- 					rtlphy->current_channel, RF90_PATH_A);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_A Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else {
- 				rtl_set_bbreg(hw, RA_TXSCALE, 0xFFE00000,
- 					txscaling_tbl[(u8)final_ofdm_swing_index]);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_A Compensate with BBSwing, Final_OFDM_Swing_Index = %d\n",
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Compensate with BBSwing, Final_OFDM_Swing_Index = %d\n",
- 					final_ofdm_swing_index);
- 				/*If TxAGC has changed, reset TxAGC again*/
- 				if (rtldm->modify_txagc_flag_path_a) {
-@@ -1372,9 +1372,9 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 						rtlphy->current_channel, RF90_PATH_A);
- 					rtldm->modify_txagc_flag_path_a = false;
- 
--					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
--						 DBG_LOUD,
--						 "******Path_A pDM_Odm->Modify_TxAGC_Flag = FALSE\n");
-+					rtl_dbg(rtlpriv, COMP_POWER_TRACKING,
-+						DBG_LOUD,
-+						"******Path_A pDM_Odm->Modify_TxAGC_Flag = FALSE\n");
- 				}
- 			}
- 		}
-@@ -1395,10 +1395,10 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				rtl8821ae_phy_set_txpower_level_by_path(hw,
- 					rtlphy->current_channel, RF90_PATH_B);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_B Over BBSwing Limit , PwrTrackingLimit = %d , Remnant TxAGC Value = %d\n",
--					 pwr_tracking_limit,
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_B Over BBSwing Limit , PwrTrackingLimit = %d , Remnant TxAGC Value = %d\n",
-+					pwr_tracking_limit,
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else if (final_ofdm_swing_index < 0) {
- 				rtldm->remnant_ofdm_swing_idx[rf_path] =
- 					final_ofdm_swing_index;
-@@ -1412,15 +1412,15 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				rtl8821ae_phy_set_txpower_level_by_path(hw,
- 					rtlphy->current_channel, RF90_PATH_B);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_B Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_B Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else {
- 				rtl_set_bbreg(hw, RB_TXSCALE, 0xFFE00000,
- 					txscaling_tbl[(u8)final_ofdm_swing_index]);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_B Compensate with BBSwing ,Final_OFDM_Swing_Index = %d\n",
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_B Compensate with BBSwing ,Final_OFDM_Swing_Index = %d\n",
- 					final_ofdm_swing_index);
- 				 /*If TxAGC has changed, reset TxAGC again*/
- 				if (rtldm->modify_txagc_flag_path_b) {
-@@ -1433,8 +1433,8 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 					rtldm->modify_txagc_flag_path_b =
- 						false;
- 
--					RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--						 "******Path_B pDM_Odm->Modify_TxAGC_Flag = FALSE\n");
-+					rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+						"******Path_B pDM_Odm->Modify_TxAGC_Flag = FALSE\n");
- 				}
- 			}
- 		}
-@@ -1474,18 +1474,18 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 
- 	rtldm->txpower_trackinginit = true;
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "pDM_Odm->BbSwingIdxCckBase: %d, pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
--		 rtldm->swing_idx_cck_base,
--		 rtldm->swing_idx_ofdm_base[RF90_PATH_A],
--		 rtldm->default_ofdm_index);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"pDM_Odm->BbSwingIdxCckBase: %d, pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
-+		rtldm->swing_idx_cck_base,
-+		rtldm->swing_idx_ofdm_base[RF90_PATH_A],
-+		rtldm->default_ofdm_index);
- 
- 	thermal_value = (u8)rtl_get_rfreg(hw, RF90_PATH_A,
- 		/*0x42: RF Reg[15:10] 88E*/
- 		RF_T_METER_8812A, 0xfc00);
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
--		 thermal_value, rtlefuse->eeprom_thermalmeter);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
-+		thermal_value, rtlefuse->eeprom_thermalmeter);
- 	if (!rtldm->txpower_track_control ||
- 	    rtlefuse->eeprom_thermalmeter == 0 ||
- 	    rtlefuse->eeprom_thermalmeter == 0xFF)
-@@ -1494,8 +1494,8 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 	/* 3. Initialize ThermalValues of RFCalibrateInfo*/
- 
- 	if (rtlhal->reloadtxpowerindex)
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "reload ofdm index for band switch\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"reload ofdm index for band switch\n");
- 
- 	/*4. Calculate average thermal meter*/
- 	rtldm->thermalvalue_avg[rtldm->thermalvalue_avg_index] = thermal_value;
-@@ -1514,9 +1514,9 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 	if (thermal_value_avg_count) {
- 		thermal_value = (u8)(thermal_value_avg /
- 				thermal_value_avg_count);
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "AVG Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
--			 thermal_value, rtlefuse->eeprom_thermalmeter);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"AVG Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
-+			thermal_value, rtlefuse->eeprom_thermalmeter);
- 	}
- 
- 	/*5. Calculate delta, delta_LCK, delta_IQK.
-@@ -1533,17 +1533,17 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 		(thermal_value - rtldm->thermalvalue_iqk) :
- 		(rtldm->thermalvalue_iqk - thermal_value);
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "(delta, delta_LCK, delta_IQK) = (%d, %d, %d)\n",
--		 delta, delta_lck, delta_iqk);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"(delta, delta_LCK, delta_IQK) = (%d, %d, %d)\n",
-+		delta, delta_lck, delta_iqk);
- 
- 	/* 6. If necessary, do LCK.
- 	 * Delta temperature is equal to or larger than 20 centigrade.
- 	 */
- 	if (delta_lck >= IQK_THRESHOLD) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "delta_LCK(%d) >= Threshold_IQK(%d)\n",
--			 delta_lck, IQK_THRESHOLD);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"delta_LCK(%d) >= Threshold_IQK(%d)\n",
-+			delta_lck, IQK_THRESHOLD);
- 		rtldm->thermalvalue_lck = thermal_value;
- 		rtl8821ae_phy_lc_calibrate(hw);
- 	}
-@@ -1564,9 +1564,9 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 		/*7.1 The Final Power Index = BaseIndex + PowerIndexOffset*/
- 
- 		if (thermal_value > rtlefuse->eeprom_thermalmeter) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "delta_swing_table_idx_tup_a[%d] = %d\n",
--				 delta, delta_swing_table_idx_tup_a[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"delta_swing_table_idx_tup_a[%d] = %d\n",
-+				delta, delta_swing_table_idx_tup_a[delta]);
- 			rtldm->delta_power_index_last[RF90_PATH_A] =
- 				rtldm->delta_power_index[RF90_PATH_A];
- 			rtldm->delta_power_index[RF90_PATH_A] =
-@@ -1576,13 +1576,13 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				delta_swing_table_idx_tup_a[delta];
- 			/*Record delta swing for mix mode power tracking*/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
- 			rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "delta_swing_table_idx_tup_b[%d] = %d\n",
--				 delta, delta_swing_table_idx_tup_b[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"delta_swing_table_idx_tup_b[%d] = %d\n",
-+				delta, delta_swing_table_idx_tup_b[delta]);
- 			rtldm->delta_power_index_last[RF90_PATH_B] =
- 				rtldm->delta_power_index[RF90_PATH_B];
- 			rtldm->delta_power_index[RF90_PATH_B] =
-@@ -1592,13 +1592,13 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				delta_swing_table_idx_tup_b[delta];
- 			/*Record delta swing for mix mode power tracking*/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_B] = %d\n",
--				 rtldm->absolute_ofdm_swing_idx[RF90_PATH_B]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_B] = %d\n",
-+				rtldm->absolute_ofdm_swing_idx[RF90_PATH_B]);
- 		} else {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "delta_swing_table_idx_tdown_a[%d] = %d\n",
--				 delta, delta_swing_table_idx_tdown_a[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"delta_swing_table_idx_tdown_a[%d] = %d\n",
-+				delta, delta_swing_table_idx_tdown_a[delta]);
- 
- 			rtldm->delta_power_index_last[RF90_PATH_A] =
- 				rtldm->delta_power_index[RF90_PATH_A];
-@@ -1608,13 +1608,13 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 			rtldm->absolute_ofdm_swing_idx[RF90_PATH_A] =
- 				-1 * delta_swing_table_idx_tdown_a[delta];
- 			/* Record delta swing for mix mode power tracking*/
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
--				 rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
-+				rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "deltaSwingTableIdx_TDOWN_B[%d] = %d\n",
--				 delta, delta_swing_table_idx_tdown_b[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"deltaSwingTableIdx_TDOWN_B[%d] = %d\n",
-+				delta, delta_swing_table_idx_tdown_b[delta]);
- 
- 			rtldm->delta_power_index_last[RF90_PATH_B] =
- 				rtldm->delta_power_index[RF90_PATH_B];
-@@ -1625,15 +1625,15 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				-1 * delta_swing_table_idx_tdown_b[delta];
- 			/*Record delta swing for mix mode power tracking*/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_B] = %d\n",
--				 rtldm->absolute_ofdm_swing_idx[RF90_PATH_B]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_B] = %d\n",
-+				rtldm->absolute_ofdm_swing_idx[RF90_PATH_B]);
- 		}
- 
- 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8812A; p++) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "============================= [Path-%c]Calculating PowerIndexOffset =============================\n",
--				 (p == RF90_PATH_A ? 'A' : 'B'));
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"============================= [Path-%c]Calculating PowerIndexOffset =============================\n",
-+				(p == RF90_PATH_A ? 'A' : 'B'));
- 
- 			if (rtldm->delta_power_index[p] ==
- 				rtldm->delta_power_index_last[p])
-@@ -1647,12 +1647,12 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				/* Power Index Diff between 2
- 				 * times Power Tracking
- 				 */
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "[Path-%c] PowerIndexOffset(%d) =DeltaPowerIndex(%d) -DeltaPowerIndexLast(%d)\n",
--				 (p == RF90_PATH_A ? 'A' : 'B'),
--				 rtldm->power_index_offset[p],
--				 rtldm->delta_power_index[p] ,
--				 rtldm->delta_power_index_last[p]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"[Path-%c] PowerIndexOffset(%d) =DeltaPowerIndex(%d) -DeltaPowerIndexLast(%d)\n",
-+				(p == RF90_PATH_A ? 'A' : 'B'),
-+				rtldm->power_index_offset[p],
-+				rtldm->delta_power_index[p],
-+				rtldm->delta_power_index_last[p]);
- 
- 			rtldm->ofdm_index[p] =
- 					rtldm->swing_idx_ofdm_base[p] +
-@@ -1666,17 +1666,17 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 
- 			/****Print BB Swing Base and Index Offset */
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "The 'CCK' final index(%d) = BaseIndex(%d) + PowerIndexOffset(%d)\n",
--				 rtldm->swing_idx_cck,
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"The 'CCK' final index(%d) = BaseIndex(%d) + PowerIndexOffset(%d)\n",
-+				rtldm->swing_idx_cck,
- 				rtldm->swing_idx_cck_base,
- 				rtldm->power_index_offset[p]);
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "The 'OFDM' final index(%d) = BaseIndex[%c](%d) + PowerIndexOffset(%d)\n",
--				 rtldm->swing_idx_ofdm[p],
--				 (p == RF90_PATH_A ? 'A' : 'B'),
--				 rtldm->swing_idx_ofdm_base[p],
--				 rtldm->power_index_offset[p]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"The 'OFDM' final index(%d) = BaseIndex[%c](%d) + PowerIndexOffset(%d)\n",
-+				rtldm->swing_idx_ofdm[p],
-+				(p == RF90_PATH_A ? 'A' : 'B'),
-+				rtldm->swing_idx_ofdm_base[p],
-+				rtldm->power_index_offset[p]);
- 
- 			/*7.1 Handle boundary conditions of index.*/
- 
-@@ -1685,32 +1685,32 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 			else if (rtldm->ofdm_index[p] < ofdm_min_index)
- 				rtldm->ofdm_index[p] = ofdm_min_index;
- 		}
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "\n\n====================================================================================\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"\n\n====================================================================================\n");
- 		if (rtldm->cck_index > TXSCALE_TABLE_SIZE - 1)
- 			rtldm->cck_index = TXSCALE_TABLE_SIZE - 1;
- 		else if (rtldm->cck_index < 0)
- 			rtldm->cck_index = 0;
- 	} else {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "The thermal meter is unchanged or TxPowerTracking OFF(%d): ThermalValue: %d , pDM_Odm->RFCalibrateInfo.ThermalValue: %d\n",
--			 rtldm->txpower_track_control,
--			 thermal_value,
--			 rtldm->thermalvalue);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"The thermal meter is unchanged or TxPowerTracking OFF(%d): ThermalValue: %d , pDM_Odm->RFCalibrateInfo.ThermalValue: %d\n",
-+			rtldm->txpower_track_control,
-+			thermal_value,
-+			rtldm->thermalvalue);
- 
- 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8812A; p++)
- 			rtldm->power_index_offset[p] = 0;
- 	}
- 	/*Print Swing base & current*/
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "TxPowerTracking: [CCK] Swing Current Index: %d,Swing Base Index: %d\n",
--		 rtldm->cck_index, rtldm->swing_idx_cck_base);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"TxPowerTracking: [CCK] Swing Current Index: %d,Swing Base Index: %d\n",
-+		rtldm->cck_index, rtldm->swing_idx_cck_base);
- 	for (p = RF90_PATH_A; p < MAX_PATH_NUM_8812A; p++) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "TxPowerTracking: [OFDM] Swing Current Index: %d,Swing Base Index[%c]: %d\n",
--			 rtldm->ofdm_index[p],
--			 (p == RF90_PATH_A ? 'A' : 'B'),
--			 rtldm->swing_idx_ofdm_base[p]);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"TxPowerTracking: [OFDM] Swing Current Index: %d,Swing Base Index[%c]: %d\n",
-+			rtldm->ofdm_index[p],
-+			(p == RF90_PATH_A ? 'A' : 'B'),
-+			rtldm->swing_idx_ofdm_base[p]);
- 	}
- 
- 	if ((rtldm->power_index_offset[RF90_PATH_A] != 0 ||
-@@ -1727,52 +1727,52 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 		 *tx power in tx agc for 88E.
- 		 */
- 		if (thermal_value > rtldm->thermalvalue) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Increasing(A): delta_pi: %d , delta_t: %d, Now_t: %d,EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_A],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
--
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Increasing(B): delta_pi: %d ,delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_B],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Increasing(A): delta_pi: %d , delta_t: %d, Now_t: %d,EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_A],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
-+
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Increasing(B): delta_pi: %d ,delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_B],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
- 		} else if (thermal_value < rtldm->thermalvalue) { /*Low temperature*/
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Decreasing(A): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_A],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
--
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Decreasing(B): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_B],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Decreasing(A): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_A],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
-+
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Decreasing(B): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_B],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
- 		}
- 
- 		if (thermal_value > rtlefuse->eeprom_thermalmeter) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature(%d) higher than PG value(%d)\n",
--				 thermal_value, rtlefuse->eeprom_thermalmeter);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature(%d) higher than PG value(%d)\n",
-+				thermal_value, rtlefuse->eeprom_thermalmeter);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "**********Enter POWER Tracking MIX_MODE**********\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"**********Enter POWER Tracking MIX_MODE**********\n");
- 			for (p = RF90_PATH_A; p < MAX_PATH_NUM_8812A; p++)
- 				rtl8812ae_dm_txpwr_track_set_pwr(hw, MIX_MODE,
- 								 p, 0);
- 		} else {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature(%d) lower than PG value(%d)\n",
--				 thermal_value, rtlefuse->eeprom_thermalmeter);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature(%d) lower than PG value(%d)\n",
-+				thermal_value, rtlefuse->eeprom_thermalmeter);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "**********Enter POWER Tracking MIX_MODE**********\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"**********Enter POWER Tracking MIX_MODE**********\n");
- 			for (p = RF90_PATH_A; p < MAX_PATH_NUM_8812A; p++)
- 				rtl8812ae_dm_txpwr_track_set_pwr(hw, MIX_MODE,
- 								 p, index_for_channel);
-@@ -1783,9 +1783,9 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				rtldm->swing_idx_ofdm_base[p] =
- 					rtldm->swing_idx_ofdm[p];
- 
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "pDM_Odm->RFCalibrateInfo.ThermalValue =%d ThermalValue= %d\n",
--			 rtldm->thermalvalue, thermal_value);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"pDM_Odm->RFCalibrateInfo.ThermalValue =%d ThermalValue= %d\n",
-+			rtldm->thermalvalue, thermal_value);
- 		/*Record last Power Tracking Thermal Value*/
- 		rtldm->thermalvalue = thermal_value;
- 	}
-@@ -1794,8 +1794,8 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 	if (delta_iqk >= IQK_THRESHOLD)
- 		rtl8812ae_do_iqk(hw, delta_iqk, thermal_value, 8);
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "<===rtl8812ae_dm_txpower_tracking_callback_thermalmeter\n");
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"<===%s\n", __func__);
- }
- 
- static void rtl8821ae_get_delta_swing_table(struct ieee80211_hw *hw,
-@@ -1865,7 +1865,7 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 	if (rtldm->tx_rate != 0xFF)
- 		tx_rate = rtl8821ae_hw_rate_to_mrate(hw, rtldm->tx_rate);
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "===>%s\n", __func__);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "===>%s\n", __func__);
- 
- 	if (tx_rate != 0xFF) { /* Mimic Modify High Rate BBSwing Limit.*/
- 		/*CCK*/
-@@ -1908,33 +1908,33 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 		else
- 			pwr_tracking_limit = 24;
- 	}
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "TxRate=0x%x, PwrTrackingLimit=%d\n",
--		 tx_rate, pwr_tracking_limit);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"TxRate=0x%x, PwrTrackingLimit=%d\n",
-+		tx_rate, pwr_tracking_limit);
- 
- 	if (method == BBSWING) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "===>%s\n", __func__);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"===>%s\n", __func__);
- 		if (rf_path == RF90_PATH_A) {
- 			final_swing_idx[RF90_PATH_A] =
- 				(rtldm->ofdm_index[RF90_PATH_A] >
- 				pwr_tracking_limit) ?
- 				pwr_tracking_limit :
- 				rtldm->ofdm_index[RF90_PATH_A];
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_A]=%d,pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_A]=%d\n",
--				 rtldm->ofdm_index[RF90_PATH_A],
--				 final_swing_idx[RF90_PATH_A]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"pDM_Odm->RFCalibrateInfo.OFDM_index[ODM_RF_PATH_A]=%d,pDM_Odm->RealBbSwingIdx[ODM_RF_PATH_A]=%d\n",
-+				rtldm->ofdm_index[RF90_PATH_A],
-+				final_swing_idx[RF90_PATH_A]);
- 
- 			rtl_set_bbreg(hw, RA_TXSCALE, 0xFFE00000,
- 				txscaling_tbl[final_swing_idx[RF90_PATH_A]]);
- 		}
- 	} else if (method == MIX_MODE) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "pDM_Odm->DefaultOfdmIndex=%d,pDM_Odm->Absolute_OFDMSwingIdx[RFPath]=%d, RF_Path = %d\n",
--			 rtldm->default_ofdm_index,
--			 rtldm->absolute_ofdm_swing_idx[rf_path],
--			 rf_path);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"pDM_Odm->DefaultOfdmIndex=%d,pDM_Odm->Absolute_OFDMSwingIdx[RFPath]=%d, RF_Path = %d\n",
-+			rtldm->default_ofdm_index,
-+			rtldm->absolute_ofdm_swing_idx[rf_path],
-+			rf_path);
- 
- 		final_ofdm_swing_index =
- 			rtldm->default_ofdm_index +
-@@ -1961,10 +1961,10 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 					rtlphy->current_channel,
- 					RF90_PATH_A);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					" ******Path_A Over BBSwing Limit , PwrTrackingLimit = %d , Remnant TxAGC Value = %d\n",
--					 pwr_tracking_limit,
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Over BBSwing Limit , PwrTrackingLimit = %d , Remnant TxAGC Value = %d\n",
-+					pwr_tracking_limit,
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else if (final_ofdm_swing_index < 0) {
- 				rtldm->remnant_cck_idx = final_ofdm_swing_index;
- 				/* CCK Follow the same compensate value as Path A*/
-@@ -1980,16 +1980,16 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 				rtl8821ae_phy_set_txpower_level_by_path(hw,
- 					rtlphy->current_channel, RF90_PATH_A);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_A Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
--					 rtldm->remnant_ofdm_swing_idx[rf_path]);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Lower then BBSwing lower bound  0 , Remnant TxAGC Value = %d\n",
-+					rtldm->remnant_ofdm_swing_idx[rf_path]);
- 			} else {
- 				rtl_set_bbreg(hw, RA_TXSCALE, 0xFFE00000,
- 					txscaling_tbl[(u8)final_ofdm_swing_index]);
- 
--				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--					 "******Path_A Compensate with BBSwing ,Final_OFDM_Swing_Index = %d\n",
--					 final_ofdm_swing_index);
-+				rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+					"******Path_A Compensate with BBSwing ,Final_OFDM_Swing_Index = %d\n",
-+					final_ofdm_swing_index);
- 				/*If TxAGC has changed, reset TxAGC again*/
- 				if (rtldm->modify_txagc_flag_path_a) {
- 					rtldm->remnant_cck_idx = 0;
-@@ -2001,9 +2001,9 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
- 
- 					rtldm->modify_txagc_flag_path_a = false;
- 
--					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
--						 DBG_LOUD,
--						 "******Path_A pDM_Odm->Modify_TxAGC_Flag= FALSE\n");
-+					rtl_dbg(rtlpriv, COMP_POWER_TRACKING,
-+						DBG_LOUD,
-+						"******Path_A pDM_Odm->Modify_TxAGC_Flag= FALSE\n");
- 				}
- 			}
- 		}
-@@ -2042,12 +2042,12 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 
- 	rtldm->txpower_trackinginit = true;
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "===>%s,\n pDM_Odm->BbSwingIdxCckBase: %d,pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
--		 __func__,
--		 rtldm->swing_idx_cck_base,
--		 rtldm->swing_idx_ofdm_base[RF90_PATH_A],
--		 rtldm->default_ofdm_index);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"===>%s,\n pDM_Odm->BbSwingIdxCckBase: %d,pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
-+		__func__,
-+		rtldm->swing_idx_cck_base,
-+		rtldm->swing_idx_ofdm_base[RF90_PATH_A],
-+		rtldm->default_ofdm_index);
- 	/*0x42: RF Reg[15:10] 88E*/
- 	thermal_value = (u8)rtl_get_rfreg(hw,
- 		RF90_PATH_A, RF_T_METER_8812A, 0xfc00);
-@@ -2059,8 +2059,8 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 	/* 3. Initialize ThermalValues of RFCalibrateInfo*/
- 
- 	if (rtlhal->reloadtxpowerindex) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "reload ofdm index for band switch\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"reload ofdm index for band switch\n");
- 	}
- 
- 	/*4. Calculate average thermal meter*/
-@@ -2080,9 +2080,9 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 	if (thermal_value_avg_count) {
- 		thermal_value = (u8)(thermal_value_avg /
- 				thermal_value_avg_count);
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "AVG Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
--			 thermal_value, rtlefuse->eeprom_thermalmeter);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"AVG Thermal Meter = 0x%X, EFUSE Thermal Base = 0x%X\n",
-+			thermal_value, rtlefuse->eeprom_thermalmeter);
- 	}
- 
- 	/*5. Calculate delta, delta_LCK, delta_IQK.
-@@ -2099,16 +2099,16 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 		(thermal_value - rtldm->thermalvalue_iqk) :
- 		(rtldm->thermalvalue_iqk - thermal_value);
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "(delta, delta_LCK, delta_IQK) = (%d, %d, %d)\n",
--		 delta, delta_lck, delta_iqk);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"(delta, delta_LCK, delta_IQK) = (%d, %d, %d)\n",
-+		delta, delta_lck, delta_iqk);
- 
- 	/* 6. If necessary, do LCK.	*/
- 	/*Delta temperature is equal to or larger than 20 centigrade.*/
- 	if (delta_lck >= IQK_THRESHOLD) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "delta_LCK(%d) >= Threshold_IQK(%d)\n",
--			 delta_lck, IQK_THRESHOLD);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"delta_LCK(%d) >= Threshold_IQK(%d)\n",
-+			delta_lck, IQK_THRESHOLD);
- 		rtldm->thermalvalue_lck = thermal_value;
- 		rtl8821ae_phy_lc_calibrate(hw);
- 	}
-@@ -2129,9 +2129,9 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 		/*7.1 The Final Power Index = BaseIndex + PowerIndexOffset*/
- 
- 		if (thermal_value > rtlefuse->eeprom_thermalmeter) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "delta_swing_table_idx_tup_a[%d] = %d\n",
--				 delta, delta_swing_table_idx_tup_a[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"delta_swing_table_idx_tup_a[%d] = %d\n",
-+				delta, delta_swing_table_idx_tup_a[delta]);
- 			rtldm->delta_power_index_last[RF90_PATH_A] =
- 				rtldm->delta_power_index[RF90_PATH_A];
- 			rtldm->delta_power_index[RF90_PATH_A] =
-@@ -2141,13 +2141,13 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 				delta_swing_table_idx_tup_a[delta];
- 			/*Record delta swing for mix mode power tracking*/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
--				 rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is higher and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
-+				rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
- 		} else {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "delta_swing_table_idx_tdown_a[%d] = %d\n",
--				 delta, delta_swing_table_idx_tdown_a[delta]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"delta_swing_table_idx_tdown_a[%d] = %d\n",
-+				delta, delta_swing_table_idx_tdown_a[delta]);
- 
- 			rtldm->delta_power_index_last[RF90_PATH_A] =
- 				rtldm->delta_power_index[RF90_PATH_A];
-@@ -2157,15 +2157,15 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 			rtldm->absolute_ofdm_swing_idx[RF90_PATH_A] =
- 				-1 * delta_swing_table_idx_tdown_a[delta];
- 			/* Record delta swing for mix mode power tracking*/
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
--				 rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"******Temp is lower and pDM_Odm->Absolute_OFDMSwingIdx[ODM_RF_PATH_A] = %d\n",
-+				rtldm->absolute_ofdm_swing_idx[RF90_PATH_A]);
- 		}
- 
- 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "\n\n================================ [Path-%c]Calculating PowerIndexOffset ================================\n",
--				 (p == RF90_PATH_A ? 'A' : 'B'));
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"\n\n================================ [Path-%c]Calculating PowerIndexOffset ================================\n",
-+				(p == RF90_PATH_A ? 'A' : 'B'));
- 			/*If Thermal value changes but lookup table value
- 			 * still the same
- 			 */
-@@ -2179,9 +2179,9 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 					rtldm->delta_power_index_last[p];
- 			/*Power Index Diff between 2 times Power Tracking*/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "[Path-%c] PowerIndexOffset(%d) = DeltaPowerIndex(%d) - DeltaPowerIndexLast(%d)\n",
--				 (p == RF90_PATH_A ? 'A' : 'B'),
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"[Path-%c] PowerIndexOffset(%d) = DeltaPowerIndex(%d) - DeltaPowerIndexLast(%d)\n",
-+				(p == RF90_PATH_A ? 'A' : 'B'),
- 				rtldm->power_index_offset[p],
- 				rtldm->delta_power_index[p] ,
- 				rtldm->delta_power_index_last[p]);
-@@ -2198,17 +2198,17 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 
- 			/*********Print BB Swing Base and Index Offset********/
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "The 'CCK' final index(%d) = BaseIndex(%d) + PowerIndexOffset(%d)\n",
--				 rtldm->swing_idx_cck,
--				 rtldm->swing_idx_cck_base,
--				 rtldm->power_index_offset[p]);
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "The 'OFDM' final index(%d) = BaseIndex[%c](%d) + PowerIndexOffset(%d)\n",
--				 rtldm->swing_idx_ofdm[p],
--				 (p == RF90_PATH_A ? 'A' : 'B'),
--				 rtldm->swing_idx_ofdm_base[p],
--				 rtldm->power_index_offset[p]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"The 'CCK' final index(%d) = BaseIndex(%d) + PowerIndexOffset(%d)\n",
-+				rtldm->swing_idx_cck,
-+				rtldm->swing_idx_cck_base,
-+				rtldm->power_index_offset[p]);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"The 'OFDM' final index(%d) = BaseIndex[%c](%d) + PowerIndexOffset(%d)\n",
-+				rtldm->swing_idx_ofdm[p],
-+				(p == RF90_PATH_A ? 'A' : 'B'),
-+				rtldm->swing_idx_ofdm_base[p],
-+				rtldm->power_index_offset[p]);
- 
- 			/*7.1 Handle boundary conditions of index.*/
- 
-@@ -2217,32 +2217,32 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 			else if (rtldm->ofdm_index[p] < ofdm_min_index)
- 				rtldm->ofdm_index[p] = ofdm_min_index;
- 		}
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "\n\n========================================================================================================\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"\n\n========================================================================================================\n");
- 		if (rtldm->cck_index > TXSCALE_TABLE_SIZE - 1)
- 			rtldm->cck_index = TXSCALE_TABLE_SIZE - 1;
- 		else if (rtldm->cck_index < 0)
- 			rtldm->cck_index = 0;
- 	} else {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "The thermal meter is unchanged or TxPowerTracking OFF(%d):ThermalValue: %d , pDM_Odm->RFCalibrateInfo.ThermalValue: %d\n",
--			 rtldm->txpower_track_control,
--			 thermal_value,
--			 rtldm->thermalvalue);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"The thermal meter is unchanged or TxPowerTracking OFF(%d):ThermalValue: %d , pDM_Odm->RFCalibrateInfo.ThermalValue: %d\n",
-+			rtldm->txpower_track_control,
-+			thermal_value,
-+			rtldm->thermalvalue);
- 
- 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
- 			rtldm->power_index_offset[p] = 0;
- 	}
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--		 "TxPowerTracking: [CCK] Swing Current Index: %d, Swing Base Index: %d\n",
--		 /*Print Swing base & current*/
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		"TxPowerTracking: [CCK] Swing Current Index: %d, Swing Base Index: %d\n",
-+		/*Print Swing base & current*/
- 		rtldm->cck_index, rtldm->swing_idx_cck_base);
- 	for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++) {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "TxPowerTracking: [OFDM] Swing Current Index: %d, Swing Base Index[%c]: %d\n",
--			 rtldm->ofdm_index[p],
--			 (p == RF90_PATH_A ? 'A' : 'B'),
--			 rtldm->swing_idx_ofdm_base[p]);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"TxPowerTracking: [OFDM] Swing Current Index: %d, Swing Base Index[%c]: %d\n",
-+			rtldm->ofdm_index[p],
-+			(p == RF90_PATH_A ? 'A' : 'B'),
-+			rtldm->swing_idx_ofdm_base[p]);
- 	}
- 
- 	if ((rtldm->power_index_offset[RF90_PATH_A] != 0 ||
-@@ -2259,38 +2259,38 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 		 *  set tx power in tx agc for 88E.
- 		 */
- 		if (thermal_value > rtldm->thermalvalue) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Increasing(A): delta_pi: %d , delta_t: %d,Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_A],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Increasing(A): delta_pi: %d , delta_t: %d,Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_A],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
- 		} else if (thermal_value < rtldm->thermalvalue) { /*Low temperature*/
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature Decreasing(A): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
--				 rtldm->power_index_offset[RF90_PATH_A],
--				 delta, thermal_value,
--				 rtlefuse->eeprom_thermalmeter,
--				 rtldm->thermalvalue);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature Decreasing(A): delta_pi: %d , delta_t: %d, Now_t: %d, EFUSE_t: %d, Last_t: %d\n",
-+				rtldm->power_index_offset[RF90_PATH_A],
-+				delta, thermal_value,
-+				rtlefuse->eeprom_thermalmeter,
-+				rtldm->thermalvalue);
- 		}
- 
- 		if (thermal_value > rtlefuse->eeprom_thermalmeter) {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature(%d) higher than PG value(%d)\n",
--				 thermal_value, rtlefuse->eeprom_thermalmeter);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature(%d) higher than PG value(%d)\n",
-+				thermal_value, rtlefuse->eeprom_thermalmeter);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "****Enter POWER Tracking MIX_MODE****\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"****Enter POWER Tracking MIX_MODE****\n");
- 			for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
- 					rtl8821ae_dm_txpwr_track_set_pwr(hw,
- 						MIX_MODE, p, index_for_channel);
- 		} else {
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "Temperature(%d) lower than PG value(%d)\n",
--				 thermal_value, rtlefuse->eeprom_thermalmeter);
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"Temperature(%d) lower than PG value(%d)\n",
-+				thermal_value, rtlefuse->eeprom_thermalmeter);
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "*****Enter POWER Tracking MIX_MODE*****\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+				"*****Enter POWER Tracking MIX_MODE*****\n");
- 			for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
- 				rtl8812ae_dm_txpwr_track_set_pwr(hw,
- 					MIX_MODE, p, index_for_channel);
-@@ -2300,9 +2300,9 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
- 			rtldm->swing_idx_ofdm_base[p] = rtldm->swing_idx_ofdm[p];
- 
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "pDM_Odm->RFCalibrateInfo.ThermalValue = %d ThermalValue= %d\n",
--			 rtldm->thermalvalue, thermal_value);
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"pDM_Odm->RFCalibrateInfo.ThermalValue = %d ThermalValue= %d\n",
-+			rtldm->thermalvalue, thermal_value);
- 		/*Record last Power Tracking Thermal Value*/
- 		rtldm->thermalvalue = thermal_value;
- 	}
-@@ -2323,7 +2323,7 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
- 		}
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "<===%s\n", __func__);
-+	rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "<===%s\n", __func__);
- }
- 
- void rtl8821ae_dm_check_txpower_tracking_thermalmeter(struct ieee80211_hw *hw)
-@@ -2332,13 +2332,13 @@ void rtl8821ae_dm_check_txpower_tracking_thermalmeter(struct ieee80211_hw *hw)
- 	if (!rtlpriv->dm.tm_trigger) {
- 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER_88E, BIT(17)|BIT(16),
- 			      0x03);
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "Trigger 8821ae Thermal Meter!!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"Trigger 8821ae Thermal Meter!!\n");
- 		rtlpriv->dm.tm_trigger = 1;
- 		return;
- 	} else {
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--			 "Schedule TxPowerTracking !!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			"Schedule TxPowerTracking !!\n");
- 
- 		rtl8821ae_dm_txpower_tracking_callback_thermalmeter(hw);
- 		rtlpriv->dm.tm_trigger = 0;
-@@ -2357,14 +2357,14 @@ static void rtl8821ae_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
+ static void rtl8723e_dm_initialize_txpower_tracking(struct ieee80211_hw *hw)
+@@ -561,14 +561,14 @@ static void rtl8723e_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
  	struct ieee80211_sta *sta = NULL;
  
  	if (is_hal_stop(rtlhal)) {
 -		RT_TRACE(rtlpriv, COMP_RATE, DBG_LOUD,
--			 "driver is going to unload\n");
+-			 " driver is going to unload\n");
 +		rtl_dbg(rtlpriv, COMP_RATE, DBG_LOUD,
-+			"driver is going to unload\n");
++			" driver is going to unload\n");
  		return;
  	}
  
  	if (!rtlpriv->dm.useramask) {
 -		RT_TRACE(rtlpriv, COMP_RATE, DBG_LOUD,
--			 "driver does not control rate adaptive mask\n");
+-			 " driver does not control rate adaptive mask\n");
 +		rtl_dbg(rtlpriv, COMP_RATE, DBG_LOUD,
-+			"driver does not control rate adaptive mask\n");
++			" driver does not control rate adaptive mask\n");
  		return;
  	}
  
-@@ -2392,14 +2392,14 @@ static void rtl8821ae_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
+@@ -612,14 +612,14 @@ static void rtl8723e_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
  			p_ra->ratr_state = DM_RATR_STA_LOW;
  
  		if (p_ra->pre_ratr_state != p_ra->ratr_state) {
 -			RT_TRACE(rtlpriv, COMP_RATE, DBG_LOUD,
 -				 "RSSI = %ld\n",
--				  rtlpriv->dm.undec_sm_pwdb);
+-				 rtlpriv->dm.undec_sm_pwdb);
 -			RT_TRACE(rtlpriv, COMP_RATE, DBG_LOUD,
 -				 "RSSI_LEVEL = %d\n", p_ra->ratr_state);
 -			RT_TRACE(rtlpriv, COMP_RATE, DBG_LOUD,
 -				 "PreState = %d, CurState = %d\n",
--				  p_ra->pre_ratr_state, p_ra->ratr_state);
+-				 p_ra->pre_ratr_state, p_ra->ratr_state);
 +			rtl_dbg(rtlpriv, COMP_RATE, DBG_LOUD,
 +				"RSSI = %ld\n",
 +				rtlpriv->dm.undec_sm_pwdb);
@@ -1375,317 +326,86 @@ index 97a30ccf0b27..89fc4d9a0313 100644
  
  			rcu_read_lock();
  			sta = rtl_find_sta(hw, mac->bssid);
-@@ -2454,22 +2454,22 @@ static void rtl8821ae_dm_edca_choose_traffic_idx(
- 	if (b_bias_on_rx) {
- 		if (cur_tx_bytes > (cur_rx_bytes*4)) {
- 			*pb_is_cur_rdl_state = false;
--			RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--				 "Uplink Traffic\n");
-+			rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+				"Uplink Traffic\n");
+@@ -716,31 +716,31 @@ static void rtl8723e_dm_dynamic_bb_powersaving(struct ieee80211_hw *hw)
+ 	if (((mac->link_state == MAC80211_NOLINK)) &&
+ 	    (rtlpriv->dm.entry_min_undec_sm_pwdb == 0)) {
+ 		dm_pstable->rssi_val_min = 0;
+-		RT_TRACE(rtlpriv, DBG_LOUD, DBG_LOUD,
+-			 "Not connected to any\n");
++		rtl_dbg(rtlpriv, DBG_LOUD, DBG_LOUD,
++			"Not connected to any\n");
+ 	}
+ 
+ 	if (mac->link_state == MAC80211_LINKED) {
+ 		if (mac->opmode == NL80211_IFTYPE_ADHOC) {
+ 			dm_pstable->rssi_val_min =
+ 			    rtlpriv->dm.entry_min_undec_sm_pwdb;
+-			RT_TRACE(rtlpriv, DBG_LOUD, DBG_LOUD,
+-				 "AP Client PWDB = 0x%lx\n",
+-				  dm_pstable->rssi_val_min);
++			rtl_dbg(rtlpriv, DBG_LOUD, DBG_LOUD,
++				"AP Client PWDB = 0x%lx\n",
++				dm_pstable->rssi_val_min);
  		} else {
- 			*pb_is_cur_rdl_state = true;
--			RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--				 "Balance Traffic\n");
-+			rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+				"Balance Traffic\n");
+ 			dm_pstable->rssi_val_min =
+ 			    rtlpriv->dm.undec_sm_pwdb;
+-			RT_TRACE(rtlpriv, DBG_LOUD, DBG_LOUD,
+-				 "STA Default Port PWDB = 0x%lx\n",
+-				  dm_pstable->rssi_val_min);
++			rtl_dbg(rtlpriv, DBG_LOUD, DBG_LOUD,
++				"STA Default Port PWDB = 0x%lx\n",
++				dm_pstable->rssi_val_min);
  		}
  	} else {
- 		if (cur_rx_bytes > (cur_tx_bytes*4)) {
- 			*pb_is_cur_rdl_state = true;
--			RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--				 "Downlink	Traffic\n");
-+			rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+				"Downlink	Traffic\n");
- 		} else {
- 			*pb_is_cur_rdl_state = false;
--			RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--				 "Balance Traffic\n");
-+			rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+				"Balance Traffic\n");
- 		}
- 	}
- 	return;
-@@ -2492,11 +2492,11 @@ static void rtl8821ae_dm_check_edca_turbo(struct ieee80211_hw *hw)
- 	bool b_bias_on_rx = false;
- 	bool b_edca_turbo_on = false;
+ 		dm_pstable->rssi_val_min =
+ 		    rtlpriv->dm.entry_min_undec_sm_pwdb;
  
--	RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--		 "rtl8821ae_dm_check_edca_turbo=====>\n");
--	RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--		 "Original BE PARAM: 0x%x\n",
--		 rtl_read_dword(rtlpriv, DM_REG_EDCA_BE_11N));
-+	rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+		"%s=====>\n", __func__);
-+	rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+		"Original BE PARAM: 0x%x\n",
-+		rtl_read_dword(rtlpriv, DM_REG_EDCA_BE_11N));
- 
- 	if (rtlpriv->dm.dbginfo.num_non_be_pkt > 0x100)
- 		rtlpriv->dm.is_any_nonbepkts = true;
-@@ -2528,20 +2528,20 @@ static void rtl8821ae_dm_check_edca_turbo(struct ieee80211_hw *hw)
- 		}
+-		RT_TRACE(rtlpriv, DBG_LOUD, DBG_LOUD,
+-			 "AP Ext Port PWDB = 0x%lx\n",
+-			  dm_pstable->rssi_val_min);
++		rtl_dbg(rtlpriv, DBG_LOUD, DBG_LOUD,
++			"AP Ext Port PWDB = 0x%lx\n",
++			dm_pstable->rssi_val_min);
  	}
  
--	RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--		 "bIsAnyNonBEPkts : 0x%x  bDisableFrameBursting : 0x%x\n",
--		 rtlpriv->dm.is_any_nonbepkts,
--		 rtlpriv->dm.disable_framebursting);
-+	rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+		"bIsAnyNonBEPkts : 0x%x  bDisableFrameBursting : 0x%x\n",
-+		rtlpriv->dm.is_any_nonbepkts,
-+		rtlpriv->dm.disable_framebursting);
- 
--	RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--		 "bEdcaTurboOn : 0x%x bBiasOnRx : 0x%x\n",
--		 b_edca_turbo_on, b_bias_on_rx);
-+	rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+		"bEdcaTurboOn : 0x%x bBiasOnRx : 0x%x\n",
-+		b_edca_turbo_on, b_bias_on_rx);
- 
- 	if (b_edca_turbo_on) {
--		RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--			 "curTxOkCnt : 0x%llx\n", cur_tx_ok_cnt);
--		RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--			 "curRxOkCnt : 0x%llx\n", cur_rx_ok_cnt);
-+		rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+			"curTxOkCnt : 0x%llx\n", cur_tx_ok_cnt);
-+		rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+			"curRxOkCnt : 0x%llx\n", cur_rx_ok_cnt);
- 		if (b_bias_on_rx)
- 			rtl8821ae_dm_edca_choose_traffic_idx(hw, cur_tx_ok_cnt,
- 				cur_rx_ok_cnt, true, pb_is_cur_rdl_state);
-@@ -2553,14 +2553,14 @@ static void rtl8821ae_dm_check_edca_turbo(struct ieee80211_hw *hw)
- 
- 		rtl_write_dword(rtlpriv, DM_REG_EDCA_BE_11N, edca_be);
- 
--		RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--			 "EDCA Turbo on: EDCA_BE:0x%x\n", edca_be);
-+		rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+			"EDCA Turbo on: EDCA_BE:0x%x\n", edca_be);
- 
- 		rtlpriv->dm.current_turbo_edca = true;
- 
--		RT_TRACE(rtlpriv, COMP_TURBO, DBG_LOUD,
--			 "EDCA_BE_DL : 0x%x  EDCA_BE_UL : 0x%x  EDCA_BE : 0x%x\n",
--			 edca_be_dl, edca_be_ul, edca_be);
-+		rtl_dbg(rtlpriv, COMP_TURBO, DBG_LOUD,
-+			"EDCA_BE_DL : 0x%x  EDCA_BE_UL : 0x%x  EDCA_BE : 0x%x\n",
-+			edca_be_dl, edca_be_ul, edca_be);
- 	} else {
- 		if (rtlpriv->dm.current_turbo_edca) {
- 			u8 tmp = AC0_BE;
-@@ -2606,8 +2606,8 @@ static void rtl8821ae_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
- 
- 	dm_digtable->pre_cck_cca_thres = dm_digtable->cur_cck_cca_thres;
- 	dm_digtable->cur_cck_cca_thres = cur_cck_cca_thresh;
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
--		 "CCK cca thresh hold =%x\n", dm_digtable->cur_cck_cca_thres);
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_TRACE,
-+		"CCK cca thresh hold =%x\n", dm_digtable->cur_cck_cca_thres);
- }
- 
- static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
-@@ -2626,9 +2626,9 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 			rtldm->atc_status = ATC_STATUS_ON;
- 		}
- 
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "No link!!\n");
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "atc_status = %d\n", rtldm->atc_status);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "No link!!\n");
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"atc_status = %d\n", rtldm->atc_status);
- 
- 		if (rtldm->crystal_cap != rtlpriv->efuse.crystalcap) {
- 			rtldm->crystal_cap = rtlpriv->efuse.crystalcap;
-@@ -2643,8 +2643,8 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 					      0xfff000, (crystal_cap |
- 					      (crystal_cap << 6)));
- 		}
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "crystal_cap = 0x%x\n",
--			 rtldm->crystal_cap);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD, "crystal_cap = 0x%x\n",
-+			rtldm->crystal_cap);
- 	} else{
- 		/*1. Calculate CFO for path-A & path-B*/
- 		cfo_khz_a = (int)(rtldm->cfo_tail[0] * 3125) / 1280;
-@@ -2653,15 +2653,15 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 
- 		/*2.No new packet*/
- 		if (packet_count == rtldm->packet_count_pre) {
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "packet counter doesn't change\n");
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"packet counter doesn't change\n");
- 			return;
- 		}
- 
- 		rtldm->packet_count_pre = packet_count;
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "packet counter = %d\n",
--			 rtldm->packet_count);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"packet counter = %d\n",
-+			rtldm->packet_count);
- 
- 		/*3.Average CFO*/
- 		if (rtlpriv->phy.rf_type == RF_1T1R)
-@@ -2669,9 +2669,9 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 		else
- 			cfo_ave = (cfo_khz_a + cfo_khz_b) >> 1;
- 
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "cfo_khz_a = %dkHz, cfo_khz_b = %dkHz, cfo_ave = %dkHz\n",
--			 cfo_khz_a, cfo_khz_b, cfo_ave);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"cfo_khz_a = %dkHz, cfo_khz_b = %dkHz, cfo_ave = %dkHz\n",
-+			cfo_khz_a, cfo_khz_b, cfo_ave);
- 
- 		/*4.Avoid abnormal large CFO*/
- 		cfo_ave_diff = (rtldm->cfo_ave_pre >= cfo_ave) ?
-@@ -2679,8 +2679,8 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 						(cfo_ave - rtldm->cfo_ave_pre);
- 
- 		if (cfo_ave_diff > 20 && rtldm->large_cfo_hit == 0) {
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "first large CFO hit\n");
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"first large CFO hit\n");
- 			rtldm->large_cfo_hit = 1;
- 			return;
- 		} else
-@@ -2701,9 +2701,9 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 				rtldm->cfo_threshold = CFO_THRESHOLD_XTAL;
- 			}
- 		}
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Dynamic threshold = %d\n",
--			 rtldm->cfo_threshold);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"Dynamic threshold = %d\n",
-+			rtldm->cfo_threshold);
- 
- 		/* 2.Calculate Xtal offset*/
- 		if (cfo_ave > rtldm->cfo_threshold && rtldm->crystal_cap < 0x3f)
-@@ -2711,9 +2711,9 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 		else if ((cfo_ave < -rtlpriv->dm.cfo_threshold) &&
- 			 rtlpriv->dm.crystal_cap > 0)
- 			adjust_xtal = ((cfo_ave + CFO_THRESHOLD_XTAL) >> 2) - 1;
--		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Crystal cap = 0x%x, Crystal cap offset = %d\n",
--			 rtldm->crystal_cap, adjust_xtal);
-+		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+			"Crystal cap = 0x%x, Crystal cap offset = %d\n",
-+			rtldm->crystal_cap, adjust_xtal);
- 
- 		/*3.Adjudt Crystal Cap.*/
- 		if (adjust_xtal != 0) {
-@@ -2735,9 +2735,9 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 				rtl_set_bbreg(hw, REG_MAC_PHY_CTRL,
- 					      0xfff000, (crystal_cap |
- 					      (crystal_cap << 6)));
--			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--				 "New crystal cap = 0x%x\n",
--				 rtldm->crystal_cap);
-+			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
-+				"New crystal cap = 0x%x\n",
-+				rtldm->crystal_cap);
- 		}
- 	}
- }
-@@ -2781,7 +2781,7 @@ void rtl8821ae_dm_watchdog(struct ieee80211_hw *hw)
- 	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
- 	rtlpriv->dm.dbginfo.num_qry_beacon_pkt = 0;
--	RT_TRACE(rtlpriv, COMP_DIG, DBG_DMESG, "\n");
-+	rtl_dbg(rtlpriv, COMP_DIG, DBG_DMESG, "\n");
- }
- 
- void rtl8821ae_dm_set_tx_ant_by_tx_info(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index fe32d397d287..6d6ef1d95c43 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -39,7 +39,7 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
- 	u32 pagenums, remainsize;
- 	u32 page, offset;
- 
--	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
-+	rtl_dbg(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
- 
- 	rtl_fill_dummy(bufferptr, &size);
- 
-@@ -75,8 +75,8 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
- 		 (!(value32 & FWDL_CHKSUM_RPT)));
- 
- 	if (counter >= FW_8821AE_POLLING_TIMEOUT_COUNT) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "chksum report fail! REG_MCUFWDL:0x%08x .\n",
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+			"chksum report fail! REG_MCUFWDL:0x%08x .\n",
- 			  value32);
- 		goto exit;
- 	}
-@@ -154,15 +154,15 @@ int rtl8821ae_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
- 		fwsize = rtlhal->fwsize;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
--		 "%s Firmware SIZE %d\n",
--		 buse_wake_on_wlan_fw ? "Wowlan" : "Normal", fwsize);
-+	rtl_dbg(rtlpriv, COMP_FW, DBG_DMESG,
-+		"%s Firmware SIZE %d\n",
-+		buse_wake_on_wlan_fw ? "Wowlan" : "Normal", fwsize);
- 
- 	if (IS_FW_HEADER_EXIST_8812(pfwheader) ||
- 	    IS_FW_HEADER_EXIST_8821(pfwheader)) {
--		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
--			 "Firmware Version(%d), Signature(%#x)\n",
--			 pfwheader->version, pfwheader->signature);
-+		rtl_dbg(rtlpriv, COMP_FW, DBG_DMESG,
-+			"Firmware Version(%d), Signature(%#x)\n",
-+			pfwheader->version, pfwheader->signature);
- 
- 		pfwdata = pfwdata + sizeof(struct rtlwifi_firmware_header);
- 		fwsize = fwsize - sizeof(struct rtlwifi_firmware_header);
-@@ -180,11 +180,11 @@ int rtl8821ae_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
- 
- 	err = _rtl8821ae_fw_free_to_go(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--			 "Firmware is not ready to run!\n");
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_DMESG,
-+			"Firmware is not ready to run!\n");
- 	} else {
--		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
--			 "Firmware is ready to run!\n");
-+		rtl_dbg(rtlpriv, COMP_FW, DBG_LOUD,
-+			"Firmware is ready to run!\n");
- 	}
- 
- 	return 0;
-@@ -199,13 +199,13 @@ void rtl8821ae_set_fw_related_for_wowlan(struct ieee80211_hw *hw,
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	/* 1. Before WoWLAN or After WOWLAN we need to re-download Fw. */
- 	if (rtl8821ae_download_fw(hw, used_wowlan_fw)) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--			 "Re-Download Firmware failed!!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-+			"Re-Download Firmware failed!!\n");
- 		rtlhal->fw_ready = false;
+ 	rtl8723e_dm_rf_saving(hw, false);
+@@ -820,21 +820,21 @@ void rtl8723e_dm_bt_coexist(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 tmp_byte = 0;
+ 	if (!rtlpriv->btcoexist.bt_coexistence) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[DM]{BT], BT not exist!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			"[DM]{BT], BT not exist!!\n");
  		return;
  	}
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "Re-Download Firmware Success !!\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-+		"Re-Download Firmware Success !!\n");
- 	rtlhal->fw_ready = true;
  
- 	/* 2. Re-Init the variables about Fw related setting. */
-@@ -249,22 +249,22 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 	unsigned long flag = 0;
- 	u8 idx = 0;
+ 	if (!rtlpriv->btcoexist.init_set) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[DM][BT], rtl8723e_dm_bt_coexist()\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			"[DM][BT], %s\n", __func__);
+ 		rtl8723e_dm_init_bt_coexist(hw);
+ 	}
+ 
+ 	tmp_byte = rtl_read_byte(rtlpriv, 0x40);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-		 "[DM][BT], 0x40 is 0x%x\n", tmp_byte);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[DM][BT], bt_dm_coexist start\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++		"[DM][BT], 0x40 is 0x%x\n", tmp_byte);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[DM][BT], bt_dm_coexist start\n");
+ 	rtl8723e_dm_bt_coexist_8723(hw);
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+index 33481232fad0..d1b50a80c191 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+@@ -43,22 +43,22 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 	unsigned long flag;
+ 	u8 idx;
  
 -	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, "come in\n");
 +	rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD, "come in\n");
@@ -1713,39 +433,29 @@ index fe32d397d287..6d6ef1d95c43 100644
  				udelay(100);
  
  				if (h2c_waitcounter > 1000)
-@@ -300,8 +300,8 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 			box_extreg = REG_HMEBOX_EXT_3;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case %#x not processed\n", boxnum);
-+			rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+				"switch case %#x not processed\n", boxnum);
- 			break;
- 		}
+@@ -110,9 +110,9 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
  
-@@ -324,8 +324,8 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 				/*wait until Fw read*/
- 				wait_h2c_limmit--;
- 				if (wait_h2c_limmit == 0) {
--					RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
--						 "Waiting too long for FW read clear HMEBox(%d)!\n",
-+					rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD,
-+						"Waiting too long for FW read clear HMEBox(%d)!\n",
- 						 boxnum);
- 					break;
- 				}
-@@ -335,25 +335,25 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 				isfw_read =
- 				  _rtl8821ae_check_fw_read_last_h2c(hw, boxnum);
- 				u1b_tmp = rtl_read_byte(rtlpriv, 0x130);
+ 			wait_h2c_limmit--;
+ 			if (wait_h2c_limmit == 0) {
 -				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
--					 "Waiting for FW read clear HMEBox(%d)!!! 0x130 = %2x\n",
--					 boxnum, u1b_tmp);
+-					 "Waiting too long for FW read clear HMEBox(%d)!\n",
+-					 boxnum);
 +				rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD,
-+					"Waiting for FW read clear HMEBox(%d)!!! 0x130 = %2x\n",
-+					boxnum, u1b_tmp);
++					"Waiting too long for FW read clear HMEBox(%d)!\n",
++					boxnum);
+ 				break;
  			}
+ 
+@@ -121,24 +121,24 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			isfw_read = _rtl8723e_check_fw_read_last_h2c(hw,
+ 								boxnum);
+ 			u1b_tmp = rtl_read_byte(rtlpriv, 0x1BF);
+-			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
+-				 "Waiting for FW read clear HMEBox(%d)!!! 0x1BF = %2x\n",
+-				 boxnum, u1b_tmp);
++			rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD,
++				"Waiting for FW read clear HMEBox(%d)!!! 0x1BF = %2x\n",
++				boxnum, u1b_tmp);
  		}
  
  		if (!isfw_read) {
@@ -1763,25 +473,14 @@ index fe32d397d287..6d6ef1d95c43 100644
  		boxcontent[0] = element_id;
 -		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
 -			 "Write element_id box_reg(%4x) = %2x\n",
--			 box_reg, element_id);
+-			  box_reg, element_id);
 +		rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD,
 +			"Write element_id box_reg(%4x) = %2x\n",
 +			box_reg, element_id);
  
  		switch (cmd_len) {
  		case 1:
-@@ -389,8 +389,8 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 			}
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case %#x not processed\n", cmd_len);
-+			rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+				"switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 
-@@ -400,16 +400,16 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
+@@ -217,16 +217,16 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
  		if (rtlhal->last_hmeboxnum == 4)
  			rtlhal->last_hmeboxnum = 0;
  
@@ -1801,107 +500,38 @@ index fe32d397d287..6d6ef1d95c43 100644
 +	rtl_dbg(rtlpriv, COMP_CMD, DBG_LOUD, "go out\n");
  }
  
- void rtl8821ae_fill_h2c_cmd(struct ieee80211_hw *hw,
-@@ -458,8 +458,8 @@ void rtl8821ae_firmware_selfreset(struct ieee80211_hw *hw)
- 	u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN+1);
- 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN+1, (u1b_tmp | BIT(2)));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "_8051Reset8812ae(): 8051 reset success .\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"_8051Reset8812ae(): 8051 reset success .\n");
- }
- 
- void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
-@@ -478,8 +478,8 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	if (bt_ctrl_lps)
- 		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
--		 mode, bt_ctrl_lps);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
-+		mode, bt_ctrl_lps);
- 
- 	switch (mode) {
- 	case FW_PS_MIN_MODE:
-@@ -590,7 +590,7 @@ void rtl8821ae_set_fw_wowlan_mode(struct ieee80211_hw *hw, bool func_en)
+ void rtl8723e_fill_h2c_cmd(struct ieee80211_hw *hw,
+@@ -252,7 +252,7 @@ void rtl8723e_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	u8 u1_h2c_set_pwrmode[3] = { 0 };
  	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	u8 fw_wowlan_info[H2C_8821AE_WOWLAN_LENGTH] = {0};
  
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "enable(%d)\n", func_en);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "enable(%d)\n", func_en);
+-	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
++	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
  
- 	SET_8812_H2CCMD_WOWLAN_FUNC_ENABLE(fw_wowlan_info,
- 					   (func_en ? true : false));
-@@ -624,9 +624,9 @@ void rtl8821ae_set_fw_remote_wake_ctrl_cmd(struct ieee80211_hw *hw,
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	u8 remote_wake_ctrl_parm[H2C_8821AE_REMOTE_WAKE_CTRL_LEN] = {0};
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--		 "enable=%d, ARP offload=%d, GTK offload=%d\n",
--		 enable, ppsc->arp_offload_enable, ppsc->gtk_offload_enable);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+		"enable=%d, ARP offload=%d, GTK offload=%d\n",
-+		enable, ppsc->arp_offload_enable, ppsc->gtk_offload_enable);
- 
- 	SET_8812_H2CCMD_REMOTE_WAKECTRL_ENABLE(remote_wake_ctrl_parm, enable);
- 	SET_8812_H2CCMD_REMOTE_WAKE_CTRL_ARP_OFFLOAD_EN(remote_wake_ctrl_parm,
-@@ -651,7 +651,7 @@ void rtl8821ae_set_fw_keep_alive_cmd(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 keep_alive_info[H2C_8821AE_KEEP_ALIVE_CTRL_LENGTH] = {0};
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "Enable(%d)\n", func_en);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "Enable(%d)\n", func_en);
- 
- 	SET_8812_H2CCMD_KEEP_ALIVE_ENABLE(keep_alive_info, func_en);
- 	/* 1: the period is controled by driver, 0: by Fw default */
-@@ -690,9 +690,9 @@ void rtl8821ae_set_fw_global_info_cmd(struct ieee80211_hw *hw)
- 	struct rtl_security *sec = &rtlpriv->sec;
- 	u8 remote_wakeup_sec_info[H2C_8821AE_AOAC_GLOBAL_INFO_LEN] = {0};
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--		 "PairwiseEncAlgorithm=%d, GroupEncAlgorithm=%d\n",
--		 sec->pairwise_enc_algorithm, sec->group_enc_algorithm);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+		"PairwiseEncAlgorithm=%d, GroupEncAlgorithm=%d\n",
-+		sec->pairwise_enc_algorithm, sec->group_enc_algorithm);
- 
- 	SET_8812_H2CCMD_AOAC_GLOBAL_INFO_PAIRWISE_ENC_ALG(
- 						remote_wakeup_sec_info,
-@@ -1646,8 +1646,8 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
- 	}
- 
- 	if (!b_dlok)
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "Set RSVD page location to Fw FAIL!!!!!!.\n");
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
-+			"Set RSVD page location to Fw FAIL!!!!!!.\n");
- }
- 
- void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
-@@ -1771,8 +1771,8 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, mode);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+@@ -458,16 +458,16 @@ void rtl8723e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
  		b_dlok = true;
  
- 	if (!b_dl_finished && b_dlok) {
+ 	if (b_dlok) {
 -		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
 -			 "Set RSVD page location to Fw.\n");
 +		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
 +			"Set RSVD page location to Fw.\n");
  		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
- 				"H2C_RSVDPAGE:\n", u1rsvdpageloc, 5);
- 		rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_RSVDPAGE,
-@@ -1788,8 +1788,8 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
- 	}
- 
- 	if (!b_dlok) {
+ 			      "H2C_RSVDPAGE:\n",
+ 			      u1rsvdpageloc, 3);
+ 		rtl8723e_fill_h2c_cmd(hw, H2C_RSVDPAGE,
+ 				      sizeof(u1rsvdpageloc), u1rsvdpageloc);
+ 	} else
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
 -			 "Set RSVD page location to Fw FAIL!!!!!!.\n");
 +		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
 +			"Set RSVD page location to Fw FAIL!!!!!!.\n");
- 	}
  }
  
-@@ -1815,11 +1815,11 @@ void rtl8821ae_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
+ void rtl8723e_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
+@@ -501,11 +501,11 @@ void rtl8723e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
  
  	switch (p2p_ps_state) {
  	case P2P_PS_DISABLE:
@@ -1915,7 +545,7 @@ index fe32d397d287..6d6ef1d95c43 100644
  		/* update CTWindow value. */
  		if (p2pinfo->ctwindow > 0) {
  			p2p_ps_offload->ctwindow_en = 1;
-@@ -1873,11 +1873,11 @@ void rtl8821ae_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
+@@ -564,11 +564,11 @@ void rtl8723e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
  		}
  		break;
  	case P2P_PS_SCAN:
@@ -1929,47 +559,1677 @@ index fe32d397d287..6d6ef1d95c43 100644
  		p2p_ps_offload->discovery = 0;
  		p2pinfo->p2p_ps_state = P2P_PS_ENABLE;
  		break;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 198d419ebb9c..ef70f57358b4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -143,9 +143,9 @@ static void _rtl8821ae_set_fw_clock_on(struct ieee80211_hw *hw,
- 			if (content & IMR_CPWM) {
- 				rtl_write_word(rtlpriv, isr_regaddr, 0x0100);
- 				rtlhal->fw_ps_state = FW_PS_STATE_RF_ON_8821AE;
--				RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--					 "Receive CPWM INT!!! Set rtlhal->FwPSState = %X\n",
--					 rtlhal->fw_ps_state);
-+				rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+					"Receive CPWM INT!!! Set rtlhal->FwPSState = %X\n",
-+					rtlhal->fw_ps_state);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.c
+index 3ac31ec26517..6c4fedc3ed63 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.c
+@@ -102,12 +102,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					BT_COEX_STATE_WIFI_RSSI_1_HIGH;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to High\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state stay at Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state stay at Low\n");
+ 			}
+ 		} else {
+ 			if (undecoratedsmoothed_pwdb < rssi_thresh) {
+@@ -116,18 +116,18 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					BT_COEX_STATE_WIFI_RSSI_1_LOW;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to Low\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state stay at High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state stay at High\n");
  			}
  		}
+ 	} else if (level_num == 3) {
+ 		if (rssi_thresh > rssi_thresh1) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "[DM][BT], RSSI_1 thresh error!!\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[DM][BT], RSSI_1 thresh error!!\n");
+ 			return rtlpriv->btcoexist.bt_pre_rssi_state;
+ 		}
  
-@@ -330,8 +330,8 @@ static void _rtl8821ae_download_rsvd_page(struct ieee80211_hw *hw,
- 	} while (!(bcnvalid_reg & BIT(0)) && dlbcn_count < 5);
- 
- 	if (!(bcnvalid_reg & BIT(0)))
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Download RSVD page failed!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Download RSVD page failed!\n");
- 	if (bcnvalid_reg & BIT(0) && rtlhal->enter_pnp_sleep) {
- 		rtl_write_byte(rtlpriv, REG_TDECTRL + 2, bcnvalid_reg | BIT(0));
- 		_rtl8821ae_return_beacon_queue_skb(hw);
-@@ -365,8 +365,8 @@ static void _rtl8821ae_download_rsvd_page(struct ieee80211_hw *hw,
- 			} while (!(bcnvalid_reg & BIT(0)) && dlbcn_count < 5);
- 
- 			if (!(bcnvalid_reg & BIT(0)))
--				RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--					 "2 Download RSVD page failed!\n");
-+				rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+					"2 Download RSVD page failed!\n");
+@@ -144,12 +144,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					~BT_COEX_STATE_WIFI_RSSI_1_LOW;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to Medium\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state stay at Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state stay at Low\n");
+ 			}
+ 		} else if ((rtlpriv->btcoexist.bt_pre_rssi_state ==
+ 			    BT_RSSI_STATE_MEDIUM) ||
+@@ -164,8 +164,8 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					~BT_COEX_STATE_WIFI_RSSI_1_LOW;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to High\n");
+ 			} else if (undecoratedsmoothed_pwdb < rssi_thresh) {
+ 				bt_rssi_state = BT_RSSI_STATE_LOW;
+ 				rtlpriv->btcoexist.cstate |=
+@@ -174,12 +174,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					~BT_COEX_STATE_WIFI_RSSI_1_HIGH;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to Low\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state stay at Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state stay at Medium\n");
+ 			}
+ 		} else {
+ 			if (undecoratedsmoothed_pwdb < rssi_thresh1) {
+@@ -190,12 +190,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state1(struct ieee80211_hw *hw,
+ 					~BT_COEX_STATE_WIFI_RSSI_1_HIGH;
+ 				rtlpriv->btcoexist.cstate &=
+ 					~BT_COEX_STATE_WIFI_RSSI_1_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state switch to Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state switch to Medium\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI_1 state stay at High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI_1 state stay at High\n");
+ 			}
  		}
  	}
+@@ -230,12 +230,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					|= BT_COEX_STATE_WIFI_RSSI_HIGH;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to High\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state stay at Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state stay at Low\n");
+ 			}
+ 		} else {
+ 			if (undecoratedsmoothed_pwdb < rssi_thresh) {
+@@ -244,18 +244,18 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					|= BT_COEX_STATE_WIFI_RSSI_LOW;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to Low\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state stay at High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state stay at High\n");
+ 			}
+ 		}
+ 	} else if (level_num == 3) {
+ 		if (rssi_thresh > rssi_thresh1) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "[DM][BT], RSSI thresh error!!\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[DM][BT], RSSI thresh error!!\n");
+ 			return rtlpriv->btcoexist.bt_pre_rssi_state;
+ 		}
+ 		if ((rtlpriv->btcoexist.bt_pre_rssi_state ==
+@@ -271,12 +271,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_LOW;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to Medium\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state stay at Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state stay at Low\n");
+ 			}
+ 		} else if ((rtlpriv->btcoexist.bt_pre_rssi_state ==
+ 				BT_RSSI_STATE_MEDIUM) ||
+@@ -291,8 +291,8 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_LOW;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to High\n");
+ 			} else if (undecoratedsmoothed_pwdb < rssi_thresh) {
+ 				bt_rssi_state = BT_RSSI_STATE_LOW;
+ 				rtlpriv->btcoexist.cstate
+@@ -301,12 +301,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_HIGH;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to Low\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to Low\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_MEDIUM;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state stay at Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state stay at Medium\n");
+ 			}
+ 		} else {
+ 			if (undecoratedsmoothed_pwdb < rssi_thresh1) {
+@@ -317,12 +317,12 @@ u8 rtl8723e_dm_bt_check_coex_rssi_state(struct ieee80211_hw *hw,
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_HIGH;
+ 				rtlpriv->btcoexist.cstate
+ 					&= ~BT_COEX_STATE_WIFI_RSSI_LOW;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state switch to Medium\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state switch to Medium\n");
+ 			} else {
+ 				bt_rssi_state = BT_RSSI_STATE_STAY_HIGH;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-					 "[DM][BT], RSSI state stay at High\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++					"[DM][BT], RSSI state stay at High\n");
+ 			}
+ 		}
+ 	}
+@@ -342,9 +342,9 @@ long rtl8723e_dm_bt_get_rx_ss(struct ieee80211_hw *hw)
+ 		undecoratedsmoothed_pwdb
+ 			= rtlpriv->dm.entry_min_undec_sm_pwdb;
+ 	}
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_get_rx_ss() = %ld\n",
+-		 undecoratedsmoothed_pwdb);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"%s = %ld\n", __func__,
++		undecoratedsmoothed_pwdb);
  
-@@ -458,8 +458,8 @@ void rtl8821ae_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 			*((bool *)(val)) = false;
+ 	return undecoratedsmoothed_pwdb;
+ }
+@@ -367,10 +367,10 @@ void rtl8723e_dm_bt_balance(struct ieee80211_hw *hw,
+ 	}
+ 	rtlpriv->btcoexist.balance_on = balance_on;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "[DM][BT], Balance=[%s:%dms:%dms], write 0xc=0x%x\n",
+-		 balance_on ? "ON" : "OFF", ms0, ms1, h2c_parameter[0]<<16 |
+-		 h2c_parameter[1]<<8 | h2c_parameter[2]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"[DM][BT], Balance=[%s:%dms:%dms], write 0xc=0x%x\n",
++		balance_on ? "ON" : "OFF", ms0, ms1, h2c_parameter[0] << 16 |
++		h2c_parameter[1] << 8 | h2c_parameter[2]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0xc, 3, h2c_parameter);
+ }
+@@ -381,8 +381,8 @@ void rtl8723e_dm_bt_agc_table(struct ieee80211_hw *hw, u8 type)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	if (type == BT_AGCTABLE_OFF) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BT]AGCTable Off!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BT]AGCTable Off!\n");
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x641c0001);
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x631d0001);
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x621e0001);
+@@ -400,8 +400,8 @@ void rtl8723e_dm_bt_agc_table(struct ieee80211_hw *hw, u8 type)
+ 		rtl8723e_phy_set_rf_reg(hw, RF90_PATH_A,
+ 					RF_RX_G1, 0xfffff, 0x30355);
+ 	} else if (type == BT_AGCTABLE_ON) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BT]AGCTable On!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BT]AGCTable On!\n");
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x4e1c0001);
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x4d1d0001);
+ 		rtl_write_dword(rtlpriv, 0xc78, 0x4c1e0001);
+@@ -428,12 +428,12 @@ void rtl8723e_dm_bt_bb_back_off_level(struct ieee80211_hw *hw, u8 type)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	if (type == BT_BB_BACKOFF_OFF) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BT]BBBackOffLevel Off!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BT]BBBackOffLevel Off!\n");
+ 		rtl_write_dword(rtlpriv, 0xc04, 0x3a05611);
+ 	} else if (type == BT_BB_BACKOFF_ON) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BT]BBBackOffLevel On!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BT]BBBackOffLevel On!\n");
+ 		rtl_write_dword(rtlpriv, 0xc04, 0x3a07611);
+ 		rtlpriv->btcoexist.sw_coexist_all_off = false;
+ 	}
+@@ -442,14 +442,14 @@ void rtl8723e_dm_bt_bb_back_off_level(struct ieee80211_hw *hw, u8 type)
+ void rtl8723e_dm_bt_fw_coex_all_off(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_fw_coex_all_off()\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"rtl8723e_dm_bt_fw_coex_all_off()\n");
+ 
+ 	if (rtlpriv->btcoexist.fw_coexist_all_off)
+ 		return;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_fw_coex_all_off(), real Do\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"rtl8723e_dm_bt_fw_coex_all_off(), real Do\n");
+ 	rtl8723e_dm_bt_fw_coex_all_off_8723a(hw);
+ 	rtlpriv->btcoexist.fw_coexist_all_off = true;
+ }
+@@ -458,14 +458,14 @@ void rtl8723e_dm_bt_sw_coex_all_off(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_sw_coex_all_off()\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"%s\n", __func__);
+ 
+ 	if (rtlpriv->btcoexist.sw_coexist_all_off)
+ 		return;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_sw_coex_all_off(), real Do\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"%s, real Do\n", __func__);
+ 	rtl8723e_dm_bt_sw_coex_all_off_8723a(hw);
+ 	rtlpriv->btcoexist.sw_coexist_all_off = true;
+ }
+@@ -474,13 +474,13 @@ void rtl8723e_dm_bt_hw_coex_all_off(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_hw_coex_all_off()\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"%s\n", __func__);
+ 
+ 	if (rtlpriv->btcoexist.hw_coexist_all_off)
+ 		return;
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "rtl8723e_dm_bt_hw_coex_all_off(), real Do\n");
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"%s, real Do\n", __func__);
+ 
+ 	rtl8723e_dm_bt_hw_coex_all_off_8723a(hw);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+index 652d8ff9cccb..16c6007861ff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+@@ -20,7 +20,7 @@ void rtl8723e_dm_bt_turn_off_bt_coexist_before_enter_lps(struct ieee80211_hw *hw
+ 		return;
+ 
+ 	if (ppsc->inactiveps) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BT][DM], Before enter IPS, turn off all Coexist DM\n");
+ 		rtlpriv->btcoexist.cstate = 0;
+ 		rtlpriv->btcoexist.previous_state = 0;
+@@ -68,9 +68,10 @@ void rtl_8723e_bt_wifi_media_status_notify(struct ieee80211_hw *hw,
+ 	else
+ 		h2c_parameter[2] = 0x20;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], FW write 0x19=0x%x\n",
+-		 h2c_parameter[0]<<16|h2c_parameter[1]<<8|h2c_parameter[2]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], FW write 0x19=0x%x\n",
++		h2c_parameter[0] << 16 | h2c_parameter[1] << 8 |
++		h2c_parameter[2]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x19, 3, h2c_parameter);
+ }
+@@ -98,7 +99,7 @@ static void rtl8723e_dm_bt_set_fw_3a(struct ieee80211_hw *hw,
+ 	h2c_parameter[2] = byte3;
+ 	h2c_parameter[3] = byte4;
+ 	h2c_parameter[4] = byte5;
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], FW write 0x3a(4bytes)=0x%x%8x\n",
+ 		h2c_parameter[0], h2c_parameter[1]<<24 |
+ 		h2c_parameter[2]<<16 | h2c_parameter[3]<<8 |
+@@ -111,7 +112,7 @@ static bool rtl8723e_dm_bt_need_to_dec_bt_pwr(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	if (mgnt_link_status_query(hw) == RT_MEDIA_CONNECT) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"Need to decrease bt power\n");
+ 		rtlpriv->btcoexist.cstate |=
+ 		BT_COEX_STATE_DEC_BT_POWER;
+@@ -130,12 +131,12 @@ static bool rtl8723e_dm_bt_is_same_coexist_state(struct ieee80211_hw *hw)
+ 	     rtlpriv->btcoexist.cstate) &&
+ 	    (rtlpriv->btcoexist.previous_state_h ==
+ 	     rtlpriv->btcoexist.cstate_h)) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[DM][BT], Coexist state do not change!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[DM][BT], Coexist state do not change!!\n");
+ 		return true;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[DM][BT], Coexist state changed!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[DM][BT], Coexist state changed!!\n");
+ 		return false;
+ 	}
+ }
+@@ -146,16 +147,16 @@ static void rtl8723e_dm_bt_set_coex_table(struct ieee80211_hw *hw,
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "set coex table, set 0x6c0=0x%x\n", val_0x6c0);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"set coex table, set 0x6c0=0x%x\n", val_0x6c0);
+ 	rtl_write_dword(rtlpriv, 0x6c0, val_0x6c0);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "set coex table, set 0x6c8=0x%x\n", val_0x6c8);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"set coex table, set 0x6c8=0x%x\n", val_0x6c8);
+ 	rtl_write_dword(rtlpriv, 0x6c8, val_0x6c8);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "set coex table, set 0x6cc=0x%x\n", val_0x6cc);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"set coex table, set 0x6cc=0x%x\n", val_0x6cc);
+ 	rtl_write_byte(rtlpriv, 0x6cc, val_0x6cc);
+ }
+ 
+@@ -164,12 +165,12 @@ static void rtl8723e_dm_bt_set_hw_pta_mode(struct ieee80211_hw *hw, bool b_mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	if (BT_PTA_MODE_ON == b_mode) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE, "PTA mode on\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE, "PTA mode on\n");
+ 		/*  Enable GPIO 0/1/2/3/8 pins for bt */
+ 		rtl_write_byte(rtlpriv, 0x40, 0x20);
+ 		rtlpriv->btcoexist.hw_coexist_all_off = false;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE, "PTA mode off\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE, "PTA mode off\n");
+ 		rtl_write_byte(rtlpriv, 0x40, 0x0);
+ 	}
+ }
+@@ -181,15 +182,15 @@ static void rtl8723e_dm_bt_set_sw_rf_rx_lpf_corner(struct ieee80211_hw *hw,
+ 
+ 	if (BT_RF_RX_LPF_CORNER_SHRINK == type) {
+ 		/* Shrink RF Rx LPF corner, 0x1e[7:4]=1111 ==> [11:4] */
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "Shrink RF Rx LPF corner!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"Shrink RF Rx LPF corner!!\n");
+ 		rtl8723e_phy_set_rf_reg(hw, RF90_PATH_A, 0x1e,
+ 					0xfffff, 0xf0ff7);
+ 		rtlpriv->btcoexist.sw_coexist_all_off = false;
+ 	} else if (BT_RF_RX_LPF_CORNER_RESUME == type) {
+ 		/*Resume RF Rx LPF corner*/
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "Resume RF Rx LPF corner!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"Resume RF Rx LPF corner!!\n");
+ 		rtl8723e_phy_set_rf_reg(hw, RF90_PATH_A, 0x1e, 0xfffff,
+ 					rtlpriv->btcoexist.bt_rfreg_origin_1e);
+ 	}
+@@ -204,12 +205,12 @@ static void dm_bt_set_sw_penalty_tx_rate_adapt(struct ieee80211_hw *hw,
+ 	tmp_u1 = rtl_read_byte(rtlpriv, 0x4fd);
+ 	tmp_u1 |= BIT(0);
+ 	if (BT_TX_RATE_ADAPTIVE_LOW_PENALTY == ra_type) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"Tx rate adaptive, set low penalty!!\n");
+ 		tmp_u1 &= ~BIT(2);
+ 		rtlpriv->btcoexist.sw_coexist_all_off = false;
+ 	} else if (BT_TX_RATE_ADAPTIVE_NORMAL == ra_type) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"Tx rate adaptive, set normal!!\n");
+ 		tmp_u1 |= BIT(2);
+ 	}
+@@ -279,14 +280,14 @@ static bool rtl8723e_dm_bt_is_2_ant_common_action(struct ieee80211_hw *hw)
+ 
+ 	if (!rtl8723e_dm_bt_is_wifi_busy(hw) &&
+ 	    !rtlpriv->btcoexist.bt_busy) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "Wifi idle + Bt idle, bt coex mechanism always off!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"Wifi idle + Bt idle, bt coex mechanism always off!!\n");
+ 		rtl8723e_dm_bt_btdm_structure_reload_all_off(hw, &btdm8723);
+ 		b_common = true;
+ 	} else if (rtl8723e_dm_bt_is_wifi_busy(hw) &&
+ 		   !rtlpriv->btcoexist.bt_busy) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "Wifi non-idle + Bt disabled/idle!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"Wifi non-idle + Bt disabled/idle!!\n");
+ 		btdm8723.low_penalty_rate_adaptive = true;
+ 		btdm8723.rf_rx_lpf_shrink = false;
+ 		btdm8723.reject_aggre_pkt = false;
+@@ -307,14 +308,14 @@ static bool rtl8723e_dm_bt_is_2_ant_common_action(struct ieee80211_hw *hw)
+ 
+ 		b_common = true;
+ 	} else if (rtlpriv->btcoexist.bt_busy) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"Bt non-idle!\n");
+ 		if (mgnt_link_status_query(hw) == RT_MEDIA_CONNECT) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 				"Wifi connection exist\n");
+ 			b_common = false;
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 				"No Wifi connection!\n");
+ 			btdm8723.rf_rx_lpf_shrink = true;
+ 			btdm8723.low_penalty_rate_adaptive = false;
+@@ -359,14 +360,14 @@ static void rtl8723e_dm_bt_set_sw_full_time_dac_swing(
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	if (sw_dac_swing_on) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], SwDacSwing = 0x%x\n", sw_dac_swing_lvl);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], SwDacSwing = 0x%x\n", sw_dac_swing_lvl);
+ 		rtl8723_phy_set_bb_reg(hw, 0x880, 0xff000000,
+ 				       sw_dac_swing_lvl);
+ 		rtlpriv->btcoexist.sw_coexist_all_off = false;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], SwDacSwing Off!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], SwDacSwing Off!\n");
+ 		rtl8723_phy_set_bb_reg(hw, 0x880, 0xff000000, 0xc0);
+ 	}
+ }
+@@ -384,9 +385,9 @@ static void rtl8723e_dm_bt_set_fw_dec_bt_pwr(
+ 		rtlpriv->btcoexist.fw_coexist_all_off = false;
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "[BTCoex], decrease Bt Power : %s, write 0x21=0x%x\n",
+-		 (dec_bt_pwr ? "Yes!!" : "No!!"), h2c_parameter[0]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"[BTCoex], decrease Bt Power : %s, write 0x21=0x%x\n",
++		(dec_bt_pwr ? "Yes!!" : "No!!"), h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x21, 1, h2c_parameter);
+ }
+@@ -404,10 +405,10 @@ static void rtl8723e_dm_bt_set_fw_2_ant_hid(struct ieee80211_hw *hw,
+ 	if (b_dac_swing_on)
+ 		h2c_parameter[0] |= BIT(1); /* Dac Swing default enable */
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "[BTCoex], turn 2-Ant+HID mode %s, DACSwing:%s, write 0x15=0x%x\n",
+-		 (b_enable ? "ON!!" : "OFF!!"), (b_dac_swing_on ? "ON" : "OFF"),
+-		 h2c_parameter[0]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"[BTCoex], turn 2-Ant+HID mode %s, DACSwing:%s, write 0x15=0x%x\n",
++		(b_enable ? "ON!!" : "OFF!!"), (b_dac_swing_on ? "ON" : "OFF"),
++		h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x15, 1, h2c_parameter);
+ }
+@@ -424,56 +425,56 @@ static void rtl8723e_dm_bt_set_fw_tdma_ctrl(struct ieee80211_hw *hw,
+ 	h2c_parameter1[0] = 0;
+ 
+ 	if (b_enable) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], set BT PTA update manager to trigger update!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], set BT PTA update manager to trigger update!!\n");
+ 		h2c_parameter1[0] |= BIT(0);
+ 
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], turn TDMA mode ON!!\n");
+ 		h2c_parameter[0] |= BIT(0);		/* function enable */
+ 		if (TDMA_1ANT == ant_num) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TDMA_1ANT\n");
+-			h2c_parameter[0] |= BIT(1);
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TDMA_1ANT\n");
++				h2c_parameter[0] |= BIT(1);
+ 		} else if (TDMA_2ANT == ant_num) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TDMA_2ANT\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TDMA_2ANT\n");
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], Unknown Ant\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], Unknown Ant\n");
+ 		}
+ 
+ 		if (TDMA_NAV_OFF == nav_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TDMA_NAV_OFF\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TDMA_NAV_OFF\n");
+ 		} else if (TDMA_NAV_ON == nav_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TDMA_NAV_ON\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TDMA_NAV_ON\n");
+ 			h2c_parameter[0] |= BIT(2);
+ 		}
+ 
+ 		if (TDMA_DAC_SWING_OFF == dac_swing_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 				"[BTCoex], TDMA_DAC_SWING_OFF\n");
+ 		} else if (TDMA_DAC_SWING_ON == dac_swing_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 				"[BTCoex], TDMA_DAC_SWING_ON\n");
+ 			h2c_parameter[0] |= BIT(4);
+ 		}
+ 		rtlpriv->btcoexist.fw_coexist_all_off = false;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], set BT PTA update manager to no update!!\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], turn TDMA mode OFF!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], set BT PTA update manager to no update!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], turn TDMA mode OFF!!\n");
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "[BTCoex], FW2AntTDMA, write 0x26=0x%x\n",
+-		 h2c_parameter1[0]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"[BTCoex], FW2AntTDMA, write 0x26=0x%x\n",
++		h2c_parameter1[0]);
+ 	rtl8723e_fill_h2c_cmd(hw, 0x26, 1, h2c_parameter1);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], FW2AntTDMA, write 0x14=0x%x\n",
+ 		h2c_parameter[0]);
+ 	rtl8723e_fill_h2c_cmd(hw, 0x14, 1, h2c_parameter);
+@@ -486,18 +487,18 @@ static void rtl8723e_dm_bt_set_fw_ignore_wlan_act(struct ieee80211_hw *hw,
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	if (b_enable) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], BT Ignore Wlan_Act !!\n");
+ 		h2c_parameter[0] |= BIT(0);		/* function enable */
+ 		rtlpriv->btcoexist.fw_coexist_all_off = false;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], BT don't ignore Wlan_Act !!\n");
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "[BTCoex], set FW for BT Ignore Wlan_Act, write 0x25=0x%x\n",
+-		 h2c_parameter[0]);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"[BTCoex], set FW for BT Ignore Wlan_Act, write 0x25=0x%x\n",
++		h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x25, 1, h2c_parameter);
+ }
+@@ -513,43 +514,43 @@ static void rtl8723e_dm_bt_set_fw_tra_tdma_ctrl(struct ieee80211_hw *hw,
+ 
+ 	/* Only 8723 B cut should do this */
+ 	if (IS_VENDOR_8723_A_CUT(rtlhal->version)) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], not 8723B cut, don't set Traditional TDMA!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], not 8723B cut, don't set Traditional TDMA!!\n");
+ 		return;
+ 	}
+ 
+ 	if (b_enable) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "[BTCoex], turn TTDMA mode ON!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex], turn TTDMA mode ON!!\n");
+ 		h2c_parameter[0] |= BIT(0);	/* function enable */
+ 		if (TDMA_1ANT == ant_num) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "[BTCoex], TTDMA_1ANT\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TTDMA_1ANT\n");
+ 			h2c_parameter[0] |= BIT(1);
+ 		} else if (TDMA_2ANT == ant_num) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TTDMA_2ANT\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TTDMA_2ANT\n");
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], Unknown Ant\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], Unknown Ant\n");
+ 		}
+ 
+ 		if (TDMA_NAV_OFF == nav_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TTDMA_NAV_OFF\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TTDMA_NAV_OFF\n");
+ 		} else if (TDMA_NAV_ON == nav_en) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			"[BTCoex], TTDMA_NAV_ON\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"[BTCoex], TTDMA_NAV_ON\n");
+ 			h2c_parameter[1] |= BIT(0);
+ 		}
+ 
+ 		rtlpriv->btcoexist.fw_coexist_all_off = false;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], turn TTDMA mode OFF!!\n");
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], FW Traditional TDMA, write 0x33=0x%x\n",
+ 		h2c_parameter[0] << 8 | h2c_parameter[1]);
+ 
+@@ -563,9 +564,9 @@ static void rtl8723e_dm_bt_set_fw_dac_swing_level(struct ieee80211_hw *hw,
+ 	u8 h2c_parameter[1] = {0};
+ 	h2c_parameter[0] = dac_swing_lvl;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], Set Dac Swing Level=0x%x\n", dac_swing_lvl);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], write 0x29=0x%x\n", h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x29, 1, h2c_parameter);
+@@ -582,9 +583,9 @@ static void rtl8723e_dm_bt_set_fw_bt_hid_info(struct ieee80211_hw *hw,
+ 		h2c_parameter[0] |= BIT(0);
+ 		rtlpriv->btcoexist.fw_coexist_all_off = false;
+ 	}
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], Set BT HID information=0x%x\n", b_enable);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], write 0x24=0x%x\n", h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x24, 1, h2c_parameter);
+@@ -597,9 +598,9 @@ static void rtl8723e_dm_bt_set_fw_bt_retry_index(struct ieee80211_hw *hw,
+ 	u8 h2c_parameter[1] = {0};
+ 	h2c_parameter[0] = retry_index;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], Set BT Retry Index=%d\n", retry_index);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], write 0x23=0x%x\n", h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x23, 1, h2c_parameter);
+@@ -614,12 +615,12 @@ static void rtl8723e_dm_bt_set_fw_wlan_act(struct ieee80211_hw *hw,
+ 	h2c_parameter_hi[0] = wlan_act_hi;
+ 	h2c_parameter_lo[0] = wlan_act_lo;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], Set WLAN_ACT Hi:Lo=0x%x/0x%x\n",
+ 		wlan_act_hi, wlan_act_lo);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], write 0x22=0x%x\n", h2c_parameter_hi[0]);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"[BTCoex], write 0x11=0x%x\n", h2c_parameter_lo[0]);
+ 
+ 	/* WLAN_ACT = High duration, unit:ms */
+@@ -646,107 +647,107 @@ void rtl8723e_dm_bt_set_bt_dm(struct ieee80211_hw *hw,
+ 	/* check new setting is different with the old one, */
+ 	/* if all the same, don't do the setting again. */
+ 	if (memcmp(btdm_8723, btdm, sizeof(struct btdm_8723)) == 0) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], the same coexist setting, return!!\n");
+ 		return;
+ 	} else {	/* save the new coexist setting */
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], UPDATE TO NEW COEX SETTING!!\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new bAllOff=0x%x/ 0x%x\n",
+ 			btdm_8723->all_off, btdm->all_off);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new agc_table_en=0x%x/ 0x%x\n",
+ 			btdm_8723->agc_table_en, btdm->agc_table_en);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new adc_back_off_on=0x%x/ 0x%x\n",
+-			 btdm_8723->adc_back_off_on,
+-			 btdm->adc_back_off_on);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new b2_ant_hid_en=0x%x/ 0x%x\n",
+-			 btdm_8723->b2_ant_hid_en, btdm->b2_ant_hid_en);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new bLowPenaltyRateAdaptive=0x%x/ 0x%x\n",
+-			 btdm_8723->low_penalty_rate_adaptive,
+-			 btdm->low_penalty_rate_adaptive);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new bRfRxLpfShrink=0x%x/ 0x%x\n",
+-			 btdm_8723->rf_rx_lpf_shrink,
+-			 btdm->rf_rx_lpf_shrink);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new bRejectAggrePkt=0x%x/ 0x%x\n",
+-			 btdm_8723->reject_aggre_pkt,
+-			 btdm->reject_aggre_pkt);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new tdma_on=0x%x/ 0x%x\n",
+-			 btdm_8723->tdma_on, btdm->tdma_on);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new tdmaAnt=0x%x/ 0x%x\n",
+-			 btdm_8723->tdma_ant, btdm->tdma_ant);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new tdmaNav=0x%x/ 0x%x\n",
+-			 btdm_8723->tdma_nav, btdm->tdma_nav);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new tdma_dac_swing=0x%x/ 0x%x\n",
+-			 btdm_8723->tdma_dac_swing, btdm->tdma_dac_swing);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new fw_dac_swing_lvl=0x%x/ 0x%x\n",
+-			 btdm_8723->fw_dac_swing_lvl,
+-			 btdm->fw_dac_swing_lvl);
+-
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new bTraTdmaOn=0x%x/ 0x%x\n",
+-			 btdm_8723->tra_tdma_on, btdm->tra_tdma_on);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new traTdmaAnt=0x%x/ 0x%x\n",
+-			 btdm_8723->tra_tdma_ant, btdm->tra_tdma_ant);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new traTdmaNav=0x%x/ 0x%x\n",
+-			 btdm_8723->tra_tdma_nav, btdm->tra_tdma_nav);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new bPsTdmaOn=0x%x/ 0x%x\n",
+-			 btdm_8723->ps_tdma_on, btdm->ps_tdma_on);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new adc_back_off_on=0x%x/ 0x%x\n",
++			btdm_8723->adc_back_off_on,
++			btdm->adc_back_off_on);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new b2_ant_hid_en=0x%x/ 0x%x\n",
++			btdm_8723->b2_ant_hid_en, btdm->b2_ant_hid_en);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new bLowPenaltyRateAdaptive=0x%x/ 0x%x\n",
++			btdm_8723->low_penalty_rate_adaptive,
++			btdm->low_penalty_rate_adaptive);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new bRfRxLpfShrink=0x%x/ 0x%x\n",
++			btdm_8723->rf_rx_lpf_shrink,
++			btdm->rf_rx_lpf_shrink);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new bRejectAggrePkt=0x%x/ 0x%x\n",
++			btdm_8723->reject_aggre_pkt,
++			btdm->reject_aggre_pkt);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new tdma_on=0x%x/ 0x%x\n",
++			btdm_8723->tdma_on, btdm->tdma_on);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new tdmaAnt=0x%x/ 0x%x\n",
++			btdm_8723->tdma_ant, btdm->tdma_ant);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new tdmaNav=0x%x/ 0x%x\n",
++			btdm_8723->tdma_nav, btdm->tdma_nav);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new tdma_dac_swing=0x%x/ 0x%x\n",
++			btdm_8723->tdma_dac_swing, btdm->tdma_dac_swing);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new fw_dac_swing_lvl=0x%x/ 0x%x\n",
++			btdm_8723->fw_dac_swing_lvl,
++			btdm->fw_dac_swing_lvl);
++
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new bTraTdmaOn=0x%x/ 0x%x\n",
++			btdm_8723->tra_tdma_on, btdm->tra_tdma_on);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new traTdmaAnt=0x%x/ 0x%x\n",
++			btdm_8723->tra_tdma_ant, btdm->tra_tdma_ant);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new traTdmaNav=0x%x/ 0x%x\n",
++			btdm_8723->tra_tdma_nav, btdm->tra_tdma_nav);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new bPsTdmaOn=0x%x/ 0x%x\n",
++			btdm_8723->ps_tdma_on, btdm->ps_tdma_on);
+ 		for (i = 0; i < 5; i++) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "[BTCoex], original/new psTdmaByte[i]=0x%x/ 0x%x\n",
+-				 btdm_8723->ps_tdma_byte[i],
+-				 btdm->ps_tdma_byte[i]);
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"[BTCoex], original/new psTdmaByte[i]=0x%x/ 0x%x\n",
++				btdm_8723->ps_tdma_byte[i],
++				btdm->ps_tdma_byte[i]);
+ 		}
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new bIgnoreWlanAct=0x%x/ 0x%x\n",
+ 			btdm_8723->ignore_wlan_act,
+ 			btdm->ignore_wlan_act);
+ 
+ 
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new bPtaOn=0x%x/ 0x%x\n",
+ 			btdm_8723->pta_on, btdm->pta_on);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new val_0x6c0=0x%x/ 0x%x\n",
+ 			btdm_8723->val_0x6c0, btdm->val_0x6c0);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new val_0x6c8=0x%x/ 0x%x\n",
+ 			btdm_8723->val_0x6c8, btdm->val_0x6c8);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], original/new val_0x6cc=0x%x/ 0x%x\n",
+ 			btdm_8723->val_0x6cc, btdm->val_0x6cc);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new sw_dac_swing_on=0x%x/ 0x%x\n",
+-			 btdm_8723->sw_dac_swing_on,
+-			 btdm->sw_dac_swing_on);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new sw_dac_swing_lvl=0x%x/ 0x%x\n",
+-			 btdm_8723->sw_dac_swing_lvl,
+-			 btdm->sw_dac_swing_lvl);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new wlanActHi=0x%x/ 0x%x\n",
+-			 btdm_8723->wlan_act_hi, btdm->wlan_act_hi);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new wlanActLo=0x%x/ 0x%x\n",
+-			 btdm_8723->wlan_act_lo, btdm->wlan_act_lo);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], original/new btRetryIndex=0x%x/ 0x%x\n",
+-			 btdm_8723->bt_retry_index, btdm->bt_retry_index);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new sw_dac_swing_on=0x%x/ 0x%x\n",
++			btdm_8723->sw_dac_swing_on,
++			btdm->sw_dac_swing_on);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new sw_dac_swing_lvl=0x%x/ 0x%x\n",
++			btdm_8723->sw_dac_swing_lvl,
++			btdm->sw_dac_swing_lvl);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new wlanActHi=0x%x/ 0x%x\n",
++			btdm_8723->wlan_act_hi, btdm->wlan_act_hi);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new wlanActLo=0x%x/ 0x%x\n",
++			btdm_8723->wlan_act_lo, btdm->wlan_act_lo);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], original/new btRetryIndex=0x%x/ 0x%x\n",
++			btdm_8723->bt_retry_index, btdm->bt_retry_index);
+ 
+ 		memcpy(btdm_8723, btdm, sizeof(struct btdm_8723));
+ 	}
+@@ -756,14 +757,14 @@ void rtl8723e_dm_bt_set_bt_dm(struct ieee80211_hw *hw,
+ 	 */
+ 
+ 	if (rtlpriv->btcoexist.hold_for_bt_operation) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], set to ignore wlanAct for BT OP!!\n");
+ 		rtl8723e_dm_bt_set_fw_ignore_wlan_act(hw, true);
+ 		return;
+ 	}
+ 
+ 	if (btdm->all_off) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], disable all coexist mechanism !!\n");
+ 		rtl8723e_btdm_coex_all_off(hw);
+ 		return;
+@@ -929,34 +930,34 @@ static u8 rtl8723e_dm_bt_bt_tx_rx_counter_level(struct ieee80211_hw *hw)
+ 
+ 	bt_tx_rx_cnt = rtl8723e_dm_bt_tx_rx_couter_h(hw)
+ 				+ rtl8723e_dm_bt_tx_rx_couter_l(hw);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt);
+ 
+ 	rtlpriv->btcoexist.cstate_h &= ~
+ 		 (BT_COEX_STATE_BT_CNT_LEVEL_0 | BT_COEX_STATE_BT_CNT_LEVEL_1|
+ 		  BT_COEX_STATE_BT_CNT_LEVEL_2);
+ 
+ 	if (bt_tx_rx_cnt >= BT_TXRX_CNT_THRES_3) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], BT TxRx Counters at level 3\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], BT TxRx Counters at level 3\n");
+ 		bt_tx_rx_cnt_lvl = BT_TXRX_CNT_LEVEL_3;
+ 		rtlpriv->btcoexist.cstate_h |=
+ 			BT_COEX_STATE_BT_CNT_LEVEL_3;
+ 	} else if (bt_tx_rx_cnt >= BT_TXRX_CNT_THRES_2) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], BT TxRx Counters at level 2\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], BT TxRx Counters at level 2\n");
+ 		bt_tx_rx_cnt_lvl = BT_TXRX_CNT_LEVEL_2;
+ 		rtlpriv->btcoexist.cstate_h |=
+ 			BT_COEX_STATE_BT_CNT_LEVEL_2;
+ 	} else if (bt_tx_rx_cnt >= BT_TXRX_CNT_THRES_1) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], BT TxRx Counters at level 1\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], BT TxRx Counters at level 1\n");
+ 		bt_tx_rx_cnt_lvl = BT_TXRX_CNT_LEVEL_1;
+ 		rtlpriv->btcoexist.cstate_h  |=
+ 			BT_COEX_STATE_BT_CNT_LEVEL_1;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], BT TxRx Counters at level 0\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], BT TxRx Counters at level 0\n");
+ 		bt_tx_rx_cnt_lvl = BT_TXRX_CNT_LEVEL_0;
+ 		rtlpriv->btcoexist.cstate_h |=
+ 			BT_COEX_STATE_BT_CNT_LEVEL_0;
+@@ -979,11 +980,11 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 	btdm8723.reject_aggre_pkt = false;
+ 
+ 	bt_tx_rx_cnt_lvl = rtl8723e_dm_bt_bt_tx_rx_counter_level(hw);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt_lvl);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt_lvl);
+ 
+ 	if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG, "HT40\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG, "HT40\n");
+ 		/* coex table */
+ 		btdm8723.val_0x6c0 = 0x55555555;
+ 		btdm8723.val_0x6c8 = 0xffff;
+@@ -997,24 +998,24 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 		/* fw mechanism */
+ 		btdm8723.ps_tdma_on = true;
+ 		if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "[BTCoex], BT TxRx Counters >= 1400\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"[BTCoex], BT TxRx Counters >= 1400\n");
+ 			btdm8723.ps_tdma_byte[0] = 0xa3;
+ 			btdm8723.ps_tdma_byte[1] = 0x5;
+ 			btdm8723.ps_tdma_byte[2] = 0x5;
+ 			btdm8723.ps_tdma_byte[3] = 0x2;
+ 			btdm8723.ps_tdma_byte[4] = 0x80;
+ 		} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 			btdm8723.ps_tdma_byte[0] = 0xa3;
+ 			btdm8723.ps_tdma_byte[1] = 0xa;
+ 			btdm8723.ps_tdma_byte[2] = 0xa;
+ 			btdm8723.ps_tdma_byte[3] = 0x2;
+ 			btdm8723.ps_tdma_byte[4] = 0x80;
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "[BTCoex], BT TxRx Counters < 1200\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"[BTCoex], BT TxRx Counters < 1200\n");
+ 			btdm8723.ps_tdma_byte[0] = 0xa3;
+ 			btdm8723.ps_tdma_byte[1] = 0xf;
+ 			btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1022,8 +1023,8 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 			btdm8723.ps_tdma_byte[4] = 0x80;
+ 		}
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "HT20 or Legacy\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"HT20 or Legacy\n");
+ 		bt_rssi_state =
+ 		  rtl8723e_dm_bt_check_coex_rssi_state(hw, 2, 47, 0);
+ 		bt_rssi_state1 =
+@@ -1037,14 +1038,14 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 		/* sw mechanism */
+ 		if ((bt_rssi_state == BT_RSSI_STATE_HIGH) ||
+ 			(bt_rssi_state == BT_RSSI_STATE_STAY_HIGH)) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					"Wifi rssi high\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi high\n");
+ 			btdm8723.agc_table_en = true;
+ 			btdm8723.adc_back_off_on = true;
+ 			btdm8723.sw_dac_swing_on = false;
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					"Wifi rssi low\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi low\n");
+ 			btdm8723.agc_table_en = false;
+ 			btdm8723.adc_back_off_on = false;
+ 			btdm8723.sw_dac_swing_on = false;
+@@ -1054,30 +1055,30 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 		btdm8723.ps_tdma_on = true;
+ 		if ((bt_rssi_state1 == BT_RSSI_STATE_HIGH) ||
+ 			(bt_rssi_state1 == BT_RSSI_STATE_STAY_HIGH)) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi-1 high\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi-1 high\n");
+ 			/* only rssi high we need to do this, */
+ 			/* when rssi low, the value will modified by fw */
+ 			rtl_write_byte(rtlpriv, 0x883, 0x40);
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				"[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+ 				btdm8723.ps_tdma_byte[3] = 0x83;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters>= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters>= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x83;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1085,27 +1086,27 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			}
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					"Wifi rssi-1 low\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi-1 low\n");
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+ 				btdm8723.ps_tdma_byte[3] = 0x2;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x2;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1120,13 +1121,13 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 
+ 	/* Always ignore WlanAct if bHid|bSCOBusy|bSCOeSCO */
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
+-		 hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
++		hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
+ 	if ((hal_coex_8723.bt_inq_page_start_time) ||
+ 	    (BT_TXRX_CNT_LEVEL_3 == bt_tx_rx_cnt_lvl)) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], Set BT inquiry / page scan 0x3a setting\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], Set BT inquiry / page scan 0x3a setting\n");
+ 		btdm8723.ps_tdma_on = true;
+ 		btdm8723.ps_tdma_byte[0] = 0xa3;
+ 		btdm8723.ps_tdma_byte[1] = 0x5;
+@@ -1157,11 +1158,11 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 
+ 	bt_tx_rx_cnt_lvl = rtl8723e_dm_bt_bt_tx_rx_counter_level(hw);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-	"[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt_lvl);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT TxRx Counters = %d\n", bt_tx_rx_cnt_lvl);
+ 
+ 	if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG, "HT40\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG, "HT40\n");
+ 		bt_rssi_state =
+ 		  rtl8723e_dm_bt_check_coex_rssi_state(hw, 2, 37, 0);
+ 
+@@ -1179,27 +1180,27 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 		btdm8723.ps_tdma_on = true;
+ 		if ((bt_rssi_state == BT_RSSI_STATE_HIGH) ||
+ 			(bt_rssi_state == BT_RSSI_STATE_STAY_HIGH)) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-						"Wifi rssi high\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi high\n");
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				"[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+ 				btdm8723.ps_tdma_byte[3] = 0x81;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x81;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1207,11 +1208,11 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			}
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi low\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi low\n");
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+@@ -1219,16 +1220,16 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl ==
+ 				BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x0;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1237,8 +1238,8 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 			}
+ 		}
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "HT20 or Legacy\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"HT20 or Legacy\n");
+ 		bt_rssi_state =
+ 		  rtl8723e_dm_bt_check_coex_rssi_state(hw, 2, 47, 0);
+ 		bt_rssi_state1 =
+@@ -1252,14 +1253,14 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 		/* sw mechanism */
+ 		if ((bt_rssi_state == BT_RSSI_STATE_HIGH) ||
+ 			(bt_rssi_state == BT_RSSI_STATE_STAY_HIGH)) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi high\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi high\n");
+ 			btdm8723.agc_table_en = true;
+ 			btdm8723.adc_back_off_on = true;
+ 			btdm8723.sw_dac_swing_on = false;
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi low\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi low\n");
+ 			btdm8723.agc_table_en = false;
+ 			btdm8723.adc_back_off_on = false;
+ 			btdm8723.sw_dac_swing_on = false;
+@@ -1269,30 +1270,30 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 		btdm8723.ps_tdma_on = true;
+ 		if ((bt_rssi_state1 == BT_RSSI_STATE_HIGH) ||
+ 			(bt_rssi_state1 == BT_RSSI_STATE_STAY_HIGH)) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi-1 high\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi-1 high\n");
+ 			/* only rssi high we need to do this, */
+ 			/* when rssi low, the value will modified by fw */
+ 			rtl_write_byte(rtlpriv, 0x883, 0x40);
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+ 				btdm8723.ps_tdma_byte[3] = 0x81;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x81;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1300,27 +1301,27 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			}
+ 		} else {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "Wifi rssi-1 low\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"Wifi rssi-1 low\n");
+ 			if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_2) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0x5;
+ 				btdm8723.ps_tdma_byte[2] = 0x5;
+ 				btdm8723.ps_tdma_byte[3] = 0x0;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else if (bt_tx_rx_cnt_lvl == BT_TXRX_CNT_LEVEL_1) {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters >= 1200 && < 1400\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xa;
+ 				btdm8723.ps_tdma_byte[2] = 0xa;
+ 				btdm8723.ps_tdma_byte[3] = 0x0;
+ 				btdm8723.ps_tdma_byte[4] = 0x80;
+ 			} else {
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BT TxRx Counters < 1200\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BT TxRx Counters < 1200\n");
+ 				btdm8723.ps_tdma_byte[0] = 0xa3;
+ 				btdm8723.ps_tdma_byte[1] = 0xf;
+ 				btdm8723.ps_tdma_byte[2] = 0xf;
+@@ -1333,14 +1334,14 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 	if (rtl8723e_dm_bt_need_to_dec_bt_pwr(hw))
+ 		btdm8723.dec_bt_pwr = true;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
+-		 hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
++		hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
+ 
+ 	if ((hal_coex_8723.bt_inq_page_start_time) ||
+ 	    (BT_TXRX_CNT_LEVEL_3 == bt_tx_rx_cnt_lvl)) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], Set BT inquiry / page scan 0x3a setting\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], Set BT inquiry / page scan 0x3a setting\n");
+ 		btdm8723.ps_tdma_on = true;
+ 		btdm8723.ps_tdma_byte[0] = 0xa3;
+ 		btdm8723.ps_tdma_byte[1] = 0x5;
+@@ -1366,20 +1367,20 @@ static void rtl8723e_dm_bt_inq_page_monitor(struct ieee80211_hw *hw)
+ 			rtlpriv->btcoexist.cstate  |=
+ 			BT_COEX_STATE_BT_INQ_PAGE;
+ 			hal_coex_8723.bt_inq_page_start_time = cur_time;
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				 "[BTCoex], BT Inquiry/page is started at time : 0x%x\n",
+-				 hal_coex_8723.bt_inq_page_start_time);
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++				"[BTCoex], BT Inquiry/page is started at time : 0x%x\n",
++				hal_coex_8723.bt_inq_page_start_time);
+ 		}
+ 	}
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		 "[BTCoex], BT Inquiry/page started time : 0x%x, cur_time : 0x%x\n",
+-		 hal_coex_8723.bt_inq_page_start_time, cur_time);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		"[BTCoex], BT Inquiry/page started time : 0x%x, cur_time : 0x%x\n",
++		hal_coex_8723.bt_inq_page_start_time, cur_time);
+ 
+ 	if (hal_coex_8723.bt_inq_page_start_time) {
+ 		if ((((long)cur_time -
+ 			(long)hal_coex_8723.bt_inq_page_start_time) / HZ)
+ 			>= 10) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 				"[BTCoex], BT Inquiry/page >= 10sec!!!\n");
+ 			hal_coex_8723.bt_inq_page_start_time = 0;
+ 			rtlpriv->btcoexist.cstate &=
+@@ -1406,14 +1407,14 @@ static void _rtl8723e_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 bt_info_original;
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 		"[BTCoex] Get bt info by fw!!\n");
+ 
+ 	_rtl8723_dm_bt_check_wifi_state(hw);
+ 
+ 	if (hal_coex_8723.c2h_bt_info_req_sent) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				"[BTCoex] c2h for bt_info not rcvd yet!!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"[BTCoex] c2h for bt_info not rcvd yet!!\n");
+ 	}
+ 
+ 	bt_info_original = hal_coex_8723.c2h_bt_info_original;
+@@ -1426,8 +1427,8 @@ static void _rtl8723e_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
+ 	if (rtl8723e_dm_bt_is_2_ant_common_action(hw)) {
+ 		rtlpriv->btcoexist.bt_profile_case = BT_COEX_MECH_COMMON;
+ 		rtlpriv->btcoexist.bt_profile_action = BT_COEX_MECH_COMMON;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		"Action 2-Ant common.\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"Action 2-Ant common.\n");
+ 	} else {
+ 		if ((bt_info_original & BTINFO_B_HID) ||
+ 			(bt_info_original & BTINFO_B_SCO_BUSY) ||
+@@ -1438,8 +1439,8 @@ static void _rtl8723e_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
+ 					BT_COEX_MECH_HID_SCO_ESCO;
+ 				rtlpriv->btcoexist.bt_profile_action =
+ 					BT_COEX_MECH_HID_SCO_ESCO;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BTInfo: bHid|bSCOBusy|bSCOeSCO\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BTInfo: bHid|bSCOBusy|bSCOeSCO\n");
+ 				rtl8723e_dm_bt_2_ant_hid_sco_esco(hw);
+ 		} else if ((bt_info_original & BTINFO_B_FTP) ||
+ 				(bt_info_original & BTINFO_B_A2DP)) {
+@@ -1449,8 +1450,8 @@ static void _rtl8723e_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
+ 					BT_COEX_MECH_FTP_A2DP;
+ 				rtlpriv->btcoexist.bt_profile_action =
+ 					BT_COEX_MECH_FTP_A2DP;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "BTInfo: bFTP|bA2DP\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"BTInfo: bFTP|bA2DP\n");
+ 				rtl8723e_dm_bt_2_ant_ftp_a2dp(hw);
+ 		} else {
+ 				rtlpriv->btcoexist.cstate |=
+@@ -1459,8 +1460,8 @@ static void _rtl8723e_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
+ 					BT_COEX_MECH_NONE;
+ 				rtlpriv->btcoexist.bt_profile_action =
+ 					BT_COEX_MECH_NONE;
+-				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-					 "[BTCoex], BTInfo: undefined case!!!!\n");
++				rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++					"[BTCoex], BTInfo: undefined case!!!!\n");
+ 				rtl8723e_dm_bt_2_ant_hid_sco_esco(hw);
+ 		}
+ 	}
+@@ -1513,7 +1514,7 @@ static void rtl8723e_dm_bt_query_bt_information(struct ieee80211_hw *hw)
+ 
+ 	h2c_parameter[0] |=  BIT(0);
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 		"Query Bt information, write 0x38=0x%x\n", h2c_parameter[0]);
+ 
+ 	rtl8723e_fill_h2c_cmd(hw, 0x38, 1, h2c_parameter);
+@@ -1548,10 +1549,10 @@ static void rtl8723e_dm_bt_bt_hw_counters_monitor(struct ieee80211_hw *hw)
+ 	hal_coex_8723.low_priority_tx = reg_lp_tx;
+ 	hal_coex_8723.low_priority_rx = reg_lp_rx;
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 		"High Priority Tx/Rx (reg 0x%x)=%x(%d)/%x(%d)\n",
+ 		reg_hp_tx_rx, reg_hp_tx, reg_hp_tx, reg_hp_rx, reg_hp_rx);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 		"Low Priority Tx/Rx (reg 0x%x)=%x(%d)/%x(%d)\n",
+ 		reg_lp_tx_rx, reg_lp_tx, reg_lp_tx, reg_lp_rx, reg_lp_rx);
+ 	rtlpriv->btcoexist.lps_counter = 0;
+@@ -1584,26 +1585,26 @@ static void rtl8723e_dm_bt_bt_enable_disable_check(struct ieee80211_hw *hw)
+ 	if (bt_alife) {
+ 		rtlpriv->btcoexist.bt_active_zero_cnt = 0;
+ 		rtlpriv->btcoexist.cur_bt_disabled = false;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "8723A BT is enabled !!\n");
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"8723A BT is enabled !!\n");
+ 	} else {
+ 		rtlpriv->btcoexist.bt_active_zero_cnt++;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "8723A bt all counters=0, %d times!!\n",
+-			 rtlpriv->btcoexist.bt_active_zero_cnt);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"8723A bt all counters=0, %d times!!\n",
++			rtlpriv->btcoexist.bt_active_zero_cnt);
+ 		if (rtlpriv->btcoexist.bt_active_zero_cnt >= 2) {
+ 			rtlpriv->btcoexist.cur_bt_disabled = true;
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "8723A BT is disabled !!\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"8723A BT is disabled !!\n");
+ 		}
+ 	}
+ 	if (rtlpriv->btcoexist.pre_bt_disabled !=
+ 		rtlpriv->btcoexist.cur_bt_disabled) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST,
+-			 DBG_TRACE, "8723A BT is from %s to %s!!\n",
+-			 (rtlpriv->btcoexist.pre_bt_disabled ?
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST,
++			DBG_TRACE, "8723A BT is from %s to %s!!\n",
++			(rtlpriv->btcoexist.pre_bt_disabled ?
+ 				"disabled" : "enabled"),
+-			 (rtlpriv->btcoexist.cur_bt_disabled ?
++			(rtlpriv->btcoexist.cur_bt_disabled ?
+ 				"disabled" : "enabled"));
+ 		rtlpriv->btcoexist.pre_bt_disabled
+ 			= rtlpriv->btcoexist.cur_bt_disabled;
+@@ -1620,22 +1621,22 @@ void rtl8723e_dm_bt_coexist_8723(struct ieee80211_hw *hw)
+ 	rtl8723e_dm_bt_bt_enable_disable_check(hw);
+ 
+ 	if (rtlpriv->btcoexist.bt_ant_num == ANT_X2) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTCoex], 2 Ant mechanism\n");
+ 		_rtl8723e_dm_bt_coexist_2_ant(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+ 			"[BTCoex], 1 Ant mechanism\n");
+ 		_rtl8723e_dm_bt_coexist_1_ant(hw);
+ 	}
+ 
+ 	if (!rtl8723e_dm_bt_is_same_coexist_state(hw)) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-			 "[BTCoex], Coexist State[bitMap] change from 0x%x%8x to 0x%x%8x\n",
+-			 rtlpriv->btcoexist.previous_state_h,
+-			 rtlpriv->btcoexist.previous_state,
+-			 rtlpriv->btcoexist.cstate_h,
+-			 rtlpriv->btcoexist.cstate);
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			"[BTCoex], Coexist State[bitMap] change from 0x%x%8x to 0x%x%8x\n",
++			rtlpriv->btcoexist.previous_state_h,
++			rtlpriv->btcoexist.previous_state,
++			rtlpriv->btcoexist.cstate_h,
++			rtlpriv->btcoexist.cstate);
+ 		rtlpriv->btcoexist.previous_state
+ 			= rtlpriv->btcoexist.cstate;
+ 		rtlpriv->btcoexist.previous_state_h
+@@ -1658,14 +1659,14 @@ static void rtl8723e_dm_bt_parse_bt_info(struct ieee80211_hw *hw,
+ 		else if (i == 1)
+ 			hal_coex_8723.bt_retry_cnt = tmp_buf[i];
+ 		if (i == len-1)
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "0x%2x]", tmp_buf[i]);
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"0x%2x]", tmp_buf[i]);
+ 		else
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "0x%2x, ", tmp_buf[i]);
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"0x%2x, ", tmp_buf[i]);
+ 
+ 	}
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 		"BT info bt_info (Data)= 0x%x\n",
+ 			hal_coex_8723.c2h_bt_info_original);
+ 	bt_info = hal_coex_8723.c2h_bt_info_original;
+@@ -1677,12 +1678,12 @@ static void rtl8723e_dm_bt_parse_bt_info(struct ieee80211_hw *hw,
+ 
+ 
+ 	if (bt_info & BTINFO_B_CONNECTION) {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTC2H], BTInfo: bConnect=true\n");
+ 		rtlpriv->btcoexist.bt_busy = true;
+ 		rtlpriv->btcoexist.cstate &= ~BT_COEX_STATE_BT_IDLE;
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 			"[BTC2H], BTInfo: bConnect=false\n");
+ 		rtlpriv->btcoexist.bt_busy = false;
+ 		rtlpriv->btcoexist.cstate |= BT_COEX_STATE_BT_IDLE;
+@@ -1697,14 +1698,14 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
+ 	u8 u1b_tmp = 0;
+ 	memset(&c2h_event, 0, sizeof(c2h_event));
+ 	u1b_tmp = rtl_read_byte(rtlpriv, REG_C2HEVT_MSG_NORMAL);
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
++	rtl_dbg(rtlpriv, COMP_FW, DBG_DMESG,
+ 		"&&&&&&: REG_C2HEVT_MSG_NORMAL is 0x%x\n", u1b_tmp);
+ 	c2h_event.cmd_id = u1b_tmp & 0xF;
+ 	c2h_event.cmd_len = (u1b_tmp & 0xF0) >> 4;
+ 	c2h_event.cmd_seq = rtl_read_byte(rtlpriv, REG_C2HEVT_MSG_NORMAL + 1);
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+-		 "cmd_id: %d, cmd_len: %d, cmd_seq: %d\n",
+-		 c2h_event.cmd_id , c2h_event.cmd_len, c2h_event.cmd_seq);
++	rtl_dbg(rtlpriv, COMP_FW, DBG_DMESG,
++		"cmd_id: %d, cmd_len: %d, cmd_seq: %d\n",
++		c2h_event.cmd_id, c2h_event.cmd_len, c2h_event.cmd_seq);
+ 	u1b_tmp = rtl_read_byte(rtlpriv, 0x01AF);
+ 	if (u1b_tmp == C2H_EVT_HOST_CLOSE) {
+ 		return;
+@@ -1714,8 +1715,8 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
+ 	}
+ 	ptmp_buf = kzalloc(c2h_event.cmd_len, GFP_KERNEL);
+ 	if (ptmp_buf == NULL) {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-			 "malloc cmd buf failed\n");
++		rtl_dbg(rtlpriv, COMP_FW, DBG_TRACE,
++			"malloc cmd buf failed\n");
+ 		return;
+ 	}
+ 
+@@ -1733,13 +1734,13 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
+ 			break;
+ 
+ 	case C2H_V0_BT_INFO:
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_FW, DBG_TRACE,
+ 			"BT info Byte[0] (ID) is 0x%x\n",
+ 			c2h_event.cmd_id);
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_FW, DBG_TRACE,
+ 			"BT info Byte[1] (Seq) is 0x%x\n",
+ 			c2h_event.cmd_seq);
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_FW, DBG_TRACE,
+ 			"BT info Byte[2] (Data)= 0x%x\n", ptmp_buf[0]);
+ 
+ 		rtl8723e_dm_bt_parse_bt_info(hw, ptmp_buf, c2h_event.cmd_len);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 7a46c6a9deae..a36dc6e726d2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -122,8 +122,8 @@ void rtl8723e_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
@@ -1979,95 +2239,95 @@ index 198d419ebb9c..ef70f57358b4 100644
  		break;
  	}
  }
-@@ -511,8 +511,8 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+@@ -187,8 +187,8 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
  	case HW_VAR_SLOT_TIME:{
- 		u8 e_aci;
- 
--		RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
--			 "HW_VAR_SLOT_TIME %x\n", val[0]);
-+		rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
-+			"HW_VAR_SLOT_TIME %x\n", val[0]);
- 
- 		rtl_write_byte(rtlpriv, REG_SLOT, val[0]);
- 
-@@ -558,9 +558,9 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 
- 			*val = min_spacing_to_set;
+ 			u8 e_aci;
  
 -			RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
--				 "Set HW_VAR_AMPDU_MIN_SPACE: %#x\n",
+-				 "HW_VAR_SLOT_TIME %x\n", val[0]);
++			rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
++				"HW_VAR_SLOT_TIME %x\n", val[0]);
+ 
+ 			rtl_write_byte(rtlpriv, REG_SLOT, val[0]);
+ 
+@@ -227,9 +227,9 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 
+ 				*val = min_spacing_to_set;
+ 
+-				RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
+-					 "Set HW_VAR_AMPDU_MIN_SPACE: %#x\n",
+-					  mac->min_space_cfg);
++				rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
++					"Set HW_VAR_AMPDU_MIN_SPACE: %#x\n",
++					mac->min_space_cfg);
+ 
+ 				rtl_write_byte(rtlpriv, REG_AMPDU_MIN_SPACE,
+ 					       mac->min_space_cfg);
+@@ -242,9 +242,9 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 			density_to_set = *((u8 *)val);
+ 			mac->min_space_cfg |= (density_to_set << 3);
+ 
+-			RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
+-				 "Set HW_VAR_SHORTGI_DENSITY: %#x\n",
 -				  mac->min_space_cfg);
 +			rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
-+				"Set HW_VAR_AMPDU_MIN_SPACE: %#x\n",
++				"Set HW_VAR_SHORTGI_DENSITY: %#x\n",
 +				mac->min_space_cfg);
  
  			rtl_write_byte(rtlpriv, REG_AMPDU_MIN_SPACE,
  				       mac->min_space_cfg);
-@@ -572,9 +572,9 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		density_to_set = *((u8 *)val);
- 		mac->min_space_cfg |= (density_to_set << 3);
+@@ -289,9 +289,9 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 						       p_regtoset[index]);
+ 				}
  
--		RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
--			 "Set HW_VAR_SHORTGI_DENSITY: %#x\n",
--			  mac->min_space_cfg);
-+		rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
-+			"Set HW_VAR_SHORTGI_DENSITY: %#x\n",
-+			mac->min_space_cfg);
- 
- 		rtl_write_byte(rtlpriv, REG_AMPDU_MIN_SPACE,
- 			       mac->min_space_cfg);
-@@ -632,9 +632,9 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				acm_ctrl |= ACMHW_VOQEN;
- 				break;
- 			default:
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--					 "HW_VAR_ACM_CTRL acm set failed: eACI is %d\n",
--					 acm);
-+				rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
-+					"HW_VAR_ACM_CTRL acm set failed: eACI is %d\n",
-+					acm);
- 				break;
+-				RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
+-					 "Set HW_VAR_AMPDU_FACTOR: %#x\n",
+-					  factor_toset);
++				rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
++					"Set HW_VAR_AMPDU_FACTOR: %#x\n",
++					factor_toset);
  			}
- 		} else {
-@@ -649,16 +649,16 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				acm_ctrl &= (~ACMHW_VOQEN);
- 				break;
- 			default:
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--					 "switch case %#x not processed\n",
--					 e_aci);
-+				rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+					"switch case %#x not processed\n",
-+					e_aci);
- 				break;
- 			}
- 		}
- 
--		RT_TRACE(rtlpriv, COMP_QOS, DBG_TRACE,
--			 "SetHwReg8190pci(): [HW_VAR_ACM_CTRL] Write 0x%X\n",
--			 acm_ctrl);
-+		rtl_dbg(rtlpriv, COMP_QOS, DBG_TRACE,
-+			"SetHwReg8190pci(): [HW_VAR_ACM_CTRL] Write 0x%X\n",
-+			acm_ctrl);
- 		rtl_write_byte(rtlpriv, REG_ACMHWCTRL, acm_ctrl);
- 		break; }
- 	case HW_VAR_RCR:
-@@ -761,9 +761,9 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		u32	us_nav_upper = *(u32 *)val;
- 
- 		if (us_nav_upper > HAL_92C_NAV_UPPER_UNIT * 0xFF) {
--			RT_TRACE(rtlpriv, COMP_INIT , DBG_WARNING,
--				 "The setting value (0x%08X us) of NAV_UPPER is larger than (%d * 0xFF)!!!\n",
--				 us_nav_upper, HAL_92C_NAV_UPPER_UNIT);
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING,
-+				"The setting value (0x%08X us) of NAV_UPPER is larger than (%d * 0xFF)!!!\n",
-+				us_nav_upper, HAL_92C_NAV_UPPER_UNIT);
  			break;
  		}
- 		rtl_write_byte(rtlpriv, REG_NAV_UPPER,
-@@ -779,8 +779,8 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				       array);
- 		break; }
+@@ -328,9 +328,9 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl |= ACMHW_VOQEN;
+ 					break;
+ 				default:
+-					RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-						 "HW_VAR_ACM_CTRL acm set failed: eACI is %d\n",
+-						 acm);
++					rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
++						"HW_VAR_ACM_CTRL acm set failed: eACI is %d\n",
++						acm);
+ 					break;
+ 				}
+ 			} else {
+@@ -345,16 +345,16 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~ACMHW_VOQEN);
+ 					break;
+ 				default:
+-					RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-						 "switch case %#x not processed\n",
+-						 e_aci);
++					rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
++						"switch case %#x not processed\n",
++						e_aci);
+ 					break;
+ 				}
+ 			}
+ 
+-			RT_TRACE(rtlpriv, COMP_QOS, DBG_TRACE,
+-				 "SetHwReg8190pci(): [HW_VAR_ACM_CTRL] Write 0x%X\n",
+-				 acm_ctrl);
++			rtl_dbg(rtlpriv, COMP_QOS, DBG_TRACE,
++				"SetHwReg8190pci(): [HW_VAR_ACM_CTRL] Write 0x%X\n",
++				acm_ctrl);
+ 			rtl_write_byte(rtlpriv, REG_ACMHWCTRL, acm_ctrl);
+ 			break;
+ 		}
+@@ -526,8 +526,8 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 			 break;
+ 		}
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
 -			 "switch case %#x not processed\n", variable);
@@ -2076,30 +2336,20 @@ index 198d419ebb9c..ef70f57358b4 100644
  		break;
  	}
  }
-@@ -910,16 +910,16 @@ static bool _rtl8821ae_init_mac(struct ieee80211_hw *hw)
- 		if (!rtl_hal_pwrseqcmdparsing(rtlpriv, PWR_CUT_ALL_MSK,
- 					      PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,
- 					      RTL8812_NIC_ENABLE_FLOW)) {
--				RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--					 "init 8812 MAC Fail as power on failure\n");
--				return false;
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"init 8812 MAC Fail as power on failure\n");
-+			return false;
- 		}
- 	} else {
- 		/* HW Power on sequence */
- 		if (!rtl_hal_pwrseqcmdparsing(rtlpriv, PWR_CUT_A_MSK,
- 					      PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,
- 					      RTL8821A_NIC_ENABLE_FLOW)){
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 				"init 8821 MAC Fail as power on failure\n");
- 			return false;
- 		}
-@@ -1161,14 +1161,14 @@ void rtl8821ae_enable_hw_security_config(struct ieee80211_hw *hw)
+@@ -703,8 +703,8 @@ static bool _rtl8712e_init_mac(struct ieee80211_hw *hw)
+ 	} while (tmpu2b != 0xc290 && retry < 100);
+ 
+ 	if (retry >= 100) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-			 "InitMAC(): ePHY configure fail!!!\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
++			"InitMAC(): ePHY configure fail!!!\n");
+ 		return false;
+ 	}
+ 
+@@ -878,14 +878,14 @@ void rtl8723e_enable_hw_security_config(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
  	u8 sec_reg_value;
- 	u8 tmp;
  
 -	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
 -		 "PairwiseEncAlgorithm = %d GroupEncAlgorithm = %d\n",
@@ -2118,9 +2368,9 @@ index 198d419ebb9c..ef70f57358b4 100644
  		return;
  	}
  
-@@ -1184,8 +1184,8 @@ void rtl8821ae_enable_hw_security_config(struct ieee80211_hw *hw)
- 	tmp = rtl_read_byte(rtlpriv, REG_CR + 1);
- 	rtl_write_byte(rtlpriv, REG_CR + 1, tmp | BIT(1));
+@@ -900,8 +900,8 @@ void rtl8723e_enable_hw_security_config(struct ieee80211_hw *hw)
+ 
+ 	rtl_write_byte(rtlpriv, REG_CR + 1, 0x02);
  
 -	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
 -		 "The SECR-value %x\n", sec_reg_value);
@@ -2128,571 +2378,119 @@ index 198d419ebb9c..ef70f57358b4 100644
 +		"The SECR-value %x\n", sec_reg_value);
  
  	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_WPA_CONFIG, &sec_reg_value);
- }
-@@ -1207,10 +1207,10 @@ static void rtl8821ae_macid_initialize_mediastatus(struct ieee80211_hw *hw)
- 	rtlpriv->cfg->ops->set_hw_reg(hw,
- 		HW_VAR_H2C_FW_MEDIASTATUSRPT, media_rpt);
  
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Initialize MacId media status: from %d to %d\n",
--		 MAC_ID_STATIC_FOR_BROADCAST_MULTICAST,
--		 MAC_ID_STATIC_FOR_BT_CLIENT_END);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"Initialize MacId media status: from %d to %d\n",
-+		MAC_ID_STATIC_FOR_BROADCAST_MULTICAST,
-+		MAC_ID_STATIC_FOR_BT_CLIENT_END);
- }
+@@ -942,8 +942,8 @@ int rtl8723e_hw_init(struct ieee80211_hw *hw)
  
- static bool _rtl8821ae_check_pcie_dma_hang(struct ieee80211_hw *hw)
-@@ -1229,8 +1229,8 @@ static bool _rtl8821ae_check_pcie_dma_hang(struct ieee80211_hw *hw)
- 	/* read reg 0x350 Bit[24] if 1 : TX hang */
- 	tmp = rtl_read_byte(rtlpriv, REG_DBI_CTRL + 3);
- 	if ((tmp & BIT(0)) || (tmp & BIT(1))) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "CheckPcieDMAHang8821AE(): true! Reset PCIE DMA!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"CheckPcieDMAHang8821AE(): true! Reset PCIE DMA!\n");
- 		return true;
- 	} else {
- 		return false;
-@@ -1247,7 +1247,7 @@ static bool _rtl8821ae_reset_pcie_interface_dma(struct ieee80211_hw *hw,
- 	bool release_mac_rx_pause;
- 	u8 backup_pcie_dma_pause;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
- 
- 	/* 1. Disable register write lock. 0x1c[1] = 0 */
- 	tmp = rtl_read_byte(rtlpriv, REG_RSV_CTRL);
-@@ -1346,8 +1346,8 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
- 
- 	fw_reason = rtl_read_byte(rtlpriv, REG_MCUTST_WOWLAN);
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "WOL Read 0x1c7 = %02X\n",
--		 fw_reason);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "WOL Read 0x1c7 = %02X\n",
-+		fw_reason);
- 
- 	ppsc->wakeup_reason = 0;
- 
-@@ -1356,62 +1356,62 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
- 	switch (fw_reason) {
- 	case FW_WOW_V2_PTK_UPDATE_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_PTK_UPDATE;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a WOL PTK Key update event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a WOL PTK Key update event!\n");
- 		break;
- 	case FW_WOW_V2_GTK_UPDATE_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_GTK_UPDATE;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a WOL GTK Key update event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a WOL GTK Key update event!\n");
- 		break;
- 	case FW_WOW_V2_DISASSOC_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_DISASSOC;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a disassociation event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a disassociation event!\n");
- 		break;
- 	case FW_WOW_V2_DEAUTH_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_DEAUTH;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a deauth event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a deauth event!\n");
- 		break;
- 	case FW_WOW_V2_FW_DISCONNECT_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_AP_LOST;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a Fw disconnect decision (AP lost) event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a Fw disconnect decision (AP lost) event!\n");
- 	break;
- 	case FW_WOW_V2_MAGIC_PKT_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_MAGIC_PKT;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a magic packet event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a magic packet event!\n");
- 		break;
- 	case FW_WOW_V2_UNICAST_PKT_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_UNICAST_PKT;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's an unicast packet event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's an unicast packet event!\n");
- 		break;
- 	case FW_WOW_V2_PATTERN_PKT_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_PATTERN_PKT;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's a pattern match event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's a pattern match event!\n");
- 		break;
- 	case FW_WOW_V2_RTD3_SSID_MATCH_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_RTD3_SSID_MATCH;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's an RTD3 Ssid match event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's an RTD3 Ssid match event!\n");
- 		break;
- 	case FW_WOW_V2_REALWOW_V2_WAKEUPPKT:
- 		ppsc->wakeup_reason = WOL_REASON_REALWOW_V2_WAKEUPPKT;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's an RealWoW wake packet event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's an RealWoW wake packet event!\n");
- 		break;
- 	case FW_WOW_V2_REALWOW_V2_ACKLOST:
- 		ppsc->wakeup_reason = WOL_REASON_REALWOW_V2_ACKLOST;
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "It's an RealWoW ack lost event!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"It's an RealWoW ack lost event!\n");
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--			 "WOL Read 0x1c7 = %02X, Unknown reason!\n",
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
-+			"WOL Read 0x1c7 = %02X, Unknown reason!\n",
- 			  fw_reason);
- 		break;
- 	}
-@@ -1484,9 +1484,9 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 	rtlpriv->cfg->ops->get_hw_reg(hw, HAL_DEF_WOWLAN,
- 				      (u8 *)(&support_remote_wakeup));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "boundary=%#X, NPQ_RQPNValue=%#X, RQPNValue=%#X\n",
--		  boundary, npq_rqpn_value, rqpn_val);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"boundary=%#X, NPQ_RQPNValue=%#X, RQPNValue=%#X\n",
-+		boundary, npq_rqpn_value, rqpn_val);
- 
- 	/* stop PCIe DMA
- 	 * 1. 0x301[7:0] = 0xFE */
-@@ -1500,12 +1500,12 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 		tmp16 = rtl_read_word(rtlpriv, REG_TXPKT_EMPTY);
- 		count++;
- 		if ((count % 200) == 0) {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Tx queue is not empty for 20ms!\n");
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Tx queue is not empty for 20ms!\n");
- 		}
- 		if (count >= 1000) {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Wait for Tx FIFO empty timeout!\n");
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Wait for Tx FIFO empty timeout!\n");
- 			break;
- 		}
- 	}
-@@ -1521,8 +1521,8 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 		udelay(100);
- 		count++;
- 		if (count >= 500) {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Wait for TX State Machine ready timeout !!\n");
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Wait for TX State Machine ready timeout !!\n");
- 			break;
- 		}
- 	}
-@@ -1540,9 +1540,9 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 		count++;
- 	} while (!(tmp & BIT(1)) && count < 100);
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Wait until Rx DMA Idle. count=%d REG[0x286]=0x%x\n",
--		  count, tmp);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"Wait until Rx DMA Idle. count=%d REG[0x286]=0x%x\n",
-+		count, tmp);
- 
- 	/* reset BB
- 	 * 7.	0x02 [0] = 0 */
-@@ -1599,8 +1599,8 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 	/* init LLT
- 	 * 17. init LLT */
- 	if (!_rtl8821ae_init_llt_table(hw, boundary)) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING,
--			 "Failed to init LLT table!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING,
-+			"Failed to init LLT table!\n");
- 		return false;
- 	}
- 
-@@ -1620,7 +1620,7 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
- 	tmp = rtl_read_byte(rtlpriv, REG_RXDMA_CONTROL);
- 	rtl_write_byte(rtlpriv, REG_RXDMA_CONTROL, (tmp&~BIT(2)));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "End.\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "End.\n");
- 	return ret;
- }
- 
-@@ -1655,12 +1655,12 @@ static void _rtl8821ae_enable_l1off(struct ieee80211_hw *hw)
- 	u8 tmp  = 0;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "--->\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "--->\n");
- 
- 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x160);
- 	if (!(tmp & (BIT(2) | BIT(3)))) {
--		RT_TRACE(rtlpriv, COMP_POWER | COMP_INIT, DBG_LOUD,
--			 "0x160(%#x)return!!\n", tmp);
-+		rtl_dbg(rtlpriv, COMP_POWER | COMP_INIT, DBG_LOUD,
-+			"0x160(%#x)return!!\n", tmp);
- 		return;
- 	}
- 
-@@ -1670,7 +1670,7 @@ static void _rtl8821ae_enable_l1off(struct ieee80211_hw *hw)
- 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x718);
- 	_rtl8821ae_dbi_write(rtlpriv, 0x718, tmp | BIT(5));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "<---\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "<---\n");
- }
- 
- static void _rtl8821ae_enable_ltr(struct ieee80211_hw *hw)
-@@ -1678,13 +1678,13 @@ static void _rtl8821ae_enable_ltr(struct ieee80211_hw *hw)
- 	u8 tmp  = 0;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "--->\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "--->\n");
- 
- 	/* Check 0x98[10] */
- 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x99);
- 	if (!(tmp & BIT(2))) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "<---0x99(%#x) return!!\n", tmp);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"<---0x99(%#x) return!!\n", tmp);
- 		return;
- 	}
- 
-@@ -1701,7 +1701,7 @@ static void _rtl8821ae_enable_ltr(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, 0x7a4, (tmp & (~BIT(0))));
- 	rtl_write_byte(rtlpriv, 0x7a4, (tmp | BIT(0)));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "<---\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "<---\n");
- }
- 
- static bool _rtl8821ae_wowlan_initialize_adapter(struct ieee80211_hw *hw)
-@@ -1724,14 +1724,14 @@ static bool _rtl8821ae_wowlan_initialize_adapter(struct ieee80211_hw *hw)
- 
- 	/* Release Pcie Interface Rx DMA to allow wake packet DMA. */
- 	rtl_write_byte(rtlpriv, REG_PCIE_CTRL_REG + 1, 0xFE);
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "Enable PCIE Rx DMA.\n");
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "Enable PCIE Rx DMA.\n");
- 
- 	/* Check wake up event.
- 	 * We should check wake packet bit before disable wowlan by H2C or
- 	 * Fw will clear the bit. */
- 	tmp = rtl_read_byte(rtlpriv, REG_FTISR + 3);
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--		 "Read REG_FTISR 0x13f = %#X\n", tmp);
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+		"Read REG_FTISR 0x13f = %#X\n", tmp);
- 
- 	/* Set the WoWLAN related function control disable. */
- 	rtl8821ae_set_fw_wowlan_mode(hw, false);
-@@ -1796,7 +1796,7 @@ static void _rtl8821ae_poweroff_adapter(struct ieee80211_hw *hw)
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8821AE) {
- 		/* Combo (PCIe + USB) Card and PCIe-MF Card */
- 		/* 1. Run LPS WL RFOFF flow */
--		/* RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		/* rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 		"=====>CardDisableRTL8812E,RTL8821A_NIC_LPS_ENTER_FLOW\n");
- 		*/
- 		rtl_hal_pwrseqcmdparsing(rtlpriv,
-@@ -1862,8 +1862,8 @@ int rtl8821ae_hw_init(struct ieee80211_hw *hw)
- 	tmp_u1b = rtl_read_byte(rtlpriv, REG_CR);
- 	if (tmp_u1b != 0 && tmp_u1b != 0xEA) {
- 		rtlhal->mac_func_enable = true;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "MAC has already power on.\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"MAC has already power on.\n");
- 	} else {
- 		rtlhal->mac_func_enable = false;
- 		rtlhal->fw_ps_state = FW_PS_STATE_ALL_ON_8821AE;
-@@ -1907,8 +1907,8 @@ int rtl8821ae_hw_init(struct ieee80211_hw *hw)
- 
- 	err = rtl8821ae_download_fw(hw, false);
+ 	err = rtl8723_download_fw(hw, false, FW_8723A_POLLING_TIMEOUT_COUNT);
  	if (err) {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "Failed to download FW. Init HW without FW now\n");
+-			 "Failed to download FW. Init HW without FW now..\n");
 +		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
-+			"Failed to download FW. Init HW without FW now\n");
++			"Failed to download FW. Init HW without FW now..\n");
  		err = 1;
- 		rtlhal->fw_ready = false;
- 		return err;
-@@ -1987,7 +1987,7 @@ int rtl8821ae_hw_init(struct ieee80211_hw *hw)
- 	rtl8821ae_dm_init(hw);
- 	rtl8821ae_macid_initialize_mediastatus(hw);
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "rtl8821ae_hw_init() <====\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "%s <====\n", __func__);
- 	return err;
- }
- 
-@@ -2000,16 +2000,16 @@ static enum version_8821ae _rtl8821ae_read_chip_version(struct ieee80211_hw *hw)
- 	u32 value32;
- 
- 	value32 = rtl_read_dword(rtlpriv, REG_SYS_CFG);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "ReadChipVersion8812A 0xF0 = 0x%x\n", value32);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"ReadChipVersion8812A 0xF0 = 0x%x\n", value32);
- 
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE)
- 		rtlphy->rf_type = RF_2T2R;
- 	else if (rtlhal->hw_type == HARDWARE_TYPE_RTL8821AE)
- 		rtlphy->rf_type = RF_1T1R;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "RF_Type is %x!!\n", rtlphy->rf_type);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"RF_Type is %x!!\n", rtlphy->rf_type);
- 
- 	if (value32 & TRP_VAUX_EN) {
- 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
-@@ -2049,44 +2049,44 @@ static enum version_8821ae _rtl8821ae_read_chip_version(struct ieee80211_hw *hw)
- 
- 	switch (version) {
- 	case VERSION_TEST_CHIP_1T1R_8812:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_TEST_CHIP_1T1R_8812\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_TEST_CHIP_1T1R_8812\n");
- 		break;
- 	case VERSION_TEST_CHIP_2T2R_8812:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_TEST_CHIP_2T2R_8812\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_TEST_CHIP_2T2R_8812\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_1T1R_8812:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID:VERSION_NORMAL_TSMC_CHIP_1T1R_8812\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID:VERSION_NORMAL_TSMC_CHIP_1T1R_8812\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_2T2R_8812:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_NORMAL_TSMC_CHIP_2T2R_8812\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_NORMAL_TSMC_CHIP_2T2R_8812\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_1T1R_8812_C_CUT:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_NORMAL_TSMC_CHIP_1T1R_8812 C CUT\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_NORMAL_TSMC_CHIP_1T1R_8812 C CUT\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_2T2R_8812_C_CUT:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_NORMAL_TSMC_CHIP_2T2R_8812 C CUT\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_NORMAL_TSMC_CHIP_2T2R_8812 C CUT\n");
- 		break;
- 	case VERSION_TEST_CHIP_8821:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_TEST_CHIP_8821\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_TEST_CHIP_8821\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_8821:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_NORMAL_TSMC_CHIP_8821 A CUT\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_NORMAL_TSMC_CHIP_8821 A CUT\n");
- 		break;
- 	case VERSION_NORMAL_TSMC_CHIP_8821_B_CUT:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: VERSION_NORMAL_TSMC_CHIP_8821 B CUT\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: VERSION_NORMAL_TSMC_CHIP_8821 B CUT\n");
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Chip Version ID: Unknown (0x%X)\n", version);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Chip Version ID: Unknown (0x%X)\n", version);
- 		break;
+ 		goto exit;
+ 	}
+@@ -1009,7 +1009,7 @@ int rtl8723e_hw_init(struct ieee80211_hw *hw)
+ 	tmp_u1b = efuse_read_1byte(hw, 0x1FA);
+ 	if (!(tmp_u1b & BIT(0))) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, 0x15, 0x0F, 0x05);
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "PA BIAS path A\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "PA BIAS path A\n");
  	}
  
-@@ -2102,7 +2102,7 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
- 	bt_msr &= 0xfc;
+ 	if (!(tmp_u1b & BIT(4))) {
+@@ -1018,7 +1018,7 @@ int rtl8723e_hw_init(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, 0x16, tmp_u1b | 0x80);
+ 		udelay(10);
+ 		rtl_write_byte(rtlpriv, 0x16, tmp_u1b | 0x90);
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
+ 	}
+ 	rtl8723e_dm_init(hw);
+ exit:
+@@ -1069,16 +1069,16 @@ static enum version_8723e _rtl8723e_read_chip_version(struct ieee80211_hw *hw)
+ 	}
+ 	switch (version) {
+ 	case VERSION_TEST_UMC_CHIP_8723:
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Chip Version ID: VERSION_TEST_UMC_CHIP_8723.\n");
+-			break;
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"Chip Version ID: VERSION_TEST_UMC_CHIP_8723.\n");
++		break;
+ 	case VERSION_NORMAL_UMC_CHIP_8723_1T1R_A_CUT:
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_A_CUT.\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_A_CUT.\n");
+ 		break;
+ 	case VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT:
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT.\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT.\n");
+ 		break;
+ 	default:
+ 		pr_err("Chip Version ID: Unknown. Bug?\n");
+@@ -1088,7 +1088,7 @@ static enum version_8723e _rtl8723e_read_chip_version(struct ieee80211_hw *hw)
+ 	if (IS_8723_SERIES(version))
+ 		rtlphy->rf_type = RF_1T1R;
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Chip RF Type: %s\n",
++	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "Chip RF Type: %s\n",
+ 		(rtlphy->rf_type == RF_2T2R) ? "RF_2T2R" : "RF_1T1R");
+ 
+ 	return version;
+@@ -1103,30 +1103,30 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+ 	u8 mode = MSR_NOLINK;
  
  	rtl_write_dword(rtlpriv, REG_BCN_CTRL, 0);
 -	RT_TRACE(rtlpriv, COMP_BEACON, DBG_LOUD,
 +	rtl_dbg(rtlpriv, COMP_BEACON, DBG_LOUD,
  		"clear 0x550 when set HW_VAR_MEDIA_STATUS\n");
  
- 	if (type == NL80211_IFTYPE_UNSPECIFIED ||
-@@ -2114,8 +2114,8 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
- 		_rtl8821ae_resume_tx_beacon(hw);
- 		_rtl8821ae_disable_bcn_sub_func(hw);
+ 	switch (type) {
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 		mode = MSR_NOLINK;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"Set Network type to NO LINK!\n");
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		mode = MSR_ADHOC;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"Set Network type to Ad Hoc!\n");
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		mode = MSR_INFRA;
+ 		ledaction = LED_CTL_LINK;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"Set Network type to STA!\n");
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		mode = MSR_AP;
+ 		ledaction = LED_CTL_LINK;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"Set Network type to AP!\n");
+ 		break;
+ 	default:
+@@ -1153,9 +1153,9 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+ 		_rtl8723e_resume_tx_beacon(hw);
+ 		_rtl8723e_disable_bcn_sub_func(hw);
  	} else {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
 -			 "Set HW_VAR_MEDIA_STATUS: No such media status(%x).\n",
+-			 mode);
 +		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
 +			"Set HW_VAR_MEDIA_STATUS: No such media status(%x).\n",
- 			 type);
++			mode);
  	}
  
-@@ -2123,24 +2123,24 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 		bt_msr |= MSR_NOLINK;
- 		ledaction = LED_CTL_LINK;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Set Network type to NO LINK!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Set Network type to NO LINK!\n");
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		bt_msr |= MSR_ADHOC;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Set Network type to Ad Hoc!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Set Network type to Ad Hoc!\n");
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		bt_msr |= MSR_INFRA;
- 		ledaction = LED_CTL_LINK;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Set Network type to STA!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Set Network type to STA!\n");
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		bt_msr |= MSR_AP;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Set Network type to AP!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Set Network type to AP!\n");
- 		break;
- 	default:
- 		pr_err("Network type %d not support!\n", type);
-@@ -2183,7 +2183,7 @@ int rtl8821ae_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "rtl8821ae_set_network_type!\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "%s!\n", __func__);
- 
- 	if (_rtl8821ae_set_media_status(hw, type))
- 		return -EOPNOTSUPP;
-@@ -2283,16 +2283,16 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
- 	 * offset 0x34 from the Function Header */
- 
- 	pci_read_config_byte(rtlpci->pdev, 0x34, &cap_pointer);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "PCI configuration 0x34 = 0x%2x\n", cap_pointer);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"PCI configuration 0x34 = 0x%2x\n", cap_pointer);
- 
- 	do {
- 		pci_read_config_word(rtlpci->pdev, cap_pointer, &cap_hdr);
- 		cap_id = cap_hdr & 0xFF;
- 
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "in pci configuration, cap_pointer%x = %x\n",
--			  cap_pointer, cap_id);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"in pci configuration, cap_pointer%x = %x\n",
-+			cap_pointer, cap_id);
- 
- 		if (cap_id == 0x01) {
- 			break;
-@@ -2322,17 +2322,17 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
- 			/* Read it back to check */
- 			pci_read_config_byte(rtlpci->pdev, cap_pointer + 5,
- 					     &pmcs_reg);
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--				 "Clear PME status 0x%2x to 0x%2x\n",
--				  cap_pointer + 5, pmcs_reg);
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-+				"Clear PME status 0x%2x to 0x%2x\n",
-+				cap_pointer + 5, pmcs_reg);
- 		} else {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--				 "PME status(0x%2x) = 0x%2x\n",
--				  cap_pointer + 5, pmcs_reg);
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-+				"PME status(0x%2x) = 0x%2x\n",
-+				cap_pointer + 5, pmcs_reg);
- 		}
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING,
--			 "Cannot find PME Capability\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING,
-+			"Cannot find PME Capability\n");
- 	}
- }
- 
-@@ -2354,13 +2354,13 @@ void rtl8821ae_card_disable(struct ieee80211_hw *hw)
- 
- 	if (!(support_remote_wakeup && mac->opmode == NL80211_IFTYPE_STATION)
- 	    || !rtlhal->enter_pnp_sleep) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "Normal Power off\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG, "Normal Power off\n");
- 		mac->link_state = MAC80211_NOLINK;
- 		opmode = NL80211_IFTYPE_UNSPECIFIED;
- 		_rtl8821ae_set_media_status(hw, opmode);
- 		_rtl8821ae_poweroff_adapter(hw);
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "Wowlan Supported.\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG, "Wowlan Supported.\n");
- 		/* 3 <1> Prepare for configuring wowlan related infomations */
- 		/* Clear Fw WoWLAN event. */
- 		rtl_write_byte(rtlpriv, REG_MCUTST_WOWLAN, 0x0);
-@@ -2410,9 +2410,9 @@ void rtl8821ae_card_disable(struct ieee80211_hw *hw)
- 			udelay(10);
- 			tmp = rtl_read_byte(rtlpriv, REG_RXDMA_CONTROL);
- 		}
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Wait Rx DMA Finished before host sleep. count=%d\n",
--			  count);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Wait Rx DMA Finished before host sleep. count=%d\n",
-+			count);
- 
- 		/* reset trx ring */
- 		rtlpriv->intf_ops->reset_trx_ring(hw);
-@@ -2438,7 +2438,7 @@ void rtl8821ae_card_disable(struct ieee80211_hw *hw)
- 
- 		/* Stop Pcie Interface Tx DMA. */
- 		rtl_write_byte(rtlpriv, REG_PCIE_CTRL_REG + 1, 0xff);
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "Stop PCIE Tx DMA.\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "Stop PCIE Tx DMA.\n");
- 
- 		/* Wait for TxDMA idle. */
- 		count = 0;
-@@ -2447,9 +2447,9 @@ void rtl8821ae_card_disable(struct ieee80211_hw *hw)
- 			udelay(10);
- 			count++;
- 		} while ((tmp != 0) && (count < 100));
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Wait Tx DMA Finished before host sleep. count=%d\n",
--			  count);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Wait Tx DMA Finished before host sleep. count=%d\n",
-+			count);
- 
- 		if (rtlhal->hw_rof_enable) {
- 			printk("hw_rof_enable\n");
-@@ -2501,8 +2501,8 @@ void rtl8821ae_set_beacon_interval(struct ieee80211_hw *hw)
+ 	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
+@@ -1350,8 +1350,8 @@ void rtl8723e_set_beacon_interval(struct ieee80211_hw *hw)
  	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
  	u16 bcn_interval = mac->beacon_interval;
  
@@ -2700,10 +2498,10 @@ index 198d419ebb9c..ef70f57358b4 100644
 -		 "beacon_interval:%d\n", bcn_interval);
 +	rtl_dbg(rtlpriv, COMP_BEACON, DBG_DMESG,
 +		"beacon_interval:%d\n", bcn_interval);
- 	rtl8821ae_disable_interrupt(hw);
+ 	rtl8723e_disable_interrupt(hw);
  	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, bcn_interval);
- 	rtl8821ae_enable_interrupt(hw);
-@@ -2514,8 +2514,8 @@ void rtl8821ae_update_interrupt_mask(struct ieee80211_hw *hw,
+ 	rtl8723e_enable_interrupt(hw);
+@@ -1363,8 +1363,8 @@ void rtl8723e_update_interrupt_mask(struct ieee80211_hw *hw,
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
  
@@ -2714,70 +2512,7 @@ index 198d419ebb9c..ef70f57358b4 100644
  
  	if (add_msr)
  		rtlpci->irq_mask[0] |= add_msr;
-@@ -2586,15 +2586,15 @@ static void _rtl8821ae_read_power_value_fromprom(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 rfpath, eeaddr = EEPROM_TX_PWR_INX, group, txcount = 0;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "hal_ReadPowerValueFromPROM8821ae(): hwinfo[0x%x]=0x%x\n",
--		 (eeaddr + 1), hwinfo[eeaddr + 1]);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"hal_ReadPowerValueFromPROM8821ae(): hwinfo[0x%x]=0x%x\n",
-+		(eeaddr + 1), hwinfo[eeaddr + 1]);
- 	if (hwinfo[eeaddr + 1] == 0xFF)  /*YJ,add,120316*/
- 		autoload_fail = true;
- 
- 	if (autoload_fail) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "auto load fail : Use Default value!\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"auto load fail : Use Default value!\n");
- 		for (rfpath = 0 ; rfpath < MAX_RF_PATH ; rfpath++) {
- 			/*2.4G default value*/
- 			for (group = 0 ; group < MAX_CHNL_GROUP_24G; group++) {
-@@ -3048,8 +3048,8 @@ static void _rtl8821ae_read_rfe_type(struct ieee80211_hw *hw, u8 *hwinfo,
- 		rtlhal->rfe_type = 0x04;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "RFE Type: 0x%2x\n", rtlhal->rfe_type);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"RFE Type: 0x%2x\n", rtlhal->rfe_type);
- }
- 
- static void _rtl8812ae_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
-@@ -3153,8 +3153,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 		rtlefuse->board_type |= ODM_BOARD_BT;
- 
- 	rtlhal->board_type = rtlefuse->board_type;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "board_type = 0x%x\n", rtlefuse->board_type);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"board_type = 0x%x\n", rtlefuse->board_type);
- 
- 	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
- 	if (rtlefuse->eeprom_channelplan == 0xff)
-@@ -3176,8 +3176,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 	}
- 
- 	rtlefuse->thermalmeter[0] = rtlefuse->eeprom_thermalmeter;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "thermalmeter = 0x%x\n", rtlefuse->eeprom_thermalmeter);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"thermalmeter = 0x%x\n", rtlefuse->eeprom_thermalmeter);
- 
- 	if (!rtlefuse->autoload_failflag) {
- 		rtlefuse->antenna_div_cfg =
-@@ -3197,7 +3197,7 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 		rtlefuse->antenna_div_type = 0;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 		"SWAS: bHwAntDiv = %x, TRxAntDivType = %x\n",
- 		rtlefuse->antenna_div_cfg, rtlefuse->antenna_div_type);
- 
-@@ -3246,8 +3246,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+@@ -1782,8 +1782,8 @@ static void _rtl8723e_hal_customized_behavior(struct ieee80211_hw *hw)
  	default:
  		break;
  	}
@@ -2785,10 +2520,10 @@ index 198d419ebb9c..ef70f57358b4 100644
 -		 "RT Customized ID: 0x%02X\n", rtlhal->oem_id);
 +	rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
 +		"RT Customized ID: 0x%02X\n", rtlhal->oem_id);
- }*/
+ }
  
- void rtl8821ae_read_eeprom_info(struct ieee80211_hw *hw)
-@@ -3264,20 +3264,20 @@ void rtl8821ae_read_eeprom_info(struct ieee80211_hw *hw)
+ void rtl8723e_read_eeprom_info(struct ieee80211_hw *hw)
+@@ -1806,19 +1806,19 @@ void rtl8723e_read_eeprom_info(struct ieee80211_hw *hw)
  	else
  		rtlpriv->dm.rfpath_rxenable[0] =
  		    rtlpriv->dm.rfpath_rxenable[1] = true;
@@ -2807,14 +2542,13 @@ index 198d419ebb9c..ef70f57358b4 100644
 +		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG, "Boot from EFUSE\n");
  		rtlefuse->epromtype = EEPROM_BOOT_EFUSE;
  	}
- 
  	if (tmp_u1b & BIT(5)) {
 -		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
 +		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
  		rtlefuse->autoload_failflag = false;
- 		_rtl8821ae_read_adapter_info(hw, false);
+ 		_rtl8723e_read_adapter_info(hw, false);
  	} else {
-@@ -3378,8 +3378,8 @@ static void rtl8821ae_update_hal_rate_table(struct ieee80211_hw *hw,
+@@ -1914,8 +1914,8 @@ static void rtl8723e_update_hal_rate_table(struct ieee80211_hw *hw,
  
  	rtl_write_dword(rtlpriv, REG_ARFR0 + ratr_index * 4, ratr_value);
  
@@ -2824,63 +2558,37 @@ index 198d419ebb9c..ef70f57358b4 100644
 +		"%x\n", rtl_read_dword(rtlpriv, REG_ARFR0));
  }
  
- static u32 _rtl8821ae_rate_to_bitmap_2ssvht(__le16 vht_rate)
-@@ -3524,8 +3524,8 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
- 	wirelessmode = sta_entry->wireless_mode;
- 
--	RT_TRACE(rtlpriv, COMP_RATR, DBG_LOUD,
--		 "wireless mode = 0x%x\n", wirelessmode);
-+	rtl_dbg(rtlpriv, COMP_RATR, DBG_LOUD,
-+		"wireless mode = 0x%x\n", wirelessmode);
- 	if (mac->opmode == NL80211_IFTYPE_STATION ||
- 		mac->opmode == NL80211_IFTYPE_MESH_POINT) {
- 		curtxbw_40mhz = mac->bw_40;
-@@ -3675,8 +3675,8 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	ratr_bitmap = _rtl8821ae_set_ra_vht_ratr_bitmap(hw, wirelessmode,
- 							ratr_bitmap);
- 
--	RT_TRACE(rtlpriv, COMP_RATR, DBG_LOUD,
--		 "ratr_bitmap :%x\n", ratr_bitmap);
-+	rtl_dbg(rtlpriv, COMP_RATR, DBG_LOUD,
-+		"ratr_bitmap :%x\n", ratr_bitmap);
- 
- 	/* *(u32 *)& rate_mask = EF4BYTE((ratr_bitmap & 0x0fffffff) |
- 				       (ratr_index << 28)); */
-@@ -3692,13 +3692,13 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	rate_mask[5] = (u8)((ratr_bitmap & 0x00ff0000) >> 16);
- 	rate_mask[6] = (u8)((ratr_bitmap & 0xff000000) >> 24);
+ static void rtl8723e_update_hal_rate_mask(struct ieee80211_hw *hw,
+@@ -2036,17 +2036,17 @@ static void rtl8723e_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	}
+ 	sta_entry->ratr_index = ratr_index;
  
 -	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
--		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x:%x:%x\n",
--		 ratr_index, ratr_bitmap,
--		 rate_mask[0], rate_mask[1],
--		 rate_mask[2], rate_mask[3],
--		 rate_mask[4], rate_mask[5],
--		 rate_mask[6]);
+-		 "ratr_bitmap :%x\n", ratr_bitmap);
 +	rtl_dbg(rtlpriv, COMP_RATR, DBG_DMESG,
-+		"Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x:%x:%x\n",
++		"ratr_bitmap :%x\n", ratr_bitmap);
+ 	*(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
+ 			     (ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+-	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		  ratr_index, ratr_bitmap,
+-		  rate_mask[0], rate_mask[1],
+-		  rate_mask[2], rate_mask[3],
+-		  rate_mask[4]);
++	rtl_dbg(rtlpriv, COMP_RATR, DBG_DMESG,
++		"Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
 +		ratr_index, ratr_bitmap,
 +		rate_mask[0], rate_mask[1],
 +		rate_mask[2], rate_mask[3],
-+		rate_mask[4], rate_mask[5],
-+		rate_mask[6]);
- 	rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_RA_MASK, 7, rate_mask);
- 	_rtl8821ae_set_bcn_ctrl_reg(hw, BIT(3), 0);
- }
-@@ -3710,8 +3710,6 @@ void rtl8821ae_update_hal_rate_tbl(struct ieee80211_hw *hw,
- 	if (rtlpriv->dm.useramask)
- 		rtl8821ae_update_hal_rate_mask(hw, sta, rssi_level, update_bw);
- 	else
--		/*RT_TRACE(rtlpriv, COMP_RATR,DBG_LOUD,
--			   "rtl8821ae_update_hal_rate_tbl() Error! 8821ae FW RA Only\n");*/
- 		rtl8821ae_update_hal_rate_table(hw, sta);
++		rate_mask[4]);
+ 	rtl8723e_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
  }
  
-@@ -3782,16 +3780,16 @@ bool rtl8821ae_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+@@ -2111,15 +2111,15 @@ bool rtl8723e_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
  		e_rfpowerstate_toset = (u1tmp & BIT(1)) ? ERFON : ERFOFF;
  
- 	if ((ppsc->hwradiooff) && (e_rfpowerstate_toset == ERFON)) {
+ 	if (ppsc->hwradiooff && (e_rfpowerstate_toset == ERFON)) {
 -		RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
 -			 "GPIOChangeRF  - HW Radio ON, RF ON\n");
 +		rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
@@ -2889,8 +2597,7 @@ index 198d419ebb9c..ef70f57358b4 100644
  		e_rfpowerstate_toset = ERFON;
  		ppsc->hwradiooff = false;
  		b_actuallyset = true;
- 	} else if ((!ppsc->hwradiooff)
- 		   && (e_rfpowerstate_toset == ERFOFF)) {
+ 	} else if (!ppsc->hwradiooff && (e_rfpowerstate_toset == ERFOFF)) {
 -		RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
 -			 "GPIOChangeRF  - HW Radio OFF, RF OFF\n");
 +		rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
@@ -2898,7 +2605,7 @@ index 198d419ebb9c..ef70f57358b4 100644
  
  		e_rfpowerstate_toset = ERFOFF;
  		ppsc->hwradiooff = true;
-@@ -3841,7 +3839,7 @@ void rtl8821ae_set_key(struct ieee80211_hw *hw, u32 key_index,
+@@ -2170,7 +2170,7 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
  		u8 cam_offset = 0;
  		u8 clear_number = 5;
  
@@ -2907,7 +2614,7 @@ index 198d419ebb9c..ef70f57358b4 100644
  
  		for (idx = 0; idx < clear_number; idx++) {
  			rtl_cam_mark_invalid(hw, cam_offset + idx);
-@@ -3868,8 +3866,8 @@ void rtl8821ae_set_key(struct ieee80211_hw *hw, u32 key_index,
+@@ -2198,8 +2198,8 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
  			enc_algo = CAM_AES;
  			break;
  		default:
@@ -2918,7 +2625,7 @@ index 198d419ebb9c..ef70f57358b4 100644
  			enc_algo = CAM_TKIP;
  			break;
  		}
-@@ -3898,26 +3896,26 @@ void rtl8821ae_set_key(struct ieee80211_hw *hw, u32 key_index,
+@@ -2229,26 +2229,26 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
  		}
  
  		if (rtlpriv->sec.key_len[key_index] == 0) {
@@ -2954,58 +2661,94 @@ index 198d419ebb9c..ef70f57358b4 100644
  
  				if (mac->opmode == NL80211_IFTYPE_ADHOC) {
  					rtl_cam_add_one_entry(hw,
-@@ -3982,7 +3980,7 @@ void rtl8821ae_allow_all_destaddr(struct ieee80211_hw *hw,
- 	if (write_into_reg)
- 		rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
+@@ -2288,9 +2288,9 @@ static void rtl8723e_bt_var_init(struct ieee80211_hw *hw)
+ 	rtlpriv->btcoexist.bt_radio_shared_type =
+ 		rtlpriv->btcoexist.eeprom_bt_radio_shared;
  
--	RT_TRACE(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
-+	rtl_dbg(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
- 		"receive_config=0x%08X, write_into_reg=%d\n",
- 		rtlpci->receive_config, write_into_reg);
- }
-@@ -4035,9 +4033,9 @@ void rtl8821ae_add_wowlan_pattern(struct ieee80211_hw *hw,
- 				cam |= BIT(26);
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "BT Coexistence = 0x%x\n",
+-		 rtlpriv->btcoexist.bt_coexistence);
++	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++		"BT Coexistence = 0x%x\n",
++		rtlpriv->btcoexist.bt_coexistence);
  
- 			rtl_write_dword(rtlpriv, REG_PKTBUF_DBG_DATA_L, cam);
--			RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
--				 "WRITE entry[%d] 0x%x: %x\n", addr,
--				  REG_PKTBUF_DBG_DATA_L, cam);
-+			rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
-+				"WRITE entry[%d] 0x%x: %x\n", addr,
-+				REG_PKTBUF_DBG_DATA_L, cam);
+ 	if (rtlpriv->btcoexist.bt_coexistence) {
+ 		rtlpriv->btcoexist.bt_busy_traffic = false;
+@@ -2301,47 +2301,47 @@ static void rtl8723e_bt_var_init(struct ieee80211_hw *hw)
+ 		rtlpriv->btcoexist.previous_state = 0;
  
- 			/* Write to Rx packet buffer. */
- 			rtl_write_word(rtlpriv, REG_RXPKTBUF_CTRL, 0x0f01);
-@@ -4045,18 +4043,18 @@ void rtl8821ae_add_wowlan_pattern(struct ieee80211_hw *hw,
- 			cam = rtl_pattern->mask[addr - 2];
- 
- 			rtl_write_dword(rtlpriv, REG_PKTBUF_DBG_DATA_L, cam);
--			RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
--				 "WRITE entry[%d] 0x%x: %x\n", addr,
--				  REG_PKTBUF_DBG_DATA_L, cam);
-+			rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
-+				"WRITE entry[%d] 0x%x: %x\n", addr,
-+				REG_PKTBUF_DBG_DATA_L, cam);
- 
- 			rtl_write_word(rtlpriv, REG_RXPKTBUF_CTRL, 0x0f01);
- 		} else if (addr == 3 || addr == 5) {/* WKFM[127:0] */
- 			cam = rtl_pattern->mask[addr - 2];
- 
- 			rtl_write_dword(rtlpriv, REG_PKTBUF_DBG_DATA_H, cam);
--			RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
--				 "WRITE entry[%d] 0x%x: %x\n", addr,
--				  REG_PKTBUF_DBG_DATA_H, cam);
-+			rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
-+				"WRITE entry[%d] 0x%x: %x\n", addr,
-+				REG_PKTBUF_DBG_DATA_H, cam);
- 
- 			rtl_write_word(rtlpriv, REG_RXPKTBUF_CTRL, 0xf001);
+ 		if (rtlpriv->btcoexist.bt_ant_num == ANT_X2) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_Ant_Num = Antx2\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_Ant_Num = Antx2\n");
+ 		} else if (rtlpriv->btcoexist.bt_ant_num == ANT_X1) {
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_Ant_Num = Antx1\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_Ant_Num = Antx1\n");
  		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-index dd7553e80ab1..7d6fb134c10f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-@@ -20,8 +20,8 @@ void rtl8821ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		switch (rtlpriv->btcoexist.bt_coexist_type) {
+ 		case BT_2WIRE:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_2Wire\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_2Wire\n");
+ 			break;
+ 		case BT_ISSC_3WIRE:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_ISSC_3Wire\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_ISSC_3Wire\n");
+ 			break;
+ 		case BT_ACCEL:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_ACCEL\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_ACCEL\n");
+ 			break;
+ 		case BT_CSR_BC4:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_CSR_BC4\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_CSR_BC4\n");
+ 			break;
+ 		case BT_CSR_BC8:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_CSR_BC8\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_CSR_BC8\n");
+ 			break;
+ 		case BT_RTL8756:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = BT_RTL8756\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = BT_RTL8756\n");
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-				 "BlueTooth BT_CoexistType = Unknown\n");
++			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++				"BlueTooth BT_CoexistType = Unknown\n");
+ 			break;
+ 		}
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "BlueTooth BT_Ant_isolation = %d\n",
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"BlueTooth BT_Ant_isolation = %d\n",
+ 			 rtlpriv->btcoexist.bt_ant_isolation);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-			 "BT_RadioSharedType = 0x%x\n",
++		rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
++			"BT_RadioSharedType = 0x%x\n",
+ 			 rtlpriv->btcoexist.bt_radio_shared_type);
+ 		rtlpriv->btcoexist.bt_active_zero_cnt = 0;
+ 		rtlpriv->btcoexist.cur_bt_disabled = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+index 5e503dbc463b..7fab02e01a8c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+@@ -19,8 +19,8 @@ void rtl8723e_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
  	u8 ledcfg;
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
  
@@ -3016,31 +2759,7 @@ index dd7553e80ab1..7d6fb134c10f 100644
  
  	switch (pled->ledpin) {
  	case LED_PIN_GPIO0:
-@@ -37,8 +37,8 @@ void rtl8821ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+			"switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -64,9 +64,9 @@ void rtl8812ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
--		 "In SwLedOn, LedAddr:%X LEDPIN=%d\n",
--		 ledreg, pled->ledpin);
-+	rtl_dbg(rtlpriv, COMP_LED, DBG_LOUD,
-+		"In SwLedOn, LedAddr:%X LEDPIN=%d\n",
-+		ledreg, pled->ledpin);
- 
- 	ledcfg =  rtl_read_byte(rtlpriv, ledreg);
- 	ledcfg |= BIT(5); /*Set 0x4c[21]*/
-@@ -81,8 +81,8 @@ void rtl8821ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+@@ -48,8 +48,8 @@ void rtl8723e_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
  	u8 ledcfg;
  
@@ -3051,31 +2770,7 @@ index dd7553e80ab1..7d6fb134c10f 100644
  
  	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
  
-@@ -109,8 +109,8 @@ void rtl8821ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg|BIT(3));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
-+			"switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-@@ -135,9 +135,9 @@ void rtl8812ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
--		 "In SwLedOff,LedAddr:%X LEDPIN=%d\n",
--		 ledreg, pled->ledpin);
-+	rtl_dbg(rtlpriv, COMP_LED, DBG_LOUD,
-+		"In SwLedOff,LedAddr:%X LEDPIN=%d\n",
-+		ledreg, pled->ledpin);
- 	/*Open-drain arrangement for controlling the LED*/
- 	if (rtlpriv->ledctl.led_opendrain) {
- 		u8 ledcfg = rtl_read_byte(rtlpriv, ledreg);
-@@ -207,7 +207,7 @@ void rtl8821ae_led_control(struct ieee80211_hw *hw,
+@@ -128,7 +128,7 @@ void rtl8723e_led_control(struct ieee80211_hw *hw,
  	     ledaction == LED_CTL_POWER_ON)) {
  		return;
  	}
@@ -3083,64 +2778,15 @@ index dd7553e80ab1..7d6fb134c10f 100644
 -		 ledaction);
 +	rtl_dbg(rtlpriv, COMP_LED, DBG_LOUD, "ledaction %d,\n",
 +		ledaction);
- 	_rtl8821ae_sw_led_control(hw, ledaction);
+ 	_rtl8723e_sw_led_control(hw, ledaction);
  }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index b8a2b2326902..0ace7885df26 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -96,16 +96,16 @@ u32 rtl8821ae_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 returnvalue, originalvalue, bitshift;
- 
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x)\n",
--		 regaddr, bitmask);
-+	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-+		"regaddr(%#x), bitmask(%#x)\n",
-+		regaddr, bitmask);
- 	originalvalue = rtl_read_dword(rtlpriv, regaddr);
- 	bitshift = _rtl8821ae_phy_calculate_bit_shift(bitmask);
- 	returnvalue = (originalvalue & bitmask) >> bitshift;
- 
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "BBR MASK=0x%x Addr[0x%x]=0x%x\n",
--		 bitmask, regaddr, originalvalue);
-+	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-+		"BBR MASK=0x%x Addr[0x%x]=0x%x\n",
-+		bitmask, regaddr, originalvalue);
- 	return returnvalue;
- }
- 
-@@ -115,9 +115,9 @@ void rtl8821ae_phy_set_bb_reg(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 originalvalue, bitshift;
- 
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
--		 regaddr, bitmask, data);
-+	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-+		"regaddr(%#x), bitmask(%#x), data(%#x)\n",
-+		regaddr, bitmask, data);
- 
- 	if (bitmask != MASKDWORD) {
- 		originalvalue = rtl_read_dword(rtlpriv, regaddr);
-@@ -128,9 +128,9 @@ void rtl8821ae_phy_set_bb_reg(struct ieee80211_hw *hw,
- 
- 	rtl_write_dword(rtlpriv, regaddr, data);
- 
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
--		 regaddr, bitmask, data);
-+	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-+		"regaddr(%#x), bitmask(%#x), data(%#x)\n",
-+		regaddr, bitmask, data);
- }
- 
- u32 rtl8821ae_phy_query_rf_reg(struct ieee80211_hw *hw,
-@@ -140,9 +140,9 @@ u32 rtl8821ae_phy_query_rf_reg(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 original_value, readback_value, bitshift;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+index 772aecedf0b4..5ba645bc46dc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+@@ -38,9 +38,9 @@ u32 rtl8723e_phy_query_rf_reg(struct ieee80211_hw *hw,
+ 	u32 original_value = 0, readback_value, bitshift;
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
  
 -	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
 -		 "regaddr(%#x), rfpath(%#x), bitmask(%#x)\n",
@@ -3151,22 +2797,22 @@ index b8a2b2326902..0ace7885df26 100644
  
  	spin_lock(&rtlpriv->locks.rf_lock);
  
-@@ -152,9 +152,9 @@ u32 rtl8821ae_phy_query_rf_reg(struct ieee80211_hw *hw,
+@@ -54,9 +54,9 @@ u32 rtl8723e_phy_query_rf_reg(struct ieee80211_hw *hw,
  
  	spin_unlock(&rtlpriv->locks.rf_lock);
  
 -	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
 -		 "regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
--		 regaddr, rfpath, bitmask, original_value);
+-		  regaddr, rfpath, bitmask, original_value);
 +	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
 +		"regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
 +		regaddr, rfpath, bitmask, original_value);
  
  	return readback_value;
  }
-@@ -166,9 +166,9 @@ void rtl8821ae_phy_set_rf_reg(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 original_value, bitshift;
+@@ -69,9 +69,9 @@ void rtl8723e_phy_set_rf_reg(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	u32 original_value = 0, bitshift;
  
 -	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
 -		 "regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
@@ -3177,7 +2823,7 @@ index b8a2b2326902..0ace7885df26 100644
  
  	spin_lock(&rtlpriv->locks.rf_lock);
  
-@@ -183,9 +183,9 @@ void rtl8821ae_phy_set_rf_reg(struct ieee80211_hw *hw,
+@@ -99,9 +99,9 @@ void rtl8723e_phy_set_rf_reg(struct ieee80211_hw *hw,
  
  	spin_unlock(&rtlpriv->locks.rf_lock);
  
@@ -3187,511 +2833,319 @@ index b8a2b2326902..0ace7885df26 100644
 +	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
 +		"regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
 +		regaddr, bitmask, data, rfpath);
+ 
  }
  
- static u32 _rtl8821ae_phy_rf_serial_read(struct ieee80211_hw *hw,
-@@ -267,9 +267,9 @@ static void _rtl8821ae_phy_rf_serial_write(struct ieee80211_hw *hw,
- 	data_and_addr = ((newoffset << 20) |
- 			 (data & 0x000fffff)) & 0x0fffffff;
- 	rtl_set_bbreg(hw, pphyreg->rf3wire_offset, MASKDWORD, data_and_addr);
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "RFW-%d Addr[0x%x]=0x%x\n",
--		 rfpath, pphyreg->rf3wire_offset, data_and_addr);
-+	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-+		"RFW-%d Addr[0x%x]=0x%x\n",
-+		rfpath, pphyreg->rf3wire_offset, data_and_addr);
- }
+@@ -185,7 +185,7 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	bool rtstatus;
  
- static u32 _rtl8821ae_phy_calculate_bit_shift(u32 bitmask)
-@@ -450,10 +450,10 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
- 	u32  out = 0x200;
- 	const s8 auto_temp = -1;
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "\n");
++	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "\n");
+ 	rtstatus = _rtl8723e_phy_config_bb_with_headerfile(hw,
+ 						BASEBAND_CONFIG_PHY_REG);
+ 	if (rtstatus != true) {
+@@ -195,7 +195,7 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
  
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--		 "===> PHY_GetTXBBSwing_8812A, bbSwing_2G: %d, bbSwing_5G: %d,autoload_failflag=%d.\n",
--		 (int)swing_2g, (int)swing_5g,
--		 (int)rtlefuse->autoload_failflag);
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+		"===> %s, bbSwing_2G: %d, bbSwing_5G: %d,autoload_failflag=%d.\n",
-+		__func__, (int)swing_2g, (int)swing_5g,
-+		(int)rtlefuse->autoload_failflag);
- 
- 	if (rtlefuse->autoload_failflag) {
- 		if (band == BAND_ON_2_4G) {
-@@ -531,9 +531,9 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
- 
- 		swing_a = (swing & 0x3) >> 0; /* 0xC6/C7[1:0] */
- 		swing_b = (swing & 0xC) >> 2; /* 0xC6/C7[3:2] */
--		RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--			 "===> PHY_GetTXBBSwing_8812A, swingA: 0x%X, swingB: 0x%X\n",
--			 swing_a, swing_b);
-+		rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+			"===> PHY_GetTXBBSwing_8812A, swingA: 0x%X, swingB: 0x%X\n",
-+			swing_a, swing_b);
- 
- 		/* 3 Path-A */
- 		if (swing_a == 0x0) {
-@@ -589,8 +589,8 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
- 		}
+ 	if (rtlphy->rf_type == RF_1T2R) {
+ 		_rtl8723e_phy_bb_config_1t(hw);
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Config to 1T!!\n");
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "Config to 1T!!\n");
  	}
- 
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--		 "<=== PHY_GetTXBBSwing_8812A, out = 0x%X\n", out);
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+		"<=== PHY_GetTXBBSwing_8812A, out = 0x%X\n", out);
- 	return out;
- }
- 
-@@ -652,23 +652,23 @@ void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
- 
- 		count = 0;
- 		reg_41a = rtl_read_word(rtlpriv, REG_TXPKT_EMPTY);
--		RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--			 "Reg41A value %d\n", reg_41a);
-+		rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+			"Reg41A value %d\n", reg_41a);
- 		reg_41a &= 0x30;
- 		while ((reg_41a != 0x30) && (count < 50)) {
- 			udelay(50);
--			RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD, "Delay 50us\n");
-+			rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD, "Delay 50us\n");
- 
- 			reg_41a = rtl_read_word(rtlpriv, REG_TXPKT_EMPTY);
- 			reg_41a &= 0x30;
- 			count++;
--			RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--				 "Reg41A value %d\n", reg_41a);
-+			rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+				"Reg41A value %d\n", reg_41a);
- 		}
- 		if (count != 0)
--			RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
--				 "PHY_SwitchWirelessBand8812(): Switch to 5G Band. Count = %d reg41A=0x%x\n",
--				 count, reg_41a);
-+			rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
-+				"PHY_SwitchWirelessBand8812(): Switch to 5G Band. Count = %d reg41A=0x%x\n",
-+				count, reg_41a);
- 
- 		/* 2012/02/01, Sinda add registry to switch workaround
- 		without long-run verification for scan issue. */
-@@ -693,9 +693,9 @@ void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
- 		rtl_set_bbreg(hw, RTXPATH, 0xf0, 0);
- 		rtl_set_bbreg(hw, RCCK_RX, 0x0f000000, 0xf);
- 
--		RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
--			 "==>PHY_SwitchWirelessBand8812() BAND_ON_5G settings OFDM index 0x%x\n",
--			 rtlpriv->dm.ofdm_index[RF90_PATH_A]);
-+		rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
-+			"==>PHY_SwitchWirelessBand8812() BAND_ON_5G settings OFDM index 0x%x\n",
-+			rtlpriv->dm.ofdm_index[RF90_PATH_A]);
- 	}
- 
- 	if ((rtlhal->hw_type == HARDWARE_TYPE_RTL8821AE) ||
-@@ -722,8 +722,8 @@ void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
- 		rtl8821ae_dm_clear_txpower_tracking_state(hw);
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
--		 "<==rtl8821ae_phy_switch_wirelessband():Switch Band OK.\n");
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE,
-+		"<==%s:Switch Band OK.\n", __func__);
- 	return;
- }
- 
-@@ -756,17 +756,17 @@ static bool _rtl8821ae_check_positive(struct ieee80211_hw *hw,
- 		      rtlhal->type_alna << 16 |
- 		      rtlhal->type_apa  << 24;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "===> [8812A] CheckPositive (cond1, cond2) = (0x%X 0x%X)\n",
--		 cond1, cond2);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "===> [8812A] CheckPositive (driver1, driver2) = (0x%X 0x%X)\n",
--		 driver1, driver2);
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "	(Platform, Interface) = (0x%X, 0x%X)\n", 0x04, intf);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "	(Board, Package) = (0x%X, 0x%X)\n",
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"===> [8812A] CheckPositive (cond1, cond2) = (0x%X 0x%X)\n",
-+		cond1, cond2);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"===> [8812A] CheckPositive (driver1, driver2) = (0x%X 0x%X)\n",
-+		driver1, driver2);
-+
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"(Platform, Interface) = (0x%X, 0x%X)\n", 0x04, intf);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"(Board, Package) = (0x%X, 0x%X)\n",
- 		 rtlhal->board_type, rtlhal->package_type);
- 
- 	/*============== Value Defined Check ===============*/
-@@ -918,7 +918,7 @@ static void _rtl8821ae_phy_set_txpower_by_rate_base(struct ieee80211_hw *hw,
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 
- 	if (path > RF90_PATH_D) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 			"Invalid Rf Path %d in phy_SetTxPowerByRatBase()\n", path);
- 		return;
- 	}
-@@ -944,8 +944,8 @@ static void _rtl8821ae_phy_set_txpower_by_rate_base(struct ieee80211_hw *hw,
- 			rtlphy->txpwr_by_rate_base_24g[path][txnum][5] = value;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Invalid RateSection %d in Band 2.4G,Rf Path %d, %dTx in PHY_SetTxPowerByRateBase()\n",
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Invalid RateSection %d in Band 2.4G,Rf Path %d, %dTx in PHY_SetTxPowerByRateBase()\n",
- 				 rate_section, path, txnum);
- 			break;
- 		}
-@@ -967,13 +967,13 @@ static void _rtl8821ae_phy_set_txpower_by_rate_base(struct ieee80211_hw *hw,
- 			rtlphy->txpwr_by_rate_base_5g[path][txnum][4] = value;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 				"Invalid RateSection %d in Band 5G, Rf Path %d, %dTx in PHY_SetTxPowerByRateBase()\n",
- 				rate_section, path, txnum);
- 			break;
- 		}
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 			"Invalid Band %d in PHY_SetTxPowerByRateBase()\n", band);
- 	}
- }
-@@ -987,9 +987,9 @@ static u8 _rtl8821ae_phy_get_txpower_by_rate_base(struct ieee80211_hw *hw,
- 	u8 value = 0;
- 
- 	if (path > RF90_PATH_D) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Invalid Rf Path %d in PHY_GetTxPowerByRateBase()\n",
--			 path);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Invalid Rf Path %d in PHY_GetTxPowerByRateBase()\n",
-+			path);
- 		return 0;
- 	}
- 
-@@ -1014,9 +1014,9 @@ static u8 _rtl8821ae_phy_get_txpower_by_rate_base(struct ieee80211_hw *hw,
- 			value = rtlphy->txpwr_by_rate_base_24g[path][txnum][5];
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Invalid RateSection %d in Band 2.4G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
--				 rate_section, path, txnum);
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Invalid RateSection %d in Band 2.4G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
-+				rate_section, path, txnum);
- 			break;
- 		}
- 	} else if (band == BAND_ON_5G) {
-@@ -1037,14 +1037,14 @@ static u8 _rtl8821ae_phy_get_txpower_by_rate_base(struct ieee80211_hw *hw,
- 			value = rtlphy->txpwr_by_rate_base_5g[path][txnum][4];
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--				 "Invalid RateSection %d in Band 5G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
--				 rate_section, path, txnum);
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+				"Invalid RateSection %d in Band 5G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
-+				rate_section, path, txnum);
- 			break;
- 		}
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "Invalid Band %d in PHY_GetTxPowerByRateBase()\n", band);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"Invalid Band %d in PHY_GetTxPowerByRateBase()\n", band);
- 	}
- 
- 	return value;
-@@ -1144,7 +1144,7 @@ static void _rtl8812ae_phy_cross_reference_ht_and_vht_txpower_limit(struct ieee8
- 						[bw][rate_section][channel][RF90_PATH_A];
- 					if (temp_pwrlmt == MAX_POWER_INDEX) {
- 						if (bw == 0 || bw == 1) { /*5G 20M 40M VHT and HT can cross reference*/
--							RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+							rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
- 								"No power limit table of the specified band %d, bandwidth %d, ratesection %d, channel %d, rf path %d\n",
- 								1, bw, rate_section, channel, RF90_PATH_A);
- 							if (rate_section == 2) {
-@@ -1161,7 +1161,9 @@ static void _rtl8812ae_phy_cross_reference_ht_and_vht_txpower_limit(struct ieee8
- 									rtlphy->txpwr_limit_5g[regulation][bw][3][channel][RF90_PATH_A];
- 							}
- 
--							RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "use other value %d\n", temp_pwrlmt);
-+							rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+								"use other value %d\n",
-+								temp_pwrlmt);
- 						}
- 					}
- 				}
-@@ -1218,7 +1220,7 @@ static u8 _rtl8812ae_phy_get_txpower_by_rate_base_index(struct ieee80211_hw *hw,
- 			break;
- 
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 				"Wrong rate 0x%x to obtain index in 2.4G in PHY_GetTxPowerByRateBaseIndex()\n",
- 				rate);
- 			break;
-@@ -1285,7 +1287,7 @@ static u8 _rtl8812ae_phy_get_txpower_by_rate_base_index(struct ieee80211_hw *hw,
- 			break;
- 
- 		default:
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
- 				"Wrong rate 0x%x to obtain index in 5G in PHY_GetTxPowerByRateBaseIndex()\n",
- 				rate);
- 			break;
-@@ -1306,7 +1308,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 	s8 temp_value = 0, temp_pwrlmt = 0;
- 	u8 rf_path = 0;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
- 		"=====> _rtl8812ae_phy_convert_txpower_limit_to_power_index()\n");
- 
- 	_rtl8812ae_phy_cross_reference_ht_and_vht_txpower_limit(hw);
-@@ -1355,7 +1357,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 								temp_value;
- 						}
- 
--						RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+						rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
- 							"TxPwrLimit_2_4G[regulation %d][bw %d][rateSection %d][channel %d] = %d\n(TxPwrLimit in dBm %d - BW40PwrLmt2_4G[channel %d][rfpath %d] %d)\n",
- 							regulation, bw, rate_section, channel,
- 							rtlphy->txpwr_limit_2_4g[regulation][bw]
-@@ -1420,7 +1422,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 								[rf_path] = temp_value;
- 						}
- 
--						RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+						rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
- 							"TxPwrLimit_5G[regulation %d][bw %d][rateSection %d][channel %d] =%d\n(TxPwrLimit in dBm %d - BW40PwrLmt5G[chnl group %d][rfpath %d] %d)\n",
- 							regulation, bw, rate_section,
- 							channel, rtlphy->txpwr_limit_5g[regulation]
-@@ -1431,8 +1433,8 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 			}
- 		}
- 	}
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "<===== _rtl8812ae_phy_convert_txpower_limit_to_power_index()\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"<===== %s\n", __func__);
- }
- 
- static void _rtl8821ae_phy_init_txpower_limit(struct ieee80211_hw *hw)
-@@ -1441,8 +1443,8 @@ static void _rtl8821ae_phy_init_txpower_limit(struct ieee80211_hw *hw)
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 	u8 i, j, k, l, m;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "=====> _rtl8821ae_phy_init_txpower_limit()!\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"=====> %s()!\n", __func__);
- 
- 	for (i = 0; i < MAX_REGULATION_NUM; ++i) {
- 		for (j = 0; j < MAX_2_4G_BANDWIDTH_NUM; ++j)
-@@ -1463,8 +1465,8 @@ static void _rtl8821ae_phy_init_txpower_limit(struct ieee80211_hw *hw)
- 							= MAX_POWER_INDEX;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "<===== _rtl8821ae_phy_init_txpower_limit()!\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"<===== _%s!\n", __func__);
- }
- 
- static void _rtl8821ae_phy_convert_txpower_dbm_to_relative_value(struct ieee80211_hw *hw)
-@@ -1574,7 +1576,7 @@ static void _rtl8821ae_phy_convert_txpower_dbm_to_relative_value(struct ieee8021
- 			0, 3, base);
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
-+	rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
- 		"<===_rtl8821ae_phy_convert_txpower_dbm_to_relative_value()\n");
- }
- 
-@@ -1630,13 +1632,13 @@ static s8 _rtl8812ae_phy_get_chnl_idx_of_txpwr_lmt(struct ieee80211_hw *hw,
- 				channel_index = i;
- 		}
- 	} else
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "Invalid Band %d in %s\n",
--			 band,  __func__);
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD, "Invalid Band %d in %s\n",
-+			band,  __func__);
- 
- 	if (channel_index == -1)
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--			 "Invalid Channel %d of Band %d in %s\n", channel,
--			 band, __func__);
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+			"Invalid Channel %d of Band %d in %s\n", channel,
-+			band, __func__);
- 
- 	return channel_index;
- }
-@@ -1655,9 +1657,9 @@ static void _rtl8812ae_phy_set_txpower_limit(struct ieee80211_hw *hw, u8 *pregul
- 	if (!_rtl8812ae_get_integer_from_string((char *)pchannel, &channel) ||
- 	    !_rtl8812ae_get_integer_from_string((char *)ppower_limit,
- 						&power_limit)) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Illegal index of pwr_lmt table [chnl %d][val %d]\n",
--			  channel, power_limit);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Illegal index of pwr_lmt table [chnl %d][val %d]\n",
-+			channel, power_limit);
- 	}
- 
- 	power_limit = power_limit > MAX_POWER_INDEX ?
-@@ -1717,10 +1719,10 @@ static void _rtl8812ae_phy_set_txpower_limit(struct ieee80211_hw *hw, u8 *pregul
- 				[rate_section][channel_index][RF90_PATH_A] =
- 								   power_limit;
- 
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "2.4G [regula %d][bw %d][sec %d][chnl %d][val %d]\n",
--			  regulation, bandwidth, rate_section, channel_index,
--			  rtlphy->txpwr_limit_2_4g[regulation][bandwidth]
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"2.4G [regula %d][bw %d][sec %d][chnl %d][val %d]\n",
-+			regulation, bandwidth, rate_section, channel_index,
-+			rtlphy->txpwr_limit_2_4g[regulation][bandwidth]
- 				[rate_section][channel_index][RF90_PATH_A]);
- 	} else if (_rtl8812ae_eq_n_byte(pband, (u8 *)("5G"), 2)) {
- 		ret = _rtl8812ae_phy_get_chnl_idx_of_txpwr_lmt(hw,
-@@ -1740,14 +1742,14 @@ static void _rtl8812ae_phy_set_txpower_limit(struct ieee80211_hw *hw, u8 *pregul
- 			rtlphy->txpwr_limit_5g[regulation][bandwidth]
- 			[rate_section][channel_index][RF90_PATH_A] = power_limit;
- 
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "5G: [regul %d][bw %d][sec %d][chnl %d][val %d]\n",
--			  regulation, bandwidth, rate_section, channel,
--			  rtlphy->txpwr_limit_5g[regulation][bandwidth]
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"5G: [regul %d][bw %d][sec %d][chnl %d][val %d]\n",
-+			regulation, bandwidth, rate_section, channel,
-+			rtlphy->txpwr_limit_5g[regulation][bandwidth]
- 				[rate_section][channel_index][RF90_PATH_A]);
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Cannot recognize the band info in %s\n", pband);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"Cannot recognize the band info in %s\n", pband);
- 		return;
- 	}
- }
-@@ -1779,8 +1781,8 @@ static void _rtl8821ae_phy_read_and_config_txpwr_lmt(struct ieee80211_hw *hw)
- 		array = RTL8821AE_TXPWR_LMT;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
-+		"\n");
- 
- 	for (i = 0; i < array_len; i += 7) {
- 		u8 *regulation = array[i];
-@@ -1903,7 +1905,7 @@ static bool _rtl8821ae_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
+ 	if (rtlefuse->autoload_failflag == false) {
+ 		rtlphy->pwrgroup_cnt = 0;
+@@ -226,12 +226,12 @@ static bool _rtl8723e_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
  	u32 arraylength;
  	u32 *ptrarray;
  
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read MAC_REG_Array\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "Read MAC_REG_Array\n");
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8821AE) {
- 		arraylength = RTL8821AE_MAC_1T_ARRAYLEN;
- 		ptrarray = RTL8821AE_MAC_REG_ARRAY;
-@@ -1911,8 +1913,8 @@ static bool _rtl8821ae_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
- 		arraylength = RTL8812AE_MAC_1T_ARRAYLEN;
- 		ptrarray = RTL8812AE_MAC_REG_ARRAY;
- 	}
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Img: MAC_REG_ARRAY LEN %d\n", arraylength);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"Img: MAC_REG_ARRAY LEN %d\n", arraylength);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl723MACPHY_Array\n");
++	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl723MACPHY_Array\n");
+ 	arraylength = RTL8723E_MACARRAYLENGTH;
+ 	ptrarray = RTL8723EMAC_ARRAY;
  
- 	return __rtl8821ae_phy_config_with_headerfile(hw,
- 			ptrarray, arraylength, rtl_write_byte_with_val32);
-@@ -1978,22 +1980,22 @@ static void _rtl8821ae_store_tx_power_by_rate(struct ieee80211_hw *hw,
- 	u8 rate_section = _rtl8821ae_get_rate_section_index(regaddr);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-		 "Img:RTL8192CEMAC_2T_ARRAY\n");
++	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++		"Img:RTL8192CEMAC_2T_ARRAY\n");
+ 	for (i = 0; i < arraylength; i = i + 2)
+ 		rtl_write_byte(rtlpriv, ptrarray[i], (u8) ptrarray[i + 1]);
+ 	return true;
+@@ -267,20 +267,20 @@ static bool _rtl8723e_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
+ 			rtl_set_bbreg(hw, phy_regarray_table[i], MASKDWORD,
+ 				      phy_regarray_table[i + 1]);
+ 			udelay(1);
+-			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-				 "The phy_regarray_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
+-				 phy_regarray_table[i],
+-				 phy_regarray_table[i + 1]);
++			rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++				"The phy_regarray_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
++				phy_regarray_table[i],
++				phy_regarray_table[i + 1]);
+ 		}
+ 	} else if (configtype == BASEBAND_CONFIG_AGC_TAB) {
+ 		for (i = 0; i < agctab_arraylen; i = i + 2) {
+ 			rtl_set_bbreg(hw, agctab_array_table[i], MASKDWORD,
+ 				      agctab_array_table[i + 1]);
+ 			udelay(1);
+-			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-				 "The agctab_array_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
+-				 agctab_array_table[i],
+-				 agctab_array_table[i + 1]);
++			rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++				"The agctab_array_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
++				agctab_array_table[i],
++				agctab_array_table[i + 1]);
+ 		}
+ 	}
+ 	return true;
+@@ -296,146 +296,146 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 	if (regaddr == RTXAGC_A_RATE18_06) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][0]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][0]);
+ 	}
+ 	if (regaddr == RTXAGC_A_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+ 							    pwrgroup_cnt][1]);
+ 	}
+ 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][6]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][6]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][7]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][7]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][2]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][2]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][3]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][3]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][4]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][4]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][5]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][5]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE18_06) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][8]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][8]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][9]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][9]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][14]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][14]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][15]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][15]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][10]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][10]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][11]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][11]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][12]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][12]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
+ 		    data;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+-			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][13]);
++		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
++			"MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
++			rtlphy->pwrgroup_cnt,
++			rtlphy->mcs_txpwrlevel_origoffset
++			[rtlphy->pwrgroup_cnt][13]);
  
- 	if (band != BAND_ON_2_4G && band != BAND_ON_5G) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid Band %d\n", band);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid Band %d\n", band);
- 		band = BAND_ON_2_4G;
+ 		rtlphy->pwrgroup_cnt++;
  	}
- 	if (rfpath >= MAX_RF_PATH) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid RfPath %d\n", rfpath);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid RfPath %d\n", rfpath);
- 		rfpath = MAX_RF_PATH - 1;
- 	}
- 	if (txnum >= MAX_RF_PATH) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid TxNum %d\n", txnum);
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid TxNum %d\n", txnum);
- 		txnum = MAX_RF_PATH - 1;
- 	}
- 	rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section] = data;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "TxPwrByRateOffset[Band %d][RfPath %d][TxNum %d][RateSection %d] = 0x%x\n",
--		 band, rfpath, txnum, rate_section,
--		 rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section]);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"TxPwrByRateOffset[Band %d][RfPath %d][TxNum %d][RateSection %d] = 0x%x\n",
-+		band, rfpath, txnum, rate_section,
-+		rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section]);
- }
- 
- static bool _rtl8821ae_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
-@@ -2015,8 +2017,8 @@ static bool _rtl8821ae_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
- 	}
- 
- 	if (configtype != BASEBAND_CONFIG_PHY_REG) {
+@@ -473,8 +473,8 @@ static bool _rtl8723e_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
+ 						phy_regarray_table_pg[i + 2]);
+ 		}
+ 	} else {
 -		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
 -			 "configtype != BaseBand_Config_PHY_REG\n");
 +		rtl_dbg(rtlpriv, COMP_SEND, DBG_TRACE,
 +			"configtype != BaseBand_Config_PHY_REG\n");
- 		return true;
  	}
- 	for (i = 0; i < arraylen; i += 6) {
-@@ -2082,9 +2084,9 @@ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 	radioa_array_table_a = RTL8812AE_RADIOA_ARRAY;
- 	radioa_arraylen_b = RTL8812AE_RADIOB_1TARRAYLEN;
- 	radioa_array_table_b = RTL8812AE_RADIOB_ARRAY;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen_a);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen_a);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
- 	switch (rfpath) {
- 	case RF90_PATH_A:
- 		return __rtl8821ae_phy_config_with_headerfile(hw,
-@@ -2113,9 +2115,9 @@ bool rtl8821ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 
- 	radioa_arraylen = RTL8821AE_RADIOA_1TARRAYLEN;
- 	radioa_array_table = RTL8821AE_RADIOA_ARRAY;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+		"Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen);
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
- 	switch (rfpath) {
- 	case RF90_PATH_A:
- 		return __rtl8821ae_phy_config_with_headerfile(hw,
-@@ -2146,21 +2148,21 @@ void rtl8821ae_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
+ 	return true;
+ }
+@@ -534,21 +534,21 @@ void rtl8723e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
  	rtlphy->default_initialgain[3] =
- 	    (u8)rtl_get_bbreg(hw, ROFDM0_XDAGCCORE1, MASKBYTE0);
+ 	    (u8) rtl_get_bbreg(hw, ROFDM0_XDAGCCORE1, MASKBYTE0);
  
 -	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
 -		 "Default initial gain (c50=0x%x, c58=0x%x, c60=0x%x, c68=0x%x\n",
--		  rtlphy->default_initialgain[0],
--		  rtlphy->default_initialgain[1],
--		  rtlphy->default_initialgain[2],
--		  rtlphy->default_initialgain[3]);
+-		 rtlphy->default_initialgain[0],
+-		 rtlphy->default_initialgain[1],
+-		 rtlphy->default_initialgain[2],
+-		 rtlphy->default_initialgain[3]);
 +	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
 +		"Default initial gain (c50=0x%x, c58=0x%x, c60=0x%x, c68=0x%x\n",
 +		rtlphy->default_initialgain[0],
@@ -3699,7 +3153,7 @@ index b8a2b2326902..0ace7885df26 100644
 +		rtlphy->default_initialgain[2],
 +		rtlphy->default_initialgain[3]);
  
- 	rtlphy->framesync = (u8)rtl_get_bbreg(hw,
+ 	rtlphy->framesync = (u8) rtl_get_bbreg(hw,
  					       ROFDM0_RXDETECTOR3, MASKBYTE0);
  	rtlphy->framesync_c34 = rtl_get_bbreg(hw,
  					      ROFDM0_RXDETECTOR2, MASKDWORD);
@@ -3712,167 +3166,58 @@ index b8a2b2326902..0ace7885df26 100644
 +		ROFDM0_RXDETECTOR3, rtlphy->framesync);
  }
  
- static void phy_init_bb_rf_register_definition(struct ieee80211_hw *hw)
-@@ -2427,14 +2429,14 @@ static s8 _rtl8812ae_phy_get_txpower_limit(struct ieee80211_hw *hw,
- 		rate_section = 5;
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
- 			"Wrong rate 0x%x\n", rate);
- 		break;
- 	}
- 
- 	if (band_temp == BAND_ON_5G  && rate_section == 0)
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--			 "Wrong rate 0x%x: No CCK in 5G Band\n", rate);
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+			"Wrong rate 0x%x: No CCK in 5G Band\n", rate);
- 
- 	/*workaround for wrong index combination to obtain tx power limit,
- 	  OFDM only exists in BW 20M*/
-@@ -2459,10 +2461,10 @@ static s8 _rtl8812ae_phy_get_txpower_limit(struct ieee80211_hw *hw,
- 
- 	if (band_temp == -1 || regulation == -1 || bandwidth_temp == -1 ||
- 		rate_section == -1 || channel_temp == -1) {
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--			 "Wrong index value to access power limit table [band %d][regulation %d][bandwidth %d][rf_path %d][rate_section %d][chnl %d]\n",
--			 band_temp, regulation, bandwidth_temp, rf_path,
--			 rate_section, channel_temp);
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+			"Wrong index value to access power limit table [band %d][regulation %d][bandwidth %d][rf_path %d][rate_section %d][chnl %d]\n",
-+			band_temp, regulation, bandwidth_temp, rf_path,
-+			rate_section, channel_temp);
- 		return MAX_POWER_INDEX;
- 	}
- 
-@@ -2496,8 +2498,8 @@ static s8 _rtl8812ae_phy_get_txpower_limit(struct ieee80211_hw *hw,
- 			rtlphy->txpwr_limit_5g[regu][chnl]
- 			[sec][chnl][rf_path];
- 	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--			 "No power limit table of the specified band\n");
-+		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
-+			"No power limit table of the specified band\n");
- 	}
- 	return power_limit;
- }
-@@ -2605,7 +2607,7 @@ static s8 _rtl8821ae_phy_get_txpower_by_rate(struct ieee80211_hw *hw,
- 			else
- 				tx_pwr_diff = tx_pwr_diff > limit ? limit : tx_pwr_diff;
- 		}
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
- 			"Maximum power by rate %d, final power by rate %d\n",
- 			limit, tx_pwr_diff);
- 	}
-@@ -2628,7 +2630,7 @@ static u8 _rtl8821ae_get_txpower_index(struct ieee80211_hw *hw, u8 path,
- 	    (channel > 14 || channel < 1)) ||
- 	    ((rtlhal->current_bandtype == BAND_ON_5G) && (channel <= 14))) {
- 		index = 0;
--		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+		rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
- 			"Illegal channel!!\n");
- 	}
- 
-@@ -2639,7 +2641,7 @@ static u8 _rtl8821ae_get_txpower_index(struct ieee80211_hw *hw, u8 path,
- 		else if (DESC_RATE6M <= rate)
- 			txpower = rtlefuse->txpwrlevel_ht40_1s[path][index];
- 		else
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "invalid rate\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "invalid rate\n");
- 
- 		if (DESC_RATE6M <= rate && rate <= DESC_RATE54M &&
- 		    !RTL8821AE_RX_HAL_IS_CCK_RATE(rate))
-@@ -2673,8 +2675,8 @@ static u8 _rtl8821ae_get_txpower_index(struct ieee80211_hw *hw, u8 path,
- 		if (DESC_RATE6M <= rate)
- 			txpower = rtlefuse->txpwr_5g_bw40base[path][index];
- 		else
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_WARNING,
--				 "INVALID Rate.\n");
-+			rtl_dbg(rtlpriv, COMP_POWER_TRACKING, DBG_WARNING,
-+				"INVALID Rate.\n");
- 
- 		if (DESC_RATE6M <= rate && rate <= DESC_RATE54M &&
- 		    !RTL8821AE_RX_HAL_IS_CCK_RATE(rate))
-@@ -2940,7 +2942,7 @@ static void _rtl8821ae_phy_set_txpower_index(struct ieee80211_hw *hw,
- 				      MASKBYTE3, power_index);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
- 				"Invalid Rate!!\n");
- 			break;
- 		}
-@@ -3139,13 +3141,13 @@ static void _rtl8821ae_phy_set_txpower_index(struct ieee80211_hw *hw,
- 				      MASKBYTE3, power_index);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--				 "Invalid Rate!!\n");
-+			rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+				"Invalid Rate!!\n");
- 			break;
- 		}
- 	} else {
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--			 "Invalid RFPath!!\n");
-+		rtl_dbg(rtlpriv, COMP_POWER, DBG_LOUD,
-+			"Invalid RFPath!!\n");
- 	}
- }
- 
-@@ -3352,7 +3354,7 @@ static void _rtl8821ae_phy_set_reg_bw(struct rtl_priv *rtlpriv, u8 bw)
- 		rtl_write_word(rtlpriv, REG_TRXPTCL_CTL, tmp & 0xFF7F);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING, "unknown Bandwidth: 0x%x\n", bw);
-+		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING, "unknown Bandwidth: 0x%x\n", bw);
- 		break;
- 	}
- }
-@@ -3403,12 +3405,12 @@ void rtl8821ae_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 	u8 sub_chnl = 0;
- 	u8 l1pk_val = 0;
+ void rtl8723e_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
+@@ -650,9 +650,9 @@ bool rtl8723e_phy_update_txpower_dbm(struct ieee80211_hw *hw, long power_indbm)
+ 		ofdmtxpwridx -= rtlefuse->legacy_ht_txpowerdiff;
+ 	else
+ 		ofdmtxpwridx = 0;
+-	RT_TRACE(rtlpriv, COMP_TXAGC, DBG_TRACE,
+-		 "%lx dBm, ccktxpwridx = %d, ofdmtxpwridx = %d\n",
+-		  power_indbm, ccktxpwridx, ofdmtxpwridx);
++	rtl_dbg(rtlpriv, COMP_TXAGC, DBG_TRACE,
++		"%lx dBm, ccktxpwridx = %d, ofdmtxpwridx = %d\n",
++		power_indbm, ccktxpwridx, ofdmtxpwridx);
+ 	for (idx = 0; idx < 14; idx++) {
+ 		for (rf_path = 0; rf_path < 2; rf_path++) {
+ 			rtlefuse->txpwrlevel_cck[rf_path][idx] = ccktxpwridx;
+@@ -734,10 +734,10 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 	u8 reg_bw_opmode;
+ 	u8 reg_prsr_rsc;
  
 -	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
 -		 "Switch to %s bandwidth\n",
--		  (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20 ?
--		  "20MHz" :
--		  (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40 ?
--		  "40MHz" : "80MHz")));
+-		  rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20 ?
+-		  "20MHz" : "40MHz");
 +	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE,
 +		"Switch to %s bandwidth\n",
-+		(rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20 ?
-+		"20MHz" :
-+		(rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40 ?
-+		"40MHz" : "80MHz")));
++		rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20 ?
++		"20MHz" : "40MHz");
  
- 	_rtl8821ae_phy_set_reg_bw(rtlpriv, rtlphy->current_chan_bw);
- 	sub_chnl = _rtl8821ae_phy_get_secondary_chnl(rtlpriv);
-@@ -3477,7 +3479,7 @@ void rtl8821ae_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 	rtl8821ae_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+ 	if (is_hal_stop(rtlhal)) {
+ 		rtlphy->set_bwmode_inprogress = false;
+@@ -791,7 +791,7 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 	}
+ 	rtl8723e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
  	rtlphy->set_bwmode_inprogress = false;
- 
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD, "\n");
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD, "\n");
+-	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
++	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
  }
  
- void rtl8821ae_phy_set_bw_mode(struct ieee80211_hw *hw,
-@@ -3494,8 +3496,8 @@ void rtl8821ae_phy_set_bw_mode(struct ieee80211_hw *hw,
- 	if ((!is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw)))
- 		rtl8821ae_phy_set_bw_mode_callback(hw);
- 	else {
+ void rtl8723e_phy_set_bw_mode(struct ieee80211_hw *hw,
+@@ -808,8 +808,8 @@ void rtl8723e_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 	if ((!is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
+ 		rtl8723e_phy_set_bw_mode_callback(hw);
+ 	} else {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "FALSE driver sleep or unload\n");
+-			 "false driver sleep or unload\n");
 +		rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
-+			"FALSE driver sleep or unload\n");
++			"false driver sleep or unload\n");
  		rtlphy->set_bwmode_inprogress = false;
  		rtlphy->current_chan_bw = tmp_bw;
  	}
-@@ -3510,8 +3512,8 @@ void rtl8821ae_phy_sw_chnl_callback(struct ieee80211_hw *hw)
- 	u8 path;
- 	u32 data;
+@@ -822,8 +822,8 @@ void rtl8723e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	u32 delay;
  
 -	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
 -		 "switch to channel%d\n", rtlphy->current_channel);
@@ -3880,305 +3225,47 @@ index b8a2b2326902..0ace7885df26 100644
 +		"switch to channel%d\n", rtlphy->current_channel);
  	if (is_hal_stop(rtlhal))
  		return;
- 
-@@ -3553,7 +3555,7 @@ void rtl8821ae_phy_sw_chnl_callback(struct ieee80211_hw *hw)
- 			}
+ 	do {
+@@ -841,7 +841,7 @@ void rtl8723e_phy_sw_chnl_callback(struct ieee80211_hw *hw)
  		}
- 	}
+ 		break;
+ 	} while (true);
 -	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
 +	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
  }
  
- u8 rtl8821ae_phy_sw_chnl(struct ieee80211_hw *hw)
-@@ -3570,8 +3572,8 @@ u8 rtl8821ae_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 
- 	if ((is_hal_stop(rtlhal)) || (RT_CANNOT_IO(hw))) {
+ u8 rtl8723e_phy_sw_chnl(struct ieee80211_hw *hw)
+@@ -861,12 +861,12 @@ u8 rtl8723e_phy_sw_chnl(struct ieee80211_hw *hw)
+ 	rtlphy->sw_chnl_step = 0;
+ 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
+ 		rtl8723e_phy_sw_chnl_callback(hw);
+-		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
+-			 "sw_chnl_inprogress false schedule workitem\n");
++		rtl_dbg(rtlpriv, COMP_CHAN, DBG_LOUD,
++			"sw_chnl_inprogress false schedule workitem\n");
+ 		rtlphy->sw_chnl_inprogress = false;
+ 	} else {
 -		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
 -			 "sw_chnl_inprogress false driver sleep or unload\n");
 +		rtl_dbg(rtlpriv, COMP_CHAN, DBG_LOUD,
 +			"sw_chnl_inprogress false driver sleep or unload\n");
- 		return 0;
+ 		rtlphy->sw_chnl_inprogress = false;
  	}
- 	while (rtlphy->lck_inprogress && timecount < timeout) {
-@@ -3588,16 +3590,16 @@ u8 rtl8821ae_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (channel == 0)
- 		channel = 1;
- 
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
--		 "switch to channel%d, band type is %d\n",
--		 rtlphy->current_channel, rtlhal->current_bandtype);
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE,
-+		"switch to channel%d, band type is %d\n",
-+		rtlphy->current_channel, rtlhal->current_bandtype);
- 
- 	rtl8821ae_phy_sw_chnl_callback(hw);
- 
- 	rtl8821ae_dm_clear_txpower_tracking_state(hw);
- 	rtl8821ae_phy_set_txpower_level(hw, rtlphy->current_channel);
- 
--	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
-+	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE, "\n");
- 	rtlphy->sw_chnl_inprogress = false;
  	return 1;
- }
-@@ -3638,7 +3640,7 @@ static void _rtl8821ae_iqk_backup_macbb(struct ieee80211_hw *hw,
- 	for (i = 0; i < mac_bb_num; i++)
- 		macbb_backup[i] = rtl_read_dword(rtlpriv, backup_macbb_reg[i]);
- 
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "BackupMacBB Success!!!!\n");
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "BackupMacBB Success!!!!\n");
- }
- 
- static void _rtl8821ae_iqk_backup_afe(struct ieee80211_hw *hw, u32 *afe_backup,
-@@ -3651,7 +3653,7 @@ static void _rtl8821ae_iqk_backup_afe(struct ieee80211_hw *hw, u32 *afe_backup,
- 	/*Save AFE Parameters */
- 	for (i = 0; i < afe_num; i++)
- 		afe_backup[i] = rtl_read_dword(rtlpriv, backup_afe_REG[i]);
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "BackupAFE Success!!!!\n");
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "BackupAFE Success!!!!\n");
- }
- 
- static void _rtl8821ae_iqk_backup_rf(struct ieee80211_hw *hw, u32 *rfa_backup,
-@@ -3669,7 +3671,7 @@ static void _rtl8821ae_iqk_backup_rf(struct ieee80211_hw *hw, u32 *rfa_backup,
- 		rfb_backup[i] = rtl_get_rfreg(hw, RF90_PATH_B, backup_rf_reg[i],
- 					      BMASKDWORD);
- 	}
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "BackupRF Success!!!!\n");
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "BackupRF Success!!!!\n");
- }
- 
- static void _rtl8821ae_iqk_configure_mac(
-@@ -3698,13 +3700,13 @@ static void _rtl8821ae_iqk_tx_fill_iqc(struct ieee80211_hw *hw,
- 		rtl_write_dword(rtlpriv, 0xcc8, 0x20000000);
- 		rtl_set_bbreg(hw, 0xccc, 0x000007ff, tx_y);
- 		rtl_set_bbreg(hw, 0xcd4, 0x000007ff, tx_x);
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "TX_X = %x;;TX_Y = %x =====> fill to IQC\n",
--			 tx_x, tx_y);
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "0xcd4 = %x;;0xccc = %x ====>fill to IQC\n",
--			 rtl_get_bbreg(hw, 0xcd4, 0x000007ff),
--			 rtl_get_bbreg(hw, 0xccc, 0x000007ff));
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"TX_X = %x;;TX_Y = %x =====> fill to IQC\n",
-+			tx_x, tx_y);
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"0xcd4 = %x;;0xccc = %x ====>fill to IQC\n",
-+			rtl_get_bbreg(hw, 0xcd4, 0x000007ff),
-+			rtl_get_bbreg(hw, 0xccc, 0x000007ff));
- 		break;
- 	default:
- 		break;
-@@ -3720,12 +3722,12 @@ static void _rtl8821ae_iqk_rx_fill_iqc(struct ieee80211_hw *hw,
- 		rtl_set_bbreg(hw, 0x82c, BIT(31), 0x0); /* [31] = 0 --> Page C */
- 		rtl_set_bbreg(hw, 0xc10, 0x000003ff, rx_x>>1);
- 		rtl_set_bbreg(hw, 0xc10, 0x03ff0000, rx_y>>1);
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "rx_x = %x;;rx_y = %x ====>fill to IQC\n",
--			 rx_x>>1, rx_y>>1);
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "0xc10 = %x ====>fill to IQC\n",
--			 rtl_read_dword(rtlpriv, 0xc10));
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"rx_x = %x;;rx_y = %x ====>fill to IQC\n",
-+			rx_x >> 1, rx_y >> 1);
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"0xc10 = %x ====>fill to IQC\n",
-+			rtl_read_dword(rtlpriv, 0xc10));
- 		break;
- 	default:
- 		break;
-@@ -3750,9 +3752,9 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 	int	i, k, vdf_y[3], vdf_x[3],
- 		ii, dx = 0, dy = 0, tx_finish = 0, rx_finish = 0;
- 
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			"BandWidth = %d.\n",
--			 rtlphy->current_chan_bw);
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+		"BandWidth = %d.\n",
-+		 rtlphy->current_chan_bw);
- 	if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_80)
- 		vdf_enable = true;
- 
-@@ -3856,7 +3858,7 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 				rtl_write_dword(rtlpriv, 0xc8c, 0x00163e96);
- 
- 			if (vdf_enable == 1) {
--				RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "VDF_enable\n");
-+				rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "VDF_enable\n");
- 				for (k = 0; k <= 2; k++) {
- 					switch (k) {
- 					case 0:
-@@ -3870,9 +3872,9 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 						rtl_set_bbreg(hw, 0xce8, BIT(31), 0x0);
- 						break;
- 					case 2:
--						RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
-+						rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
- 							"vdf_y[1] = %x;;;vdf_y[0] = %x\n", vdf_y[1]>>21 & 0x00007ff, vdf_y[0]>>21 & 0x00007ff);
--						RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
-+						rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
- 							"vdf_x[1] = %x;;;vdf_x[0] = %x\n", vdf_x[1]>>21 & 0x00007ff, vdf_x[0]>>21 & 0x00007ff);
- 						tx_dt[cal] = (vdf_y[1]>>20)-(vdf_y[0]>>20);
- 						tx_dt[cal] = ((16*tx_dt[cal])*10000/15708);
-@@ -3992,7 +3994,7 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 
- 			if (vdf_enable == 1) {
- 				rtl_set_bbreg(hw, 0xce8, BIT(31), 0x0);    /* TX VDF Disable */
--				RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "RXVDF Start\n");
-+				rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "RXVDF Start\n");
- 				for (k = 0; k <= 2; k++) {
- 					/* ====== RX mode TXK (RXK Step 1) ====== */
- 					rtl_set_bbreg(hw, 0x82c, BIT(31), 0x0); /* [31] = 0 --> Page C */
-@@ -4029,14 +4031,17 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 						break;
- 					case 2:
- 						{
--							RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--							"VDF_Y[1] = %x;;;VDF_Y[0] = %x\n",
--							vdf_y[1]>>21 & 0x00007ff, vdf_y[0]>>21 & 0x00007ff);
--							RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--							"VDF_X[1] = %x;;;VDF_X[0] = %x\n",
--							vdf_x[1]>>21 & 0x00007ff, vdf_x[0]>>21 & 0x00007ff);
-+							rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+								"VDF_Y[1] = %x;;;VDF_Y[0] = %x\n",
-+								vdf_y[1] >> 21 & 0x00007ff,
-+								vdf_y[0] >> 21 & 0x00007ff);
-+							rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+								"VDF_X[1] = %x;;;VDF_X[0] = %x\n",
-+								vdf_x[1] >> 21 & 0x00007ff,
-+								vdf_x[0] >> 21 & 0x00007ff);
- 							rx_dt[cal] = (vdf_y[1]>>20)-(vdf_y[0]>>20);
--							RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "Rx_dt = %d\n", rx_dt[cal]);
-+							rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "Rx_dt = %d\n",
-+								rx_dt[cal]);
- 							rx_dt[cal] = ((16*rx_dt[cal])*10000/13823);
- 							rx_dt[cal] = (rx_dt[cal] >> 1)+(rx_dt[cal] & BIT(0));
- 							rtl_write_dword(rtlpriv, 0xc80, 0x18008c20);/* TX_TONE_idx[9:0], TxK_Mask[29] TX_Tone = 16 */
-@@ -4098,10 +4103,10 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 						tx_x0_rxk[cal] = tx_x0[cal];
- 						tx_y0_rxk[cal] = tx_y0[cal];
- 						tx0iqkok = true;
--						RT_TRACE(rtlpriv,
--							 COMP_IQK,
--							 DBG_LOUD,
--							 "RXK Step 1 fail\n");
-+						rtl_dbg(rtlpriv,
-+							COMP_IQK,
-+							DBG_LOUD,
-+							"RXK Step 1 fail\n");
- 					}
- 
- 					/* ====== RX IQK ====== */
-@@ -4257,8 +4262,8 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 					tx_x0_rxk[cal] = tx_x0[cal];
- 					tx_y0_rxk[cal] = tx_y0[cal];
- 					tx0iqkok = true;
--					RT_TRACE(rtlpriv, COMP_IQK,
--						 DBG_LOUD, "1");
-+					rtl_dbg(rtlpriv, COMP_IQK,
-+						DBG_LOUD, "1");
- 				}
- 
- 				/* ====== RX IQK ====== */
-@@ -4352,20 +4357,20 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 	/* FillIQK Result */
- 	switch (path) {
- 	case RF90_PATH_A:
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "========Path_A =======\n");
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"========Path_A =======\n");
- 		if (tx_average == 0)
+@@ -991,9 +991,9 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			_rtl8723e_phy_sw_rf_seting(hw, channel);
  			break;
- 
- 		for (i = 0; i < tx_average; i++) {
--			RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--				 "TX_X0_RXK[%d] = %x ;; TX_Y0_RXK[%d] = %x\n", i,
--				 (tx_x0_rxk[i])>>21&0x000007ff, i,
--				 (tx_y0_rxk[i])>>21&0x000007ff);
--			RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--				 "TX_X0[%d] = %x ;; TX_Y0[%d] = %x\n", i,
--				 (tx_x0[i])>>21&0x000007ff, i,
--				 (tx_y0[i])>>21&0x000007ff);
-+			rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+				"TX_X0_RXK[%d] = %x ;; TX_Y0_RXK[%d] = %x\n", i,
-+				(tx_x0_rxk[i]) >> 21 & 0x000007ff, i,
-+				(tx_y0_rxk[i]) >> 21 & 0x000007ff);
-+			rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+				"TX_X0[%d] = %x ;; TX_Y0[%d] = %x\n", i,
-+				(tx_x0[i]) >> 21 & 0x000007ff, i,
-+				(tx_y0[i]) >> 21 & 0x000007ff);
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-				 "switch case %#x not processed\n",
+-				 currentcmd->cmdid);
++			rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
++				"switch case %#x not processed\n",
++				currentcmd->cmdid);
+ 			break;
  		}
- 		for (i = 0; i < tx_average; i++) {
- 			for (ii = i+1; ii < tx_average; ii++) {
-@@ -4393,7 +4398,7 @@ static void _rtl8821ae_iqk_tx(struct ieee80211_hw *hw, enum radio_path path)
- 			break;
  
- 		for (i = 0; i < rx_average; i++)
--			RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
-+			rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
- 				"RX_X0[%d] = %x ;; RX_Y0[%d] = %x\n", i,
- 				(rx_x0[i])>>21&0x000007ff, i,
- 				(rx_y0[i])>>21&0x000007ff);
-@@ -4439,8 +4444,8 @@ static void _rtl8821ae_iqk_restore_rf(struct ieee80211_hw *hw,
- 
- 	switch (path) {
- 	case RF90_PATH_A:
--		RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--			 "RestoreRF Path A Success!!!!\n");
-+		rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+			"RestoreRF Path A Success!!!!\n");
- 		break;
- 	default:
- 			break;
-@@ -4468,7 +4473,7 @@ static void _rtl8821ae_iqk_restore_afe(struct ieee80211_hw *hw,
- 	rtl_write_dword(rtlpriv, 0xcc4, 0x20040000);
- 	rtl_write_dword(rtlpriv, 0xcc8, 0x20000000);
- 	rtl_write_dword(rtlpriv, 0xcb8, 0x0);
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "RestoreAFE Success!!!!\n");
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "RestoreAFE Success!!!!\n");
- }
- 
- static void _rtl8821ae_iqk_restore_macbb(struct ieee80211_hw *hw,
-@@ -4483,7 +4488,7 @@ static void _rtl8821ae_iqk_restore_macbb(struct ieee80211_hw *hw,
- 	/* Reload MacBB Parameters */
- 	for (i = 0; i < macbb_num; i++)
- 		rtl_write_dword(rtlpriv, backup_macbb_reg[i], macbb_backup[i]);
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD, "RestoreMacBB Success!!!!\n");
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD, "RestoreMacBB Success!!!!\n");
- }
- 
- #undef MACBB_REG_NUM
-@@ -4531,7 +4536,7 @@ static void _rtl8821ae_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool main)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	/* struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw)); */
- 	/* struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw)); */
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
-+	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
- 
- 	if (main)
- 		rtl_set_bbreg(hw, RA_RFE_PINMUX + 4, BIT(29) | BIT(28), 0x1);
-@@ -4579,11 +4584,11 @@ void rtl8821ae_reset_iqk_result(struct ieee80211_hw *hw)
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 	u8 i;
- 
--	RT_TRACE(rtlpriv, COMP_IQK, DBG_LOUD,
--		 "rtl8812ae_dm_reset_iqk_result:: settings regs %d default regs %d\n",
--		 (int)(sizeof(rtlphy->iqk_matrix) /
--		 sizeof(struct iqk_matrix_regs)),
--		 IQK_MATRIX_SETTINGS_NUM);
-+	rtl_dbg(rtlpriv, COMP_IQK, DBG_LOUD,
-+		"rtl8812ae_dm_reset_iqk_result:: settings regs %d default regs %d\n",
-+		(int)(sizeof(rtlphy->iqk_matrix) /
-+		sizeof(struct iqk_matrix_regs)),
-+		IQK_MATRIX_SETTINGS_NUM);
- 
- 	for (i = 0; i < IQK_MATRIX_SETTINGS_NUM; i++) {
- 		rtlphy->iqk_matrix[i].value[0][0] = 0x100;
-@@ -4630,20 +4635,20 @@ bool rtl8821ae_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
+@@ -1444,24 +1444,24 @@ bool rtl8723e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
  	struct rtl_phy *rtlphy = &rtlpriv->phy;
  	bool postprocessing = false;
  
@@ -4198,7 +3285,6 @@ index b8a2b2326902..0ace7885df26 100644
  			postprocessing = true;
  			break;
  		case IO_CMD_PAUSE_BAND0_DM_BY_SCAN:
- 		case IO_CMD_PAUSE_BAND1_DM_BY_SCAN:
 -			RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
 -				 "[IO CMD] Pause DM before scan.\n");
 +			rtl_dbg(rtlpriv, COMP_CMD, DBG_TRACE,
@@ -4206,18 +3292,25 @@ index b8a2b2326902..0ace7885df26 100644
  			postprocessing = true;
  			break;
  		default:
-@@ -4659,7 +4664,7 @@ bool rtl8821ae_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-				 "switch case %#x not processed\n", iotype);
++			rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
++				"switch case %#x not processed\n", iotype);
+ 			break;
+ 		}
+ 	} while (false);
+@@ -1472,7 +1472,7 @@ bool rtl8723e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
  		return false;
  	}
- 	rtl8821ae_phy_set_io(hw);
+ 	rtl8723e_phy_set_io(hw);
 -	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE, "IO Type(%#x)\n", iotype);
 +	rtl_dbg(rtlpriv, COMP_CMD, DBG_TRACE, "IO Type(%#x)\n", iotype);
  	return true;
  }
  
-@@ -4669,9 +4674,9 @@ static void rtl8821ae_phy_set_io(struct ieee80211_hw *hw)
- 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+@@ -1482,9 +1482,9 @@ static void rtl8723e_phy_set_io(struct ieee80211_hw *hw)
  	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
  
 -	RT_TRACE(rtlpriv, COMP_CMD, DBG_TRACE,
 -		 "--->Cmd(%#x), set_io_inprogress(%d)\n",
@@ -4227,8 +3320,17 @@ index b8a2b2326902..0ace7885df26 100644
 +		rtlphy->current_io_type, rtlphy->set_io_inprogress);
  	switch (rtlphy->current_io_type) {
  	case IO_CMD_RESUME_DM_BY_SCAN:
- 		if (rtlpriv->mac80211.opmode == NL80211_IFTYPE_ADHOC)
-@@ -4696,8 +4701,8 @@ static void rtl8821ae_phy_set_io(struct ieee80211_hw *hw)
+ 		dm_digtable->cur_igvalue = rtlphy->initgain_backup.xaagccore1;
+@@ -1497,14 +1497,14 @@ static void rtl8723e_phy_set_io(struct ieee80211_hw *hw)
+ 		rtl8723e_dm_write_dig(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-			 "switch case %#x not processed\n",
+-			 rtlphy->current_io_type);
++		rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
++			"switch case %#x not processed\n",
++			rtlphy->current_io_type);
  		break;
  	}
  	rtlphy->set_io_inprogress = false;
@@ -4238,8 +3340,19 @@ index b8a2b2326902..0ace7885df26 100644
 +		"(%#x)\n", rtlphy->current_io_type);
  }
  
- static void rtl8821ae_phy_set_rf_on(struct ieee80211_hw *hw)
-@@ -4731,18 +4736,17 @@ static bool _rtl8821ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ static void rtl8723e_phy_set_rf_on(struct ieee80211_hw *hw)
+@@ -1541,8 +1541,8 @@ static void _rtl8723e_phy_set_rf_sleep(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, 0xE2);
+ 		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, 0xE3);
+ 		rtl_write_byte(rtlpriv, REG_TXPAUSE, 0x00);
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_TRACE,
+-			 "Switch RF timeout !!!.\n");
++		rtl_dbg(rtlpriv, COMP_POWER, DBG_TRACE,
++			"Switch RF timeout !!!.\n");
+ 		return;
+ 	}
+ 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, 0xE2);
+@@ -1569,18 +1569,17 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
  
  			do {
  				initializecount++;
@@ -4260,11 +3373,22 @@ index b8a2b2326902..0ace7885df26 100644
 +			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
 +				"Set ERFON slept:%d ms\n",
 +				jiffies_to_msecs(jiffies -
-+				 ppsc->last_sleep_jiffies));
++					   ppsc->last_sleep_jiffies));
  			ppsc->last_awake_jiffies = jiffies;
- 			rtl8821ae_phy_set_rf_on(hw);
+ 			rtl8723e_phy_set_rf_on(hw);
  		}
-@@ -4763,27 +4767,27 @@ static bool _rtl8821ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
+@@ -1594,8 +1593,8 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		break;
+ 	case ERFOFF:
+ 		if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_HALT_NIC) {
+-			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
+-				 "IPS Set eRf nic disable\n");
++			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
++				"IPS Set eRf nic disable\n");
+ 			rtl_ps_disable_nic(hw);
+ 			RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 		} else {
+@@ -1619,33 +1618,33 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
  				queue_id++;
  				continue;
  			} else {
@@ -4282,35 +3406,45 @@ index b8a2b2326902..0ace7885df26 100644
  			}
  			if (i >= MAX_DOZE_WAITING_TIMES_9x) {
 -				RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--					 "\n ERFSLEEP: %d times TcbBusyQueue[%d] = %d !\n",
+-					 "ERFSLEEP: %d times TcbBusyQueue[%d] = %d !\n",
 -					  MAX_DOZE_WAITING_TIMES_9x,
 -					  queue_id,
 -					  skb_queue_len(&ring->queue));
 +				rtl_dbg(rtlpriv, COMP_ERR, DBG_WARNING,
-+					"\n ERFSLEEP: %d times TcbBusyQueue[%d] = %d !\n",
++					"ERFSLEEP: %d times TcbBusyQueue[%d] = %d !\n",
 +					MAX_DOZE_WAITING_TIMES_9x,
 +					queue_id,
 +					skb_queue_len(&ring->queue));
  				break;
  			}
  		}
- 
- 		if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_HALT_NIC) {
--			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--				 "IPS Set eRf nic disable\n");
-+			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
-+				"IPS Set eRf nic disable\n");
- 			rtl_ps_disable_nic(hw);
- 			RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rf.c
-index a6e56872e063..e339f2383e6d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rf.c
-@@ -428,13 +428,13 @@ static bool _rtl8821ae_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
+-		RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
+-			 "Set ERFSLEEP awaked:%d ms\n",
+-			  jiffies_to_msecs(jiffies -
+-					   ppsc->last_awake_jiffies));
++		rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
++			"Set ERFSLEEP awaked:%d ms\n",
++			jiffies_to_msecs(jiffies -
++			   ppsc->last_awake_jiffies));
+ 		ppsc->last_sleep_jiffies = jiffies;
+ 		_rtl8723e_phy_set_rf_sleep(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-			 "switch case %#x not processed\n", rfpwr_state);
++		rtl_dbg(rtlpriv, COMP_ERR, DBG_LOUD,
++			"switch case %#x not processed\n", rfpwr_state);
+ 		bresult = false;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+index 9058527a7f94..ecec8c9f0992 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+@@ -480,12 +480,12 @@ static bool _rtl8723e_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
  		}
  
- 		if (!rtstatus) {
+ 		if (rtstatus != true) {
 -			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
 -				 "Radio[%d] Fail!!\n", rfpath);
 +			rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
@@ -4319,103 +3453,17 @@ index a6e56872e063..e339f2383e6d 100644
  		}
  	}
  
- 	/*put arrays in dm.c*/
 -	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "\n");
 +	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "\n");
  	return rtstatus;
  }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-index cd809c992245..d1798eb2e1e6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-@@ -391,7 +391,7 @@ static bool rtl8821ae_get_rxdesc_is_ht(struct ieee80211_hw *hw, __le32 *pdesc)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+index a04ce15d5538..6bcd897512ac 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+@@ -368,8 +368,8 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 	u8 bw_40 = 0;
  
- 	rx_rate = get_rx_desc_rxmcs(pdesc);
- 
--	RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD, "rx_rate=0x%02x.\n", rx_rate);
-+	rtl_dbg(rtlpriv, COMP_RXDESC, DBG_LOUD, "rx_rate=0x%02x.\n", rx_rate);
- 
- 	if ((rx_rate >= DESC_RATEMCS0) && (rx_rate <= DESC_RATEMCS15))
- 		return true;
-@@ -405,7 +405,7 @@ static bool rtl8821ae_get_rxdesc_is_vht(struct ieee80211_hw *hw, __le32 *pdesc)
- 
- 	rx_rate = get_rx_desc_rxmcs(pdesc);
- 
--	RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD, "rx_rate=0x%02x.\n", rx_rate);
-+	rtl_dbg(rtlpriv, COMP_RXDESC, DBG_LOUD, "rx_rate=0x%02x.\n", rx_rate);
- 
- 	if (rx_rate >= DESC_RATEVHT1SS_MCS0)
- 		return true;
-@@ -461,12 +461,12 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 	status->vht_nss = rtl8821ae_get_rx_vht_nss(hw, pdesc);
- 	status->is_cck = RTL8821AE_RX_HAL_IS_CCK_RATE(status->rate);
- 
--	RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
--		 "rx_packet_bw=%s,is_ht %d, is_vht %d, vht_nss=%d,is_short_gi %d.\n",
--		 (status->rx_packet_bw == 2) ? "80M" :
--		 (status->rx_packet_bw == 1) ? "40M" : "20M",
--		 status->is_ht, status->is_vht, status->vht_nss,
--		 status->is_short_gi);
-+	rtl_dbg(rtlpriv, COMP_RXDESC, DBG_LOUD,
-+		"rx_packet_bw=%s,is_ht %d, is_vht %d, vht_nss=%d,is_short_gi %d.\n",
-+		(status->rx_packet_bw == 2) ? "80M" :
-+		(status->rx_packet_bw == 1) ? "40M" : "20M",
-+		status->is_ht, status->is_vht, status->vht_nss,
-+		status->is_short_gi);
- 
- 	if (get_rx_status_desc_rpt_sel(pdesc))
- 		status->packet_report_type = C2H_PACKET;
-@@ -483,9 +483,9 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 		wake_match = 0;
- 
- 	if (wake_match)
--		RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
--			 "GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
--			 wake_match);
-+		rtl_dbg(rtlpriv, COMP_RXDESC, DBG_LOUD,
-+			"GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
-+			wake_match);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-@@ -558,9 +558,9 @@ static u8 rtl8821ae_bw_mapping(struct ieee80211_hw *hw,
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 	u8 bw_setting_of_desc = 0;
- 
--	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--		 "rtl8821ae_bw_mapping, current_chan_bw %d, packet_bw %d\n",
--		 rtlphy->current_chan_bw, ptcb_desc->packet_bw);
-+	rtl_dbg(rtlpriv, COMP_SEND, DBG_TRACE,
-+		"%s, current_chan_bw %d, packet_bw %d\n", __func__,
-+		rtlphy->current_chan_bw, ptcb_desc->packet_bw);
- 
- 	if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_80) {
- 		if (ptcb_desc->packet_bw == HT_CHANNEL_WIDTH_80)
-@@ -602,8 +602,8 @@ static u8 rtl8821ae_sc_mapping(struct ieee80211_hw *hw,
- 				sc_setting_of_desc =
- 					VHT_DATA_SC_40_UPPER_OF_80MHZ;
- 			else
--				RT_TRACE(rtlpriv, COMP_SEND, DBG_LOUD,
--					 "rtl8821ae_sc_mapping: Not Correct Primary40MHz Setting\n");
-+				rtl_dbg(rtlpriv, COMP_SEND, DBG_LOUD,
-+					"%s: Not Correct Primary40MHz Setting\n", __func__);
- 		} else {
- 			if ((mac->cur_40_prime_sc ==
- 			     HAL_PRIME_CHNL_OFFSET_LOWER) &&
-@@ -630,8 +630,8 @@ static u8 rtl8821ae_sc_mapping(struct ieee80211_hw *hw,
- 				sc_setting_of_desc =
- 					VHT_DATA_SC_20_UPPERST_OF_80MHZ;
- 			else
--				RT_TRACE(rtlpriv, COMP_SEND, DBG_LOUD,
--					 "rtl8821ae_sc_mapping: Not Correct Primary40MHz Setting\n");
-+				rtl_dbg(rtlpriv, COMP_SEND, DBG_LOUD,
-+					"%s: Not Correct Primary40MHz Setting\n", __func__);
- 		}
- 	} else if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
- 		if (ptcb_desc->packet_bw == HT_CHANNEL_WIDTH_20_40) {
-@@ -693,8 +693,8 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 	mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
- 				 PCI_DMA_TODEVICE);
  	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
 -		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
 -			 "DMA mapping error\n");
@@ -4423,21 +3471,8 @@ index cd809c992245..d1798eb2e1e6 100644
 +			"DMA mapping error\n");
  		return;
  	}
- 	clear_pci_tx_desc_content(pdesc, sizeof(struct tx_desc_8821ae));
-@@ -708,9 +708,9 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 			set_tx_desc_offset(pdesc, USB_HWDESC_HEADER_LEN +
- 					   EM_HDR_LEN);
- 			if (ptcb_desc->empkt_num) {
--				RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--					 "Insert 8 byte.pTcb->EMPktNum:%d\n",
--					  ptcb_desc->empkt_num);
-+				rtl_dbg(rtlpriv, COMP_SEND, DBG_TRACE,
-+					"Insert 8 byte.pTcb->EMPktNum:%d\n",
-+					ptcb_desc->empkt_num);
- 				rtl8821ae_insert_emcontent(ptcb_desc,
- 							   (__le32 *)skb->data);
- 			}
-@@ -789,8 +789,8 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+@@ -477,8 +477,8 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
  
  		if (ieee80211_is_data_qos(fc)) {
  			if (mac->rdg_en) {
@@ -4448,17 +3483,17 @@ index cd809c992245..d1798eb2e1e6 100644
  				set_tx_desc_rdg_enable(pdesc, 1);
  				set_tx_desc_htc(pdesc, 1);
  			}
-@@ -822,7 +822,7 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
+@@ -517,7 +517,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 		set_tx_desc_bmc(pdesc, 1);
  	}
  
- 	rtl8821ae_dm_set_tx_ant_by_tx_info(hw, pdesc8, ptcb_desc->mac_id);
 -	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
 +	rtl_dbg(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
  }
  
- void rtl8821ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
-@@ -839,8 +839,8 @@ void rtl8821ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 					    PCI_DMA_TODEVICE);
+ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
+@@ -537,8 +537,8 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
+ 	__le16 fc = hdr->frame_control;
  
  	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
 -		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
