@@ -2,89 +2,161 @@ Return-Path: <SRS0=cbEF=BC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 343C5C433E3
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 12:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B762C433E8
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 13:53:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AE7A20709
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 12:11:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="D6TlSCEh"
+	by mail.kernel.org (Postfix) with ESMTP id 05B8D2080D
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 13:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728426AbgGWMLY (ORCPT
+        id S1729115AbgGWNxF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:11:24 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:62309 "EHLO m43-7.mailgun.net"
+        Thu, 23 Jul 2020 09:53:05 -0400
+Received: from smtp.asem.it ([151.1.184.197]:61446 "EHLO smtp.asem.it"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727940AbgGWMLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Jul 2020 08:11:24 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595506283; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=WvXLJMSd5moKGBo4HGcbWn9Mn8ofEkg1LsUDy5piKlI=; b=D6TlSCEhZYtWjlBKd4YEIVLkRPKWwp8zQWb0IgYnnBjgyDt7C1ji7yTgSR7uEzajUteddrgf
- zFbNLm+4GTjUhZmpY/iN6uEZcrzy+/duf/rF2+Avz2YL+guzawjSMpx0i0KApMTZIYAqh8rx
- YlM2f6HLCN9OdC9RHdCE96pq8OA=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n14.prod.us-west-2.postgun.com with SMTP id
- 5f197e638e9b2c49c6f31de3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 23 Jul 2020 12:11:15
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 495D0C433C6; Thu, 23 Jul 2020 12:11:15 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: akolli)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7FD4AC433C9;
-        Thu, 23 Jul 2020 12:11:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7FD4AC433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=akolli@codeaurora.org
-From:   Anilkumar Kolli <akolli@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        akolli@codeaurora.org
-Subject: [PATCH v4 0/3] ath11k: Add IPQ6018 support
-Date:   Thu, 23 Jul 2020 17:41:01 +0530
-Message-Id: <1595506264-6393-1-git-send-email-akolli@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1728942AbgGWNxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Jul 2020 09:53:03 -0400
+Received: from webmail.asem.it
+        by asem.it (smtp.asem.it)
+        (SecurityGateway 6.5.2)
+        with ESMTP id SG000400764.MSG 
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 15:52:56 +0200S
+Received: from ASAS044.asem.intra (172.16.16.44) by ASAS044.asem.intra
+ (172.16.16.44) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 23
+ Jul 2020 15:52:55 +0200
+Received: from flavio-x.asem.intra (172.16.17.208) by ASAS044.asem.intra
+ (172.16.16.44) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Thu, 23 Jul 2020 15:52:55 +0200
+From:   Flavio Suligoi <f.suligoi@asem.it>
+To:     "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Cong Wang <xiyou.wangcong@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Flavio Suligoi <f.suligoi@asem.it>
+Subject: [PATCH v2 7/9] intersil: fix wiki website url
+Date:   Thu, 23 Jul 2020 15:52:54 +0200
+Message-ID: <20200723135254.594984-1-f.suligoi@asem.it>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-SGHeloLookup-Result: pass smtp.helo=webmail.asem.it (ip=172.16.16.44)
+X-SGSPF-Result: none (smtp.asem.it)
+X-SGOP-RefID: str=0001.0A090210.5F199638.0028,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0 (_st=1 _vt=0 _iwf=0)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-IPQ6018 has a 5G radio and 2G radio with 2x2
-and shares IPQ8074 configuration.
+In some Intersil files, the wiki url is still the old
+"wireless.kernel.org" instead of the new
+"wireless.wiki.kernel.org"
 
-Tested on: IPQ6018 WLAN.HK.2.2-02134-QCAHKSWPL_SILICONZ-1
-Tested on: IPQ8074 WLAN.HK.2.4.0.1-00009-QCAHKSWPL_SILICONZ-1 
+Signed-off-by: Flavio Suligoi <f.suligoi@asem.it>
+---
 
-Anilkumar Kolli (3):
-  dt: bindings: net: update compatible for ath11k
-  ath11k: copy ce service configs to hw_params
-  ath11k: add IPQ6018 support
+v2: the previous version failed to apply:
+    "fatal: corrupt patch at line 97
+     error: could not build fake ancestor"
 
-V2:
- - Added devicetree reviewers 
-V3:
- - addressed dt bindinds comments
- - Reworked on Kalles patches
- - copied ce svc configs to hw_params
-V4:
- - updated dt patch (Rob)
+ drivers/net/wireless/intersil/Kconfig                  | 2 +-
+ drivers/net/wireless/intersil/p54/Kconfig              | 6 +++---
+ drivers/net/wireless/intersil/p54/fwio.c               | 2 +-
+ drivers/net/wireless/intersil/p54/p54usb.c             | 2 +-
+ drivers/net/wireless/intersil/prism54/islpci_hotplug.c | 3 ++-
+ 5 files changed, 8 insertions(+), 7 deletions(-)
 
- .../bindings/net/wireless/qcom,ath11k.yaml         |   4 +-
- drivers/net/wireless/ath/ath11k/ahb.c              | 131 ++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/core.c             |  20 ++--
- drivers/net/wireless/ath/ath11k/core.h             |   2 +
- drivers/net/wireless/ath/ath11k/hw.h               |   2 +
- 5 files changed, 146 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/net/wireless/intersil/Kconfig b/drivers/net/wireless/intersil/Kconfig
+index 6a6ce9d4aeee..c52d9b535623 100644
+--- a/drivers/net/wireless/intersil/Kconfig
++++ b/drivers/net/wireless/intersil/Kconfig
+@@ -30,7 +30,7 @@ config PRISM54
+ 
+ 	  For more information refer to the p54 wiki:
+ 
+-	  http://wireless.kernel.org/en/users/Drivers/p54
++	  http://wireless.wiki.kernel.org/en/users/Drivers/p54
+ 
+ 	  Note: You need a motherboard with DMA support to use any of these cards
+ 
+diff --git a/drivers/net/wireless/intersil/p54/Kconfig b/drivers/net/wireless/intersil/p54/Kconfig
+index 024be5507daf..003c378ed131 100644
+--- a/drivers/net/wireless/intersil/p54/Kconfig
++++ b/drivers/net/wireless/intersil/p54/Kconfig
+@@ -10,7 +10,7 @@ config P54_COMMON
+ 	  also need to be enabled in order to support any devices.
+ 
+ 	  These devices require softmac firmware which can be found at
+-	  <http://wireless.kernel.org/en/users/Drivers/p54>
++	  <http://wireless.wiki.kernel.org/en/users/Drivers/p54>
+ 
+ 	  If you choose to build a module, it'll be called p54common.
+ 
+@@ -22,7 +22,7 @@ config P54_USB
+ 	  This driver is for USB isl38xx based wireless cards.
+ 
+ 	  These devices require softmac firmware which can be found at
+-	  <http://wireless.kernel.org/en/users/Drivers/p54>
++	  <http://wireless.wiki.kernel.org/en/users/Drivers/p54>
+ 
+ 	  If you choose to build a module, it'll be called p54usb.
+ 
+@@ -36,7 +36,7 @@ config P54_PCI
+ 	  supported by the fullmac driver/firmware.
+ 
+ 	  This driver requires softmac firmware which can be found at
+-	  <http://wireless.kernel.org/en/users/Drivers/p54>
++	  <http://wireless.wiki.kernel.org/en/users/Drivers/p54>
+ 
+ 	  If you choose to build a module, it'll be called p54pci.
+ 
+diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+index a5afcc865196..bece14e4ff0d 100644
+--- a/drivers/net/wireless/intersil/p54/fwio.c
++++ b/drivers/net/wireless/intersil/p54/fwio.c
+@@ -132,7 +132,7 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ 	if (priv->fw_var < 0x500)
+ 		wiphy_info(priv->hw->wiphy,
+ 			   "you are using an obsolete firmware. "
+-			   "visit http://wireless.kernel.org/en/users/Drivers/p54 "
++			   "visit http://wireless.wiki.kernel.org/en/users/Drivers/p54 "
+ 			   "and grab one for \"kernel >= 2.6.28\"!\n");
+ 
+ 	if (priv->fw_var >= 0x300) {
+diff --git a/drivers/net/wireless/intersil/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
+index ff0e30c0c14c..cae47663b17b 100644
+--- a/drivers/net/wireless/intersil/p54/p54usb.c
++++ b/drivers/net/wireless/intersil/p54/p54usb.c
+@@ -36,7 +36,7 @@ static struct usb_driver p54u_driver;
+  * Note:
+  *
+  * Always update our wiki's device list (located at:
+- * http://wireless.kernel.org/en/users/Drivers/p54/devices ),
++ * http://wireless.wiki.kernel.org/en/users/Drivers/p54/devices ),
+  * whenever you add a new device.
+  */
+ 
+diff --git a/drivers/net/wireless/intersil/prism54/islpci_hotplug.c b/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+index 20291c0d962d..34912267ff63 100644
+--- a/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
++++ b/drivers/net/wireless/intersil/prism54/islpci_hotplug.c
+@@ -26,7 +26,8 @@ module_param(init_pcitm, int, 0);
+ /* In this order: vendor, device, subvendor, subdevice, class, class_mask,
+  * driver_data
+  * If you have an update for this please contact prism54-devel@prism54.org
+- * The latest list can be found at http://wireless.kernel.org/en/users/Drivers/p54 */
++ * The latest list can be found at http://wireless.wiki.kernel.org/en/users/Drivers/p54
++ */
+ static const struct pci_device_id prism54_id_tbl[] = {
+ 	/* Intersil PRISM Duette/Prism GT Wireless LAN adapter */
+ 	{
 -- 
-2.7.4
+2.25.1
 
