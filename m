@@ -2,264 +2,256 @@ Return-Path: <SRS0=cbEF=BC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 616CFC433F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 10:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6DFDC433E4
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 12:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 481F52086A
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 10:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94E252080D
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jul 2020 12:11:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="srx2mqA0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728300AbgGWKDZ (ORCPT
+        id S1728453AbgGWML2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jul 2020 06:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36146 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728044AbgGWKDZ (ORCPT
+        Thu, 23 Jul 2020 08:11:28 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:37824 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728396AbgGWML1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Jul 2020 06:03:25 -0400
-Received: from rhcavuit04.kulnet.kuleuven.be (rhcavuit04.kulnet.kuleuven.be [IPv6:2a02:2c40:0:c0::25:137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E704C0619DC
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 03:03:24 -0700 (PDT)
-X-KULeuven-Envelope-From: mathy.vanhoef@kuleuven.be
-X-KULeuven-Scanned: Found to be clean
-X-KULeuven-ID: 78937120334.A0C2C
-X-KULeuven-Information: Katholieke Universiteit Leuven
-Received: from icts-p-smtps-2.cc.kuleuven.be (icts-p-smtps-2e.kulnet.kuleuven.be [134.58.240.34])
-        by rhcavuit04.kulnet.kuleuven.be (Postfix) with ESMTP id 78937120334
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2020 12:03:19 +0200 (CEST)
-Received: from mathy-work.localhost (unknown [176.205.50.14])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 23 Jul 2020 08:11:27 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1595506286; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=sUTIwmA18KKFD78sQQkujxdQylj2SVkiaYMf8FOj5wo=; b=srx2mqA0PCkBReXR1AFUlpbP98aBbrLmJpAtUhTHU3i4wEiuGGs0InLdVx5+1DFa7G7DrU7w
+ wsXjZrfWtjcqCyz0mWN8N8d+2h+S9iYVe+7hpdZs/m+NATgsUdzBeCtKVh+DCT1Dv2r3YPwn
+ OV2kco4a2oZEd8P4zo3tdU+d/2I=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
+ 5f197e6a0cb8533c3ba06ec7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 23 Jul 2020 12:11:22
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 414DCC433C6; Thu, 23 Jul 2020 12:11:22 +0000 (UTC)
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by icts-p-smtps-2.cc.kuleuven.be (Postfix) with ESMTPSA id 6D1D2200A1;
-        Thu, 23 Jul 2020 12:03:18 +0200 (CEST)
-X-Kuleuven: This mail passed the K.U.Leuven mailcluster
-From:   Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-Subject: [PATCH 5/6] mac80211: remove unused flags argument in transmit functions
-Date:   Thu, 23 Jul 2020 14:01:52 +0400
-Message-Id: <20200723100153.31631-5-Mathy.Vanhoef@kuleuven.be>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200723100153.31631-1-Mathy.Vanhoef@kuleuven.be>
-References: <20200723085126.29127-1-Mathy.Vanhoef@kuleuven.be>
- <20200723100153.31631-1-Mathy.Vanhoef@kuleuven.be>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        (Authenticated sender: akolli)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3D707C433CB;
+        Thu, 23 Jul 2020 12:11:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3D707C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=akolli@codeaurora.org
+From:   Anilkumar Kolli <akolli@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        akolli@codeaurora.org
+Subject: [PATCH v4 3/3] ath11k: add IPQ6018 support
+Date:   Thu, 23 Jul 2020 17:41:04 +0530
+Message-Id: <1595506264-6393-4-git-send-email-akolli@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1595506264-6393-1-git-send-email-akolli@codeaurora.org>
+References: <1595506264-6393-1-git-send-email-akolli@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The flags argument in transmit functions is no longer being used
-and can be removed.
+IPQ6018 has one 5G and one 2G radio with 2x2,
+shares ipq8074 configurations.
 
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 ---
- net/mac80211/cfg.c         |  2 +-
- net/mac80211/ieee80211_i.h | 11 +++++------
- net/mac80211/offchannel.c  |  2 +-
- net/mac80211/rx.c          |  2 +-
- net/mac80211/scan.c        |  2 +-
- net/mac80211/sta_info.c    |  2 +-
- net/mac80211/tx.c          | 19 ++++++++-----------
- 7 files changed, 18 insertions(+), 22 deletions(-)
+V3:
+ - rebased on Kalles patches
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9b360544a..06f57b8b8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3583,7 +3583,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ drivers/net/wireless/ath/ath11k/ahb.c  | 115 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/core.c |  12 ++++
+ drivers/net/wireless/ath/ath11k/core.h |   1 +
+ 3 files changed, 126 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index aa74d27e5871..21f23ac75650 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -20,6 +20,9 @@ static const struct of_device_id ath11k_ahb_of_match[] = {
+ 	{ .compatible = "qcom,ipq8074-wifi",
+ 	  .data = (void *)ATH11K_HW_IPQ8074,
+ 	},
++	{ .compatible = "qcom,ipq6018-wifi",
++	  .data = (void *)ATH11K_HW_IPQ6018,
++	},
+ 	{ }
+ };
+ 
+@@ -264,6 +267,108 @@ static const struct service_to_pipe target_service_to_ce_map_wlan_ipq8074[] = {
+ 	{ /* terminator entry */ }
+ };
+ 
++static const struct service_to_pipe target_service_to_ce_map_wlan_ipq6018[] = {
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(3),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(3),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(3),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(3),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(3),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(7),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(2),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(0),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(1),
++	},
++	{ /* not used */
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(0),
++	},
++	{ /* not used */
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(1),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		.pipenum = __cpu_to_le32(4),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(1),
++	},
++	{
++		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_PKT_LOG),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		.pipenum = __cpu_to_le32(5),
++	},
++
++	/* (Additions here) */
++
++	{ /* terminator entry */ }
++};
++
+ #define ATH11K_IRQ_CE0_OFFSET 4
+ 
+ static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
+@@ -956,9 +1061,15 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+ 		return ret;
  	}
  
- 	local_bh_disable();
--	ieee80211_xmit(sdata, sta, skb, 0);
-+	ieee80211_xmit(sdata, sta, skb);
- 	local_bh_enable();
+-	ab->hw_params.svc_to_ce_map_len =
++	if (ab->hw_rev == ATH11K_HW_IPQ8074) {
++		ab->hw_params.svc_to_ce_map_len =
+ 			ARRAY_SIZE(target_service_to_ce_map_wlan_ipq8074);
+-	ab->hw_params.svc_to_ce_map = target_service_to_ce_map_wlan_ipq8074;
++		ab->hw_params.svc_to_ce_map = target_service_to_ce_map_wlan_ipq8074;
++	} else if (ab->hw_rev == ATH11K_HW_IPQ6018) {
++		ab->hw_params.svc_to_ce_map_len =
++			ARRAY_SIZE(target_service_to_ce_map_wlan_ipq6018);
++		ab->hw_params.svc_to_ce_map = target_service_to_ce_map_wlan_ipq6018;
++	}
  
- 	ret = 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8f1a325e0..0e7ef5d5b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1966,12 +1966,11 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 			       bool bss_notify, bool enable_qos);
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
--		    struct sta_info *sta, struct sk_buff *skb,
--		    u32 txdata_flags);
-+		    struct sta_info *sta, struct sk_buff *skb);
+ 	ath11k_ahb_init_qmi_ce_config(ab);
  
- void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 				 struct sk_buff *skb, int tid,
--				 enum nl80211_band band, u32 txdata_flags);
-+				 enum nl80211_band band);
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 0bf8bb1674dc..5f794f97d359 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -30,6 +30,18 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.bdf_addr = 0x4B0C0000,
+ 		.hw_ops = &ipq8074_ops,
+ 	},
++	{
++		.hw_rev = ATH11K_HW_IPQ6018,
++		.name = "ipq6018 hw1.0",
++		.fw = {
++			.dir = "IPQ6018/hw1.0",
++			.board_size = 256 * 1024,
++			.cal_size = 256 * 1024,
++		},
++		.max_radios = 2,
++		.bdf_addr = 0x4ABC0000,
++		.hw_ops = &ipq6018_ops,
++	},
+ };
  
- /* sta_out needs to be checked for ERR_PTR() before using */
- int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
-@@ -1981,10 +1980,10 @@ int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
- static inline void
- ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 			  struct sk_buff *skb, int tid,
--			  enum nl80211_band band, u32 txdata_flags)
-+			  enum nl80211_band band)
- {
- 	rcu_read_lock();
--	__ieee80211_tx_skb_tid_band(sdata, skb, tid, band, txdata_flags);
-+	__ieee80211_tx_skb_tid_band(sdata, skb, tid, band);
- 	rcu_read_unlock();
- }
+ static int ath11k_core_create_board_name(struct ath11k_base *ab, char *name,
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 98b994984c25..fe11fcd9e914 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -90,6 +90,7 @@ struct ath11k_skb_rxcb {
  
-@@ -2002,7 +2001,7 @@ static inline void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
- 	}
+ enum ath11k_hw_rev {
+ 	ATH11K_HW_IPQ8074,
++	ATH11K_HW_IPQ6018,
+ };
  
- 	__ieee80211_tx_skb_tid_band(sdata, skb, tid,
--				    chanctx_conf->def.chan->band, 0);
-+				    chanctx_conf->def.chan->band);
- 	rcu_read_unlock();
- }
- 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index db3b8bf75..882319bdb 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -264,7 +264,7 @@ static void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc,
- 	if (roc->mgmt_tx_cookie) {
- 		if (!WARN_ON(!roc->frame)) {
- 			ieee80211_tx_skb_tid_band(roc->sdata, roc->frame, 7,
--						  roc->chan->band, 0);
-+						  roc->chan->band);
- 			roc->frame = NULL;
- 		}
- 	} else {
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5c5af4b5f..2c88a69b7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3591,7 +3591,7 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
- 		}
- 
- 		__ieee80211_tx_skb_tid_band(rx->sdata, nskb, 7,
--					    status->band, 0);
-+					    status->band);
- 	}
- 	dev_kfree_skb(rx->skb);
- 	return RX_QUEUED;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8ccdafa62..8c6b4ff7b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -607,7 +607,7 @@ static void ieee80211_send_scan_probe_req(struct ieee80211_sub_if_data *sdata,
- 				cpu_to_le16(IEEE80211_SN_TO_SEQ(sn));
- 		}
- 		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
--		ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band, 0);
-+		ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band);
- 	}
- }
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index cd8487bc6..6a368f41b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1455,7 +1455,7 @@ static void ieee80211_send_null_response(struct sta_info *sta, int tid,
- 	}
- 
- 	info->band = chanctx_conf->def.chan->band;
--	ieee80211_xmit(sdata, sta, skb, 0);
-+	ieee80211_xmit(sdata, sta, skb);
- 	rcu_read_unlock();
- }
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 279d1edbb..e2cb933cd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1891,7 +1891,7 @@ EXPORT_SYMBOL(ieee80211_tx_prepare_skb);
-  */
- static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 			 struct sta_info *sta, struct sk_buff *skb,
--			 bool txpending, u32 txdata_flags)
-+			 bool txpending)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_data tx;
-@@ -1909,8 +1909,6 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 	led_len = skb->len;
- 	res_prepare = ieee80211_tx_prepare(sdata, &tx, sta, skb);
- 
--	tx.flags |= txdata_flags;
--
- 	if (unlikely(res_prepare == TX_DROP)) {
- 		ieee80211_free_txskb(&local->hw, skb);
- 		return true;
-@@ -1978,8 +1976,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- }
- 
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
--		    struct sta_info *sta, struct sk_buff *skb,
--		    u32 txdata_flags)
-+		    struct sta_info *sta, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -2014,7 +2011,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	ieee80211_set_qos_hdr(sdata, skb);
--	ieee80211_tx(sdata, sta, skb, false, txdata_flags);
-+	ieee80211_tx(sdata, sta, skb, false);
- }
- 
- static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
-@@ -2349,7 +2346,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	if (!ieee80211_parse_tx_radiotap(local, skb))
- 		goto fail_rcu;
- 
--	ieee80211_xmit(sdata, NULL, skb, 0);
-+	ieee80211_xmit(sdata, NULL, skb);
- 	rcu_read_unlock();
- 
- 	return NETDEV_TX_OK;
-@@ -4011,7 +4008,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 
- 		ieee80211_tx_stats(dev, skb->len);
- 
--		ieee80211_xmit(sdata, sta, skb, 0);
-+		ieee80211_xmit(sdata, sta, skb);
- 	}
- 	goto out;
-  out_free:
-@@ -4377,7 +4374,7 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 			return true;
- 		}
- 		info->band = chanctx_conf->def.chan->band;
--		result = ieee80211_tx(sdata, NULL, skb, true, 0);
-+		result = ieee80211_tx(sdata, NULL, skb, true);
- 	} else if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
- 		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
- 			dev_kfree_skb(skb);
-@@ -5336,7 +5333,7 @@ EXPORT_SYMBOL(ieee80211_unreserve_tid);
- 
- void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 				 struct sk_buff *skb, int tid,
--				 enum nl80211_band band, u32 txdata_flags)
-+				 enum nl80211_band band)
- {
- 	int ac = ieee80211_ac_from_tid(tid);
- 
-@@ -5353,7 +5350,7 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	local_bh_disable();
- 	IEEE80211_SKB_CB(skb)->band = band;
--	ieee80211_xmit(sdata, NULL, skb, txdata_flags);
-+	ieee80211_xmit(sdata, NULL, skb);
- 	local_bh_enable();
- }
- 
+ enum ath11k_firmware_mode {
 -- 
-2.27.0
+2.7.4
 
