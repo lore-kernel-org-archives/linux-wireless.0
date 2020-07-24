@@ -2,98 +2,102 @@ Return-Path: <SRS0=fllt=BD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DB4C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD11C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E334D206F0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CB152065C
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FLavtlC2"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rkDDKscM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726915AbgGXKP3 (ORCPT
+        id S1727862AbgGXKPe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jul 2020 06:15:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35544 "EHLO
+        Fri, 24 Jul 2020 06:15:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726810AbgGXKP3 (ORCPT
+        with ESMTP id S1726800AbgGXKPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jul 2020 06:15:29 -0400
+        Fri, 24 Jul 2020 06:15:33 -0400
 Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51579C0619D3
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:28 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id f18so7773912wml.3
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96DD2C0619E4
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:33 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id t142so1394988wmt.4
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=qs6BR4el7anmcaF5o/42Yf/+zTlR0nDHk0hbGDcqlnQ=;
-        b=FLavtlC2aauJwyxlYTlyy00sJQZV1ockGp2kNVapCorrzuss7tOgRhgySY4zWVS85L
-         C4Upg626spKv3o2lQYJY/AhCnBNLi3vYo+xKvNOYLEK1qY6T1qYlzX9zAf5SHHIy0lLS
-         bRHhMoHOyV1KwKoAGmVk1jQlB8QEvlLWno+75f19tfKkIqrD1ERUCxMQI8gwRQFjoiqy
-         GzHDFcGBuO2BaIggjD6UP0D2toiH7cjIyjXrBI6DVbjsGwsMmQcdaRfEaY1/anPUcRw0
-         5TucrBOLv8OXZYCfIk2mZJ9xvFah/UcrGeC3Opb6lfLgZj7bv1Wv2czSsEB6sEotu/FG
-         uN/g==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=xOOjQJESRtYt2KufOtjIRxHNZwgGy+9IHcMsoZIrghI=;
+        b=rkDDKscMOyVNcs2gFEAVvnX0wv/PljueUqLwXnis0CGjRvXdVHnshtPaKz0FSVRVvD
+         ZHJWW6GSf/reU/djVc5KUYqe5IkhOjHGb4l2Srneo3pHEcoJXy/nGzV2DPeMV9WXwQnq
+         N/zXaLD8T8N8x97Yya6UMm1IbQ6VkeO+AuPsXCXlzX/X7sLY4y5CP1XVwunzkgYWx9JO
+         iS4mdZE1f9iudpvA3KKW5z4IzZCIKGoCXuhqboxyBMGg5AtaomMGjaanCYO6oQuMT1Vb
+         oLX6RvVuq+DJM44dr94V7rL5XtZhqzizLB7Y+yvYzzCqaLQwd4LfHdQlbjtekcdGef5R
+         /32g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=qs6BR4el7anmcaF5o/42Yf/+zTlR0nDHk0hbGDcqlnQ=;
-        b=ES661/eWlOu29FIuDQUVuC6OUXsx8a5A0UPTlQSEn1XvqnZFDOwwpIfntTJ1os/1aD
-         ejSo+9FBSf9js/FK3tckmq/6wP6H5aS2AYEVJ6Za8ai4GueKZq1lxzQiTrjrJ1V3Ss9C
-         YIxZWK+Mz6d4jL8x3vRlJTZJ5V7Cd2HeBLRr/LGVa8NP2EDyhq1TCmRpTJ5CVeaN8sIV
-         Xn+YoAmCllCjHAOssIw4+599YrCv4YfUyi1SmvpRVIU+EaUDe66MeT59yJUqiRdOZs/r
-         lq7tji2ZLEFTTsVz6YD9YKQ18et8L4iDdePkVcOXv8USKNHh5HkuPgdUexsxF4o0L/pp
-         YqGw==
-X-Gm-Message-State: AOAM533yM8fPqG+acq0tcn8aKXlbkLPbt87VBPmLiuzJPdUU3e4qik/i
-        vcXnr7HjCC0efsvCbbYTjv1VVw==
-X-Google-Smtp-Source: ABdhPJwqc69E8jbV83lgQHDGQvyjwdDUwoSHk1KPADMNqGIeK1dQx3mLWIHzop3UDKM13KaS6F/PQg==
-X-Received: by 2002:a1c:9c0b:: with SMTP id f11mr7922775wme.0.1595585726986;
-        Fri, 24 Jul 2020 03:15:26 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=xOOjQJESRtYt2KufOtjIRxHNZwgGy+9IHcMsoZIrghI=;
+        b=ZBBrf4qpWSCevI/OIlkP24uwuFKzvJDqytR+Lzq7yU46o2sHJTDs8cSawRGRIlYGHg
+         ZmW88OEcSVdMxYzxFe5YzhsWQeoTUrENU0Lygb1EcKNmuOtqxpaEB7q4SFVECjd6mmSS
+         vyH3e5mkhyflOVfmm8wMvEjRJMb2yJLzgdvB5LVbxq+pYc0zun4LPoY+/Gt3bNeBMjLK
+         mY9HHkwMxZIG9ehzoW0OqJWy0MN6/MnQsg1ehA1N6zhK+C71jbtA3ikqmCyJ1UJOtIlZ
+         Y5/ILiY6SWtcsTxR68FBqkJBgzDzjXZUFKmvYLWGoexe8/mc0dW9h7Jq+gCB078vigA5
+         U70A==
+X-Gm-Message-State: AOAM532PIwuAdOExBD3C0NxG5WsjyxaUYzZzVCGc8SqRypE9s3Io/tKl
+        a5iCGZZfAEfU2Vv7f31VKZz+/g==
+X-Google-Smtp-Source: ABdhPJxXN5wp6qm73HC7GcGKHnv4qnkwMuJY7iiIz8tsUZ/S4sckHi4wiSWdL8oyNtqT6uVTLrDGDQ==
+X-Received: by 2002:a1c:7ecb:: with SMTP id z194mr7594250wmc.12.1595585732200;
+        Fri, 24 Jul 2020 03:15:32 -0700 (PDT)
 Received: from localhost.localdomain ([88.122.66.28])
-        by smtp.gmail.com with ESMTPSA id d18sm774714wrj.8.2020.07.24.03.15.26
+        by smtp.gmail.com with ESMTPSA id d18sm774714wrj.8.2020.07.24.03.15.31
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Jul 2020 03:15:26 -0700 (PDT)
+        Fri, 24 Jul 2020 03:15:31 -0700 (PDT)
 From:   Loic Poulain <loic.poulain@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH v2 0/6] wcn36xx misc fixes
-Date:   Fri, 24 Jul 2020 12:20:46 +0200
-Message-Id: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
+Subject: [PATCH v2 3/6] wcn36xx: Increase number of TX retries
+Date:   Fri, 24 Jul 2020 12:20:49 +0200
+Message-Id: <1595586052-16081-4-git-send-email-loic.poulain@linaro.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
+References: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series contains various fixes for the wcn36xx driver.
-This has been tested with wcn3620, wcn3660 and wcn3680.
+Increase the short/long retry limit to 15 in order to impove TX
+robustness in noisy/busy environment. 15 is the default value
+defined in the downstream driver. Observed number of ack timeout
+is reduced with this change.
 
-v2: - Move TX retries change into its own commit
-    - Additional patch for sequence number assignment
-    - Reword TX ack commit log (timeout detection)
-    - Fix checkpatch issues reported by Bryan
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Loic Poulain (6):
-  wcn36xx: Fix multiple AMPDU sessions support
-  wcn36xx: Add TX ack support
-  wcn36xx: Increase number of TX retries
-  wcn36xx: Fix TX data path
-  wcn36xx: Fix software-driven scan
-  wcn36xx: Use sequence number allocated by mac80211
-
- drivers/net/wireless/ath/wcn36xx/dxe.c     |  57 +++++++++-
- drivers/net/wireless/ath/wcn36xx/main.c    | 172 +++++++++++++++--------------
- drivers/net/wireless/ath/wcn36xx/smd.c     |  59 ++++++++--
- drivers/net/wireless/ath/wcn36xx/smd.h     |  12 +-
- drivers/net/wireless/ath/wcn36xx/txrx.c    |  57 ++++++----
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   7 +-
- 6 files changed, 241 insertions(+), 123 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 59f9f53..908cc6c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -45,8 +45,8 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(MAX_MEDIUM_TIME, 6000),
+ 	WCN36XX_CFG_VAL(MAX_MPDUS_IN_AMPDU, 64),
+ 	WCN36XX_CFG_VAL(RTS_THRESHOLD, 2347),
+-	WCN36XX_CFG_VAL(SHORT_RETRY_LIMIT, 6),
+-	WCN36XX_CFG_VAL(LONG_RETRY_LIMIT, 6),
++	WCN36XX_CFG_VAL(SHORT_RETRY_LIMIT, 15),
++	WCN36XX_CFG_VAL(LONG_RETRY_LIMIT, 15),
+ 	WCN36XX_CFG_VAL(FRAGMENTATION_THRESHOLD, 8000),
+ 	WCN36XX_CFG_VAL(DYNAMIC_THRESHOLD_ZERO, 5),
+ 	WCN36XX_CFG_VAL(DYNAMIC_THRESHOLD_ONE, 10),
 -- 
 2.7.4
 
