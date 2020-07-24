@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F20B6C433E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB1FFC433E5
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7DB3206F0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8FC62065C
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 10:15:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Bc/gd/nq"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="m4QVLZ8y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727811AbgGXKPe (ORCPT
+        id S1727873AbgGXKPg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jul 2020 06:15:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35562 "EHLO
+        Fri, 24 Jul 2020 06:15:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726810AbgGXKPd (ORCPT
+        with ESMTP id S1726800AbgGXKPf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jul 2020 06:15:33 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81D22C0619D3
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:32 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id f7so7815442wrw.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:32 -0700 (PDT)
+        Fri, 24 Jul 2020 06:15:35 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E23D2C0619D3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:34 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id p14so7106877wmg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 03:15:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=odT6kLPnDXapaMumnxiChGk1KiPid9TEGBDoPxHNhxg=;
-        b=Bc/gd/nq0VwLndk+QoEqDqgBXC7Pk14K+xy9g+dTDDNYvjgzYd21ZMN3Cs8/IH7URm
-         /E6wavmaBVnCw4IcUUyjltvGnG2GFuqrmsixzhdK9wp9LOv9xj1Q2bh8vIfFsfQ3ohc5
-         5KccI+UNzHswiLpx2vajlqRR7WlbT1QdZXQ6yEjSgxjo4gkxEFDtdm9NyD6ck+LDxdSx
-         EOmxMWXsPLVZ7zGs3TiZOcT6zakd17xmWtlHmFnxw+RLoEXUvneN381R8Z73fDba3W2G
-         LURclqc0jC+tXDDQUr7WqONisGoLuVpRXq5oMB+eS/7V3zBBGBB4QghV4/ULaACjocxJ
-         aeFg==
+        bh=6sIBs2chvdtlEKeOF6rmdpIMaaTVwiwiQeevfHl2XXk=;
+        b=m4QVLZ8yfq0jCWgZZhasLvAzDwhOnovGfmIrWzAePSJr8qA/rxrsHf80FwCrRlceUC
+         vWfNM4lSAkKHjyDOIC51I8EDM8kQU2/0FrUuKE8LHt4xJQquk8LFXsoHwaqEWki5ODy/
+         ytTEtWfzjku5DnY+a9O/FG46+yhc8F3w76yla1VbiLFC1Czec09kcvAb3MLPo1oVqxb8
+         MvBGuBkRbtug+ohZPeOy/opp5voOjvBfCiBVB1nxuFVO2k9bg53L1INmNW4Ab7BjwOD6
+         f5fFQHKFWh0b65kOUzTxbCbD0aJUh7F9+pugj5+VYY1L/oPj7MQXIrgUFuTnYNibtiw0
+         E2fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=odT6kLPnDXapaMumnxiChGk1KiPid9TEGBDoPxHNhxg=;
-        b=EoutXtnW/4f7n/8l6GcYQ1ikBCECUjqzNWnziCdVNND/cQ2peNG/mcZgAvbALvr3Ds
-         NN9f664qPCD0hfq/6dBmLtEW5+zCwoIG/bpCWgcdfe5h59JrOAMhocb1uE58yvqVYaA3
-         OPWnhEP2oqm3YPRNDQ83SoQInKKOpUzUhGTIaQe16Tcjn1+HJxJR6EjEklihh9Lvzcru
-         0aabl6YsEk9L1Rj83LSbxi6lg1MZyYdGis/GXXnz3ztJclLlwSb5FwCsCI6Xr0BNiAy2
-         Zo9nILwkvL/rmGtJrrFxesOWJLiyT45lppZ6vQcL8AZY4raa4z2KaKIkcR00t4BjRB1l
-         xGfg==
-X-Gm-Message-State: AOAM533gW6fbTsVNmcLe9HA8m8kmbbmrJnM1Gx3vXCO0269/qyyNk1xq
-        ACoBtvDz2FEhYiP1wVLbsMidMQ==
-X-Google-Smtp-Source: ABdhPJyMpBFgYDxS/JG0ZvPGsZ4v20x8hZPVO3GuIH+J28idt43v1QQVuJD1TWPMRQd1dmNvx77Hig==
-X-Received: by 2002:a05:6000:150:: with SMTP id r16mr7770858wrx.63.1595585730938;
-        Fri, 24 Jul 2020 03:15:30 -0700 (PDT)
+        bh=6sIBs2chvdtlEKeOF6rmdpIMaaTVwiwiQeevfHl2XXk=;
+        b=Z+Fr3o8zHHWB/4Gxq15lFE8WQ3AOcVXs5ImtRbXA67TYMBFFDyj5jKja88k6QK/amc
+         VIEzTaAawYHKHfRbtzhYjyXK6X1SMGKF/b8vDk9eX9RvuoYX3oZ6E8gAKtkaaHIqRnFy
+         dlAnw4t5F14WfE2+kseRr6q5F/j21e/wnpkUUysKqqxrfSo8xNjHHHGpxTkme+2KSKYH
+         dXYokMjCt2naB8ytSZUDavwachZsAxmLYeLrBPeq5A4WWQkz0Iy0GoKivXjuqiBDbthn
+         t60QqLgoz4s7Nmzjjd57kjVzJEsoNDB0WNolJu03K5U3V4CcbyPS3B4mHAXXwPAZ3v9e
+         pW3w==
+X-Gm-Message-State: AOAM531EPMom9xudK9r7Crik9QXtIscxRIKzWE3E6DV9nUeuNG9j1Qnj
+        rBOftm/yaUhmCuOy/1h+ZfeD1g==
+X-Google-Smtp-Source: ABdhPJwg3hSv/7exm0i0KMK9ArjANj4yxY46PKbm2dJFhvL45UEU/nQ7ZT04SsFGomlR6drLCVvBVQ==
+X-Received: by 2002:a7b:cb47:: with SMTP id v7mr7705694wmj.57.1595585733593;
+        Fri, 24 Jul 2020 03:15:33 -0700 (PDT)
 Received: from localhost.localdomain ([88.122.66.28])
-        by smtp.gmail.com with ESMTPSA id d18sm774714wrj.8.2020.07.24.03.15.30
+        by smtp.gmail.com with ESMTPSA id d18sm774714wrj.8.2020.07.24.03.15.32
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Jul 2020 03:15:30 -0700 (PDT)
+        Fri, 24 Jul 2020 03:15:33 -0700 (PDT)
 From:   Loic Poulain <loic.poulain@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH v2 2/6] wcn36xx: Add TX ack support
-Date:   Fri, 24 Jul 2020 12:20:48 +0200
-Message-Id: <1595586052-16081-3-git-send-email-loic.poulain@linaro.org>
+Subject: [PATCH v2 4/6] wcn36xx: Fix TX data path
+Date:   Fri, 24 Jul 2020 12:20:50 +0200
+Message-Id: <1595586052-16081-5-git-send-email-loic.poulain@linaro.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
 References: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
@@ -73,228 +73,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The controller is capable of reporting TX indication which can be used
-to report TX ack when IEEE80211_TX_CTL_REQ_TX_STATUS is set.
-The support was only partially implemented.
+This patch contains the following fixes:
 
-The firmware can be configured for reporting event when a packet is
-acked, without specifying which packet though. In order to send a
-packet flagged with TX status callback, we need to stop the queue,
-submit the packet and wait for the firmware ack event. Then the queue
-can be restarted and mac80211 status callback called.
+- Use correct queue for submitting QoS packet. The queue id to use
+is a one-to-one mapping with the TID.
 
-In case the packet is not acked, no ack event will be received,
-therefore a timeout mechanism is introduced to restart the queue
-and call the status cb in case no event is received after a 100ms.
+- Don't encrypt a frame with IEEE80211_TX_INTFL_DONT_ENCRYPT flag.
+
+- Use the 'special queue' for null packets, preventing the firmware
+to submit it as AMPDU.
 
 Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c     | 57 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/wcn36xx/main.c    |  1 +
- drivers/net/wireless/ath/wcn36xx/txrx.c    | 20 +++++++----
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 +
- 4 files changed, 70 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index bab30f7..6307923 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -334,6 +334,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
- 	spin_lock_irqsave(&wcn->dxe_lock, flags);
- 	skb = wcn->tx_ack_skb;
- 	wcn->tx_ack_skb = NULL;
-+	del_timer(&wcn->tx_ack_timer);
- 	spin_unlock_irqrestore(&wcn->dxe_lock, flags);
- 
- 	if (!skb) {
-@@ -345,6 +346,8 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
- 
- 	if (status == 1)
- 		info->flags |= IEEE80211_TX_STAT_ACK;
-+	else
-+		info->flags &= ~IEEE80211_TX_STAT_ACK;
- 
- 	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ack status: %d\n", status);
- 
-@@ -352,6 +355,32 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
- 	ieee80211_wake_queues(wcn->hw);
- }
- 
-+static void wcn36xx_dxe_tx_timer(struct timer_list *t)
-+{
-+	struct wcn36xx *wcn = from_timer(wcn, t, tx_ack_timer);
-+	struct ieee80211_tx_info *info;
-+	unsigned long flags;
-+	struct sk_buff *skb;
-+
-+	/* TX Timeout */
-+	wcn36xx_dbg(WCN36XX_DBG_DXE, "TX timeout\n");
-+
-+	spin_lock_irqsave(&wcn->dxe_lock, flags);
-+	skb = wcn->tx_ack_skb;
-+	wcn->tx_ack_skb = NULL;
-+	spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-+
-+	if (!skb)
-+		return;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	info->flags &= ~IEEE80211_TX_STAT_ACK;
-+	info->flags &= ~IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+
-+	ieee80211_tx_status_irqsafe(wcn->hw, skb);
-+	ieee80211_wake_queues(wcn->hw);
-+}
-+
- static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- {
- 	struct wcn36xx_dxe_ctl *ctl;
-@@ -397,6 +426,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- {
- 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
- 	int int_src, int_reason;
-+	bool transmitted = false;
- 
- 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
- 
-@@ -434,8 +464,10 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 			    int_reason);
- 
- 		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
--				  WCN36XX_CH_STAT_INT_ED_MASK))
-+				  WCN36XX_CH_STAT_INT_ED_MASK)) {
- 			reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
-+			transmitted = true;
-+		}
- 	}
- 
- 	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
-@@ -473,9 +505,27 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 			    int_reason);
- 
- 		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
--				  WCN36XX_CH_STAT_INT_ED_MASK))
-+				  WCN36XX_CH_STAT_INT_ED_MASK)) {
- 			reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
-+			transmitted = true;
-+		}
-+	}
-+
-+	spin_lock(&wcn->dxe_lock);
-+	if (wcn->tx_ack_skb && transmitted) {
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(wcn->tx_ack_skb);
-+
-+		/* TX complete, no need to wait for 802.11 ack indication */
-+		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
-+		    info->flags & IEEE80211_TX_CTL_NO_ACK) {
-+			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+			del_timer(&wcn->tx_ack_timer);
-+			ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
-+			wcn->tx_ack_skb = NULL;
-+			ieee80211_wake_queues(wcn->hw);
-+		}
- 	}
-+	spin_unlock(&wcn->dxe_lock);
- 
- 	return IRQ_HANDLED;
- }
-@@ -916,6 +966,8 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 	if (ret < 0)
- 		goto out_err_irq;
- 
-+	timer_setup(&wcn->tx_ack_timer, wcn36xx_dxe_tx_timer, 0);
-+
- 	return 0;
- 
- out_err_irq:
-@@ -934,6 +986,7 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
- {
- 	free_irq(wcn->tx_irq, wcn);
- 	free_irq(wcn->rx_irq, wcn);
-+	del_timer(&wcn->tx_ack_timer);
- 
- 	if (wcn->tx_ack_skb) {
- 		ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index af32bd6..c19648f 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1175,6 +1175,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	ieee80211_hw_set(wcn->hw, SIGNAL_DBM);
- 	ieee80211_hw_set(wcn->hw, HAS_RATE_CONTROL);
- 	ieee80211_hw_set(wcn->hw, SINGLE_SCAN_ON_ALL_BANDS);
-+	ieee80211_hw_set(wcn->hw, REPORTS_TX_ACK_STATUS);
- 
- 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_AP) |
 diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index a690237..274cf58 100644
+index 274cf58..dcc2ec0 100644
 --- a/drivers/net/wireless/ath/wcn36xx/txrx.c
 +++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -191,9 +191,10 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+@@ -160,9 +160,11 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 				bool bcast)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = NULL;
+ 	struct wcn36xx_vif *__vif_priv = NULL;
+-	bool is_data_qos;
++	bool is_data_qos = ieee80211_is_data_qos(hdr->frame_control);
++	u16 tid = 0;
+ 
+ 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
+ 
+@@ -191,24 +193,33 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
  		bd->dpu_sign = __vif_priv->self_ucast_dpu_sign;
  	}
  
--	if (ieee80211_is_nullfunc(hdr->frame_control) ||
--	   (sta_priv && !sta_priv->is_data_encrypted))
-+	if (ieee80211_is_any_nullfunc(hdr->frame_control) ||
-+	   (sta_priv && !sta_priv->is_data_encrypted)) {
- 		bd->dpu_ne = 1;
+-	if (ieee80211_is_any_nullfunc(hdr->frame_control) ||
+-	   (sta_priv && !sta_priv->is_data_encrypted)) {
++	if (is_data_qos) {
++		tid = ieee80211_get_tid(hdr);
++		/* TID->QID is one-to-one mapping */
++		bd->queue_id = tid;
 +	}
- 
- 	if (bcast) {
- 		bd->ub = 1;
-@@ -287,9 +288,9 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 	bd.dpu_rf = WCN36XX_BMU_WQ_TX;
- 
--	bd.tx_comp = !!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
--	if (bd.tx_comp) {
-+	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
 +
- 		spin_lock_irqsave(&wcn->dxe_lock, flags);
- 		if (wcn->tx_ack_skb) {
- 			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-@@ -302,10 +303,15 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 		/* Only one at a time is supported by fw. Stop the TX queues
- 		 * until the ack status gets back.
--		 *
--		 * TODO: Add watchdog in case FW does not answer
- 		 */
- 		ieee80211_stop_queues(wcn->hw);
-+
-+		/* TX watchdog if no TX irq or ack indication received  */
-+		mod_timer(&wcn->tx_ack_timer, jiffies + HZ / 10);
-+
-+		/* Request ack indication from the firmware */
-+		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
-+			bd.tx_comp = 1;
++	if (info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT ||
++	    (sta_priv && !sta_priv->is_data_encrypted)) {
+ 		bd->dpu_ne = 1;
  	}
  
- 	/* Data frames served first*/
-@@ -319,7 +325,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 	bd.tx_bd_sign = 0xbdbdbdbd;
++	if (ieee80211_is_any_nullfunc(hdr->frame_control)) {
++		/* Don't use a regular queue for null packet (no ampdu) */
++		bd->queue_id = WCN36XX_TX_U_WQ_ID;
++	}
++
+ 	if (bcast) {
+ 		bd->ub = 1;
+ 		bd->ack_policy = 1;
+ 	}
+ 	*vif_priv = __vif_priv;
  
- 	ret = wcn36xx_dxe_tx_frame(wcn, vif_priv, &bd, skb, is_low);
--	if (ret && bd.tx_comp) {
-+	if (ret && (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
- 		/* If the skb has not been transmitted,
- 		 * don't keep a reference to it.
- 		 */
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index a58f313..2d89849 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -245,6 +245,7 @@ struct wcn36xx {
- 	struct wcn36xx_dxe_mem_pool data_mem_pool;
+-	is_data_qos = ieee80211_is_data_qos(hdr->frame_control);
+-
+ 	wcn36xx_set_tx_pdu(bd,
+ 			   is_data_qos ?
+ 			   sizeof(struct ieee80211_qos_hdr) :
+ 			   sizeof(struct ieee80211_hdr_3addr),
+-			   skb->len, sta_priv ? sta_priv->tid : 0);
++			   skb->len, tid);
  
- 	struct sk_buff		*tx_ack_skb;
-+	struct timer_list	tx_ack_timer;
- 
- 	/* RF module */
- 	unsigned		rf_id;
+ 	if (sta_priv && is_data_qos)
+ 		wcn36xx_tx_start_ampdu(wcn, sta_priv, skb);
 -- 
 2.7.4
 
