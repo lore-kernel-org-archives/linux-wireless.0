@@ -2,115 +2,146 @@ Return-Path: <SRS0=fllt=BD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A45D4C433E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 14:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A8E0C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 18:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8277E20663
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 14:03:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18B6D206F6
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jul 2020 18:28:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pd+tFesJ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tm+nvLKm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726782AbgGXODu (ORCPT
+        id S1726411AbgGXS2W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jul 2020 10:03:50 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:40491 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726503AbgGXODt (ORCPT
+        Fri, 24 Jul 2020 14:28:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56376 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725822AbgGXS2V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jul 2020 10:03:49 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595599428; h=Date: Message-Id: Cc: To: Subject: From:
- Content-Transfer-Encoding: MIME-Version: Content-Type: Sender;
- bh=Tu15BLUwKvHQDTbj5GU8pQlCzoGF12QBNrYYHMnPAuQ=; b=pd+tFesJeVPrRpJ/uBMMltFVYQSuw5LLWA4ce2Udr+yZ6+gTQziS7S7HN/DsvKwF7nqg+IAD
- fyohjUtPd5xsmkjmzKRfCsXWmos0eYN0qrQi0kdXRp61aGkPqgH/WuAPoaAzHsydF2NSf20j
- ZCF6TNLRfeLm48tLrJTRA9bHFrE=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5f1aea17845c4d05a3d01c3a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 24 Jul 2020 14:03:03
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D143AC433CB; Fri, 24 Jul 2020 14:03:02 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0296CC433C6;
-        Fri, 24 Jul 2020 14:03:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0296CC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Fri, 24 Jul 2020 14:28:21 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B637DC0619D3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2020 11:28:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=+bFG/P2tkhDrKOjNW3CVk9SiDulandhIz4gSl0EUF4E=; b=tm+nvLKmI7QlhMD7lb3jm2RqhK
+        YeJ7KNUrfLKT7jNw1iWugxjJqDJSy3+1jkhbmSUlM3iX965SqsvVWnS/fzG8+lc+Oo3u028hlex/i
+        BZuXUFUo4vdALx+KYmgZaoWtuievM0ZkMhWeUERV5sUiRnx/7rzBRGdYi/ktO9jsZ2XM=;
+Received: from p5b206d80.dip0.t-ipconnect.de ([91.32.109.128] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1jz2Qc-0007Yq-3j; Fri, 24 Jul 2020 20:28:18 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH] mac80211: improve AQL tx airtime estimation
+Date:   Fri, 24 Jul 2020 20:28:16 +0200
+Message-Id: <20200724182816.18678-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-From:   Kalle Valo <kvalo@codeaurora.org>
-Subject: pull-request: wireless-drivers-2020-07-24
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Message-Id: <20200724140302.D143AC433CB@smtp.codeaurora.org>
-Date:   Fri, 24 Jul 2020 14:03:02 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+AQL does not take into account that most HT/VHT/HE traffic is A-MPDU aggregated.
+Because of that, the per-packet airtime overhead is vastly overestimated.
+Improve it by assuming an average aggregation length of 16 for non-legacy
+traffic if not using the VO AC queue.
+This should improve performance with high data rates, especially with multiple
+stations
 
-here's a pull request to net tree, more info below. Please let me know if there
-are any problems.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/airtime.c     | 26 +++++++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/tx.c          |  3 ++-
+ 3 files changed, 24 insertions(+), 7 deletions(-)
 
-Kalle
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index 9fc2968856c0..366f76c9003d 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -551,7 +551,7 @@ EXPORT_SYMBOL_GPL(ieee80211_calc_tx_airtime);
+ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_sta *pubsta,
+-				       int len)
++				       int len, bool ampdu)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_chanctx_conf *conf;
+@@ -572,10 +572,26 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 	if (pubsta) {
+ 		struct sta_info *sta = container_of(pubsta, struct sta_info,
+ 						    sta);
+-
+-		return ieee80211_calc_tx_airtime_rate(hw,
+-						      &sta->tx_stats.last_rate,
+-						      band, len);
++		struct ieee80211_tx_rate *rate = &sta->tx_stats.last_rate;
++		u32 airtime;
++
++		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
++				     IEEE80211_TX_RC_MCS)))
++			ampdu = false;
++
++		/*
++		 * Assume that HT/VHT transmission on any AC except VO will
++		 * use aggregation. Since we don't have reliable reporting
++		 * of aggregation length, assume an average of 16.
++		 * This will not be very accurate, but much better than simply
++		 * assuming un-aggregated tx.
++		 */
++		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, band,
++							 ampdu ? len * 16 : len);
++		if (ampdu)
++			airtime /= 16;
++
++		return airtime;
+ 	}
+ 
+ 	if (!conf)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ec1a71ac65f2..28b154c6e72d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2290,7 +2290,7 @@ extern const struct ethtool_ops ieee80211_ethtool_ops;
+ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_sta *pubsta,
+-				       int len);
++				       int len, bool ampdu);
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1a2941e5244f..a4e7ef6b0457 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3721,10 +3721,11 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 
+ 	if (vif &&
+ 	    wiphy_ext_feature_isset(local->hw.wiphy, NL80211_EXT_FEATURE_AQL)) {
++		bool ampdu = txq->ac != IEEE80211_AC_VO;
+ 		u32 airtime;
+ 
+ 		airtime = ieee80211_calc_expected_tx_airtime(hw, vif, txq->sta,
+-							     skb->len);
++							     skb->len, ampdu);
+ 		if (airtime) {
+ 			airtime = ieee80211_info_set_tx_time_est(info, airtime);
+ 			ieee80211_sta_update_pending_airtime(local, tx.sta,
+-- 
+2.24.0
 
-The following changes since commit dc7bd30b97aac8a97eccef0ffe31f6cefb6e2c3e:
-
-  mt76: mt7615: fix EEPROM buffer size (2020-06-23 11:43:41 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-2020-07-24
-
-for you to fetch changes up to 1cfd3426ef989b83fa6176490a38777057e57f6c:
-
-  ath10k: Fix NULL pointer dereference in AHB device probe (2020-07-20 20:23:48 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for v5.8
-
-Second set of fixes for v5.8, and hopefully also the last. Three
-important regressions fixed.
-
-ath9k
-
-* fix a regression which broke support for all ath9k usb devices
-
-ath10k
-
-* fix a regression which broke support for all QCA4019 AHB devices
-
-iwlwifi
-
-* fix a regression which broke support for some Killer Wireless-AC 1550 cards
-
-----------------------------------------------------------------
-Alessio Bonfiglio (1):
-      iwlwifi: Make some Killer Wireless-AC 1550 cards work again
-
-Hauke Mehrtens (1):
-      ath10k: Fix NULL pointer dereference in AHB device probe
-
-Mark O'Donovan (1):
-      ath9k: Fix regression with Atheros 9271
-
- drivers/net/wireless/ath/ath10k/ahb.c         |  2 +-
- drivers/net/wireless/ath/ath10k/pci.c         | 78 +++++++++++++--------------
- drivers/net/wireless/ath/ath9k/hif_usb.c      |  4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  2 +
- 4 files changed, 43 insertions(+), 43 deletions(-)
