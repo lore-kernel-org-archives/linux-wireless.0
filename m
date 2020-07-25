@@ -4,33 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD5AC433F4
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 19:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA25DC433F8
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 19:56:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1E13206D8
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 19:56:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A070E206D8
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 19:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728171AbgGYT4Y (ORCPT
+        id S1728153AbgGYT4X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Jul 2020 15:56:24 -0400
-Received: from smtprelay0222.hostedemail.com ([216.40.44.222]:36004 "EHLO
+        Sat, 25 Jul 2020 15:56:23 -0400
+Received: from smtprelay0156.hostedemail.com ([216.40.44.156]:55788 "EHLO
         smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728031AbgGYT4Y (ORCPT
+        by vger.kernel.org with ESMTP id S1728125AbgGYT4W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Jul 2020 15:56:24 -0400
+        Sat, 25 Jul 2020 15:56:22 -0400
 Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay05.hostedemail.com (Postfix) with ESMTP id 5AA211802926E;
-        Sat, 25 Jul 2020 19:56:22 +0000 (UTC)
+        by smtprelay07.hostedemail.com (Postfix) with ESMTP id 8BAEA181D3026;
+        Sat, 25 Jul 2020 19:56:19 +0000 (UTC)
 X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: verse03_3401d9026f52
-X-Filterd-Recvd-Size: 6761
+X-HE-Tag: crate03_310ca5526f52
+X-Filterd-Recvd-Size: 19597
 Received: from joe-laptop.perches.com (unknown [47.151.133.149])
         (Authenticated sender: joe@perches.com)
         by omf18.hostedemail.com (Postfix) with ESMTPA;
-        Sat, 25 Jul 2020 19:56:20 +0000 (UTC)
+        Sat, 25 Jul 2020 19:56:17 +0000 (UTC)
 From:   Joe Perches <joe@perches.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
@@ -39,9 +39,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 6/6] rtlwifi: Convert sleeped to slept in rtl_dbg uses
-Date:   Sat, 25 Jul 2020 12:55:08 -0700
-Message-Id: <33734b374f82d41425c926ec9d2f136be3b65dc2.1595706420.git.joe@perches.com>
+Subject: [PATCH 5/6] rtlwifi: Avoid multiline dereferences in rtl_dbg uses
+Date:   Sat, 25 Jul 2020 12:55:07 -0700
+Message-Id: <3a2fa7dadb9c0beb5e268dd2e6e71c537f29f9f5.1595706420.git.joe@perches.com>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <cover.1595706419.git.joe@perches.com>
 References: <cover.1595706419.git.joe@perches.com>
@@ -52,124 +52,402 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use a more standard word.
+Use a more typical kernel style in rtl_dbg uses.
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 2 +-
- 8 files changed, 8 insertions(+), 8 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8188ee/phy.c  |  3 +-
+ .../realtek/rtlwifi/rtl8192c/phy_common.c     | 48 +++++++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/phy.c  |  3 +-
+ .../wireless/realtek/rtlwifi/rtl8192se/phy.c  |  3 +-
+ .../wireless/realtek/rtlwifi/rtl8723ae/phy.c  | 48 +++++++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/phy.c  |  3 +-
+ 6 files changed, 36 insertions(+), 72 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index 4771b76bdefa..507cd44661fa 100644
+index 40ebc3f726f4..4771b76bdefa 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -2189,7 +2189,7 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
+@@ -2191,8 +2191,7 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
  			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--				"Set ERFON sleeped:%d ms\n",
-+				"Set ERFON slept:%d ms\n",
+ 				"Set ERFON sleeped:%d ms\n",
  				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies));
+-						 ppsc->
+-						 last_sleep_jiffies));
++						 ppsc->last_sleep_jiffies));
  			ppsc->last_awake_jiffies = jiffies;
+ 			rtl88ee_phy_set_rf_on(hw);
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index f7b3b55e9776..3f3a7f196843 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -230,8 +230,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][0]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0]);
+ 	}
+ 	if (regaddr == RTXAGC_A_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
+@@ -239,8 +238,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][1]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1]);
+ 	}
+ 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
+@@ -248,8 +246,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][6]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
+@@ -257,8 +254,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][7]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
+@@ -266,8 +262,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][2]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
+@@ -275,8 +270,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][3]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
+@@ -284,8 +278,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][4]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
+@@ -293,8 +286,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][5]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE18_06) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
+@@ -302,8 +294,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][8]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
+@@ -311,8 +302,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][9]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
+@@ -320,8 +310,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][14]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15] =
+@@ -329,8 +318,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][15]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
+@@ -338,8 +326,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][10]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
+@@ -347,8 +334,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][11]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
+@@ -356,8 +342,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][12]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
+@@ -365,8 +350,7 @@ void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][13]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13]);
+ 
+ 		rtlphy->pwrgroup_cnt++;
+ 	}
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-index b0a978ff6193..aef4d88ebbe9 100644
+index 1e9978773c8d..b0a978ff6193 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-@@ -454,7 +454,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 			} else {
+@@ -456,8 +456,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
  				rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--					"Set ERFON sleeped:%d ms\n",
-+					"Set ERFON slept:%d ms\n",
+ 					"Set ERFON sleeped:%d ms\n",
  					jiffies_to_msecs(jiffies -
- 							 ppsc->last_sleep_jiffies));
+-							 ppsc->
+-							 last_sleep_jiffies));
++							 ppsc->last_sleep_jiffies));
  				ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-index 1787b82422f2..a8d9fe269f31 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-@@ -398,7 +398,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--				"Set ERFON sleeped:%d ms\n",
-+				"Set ERFON slept:%d ms\n",
- 				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index f7419b4b3d8d..1a79e1c046cf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -3074,7 +3074,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
--				"awake, sleeped:%d ms state_inap:%x\n",
-+				"awake, slept:%d ms state_inap:%x\n",
- 				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies),
- 				rtlpriv->psc.state_inap);
+ 				rtl92ce_phy_set_rf_on(hw);
+ 			}
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-index 56d795418e18..48d9fe4054af 100644
+index db378370802d..56d795418e18 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-@@ -539,7 +539,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 			} else {
+@@ -541,8 +541,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
  				rtl_dbg(rtlpriv, COMP_POWER, DBG_DMESG,
--					"awake, sleeped:%d ms state_inap:%x\n",
-+					"awake, slept:%d ms state_inap:%x\n",
+ 					"awake, sleeped:%d ms state_inap:%x\n",
  					jiffies_to_msecs(jiffies -
- 							 ppsc->last_sleep_jiffies),
+-							 ppsc->
+-							 last_sleep_jiffies),
++							 ppsc->last_sleep_jiffies),
  					rtlpriv->psc.state_inap);
+ 				ppsc->last_awake_jiffies = jiffies;
+ 				rtl_write_word(rtlpriv, CMDR, 0x37FC);
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-index e7445fb74075..349275c45622 100644
+index 393bec07618f..e7445fb74075 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-@@ -1562,7 +1562,7 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
+@@ -299,8 +299,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][0]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0]);
+ 	}
+ 	if (regaddr == RTXAGC_A_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
+@@ -308,8 +307,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][1]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1]);
+ 	}
+ 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
+@@ -317,8 +315,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][6]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
+@@ -326,8 +323,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][7]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
+@@ -335,8 +331,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][2]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
+@@ -344,8 +339,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][3]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
+@@ -353,8 +347,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][4]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4]);
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
+@@ -362,8 +355,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][5]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE18_06) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
+@@ -371,8 +363,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][8]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8]);
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE54_24) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
+@@ -380,8 +371,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][9]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9]);
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
+@@ -398,8 +388,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][15]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
+@@ -407,8 +396,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][10]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
+@@ -416,8 +404,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][11]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
+@@ -425,8 +412,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][12]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12]);
+ 	}
+ 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+ 		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
+@@ -434,8 +420,7 @@ static void store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			"MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+ 			rtlphy->pwrgroup_cnt,
+-			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							  pwrgroup_cnt][13]);
++			rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13]);
+ 
+ 		rtlphy->pwrgroup_cnt++;
+ 	}
+@@ -1579,8 +1564,7 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
  			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--				"Set ERFON sleeped:%d ms\n",
-+				"Set ERFON slept:%d ms\n",
+ 				"Set ERFON sleeped:%d ms\n",
  				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies));
+-						 ppsc->
+-						 last_sleep_jiffies));
++						 ppsc->last_sleep_jiffies));
  			ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index b43574c44117..f742b9069668 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -2528,7 +2528,7 @@ static bool _rtl8723be_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 			RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--				"Set ERFON sleeped:%d ms\n",
-+				"Set ERFON slept:%d ms\n",
- 				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
+ 			rtl8723e_phy_set_rf_on(hw);
+ 		}
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index 2255c9b9fc16..852f452d3fd3 100644
+index 085d9e9c44ed..2255c9b9fc16 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -4736,7 +4736,7 @@ static bool _rtl8821ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
+@@ -4738,8 +4738,7 @@ static bool _rtl8821ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
  			rtl_dbg(rtlpriv, COMP_RF, DBG_DMESG,
--				"Set ERFON sleeped:%d ms\n",
-+				"Set ERFON slept:%d ms\n",
+ 				"Set ERFON sleeped:%d ms\n",
  				jiffies_to_msecs(jiffies -
- 						 ppsc->last_sleep_jiffies));
+-						 ppsc->
+-						 last_sleep_jiffies));
++						 ppsc->last_sleep_jiffies));
  			ppsc->last_awake_jiffies = jiffies;
+ 			rtl8821ae_phy_set_rf_on(hw);
+ 		}
 -- 
 2.26.0
 
