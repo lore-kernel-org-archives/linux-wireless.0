@@ -2,109 +2,118 @@ Return-Path: <SRS0=M7CZ=BF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 568E1C433E1
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:16:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD86CC433EA
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:40:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E2692065C
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:16:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92CC02070A
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:40:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727926AbgGZLQG (ORCPT
+        id S1728087AbgGZLkA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jul 2020 07:16:06 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:42664 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725972AbgGZLQF (ORCPT
+        Sun, 26 Jul 2020 07:40:00 -0400
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:32833
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728014AbgGZLj5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jul 2020 07:16:05 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-175-gr1C-2L-MRi0aJYN1JyBVw-1; Sun, 26 Jul 2020 12:16:01 +0100
-X-MC-Unique: gr1C-2L-MRi0aJYN1JyBVw-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Sun, 26 Jul 2020 12:16:01 +0100
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Sun, 26 Jul 2020 12:16:01 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Sebastian Gottschall' <s.gottschall@dd-wrt.com>,
-        Hillf Danton <hdanton@sina.com>
-CC:     Andrew Lunn <andrew@lunn.ch>,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "dianders@chromium.org" <dianders@chromium.org>,
-        Markus Elfring <Markus.Elfring@web.de>,
-        "evgreen@chromium.org" <evgreen@chromium.org>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-Subject: RE: [RFC 0/7] Add support to process rx packets in thread
-Thread-Topic: [RFC 0/7] Add support to process rx packets in thread
-Thread-Index: AQHWYpohNM2Njdw2F0Sh0GJATpMrdKkZtSeg
-Date:   Sun, 26 Jul 2020 11:16:00 +0000
-Message-ID: <cb54c2746a3d4ce695e3bda8b576b40e@AcuMS.aculab.com>
-References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
- <20200721172514.GT1339445@lunn.ch> <20200725081633.7432-1-hdanton@sina.com>
- <8359a849-2b8a-c842-a501-c6cb6966e345@dd-wrt.com>
- <20200725145728.10556-1-hdanton@sina.com>
- <2664182a-1d03-998d-8eff-8478174a310a@dd-wrt.com>
-In-Reply-To: <2664182a-1d03-998d-8eff-8478174a310a@dd-wrt.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
-MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+        Sun, 26 Jul 2020 07:39:57 -0400
+X-IronPort-AV: E=Sophos;i="5.75,398,1589234400"; 
+   d="scan'208";a="355309549"
+Received: from palace.rsr.lip6.fr (HELO palace.lip6.fr) ([132.227.105.202])
+  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/AES256-SHA256; 26 Jul 2020 13:39:48 +0200
+From:   Julia Lawall <Julia.Lawall@inria.fr>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     kernel-janitors@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 7/7] ath: drop unnecessary list_empty
+Date:   Sun, 26 Jul 2020 12:58:32 +0200
+Message-Id: <1595761112-11003-8-git-send-email-Julia.Lawall@inria.fr>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1595761112-11003-1-git-send-email-Julia.Lawall@inria.fr>
+References: <1595761112-11003-1-git-send-email-Julia.Lawall@inria.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogU2ViYXN0aWFuIEdvdHRzY2hhbGwgPHMuZ290dHNjaGFsbEBkZC13cnQuY29tPg0KPiBT
-ZW50OiAyNSBKdWx5IDIwMjAgMTY6NDINCj4gPj4gaSBhZ3JlZS4gaSBqdXN0IGNhbiBzYXkgdGhh
-dCBpIHRlc3RlZCB0aGlzIHBhdGNoIHJlY2VudGx5IGR1ZSB0aGlzDQo+ID4+IGRpc2N1c3Npb24g
-aGVyZS4gYW5kIGl0IGNhbiBiZSBjaGFuZ2VkIGJ5IHN5c2ZzLiBidXQgaXQgZG9lc250IHdvcmsg
-Zm9yDQo+ID4+IHdpZmkgZHJpdmVycyB3aGljaCBhcmUgbWFpbmx5IHVzaW5nIGR1bW15IG5ldGRl
-diBkZXZpY2VzLiBmb3IgdGhpcyBpDQo+ID4+IG1hZGUgYSBzbWFsbCBwYXRjaCB0byBnZXQgdGhl
-bSB3b3JraW5nIHVzaW5nIG5hcGlfc2V0X3RocmVhZGVkIG1hbnVhbGx5DQo+ID4+IGhhcmRjb2Rl
-ZCBpbiB0aGUgZHJpdmVycy4gKHNlZSBwYXRjaCBiZWxsb3cpDQoNCj4gPiBCeSBDT05GSUdfVEhS
-RUFERURfTkFQSSwgdGhlcmUgaXMgbm8gbmVlZCB0byBjb25zaWRlciB3aGF0IHlvdSBkaWQgaGVy
-ZQ0KPiA+IGluIHRoZSBuYXBpIGNvcmUgYmVjYXVzZSBkZXZpY2UgZHJpdmVycyBrbm93IGJldHRl
-ciBhbmQgYXJlIHJlc3BvbnNpYmxlDQo+ID4gZm9yIGl0IGJlZm9yZSBjYWxsaW5nIG5hcGlfc2No
-ZWR1bGUobikuDQoNCj4geWVhaC4gYnV0IHRoYXQgYXBwcm9hY2ggd2lsbCBub3Qgd29yayBmb3Ig
-c29tZSBjYXNlcy4gc29tZSBzdHVwaWQNCj4gZHJpdmVycyBhcmUgdXNpbmcgbG9ja2luZyBjb250
-ZXh0IGluIHRoZSBuYXBpIHBvbGwgZnVuY3Rpb24uDQo+IGluIHRoYXQgY2FzZSB0aGUgcGVyZm9y
-bWFuY2Ugd2lsbCBydW50byBzaGl0LiBpIGRpc2NvdmVyZWQgdGhpcyB3aXRoIHRoZQ0KPiBtdm5l
-dGEgZXRoIGRyaXZlciAobWFydmVsbCkgYW5kIG10NzYgdHggcG9sbGluZyAocnjCoCB3b3JrcykN
-Cj4gZm9yIG12bmV0YSBpcyB3aWxsIGNhdXNlIHZlcnkgaGlnaCBsYXRlbmNpZXMgYW5kIHBhY2tl
-dCBkcm9wcy4gZm9yIG10NzYNCj4gaXQgY2F1c2VzIHBhY2tldCBzdG9wLiBkb2VzbnQgd29yayBz
-aW1wbHkgKG9uIGFsbCBjYXNlcyBubyBjcmFzaGVzKQ0KPiBzbyB0aGUgdGhyZWFkaW5nIHdpbGwg
-b25seSB3b3JrIGZvciBkcml2ZXJzIHdoaWNoIGFyZSBjb21wYXRpYmxlIHdpdGgNCj4gdGhhdCBh
-cHByb2FjaC4gaXQgY2Fubm90IGJlIHVzZWQgYXMgZHJvcCBpbiByZXBsYWNlbWVudCBmcm9tIG15
-IHBvaW50IG9mDQo+IHZpZXcuDQo+IGl0cyBhbGwgYSBxdWVzdGlvbiBvZiB0aGUgZHJpdmVyIGRl
-c2lnbg0KDQpXaHkgc2hvdWxkIGl0IG1ha2UgKG11Y2gpIGRpZmZlcmVuY2Ugd2hldGhlciB0aGUg
-bmFwaSBjYWxsYmFja3MgKGV0YykNCmFyZSBkb25lIGluIHRoZSBjb250ZXh0IG9mIHRoZSBpbnRl
-cnJ1cHRlZCBwcm9jZXNzIG9yIHRoYXQgb2YgYQ0Kc3BlY2lmaWMga2VybmVsIHRocmVhZC4NClRo
-ZSBwcm9jZXNzIGZsYWdzIChvciB3aGF0ZXZlcikgY2FuIGV2ZW4gYmUgc2V0IHNvIHRoYXQgaXQg
-YXBwZWFycw0KdG8gYmUgdGhlIGV4cGVjdGVkICdzb2Z0aW50JyBjb250ZXh0Lg0KDQpJbiBhbnkg
-Y2FzZSBydW5uaW5nIE5BUEkgZnJvbSBhIHRocmVhZCB3aWxsIGp1c3Qgc2hvdyB1cCB0aGUgbmV4
-dA0KcGllY2Ugb2YgY29kZSB0aGF0IHJ1bnMgZm9yIGFnZXMgaW4gc29mdGludCBjb250ZXh0Lg0K
-SSB0aGluayBJJ3ZlIHNlZW4gdGhlIHRhaWwgZW5kIG9mIG1lbW9yeSBiZWluZyBmcmVlZCB1bmRl
-ciByY3UNCmZpbmFsbHkgaGFwcGVuaW5nIHVuZGVyIHNvZnRpbnQgYW5kIHRha2luZyBhYnNvbHV0
-ZWx5IGFnZXMuDQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJy
-YW1sZXkgUm9hZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lz
-dHJhdGlvbiBObzogMTM5NzM4NiAoV2FsZXMpDQo=
+list_for_each_entry{_safe} is able to handle an empty list.
+The only effect of avoiding the loop is not initializing the
+index variable.
+Drop list_empty tests in cases where these variables are not
+used.
+
+Note that list_for_each_entry{_safe} is defined in terms of
+list_first_entry, which indicates that it should not be used on an
+empty list.  But in list_for_each_entry{_safe}, the element obtained
+by list_first_entry is not really accessed, only the address of its
+list_head field is compared to the address of the list head, so the
+list_first_entry is safe.
+
+The semantic patch that makes this change for the list_for_each_entry
+case is as follows: (http://coccinelle.lip6.fr/)
+
+<smpl>
+@@
+expression x,e;
+statement S;
+identifier i;
+@@
+
+-if (!(list_empty(x)))
+   list_for_each_entry(i,x,...) S
+ ... when != i
+? i = e
+</smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+
+---
+ drivers/net/wireless/ath/dfs_pattern_detector.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index a274eb0..0813473 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -253,17 +253,15 @@ static void channel_detector_exit(struct dfs_pattern_detector *dpd,
+ static void dpd_reset(struct dfs_pattern_detector *dpd)
+ {
+ 	struct channel_detector *cd;
+-	if (!list_empty(&dpd->channel_detectors))
+-		list_for_each_entry(cd, &dpd->channel_detectors, head)
+-			channel_detector_reset(dpd, cd);
++	list_for_each_entry(cd, &dpd->channel_detectors, head)
++		channel_detector_reset(dpd, cd);
+ 
+ }
+ static void dpd_exit(struct dfs_pattern_detector *dpd)
+ {
+ 	struct channel_detector *cd, *cd0;
+-	if (!list_empty(&dpd->channel_detectors))
+-		list_for_each_entry_safe(cd, cd0, &dpd->channel_detectors, head)
+-			channel_detector_exit(dpd, cd);
++	list_for_each_entry_safe(cd, cd0, &dpd->channel_detectors, head)
++		channel_detector_exit(dpd, cd);
+ 	kfree(dpd);
+ }
+ 
+@@ -331,9 +329,8 @@ static bool dpd_set_domain(struct dfs_pattern_detector *dpd,
+ 		return false;
+ 
+ 	/* delete all channel detectors for previous DFS domain */
+-	if (!list_empty(&dpd->channel_detectors))
+-		list_for_each_entry_safe(cd, cd0, &dpd->channel_detectors, head)
+-			channel_detector_exit(dpd, cd);
++	list_for_each_entry_safe(cd, cd0, &dpd->channel_detectors, head)
++		channel_detector_exit(dpd, cd);
+ 	dpd->radar_spec = rt->radar_types;
+ 	dpd->num_radar_types = rt->num_radar_types;
+ 
 
