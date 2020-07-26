@@ -1,69 +1,132 @@
-Return-Path: <SRS0=EDlr=BE=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=M7CZ=BF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62588C433E4
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 21:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB33C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 07:23:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49A862070B
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Jul 2020 21:03:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1094620714
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 07:23:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="a7d0QhOq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728080AbgGYVDp (ORCPT
+        id S1725903AbgGZHXP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Jul 2020 17:03:45 -0400
-Received: from smtprelay0013.hostedemail.com ([216.40.44.13]:53398 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728015AbgGYVDp (ORCPT
+        Sun, 26 Jul 2020 03:23:15 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:32243 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725829AbgGZHXO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Jul 2020 17:03:45 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 83030100E7B47;
-        Sat, 25 Jul 2020 21:03:44 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: sun63_59013f726f53
-X-Filterd-Recvd-Size: 1432
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf18.hostedemail.com (Postfix) with ESMTPA;
-        Sat, 25 Jul 2020 21:03:42 +0000 (UTC)
-Message-ID: <f7349cdd968aa8e8fa6552d62999a7e05fa875f7.camel@perches.com>
-Subject: Re: [PATCH 0/6] rtlwifi: Convert RT_TRACE to rtl_dbg and neatening
-From:   Joe Perches <joe@perches.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
+        Sun, 26 Jul 2020 03:23:14 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1595748194; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=P9/WVVMgNuEVZ2lL6lp5i3zGw0G7WWHSy768IkuWabM=; b=a7d0QhOqBEdr4x9Mx2/IUBQnQ/9doz+ad3kw3mbqsqYE9WcP9IvkjG4s+lmO9vM/Aba2ZDlx
+ 5ngdb/xaHcwDqREp880HQVDTQ6+oQpBWcAcTgLIsytdHsDiaBU5YAmZmbbSnGlwifvDs7ZfV
+ nwdJB/0j7vjYzbhRlrbBLNDIL2Q=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 5f1d2f4fa19b5f4b115ed6f3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 26 Jul 2020 07:22:55
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 083F1C433CA; Sun, 26 Jul 2020 07:22:55 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F1F26C433C9;
+        Sun, 26 Jul 2020 07:22:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F1F26C433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sedat Dilek <sedat.dilek@gmail.com>
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Sat, 25 Jul 2020 14:03:41 -0700
-In-Reply-To: <cover.1595706419.git.joe@perches.com>
-References: <cover.1595706419.git.joe@perches.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.3-0ubuntu1 
+Subject: Re: iwlwifi: Direct firmware load for iwl-debug-yoyo.bin failed with error -2
+References: <CA+icZUWoycCvAAs5H0sigHTB+GGhX5NRVonYqKg7BRLB97dGkA@mail.gmail.com>
+Date:   Sun, 26 Jul 2020 10:22:50 +0300
+In-Reply-To: <CA+icZUWoycCvAAs5H0sigHTB+GGhX5NRVonYqKg7BRLB97dGkA@mail.gmail.com>
+        (Sedat Dilek's message of "Sat, 25 Jul 2020 14:11:32 +0200")
+Message-ID: <87mu3magfp.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2020-07-25 at 12:55 -0700, Joe Perches wrote:
-> RT_TRACE seems like it should be associated to tracing but it's not.
-> It's a generic debug logging mechanism.
-> Rename it to a more typical name.
-> Miscellaneous neatening around these changes.
+Sedat Dilek <sedat.dilek@gmail.com> writes:
 
-Patch 1/6 is over 1MB and is too large for some mailing lists.
+> Hi,
+>
+> I am seeing this failed/error message for a long time:
+>
+> [Sat Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
+> for iwl-debug-yoyo.bin failed with error -2
+>
+> So, I started to look for the file "iwl-debug-yoyo.bin" in [1], but failed.
+> AFAICS this is a file for debugging purposes?
+>
+> Why do I see such a message as an end-user w/o iwlwifi-debugging enabled?
+> For some end-users I can imagine this looks scary and they will look
+> into their cupboards and below their beds but will not find any
+> monsters.
+>
+> I found a rename from an ini file to bin here:
+> commit 8d9e982bf9bf ("iwlwifi: dbg_ini: rename external debug
+> configuration file")
+>
+> Is "iwl-debug-yoyo.bin" a binary or as before an ini (text) file I
+> have to configure somehow.
+>
+> Does this need to be guarded by some "ifdef CONFIG_IWLWIFI_DEBUG" in
+> "drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c"?
+>
+> Or does drivers/net/wireless/intel/iwlwifi/Makefile needs some tuning
+> - as said I have no iwlwifi debugging enabled via Kconfig?
+> ...
+> iwlwifi-objs            += iwl-dbg-tlv.o
+>
+> Please enlighten me/us?
+>
+> Thanks.
+>
+> Regards,
+> - Sedat -
+>
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
+> [2] https://git.kernel.org/linus/e8d9e982bf9bf0e6f99099f1f09a37563b2b95b5
+>
+>>From my dmesg-output:
+>
+> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: can't disable ASPM; OS
+> doesn't have ASPM control
+> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: loaded firmware
+> version 18.168.6.1 6000g2b-6.ucode op_mode iwldvm
+> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
+> for iwl-debug-yoyo.bin failed with error -2
 
-These patches are based on wireless-drivers-next and are also
-available at:
+There's an RFC patch about this:
 
-git://repo.or.cz/linux-2.6/trivial-mods.git in branch 20200724_rtlwifi
+https://patchwork.kernel.org/patch/11625759/
 
+I think that should be applied. Intel folks, should I take that directly
+to wireless-drivers-next?
 
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
