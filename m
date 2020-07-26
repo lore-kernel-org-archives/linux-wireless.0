@@ -2,181 +2,79 @@ Return-Path: <SRS0=M7CZ=BF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3263C433E4
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:40:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4B5C433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 13:09:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C25F7206D8
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 11:40:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64F0120714
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 13:09:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="PXpTcGMF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726783AbgGZLju (ORCPT
+        id S1726964AbgGZNJv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jul 2020 07:39:50 -0400
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:32814
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725794AbgGZLju (ORCPT
+        Sun, 26 Jul 2020 09:09:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726937AbgGZNJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jul 2020 07:39:50 -0400
-X-IronPort-AV: E=Sophos;i="5.75,398,1589234400"; 
-   d="scan'208";a="355309542"
-Received: from palace.rsr.lip6.fr (HELO palace.lip6.fr) ([132.227.105.202])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/AES256-SHA256; 26 Jul 2020 13:39:47 +0200
-From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     linux-rdma@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
-        linux-media@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] drop unnecessary list_empty
-Date:   Sun, 26 Jul 2020 12:58:25 +0200
-Message-Id: <1595761112-11003-1-git-send-email-Julia.Lawall@inria.fr>
-X-Mailer: git-send-email 1.9.1
+        Sun, 26 Jul 2020 09:09:51 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B741C0619D4
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2020 06:09:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ASbKazThAxyPI+gS02+4Qf0lChoQbWaIBby5Xxgm/sQ=; b=PXpTcGMFjC6zGuqT9BSRRjMjmX
+        wIZdjYQ35UrvZiVXhpAuG2hhDb79kuBAQeBdqzx5g5Wwdr+eh+Hrg+Ac/EUAaZxZGgh9UZEmPJGte
+        xLAsiLhPkJvtgAA2Pofgo+uEx7SF2UUnnCc4u9G6k63NOZeioqlDL2wqxZLGV5iaWwZ8=;
+Received: from p5b206d80.dip0.t-ipconnect.de ([91.32.109.128] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1jzgPU-0000J8-W4; Sun, 26 Jul 2020 15:09:49 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 2/2] mac80211: calculcate skb hash early when using itxq
+Date:   Sun, 26 Jul 2020 15:09:47 +0200
+Message-Id: <20200726130947.88145-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20200726130947.88145-1-nbd@nbd.name>
+References: <20200726130947.88145-1-nbd@nbd.name>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The various list iterators are able to handle an empty list.
-The only effect of avoiding the loop is not initializing some
-index variables.
-Drop list_empty tests in cases where these variables are not
-used.
+This avoids flow separation issues when using software encryption
 
-The semantic patch that makes these changes is as follows:
-(http://coccinelle.lip6.fr/)
-
-<smpl>
-@@
-expression x,e;
-iterator name list_for_each_entry;
-statement S;
-identifier i;
-@@
-
--if (!(list_empty(x))) {
-   list_for_each_entry(i,x,...) S
-- }
- ... when != i
-? i = e
-
-@@
-expression x,e;
-iterator name list_for_each_entry_safe;
-statement S;
-identifier i,j;
-@@
-
--if (!(list_empty(x))) {
-   list_for_each_entry_safe(i,j,x,...) S
-- }
- ... when != i
-     when != j
-(
-  i = e;
-|
-? j = e;
-)
-
-@@
-expression x,e;
-iterator name list_for_each;
-statement S;
-identifier i;
-@@
-
--if (!(list_empty(x))) {
-   list_for_each(i,x) S
-- }
- ... when != i
-? i = e
-
-@@
-expression x,e;
-iterator name list_for_each_safe;
-statement S;
-identifier i,j;
-@@
-
--if (!(list_empty(x))) {
-   list_for_each_safe(i,j,x) S
-- }
- ... when != i
-     when != j
-(
-  i = e;
-|
-? j = e;
-)
-
-// -------------------
-
-@@
-expression x,e;
-statement S;
-identifier i;
-@@
-
--if (!(list_empty(x)))
-   list_for_each_entry(i,x,...) S
- ... when != i
-? i = e
-
-@@
-expression x,e;
-statement S;
-identifier i,j;
-@@
-
--if (!(list_empty(x)))
-   list_for_each_entry_safe(i,j,x,...) S
- ... when != i
-     when != j
-(
-  i = e;
-|
-? j = e;
-)
-
-@@
-expression x,e;
-statement S;
-identifier i;
-@@
-
--if (!(list_empty(x)))
-   list_for_each(i,x) S
- ... when != i
-? i = e
-
-@@
-expression x,e;
-statement S;
-identifier i,j;
-@@
-
--if (!(list_empty(x)))
-   list_for_each_safe(i,j,x) S
- ... when != i
-     when != j
-(
-  i = e;
-|
-? j = e;
-)
-</smpl>
-
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
+ net/mac80211/tx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/media/pci/saa7134/saa7134-core.c                      |   14 ++---
- drivers/media/usb/cx231xx/cx231xx-core.c                      |   16 ++----
- drivers/media/usb/tm6000/tm6000-core.c                        |   24 +++-------
- drivers/net/ethernet/mellanox/mlx5/core/steering/dr_matcher.c |   13 ++---
- drivers/net/ethernet/mellanox/mlx5/core/steering/dr_rule.c    |    5 --
- drivers/net/ethernet/sfc/ptp.c                                |   20 +++-----
- drivers/net/wireless/ath/dfs_pattern_detector.c               |   15 ++----
- sound/soc/intel/atom/sst/sst_loader.c                         |   10 +---
- sound/soc/intel/skylake/skl-pcm.c                             |    8 +--
- sound/soc/intel/skylake/skl-topology.c                        |    5 --
- 10 files changed, 53 insertions(+), 77 deletions(-)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a4e7ef6b0457..7cb73416a372 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3951,6 +3951,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	if (local->ops->wake_tx_queue) {
+ 		u16 queue = __ieee80211_select_queue(sdata, sta, skb);
+ 		skb_set_queue_mapping(skb, queue);
++		skb_get_hash(skb);
+ 	}
+ 
+ 	if (sta) {
+-- 
+2.24.0
+
