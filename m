@@ -2,131 +2,178 @@ Return-Path: <SRS0=M7CZ=BF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB33C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 07:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E02C433E8
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 08:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1094620714
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 07:23:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D56B92065C
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jul 2020 08:10:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="a7d0QhOq"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="OvbtUZfB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725903AbgGZHXP (ORCPT
+        id S1727021AbgGZIKh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jul 2020 03:23:15 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:32243 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725829AbgGZHXO (ORCPT
+        Sun, 26 Jul 2020 04:10:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725810AbgGZIKh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jul 2020 03:23:14 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595748194; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=P9/WVVMgNuEVZ2lL6lp5i3zGw0G7WWHSy768IkuWabM=; b=a7d0QhOqBEdr4x9Mx2/IUBQnQ/9doz+ad3kw3mbqsqYE9WcP9IvkjG4s+lmO9vM/Aba2ZDlx
- 5ngdb/xaHcwDqREp880HQVDTQ6+oQpBWcAcTgLIsytdHsDiaBU5YAmZmbbSnGlwifvDs7ZfV
- nwdJB/0j7vjYzbhRlrbBLNDIL2Q=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5f1d2f4fa19b5f4b115ed6f3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 26 Jul 2020 07:22:55
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 083F1C433CA; Sun, 26 Jul 2020 07:22:55 +0000 (UTC)
-Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F1F26C433C9;
-        Sun, 26 Jul 2020 07:22:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F1F26C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Sedat Dilek <sedat.dilek@gmail.com>
-Cc:     Luca Coelho <luciano.coelho@intel.com>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: Direct firmware load for iwl-debug-yoyo.bin failed with error -2
-References: <CA+icZUWoycCvAAs5H0sigHTB+GGhX5NRVonYqKg7BRLB97dGkA@mail.gmail.com>
-Date:   Sun, 26 Jul 2020 10:22:50 +0300
-In-Reply-To: <CA+icZUWoycCvAAs5H0sigHTB+GGhX5NRVonYqKg7BRLB97dGkA@mail.gmail.com>
-        (Sedat Dilek's message of "Sat, 25 Jul 2020 14:11:32 +0200")
-Message-ID: <87mu3magfp.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Sun, 26 Jul 2020 04:10:37 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AC03C0619D2;
+        Sun, 26 Jul 2020 01:10:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=3915KriMet4cte0HTVlxNc6u/33aLWN9iC1lOprRd9k=; b=OvbtUZfBlBi9zcxNPT6puBcmPi
+        NZ9G5QMXeTFPYiVuEp1YUlOTE/gi7TQ8PjcwlNV/fY7o6HU290Y7WaCwxUoTmSXOyTmboR+CvZIHP
+        LCDDAHffIkM/xzUdjHFcMiT/4g4irEupnb1MqVItpQNqUbiVoAQnV0u5/jGNIJfMZ9U4=;
+Received: from p5b206d80.dip0.t-ipconnect.de ([91.32.109.128] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1jzbjc-0007aH-CD; Sun, 26 Jul 2020 10:10:16 +0200
+Subject: Re: [RFC 0/7] Add support to process rx packets in thread
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     David Laight <David.Laight@ACULAB.COM>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "dianders@chromium.org" <dianders@chromium.org>,
+        Markus Elfring <Markus.Elfring@web.de>,
+        Ding Zhao Nan <oshack@hotmail.com>,
+        "evgreen@chromium.org" <evgreen@chromium.org>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+References: <1595351666-28193-1-git-send-email-pillair@codeaurora.org>
+ <20200721172514.GT1339445@lunn.ch> <20200725081633.7432-1-hdanton@sina.com>
+ <20200726012244.15264-1-hdanton@sina.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <3ce69fb9-f340-d50d-8e77-61c7210a61c6@nbd.name>
+Date:   Sun, 26 Jul 2020 10:10:15 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20200726012244.15264-1-hdanton@sina.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sedat Dilek <sedat.dilek@gmail.com> writes:
+On 2020-07-26 03:22, Hillf Danton wrote:
+>> - add a state bit for threaded NAPI
+>> - make netif_threaded_napi_add inline
+>> - run queue_work outside of local_irq_save/restore (it does that
+>> internally already)
+>>
+>> If you don't mind, I'd like to propose this to netdev soon. Can I have
+>> your Signed-off-by for that?
+> 
+> Feel free to do that. Is it likely for me to select a Cc?
+Shall I use Signed-off-by: Hillf Danton <hdanton@sina.com>?
+What Cc do you want me to add?
 
-> Hi,
->
-> I am seeing this failed/error message for a long time:
->
-> [Sat Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
-> for iwl-debug-yoyo.bin failed with error -2
->
-> So, I started to look for the file "iwl-debug-yoyo.bin" in [1], but failed.
-> AFAICS this is a file for debugging purposes?
->
-> Why do I see such a message as an end-user w/o iwlwifi-debugging enabled?
-> For some end-users I can imagine this looks scary and they will look
-> into their cupboards and below their beds but will not find any
-> monsters.
->
-> I found a rename from an ini file to bin here:
-> commit 8d9e982bf9bf ("iwlwifi: dbg_ini: rename external debug
-> configuration file")
->
-> Is "iwl-debug-yoyo.bin" a binary or as before an ini (text) file I
-> have to configure somehow.
->
-> Does this need to be guarded by some "ifdef CONFIG_IWLWIFI_DEBUG" in
-> "drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c"?
->
-> Or does drivers/net/wireless/intel/iwlwifi/Makefile needs some tuning
-> - as said I have no iwlwifi debugging enabled via Kconfig?
-> ...
-> iwlwifi-objs            += iwl-dbg-tlv.o
->
-> Please enlighten me/us?
->
-> Thanks.
->
-> Regards,
-> - Sedat -
->
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
-> [2] https://git.kernel.org/linus/e8d9e982bf9bf0e6f99099f1f09a37563b2b95b5
->
->>From my dmesg-output:
->
-> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: can't disable ASPM; OS
-> doesn't have ASPM control
-> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: loaded firmware
-> version 18.168.6.1 6000g2b-6.ucode op_mode iwldvm
-> [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
-> for iwl-debug-yoyo.bin failed with error -2
+>> ---
+>> --- a/include/linux/netdevice.h
+>> +++ b/include/linux/netdevice.h
+>> @@ -347,6 +347,7 @@ struct napi_struct {
+>>  	struct list_head	dev_list;
+>>  	struct hlist_node	napi_hash_node;
+>>  	unsigned int		napi_id;
+>> +	struct work_struct	work;
+>>  };
+>>  
+>>  enum {
+>> @@ -357,6 +358,7 @@ enum {
+>>  	NAPI_STATE_HASHED,	/* In NAPI hash (busy polling possible) */
+>>  	NAPI_STATE_NO_BUSY_POLL,/* Do not add in napi_hash, no busy polling */
+>>  	NAPI_STATE_IN_BUSY_POLL,/* sk_busy_loop() owns this NAPI */
+>> +	NAPI_STATE_THREADED,	/* Use threaded NAPI */
+>>  };
+>>  
+>>  enum {
+>> @@ -367,6 +369,7 @@ enum {
+>>  	NAPIF_STATE_HASHED	 = BIT(NAPI_STATE_HASHED),
+>>  	NAPIF_STATE_NO_BUSY_POLL = BIT(NAPI_STATE_NO_BUSY_POLL),
+>>  	NAPIF_STATE_IN_BUSY_POLL = BIT(NAPI_STATE_IN_BUSY_POLL),
+>> +	NAPIF_STATE_THREADED	 = BIT(NAPI_STATE_THREADED),
+>>  };
+>>  
+>>  enum gro_result {
+>> @@ -2315,6 +2318,26 @@ static inline void *netdev_priv(const struct net_device *dev)
+>>  void netif_napi_add(struct net_device *dev, struct napi_struct *napi,
+>>  		    int (*poll)(struct napi_struct *, int), int weight);
+>>  
+>> +/**
+>> + *	netif_threaded_napi_add - initialize a NAPI context
+>> + *	@dev:  network device
+>> + *	@napi: NAPI context
+>> + *	@poll: polling function
+>> + *	@weight: default weight
+>> + *
+>> + * This variant of netif_napi_add() should be used from drivers using NAPI
+>> + * with CPU intensive poll functions.
+>> + * This will schedule polling from a high priority workqueue that
+>> + */
+>> +static inline void netif_threaded_napi_add(struct net_device *dev,
+>> +					   struct napi_struct *napi,
+>> +					   int (*poll)(struct napi_struct *, int),
+>> +					   int weight)
+>> +{
+>> +	set_bit(NAPI_STATE_THREADED, &napi->state);
+>> +	netif_napi_add(dev, napi, poll, weight);
+>> +}
+>> +
+>>  /**
+>>   *	netif_tx_napi_add - initialize a NAPI context
+>>   *	@dev:  network device
+>> --- a/net/core/dev.c
+>> +++ b/net/core/dev.c
+>> @@ -158,6 +158,7 @@ static DEFINE_SPINLOCK(offload_lock);
+>>  struct list_head ptype_base[PTYPE_HASH_SIZE] __read_mostly;
+>>  struct list_head ptype_all __read_mostly;	/* Taps */
+>>  static struct list_head offload_base __read_mostly;
+>> +static struct workqueue_struct *napi_workq;
+> 
+> Is __read_mostly missing?
+Yes, thanks. I will add that before sending the patch.
 
-There's an RFC patch about this:
-
-https://patchwork.kernel.org/patch/11625759/
-
-I think that should be applied. Intel folks, should I take that directly
-to wireless-drivers-next?
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+- Felix
