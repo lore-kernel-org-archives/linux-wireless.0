@@ -2,109 +2,108 @@ Return-Path: <SRS0=zMWk=BG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86605C43457
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 23:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5D8C433E4
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 23:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 541CF20809
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 23:30:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595892630;
-	bh=x7YoQtupH7CiYhIjtuOqqsTxqZZSxlDcl4I1Z5TtKrI=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=GArXgUW4chvdcEDV1jEVo53jyY71WjS2BHVWQNoedrv0tJ5Scqh9wNVfDIzZ6PVzR
-	 1tIfdM7iGy5e7Uc7CRRCe9M5ygzAtpSfTXkpC0Pa+V7xp8To3Qc6guT1o24Dh6e54T
-	 4qnjFU3yOBXvw3JPhROLw7HEDQb9DNKSLTQ5xEyY=
+	by mail.kernel.org (Postfix) with ESMTP id F09892070B
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 23:44:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q1ZgQoFO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbgG0XXs (ORCPT
+        id S1726666AbgG0Xo2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jul 2020 19:23:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34600 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726171AbgG0XXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jul 2020 19:23:48 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C907220786;
-        Mon, 27 Jul 2020 23:23:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595892227;
-        bh=x7YoQtupH7CiYhIjtuOqqsTxqZZSxlDcl4I1Z5TtKrI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Q433sx5jaX7YtQhjB71uXxNSpyaSrya38qdWSyQ5ByJw3awzIE5X0s/Oc638rkU87
-         av6JGC54Rs09q3BXtfTmB0Vm73CTzfEbkJ5E20QDUNH5+Nfh2d2G/nLtyGO3N2K6yh
-         vF1lmvphvkKD2s7y9vHO0T4CApPGQMuEB7uUjSaI=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.7 01/25] mt76: mt7615: fix lmac queue debugsfs entry
-Date:   Mon, 27 Jul 2020 19:23:21 -0400
-Message-Id: <20200727232345.717432-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        Mon, 27 Jul 2020 19:44:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40106 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726278AbgG0Xo1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Jul 2020 19:44:27 -0400
+Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DBC6C061794;
+        Mon, 27 Jul 2020 16:44:26 -0700 (PDT)
+Received: by mail-lj1-x244.google.com with SMTP id q7so19163568ljm.1;
+        Mon, 27 Jul 2020 16:44:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=moew+kZmDVAfG4fC4F4BUXU70dVOAPvVXz3aPRqWV+c=;
+        b=q1ZgQoFOYhEzcRTpKcFgFCwWWkfWsdZN9V77ruy9ePxp4kkFu4iPnUpH6Txm9eLP3K
+         Ducw5HyWELvKNTA+jGcHYqDLUPshvYa6BmrnXsro8UdgdiIcrU/WSHxuxBkofSyDwPCK
+         TL8TsWCPnDJ18icY0/LWUZd2Sf104gIsH82LtIgNn5usBJrvJ2wX+OTCcL7H5YyRraDW
+         TQ2B8A2apljo5nq5fx3VbvAbnjLgeQO4cJCsZlPAWIMOggk2NxTzZQzt4E2XAwnt/gxw
+         MRlKi6jvRdfZ1zwqyWJQ6ShIwLJze7Jc7KuP45j9bUeq+E5Vts/jXc4z8RiPWgeDrc06
+         tj2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=moew+kZmDVAfG4fC4F4BUXU70dVOAPvVXz3aPRqWV+c=;
+        b=KQgx2hHuYCOZ+EC/T7tXekyDCgeZPd5ZZT9i8JHqoQzt8KZgtMkC1Pst1V0OgJcUVs
+         pChkVdLN2waoeMwfa09oGBjZIjAgA7z+C0Fe8e11FzNCVvKchkTyyQ5Lzfl1Zutx1YzW
+         CSlYBY/eeUXEkZoorBsirx8VgUGUvkb+BGbeAFQ11FKFeH8guTV3s3YOrHIW9fvt0sdd
+         HwTGeBSkdpPWfa9FHm+VcwKYtNTJz9X12D9jwqdFxhlchJQX7faQ8fhw8Fo62hLpcPU2
+         A1xII6T3vu6N5rOfQ/sbvVXpmgLStTYR3NyCIJcrZ/9mbO16x/ZgvahpPZ6YHZ/RBA0X
+         MCQA==
+X-Gm-Message-State: AOAM5310mAtFqSbcEhjqLba5PXAYqTw69MXLQf/n5PjI8Y1cwMEU2rR6
+        er+9aXk9C2jyANSr2ShPHCKvpDtO5Zpid59Kl86Iyawxrgw=
+X-Google-Smtp-Source: ABdhPJxqt7yjHQHbPupJG9vvFvZjRsehmeM8o56Au9FRmksB3Q9itPwQ3rIbmzHlg9L/qPzCtL3kCB6IQ7KGZUHAu6M=
+X-Received: by 2002:a2e:8059:: with SMTP id p25mr5366425ljg.219.1595893464673;
+ Mon, 27 Jul 2020 16:44:24 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20200727194415.GA1275@embeddedor> <70ed74d65b5909615c7a9430f3479695465d3b1d.camel@perches.com>
+In-Reply-To: <70ed74d65b5909615c7a9430f3479695465d3b1d.camel@perches.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Tue, 28 Jul 2020 09:44:13 +1000
+Message-ID: <CAGRGNgW4VB1F9TdHf1Kg6WQtgHyH-ZKAnZ0kU5eKQaqUWHwbqg@mail.gmail.com>
+Subject: Re: [PATCH][next] ath11k: Use fallthrough pseudo-keyword
+To:     Joe Perches <joe@perches.com>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+Hi Joe,
 
-[ Upstream commit d941f47caa386931c3b598ad1b43d5ddd65869aa ]
+On Tue, Jul 28, 2020 at 5:48 AM Joe Perches <joe@perches.com> wrote:
+>
+> On Mon, 2020-07-27 at 14:44 -0500, Gustavo A. R. Silva wrote:
+> > Replace the existing /* fall through */ comments and its variants with
+> > the new pseudo-keyword macro fallthrough[1]. Also, remove unnecessary
+> > fall-through markings when it is the case.
+> []
+> > diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+> []
+> > @@ -159,7 +159,7 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+> >                       break;
+> >               }
+> >               /* follow through when ring_num >= 3 */
+> > -             /* fall through */
+> > +             fallthrough;
+>
+> Likely the /* follow through ... */ comment can be deleted too
 
-acs and wmm index are swapped in mt7615_queues_acq respect to the hw
-design
+If the "when ring_num >= 3" comment is needed, how should this get
+formatted? Maybe something like:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+fallthrough; /* when ring_num >= 3 */
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-index b4d0795154e3d..a2afd1a3c51ba 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-@@ -206,10 +206,11 @@ mt7615_queues_acq(struct seq_file *s, void *data)
- 	int i;
- 
- 	for (i = 0; i < 16; i++) {
--		int j, acs = i / 4, index = i % 4;
-+		int j, wmm_idx = i % MT7615_MAX_WMM_SETS;
-+		int acs = i / MT7615_MAX_WMM_SETS;
- 		u32 ctrl, val, qlen = 0;
- 
--		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(acs, index));
-+		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(acs, wmm_idx));
- 		ctrl = BIT(31) | BIT(15) | (acs << 8);
- 
- 		for (j = 0; j < 32; j++) {
-@@ -217,11 +218,11 @@ mt7615_queues_acq(struct seq_file *s, void *data)
- 				continue;
- 
- 			mt76_wr(dev, MT_PLE_FL_Q0_CTRL,
--				ctrl | (j + (index << 5)));
-+				ctrl | (j + (wmm_idx << 5)));
- 			qlen += mt76_get_field(dev, MT_PLE_FL_Q3_CTRL,
- 					       GENMASK(11, 0));
- 		}
--		seq_printf(s, "AC%d%d: queued=%d\n", acs, index, qlen);
-+		seq_printf(s, "AC%d%d: queued=%d\n", wmm_idx, acs, qlen);
- 	}
- 
- 	return 0;
+Thanks,
+
 -- 
-2.25.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
