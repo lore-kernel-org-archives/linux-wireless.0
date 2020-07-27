@@ -2,57 +2,53 @@ Return-Path: <SRS0=zMWk=BG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 875C2C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 06:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C551EC433E4
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 08:27:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B77420714
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 06:22:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9665B20714
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jul 2020 08:27:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726163AbgG0GW2 (ORCPT
+        id S1726835AbgG0I1v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jul 2020 02:22:28 -0400
-Received: from mga14.intel.com ([192.55.52.115]:53448 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726116AbgG0GW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jul 2020 02:22:28 -0400
-IronPort-SDR: MvcTnF2hWmXyCFnEXmgTJE26gNESBiL0nmOuZHRt1oIaPo1V/j3ijT0oSnghb/chPZz7Ky2/UX
- tH/NuqzPoE1w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9694"; a="150139875"
-X-IronPort-AV: E=Sophos;i="5.75,401,1589266800"; 
-   d="scan'208";a="150139875"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2020 23:22:28 -0700
-IronPort-SDR: cVcA1MbSggbVlEp+p7dXxBiOAuCwWtJzSAgPMiIwkSTcLQQvmiyiUKeDcV/LuesgJvzUyMFGYb
- smB9QGXQIS4Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,401,1589266800"; 
-   d="scan'208";a="433786627"
-Received: from bfarkas-mobl.ger.corp.intel.com ([10.249.254.210])
-  by orsmga004.jf.intel.com with ESMTP; 26 Jul 2020 23:22:26 -0700
-Message-ID: <80afa796cefcc78f8a56059b279d6d424bc00d5e.camel@intel.com>
-Subject: Re: iwlwifi: Direct firmware load for iwl-debug-yoyo.bin failed
- with error -2
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        Sedat Dilek <sedat.dilek@gmail.com>
-Cc:     Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-wireless@vger.kernel.org
-Date:   Mon, 27 Jul 2020 09:22:25 +0300
-In-Reply-To: <87mu3magfp.fsf@tynnyri.adurom.net>
-References: <CA+icZUWoycCvAAs5H0sigHTB+GGhX5NRVonYqKg7BRLB97dGkA@mail.gmail.com>
-         <87mu3magfp.fsf@tynnyri.adurom.net>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.3-1 
+        Mon, 27 Jul 2020 04:27:51 -0400
+Received: from smtprelay0083.hostedemail.com ([216.40.44.83]:48704 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726139AbgG0I1u (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Jul 2020 04:27:50 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay02.hostedemail.com (Postfix) with ESMTP id C23DD1730850;
+        Mon, 27 Jul 2020 08:27:49 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: sleet04_270be7a26f5f
+X-Filterd-Recvd-Size: 2386
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf14.hostedemail.com (Postfix) with ESMTPA;
+        Mon, 27 Jul 2020 08:27:48 +0000 (UTC)
+Message-ID: <ae9d562ec9ef765dddd1491d4cfb5f6d18f7025f.camel@perches.com>
+Subject: Re: [PATCH 2/6] rtlwifi: Remove unnecessary parenthese in rtl_dbg
+ uses
+From:   Joe Perches <joe@perches.com>
+To:     Pkshih <pkshih@realtek.com>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date:   Mon, 27 Jul 2020 01:27:47 -0700
+In-Reply-To: <1595830034.12227.7.camel@realtek.com>
+References: <cover.1595706419.git.joe@perches.com>
+         <9b2eaedb7ea123ea766a379459b20a9486d1cd41.1595706420.git.joe@perches.com>
+         <1595830034.12227.7.camel@realtek.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.3-0ubuntu1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -60,68 +56,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 2020-07-26 at 10:22 +0300, Kalle Valo wrote:
-> Sedat Dilek <sedat.dilek@gmail.com> writes:
+On Mon, 2020-07-27 at 06:07 +0000, Pkshih wrote:
+> On Sat, 2020-07-25 at 12:55 -0700, Joe Perches wrote:
+> > Make these statements a little simpler.
+[]
+> > diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+[]
+> > @@ -874,11 +874,10 @@ static void halbtc_display_wifi_status(struct
+> > btc_coexist *btcoexist,
+> >  	seq_printf(m, "\n %-35s = %s / %s/ %s/ AP=%d ",
+> >  		   "Wifi freq/ bw/ traffic",
+> >  		   gl_btc_wifi_freq_string[wifi_freq],
+> > -		   ((wifi_under_b_mode) ? "11b" :
+> > -		    gl_btc_wifi_bw_string[wifi_bw]),
+> > -		   ((!wifi_busy) ? "idle" : ((BTC_WIFI_TRAFFIC_TX ==
+> > -					      wifi_traffic_dir) ? "uplink" :
+> > -					     "downlink")),
+> > +		   wifi_under_b_mode ? "11b" : gl_btc_wifi_bw_string[wifi_bw],
+> > +		   (!wifi_busy ? "idle" :
+> > +		    wifi_traffic_dir == BTC_WIFI_TRAFFIC_TX ? "uplink" :
+> > +		    "downlink"),
 > 
-> > Hi,
-> > 
-> > I am seeing this failed/error message for a long time:
-> > 
-> > [Sat Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
-> > for iwl-debug-yoyo.bin failed with error -2
-> > 
-> > So, I started to look for the file "iwl-debug-yoyo.bin" in [1], but failed.
-> > AFAICS this is a file for debugging purposes?
-> > 
-> > Why do I see such a message as an end-user w/o iwlwifi-debugging enabled?
-> > For some end-users I can imagine this looks scary and they will look
-> > into their cupboards and below their beds but will not find any
-> > monsters.
-> > 
-> > I found a rename from an ini file to bin here:
-> > commit 8d9e982bf9bf ("iwlwifi: dbg_ini: rename external debug
-> > configuration file")
-> > 
-> > Is "iwl-debug-yoyo.bin" a binary or as before an ini (text) file I
-> > have to configure somehow.
-> > 
-> > Does this need to be guarded by some "ifdef CONFIG_IWLWIFI_DEBUG" in
-> > "drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c"?
-> > 
-> > Or does drivers/net/wireless/intel/iwlwifi/Makefile needs some tuning
-> > - as said I have no iwlwifi debugging enabled via Kconfig?
-> > ...
-> > iwlwifi-objs            += iwl-dbg-tlv.o
-> > 
-> > Please enlighten me/us?
-> > 
-> > Thanks.
-> > 
-> > Regards,
-> > - Sedat -
-> > 
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
-> > [2] https://git.kernel.org/linus/e8d9e982bf9bf0e6f99099f1f09a37563b2b95b5
-> > 
-> > > From my dmesg-output:
-> > 
-> > [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: can't disable ASPM; OS
-> > doesn't have ASPM control
-> > [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: loaded firmware
-> > version 18.168.6.1 6000g2b-6.ucode op_mode iwldvm
-> > [Sa Jul 25 13:03:28 2020] iwlwifi 0000:01:00.0: Direct firmware load
-> > for iwl-debug-yoyo.bin failed with error -2
+> I think this would be better
 > 
-> There's an RFC patch about this:
-> 
-> https://patchwork.kernel.org/patch/11625759/
-> 
-> I think that should be applied. Intel folks, should I take that directly
-> to wireless-drivers-next?
+> +		   !wifi_busy ? "idle" :
+> +		   (wifi_traffic_dir == BTC_WIFI_TRAFFIC_TX ? "uplink" :
+> +		    "downlink"),
 
-As I wrote in the other thread, yes, please.  Go ahead and merge it.
+It seems most repeated test1 ? : test2 ? : test3 ?:
+uses do not have the style you suggest in the kernel.
 
---
-Cheers,
-Luca.
 
