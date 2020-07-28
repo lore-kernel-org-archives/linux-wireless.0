@@ -2,94 +2,137 @@ Return-Path: <SRS0=wFPv=BH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CDE2C433E1
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 01:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883C8C433E4
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 10:08:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE07A20838
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 01:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6340620792
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 10:08:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YyLJcW54"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726733AbgG1BpA (ORCPT
+        id S1728666AbgG1KIg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jul 2020 21:45:00 -0400
-Received: from www262.sakura.ne.jp ([202.181.97.72]:52595 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726575AbgG1BpA (ORCPT
+        Tue, 28 Jul 2020 06:08:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51820 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728305AbgG1KId (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jul 2020 21:45:00 -0400
-Received: from fsav303.sakura.ne.jp (fsav303.sakura.ne.jp [153.120.85.134])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 06S1iJxD088794;
-        Tue, 28 Jul 2020 10:44:19 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav303.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav303.sakura.ne.jp);
- Tue, 28 Jul 2020 10:44:19 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav303.sakura.ne.jp)
-Received: from localhost.localdomain (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 06S1iFhm088645
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 28 Jul 2020 10:44:19 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-To:     gbhat@marvell.com
-Cc:     amitkarwar@gmail.com, andreyknvl@google.com, davem@davemloft.net,
-        dvyukov@google.com, huxinming820@gmail.com, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        nishants@marvell.com,
-        syzbot+dc4127f950da51639216@syzkaller.appspotmail.com,
-        syzkaller-bugs@googlegroups.com,
-        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        syzbot <syzbot+373e6719b49912399d21@syzkaller.appspotmail.com>
-Subject: [PATCH] mwifiex: don't call del_timer_sync() on uninitialized timer
-Date:   Tue, 28 Jul 2020 10:44:12 +0900
-Message-Id: <1595900652-3842-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com>
-References: <MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com>
+        Tue, 28 Jul 2020 06:08:33 -0400
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DBC1C061794
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2020 03:08:33 -0700 (PDT)
+Received: by mail-ed1-x544.google.com with SMTP id z17so14340476edr.9
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2020 03:08:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ici1nNo6rNlYQpg1lc3t6UQAXO9yQYAF7LL5FlZGfwQ=;
+        b=YyLJcW54k2hJ89sDuOn1bpy9EOzlrivuo8+6oeZt9PkLpMd6Jz0kQdktu3ONK1sR7B
+         DKZ9zQLCY+15o4drTygZt5FSF+GLVSqxgVu9oI8Jpvkw5okjEg2p4liG6lj+ptLJ9QdG
+         27J33pKlOLHRC09IVDj4mLsVbJNMeGWs8sKu8a34I4LHxBegXPwjrfBqohTeJ+d8wPcj
+         kBoKaka2uVK7NN9891Fmv5klhkqt8IuYhrzxxUQ5FqIYOlne6Sgw7R7jRrr1Kdq5Rt4W
+         pn9qpebKe5+zob1vPMxlFmkgVrVOHh8wk9QH/Z/vCesER17NitRb1B8ZZ5RbWe3aVrmV
+         Deyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ici1nNo6rNlYQpg1lc3t6UQAXO9yQYAF7LL5FlZGfwQ=;
+        b=S5kODEDiAnj2eEq7IEO8RjQJ4pVclP0A5Cy0YzUlHt0NB8zEmMYIPRPMJw5ZvUJExT
+         fNSroa7G4JNXSkIJkBB7j3XI0Fs62aJlwp5h8Cnv/jororfblL310rt44snA/nTktOOx
+         SJFpnjB7hQyk2Vyhh/Jv1Z9wPtxoHDPQAMOhXFzELoMN8oxhI8kVYEr18ykgThGafWbB
+         SqYrcUpx5rJvThKSigFr4CW5IIqmh7zk0sGZw0d3MB2kxrwT0e3IA8hfdsDcTBV/dwI/
+         gTbdeKgR8Ss3bUxrgxAvsdllSD4GfMUjU5TvygT3362O8zVkjkGluLagvt2UIiwzYGFo
+         vhpQ==
+X-Gm-Message-State: AOAM531ukgUVmO8hbEyL9aG/3pGsf526frNDrwO7ogMbh/LRMK4bvu7v
+        h868CKL/RaymKB3dxpjaySMGmAJNihJk7JAN4Cknzo2d
+X-Google-Smtp-Source: ABdhPJwZiyJUzjxf5hpf8toFvfspU8ITbdpv6E0VstGqONdvtSMs9fH09mvSgJg33PZ7IKAtgdknJwKppDzCiAQeBJw=
+X-Received: by 2002:a05:6402:cb3:: with SMTP id cn19mr26309144edb.368.1595930911947;
+ Tue, 28 Jul 2020 03:08:31 -0700 (PDT)
+MIME-Version: 1.0
+References: <1595586052-16081-1-git-send-email-loic.poulain@linaro.org>
+ <CA+Kvs9mV39gndidkDjMHswQGii74MH4cTDr9az1HLNOtW6PZTA@mail.gmail.com>
+ <CAMZdPi8jgoYsWd6d90WE-sGD8P5LMKO+YAHoP5-xRBV+vncy=A@mail.gmail.com> <CA+Kvs9=0mJ4-6bZUkB3EG-R6ju8UrwJWo3_6aRxzn1tnrGiq-A@mail.gmail.com>
+In-Reply-To: <CA+Kvs9=0mJ4-6bZUkB3EG-R6ju8UrwJWo3_6aRxzn1tnrGiq-A@mail.gmail.com>
+From:   Loic Poulain <loic.poulain@linaro.org>
+Date:   Tue, 28 Jul 2020 12:13:19 +0200
+Message-ID: <CAMZdPi9XiDutLKQbLzwnG_3LkFkpCoOh4yJKnENfSSqYEkvs2w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] wcn36xx misc fixes
+To:     Ramon Fried <ramon.fried@gmail.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-syzbot is reporting that del_timer_sync() is called from
-mwifiex_usb_cleanup_tx_aggr() from mwifiex_unregister_dev() without
-checking timer_setup() from mwifiex_usb_tx_init() was called [1].
-Since mwifiex_usb_prepare_tx_aggr_skb() is calling del_timer() if
-is_hold_timer_set == true, use the same condition for del_timer_sync().
+Hi Ramon,
 
-[1] https://syzkaller.appspot.com/bug?id=fdeef9cf7348be8b8ab5b847f2ed993aba8ea7b6
+On Fri, 24 Jul 2020 at 20:51, Ramon Fried <ramon.fried@gmail.com> wrote:
+>
+> On Fri, Jul 24, 2020 at 4:57 PM Loic Poulain <loic.poulain@linaro.org> wrote:
+> >
+> > Hi Ramon,
+> >
+> > On Fri, 24 Jul 2020 at 15:47, Ramon Fried <ramon.fried@gmail.com> wrote:
+> > >
+> > > On Fri, Jul 24, 2020 at 1:15 PM Loic Poulain <loic.poulain@linaro.org> wrote:
+> > > >
+> > > > This series contains various fixes for the wcn36xx driver.
+> > > > This has been tested with wcn3620, wcn3660 and wcn3680.
+> > > >
+> > > > v2: - Move TX retries change into its own commit
+> > > >     - Additional patch for sequence number assignment
+> > > >     - Reword TX ack commit log (timeout detection)
+> > > >     - Fix checkpatch issues reported by Bryan
+> > > >
+> > > > Loic Poulain (6):
+> > > >   wcn36xx: Fix multiple AMPDU sessions support
+> > > >   wcn36xx: Add TX ack support
+> > > >   wcn36xx: Increase number of TX retries
+> > > >   wcn36xx: Fix TX data path
+> > > >   wcn36xx: Fix software-driven scan
+> > > >   wcn36xx: Use sequence number allocated by mac80211
+> > > >
+> > > >  drivers/net/wireless/ath/wcn36xx/dxe.c     |  57 +++++++++-
+> > > >  drivers/net/wireless/ath/wcn36xx/main.c    | 172 +++++++++++++++--------------
+> > > >  drivers/net/wireless/ath/wcn36xx/smd.c     |  59 ++++++++--
+> > > >  drivers/net/wireless/ath/wcn36xx/smd.h     |  12 +-
+> > > >  drivers/net/wireless/ath/wcn36xx/txrx.c    |  57 ++++++----
+> > > >  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   7 +-
+> > > >  6 files changed, 241 insertions(+), 123 deletions(-)
+> > > >
+> > > > --
+> > > > 2.7.4
+> > > >
+> > > >
+> > > > _______________________________________________
+> > > > wcn36xx mailing list
+> > > > wcn36xx@lists.infradead.org
+> > > > http://lists.infradead.org/mailman/listinfo/wcn36xx
+> > >
+> > >
+> > > Hi Loic,
+> > > What about upstreaming the fixes for several TP-Link AP's ?
+> > > The WCN36xx is not usable on those networks and your own tree patches seems to
+> > > be working properly.
+> >
+> > Which ones do you have in mind?
+> I didn't inspect each patch, I just took your tree and everything now
+> works as expected on  my TP-Link setup.
+> I did notice this patch -   "wcn36xx: Fix power-saving with some APs"
+> that was missing.
+> And there are some patches in your tree that hack the mac802111 core,
+> Do you think there's a way to upstream those ?
 
-Reported-by: syzbot <syzbot+373e6719b49912399d21@syzkaller.appspotmail.com>
-Cc: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
-A patch from Ganapathi Bhat ( https://patchwork.kernel.org/patch/10990275/ ) is stalling
-at https://lore.kernel.org/linux-usb/MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com/ .
-syzbot by now got this report for 10000 times. Do we want to go with this simple patch?
+Indeed I've additional fixes in my tree, but they are either not
+strictly required or I need more time for proper testing.
 
- drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 6f3cfde..04a1461 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -1353,7 +1353,8 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
- 				skb_dequeue(&port->tx_aggr.aggr_list)))
- 				mwifiex_write_data_complete(adapter, skb_tmp,
- 							    0, -1);
--		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
-+		if (port->tx_aggr.timer_cnxt.is_hold_timer_set)
-+			del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
- 		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
- 		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
- 	}
--- 
-1.8.3.1
-
+Loic
