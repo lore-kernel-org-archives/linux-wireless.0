@@ -2,97 +2,94 @@ Return-Path: <SRS0=wFPv=BH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7D7C433E4
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 00:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CDE2C433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 01:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6AC120729
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 00:03:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE07A20838
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jul 2020 01:45:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726887AbgG1ADU (ORCPT
+        id S1726733AbgG1BpA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jul 2020 20:03:20 -0400
-Received: from smtprelay0237.hostedemail.com ([216.40.44.237]:35802 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726171AbgG1ADU (ORCPT
+        Mon, 27 Jul 2020 21:45:00 -0400
+Received: from www262.sakura.ne.jp ([202.181.97.72]:52595 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726575AbgG1BpA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jul 2020 20:03:20 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 0EE3F18225DF5;
-        Tue, 28 Jul 2020 00:03:19 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: owner27_5f0264426f65
-X-Filterd-Recvd-Size: 2596
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf07.hostedemail.com (Postfix) with ESMTPA;
-        Tue, 28 Jul 2020 00:03:17 +0000 (UTC)
-Message-ID: <940c318b59c3c3e945c80216699299d051f8b4c5.camel@perches.com>
-Subject: Re: [PATCH][next] ath11k: Use fallthrough pseudo-keyword
-From:   Joe Perches <joe@perches.com>
-To:     Julian Calaby <julian.calaby@gmail.com>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org,
+        Mon, 27 Jul 2020 21:45:00 -0400
+Received: from fsav303.sakura.ne.jp (fsav303.sakura.ne.jp [153.120.85.134])
+        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 06S1iJxD088794;
+        Tue, 28 Jul 2020 10:44:19 +0900 (JST)
+        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
+Received: from www262.sakura.ne.jp (202.181.97.72)
+ by fsav303.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav303.sakura.ne.jp);
+ Tue, 28 Jul 2020 10:44:19 +0900 (JST)
+X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav303.sakura.ne.jp)
+Received: from localhost.localdomain (M106072142033.v4.enabler.ne.jp [106.72.142.33])
+        (authenticated bits=0)
+        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 06S1iFhm088645
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 28 Jul 2020 10:44:19 +0900 (JST)
+        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
+From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+To:     gbhat@marvell.com
+Cc:     amitkarwar@gmail.com, andreyknvl@google.com, davem@davemloft.net,
+        dvyukov@google.com, huxinming820@gmail.com, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Date:   Mon, 27 Jul 2020 17:03:16 -0700
-In-Reply-To: <CAGRGNgW4VB1F9TdHf1Kg6WQtgHyH-ZKAnZ0kU5eKQaqUWHwbqg@mail.gmail.com>
-References: <20200727194415.GA1275@embeddedor>
-         <70ed74d65b5909615c7a9430f3479695465d3b1d.camel@perches.com>
-         <CAGRGNgW4VB1F9TdHf1Kg6WQtgHyH-ZKAnZ0kU5eKQaqUWHwbqg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.3-0ubuntu1 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        nishants@marvell.com,
+        syzbot+dc4127f950da51639216@syzkaller.appspotmail.com,
+        syzkaller-bugs@googlegroups.com,
+        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
+        syzbot <syzbot+373e6719b49912399d21@syzkaller.appspotmail.com>
+Subject: [PATCH] mwifiex: don't call del_timer_sync() on uninitialized timer
+Date:   Tue, 28 Jul 2020 10:44:12 +0900
+Message-Id: <1595900652-3842-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com>
+References: <MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-07-28 at 09:44 +1000, Julian Calaby wrote:
-> Hi Joe,
-> 
-> On Tue, Jul 28, 2020 at 5:48 AM Joe Perches <joe@perches.com> wrote:
-> > On Mon, 2020-07-27 at 14:44 -0500, Gustavo A. R. Silva wrote:
-> > > Replace the existing /* fall through */ comments and its variants with
-> > > the new pseudo-keyword macro fallthrough[1]. Also, remove unnecessary
-> > > fall-through markings when it is the case.
-> > []
-> > > diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-> > []
-> > > @@ -159,7 +159,7 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
-> > >                       break;
-> > >               }
-> > >               /* follow through when ring_num >= 3 */
-> > > -             /* fall through */
-> > > +             fallthrough;
-> > 
-> > Likely the /* follow through ... */ comment can be deleted too
-> 
-> If the "when ring_num >= 3" comment is needed, how should this get
-> formatted? Maybe something like:
-> 
-> fallthrough; /* when ring_num >= 3 */
+syzbot is reporting that del_timer_sync() is called from
+mwifiex_usb_cleanup_tx_aggr() from mwifiex_unregister_dev() without
+checking timer_setup() from mwifiex_usb_tx_init() was called [1].
+Since mwifiex_usb_prepare_tx_aggr_skb() is calling del_timer() if
+is_hold_timer_set == true, use the same condition for del_timer_sync().
 
-Likely, or just removed as the test above is fairly clear
+[1] https://syzkaller.appspot.com/bug?id=fdeef9cf7348be8b8ab5b847f2ed993aba8ea7b6
 
-Existing code:
+Reported-by: syzbot <syzbot+373e6719b49912399d21@syzkaller.appspotmail.com>
+Cc: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+A patch from Ganapathi Bhat ( https://patchwork.kernel.org/patch/10990275/ ) is stalling
+at https://lore.kernel.org/linux-usb/MN2PR18MB2637D7C742BC235FE38367F0A09C0@MN2PR18MB2637.namprd18.prod.outlook.com/ .
+syzbot by now got this report for 10000 times. Do we want to go with this simple patch?
 
-	case HAL_WBM2SW_RELEASE:
-		if (ring_num < 3) {
-			params.intr_batch_cntr_thres_entries =
-					HAL_SRNG_INT_BATCH_THRESHOLD_TX;
-			params.intr_timer_thres_us =
-					HAL_SRNG_INT_TIMER_THRESHOLD_TX;
-			break;
-		}
-		/* follow through when ring_num >= 3 */
-		/* fall through */
-	case HAL_REO_EXCEPTION:
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 6f3cfde..04a1461 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -1353,7 +1353,8 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
+ 				skb_dequeue(&port->tx_aggr.aggr_list)))
+ 				mwifiex_write_data_complete(adapter, skb_tmp,
+ 							    0, -1);
+-		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
++		if (port->tx_aggr.timer_cnxt.is_hold_timer_set)
++			del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
+ 		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
+ 		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
+ 	}
+-- 
+1.8.3.1
 
