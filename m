@@ -2,87 +2,76 @@ Return-Path: <SRS0=1Ud/=BJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF23C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 00:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 395B8C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 06:51:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88DCF2075D
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 00:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B71F20656
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 06:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727840AbgG3Azd (ORCPT
+        id S1728816AbgG3GvA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Jul 2020 20:55:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43278 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726709AbgG3Azd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Jul 2020 20:55:33 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84ADDC061794;
-        Wed, 29 Jul 2020 17:55:33 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 5A34B11D69C93;
-        Wed, 29 Jul 2020 17:38:46 -0700 (PDT)
-Date:   Wed, 29 Jul 2020 17:55:28 -0700 (PDT)
-Message-Id: <20200729.175528.1166456771819897321.davem@davemloft.net>
-To:     netdev@vger.kernel.org
-CC:     linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        bpf@vger.kernel.org, xdp-newbies@vger.kernel.org, lwn@lwn.net
-Subject: [FINAL REMINDER] LPC 2020 Networking and BPF Track CFP
-From:   David Miller <davem@davemloft.net>
-X-Mailer: Mew version 6.8 on Emacs 26.3
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Wed, 29 Jul 2020 17:38:46 -0700 (PDT)
+        Thu, 30 Jul 2020 02:51:00 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:8860 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728760AbgG3Gu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Jul 2020 02:50:59 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 1369950D6FCD2D5DE4B9;
+        Thu, 30 Jul 2020 14:50:57 +0800 (CST)
+Received: from huawei.com (10.175.113.133) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.487.0; Thu, 30 Jul 2020
+ 14:50:50 +0800
+From:   Wang Hai <wanghai38@huawei.com>
+To:     <imitsyanko@quantenna.com>, <geomatsi@gmail.com>,
+        <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>,
+        <mst@redhat.com>, <mkarpenko@quantenna.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH net] qtnfmac: Missing platform_device_unregister() on error in qtnf_core_mac_alloc()
+Date:   Thu, 30 Jul 2020 14:49:10 +0800
+Message-ID: <20200730064910.37589-1-wanghai38@huawei.com>
+X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.175.113.133]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Add the missing platform_device_unregister() before return from
+qtnf_core_mac_alloc() in the error handling case.
 
-[ The deadline is this Sunday, please get your submissions in now! ]
+Fixes: 616f5701f4ab ("qtnfmac: assign each wiphy to its own virtual platform device")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wang Hai <wanghai38@huawei.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-This is the FINAL reminder for the call for proposals for the
-networking and bpf track at the Linux Plumbers Conference on the wider
-internet, which will be happening on August 24th-28th, 2020.
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index eea777f8acea..6aafff9d4231 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -446,8 +446,11 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ 	}
+ 
+ 	wiphy = qtnf_wiphy_allocate(bus, pdev);
+-	if (!wiphy)
++	if (!wiphy) {
++		if (pdev)
++			platform_device_unregister(pdev);
+ 		return ERR_PTR(-ENOMEM);
++	}
+ 
+ 	mac = wiphy_priv(wiphy);
+ 
+-- 
+2.17.1
 
-This year the technical committee is comprised of:
-
-David S. Miller <davem@davemloft.net>
-Alexei Starovoitov <ast@kernel.org>
-Daniel Borkmann <daniel@iogearbox.net>
-Jakub Sitnicki <jakub@cloudflare.com>
-Paolo Abeni <pabeni@redhat.com>
-Jakub Kicinski <kuba@kernel.org>
-Michal Kubecek <mkubecek@suse.cz>
-Sabrina Dubroca <sd@queasysnail.net>
-
-We are seeking talks of 40 minutes in length (including Q & A),
-optionally accompanied by papers of 2 to 10 pages in length.  The
-papers, while not required, are very strongly encouraged by the
-committee.  The submitters intention to provide a paper will be taken
-into consideration as a criteria when deciding which proposals to
-accept.
-
-Any kind of advanced networking and/or bpf related topic will be
-considered.
-
-Please submit your proposals on the LPC website at:
-
-	https://www.linuxplumbersconf.org/event/7/abstracts/#submit-abstract
-
-And be sure to select "Networking & BPF Summit" in the Track
-pulldown menu.
-
-Proposals must be submitted by August 2nd, and submitters will be
-notified of acceptance by August 9th.
-
-Final slides and papers (as PDF) are due on August 24th, the first day of
-the conference.
