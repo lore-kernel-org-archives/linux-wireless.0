@@ -2,96 +2,93 @@ Return-Path: <SRS0=1Ud/=BJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F97CC433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 22:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3397DC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 22:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32E2520809
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 22:21:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="UqXHJHdz"
+	by mail.kernel.org (Postfix) with ESMTP id 0E02D20838
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jul 2020 22:29:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1596148145;
+	bh=YH9+ICW/3hXRtSm64orqu19oSdQuuWKrMUBevTvaXkE=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:List-ID:From;
+	b=xev2YfG2Z4vkvlkxLcDO7Int01c8tQEZkqYo/n/I/IPhh4zoVjRrJOu5B1DT5Z0iH
+	 zvAtHWZCsomO1N0pOdCtsoqibTialXMzbXrlAOEBrPMBrh4BK0oiK1k/6ogUBBY1pG
+	 GRjGITXKNSe97/20zTqU+Ds1y/pko4wj/6zDMcFQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730153AbgG3WVJ (ORCPT
+        id S1730650AbgG3W26 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Jul 2020 18:21:09 -0400
-Received: from bilbo.ozlabs.org ([203.11.71.1]:43881 "EHLO ozlabs.org"
+        Thu, 30 Jul 2020 18:28:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41070 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728063AbgG3WVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Jul 2020 18:21:09 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        id S1730641AbgG3W25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Jul 2020 18:28:57 -0400
+Received: from localhost (fw-tnat.cambridge.arm.com [217.140.96.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4BHlHR0sPjz9sTC;
-        Fri, 31 Jul 2020 08:21:06 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1596147667;
-        bh=v81W8GIsNfgI+jNrSnQzwtV4UC776qBdtzVq2xM/XQQ=;
-        h=Date:From:To:Cc:Subject:From;
-        b=UqXHJHdzyspL7lWX4rhLYDvN3nEx4Axl3nmlhDZWHztQzBp3xjhd4W03D2/qlrctd
-         Ce9h6uOCex41gBy1mbMrG1+8SHHHBA9QKCNm4//GdqY6klyTUOTEqZCq4VzCxZFaBI
-         RBawGJaetk2si3MZpNL4yYnWlQYw1H2UyURgerEs+rZAZyLXPYKVA81Hwy0BLZ9YaF
-         N3MBmVh0d1ALlAj45ffnR9cPkHPThUhb2UIJflNp0RjwtotKkwoks1x7JyQnTDE2VO
-         DH0d3P0YqYkEaRJPHhOII49+bEZUfROx/3E51vNeX7hQncuvm2jppTj7zdxNbiateA
-         qYQY7xMXZ3AWQ==
-Date:   Fri, 31 Jul 2020 08:21:05 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        P Praneesh <ppranees@codeaurora.org>
-Subject: linux-next: Fixes tag needs some work in the mac80211-next tree
-Message-ID: <20200731082105.75e60bda@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/KdgfdNUuPJW4qH/heNXQkr5";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D06520829;
+        Thu, 30 Jul 2020 22:28:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1596148137;
+        bh=YH9+ICW/3hXRtSm64orqu19oSdQuuWKrMUBevTvaXkE=;
+        h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+        b=F+0Ydd/Fgutk16gkyGj2gECpPoXbH4sg6UlFq9catgilRzwkQfA9O7G1w0Kz6j0y8
+         QrQ7gUCMeXm93qiW40R2H2WfV9+NT2PCbOx4GxEs87RdYK42aWEzohK3Bf2m4JuD5e
+         DShs/tsbsdcOdvIawMZxl9W+REGJfO6Zjj0yspI8=
+Date:   Thu, 30 Jul 2020 23:28:36 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     linux-rdma@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-media@vger.kernel.org, kernel-janitors@vger.kernel.org
+In-Reply-To: <1595761112-11003-1-git-send-email-Julia.Lawall@inria.fr>
+References: <1595761112-11003-1-git-send-email-Julia.Lawall@inria.fr>
+Subject: Re: [PATCH 0/7] drop unnecessary list_empty
+Message-Id: <159614804536.1473.16638498246526574558.b4-ty@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/KdgfdNUuPJW4qH/heNXQkr5
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, 26 Jul 2020 12:58:25 +0200, Julia Lawall wrote:
+> The various list iterators are able to handle an empty list.
+> The only effect of avoiding the loop is not initializing some
+> index variables.
+> Drop list_empty tests in cases where these variables are not
+> used.
+> 
+> The semantic patch that makes these changes is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> [...]
 
-Hi all,
+Applied to
 
-In commit
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git for-next
 
-  5fa4ab3cf34e ("mac80211: avoid bss color setting in non-HE modes")
+Thanks!
 
-Fixes tag
+[1/1] ASoC: Intel: drop unnecessary list_empty
+      commit: a383308e50244a28fe927b9c1acbe0a963bf186b
 
-  Fixes: eb024f1abca3("mac80211: avoid bss color setting in non-he mode")
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
 
-has these problem(s):
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
 
-  - Target SHA1 does not exist
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
 
-I can't find which commit is meant.
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
 
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/KdgfdNUuPJW4qH/heNXQkr5
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl8jR9EACgkQAVBC80lX
-0Gy34Af/e7rSP2pQ9PkQud80zM3HRxW2nPNYDqI/xj3I28TsaAJRWLPEBWAhikLL
-uoSQdUPTUZA3w3CoP77SSHLbCll/DpgJmouBWunL+5d7y4DVpSk0b8o1vOm8wyyL
-h0KG4b2HGrwiH5KHA5tLExNN7bzELv7cORy7Z8RBD9EZ/Cas8enBi44oa/iLA9GO
-WrJB1yUe4QsGOwSuV5opPkXaMSJuDH6IEn0LNltRNyx9mkkhhWJSsuOVMUsTHGX7
-6cjtZEwT07jgenjPR0ca2uS0LEEzA7RQ6GB56V2Habw7CLbGeH1YNuyMjPyUzdTP
-Y2LE+NdS7gWakniGnPTfa0q8k8qzaQ==
-=DuOS
------END PGP SIGNATURE-----
-
---Sig_/KdgfdNUuPJW4qH/heNXQkr5--
+Thanks,
+Mark
