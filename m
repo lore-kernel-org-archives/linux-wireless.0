@@ -2,111 +2,207 @@ Return-Path: <SRS0=mEur=BK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C7DC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE0FC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2080522CB3
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1417522BF3
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 12:02:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QlWaplXG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IV77SFHd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733041AbgGaMC2 (ORCPT
+        id S1732885AbgGaMCT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jul 2020 08:02:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56216 "EHLO
+        Fri, 31 Jul 2020 08:02:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733025AbgGaMCY (ORCPT
+        with ESMTP id S1732699AbgGaMCS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jul 2020 08:02:24 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E164DC061574;
-        Fri, 31 Jul 2020 05:02:23 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id a21so31150585ejj.10;
-        Fri, 31 Jul 2020 05:02:23 -0700 (PDT)
+        Fri, 31 Jul 2020 08:02:18 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F592C061574;
+        Fri, 31 Jul 2020 05:02:18 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id bo3so8536250ejb.11;
+        Fri, 31 Jul 2020 05:02:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=eZK+H+8P4YZaGPvNdFZeiGG9Bo1EGoEt0s5F4CNNc80=;
-        b=QlWaplXGbixFr2iaZsG5PJHSSOZbuNBUIasW8yuH1nsnVdp6YoYPMGxTOoB8aeGPjl
-         cn2K3t/zLUCVvaaSnJcwSClDPI/NsQpHsPV9YLrXYaYwWeJ89I2ysukcyFp9knRUz/6A
-         C1Yy8ztk7MbJ2O1f6n8/EwUzvpVmzYv3aVhmpXCFLy0CcrvflKiFRAQY1NvlEFKkwjEd
-         7M3+18TKCiSUH8ezZEFQRUHHM1DaiD+BvM6ftfMrAemf6hGhWP+eoJ4DEqde40kq53fv
-         Vt/tgbEvtv1lsYX5VyhQ7PDlh++wbx6fnuf5oW+s+Z+p1JAKPLwxByyotKgX808QntiK
-         +X2w==
+        h=from:to:cc:subject:date:message-id;
+        bh=ZPoeO3tTC7ewTWnbFijLfWrL4pIpzl5ZB76dv/p6S+8=;
+        b=IV77SFHdlJClAFDI4KSZtVJdC2DAtGrxQmIzbw7GOFGworBySBIYMfm9Yv26Y/SKyP
+         rJ/5xlxCVrVFPq8kGTy8sYSnl8lJJRNSCrGsHmSuT/Q/6f6ZNhMo+IUMump4oyHXnbT4
+         zdg6GnXC6I2EnnmIO+QWUt/QBdgUQDiMTBzZ1MF6LcHzPH6p6WiuMJRqgKLwdVXr0w6T
+         A41vxNL3Pbxy7zwarGyvn0JkT7Sx1d9otfI42XD75uRhNvxzHSotK52Z7UcRx/7L0KoB
+         ev5oiKfqKrPihVeHMlZvAQD8DrotfvZAdy9sCn3f87cYflYMriFMzeKWHMdJMTvHmefD
+         7wSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=eZK+H+8P4YZaGPvNdFZeiGG9Bo1EGoEt0s5F4CNNc80=;
-        b=ok/E+6G8UhDrhUdh76PdpYMPzQYa4VvtED4CF3Kryw1KxNpsqysKzc//Ad0wu1PErb
-         3597mUZEGhg63RjOf3xkPHlesimdYIXBmFQVvAW6Qyn8yJu5YLtCPhraiGq6xg6px2yE
-         A/Lkm52CPKcbkR3E8syuUaFcTHnj1QMM3web7pqcWj7ebJW22Qy5K1L4ru5qu9j0K263
-         8ZU2yfOde9OS83USExyjVKsXEM5+MQ2WT5QaQNj3dSsyXYdxnkObsL0udJmFv/dpGQ+C
-         dZSZ5vnY4s/bcGx5ccg8t0fODK9wfzfKTeKIQ+8qaeDeSU/DYBAbyJpHCW9CQyJN6t9o
-         FEeQ==
-X-Gm-Message-State: AOAM532J3Cs1HI80hWuWEAHG0AZIITGQ1H3pvunKRPhwtJ4/n0eMzT6H
-        E4gQYGrZXgCOirX/8d0cXiI=
-X-Google-Smtp-Source: ABdhPJzseAgg1rg1tVy8ApT5RrpMw/6kYsnooL/dOwqEDLtZ6RfM9YbjqXKCNWBVO0h/MP8NAaoBeQ==
-X-Received: by 2002:a17:906:c1c3:: with SMTP id bw3mr3941716ejb.8.1596196942684;
-        Fri, 31 Jul 2020 05:02:22 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ZPoeO3tTC7ewTWnbFijLfWrL4pIpzl5ZB76dv/p6S+8=;
+        b=BsQ1TTmSRZiL4D5NH9xf1aEOOZBBt3vZfd4bEA4JHu9OWhAtNu+3FV56Db1NJ1FAeQ
+         lpquwahRKHUW6130T5Vjg0oncoVqWjlWDg8zvui4GvHH2W2fk4/+eWLgovZQCaUQ55X8
+         Me4TuiWUCfi2deewwUJZ9aRKkbIsMMQJHpDMMUigmc4lQk5lplU29nr1Mx+Ba3nDYe2S
+         I4y/Y3vs/QztHBQtfW4x53UBA9h2COZbyHvaE6KASClOXTpQph+ENV2lnPpFFnJzw6LP
+         JSN+xvc5G6WSWIyEnLgjJRsSCuHjZrCEu5xzKslUf3dcAcJLUlzYxGwdbkhl1t80Y4rm
+         J+3w==
+X-Gm-Message-State: AOAM530eMoGsMzeW6I7P3ZOQ9J7SJ0np+8an32G8XaTnZawo1nPjK848
+        VzYuOP1H4DFt1v57gniiBMiWw9y6/hcxOQ==
+X-Google-Smtp-Source: ABdhPJzjoTcnAvyDzlAqwJiXlviIPrdknthesuHRXw6Drk1Mxsa9h9E21KaWBpHYtCNmp+wuQyAJqg==
+X-Received: by 2002:a17:906:d7b1:: with SMTP id pk17mr3684852ejb.554.1596196936900;
+        Fri, 31 Jul 2020 05:02:16 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id j5sm9091734ejk.87.2020.07.31.05.02.21
+        by smtp.gmail.com with ESMTPSA id j5sm9091734ejk.87.2020.07.31.05.02.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2020 05:02:22 -0700 (PDT)
+        Fri, 31 Jul 2020 05:02:16 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+To:     helgaas@kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v4 04/12] iwlegacy: Check if pcie_capability_read_*() reads ~0
-Date:   Fri, 31 Jul 2020 13:02:32 +0200
-Message-Id: <20200731110240.98326-5-refactormyself@gmail.com>
+        linux-rdma@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v4 00/12] PCI: Remove '*val = 0' from pcie_capability_read_*()
+Date:   Fri, 31 Jul 2020 13:02:28 +0200
+Message-Id: <20200731110240.98326-1-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20200731110240.98326-1-refactormyself@gmail.com>
-References: <20200731110240.98326-1-refactormyself@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On failure pcie_capability_read_dword() sets it's last parameter, val
-to 0. However, with Patch 12/12, it is possible that val is set to ~0
-on failure. This would introduce a bug because (x & x) == (~0 & x).
+v4 CHANGES:
+- Drop uses of pcie_capability_read_*() return value. This related to
+  [1] which is pointing towards making the accessors return void.
+- Remove patches found to be unnecessary
+- Reword some commit messages
 
-Since ~0 is an invalid value here,
+v3 CHANGES:
+- Split previous PATCH 6/13 into two : PATCH 6/14 and PATCH 7/14
+- Fix commit message of PATCH 5/14
+- Update Patch numbering and Commit messages
+- Add 'Acked by Greg KH' to PATCH 2/14
+- Add PATCH version
 
-Add an extra check for ~0 to the if condition to ensure success.
+v2 CHANGES:
+- Fix missing comma, causing the email cc error
+- Fix typos and numbering errors in commit messages
+- Add commit message to 13/13
+- Add two more patches: PATCH 3/13 and PATCH 4/13
 
-Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
-Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
----
- drivers/net/wireless/intel/iwlegacy/common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+MERGING:
+- Patch 6/12 depends on Patch 5/12. However Patch 5/12 has no dependency.
+  Please, merge PATCH 6/12 only after Patch 5/12.
+- Patch 12/12 depends on all preceding patches. Please merge Patch 12/12
+  only after other patches in this series have been merged.
+- All other patches have no dependencies besides those mentioned above and
+  can be merge individually.
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 348c17ce72f5..659027563260 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4287,7 +4287,7 @@ il_apm_init(struct il_priv *il)
- 	 */
- 	if (il->cfg->set_l0s) {
- 		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
--		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
-+		if ((lctl != (u16)~0) && (lctl & PCI_EXP_LNKCTL_ASPM_L1)) {
- 			/* L1-ASPM enabled; disable(!) L0S  */
- 			il_set_bit(il, CSR_GIO_REG,
- 				   CSR_GIO_REG_VAL_L0S_ENABLED);
+PATCH 5/12:
+Set the default case in the switch-statement to set status
+to "Power On".
+
+PATCH 1/12 to 11/12:
+Use the value read by pcie_capability_read_*() to determine success or
+failure. This is done by checking if it is ~0, while maintaining the
+functions' behaviour. This ensures that the changes in PATCH 12/12 does
+not introduce any bug.
+
+PATCH 12/12:
+There are several reasons why a PCI capability read may fail whether the
+device is present or not. If this happens, pcie_capability_read_*() will
+return -EINVAL/PCIBIOS_BAD_REGISTER_NUMBER or PCIBIOS_DEVICE_NOT_FOUND
+and *val is set to 0.
+
+This behaviour if further ensured by this code inside
+pcie_capability_read_*()
+
+ ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+ /*
+  * Reset *val to 0 if pci_read_config_dword() fails, it may
+  * have been written as 0xFFFFFFFF if hardware error happens
+  * during pci_read_config_dword().
+  */
+ if (ret)
+	 *val = 0;
+ return ret;
+
+a) Since all pci_generic_config_read() does is read a register value,
+it may return success after reading a ~0 which *may* have been fabricated
+by the PCI host bridge due to a read timeout. Hence pci_read_config_*() 
+will return success with a fabricated ~0 in *val, indicating a problem.
+In this case, the assumed behaviour of  pcie_capability_read_*() will be
+wrong. To avoid error slipping through, more checks are necessary.
+
+b) pci_read_config_*() will return PCIBIOS_DEVICE_NOT_FOUND only if 
+dev->error_state = pci_channel_io_perm_failure (i.e. 
+pci_dev_is_disconnected()) or if pci_generic_config_read() can't find the
+device. In both cases *val is initially set to ~0 but as shown in the code
+above pcie_capability_read_*() resets it back to 0. Even with this effort,
+drivers still have to perform validation checks more so if 0 is a valid
+value.
+
+Most drivers only consider the case (b) and in some cases, there is the 
+expectation that on timeout *val has a fabricated value of ~0, which *may*
+not always be true as explained in (a).
+
+In any case, checks need to be done to validate the value read and maybe
+confirm which error has occurred. It is better left to the drivers to do.
+
+Check the return value of pcie_capability_read_dword() to ensure success
+and avoid bug as a result of Patch 14/14.
+Remove the reset of *val to 0 when pci_read_config_*() fails.
+
+[1] https://lore.kernel.org/linux-pci/20200714234625.GA428442@bjorn-Precision-5520/
+
+
+Saheed O. Bolarinwa (12):
+  IB/hfi1: Check if pcie_capability_read_*() reads ~0
+  misc: rtsx: Check if pcie_capability_read_*() reads ~0
+  ath9k: Check if pcie_capability_read_*() reads ~0
+  iwlegacy: Check if pcie_capability_read_*() reads ~0
+  PCI: pciehp: Set "Power On" as the default get_power_status
+  PCI: pciehp: Check if pcie_capability_read_*() reads ~0
+  PCI/ACPI: Check if pcie_capability_read_*() reads ~0
+  PCI: Check if pcie_capability_read_*() reads ~0
+  PCI/PM: Check if pcie_capability_read_*() reads ~0
+  PCI/AER: Check if pcie_capability_read_*() reads ~0
+  PCI/ASPM: Check if pcie_capability_read_*() reads ~0
+  PCI: Remove '*val = 0' from pcie_capability_read_*()
+
+ drivers/infiniband/hw/hfi1/aspm.c            |  6 ++--
+ drivers/misc/cardreader/rts5227.c            |  2 +-
+ drivers/misc/cardreader/rts5249.c            |  2 +-
+ drivers/misc/cardreader/rts5260.c            |  2 +-
+ drivers/misc/cardreader/rts5261.c            |  2 +-
+ drivers/net/wireless/ath/ath9k/pci.c         |  3 +-
+ drivers/net/wireless/intel/iwlegacy/common.c |  2 +-
+ drivers/pci/access.c                         | 14 --------
+ drivers/pci/hotplug/pciehp_hpc.c             | 13 +++++---
+ drivers/pci/pci-acpi.c                       |  4 +--
+ drivers/pci/pci.c                            | 34 ++++++++++++++------
+ drivers/pci/pcie/aer.c                       |  2 +-
+ drivers/pci/pcie/aspm.c                      | 10 +++---
+ drivers/pci/probe.c                          | 12 +++----
+ 14 files changed, 56 insertions(+), 52 deletions(-)
+
 -- 
 2.18.4
 
