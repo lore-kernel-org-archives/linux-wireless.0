@@ -2,137 +2,66 @@ Return-Path: <SRS0=mEur=BK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F6BC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 20:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E036C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 20:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B75B208E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 20:13:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80D2422B3F
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 20:31:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1596227508;
+	bh=pD3jNcmOWktiyQVUN0PpMKyCE1vag4hIA96oczwCKbw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=fi8FnmoJ6lrN33oloAFoat72itqTku4FVDe5UR/lpsJ75jABs0ESGWlgSMfiK/REj
+	 S6QWWR2tHTrY1sXGG14RI9fpbWte2R0aR/UKIUFonAativBGb66+Q/tskj0Wo2HFWj
+	 mfyNzLEsRjnVBIe24zqwb/KKEvOY+6fKjzGUkraA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726916AbgGaUND (ORCPT
+        id S1728795AbgGaUbn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jul 2020 16:13:03 -0400
-Received: from mga03.intel.com ([134.134.136.65]:39403 "EHLO mga03.intel.com"
+        Fri, 31 Jul 2020 16:31:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53986 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726644AbgGaUNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jul 2020 16:13:02 -0400
-IronPort-SDR: NIarx5GSI193dSpu1j4wy06/VeTfyyGa1EyvuwjxxrkAH6cz5xHxlmUlrbCdMY7s2GlqEvUyh1
- p5wntZwce++Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9698"; a="151832413"
-X-IronPort-AV: E=Sophos;i="5.75,419,1589266800"; 
-   d="scan'208";a="151832413"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jul 2020 13:12:54 -0700
-IronPort-SDR: 23DRocfzefcrppvygLfoz137C/fu72XRLv+DV3cZVnQgH/YityakkqUT5saJsCaaYKR/OwtoJo
- 2RfaQRCssaFw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,419,1589266800"; 
-   d="scan'208";a="313914404"
-Received: from lkp-server01.sh.intel.com (HELO e21119890065) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 31 Jul 2020 13:12:52 -0700
-Received: from kbuild by e21119890065 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1k1bOe-00006n-32; Fri, 31 Jul 2020 20:12:52 +0000
-Date:   Sat, 01 Aug 2020 04:11:58 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD SUCCESS
- c8ad010665c0b85c6a35466b2159e907b8dd85d1
-Message-ID: <5f247b0e.RJcAxmiLGTnNQkKz%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1726950AbgGaUbn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Jul 2020 16:31:43 -0400
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C24242087C;
+        Fri, 31 Jul 2020 20:31:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1596227503;
+        bh=pD3jNcmOWktiyQVUN0PpMKyCE1vag4hIA96oczwCKbw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=WFJ4ENaFnRtkdMD6lhFQVd4W9l4fXi0gDB+tp/GycXox16R+NuIUkWF5rKvmuEHbD
+         /zJoic0DDqyezvnq2NzLZMXYi5d9LFRw3IenykNtJcpQilacnTcx4HQBF3mF0hX1Qo
+         AS/Vjmc65q/XKvF4yW4iLnPMqTmGF5HaTdcqqjHo=
+Date:   Fri, 31 Jul 2020 13:31:41 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Rakesh Pillai <pillair@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+        davem@davemloft.net, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 0/3]
+Message-ID: <20200731133141.68d7ad81@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <1596220042-2778-1-git-send-email-pillair@codeaurora.org>
+References: <1596220042-2778-1-git-send-email-pillair@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  master
-branch HEAD: c8ad010665c0b85c6a35466b2159e907b8dd85d1  mac80211: warn only once in check_sdata_in_driver() at each caller
+On Fri, 31 Jul 2020 23:57:19 +0530 Rakesh Pillai wrote:
+> The history recording will be compiled only if
+> ATH10K_DEBUG is enabled, and also enabled via
+> the module parameter. Once the history recording
+> is enabled via module parameter, it can be enabled
+> or disabled runtime via debugfs.
 
-elapsed time: 724m
-
-configs tested: 66
-configs skipped: 1
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-i386                 randconfig-a005-20200731
-i386                 randconfig-a004-20200731
-i386                 randconfig-a006-20200731
-i386                 randconfig-a002-20200731
-i386                 randconfig-a001-20200731
-i386                 randconfig-a003-20200731
-x86_64               randconfig-a015-20200731
-x86_64               randconfig-a014-20200731
-x86_64               randconfig-a016-20200731
-x86_64               randconfig-a012-20200731
-x86_64               randconfig-a013-20200731
-x86_64               randconfig-a011-20200731
-i386                 randconfig-a016-20200731
-i386                 randconfig-a012-20200731
-i386                 randconfig-a014-20200731
-i386                 randconfig-a015-20200731
-i386                 randconfig-a011-20200731
-i386                 randconfig-a013-20200731
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Have you seen the trace_devlink_hwmsg() interface?
+Could it be used here?
