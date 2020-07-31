@@ -2,184 +2,534 @@ Return-Path: <SRS0=mEur=BK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E386CC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 16:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E4EC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 18:27:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8A802245C
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 16:54:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CA5122BEA
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jul 2020 18:27:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ohy1Wi/z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732732AbgGaQyS (ORCPT
+        id S2387815AbgGaS1o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jul 2020 12:54:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44814 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728958AbgGaQyS (ORCPT
+        Fri, 31 Jul 2020 14:27:44 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:58238 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387766AbgGaS1o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jul 2020 12:54:18 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B9F2C061574;
-        Fri, 31 Jul 2020 09:54:18 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1k1YIR-00EBrk-IT; Fri, 31 Jul 2020 18:54:15 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2020-07-31
-Date:   Fri, 31 Jul 2020 18:54:02 +0200
-Message-Id: <20200731165403.31899-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        Fri, 31 Jul 2020 14:27:44 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1596220062; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=o7f3Xk/EixElVTO6+Uz9inas4c+cBqV/P656fdel21Y=; b=Ohy1Wi/zCllYNPNTd9W+y8j6CIyYEs6yMl87qev6vrirG7wgEbZcbfbljtehnCr7bmyMXnro
+ m60FTD8X1Y6SebM6R/l8A66IDPg/lxVRq/wAKbsCyZBWK7Qm4YesVO6bow/2sp9yb2xHOIuH
+ YNvn0XN1ZJLvw2iGv70M3jevIDM=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
+ 5f24629d2dfc1b5cc2a50411 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 31 Jul 2020 18:27:41
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 50F4DC433A0; Fri, 31 Jul 2020 18:27:41 +0000 (UTC)
+Received: from pillair-linux.qualcomm.com (unknown [202.46.22.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BAE7DC433AD;
+        Fri, 31 Jul 2020 18:27:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BAE7DC433AD
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
+        netdev@vger.kernel.org, Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH v2 1/3] ath10k: Add history for tracking certain events
+Date:   Fri, 31 Jul 2020 23:57:20 +0530
+Message-Id: <1596220042-2778-2-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1596220042-2778-1-git-send-email-pillair@codeaurora.org>
+References: <1596220042-2778-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+Add history for tracking the below events
+- register read
+- register write
+- IRQ trigger
+- NAPI poll
+- CE service
+- WMI cmd
+- WMI event
+- WMI tx completion
 
-Here's a set of patches for -next, in case we get a release
-on Sunday :-) If not I may have some more next week, but no
-point waiting now with this.
+This will help in debugging any crash or any
+improper behaviour.
 
-Please pull and let me know if there's any problem.
+Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
 
-Thanks,
-johannes
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/ce.c      |   1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  74 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c   | 133 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h   |  74 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/snoc.c    |  15 +++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     |  10 +++
+ 7 files changed, 307 insertions(+), 1 deletion(-)
 
-
-
-The following changes since commit 41d707b7332f1386642c47eb078110ca368a46f5:
-
-  fib: fix fib_rules_ops indirect calls wrappers (2020-07-29 13:26:42 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2020-07-31
-
-for you to fetch changes up to c8ad010665c0b85c6a35466b2159e907b8dd85d1:
-
-  mac80211: warn only once in check_sdata_in_driver() at each caller (2020-07-31 09:27:02 +0200)
-
-----------------------------------------------------------------
-We have a number of changes
- * code cleanups and fixups as usual
- * AQL & internal TXQ improvements from Felix
- * some mesh 802.1X support bits
- * some injection improvements from Mathy of KRACK
-   fame, so we'll see what this results in ;-)
- * some more initial S1G supports bits, this time
-   (some of?) the userspace APIs
-
-----------------------------------------------------------------
-Christophe JAILLET (2):
-      nl80211: Remove a misleading label in 'nl80211_trigger_scan()'
-      nl80211: Simplify error handling path in 'nl80211_trigger_scan()'
-
-Chung-Hsien Hsu (1):
-      nl80211: support 4-way handshake offloading for WPA/WPA2-PSK in AP mode
-
-Colin Ian King (1):
-      mac80211: remove the need for variable rates_idx
-
-Emmanuel Grumbach (1):
-      cfg80211: allow the low level driver to flush the BSS table
-
-Felix Fietkau (4):
-      mac80211: improve AQL tx airtime estimation
-      net/fq_impl: use skb_get_hash instead of skb_get_hash_perturb
-      mac80211: calculate skb hash early when using itxq
-      mac80211: add a function for running rx without passing skbs to the stack
-
-Gustavo A. R. Silva (1):
-      mac80211: Use fallthrough pseudo-keyword
-
-Johannes Berg (2):
-      cfg80211: invert HE BSS color 'disabled' to 'enabled'
-      mac80211: warn only once in check_sdata_in_driver() at each caller
-
-Julian Squires (1):
-      cfg80211: allow vendor dumpit to terminate by returning 0
-
-Linus Lüssing (1):
-      cfg80211/mac80211: add mesh_param "mesh_nolearn" to skip path discovery
-
-Markus Theil (2):
-      cfg80211/mac80211: add connected to auth server to meshconf
-      cfg80211/mac80211: add connected to auth server to station info
-
-Mathy Vanhoef (6):
-      mac80211: never drop injected frames even if normally not allowed
-      mac80211: add radiotap flag to prevent sequence number overwrite
-      mac80211: do not overwrite the sequence number if requested
-      mac80211: use same flag everywhere to avoid sequence number overwrite
-      mac80211: remove unused flags argument in transmit functions
-      mac80211: parse radiotap header when selecting Tx queue
-
-P Praneesh (1):
-      cfg80211/mac80211: avoid bss color setting in non-HE modes
-
-Randy Dunlap (5):
-      net/wireless: nl80211.h: drop duplicate words in comments
-      net/wireless: wireless.h: drop duplicate word in comments
-      net/wireless: cfg80211.h: drop duplicate words in comments
-      net/wireless: mac80211.h: drop duplicate words in comments
-      net/wireless: regulatory.h: drop duplicate word in comment
-
-Thomas Pedersen (1):
-      nl80211: S1G band and channel definitions
-
-Veerendranath Jakkam (1):
-      cfg80211: Add support to advertize OCV support
-
- drivers/net/wireless/ath/ath10k/mac.c |  9 +---
- drivers/net/wireless/ath/ath11k/mac.c |  2 +-
- drivers/net/wireless/mac80211_hwsim.c |  2 +-
- include/net/cfg80211.h                | 41 +++++++++++++--
- include/net/fq.h                      |  1 -
- include/net/fq_impl.h                 |  3 +-
- include/net/ieee80211_radiotap.h      |  1 +
- include/net/mac80211.h                | 42 +++++++++++++--
- include/net/regulatory.h              |  2 +-
- include/uapi/linux/nl80211.h          | 94 +++++++++++++++++++++++++--------
- include/uapi/linux/wireless.h         |  2 +-
- net/mac80211/airtime.c                | 26 +++++++--
- net/mac80211/cfg.c                    | 21 +++++---
- net/mac80211/chan.c                   |  9 +++-
- net/mac80211/debugfs_netdev.c         |  5 ++
- net/mac80211/driver-ops.h             | 11 ++--
- net/mac80211/ht.c                     |  4 +-
- net/mac80211/ibss.c                   |  4 +-
- net/mac80211/ieee80211_i.h            | 16 +++---
- net/mac80211/iface.c                  | 25 +++++----
- net/mac80211/key.c                    |  2 +-
- net/mac80211/mesh.c                   |  9 ++--
- net/mac80211/mesh_hwmp.c              | 41 ++++++++++++++-
- net/mac80211/mesh_plink.c             |  2 +-
- net/mac80211/mlme.c                   | 14 ++---
- net/mac80211/offchannel.c             |  6 +--
- net/mac80211/rx.c                     | 66 ++++++++++++++---------
- net/mac80211/scan.c                   |  8 +--
- net/mac80211/sta_info.c               |  6 ++-
- net/mac80211/sta_info.h               |  2 +
- net/mac80211/status.c                 |  4 +-
- net/mac80211/tdls.c                   |  8 +--
- net/mac80211/tx.c                     | 99 +++++++++++++++++------------------
- net/mac80211/util.c                   | 20 ++++---
- net/mac80211/wme.c                    |  2 +-
- net/wireless/chan.c                   | 35 +++++++++++++
- net/wireless/core.c                   |  5 +-
- net/wireless/mesh.c                   |  1 +
- net/wireless/nl80211.c                | 74 ++++++++++++++------------
- net/wireless/scan.c                   | 10 ++++
- net/wireless/trace.h                  |  4 +-
- net/wireless/util.c                   |  8 +++
- 42 files changed, 511 insertions(+), 235 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 84ec80c..0f541de 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1299,6 +1299,7 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
+ 	struct ath10k_hw_ce_host_wm_regs *wm_regs = ar->hw_ce_regs->wm_regs;
+ 	u32 ctrl_addr = ce_state->ctrl_addr;
+ 
++	ath10k_record_ce_event(ar, ATH10K_CE_SERVICE, ce_id);
+ 	/*
+ 	 * Clear before handling
+ 	 *
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 5c18f6c..46bd5aa 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -970,6 +970,75 @@ struct ath10k_bus_params {
+ 	bool hl_msdu_ids;
+ };
+ 
++#define ATH10K_REG_ACCESS_HISTORY_MAX	512
++#define ATH10K_CE_EVENT_HISTORY_MAX	1024
++#define ATH10K_WMI_EVENT_HISTORY_MAX	512
++#define ATH10K_WMI_CMD_HISTORY_MAX	256
++
++#define ATH10K_WMI_DATA_LEN	16
++
++enum ath10k_ce_event {
++	ATH10K_IRQ_TRIGGER,
++	ATH10K_NAPI_POLL,
++	ATH10K_CE_SERVICE,
++	ATH10K_NAPI_COMPLETE,
++	ATH10K_NAPI_RESCHED,
++	ATH10K_IRQ_SUMMARY,
++};
++
++enum ath10k_wmi_type {
++	ATH10K_WMI_EVENT,
++	ATH10K_WMI_CMD,
++	ATH10K_WMI_TX_COMPL,
++};
++
++struct ath10k_reg_access_entry {
++	u32 cpu_id;
++	bool write;
++	u32 offset;
++	u32 val;
++	u64 timestamp;
++};
++
++struct ath10k_wmi_event_entry {
++	u32 cpu_id;
++	enum ath10k_wmi_type type;
++	u32 id;
++	u64 timestamp;
++	unsigned char data[ATH10K_WMI_DATA_LEN];
++};
++
++struct ath10k_ce_event_entry {
++	u32 cpu_id;
++	enum ath10k_ce_event event_type;
++	u32 ce_id;
++	u64 timestamp;
++};
++
++struct ath10k_wmi_event_history {
++	struct ath10k_wmi_event_entry *record;
++	u32 max_entries;
++	atomic_t index;
++	/* lock for accessing wmi event history */
++	spinlock_t hist_lock;
++};
++
++struct ath10k_ce_event_history {
++	struct ath10k_ce_event_entry *record;
++	u32 max_entries;
++	atomic_t index;
++	/* lock for accessing ce event history */
++	spinlock_t hist_lock;
++};
++
++struct ath10k_reg_access_history {
++	struct ath10k_reg_access_entry *record;
++	u32 max_entries;
++	atomic_t index;
++	/* lock for accessing register access history */
++	spinlock_t hist_lock;
++};
++
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -1261,6 +1330,11 @@ struct ath10k {
+ 	bool coex_support;
+ 	int coex_gpio_pin;
+ 
++	struct ath10k_reg_access_history reg_access_history;
++	struct ath10k_ce_event_history ce_event_history;
++	struct ath10k_wmi_event_history wmi_event_history;
++	struct ath10k_wmi_event_history wmi_cmd_history;
++
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e8250a6..9105b0b 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2722,4 +2722,137 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ }
+ EXPORT_SYMBOL(ath10k_dbg_dump);
+ 
++int ath10k_core_reg_access_history_init(struct ath10k *ar, u32 max_entries)
++{
++	ar->reg_access_history.record = vzalloc(max_entries *
++						sizeof(struct ath10k_reg_access_entry));
++	if (!ar->reg_access_history.record)
++		return -ENOMEM;
++
++	ar->reg_access_history.max_entries = max_entries;
++	atomic_set(&ar->reg_access_history.index, 0);
++	spin_lock_init(&ar->reg_access_history.hist_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(ath10k_core_reg_access_history_init);
++
++int ath10k_core_wmi_cmd_history_init(struct ath10k *ar, u32 max_entries)
++{
++	ar->wmi_cmd_history.record = vzalloc(max_entries *
++					     sizeof(struct ath10k_wmi_event_entry));
++	if (!ar->wmi_cmd_history.record)
++		return -ENOMEM;
++
++	ar->wmi_cmd_history.max_entries = max_entries;
++	atomic_set(&ar->wmi_cmd_history.index, 0);
++	spin_lock_init(&ar->wmi_cmd_history.hist_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(ath10k_core_wmi_cmd_history_init);
++
++int ath10k_core_wmi_event_history_init(struct ath10k *ar, u32 max_entries)
++{
++	ar->wmi_event_history.record = vzalloc(max_entries *
++					       sizeof(struct ath10k_wmi_event_entry));
++	if (!ar->wmi_event_history.record)
++		return -ENOMEM;
++
++	ar->wmi_event_history.max_entries = max_entries;
++	atomic_set(&ar->wmi_event_history.index, 0);
++	spin_lock_init(&ar->wmi_event_history.hist_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(ath10k_core_wmi_event_history_init);
++
++int ath10k_core_ce_event_history_init(struct ath10k *ar, u32 max_entries)
++{
++	ar->ce_event_history.record = vzalloc(max_entries *
++					      sizeof(struct ath10k_ce_event_entry));
++	if (!ar->ce_event_history.record)
++		return -ENOMEM;
++
++	ar->ce_event_history.max_entries = max_entries;
++	atomic_set(&ar->ce_event_history.index, 0);
++	spin_lock_init(&ar->ce_event_history.hist_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(ath10k_core_ce_event_history_init);
++
++void ath10k_record_reg_access(struct ath10k *ar, u32 offset, u32 val, bool write)
++{
++	struct ath10k_reg_access_entry *entry;
++	u32 idx;
++
++	if (!ar->reg_access_history.record)
++		return;
++
++	idx = ath10k_core_get_next_idx(&ar->reg_access_history.index,
++				       ar->reg_access_history.max_entries);
++	entry = &ar->reg_access_history.record[idx];
++
++	entry->timestamp = ath10k_core_get_timestamp();
++	entry->write = write;
++	entry->offset = offset;
++	entry->val = val;
++}
++EXPORT_SYMBOL(ath10k_record_reg_access);
++
++void ath10k_record_wmi_event(struct ath10k *ar, enum ath10k_wmi_type type,
++			     u32 id, unsigned char *data)
++{
++	struct ath10k_wmi_event_entry *entry;
++	u32 idx;
++
++	if (type == ATH10K_WMI_EVENT) {
++		if (!ar->wmi_event_history.record)
++			return;
++
++		spin_lock_bh(&ar->wmi_event_history.hist_lock);
++		idx = ath10k_core_get_next_idx(&ar->reg_access_history.index,
++					       ar->wmi_event_history.max_entries);
++		spin_unlock_bh(&ar->wmi_event_history.hist_lock);
++		entry = &ar->wmi_event_history.record[idx];
++	} else {
++		if (!ar->wmi_cmd_history.record)
++			return;
++
++		spin_lock_bh(&ar->wmi_cmd_history.hist_lock);
++		idx = ath10k_core_get_next_idx(&ar->reg_access_history.index,
++					       ar->wmi_cmd_history.max_entries);
++		spin_unlock_bh(&ar->wmi_cmd_history.hist_lock);
++		entry = &ar->wmi_cmd_history.record[idx];
++	}
++
++	entry->timestamp = ath10k_core_get_timestamp();
++	entry->cpu_id = smp_processor_id();
++	entry->type = type;
++	entry->id = id;
++	memcpy(&entry->data, data + 4, ATH10K_WMI_DATA_LEN);
++}
++EXPORT_SYMBOL(ath10k_record_wmi_event);
++
++void ath10k_record_ce_event(struct ath10k *ar, enum ath10k_ce_event event_type,
++			    int ce_id)
++{
++	struct ath10k_ce_event_entry *entry;
++	u32 idx;
++
++	if (!ar->ce_event_history.record)
++		return;
++
++	idx = ath10k_core_get_next_idx(&ar->ce_event_history.index,
++				       ar->ce_event_history.max_entries);
++	entry = &ar->ce_event_history.record[idx];
++
++	entry->timestamp = ath10k_core_get_timestamp();
++	entry->cpu_id = smp_processor_id();
++	entry->event_type = event_type;
++	entry->ce_id = ce_id;
++}
++EXPORT_SYMBOL(ath10k_record_ce_event);
++
+ #endif /* CONFIG_ATH10K_DEBUG */
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 997c1c8..c28aeb1 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -258,6 +258,38 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 		     enum ath10k_debug_mask mask,
+ 		     const char *msg, const char *prefix,
+ 		     const void *buf, size_t len);
++
++/* ========== History init APIs =========== */
++int ath10k_core_reg_access_history_init(struct ath10k *ar, u32 max_entries);
++int ath10k_core_wmi_cmd_history_init(struct ath10k *ar, u32 max_entries);
++int ath10k_core_wmi_event_history_init(struct ath10k *ar, u32 max_entries);
++int ath10k_core_ce_event_history_init(struct ath10k *ar, u32 max_entries);
++
++/* ========== History record APIs =========== */
++void ath10k_record_reg_access(struct ath10k *ar, u32 offset, u32 val,
++			      bool write);
++void ath10k_record_wmi_event(struct ath10k *ar, enum ath10k_wmi_type type,
++			     u32 id, unsigned char *data);
++void ath10k_record_ce_event(struct ath10k *ar,
++			    enum ath10k_ce_event event_type,
++			    int ce_id);
++
++static inline u64 ath10k_core_get_timestamp(void)
++{
++	struct timespec64 ts;
++
++	ktime_get_real_ts64(&ts);
++	return ((u64)ts.tv_sec * 1000000) + (ts.tv_nsec / 1000);
++}
++
++static inline int ath10k_core_get_next_idx(atomic_t *index, u32 max_entries)
++{
++	u32 curr_idx;
++
++	curr_idx = atomic_fetch_inc(index);
++	return (curr_idx & (max_entries - 1));
++}
++
+ #else /* CONFIG_ATH10K_DEBUG */
+ 
+ static inline int __ath10k_dbg(struct ath10k *ar,
+@@ -273,6 +305,48 @@ static inline void ath10k_dbg_dump(struct ath10k *ar,
+ 				   const void *buf, size_t len)
+ {
+ }
++
++static inline int ath10k_core_reg_access_history_init(struct ath10k *ar,
++						      u32 max_entries)
++{
++	return 0;
++}
++
++static inline int ath10k_core_wmi_cmd_history_init(struct ath10k *ar,
++						   u32 max_entries)
++{
++	return 0;
++}
++
++static inline int ath10k_core_wmi_event_history_init(struct ath10k *ar,
++						     u32 max_entries)
++{
++	return 0;
++}
++
++static inline int ath10k_core_ce_event_history_init(struct ath10k *ar,
++						    u32 max_entries)
++{
++	return 0;
++}
++
++static inline void ath10k_record_reg_access(struct ath10k *ar, u32 offset,
++					    u32 val, bool write)
++{
++}
++
++static inline void ath10k_record_wmi_event(struct ath10k *ar,
++					   enum ath10k_wmi_type type,
++					   u32 id, unsigned char *data)
++{
++}
++
++static inline void ath10k_record_ce_event(struct ath10k *ar,
++					  enum ath10k_ce_event event_type,
++					  int ce_id)
++{
++}
++
+ #endif /* CONFIG_ATH10K_DEBUG */
+ 
+ /* Avoid calling __ath10k_dbg() if debug_mask is not set and tracing
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 1ef5fdb..aa7ee32 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -473,6 +473,7 @@ static void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+ 
++	ath10k_record_reg_access(ar, offset, value, true);
+ 	iowrite32(value, ar_snoc->mem + offset);
+ }
+ 
+@@ -482,6 +483,7 @@ static u32 ath10k_snoc_read32(struct ath10k *ar, u32 offset)
+ 	u32 val;
+ 
+ 	val = ioread32(ar_snoc->mem + offset);
++	ath10k_record_reg_access(ar, offset, val, false);
+ 
+ 	return val;
+ }
+@@ -1159,6 +1161,7 @@ static irqreturn_t ath10k_snoc_per_engine_handler(int irq, void *arg)
+ 			    ce_id);
+ 		return IRQ_HANDLED;
+ 	}
++	ath10k_record_ce_event(ar, ATH10K_IRQ_TRIGGER, ce_id);
+ 
+ 	ath10k_ce_disable_interrupt(ar, ce_id);
+ 	set_bit(ce_id, ar_snoc->pending_ce_irqs);
+@@ -1175,6 +1178,7 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
+ 	int done = 0;
+ 	int ce_id;
+ 
++	ath10k_record_ce_event(ar, ATH10K_NAPI_POLL, 0);
+ 	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags)) {
+ 		napi_complete(ctx);
+ 		return done;
+@@ -1188,8 +1192,12 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
+ 
+ 	done = ath10k_htt_txrx_compl_task(ar, budget);
+ 
+-	if (done < budget)
++	if (done < budget) {
+ 		napi_complete(ctx);
++		ath10k_record_ce_event(ar, ATH10K_NAPI_COMPLETE, 0);
++	} else {
++		ath10k_record_ce_event(ar, ATH10K_NAPI_RESCHED, 0);
++	}
+ 
+ 	return done;
+ }
+@@ -1660,6 +1668,11 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 	ar->ce_priv = &ar_snoc->ce;
+ 	msa_size = drv_data->msa_size;
+ 
++	ath10k_core_reg_access_history_init(ar, ATH10K_REG_ACCESS_HISTORY_MAX);
++	ath10k_core_wmi_event_history_init(ar, ATH10K_WMI_EVENT_HISTORY_MAX);
++	ath10k_core_wmi_cmd_history_init(ar, ATH10K_WMI_CMD_HISTORY_MAX);
++	ath10k_core_ce_event_history_init(ar, ATH10K_CE_EVENT_HISTORY_MAX);
++
+ 	ath10k_snoc_quirks_init(ar);
+ 
+ 	ret = ath10k_snoc_resource_init(ar);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 932266d..9df5748 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -627,6 +627,7 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
+ 		goto out;
+ 
++	ath10k_record_wmi_event(ar, ATH10K_WMI_EVENT, id, skb->data);
+ 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
+ 
+ 	consumed = ath10k_tm_event_wmi(ar, id, skb);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index a81a1ab..8ebd05c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1802,6 +1802,15 @@ struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len)
+ 
+ static void ath10k_wmi_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ {
++	struct wmi_cmd_hdr *cmd_hdr;
++	enum wmi_tlv_event_id id;
++
++	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
++	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
++
++	ath10k_record_wmi_event(ar, ATH10K_WMI_TX_COMPL, id,
++				skb->data + sizeof(struct wmi_cmd_hdr));
++
+ 	dev_kfree_skb(skb);
+ }
+ 
+@@ -1912,6 +1921,7 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+ 
+ 	might_sleep();
+ 
++	ath10k_record_wmi_event(ar, ATH10K_WMI_CMD, cmd_id, skb->data);
+ 	if (cmd_id == WMI_CMD_UNSUPPORTED) {
+ 		ath10k_warn(ar, "wmi command %d is not supported by firmware\n",
+ 			    cmd_id);
+-- 
+2.7.4
 
