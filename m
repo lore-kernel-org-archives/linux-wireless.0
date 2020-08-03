@@ -7,34 +7,38 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A75C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 08:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 436B0C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 08:51:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C08320678
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 08:45:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17D5F2068F
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 08:51:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726195AbgHCIpp (ORCPT
+        id S1725926AbgHCIvb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Aug 2020 04:45:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36416 "EHLO
+        Mon, 3 Aug 2020 04:51:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725806AbgHCIpp (ORCPT
+        with ESMTP id S1725806AbgHCIva (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Aug 2020 04:45:45 -0400
+        Mon, 3 Aug 2020 04:51:30 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26C0EC06174A
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2020 01:45:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2EAAC06174A
+        for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2020 01:51:30 -0700 (PDT)
 Received: from [134.101.163.132] (helo=bertha9.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1k2W6I-00022u-DK; Mon, 03 Aug 2020 10:45:42 +0200
+        id 1k2WBs-0002Pi-UR; Mon, 03 Aug 2020 10:51:29 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>
-Subject: [PATCH] mac8211: fix struct initialisation
-Date:   Mon,  3 Aug 2020 10:45:40 +0200
-Message-Id: <20200803084540.179908-1-john@phrozen.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Miles Hu <milehu@codeaurora.org>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH V5 2/3] mac80211: add support for setting fixed HE rate/gi/ltf
+Date:   Mon,  3 Aug 2020 10:51:26 +0200
+Message-Id: <20200803085127.180550-2-john@phrozen.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200803085127.180550-1-john@phrozen.org>
+References: <20200803085127.180550-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,28 +46,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sparse showed up with the following error.
-net/mac80211/agg-rx.c:480:43: warning: Using plain integer as NULL pointer
+From: Miles Hu <milehu@codeaurora.org>
 
-Fixes: 2ab45876756f (mac80211: add support for the ADDBA extension element)
+With nl80211 now able to receive fixed HE rate/gi/ltf settings we want to
+propagate these further down the stack into the mac80211 drivers. This
+patch copies the values into the sdata struct.
+
+Signed-off-by: Miles Hu <milehu@codeaurora.org>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- net/mac80211/agg-rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/cfg.c         | 11 +++++++++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 7f245e9f114c..313ba97acae3 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -477,7 +477,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 				     size_t len)
- {
- 	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num;
--	struct ieee802_11_elems elems = { 0 };
-+	struct ieee802_11_elems elems = { };
- 	u8 dialog_token;
- 	int ies_len;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 24e9e00decb8..efee1a4e0600 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2863,9 +2863,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 		memcpy(sdata->rc_rateidx_vht_mcs_mask[i],
+ 		       mask->control[i].vht_mcs,
+ 		       sizeof(mask->control[i].vht_mcs));
++		memcpy(sdata->rc_rateidx_he_mcs_mask[i],
++		       mask->control[i].he_mcs,
++		       sizeof(mask->control[i].he_mcs));
  
+ 		sdata->rc_has_mcs_mask[i] = false;
+ 		sdata->rc_has_vht_mcs_mask[i] = false;
++		sdata->rc_has_he_mcs_mask[i] = false;
+ 		if (!sband)
+ 			continue;
+ 
+@@ -2882,6 +2886,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				break;
+ 			}
+ 		}
++
++		for (j = 0; j < NL80211_HE_NSS_MAX; j++) {
++			if (~sdata->rc_rateidx_he_mcs_mask[i][j]) {
++				sdata->rc_has_he_mcs_mask[i] = true;
++				break;
++			}
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0b1eaec6649f..19ff8a2ff7b6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -967,6 +967,9 @@ struct ieee80211_sub_if_data {
+ 	u32 beacon_rateidx_mask[NUM_NL80211_BANDS];
+ 	bool beacon_rate_set;
+ 
++	bool rc_has_he_mcs_mask[NUM_NL80211_BANDS];
++	u16 rc_rateidx_he_mcs_mask[NUM_NL80211_BANDS][NL80211_HE_NSS_MAX];
++
+ 	union {
+ 		struct ieee80211_if_ap ap;
+ 		struct ieee80211_if_wds wds;
 -- 
 2.25.1
 
