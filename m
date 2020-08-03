@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2193EC433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0D37C433E1
 	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 046CC20738
+	by mail.kernel.org (Postfix) with ESMTP id D330C20738
 	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:11:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Yh6JHZpU"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="I9ASwBhw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727785AbgHCDLJ (ORCPT
+        id S1727789AbgHCDLK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Aug 2020 23:11:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41564 "EHLO
+        Sun, 2 Aug 2020 23:11:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727772AbgHCDLI (ORCPT
+        with ESMTP id S1726824AbgHCDLJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Aug 2020 23:11:08 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9700DC06174A
+        Sun, 2 Aug 2020 23:11:09 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDDCCC061756
         for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2020 20:11:08 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id k8so14104915wma.2
+Received: by mail-wr1-x443.google.com with SMTP id f7so32820304wrw.1
         for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2020 20:11:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=KouWK8WECSEN05fvf0840cgRztNjkH3BZYdSGFVlz4M=;
-        b=Yh6JHZpUZHFpNMw4crydqKnCrTDn0LIZ1lQLiwLxzxqXYxfyGNVdErNj4/iayJjR+B
-         I+SejTDrx05Z1bsi/qil7Y3iPnRCNVNeA/OACr+P/TsTjNJaBV1JnsUMTZWr4Kx8Anqy
-         HVetXfy+ggXJs2UoFWLR0/oUlV7PfRh/nJ5s3eoMWdFzVehs0sCUzLthDJKl2VUpx0sA
-         mN5uYuYR0Ki0PGBNREsSH48EYeYLqKHCX9tRSaQC2cb7WDI1QEqVqt3y/gHAm34vJ+Zh
-         qAVLTkIXwpg0QvSr/6i8SonFOzr65peday6NQgHAen6QDJBZMRtpJ/MPrmNMjuGOjHY4
-         cNiQ==
+        bh=tYD10FZO8KhccbIhk1uqysdR2q5fPg1Yg+7P+eySpwo=;
+        b=I9ASwBhwfZb3DoiFraFPtPwchqSItIhD79zECvHvQTdoVCkO8EwPvAXUmK9/KGGAtg
+         jTXHThmWJXorf/ar5noQYN2/L5bvzKq/pXQqiDMZ+1hbzHA5+ZCU5kpEPR7gInQEuB5i
+         JzFbcxOCpuNsUi6cQa8ABQYM/5Qc8Po9ntduUTg7kveLycm9eC+lbeFbv1hxZcDAhl1a
+         mB2SyDxYBibgjEPofx/lcaVRG4SIN4zgm8xnH9GTIN4qVbRprhNcqb4pxrYgOjPHWSjM
+         jJre9aZF2ldPMFbMUStMGv1n/RFFr5OXLd4+mcJxaiRcXSRL5g6VfYBXeH6kf9acBpCU
+         Kmxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KouWK8WECSEN05fvf0840cgRztNjkH3BZYdSGFVlz4M=;
-        b=AgMoHlH62lBDi6dk3a/u2U+wnGvPVf/NOqqC5X846MHI+RarsE1zxrwEQA316pj9Ro
-         rncfLQjq9RALIf2gIMDb8NuH4IYbRUg4uzNv57C/qn/VEPBgodj+kejiige64cpK+4mp
-         qUix347hQYxuvxHjiVVrBy8wngVy/YqgOvlE5/ACb+aRaQSXuz0VTL3F2FHh/xCxiSXO
-         DrpgzK+I3LRvpzf2Vu1WRjtV7SeHD0LKLt5USbYf3Fgb8AkaAxVRfQliMf39l4/wK8y6
-         mizZfGEr1vu+t4nAdSivmyXlV8rOlQjcSNHJ0BuDPxJb7r2wSv+ImPX4SIvBWNPKbTrM
-         zF4Q==
-X-Gm-Message-State: AOAM530OMIli9cKI2xJvz8UPz3Wqd/PeIu70yZQ43iGCyI1gf2/kskal
-        1kEMoCwIZuzfleFEGPVw4bpKMQ==
-X-Google-Smtp-Source: ABdhPJypP/oGHzV7PccfNI+wKB7lwPYiNb4zun3Qm40qcZB/XnxP9FO69L3VK6xcAiNlEqY85UV3pQ==
-X-Received: by 2002:a1c:cc0c:: with SMTP id h12mr667020wmb.57.1596424263363;
-        Sun, 02 Aug 2020 20:11:03 -0700 (PDT)
+        bh=tYD10FZO8KhccbIhk1uqysdR2q5fPg1Yg+7P+eySpwo=;
+        b=UiSP5Ig9NgWcD3soLXyhZwFlRFbZDzlejFEjeTesdlGEGc9OZBMd+ibpu2lZU0Warp
+         VoAWPkj6/UuZkgPsx/ZkpeiE4Tso2eqIb/lx4BxZZmRwcwhPFsolMXHk5tbXcF9cxOEa
+         EuiMi2VssHPxZvmAkospyNutAHF3SS+pZRMaTYrw/hK9JnU8SugBdM7u1YfC676sbSTO
+         Jn49A9RRY2+d34Y1BCva63NukUkcQU2zzGe1V1uXd7LEaSeIVorF+ZOQWR7KwsTIk5SP
+         VPzHvASrmEyjirK/xjzqmoIXuZPekUjvdXNrMjM2YZe0Bcc5Wv95+uhpgKUu6L9iYN9T
+         GBkA==
+X-Gm-Message-State: AOAM531gZvPg6X2wCxPUB+k9DbIl18kU9vyVY4b3zuv1K2mrZJlDNEMl
+        yRaUefamyJyIkj4uaaaRk1WH3w==
+X-Google-Smtp-Source: ABdhPJwZkJWZxJoaH4alTXKRcy9FS1Usey7pRhjXNDwb2OndQZvlINcGG0SbZW15MPYw4zRZcphPHQ==
+X-Received: by 2002:adf:fe0a:: with SMTP id n10mr12660332wrr.125.1596424267660;
+        Sun, 02 Aug 2020 20:11:07 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id q2sm21956857wro.8.2020.08.02.20.11.02
+        by smtp.gmail.com with ESMTPSA id q2sm21956857wro.8.2020.08.02.20.11.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Aug 2020 20:11:02 -0700 (PDT)
+        Sun, 02 Aug 2020 20:11:06 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         bryan.odonoghue@linaro.org, shawn.guo@linaro.org
-Subject: [PATCH 15/36] wcn36xx: Add wcn36xx_smd_set_sta_vht_params()
-Date:   Mon,  3 Aug 2020 04:11:11 +0100
-Message-Id: <20200803031132.1427063-16-bryan.odonoghue@linaro.org>
+Subject: [PATCH 19/36] wcn36xx: Define INIT_HAL_MSG_V1()
+Date:   Mon,  3 Aug 2020 04:11:15 +0100
+Message-Id: <20200803031132.1427063-20-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200803031132.1427063-1-bryan.odonoghue@linaro.org>
 References: <20200803031132.1427063-1-bryan.odonoghue@linaro.org>
@@ -76,46 +76,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit adds support for setting VHT parameters based on the declared
-VHT capability bits in the VHT capability structure.
+In order to pass 802.11ac VHT parameters from the SoC to wcn36xx we need to
+use the V1 data structures associated with BSS and STA parameters.
 
-The bit-field TX-BF is purposefully left out since wcn3680 is the only
-wcn36xx that can do VHT/80211.ac and is not TX beamformer capable. TX-BF is
-a dead bit.
-
-Similarly we cannot do 160MHz so VHT Channel width set should be zero.
+The means of identifying a V1 data-structure is via the SMD version field.
+This patch defines a INIT_HAL_MSG_V1() which operates the same way as
+INIT_HAL_MSG() with the exception that it defines VERSION1 as opposed to
+VERSION0.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 88fb4b7f1356..2632ea2ad9fa 100644
+index f61516988953..6a03d5956fc2 100644
 --- a/drivers/net/wireless/ath/wcn36xx/smd.c
 +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -173,6 +173,21 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
- 	}
+@@ -349,14 +349,20 @@ static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
+ 	hdr->len = msg_size + sizeof(*hdr);
  }
  
-+static void wcn36xx_smd_set_sta_vht_params(struct ieee80211_sta *sta,
-+		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
-+{
-+	if (sta->vht_cap.vht_supported) {
-+		unsigned long caps = sta->vht_cap.cap;
+-#define INIT_HAL_MSG(msg_body, type) \
++#define __INIT_HAL_MSG(msg_body, type, version) \
+ 	do {								\
+ 		memset(&msg_body, 0, sizeof(msg_body));			\
+ 		msg_body.header.msg_type = type;			\
+-		msg_body.header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
++		msg_body.header.msg_version = version;			\
+ 		msg_body.header.len = sizeof(msg_body);			\
+ 	} while (0)							\
+ 
++#define INIT_HAL_MSG(msg_body, type)	\
++	__INIT_HAL_MSG(msg_body, type, WCN36XX_HAL_MSG_VERSION0)
 +
-+		sta_params->vht_capable = sta->vht_cap.vht_supported;
-+		sta_params->vht_ldpc_enabled =
-+			is_cap_supported(caps, IEEE80211_VHT_CAP_RXLDPC);
-+		sta_params->vht_tx_mu_beamformee_capable =
-+			is_cap_supported(caps, IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+		sta_params->vht_tx_channel_width_set = 0;
-+	}
-+}
++#define INIT_HAL_MSG_V1(msg_body, type) \
++	__INIT_HAL_MSG(msg_body, type, WCN36XX_HAL_MSG_VERSION1)
 +
- static void wcn36xx_smd_set_sta_default_ht_params(
- 		struct wcn36xx_hal_config_sta_params *sta_params)
- {
+ #define INIT_HAL_PTT_MSG(p_msg_body, ppt_msg_len) \
+ 	do { \
+ 		memset(p_msg_body, 0, sizeof(*p_msg_body) + ppt_msg_len); \
 -- 
 2.27.0
 
