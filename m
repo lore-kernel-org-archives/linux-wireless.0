@@ -4,38 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ADB5C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 14:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47967C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 15:33:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 249472076C
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 14:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3329920775
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 15:33:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726807AbgHCOyz (ORCPT
+        id S1726981AbgHCPdt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Aug 2020 10:54:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725933AbgHCOyz (ORCPT
+        Mon, 3 Aug 2020 11:33:49 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51534 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725945AbgHCPdt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Aug 2020 10:54:55 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E38C061757
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2020 07:54:54 -0700 (PDT)
-Received: from [134.101.163.132] (helo=bertha9.fritz.box)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1k2brW-0008Fw-8U; Mon, 03 Aug 2020 16:54:50 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH V6 1/2] ath11k: switch to using ieee80211_tx_status_ext()
-Date:   Mon,  3 Aug 2020 16:54:43 +0200
-Message-Id: <20200803145444.473810-1-john@phrozen.org>
-X-Mailer: git-send-email 2.25.1
+        Mon, 3 Aug 2020 11:33:49 -0400
+Received: from legolas.tu-ilmenau.de (unknown [141.24.111.199])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 7ED1258004F;
+        Mon,  3 Aug 2020 17:33:47 +0200 (CEST)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH 1/4] iw: print current ext feature set
+Date:   Mon,  3 Aug 2020 17:33:33 +0200
+Message-Id: <20200803153336.319773-1-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -43,62 +41,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This allows us to pass HE rates down into the stack.
-
-Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
-Changes in V5
-* fix sparse warnings
+ info.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/net/wireless/ath/ath11k/dp_tx.c | 24 +++++++++++++++++++-----
- 1 file changed, 19 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 1af76775b1a8..a1f16f589b98 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -393,9 +393,12 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
- 				       struct sk_buff *msdu,
- 				       struct hal_tx_status *ts)
- {
-+	struct ieee80211_tx_status status = { };
- 	struct ath11k_base *ab = ar->ab;
- 	struct ieee80211_tx_info *info;
- 	struct ath11k_skb_cb *skb_cb;
-+	struct ath11k_peer *peer;
-+	struct ath11k_sta *arsta;
- 
- 	if (WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM)) {
- 		/* Must not happen */
-@@ -459,12 +462,23 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
- 		ath11k_dp_tx_cache_peer_stats(ar, msdu, ts);
+diff --git a/info.c b/info.c
+index f7889fe..ee2faeb 100644
+--- a/info.c
++++ b/info.c
+@@ -710,6 +710,8 @@ broken_combination:
+ 		ext_feat_print(tb, BEACON_PROTECTION_CLIENT, "beacon prot. for clients support");
+ 		ext_feat_print(tb, SCAN_FREQ_KHZ, "scan on kHz frequency support");
+ 		ext_feat_print(tb, CONTROL_PORT_OVER_NL80211_TX_STATUS, "tx status for nl80211 control port support");
++		ext_feat_print(tb, OPERATING_CHANNEL_VALIDATION, "Operating Channel Validation (OCV) support");
++		ext_feat_print(tb, 4WAY_HANDSHAKE_AP_PSK, "AP mode PSK offload support");
  	}
  
--	/* NOTE: Tx rate status reporting. Tx completion status does not have
--	 * necessary information (for example nss) to build the tx rate.
--	 * Might end up reporting it out-of-band from HTT stats.
--	 */
- 
--	ieee80211_tx_status(ar->hw, msdu);
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
-+	if (peer) {
-+		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
-+		status.sta = peer->sta;
-+		status.skb = msdu;
-+		status.info = info;
-+		status.rate = &arsta->last_txrate;
-+	}
-+	rcu_read_unlock();
-+	if (peer)
-+		ieee80211_tx_status_ext(ar->hw, &status);
-+	else
-+		dev_kfree_skb_any(msdu);
-+	spin_unlock_bh(&ab->base_lock);
-+	return;
- 
- exit:
- 	rcu_read_unlock();
+ 	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
 -- 
-2.25.1
+2.28.0
 
