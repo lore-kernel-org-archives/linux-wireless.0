@@ -2,118 +2,202 @@ Return-Path: <SRS0=Ljpw=BN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB8F1C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:11:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5D2C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C68E20738
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:11:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TrwaFydT"
+	by mail.kernel.org (Postfix) with ESMTP id 12F55206E2
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Aug 2020 03:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbgHCDLb (ORCPT
+        id S1726750AbgHCDk7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Aug 2020 23:11:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41628 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727884AbgHCDLX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Aug 2020 23:11:23 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A94C06174A
-        for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2020 20:11:22 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id a15so32764232wrh.10
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2020 20:11:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=bjS/i84B6ZPWvX9FfR+k97So50sjazJcZS53gCPXCDQ=;
-        b=TrwaFydTgwuNUGglRyHoaXlS2rlOPAyEUpd0gn/m4RgMYqZ8r0QgcMVug/fVoFM1dX
-         TNQj0y4qsMCVhl3xuIk20SrLPK/i6RC3IfG0+/4VhsAJO0eEFs44klu7/VZo97flHz6/
-         ymZDR+1By1n8Lrv6VO5c8aBfeCUDk+Qu4fY6u816UK4ynK4oXDZ6UBneovMhaDB5MFDQ
-         rSAyl0V+PTb/j1i9hE0eX1akkaAL8QrPN/zYqfvS7bA+J9SbyqkS8xUMMOorbtTjGxw4
-         Qbzw+iJc8sm0Jihqck6TGAfXUAmOndgPHWvn6uvecVCcaerD3ryPv11ttyf8WPBYa6w7
-         iK8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=bjS/i84B6ZPWvX9FfR+k97So50sjazJcZS53gCPXCDQ=;
-        b=jQDpncxs//hs2mKR3jcf0DDD4CcQG5geRL8L6wUMdEzp7bdOKuQHbTWQHjyIwMv7nK
-         cPyhjXPmkZbi42ZmfbGzTl8mKhRRFYak+ffFJIfm2H5h3huw8iJZD77D81cyDL7HEfSv
-         eFcpQ1O0Za00Ed8xbPQb5TXJo4b5ozHp/u3m1Z+eu1VUPCv/Ub3xIJnYKV9jx7kBB1Uh
-         tsPXEfHuCo++VRZknZpnizt1GXrgj+A9HfijU00fQDnsp8VPQP4uQt5BQBDTkijh4dQk
-         uyv7Z1kDxxef3rF6gVPnPaa3/aWbhLT5EVue0zZHIU9dNXa5clU2s9Q/d8z/yOmKTzw2
-         hSWQ==
-X-Gm-Message-State: AOAM532RERktX/DXRBO07KNJsKMMX75jImNvNBXwIZs99Vsbwv7xsmng
-        irU2w8aAEnkCrXlQ5VCd8BkUaQ==
-X-Google-Smtp-Source: ABdhPJwHzBw3eIHyTZ0a8oR8Y9U6FLhBp1yx7u+66SQHFJUP1gSTWjYTdz3ceRsOO0GqWqu8MWeoyw==
-X-Received: by 2002:a5d:5446:: with SMTP id w6mr12836617wrv.127.1596424281602;
-        Sun, 02 Aug 2020 20:11:21 -0700 (PDT)
-Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id q2sm21956857wro.8.2020.08.02.20.11.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Aug 2020 20:11:21 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org
-Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        bryan.odonoghue@linaro.org, shawn.guo@linaro.org
-Subject: [PATCH 33/36] wcn36xx: Set PHY into correct mode for 80MHz channel width
-Date:   Mon,  3 Aug 2020 04:11:29 +0100
-Message-Id: <20200803031132.1427063-34-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200803031132.1427063-1-bryan.odonoghue@linaro.org>
-References: <20200803031132.1427063-1-bryan.odonoghue@linaro.org>
+        Sun, 2 Aug 2020 23:40:59 -0400
+Received: from mga05.intel.com ([192.55.52.43]:35977 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725820AbgHCDk7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 2 Aug 2020 23:40:59 -0400
+IronPort-SDR: hXUzGsd0VIYnanOmQo3lbVUL351wj2JIgC/M+LmptGDoHiBivrZpZotkLegLLrkDUT3Bzk8TKH
+ YJH4AzmI+b6g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9701"; a="236905972"
+X-IronPort-AV: E=Sophos;i="5.75,428,1589266800"; 
+   d="scan'208";a="236905972"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2020 20:40:50 -0700
+IronPort-SDR: /PDlqv0bFZIvQqItcSv8vRUG8ClnF7W4G6VoEW3rMswFaBmT8OxyggGULRE/lUeoGnCsMcHQwX
+ h0cDlpDFK8rw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,428,1589266800"; 
+   d="scan'208";a="491678985"
+Received: from lkp-server01.sh.intel.com (HELO e21119890065) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 02 Aug 2020 20:40:48 -0700
+Received: from kbuild by e21119890065 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1k2RLD-0001pH-Sk; Mon, 03 Aug 2020 03:40:47 +0000
+Date:   Mon, 03 Aug 2020 11:39:48 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [wireless-drivers-next:master] BUILD SUCCESS WITH WARNING
+ 3dc05ffb04436020f63138186dbc4f37bd938552
+Message-ID: <5f278704.28CvpKmtytiU4XvD%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For the 80MHz channel we need to set the PHY mode to one of four PHY modes
-that span the 80MHz range.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
+branch HEAD: 3dc05ffb04436020f63138186dbc4f37bd938552  brcmfmac: Set timeout value when configuring power save
 
-This patch latches the hw_value PHY field previously defined for 5GHz
-channels directly to the parameter passed to the firmware.
+Warning in current branch:
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+drivers/net/wireless/realtek/rtw88/rtw8821c.c:71:8: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+
+Warning ids grouped by kconfigs:
+
+recent_errors
+|-- alpha-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- alpha-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- arc-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- arm-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- arm-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- arm64-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- i386-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- ia64-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- ia64-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- microblaze-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- mips-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- mips-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- parisc-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- powerpc-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- powerpc-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- riscv-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- riscv-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- sparc-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- x86_64-allmodconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+|-- x86_64-allyesconfig
+|   `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+`-- xtensa-allyesconfig
+    `-- drivers-net-wireless-realtek-rtw88-rtw8821c.c:warning:type-qualifiers-ignored-on-function-return-type
+
+elapsed time: 723m
+
+configs tested: 85
+configs skipped: 5
+
+arm64                            allyesconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                                 defconfig
+arm64                               defconfig
+powerpc                    adder875_defconfig
+powerpc                          g5_defconfig
+sh                   rts7751r2dplus_defconfig
+arm                      jornada720_defconfig
+mips                         rt305x_defconfig
+powerpc                 linkstation_defconfig
+sh                          r7785rp_defconfig
+m68k                          sun3x_defconfig
+arm                        mvebu_v7_defconfig
+arm                            zeus_defconfig
+c6x                         dsk6455_defconfig
+m68k                                defconfig
+nds32                            alldefconfig
+arc                         haps_hs_defconfig
+arm                          exynos_defconfig
+mips                      pistachio_defconfig
+arm                     davinci_all_defconfig
+mips                           ip27_defconfig
+mips                           xway_defconfig
+riscv                    nommu_virt_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                             defconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a004-20200802
+i386                 randconfig-a005-20200802
+i386                 randconfig-a001-20200802
+i386                 randconfig-a002-20200802
+i386                 randconfig-a003-20200802
+i386                 randconfig-a006-20200802
+i386                 randconfig-a011-20200802
+i386                 randconfig-a012-20200802
+i386                 randconfig-a015-20200802
+i386                 randconfig-a014-20200802
+i386                 randconfig-a013-20200802
+i386                 randconfig-a016-20200802
+x86_64               randconfig-a006-20200802
+x86_64               randconfig-a001-20200802
+x86_64               randconfig-a004-20200802
+x86_64               randconfig-a003-20200802
+x86_64               randconfig-a002-20200802
+x86_64               randconfig-a005-20200802
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9a7e6f96f0b6..527da56a1386 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1487,6 +1487,7 @@ int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	struct wcn36xx_hal_config_bss_params_v1 *bss;
- 	struct wcn36xx_hal_config_bss_params bss_v0;
- 	struct wcn36xx_hal_config_sta_params_v1 *sta;
-+	struct cfg80211_chan_def *chandef;
- 	int ret;
- 
- 	msg_body = kzalloc(sizeof(*msg_body), GFP_KERNEL);
-@@ -1529,7 +1530,13 @@ int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	bss->dtim_period = bss_v0.dtim_period;
- 	bss->tx_channel_width_set = bss_v0.tx_channel_width_set;
- 	bss->oper_channel = bss_v0.oper_channel;
--	bss->ext_channel = bss_v0.ext_channel;
-+
-+	if (wcn->hw->conf.chandef.width == NL80211_CHAN_WIDTH_80) {
-+		chandef = &wcn->hw->conf.chandef;
-+		bss->ext_channel = HW_VALUE_PHY(chandef->chan->hw_value);
-+	} else {
-+		bss->ext_channel = bss_v0.ext_channel;
-+	}
- 
- 	bss->reserved = bss_v0.reserved;
- 
--- 
-2.27.0
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
