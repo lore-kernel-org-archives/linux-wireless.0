@@ -3,82 +3,105 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC96AC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 20:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CAFC433DF
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 21:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8845722B42
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 20:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3ACF121D95
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 21:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728544AbgHEUQH convert rfc822-to-8bit (ORCPT
+        id S1726155AbgHEVDl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Aug 2020 16:16:07 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:44778 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726294AbgHEQUC (ORCPT
+        Wed, 5 Aug 2020 17:03:41 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:43495 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbgHEVDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Aug 2020 12:20:02 -0400
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 075BIxjF6020272, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 075BIxjF6020272
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 5 Aug 2020 19:18:59 +0800
-Received: from RTEXMB03.realtek.com.tw (172.21.6.96) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 5 Aug 2020 19:18:59 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 5 Aug 2020 19:18:59 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::941:6388:7d34:5c44]) by
- RTEXMB04.realtek.com.tw ([fe80::941:6388:7d34:5c44%3]) with mapi id
- 15.01.1779.005; Wed, 5 Aug 2020 19:18:58 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC:     "David S. Miller" <davem@davemloft.net>,
+        Wed, 5 Aug 2020 17:03:41 -0400
+Received: from mail-pf1-f197.google.com ([209.85.210.197])
+        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1k3HXC-00086H-Bf
+        for linux-wireless@vger.kernel.org; Wed, 05 Aug 2020 11:24:38 +0000
+Received: by mail-pf1-f197.google.com with SMTP id e30so21225342pfj.0
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2020 04:24:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=lF9ALM9gRuD9sB/pHsvqa0BtUHkbcECALGd1yP2+BEE=;
+        b=ZgO0CXv/boayGrmrtdmuXkrYNh9s3XPrMBMosO9FV2U/Qox/hK8NE0aC6wj+VMyTLd
+         tmIWGUXTs3XbhaEXCT/h+psV7y+Yfj4C9grY1oLsxfvZymYT0GI4Lusm0bctqjVdAcSk
+         Z9gnNr/1EHm+oweaIPS8NVc6z4rliO7HDWGBNrfHVOTvTYw9N/m2Aw8aRg2ihRdh0+Yn
+         FR58no8wlI2De8oijbAiom3IILuHG9Hu1auQ9aJsLDHAugDDbhCy0GX7a5Vbhg22m7a3
+         2SZPvZGBiwe/n4jpnY1Epov3BpU/1H+CIZnXj2MMJwJB/Zr0m+cDYYf8ocIpd5f8DWlY
+         8D+w==
+X-Gm-Message-State: AOAM5334fx1iuTwzzczH0A0YZ5fzv85+t2UCh3VD1XPsDq6HRk1MaN3X
+        DYq3LQjXPLMkDf3GBwkrWneACm7pYOTf9RPWuc050lnb443JseY1gb7lmSHMMnQqQpJu6aN8Xyw
+        bwlhSeSZX9xkiG4BQGFnhzduiNDNB0DPdiNGcw+KdXLfZ
+X-Received: by 2002:aa7:9a4c:: with SMTP id x12mr2894372pfj.307.1596626676926;
+        Wed, 05 Aug 2020 04:24:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzJvZXSuRgwTlY5y0En/vjiU7lqcs7sM2JL0qxNrQv5cxET1ZLz6FnSZD2pMhacVp3VGxyXoA==
+X-Received: by 2002:aa7:9a4c:: with SMTP id x12mr2894345pfj.307.1596626676533;
+        Wed, 05 Aug 2020 04:24:36 -0700 (PDT)
+Received: from [192.168.1.208] (220-133-187-190.HINET-IP.hinet.net. [220.133.187.190])
+        by smtp.gmail.com with ESMTPSA id i11sm2613913pjv.30.2020.08.05.04.24.34
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 05 Aug 2020 04:24:35 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [PATCH] rtw88: 8821c: Add RFE 2 support
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <c0c336d806584361992d4b52665fbb82@realtek.com>
+Date:   Wed, 5 Aug 2020 19:24:32 +0800
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         "open list:REALTEK WIRELESS DRIVER (rtw88)" 
         <linux-wireless@vger.kernel.org>,
         "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>,
         Andy Huang <tehuang@realtek.com>
-Subject: RE: [PATCH] rtw88: 8821c: Add RFE 2 support
-Thread-Topic: [PATCH] rtw88: 8821c: Add RFE 2 support
-Thread-Index: AQHWawTgrZXV5FXpY0mfKjdCxZOrO6kpXYpw
-Date:   Wed, 5 Aug 2020 11:18:58 +0000
-Message-ID: <c0c336d806584361992d4b52665fbb82@realtek.com>
+Content-Transfer-Encoding: 7bit
+Message-Id: <9330BBA5-158B-49F1-8B7C-C2733F358AC1@canonical.com>
 References: <20200805084559.30092-1-kai.heng.feng@canonical.com>
-In-Reply-To: <20200805084559.30092-1-kai.heng.feng@canonical.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.175]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+ <c0c336d806584361992d4b52665fbb82@realtek.com>
+To:     Tony Chuang <yhchuang@realtek.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> 8821CE with RFE 2 isn't supported:
-> [   12.404834] rtw_8821ce 0000:02:00.0: rfe 2 isn't supported
-> [   12.404937] rtw_8821ce 0000:02:00.0: failed to setup chip efuse info
-> [   12.404939] rtw_8821ce 0000:02:00.0: failed to setup chip information
+Hi Tony,
+
+> On Aug 5, 2020, at 19:18, Tony Chuang <yhchuang@realtek.com> wrote:
 > 
+>> 8821CE with RFE 2 isn't supported:
+>> [   12.404834] rtw_8821ce 0000:02:00.0: rfe 2 isn't supported
+>> [   12.404937] rtw_8821ce 0000:02:00.0: failed to setup chip efuse info
+>> [   12.404939] rtw_8821ce 0000:02:00.0: failed to setup chip information
+>> 
+> 
+> NACK
+> 
+> The RFE type 2 should be working with some additional fixes.
+> Did you tested connecting to AP with BT paired?
 
-NACK
+No, I only tested WiFi.
 
-The RFE type 2 should be working with some additional fixes.
-Did you tested connecting to AP with BT paired?
+> The antenna configuration is different with RFE type 0.
+> I will ask someone else to fix them.
+> Then the RFE type 2 modules can be supported.
 
-The antenna configuration is different with RFE type 0.
-I will ask someone else to fix them.
-Then the RFE type 2 modules can be supported.
+Good to know that, I'll be patient and wait for a real fix.
 
-Yen-Hsuan
+Kai-Heng
+
+> 
+> Yen-Hsuan
+
