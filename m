@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ADF3C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 08:06:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 905DFC433DF
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 08:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35B4622B40
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 08:06:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4ACAB2177B
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 08:11:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728148AbgHEIGL (ORCPT
+        id S1726980AbgHEIFs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Aug 2020 04:06:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49922 "EHLO
+        Wed, 5 Aug 2020 04:05:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728032AbgHEICl (ORCPT
+        with ESMTP id S1728034AbgHEICl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Aug 2020 04:02:41 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4153C06179F
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2020 01:02:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 954D7C061756
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2020 01:02:34 -0700 (PDT)
 Received: from [134.101.151.222] (helo=localhost.localdomain)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1k3ENZ-00045x-I0; Wed, 05 Aug 2020 10:02:29 +0200
+        id 1k3ENZ-00045x-W6; Wed, 05 Aug 2020 10:02:30 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V3 2/5] mac80211: rename csa counters to countdown counters
-Date:   Wed,  5 Aug 2020 10:02:17 +0200
-Message-Id: <20200805080220.2884582-2-john@phrozen.org>
+Subject: [PATCH V3 4/5] mac80211: add support for BSS coloring
+Date:   Wed,  5 Aug 2020 10:02:19 +0200
+Message-Id: <20200805080220.2884582-4-john@phrozen.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200805080220.2884582-1-john@phrozen.org>
 References: <20200805080220.2884582-1-john@phrozen.org>
@@ -45,659 +45,527 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We want to reuse the functions and structs for other counters such as BSS
-color change. Rename them to more generic names.
+The CCA (color change announcement) is very similar to how CSA works where
+we have an IE that includes a counter. When the counter hits 0, the new
+color is applied via an updated beacon.
+
+This patch makes the CSA counter functionality reusable, rather than
+implementing it again. This also allows for future reuse incase support
+for other counter IEs gets added.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c         |  4 +-
- drivers/net/wireless/ath/ath10k/wmi.c         |  2 +-
- drivers/net/wireless/ath/ath11k/wmi.c         |  4 +-
- drivers/net/wireless/ath/ath9k/beacon.c       |  2 +-
- .../net/wireless/ath/ath9k/htc_drv_beacon.c   |  2 +-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  6 +-
- .../wireless/intel/iwlwifi/mvm/time-event.c   |  2 +-
- drivers/net/wireless/mac80211_hwsim.c         |  2 +-
- drivers/net/wireless/mediatek/mt76/mac80211.c |  4 +-
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 10 +--
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   |  8 +-
- include/net/mac80211.h                        | 35 +++++----
- net/mac80211/cfg.c                            | 14 ++--
- net/mac80211/ibss.c                           |  4 +-
- net/mac80211/ieee80211_i.h                    |  6 +-
- net/mac80211/main.c                           |  2 +-
- net/mac80211/mesh.c                           |  4 +-
- net/mac80211/offchannel.c                     |  2 +-
- net/mac80211/tx.c                             | 73 ++++++++++---------
- 19 files changed, 93 insertions(+), 93 deletions(-)
+ include/net/mac80211.h     |  28 +++++
+ net/mac80211/cfg.c         | 227 +++++++++++++++++++++++++++++++++++--
+ net/mac80211/ieee80211_i.h |  12 ++
+ net/mac80211/iface.c       |   3 +
+ net/mac80211/tx.c          |  24 ++--
+ 5 files changed, 276 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3c0c33a9f30c..b37902222517 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2019,8 +2019,8 @@ static void ath10k_mac_vif_ap_csa_count_down(struct ath10k_vif *arvif)
- 	if (!arvif->is_up)
- 		return;
- 
--	if (!ieee80211_csa_is_complete(vif)) {
--		ieee80211_csa_update_counter(vif);
-+	if (!ieee80211_beacon_cntdwn_is_complete(vif)) {
-+		ieee80211_beacon_update_cntdwn(vif);
- 
- 		ret = ath10k_mac_setup_bcn_tmpl(arvif);
- 		if (ret)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index a81a1ab2de19..b661d4ec5d52 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3878,7 +3878,7 @@ void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 		 * actual channel switch is done
- 		 */
- 		if (arvif->vif->csa_active &&
--		    ieee80211_csa_is_complete(arvif->vif)) {
-+		    ieee80211_beacon_cntdwn_is_complete(arvif->vif)) {
- 			ieee80211_csa_finish(arvif->vif);
- 			continue;
- 		}
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 8e3437a65673..9fffa37f1e2e 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1593,8 +1593,8 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
- 	cmd->vdev_id = vdev_id;
- 	cmd->tim_ie_offset = offs->tim_offset;
--	cmd->csa_switch_count_offset = offs->csa_counter_offs[0];
--	cmd->ext_csa_switch_count_offset = offs->csa_counter_offs[1];
-+	cmd->csa_switch_count_offset = offs->cntdwn_counter_offs[0];
-+	cmd->ext_csa_switch_count_offset = offs->cntdwn_counter_offs[1];
- 	cmd->buf_len = bcn->len;
- 
- 	ptr = skb->data + sizeof(*cmd);
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index e36f947e19fc..b17cb9158544 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -365,7 +365,7 @@ bool ath9k_csa_is_finished(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	if (!vif || !vif->csa_active)
- 		return false;
- 
--	if (!ieee80211_csa_is_complete(vif))
-+	if (!ieee80211_beacon_counter_is_complete(vif))
- 		return false;
- 
- 	ieee80211_csa_finish(vif);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index f20c839aeda2..346967f1f8ad 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -514,7 +514,7 @@ bool ath9k_htc_csa_is_finished(struct ath9k_htc_priv *priv)
- 	if (!vif || !vif->csa_active)
- 		return false;
- 
--	if (!ieee80211_csa_is_complete(vif))
-+	if (!ieee80211_beacon_counter_is_complete(vif))
- 		return false;
- 
- 	ieee80211_csa_finish(vif);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index b78992e341d5..81bc05d70267 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1300,8 +1300,8 @@ static void iwl_mvm_csa_count_down(struct iwl_mvm *mvm,
- 
- 	mvmvif->csa_countdown = true;
- 
--	if (!ieee80211_csa_is_complete(csa_vif)) {
--		int c = ieee80211_csa_update_counter(csa_vif);
-+	if (!ieee80211_beacon_cntdwn_is_complete(csa_vif)) {
-+		int c = ieee80211_beacon_update_cntdwn(csa_vif);
- 
- 		iwl_mvm_mac_ctxt_beacon_changed(mvm, csa_vif);
- 		if (csa_vif->p2p &&
-@@ -1543,7 +1543,7 @@ void iwl_mvm_probe_resp_data_notif(struct iwl_mvm *mvm,
- 
- 	if (notif->csa_counter != IWL_PROBE_RESP_DATA_NO_CSA &&
- 	    notif->csa_counter >= 1)
--		ieee80211_csa_set_counter(vif, notif->csa_counter);
-+		ieee80211_beacon_set_cntdwn(vif, notif->csa_counter);
- }
- 
- void iwl_mvm_channel_switch_noa_notif(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 1babc4bb5194..8abb57012240 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -172,7 +172,7 @@ static void iwl_mvm_csa_noa_start(struct iwl_mvm *mvm)
- 	 * So we just do nothing here and the switch
- 	 * will be performed on the last TBTT.
- 	 */
--	if (!ieee80211_csa_is_complete(csa_vif)) {
-+	if (!ieee80211_beacon_cntdwn_is_complete(csa_vif)) {
- 		IWL_WARN(mvm, "CSA NOA started too early\n");
- 		goto out_unlock;
- 	}
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 9dd9d73f4484..515e1722c398 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1699,7 +1699,7 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				rcu_dereference(vif->chanctx_conf)->def.chan);
- 	}
- 
--	if (vif->csa_active && ieee80211_csa_is_complete(vif))
-+	if (vif->csa_active && ieee80211_beacon_counter_is_complete(vif))
- 		ieee80211_csa_finish(vif);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 907098101898..1d08f8a94964 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -1068,7 +1068,7 @@ EXPORT_SYMBOL_GPL(mt76_get_txpower);
- static void
- __mt76_csa_finish(void *priv, u8 *mac, struct ieee80211_vif *vif)
- {
--	if (vif->csa_active && ieee80211_csa_is_complete(vif))
-+	if (vif->csa_active && ieee80211_beacon_cntdwn_is_complete(vif))
- 		ieee80211_csa_finish(vif);
- }
- 
-@@ -1093,7 +1093,7 @@ __mt76_csa_check(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 	if (!vif->csa_active)
- 		return;
- 
--	dev->csa_complete |= ieee80211_csa_is_complete(vif);
-+	dev->csa_complete |= ieee80211_beacon_cntdwn_is_complete(vif);
- }
- 
- void mt76_csa_check(struct mt76_dev *dev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 6e869b8c5e26..0c88a6e4b5c2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -597,12 +597,12 @@ mt7615_mcu_add_beacon_offload(struct mt7615_dev *dev,
- 	memcpy(req.pkt + MT_TXD_SIZE, skb->data, skb->len);
- 	req.pkt_len = cpu_to_le16(MT_TXD_SIZE + skb->len);
- 	req.tim_ie_pos = cpu_to_le16(MT_TXD_SIZE + offs.tim_offset);
--	if (offs.csa_counter_offs[0]) {
-+	if (offs.cntdwn_counter_offs[0]) {
- 		u16 csa_offs;
- 
--		csa_offs = MT_TXD_SIZE + offs.csa_counter_offs[0] - 4;
-+		csa_offs = MT_TXD_SIZE + offs.cntdwn_counter_offs[0] - 4;
- 		req.csa_ie_pos = cpu_to_le16(csa_offs);
--		req.csa_cnt = skb->data[offs.csa_counter_offs[0]];
-+		req.csa_cnt = skb->data[offs.cntdwn_counter_offs[0]];
- 	}
- 	dev_kfree_skb(skb);
- 
-@@ -1614,10 +1614,10 @@ mt7615_mcu_uni_add_beacon_offload(struct mt7615_dev *dev,
- 	req.beacon_tlv.pkt_len = cpu_to_le16(MT_TXD_SIZE + skb->len);
- 	req.beacon_tlv.tim_ie_pos = cpu_to_le16(MT_TXD_SIZE + offs.tim_offset);
- 
--	if (offs.csa_counter_offs[0]) {
-+	if (offs.cntdwn_counter_offs[0]) {
- 		u16 csa_offs;
- 
--		csa_offs = MT_TXD_SIZE + offs.csa_counter_offs[0] - 4;
-+		csa_offs = MT_TXD_SIZE + offs.cntdwn_counter_offs[0] - 4;
- 		req.beacon_tlv.csa_ie_pos = cpu_to_le16(csa_offs);
- 	}
- 	dev_kfree_skb(skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index c8c12c740c1a..317ad82afb3f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2207,7 +2207,7 @@ mt7915_mcu_beacon_csa(struct sk_buff *rskb, struct sk_buff *skb,
- 		      struct bss_info_bcn *bcn,
- 		      struct ieee80211_mutable_offsets *offs)
- {
--	if (offs->csa_counter_offs[0]) {
-+	if (offs->cntdwn_counter_offs[0]) {
- 		struct tlv *tlv;
- 		struct bss_info_bcn_csa *csa;
- 
-@@ -2215,7 +2215,7 @@ mt7915_mcu_beacon_csa(struct sk_buff *rskb, struct sk_buff *skb,
- 						   sizeof(*csa), &bcn->sub_ntlv,
- 						   &bcn->len);
- 		csa = (struct bss_info_bcn_csa *)tlv;
--		csa->cnt = skb->data[offs->csa_counter_offs[0]];
-+		csa->cnt = skb->data[offs->cntdwn_counter_offs[0]];
- 	}
- }
- 
-@@ -2237,8 +2237,8 @@ mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct sk_buff *rskb,
- 	cont->pkt_len = cpu_to_le16(MT_TXD_SIZE + skb->len);
- 	cont->tim_ofs = cpu_to_le16(offs->tim_offset);
- 
--	if (offs->csa_counter_offs[0])
--		cont->csa_ofs = cpu_to_le16(offs->csa_counter_offs[0] - 4);
-+	if (offs->cntdwn_counter_offs[0])
-+		cont->csa_ofs = cpu_to_le16(offs->cntdwn_counter_offs[0] - 4);
- 
- 	buf = (u8 *)tlv + sizeof(*cont);
- 	mt7915_mac_write_txwi(dev, (__le32 *)buf, skb, wcid, NULL,
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 66e2bfd165e8..ec148b3e9c41 100644
+index ec148b3e9c41..f0ae718633d2 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -3736,7 +3736,7 @@ enum ieee80211_reconfig_type {
-  *	decremented, and when they reach 1 the driver must call
-  *	ieee80211_csa_finish(). Drivers which use ieee80211_beacon_get()
-  *	get the csa counter decremented by mac80211, but must check if it is
-- *	1 using ieee80211_csa_is_complete() after the beacon has been
-+ *	1 using ieee80211_beacon_counter_is_complete() after the beacon has been
-  *	transmitted and then call ieee80211_csa_finish().
-  *	If the CSA count starts as zero or 1, this function will not be called,
-  *	since there won't be any time to beacon before the switch anyway.
-@@ -4763,21 +4763,21 @@ void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
+@@ -1645,6 +1645,10 @@ enum ieee80211_vif_flags {
+  * @txq: the multicast data TX queue (if driver uses the TXQ abstraction)
+  * @txqs_stopped: per AC flag to indicate that intermediate TXQs are stopped,
+  *	protected by fq->lock.
++ * @cca_active: marks whether a color change is going on. Internally it is
++ *	write-protected by sdata_lock and local->mtx so holding either is fine
++ *	for read access.
++ * @cca_color: the color that we will have after the change.
   */
- void ieee80211_report_low_ack(struct ieee80211_sta *sta, u32 num_packets);
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
+@@ -1672,6 +1676,9 @@ struct ieee80211_vif {
  
--#define IEEE80211_MAX_CSA_COUNTERS_NUM 2
-+#define IEEE80211_MAX_CNTDWN_COUNTERS_NUM 2
+ 	bool txqs_stopped[IEEE80211_NUM_ACS];
  
- /**
-  * struct ieee80211_mutable_offsets - mutable beacon offsets
-  * @tim_offset: position of TIM element
-  * @tim_length: size of TIM element
-- * @csa_counter_offs: array of IEEE80211_MAX_CSA_COUNTERS_NUM offsets
-- *	to CSA counters.  This array can contain zero values which
-+ * @cntdwn_counter_offs: array of IEEE80211_MAX_CNTDWN_COUNTERS_NUM offsets
-+ *	to countdown counters.  This array can contain zero values which
-  *	should be ignored.
-  */
- struct ieee80211_mutable_offsets {
- 	u16 tim_offset;
- 	u16 tim_length;
- 
--	u16 csa_counter_offs[IEEE80211_MAX_CSA_COUNTERS_NUM];
-+	u16 cntdwn_counter_offs[IEEE80211_MAX_CNTDWN_COUNTERS_NUM];
++	bool cca_active;
++	u8 cca_color;
++
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
  };
- 
- /**
-@@ -4846,31 +4846,31 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
- }
- 
- /**
-- * ieee80211_csa_update_counter - request mac80211 to decrement the csa counter
-+ * ieee80211_beacon_update_cntdwn - request mac80211 to decrement the beacon countdown
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  *
-- * The csa counter should be updated after each beacon transmission.
-+ * The beacon counter should be updated after each beacon transmission.
-  * This function is called implicitly when
-  * ieee80211_beacon_get/ieee80211_beacon_get_tim are called, however if the
-  * beacon frames are generated by the device, the driver should call this
-- * function after each beacon transmission to sync mac80211's csa counters.
-+ * function after each beacon transmission to sync mac80211's beacon countdown.
-  *
-- * Return: new csa counter value
-+ * Return: new countdown value
+@@ -4890,6 +4897,16 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif);
   */
--u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif);
-+u8 ieee80211_beacon_update_cntdwn(struct ieee80211_vif *vif);
+ bool ieee80211_beacon_cntdwn_is_complete(struct ieee80211_vif *vif);
  
- /**
-- * ieee80211_csa_set_counter - request mac80211 to set csa counter
-+ * ieee80211_beacon_set_cntdwn - request mac80211 to set beacon countdown
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @counter: the new value for the counter
-  *
-- * The csa counter can be changed by the device, this API should be
-+ * The beacon countdown can be changed by the device, this API should be
-  * used by the device driver to update csa counter in mac80211.
-  *
-- * It should never be used together with ieee80211_csa_update_counter(),
-+ * It should never be used together with ieee80211_beacon_update_cntdwn(),
-  * as it will cause a race condition around the counter value.
-  */
--void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter);
-+void ieee80211_beacon_set_cntdwn(struct ieee80211_vif *vif, u8 counter);
- 
- /**
-  * ieee80211_csa_finish - notify mac80211 about channel switch
-@@ -4883,13 +4883,12 @@ void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter);
- void ieee80211_csa_finish(struct ieee80211_vif *vif);
- 
- /**
-- * ieee80211_csa_is_complete - find out if counters reached 1
-+ * ieee80211_beacon_cntdwn_is_complete - find out if countdown reached 1
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  *
-- * This function returns whether the channel switch counters reached zero.
-+ * This function returns whether the countdown reached zero.
-  */
--bool ieee80211_csa_is_complete(struct ieee80211_vif *vif);
--
-+bool ieee80211_beacon_cntdwn_is_complete(struct ieee80211_vif *vif);
- 
++/**
++ * ieee80211_cca_finish - notify mac80211 about color change
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * After a color change announcement was scheduled and the counter in this
++ * announcement hits 1, this function must be called by the driver to
++ * notify mac80211 that the color can be changed
++ */
++void ieee80211_cca_finish(struct ieee80211_vif *vif);
++
  /**
   * ieee80211_proberesp_get - retrieve a Probe Response template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+@@ -6593,4 +6610,15 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
+  */
+ bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
+ 
++/**
++ * ieeee80211_obss_color_collision_notify notify userland about a BSS color
++ * collision.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @color_bitmap: a 64 bit bitmap representing the colors that the local BSS is
++ *	aware of.
++ */
++void
++ieeee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
++				       u64 color_bitmap);
+ #endif /* MAC80211_H */
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 24e9e00decb8..b1a8a2d06f58 100644
+index b1a8a2d06f58..35bb43aeada4 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -826,9 +826,9 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	memcpy(new->data, resp, resp_len);
+@@ -809,7 +809,8 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
  
- 	if (csa)
--		memcpy(new->csa_counter_offsets, csa->counter_offsets_presp,
-+		memcpy(new->cntdwn_counter_offsets, csa->counter_offsets_presp,
+ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 				    const u8 *resp, size_t resp_len,
+-				    const struct ieee80211_csa_settings *csa)
++				    const struct ieee80211_csa_settings *csa,
++				    const struct ieee80211_cca_settings *cca)
+ {
+ 	struct probe_resp *new, *old;
+ 
+@@ -829,6 +830,8 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(new->cntdwn_counter_offsets, csa->counter_offsets_presp,
  		       csa->n_counter_offsets_presp *
--		       sizeof(new->csa_counter_offsets[0]));
-+		       sizeof(new->cntdwn_counter_offsets[0]));
+ 		       sizeof(new->cntdwn_counter_offsets[0]));
++	if (cca)
++		new->cntdwn_counter_offsets[0] = cca->counter_offset_presp;
  
  	rcu_assign_pointer(sdata->u.ap.probe_resp, new);
  	if (old)
-@@ -926,10 +926,10 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	new->tail_len = new_tail_len;
+@@ -881,7 +884,8 @@ static int ieee80211_set_ftm_responder_params(
  
- 	if (csa) {
--		new->csa_current_counter = csa->count;
--		memcpy(new->csa_counter_offsets, csa->counter_offsets_beacon,
-+		new->cntdwn_current_counter = csa->count;
-+		memcpy(new->cntdwn_counter_offsets, csa->counter_offsets_beacon,
- 		       csa->n_counter_offsets_beacon *
--		       sizeof(new->csa_counter_offsets[0]));
-+		       sizeof(new->cntdwn_counter_offsets[0]));
+ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 				   struct cfg80211_beacon_data *params,
+-				   const struct ieee80211_csa_settings *csa)
++				   const struct ieee80211_csa_settings *csa,
++				   const struct ieee80211_cca_settings *cca)
+ {
+ 	struct beacon_data *new, *old;
+ 	int new_head_len, new_tail_len;
+@@ -932,6 +936,11 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 		       sizeof(new->cntdwn_counter_offsets[0]));
  	}
  
++	if (cca) {
++		new->cntdwn_current_counter = cca->count;
++		new->cntdwn_counter_offsets[0] = cca->counter_offset_beacon;
++	}
++
  	/* copy in head */
-@@ -3185,9 +3185,9 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 			break;
+ 	if (params->head)
+ 		memcpy(new->head, params->head, new_head_len);
+@@ -946,7 +955,7 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 			memcpy(new->tail, old->tail, new_tail_len);
  
- 		if ((params->n_counter_offsets_beacon >
--		     IEEE80211_MAX_CSA_COUNTERS_NUM) ||
-+		     IEEE80211_MAX_CNTDWN_COUNTERS_NUM) ||
- 		    (params->n_counter_offsets_presp >
--		     IEEE80211_MAX_CSA_COUNTERS_NUM))
-+		     IEEE80211_MAX_CNTDWN_COUNTERS_NUM))
- 			return -EINVAL;
- 
- 		csa.counter_offsets_beacon = params->counter_offsets_beacon;
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 53632c2f5217..c0963969a465 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -145,9 +145,9 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
- 		*pos++ = csa_settings->block_tx ? 1 : 0;
- 		*pos++ = ieee80211_frequency_to_channel(
- 				csa_settings->chandef.chan->center_freq);
--		presp->csa_counter_offsets[0] = (pos - presp->head);
-+		presp->cntdwn_counter_offsets[0] = (pos - presp->head);
- 		*pos++ = csa_settings->count;
--		presp->csa_current_counter = csa_settings->count;
-+		presp->cntdwn_current_counter = csa_settings->count;
+ 	err = ieee80211_set_probe_resp(sdata, params->probe_resp,
+-				       params->probe_resp_len, csa);
++				       params->probe_resp_len, csa, cca);
+ 	if (err < 0) {
+ 		kfree(new);
+ 		return err;
+@@ -1098,7 +1107,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		}
  	}
  
- 	/* put the remaining rates in WLAN_EID_EXT_SUPP_RATES */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0b1eaec6649f..6bf879660a93 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -259,15 +259,15 @@ struct beacon_data {
- 	u8 *head, *tail;
- 	int head_len, tail_len;
- 	struct ieee80211_meshconf_ie *meshconf;
--	u16 csa_counter_offsets[IEEE80211_MAX_CSA_COUNTERS_NUM];
--	u8 csa_current_counter;
-+	u16 cntdwn_counter_offsets[IEEE80211_MAX_CNTDWN_COUNTERS_NUM];
-+	u8 cntdwn_current_counter;
- 	struct rcu_head rcu_head;
- };
+-	err = ieee80211_assign_beacon(sdata, &params->beacon, NULL);
++	err = ieee80211_assign_beacon(sdata, &params->beacon, NULL, NULL);
+ 	if (err < 0) {
+ 		ieee80211_vif_release_channel(sdata);
+ 		return err;
+@@ -1136,17 +1145,17 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	sdata_assert_lock(sdata);
  
- struct probe_resp {
- 	struct rcu_head rcu_head;
- 	int len;
--	u16 csa_counter_offsets[IEEE80211_MAX_CSA_COUNTERS_NUM];
-+	u16 cntdwn_counter_offsets[IEEE80211_MAX_CNTDWN_COUNTERS_NUM];
- 	u8 data[];
- };
+-	/* don't allow changing the beacon while CSA is in place - offset
++	/* don't allow changing the beacon while a countdown is in place - offset
+ 	 * of channel switch counter may change
+ 	 */
+-	if (sdata->vif.csa_active)
++	if (sdata->vif.csa_active || sdata->vif.cca_active)
+ 		return -EBUSY;
  
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b4a2efe8e83a..523380aed92e 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1168,7 +1168,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 				WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT;
- 	}
+ 	old = sdata_dereference(sdata->u.ap.beacon, sdata);
+ 	if (!old)
+ 		return -ENOENT;
  
--	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
-+	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CNTDWN_COUNTERS_NUM;
+-	err = ieee80211_assign_beacon(sdata, params, NULL);
++	err = ieee80211_assign_beacon(sdata, params, NULL, NULL);
+ 	if (err < 0)
+ 		return err;
+ 	ieee80211_bss_info_change_notify(sdata, err);
+@@ -3030,7 +3039,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+ 		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon,
+-					      NULL);
++					      NULL, NULL);
+ 		kfree(sdata->u.ap.next_beacon);
+ 		sdata->u.ap.next_beacon = NULL;
  
- 	/*
- 	 * We use the number of queues for feature tests (QoS, HT) internally
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d0db6af16427..259766ec6bb0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -851,8 +851,8 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		*pos++ = 0x0;
- 		*pos++ = ieee80211_frequency_to_channel(
- 				csa->settings.chandef.chan->center_freq);
--		bcn->csa_current_counter = csa->settings.count;
--		bcn->csa_counter_offsets[0] = hdr_len + 6;
-+		bcn->cntdwn_current_counter = csa->settings.count;
-+		bcn->cntdwn_counter_offsets[0] = hdr_len + 6;
- 		*pos++ = csa->settings.count;
- 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
- 		*pos++ = 6;
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index f470d1a7ce9b..1ac7b8c374c9 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -916,7 +916,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		if (beacon)
- 			for (i = 0; i < params->n_csa_offsets; i++)
- 				data[params->csa_offsets[i]] =
--					beacon->csa_current_counter;
-+					beacon->cntdwn_current_counter;
+@@ -3196,7 +3205,7 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		csa.n_counter_offsets_presp = params->n_counter_offsets_presp;
+ 		csa.count = params->count;
  
- 		rcu_read_unlock();
- 	}
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ec35a92df8ed..45df3ee7bb74 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4537,14 +4537,14 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+-		err = ieee80211_assign_beacon(sdata, &params->beacon_csa, &csa);
++		err = ieee80211_assign_beacon(sdata, &params->beacon_csa, &csa, NULL);
+ 		if (err < 0) {
+ 			kfree(sdata->u.ap.next_beacon);
+ 			return err;
+@@ -3284,6 +3293,14 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
  	return 0;
  }
  
--static void ieee80211_set_csa(struct ieee80211_sub_if_data *sdata,
--			      struct beacon_data *beacon)
-+static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
-+					struct beacon_data *beacon)
++static void ieee80211_cca_abort(struct ieee80211_sub_if_data  *sdata)
++{
++	sdata->vif.cca_active = false;
++	kfree(sdata->u.ap.next_beacon);
++	sdata->u.ap.next_beacon = NULL;
++	cfg80211_color_change_aborted_notify(sdata->dev);
++}
++
+ static int
+ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			   struct cfg80211_csa_settings *params)
+@@ -3352,6 +3369,10 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		goto out;
+ 	}
+ 
++	/* if there is a CCA in progress, abort it */
++	if (sdata->vif.cca_active)
++		ieee80211_cca_abort(sdata);
++
+ 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
+ 	if (err) {
+ 		ieee80211_vif_unreserve_chanctx(sdata);
+@@ -3992,6 +4013,193 @@ static int ieee80211_reset_tid_config(struct wiphy *wiphy,
+ 	return ret;
+ }
+ 
++static int ieee80211_set_after_cca_beacon(struct ieee80211_sub_if_data *sdata,
++					  u32 *changed)
++{
++	int err;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon,
++					      NULL, NULL);
++		kfree(sdata->u.ap.next_beacon);
++		sdata->u.ap.next_beacon = NULL;
++
++		if (err < 0)
++			return err;
++		*changed |= err;
++		break;
++	default:
++		WARN_ON(1);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int ieee80211_set_cca_beacon(struct ieee80211_sub_if_data *sdata,
++				    struct cfg80211_color_change_settings *params,
++				    u32 *changed)
++{
++	struct ieee80211_cca_settings cca = {};
++	int err;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		sdata->u.ap.next_beacon =
++			cfg80211_beacon_dup(&params->beacon_after);
++		if (!sdata->u.ap.next_beacon)
++			return -ENOMEM;
++
++		if (params->count <= 1)
++			break;
++
++		cca.counter_offset_beacon = params->counter_offset_beacon;
++		cca.counter_offset_presp = params->counter_offset_presp;
++		cca.count = params->count;
++
++		err = ieee80211_assign_beacon(sdata, &params->beacon_cca, NULL, &cca);
++		if (err < 0) {
++			kfree(sdata->u.ap.next_beacon);
++			return err;
++		}
++		*changed |= err;
++
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return 0;
++}
++
++static int ieee80211_cca_finalize(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	u32 changed = 0;
++	int err;
++
++	sdata_assert_lock(sdata);
++	lockdep_assert_held(&local->mtx);
++
++	sdata->vif.cca_active = false;
++
++	err = ieee80211_set_after_cca_beacon(sdata, &changed);
++	if (err) {
++		cfg80211_color_change_aborted_notify(sdata->dev);
++		return err;
++	}
++
++	sdata->vif.bss_conf.he_bss_color.color = sdata->vif.cca_color;
++	sdata->vif.bss_conf.he_bss_color.enabled = 1;
++	changed |= BSS_CHANGED_HE_BSS_COLOR;
++
++	ieee80211_bss_info_change_notify(sdata, changed);
++
++	cfg80211_color_change_notify(sdata->dev);
++
++	return 0;
++}
++
++void ieee80211_cca_finalize_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     cca_finalize_work);
++	struct ieee80211_local *local = sdata->local;
++
++	sdata_lock(sdata);
++	mutex_lock(&local->mtx);
++
++	/* AP might have been stopped while waiting for the lock. */
++	if (!sdata->vif.cca_active)
++		goto unlock;
++
++	if (!ieee80211_sdata_running(sdata))
++		goto unlock;
++
++	ieee80211_cca_finalize(sdata);
++
++unlock:
++	mutex_unlock(&local->mtx);
++	sdata_unlock(sdata);
++}
++
++void ieee80211_cca_finish(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	ieee80211_queue_work(&sdata->local->hw,
++			     &sdata->cca_finalize_work);
++}
++EXPORT_SYMBOL_GPL(ieee80211_cca_finish);
++
++void
++ieeee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
++				       u64 color_bitmap)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	if (sdata->vif.cca_active || sdata->vif.csa_active)
++		return;
++
++	cfg80211_obss_color_collision_notify(sdata->dev, color_bitmap);
++}
++EXPORT_SYMBOL_GPL(ieeee80211_obss_color_collision_notify);
++
++static int
++__ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
++			 struct cfg80211_color_change_settings *params)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	u32 changed = 0;
++	int err;
++
++	sdata_assert_lock(sdata);
++	lockdep_assert_held(&local->mtx);
++
++	/* don't allow another color change if one is already active or if csa
++	 * is active
++	 */
++	if (sdata->vif.cca_active || sdata->vif.csa_active)
++		return -EBUSY;
++
++	err = ieee80211_set_cca_beacon(sdata, params, &changed);
++	if (err)
++		return err;
++
++	sdata->vif.cca_active = true;
++	sdata->vif.cca_color = params->color;
++
++	cfg80211_color_change_started_notify(sdata->dev, params->count);
++
++	if (changed) {
++		sdata->vif.bss_conf.he_bss_color.enabled = 0;
++		changed |= BSS_CHANGED_HE_BSS_COLOR;
++		ieee80211_bss_info_change_notify(sdata, changed);
++	} else {
++		/* if the beacon didn't change, we can finalize immediately */
++		ieee80211_cca_finalize(sdata);
++	}
++
++	return 0;
++}
++
++static int ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
++				  struct cfg80211_color_change_settings *params)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int err;
++
++	mutex_lock(&local->mtx);
++	err = __ieee80211_color_change(wiphy, dev, params);
++	mutex_unlock(&local->mtx);
++
++	return err;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -4095,4 +4303,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_mesh_link = ieee80211_probe_mesh_link,
+ 	.set_tid_config = ieee80211_set_tid_config,
+ 	.reset_tid_config = ieee80211_reset_tid_config,
++	.color_change = ieee80211_color_change,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6bf879660a93..c8a25f62e458 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -255,6 +255,13 @@ struct ieee80211_csa_settings {
+ 	u8 count;
+ };
+ 
++struct ieee80211_cca_settings {
++	u16 counter_offset_beacon;
++	u16 counter_offset_presp;
++
++	u8 count;
++};
++
+ struct beacon_data {
+ 	u8 *head, *tail;
+ 	int head_len, tail_len;
+@@ -923,6 +930,8 @@ struct ieee80211_sub_if_data {
+ 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
+ 	struct cfg80211_chan_def csa_chandef;
+ 
++	struct work_struct cca_finalize_work;
++
+ 	struct list_head assigned_chanctx_list; /* protected by chanctx_mtx */
+ 	struct list_head reserved_chanctx_list; /* protected by chanctx_mtx */
+ 
+@@ -1737,6 +1746,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work);
+ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct cfg80211_csa_settings *params);
+ 
++/* color change handling */
++void ieee80211_cca_finalize_work(struct work_struct *work);
++
+ /* interface handling */
+ #define MAC80211_SUPPORTED_FEATURES_TX	(NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM | \
+ 					 NETIF_F_HW_CSUM | NETIF_F_SG | \
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 9740ae8fa697..8060cdc102d4 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -912,6 +912,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 				   GFP_KERNEL);
+ 	}
+ 
++	cancel_work_sync(&sdata->cca_finalize_work);
++
+ 	/* APs need special treatment */
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
+@@ -1496,6 +1498,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+ 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
++	INIT_WORK(&sdata->cca_finalize_work, ieee80211_cca_finalize_work);
+ 	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
+ 	INIT_LIST_HEAD(&sdata->reserved_chanctx_list);
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 45df3ee7bb74..f8ee87e7f9ab 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4540,11 +4540,12 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
+ 					struct beacon_data *beacon)
  {
++	u16 *bcn_offsets, *resp_offsets;
  	struct probe_resp *resp;
  	u8 *beacon_data;
  	size_t beacon_data_len;
  	int i;
--	u8 count = beacon->csa_current_counter;
-+	u8 count = beacon->cntdwn_current_counter;
+-	u8 count = beacon->cntdwn_current_counter;
++	u8 count, max_count = 1;
  
  	switch (sdata->vif.type) {
  	case NL80211_IFTYPE_AP:
-@@ -4564,36 +4564,36 @@ static void ieee80211_set_csa(struct ieee80211_sub_if_data *sdata,
+@@ -4564,21 +4565,25 @@ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
  	}
  
  	rcu_read_lock();
--	for (i = 0; i < IEEE80211_MAX_CSA_COUNTERS_NUM; ++i) {
-+	for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; ++i) {
- 		resp = rcu_dereference(sdata->u.ap.probe_resp);
+-	for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; ++i) {
+-		resp = rcu_dereference(sdata->u.ap.probe_resp);
++	resp = rcu_dereference(sdata->u.ap.probe_resp);
  
--		if (beacon->csa_counter_offsets[i]) {
--			if (WARN_ON_ONCE(beacon->csa_counter_offsets[i] >=
-+		if (beacon->cntdwn_counter_offsets[i]) {
-+			if (WARN_ON_ONCE(beacon->cntdwn_counter_offsets[i] >=
- 					 beacon_data_len)) {
+-		if (beacon->cntdwn_counter_offsets[i]) {
+-			if (WARN_ON_ONCE(beacon->cntdwn_counter_offsets[i] >=
+-					 beacon_data_len)) {
++	bcn_offsets = beacon->cntdwn_counter_offsets;
++	resp_offsets = resp->cntdwn_counter_offsets;
++	count = beacon->cntdwn_current_counter;
++	if (sdata->vif.csa_active)
++		max_count = IEEE80211_MAX_CNTDWN_COUNTERS_NUM;
++
++	for (i = 0; i < max_count; ++i) {
++		if (bcn_offsets[i]) {
++			if (WARN_ON_ONCE(bcn_offsets[i] >= beacon_data_len)) {
  				rcu_read_unlock();
  				return;
  			}
- 
--			beacon_data[beacon->csa_counter_offsets[i]] = count;
-+			beacon_data[beacon->cntdwn_counter_offsets[i]] = count;
+-
+-			beacon_data[beacon->cntdwn_counter_offsets[i]] = count;
++			beacon_data[bcn_offsets[i]] = count;
  		}
  
  		if (sdata->vif.type == NL80211_IFTYPE_AP && resp)
--			resp->data[resp->csa_counter_offsets[i]] = count;
-+			resp->data[resp->cntdwn_counter_offsets[i]] = count;
+-			resp->data[resp->cntdwn_counter_offsets[i]] = count;
++			resp->data[resp_offsets[i]] = count;
  	}
  	rcu_read_unlock();
  }
+@@ -4788,6 +4793,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 			if (offs) {
+ 				offs->tim_offset = beacon->head_len;
+ 				offs->tim_length = skb->len - beacon->head_len;
++				offs->cntdwn_counter_offs[0] = beacon->cntdwn_counter_offsets[0];
  
--static u8 __ieee80211_csa_update_counter(struct beacon_data *beacon)
-+static u8 __ieee80211_beacon_update_cntdwn(struct beacon_data *beacon)
- {
--	beacon->csa_current_counter--;
-+	beacon->cntdwn_current_counter--;
- 
- 	/* the counter should never reach 0 */
--	WARN_ON_ONCE(!beacon->csa_current_counter);
-+	WARN_ON_ONCE(!beacon->cntdwn_current_counter);
- 
--	return beacon->csa_current_counter;
-+	return beacon->cntdwn_current_counter;
- }
- 
--u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
-+u8 ieee80211_beacon_update_cntdwn(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct beacon_data *beacon = NULL;
-@@ -4611,15 +4611,15 @@ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
- 	if (!beacon)
- 		goto unlock;
- 
--	count = __ieee80211_csa_update_counter(beacon);
-+	count = __ieee80211_beacon_update_cntdwn(beacon);
- 
- unlock:
- 	rcu_read_unlock();
- 	return count;
- }
--EXPORT_SYMBOL(ieee80211_csa_update_counter);
-+EXPORT_SYMBOL(ieee80211_beacon_update_cntdwn);
- 
--void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter)
-+void ieee80211_beacon_set_cntdwn(struct ieee80211_vif *vif, u8 counter)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct beacon_data *beacon = NULL;
-@@ -4636,15 +4636,15 @@ void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter)
- 	if (!beacon)
- 		goto unlock;
- 
--	if (counter < beacon->csa_current_counter)
--		beacon->csa_current_counter = counter;
-+	if (counter < beacon->cntdwn_current_counter)
-+		beacon->cntdwn_current_counter = counter;
- 
- unlock:
- 	rcu_read_unlock();
- }
--EXPORT_SYMBOL(ieee80211_csa_set_counter);
-+EXPORT_SYMBOL(ieee80211_beacon_set_cntdwn);
- 
--bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
-+bool ieee80211_beacon_cntdwn_is_complete(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct beacon_data *beacon = NULL;
-@@ -4687,20 +4687,21 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
- 		goto out;
- 	}
- 
--	if (!beacon->csa_counter_offsets[0])
-+	if (!beacon->cntdwn_counter_offsets[0])
- 		goto out;
- 
--	if (WARN_ON_ONCE(beacon->csa_counter_offsets[0] > beacon_data_len))
-+	if (WARN_ON_ONCE(beacon->cntdwn_counter_offsets[0] > beacon_data_len))
- 		goto out;
- 
--	if (beacon_data[beacon->csa_counter_offsets[0]] == 1)
-+	if (beacon_data[beacon->cntdwn_counter_offsets[0]] == 1)
- 		ret = true;
-+
-  out:
- 	rcu_read_unlock();
- 
- 	return ret;
- }
--EXPORT_SYMBOL(ieee80211_csa_is_complete);
-+EXPORT_SYMBOL(ieee80211_beacon_cntdwn_is_complete);
- 
- static int ieee80211_beacon_protect(struct sk_buff *skb,
- 				    struct ieee80211_local *local,
-@@ -4760,11 +4761,11 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 
- 		beacon = rcu_dereference(ap->beacon);
- 		if (beacon) {
--			if (beacon->csa_counter_offsets[0]) {
-+			if (beacon->cntdwn_counter_offsets[0]) {
- 				if (!is_template)
--					__ieee80211_csa_update_counter(beacon);
-+					ieee80211_beacon_update_cntdwn(vif);
- 
--				ieee80211_set_csa(sdata, beacon);
-+				ieee80211_set_beacon_cntdwn(sdata, beacon);
- 			}
- 
- 			/*
-@@ -4808,11 +4809,11 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (!beacon)
- 			goto out;
- 
--		if (beacon->csa_counter_offsets[0]) {
-+		if (beacon->cntdwn_counter_offsets[0]) {
- 			if (!is_template)
--				__ieee80211_csa_update_counter(beacon);
-+				__ieee80211_beacon_update_cntdwn(beacon);
- 
--			ieee80211_set_csa(sdata, beacon);
-+			ieee80211_set_beacon_cntdwn(sdata, beacon);
- 		}
- 
- 		skb = dev_alloc_skb(local->tx_headroom + beacon->head_len +
-@@ -4832,16 +4833,16 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (!beacon)
- 			goto out;
- 
--		if (beacon->csa_counter_offsets[0]) {
-+		if (beacon->cntdwn_counter_offsets[0]) {
- 			if (!is_template)
- 				/* TODO: For mesh csa_counter is in TU, so
- 				 * decrementing it by one isn't correct, but
- 				 * for now we leave it consistent with overall
- 				 * mac80211's behavior.
- 				 */
--				__ieee80211_csa_update_counter(beacon);
-+				__ieee80211_beacon_update_cntdwn(beacon);
- 
--			ieee80211_set_csa(sdata, beacon);
-+			ieee80211_set_beacon_cntdwn(sdata, beacon);
- 		}
- 
- 		if (ifmsh->sync_ops)
-@@ -4873,13 +4874,13 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 	if (offs && beacon) {
- 		int i;
- 
--		for (i = 0; i < IEEE80211_MAX_CSA_COUNTERS_NUM; i++) {
--			u16 csa_off = beacon->csa_counter_offsets[i];
-+		for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; i++) {
-+			u16 csa_off = beacon->cntdwn_counter_offsets[i];
- 
- 			if (!csa_off)
- 				continue;
- 
--			offs->csa_counter_offs[i] = csa_off_base + csa_off;
-+			offs->cntdwn_counter_offs[i] = csa_off_base + csa_off;
- 		}
- 	}
- 
+ 				/* for AP the csa offsets are from tail */
+ 				csa_off_base = skb->len;
 -- 
 2.25.1
 
