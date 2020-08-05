@@ -2,168 +2,120 @@ Return-Path: <SRS0=0wPU=BP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF275C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E145C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:56:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B90612076E
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:55:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lwg4a84I"
+	by mail.kernel.org (Postfix) with ESMTP id 86C6922B42
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:56:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728055AbgHETzd (ORCPT
+        id S1729042AbgHET4M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Aug 2020 15:55:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46168 "EHLO
+        Wed, 5 Aug 2020 15:56:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727824AbgHEQqz (ORCPT
+        with ESMTP id S1728038AbgHEQqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Aug 2020 12:46:55 -0400
-Received: from mail-lf1-x142.google.com (mail-lf1-x142.google.com [IPv6:2a00:1450:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E8FDC0A889C
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2020 07:01:07 -0700 (PDT)
-Received: by mail-lf1-x142.google.com with SMTP id i19so24308479lfj.8
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2020 07:01:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=1iOZ+P++d3lrufGqurBgPCXRh6ZcH1g+4KMY8qM0WU0=;
-        b=Lwg4a84I6HeDaQ4x1UJ4L4QCAJGWNrUYiyCQwvRVv8L/0kaKsv1olAIETmn7Hw1ea9
-         F4W1dvoe2WUvpOg3e/8UedL/FUCMs2YIXWW+yuR6GwyuM1PH944zUAfWTygIKAygkS6J
-         3xg+NRZlLlOmDH1bhEEoOVGLhlKrwIokqZV7+YCeZnRnOQdDfoBrzj1MX2BQXvjABhGj
-         FzoEvGbBR6w1cg1j5WaXxsOau5uYKDKCHnahl3cE5jvI+4t7aopJlN+N7/rFpKr36wLn
-         QP6gCEojx4xiM+U/fFL5oCGpEMT9oxTZKvl10b/tuLl+m7zD5ABpUz1nnKTo5649criW
-         jpJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=1iOZ+P++d3lrufGqurBgPCXRh6ZcH1g+4KMY8qM0WU0=;
-        b=Ak4EVABbvhxdbtoGGAG3efSOGgeKrtQkppRStYnQy09akKmnXCt0JyvP+dFVMbxSqu
-         e4wJf4Bns9ecbpUzLhJGG3fwpQYo1ogp5+Gx5VWhtAkE1dBmAeYkY5ndPFlGWq0s961i
-         O8C5k0lzai1OBtxLYC8nHdYL7w6Gux0kaoRlAKktwZTAHABvEX4HRlOS21s1FPINX/FY
-         ZFKaY4+VXdOzBS0EiP6SDClfYyMgye/NC/NAMVQVLeAcaByVdSIg0vxXNi/ouvpcXyh1
-         UairzyA7kwnB9RepIR/EIHCt67JFwt+qHZ1b6CwI24EqZFlF2L41qyvaK9gONJaB/a7M
-         bwow==
-X-Gm-Message-State: AOAM5335EUtjkLbOgNVVLn3Km2uDJNFfNAGGww1W1TEbkkv1W4jQ6gG0
-        nio7v68EgesfMvwSIHOkNXY=
-X-Google-Smtp-Source: ABdhPJyhlQZC9a8l7v8VqEZ2QwvL8PvxJ8yRf6YWlBDOSbLzNhSPMIt2nM5BoI/VvpNBKcZWKnYPyA==
-X-Received: by 2002:a19:c1d6:: with SMTP id r205mr1627463lff.141.1596636065715;
-        Wed, 05 Aug 2020 07:01:05 -0700 (PDT)
-Received: from [192.168.2.145] (94-29-41-50.dynamic.spd-mgts.ru. [94.29.41.50])
-        by smtp.googlemail.com with ESMTPSA id c21sm1145501lfh.38.2020.08.05.07.01.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Aug 2020 07:01:04 -0700 (PDT)
-Subject: Re: [PATCH V2 3/6] brcmfmac: reserve 2 credits for host tx control
- path
-To:     Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Amar Shankar <amsr@cypress.com>,
-        Jia-Shyr Chuang <joseph.chuang@cypress.com>
-References: <20200610152106.175257-1-chi-hsien.lin@cypress.com>
- <20200610152106.175257-4-chi-hsien.lin@cypress.com>
- <f0910f96-1d23-daf1-b517-363e59bff105@gmail.com>
- <875z9yr7lg.fsf@codeaurora.org>
- <ffcf55cc-b27d-78ec-ff4f-e7efa3087712@gmail.com>
- <87a6zapbqp.fsf@codeaurora.org>
- <0923f45f-03e3-a870-3d2a-35f982482e1a@cypress.com>
-From:   Dmitry Osipenko <digetx@gmail.com>
-Message-ID: <bed18d45-6119-53da-2b9c-d98d121c8298@gmail.com>
-Date:   Wed, 5 Aug 2020 17:01:04 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Wed, 5 Aug 2020 12:46:16 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA8CDC0A889F;
+        Wed,  5 Aug 2020 07:04:20 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1k3K1i-00GoxW-Em; Wed, 05 Aug 2020 16:04:18 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/4] netlink: consistently use NLA_POLICY_MIN_LEN()
+Date:   Wed,  5 Aug 2020 16:03:22 +0200
+Message-Id: <20200805154803.58b1511df73a.I38ad2c00d1d856ca5627af9bb1fc320317abb3b5@changeid>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200805140324.72855-1-johannes@sipsolutions.net>
+References: <20200805140324.72855-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <0923f45f-03e3-a870-3d2a-35f982482e1a@cypress.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-05.08.2020 11:24, Chi-Hsien Lin пишет:
-> 
-> On 8/5/2020 1:22 AM, Kalle Valo wrote:
->> Dmitry Osipenko <digetx@gmail.com> writes:
->>
->>> 04.08.2020 14:08, Kalle Valo пишет:
->>>> Dmitry Osipenko <digetx@gmail.com> writes:
->>>>
->>>>> 10.06.2020 18:21, Chi-Hsien Lin пишет:
->>>>>> From: Amar Shankar <amsr@cypress.com>
->>>>>>
->>>>>> It is observed that sometimes when sdiod is low in tx credits in low
->>>>>> rssi scenarios, the data path consumes all sdiod rx all credits and
->>>>>> there is no sdiod rx credit available for control path causing host
->>>>>> and card to go out of sync resulting in link loss between host and
->>>>>> card. So in order to prevent it some credits are reserved for control
->>>>>> path.
->>>>>>
->>>>>> Note that TXCTL_CREDITS can't be larger than the firmware default
->>>>>> credit update threshold 2; otherwise there will be a deadlock for
->>>>>> both
->>>>>> side waiting for each other.
->>>>>>
->>>>>> Signed-off-by: Amar Shankar <amsr@cypress.com>
->>>>>> Signed-off-by: Jia-Shyr Chuang <joseph.chuang@cypress.com>
->>>>>> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->>>> [...]
->>>>
->>>>> This patch causes a severe WiFi performance regression on BCM4329.
->>>>> Please fix or revert this patch, thanks in advance.
->>>>>
->>>>> Before this patch:
->>>>> - - - - - - - - - - - - - - - - - - - - - - - - -
->>>>> [ ID] Interval           Transfer     Bitrate         Retr
->>>>> [  5]   0.00-10.00  sec  17.2 MBytes  14.4 Mbits/sec   
->>>>> 0             sender
->>>>> [  5]   0.00-10.04  sec  16.9 MBytes  14.1 Mbits/sec
->>>>> receiver
->>>>>
->>>>>
->>>>> After this patch:
->>>>> - - - - - - - - - - - - - - - - - - - - - - - - -
->>>>> [ ID] Interval           Transfer     Bitrate         Retr
->>>>> [  5]   0.00-10.00  sec  1.05 MBytes   881 Kbits/sec   
->>>>> 3             sender
->>>>> [  5]   0.00-14.01  sec   959 KBytes   561 Kbits/sec
->>>>> receiver
->>>> Can someone please send a revert patch (with the explanation above)
->>>> if a
->>>> fix is not quickly found? The commit id is:
->>>>
->>>> commit b41c232d33666191a1db11befc0f040fcbe664e9
->>>> Author:     Amar Shankar <amsr@cypress.com>
->>>> AuthorDate: Wed Jun 10 10:21:03 2020 -0500
->>>> Commit:     Kalle Valo <kvalo@codeaurora.org>
->>>> CommitDate: Tue Jul 14 12:46:43 2020 +0300
->>>>
->>>>      brcmfmac: reserve 2 credits for host tx control path
->>>>
->>> Hello Kalle,
->>>
->>> I'll send the revert if nobody will stand up to address the problem in a
->>> two weeks, thanks.
->> Thanks. Then I should be able to get the revert to v5.9 so that the
->> release won't be broken. (v5.8 is unaffected)
-> 
-> Dmitry/Kalle,
-> 
-> We'll take a look and revert/fix it in a few days.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Good to know, thank you.
+Change places that open-code NLA_POLICY_MIN_LEN() to
+use the macro instead, giving us flexibility in how we
+handle the details of the macro.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/macsec.c            | 2 +-
+ drivers/net/wireguard/netlink.c | 4 ++--
+ net/wireless/nl80211.c          | 6 +++---
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/macsec.c b/drivers/net/macsec.c
+index 9159846b8b93..124045cbcda3 100644
+--- a/drivers/net/macsec.c
++++ b/drivers/net/macsec.c
+@@ -1611,7 +1611,7 @@ static const struct nla_policy macsec_genl_rxsc_policy[NUM_MACSEC_RXSC_ATTR] = {
+ static const struct nla_policy macsec_genl_sa_policy[NUM_MACSEC_SA_ATTR] = {
+ 	[MACSEC_SA_ATTR_AN] = { .type = NLA_U8 },
+ 	[MACSEC_SA_ATTR_ACTIVE] = { .type = NLA_U8 },
+-	[MACSEC_SA_ATTR_PN] = { .type = NLA_MIN_LEN, .len = 4 },
++	[MACSEC_SA_ATTR_PN] = NLA_POLICY_MIN_LEN(4),
+ 	[MACSEC_SA_ATTR_KEYID] = { .type = NLA_BINARY,
+ 				   .len = MACSEC_KEYID_LEN, },
+ 	[MACSEC_SA_ATTR_KEY] = { .type = NLA_BINARY,
+diff --git a/drivers/net/wireguard/netlink.c b/drivers/net/wireguard/netlink.c
+index 0e6c6eb9384e..d0f3b6d7f408 100644
+--- a/drivers/net/wireguard/netlink.c
++++ b/drivers/net/wireguard/netlink.c
+@@ -34,7 +34,7 @@ static const struct nla_policy peer_policy[WGPEER_A_MAX + 1] = {
+ 	[WGPEER_A_PUBLIC_KEY]				= NLA_POLICY_EXACT_LEN(NOISE_PUBLIC_KEY_LEN),
+ 	[WGPEER_A_PRESHARED_KEY]			= NLA_POLICY_EXACT_LEN(NOISE_SYMMETRIC_KEY_LEN),
+ 	[WGPEER_A_FLAGS]				= { .type = NLA_U32 },
+-	[WGPEER_A_ENDPOINT]				= { .type = NLA_MIN_LEN, .len = sizeof(struct sockaddr) },
++	[WGPEER_A_ENDPOINT]				= NLA_POLICY_MIN_LEN(sizeof(struct sockaddr)),
+ 	[WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL]	= { .type = NLA_U16 },
+ 	[WGPEER_A_LAST_HANDSHAKE_TIME]			= NLA_POLICY_EXACT_LEN(sizeof(struct __kernel_timespec)),
+ 	[WGPEER_A_RX_BYTES]				= { .type = NLA_U64 },
+@@ -45,7 +45,7 @@ static const struct nla_policy peer_policy[WGPEER_A_MAX + 1] = {
+ 
+ static const struct nla_policy allowedip_policy[WGALLOWEDIP_A_MAX + 1] = {
+ 	[WGALLOWEDIP_A_FAMILY]		= { .type = NLA_U16 },
+-	[WGALLOWEDIP_A_IPADDR]		= { .type = NLA_MIN_LEN, .len = sizeof(struct in_addr) },
++	[WGALLOWEDIP_A_IPADDR]		= NLA_POLICY_MIN_LEN(sizeof(struct in_addr)),
+ 	[WGALLOWEDIP_A_CIDR_MASK]	= { .type = NLA_U8 }
+ };
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 248e845ebd5b..076e3e96c809 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -706,7 +706,7 @@ nl80211_wowlan_tcp_policy[NUM_NL80211_WOWLAN_TCP] = {
+ 	[NL80211_WOWLAN_TCP_DST_MAC] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_WOWLAN_TCP_SRC_PORT] = { .type = NLA_U16 },
+ 	[NL80211_WOWLAN_TCP_DST_PORT] = { .type = NLA_U16 },
+-	[NL80211_WOWLAN_TCP_DATA_PAYLOAD] = { .type = NLA_MIN_LEN, .len = 1 },
++	[NL80211_WOWLAN_TCP_DATA_PAYLOAD] = NLA_POLICY_MIN_LEN(1),
+ 	[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ] = {
+ 		.len = sizeof(struct nl80211_wowlan_tcp_data_seq)
+ 	},
+@@ -714,8 +714,8 @@ nl80211_wowlan_tcp_policy[NUM_NL80211_WOWLAN_TCP] = {
+ 		.len = sizeof(struct nl80211_wowlan_tcp_data_token)
+ 	},
+ 	[NL80211_WOWLAN_TCP_DATA_INTERVAL] = { .type = NLA_U32 },
+-	[NL80211_WOWLAN_TCP_WAKE_PAYLOAD] = { .type = NLA_MIN_LEN, .len = 1 },
+-	[NL80211_WOWLAN_TCP_WAKE_MASK] = { .type = NLA_MIN_LEN, .len = 1 },
++	[NL80211_WOWLAN_TCP_WAKE_PAYLOAD] = NLA_POLICY_MIN_LEN(1),
++	[NL80211_WOWLAN_TCP_WAKE_MASK] = NLA_POLICY_MIN_LEN(1),
+ };
+ #endif /* CONFIG_PM */
+ 
+-- 
+2.26.2
 
