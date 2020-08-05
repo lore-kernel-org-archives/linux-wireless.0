@@ -2,147 +2,144 @@ Return-Path: <SRS0=0wPU=BP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F10BC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8971BC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:53:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 889BF22B42
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:52:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5877B2076E
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Aug 2020 19:53:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="DAhkOvAY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729437AbgHETwk (ORCPT
+        id S1728750AbgHETwi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Aug 2020 15:52:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47250 "EHLO
+        Wed, 5 Aug 2020 15:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728174AbgHEQvZ (ORCPT
+        with ESMTP id S1728101AbgHEQvZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Aug 2020 12:51:25 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD2DAC0A88B0;
-        Wed,  5 Aug 2020 07:04:21 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1k3K1j-00GoxW-2W; Wed, 05 Aug 2020 16:04:19 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 4/4] nl80211: use NLA_POLICY_RANGE(NLA_BINARY, ...) for a few attributes
-Date:   Wed,  5 Aug 2020 16:03:24 +0200
-Message-Id: <20200805154803.e858a2edcead.I9d948d59870e521febcd79bb4a986b1de1dca47b@changeid>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200805140324.72855-1-johannes@sipsolutions.net>
-References: <20200805140324.72855-1-johannes@sipsolutions.net>
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0A7C0A8890
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2020 06:55:33 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id c16so25596828ils.8
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2020 06:55:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=T0iHC5DzypW6poy3NDVtNkEOvm1za2UqY6n/ov5xw0A=;
+        b=DAhkOvAYaZ9UtoECfWC2gAqYzdQdZu4/OTZhHotTaCMraihBeTETAb2o+tdVB+R9c/
+         fgruEjKoM8VG+YdsLo4GUZF8VaCggzTi5h3uToTV2f2Sv1hwOpZ5HvtTKuXa2Y1A6q3O
+         zX5fNDo98uB0Sok2zX9/YQGJMJ6y+B1u0vCnk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=T0iHC5DzypW6poy3NDVtNkEOvm1za2UqY6n/ov5xw0A=;
+        b=iu8HQuu1Wnq6X0XH30oAcM9DBxLLMDgscgnmark6KdrX+162Uwbqo/QUEEfbz10zwR
+         p6lIcp3dKquOz5CmX4fBHu/Ibm5cU3t8y/+P06O04meT0/AHxmosfxrpRMbHzGnLIV7T
+         s+qBTkXraiRHTslNn88Svvbgo9ASKzBZ+RqCOvtl2gyBN0ej/6D9/LIXLftWTcL9B4QO
+         p2+iQAwU1XFNg89dZilv5kuW3SS/naryIHN+m+RptqwqnAZyn7J5m2KUz/ACDRrbqaXd
+         dtKrCTy28r3JyShqWQ5QFjeDxGBTT942tJiNzXkyDg8UbngPwic+TrpQAXcuHYK3U89B
+         eshg==
+X-Gm-Message-State: AOAM532nj/yFwSMqbyc9uuvjrxB4IdaMB75oGoF7of/znnhxvS98AzRN
+        XOfHeJh69jMAoqPP959Xkr8RLw==
+X-Google-Smtp-Source: ABdhPJygRlU9l3OctXlmAVj+p1MKYQ+VT9ZvU9QPRbxWDqUzC6q+bEae4dy82QDhDGDE28iGtnJLqA==
+X-Received: by 2002:a92:c14d:: with SMTP id b13mr3548606ilh.269.1596635733090;
+        Wed, 05 Aug 2020 06:55:33 -0700 (PDT)
+Received: from [172.22.22.26] (c-73-185-129-58.hsd1.mn.comcast.net. [73.185.129.58])
+        by smtp.googlemail.com with ESMTPSA id c2sm1073796iow.6.2020.08.05.06.55.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Aug 2020 06:55:32 -0700 (PDT)
+Subject: Re: [PATCH] soc: qmi: allow user to set handle wq to hiprio
+To:     =?UTF-8?B?546L5paH6JmO?= <wenhu.wang@vivo.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     elder@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        kvalo@codeaurora.org, agross@kernel.org, ohad@wizery.com,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, alsa-devel@alsa-project.org,
+        ath11k@lists.infradead.org, netdev@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        srinivas.kandagatla@linaro.org, sibis@codeaurora.org
+References: <ADUAnwD8DVByMMSsrG-r3Kri.3.1596374087585.Hmail.wenhu.wang@vivo.com>
+From:   Alex Elder <elder@ieee.org>
+Message-ID: <5c6123f2-1a65-8615-9d5d-3bb1d25818b2@ieee.org>
+Date:   Wed, 5 Aug 2020 08:55:30 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <ADUAnwD8DVByMMSsrG-r3Kri.3.1596374087585.Hmail.wenhu.wang@vivo.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 8/2/20 8:14 AM, 王文虎 wrote:
+> 
+>>> Currently the qmi_handle is initialized single threaded and strictly
+>>> ordered with the active set to 1. This is pretty simple and safe but
+>>> sometimes ineffency. So it is better to allow user to decide whether
+>>> a high priority workqueue should be used.
+>>
+>> Can you please describe a scenario where this is needed/desired and
+>> perhaps also comment on why this is not always desired?
+>>
+> 
+> Well, one scenario is that when the AP wants to check the status of the
+> subsystems and the whole QMI data path. It first sends out an indication
+> which asks the subsystems to report their status. After the subsystems send
+> responses to the AP, the responses then are queued on the workqueue of
+> the QMI handler. Actually the AP is configured to do the check in a specific
+> interval regularly. And it check the report counts within a specific delay after
+> it sends out the related indication. When the AP has been under a heavy
+> load for long, the reports are queue their without CPU resource to update
+> the report counts within the specific delay. As a result, the thread that checks
+> the report counts takes it misleadingly that the QMI data path or the subsystems
+> are crashed.
+> 
+> The patch can really resolve the problem mentioned abolve.
 
-We have a few attributes with minimum and maximum lengths that are
-not the same, use the new feature of being able to specify both in
-the policy to validate them, removing code and allowing this to be
-advertised to userspace in the policy export.
+Is it your intention to submit code that actually does what you describe
+above?  If so, then (as David said) you should propose this change at
+the time it will be needed--which is at the time you send that new
+code out for review.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 36 ++++++++++++++----------------------
- 1 file changed, 14 insertions(+), 22 deletions(-)
+Even in that case, I don't believe using a high priority workqueue
+would guarantee the improved behavior you think this would provide.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 076e3e96c809..e91d5bcb0f8b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -574,14 +574,20 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = NLA_POLICY_MIN_LEN(2),
--	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
-+	/*
-+	 * The value of the Length field of the Supported Operating
-+	 * Classes element is between 2 and 253.
-+	 */
-+	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] =
-+		NLA_POLICY_RANGE(NLA_BINARY, 2, 253),
- 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_OPMODE_NOTIF] = { .type = NLA_U8 },
- 	[NL80211_ATTR_VENDOR_ID] = { .type = NLA_U32 },
- 	[NL80211_ATTR_VENDOR_SUBCMD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_VENDOR_DATA] = { .type = NLA_BINARY },
--	[NL80211_ATTR_QOS_MAP] = { .type = NLA_BINARY,
--				   .len = IEEE80211_QOS_MAP_LEN_MAX },
-+	[NL80211_ATTR_QOS_MAP] = NLA_POLICY_RANGE(NLA_BINARY,
-+						  IEEE80211_QOS_MAP_LEN_MIN,
-+						  IEEE80211_QOS_MAP_LEN_MAX),
- 	[NL80211_ATTR_MAC_HINT] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
-@@ -636,9 +642,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_TXQ_LIMIT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TXQ_MEMORY_LIMIT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
--	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
--					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
--
-+	[NL80211_ATTR_HE_CAPABILITY] =
-+		NLA_POLICY_RANGE(NLA_BINARY,
-+				 NL80211_HE_MIN_CAPABILITY_LEN,
-+				 NL80211_HE_MAX_CAPABILITY_LEN),
- 	[NL80211_ATTR_FTM_RESPONDER] =
- 		NLA_POLICY_NESTED(nl80211_ftm_responder_policy),
- 	[NL80211_ATTR_TIMEOUT] = NLA_POLICY_MIN(NLA_U32, 1),
-@@ -5851,13 +5858,6 @@ static int nl80211_parse_sta_channel_info(struct genl_info *info,
- 		 nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
- 		params->supported_oper_classes_len =
- 		  nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
--		/*
--		 * The value of the Length field of the Supported Operating
--		 * Classes element is between 2 and 253.
--		 */
--		if (params->supported_oper_classes_len < 2 ||
--		    params->supported_oper_classes_len > 253)
--			return -EINVAL;
- 	}
- 	return 0;
- }
-@@ -5880,9 +5880,6 @@ static int nl80211_set_station_tdls(struct genl_info *info,
- 			nla_data(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
- 		params->he_capa_len =
- 			nla_len(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
--
--		if (params->he_capa_len < NL80211_HE_MIN_CAPABILITY_LEN)
--			return -EINVAL;
- 	}
- 
- 	err = nl80211_parse_sta_channel_info(info, params);
-@@ -6141,10 +6138,6 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_data(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
- 		params.he_capa_len =
- 			nla_len(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
--
--		/* max len is validated in nla policy */
--		if (params.he_capa_len < NL80211_HE_MIN_CAPABILITY_LEN)
--			return -EINVAL;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
-@@ -13540,8 +13533,7 @@ static int nl80211_set_qos_map(struct sk_buff *skb,
- 		pos = nla_data(info->attrs[NL80211_ATTR_QOS_MAP]);
- 		len = nla_len(info->attrs[NL80211_ATTR_QOS_MAP]);
- 
--		if (len % 2 || len < IEEE80211_QOS_MAP_LEN_MIN ||
--		    len > IEEE80211_QOS_MAP_LEN_MAX)
-+		if (len % 2)
- 			return -EINVAL;
- 
- 		qos_map = kzalloc(sizeof(struct cfg80211_qos_map), GFP_KERNEL);
--- 
-2.26.2
+In case it wasn't clear already, this change won't be accepted
+at this time (despite your explanation above).
+
+						-Alex
+
+> 
+> For narmal situations, it is enough to just use normal priority QMI workqueue.
+> 
+>> Regards,
+>> Bjorn
+>>
+>>>
+>>> Signed-off-by: Wang Wenhu <wenhu.wang@vivo.com>
+>>> ---
+>>>  drivers/net/ipa/ipa_qmi.c             | 4 ++--
+>>>  drivers/net/wireless/ath/ath10k/qmi.c | 2 +-
+>>>  drivers/net/wireless/ath/ath11k/qmi.c | 2 +-
+>>>  drivers/remoteproc/qcom_sysmon.c      | 2 +-
+>>>  drivers/slimbus/qcom-ngd-ctrl.c       | 4 ++--
+>>>  drivers/soc/qcom/pdr_interface.c      | 4 ++--
+>>>  drivers/soc/qcom/qmi_interface.c      | 9 +++++++--
+>>>  include/linux/soc/qcom/qmi.h          | 3 ++-
+>>>  samples/qmi/qmi_sample_client.c       | 4 ++--
+>>>  9 files changed, 20 insertions(+), 14 deletions(-)
+> 
 
