@@ -1,357 +1,165 @@
-Return-Path: <SRS0=CHVH=BQ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=8fA2=BS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B84C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Aug 2020 21:04:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE74C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  8 Aug 2020 15:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D398221E3
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Aug 2020 21:04:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AB9020747
+	for <linux-wireless@archiver.kernel.org>; Sat,  8 Aug 2020 15:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726190AbgHFVEk (ORCPT
+        id S1726370AbgHHP7h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Aug 2020 17:04:40 -0400
-Received: from smtp11.smtpout.orange.fr ([80.12.242.133]:47099 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725812AbgHFVEi (ORCPT
+        Sat, 8 Aug 2020 11:59:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53766 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726242AbgHHP7g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Aug 2020 17:04:38 -0400
-Received: from localhost.localdomain ([93.22.37.174])
-        by mwinf5d46 with ME
-        id CM4Z230063lSDvh03M4ZCJ; Thu, 06 Aug 2020 23:04:35 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Thu, 06 Aug 2020 23:04:35 +0200
-X-ME-IP: 93.22.37.174
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
-        yuehaibing@huawei.com, vaibhavgupta40@gmail.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] adm8211: switch from 'pci_' to 'dma_' API
-Date:   Thu,  6 Aug 2020 23:04:31 +0200
-Message-Id: <20200806210431.736050-1-christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.25.1
+        Sat, 8 Aug 2020 11:59:36 -0400
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050::465:101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED2EC061756
+        for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2020 08:59:35 -0700 (PDT)
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:105:465:1:2:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-CHACHA20-POLY1305 (256/256 bits))
+        (No client certificate requested)
+        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4BP6P069n8zKmbx;
+        Sat,  8 Aug 2020 17:59:32 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Received: from smtp2.mailbox.org ([80.241.60.241])
+        by spamfilter02.heinlein-hosting.de (spamfilter02.heinlein-hosting.de [80.241.56.116]) (amavisd-new, port 10030)
+        with ESMTP id YOlHtS0-6XFH; Sat,  8 Aug 2020 17:59:29 +0200 (CEST)
+To:     "backports@vger.kernel.org" <backports@vger.kernel.org>
+Cc:     linux-wireless@vger.kernel.org
+From:   Hauke Mehrtens <hauke@hauke-m.de>
+Subject: wireless backports 4.19.137-1, 5.4.56-1 and 5.8-1 released
+Autocrypt: addr=hauke@hauke-m.de; keydata=
+ mQINBFtLdKcBEADFOTNUys8TnhpEdE5e1wO1vC+a62dPtuZgxYG83+9iVpsAyaSrCGGz5tmu
+ BgkEMZVK9YogfMyVHFEcy0RqfO7gIYBYvFp0z32btJhjkjBm9hZ6eonjFnG9XmqDKg/aZI+u
+ d9KGUh0DeaHT9FY96qdUsxIsdCodowf1eTNTJn+hdCudjLWjDf9FlBV0XKTN+ETY3pbPL2yi
+ h8Uem7tC3pmU7oN7Z0OpKev5E2hLhhx+Lpcro4ikeclxdAg7g3XZWQLqfvKsjiOJsCWNXpy7
+ hhru9PQE8oNFgSNzzx2tMouhmXIlzEX4xFnJghprn+8EA/sCaczhdna+LVjICHxTO36ytOv7
+ L3q6xDxIkdF6vyeEtVm1OfRzfGSgKdrvxc+FRJjp3TIRPFqvYUADDPh5Az7xa1LRy3YcvKYx
+ psDDKpJ8nCxNaYs6hqTbz4loHpv1hQLrPXFVpoFUApfvH/q7bb+eXVjRW1m2Ahvp7QipLEAK
+ GbiV7uvALuIjnlVtfBZSxI+Xg7SBETxgK1YHxV7PhlzMdTIKY9GL0Rtl6CMir/zMFJkxTMeO
+ 1P8wzt+WOvpxF9TixOhUtmfv0X7ay93HWOdddAzov7eCKp4Ju1ZQj8QqROqsc/Ba87OH8cnG
+ /QX9pHXpO9efHcZYIIwx1nquXnXyjJ/sMdS7jGiEOfGlp6N9IwARAQABtCFIYXVrZSBNZWhy
+ dGVucyA8aGF1a2VAaGF1a2UtbS5kZT6JAlQEEwEIAD4CGwEFCwkIBwIGFQgJCgsCBBYCAwEC
+ HgECF4AWIQS4+/Pwq1ZO6E9/sdOT3SBjCRC1FQUCXr/2hwUJBcXE4AAKCRCT3SBjCRC1FX1B
+ EACXkrQyF2DJuoWQ9up7LKEHjnQ3CjL06kNWH3FtvdOjde/H7ACo2gEAPz3mWYGocdH8Njpm
+ lnneX+3SzDspkW9dOJP/xjq9IlttJi3WeQqrBpe/01285IUDfOYi+DasdqGFEzAYGznGmptL
+ 9X7hcAdu7fWUbxjZgPtJKw2pshRu9cCrPJqqlKkRFVlthFc+mkcLFxePl7SvLY+ANwvviQBb
+ lXJ2WXTSTX+Kqx8ywrKPwsJlTGysqvNRKScDMr2u+aROaOC9rvU3bucmWNSuigtXJLSA1PbU
+ 7khRCHRb1q5q3AN+PCM3SXYwV7DL/4pCkEYdrQPztJ57jnsnJVjKR5TCkBwUaPIXjFmOk15/
+ BNuZWAfAZqYHkcbVjwo4Dr1XnJJon4vQncnVE4Igqlt2jujTRlB/AomuzLWy61mqkwUQl+uM
+ 1tNmeg0yC/b8bM6PqPca6tKfvkvseFzcVK6kKRfeO5zbVLoLQ3hQzRWTS2qOeiHDJyX7iKW/
+ jmR7YpLcx/Srqayb5YO207yo8NHkztyuSqFoAKBElEYIKtpJwZ8mnMJizijs5wjQ0VqDpGbR
+ QanUx025D4lN8PrHNEnDbx/e7MSZGye2oK73GZYcExXpEC4QkJwu7AVoVir9lZUclC7Lz0QZ
+ S08apVSYu81UzhmlEprdOEPPGEXOtC1zs6y9O7kBDQRbS3sDAQgA4DtYzB73BUYxMaU2gbFT
+ rPwXuDba+NgLpaF80PPXJXacdYoKklVyD23vTk5vw1AvMYe32Y16qgLkmr8+bS9KlLmpgNn5
+ rMWzOqKr/N+m2DG7emWAg3kVjRRkJENs1aQZoUIFJFBxlVZ2OuUSYHvWujej11CLFkxQo9Ef
+ a35QAEeizEGtjhjEd4OUT5iPuxxr5yQ/7IB98oTT17UBs62bDIyiG8Dhus+tG8JZAvPvh9pM
+ MAgcWf+Bsu4A00r+Xyojq06pnBMa748elV1Bo48Bg0pEVncFyQ9YSEiLtdgwnq6W8E00kATG
+ VpN1fafvxGRLVPfQbfrKTiTkC210L7nv2wARAQABiQI8BBgBCAAmAhsMFiEEuPvz8KtWTuhP
+ f7HTk90gYwkQtRUFAl6/9skFCQXFvsYACgkQk90gYwkQtRXR7xAAs5ia7JHCLmsg42KEWoMI
+ XI2P8U+K4lN6YyBwSV2T9kFWtsoGr6IA7hSdNHLfgb+BSnvsqqJeDMSR9Z+DzJlFmHoX7Nv9
+ ZY34xWItreNcSmFVC3D5h7LXZX5gOgyyGFHyPYTnYFGXQbeEPsLT+LA+pACzDBeDllxHJVYy
+ SbK1UEgco6UoDnIWjA6GhCVX612r84Eif4rRdkVurHFWMRYL9ytVo5BvmP0huR/OvdBbThIw
+ UFn2McG/Z9fHxZoz6RSSXtutA7Yb9FdpLbBowZSe7ArGUxp3JeOYpRglb56ilY/ojSSy/gSP
+ BkQJRo6d2nWa4YCZH1N5wiQ0LN4L3p4N4tHiVzntagUs3qRaDPky3R6ODDDMxz6etRTIUYyu
+ Rsvvdk6L2rVrm1+1NCZ4g6aeW6eSNsAXPDF+A8oS6oGEk10a6gmybLmrIxBsBm5EduPyZ1kE
+ A3rcMaJ+mcjaEC2kzVTW8DpddOMQHf97LQx/iBLP7k8amx0Bn0T2PeqQ7VdT4u0vAhfA4Tqi
+ koknWBPES3GLdj/8Ejy9Wqk8hbnRKteCikcabbm+333ZqQalS2AHpxCOV57TAfsA56/tmKmB
+ BrdB7fHU6vi6ajkwlGHETkftESYAyEudtOUnQdxZJ5Bq1ZLzHrCfJtz/Zc9whxbXEQMxwVHe
+ Sg0bIrraHA6Pqr25AQ0EW0t7cQEIAOZqnCTnoFeTFoJU2mHdEMAhsfh7X4wTPFRy48O70y4P
+ FDgingwETq8njvABMDGjN++00F8cZ45HNNB5eUKDcW9bBmxrtCK+F0yPu5fy+0M4Ntow3PyH
+ MNItOWIKd//EazOKiuHarhc6f1OgErMShe/9rTmlToqxwVmfnHi1aK6wvVbTiNgGyt+2FgA6
+ BQIoChkPGNQ6pgV5QlCEWvxbeyiobOSAx1dirsfogJwcTvsCU/QaTufAI9QO8dne6SKsp5z5
+ 8yigWPwDnOF/LvQ26eDrYHjnk7kVuBVIWjKlpiAQ00hfLU7vwQH0oncfB5HT/fL1b2461hmw
+ XxeV+jEzQkkAEQEAAYkDcgQYAQgAJgIbAhYhBLj78/CrVk7oT3+x05PdIGMJELUVBQJev/bK
+ BQkFxb5YAUDAdCAEGQEIAB0WIQTLPT+4Bx34nBebC0Pxt2eFnLLrxwUCW0t7cQAKCRDxt2eF
+ nLLrx3VaB/wNpvH28qjW6xuAMeXgtnOsmF9GbYjf4nkVNugsmwV7yOlE1x/p4YmkYt5bez/C
+ pZ3xxiwu1vMlrXOejPcTA+EdogebBfDhOBib41W7YKb12DZos1CPyFo184+Egaqvm6e+GeXC
+ tsb5iOXR6vawB0HnNeUjHyEiMeh8wkihbjIHv1Ph5mx4XKvAD454jqklOBDV1peU6mHbpka6
+ UzL76m+Ig/8Bvns8nzX8NNI9ZeqYR7vactbmNYpd4dtMxof0pU13EkIiXxlmCrjM3aayemWI
+ n4Sg1WAY6AqJFyR4aWRa1x7NDQivnIFoAGRVVkJLJ1h8RNIntOsXBjXBDDIIVwvvCRCT3SBj
+ CRC1FTCWD/9/ecADGmAbE/nFv41z5zpfUORZQWMFW4wQnrLBgadv5NbHe2/WYrw+d+buan86
+ cMuBW492kVT9sHKfeLRsrrdwlwNN5co02kY6ctrrT5vDFanA9G3gHHUbCKXV3dubbqzyZB21
+ jZDIaY78vzBsMGk8VuqCiYEeP2mJrs55NbGx0gFAnGBL2TDeJIfTjnPvEBmlpBvJ48f0lH8e
+ wlGiyEGCmzKVoQ2OHdVx5uUUDe5v6IVmntM+DODZhzfSYyMMbROiK6KxqGBdHyQD70CCRte9
+ 8zYhb7LddYV2ALM2Gts5jK3yP2iXVvtvJ7zgQ6YYE76kGCyCFxZKoj2690LZ23viF4XS9bJ3
+ 5MLp1AnkCXoXxeuOzusITcKx59JczmWDWb2TUwG3NElMUoXrBVaxoSg/yJO8jm/CTddLr7zq
+ 4e3q02uMVISE+7Lcrhb0AA1sVHUZNvYsH+ksJdrCyczmZKjcnpZ1xzTIgCJTEIppgO8oGZo6
+ q9SjZLS0KI6hMLaYwRq/LPNZyDmMd8fVVvmrmlyacYpkQ4FNFuqamXJO7Z8hbTB1WglRCdMN
+ bVi+L9fa2gJ1pT34LcKRP/aqdqHR0Svc4B17vXzhkmnjfdp4SO5wGGMhz7nB1JI7CjCRRf+H
+ nyFzhfxUVvpNZCYq18iKFBzilZNKLjh9sly4+DrCCUp2cg==
+Message-ID: <9516452b-9a6e-cfe7-d308-927d4a2168f7@hauke-m.de>
+Date:   Sat, 8 Aug 2020 17:59:25 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="k6gTEIorqqY71VzwKLdepkPhkepWTnb7T"
+X-MBO-SPAM-Probability: 
+X-Rspamd-Score: -5.82 / 15.00 / 15.00
+X-Rspamd-Queue-Id: 646C4178C
+X-Rspamd-UID: c34c4b
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The wrappers in include/linux/pci-dma-compat.h should go away.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--k6gTEIorqqY71VzwKLdepkPhkepWTnb7T
+Content-Type: multipart/mixed; boundary="V3oCkN9vDBTJ2rGhT9jaPikuHCNChkbOV"
 
-The patch has been generated with the coccinelle script below and has been
-hand modified to replace GFP_ with a correct flag.
-It has been compile tested.
+--V3oCkN9vDBTJ2rGhT9jaPikuHCNChkbOV
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-When memory is allocated in 'adm8211_alloc_rings()', GFP_KERNEL can be used
-because it is called only from the probe function and no lock is acquired.
-Moreover, GFP_KERNEL is already used just a few lines above in a kmalloc.
+Hi
 
-@@
-@@
--    PCI_DMA_BIDIRECTIONAL
-+    DMA_BIDIRECTIONAL
+backports-5.8-1 was released. This is based on Linux 5.8.
+https://cdn.kernel.org/pub/linux/kernel/projects/backports/stable/v5.8/ba=
+ckports-5.8-1.tar.xz
 
-@@
-@@
--    PCI_DMA_TODEVICE
-+    DMA_TO_DEVICE
+backports-5.4.56-1 was released. This is based on Linux 5.4.56.
+https://cdn.kernel.org/pub/linux/kernel/projects/backports/stable/v5.4.56=
+/backports-5.4.56-1.tar.xz
 
-@@
-@@
--    PCI_DMA_FROMDEVICE
-+    DMA_FROM_DEVICE
+backports-4.19.137-1 was released. This is based on Linux 4.19.137.
+https://cdn.kernel.org/pub/linux/kernel/projects/backports/stable/v4.19.1=
+37/backports-4.19.137-1.tar.xz
 
-@@
-@@
--    PCI_DMA_NONE
-+    DMA_NONE
+There is now a updated wiki page with the releases:
+https://backports.wiki.kernel.org/index.php/Releases
 
-@@
-expression e1, e2, e3;
-@@
--    pci_alloc_consistent(e1, e2, e3)
-+    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+The source code can be found here:
+https://git.kernel.org/cgit/linux/kernel/git/backports/backports.git/
 
-@@
-expression e1, e2, e3;
-@@
--    pci_zalloc_consistent(e1, e2, e3)
-+    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+Hauke
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_free_consistent(e1, e2, e3, e4)
-+    dma_free_coherent(&e1->dev, e2, e3, e4)
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_map_single(e1, e2, e3, e4)
-+    dma_map_single(&e1->dev, e2, e3, e4)
+--V3oCkN9vDBTJ2rGhT9jaPikuHCNChkbOV--
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_single(e1, e2, e3, e4)
-+    dma_unmap_single(&e1->dev, e2, e3, e4)
+--k6gTEIorqqY71VzwKLdepkPhkepWTnb7T
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-@@
-expression e1, e2, e3, e4, e5;
-@@
--    pci_map_page(e1, e2, e3, e4, e5)
-+    dma_map_page(&e1->dev, e2, e3, e4, e5)
+-----BEGIN PGP SIGNATURE-----
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_page(e1, e2, e3, e4)
-+    dma_unmap_page(&e1->dev, e2, e3, e4)
+iQEzBAEBCgAdFiEEyz0/uAcd+JwXmwtD8bdnhZyy68cFAl8uy90ACgkQ8bdnhZyy
+68cvoQf/YEbmTpkWufmGQ8HNH+npyL+cJDiX94OMvZeeEkzvwDWqWYlYkKa7lxkr
+JOyasdGavlTKZb3+4ncSym9tbopkll7OSgZ84a0h9bM5cGcp81NELlj6bROY0uzy
+VigeG9LBBdW5xpZVdulKBF4sjmGxLQTHxMUp0qOHXLmGeZJKSIK9osO0GFfB3lzC
+hNoTSSwMrriELEirqueoSz9/5zqxxjijd+z0Hic3EM3CS7CIZb0kdkNxSaBCMaqI
+/fhjRZB9B24ZGsJ7gUirRo1kFYbe5r/Ab/odfQxxAZp9wMEP0astICDeH3fqc3HX
+EUntgGRilJU4WHuc/qZsKwAEmQrsvA==
+=SuGw
+-----END PGP SIGNATURE-----
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_map_sg(e1, e2, e3, e4)
-+    dma_map_sg(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_sg(e1, e2, e3, e4)
-+    dma_unmap_sg(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_single_for_cpu(e1, e2, e3, e4)
-+    dma_sync_single_for_cpu(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_single_for_device(e1, e2, e3, e4)
-+    dma_sync_single_for_device(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_sg_for_cpu(e1, e2, e3, e4)
-+    dma_sync_sg_for_cpu(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_sg_for_device(e1, e2, e3, e4)
-+    dma_sync_sg_for_device(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2;
-@@
--    pci_dma_mapping_error(e1, e2)
-+    dma_mapping_error(&e1->dev, e2)
-
-@@
-expression e1, e2;
-@@
--    pci_set_dma_mask(e1, e2)
-+    dma_set_mask(&e1->dev, e2)
-
-@@
-expression e1, e2;
-@@
--    pci_set_consistent_dma_mask(e1, e2)
-+    dma_set_coherent_mask(&e1->dev, e2)
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-If needed, see post from Christoph Hellwig on the kernel-janitors ML:
-   https://marc.info/?l=kernel-janitors&m=158745678307186&w=4
----
- drivers/net/wireless/admtek/adm8211.c | 83 +++++++++++++--------------
- 1 file changed, 40 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
-index 22f9f2f8af10..5cf2045fadef 100644
---- a/drivers/net/wireless/admtek/adm8211.c
-+++ b/drivers/net/wireless/admtek/adm8211.c
-@@ -324,8 +324,8 @@ static void adm8211_interrupt_tci(struct ieee80211_hw *dev)
- 
- 		/* TODO: check TDES0_STATUS_TUF and TDES0_STATUS_TRO */
- 
--		pci_unmap_single(priv->pdev, info->mapping,
--				 info->skb->len, PCI_DMA_TODEVICE);
-+		dma_unmap_single(&priv->pdev->dev, info->mapping,
-+				 info->skb->len, DMA_TO_DEVICE);
- 
- 		ieee80211_tx_info_clear_status(txi);
- 
-@@ -382,35 +382,34 @@ static void adm8211_interrupt_rci(struct ieee80211_hw *dev)
- 		} else if (pktlen < RX_COPY_BREAK) {
- 			skb = dev_alloc_skb(pktlen);
- 			if (skb) {
--				pci_dma_sync_single_for_cpu(
--					priv->pdev,
--					priv->rx_buffers[entry].mapping,
--					pktlen, PCI_DMA_FROMDEVICE);
-+				dma_sync_single_for_cpu(&priv->pdev->dev,
-+							priv->rx_buffers[entry].mapping,
-+							pktlen,
-+							DMA_FROM_DEVICE);
- 				skb_put_data(skb,
- 					     skb_tail_pointer(priv->rx_buffers[entry].skb),
- 					     pktlen);
--				pci_dma_sync_single_for_device(
--					priv->pdev,
--					priv->rx_buffers[entry].mapping,
--					RX_PKT_SIZE, PCI_DMA_FROMDEVICE);
-+				dma_sync_single_for_device(&priv->pdev->dev,
-+							   priv->rx_buffers[entry].mapping,
-+							   RX_PKT_SIZE,
-+							   DMA_FROM_DEVICE);
- 			}
- 		} else {
- 			newskb = dev_alloc_skb(RX_PKT_SIZE);
- 			if (newskb) {
- 				skb = priv->rx_buffers[entry].skb;
- 				skb_put(skb, pktlen);
--				pci_unmap_single(
--					priv->pdev,
--					priv->rx_buffers[entry].mapping,
--					RX_PKT_SIZE, PCI_DMA_FROMDEVICE);
-+				dma_unmap_single(&priv->pdev->dev,
-+						 priv->rx_buffers[entry].mapping,
-+						 RX_PKT_SIZE, DMA_FROM_DEVICE);
- 				priv->rx_buffers[entry].skb = newskb;
- 				priv->rx_buffers[entry].mapping =
--					pci_map_single(priv->pdev,
-+					dma_map_single(&priv->pdev->dev,
- 						       skb_tail_pointer(newskb),
- 						       RX_PKT_SIZE,
--						       PCI_DMA_FROMDEVICE);
--				if (pci_dma_mapping_error(priv->pdev,
--					   priv->rx_buffers[entry].mapping)) {
-+						       DMA_FROM_DEVICE);
-+				if (dma_mapping_error(&priv->pdev->dev,
-+						      priv->rx_buffers[entry].mapping)) {
- 					priv->rx_buffers[entry].skb = NULL;
- 					dev_kfree_skb(newskb);
- 					skb = NULL;
-@@ -1449,11 +1448,11 @@ static int adm8211_init_rings(struct ieee80211_hw *dev)
- 		rx_info->skb = dev_alloc_skb(RX_PKT_SIZE);
- 		if (rx_info->skb == NULL)
- 			break;
--		rx_info->mapping = pci_map_single(priv->pdev,
-+		rx_info->mapping = dma_map_single(&priv->pdev->dev,
- 						  skb_tail_pointer(rx_info->skb),
- 						  RX_PKT_SIZE,
--						  PCI_DMA_FROMDEVICE);
--		if (pci_dma_mapping_error(priv->pdev, rx_info->mapping)) {
-+						  DMA_FROM_DEVICE);
-+		if (dma_mapping_error(&priv->pdev->dev, rx_info->mapping)) {
- 			dev_kfree_skb(rx_info->skb);
- 			rx_info->skb = NULL;
- 			break;
-@@ -1490,10 +1489,9 @@ static void adm8211_free_rings(struct ieee80211_hw *dev)
- 		if (!priv->rx_buffers[i].skb)
- 			continue;
- 
--		pci_unmap_single(
--			priv->pdev,
--			priv->rx_buffers[i].mapping,
--			RX_PKT_SIZE, PCI_DMA_FROMDEVICE);
-+		dma_unmap_single(&priv->pdev->dev,
-+				 priv->rx_buffers[i].mapping, RX_PKT_SIZE,
-+				 DMA_FROM_DEVICE);
- 
- 		dev_kfree_skb(priv->rx_buffers[i].skb);
- 	}
-@@ -1502,10 +1500,9 @@ static void adm8211_free_rings(struct ieee80211_hw *dev)
- 		if (!priv->tx_buffers[i].skb)
- 			continue;
- 
--		pci_unmap_single(priv->pdev,
-+		dma_unmap_single(&priv->pdev->dev,
- 				 priv->tx_buffers[i].mapping,
--				 priv->tx_buffers[i].skb->len,
--				 PCI_DMA_TODEVICE);
-+				 priv->tx_buffers[i].skb->len, DMA_TO_DEVICE);
- 
- 		dev_kfree_skb(priv->tx_buffers[i].skb);
- 	}
-@@ -1632,9 +1629,9 @@ static int adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
- 	unsigned int entry;
- 	u32 flag;
- 
--	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
--				 PCI_DMA_TODEVICE);
--	if (pci_dma_mapping_error(priv->pdev, mapping))
-+	mapping = dma_map_single(&priv->pdev->dev, skb->data, skb->len,
-+				 DMA_TO_DEVICE);
-+	if (dma_mapping_error(&priv->pdev->dev, mapping))
- 		return -ENOMEM;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -1745,8 +1742,8 @@ static int adm8211_alloc_rings(struct ieee80211_hw *dev)
- 	/* Allocate TX/RX descriptors */
- 	ring_size = sizeof(struct adm8211_desc) * priv->rx_ring_size +
- 		    sizeof(struct adm8211_desc) * priv->tx_ring_size;
--	priv->rx_ring = pci_alloc_consistent(priv->pdev, ring_size,
--					     &priv->rx_ring_dma);
-+	priv->rx_ring = dma_alloc_coherent(&priv->pdev->dev, ring_size,
-+					   &priv->rx_ring_dma, GFP_KERNEL);
- 
- 	if (!priv->rx_ring) {
- 		kfree(priv->rx_buffers);
-@@ -1818,8 +1815,8 @@ static int adm8211_probe(struct pci_dev *pdev,
- 		return err; /* someone else grabbed it? don't disable it */
- 	}
- 
--	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
--	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
-+	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(32)) ||
-+	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32))) {
- 		printk(KERN_ERR "%s (adm8211): No suitable DMA available\n",
- 		       pci_name(pdev));
- 		goto err_free_reg;
-@@ -1929,10 +1926,10 @@ static int adm8211_probe(struct pci_dev *pdev,
- 	kfree(priv->eeprom);
- 
-  err_free_desc:
--	pci_free_consistent(pdev,
--			    sizeof(struct adm8211_desc) * priv->rx_ring_size +
--			    sizeof(struct adm8211_desc) * priv->tx_ring_size,
--			    priv->rx_ring, priv->rx_ring_dma);
-+	dma_free_coherent(&pdev->dev,
-+			  sizeof(struct adm8211_desc) * priv->rx_ring_size +
-+			  sizeof(struct adm8211_desc) * priv->tx_ring_size,
-+			  priv->rx_ring, priv->rx_ring_dma);
- 	kfree(priv->rx_buffers);
- 
-  err_iounmap:
-@@ -1962,10 +1959,10 @@ static void adm8211_remove(struct pci_dev *pdev)
- 
- 	priv = dev->priv;
- 
--	pci_free_consistent(pdev,
--			    sizeof(struct adm8211_desc) * priv->rx_ring_size +
--			    sizeof(struct adm8211_desc) * priv->tx_ring_size,
--			    priv->rx_ring, priv->rx_ring_dma);
-+	dma_free_coherent(&pdev->dev,
-+			  sizeof(struct adm8211_desc) * priv->rx_ring_size +
-+			  sizeof(struct adm8211_desc) * priv->tx_ring_size,
-+			  priv->rx_ring, priv->rx_ring_dma);
- 
- 	kfree(priv->rx_buffers);
- 	kfree(priv->eeprom);
--- 
-2.25.1
-
+--k6gTEIorqqY71VzwKLdepkPhkepWTnb7T--
