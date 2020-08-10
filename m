@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD4BC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2D2C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:27:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D65972080C
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:24:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2B7F22BF3
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:27:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597087448;
-	bh=9i6H2Tin48+twAxQyorX2vTSljyFWWgJukO4sM8Zwzs=;
+	s=default; t=1597087662;
+	bh=zIJWPH1eXUeVm95uS/z9QRiwBsJjl9gSGGz4SxpcTtQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pj7k1KPTzaUL4ufasRWo9IhJNwhlcvJYMNg5mQUbHWdnhfQ/UVjzjXxBdTzX1uJQE
-	 B+8VF+V/EsniUd4ui75fz/FP8OY2GR2zmELrwxLc9K4DpEYvJj9tXQC8sZMofVXxX7
-	 PI52mcJEgY9o0Qhj3FDBFQ6fqtTo+AY1WcAahz9Y=
+	b=hEKktp3y9fsXTIpWfaHZbQzPHcRTtqFUlfmv51NRJ2E3J3CpmTAxXgrL2oOBtaHqu
+	 iQsCCl2lM2cZEvNScNfeSJ2wlLCXUvngzv18XXXfZTvufjXRgnQANmjxAXFN0hqewV
+	 lvyoFfjzQb8+jlh2jIpnGwcrhV88PunQeZZSdk3U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729874AbgHJTX5 (ORCPT
+        id S1729296AbgHJTL0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Aug 2020 15:23:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42756 "EHLO mail.kernel.org"
+        Mon, 10 Aug 2020 15:11:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729593AbgHJTMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Aug 2020 15:12:41 -0400
+        id S1729097AbgHJTLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Aug 2020 15:11:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9DDE222B49;
-        Mon, 10 Aug 2020 19:12:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4382F21775;
+        Mon, 10 Aug 2020 19:11:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597086759;
-        bh=9i6H2Tin48+twAxQyorX2vTSljyFWWgJukO4sM8Zwzs=;
+        s=default; t=1597086684;
+        bh=zIJWPH1eXUeVm95uS/z9QRiwBsJjl9gSGGz4SxpcTtQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B39wYx6cnHPZDLUyDX8+w9A2KQUPUQsAypazYzj7Poz72a2U6eH8qyAeCuCJtS50g
-         ASSgnDxNlynsQ9rJPIoffzBDbHm+9dZv40ngtFN9LpkQntXWsQeDZ7YpCWouI2mc+H
-         /CfjEjVS1qTe6C0bqw93yr/yX6dSCM4h5DSbBD5s=
+        b=pOMBGaD7yfn6RbP5szlTDg1RoX/1dkxgxB7r4ioDC5K6s02xbKMbC6Y6XsvcV4YN7
+         cbB10MpzfBHfKo3lUqKF6Gq+W/NCUxGOIxAUIESUjpd7gx4u9RNOhd0zJTTssI3Zj+
+         h2NdqkZ8TUQAaCFk3HRWAV0v0DSgZ0KA6+Frgn9w=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wright Feng <wright.feng@cypress.com>,
@@ -49,12 +49,12 @@ Cc:     Wright Feng <wright.feng@cypress.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 32/45] brcmfmac: set state of hanger slot to FREE when flushing PSQ
-Date:   Mon, 10 Aug 2020 15:11:40 -0400
-Message-Id: <20200810191153.3794446-32-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 40/60] brcmfmac: set state of hanger slot to FREE when flushing PSQ
+Date:   Mon, 10 Aug 2020 15:10:08 -0400
+Message-Id: <20200810191028.3793884-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200810191153.3794446-1-sashal@kernel.org>
-References: <20200810191153.3794446-1-sashal@kernel.org>
+In-Reply-To: <20200810191028.3793884-1-sashal@kernel.org>
+References: <20200810191028.3793884-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -115,7 +115,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 2bd892df83cc5..eadc64454839d 100644
+index 8cc52935fd413..948840b4e38e3 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
 @@ -643,6 +643,7 @@ static inline int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
