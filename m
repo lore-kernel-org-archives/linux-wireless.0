@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B369C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:15:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69080C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:16:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 428E1207FF
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:15:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2872D2080C
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:16:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597086958;
-	bh=RYKXhrn6ZF+MK1Oo2SpdcneoS8H8JLGPx3YQJ8SZw50=;
+	s=default; t=1597087016;
+	bh=an2qDyvexFxr4rBh8yzEGHY2b5T586DGONdlqCE5QIM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mGyiAWuNzNlFPQihG287Sn8PzKS04vNiEqJTUNxTHUMkJXnj5bbIglQgy84jubyn1
-	 dbE0nAcf0oFPwXv5kIgm05shKQdR3QydmVgp62vlpZmkMHrFJOSF8nkV30Q9wPUCyK
-	 sQxva6coXP4FoAQLnHidoefJ720Z2calfSEUkFYc=
+	b=BBi/v5H3VXCtOCk9cVypC+oygmQCrxcSRvZww29TQrSkFUgGvHnbLiORLhexR9ov9
+	 WHBN5noE1pJBLlm/5EXGJpLk22Kr3lZy1dckUI//k9RX0gO/WmKpoF0+ztesKr83m9
+	 5gelQNAVTk4RPDVt+HBx6qssTCYLQ7N7rbKjTyYI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730134AbgHJTPB (ORCPT
+        id S1729855AbgHJTQv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Aug 2020 15:15:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47636 "EHLO mail.kernel.org"
+        Mon, 10 Aug 2020 15:16:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46868 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730125AbgHJTO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Aug 2020 15:14:58 -0400
+        id S1730036AbgHJTOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Aug 2020 15:14:34 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DA03A22CA1;
-        Mon, 10 Aug 2020 19:14:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2A0F722C9E;
+        Mon, 10 Aug 2020 19:14:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597086898;
-        bh=RYKXhrn6ZF+MK1Oo2SpdcneoS8H8JLGPx3YQJ8SZw50=;
+        s=default; t=1597086873;
+        bh=an2qDyvexFxr4rBh8yzEGHY2b5T586DGONdlqCE5QIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ShFxMi9gfXmxe9CFYsVdqJ/dFR2fnPvIQz/rTUI06wskmD9mY4yEVA93UuPVHVrqr
-         bSJn1o0XdOUlapH+TWakMBd9p6heQKuZ5SISf9LkR8X2lZbyHUwrcr78St72Y0D8Hb
-         kz/AENkrUpsQc3TjNhn7QXZk49vLbhDWUABkib/Y=
+        b=fCA62dI73dTMum8I+wgANHDED3NCJvF7ztmYN4uV22yw23nBHJ/8cR/sS/lTWZ33N
+         Kx7mWOq5e5rwuUo23sYB4ZoOPVokYTuMeMcxF8gnB+7telbrdRUccnazbNceHt9P31
+         AyoGZzB37HqD5AiQTjPvXvK2b/EfIgQACumYc788=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Prasanna Kerekoppa <prasanna.kerekoppa@cypress.com>,
@@ -46,13 +46,15 @@ Cc:     Prasanna Kerekoppa <prasanna.kerekoppa@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 09/16] brcmfmac: To fix Bss Info flag definition Bug
-Date:   Mon, 10 Aug 2020 15:14:36 -0400
-Message-Id: <20200810191443.3795581-9-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 10/17] brcmfmac: To fix Bss Info flag definition Bug
+Date:   Mon, 10 Aug 2020 15:14:11 -0400
+Message-Id: <20200810191418.3795394-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200810191443.3795581-1-sashal@kernel.org>
-References: <20200810191443.3795581-1-sashal@kernel.org>
+In-Reply-To: <20200810191418.3795394-1-sashal@kernel.org>
+References: <20200810191418.3795394-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,13 +79,13 @@ Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Link: https://lore.kernel.org/r/20200604071835.3842-6-wright.feng@cypress.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index 4320c4cae53e1..7eb9f31dde1a2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 59013572fbe3f..d6a4a08fd3c44 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
 @@ -30,7 +30,7 @@
  #define BRCMF_ARP_OL_PEER_AUTO_REPLY	0x00000008
  
