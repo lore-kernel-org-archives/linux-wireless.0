@@ -5,56 +5,53 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E84C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A62FC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:21:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92E0C22B47
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:20:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45D0122CF6
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:21:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597087204;
-	bh=ol2mVve6eFfgKC4fO+t6H8muDmioQ64l/6eQK9evxu8=;
+	s=default; t=1597087265;
+	bh=P6arwzrIw0WOUUAoc7OYWctn1HzcRdYuWCh63ElO2eA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R40hdSjFu3ikQ9ZlOYtwcb7kMpiqoUBX2DcsOBi802DQrVZ4JIHrZWUY+XV6LYFWP
-	 IioNRR+Z7Sa2XPUUhchjq/QnmVh2BkBPhVXeT2/RxhOhSaDnN9L/vODdv8Z73JfJr9
-	 MuwWXkQU4yIsjyZroNqLhwK/NBQyT3IUJvlGbZTA=
+	b=aVF1r/1yuk4bpuMi+5DXOzaOLzAbCjdzkIOdipveAZfBoOM+kAOxJ7j4D8JkJisNN
+	 Oh5Na+rN5VAa1ra94bNij4BeQDPKh6mFoz6xsDeg2La1AbFvp/W49Jci9mnCXMBmhd
+	 puzd9v2gsgx2sLEkkkA98AdQ0IlgOn2uVILs22UY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729768AbgHJTUB (ORCPT
+        id S1729667AbgHJTVD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Aug 2020 15:20:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45774 "EHLO mail.kernel.org"
+        Mon, 10 Aug 2020 15:21:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44624 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729928AbgHJTOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Aug 2020 15:14:02 -0400
+        id S1729787AbgHJTNc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Aug 2020 15:13:32 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 143E122D04;
-        Mon, 10 Aug 2020 19:14:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F2D1322B49;
+        Mon, 10 Aug 2020 19:13:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597086842;
-        bh=ol2mVve6eFfgKC4fO+t6H8muDmioQ64l/6eQK9evxu8=;
+        s=default; t=1597086811;
+        bh=P6arwzrIw0WOUUAoc7OYWctn1HzcRdYuWCh63ElO2eA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DRmuN8G3jQ1li14w3MLpqV28+d+9UtjgXC1lFZEUYNg3fLuZ0swZyQVI3Ie0v8cZ+
-         tqKlNU3QapUjZSnTwbqjztIleyMy9BiYW0Bk63N28bBlXXQM+/D/RWyDEmCz9cqIf+
-         UCtKRfFURU1zeu4b8yFz6FJngFvMR2guqtP+wL34=
+        b=G/G3XKTqWgl7buFST0EljNRwL0ltHjme6x5XuB4i4epzK699pvIHuN89rTke1Pqzj
+         AbBuj8SRGbdD6M0pQFkgCeSL6jLJsK2VYZdKH6l/cXgLe2JLel8Pvi7Pr6NP3Zamth
+         2UugI1tzH5KXC5bm1hsU9nIoNi1PprBDivVDFrg4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Prasanna Kerekoppa <prasanna.kerekoppa@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 12/22] brcmfmac: To fix Bss Info flag definition Bug
-Date:   Mon, 10 Aug 2020 15:13:34 -0400
-Message-Id: <20200810191345.3795166-12-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 22/31] iwlegacy: Check the return value of pcie_capability_read_*()
+Date:   Mon, 10 Aug 2020 15:12:50 -0400
+Message-Id: <20200810191259.3794858-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200810191345.3795166-1-sashal@kernel.org>
-References: <20200810191345.3795166-1-sashal@kernel.org>
+In-Reply-To: <20200810191259.3794858-1-sashal@kernel.org>
+References: <20200810191259.3794858-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -64,37 +61,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Prasanna Kerekoppa <prasanna.kerekoppa@cypress.com>
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-[ Upstream commit fa3266541b13f390eb35bdbc38ff4a03368be004 ]
+[ Upstream commit 9018fd7f2a73e9b290f48a56b421558fa31e8b75 ]
 
-Bss info flag definition need to be fixed from 0x2 to 0x4
-This flag is for rssi info received on channel.
-All Firmware branches defined as 0x4 and this is bug in brcmfmac.
+On failure pcie_capability_read_dword() sets it's last parameter, val
+to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
+failure. This would introduce a bug because (x & x) == (~0 & x).
 
-Signed-off-by: Prasanna Kerekoppa <prasanna.kerekoppa@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
+This bug can be avoided without changing the function's behaviour if the
+return value of pcie_capability_read_dword is checked to confirm success.
+
+Check the return value of pcie_capability_read_dword() to ensure success.
+
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200604071835.3842-6-wright.feng@cypress.com
+Link: https://lore.kernel.org/r/20200713175529.29715-3-refactormyself@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index e0d22fedb2b45..05bd636011ec9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -30,7 +30,7 @@
- #define BRCMF_ARP_OL_PEER_AUTO_REPLY	0x00000008
- 
- #define	BRCMF_BSS_INFO_VERSION	109 /* curr ver of brcmf_bss_info_le struct */
--#define BRCMF_BSS_RSSI_ON_CHANNEL	0x0002
-+#define BRCMF_BSS_RSSI_ON_CHANNEL	0x0004
- 
- #define BRCMF_STA_WME              0x00000002      /* WMM association */
- #define BRCMF_STA_AUTHE            0x00000008      /* Authenticated */
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index e16f2597c2199..c1c1cf330de7f 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -4302,8 +4302,8 @@ il_apm_init(struct il_priv *il)
+ 	 *    power savings, even without L1.
+ 	 */
+ 	if (il->cfg->set_l0s) {
+-		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
++		ret = pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
++		if (!ret && (lctl & PCI_EXP_LNKCTL_ASPM_L1)) {
+ 			/* L1-ASPM enabled; disable(!) L0S  */
+ 			il_set_bit(il, CSR_GIO_REG,
+ 				   CSR_GIO_REG_VAL_L0S_ENABLED);
 -- 
 2.25.1
 
