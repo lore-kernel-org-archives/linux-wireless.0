@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D153CC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B2C5C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:15:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9925022B47
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:14:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9D6422B49
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:15:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597086879;
-	bh=Oxz/pHHOfZu6DDktw0jpD77BvgosJPVmTpZamkfr8Jo=;
+	s=default; t=1597086903;
+	bh=uk29GL4coUtLWOOTzRqG3SuII1bqfwPuOXtVJvyFpM4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Hv0tnWaRsg/EvCRXSX0ZRWWIvWJ/dnILGR6hYIct488JTi8nAHd+BjUHRzt2JNkA1
-	 1AfTkYNxYI0liqjDIWG6FnLPq+3FZSvndO9A3tAcNEZ0ee4aAslzG8B4AdXvsWdiz3
-	 +4rkFTFLrreSnqZBRFbEN3KlMd9AiGsqwoAo/5dk=
+	b=u2n5mjSfEFfU6E8v05a0LjxLLI+VMTmJRgFY5tyvj3fZVzWCvCOW9LTItF7lN6VRf
+	 E26vL7NrzUiU98zO/BnFeQ6cnebB4vL+Z/e9Hql8aXTx7WeoObDyLvORSUGndZaISE
+	 f+gFJBhpJzq23eCqHr511EHRegKfWBZofCEPb39U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730050AbgHJTOh (ORCPT
+        id S1729429AbgHJTPC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Aug 2020 15:14:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46946 "EHLO mail.kernel.org"
+        Mon, 10 Aug 2020 15:15:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47712 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730043AbgHJTOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Aug 2020 15:14:35 -0400
+        id S1730127AbgHJTPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Aug 2020 15:15:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DF51B22CA1;
-        Mon, 10 Aug 2020 19:14:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7B94E22CAF;
+        Mon, 10 Aug 2020 19:14:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597086874;
-        bh=Oxz/pHHOfZu6DDktw0jpD77BvgosJPVmTpZamkfr8Jo=;
+        s=default; t=1597086899;
+        bh=uk29GL4coUtLWOOTzRqG3SuII1bqfwPuOXtVJvyFpM4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t4ueJNhbRS4y9xvEH1K8LRM4+XnlxEoNauA1YHwbwjVm6yaASZ7ijSWLDjx57TQZj
-         HN88lWM8GG3TmHTN2Yof6cH06X7zUTsDzMInadBEPswnU+HMwp7n/1YVm8G/FRprwy
-         oZNpWSjZxs1ZbtFO9D4PsHqbKv2iRgbMyb3QD8xI=
+        b=PpzKaeUT5zzItKZGQBosQAaLBIn+TU2Or8OwUYOKBaRwnLTO5sUnjMlKoOxOTGSX6
+         hdL/opnIuR90RH47Bz3gBFVWMCT3wodA7N9GRlk+Lc+wF9JQK0EzfU5lLXVsbCSCEO
+         kkj7A4F0tgRPP1sU/yiVpASHv5nmOMweK5QkY6dY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
@@ -46,12 +46,12 @@ Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 11/17] iwlegacy: Check the return value of pcie_capability_read_*()
-Date:   Mon, 10 Aug 2020 15:14:12 -0400
-Message-Id: <20200810191418.3795394-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 10/16] iwlegacy: Check the return value of pcie_capability_read_*()
+Date:   Mon, 10 Aug 2020 15:14:37 -0400
+Message-Id: <20200810191443.3795581-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200810191418.3795394-1-sashal@kernel.org>
-References: <20200810191418.3795394-1-sashal@kernel.org>
+In-Reply-To: <20200810191443.3795581-1-sashal@kernel.org>
+References: <20200810191443.3795581-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,14 +80,14 @@ Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Link: https://lore.kernel.org/r/20200713175529.29715-3-refactormyself@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+ drivers/net/wireless/iwlegacy/common.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index db2373fe8ac32..55573d090503b 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4302,8 +4302,8 @@ il_apm_init(struct il_priv *il)
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 544ab3750ea6e..c56febdae1349 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4294,8 +4294,8 @@ il_apm_init(struct il_priv *il)
  	 *    power savings, even without L1.
  	 */
  	if (il->cfg->set_l0s) {
