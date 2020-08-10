@@ -7,53 +7,51 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17B01C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4C5BC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:31:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D81012080C
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C90C22B47
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Aug 2020 19:31:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597087677;
-	bh=KOJL2c+I4mdDAdRYWnBoY+tYmEj3vH857XWtspWJIuY=;
+	s=default; t=1597087910;
+	bh=0hpCvABZStLplECItoq4E4rTIl3EAyzd0ZRKA+1fl1o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Sita5DXfYv/tvP+e7QptG1CbrtVuX9jkaqy01VNE5/ZO3PcYVJ3pNme95JQxZPFhh
-	 ZRqi4Fc2BPpXFbQZekfdW6eXb+oXnEIYpysMbz0WrkdFxghi5SV4xQe7mSPhl/E6y0
-	 54R/K4b3vtI63rufm0jDl9BLCN7VCK+zZh5nE3Ng=
+	b=Aul0aFNHIiVwgnwEQxSVC+tRY43eHChIcQEi71fDMxX7/uHETdhbgxSlssdvsv6Tr
+	 P101atZBNXzX/6aY4B3+DsZV44Xt6O+OB2w6SBuKi4BA5sIDAu5Tt5NSl9t+6Tpv9v
+	 29t03qr1Go1BSYLzezZLin8u3OEsR042f+sLUH1c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729263AbgHJTLX (ORCPT
+        id S1730343AbgHJTbk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Aug 2020 15:11:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39666 "EHLO mail.kernel.org"
+        Mon, 10 Aug 2020 15:31:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37052 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728321AbgHJTLW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Aug 2020 15:11:22 -0400
+        id S1728800AbgHJTKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Aug 2020 15:10:03 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E466422B49;
-        Mon, 10 Aug 2020 19:11:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 210B021775;
+        Mon, 10 Aug 2020 19:10:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597086681;
-        bh=KOJL2c+I4mdDAdRYWnBoY+tYmEj3vH857XWtspWJIuY=;
+        s=default; t=1597086603;
+        bh=0hpCvABZStLplECItoq4E4rTIl3EAyzd0ZRKA+1fl1o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mdlUxqOXOptSrq8khQw9Ix2M9u1dfy4XpRWQkwyAu10dYPZSKfyfLTArDntn5jaYc
-         TFbx0eRnhPRCIPqWbeRouOT9yMqs6fuimpOBl8Yf5cePf8AW6UFh6Q40YWmk6+cEAz
-         lsTtB8TD0iv2Am0dCEzQ75qNFuzkVVIEiu/ITlsY=
+        b=BWmzyrbkx8aRiC3NFHBYqO0QJWgYJHAOrVp/ciahzhXXCThS+hECezdXIXDS8fYoX
+         UrQ/R1voeeC3cJ+sv0qPOk0BBboZBqEVy9fL96Ncy34M+XNydBerAz407rOrIir45i
+         TgJpl+TOs7BqnlFjvEPcgnlbTFfdgdUvi7qhBUH4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wright Feng <wright.feng@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
+Cc:     Bolarinwa Olayemi Saheed <refactormyself@gmail.com>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 38/60] brcmfmac: keep SDIO watchdog running when console_interval is non-zero
-Date:   Mon, 10 Aug 2020 15:10:06 -0400
-Message-Id: <20200810191028.3793884-38-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 46/64] iwlegacy: Check the return value of pcie_capability_read_*()
+Date:   Mon, 10 Aug 2020 15:08:41 -0400
+Message-Id: <20200810190859.3793319-46-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200810191028.3793884-1-sashal@kernel.org>
-References: <20200810191028.3793884-1-sashal@kernel.org>
+In-Reply-To: <20200810190859.3793319-1-sashal@kernel.org>
+References: <20200810190859.3793319-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,42 +61,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wright Feng <wright.feng@cypress.com>
+From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 
-[ Upstream commit eccbf46b15bb3e35d004148f7c3a8fa8e9b26c1e ]
+[ Upstream commit 9018fd7f2a73e9b290f48a56b421558fa31e8b75 ]
 
-brcmfmac host driver makes SDIO bus sleep and stops SDIO watchdog if no
-pending event or data. As a result, host driver does not poll firmware
-console buffer before buffer overflow, which leads to missing firmware
-logs. We should not stop SDIO watchdog if console_interval is non-zero
-in debug build.
+On failure pcie_capability_read_dword() sets it's last parameter, val
+to 0. However, with Patch 14/14, it is possible that val is set to ~0 on
+failure. This would introduce a bug because (x & x) == (~0 & x).
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+This bug can be avoided without changing the function's behaviour if the
+return value of pcie_capability_read_dword is checked to confirm success.
+
+Check the return value of pcie_capability_read_dword() to ensure success.
+
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200604071835.3842-4-wright.feng@cypress.com
+Link: https://lore.kernel.org/r/20200713175529.29715-3-refactormyself@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 3a08252f1a53f..0dbbb467c2291 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3689,7 +3689,11 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- 			if (bus->idlecount > bus->idletime) {
- 				brcmf_dbg(SDIO, "idle\n");
- 				sdio_claim_host(bus->sdiodev->func1);
--				brcmf_sdio_wd_timer(bus, false);
-+#ifdef DEBUG
-+				if (!BRCMF_FWCON_ON() ||
-+				    bus->console_interval == 0)
-+#endif
-+					brcmf_sdio_wd_timer(bus, false);
- 				bus->idlecount = 0;
- 				brcmf_sdio_bus_sleep(bus, true, false);
- 				sdio_release_host(bus->sdiodev->func1);
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 348c17ce72f5c..f78e062df572a 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -4286,8 +4286,8 @@ il_apm_init(struct il_priv *il)
+ 	 *    power savings, even without L1.
+ 	 */
+ 	if (il->cfg->set_l0s) {
+-		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
++		ret = pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
++		if (!ret && (lctl & PCI_EXP_LNKCTL_ASPM_L1)) {
+ 			/* L1-ASPM enabled; disable(!) L0S  */
+ 			il_set_bit(il, CSR_GIO_REG,
+ 				   CSR_GIO_REG_VAL_L0S_ENABLED);
 -- 
 2.25.1
 
