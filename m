@@ -2,570 +2,232 @@ Return-Path: <SRS0=WbHW=BV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1055AC433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2263DC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:35:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E508120656
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:01:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7D3A20658
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:35:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="jmHUfse7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728358AbgHKIB0 (ORCPT
+        id S1728322AbgHKIfc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Aug 2020 04:01:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47588 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728350AbgHKIBW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Aug 2020 04:01:22 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F00EC06178A
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2020 01:01:22 -0700 (PDT)
-Received: from [149.224.185.155] (helo=bertha9.lan)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1k5PDh-0002ig-PR; Tue, 11 Aug 2020 10:01:17 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH V4 4/5] mac80211: add support for BSS coloring
-Date:   Tue, 11 Aug 2020 10:01:06 +0200
-Message-Id: <20200811080107.3615705-4-john@phrozen.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200811080107.3615705-1-john@phrozen.org>
-References: <20200811080107.3615705-1-john@phrozen.org>
-MIME-Version: 1.0
+        Tue, 11 Aug 2020 04:35:32 -0400
+Received: from mail-eopbgr760124.outbound.protection.outlook.com ([40.107.76.124]:57984
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728253AbgHKIfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Aug 2020 04:35:31 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MkTp/h+C9auKv+tvWa32qi+eY+f9YhqyXxWr3zFZkQUytu3KZN5SmYB+o+s0Q1+BWxSIty1LVZLdtkiuTghHFo5UZxswMrqnagrBihEHQdW43ZSZ4gh2WjHR6WeKdYqfaxVarJTT+uuZlyAf8BP4P9+3lSZKMPn2JjSo3n7UIXi2X9ll1DAviLug+LqOhAOhWiPClt6DQvAt4ZDM89H7siYQF02+O/ZhYtryAoTamJUVyeSUGt2U5ShQmTcYvqKm7CtXPA3J05BYwR0wq0ag1cULAuVPTbYf2JilKQQUH5n6dCjOfy0m+aCnK9nQ9JDoZszWNo2a+oRUPpW+/M5qTw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PK3pqEazXJ+afZtXStUKuOJZw4qTOmTmWwNTjUy57Eo=;
+ b=RS3dDC/YzTitXa5b+/+XiBohDt49tv4Fnt259plr4/GwcljoqAGHElRXCAgKVailU504kww0zJmJhL56dObkEA4n6M0NRXzk+wewDOhPnaCFVM8p9XGw6yzrQBDF7S55N5K6gcqWaLJSgtDx0JUxqUX9P102yqaHcC+u7K6WI5rOF6um81ZADCpK2cV3eTYXlMtOj3kofMhWV7Btj+xhu/GL54hJSQOCdwojD2wodWjl/Fg3AyFhFYr1rVL5eONBWcBS3vc82UMrOWM8vCQfJ27btFoejfpVrX5Nztany/GWX8ji7Rj0l35/qatawld+3qTszWZzs1DIyfyYeX43Tw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PK3pqEazXJ+afZtXStUKuOJZw4qTOmTmWwNTjUy57Eo=;
+ b=jmHUfse7lXt0x31Zx3tzB/8xFgNs075TWI9CQ8er1mEaWvDCB/UKK9uMEBQyideppPL8BMAOWKzIR1nAqRr3FuUIqiuA3BQOiNSdNl0R2tfRPq6ksOc84QeTyhCHANopjrFD9ubcqtElQ4tyl903Ya++3cQcaa4FVpVCLGqGRGQ=
+Authentication-Results: cypress.com; dkim=none (message not signed)
+ header.d=none;cypress.com; dmarc=none action=none header.from=cypress.com;
+Received: from BN8PR06MB5889.namprd06.prod.outlook.com (2603:10b6:408:c2::25)
+ by BN8PR06MB5618.namprd06.prod.outlook.com (2603:10b6:408:65::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.19; Tue, 11 Aug
+ 2020 08:35:28 +0000
+Received: from BN8PR06MB5889.namprd06.prod.outlook.com
+ ([fe80::d82b:5f42:b7a8:d819]) by BN8PR06MB5889.namprd06.prod.outlook.com
+ ([fe80::d82b:5f42:b7a8:d819%3]) with mapi id 15.20.3261.024; Tue, 11 Aug 2020
+ 08:35:28 +0000
+Subject: Re: [PATCH V2 3/6] brcmfmac: reserve 2 credits for host tx control
+ path
+To:     Dmitry Osipenko <digetx@gmail.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Amar Shankar <amsr@cypress.com>,
+        Jia-Shyr Chuang <joseph.chuang@cypress.com>
+References: <20200610152106.175257-1-chi-hsien.lin@cypress.com>
+ <20200610152106.175257-4-chi-hsien.lin@cypress.com>
+ <f0910f96-1d23-daf1-b517-363e59bff105@gmail.com>
+ <875z9yr7lg.fsf@codeaurora.org>
+ <ffcf55cc-b27d-78ec-ff4f-e7efa3087712@gmail.com>
+ <87a6zapbqp.fsf@codeaurora.org>
+ <0923f45f-03e3-a870-3d2a-35f982482e1a@cypress.com>
+ <bed18d45-6119-53da-2b9c-d98d121c8298@gmail.com>
+From:   Wright Feng <wright.feng@cypress.com>
+Message-ID: <a7aaf6ac-d6df-ab57-4939-474b542f007c@cypress.com>
+Date:   Tue, 11 Aug 2020 16:35:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
+In-Reply-To: <bed18d45-6119-53da-2b9c-d98d121c8298@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: BYAPR11CA0064.namprd11.prod.outlook.com
+ (2603:10b6:a03:80::41) To BN8PR06MB5889.namprd06.prod.outlook.com
+ (2603:10b6:408:c2::25)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.5.77] (122.116.94.118) by BYAPR11CA0064.namprd11.prod.outlook.com (2603:10b6:a03:80::41) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.17 via Frontend Transport; Tue, 11 Aug 2020 08:35:25 +0000
+X-Originating-IP: [122.116.94.118]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: 212be75a-2be3-4a25-d667-08d83dd18024
+X-MS-TrafficTypeDiagnostic: BN8PR06MB5618:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN8PR06MB56188780FB1A279C6B7C8F32FB450@BN8PR06MB5618.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 9ESs10BdqdJ88yjCpsEOL6Z6sLKgnoe7Wc4aQkuk22G/46SfA3Zfd48nlrgsnT/LLrqoIw2xTLcME1xHKULs3OtaYm/+rPyI8N0B1jSKc/xT5bQIC6MiP1zJ/kTWu5wFeQwp63TI3GX3dczzA6EtiZRPbI9lIoBDI/YEkroObY4pMXY9MKiOb9ydc8MdLEz7MBjKlWErO5PBrpTbB+t0DPoORa0kEQSpHYqdJniVIiJ1KnnKdFEfHBzbvFFh3tilqC7fXJ6PQRqX3h2kmZtuK98B0yJsQ4dYrJH1YSdWIlj+naHi9U2kSlcve1tiisPpndFyiHYqdmwlVwnpu7xVLh7EiaKzmbtJLd8rVGCNaxXT0W09oNca5CSMKoOmHh5Z
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR06MB5889.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(396003)(366004)(39860400002)(346002)(376002)(4326008)(66476007)(107886003)(66556008)(8676002)(44832011)(6666004)(31686004)(86362001)(2906002)(186003)(2616005)(956004)(83380400001)(16526019)(478600001)(5660300002)(53546011)(54906003)(36756003)(31696002)(110136005)(26005)(52116002)(8936002)(316002)(16576012)(66946007)(6486002)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: On1WdSX6fX5Ruj/IKkn/ER4caW37G1UJY1Ivbcc1bxiqEjvLshuLbQfxtiUDgJ9lfs6g41zsU5X6kjoYiPxAPF/c/CA649/YqFZy6zSYbgar3yQbBVovvFeblkgU++bphQVX5X5PPg2WLQi8fl3obZp1+wMWddvAkUt8oULkSi6V6VK81k7dyT9r4w896Rz1tpo67bDP1QZDmpk+KzFSERqE+7cfbWwPxSe/KR/h4pMoXmbWs5OhyC+AQTVlXVE5mVBUFc1T5eNjItWFWiLMmAn87tzHwhIsnREaCtw57s3pu0EBsEz+5iFWVFRtwD1iIx16Vh8NMHOeCFa8RzU6dNPxLlfhVoK4zc+/854BKHFhr/BhDBX5k8PB0PnESMTechn5oN2slPZPj60vT/OyBBou9vJxzmRYgaGD+H+51KDkYjI5WOdZOphe0ocUv97Fj22xAYe3tGlbqB7sCILNVuY528shSVv1Xth3dm0tgo2p/w4vTzyj4npqCHzGItiYvRYI3/ba03syce7TL0wXS03bwC3TA7ZktHC4pOQHjht7R7uaEqHvtHlqr8mNnuVFY/bwDUqnkH36mzet7EF9PYvxUg3BR9mZGK+smlYfLOpaZqTapNSWetTa/vQ/DtHOpzKudFU4S5OHwq0c1R7Hvg==
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 212be75a-2be3-4a25-d667-08d83dd18024
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR06MB5889.namprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Aug 2020 08:35:28.4060
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9UgWmuUVCC+QyvmA3CeyJ0gs1CEt4ssRXfONctNijLxsyEW7hmX1NhDstyH3tR6iRd1URXVrg0iZAyO02bzJEQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR06MB5618
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The CCA (color change announcement) is very similar to how CSA works where
-we have an IE that includes a counter. When the counter hits 0, the new
-color is applied via an updated beacon.
 
-This patch makes the CSA counter functionality reusable, rather than
-implementing it again. This also allows for future reuse incase support
-for other counter IEs gets added.
 
-Signed-off-by: John Crispin <john@phrozen.org>
+Dmitry Osipenko 於 8/5/2020 10:01 PM 寫道:
+> 05.08.2020 11:24, Chi-Hsien Lin пишет:
+>>
+>> On 8/5/2020 1:22 AM, Kalle Valo wrote:
+>>> Dmitry Osipenko <digetx@gmail.com> writes:
+>>>
+>>>> 04.08.2020 14:08, Kalle Valo пишет:
+>>>>> Dmitry Osipenko <digetx@gmail.com> writes:
+>>>>>
+>>>>>> 10.06.2020 18:21, Chi-Hsien Lin пишет:
+>>>>>>> From: Amar Shankar <amsr@cypress.com>
+>>>>>>>
+>>>>>>> It is observed that sometimes when sdiod is low in tx credits in low
+>>>>>>> rssi scenarios, the data path consumes all sdiod rx all credits and
+>>>>>>> there is no sdiod rx credit available for control path causing host
+>>>>>>> and card to go out of sync resulting in link loss between host and
+>>>>>>> card. So in order to prevent it some credits are reserved for control
+>>>>>>> path.
+>>>>>>>
+>>>>>>> Note that TXCTL_CREDITS can't be larger than the firmware default
+>>>>>>> credit update threshold 2; otherwise there will be a deadlock for
+>>>>>>> both
+>>>>>>> side waiting for each other.
+>>>>>>>
+>>>>>>> Signed-off-by: Amar Shankar <amsr@cypress.com>
+>>>>>>> Signed-off-by: Jia-Shyr Chuang <joseph.chuang@cypress.com>
+>>>>>>> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>>>>> [...]
+>>>>>
+>>>>>> This patch causes a severe WiFi performance regression on BCM4329.
+>>>>>> Please fix or revert this patch, thanks in advance.
+>>>>>>
+>>>>>> Before this patch:
+>>>>>> - - - - - - - - - - - - - - - - - - - - - - - - -
+>>>>>> [ ID] Interval           Transfer     Bitrate         Retr
+>>>>>> [  5]   0.00-10.00  sec  17.2 MBytes  14.4 Mbits/sec
+>>>>>> 0             sender
+>>>>>> [  5]   0.00-10.04  sec  16.9 MBytes  14.1 Mbits/sec
+>>>>>> receiver
+>>>>>>
+>>>>>>
+>>>>>> After this patch:
+>>>>>> - - - - - - - - - - - - - - - - - - - - - - - - -
+>>>>>> [ ID] Interval           Transfer     Bitrate         Retr
+>>>>>> [  5]   0.00-10.00  sec  1.05 MBytes   881 Kbits/sec
+>>>>>> 3             sender
+>>>>>> [  5]   0.00-14.01  sec   959 KBytes   561 Kbits/sec
+>>>>>> receiver
+>>>>> Can someone please send a revert patch (with the explanation above)
+>>>>> if a
+>>>>> fix is not quickly found? The commit id is:
+>>>>>
+>>>>> commit b41c232d33666191a1db11befc0f040fcbe664e9
+>>>>> Author:     Amar Shankar <amsr@cypress.com>
+>>>>> AuthorDate: Wed Jun 10 10:21:03 2020 -0500
+>>>>> Commit:     Kalle Valo <kvalo@codeaurora.org>
+>>>>> CommitDate: Tue Jul 14 12:46:43 2020 +0300
+>>>>>
+>>>>>       brcmfmac: reserve 2 credits for host tx control path
+>>>>>
+>>>> Hello Kalle,
+>>>>
+>>>> I'll send the revert if nobody will stand up to address the problem in a
+>>>> two weeks, thanks.
+>>> Thanks. Then I should be able to get the revert to v5.9 so that the
+>>> release won't be broken. (v5.8 is unaffected)
+>>
+>> Dmitry/Kalle,
+>>
+>> We'll take a look and revert/fix it in a few days.
+> 
+> Good to know, thank you.
+> 
+Hi Dmitry,
+We have a fix for this issue. But we got the different test result 
+numbers from yours, so would you help us verify the same with
+following patch in your setup?
+With your confirmation, I can make sure we see the same issue.
+
 ---
- include/net/mac80211.h     |  28 +++++
- net/mac80211/cfg.c         | 227 +++++++++++++++++++++++++++++++++++--
- net/mac80211/ieee80211_i.h |  12 ++
- net/mac80211/iface.c       |   3 +
- net/mac80211/tx.c          |  24 ++--
- 5 files changed, 276 insertions(+), 18 deletions(-)
+  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 9 +++++++--
+  1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ec148b3e9c41..f0ae718633d2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1645,6 +1645,10 @@ enum ieee80211_vif_flags {
-  * @txq: the multicast data TX queue (if driver uses the TXQ abstraction)
-  * @txqs_stopped: per AC flag to indicate that intermediate TXQs are stopped,
-  *	protected by fq->lock.
-+ * @cca_active: marks whether a color change is going on. Internally it is
-+ *	write-protected by sdata_lock and local->mtx so holding either is fine
-+ *	for read access.
-+ * @cca_color: the color that we will have after the change.
-  */
- struct ieee80211_vif {
- 	enum nl80211_iftype type;
-@@ -1672,6 +1676,9 @@ struct ieee80211_vif {
- 
- 	bool txqs_stopped[IEEE80211_NUM_ACS];
- 
-+	bool cca_active;
-+	u8 cca_color;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c 
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index e8712ad3ac45..ea07bb1bfe27 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -664,8 +664,13 @@ static void pkt_align(struct sk_buff *p, int len, 
+int align)
+  /* To check if there's window offered */
+  static bool data_ok(struct brcmf_sdio *bus)
+  {
+-	/* Reserve TXCTL_CREDITS credits for txctl */
+-	return (bus->tx_max - bus->tx_seq) > TXCTL_CREDITS &&
++	u8 tx_rsv = 0;
 +
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-@@ -4890,6 +4897,16 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif);
-  */
- bool ieee80211_beacon_cntdwn_is_complete(struct ieee80211_vif *vif);
- 
-+/**
-+ * ieee80211_cca_finish - notify mac80211 about color change
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * After a color change announcement was scheduled and the counter in this
-+ * announcement hits 1, this function must be called by the driver to
-+ * notify mac80211 that the color can be changed
-+ */
-+void ieee80211_cca_finish(struct ieee80211_vif *vif);
++	/* Reserve TXCTL_CREDITS credits for txctl when it is ready to send */
++	if (bus->ctrl_frame_stat)
++		tx_rsv = TXCTL_CREDITS;
 +
- /**
-  * ieee80211_proberesp_get - retrieve a Probe Response template
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-@@ -6593,4 +6610,15 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
-  */
- bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
- 
-+/**
-+ * ieeee80211_obss_color_collision_notify notify userland about a BSS color
-+ * collision.
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @color_bitmap: a 64 bit bitmap representing the colors that the local BSS is
-+ *	aware of.
-+ */
-+void
-+ieeee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
-+				       u64 color_bitmap);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b4e39e31a985..37a218b89c9a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -809,7 +809,8 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
- 
- static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 				    const u8 *resp, size_t resp_len,
--				    const struct ieee80211_csa_settings *csa)
-+				    const struct ieee80211_csa_settings *csa,
-+				    const struct ieee80211_cca_settings *cca)
- {
- 	struct probe_resp *new, *old;
- 
-@@ -829,6 +830,8 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		memcpy(new->cntdwn_counter_offsets, csa->counter_offsets_presp,
- 		       csa->n_counter_offsets_presp *
- 		       sizeof(new->cntdwn_counter_offsets[0]));
-+	if (cca)
-+		new->cntdwn_counter_offsets[0] = cca->counter_offset_presp;
- 
- 	rcu_assign_pointer(sdata->u.ap.probe_resp, new);
- 	if (old)
-@@ -881,7 +884,8 @@ static int ieee80211_set_ftm_responder_params(
- 
- static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 				   struct cfg80211_beacon_data *params,
--				   const struct ieee80211_csa_settings *csa)
-+				   const struct ieee80211_csa_settings *csa,
-+				   const struct ieee80211_cca_settings *cca)
- {
- 	struct beacon_data *new, *old;
- 	int new_head_len, new_tail_len;
-@@ -932,6 +936,11 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 		       sizeof(new->cntdwn_counter_offsets[0]));
- 	}
- 
-+	if (cca) {
-+		new->cntdwn_current_counter = cca->count;
-+		new->cntdwn_counter_offsets[0] = cca->counter_offset_beacon;
-+	}
-+
- 	/* copy in head */
- 	if (params->head)
- 		memcpy(new->head, params->head, new_head_len);
-@@ -946,7 +955,7 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 			memcpy(new->tail, old->tail, new_tail_len);
- 
- 	err = ieee80211_set_probe_resp(sdata, params->probe_resp,
--				       params->probe_resp_len, csa);
-+				       params->probe_resp_len, csa, cca);
- 	if (err < 0) {
- 		kfree(new);
- 		return err;
-@@ -1098,7 +1107,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		}
- 	}
- 
--	err = ieee80211_assign_beacon(sdata, &params->beacon, NULL);
-+	err = ieee80211_assign_beacon(sdata, &params->beacon, NULL, NULL);
- 	if (err < 0) {
- 		ieee80211_vif_release_channel(sdata);
- 		return err;
-@@ -1136,17 +1145,17 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	sdata_assert_lock(sdata);
- 
--	/* don't allow changing the beacon while CSA is in place - offset
-+	/* don't allow changing the beacon while a countdown is in place - offset
- 	 * of channel switch counter may change
- 	 */
--	if (sdata->vif.csa_active)
-+	if (sdata->vif.csa_active || sdata->vif.cca_active)
- 		return -EBUSY;
- 
- 	old = sdata_dereference(sdata->u.ap.beacon, sdata);
- 	if (!old)
- 		return -ENOENT;
- 
--	err = ieee80211_assign_beacon(sdata, params, NULL);
-+	err = ieee80211_assign_beacon(sdata, params, NULL, NULL);
- 	if (err < 0)
- 		return err;
- 	ieee80211_bss_info_change_notify(sdata, err);
-@@ -3031,7 +3040,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
- 		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon,
--					      NULL);
-+					      NULL, NULL);
- 		kfree(sdata->u.ap.next_beacon);
- 		sdata->u.ap.next_beacon = NULL;
- 
-@@ -3197,7 +3206,7 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 		csa.n_counter_offsets_presp = params->n_counter_offsets_presp;
- 		csa.count = params->count;
- 
--		err = ieee80211_assign_beacon(sdata, &params->beacon_csa, &csa);
-+		err = ieee80211_assign_beacon(sdata, &params->beacon_csa, &csa, NULL);
- 		if (err < 0) {
- 			kfree(sdata->u.ap.next_beacon);
- 			return err;
-@@ -3285,6 +3294,14 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+static void ieee80211_cca_abort(struct ieee80211_sub_if_data  *sdata)
-+{
-+	sdata->vif.cca_active = false;
-+	kfree(sdata->u.ap.next_beacon);
-+	sdata->u.ap.next_beacon = NULL;
-+	cfg80211_color_change_aborted_notify(sdata->dev);
-+}
-+
- static int
- __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			   struct cfg80211_csa_settings *params)
-@@ -3353,6 +3370,10 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		goto out;
- 	}
- 
-+	/* if there is a CCA in progress, abort it */
-+	if (sdata->vif.cca_active)
-+		ieee80211_cca_abort(sdata);
-+
- 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
- 	if (err) {
- 		ieee80211_vif_unreserve_chanctx(sdata);
-@@ -3993,6 +4014,193 @@ static int ieee80211_reset_tid_config(struct wiphy *wiphy,
- 	return ret;
- }
- 
-+static int ieee80211_set_after_cca_beacon(struct ieee80211_sub_if_data *sdata,
-+					  u32 *changed)
-+{
-+	int err;
-+
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_AP:
-+		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon,
-+					      NULL, NULL);
-+		kfree(sdata->u.ap.next_beacon);
-+		sdata->u.ap.next_beacon = NULL;
-+
-+		if (err < 0)
-+			return err;
-+		*changed |= err;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ieee80211_set_cca_beacon(struct ieee80211_sub_if_data *sdata,
-+				    struct cfg80211_color_change_settings *params,
-+				    u32 *changed)
-+{
-+	struct ieee80211_cca_settings cca = {};
-+	int err;
-+
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_AP:
-+		sdata->u.ap.next_beacon =
-+			cfg80211_beacon_dup(&params->beacon_after);
-+		if (!sdata->u.ap.next_beacon)
-+			return -ENOMEM;
-+
-+		if (params->count <= 1)
-+			break;
-+
-+		cca.counter_offset_beacon = params->counter_offset_beacon;
-+		cca.counter_offset_presp = params->counter_offset_presp;
-+		cca.count = params->count;
-+
-+		err = ieee80211_assign_beacon(sdata, &params->beacon_cca, NULL, &cca);
-+		if (err < 0) {
-+			kfree(sdata->u.ap.next_beacon);
-+			return err;
-+		}
-+		*changed |= err;
-+
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ieee80211_cca_finalize(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	u32 changed = 0;
-+	int err;
-+
-+	sdata_assert_lock(sdata);
-+	lockdep_assert_held(&local->mtx);
-+
-+	sdata->vif.cca_active = false;
-+
-+	err = ieee80211_set_after_cca_beacon(sdata, &changed);
-+	if (err) {
-+		cfg80211_color_change_aborted_notify(sdata->dev);
-+		return err;
-+	}
-+
-+	sdata->vif.bss_conf.he_bss_color.color = sdata->vif.cca_color;
-+	sdata->vif.bss_conf.he_bss_color.enabled = 1;
-+	changed |= BSS_CHANGED_HE_BSS_COLOR;
-+
-+	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	cfg80211_color_change_notify(sdata->dev);
-+
-+	return 0;
-+}
-+
-+void ieee80211_cca_finalize_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data,
-+			     cca_finalize_work);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	sdata_lock(sdata);
-+	mutex_lock(&local->mtx);
-+
-+	/* AP might have been stopped while waiting for the lock. */
-+	if (!sdata->vif.cca_active)
-+		goto unlock;
-+
-+	if (!ieee80211_sdata_running(sdata))
-+		goto unlock;
-+
-+	ieee80211_cca_finalize(sdata);
-+
-+unlock:
-+	mutex_unlock(&local->mtx);
-+	sdata_unlock(sdata);
-+}
-+
-+void ieee80211_cca_finish(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	ieee80211_queue_work(&sdata->local->hw,
-+			     &sdata->cca_finalize_work);
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_cca_finish);
-+
-+void
-+ieeee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
-+				       u64 color_bitmap)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	if (sdata->vif.cca_active || sdata->vif.csa_active)
-+		return;
-+
-+	cfg80211_obss_color_collision_notify(sdata->dev, color_bitmap);
-+}
-+EXPORT_SYMBOL_GPL(ieeee80211_obss_color_collision_notify);
-+
-+static int
-+__ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
-+			 struct cfg80211_color_change_settings *params)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	u32 changed = 0;
-+	int err;
-+
-+	sdata_assert_lock(sdata);
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* don't allow another color change if one is already active or if csa
-+	 * is active
-+	 */
-+	if (sdata->vif.cca_active || sdata->vif.csa_active)
-+		return -EBUSY;
-+
-+	err = ieee80211_set_cca_beacon(sdata, params, &changed);
-+	if (err)
-+		return err;
-+
-+	sdata->vif.cca_active = true;
-+	sdata->vif.cca_color = params->color;
-+
-+	cfg80211_color_change_started_notify(sdata->dev, params->count);
-+
-+	if (changed) {
-+		sdata->vif.bss_conf.he_bss_color.enabled = 0;
-+		changed |= BSS_CHANGED_HE_BSS_COLOR;
-+		ieee80211_bss_info_change_notify(sdata, changed);
-+	} else {
-+		/* if the beacon didn't change, we can finalize immediately */
-+		ieee80211_cca_finalize(sdata);
-+	}
-+
-+	return 0;
-+}
-+
-+static int ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
-+				  struct cfg80211_color_change_settings *params)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	int err;
-+
-+	mutex_lock(&local->mtx);
-+	err = __ieee80211_color_change(wiphy, dev, params);
-+	mutex_unlock(&local->mtx);
-+
-+	return err;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -4096,4 +4304,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.probe_mesh_link = ieee80211_probe_mesh_link,
- 	.set_tid_config = ieee80211_set_tid_config,
- 	.reset_tid_config = ieee80211_reset_tid_config,
-+	.color_change = ieee80211_color_change,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6bf879660a93..c8a25f62e458 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -255,6 +255,13 @@ struct ieee80211_csa_settings {
- 	u8 count;
- };
- 
-+struct ieee80211_cca_settings {
-+	u16 counter_offset_beacon;
-+	u16 counter_offset_presp;
-+
-+	u8 count;
-+};
-+
- struct beacon_data {
- 	u8 *head, *tail;
- 	int head_len, tail_len;
-@@ -923,6 +930,8 @@ struct ieee80211_sub_if_data {
- 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
- 	struct cfg80211_chan_def csa_chandef;
- 
-+	struct work_struct cca_finalize_work;
-+
- 	struct list_head assigned_chanctx_list; /* protected by chanctx_mtx */
- 	struct list_head reserved_chanctx_list; /* protected by chanctx_mtx */
- 
-@@ -1737,6 +1746,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work);
- int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			     struct cfg80211_csa_settings *params);
- 
-+/* color change handling */
-+void ieee80211_cca_finalize_work(struct work_struct *work);
-+
- /* interface handling */
- #define MAC80211_SUPPORTED_FEATURES_TX	(NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM | \
- 					 NETIF_F_HW_CSUM | NETIF_F_SG | \
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 9740ae8fa697..8060cdc102d4 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -912,6 +912,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 				   GFP_KERNEL);
- 	}
- 
-+	cancel_work_sync(&sdata->cca_finalize_work);
-+
- 	/* APs need special treatment */
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
-@@ -1496,6 +1498,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	INIT_WORK(&sdata->work, ieee80211_iface_work);
- 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
- 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
-+	INIT_WORK(&sdata->cca_finalize_work, ieee80211_cca_finalize_work);
- 	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
- 	INIT_LIST_HEAD(&sdata->reserved_chanctx_list);
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d2136007e2eb..481dd7cc36d3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4541,11 +4541,12 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
- 					struct beacon_data *beacon)
- {
-+	u16 *bcn_offsets, *resp_offsets;
- 	struct probe_resp *resp;
- 	u8 *beacon_data;
- 	size_t beacon_data_len;
- 	int i;
--	u8 count = beacon->cntdwn_current_counter;
-+	u8 count, max_count = 1;
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
-@@ -4565,21 +4566,25 @@ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	rcu_read_lock();
--	for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; ++i) {
--		resp = rcu_dereference(sdata->u.ap.probe_resp);
-+	resp = rcu_dereference(sdata->u.ap.probe_resp);
- 
--		if (beacon->cntdwn_counter_offsets[i]) {
--			if (WARN_ON_ONCE(beacon->cntdwn_counter_offsets[i] >=
--					 beacon_data_len)) {
-+	bcn_offsets = beacon->cntdwn_counter_offsets;
-+	resp_offsets = resp->cntdwn_counter_offsets;
-+	count = beacon->cntdwn_current_counter;
-+	if (sdata->vif.csa_active)
-+		max_count = IEEE80211_MAX_CNTDWN_COUNTERS_NUM;
-+
-+	for (i = 0; i < max_count; ++i) {
-+		if (bcn_offsets[i]) {
-+			if (WARN_ON_ONCE(bcn_offsets[i] >= beacon_data_len)) {
- 				rcu_read_unlock();
- 				return;
- 			}
--
--			beacon_data[beacon->cntdwn_counter_offsets[i]] = count;
-+			beacon_data[bcn_offsets[i]] = count;
- 		}
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_AP && resp)
--			resp->data[resp->cntdwn_counter_offsets[i]] = count;
-+			resp->data[resp_offsets[i]] = count;
- 	}
- 	rcu_read_unlock();
- }
-@@ -4789,6 +4794,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 			if (offs) {
- 				offs->tim_offset = beacon->head_len;
- 				offs->tim_length = skb->len - beacon->head_len;
-+				offs->cntdwn_counter_offs[0] = beacon->cntdwn_counter_offsets[0];
- 
- 				/* for AP the csa offsets are from tail */
- 				csa_off_base = skb->len;
++	return (bus->tx_max - bus->tx_seq) > tx_rsv &&
+  	       ((bus->tx_max - bus->tx_seq) & 0x80) == 0;
+  }
+
 -- 
-2.25.1
 
+Here is our 4329 TX throughput result.
+
+Without the fix:
+Interval           Transfer     Bandwidth       Retr
+0.00-10.00  sec  36.4 MBytes  30.6 Mbits/sec  receiver
+With the fix:
+Interval           Transfer     Bandwidth       Retr
+0.00-10.00  sec  47.9 MBytes  40.2 Mbits/sec  receiver
