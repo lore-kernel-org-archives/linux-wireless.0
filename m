@@ -7,35 +7,37 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D722C433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D474C433E0
 	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 114AA206B5
+	by mail.kernel.org (Postfix) with ESMTP id 832BD206B5
 	for <linux-wireless@archiver.kernel.org>; Tue, 11 Aug 2020 08:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728367AbgHKIBW (ORCPT
+        id S1728369AbgHKIBX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Aug 2020 04:01:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47580 "EHLO
+        Tue, 11 Aug 2020 04:01:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbgHKIBW (ORCPT
+        with ESMTP id S1728000AbgHKIBW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 11 Aug 2020 04:01:22 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 228BBC061787
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36309C06178B
         for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2020 01:01:22 -0700 (PDT)
 Received: from [149.224.185.155] (helo=bertha9.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1k5PDg-0002ig-SL; Tue, 11 Aug 2020 10:01:16 +0200
+        id 1k5PDi-0002ig-1Y; Tue, 11 Aug 2020 10:01:18 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V4 1/5] nl80211: rename csa counter attributes countdown counters
-Date:   Tue, 11 Aug 2020 10:01:03 +0200
-Message-Id: <20200811080107.3615705-1-john@phrozen.org>
+Subject: [PATCH V4 5/5] ath11k: add support for BSS coloring
+Date:   Tue, 11 Aug 2020 10:01:07 +0200
+Message-Id: <20200811080107.3615705-5-john@phrozen.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200811080107.3615705-1-john@phrozen.org>
+References: <20200811080107.3615705-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -43,111 +45,228 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We want to reuse the attributes for other counters such as BSS color
-change. Rename them to more generic names.
+Whenever the MAC detects a color collision or any of its associated station
+detects one the FW will send out an event. Add the code to parse and handle
+this event. and pass the data up to mac80211.
+
+The FW does not provide an offload feature such as the one used for CSA. The
+CCA process is hence triggered via the beacon offload tx completion events
+sent out by the FW.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- include/uapi/linux/nl80211.h | 14 ++++++++------
- net/wireless/nl80211.c       | 16 ++++++++--------
- 2 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 36 +++++++++++++++++
+ drivers/net/wireless/ath/ath11k/mac.h |  1 +
+ drivers/net/wireless/ath/ath11k/wmi.c | 57 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h | 14 +++++++
+ 4 files changed, 108 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 631f3a997b3c..bccd16f743b9 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2082,10 +2082,10 @@ enum nl80211_commands {
-  *	operation).
-  * @NL80211_ATTR_CSA_IES: Nested set of attributes containing the IE information
-  *	for the time while performing a channel switch.
-- * @NL80211_ATTR_CSA_C_OFF_BEACON: An array of offsets (u16) to the channel
-- *	switch counters in the beacons tail (%NL80211_ATTR_BEACON_TAIL).
-- * @NL80211_ATTR_CSA_C_OFF_PRESP: An array of offsets (u16) to the channel
-- *	switch counters in the probe response (%NL80211_ATTR_PROBE_RESP).
-+ * @NL80211_ATTR_CNTDWN_OFFS_BEACON: An array of offsets (u16) to the channel
-+ *	switch or color change counters in the beacons tail (%NL80211_ATTR_BEACON_TAIL).
-+ * @NL80211_ATTR_CNTDWN_OFFS_PRESP: An array of offsets (u16) to the channel
-+ *	switch or color change counters in the probe response (%NL80211_ATTR_PROBE_RESP).
-  *
-  * @NL80211_ATTR_RXMGMT_FLAGS: flags for nl80211_send_mgmt(), u32.
-  *	As specified in the &enum nl80211_rxmgmt_flags.
-@@ -2821,8 +2821,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CH_SWITCH_COUNT,
- 	NL80211_ATTR_CH_SWITCH_BLOCK_TX,
- 	NL80211_ATTR_CSA_IES,
--	NL80211_ATTR_CSA_C_OFF_BEACON,
--	NL80211_ATTR_CSA_C_OFF_PRESP,
-+	NL80211_ATTR_CNTDWN_OFFS_BEACON,
-+	NL80211_ATTR_CNTDWN_OFFS_PRESP,
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 94ae2b9ea663..3c034e8428a2 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -815,6 +815,22 @@ static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
+ 	return ret;
+ }
  
- 	NL80211_ATTR_RXMGMT_FLAGS,
++void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif)
++{
++	struct ieee80211_vif *vif = arvif->vif;
++
++	if (!vif->cca_active)
++		return;
++
++	if (ieee80211_beacon_cntdwn_is_complete(vif)) {
++		ieee80211_cca_finish(vif);
++		return;
++	}
++
++	ieee80211_beacon_update_cntdwn(vif);
++	ath11k_mac_setup_bcn_tmpl(arvif);
++}
++
+ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 				     struct ieee80211_bss_conf *info)
+ {
+@@ -2076,6 +2092,24 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (ret)
+ 				ath11k_warn(ar->ab, "failed to set bss color collision on vdev %i: %d\n",
+ 					    arvif->vdev_id,  ret);
++
++			param_id = WMI_VDEV_PARAM_BSS_COLOR;
++			if (info->he_bss_color.enabled)
++				param_value = info->he_bss_color.color <<
++						IEEE80211_HE_OPERATION_BSS_COLOR_OFFSET;
++			else
++				param_value = IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED;
++
++			ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++							    param_id,
++							    param_value);
++			if (ret)
++				ath11k_warn(ar->ab,
++					    "failed to set bss color param on vdev %i: %d\n",
++					    arvif->vdev_id,  ret);
++
++			ath11k_info(ar->ab, "bss color param 0x%x set on vdev %i\n",
++				    param_value, arvif->vdev_id);
+ 		} else if (vif->type == NL80211_IFTYPE_STATION) {
+ 			ret = ath11k_wmi_send_bss_color_change_enable_cmd(ar,
+ 									  arvif->vdev_id,
+@@ -6065,6 +6099,8 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
+ 				   NL80211_FEATURE_AP_SCAN;
  
-@@ -3009,6 +3009,8 @@ enum nl80211_attrs {
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
- #define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
- #define NL80211_ATTR_SAE_DATA NL80211_ATTR_AUTH_DATA
-+#define NL80211_ATTR_CSA_C_OFF_BEACON NL80211_ATTR_CNTDWN_OFFS_BEACON
-+#define NL80211_ATTR_CSA_C_OFF_PRESP NL80211_ATTR_CNTDWN_OFFS_PRESP
++	ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_BSS_COLOR;
++
+ 	ar->max_num_stations = TARGET_NUM_STATIONS;
+ 	ar->max_num_peers = TARGET_NUM_PEERS_PDEV;
  
- /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 814e23d3ce7c..e41fcec7c306 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -567,8 +567,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CH_SWITCH_COUNT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CH_SWITCH_BLOCK_TX] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
--	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_BINARY },
--	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_BINARY },
-+	[NL80211_ATTR_CNTDWN_OFFS_BEACON] = { .type = NLA_BINARY },
-+	[NL80211_ATTR_CNTDWN_OFFS_PRESP] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
-@@ -8787,10 +8787,10 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
+index 0607479774a9..55978744e170 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.h
++++ b/drivers/net/wireless/ath/ath11k/mac.h
+@@ -146,4 +146,5 @@ int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
+ u8 ath11k_mac_bw_to_mac80211_bw(u8 bw);
+ enum ath11k_supported_bw ath11k_mac_mac80211_bw_to_ath11k_bw(enum rate_info_bw bw);
+ enum hal_encrypt_type ath11k_dp_tx_get_encrypt_type(u32 cipher);
++void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 9fffa37f1e2e..01931e838b4e 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -122,6 +122,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		= { .min_len = sizeof(struct wmi_stats_event) },
+ 	[WMI_TAG_PDEV_CTL_FAILSAFE_CHECK_EVENT]
+ 		= { .min_len = sizeof(struct wmi_pdev_ctl_failsafe_chk_event) },
++	[WMI_TAG_OBSS_COLOR_COLLISION_EVT]
++		= { .min_len = sizeof(struct wmi_obss_color_collision_event) },
+ };
  
--	if (!csa_attrs[NL80211_ATTR_CSA_C_OFF_BEACON])
-+	if (!csa_attrs[NL80211_ATTR_CNTDWN_OFFS_BEACON])
- 		return -EINVAL;
+ #define PRIMAP(_hw_mode_) \
+@@ -3058,6 +3060,49 @@ int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id,
+ 	return ret;
+ }
  
--	len = nla_len(csa_attrs[NL80211_ATTR_CSA_C_OFF_BEACON]);
-+	len = nla_len(csa_attrs[NL80211_ATTR_CNTDWN_OFFS_BEACON]);
- 	if (!len || (len % sizeof(u16)))
- 		return -EINVAL;
++static void
++ath11k_wmi_obss_color_collision_event(struct ath11k_base *ab, struct sk_buff *skb)
++{
++	const void **tb;
++	const struct wmi_obss_color_collision_event *ev;
++	struct ath11k_vif *arvif;
++	int ret;
++
++	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ret = PTR_ERR(tb);
++		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
++		return;
++	}
++
++	ev = tb[WMI_TAG_OBSS_COLOR_COLLISION_EVT];
++	if (!ev) {
++		ath11k_warn(ab, "failed to fetch obss color collision ev");
++		goto exit;
++	}
++
++	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, ev->vdev_id);
++	switch (ev->evt_type) {
++	case WMI_BSS_COLOR_COLLISION_DETECTION:
++		break;
++	case WMI_BSS_COLOR_COLLISION_DISABLE:
++	case WMI_BSS_COLOR_FREE_SLOT_TIMER_EXPIRY:
++	case WMI_BSS_COLOR_FREE_SLOT_AVAILABLE:
++		goto exit;
++	default:
++		ath11k_warn(ab, "received unknown obss color collision detetction event\n");
++		goto exit;
++	}
++
++	ieeee80211_obss_color_collision_notify(arvif->vif, ev->obss_color_bitmap);
++
++	ath11k_dbg(ab, ATH11K_DBG_WMI,
++		   "OBSS color collision detected vdev:%d, event:%d, bitmap:%08llx\n",
++		   ev->vdev_id, ev->evt_type, ev->obss_color_bitmap);
++exit:
++	kfree(tb);
++}
++
+ static void
+ ath11k_fill_band_to_mac_param(struct ath11k_base  *soc,
+ 			      struct wmi_host_pdev_band_to_mac *band_to_mac)
+@@ -5638,6 +5683,7 @@ static void ath11k_vdev_start_resp_event(struct ath11k_base *ab, struct sk_buff
  
-@@ -8801,7 +8801,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
+ static void ath11k_bcn_tx_status_event(struct ath11k_base *ab, struct sk_buff *skb)
+ {
++	struct ath11k_vif *arvif;
+ 	u32 vdev_id, tx_status;
  
- 	params.counter_offsets_beacon =
--		nla_data(csa_attrs[NL80211_ATTR_CSA_C_OFF_BEACON]);
-+		nla_data(csa_attrs[NL80211_ATTR_CNTDWN_OFFS_BEACON]);
- 
- 	/* sanity checks - counters should fit and be the same */
- 	for (i = 0; i < params.n_counter_offsets_beacon; i++) {
-@@ -8814,8 +8814,8 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
+ 	if (ath11k_pull_bcn_tx_status_ev(ab, skb->data, skb->len,
+@@ -5645,6 +5691,14 @@ static void ath11k_bcn_tx_status_event(struct ath11k_base *ab, struct sk_buff *s
+ 		ath11k_warn(ab, "failed to extract bcn tx status");
+ 		return;
  	}
++
++	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, vdev_id);
++	if (!arvif) {
++		ath11k_warn(ab, "invalid vdev id %d in bcn_tx_status",
++			    vdev_id);
++		return;
++	}
++	ath11k_mac_bcn_tx_event(arvif);
+ }
  
--	if (csa_attrs[NL80211_ATTR_CSA_C_OFF_PRESP]) {
--		len = nla_len(csa_attrs[NL80211_ATTR_CSA_C_OFF_PRESP]);
-+	if (csa_attrs[NL80211_ATTR_CNTDWN_OFFS_PRESP]) {
-+		len = nla_len(csa_attrs[NL80211_ATTR_CNTDWN_OFFS_PRESP]);
- 		if (!len || (len % sizeof(u16)))
- 			return -EINVAL;
+ static void ath11k_vdev_stopped_event(struct ath11k_base *ab, struct sk_buff *skb)
+@@ -6523,6 +6577,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ 	case WMI_PDEV_DMA_RING_BUF_RELEASE_EVENTID:
+ 		ath11k_wmi_pdev_dma_ring_buf_release_event(ab, skb);
+ 		break;
++	case WMI_OBSS_COLOR_COLLISION_DETECTION_EVENTID:
++		ath11k_wmi_obss_color_collision_event(ab, skb);
++		break;
+ 	/* add Unsupported events here */
+ 	case WMI_TBTTOFFSET_EXT_UPDATE_EVENTID:
+ 	case WMI_VDEV_DELETE_RESP_EVENTID:
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 5a32ba0eb4f5..4f7078369b3c 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -740,6 +740,7 @@ enum wmi_tlv_event_id {
+ 	WMI_MDNS_STATS_EVENTID = WMI_TLV_CMD(WMI_GRP_MDNS_OFL),
+ 	WMI_SAP_OFL_ADD_STA_EVENTID = WMI_TLV_CMD(WMI_GRP_SAP_OFL),
+ 	WMI_SAP_OFL_DEL_STA_EVENTID,
++	WMI_OBSS_COLOR_COLLISION_DETECTION_EVENTID = WMI_EVT_GRP_START_ID(WMI_GRP_OBSS_OFL),
+ 	WMI_OCB_SET_CONFIG_RESP_EVENTID = WMI_TLV_CMD(WMI_GRP_OCB),
+ 	WMI_OCB_GET_TSF_TIMER_RESP_EVENTID,
+ 	WMI_DCC_GET_STATS_RESP_EVENTID,
+@@ -4768,6 +4769,13 @@ struct wmi_obss_spatial_reuse_params_cmd {
+ #define ATH11K_BSS_COLOR_COLLISION_DETECTION_STA_PERIOD_MS	10000
+ #define ATH11K_BSS_COLOR_COLLISION_DETECTION_AP_PERIOD_MS	5000
  
-@@ -8826,7 +8826,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
++enum wmi_bss_color_collision {
++	WMI_BSS_COLOR_COLLISION_DISABLE = 0,
++	WMI_BSS_COLOR_COLLISION_DETECTION,
++	WMI_BSS_COLOR_FREE_SLOT_TIMER_EXPIRY,
++	WMI_BSS_COLOR_FREE_SLOT_AVAILABLE,
++};
++
+ struct wmi_obss_color_collision_cfg_params_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -4785,6 +4793,12 @@ struct wmi_bss_color_change_enable_params_cmd {
+ 	u32 enable;
+ } __packed;
  
- 		params.counter_offsets_presp =
--			nla_data(csa_attrs[NL80211_ATTR_CSA_C_OFF_PRESP]);
-+			nla_data(csa_attrs[NL80211_ATTR_CNTDWN_OFFS_PRESP]);
++struct wmi_obss_color_collision_event {
++	u32 vdev_id;
++	u32 evt_type;
++	u64 obss_color_bitmap;
++} __packed;
++
+ #define ATH11K_IPV4_TH_SEED_SIZE 5
+ #define ATH11K_IPV6_TH_SEED_SIZE 11
  
- 		/* sanity checks - counters should fit and be the same */
- 		for (i = 0; i < params.n_counter_offsets_presp; i++) {
 -- 
 2.25.1
 
