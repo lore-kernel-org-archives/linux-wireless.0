@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 644B1C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 10:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28783C433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 10:28:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B0292076B
+	by mail.kernel.org (Postfix) with ESMTP id EB7342076B
 	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 10:28:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="FHpvXPcH"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Cd4Kd3H6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727794AbgHLK2e (ORCPT
+        id S1727814AbgHLK2f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Aug 2020 06:28:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37668 "EHLO
+        Wed, 12 Aug 2020 06:28:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726846AbgHLK2d (ORCPT
+        with ESMTP id S1727801AbgHLK2e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Aug 2020 06:28:33 -0400
+        Wed, 12 Aug 2020 06:28:34 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E981C061788
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2020 03:28:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41141C06174A
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2020 03:28:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=pboeGOsZF8mBK+lrby76L4nQd6TphDGFqpffL2IDs4A=; b=FHpvXPcHHdqTOAWs9a4Nnidvw9
-        LTfFRh7ZCHZu04Gyesz3dY4xz7x5fF9Vb9rH2Xb3mRrTgZG4jyex1fhKovmwCHhc8kWuvr4mpmGqh
-        kGlfJjOYEj8Dvgduv2OZOysBQkFBv8vTFbQqdxRtbluMTuIhfCOZAeIEDkxt135tvE6I=;
+        bh=qgOAe54kk0f5FTXy7ykSKANLVO2hXUhc3EFcJF6j9Fs=; b=Cd4Kd3H6yTWglY9DgLDJKjoVlY
+        QJt8AjxVdbJgKJI8T7PyRut9zJt7fWefIBIi/S4bm0+F1g9dFCP6SfCaT2QwYuf/6ZpsRS1lqQhnI
+        OqoZ+1Est5lbaHJR/JmZ1p/dGtMJzn+3oLFgZsBnudk1nKw8yb61/vmQMLTPZAKbKVEU=;
 Received: from p54ae996c.dip0.t-ipconnect.de ([84.174.153.108] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k5nzk-0002U3-5z
+        id 1k5nzk-0002U3-Ty
         for linux-wireless@vger.kernel.org; Wed, 12 Aug 2020 12:28:32 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] mt76: mt7915: enable offloading of sequence number assignment
-Date:   Wed, 12 Aug 2020 12:28:26 +0200
-Message-Id: <20200812102831.11991-3-nbd@nbd.name>
+Subject: [PATCH 7/8] mt76: mt7915: add missing flags in WMM parameter settings
+Date:   Wed, 12 Aug 2020 12:28:30 +0200
+Message-Id: <20200812102831.11991-7-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200812102831.11991-1-nbd@nbd.name>
 References: <20200812102831.11991-1-nbd@nbd.name>
@@ -56,129 +56,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Preparation for supporting more offload features
+Indicate the filled parameter to the firmware
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 49 +++++++++++++------
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  1 -
- 2 files changed, 33 insertions(+), 17 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 06371d694618..dde1c93d6701 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -565,6 +565,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
- 	bool multicast = is_multicast_ether_addr(hdr->addr1);
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct mt76_phy *mphy = &dev->mphy;
-@@ -572,6 +573,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	u8 fc_type, fc_stype, p_fmt, q_idx, omac_idx = 0, wmm_idx = 0;
- 	__le16 fc = hdr->frame_control;
- 	u16 tx_count = 15, seqno = 0;
-+	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 	u32 val;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 949a387e8f93..86eb24e90775 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2939,6 +2939,7 @@ int mt7915_mcu_set_tx(struct mt7915_dev *dev, struct ieee80211_vif *vif)
+ 		struct ieee80211_tx_queue_params *q = &mvif->queue_params[ac];
+ 		struct edca *e = &req.edca[ac];
  
- 	if (vif) {
-@@ -587,6 +589,10 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	fc_type = (le16_to_cpu(fc) & IEEE80211_FCTL_FTYPE) >> 2;
- 	fc_stype = (le16_to_cpu(fc) & IEEE80211_FCTL_STYPE) >> 4;
- 
-+	txwi[4] = 0;
-+	txwi[5] = 0;
-+	txwi[6] = 0;
-+
- 	if (beacon) {
- 		p_fmt = MT_TX_TYPE_FW;
- 		q_idx = MT_LMAC_BCN0;
-@@ -599,6 +605,20 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 			mt7915_lmac_mapping(dev, skb_get_queue_mapping(skb));
- 	}
- 
-+	if (ieee80211_is_action(fc) &&
-+	    mgmt->u.action.category == WLAN_CATEGORY_BACK &&
-+	    mgmt->u.action.u.addba_req.action_code == WLAN_ACTION_ADDBA_REQ) {
-+		u16 capab = le16_to_cpu(mgmt->u.action.u.addba_req.capab);
-+
-+		txwi[5] |= cpu_to_le32(MT_TXD5_ADD_BA);
-+		tid = (capab >> 2) & IEEE80211_QOS_CTL_TID_MASK;
-+	} else if (ieee80211_is_back_req(hdr->frame_control)) {
-+		struct ieee80211_bar *bar = (struct ieee80211_bar *)hdr;
-+		u16 control = le16_to_cpu(bar->control);
-+
-+		tid = FIELD_GET(IEEE80211_BAR_CTRL_TID_INFO_MASK, control);
-+	}
-+
- 	val = FIELD_PREP(MT_TXD0_TX_BYTES, skb->len + MT_TXD_SIZE) |
- 	      FIELD_PREP(MT_TXD0_PKT_FMT, p_fmt) |
- 	      FIELD_PREP(MT_TXD0_Q_IDX, q_idx);
-@@ -609,8 +629,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	      FIELD_PREP(MT_TXD1_HDR_FORMAT, MT_HDR_FORMAT_802_11) |
- 	      FIELD_PREP(MT_TXD1_HDR_INFO,
- 			 ieee80211_get_hdrlen_from_skb(skb) / 2) |
--	      FIELD_PREP(MT_TXD1_TID,
--			 skb->priority & IEEE80211_QOS_CTL_TID_MASK) |
-+	      FIELD_PREP(MT_TXD1_TID, tid) |
- 	      FIELD_PREP(MT_TXD1_OWN_MAC, omac_idx);
- 
- 	if (ext_phy && q_idx >= MT_LMAC_ALTX0 && q_idx <= MT_LMAC_BCN0)
-@@ -634,10 +653,6 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	}
- 	txwi[2] = cpu_to_le32(val);
- 
--	txwi[4] = 0;
--	txwi[5] = 0;
--	txwi[6] = 0;
--
- 	if (!ieee80211_is_data(fc) || multicast) {
- 		u16 rate;
- 
-@@ -668,17 +683,19 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	txwi[7] = cpu_to_le32(val);
- 
- 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
--	if (ieee80211_is_data_qos(fc)) {
--		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
--		val |= MT_TXD3_SN_VALID;
--	} else if (ieee80211_is_back_req(fc)) {
--		struct ieee80211_bar *bar;
--
--		bar = (struct ieee80211_bar *)skb->data;
--		seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(bar->start_seq_num));
--		val |= MT_TXD3_SN_VALID;
-+	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
-+		seqno = le16_to_cpu(hdr->seq_ctrl);
-+
-+		if (ieee80211_is_back_req(hdr->frame_control)) {
-+			struct ieee80211_bar *bar;
-+
-+			bar = (struct ieee80211_bar *)skb->data;
-+			seqno = le16_to_cpu(bar->start_seq_num);
-+		}
-+
-+		val |= MT_TXD3_SN_VALID |
-+		       FIELD_PREP(MT_TXD3_SEQ, IEEE80211_SEQ_TO_SN(seqno));
- 	}
--	val |= FIELD_PREP(MT_TXD3_SEQ, seqno);
- 	txwi[3] |= cpu_to_le32(val);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 0feea2c33717..9e53f0db87f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -620,7 +620,6 @@ mt7915_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		mt7915_mcu_add_tx_ba(dev, params, false);
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
--		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(ssn);
- 		mt7915_set_aggr_state(msta, tid, MT7915_AGGR_START);
- 		ret = IEEE80211_AMPDU_TX_START_IMMEDIATE;
- 		break;
++		e->set = WMM_PARAM_SET;
+ 		e->queue = ac + mvif->wmm_idx * MT7915_MAX_WMM_SETS;
+ 		e->aifs = q->aifs;
+ 		e->txop = cpu_to_le16(q->txop);
 -- 
 2.28.0
 
