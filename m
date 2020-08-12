@@ -2,78 +2,96 @@ Return-Path: <SRS0=580q=BW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91EC2C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 15:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD465C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 15:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 619A82080C
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 15:02:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0368207F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Aug 2020 15:19:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UfpMGj2D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbgHLPBs (ORCPT
+        id S1726587AbgHLPT6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Aug 2020 11:01:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51354 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726567AbgHLPBB (ORCPT
+        Wed, 12 Aug 2020 11:19:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:32299 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726492AbgHLPTz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Aug 2020 11:01:01 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA9D8C061385
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2020 08:01:00 -0700 (PDT)
-Received: from [149.224.82.90] (helo=localhost.localdomain)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1k5sFN-0002OP-3C; Wed, 12 Aug 2020 17:00:57 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH V3 0/9] mac80211: add multiple bssid / EMA
-Date:   Wed, 12 Aug 2020 17:00:41 +0200
-Message-Id: <20200812150050.2683396-1-john@phrozen.org>
-X-Mailer: git-send-email 2.25.1
+        Wed, 12 Aug 2020 11:19:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597245593;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=j/6YCC8rF/n0jjkmOFgRfI6WFgYQisH5kto2Ia8JPo8=;
+        b=UfpMGj2DYBJziavyqVYRH+36Z48POCYUbnbz5Bf4WdjUx133HjK+/VMPVg5rjkj+tXSLSn
+        BKCYIzYt6Dyq6To6UVDdmXcy/tbhb06QtdR15D/l2MOrkVLdu/fUaZCXSWgubZi2TXykaL
+        /RVvdNiKWLCp7gZuiYXTvGFnZmVk6Y0=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-136-suTHRt0nPxmQl5ILj8mQww-1; Wed, 12 Aug 2020 11:19:51 -0400
+X-MC-Unique: suTHRt0nPxmQl5ILj8mQww-1
+Received: by mail-wm1-f72.google.com with SMTP id f74so1000568wmf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2020 08:19:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=j/6YCC8rF/n0jjkmOFgRfI6WFgYQisH5kto2Ia8JPo8=;
+        b=PETxO2seY/gmmpkPaqaGesZEkPjFSnEvwXyC+RxfPNFd3bv9Jqc4bjI1ZKyWvZ2n0r
+         e7fE5ArFwqjL7S9UGSic6GWWmzc6II5nVhisCLl29qg4ANt6gmUQCSR2iJlp1c3L6cdt
+         bJN7ishJovaY7ROGXiJnIgVUGsI35pwIVwdxgb9UEDzfpLU91ZzdLaeLj1kV+SDAlDlh
+         O1a4JNZVhIljRzL8eWF/G4WCmGu9oCtuIa7I9EYBrDkhxl/kRi5axPnmXuG1WbKDOt1M
+         TvblkJF+tQkGIFyDoEPbRbc+WSniW069XjOPgxM6fcni5OcbzRbTk6yzFajsurttOGYW
+         ij3A==
+X-Gm-Message-State: AOAM533zD9QtrIP2eOK0Nu41jFdfUROEmjXzbZiX825dvrLO1pEn3em4
+        JTXqG+ZbT0O5cXQt86VRbUg7QsO2eyCHVRXEACwm3u2nCt15iAqCKtEJwVPjeKqt9EmpFOLrjVw
+        k7GdCoOwIvqXmXTOFYLtAOi5FB+4=
+X-Received: by 2002:a1c:a787:: with SMTP id q129mr214040wme.77.1597245589862;
+        Wed, 12 Aug 2020 08:19:49 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyifW7MBtz5Ifw99ppqpsbHhMb4rjKY8IqCyT1LZSHRkjkvjtGx5F8c3S+0my7NYtkMWGw7WQ==
+X-Received: by 2002:a1c:a787:: with SMTP id q129mr214026wme.77.1597245589670;
+        Wed, 12 Aug 2020 08:19:49 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id r16sm5285140wrr.13.2020.08.12.08.19.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2020 08:19:49 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 16271182840; Wed, 12 Aug 2020 17:19:47 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org
+Subject: Re: [PATCH 5.9] mt76: mt7915: use ieee80211_free_txskb to free tx skbs
+In-Reply-To: <20200812144943.91974-1-nbd@nbd.name>
+References: <20200812144943.91974-1-nbd@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Wed, 12 Aug 2020 17:19:47 +0200
+Message-ID: <878sejvqlo.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series addss multiple bssid and EMA beacons.
+Felix Fietkau <nbd@nbd.name> writes:
 
-The V3 series has a lot of changes to V2. The biggest being the added
-support for EMA. As we might have HW that can offload this we need to
-pass the multiple bssid elements to the kernel. This gives us a lot of
-flexibility for supporting different hardware.
+> Using dev_kfree_skb for tx skbs breaks AQL. This worked until now only
+> by accident, because a mac80211 issue breaks AQL on drivers with firmware
+> rate control that report the rate via ieee80211_tx_status_ext as struct
+> rate_info.
 
-John Crispin (9):
-  nl80211: add basic multiple bssid support
-  mac80211: add multiple bssid support to interface handling
-  mac80211: add multiple bssid support to beacon handling
-  mac80211: add multiple bssid/ema support to bcn templating
-  ath11k: add a struct to pass parameters into ath11k_wmi_vdev_up
-  ath11k: add the multiple bssid WMI commands
-  ath11k: add multiple bssid support to device creation
-  ath11k: add EMA beacon support
-  ath11k: set the multiple bssid hw flags and capabilities
+Ah, nice catch! Is it safe to assume that you also have a fix pending
+for the mac80211 issue you're talking about in the commit message? :)
 
- drivers/net/wireless/ath/ath11k/mac.c |  83 ++++++++++++++++---
- drivers/net/wireless/ath/ath11k/wmi.c |  20 +++--
- drivers/net/wireless/ath/ath11k/wmi.h |  22 ++++-
- include/net/cfg80211.h                |  35 ++++++++
- include/net/mac80211.h                |  42 +++++++++-
- include/uapi/linux/nl80211.h          |  22 +++++
- net/mac80211/cfg.c                    | 113 +++++++++++++++++++++++++-
- net/mac80211/debugfs.c                |   1 +
- net/mac80211/ieee80211_i.h            |   2 +
- net/mac80211/iface.c                  |   7 ++
- net/mac80211/tx.c                     |  49 ++++++++++-
- net/wireless/nl80211.c                |  40 +++++++++
- 12 files changed, 408 insertions(+), 28 deletions(-)
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 
--- 
-2.25.1
+-Toke
 
