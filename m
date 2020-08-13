@@ -2,245 +2,125 @@ Return-Path: <SRS0=/wyl=BX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3226C433E4
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44BC3C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 21:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0B4520781
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13A06206A4
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 21:30:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hcQ66GTW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BJzwsWPB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726522AbgHMPwT (ORCPT
+        id S1726499AbgHMVan (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 11:52:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55208 "EHLO
+        Thu, 13 Aug 2020 17:30:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726131AbgHMPwT (ORCPT
+        with ESMTP id S1726192AbgHMVam (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Aug 2020 11:52:19 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6F2FC061757
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 08:52:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=EcmDpehXQVRR4b2VHpiPDhS5Td8u2I9W4Wg0/imCyv0=; b=hcQ66GTWRdrDYQ9/aEs0UABJGj
-        +BnWV7/PTEhEHtiNcdWR05jTvf5+xBatgF/tYKmRXAgQNvBFC8bmpe6wJEpF/wWBIQSco99jHRZ1F
-        7dNtITDMCr4LEOMCqYkoHj6Gj2Zjbnq9pjEQtRZ4zR7LXPXmq521yQpuxtEr9wGMJkhY=;
-Received: from p54ae996c.dip0.t-ipconnect.de ([84.174.153.108] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1k6FWY-0000Cc-3u; Thu, 13 Aug 2020 17:52:14 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5.9 2/3] mac80211: factor out code to look up the average packet length duration for a rate
-Date:   Thu, 13 Aug 2020 17:52:11 +0200
-Message-Id: <20200813155212.97884-2-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200813155212.97884-1-nbd@nbd.name>
-References: <20200813155212.97884-1-nbd@nbd.name>
+        Thu, 13 Aug 2020 17:30:42 -0400
+Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79EEDC061757
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 14:30:40 -0700 (PDT)
+Received: by mail-lj1-x242.google.com with SMTP id h19so7767912ljg.13
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 14:30:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=//FEs9ogX61SCfZ2UB23DAWGzJP9ukCu9JfAdB6kn/k=;
+        b=BJzwsWPBfWvcNkjM4HDGXEAnSDX6aRjcdCMWnh+p1tjAlaBMo/eBfR2pr5Ct6WzMYg
+         JZ/bUabIDzkIQFawCNdpPH2eddjpcxpDIvI2iO1Gz5ThkOoLu2RqFDzYs90bEQTO1SHB
+         KDqzv/lsBlIgbKcB4Q636zKebPkawu5k3WuDV8b9zIzX9FAKyaUAoksZA5oSGZjOU5WC
+         h3w3dGcwmclloMuo5tPL/S4r+8gQMNscJvP/bjKp2QsxLITp0ZSbpLAxFFAqsf21Ait8
+         tMgLkvlZJ8D3JxGRgFpuThqf+B9SCo8SQFHPUxRmP9B2yDTwzJc37PoQYwKpVldcDPSz
+         yt4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=//FEs9ogX61SCfZ2UB23DAWGzJP9ukCu9JfAdB6kn/k=;
+        b=EiEgtgjDJRbiHOxe9mYfTtJgABxst2lv8oyiL3LzmkOyfPC3/sqJycNVK0Y+AbUISw
+         1rUmQGhbLbP+LrxPR4jma760jAKiwAjrYhw5XzogD1CgJKdCWn19Lz0rkGjKYQdk9S12
+         iOwb1UwNZ7ldrj3bBGlRfSxfQpeUU7e0+OgizRPRWikzXEkJElyq0ArRmHwOz5gvsaoh
+         bHSJxD9eBvr5Wv35uIl1nPR3SjDPGpfVs1eBdi4r1OZcPDjB+bj6taUNw83SPVJ2qvXE
+         1q0g8RSVA/ou2t9BPFrHEOfYWXWowftiaSvbL6FEwr3M91yywLhRs5oIIiszBpnV1PYL
+         181A==
+X-Gm-Message-State: AOAM530AgJ+dq9woBCH68HVeEXq+/m/9RqRq0aO/TtjO2B2XaN6dyNE9
+        YJD02FwNR1Uq6qNkhaeA0vcBny7j
+X-Google-Smtp-Source: ABdhPJwVjZpbFTDcPQyZk95TknActODkkSiIPPSn0iEM0ZUKa6igPBezeRkCIZ1pSpVbghSs9V1Mrw==
+X-Received: by 2002:a05:651c:2004:: with SMTP id s4mr2738512ljo.89.1597354238827;
+        Thu, 13 Aug 2020 14:30:38 -0700 (PDT)
+Received: from [192.168.2.145] (109-252-170-211.dynamic.spd-mgts.ru. [109.252.170.211])
+        by smtp.googlemail.com with ESMTPSA id o24sm1331311ljg.69.2020.08.13.14.30.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Aug 2020 14:30:38 -0700 (PDT)
+Subject: Re: [PATCH V2 3/6] brcmfmac: reserve 2 credits for host tx control
+ path
+To:     Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Amar Shankar <amsr@cypress.com>,
+        Jia-Shyr Chuang <joseph.chuang@cypress.com>
+References: <20200610152106.175257-1-chi-hsien.lin@cypress.com>
+ <20200610152106.175257-4-chi-hsien.lin@cypress.com>
+ <f0910f96-1d23-daf1-b517-363e59bff105@gmail.com>
+ <875z9yr7lg.fsf@codeaurora.org>
+ <ffcf55cc-b27d-78ec-ff4f-e7efa3087712@gmail.com>
+ <87a6zapbqp.fsf@codeaurora.org>
+ <0923f45f-03e3-a870-3d2a-35f982482e1a@cypress.com>
+ <bed18d45-6119-53da-2b9c-d98d121c8298@gmail.com>
+ <a7aaf6ac-d6df-ab57-4939-474b542f007c@cypress.com>
+ <112956e1-df38-0a35-c2f0-8d9e1568d3c5@gmail.com>
+ <725e7a73-6cbf-227e-58ea-2457179a5063@cypress.com>
+ <df1c734c-ef7c-19ae-fad0-a5db148e5220@gmail.com>
+ <8edbb3bb-a28b-6dae-1318-68c4b0478ad7@cypress.com>
+From:   Dmitry Osipenko <digetx@gmail.com>
+Message-ID: <f4031cd9-edf8-9c7a-90fa-95cac370a656@gmail.com>
+Date:   Fri, 14 Aug 2020 00:30:37 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <8edbb3bb-a28b-6dae-1318-68c4b0478ad7@cypress.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This will be used to enhance AQL estimated aggregation length
+13.08.2020 06:03, Wright Feng пишет:
+..
+>> Wright, thank you very much for the patch! It fixes the problem!
+>>
+>> Tested-by: Dmitry Osipenko <digetx@gmail.com>
+>>
+>> The 4329/3 is indeed an older chip, but it's also an "old" device (Acer
+>> A500 tablet from 2011/12) that I'm using. Upstream v5.9 kernel just got
+>> support for the A500. There are quite a lot of other older devices with
+>> 4329/3 in a wild that are still very usable if user can wipe off ancient
+>> Android and put a modern Linux distro on them. Today that A500 tablet is
+>> still rocking hard running a modern upstream kernel, opensource drivers
+>> and KDE Plasma 5. The 15Mbit is a good enough speed for a lot of things,
+>> but of course 40Mbit will be better. Would be great if you could try to
+>> help with improving the speed :) Please feel free to contact me at any
+>> time if you'll have patches to try!
+>>
+> Dmitry,
+> Thanks for the verification. The patch will be submitted to upstream
+> within two days.
+> And with regards to low THP problem on Acer A500 tablet, I will create
+> another mail thread to discuss with you.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/airtime.c | 120 +++++++++++++++++++++++++----------------
- 1 file changed, 73 insertions(+), 47 deletions(-)
-
-diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-index 656c9a033714..2d959b22b141 100644
---- a/net/mac80211/airtime.c
-+++ b/net/mac80211/airtime.c
-@@ -405,18 +405,14 @@ ieee80211_calc_legacy_rate_duration(u16 bitrate, bool short_pre,
- 	return duration;
- }
- 
--u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
--			      struct ieee80211_rx_status *status,
--			      int len)
-+static u32 ieee80211_get_rate_duration(struct ieee80211_hw *hw,
-+				       struct ieee80211_rx_status *status,
-+				       u32 *overhead)
- {
--	struct ieee80211_supported_band *sband;
--	const struct ieee80211_rate *rate;
- 	bool sgi = status->enc_flags & RX_ENC_FLAG_SHORT_GI;
--	bool sp = status->enc_flags & RX_ENC_FLAG_SHORTPRE;
- 	int bw, streams;
- 	int group, idx;
- 	u32 duration;
--	bool cck;
- 
- 	switch (status->bw) {
- 	case RATE_INFO_BW_20:
-@@ -437,20 +433,6 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
- 	}
- 
- 	switch (status->encoding) {
--	case RX_ENC_LEGACY:
--		if (WARN_ON_ONCE(status->band > NL80211_BAND_5GHZ))
--			return 0;
--
--		sband = hw->wiphy->bands[status->band];
--		if (!sband || status->rate_idx >= sband->n_bitrates)
--			return 0;
--
--		rate = &sband->bitrates[status->rate_idx];
--		cck = rate->flags & IEEE80211_RATE_MANDATORY_B;
--
--		return ieee80211_calc_legacy_rate_duration(rate->bitrate, sp,
--							   cck, len);
--
- 	case RX_ENC_VHT:
- 		streams = status->nss;
- 		idx = status->rate_idx;
-@@ -477,13 +459,47 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
- 
- 	duration = airtime_mcs_groups[group].duration[idx];
- 	duration <<= airtime_mcs_groups[group].shift;
-+	*overhead = 36 + (streams << 2);
-+
-+	return duration;
-+}
-+
-+
-+u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
-+			      struct ieee80211_rx_status *status,
-+			      int len)
-+{
-+	struct ieee80211_supported_band *sband;
-+	u32 duration, overhead = 0;
-+
-+	if (status->encoding == RX_ENC_LEGACY) {
-+		const struct ieee80211_rate *rate;
-+		bool sp = status->enc_flags & RX_ENC_FLAG_SHORTPRE;
-+		bool cck;
-+
-+		if (WARN_ON_ONCE(status->band > NL80211_BAND_5GHZ))
-+			return 0;
-+
-+		sband = hw->wiphy->bands[status->band];
-+		if (!sband || status->rate_idx >= sband->n_bitrates)
-+			return 0;
-+
-+		rate = &sband->bitrates[status->rate_idx];
-+		cck = rate->flags & IEEE80211_RATE_MANDATORY_B;
-+
-+		return ieee80211_calc_legacy_rate_duration(rate->bitrate, sp,
-+							   cck, len);
-+	}
-+
-+	duration = ieee80211_get_rate_duration(hw, status, &overhead);
-+	if (!duration)
-+		return 0;
-+
- 	duration *= len;
- 	duration /= AVG_PKT_SIZE;
- 	duration /= 1024;
- 
--	duration += 36 + (streams << 2);
--
--	return duration;
-+	return duration + overhead;
- }
- EXPORT_SYMBOL_GPL(ieee80211_calc_rx_airtime);
- 
-@@ -530,46 +546,56 @@ static bool ieee80211_fill_rate_info(struct ieee80211_hw *hw,
- 	return false;
- }
- 
--static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
--					  struct ieee80211_tx_rate *rate,
--					  struct rate_info *ri,
--					  u8 band, int len)
-+static int ieee80211_fill_rx_status(struct ieee80211_rx_status *stat,
-+				    struct ieee80211_hw *hw,
-+				    struct ieee80211_tx_rate *rate,
-+				    struct rate_info *ri, u8 band, int len)
- {
--	struct ieee80211_rx_status stat = {
--		.band = band,
--	};
-+	memset(stat, 0, sizeof(*stat));
-+	stat->band = band;
- 
--	if (ieee80211_fill_rate_info(hw, &stat, band, ri))
--		goto out;
-+	if (ieee80211_fill_rate_info(hw, stat, band, ri))
-+		return 0;
- 
- 	if (rate->idx < 0 || !rate->count)
--		return 0;
-+		return -1;
- 
- 	if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
--		stat.bw = RATE_INFO_BW_80;
-+		stat->bw = RATE_INFO_BW_80;
- 	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
--		stat.bw = RATE_INFO_BW_40;
-+		stat->bw = RATE_INFO_BW_40;
- 	else
--		stat.bw = RATE_INFO_BW_20;
-+		stat->bw = RATE_INFO_BW_20;
- 
--	stat.enc_flags = 0;
-+	stat->enc_flags = 0;
- 	if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
--		stat.enc_flags |= RX_ENC_FLAG_SHORTPRE;
-+		stat->enc_flags |= RX_ENC_FLAG_SHORTPRE;
- 	if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
--		stat.enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+		stat->enc_flags |= RX_ENC_FLAG_SHORT_GI;
- 
--	stat.rate_idx = rate->idx;
-+	stat->rate_idx = rate->idx;
- 	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
--		stat.encoding = RX_ENC_VHT;
--		stat.rate_idx = ieee80211_rate_get_vht_mcs(rate);
--		stat.nss = ieee80211_rate_get_vht_nss(rate);
-+		stat->encoding = RX_ENC_VHT;
-+		stat->rate_idx = ieee80211_rate_get_vht_mcs(rate);
-+		stat->nss = ieee80211_rate_get_vht_nss(rate);
- 	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
--		stat.encoding = RX_ENC_HT;
-+		stat->encoding = RX_ENC_HT;
- 	} else {
--		stat.encoding = RX_ENC_LEGACY;
-+		stat->encoding = RX_ENC_LEGACY;
- 	}
- 
--out:
-+	return 0;
-+}
-+
-+static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
-+					  struct ieee80211_tx_rate *rate,
-+					  struct rate_info *ri,
-+					  u8 band, int len)
-+{
-+	struct ieee80211_rx_status stat;
-+
-+	ieee80211_fill_rx_status(&stat, hw, rate, ri, band, len);
-+
- 	return ieee80211_calc_rx_airtime(hw, &stat, len);
- }
- 
--- 
-2.28.0
-
+Thank you!
