@@ -2,115 +2,214 @@ Return-Path: <SRS0=/wyl=BX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA72C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 14:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B82C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C92120675
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 14:16:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9455020781
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RlOjJrJG"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BPgmyYTi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbgHMOQf (ORCPT
+        id S1726427AbgHMPwT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 10:16:35 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52808 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726082AbgHMOQe (ORCPT
+        Thu, 13 Aug 2020 11:52:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55210 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726292AbgHMPwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Aug 2020 10:16:34 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07DED9sg153761;
-        Thu, 13 Aug 2020 14:13:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=hReHtbilarffvDjNu7dz5RQ1aPGTpcjqtoy9B6EgYbE=;
- b=RlOjJrJGBnVnMbAjGhU7v6quEXMqD8MRFt1F6BV5ER3jp3bl4j1ixvh+i2l1Pc4DNXh0
- Lfom1t52mTJMSykOuI5mrrPJfL6LSlsH9jf+jN1p1NgGkbCJkRZ4adLUDesr2bAah1l2
- 7Cu7gaX0NZDgQgCsjrDTVDDC0k0XF1JexsQw90S2lUCgCooCWFIE3+bCw4SmlwByRymn
- JxPzZb8FihpNDd240iCIz5f9Z+GHYRbt+k5OpcPqMrb2sUxHCrRk14y3y/YImRmRbPnh
- t+6+yVeV50zeagiC8LBtCzJWaIkgTAasaCZeodssaWxl2ypQzONrpbEOb0w7MiHnAgE8 Cw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 32w73c800a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 13 Aug 2020 14:13:09 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07DE9Rls049806;
-        Thu, 13 Aug 2020 14:13:08 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 32t5y9vds5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Aug 2020 14:13:08 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07DED2q9032552;
-        Thu, 13 Aug 2020 14:13:02 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 13 Aug 2020 14:13:01 +0000
-Date:   Thu, 13 Aug 2020 17:12:53 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Senthil Balasubramanian <senthilkumar@atheros.com>,
-        Sujith <Sujith.Manoharan@atheros.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] ath9k: Fix potential out of bounds in
- ath9k_htc_txcompletion_cb()
-Message-ID: <20200813141253.GA457408@mwanda>
+        Thu, 13 Aug 2020 11:52:19 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD7ADC061383
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 08:52:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=uQhJQQITnz3C7SLVQCD8u+Bt7Iip0mypnEhGuUSJQ30=; b=BPgmyYTiSPIARO/rpIv8dd1kDd
+        IxUVoqLKdX9pIUMFF1SzlmC2dhzYqLFBSn6D9JILa/fVFaffQY9d90GS9z7ITIzC+1RYIqvaXfu9h
+        IA4viBftUPaouueJyqKiS5WcQBRgHx9LE/P35P9P0Qb5pNA6RIB19Gzu1E8nrZJvcOxw=;
+Received: from p54ae996c.dip0.t-ipconnect.de ([84.174.153.108] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1k6FWX-0000Cc-TL; Thu, 13 Aug 2020 17:52:13 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5.9 1/3] mac80211: use rate provided via status->rate on ieee80211_tx_status_ext for AQL
+Date:   Thu, 13 Aug 2020 17:52:10 +0200
+Message-Id: <20200813155212.97884-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9711 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- suspectscore=2 mlxscore=0 adultscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008130106
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9711 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 phishscore=0 suspectscore=2 mlxscore=0 priorityscore=1501
- spamscore=0 clxscore=1011 lowpriorityscore=0 adultscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008130107
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The value of "htc_hdr->endpoint_id" comes from skb->data so Smatch marks
-it as untrusted so we have to check it before using it as an array
-offset.
+Since ieee80211_tx_info does not have enough room to encode HE rates, HE
+drivers use status->rate to provide rate info.
+Store it in struct sta_info and use it for AQL.
 
-This is similar to a bug that syzkaller found in commit e4ff08a4d727
-("ath9k: Fix use-after-free Write in ath9k_htc_rx_msg") so it is
-probably a real issue.
-
-Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/ath9k/htc_hst.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/airtime.c  | 53 +++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/sta_info.h |  1 +
+ net/mac80211/status.c   | 12 ++++++----
+ 3 files changed, 60 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index d2e062eaf561..510e61e97dbc 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -339,6 +339,8 @@ void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index 366f76c9003d..656c9a033714 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -487,14 +487,61 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_calc_rx_airtime);
  
- 	if (skb) {
- 		htc_hdr = (struct htc_frame_hdr *) skb->data;
-+		if (htc_hdr->endpoint_id >= ARRAY_SIZE(htc_handle->endpoint))
-+			goto ret;
- 		endpoint = &htc_handle->endpoint[htc_hdr->endpoint_id];
- 		skb_pull(skb, sizeof(struct htc_frame_hdr));
++static bool ieee80211_fill_rate_info(struct ieee80211_hw *hw,
++				     struct ieee80211_rx_status *stat, u8 band,
++				     struct rate_info *ri)
++{
++	struct ieee80211_supported_band *sband = hw->wiphy->bands[band];
++	int i;
++
++	if (!ri || !sband)
++	    return false;
++
++	stat->bw = ri->bw;
++	stat->nss = ri->nss;
++	stat->rate_idx = ri->mcs;
++
++	if (ri->flags & RATE_INFO_FLAGS_HE_MCS)
++		stat->encoding = RX_ENC_HE;
++	else if (ri->flags & RATE_INFO_FLAGS_VHT_MCS)
++		stat->encoding = RX_ENC_VHT;
++	else if (ri->flags & RATE_INFO_FLAGS_MCS)
++		stat->encoding = RX_ENC_HT;
++	else
++		stat->encoding = RX_ENC_LEGACY;
++
++	if (ri->flags & RATE_INFO_FLAGS_SHORT_GI)
++		stat->enc_flags |= RX_ENC_FLAG_SHORT_GI;
++
++	stat->he_gi = ri->he_gi;
++
++	if (stat->encoding != RX_ENC_LEGACY)
++		return true;
++
++	stat->rate_idx = 0;
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if (ri->legacy != sband->bitrates[i].bitrate)
++			continue;
++
++		stat->rate_idx = i;
++		return true;
++	}
++
++	return false;
++}
++
+ static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
+ 					  struct ieee80211_tx_rate *rate,
++					  struct rate_info *ri,
+ 					  u8 band, int len)
+ {
+ 	struct ieee80211_rx_status stat = {
+ 		.band = band,
+ 	};
  
++	if (ieee80211_fill_rate_info(hw, &stat, band, ri))
++		goto out;
++
+ 	if (rate->idx < 0 || !rate->count)
+ 		return 0;
+ 
+@@ -522,6 +569,7 @@ static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
+ 		stat.encoding = RX_ENC_LEGACY;
+ 	}
+ 
++out:
+ 	return ieee80211_calc_rx_airtime(hw, &stat, len);
+ }
+ 
+@@ -536,7 +584,7 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
+ 		struct ieee80211_tx_rate *rate = &info->status.rates[i];
+ 		u32 cur_duration;
+ 
+-		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate,
++		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate, NULL,
+ 							      info->band, len);
+ 		if (!cur_duration)
+ 			break;
+@@ -573,6 +621,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 		struct sta_info *sta = container_of(pubsta, struct sta_info,
+ 						    sta);
+ 		struct ieee80211_tx_rate *rate = &sta->tx_stats.last_rate;
++		struct rate_info *ri = &sta->tx_stats.last_rate_info;
+ 		u32 airtime;
+ 
+ 		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
+@@ -586,7 +635,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 		 * This will not be very accurate, but much better than simply
+ 		 * assuming un-aggregated tx.
+ 		 */
+-		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, band,
++		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, ri, band,
+ 							 ampdu ? len * 16 : len);
+ 		if (ampdu)
+ 			airtime /= 16;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 9d398c9daa4c..8060d142e4f1 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -611,6 +611,7 @@ struct sta_info {
+ 		u64 packets[IEEE80211_NUM_ACS];
+ 		u64 bytes[IEEE80211_NUM_ACS];
+ 		struct ieee80211_tx_rate last_rate;
++		struct rate_info last_rate_info;
+ 		u64 msdu[IEEE80211_NUM_TIDS + 1];
+ 	} tx_stats;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index adb1d30ce06e..6de63f1d8c7b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -1137,9 +1137,17 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = status->info;
+ 	struct ieee80211_sta *pubsta = status->sta;
+ 	struct ieee80211_supported_band *sband;
++	struct sta_info *sta;
+ 	int retry_count;
+ 	bool acked, noack_success;
+ 
++	if (pubsta) {
++		sta = container_of(pubsta, struct sta_info, sta);
++
++		if (status->rate)
++			sta->tx_stats.last_rate_info = *status->rate;
++	}
++
+ 	if (status->skb)
+ 		return __ieee80211_tx_status(hw, status);
+ 
+@@ -1154,10 +1162,6 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
+ 
+ 	if (pubsta) {
+-		struct sta_info *sta;
+-
+-		sta = container_of(pubsta, struct sta_info, sta);
+-
+ 		if (!acked && !noack_success)
+ 			sta->status_stats.retry_failed++;
+ 		sta->status_stats.retry_count += retry_count;
 -- 
 2.28.0
 
