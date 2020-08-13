@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B82C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC49C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9455020781
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52CE620781
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BPgmyYTi"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="r/058piG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726427AbgHMPwT (ORCPT
+        id S1726606AbgHMPwU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 11:52:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55210 "EHLO
+        Thu, 13 Aug 2020 11:52:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726292AbgHMPwT (ORCPT
+        with ESMTP id S1726305AbgHMPwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 13 Aug 2020 11:52:19 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD7ADC061383
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D70CCC061384
         for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 08:52:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=uQhJQQITnz3C7SLVQCD8u+Bt7Iip0mypnEhGuUSJQ30=; b=BPgmyYTiSPIARO/rpIv8dd1kDd
-        IxUVoqLKdX9pIUMFF1SzlmC2dhzYqLFBSn6D9JILa/fVFaffQY9d90GS9z7ITIzC+1RYIqvaXfu9h
-        IA4viBftUPaouueJyqKiS5WcQBRgHx9LE/P35P9P0Qb5pNA6RIB19Gzu1E8nrZJvcOxw=;
+        bh=kYglcNj8/+I8pmxtgchmAGHMlWTTzciOicDgj460Lbc=; b=r/058piGzC2TJ57ZPP/Tq4ir/N
+        9tTIUG6o7QY0pBzkE15alx891So2eFvjGTKqNYWZMB0EYl88E3nKdjTbbHK/0uoa6tfurS3Um0jUL
+        keoD5+gvsEJ2RVukpBAFGPAlZ5puf88b+cE3oU/70tJB+YY+xRriR39RNgEOVb0F6YWg=;
 Received: from p54ae996c.dip0.t-ipconnect.de ([84.174.153.108] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k6FWX-0000Cc-TL; Thu, 13 Aug 2020 17:52:13 +0200
+        id 1k6FWY-0000Cc-Aj; Thu, 13 Aug 2020 17:52:14 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5.9 1/3] mac80211: use rate provided via status->rate on ieee80211_tx_status_ext for AQL
-Date:   Thu, 13 Aug 2020 17:52:10 +0200
-Message-Id: <20200813155212.97884-1-nbd@nbd.name>
+Subject: [PATCH 5.9 3/3] mac80211: improve AQL aggregation estimation for low data rates
+Date:   Thu, 13 Aug 2020 17:52:12 +0200
+Message-Id: <20200813155212.97884-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200813155212.97884-1-nbd@nbd.name>
+References: <20200813155212.97884-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,162 +56,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since ieee80211_tx_info does not have enough room to encode HE rates, HE
-drivers use status->rate to provide rate info.
-Store it in struct sta_info and use it for AQL.
+Links with low data rates use much smaller aggregates and are much more
+sensitive to latency added by bufferbloat.
+Tune the assumed aggregation length based on the tx rate duration.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/airtime.c  | 53 +++++++++++++++++++++++++++++++++++++++--
- net/mac80211/sta_info.h |  1 +
- net/mac80211/status.c   | 12 ++++++----
- 3 files changed, 60 insertions(+), 6 deletions(-)
+ net/mac80211/airtime.c | 37 +++++++++++++++++++++++++------------
+ 1 file changed, 25 insertions(+), 12 deletions(-)
 
 diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-index 366f76c9003d..656c9a033714 100644
+index 2d959b22b141..6a46771f9d54 100644
 --- a/net/mac80211/airtime.c
 +++ b/net/mac80211/airtime.c
-@@ -487,14 +487,61 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL_GPL(ieee80211_calc_rx_airtime);
- 
-+static bool ieee80211_fill_rate_info(struct ieee80211_hw *hw,
-+				     struct ieee80211_rx_status *stat, u8 band,
-+				     struct rate_info *ri)
-+{
-+	struct ieee80211_supported_band *sband = hw->wiphy->bands[band];
-+	int i;
-+
-+	if (!ri || !sband)
-+	    return false;
-+
-+	stat->bw = ri->bw;
-+	stat->nss = ri->nss;
-+	stat->rate_idx = ri->mcs;
-+
-+	if (ri->flags & RATE_INFO_FLAGS_HE_MCS)
-+		stat->encoding = RX_ENC_HE;
-+	else if (ri->flags & RATE_INFO_FLAGS_VHT_MCS)
-+		stat->encoding = RX_ENC_VHT;
-+	else if (ri->flags & RATE_INFO_FLAGS_MCS)
-+		stat->encoding = RX_ENC_HT;
-+	else
-+		stat->encoding = RX_ENC_LEGACY;
-+
-+	if (ri->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		stat->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+
-+	stat->he_gi = ri->he_gi;
-+
-+	if (stat->encoding != RX_ENC_LEGACY)
-+		return true;
-+
-+	stat->rate_idx = 0;
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (ri->legacy != sband->bitrates[i].bitrate)
-+			continue;
-+
-+		stat->rate_idx = i;
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
- 					  struct ieee80211_tx_rate *rate,
-+					  struct rate_info *ri,
- 					  u8 band, int len)
- {
- 	struct ieee80211_rx_status stat = {
- 		.band = band,
- 	};
- 
-+	if (ieee80211_fill_rate_info(hw, &stat, band, ri))
-+		goto out;
-+
- 	if (rate->idx < 0 || !rate->count)
- 		return 0;
- 
-@@ -522,6 +569,7 @@ static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
- 		stat.encoding = RX_ENC_LEGACY;
- 	}
- 
-+out:
- 	return ieee80211_calc_rx_airtime(hw, &stat, len);
- }
- 
-@@ -536,7 +584,7 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
- 		struct ieee80211_tx_rate *rate = &info->status.rates[i];
- 		u32 cur_duration;
- 
--		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate,
-+		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate, NULL,
- 							      info->band, len);
- 		if (!cur_duration)
- 			break;
-@@ -573,6 +621,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+@@ -646,27 +646,40 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 	if (pubsta) {
  		struct sta_info *sta = container_of(pubsta, struct sta_info,
  						    sta);
++		struct ieee80211_rx_status stat;
  		struct ieee80211_tx_rate *rate = &sta->tx_stats.last_rate;
-+		struct rate_info *ri = &sta->tx_stats.last_rate_info;
- 		u32 airtime;
+ 		struct rate_info *ri = &sta->tx_stats.last_rate_info;
+-		u32 airtime;
++		u32 duration, overhead;
++		u8 agg_shift;
  
- 		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
-@@ -586,7 +635,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+-		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
+-				     IEEE80211_TX_RC_MCS)))
+-			ampdu = false;
++		ieee80211_fill_rx_status(&stat, hw, rate, ri, band, len);
+ 
++		if (stat.encoding == RX_ENC_LEGACY || !ampdu)
++			return ieee80211_calc_rx_airtime(hw, &stat, len);
++
++		duration = ieee80211_get_rate_duration(hw, &stat, &overhead);
+ 		/*
+ 		 * Assume that HT/VHT transmission on any AC except VO will
+ 		 * use aggregation. Since we don't have reliable reporting
+-		 * of aggregation length, assume an average of 16.
++		 * of aggregation length, assume an average size based on the
++		 * tx rate.
  		 * This will not be very accurate, but much better than simply
- 		 * assuming un-aggregated tx.
+-		 * assuming un-aggregated tx.
++		 * assuming un-aggregated tx in all cases.
  		 */
--		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, band,
-+		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, ri, band,
- 							 ampdu ? len * 16 : len);
- 		if (ampdu)
- 			airtime /= 16;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9d398c9daa4c..8060d142e4f1 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -611,6 +611,7 @@ struct sta_info {
- 		u64 packets[IEEE80211_NUM_ACS];
- 		u64 bytes[IEEE80211_NUM_ACS];
- 		struct ieee80211_tx_rate last_rate;
-+		struct rate_info last_rate_info;
- 		u64 msdu[IEEE80211_NUM_TIDS + 1];
- 	} tx_stats;
- 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index adb1d30ce06e..6de63f1d8c7b 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -1137,9 +1137,17 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info = status->info;
- 	struct ieee80211_sta *pubsta = status->sta;
- 	struct ieee80211_supported_band *sband;
-+	struct sta_info *sta;
- 	int retry_count;
- 	bool acked, noack_success;
- 
-+	if (pubsta) {
-+		sta = container_of(pubsta, struct sta_info, sta);
-+
-+		if (status->rate)
-+			sta->tx_stats.last_rate_info = *status->rate;
-+	}
-+
- 	if (status->skb)
- 		return __ieee80211_tx_status(hw, status);
- 
-@@ -1154,10 +1162,6 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
- 
- 	if (pubsta) {
--		struct sta_info *sta;
+-		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, ri, band,
+-							 ampdu ? len * 16 : len);
+-		if (ampdu)
+-			airtime /= 16;
 -
--		sta = container_of(pubsta, struct sta_info, sta);
--
- 		if (!acked && !noack_success)
- 			sta->status_stats.retry_failed++;
- 		sta->status_stats.retry_count += retry_count;
+-		return airtime;
++		if (duration > 400) /* <= VHT20 MCS2 1S */
++			agg_shift = 1;
++		else if (duration > 250) /* <= VHT20 MCS3 1S or MCS1 2S */
++			agg_shift = 2;
++		else if (duration > 150) /* <= VHT20 MCS5 1S or MCS3 2S */
++			agg_shift = 3;
++		else
++			agg_shift = 4;
++
++		duration *= len;
++		duration /= AVG_PKT_SIZE;
++		duration /= 1024;
++
++		return duration + (overhead >> agg_shift);
+ 	}
+ 
+ 	if (!conf)
 -- 
 2.28.0
 
