@@ -7,52 +7,53 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A27AFC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 09:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CD4C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 09:05:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77CBE2074D
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 09:04:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B4CB2074D
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 09:05:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="hOpnbyAo"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qrzIsGyY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726597AbgHMJEz (ORCPT
+        id S1726292AbgHMJFS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 05:04:55 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:58096 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726192AbgHMJEy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Aug 2020 05:04:54 -0400
+        Thu, 13 Aug 2020 05:05:18 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:63560 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726192AbgHMJFS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Aug 2020 05:05:18 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597309492; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1597309517; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=F2wT4AtZTUXJpJtE5cYctWbmbP4HkchcMEanSMWA6zc=; b=hOpnbyAoFR4SCRF/Gr9ubcv08Yo3yRptuVfiaDn2DnYOeUmxn78SxyrV91U1GaKeV6WWhhf9
- xGewHhZeSDeLDtSF9Mf2hmT9nt5hXPe19q2JGuPtuYYMFeLoS+Skv9L2wztKQCM2GUQfLuIn
- /E+dV22E30CsU04Wa2qRpYI4w6s=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ bh=ClGOkQu3PEnD9mH7emRdQpApxzAiAiZhl9hgHeGM/2Y=; b=qrzIsGyYLlH5pK7IWpVFN7GaQuEXWK4TbkIz9GMssBSUZlwbIIFTyLT4DXpBfhVDvDTG55Mq
+ cOU2iXYENSEfwNzYFwneNtuBB9waGiWF0SnasPhIzBMLtr1mJuAjstyLkGl1k5EM12Yr0tf5
+ SlI2g3UG/WhF8C7INt2pNeR979c=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5f350224247ccc308c06f51c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 13 Aug 2020 09:04:36
+ 5f35022ef2b697637a83130c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 13 Aug 2020 09:04:46
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D2C1DC433C6; Thu, 13 Aug 2020 09:04:35 +0000 (UTC)
+        id 788FAC4339C; Thu, 13 Aug 2020 09:04:45 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BFDD4C43391;
-        Thu, 13 Aug 2020 09:04:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BFDD4C43391
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 125D4C433A0;
+        Thu, 13 Aug 2020 09:04:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 125D4C433A0
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 03/10] ath11k: move ring mask definitions to hw_params
-Date:   Thu, 13 Aug 2020 12:04:19 +0300
-Message-Id: <1597309466-19688-4-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 09/10] ath11k: pci: add HAL, CE and core initialisation
+Date:   Thu, 13 Aug 2020 12:04:25 +0300
+Message-Id: <1597309466-19688-10-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1597309466-19688-1-git-send-email-kvalo@codeaurora.org>
 References: <1597309466-19688-1-git-send-email-kvalo@codeaurora.org>
@@ -61,389 +62,512 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is needed for splitting ahb and pci modules as they have different ring
-mask settings.
+From: Govind Singh <govinds@codeaurora.org>
+
+Define CE pipe/qmi config and setup pci irq for the
+same. Call ath11k_core_init().
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c  | 88 ++++------------------------------
- drivers/net/wireless/ath/ath11k/core.c |  2 +
- drivers/net/wireless/ath/ath11k/core.h | 10 ----
- drivers/net/wireless/ath/ath11k/dp.c   | 22 ++++-----
- drivers/net/wireless/ath/ath11k/hw.c   | 68 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/hw.h   | 17 +++++++
- 6 files changed, 106 insertions(+), 101 deletions(-)
+ drivers/net/wireless/ath/ath11k/ce.c   |   2 +
+ drivers/net/wireless/ath/ath11k/core.c |   1 +
+ drivers/net/wireless/ath/ath11k/hal.c  |   1 +
+ drivers/net/wireless/ath/ath11k/pci.c  | 390 ++++++++++++++++++++++++++++++++-
+ 4 files changed, 393 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 7e9bfeaaf4d2..e3228a4f485f 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -321,78 +321,6 @@ static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
- 	"tcl2host-status-ring",
- };
+diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
+index 7ae1bef0ab30..2fff171b35f8 100644
+--- a/drivers/net/wireless/ath/ath11k/ce.c
++++ b/drivers/net/wireless/ath/ath11k/ce.c
+@@ -619,6 +619,7 @@ void ath11k_ce_cleanup_pipes(struct ath11k_base *ab)
+ 		/* NOTE: Should we also clean up tx buffer in all pipes? */
+ 	}
+ }
++EXPORT_SYMBOL(ath11k_ce_cleanup_pipes);
  
--#define ATH11K_TX_RING_MASK_0 0x1
--#define ATH11K_TX_RING_MASK_1 0x2
--#define ATH11K_TX_RING_MASK_2 0x4
--
--#define ATH11K_RX_RING_MASK_0 0x1
--#define ATH11K_RX_RING_MASK_1 0x2
--#define ATH11K_RX_RING_MASK_2 0x4
--#define ATH11K_RX_RING_MASK_3 0x8
--
--#define ATH11K_RX_ERR_RING_MASK_0 0x1
--
--#define ATH11K_RX_WBM_REL_RING_MASK_0 0x1
--
--#define ATH11K_REO_STATUS_RING_MASK_0 0x1
--
--#define ATH11K_RXDMA2HOST_RING_MASK_0 0x1
--#define ATH11K_RXDMA2HOST_RING_MASK_1 0x2
--#define ATH11K_RXDMA2HOST_RING_MASK_2 0x4
--
--#define ATH11K_HOST2RXDMA_RING_MASK_0 0x1
--#define ATH11K_HOST2RXDMA_RING_MASK_1 0x2
--#define ATH11K_HOST2RXDMA_RING_MASK_2 0x4
--
--#define ATH11K_RX_MON_STATUS_RING_MASK_0 0x1
--#define ATH11K_RX_MON_STATUS_RING_MASK_1 0x2
--#define ATH11K_RX_MON_STATUS_RING_MASK_2 0x4
--
--const u8 ath11k_tx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_TX_RING_MASK_0,
--	ATH11K_TX_RING_MASK_1,
--	ATH11K_TX_RING_MASK_2,
--};
--
--const u8 rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	0, 0, 0, 0,
--	ATH11K_RX_MON_STATUS_RING_MASK_0,
--	ATH11K_RX_MON_STATUS_RING_MASK_1,
--	ATH11K_RX_MON_STATUS_RING_MASK_2,
--};
--
--const u8 ath11k_rx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	0, 0, 0, 0, 0, 0, 0,
--	ATH11K_RX_RING_MASK_0,
--	ATH11K_RX_RING_MASK_1,
--	ATH11K_RX_RING_MASK_2,
--	ATH11K_RX_RING_MASK_3,
--};
--
--const u8 ath11k_rx_err_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_RX_ERR_RING_MASK_0,
--};
--
--const u8 ath11k_rx_wbm_rel_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_RX_WBM_REL_RING_MASK_0,
--};
--
--const u8 ath11k_reo_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_REO_STATUS_RING_MASK_0,
--};
--
--const u8 ath11k_rxdma2host_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_RXDMA2HOST_RING_MASK_0,
--	ATH11K_RXDMA2HOST_RING_MASK_1,
--	ATH11K_RXDMA2HOST_RING_MASK_2,
--};
--
--const u8 ath11k_host2rxdma_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
--	ATH11K_HOST2RXDMA_RING_MASK_0,
--	ATH11K_HOST2RXDMA_RING_MASK_1,
--	ATH11K_HOST2RXDMA_RING_MASK_2,
--};
--
- /* enum ext_irq_num - irq numbers that can be used by external modules
-  * like datapath
-  */
-@@ -750,39 +678,39 @@ static int ath11k_ahb_ext_irq_config(struct ath11k_base *ab)
- 			       ath11k_ahb_ext_grp_napi_poll, NAPI_POLL_WEIGHT);
+ void ath11k_ce_rx_post_buf(struct ath11k_base *ab)
+ {
+@@ -780,6 +781,7 @@ int ath11k_ce_alloc_pipes(struct ath11k_base *ab)
  
- 		for (j = 0; j < ATH11K_EXT_IRQ_NUM_MAX; j++) {
--			if (ath11k_tx_ring_mask[i] & BIT(j)) {
-+			if (ab->hw_params.ring_mask->tx[i] & BIT(j)) {
- 				irq_grp->irqs[num_irq++] =
- 					wbm2host_tx_completions_ring1 - j;
- 			}
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath11k_ce_alloc_pipes);
  
--			if (ath11k_rx_ring_mask[i] & BIT(j)) {
-+			if (ab->hw_params.ring_mask->rx[i] & BIT(j)) {
- 				irq_grp->irqs[num_irq++] =
- 					reo2host_destination_ring1 - j;
- 			}
- 
--			if (ath11k_rx_err_ring_mask[i] & BIT(j))
-+			if (ab->hw_params.ring_mask->rx_err[i] & BIT(j))
- 				irq_grp->irqs[num_irq++] = reo2host_exception;
- 
--			if (ath11k_rx_wbm_rel_ring_mask[i] & BIT(j))
-+			if (ab->hw_params.ring_mask->rx_wbm_rel[i] & BIT(j))
- 				irq_grp->irqs[num_irq++] = wbm2host_rx_release;
- 
--			if (ath11k_reo_status_ring_mask[i] & BIT(j))
-+			if (ab->hw_params.ring_mask->reo_status[i] & BIT(j))
- 				irq_grp->irqs[num_irq++] = reo2host_status;
- 
- 			if (j < ab->hw_params.max_radios) {
--				if (ath11k_rxdma2host_ring_mask[i] & BIT(j)) {
-+				if (ab->hw_params.ring_mask->rxdma2host[i] & BIT(j)) {
- 					irq_grp->irqs[num_irq++] =
- 						rxdma2host_destination_ring_mac1 -
- 						ath11k_hw_get_mac_from_pdev_id(hw, j);
- 				}
- 
--				if (ath11k_host2rxdma_ring_mask[i] & BIT(j)) {
-+				if (ab->hw_params.ring_mask->host2rxdma[i] & BIT(j)) {
- 					irq_grp->irqs[num_irq++] =
- 						host2rxdma_host_buf_ring_mac1 -
- 						ath11k_hw_get_mac_from_pdev_id(hw, j);
- 				}
- 
--				if (rx_mon_status_ring_mask[i] & BIT(j)) {
-+				if (ab->hw_params.ring_mask->rx_mon_status[i] & BIT(j)) {
- 					irq_grp->irqs[num_irq++] =
- 						ppdu_end_interrupts_mac1 -
- 						ath11k_hw_get_mac_from_pdev_id(hw, j);
+ /* For Big Endian Host, Copy Engine byte_swap is enabled
+  * When Copy Engine does byte_swap, need to byte swap again for the
 diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 093faf20f324..5638f0731634 100644
+index 5c84995baaf9..741093de3a83 100644
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -29,6 +29,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.max_radios = 3,
- 		.bdf_addr = 0x4B0C0000,
- 		.hw_ops = &ipq8074_ops,
-+		.ring_mask = &ath11k_hw_ring_mask_ipq8074,
+@@ -783,6 +783,7 @@ int ath11k_core_init(struct ath11k_base *ab)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath11k_core_init);
+ 
+ void ath11k_core_deinit(struct ath11k_base *ab)
+ {
+diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+index c7b26478d3e7..fe4df2b4a2cc 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.c
++++ b/drivers/net/wireless/ath/ath11k/hal.c
+@@ -1127,6 +1127,7 @@ int ath11k_hal_srng_init(struct ath11k_base *ab)
+ err_hal:
+ 	return ret;
+ }
++EXPORT_SYMBOL(ath11k_hal_srng_init);
+ 
+ void ath11k_hal_srng_deinit(struct ath11k_base *ab)
+ {
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 6f7789fa23d6..d1068766972d 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -16,6 +16,8 @@
+ #define ATH11K_PCI_BAR_NUM		0
+ #define ATH11K_PCI_DMA_MASK		32
+ 
++#define ATH11K_PCI_IRQ_CE0_OFFSET		3
++
+ #define QCA6390_DEVICE_ID		0x1101
+ 
+ static const struct pci_device_id ath11k_pci_id_table[] = {
+@@ -36,6 +38,241 @@ static const struct ath11k_msi_config msi_config = {
  	},
- 	{
- 		.name = "qca6390 hw2.0",
-@@ -41,6 +42,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.max_radios = 3,
- 		.bdf_addr = 0x4B0C0000,
- 		.hw_ops = &qca6390_ops,
-+		.ring_mask = &ath11k_hw_ring_mask_ipq8074,
- 	},
  };
  
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index c48d53ec4fa7..ca97ccf250a4 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -102,18 +102,8 @@ enum ath11k_firmware_mode {
- };
- 
- #define ATH11K_IRQ_NUM_MAX 52
--#define ATH11K_EXT_IRQ_GRP_NUM_MAX 11
- #define ATH11K_EXT_IRQ_NUM_MAX	16
- 
--extern const u8 ath11k_reo_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_tx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_rx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_rx_err_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_rx_wbm_rel_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_rxdma2host_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 ath11k_host2rxdma_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--extern const u8 rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--
- struct ath11k_ext_irq_grp {
- 	struct ath11k_base *ab;
- 	u32 irqs[ATH11K_EXT_IRQ_NUM_MAX];
-diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-index 1d64c3c51ac9..73fcb4f7f3c4 100644
---- a/drivers/net/wireless/ath/ath11k/dp.c
-+++ b/drivers/net/wireless/ath/ath11k/dp.c
-@@ -625,13 +625,13 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 	int i = 0;
- 	int tot_work_done = 0;
- 
--	while (ath11k_tx_ring_mask[grp_id] >> i) {
--		if (ath11k_tx_ring_mask[grp_id] & BIT(i))
-+	while (ab->hw_params.ring_mask->tx[grp_id] >> i) {
-+		if (ab->hw_params.ring_mask->tx[grp_id] & BIT(i))
- 			ath11k_dp_tx_completion_handler(ab, i);
- 		i++;
- 	}
- 
--	if (ath11k_rx_err_ring_mask[grp_id]) {
-+	if (ab->hw_params.ring_mask->rx_err[grp_id]) {
- 		work_done = ath11k_dp_process_rx_err(ab, napi, budget);
- 		budget -= work_done;
- 		tot_work_done += work_done;
-@@ -639,7 +639,7 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 			goto done;
- 	}
- 
--	if (ath11k_rx_wbm_rel_ring_mask[grp_id]) {
-+	if (ab->hw_params.ring_mask->rx_wbm_rel[grp_id]) {
- 		work_done = ath11k_dp_rx_process_wbm_err(ab,
- 							 napi,
- 							 budget);
-@@ -650,8 +650,8 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 			goto done;
- 	}
- 
--	if (ath11k_rx_ring_mask[grp_id]) {
--		i =  fls(ath11k_rx_ring_mask[grp_id]) - 1;
-+	if (ab->hw_params.ring_mask->rx[grp_id]) {
-+		i =  fls(ab->hw_params.ring_mask->rx[grp_id]) - 1;
- 		work_done = ath11k_dp_process_rx(ab, i, napi,
- 						 budget);
- 		budget -= work_done;
-@@ -660,9 +660,9 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 			goto done;
- 	}
- 
--	if (rx_mon_status_ring_mask[grp_id]) {
-+	if (ab->hw_params.ring_mask->rx_mon_status[grp_id]) {
- 		for (i = 0; i <  ab->num_radios; i++) {
--			if (rx_mon_status_ring_mask[grp_id] & BIT(i)) {
-+			if (ab->hw_params.ring_mask->rx_mon_status[grp_id] & BIT(i)) {
- 				work_done =
- 				ath11k_dp_rx_process_mon_rings(ab,
- 							       i, napi,
-@@ -675,11 +675,11 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 		}
- 	}
- 
--	if (ath11k_reo_status_ring_mask[grp_id])
-+	if (ab->hw_params.ring_mask->reo_status[grp_id])
- 		ath11k_dp_process_reo_status(ab);
- 
- 	for (i = 0; i < ab->num_radios; i++) {
--		if (ath11k_rxdma2host_ring_mask[grp_id] & BIT(i)) {
-+		if (ab->hw_params.ring_mask->rxdma2host[grp_id] & BIT(i)) {
- 			work_done = ath11k_dp_process_rxdma_err(ab, i, budget);
- 			budget -= work_done;
- 			tot_work_done += work_done;
-@@ -688,7 +688,7 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 		if (budget <= 0)
- 			goto done;
- 
--		if (ath11k_host2rxdma_ring_mask[grp_id] & BIT(i)) {
-+		if (ab->hw_params.ring_mask->host2rxdma[grp_id] & BIT(i)) {
- 			struct ath11k_pdev_dp *dp = &ab->pdevs[i].ar->dp;
- 			struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
- 
-diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index 6feb0f699cfc..f7354476d673 100644
---- a/drivers/net/wireless/ath/ath11k/hw.c
-+++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -36,3 +36,71 @@ const struct ath11k_hw_ops ipq6018_ops = {
- const struct ath11k_hw_ops qca6390_ops = {
- 	.get_hw_mac_from_pdev_id = ath11k_hw_ipq8074_mac_from_pdev_id,
- };
-+
-+#define ATH11K_TX_RING_MASK_0 0x1
-+#define ATH11K_TX_RING_MASK_1 0x2
-+#define ATH11K_TX_RING_MASK_2 0x4
-+
-+#define ATH11K_RX_RING_MASK_0 0x1
-+#define ATH11K_RX_RING_MASK_1 0x2
-+#define ATH11K_RX_RING_MASK_2 0x4
-+#define ATH11K_RX_RING_MASK_3 0x8
-+
-+#define ATH11K_RX_ERR_RING_MASK_0 0x1
-+
-+#define ATH11K_RX_WBM_REL_RING_MASK_0 0x1
-+
-+#define ATH11K_REO_STATUS_RING_MASK_0 0x1
-+
-+#define ATH11K_RXDMA2HOST_RING_MASK_0 0x1
-+#define ATH11K_RXDMA2HOST_RING_MASK_1 0x2
-+#define ATH11K_RXDMA2HOST_RING_MASK_2 0x4
-+
-+#define ATH11K_HOST2RXDMA_RING_MASK_0 0x1
-+#define ATH11K_HOST2RXDMA_RING_MASK_1 0x2
-+#define ATH11K_HOST2RXDMA_RING_MASK_2 0x4
-+
-+#define ATH11K_RX_MON_STATUS_RING_MASK_0 0x1
-+#define ATH11K_RX_MON_STATUS_RING_MASK_1 0x2
-+#define ATH11K_RX_MON_STATUS_RING_MASK_2 0x4
-+
-+const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074 = {
-+	.tx  = {
-+		ATH11K_TX_RING_MASK_0,
-+		ATH11K_TX_RING_MASK_1,
-+		ATH11K_TX_RING_MASK_2,
++/* Target firmware's Copy Engine configuration. */
++static const struct ce_pipe_config target_ce_config_wlan[] = {
++	/* CE0: host->target HTC control and raw streams */
++	{
++		.pipenum = __cpu_to_le32(0),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.rx_mon_status = {
-+		0, 0, 0, 0,
-+		ATH11K_RX_MON_STATUS_RING_MASK_0,
-+		ATH11K_RX_MON_STATUS_RING_MASK_1,
-+		ATH11K_RX_MON_STATUS_RING_MASK_2,
++
++	/* CE1: target->host HTT + HTC control */
++	{
++		.pipenum = __cpu_to_le32(1),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.rx = {
-+		0, 0, 0, 0, 0, 0, 0,
-+		ATH11K_RX_RING_MASK_0,
-+		ATH11K_RX_RING_MASK_1,
-+		ATH11K_RX_RING_MASK_2,
-+		ATH11K_RX_RING_MASK_3,
++
++	/* CE2: target->host WMI */
++	{
++		.pipenum = __cpu_to_le32(2),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.rx_err = {
-+		ATH11K_RX_ERR_RING_MASK_0,
++
++	/* CE3: host->target WMI */
++	{
++		.pipenum = __cpu_to_le32(3),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.rx_wbm_rel = {
-+		ATH11K_RX_WBM_REL_RING_MASK_0,
++
++	/* CE4: host->target HTT */
++	{
++		.pipenum = __cpu_to_le32(4),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(256),
++		.nbytes_max = __cpu_to_le32(256),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.reo_status = {
-+		ATH11K_REO_STATUS_RING_MASK_0,
++
++	/* CE5: target->host Pktlog */
++	{
++		.pipenum = __cpu_to_le32(5),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.rxdma2host = {
-+		ATH11K_RXDMA2HOST_RING_MASK_0,
-+		ATH11K_RXDMA2HOST_RING_MASK_1,
-+		ATH11K_RXDMA2HOST_RING_MASK_2,
++
++	/* CE6: Reserved for target autonomous hif_memcpy */
++	{
++		.pipenum = __cpu_to_le32(6),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(16384),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
 +	},
-+	.host2rxdma = {
-+		ATH11K_HOST2RXDMA_RING_MASK_0,
-+		ATH11K_HOST2RXDMA_RING_MASK_1,
-+		ATH11K_HOST2RXDMA_RING_MASK_2,
++
++	/* CE7 used only by Host */
++	{
++		.pipenum = __cpu_to_le32(7),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT_H2H),
++		.nentries = __cpu_to_le32(0),
++		.nbytes_max = __cpu_to_le32(0),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE8 target->host used only by IPA */
++	{
++		.pipenum = __cpu_to_le32(8),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(16384),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++	/* CE 9, 10, 11 are used by MHI driver */
++};
++
++/* Map from service/endpoint to Copy Engine.
++ * This table is derived from the CE_PCI TABLE, above.
++ * It is passed to the Target at startup for use by firmware.
++ */
++static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(0),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(4),
++	},
++	{
++		__cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(1),
++	},
++
++	/* (Additions here) */
++
++	{ /* must be last */
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
 +	},
 +};
 +
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index 1958830c01ec..a8cdf4d08be4 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -99,6 +99,19 @@ enum ath11k_bus {
- 	ATH11K_BUS_PCI,
- };
- 
-+#define ATH11K_EXT_IRQ_GRP_NUM_MAX 11
-+
-+struct ath11k_hw_ring_mask {
-+	u8 tx[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 rx_mon_status[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 rx[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 rx_err[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 rx_wbm_rel[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 reo_status[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 rxdma2host[ATH11K_EXT_IRQ_GRP_NUM_MAX];
-+	u8 host2rxdma[ATH11K_EXT_IRQ_GRP_NUM_MAX];
++static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
++	"bhi",
++	"mhi-er0",
++	"mhi-er1",
++	"ce0",
++	"ce1",
++	"ce2",
++	"ce3",
++	"ce4",
++	"ce5",
++	"ce6",
++	"ce7",
++	"ce8",
++	"ce9",
++	"ce10",
++	"ce11",
++	"host2wbm-desc-feed",
++	"host2reo-re-injection",
++	"host2reo-command",
++	"host2rxdma-monitor-ring3",
++	"host2rxdma-monitor-ring2",
++	"host2rxdma-monitor-ring1",
++	"reo2ost-exception",
++	"wbm2host-rx-release",
++	"reo2host-status",
++	"reo2host-destination-ring4",
++	"reo2host-destination-ring3",
++	"reo2host-destination-ring2",
++	"reo2host-destination-ring1",
++	"rxdma2host-monitor-destination-mac3",
++	"rxdma2host-monitor-destination-mac2",
++	"rxdma2host-monitor-destination-mac1",
++	"ppdu-end-interrupts-mac3",
++	"ppdu-end-interrupts-mac2",
++	"ppdu-end-interrupts-mac1",
++	"rxdma2host-monitor-status-ring-mac3",
++	"rxdma2host-monitor-status-ring-mac2",
++	"rxdma2host-monitor-status-ring-mac1",
++	"host2rxdma-host-buf-ring-mac3",
++	"host2rxdma-host-buf-ring-mac2",
++	"host2rxdma-host-buf-ring-mac1",
++	"rxdma2host-destination-ring-mac3",
++	"rxdma2host-destination-ring-mac2",
++	"rxdma2host-destination-ring-mac1",
++	"host2tcl-input-ring4",
++	"host2tcl-input-ring3",
++	"host2tcl-input-ring2",
++	"host2tcl-input-ring1",
++	"wbm2host-tx-completions-ring3",
++	"wbm2host-tx-completions-ring2",
++	"wbm2host-tx-completions-ring1",
++	"tcl2host-status-ring",
 +};
 +
- struct ath11k_hw_ops {
- 	u8 (*get_hw_mac_from_pdev_id)(int pdev_id);
- };
-@@ -116,12 +129,16 @@ struct ath11k_hw_params {
- 	} fw;
+ int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -70,6 +307,106 @@ int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_nam
+ 	return -EINVAL;
+ }
  
- 	const struct ath11k_hw_ops *hw_ops;
++static void ath11k_pci_free_irq(struct ath11k_base *ab)
++{
++	int i, irq_idx;
 +
-+	const struct ath11k_hw_ring_mask *ring_mask;
- };
- 
- extern const struct ath11k_hw_ops ipq8074_ops;
- extern const struct ath11k_hw_ops ipq6018_ops;
- extern const struct ath11k_hw_ops qca6390_ops;
- 
-+extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074;
++	for (i = 0; i < CE_COUNT; i++) {
++		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
++			continue;
++		irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + i;
++		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
++	}
++}
 +
- static inline
- int ath11k_hw_get_mac_from_pdev_id(struct ath11k_hw_params *hw,
- 				   int pdev_idx)
++static void ath11k_pci_ce_irq_disable(struct ath11k_base *ab, u16 ce_id)
++{
++	u32 irq_idx;
++
++	irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + ce_id;
++	disable_irq_nosync(ab->irq_num[irq_idx]);
++}
++
++static irqreturn_t ath11k_pci_ce_interrupt_handler(int irq, void *arg)
++{
++	struct ath11k_ce_pipe *ce_pipe = arg;
++
++	ath11k_pci_ce_irq_disable(ce_pipe->ab, ce_pipe->pipe_num);
++
++	return IRQ_HANDLED;
++}
++
++static int ath11k_pci_config_irq(struct ath11k_base *ab)
++{
++	struct ath11k_ce_pipe *ce_pipe;
++	u32 msi_data_start;
++	u32 msi_data_count;
++	u32 msi_irq_start;
++	unsigned int msi_data;
++	int irq, i, ret, irq_idx;
++
++	ret = ath11k_pci_get_user_msi_assignment(ath11k_pci_priv(ab),
++						 "CE", &msi_data_count,
++						 &msi_data_start, &msi_irq_start);
++	if (ret)
++		return ret;
++
++	/* Configure CE irqs */
++	for (i = 0; i < CE_COUNT; i++) {
++		msi_data = (i % msi_data_count) + msi_irq_start;
++		irq = ath11k_pci_get_msi_irq(ab->dev, msi_data);
++		ce_pipe = &ab->ce.ce_pipe[i];
++
++		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
++			continue;
++
++		irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + i;
++
++		ret = request_irq(irq, ath11k_pci_ce_interrupt_handler,
++				  IRQF_SHARED, irq_name[irq_idx],
++				  ce_pipe);
++		if (ret) {
++			ath11k_err(ab, "failed to request irq %d: %d\n",
++				   irq_idx, ret);
++			return ret;
++		}
++
++		ab->irq_num[irq_idx] = irq;
++	}
++
++	return 0;
++}
++
++static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
++{
++	struct ath11k_qmi_ce_cfg *cfg = &ab->qmi.ce_cfg;
++
++	cfg->tgt_ce = target_ce_config_wlan;
++	cfg->tgt_ce_len = ARRAY_SIZE(target_ce_config_wlan);
++
++	cfg->svc_to_ce_map = target_service_to_ce_map_wlan;
++	cfg->svc_to_ce_map_len = ARRAY_SIZE(target_service_to_ce_map_wlan);
++}
++
++static void ath11k_pci_ce_irq_enable(struct ath11k_base *ab, u16 ce_id)
++{
++	u32 irq_idx;
++
++	irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + ce_id;
++	enable_irq(ab->irq_num[irq_idx]);
++}
++
++static void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
++{
++	int i;
++
++	for (i = 0; i < CE_COUNT; i++) {
++		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
++			continue;
++		ath11k_pci_ce_irq_enable(ab, i);
++	}
++}
++
+ static int ath11k_pci_enable_msi(struct ath11k_pci *ab_pci)
+ {
+ 	struct ath11k_base *ab = ab_pci->ab;
+@@ -218,7 +555,21 @@ static void ath11k_pci_power_down(struct ath11k_base *ab)
+ 	ath11k_mhi_stop(ab_pci);
+ }
+ 
+-static __maybe_unused const struct ath11k_hif_ops ath11k_pci_hif_ops = {
++static void ath11k_pci_stop(struct ath11k_base *ab)
++{
++	ath11k_ce_cleanup_pipes(ab);
++}
++
++static int ath11k_pci_start(struct ath11k_base *ab)
++{
++	ath11k_pci_ce_irqs_enable(ab);
++
++	return 0;
++}
++
++static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
++	.start = ath11k_pci_start,
++	.stop = ath11k_pci_stop,
+ 	.power_down = ath11k_pci_power_down,
+ 	.power_up = ath11k_pci_power_up,
+ };
+@@ -256,6 +607,7 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
+ 	ab_pci->dev_id = pci_dev->device;
+ 	ab_pci->ab = ab;
+ 	ab_pci->pdev = pdev;
++	ab->hif.ops = &ath11k_pci_hif_ops;
+ 	pci_set_drvdata(pdev, ab);
+ 
+ 	ret = ath11k_pci_claim(ab_pci, pdev);
+@@ -280,8 +632,43 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
+ 		goto err_pci_disable_msi;
+ 	}
+ 
++	ret = ath11k_hal_srng_init(ab);
++	if (ret)
++		goto err_mhi_unregister;
++
++	ret = ath11k_ce_alloc_pipes(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to allocate ce pipes: %d\n", ret);
++		goto err_hal_srng_deinit;
++	}
++
++	ath11k_pci_init_qmi_ce_config(ab);
++
++	ret = ath11k_pci_config_irq(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to config irq: %d\n", ret);
++		goto err_ce_free;
++	}
++
++	ret = ath11k_core_init(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to init core: %d\n", ret);
++		goto err_free_irq;
++	}
+ 	return 0;
+ 
++err_free_irq:
++	ath11k_pci_free_irq(ab);
++
++err_ce_free:
++	ath11k_ce_free_pipes(ab);
++
++err_hal_srng_deinit:
++	ath11k_hal_srng_deinit(ab);
++
++err_mhi_unregister:
++	ath11k_mhi_unregister(ab_pci);
++
+ err_pci_disable_msi:
+ 	ath11k_pci_disable_msi(ab_pci);
+ 
+@@ -303,6 +690,7 @@ static void ath11k_pci_remove(struct pci_dev *pdev)
+ 	ath11k_mhi_unregister(ab_pci);
+ 	ath11k_pci_disable_msi(ab_pci);
+ 	ath11k_pci_free_region(ab_pci);
++	ath11k_pci_free_irq(ab);
+ 	ath11k_core_free(ab);
+ }
+ 
 -- 
 2.7.4
 
