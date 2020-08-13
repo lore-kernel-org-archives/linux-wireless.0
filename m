@@ -2,144 +2,288 @@ Return-Path: <SRS0=/wyl=BX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EC3C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 07:02:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D93C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 07:55:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86F8420716
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 07:02:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BCD720716
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 07:55:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="G49YdF5p"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kVHj+kYw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726044AbgHMHCP (ORCPT
+        id S1726499AbgHMHzR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 03:02:15 -0400
-Received: from mail-bn7nam10on2121.outbound.protection.outlook.com ([40.107.92.121]:54113
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725978AbgHMHCO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Aug 2020 03:02:14 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OE8ozt4cVCVThuQhIBGQwKlcwY4gdKCTHNsTab/Xhn/zvXRsmWOvPfak1eLT/f0Zjf+hUPU2V4st8uM1cqP8R2f8sSVLYNlzjdboaVbCuA0ApOMzSKgHZE6CHmvKuV8n4z+9B8Iducw45F5dIX0sBLatjOV+hCP1d3PG9SWCGZjfS61DA1E6JTLesAKHg4/i1di6hyjxD9AZ9FFq3/xln4mwjoz612Uccwh9nWwYwBa1bOcO6bedNzczhC2lWbNnjnSgtyHGdk8vsTas0pvi+oQq3Ajr9CrZDnsgSlJ4R7MlnBGv2OIDKLlvNqN6wFA5JSrNubplwqc/WRIaNLxkcw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7HGiF3wXi9wB1DoAGlLOgFsdWoPkIoghho/RdbZbCkI=;
- b=B4zVQvXssNkA1uyKHYtgLxHl4j9r5z1fvLDF0pwrTzlj3bA4e0Dxc9TzZfsKjuKSqxX84Ya0NEshb0MdkGVIEkNl6kh6VcNieZpiuNwm7rcycxDDaqxcJBw1FjVwp/m3g3kP9Ds5b6fBhSh3SR24qYPveyQJti6y3Ghzbh7D+Xy0GVmb5eoePIbtIovck5lJ4XEqdrNhpXVY630xRcP2eWWNdOKAuAfrPtfhgFCWS09iNiqLiqlfKq/F5F7sQGZd9FQIDi/9x8qGq+Y0Q1BU9Eb68FDXREAlOXcDAWTYoptCiludIccVr+JILlE00W3TLCV6xq0EqaTh8+rJt5ryTw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
- dkim=pass header.d=cypress.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7HGiF3wXi9wB1DoAGlLOgFsdWoPkIoghho/RdbZbCkI=;
- b=G49YdF5pVAlTsG0cE5bkrGOWR2l/klD5In1fwPZm9QB9c7bocRd6+ctBINJyIa2kopTAmGJtmKbLjcDBitFXW2ahEaDgQ5GPsqMuVUZyq/lFjdJ1PJHqF6TbwkxvGGHFvKJIAi5C2sjRqbXs8lbuxf80vQ1mOuIXWeqYdz1M1kg=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=cypress.com;
-Received: from BN8PR06MB5889.namprd06.prod.outlook.com (2603:10b6:408:c2::25)
- by BN6PR06MB3506.namprd06.prod.outlook.com (2603:10b6:404:11c::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3283.16; Thu, 13 Aug
- 2020 07:02:11 +0000
-Received: from BN8PR06MB5889.namprd06.prod.outlook.com
- ([fe80::d82b:5f42:b7a8:d819]) by BN8PR06MB5889.namprd06.prod.outlook.com
- ([fe80::d82b:5f42:b7a8:d819%3]) with mapi id 15.20.3261.026; Thu, 13 Aug 2020
- 07:02:11 +0000
-From:   Wright Feng <wright.feng@cypress.com>
+        Thu, 13 Aug 2020 03:55:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38096 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726131AbgHMHzQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Aug 2020 03:55:16 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89A4FC061757
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2020 00:55:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=GlzA+Zr5yKe82VFXrwkdWqggYVpZAK0qR381iuY18o0=; b=kVHj+kYwDpMhqLwpDw/E6c+RDW
+        bZQ33W4HZ7LeHyd1QV5D1oMqD+XzkcYh8jRbhgMmkePzw5uUUOJawfVesQ+McYuTvSNpQFDA+Dms8
+        wG0I579um7HvhRhyNWM7cwv5iCeaNqW4USduvJQ08hfB63+LKrgIDM7igF4r0Y3zBvB4=;
+Received: from p54ae996c.dip0.t-ipconnect.de ([84.174.153.108] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1k684v-0007LC-23; Thu, 13 Aug 2020 09:55:13 +0200
+From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Cc:     wright.feng@cypress.com, brcm80211-dev-list@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>, chi-hsien.lin@cypress.com,
-        Dmitry Osipenko <digetx@gmail.com>
-Subject: [PATCH] brcmfmac: reserve tx credit only when txctl is ready to send
-Date:   Thu, 13 Aug 2020 02:00:16 -0500
-Message-Id: <20200813070017.89023-1-wright.feng@cypress.com>
-X-Mailer: git-send-email 2.25.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR20CA0037.namprd20.prod.outlook.com
- (2603:10b6:208:235::6) To BN8PR06MB5889.namprd06.prod.outlook.com
- (2603:10b6:408:c2::25)
+Cc:     Ryder Lee <ryder.lee@mediatek.com>,
+        Yiwei Chung <yiwei.chung@mediatek.com>,
+        YF Luo <yf.luo@mediatek.com>
+Subject: [PATCH v2 8/8] mt76: mt7915: add Tx A-MSDU offloading support
+Date:   Thu, 13 Aug 2020 09:55:11 +0200
+Message-Id: <20200813075511.5875-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200812102831.11991-8-nbd@nbd.name>
+References: <20200812102831.11991-8-nbd@nbd.name>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from aremote06.aus.cypress.com (157.95.12.33) by MN2PR20CA0037.namprd20.prod.outlook.com (2603:10b6:208:235::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3283.15 via Frontend Transport; Thu, 13 Aug 2020 07:02:10 +0000
-X-Mailer: git-send-email 2.25.0
-X-Originating-IP: [157.95.12.33]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 4e290180-f095-47cb-6e41-08d83f56cce1
-X-MS-TrafficTypeDiagnostic: BN6PR06MB3506:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BN6PR06MB35060F1FF9E387E2277F2ABEFB430@BN6PR06MB3506.namprd06.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1417;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 9RRKe2SwPlOcnRfSLYZpXqTKr2UcTiKuYG/m/uy3S1unt8S3hABLr0hsxHciCVvSh3MwBNcoy7Z0cNKe1OdnFt7/qsrBGeneSX/gNJCQkVECsCtpWqqVqVsOVgjTbm5HTjh/W2v/yTnLCLoMvJk/jynVhl1cpyDnt0FHSLeKX6Q9hRKfJuoET/FeIAB5uh0Xr5CryghPbaLwy1ARWFttIBiIlX0GUwjtO0/7T9mTgpwPOKcWbUGKfz3Hk8qaZyrkm+fdYhGWSL1BCYwRsPl8GjnbtqOgTUCTrjo7rKYnbcRQ/7GnPabcEkk7QnwQxqPL
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR06MB5889.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(366004)(396003)(376002)(346002)(39860400002)(186003)(7696005)(66476007)(66946007)(66556008)(52116002)(16526019)(26005)(478600001)(83380400001)(5660300002)(44832011)(1076003)(36756003)(54906003)(86362001)(8936002)(6486002)(2906002)(6916009)(2616005)(956004)(8676002)(4326008)(316002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: zSwsTKaaoAgViPpVV9iCZ31ZUleDI7otoCGxx6aMSLYKgErOyBCVhLhBYkg31p5szHMwWyy3Jq3PDqcPS6a51h+S+sQvFxa+g58v+98gKbpwGl1MD9cqXzfHNqFgm1Ey1+cr9wg702PScRzow65zUMmNvDuOG6ypemuBgvOHZI5RU16MAWXpbIDNSuH0cQ4CI0zszkBfq8R9s7R/bbjoUPNfF2cHCKyeYsPIV4K6PwRj2F3ul3ivma5xF9GUV5qQHXoDSfUF2y9CSA1KMbhrc0TwIutDPVfRYrCYpiX6qZmlwHPQ0X13+Z6N3mMlf6u9JT1ND+7CszHBrRzxhxUPjM5Mxz50J6xMIW30FrDup4xpVskN71VEIXlAprxFpg3R+C7qyz9p1Fs9aAZmuKuaEEPJM7cNBKVQol+tnSnKaS0743T2FGgwJAvGi/CyevuZrNyViI7+3Ee+8iHUXgPf1EGCgbz5pWtA2mxrLLcoTcWzWn93HYa6NdXAE+3/6fEtJSUK0xyFEYqaMJCHeIG5pRAoWegujm/fBc2kedMkqAYfXuMh6GCbwVuUwLjF9uepI3o+6zhhCOxRH7p3Yie855zy51C4IRt0ZkV2W5f97noKkuxGuU29Rh6yYi53q++FLIpPxFBfMW1AGRB43RFXRA==
-X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e290180-f095-47cb-6e41-08d83f56cce1
-X-MS-Exchange-CrossTenant-AuthSource: BN8PR06MB5889.namprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2020 07:02:11.4945
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: X0vCs2LyOs1Mz6mankKxfdcP49CjuMv9jmkE8Ql65WKkDdkmVw7XHpjS34oN4X9DXaTRX/wp+Mg11Q6Uojk0nw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR06MB3506
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The 4329 throughput drops from 40.2 Mbits/sec to 190 Kbits/sec in 2G
-11n mode because the commit b41c232d33666 ("brcmfmac: reserve 2 credits
-for host tx control path"). To fix the issue, host driver only reserves
-tx control credit when there is a txctl frame is pending to send. And
-we also check available credit by using "not equal to 0" instead of
-"greater than 0" because tx_max and tx_seq are circled positive numbers.
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-Reported-by: Dmitry Osipenko <digetx@gmail.com>
-Fixes: b41c232d33666 ("brcmfmac: reserve 2 credits for host tx control
-path")
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-Tested-by: Dmitry Osipenko <digetx@gmail.com>
+This disables the software A-MSDU aggregation in mac80211 and enables hardware
+offloading
+
+Suggested-by: Yiwei Chung <yiwei.chung@mediatek.com>
+Suggested-by: YF Luo <yf.luo@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Co-developed-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c  | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+v2: fix maximum mpdu length MCU message field
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index e8712ad3ac45..3c07d1bbe1c6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -664,9 +664,15 @@ static void pkt_align(struct sk_buff *p, int len, int align)
- /* To check if there's window offered */
- static bool data_ok(struct brcmf_sdio *bus)
- {
--	/* Reserve TXCTL_CREDITS credits for txctl */
--	return (bus->tx_max - bus->tx_seq) > TXCTL_CREDITS &&
--	       ((bus->tx_max - bus->tx_seq) & 0x80) == 0;
-+	u8 tx_rsv = 0;
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 11 +++--
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 +
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   |  2 +
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 42 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mcu.h   | 21 ++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/pci.c   |  3 +-
+ 6 files changed, 76 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 3d4bf72700a5..8b41558c7855 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -304,11 +304,14 @@ mt76_phy_init(struct mt76_dev *dev, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
+ 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
+-	ieee80211_hw_set(hw, TX_AMSDU);
+ 
+-	/* TODO: avoid linearization for SDIO */
+-	if (!mt76_is_sdio(dev))
+-		ieee80211_hw_set(hw, TX_FRAG_LIST);
++	if (!(dev->drv->drv_flags & MT_DRV_AMSDU_OFFLOAD)) {
++		ieee80211_hw_set(hw, TX_AMSDU);
 +
-+	/* Reserve TXCTL_CREDITS credits for txctl when it is ready to send */
-+	if (bus->ctrl_frame_stat)
-+		tx_rsv = TXCTL_CREDITS;
-+
-+	return (bus->tx_max - bus->tx_seq - tx_rsv) != 0 &&
-+	       ((bus->tx_max - bus->tx_seq - tx_rsv) & 0x80) == 0;
-+
++		/* TODO: avoid linearization for SDIO */
++		if (!mt76_is_sdio(dev))
++			ieee80211_hw_set(hw, TX_FRAG_LIST);
++	}
+ 
+ 	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(hw, AP_LINK_PS);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index f11978f2bd8f..3d5037afd5ea 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -216,6 +216,7 @@ struct mt76_wcid {
+ 
+ 	u8 sta:1;
+ 	u8 ext_phy:1;
++	u8 amsdu:1;
+ 
+ 	u8 rx_check_pn;
+ 	u8 rx_key_pn[IEEE80211_NUM_TIDS][6];
+@@ -311,6 +312,7 @@ struct mt76_hw_cap {
+ #define MT_DRV_SW_RX_AIRTIME		BIT(2)
+ #define MT_DRV_RX_DMA_HDR		BIT(3)
+ #define MT_DRV_HW_MGMT_TXQ		BIT(4)
++#define MT_DRV_AMSDU_OFFLOAD		BIT(5)
+ 
+ struct mt76_driver_ops {
+ 	u32 drv_flags;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index df9131d7af3d..9e17be5005e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -680,6 +680,8 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
+ 
+ 	val = FIELD_PREP(MT_TXD7_TYPE, fc_type) |
+ 	      FIELD_PREP(MT_TXD7_SUB_TYPE, fc_stype);
++	if (wcid->amsdu)
++		val |= MT_TXD7_HW_AMSDU;
+ 	txwi[7] = cpu_to_le32(val);
+ 
+ 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 86eb24e90775..4f2219be68b6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -949,6 +949,23 @@ mt7915_mcu_bss_he_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	he->max_nss_mcs[CMD_HE_MCS_BW8080] = cap->he_mcs_nss_supp.tx_mcs_80p80;
  }
  
- /* To check if there's window offered */
++static void
++mt7915_mcu_bss_hw_amsdu_tlv(struct sk_buff *skb)
++{
++#define TXD_CMP_MAP1		GENMASK(15, 0)
++#define TXD_CMP_MAP2		(GENMASK(31, 0) & ~BIT(23))
++	struct bss_info_hw_amsdu *amsdu;
++	struct tlv *tlv;
++
++	tlv = mt7915_mcu_add_tlv(skb, BSS_INFO_HW_AMSDU, sizeof(*amsdu));
++
++	amsdu = (struct bss_info_hw_amsdu *)tlv;
++	amsdu->cmp_bitmap_0 = cpu_to_le32(TXD_CMP_MAP1);
++	amsdu->cmp_bitmap_1 = cpu_to_le32(TXD_CMP_MAP2);
++	amsdu->trig_thres = cpu_to_le16(2);
++	amsdu->enable = true;
++}
++
+ static void
+ mt7915_mcu_bss_ext_tlv(struct sk_buff *skb, struct mt7915_vif *mvif)
+ {
+@@ -1023,6 +1040,7 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
+ 		mt7915_mcu_bss_rfch_tlv(skb, vif, phy);
+ 		mt7915_mcu_bss_bmc_tlv(skb, phy);
+ 		mt7915_mcu_bss_ra_tlv(skb, vif, phy);
++		mt7915_mcu_bss_hw_amsdu_tlv(skb);
+ 
+ 		if (vif->bss_conf.he_support)
+ 			mt7915_mcu_bss_he_tlv(skb, vif, phy);
+@@ -1181,6 +1199,9 @@ mt7915_mcu_sta_ba(struct mt7915_dev *dev,
+ 	struct sk_buff *skb;
+ 	int ret;
+ 
++	if (enable && tx && !params->amsdu)
++		msta->wcid.amsdu = false;
++
+ 	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta,
+ 				       MT7915_STA_UPDATE_MAX_SIZE);
+ 	if (IS_ERR(skb))
+@@ -1546,6 +1567,25 @@ mt7915_mcu_add_mu(struct mt7915_dev *dev, struct ieee80211_vif *vif,
+ 				       MCU_EXT_CMD_STA_REC_UPDATE, true);
+ }
+ 
++static void
++mt7915_mcu_sta_amsdu_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
++{
++	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
++	struct sta_rec_amsdu *amsdu;
++	struct tlv *tlv;
++
++	if (!sta->max_amsdu_len)
++	    return;
++
++	tlv = mt7915_mcu_add_tlv(skb, STA_REC_HW_AMSDU, sizeof(*amsdu));
++	amsdu = (struct sta_rec_amsdu *)tlv;
++	amsdu->max_amsdu_num = 8;
++	amsdu->amsdu_en = true;
++	amsdu->max_mpdu_size = sta->max_amsdu_len >=
++			       IEEE80211_MAX_MPDU_LEN_VHT_7991;
++	msta->wcid.amsdu = true;
++}
++
+ static void
+ mt7915_mcu_sta_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 		   struct ieee80211_sta *sta, struct ieee80211_vif *vif)
+@@ -1559,6 +1599,8 @@ mt7915_mcu_sta_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 		tlv = mt7915_mcu_add_tlv(skb, STA_REC_HT, sizeof(*ht));
+ 		ht = (struct sta_rec_ht *)tlv;
+ 		ht->ht_cap = cpu_to_le16(sta->ht_cap.cap);
++
++		mt7915_mcu_sta_amsdu_tlv(skb, sta);
+ 	}
+ 
+ 	/* starec vht */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+index a4600860fbf7..c656d66385c4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+@@ -402,6 +402,16 @@ struct bss_info_ra {
+ 	__le32 fast_interval;
+ } __packed;
+ 
++struct bss_info_hw_amsdu {
++	__le16 tag;
++	__le16 len;
++	__le32 cmp_bitmap_0;
++	__le32 cmp_bitmap_1;
++	__le16 trig_thres;
++	u8 enable;
++	u8 rsv;
++} __packed;
++
+ struct bss_info_he {
+ 	__le16 tag;
+ 	__le16 len;
+@@ -736,6 +746,15 @@ struct sta_rec_ba {
+ 	__le16 winsize;
+ } __packed;
+ 
++struct sta_rec_amsdu {
++	__le16 tag;
++	__le16 len;
++	u8 max_amsdu_num;
++	u8 max_mpdu_size;
++	u8 amsdu_en;
++	u8 rsv;
++} __packed;
++
+ struct sec_key {
+ 	u8 cipher_id;
+ 	u8 cipher_len;
+@@ -963,6 +982,7 @@ enum {
+ 					 sizeof(struct sta_rec_ba) +	\
+ 					 sizeof(struct sta_rec_vht) +	\
+ 					 sizeof(struct sta_rec_uapsd) + \
++					 sizeof(struct sta_rec_amsdu) +	\
+ 					 sizeof(struct tlv) +		\
+ 					 MT7915_WTBL_UPDATE_MAX_SIZE)
+ 
+@@ -974,6 +994,7 @@ enum {
+ 					 sizeof(struct bss_info_basic) +\
+ 					 sizeof(struct bss_info_rf_ch) +\
+ 					 sizeof(struct bss_info_ra) +	\
++					 sizeof(struct bss_info_hw_amsdu) +\
+ 					 sizeof(struct bss_info_he) +	\
+ 					 sizeof(struct bss_info_bmc_rate) +\
+ 					 sizeof(struct bss_info_ext_bss) +\
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+index 520dea15c449..e0d853bca52a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+@@ -78,7 +78,8 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
+ 	static const struct mt76_driver_ops drv_ops = {
+ 		/* txwi_size = txd size + txp size */
+ 		.txwi_size = MT_TXD_SIZE + sizeof(struct mt7915_txp),
+-		.drv_flags = MT_DRV_TXWI_NO_FREE | MT_DRV_HW_MGMT_TXQ,
++		.drv_flags = MT_DRV_TXWI_NO_FREE | MT_DRV_HW_MGMT_TXQ |
++			     MT_DRV_AMSDU_OFFLOAD,
+ 		.survey_flags = SURVEY_INFO_TIME_TX |
+ 				SURVEY_INFO_TIME_RX |
+ 				SURVEY_INFO_TIME_BSS_RX,
 -- 
-2.25.0
+2.28.0
 
