@@ -7,285 +7,140 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDCDC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 954E6C433E4
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 08:04:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06A9E2074D
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:11:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75B0B20866
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 08:04:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="py+WSDBR"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tVrzSgva"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726283AbgHNHL1 (ORCPT
+        id S1726861AbgHNIEd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 03:11:27 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:54912 "EHLO
+        Fri, 14 Aug 2020 04:04:33 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:59239 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726297AbgHNHL0 (ORCPT
+        by vger.kernel.org with ESMTP id S1726596AbgHNIEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 03:11:26 -0400
+        Fri, 14 Aug 2020 04:04:33 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597389086; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=UueX7NT6C0mBvDjY7nYGDWZLSv4hvt0bCQ5HzD4nb3o=; b=py+WSDBRu48y2D5LVJbEMlrqj+DcAxfDsiiY0yF+/i6hyUxlyadm5C7rvkhEoHrlvA/DZFzp
- m+Me8auXaj1UWCEcaQbzKlCbsizvnxSEvUsa8BEggf/olBkZ8TrG3QcesInxdIPDLn/ApLl6
- BDrlLXaD4cqWLG06+C7OUVLyoeo=
+ s=smtp; t=1597392272; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=2VWhHvy+dAEpokrHqac8Yco++JKHoZbC+fOsh8eOZtA=; b=tVrzSgvajbbLiIPcOE69DSdtY/2+UE5lWV2IY1P8PSuinwFMaYrh9ymIc+V/CxV9IHeX/mpt
+ pbdRqqAi+NZAvfmmpC2d2VVsel509E7Vwv68wbRJvaNSumdR4src+hmIDqo3Z3BJuA+yRecI
+ r35F4OvpgjqcPdW9x75u75SEWxk=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5f3638f4d96d28d61eef44bc (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 07:10:44
+ smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
+ 5f36458f2b87d66049483949 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 08:04:31
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 35D76C433CB; Fri, 14 Aug 2020 07:10:44 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        id 09723C433CB; Fri, 14 Aug 2020 08:04:31 +0000 (UTC)
+Received: from gongwen-ThinkPad-T420.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 163D9C433C9;
-        Fri, 14 Aug 2020 07:10:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 163D9C433C9
+        (Authenticated sender: wgong)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86C0AC433C9;
+        Fri, 14 Aug 2020 08:04:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 86C0AC433C9
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 06/11] ath11k: setup ce tasklet for control path
-Date:   Fri, 14 Aug 2020 10:10:25 +0300
-Message-Id: <1597389030-13887-7-git-send-email-kvalo@codeaurora.org>
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
+Subject: [PATCH] ath10k: correct the array index from mcs index for HT mode for QCA6174
+Date:   Fri, 14 Aug 2020 16:04:54 +0800
+Message-Id: <1597392294-13124-1-git-send-email-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
-References: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Govind Singh <govinds@codeaurora.org>
+The mcs index of HT mode is 0 to 31, please refer http://mcsindex.com/.
+Its spatial stream(Nss) number is from 1 to 4, mcs index is 0~7 for
+Nss=1, 8~15 for Nss=2, 16~23 for Nss=3 and 24~31 is for Nss=4.
 
-CE srng is used for control path and CE srng processing is done using tasklet
-bottom half. Setup ce tasklet initialization and scheduling for control path.
+The mcs is reported from firmware in wmi_tlv_peer_stats_info of
+event WMI_TLV_PEER_STATS_INFO_EVENTID, its range is from 0~15 for
+QCA6174 SDIO and PCIe. It is for both Nss=1 and Nss=2, and it has 2
+rate table supported_ht_mcs_rate_nss1 and supported_ht_mcs_rate_nss2
+in ath10k, they are for Nss=1 and Nss=2, each table has 8 rates.
 
-Needed for PCI support.
+It need to find the matched row number with the mcs index, for example,
+mcs index is 2, it is <=7, so it is Nss=1, and match row 2 in table of
+Nss=1. If mcs index is 12, it is >= 8 and <= 15, so it is Nss=2, it
+match row 4(12-8) in table of Nss=2. If mcs index is >=16, it is for
+Nss=3/4, it need to add rate table, so it is not support in current
+ath10k.
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
+This patch is to find the row number in rate table of Nss=1 or Nss=2
+with the mcs index reported from firmware.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This patch only effect the chips which supports_peer_stats_info of its
+hw_params is true, it is true only for QCA6174 currently.
+
+Tested-on: QCA6174 hw3.2 SDIO WLAN.RMH.4.4.1-00048
+Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00110-QCARMSWP-1
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ce.c  |   2 +
- drivers/net/wireless/ath/ath11k/ce.h  |   2 +
- drivers/net/wireless/ath/ath11k/pci.c | 116 +++++++++++++++++++++++++++++++---
- 3 files changed, 112 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index a457fe7f7049..59cb403b8597 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -524,6 +524,7 @@ void ath11k_ce_poll_send_completed(struct ath11k_base *ab, u8 pipe_id)
- 	if ((pipe->attr_flags & CE_ATTR_DIS_INTR) && pipe->send_cb)
- 		pipe->send_cb(pipe);
- }
-+EXPORT_SYMBOL(ath11k_ce_per_engine_service);
- 
- int ath11k_ce_send(struct ath11k_base *ab, struct sk_buff *skb, u8 pipe_id,
- 		   u16 transfer_id)
-@@ -673,6 +674,7 @@ void ath11k_ce_rx_post_buf(struct ath11k_base *ab)
- 		}
- 	}
- }
-+EXPORT_SYMBOL(ath11k_ce_rx_post_buf);
- 
- void ath11k_ce_rx_replenish_retry(struct timer_list *t)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3e3896214e8b..daa9e43d16b0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8368,19 +8368,32 @@ static void ath10k_mac_get_rate_flags_ht(struct ath10k *ar, u32 rate, u8 nss, u8
+ 					 u8 *flags, u8 *bw)
  {
-diff --git a/drivers/net/wireless/ath/ath11k/ce.h b/drivers/net/wireless/ath/ath11k/ce.h
-index 688f357e6eaf..6e3a37909ade 100644
---- a/drivers/net/wireless/ath/ath11k/ce.h
-+++ b/drivers/net/wireless/ath/ath11k/ce.h
-@@ -181,4 +181,6 @@ int ath11k_ce_alloc_pipes(struct ath11k_base *ab);
- void ath11k_ce_free_pipes(struct ath11k_base *ab);
- int ath11k_ce_get_attr_flags(int ce_id);
- void ath11k_ce_poll_send_completed(struct ath11k_base *ab, u8 pipe_id);
-+int ath11k_ce_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
-+				  u8 *ul_pipe, u8 *dl_pipe);
- #endif
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index af08f0542867..d5dcbb928baf 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -401,6 +401,14 @@ static void ath11k_pci_free_irq(struct ath11k_base *ab)
- 	}
- }
- 
-+static void ath11k_pci_ce_irq_enable(struct ath11k_base *ab, u16 ce_id)
-+{
-+	u32 irq_idx;
+ 	struct ath10k_index_ht_data_rate_type *mcs_rate;
++	u8 index;
++	size_t len_nss1 = ARRAY_SIZE(supported_ht_mcs_rate_nss1);
++	size_t len_nss2 = ARRAY_SIZE(supported_ht_mcs_rate_nss2);
 +
-+	irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + ce_id;
-+	enable_irq(ab->irq_num[irq_idx]);
-+}
-+
- static void ath11k_pci_ce_irq_disable(struct ath11k_base *ab, u16 ce_id)
- {
- 	u32 irq_idx;
-@@ -409,11 +417,46 @@ static void ath11k_pci_ce_irq_disable(struct ath11k_base *ab, u16 ce_id)
- 	disable_irq_nosync(ab->irq_num[irq_idx]);
- }
- 
-+static void ath11k_pci_ce_irqs_disable(struct ath11k_base *ab)
-+{
-+	int i;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
-+			continue;
-+		ath11k_pci_ce_irq_disable(ab, i);
++	if (mcs >= (len_nss1 + len_nss2)) {
++		ath10k_warn(ar, "not supported mcs %d in current rate table", mcs);
++		return;
 +	}
-+}
-+
-+static void ath11k_pci_sync_ce_irqs(struct ath11k_base *ab)
-+{
-+	int i;
-+	int irq_idx;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
-+			continue;
-+
-+		irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + i;
-+		synchronize_irq(ab->irq_num[irq_idx]);
-+	}
-+}
-+
-+static void ath11k_pci_ce_tasklet(unsigned long data)
-+{
-+	struct ath11k_ce_pipe *ce_pipe = (struct ath11k_ce_pipe *)data;
-+
-+	ath11k_ce_per_engine_service(ce_pipe->ab, ce_pipe->pipe_num);
-+
-+	ath11k_pci_ce_irq_enable(ce_pipe->ab, ce_pipe->pipe_num);
-+}
-+
- static irqreturn_t ath11k_pci_ce_interrupt_handler(int irq, void *arg)
- {
- 	struct ath11k_ce_pipe *ce_pipe = arg;
  
- 	ath11k_pci_ce_irq_disable(ce_pipe->ab, ce_pipe->pipe_num);
-+	tasklet_schedule(&ce_pipe->intr_tq);
+ 	mcs_rate = (struct ath10k_index_ht_data_rate_type *)
+ 		   ((nss == 1) ? &supported_ht_mcs_rate_nss1 :
+ 		   &supported_ht_mcs_rate_nss2);
  
- 	return IRQ_HANDLED;
- }
-@@ -444,6 +487,9 @@ static int ath11k_pci_config_irq(struct ath11k_base *ab)
+-	if (rate == mcs_rate[mcs].supported_rate[0]) {
++	if (mcs >= len_nss1)
++		index = mcs - len_nss1;
++	else
++		index = mcs;
++
++	if (rate == mcs_rate[index].supported_rate[0]) {
+ 		*bw = RATE_INFO_BW_20;
+-	} else if (rate == mcs_rate[mcs].supported_rate[1]) {
++	} else if (rate == mcs_rate[index].supported_rate[1]) {
+ 		*bw |= RATE_INFO_BW_40;
+-	} else if (rate == mcs_rate[mcs].supported_rate[2]) {
++	} else if (rate == mcs_rate[index].supported_rate[2]) {
+ 		*bw |= RATE_INFO_BW_20;
+ 		*flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	} else if (rate == mcs_rate[mcs].supported_rate[3]) {
++	} else if (rate == mcs_rate[index].supported_rate[3]) {
+ 		*bw |= RATE_INFO_BW_40;
+ 		*flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 	} else {
+@@ -8441,6 +8454,9 @@ static void ath10k_mac_parse_bitrate(struct ath10k *ar, u32 rate_code,
+ 	u8 mcs = WMI_TLV_GET_HW_RC_RATE_V1(rate_code);
+ 	u8 flags = 0, bw = 0;
  
- 		irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + i;
- 
-+		tasklet_init(&ce_pipe->intr_tq, ath11k_pci_ce_tasklet,
-+			     (unsigned long)ce_pipe);
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac parse rate code 0x%x bitrate %d kbps\n",
++		   rate_code, bitrate_kbps);
 +
- 		ret = request_irq(irq, ath11k_pci_ce_interrupt_handler,
- 				  IRQF_SHARED, irq_name[irq_idx],
- 				  ce_pipe);
-@@ -471,14 +517,6 @@ static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
- 	ab->qmi.service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCA6390;
- }
- 
--static void ath11k_pci_ce_irq_enable(struct ath11k_base *ab, u16 ce_id)
--{
--	u32 irq_idx;
--
--	irq_idx = ATH11K_PCI_IRQ_CE0_OFFSET + ce_id;
--	enable_irq(ab->irq_num[irq_idx]);
--}
--
- static void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
- {
- 	int i;
-@@ -638,14 +676,75 @@ static void ath11k_pci_power_down(struct ath11k_base *ab)
- 	ath11k_mhi_stop(ab_pci);
- }
- 
-+static void ath11k_pci_kill_tasklets(struct ath11k_base *ab)
-+{
-+	int i;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		struct ath11k_ce_pipe *ce_pipe = &ab->ce.ce_pipe[i];
-+
-+		if (ath11k_ce_get_attr_flags(i) & CE_ATTR_DIS_INTR)
-+			continue;
-+
-+		tasklet_kill(&ce_pipe->intr_tq);
-+	}
-+}
-+
- static void ath11k_pci_stop(struct ath11k_base *ab)
- {
-+	ath11k_pci_ce_irqs_disable(ab);
-+	ath11k_pci_sync_ce_irqs(ab);
-+	ath11k_pci_kill_tasklets(ab);
- 	ath11k_ce_cleanup_pipes(ab);
- }
- 
- static int ath11k_pci_start(struct ath11k_base *ab)
- {
- 	ath11k_pci_ce_irqs_enable(ab);
-+	ath11k_ce_rx_post_buf(ab);
-+
-+	return 0;
-+}
-+
-+static int ath11k_pci_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
-+					  u8 *ul_pipe, u8 *dl_pipe)
-+{
-+	const struct service_to_pipe *entry;
-+	bool ul_set = false, dl_set = false;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
-+		entry = &target_service_to_ce_map_wlan[i];
-+
-+		if (__le32_to_cpu(entry->service_id) != service_id)
-+			continue;
-+
-+		switch (__le32_to_cpu(entry->pipedir)) {
-+		case PIPEDIR_NONE:
-+			break;
-+		case PIPEDIR_IN:
-+			WARN_ON(dl_set);
-+			*dl_pipe = __le32_to_cpu(entry->pipenum);
-+			dl_set = true;
-+			break;
-+		case PIPEDIR_OUT:
-+			WARN_ON(ul_set);
-+			*ul_pipe = __le32_to_cpu(entry->pipenum);
-+			ul_set = true;
-+			break;
-+		case PIPEDIR_INOUT:
-+			WARN_ON(dl_set);
-+			WARN_ON(ul_set);
-+			*dl_pipe = __le32_to_cpu(entry->pipenum);
-+			*ul_pipe = __le32_to_cpu(entry->pipenum);
-+			dl_set = true;
-+			ul_set = true;
-+			break;
-+		}
-+	}
-+
-+	if (WARN_ON(!ul_set || !dl_set))
-+		return -ENOENT;
- 
- 	return 0;
- }
-@@ -659,6 +758,7 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
- 	.power_up = ath11k_pci_power_up,
- 	.get_msi_address =  ath11k_pci_get_msi_address,
- 	.get_user_msi_vector = ath11k_get_user_msi_assignment,
-+	.map_service_to_pipe = ath11k_pci_map_service_to_pipe,
- };
- 
- static int ath11k_pci_probe(struct pci_dev *pdev,
+ 	if (preamble == WMI_RATE_PREAMBLE_HT)
+ 		mode = ATH10K_PHY_MODE_HT;
+ 	else if (preamble == WMI_RATE_PREAMBLE_VHT)
 -- 
-2.7.4
+2.23.0
 
