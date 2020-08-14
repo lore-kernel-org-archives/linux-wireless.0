@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F7C7C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDD3C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2842D20708
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CA462074D
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uT31d/Xg"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tilmGAuy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726278AbgHNHKu (ORCPT
+        id S1726272AbgHNHKw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 03:10:50 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:29707 "EHLO m43-7.mailgun.net"
+        Fri, 14 Aug 2020 03:10:52 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:57192 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726006AbgHNHKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 03:10:50 -0400
+        id S1726091AbgHNHKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Aug 2020 03:10:52 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597389049; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1597389051; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=VUfWrl6bEWh9+CnFbDm0LA8PMKMOmwAyMBTQq64DLdA=; b=uT31d/Xg12/SAMHOASY6XNpeGE3lSVL+qBjHJMKOEdcadV0iKPKHwcN2SDgvg5aOb+UNSN//
- dNEWDcBqv3VCNYoR7f/IQVhyilEtk1jIUdigML2WLe1K9S8Qugpzhc8DmiQvcDopSMKJIZ4+
- mOETNWmzLd/FdXLtsRiaEzk/XuY=
+ bh=/5+E+tFh01VFfvNQ3vQuSvQSYBMOJnEk15q0YCssIF8=; b=tilmGAuy+bmX9ALXfKIBfpEHT3wZWQHEG3muSTnKMCAH69WWiMDKWNxgPrtH37Zgrk21/GHN
+ pZ0kYolYSS3Ehv5oeKhSdKuCo+WqSKPiEdLc6sX69WTEaAl0AXLV4FgAHWZDeZLh38dt2790
+ FxZrrPn1oibwzk37mc6puTm3yMQ=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f3638f51e4d3989d4b99f4a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 07:10:45
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 5f3638f0c85a1092b060751f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 07:10:40
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B47D9C433C9; Fri, 14 Aug 2020 07:10:44 +0000 (UTC)
+        id D219CC433C6; Fri, 14 Aug 2020 07:10:39 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7B5CDC433CA;
-        Fri, 14 Aug 2020 07:10:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7B5CDC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CF8ABC433CA;
+        Fri, 14 Aug 2020 07:10:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CF8ABC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 07/11] ath11k: allocate smaller chunks of memory for firmware
-Date:   Fri, 14 Aug 2020 10:10:26 +0300
-Message-Id: <1597389030-13887-8-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 03/11] ath11k: fill appropriate QMI service instance id for QCA6390
+Date:   Fri, 14 Aug 2020 10:10:22 +0300
+Message-Id: <1597389030-13887-4-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
 References: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
@@ -61,92 +61,82 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Carl Huang <cjhuang@codeaurora.org>
+From: Govind Singh <govinds@codeaurora.org>
 
-On x86 it's sometimes difficult to allocate a large contigous DMA
-memory, so instead allocate blocks of small chunk memory.
-
-In ath11k_qmi_msg_mem_request_cb() the error handling was cleaned up to avoid
-an unused variable warning. Also changed the test from (ret < 0) to just (ret)
-as the functions don't return any positive values.
+QMI service instance id is used for qmi service lookup, IPQ8074 and QCA6390
+uses different instance id for service lookup.  Fill appropriate QMI service
+instance id for respective targets.
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/qmi.c | 42 +++++++++++++++++++++++++----------
- 1 file changed, 30 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath11k/ahb.c | 1 +
+ drivers/net/wireless/ath/ath11k/pci.c | 1 +
+ drivers/net/wireless/ath/ath11k/qmi.c | 2 +-
+ drivers/net/wireless/ath/ath11k/qmi.h | 3 +++
+ 4 files changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 06e599cbfbf9..2e0d90c022bb 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -581,6 +581,7 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
+ 	cfg->tgt_ce = target_ce_config_wlan;
+ 	cfg->svc_to_ce_map_len = ARRAY_SIZE(target_service_to_ce_map_wlan);
+ 	cfg->svc_to_ce_map = target_service_to_ce_map_wlan;
++	ab->qmi.service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_IPQ8074;
+ }
+ 
+ static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index dd3122b47d35..47ee5689a5e2 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -393,6 +393,7 @@ static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
+ 
+ 	cfg->svc_to_ce_map = target_service_to_ce_map_wlan;
+ 	cfg->svc_to_ce_map_len = ARRAY_SIZE(target_service_to_ce_map_wlan);
++	ab->qmi.service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCA6390;
+ }
+ 
+ static void ath11k_pci_ce_irq_enable(struct ath11k_base *ab, u16 ce_id)
 diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index acf7a3f2fe77..b386ab4bd806 100644
+index b182d6181057..acf7a3f2fe77 100644
 --- a/drivers/net/wireless/ath/ath11k/qmi.c
 +++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -1640,19 +1640,30 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
+@@ -2610,7 +2610,7 @@ int ath11k_qmi_init_service(struct ath11k_base *ab)
  
- 	memset(&resp, 0, sizeof(resp));
+ 	ret = qmi_add_lookup(&ab->qmi.handle, ATH11K_QMI_WLFW_SERVICE_ID_V01,
+ 			     ATH11K_QMI_WLFW_SERVICE_VERS_V01,
+-			     ATH11K_QMI_WLFW_SERVICE_INS_ID_V01);
++			     ab->qmi.service_ins_id);
+ 	if (ret < 0) {
+ 		ath11k_warn(ab, "failed to add qmi lookup\n");
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
+index cd484a4d0216..d55ce6cf7222 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.h
++++ b/drivers/net/wireless/ath/ath11k/qmi.h
+@@ -18,6 +18,8 @@
+ #define ATH11K_QMI_WLFW_SERVICE_ID_V01		0x45
+ #define ATH11K_QMI_WLFW_SERVICE_VERS_V01	0x01
+ #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01	0x02
++#define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCA6390	0x01
++#define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_IPQ8074	0x02
+ #define ATH11K_QMI_WLANFW_MAX_TIMESTAMP_LEN_V01	32
+ #define ATH11K_QMI_RESP_LEN_MAX			8192
+ #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	32
+@@ -122,6 +124,7 @@ struct ath11k_qmi {
+ 	u8 cal_done;
+ 	struct target_info target;
+ 	struct m3_mem_region m3_mem;
++	unsigned int service_ins_id;
+ };
  
--	req->mem_seg_len = ab->qmi.mem_seg_count;
-+	/* For QCA6390 by default FW requests a block of ~4M contiguous
-+	 * DMA memory, it's hard to allocate from OS. So host returns
-+	 * failure to FW and FW will then request mulitple blocks of small
-+	 * chunk size memory.
-+	 */
-+	if (!ab->bus_params.fixed_mem_region && ab->qmi.mem_seg_count <= 2) {
-+		ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi delays mem_request %d\n",
-+			   ab->qmi.mem_seg_count);
-+		memset(req, 0, sizeof(*req));
-+	} else {
-+		req->mem_seg_len = ab->qmi.mem_seg_count;
-+
-+		for (i = 0; i < req->mem_seg_len ; i++) {
-+			req->mem_seg[i].addr = ab->qmi.target_mem[i].paddr;
-+			req->mem_seg[i].size = ab->qmi.target_mem[i].size;
-+			req->mem_seg[i].type = ab->qmi.target_mem[i].type;
-+		}
-+	}
- 
- 	ret = qmi_txn_init(&ab->qmi.handle, &txn,
- 			   qmi_wlanfw_respond_mem_resp_msg_v01_ei, &resp);
- 	if (ret < 0)
- 		goto out;
- 
--	for (i = 0; i < req->mem_seg_len ; i++) {
--		req->mem_seg[i].addr = ab->qmi.target_mem[i].paddr;
--		req->mem_seg[i].size = ab->qmi.target_mem[i].size;
--		req->mem_seg[i].type = ab->qmi.target_mem[i].type;
--	}
--
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_RESPOND_MEM_REQ_V01,
- 			       QMI_WLANFW_RESPOND_MEM_REQ_MSG_V01_MAX_LEN,
-@@ -2411,13 +2422,20 @@ static void ath11k_qmi_msg_mem_request_cb(struct qmi_handle *qmi_hdl,
- 			   msg->mem_seg[i].type, msg->mem_seg[i].size);
- 	}
- 
--	if (ab->bus_params.fixed_mem_region)
-+	if (ab->bus_params.fixed_mem_region) {
- 		ret = ath11k_qmi_assign_target_mem_chunk(ab);
--	else
-+		if (ret) {
-+			ath11k_warn(ab, "qmi failed to assign target memory: %d\n",
-+				    ret);
-+			return;
-+		}
-+	} else if (msg->mem_seg_len > 2) {
- 		ret = ath11k_qmi_alloc_target_mem_chunk(ab);
--	if (ret < 0) {
--		ath11k_warn(ab, "qmi failed to alloc target memory:%d\n", ret);
--		return;
-+		if (ret) {
-+			ath11k_warn(ab, "qmi failed to alloc target memory: %d\n",
-+				    ret);
-+			return;
-+		}
- 	}
- 
- 	ath11k_qmi_driver_event_post(qmi, ATH11K_QMI_EVENT_REQUEST_MEM, NULL);
+ #define QMI_WLANFW_HOST_CAP_REQ_MSG_V01_MAX_LEN		189
 -- 
 2.7.4
 
