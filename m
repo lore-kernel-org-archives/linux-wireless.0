@@ -2,212 +2,133 @@ Return-Path: <SRS0=OllR=BY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F90C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 16:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B214C433E4
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 16:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95FCB2074D
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 16:37:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AE1520791
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 16:38:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="BB2KF+2b"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KFwZiGgG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726773AbgHNQhQ (ORCPT
+        id S1728002AbgHNQih (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 12:37:16 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:61212 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726196AbgHNQhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 12:37:13 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597423032; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=Z/OS8t1bV43NVOmy/9zoz8afuEySCPn6fROSfMWNYr4=; b=BB2KF+2bNmNtzG5iqOH2RRRCUFfup3/+6ZLb3igB38H6BmiAbrz5SRSsKQA7IOFMb6fLNyws
- SzD7UZf0sZwAvzlbvdaEN/2EQ8R3I7XPmg3hLdT6JJLN2EnO4zSitBA2Wjz1+Tz2EkaZiRpu
- Cq2s6okCfjRNeP7/Zk/B3f9hzcA=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 5f36bd9ecbcd42bdee6d3407 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 16:36:46
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C858AC433CA; Fri, 14 Aug 2020 16:36:45 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 64038C433C9;
-        Fri, 14 Aug 2020 16:36:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 64038C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] ath10k: add fw coredump for sdio when firmware assert
-References: <1569310030-834-1-git-send-email-wgong@codeaurora.org>
-        <1569310030-834-3-git-send-email-wgong@codeaurora.org>
-Date:   Fri, 14 Aug 2020 19:36:42 +0300
-In-Reply-To: <1569310030-834-3-git-send-email-wgong@codeaurora.org> (Wen
-        Gong's message of "Tue, 24 Sep 2019 15:27:10 +0800")
-Message-ID: <87mu2xkwv9.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 14 Aug 2020 12:38:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57786 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726754AbgHNQig (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Aug 2020 12:38:36 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF036C061386
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 09:38:35 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id k20so8434713wmi.5
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 09:38:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=SBRnLFjikbgUE3zhul5CZPoOJXI826l4dDRWqFfAQRw=;
+        b=KFwZiGgGsHOEQTkED76nmBtiNDbHKD6KDhybIgSAGbZvZJg0xNdODvEI53hyV7GVQq
+         fv6hqAIMlvAzZZ/H+0svImJXztuW8n+06vvlckdkmKFvtA30QhP8xutcoXJqrxq0GxXk
+         1b5uZAP095ez+KqvWry9UQgjiMeVB4IZkisACV1h9qlAVFN59iLGEeuij5V7ciNXqLrR
+         DAHbNYpEOpitJZR4USDa+8UbITYPbhO6VHr6Rvfmo8CEKofCfAyITHcfBbrxc2szZznV
+         FGGP9j5NnYrV6b8JVilkN+og4BUDJJIFUNq1WvIqeKb8lPc+kwlIO3BQdDraGHhz5SQL
+         0UTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=SBRnLFjikbgUE3zhul5CZPoOJXI826l4dDRWqFfAQRw=;
+        b=gJ2CDWWzg32NXuRKqwIIToYTAvSRzNiPQQqc6zvGUGgdOuyay5TAyZP9ZkMCNFrw/V
+         TJmIunNGr+9EzA57TvSkVFtcLd6p4iz67lclL2P9C26XOPCqCJ8wiFAcT9W7n7bGdpiD
+         6zPpHAT9wkeVWRrGpNj1QF3Br77vaORuWv9a1uOvpxN1T7l4kdSXA58s3qf5ABY2HGpw
+         mhTw86Xqrhr4oTuF8RDm8DE9JXgI5nQ5rfIQF6ou2JHLnguN5ulP9fZ2LlJcA+mSTnhq
+         kWsWPTsC34RANfmX5WI+9WGJEQcFHYzQz7vmXV3DYPNyaCZlKA0c51yRei+1n61L7ImV
+         DBCQ==
+X-Gm-Message-State: AOAM533hvLYhFseIVssYh7bvWd9wef+WLFKUK+E5OF4o5KK5+kNItHEu
+        F6FYWtrso4FazMiHduM5HDGmDw==
+X-Google-Smtp-Source: ABdhPJzibn0jjmtjzLY2ilhQ9fx+rMUtqgQREpZcOlyPu6KoHh7sYeqxx1ZLF1RbiozQAYxr3iNwGQ==
+X-Received: by 2002:a1c:3285:: with SMTP id y127mr3273780wmy.104.1597423114464;
+        Fri, 14 Aug 2020 09:38:34 -0700 (PDT)
+Received: from dell ([95.149.164.62])
+        by smtp.gmail.com with ESMTPSA id r22sm16053717wmh.45.2020.08.14.09.38.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Aug 2020 09:38:33 -0700 (PDT)
+Date:   Fri, 14 Aug 2020 17:38:31 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        Benjamin Reed <breed@users.sourceforge.net>,
+        Javier Achirica <achirica@users.sourceforge.net>,
+        Jean Tourrilhes <jt@hpl.hp.com>,
+        Fabrice Bellet <fabrice@bellet.info>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 12/30] net: wireless: cisco: airo: Fix a myriad of coding
+ style issues
+Message-ID: <20200814163831.GN4354@dell>
+References: <20200814113933.1903438-1-lee.jones@linaro.org>
+ <20200814113933.1903438-13-lee.jones@linaro.org>
+ <87r1s9l0mc.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87r1s9l0mc.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@codeaurora.org> writes:
+On Fri, 14 Aug 2020, Kalle Valo wrote:
 
-> When firmware assert, it need coredump to analyze, this patch will
-> collect the register and memory info for sdio chip.
->
-> The coredump configuration is different between PCIE and SDIO for
-> the same reversion, so this patch add bus type to distinguish PCIE
-> and SDIO chip for coredump.
->
-> It has 2 type to dump firmware: fastdump and slowdump. Fastdump is
-> not support in old version firmware, if this, ath10k will select
-> slowdump for it. If firmware support fastdump, ath10k will select
-> fastdump for it. Version WLAN.RMH.4.4.1-00017-QCARMSWPZ-2 of
-> firmware begin to support fastdump.
->
-> For slow dump, ath10k_sdio_hif_diag_read can not be used, the diag
-> window has a limit value, it is 4 bytes and the dump's buffer length
-> is larger than it, it will trigger error. So this patch add
-> ath10k_sdio_read_mem to read 4 bytes for each time.
->
-> Tested with QCA6174 SDIO with firmware
-> WLAN.RMH.4.4.1-00018-QCARMSWP-1.
->
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> Lee Jones <lee.jones@linaro.org> writes:
+> 
+> >  - Ensure spaces appear after {for, if, while, etc}
+> >  - Ensure spaces to not appear after '('
+> >  - Ensure spaces to not appear before ')'
+> >  - Ensure spaces appear between ')' and '{'
+> >  - Ensure spaces appear after ','
+> >  - Ensure spaces do not appear before ','
+> >  - Ensure spaces appear either side of '='
+> >  - Ensure '{'s which open functions are on a new line
+> >  - Remove trailing whitespace
+> >
+> > There are still a whole host of issues with this file, but this
+> > patch certainly breaks the back of them.
+> >
+> > Cc: Kalle Valo <kvalo@codeaurora.org>
+> > Cc: "David S. Miller" <davem@davemloft.net>
+> > Cc: Jakub Kicinski <kuba@kernel.org>
+> > Cc: Benjamin Reed <breed@users.sourceforge.net>
+> > Cc: Javier Achirica <achirica@users.sourceforge.net>
+> > Cc: Jean Tourrilhes <jt@hpl.hp.com>
+> > Cc: Fabrice Bellet <fabrice@bellet.info>
+> > Cc: linux-wireless@vger.kernel.org
+> > Cc: netdev@vger.kernel.org
+> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> > ---
+> >  drivers/net/wireless/cisco/airo.c | 897 ++++++++++++++++--------------
+> >  1 file changed, 467 insertions(+), 430 deletions(-)
+> 
+> This is a driver for ancient hardware, I'm not sure if it's worth trying
+> to fix any style issues. Is anyone even using it? Should we instead just
+> remove the driver?
 
-I did some changes in the pending branch, please check:
+Sounds like a reasonable solution to me.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=de03e26479e2cf5f3e1753bda517f44910457036
+I'm also happy to do it, if there are no objections.
 
-Also please send dmesg output from a firmware crash, I'll add it to the
-commit log as an example.
-
-> +static void ath10k_sdio_check_fw_reg(struct ath10k *ar, u32 *fast_dump)
-> +{
-> +	u32 param;
-> +
-> +	ath10k_sdio_read_host_interest_value(ar, HI_ITEM(hi_option_flag2), &param);
-> +
-> +	*fast_dump = ((param & HI_OPTION_SDIO_CRASH_DUMP_ENHANCEMENT_FW)
-> +			     == HI_OPTION_SDIO_CRASH_DUMP_ENHANCEMENT_FW);
-> +
-> +	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio hi_option_flag2 %x\n", param);
-> +}
-
-I renamed this ath10k_sdio_is_fast_dump_supported() which returns a
-boolean. Also I changed all fast_dump variables to a boolean.
-
-> +static void ath10k_sdio_dump_memory(struct ath10k *ar,
-> +				    struct ath10k_fw_crash_data *crash_data,
-> +				    u32 fast_dump)
-> +{
-> +	const struct ath10k_hw_mem_layout *mem_layout;
-> +	const struct ath10k_mem_region *current_region;
-> +	struct ath10k_dump_ram_data_hdr *hdr;
-> +	u32 count;
-> +	size_t buf_len;
-> +	int ret, i;
-> +	u8 *buf;
-> +
-> +	if (!crash_data)
-> +		return;
-> +
-> +	mem_layout = ath10k_coredump_get_mem_layout(ar);
-> +	if (!mem_layout)
-> +		return;
-> +
-> +	current_region = &mem_layout->region_table.regions[0];
-> +
-> +	buf = crash_data->ramdump_buf;
-> +	buf_len = crash_data->ramdump_buf_len;
-> +
-> +	memset(buf, 0, buf_len);
-> +
-> +	for (i = 0; i < mem_layout->region_table.size; i++) {
-> +		count = 0;
-> +
-> +		if (current_region->len > buf_len) {
-> +			ath10k_warn(ar, "memory region %s size %d is larger that remaining ramdump buffer size %zu\n",
-> +				    current_region->name,
-> +				    current_region->len,
-> +				    buf_len);
-> +			break;
-> +		}
-> +
-> +		/* Reserve space for the header. */
-> +		hdr = (void *)buf;
-> +		buf += sizeof(*hdr);
-> +		buf_len -= sizeof(*hdr);
-> +
-> +		ret = ath10k_sdio_dump_memory_generic(ar, current_region, buf, fast_dump);
-> +
-> +		ath10k_err(ar, "dump mem, name:%s, type:%d, start:0x%x, len:0x%x, size:%d, ret:0x%x\n",
-> +			   current_region->name,
-> +			   current_region->type,
-> +			   current_region->start,
-> +			   current_region->len,
-> +			   current_region->section_table.size,
-> +			   ret);
-
-This error print looks like a debug message, so I removed it. If you
-need it, let me know.
-
-> +void ath10k_sdio_fw_crashed_dump(struct ath10k *ar)
-> +{
-> +	struct ath10k_fw_crash_data *crash_data;
-> +	char guid[UUID_STRING_LEN + 1];
-> +	u32 fast_dump = 0;
-> +
-> +	ath10k_err(ar, "begin fw dump\n");
-
-This also looks like a debug message so I removed it.
-
-> +	ath10k_sdio_check_fw_reg(ar, &fast_dump);
-> +
-> +	if (fast_dump)
-> +		ar->bmi.done_sent = false;
-
-I did some refactoring in patch "ath10k: move enable_pll_clk call to
-ath10k_core_start()" (submitted separately) so that I could change this
-to ath10k_bmi_start().
-
-> --- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-> +++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-> @@ -334,6 +334,16 @@ struct host_interest {
->  #define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
->  
->  /*
-> + * If both SDIO_CRASH_DUMP_ENHANCEMENT_HOST and SDIO_CRASH_DUMP_ENHANCEMENT_FW
-> + * flags are set, then crashdump upload will be done using the BMI host/target
-> + * communication channel.
-> + */
-> +/* HOST to support using BMI dump FW memory when hit assert */
-> +#define HI_OPTION_SDIO_CRASH_DUMP_ENHANCEMENT_HOST 0x400
-
-Added empty line here.
-
-> +/* FW to support using BMI dump FW memory when hit assert */
-> +#define HI_OPTION_SDIO_CRASH_DUMP_ENHANCEMENT_FW   0x800
-> +
-> +/*
->   * CONSOLE FLAGS
->   *
->   * Bit Range  Meaning
+As it stands, it's polluting the code-base and the build-log, so
+something should be done.
 
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
