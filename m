@@ -1,206 +1,245 @@
-Return-Path: <SRS0=/wyl=BX=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=OllR=BY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EC8C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 22:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA3CC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9580220771
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Aug 2020 22:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5423B20708
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 07:10:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="GGnuo8gG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726642AbgHMWKH (ORCPT
+        id S1726151AbgHNHKo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Aug 2020 18:10:07 -0400
-Received: from mga18.intel.com ([134.134.136.126]:1927 "EHLO mga18.intel.com"
+        Fri, 14 Aug 2020 03:10:44 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:29707 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726205AbgHMWKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Aug 2020 18:10:06 -0400
-IronPort-SDR: 1QudTga/56MnoYBzDOBWTrzrhJtioc+U6KpmsSOXY6j+KuK2rRXKAaVwexUmOI+QSF0lR5r52T
- 6whmKEu8pBlQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9712"; a="141953326"
-X-IronPort-AV: E=Sophos;i="5.76,309,1592895600"; 
-   d="scan'208";a="141953326"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2020 15:10:05 -0700
-IronPort-SDR: JaXG4MnLMAOZE7VuE0e8IjW2hcrhCT+mTjcqmglZ3fGpJw/H6PvdZQIJJOOSSsFxBtbswLCi9r
- NIntTzYTQlsg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,309,1592895600"; 
-   d="scan'208";a="327703339"
-Received: from lkp-server01.sh.intel.com (HELO 7f1ebb311643) ([10.239.97.150])
-  by fmsmga002.fm.intel.com with ESMTP; 13 Aug 2020 15:10:04 -0700
-Received: from kbuild by 7f1ebb311643 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1k6LQB-0000qQ-QG; Thu, 13 Aug 2020 22:10:03 +0000
-Date:   Fri, 14 Aug 2020 06:09:49 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
+        id S1726006AbgHNHKo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Aug 2020 03:10:44 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1597389043; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=a9v10HiPtGDV3zC4GDnuaMdBcfTmnynAeS608UjP4Kk=; b=GGnuo8gG6uGxEo4RDEuXqFUCcfHWLBnZsT+O4KomMjISiHZhGeG7XoJmpHRKmKkgPP0HOqe9
+ WtS4SJ2J81stX/l8tke2rPC2uqgYvqAZznbhUY6WWPyvqahKqkmLm19ZcT3flgUaqZZu6aDz
+ 90qoEZZ/epbzeTLEkAMJ73CBWLo=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f3638f23f2ce110208a33e4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 07:10:42
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 95BACC433CA; Fri, 14 Aug 2020 07:10:42 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A63E3C433CB;
+        Fri, 14 Aug 2020 07:10:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A63E3C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:um-orc-unwind] BUILD SUCCESS
- 2706859f698a7e6042cfa59b1dd81040db1eeae0
-Message-ID: <5f35ba2d.uIYxZ4xJlVKwXJzw%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 05/11] ath11k: configure copy engine msi address in CE srng
+Date:   Fri, 14 Aug 2020 10:10:24 +0300
+Message-Id: <1597389030-13887-6-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
+References: <1597389030-13887-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  um-orc-unwind
-branch HEAD: 2706859f698a7e6042cfa59b1dd81040db1eeae0  try ARCH=um ORC unwinder
+From: Govind Singh <govinds@codeaurora.org>
 
-elapsed time: 725m
+Fill msi base address and msi data to be programmed in CE srang.
+This is used by the srng to generate the msi interrupt.
 
-configs tested: 135
-configs skipped: 6
+Needed for PCI support.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm                            xcep_defconfig
-mips                          ath25_defconfig
-sh                           se7619_defconfig
-powerpc                        cell_defconfig
-m68k                          multi_defconfig
-arm                           corgi_defconfig
-arm                   milbeaut_m10v_defconfig
-arm                            dove_defconfig
-openrisc                    or1ksim_defconfig
-powerpc                           allnoconfig
-m68k                          atari_defconfig
-openrisc                            defconfig
-sh                        sh7763rdp_defconfig
-arm                      pxa255-idp_defconfig
-sh                           se7750_defconfig
-m68k                         apollo_defconfig
-mips                        maltaup_defconfig
-powerpc                     pseries_defconfig
-arc                          axs103_defconfig
-h8300                     edosk2674_defconfig
-sh                         ap325rxa_defconfig
-arm                            pleb_defconfig
-sh                           se7780_defconfig
-xtensa                    xip_kc705_defconfig
-csky                             alldefconfig
-m68k                       bvme6000_defconfig
-mips                malta_kvm_guest_defconfig
-sh                           se7722_defconfig
-powerpc                             defconfig
-mips                      malta_kvm_defconfig
-mips                         mpc30x_defconfig
-arm                          ixp4xx_defconfig
-sh                          landisk_defconfig
-sh                          urquell_defconfig
-mips                      pic32mzda_defconfig
-arm                           viper_defconfig
-nds32                            alldefconfig
-powerpc                 mpc8272_ads_defconfig
-powerpc                mpc7448_hpc2_defconfig
-c6x                        evmc6472_defconfig
-arm                     eseries_pxa_defconfig
-arc                    vdk_hs38_smp_defconfig
-arm                            hisi_defconfig
-xtensa                          iss_defconfig
-mips                     decstation_defconfig
-sh                             sh03_defconfig
-powerpc                     mpc512x_defconfig
-sh                          lboxre2_defconfig
-arc                          axs101_defconfig
-arm                        shmobile_defconfig
-arm                             mxs_defconfig
-sparc64                          alldefconfig
-arm                          lpd270_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-x86_64               randconfig-a006-20200813
-x86_64               randconfig-a001-20200813
-x86_64               randconfig-a005-20200813
-x86_64               randconfig-a003-20200813
-x86_64               randconfig-a004-20200813
-x86_64               randconfig-a002-20200813
-i386                 randconfig-a005-20200813
-i386                 randconfig-a001-20200813
-i386                 randconfig-a002-20200813
-i386                 randconfig-a003-20200813
-i386                 randconfig-a006-20200813
-i386                 randconfig-a004-20200813
-i386                 randconfig-a005-20200811
-i386                 randconfig-a001-20200811
-i386                 randconfig-a002-20200811
-i386                 randconfig-a003-20200811
-i386                 randconfig-a006-20200811
-i386                 randconfig-a004-20200811
-i386                 randconfig-a016-20200812
-i386                 randconfig-a011-20200812
-i386                 randconfig-a013-20200812
-i386                 randconfig-a015-20200812
-i386                 randconfig-a012-20200812
-i386                 randconfig-a014-20200812
-i386                 randconfig-a016-20200811
-i386                 randconfig-a011-20200811
-i386                 randconfig-a015-20200811
-i386                 randconfig-a013-20200811
-i386                 randconfig-a012-20200811
-i386                 randconfig-a014-20200811
-i386                 randconfig-a016-20200813
-i386                 randconfig-a011-20200813
-i386                 randconfig-a013-20200813
-i386                 randconfig-a015-20200813
-i386                 randconfig-a012-20200813
-i386                 randconfig-a014-20200813
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/net/wireless/ath/ath11k/ce.c  | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/hal.h |  2 ++
+ drivers/net/wireless/ath/ath11k/hif.h | 26 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/pci.c | 25 +++++++++++++++++++++++++
+ 4 files changed, 83 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
+index 2fff171b35f8..a457fe7f7049 100644
+--- a/drivers/net/wireless/ath/ath11k/ce.c
++++ b/drivers/net/wireless/ath/ath11k/ce.c
+@@ -5,6 +5,7 @@
+ 
+ #include "dp_rx.h"
+ #include "debug.h"
++#include "hif.h"
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -352,6 +353,31 @@ static void ath11k_ce_send_done_cb(struct ath11k_ce_pipe *pipe)
+ 	}
+ }
+ 
++static void ath11k_ce_srng_msi_ring_params_setup(struct ath11k_base *ab, u32 ce_id,
++						 struct hal_srng_params *ring_params)
++{
++	u32 msi_data_start;
++	u32 msi_data_count;
++	u32 msi_irq_start;
++	u32 addr_lo;
++	u32 addr_hi;
++	int ret;
++
++	ret = ath11k_get_user_msi_vector(ab, "CE",
++					 &msi_data_count, &msi_data_start,
++					 &msi_irq_start);
++
++	if (ret)
++		return;
++
++	ath11k_get_msi_address(ab, &addr_lo, &addr_hi);
++
++	ring_params->msi_addr = addr_lo;
++	ring_params->msi_addr |= (dma_addr_t)(((uint64_t)addr_hi) << 32);
++	ring_params->msi_data = (ce_id % msi_data_count) + msi_data_start;
++	ring_params->flags |= HAL_SRNG_FLAGS_MSI_INTR;
++}
++
+ static int ath11k_ce_init_ring(struct ath11k_base *ab,
+ 			       struct ath11k_ce_ring *ce_ring,
+ 			       int ce_id, enum hal_ring_type type)
+@@ -395,6 +421,10 @@ static int ath11k_ce_init_ring(struct ath11k_base *ab,
+ 			    ret, ce_id);
+ 		return ret;
+ 	}
++
++	if (!(CE_ATTR_DIS_INTR & host_ce_config_wlan[ce_id].flags))
++		ath11k_ce_srng_msi_ring_params_setup(ab, ce_id, &params);
++
+ 	ce_ring->hal_ring_id = ret;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+index 780a3e11b609..6d9a6938870c 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.h
++++ b/drivers/net/wireless/ath/ath11k/hal.h
+@@ -458,6 +458,8 @@ struct hal_srng_params {
+ 	u32 flags;
+ 	u32 max_buffer_len;
+ 	u32 low_threshold;
++	dma_addr_t msi_addr;
++	u32 msi_data;
+ 
+ 	/* Add more params as needed */
+ };
+diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
+index 48ee55cebc81..dbe5568916e8 100644
+--- a/drivers/net/wireless/ath/ath11k/hif.h
++++ b/drivers/net/wireless/ath/ath11k/hif.h
+@@ -19,6 +19,11 @@ struct ath11k_hif_ops {
+ 	void (*power_down)(struct ath11k_base *sc);
+ 	int (*map_service_to_pipe)(struct ath11k_base *sc, u16 service_id,
+ 				   u8 *ul_pipe, u8 *dl_pipe);
++	int (*get_user_msi_vector)(struct ath11k_base *ab, char *user_name,
++				   int *num_vectors, u32 *user_base_data,
++				   u32 *base_vector);
++	void (*get_msi_address)(struct ath11k_base *ab, u32 *msi_addr_lo,
++				u32 *msi_addr_hi);
+ };
+ 
+ static inline int ath11k_hif_start(struct ath11k_base *sc)
+@@ -66,4 +71,25 @@ static inline int ath11k_hif_map_service_to_pipe(struct ath11k_base *sc, u16 ser
+ {
+ 	return sc->hif.ops->map_service_to_pipe(sc, service_id, ul_pipe, dl_pipe);
+ }
++
++static inline int ath11k_get_user_msi_vector(struct ath11k_base *ab, char *user_name,
++					     int *num_vectors, u32 *user_base_data,
++					     u32 *base_vector)
++{
++	if (!ab->hif.ops->get_user_msi_vector)
++		return -EOPNOTSUPP;
++
++	return ab->hif.ops->get_user_msi_vector(ab, user_name, num_vectors,
++						user_base_data,
++						base_vector);
++}
++
++static inline void ath11k_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
++					  u32 *msi_addr_hi)
++{
++	if (!ab->hif.ops->get_msi_address)
++		return;
++
++	ab->hif.ops->get_msi_address(ab, msi_addr_lo, msi_addr_hi);
++}
+ #endif /* _HIF_H_ */
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 10c281ece3d4..af08f0542867 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -339,6 +339,18 @@ int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector)
+ 	return pci_irq_vector(pci_dev, vector);
+ }
+ 
++static void ath11k_pci_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
++				       u32 *msi_addr_hi)
++{
++	struct pci_dev *pci_dev = to_pci_dev(ab->dev);
++
++	pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_LO,
++			      msi_addr_lo);
++
++	pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_HI,
++			      msi_addr_hi);
++}
++
+ int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_name,
+ 				       int *num_vectors, u32 *user_base_data,
+ 				       u32 *base_vector)
+@@ -366,6 +378,17 @@ int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_nam
+ 	return -EINVAL;
+ }
+ 
++static int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
++					  int *num_vectors, u32 *user_base_data,
++					  u32 *base_vector)
++{
++	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
++
++	return ath11k_pci_get_user_msi_assignment(ab_pci, user_name,
++						  num_vectors, user_base_data,
++						  base_vector);
++}
++
+ static void ath11k_pci_free_irq(struct ath11k_base *ab)
+ {
+ 	int i, irq_idx;
+@@ -634,6 +657,8 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ 	.write32 = ath11k_pci_write32,
+ 	.power_down = ath11k_pci_power_down,
+ 	.power_up = ath11k_pci_power_up,
++	.get_msi_address =  ath11k_pci_get_msi_address,
++	.get_user_msi_vector = ath11k_get_user_msi_assignment,
+ };
+ 
+ static int ath11k_pci_probe(struct pci_dev *pdev,
+-- 
+2.7.4
+
