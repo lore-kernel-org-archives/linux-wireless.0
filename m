@@ -7,72 +7,75 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DB4C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E82C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F1ED20866
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94D1320866
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="U7sxSLVW"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GFwPVGLx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728295AbgHNLky (ORCPT
+        id S1728326AbgHNLlH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 07:40:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39808 "EHLO
+        Fri, 14 Aug 2020 07:41:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728188AbgHNLkY (ORCPT
+        with ESMTP id S1728227AbgHNLkW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 07:40:24 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3962EC061345
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:22 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id z18so8048217wrm.12
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:22 -0700 (PDT)
+        Fri, 14 Aug 2020 07:40:22 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E1B3C06138A
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:19 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id f7so8096561wrw.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XO8EPoQb4LLTq78EddIBY+0bDLZNec0c1XiicaUFJYo=;
-        b=U7sxSLVW1sh8DVHNuWMgFrMIpseyetwKXM8Pfy8sOE/mGMowDRS3KKckwCDm2Cltu6
-         qUeQt0IXWET7Og1vfVvhhjeN190SZNq2N9/Btm8L9444qTRkss6jUErqKC8V8q+XuFo4
-         MrhlkXXslgeK2Kn/tSqPvaYxPLzs6u/Z/J5AHt3MqEbYrA+RS7AmLohpC128ndB+0vtY
-         a3EJDOQgaMqNPGvthcbFSAY1MwTX6aduR+ooQYmXTFuXDKYajNYYBV1kfitOALgCKHOw
-         g1eMSIdSoyt8DsPMxi+6WJf4rVqcYkATcvNKzG7IzqfMMapnpINB1c8XnupmnDXG8Sju
-         pwng==
+        bh=YFgXjYQQ0+xg2jvt5uv0D8nLYp5jF/FJWwM+q4+R5DE=;
+        b=GFwPVGLxXf/mpStDrwQbhZhhGdubhcLGe+9QBE3auyMrhgHAOnfF9/382XpY9WzAAy
+         erGIGgYbUKa0VY9jyzkDnooZ6tWkoEPH3xTCvwbUgzwtQFCfVUMsdD2xluztnlnPHvPk
+         Wj4O4gMCgAcc6ALZu71VEc8S4IQ8s/EONoLx4Y9Fs3Vy8yIAaRcJBYmeiVyQ6GUffrlz
+         TPa7yzxScLbZHbr9ozFnhXH0Kf/XqZHFzqZSosAFH3TrtyEWg4/ZPY3GopviOpzQoUln
+         DBDzrWxAlV0KS4t0N5dOKAnzYmh2hN8EI/wPGmyITJ1kTzwUkB9iwLfiNipfsuCEf+W4
+         dWVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XO8EPoQb4LLTq78EddIBY+0bDLZNec0c1XiicaUFJYo=;
-        b=cn9y8q23Elm39usZSwPLkNo9+03MD64p4N5HlfI3UBWdhijoNZFhvcFU9REgEn4Gji
-         fkhqpJU4QmPkhaAc1rCT5tPUL9eVfXiwswJ1hZ40NVcTZTbZx3k8epA3aiVCb07YoAa6
-         vM39KcyoA6DrgH+eKgB7VVYKfQjD+sym24ia9DFlbbRxZgKixO1hFX0MoD63guKJBL0J
-         rwxnPuqi/ruodlENHFctEd14TJXOVqoT+qVQBfQ0eLBLMWsHm8GHdbC8ZYfVXS9jpAqd
-         DvTSxJoVXCyFsMIInJ6ZAWkRmpHkx1btSFdXSLBN3CEm2lcjdncObz985IvNmqFJ8S3N
-         /nLw==
-X-Gm-Message-State: AOAM533xjJoaruBqw4iNHupupm/e4UxcTwLUH9gXAubkAtTWYiCdDQs0
-        1YXhgwcbB/ybHGuDLSqs2ZR0Kw==
-X-Google-Smtp-Source: ABdhPJyXRRYLrDoG3M9VfBg386tn7Y7Pbra593U8XbwJE8gHTjQ2o5hAlSZL15+Ss1XCPPuij8eTeg==
-X-Received: by 2002:adf:edc3:: with SMTP id v3mr2357786wro.193.1597405220978;
-        Fri, 14 Aug 2020 04:40:20 -0700 (PDT)
+        bh=YFgXjYQQ0+xg2jvt5uv0D8nLYp5jF/FJWwM+q4+R5DE=;
+        b=HKsNkgMVrqeR2V0MAv1565O/MaGC+sNN0qB5sA+n3jzjiuJPuDvKvyqwRaGhqPmpnz
+         +E4ODMwOdtTMHSIHQfmEPfo38QhmKh1DzFObShk/gJOxJJombO/jhSHuP6wZqEaLpu6q
+         8OGIN2/EkIHQRNafO7jdgnCEOO6fzVSzvhTtl2xCEIJ73TjPTpvUrSVPXFNjngjithDc
+         Y4sTvo63Oni+/hc9jTCur3KBeEcsFu//1Kk7+Bjpy2m/IMTnbGsJAl/Yzl0fjHtTM8tU
+         /+QobNOsV/GpIqs1ApO1/RnSWM8wybxlwJoiKhQH6GN44QbTsso7cH9sF92NxBzmDKad
+         viAw==
+X-Gm-Message-State: AOAM531Gu2f/JlAz+sGMqtU3XsNyhvhjao284E/mDxjG6kd2xqdtnGR9
+        D0qlNkKR68DwZ6oCBenCEKrgNQ==
+X-Google-Smtp-Source: ABdhPJyYbghJq3Vbytc+37vzZWS3PlyxtAiIzUiiOcVh5+jOzFITVoKVkNX94BOY56UhZmaJvfCDEw==
+X-Received: by 2002:a5d:5746:: with SMTP id q6mr2377308wrw.59.1597405218092;
+        Fri, 14 Aug 2020 04:40:18 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id 32sm16409129wrh.18.2020.08.14.04.40.19
+        by smtp.gmail.com with ESMTPSA id 32sm16409129wrh.18.2020.08.14.04.40.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 04:40:20 -0700 (PDT)
+        Fri, 14 Aug 2020 04:40:17 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "Alexander A. Klimov" <grandmaster@al2klimov.de>,
-        Martin Langer <martin-langer@gmx.de>,
-        Stefano Brivio <stefano.brivio@polimi.it>,
-        Michael Buesch <m@bues.ch>, van Dyk <kugelfang@gentoo.org>,
-        Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 26/30] net: wireless: broadcom: b43: phy_common: Demote non-conformant kerneldoc header
-Date:   Fri, 14 Aug 2020 12:39:29 +0100
-Message-Id: <20200814113933.1903438-27-lee.jones@linaro.org>
+        Johannes Berg <johannes.berg@intel.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH 24/30] net: wireless: broadcom: brcm80211: brcmsmac: mac80211_if: Demote a few non-conformant kerneldoc headers
+Date:   Fri, 14 Aug 2020 12:39:27 +0100
+Message-Id: <20200814113933.1903438-25-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200814113933.1903438-1-lee.jones@linaro.org>
 References: <20200814113933.1903438-1-lee.jones@linaro.org>
@@ -85,38 +88,87 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/broadcom/b43/phy_common.c:467: warning: Function parameter or member 'work' not described in 'b43_phy_txpower_adjust_work'
+ In file included from drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:30:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:288: warning: Function parameter or member 'wl' not described in 'brcms_free'
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:1127: warning: Function parameter or member 'pdev' not described in 'brcms_attach'
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:1222: warning: Function parameter or member 'pdev' not described in 'brcms_bcma_probe'
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:1301: warning: Function parameter or member 'work' not described in 'brcms_driver_init'
 
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: "Alexander A. Klimov" <grandmaster@al2klimov.de>
-Cc: Martin Langer <martin-langer@gmx.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Michael Buesch <m@bues.ch>
-Cc: van Dyk <kugelfang@gentoo.org>
-Cc: Andreas Jaggi <andreas.jaggi@waterwave.ch>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
 Cc: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/broadcom/b43/phy_common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c         | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_common.c b/drivers/net/wireless/broadcom/b43/phy_common.c
-index 1de4de094d61b..285490f6f0a1d 100644
---- a/drivers/net/wireless/broadcom/b43/phy_common.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_common.c
-@@ -458,7 +458,7 @@ void b43_software_rfkill(struct b43_wldev *dev, bool blocked)
- 	b43_mac_enable(dev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index 648efcbc819fa..29a834ea45eb8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -275,14 +275,13 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+ 	}
  }
  
 -/**
 +/*
-  * b43_phy_txpower_adjust_work - TX power workqueue.
+  * This function frees the WL per-device resources.
   *
-  * Workqueue for updating the TX power parameters in hardware.
+  * This function frees resources owned by the WL device pointed to
+  * by the wl parameter.
+  *
+  * precondition: can both be called locked and unlocked
+- *
+  */
+ static void brcms_free(struct brcms_info *wl)
+ {
+@@ -1115,7 +1114,7 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
+ 	return ieee_hw_rate_init(hw);
+ }
+ 
+-/**
++/*
+  * attach to the WL device.
+  *
+  * Attach to the WL device identified by vendor and device parameters.
+@@ -1210,7 +1209,7 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+ 
+ 
+ 
+-/**
++/*
+  * determines if a device is a WL device, and if so, attaches it.
+  *
+  * This function determines if a device pointed to by pdev is a WL device,
+@@ -1290,7 +1289,7 @@ static struct bcma_driver brcms_bcma_driver = {
+ 	.id_table = brcms_coreid_table,
+ };
+ 
+-/**
++/*
+  * This is the main entry point for the brcmsmac driver.
+  *
+  * This function is scheduled upon module initialization and
+@@ -1317,7 +1316,7 @@ static int __init brcms_module_init(void)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * This function unloads the brcmsmac driver from the system.
+  *
+  * This function unconditionally unloads the brcmsmac driver module from the
 -- 
 2.25.1
 
