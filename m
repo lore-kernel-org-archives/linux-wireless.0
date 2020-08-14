@@ -7,258 +7,157 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D4BC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57890C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1C1E20866
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 214B420866
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:41:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="K8YakLwQ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="lnMu9WBE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728298AbgHNLlH (ORCPT
+        id S1726327AbgHNLl3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 07:41:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39774 "EHLO
+        Fri, 14 Aug 2020 07:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728232AbgHNLkW (ORCPT
+        with ESMTP id S1728224AbgHNLkW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 14 Aug 2020 07:40:22 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECE7EC061343
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:20 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id a14so8076236wra.5
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46E28C061387
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:18 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id f7so8096508wrw.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2020 04:40:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=BETUm1VsjAHaE9mSTvIErHbihrcPaijwVnn2xiQgls0=;
-        b=K8YakLwQXGOsqfx28gwRQ+anspeFLdTWsKZ6Hb88B6w5tU+DE5CK/TOOil0CWNCXAu
-         ffYdufP1kx1qwkJ9ouyEhwkIbzXcRkmsDWQzq8/XqtLXPy+y2Z/XVOEFa6gMxPEDeVkQ
-         EQwSXEVmpKzK+GkwMptcX26ANSi3nFbr9aVTK5wZQCsCDzE2+QL9xl89zjqrAg4YsvIa
-         sTUNe6XZMX14B4JRRT+6QRuodGaw/82z76iu5tYITweWAhbl/2R7Z3F2od1mKqeyRL1Z
-         N+onSwvPoF7x4ZQ+YvnZKM+HsR5b5nGc24k7RD5a30ek24EIU4pOHZ1eag5gc52ATru8
-         gvLw==
+        bh=QL8P1vJDktk76ShKc1HPImGMIug4YyMuQnQRcEyKkoI=;
+        b=lnMu9WBEwLa+et+Tun3rNvwx1hf61X+CVtMJG/DDGWk2x5ctb0Nbd50aVhKtCXUC9T
+         z6ydfEiNpiajXqm230uX3ya68ut+rULL9Dru//OVyEZ4SZ1kSGcYN7Pik0bGW0xe1/0t
+         o0LC8U7sU4kcekipyEvc25ZIw9Iei0nwLE9H7xjrMT++K/jkrbZVgCpKLX/T7I1sTVkH
+         wR7b71tU0bQw+hjMA7zA3bGbm+cMALRKFJhjQC/I+QEzkqSi3khmpkrIe2DjPXfhR9Vp
+         /KA4+GUnu6MTA7dq5Kc0vhFdMxLlCV1CgQqkQPSPYU7Q90d4aRnkXxanxZvUPgLZLVbb
+         kV6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BETUm1VsjAHaE9mSTvIErHbihrcPaijwVnn2xiQgls0=;
-        b=X2rlTGY75p4FID4gQ8CVo1k/iT+OradJyn68RqEPCfappE5UrDPBw6cnhnHJRjfVjI
-         d956tA68NejMtroyuarE6d7dlsfmBcxtxsKkdHS9ZapM8d4pUlk1EVC8d/MGYiyTmNbQ
-         1kdHu8FBOiE9/D7h6wUop48RzXrQuPl+fIWq+kRagmGNu1nbg4JsjSan7ZfpY9wM04hV
-         QhetJsl7lFQUqbowRyWtqnsx21TMi0/ugkqdk26lERkssM1gW2AQvSr69/lvPSfcGZmV
-         gfqdEf4traGR6zTJNYN9qvxQgUthwwusdoOgEGEWh5oABF2I3ns5Npt2cX1zE1vDWijT
-         vDiA==
-X-Gm-Message-State: AOAM533iawYIT5I8YlLLGt68xnkP68nJMLrAadDMFNOOOn2WdyJJN5tz
-        3Y7h/feY83muhSTAM9IihdbRwQ==
-X-Google-Smtp-Source: ABdhPJxIxjXAMbNxjAnHnCJBk/QJ0q8XoyiBfmFbg2rseOQ463H3p0d/reKBasOyl/LNP6JUO29kqQ==
-X-Received: by 2002:a5d:4b11:: with SMTP id v17mr2343043wrq.224.1597405219704;
-        Fri, 14 Aug 2020 04:40:19 -0700 (PDT)
+        bh=QL8P1vJDktk76ShKc1HPImGMIug4YyMuQnQRcEyKkoI=;
+        b=Bsa2sLTqAXgNnVzn8D40OjPT7ssCYIFfnK5g1obMSPgnWRCFb9M2a647Yv4/+Hswic
+         +Z04zQG8DuVBJpE2NvuUJc42FVVKAzXLkT5Qp5hMtbSIDKb+seYNiUNWm3SZ+c2GaJ9m
+         8536apNWRmIPKM+fHOHxCWNzDvLkZzWVdfamUnMGv5Gob4Ec7P2wvvggVVmWz+/u9EPy
+         PmyDODc2Uj1DGH2B4vCwivw5+SG468H3aLiWeEKlzIrBV6yqXXgNDKEfK3s4eW8fB4Tb
+         lH7ZsUZUrlcqXkefOYpUTFkPKImfaG6C/U7NXX8RisrWRa4MX62NQXduBjVrak82gfwD
+         P3dA==
+X-Gm-Message-State: AOAM533xO7T1WDmKdVCibnS0Tv9q5B3scLY7Ue0UbBSDJTo89s9YxzDg
+        fmtiAEbskbP9nndOHkzZKlfN+w==
+X-Google-Smtp-Source: ABdhPJzyLjHxyrMZWitTzof2A/YZn3HTH6pdxivRPUutGlNS/6e66PfYqnT9d55LRQt0vgfwSqeylA==
+X-Received: by 2002:adf:a19e:: with SMTP id u30mr2322432wru.274.1597405216394;
+        Fri, 14 Aug 2020 04:40:16 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id 32sm16409129wrh.18.2020.08.14.04.40.18
+        by smtp.gmail.com with ESMTPSA id 32sm16409129wrh.18.2020.08.14.04.40.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 04:40:18 -0700 (PDT)
+        Fri, 14 Aug 2020 04:40:15 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Gerald Combs <gerald@ethereal.com>,
-        Linux Wireless <ilw@linux.intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 25/30] net: wireless: intel: ipw2x00: ipw2200: Demote lots of nonconformant kerneldoc comments
-Date:   Fri, 14 Aug 2020 12:39:28 +0100
-Message-Id: <20200814113933.1903438-26-lee.jones@linaro.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH 23/30] net: wireless: broadcom: brcm80211: brcmfmac: fweh: Fix docrot related function documentation issues
+Date:   Fri, 14 Aug 2020 12:39:26 +0100
+Message-Id: <20200814113933.1903438-24-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200814113933.1903438-1-lee.jones@linaro.org>
 References: <20200814113933.1903438-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lots of these are either completely wrong or do not even attempt to
-document any of the parameters.  Others use an incorrect/dated format
-which is not recognised by the kernel (... and are also wrong and
-suffering from docrot).
+Also demote a commit block header which is clearly not suitable for kerneldoc.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3011: warning: Function parameter or member 'priv' not described in 'ipw_alive'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3693: warning: Incorrect use of kernel-doc format:  * Driver allocates buffers of this size for Rx
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3697: warning: Incorrect use of kernel-doc format:  * ipw_rx_queue_space - Return number of free slots available in queue.
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3700: warning: Function parameter or member 'q' not described in 'ipw_rx_queue_space'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'priv' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'q' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'count' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'read' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'write' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'base' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3743: warning: Function parameter or member 'size' not described in 'ipw_queue_init'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3800: warning: Function parameter or member 'priv' not described in 'ipw_queue_tx_free_tfd'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3800: warning: Function parameter or member 'txq' not described in 'ipw_queue_tx_free_tfd'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3841: warning: Function parameter or member 'priv' not described in 'ipw_queue_tx_free'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3841: warning: Function parameter or member 'txq' not described in 'ipw_queue_tx_free'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:3869: warning: Function parameter or member 'priv' not described in 'ipw_tx_queue_free'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:4474: warning: Function parameter or member 'priv' not described in 'ipw_rx_notification'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:4474: warning: Function parameter or member 'notif' not described in 'ipw_rx_notification'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:4935: warning: Function parameter or member 'priv' not described in 'ipw_queue_reset'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:5008: warning: Function parameter or member 'priv' not described in 'ipw_queue_tx_reclaim'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:5008: warning: Function parameter or member 'txq' not described in 'ipw_queue_tx_reclaim'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:5008: warning: Function parameter or member 'qindex' not described in 'ipw_queue_tx_reclaim'
- drivers/net/wireless/intel/ipw2x00/ipw2200.c:8456: warning: Function parameter or member 'priv' not described in 'ipw_sw_reset'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c: In function ‘brcmf_fweh_handle_if_event’:
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:131:6: warning: variable ‘err’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:36: warning: Function parameter or member 'datalen' not described in 'brcmf_fweh_queue_item'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:44: warning: Function parameter or member 'code' not described in 'brcmf_fweh_event_name'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:44: warning: Function parameter or member 'name' not described in 'brcmf_fweh_event_name'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:127: warning: Function parameter or member 'emsg' not described in 'brcmf_fweh_handle_if_event'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:127: warning: Function parameter or member 'data' not described in 'brcmf_fweh_handle_if_event'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:127: warning: Excess function parameter 'item' description in 'brcmf_fweh_handle_if_event'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:127: warning: Excess function parameter 'ifpp' description in 'brcmf_fweh_handle_if_event'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:391: warning: Function parameter or member 'packet_len' not described in 'brcmf_fweh_process_event'
 
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Gerald Combs <gerald@ethereal.com>
-Cc: Linux Wireless <ilw@linux.intel.com>
+Cc: Lee Jones <lee.jones@linaro.org>
 Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 30 ++++++++++----------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 5345f90837f5f..e7680702e1602 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -2998,7 +2998,7 @@ static void ipw_remove_current_network(struct ipw_priv *priv)
- 	spin_unlock_irqrestore(&priv->ieee->lock, flags);
- }
- 
--/**
-+/*
-  * Check that card is still alive.
-  * Reads debug register from domain0.
-  * If card is present, pre-defined value should
-@@ -3113,7 +3113,7 @@ static int ipw_load_ucode(struct ipw_priv *priv, u8 * data, size_t len)
- 	mdelay(1);
- 
- 	/* write ucode */
--	/**
-+	/*
- 	 * @bug
- 	 * Do NOT set indirect address register once and then
- 	 * store data to indirect data register in the loop.
-@@ -3666,7 +3666,7 @@ static int ipw_load(struct ipw_priv *priv)
- 	return rc;
- }
- 
--/**
-+/*
-  * DMA services
-  *
-  * Theory of operation
-@@ -3689,11 +3689,11 @@ static int ipw_load(struct ipw_priv *priv)
-  * we only utilize the first data transmit queue (queue1).
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 6f74567c7bd72..3bdbb285b3aa6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -23,6 +23,7 @@
+  * @ifidx: interface index related to this event.
+  * @ifaddr: ethernet address for interface.
+  * @emsg: common parameters of the firmware event message.
++ * @datalen: length of the data array
+  * @data: event specific data part of the firmware event.
   */
+ struct brcmf_fweh_queue_item {
+@@ -35,7 +36,7 @@ struct brcmf_fweh_queue_item {
+ 	u8 data[];
+ };
  
 -/**
 +/*
-  * Driver allocates buffers of this size for Rx
+  * struct brcmf_fweh_event_name - code, name mapping entry.
   */
- 
--/**
-+/*
-  * ipw_rx_queue_space - Return number of free slots available in queue.
+ struct brcmf_fweh_event_name {
+@@ -118,8 +119,8 @@ static int brcmf_fweh_call_event_handler(struct brcmf_pub *drvr,
+  * brcmf_fweh_handle_if_event() - handle IF event.
+  *
+  * @drvr: driver information object.
+- * @item: queue entry.
+- * @ifpp: interface object (may change upon ADD action).
++ * @emsg: event message object.
++ * @data: event object.
   */
- static int ipw_rx_queue_space(const struct ipw_rx_queue *q)
-@@ -3724,7 +3724,7 @@ static inline int ipw_queue_inc_wrap(int index, int n_bd)
- 	return (++index == n_bd) ? 0 : index;
- }
- 
--/**
-+/*
-  * Initialize common DMA queue structure
+ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 				       struct brcmf_event_msg *emsg,
+@@ -380,6 +381,7 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
   *
-  * @param q                queue to init
-@@ -3788,7 +3788,7 @@ static int ipw_queue_tx_init(struct ipw_priv *priv,
- 	return 0;
- }
- 
--/**
-+/*
-  * Free one TFD, those at index [txq->q.last_used].
-  * Do NOT advance any indexes
+  * @drvr: driver information object.
+  * @event_packet: event packet to process.
++ * @packet_len: length of the packet
   *
-@@ -3811,7 +3811,7 @@ static void ipw_queue_tx_free_tfd(struct ipw_priv *priv,
- 	if (le32_to_cpu(bd->u.data.num_chunks) > NUM_TFD_CHUNKS) {
- 		IPW_ERROR("Too many chunks: %i\n",
- 			  le32_to_cpu(bd->u.data.num_chunks));
--		/** @todo issue fatal error, it is quite serious situation */
-+		/* @todo issue fatal error, it is quite serious situation */
- 		return;
- 	}
- 
-@@ -3828,7 +3828,7 @@ static void ipw_queue_tx_free_tfd(struct ipw_priv *priv,
- 	}
- }
- 
--/**
-+/*
-  * Deallocate DMA queue.
-  *
-  * Empty queue by removing and destroying all BD's.
-@@ -3860,7 +3860,7 @@ static void ipw_queue_tx_free(struct ipw_priv *priv, struct clx2_tx_queue *txq)
- 	memset(txq, 0, sizeof(*txq));
- }
- 
--/**
-+/*
-  * Destroy all DMA queues and structures
-  *
-  * @param priv
-@@ -4465,7 +4465,7 @@ static void handle_scan_event(struct ipw_priv *priv)
- 	}
- }
- 
--/**
-+/*
-  * Handle host notification packet.
-  * Called from interrupt routine
-  */
-@@ -4925,7 +4925,7 @@ static void ipw_rx_notification(struct ipw_priv *priv,
- 	}
- }
- 
--/**
-+/*
-  * Destroys all DMA structures and initialise them again
-  *
-  * @param priv
-@@ -4934,7 +4934,7 @@ static void ipw_rx_notification(struct ipw_priv *priv,
- static int ipw_queue_reset(struct ipw_priv *priv)
- {
- 	int rc = 0;
--	/** @todo customize queue sizes */
-+	/* @todo customize queue sizes */
- 	int nTx = 64, nTxCmd = 8;
- 	ipw_tx_queue_free(priv);
- 	/* Tx CMD queue */
-@@ -4990,7 +4990,7 @@ static int ipw_queue_reset(struct ipw_priv *priv)
- 	return rc;
- }
- 
--/**
-+/*
-  * Reclaim Tx queue entries no more used by NIC.
-  *
-  * When FW advances 'R' index, all entries between old and
-@@ -8445,7 +8445,7 @@ static void ipw_rx(struct ipw_priv *priv)
- #define	DEFAULT_SHORT_RETRY_LIMIT 7U
- #define	DEFAULT_LONG_RETRY_LIMIT  4U
- 
--/**
-+/*
-  * ipw_sw_reset
-  * @option: options to control different reset behaviour
-  * 	    0 = reset everything except the 'disable' module_param
+  * If the packet buffer contains a firmware event message it will
+  * dispatch the event to a registered handler (using worker).
 -- 
 2.25.1
 
