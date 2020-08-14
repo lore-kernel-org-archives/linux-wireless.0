@@ -2,95 +2,93 @@ Return-Path: <SRS0=OllR=BY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39973C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 14:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C01C4C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 14:50:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1691520855
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 14:47:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ECA420855
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 14:50:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ssa2MqC4"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XBEdSwO/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726786AbgHNOrz (ORCPT
+        id S1727905AbgHNOux (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 10:47:55 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:54580 "EHLO m43-7.mailgun.net"
+        Fri, 14 Aug 2020 10:50:53 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:60318 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726213AbgHNOry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 10:47:54 -0400
+        id S1726193AbgHNOuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Aug 2020 10:50:52 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597416474; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1597416651; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=5bjxNb/F89xa7CS6S3NOKLAf9mAo71elY+kX0Y7RX0c=;
- b=Ssa2MqC4D8GNReZzDPjXQCuKTq3WiOoFaGmEkJ3uOnFRIVHMC+NSntRvy4dURqrWUyIDSdwY
- tVOxLHgW2LO0LfmuzJOCNdMLYQ8LXQXBx1YNtt3N2wPAJjjnVK2yPnR3HMjKFDszhpqys7LA
- J1Xv1ARYiGIIHTQxxEtf8uIu3d8=
+ Content-Type: Sender; bh=pdoa35tjc7pBRBQqNeg3ep0c9In8mctpwTL5tUWw3eM=;
+ b=XBEdSwO/s2ObycnKcnnreEzyheOkLoujPwn6XCfhd4Bp5d+Ww9rZwYbRIDnzXN9UIo9eJWaj
+ /O2YDY3pHX7WXUivsNVZ5MbDT0Wmb9KbPN8o3fR9yIeD+c+Y9ki+/i1Y0APjusUtuyfxyCXJ
+ rOisIQfUaS9zJUn9GhMhv1aqAj8=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 5f36a40ed48d4625cad9f374 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 14:47:42
+ smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
+ 5f36a4cbba4c2cd367abf76d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 14:50:51
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DB6D4C43391; Fri, 14 Aug 2020 14:47:41 +0000 (UTC)
+        id 5035CC43391; Fri, 14 Aug 2020 14:50:50 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 71A77C433C6;
-        Fri, 14 Aug 2020 14:47:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 71A77C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D2B86C433C9;
+        Fri, 14 Aug 2020 14:50:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D2B86C433C9
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] wil6210: Avoid the use of one-element array
+Subject: Re: [PATCH v2 5/6] wcn36xx: Fix software-driven scan
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200715215755.GA21716@embeddedor>
-References: <20200715215755.GA21716@embeddedor>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Maya Erez <merez@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+In-Reply-To: <1595586052-16081-6-git-send-email-loic.poulain@linaro.org>
+References: <1595586052-16081-6-git-send-email-loic.poulain@linaro.org>
+To:     Loic Poulain <loic.poulain@linaro.org>
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200814144741.DB6D4C43391@smtp.codeaurora.org>
-Date:   Fri, 14 Aug 2020 14:47:41 +0000 (UTC)
+Message-Id: <20200814145050.5035CC43391@smtp.codeaurora.org>
+Date:   Fri, 14 Aug 2020 14:50:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
+Loic Poulain <loic.poulain@linaro.org> wrote:
 
-> One-element arrays are being deprecated[1]. Replace the one-element
-> array with a simple value type 'u8 reserved'[2], once this is just
-> a placeholder for alignment.
+> For software-driven scan, rely on mac80211 software scan instead
+> of internal driver implementation. The internal implementation
+> cause connection trouble since it keep the antenna busy during
+> the entire scan duration, moreover it's only a passive scanning
+> (no probe request). Therefore, let mac80211 manages sw scan.
 > 
-> [1] https://github.com/KSPP/linux/issues/79
-> [2] https://github.com/KSPP/linux/issues/86
+> Note: we fallback to software scan if firmware does not report
+> scan offload support or if we need to scan the 5Ghz band (currently
+> not supported by the offload scan...).
 > 
-> Tested-by: kernel test robot <lkp@intel.com>
-> Link: https://github.com/GustavoARSilva/linux-hardening/blob/master/cii/0-day/wil6210-20200715.md
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> Tested-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I agree with Johannes, I don't see the point of this patch as there are
-no clear benefits.
+I dropped this patch 5 per Bryan's comment. Please work with Bryan to
+fix the issue and resend this patch.
 
-Patch set to Rejected.
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/patch/11666325/
+https://patchwork.kernel.org/patch/11682841/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
