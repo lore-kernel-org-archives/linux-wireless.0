@@ -2,84 +2,101 @@ Return-Path: <SRS0=OllR=BY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41568C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 10:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D027C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16F0C20781
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 10:29:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC99C2078D
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 11:18:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="SquJTcw/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FI3d3AXs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbgHNK3f (ORCPT
+        id S1727123AbgHNLSR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 06:29:35 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:50610 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726012AbgHNK3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 06:29:35 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597400974; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=KrpBkM033gIFZ56EzZ3aP2meXijZYyViwP302gCUNBE=; b=SquJTcw/BYsb5gZuio3OFtjk2Mcz5LyVBtNyAn+lrpshtyCVrlUI3Lo3O+o9CekWtc4ujdxj
- 0kQuHZkv0Rjq+jqu2/nCl5Q54IubR3X9J0PK3v49UHMzxsv5KFtXzkt5fRqwfjx+LdWbQ/b7
- Htk3qKKXxRkK+fXUVpyGpdF5mwY=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f36678d247ccc308cad632d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 14 Aug 2020 10:29:33
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E73F3C433C6; Fri, 14 Aug 2020 10:29:32 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9F74FC433CA;
-        Fri, 14 Aug 2020 10:29:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9F74FC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
+        Fri, 14 Aug 2020 07:18:17 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:51036 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727109AbgHNLSQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Aug 2020 07:18:16 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07EBGoNJ070776;
+        Fri, 14 Aug 2020 11:18:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=41fr713SEuqBN+291fchNgohOxrXXq9eL+cDz9R+CuI=;
+ b=FI3d3AXs9xnVCIfnFeN2Z/Aecm+e8qerW6wrBfQ2CFDEqzXMP0ZfJ3ma1fzXHN6znyu1
+ OUatmH1UMyG8kvq2g5D+oYDxRoIoi3GbcTzWuz9jL9g0BpOF+ef1JOxfhwy9StJXCPoW
+ KEaqA1SSxjy71xI3QosaLd50Pf3XT7KUAtUWlnaGQgoU2C688FSu1pw7/4qovN5rihis
+ WOCJOcTYBWwQ75FQD9CsUAy87hKGYB5nZzLBMtSX/CB7/UlQDzNTVJ4wBIgz8z2F7dCj
+ DAX/sf9wYX4e1oBbTtvuGVd2+uj6jTyp1mAPE1MH46a0ArE9/tkC+BZ1Q/PKImStf911 eA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 32w73ccwda-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 14 Aug 2020 11:18:09 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07EBHg00135553;
+        Fri, 14 Aug 2020 11:18:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 32u3h815gv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 14 Aug 2020 11:18:08 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07EBI11j021448;
+        Fri, 14 Aug 2020 11:18:01 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 14 Aug 2020 11:18:00 +0000
+Date:   Fri, 14 Aug 2020 14:17:54 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
 To:     Walter Harms <wharms@bfs.de>
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Jakub Kicinski <kuba@kernel.org>,
         Jouni Malinen <jouni@qca.qualcomm.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors\@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: AW: [PATCH] ath6kl: prevent potential array overflow in ath6kl_add_new_sta()
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: prevent potential array overflow in
+ ath6kl_add_new_sta()
+Message-ID: <20200814111753.GQ1793@kadam>
 References: <20200813141315.GB457408@mwanda>
-        <61e34f670a4845f8b1cbf6f6013f8a35@bfs.de>
-Date:   Fri, 14 Aug 2020 13:29:27 +0300
-In-Reply-To: <61e34f670a4845f8b1cbf6f6013f8a35@bfs.de> (Walter Harms's message
-        of "Fri, 14 Aug 2020 08:49:43 +0000")
-Message-ID: <874kp5msfs.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+ <61e34f670a4845f8b1cbf6f6013f8a35@bfs.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <61e34f670a4845f8b1cbf6f6013f8a35@bfs.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9712 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 spamscore=0 suspectscore=0 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008140087
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9712 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ bulkscore=0 phishscore=0 suspectscore=0 mlxscore=0 priorityscore=1501
+ spamscore=0 clxscore=1011 lowpriorityscore=0 adultscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008140087
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Walter Harms <wharms@bfs.de> writes:
-
+On Fri, Aug 14, 2020 at 08:49:43AM +0000, Walter Harms wrote:
+> nitpicking:
+> 
 > the debugtrace will give the impression that the function is 
 > running. perhaps it is more clever to have this after the check.
+> 
 
-But it's possible to deduce from the debug message that aid is out of
-limit, so I prefer the way Dan did it.
+The debug is more useful they way I did it.  Otherwise it doesn't
+print anything.  This is also the normal way to do this sort of
+debugging.
 
-Please don't top post. Also your mails are not visible in patchwork and
-are easily missed, most likely due to using "AW:" in the subject.
+regards,
+dan carpenter
 
-https://patchwork.kernel.org/patch/11712551/
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
