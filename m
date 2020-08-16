@@ -1,170 +1,218 @@
-Return-Path: <SRS0=OllR=BY=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=rysR=B2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A26C433E3
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 17:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C25C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:31:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D263520708
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Aug 2020 17:26:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B2A7206F4
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:31:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dOpIA/4J"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="OOwRdyER"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728412AbgHNR0G (ORCPT
+        id S1730083AbgHPFbl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Aug 2020 13:26:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37178 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726210AbgHNR0G (ORCPT
+        Sun, 16 Aug 2020 01:31:41 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:53937 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730068AbgHPFbk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Aug 2020 13:26:06 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13A7AC061384;
-        Fri, 14 Aug 2020 10:26:06 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id t10so10711629ejs.8;
-        Fri, 14 Aug 2020 10:26:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=QdH301wgS7cyfyANm3QdNLsmOKta1Zr4tgtkQ//vUEw=;
-        b=dOpIA/4JbMCFQP35uxNzdsMPiNq0i0CAGHAMNXbyWBOwU5ZhVu79CCcnmOCTUGSgof
-         poji8AKEuKDpgTKCVmDWcL5T/w5rIMpo7KaAh5LteA4VogzS1es30OuWzDjeB0iUIBzC
-         QRvdlqnc/Ypu8DKuW1WgZMntkjwZPLMQJgY3vQIk8+hL9zIz1svZE4LXvfI/R1HOJKZ1
-         enNh1OkDmAMPy92Bn10R3FlT4k07qxiJzDu4P09DMY5eai4t9jv/wHVDgFpof/l51OTQ
-         VIx+OAHMPkfTvRFWhSIvMthr7n4ORRE5MWrztdJ1nEC4w7HsXgM1TqSvbifZWCVGyYyp
-         QHqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=QdH301wgS7cyfyANm3QdNLsmOKta1Zr4tgtkQ//vUEw=;
-        b=q+np043nNBu4yHTWe9Ku59DDhCBNFaSS39rcH5nkhz7RZ1/8BDqMQ8wt27VoTXm/Dt
-         an9nfhpPmomiu2nWkzdxzxEdpNKO7Csvh5/X7y48G4qDSR5a4+FlP3UKqOk4MZPMFGXe
-         nLTbz/W6pgUOvjCf0TJsoA5sbXmy8Lvhsdrw7JjbWBEG1Vkb66ZCqzqPhL1T6X293v3n
-         P1YqPDP/rK3kV37JDamqoPqt1NVOT3RVe2z7H+xWl2/7ODhqbWmj8Q2Ah+89GzyV699Y
-         Xvy2DyNlspJS/4aCmrLPhMS3o+cvinE1dnc6FyyL2fIzA+E77FdC8LtiYFyYVHIMoL5j
-         TPQQ==
-X-Gm-Message-State: AOAM530KuQrd+vO38ThyRG7MedJ5W71HTOpNhP/gCIM0Kn6n2RFC7Mex
-        xPAuM5yNAR1+Oh3hrARcQQPii5+BhtA=
-X-Google-Smtp-Source: ABdhPJztkVGS1uzsrg8R/zQfvO6jWeUBcJbznNXsWBTi3+p08CkzyWA3Gb4Mv9/aZRPOhH2iriYJlA==
-X-Received: by 2002:a17:907:9483:: with SMTP id dm3mr3512878ejc.333.1597425964745;
-        Fri, 14 Aug 2020 10:26:04 -0700 (PDT)
-Received: from debian64.daheim (pd9e292cf.dip0.t-ipconnect.de. [217.226.146.207])
-        by smtp.gmail.com with ESMTPSA id o25sm7076217ejm.34.2020.08.14.10.26.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 10:26:04 -0700 (PDT)
-Received: from localhost.daheim ([127.0.0.1])
-        by debian64.daheim with esmtp (Exim 4.94)
-        (envelope-from <chunkeey@gmail.com>)
-        id 1k6dSn-0006ec-WD; Fri, 14 Aug 2020 19:25:59 +0200
-Subject: Re: [PATCH 08/30] net: wireless: ath: carl9170: Mark 'ar9170_qmap' as
- __maybe_unused
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20200814113933.1903438-1-lee.jones@linaro.org>
- <20200814113933.1903438-9-lee.jones@linaro.org>
- <7ef231f2-e6d3-904f-dc3a-7ef82beda6ef@gmail.com> <20200814164046.GO4354@dell>
-From:   Christian Lamparter <chunkeey@gmail.com>
-Message-ID: <0a144311-2085-60b5-ea36-554c6efbf7e9@gmail.com>
-Date:   Fri, 14 Aug 2020 19:25:58 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200814164046.GO4354@dell>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        Sun, 16 Aug 2020 01:31:40 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1597555899; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=CxCooxFuDRqmaSG8JvCN8qg08uoHiF6jNBrej/X2W8s=; b=OOwRdyERwu6/o11WpWYtOHCydRl7PCaTs9G4cbi+rulJNECM490r5Rl1idawdb8dgq4SdXAO
+ 32eqDX3B1utHZjIVe0IuMgEQwL8UbjyLQ/nHdLi9TY0hTjJC+3S655+iXLaIPzYMDgpB5EOJ
+ X07ja1MLdcuYN8XNCFCO1NZmiXI=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
+ 5f38c4bb91f8def8b2c2980e (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 16 Aug 2020 05:31:38
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 45C65C43395; Sun, 16 Aug 2020 05:31:38 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BF43FC433C9;
+        Sun, 16 Aug 2020 05:31:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BF43FC433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/9] ath11k: don't initialize rxdma1 related ring
+Date:   Sun, 16 Aug 2020 08:31:24 +0300
+Message-Id: <1597555891-26112-3-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1597555891-26112-1-git-send-email-kvalo@codeaurora.org>
+References: <1597555891-26112-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-14 18:40, Lee Jones wrote:
-> On Fri, 14 Aug 2020, Christian Lamparter wrote:
-> 
->> On 2020-08-14 13:39, Lee Jones wrote:
->>> 'ar9170_qmap' is used in some source files which include carl9170.h,
->>> but not all of them.  Mark it as __maybe_unused to show that this is
->>> not only okay, it's expected.
->>>
->>> Fixes the following W=1 kernel build warning(s)
->>
->> Is this W=1 really a "must" requirement? I find it strange having
-> 
-> Clean W=1 warnings is the dream, yes.
-But is it a requirement?
+From: Carl Huang <cjhuang@codeaurora.org>
 
-> 
-> I would have thought most Maintainers would be on-board with this.
- From what I know: It's no changes For changes' sake. Because otherwise 
-this would be pretty broken for maintainers. They could just write and 
-revert the same code over and over to prob up their LOC and commit 
-counter. Wouldn't you agree there?
+For QCA6390, it has 2 lmacs and thus 2 rxdmas. However, each rxdma has rxdma0
+only, and doesn't have rxdma1. So for QCA6390, don't initialize rxdma1 related
+rings such as rx_mon_buf_ring, rx_mon_dst_ring and rx_mon_desc_ring.
 
-> 
-> The ones I've worked with thus far have certainly been thankful.  Many
-> had this on their own TODO lists.
-Question is, do you really want to be just the cleanup crew there? Since 
-semantic patches came along and a lot of this has been automated.
-I'm of course after something else. Like: "Isn't there a better way than 
-manually slapping __maybe_unused there to suppress the warning and call 
-it a day?" If you already went down these avenues and can confirm that 
-there's no alternative than this, then "fine". But if there is a better
-method of doing this, then "let's go with that!".
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 
-> 
->> __maybe_unused in header files as this "suggests" that the
->> definition is redundant.
-> 
-> Not true.
-> 
-> If it were redundant then we would remove the line entirely.
-So, why adding __maybe_unused then? I find it not very helpful to
-tell the compiler to "shut up" when you want it's opinion...
-This was the vibe I got from gcc's attribute unused help text.
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/core.c  |  2 ++
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 34 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/hw.h    |  2 ++
+ 3 files changed, 36 insertions(+), 2 deletions(-)
 
-Cheers,
-Christian
-
-> 
->>>    from drivers/net/wireless/ath/carl9170/carl9170.h:57,
->>>    In file included from drivers/net/wireless/ath/carl9170/carl9170.h:57,
->>>    drivers/net/wireless/ath/carl9170/carl9170.h:71:17: warning: ‘ar9170_qmap’ defined but not used [-Wunused-const-variable=]
->>>
->>> Cc: Christian Lamparter <chunkeey@googlemail.com>
->>> Cc: Kalle Valo <kvalo@codeaurora.org>
->>> Cc: "David S. Miller" <davem@davemloft.net>
->>> Cc: Jakub Kicinski <kuba@kernel.org>
->>> Cc: Johannes Berg <johannes@sipsolutions.net>
->>> Cc: linux-wireless@vger.kernel.org
->>> Cc: netdev@vger.kernel.org
->>> Signed-off-by: Lee Jones <lee.jones@linaro.org>
->>> ---
->>>    drivers/net/wireless/ath/carl9170/carl9170.h | 2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
->>> index 237d0cda1bcb0..9d86253081bce 100644
->>> --- a/drivers/net/wireless/ath/carl9170/carl9170.h
->>> +++ b/drivers/net/wireless/ath/carl9170/carl9170.h
->>> @@ -68,7 +68,7 @@
->>>    #define PAYLOAD_MAX	(CARL9170_MAX_CMD_LEN / 4 - 1)
->>> -static const u8 ar9170_qmap[__AR9170_NUM_TXQ] = { 3, 2, 1, 0 };
->>> +static const u8 __maybe_unused ar9170_qmap[__AR9170_NUM_TXQ] = { 3, 2, 1, 0 };
->>>    #define CARL9170_MAX_RX_BUFFER_SIZE		8192
->>>
->>
-> 
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 45d16f7ad461..8e9bf0e64a68 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -37,6 +37,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.ce_count = 12,
+ 		.single_pdev_only = false,
+ 		.needs_band_to_mac = true,
++		.rxdma1_enable = true,
+ 	},
+ 	{
+ 		.name = "qca6390 hw2.0",
+@@ -56,6 +57,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.ce_count = 9,
+ 		.single_pdev_only = true,
+ 		.needs_band_to_mac = false,
++		.rxdma1_enable = false,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 6009c26ce525..64aa0077a45d 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -375,6 +375,12 @@ static int ath11k_dp_rxdma_buf_ring_free(struct ath11k *ar,
+ 	idr_destroy(&rx_ring->bufs_idr);
+ 	spin_unlock_bh(&rx_ring->idr_lock);
+ 
++	/* if rxdma1_enable is false, mon_status_refill_ring
++	 * isn't setup, so don't clean.
++	 */
++	if (!ar->ab->hw_params.rxdma1_enable)
++		return 0;
++
+ 	rx_ring = &dp->rx_mon_status_refill_ring;
+ 
+ 	spin_lock_bh(&rx_ring->idr_lock);
+@@ -390,6 +396,7 @@ static int ath11k_dp_rxdma_buf_ring_free(struct ath11k *ar,
+ 
+ 	idr_destroy(&rx_ring->bufs_idr);
+ 	spin_unlock_bh(&rx_ring->idr_lock);
++
+ 	return 0;
+ }
+ 
+@@ -431,8 +438,10 @@ static int ath11k_dp_rxdma_pdev_buf_setup(struct ath11k *ar)
+ 
+ 	ath11k_dp_rxdma_ring_buf_setup(ar, rx_ring, HAL_RXDMA_BUF);
+ 
+-	rx_ring = &dp->rxdma_mon_buf_ring;
+-	ath11k_dp_rxdma_ring_buf_setup(ar, rx_ring, HAL_RXDMA_MONITOR_BUF);
++	if (ar->ab->hw_params.rxdma1_enable) {
++		rx_ring = &dp->rxdma_mon_buf_ring;
++		ath11k_dp_rxdma_ring_buf_setup(ar, rx_ring, HAL_RXDMA_MONITOR_BUF);
++	}
+ 
+ 	rx_ring = &dp->rx_mon_status_refill_ring;
+ 	ath11k_dp_rxdma_ring_buf_setup(ar, rx_ring, HAL_RXDMA_MONITOR_STATUS);
+@@ -516,6 +525,14 @@ static int ath11k_dp_rx_pdev_srng_alloc(struct ath11k *ar)
+ 			    "failed to setup rx_mon_status_refill_ring\n");
+ 		return ret;
+ 	}
++
++	/* if rxdma1_enable is false, then it doesn't need
++	 * to setup rxdam_mon_buf_ring, rxdma_mon_dst_ring
++	 * and rxdma_mon_desc_ring.
++	 */
++	if (!ar->ab->hw_params.rxdma1_enable)
++		return 0;
++
+ 	ret = ath11k_dp_srng_setup(ar->ab,
+ 				   &dp->rxdma_mon_buf_ring.refill_buf_ring,
+ 				   HAL_RXDMA_MONITOR_BUF, 0, dp->mac_id,
+@@ -4129,6 +4146,9 @@ int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int mac_id)
+ 		return ret;
+ 	}
+ 
++	if (!ab->hw_params.rxdma1_enable)
++		goto config_refill_ring;
++
+ 	ring_id = dp->rxdma_mon_buf_ring.refill_buf_ring.ring_id;
+ 	ret = ath11k_dp_tx_htt_srng_setup(ab, ring_id,
+ 					  mac_id, HAL_RXDMA_MONITOR_BUF);
+@@ -4153,6 +4173,8 @@ int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int mac_id)
+ 			    ret);
+ 		return ret;
+ 	}
++
++config_refill_ring:
+ 	ring_id = dp->rx_mon_status_refill_ring.refill_buf_ring.ring_id;
+ 	ret = ath11k_dp_tx_htt_srng_setup(ab, ring_id, mac_id,
+ 					  HAL_RXDMA_MONITOR_STATUS);
+@@ -4162,6 +4184,7 @@ int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int mac_id)
+ 			    ret);
+ 		return ret;
+ 	}
++
+ 	return 0;
+ }
+ 
+@@ -4834,6 +4857,12 @@ int ath11k_dp_rx_pdev_mon_attach(struct ath11k *ar)
+ 		return ret;
+ 	}
+ 
++	/* if rxdma1_enable is false, no need to setup
++	 * rxdma_mon_desc_ring.
++	 */
++	if (!ar->ab->hw_params.rxdma1_enable)
++		return 0;
++
+ 	dp_srng = &dp->rxdma_mon_desc_ring;
+ 	n_link_desc = dp_srng->size /
+ 		ath11k_hal_srng_get_entrysize(ar->ab, HAL_RXDMA_MONITOR_DESC);
+@@ -4850,6 +4879,7 @@ int ath11k_dp_rx_pdev_mon_attach(struct ath11k *ar)
+ 	pmon->mon_last_linkdesc_paddr = 0;
+ 	pmon->mon_last_buf_cookie = DP_RX_DESC_COOKIE_MAX + 1;
+ 	spin_lock_init(&pmon->mon_lock);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 1c9176273883..2e88194da329 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -151,6 +151,8 @@ struct ath11k_hw_params {
+ 	 * firmware creates the mapping.
+ 	 */
+ 	bool needs_band_to_mac;
++
++	bool rxdma1_enable;
+ };
+ 
+ extern const struct ath11k_hw_ops ipq8074_ops;
+-- 
+2.7.4
 
