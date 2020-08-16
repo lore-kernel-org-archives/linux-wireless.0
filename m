@@ -2,101 +2,99 @@ Return-Path: <SRS0=rysR=B2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 247F0C433E1
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6E5C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3B9C206F4
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB71B2078B
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Aug 2020 05:32:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lTs/cfYw"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="SOL4NqCF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730112AbgHPFb6 (ORCPT
+        id S1730108AbgHPFb7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
+        Sun, 16 Aug 2020 01:31:59 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:40194 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730109AbgHPFb6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 16 Aug 2020 01:31:58 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:52995 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730105AbgHPFb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Aug 2020 01:31:57 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597555917; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=EFWwWseA5xQGpFgtCtYtdiEyssDJT/Ko0ZwPOqis0rE=; b=lTs/cfYw6/4ldH/mojFTt+Ym+sS0f+SYsugI9uSdUickF8EQfAvlARw/VkpCccfEYr2mQG38
- HtntMgFa7CqBdVzxC9SDa7VwxBHe6FhbpqBcMcQiOD8NUfIzfOcOB/0pCUAbCFlQW8vTONXl
- JX94olkAh5aLTZRKbxsjb7gqLYA=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ s=smtp; t=1597555918; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=DKox33vVlWOaZocMDvO157zGjOdVPoq+ZgKKL3b7t6w=; b=SOL4NqCFnSxcF+8tvG9hTYdr2eU1153YKfefngQ1s/t4ok2fXf81WJU9wk52zkcKo78rd64D
+ VwpXY3RRM8OQ+hmuZ7jDi86n6zZcNZ+Qc6tPaQ/hLvvRr+FNc/TGN8YIFcrMK5WpX0UoG3as
+ MsdOIzZQWDrjZsMSAh0zFWYgp+U=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f38c4b985672017517495f1 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 16 Aug 2020 05:31:37
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 5f38c4bdba4c2cd367b6aceb (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 16 Aug 2020 05:31:41
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4C1B8C433C6; Sun, 16 Aug 2020 05:31:36 +0000 (UTC)
+        id EC90AC43391; Sun, 16 Aug 2020 05:31:40 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C1D6CC433C6;
-        Sun, 16 Aug 2020 05:31:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C1D6CC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D764BC433CA;
+        Sun, 16 Aug 2020 05:31:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D764BC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 0/9] ath11k: last patches for QCA6390 support
-Date:   Sun, 16 Aug 2020 08:31:22 +0300
-Message-Id: <1597555891-26112-1-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 4/9] ath11k: refine the phy_id check in ath11k_reg_chan_list_event
+Date:   Sun, 16 Aug 2020 08:31:26 +0300
+Message-Id: <1597555891-26112-5-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1597555891-26112-1-git-send-email-kvalo@codeaurora.org>
+References: <1597555891-26112-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Here interrupt and ring configuration changes, and some smaller stuff,
-are done to get QCA6390 working.
+From: Carl Huang <cjhuang@codeaurora.org>
 
-This is the last patchset adding initial QCA6390 support. Now it's
-possible to associate to an AP and ping with an QCA6390 device.
+For QCA6390, it processes the reg chan list event only for phy0,
+and it goes to fallback if the phy_id is not valid. For a valid
+phy_id but not 0, just discard the event.
 
-This patchset depends on the patchset:
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 
-ath11k: CE and HAL support for QCA6390
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Kalle
-
-Carl Huang (9):
-  ath11k: enable DP interrupt setup for QCA6390
-  ath11k: don't initialize rxdma1 related ring
-  ath11k: setup QCA6390 rings for both rxdmas
-  ath11k: refine the phy_id check in ath11k_reg_chan_list_event
-  ath11k: delay vdev_start for QCA6390
-  ath11k: assign correct search flag and type for QCA6390
-  ath11k: process both lmac rings for QCA6390
-  ath11k: use TCL_DATA_RING_0 for QCA6390
-  ath11k: reset MHI during power down and power up
-
- drivers/net/wireless/ath/ath11k/core.c  |  14 +-
- drivers/net/wireless/ath/ath11k/core.h  |   7 +
- drivers/net/wireless/ath/ath11k/debug.c |  41 ++++--
- drivers/net/wireless/ath/ath11k/dp.c    | 189 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath11k/dp.h    |   7 +-
- drivers/net/wireless/ath/ath11k/dp_rx.c | 208 +++++++++++++++++++-------
- drivers/net/wireless/ath/ath11k/dp_tx.c |  65 +++++---
- drivers/net/wireless/ath/ath11k/hw.c    |  68 +++++++++
- drivers/net/wireless/ath/ath11k/hw.h    |  40 ++++-
- drivers/net/wireless/ath/ath11k/mac.c   |  66 ++++++++-
- drivers/net/wireless/ath/ath11k/mhi.c   |  46 +++++-
- drivers/net/wireless/ath/ath11k/mhi.h   |  11 ++
- drivers/net/wireless/ath/ath11k/pci.c   | 254 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/pci.h   |  17 +++
- drivers/net/wireless/ath/ath11k/wmi.c   |   7 +-
- 15 files changed, 907 insertions(+), 133 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 4e100407fea6..a66576f78af2 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -5463,7 +5463,12 @@ static int ath11k_reg_chan_list_event(struct ath11k_base *ab, struct sk_buff *sk
+ 	pdev_idx = reg_info->phy_id;
+ 
+ 	if (pdev_idx >= ab->num_radios) {
+-		if (ab->hw_params.single_pdev_only)
++		/* Process the event for phy0 only if single_pdev_only
++		 * is true. If pdev_idx is valid but not 0, discard the
++		 * event. Otherwise, it goes to fallback.
++		 */
++		if (ab->hw_params.single_pdev_only &&
++		    pdev_idx < ab->hw_params.num_rxmda_per_pdev)
+ 			goto mem_free;
+ 		else
+ 			goto fallback;
 -- 
 2.7.4
 
