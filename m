@@ -6,105 +6,82 @@ X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70C09C433E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46299C433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E37F2078E
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CC032078E
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:22:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lSjNVoCU"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Z8vce7hz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727911AbgHQKVI (ORCPT
+        id S1728000AbgHQKWC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Aug 2020 06:21:08 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:57910 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726165AbgHQKVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Aug 2020 06:21:05 -0400
+        Mon, 17 Aug 2020 06:22:02 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:62749 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727976AbgHQKV7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Aug 2020 06:21:59 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597659665; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1597659719; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=C1hZ2gm17WhpsJNUvxDXJNYffSUUYMl+EuQWFbm62NM=;
- b=lSjNVoCUq9Mtn65N70TSmKviYpXd+UKioHVKCNZqIiPZWBEreiucU+O6s3xVI65bwdPr4IgZ
- 6jrs3IJBIPIdmQUkYR3YRknbHRPyQfLbj+CjT1ENUlxMSujqzOR5UoFHikG1w5T7QYVGk9pX
- ZfIMoq2nAYKGKEVb4sGUDkGMy5g=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ Content-Type: Sender; bh=HesLtvDCqqMuxbBVhLIM5+4/cz/qmroX/Ohci/Yh1V0=;
+ b=Z8vce7hzNlGridGkbwd8wSPeYQ68z26Lr9vGURzpDWL6jznOw+dC/ypZfAzyN4AG5V1xCccy
+ 2A8khpCSjj5BAd0WMKiUnGXaOpryqXzTFddBwmtSm6VtmuxKNrJ9jYcMpRh7bkyWUdoJQ0A3
+ E2mmtKsauP5esXklqtI9g9uZL4E=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
- 5f3a59f603528d4024247de8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 Aug 2020 10:20:38
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 5f3a5a463f2ce11020c5165d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 Aug 2020 10:21:58
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C2496C433A1; Mon, 17 Aug 2020 10:20:37 +0000 (UTC)
+        id 415C2C433CA; Mon, 17 Aug 2020 10:21:58 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2DFFDC433CB;
-        Mon, 17 Aug 2020 10:20:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2DFFDC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 31369C433CB;
+        Mon, 17 Aug 2020 10:21:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 31369C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 09/30] net: wireless: ath: ath5k: pcu: Add a description
- for
- 'band' remove one for 'mode'
+Subject: Re: [PATCH] ath6kl: fix spelling mistake "initilisation" ->
+ "initialization"
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200814113933.1903438-10-lee.jones@linaro.org>
-References: <20200814113933.1903438-10-lee.jones@linaro.org>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Reyk Floeter <reyk@openbsd.org>,
-        "W. S. Bell" <mentor@madwifi.org>,
-        Luis Rodriguez <mcgrof@winlab.rutgers.edu>,
-        Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
+In-Reply-To: <20200806121958.60700-1-colin.king@canonical.com>
+References: <20200806121958.60700-1-colin.king@canonical.com>
+To:     Colin King <colin.king@canonical.com>
+Cc:     "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200817102037.C2496C433A1@smtp.codeaurora.org>
-Date:   Mon, 17 Aug 2020 10:20:37 +0000 (UTC)
+Message-Id: <20200817102158.415C2C433CA@smtp.codeaurora.org>
+Date:   Mon, 17 Aug 2020 10:21:58 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lee Jones <lee.jones@linaro.org> wrote:
+Colin King <colin.king@canonical.com> wrote:
 
-> Fixes the following W=1 kernel build warning(s):
+> There is a spelling mistake in an ath6kl_err error message. Fix it.
 > 
->  drivers/net/wireless/ath/ath5k/pcu.c:115: warning: Function parameter or member 'band' not described in 'ath5k_hw_get_frame_duration'
->  drivers/net/wireless/ath/ath5k/pcu.c:955: warning: Excess function parameter 'mode' description in 'ath5k_hw_pcu_init'
-> 
-> Cc: Jiri Slaby <jirislaby@kernel.org>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: Luis Chamberlain <mcgrof@kernel.org>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Reyk Floeter <reyk@openbsd.org>
-> Cc: "W. S. Bell" <mentor@madwifi.org>
-> Cc: Luis Rodriguez <mcgrof@winlab.rutgers.edu>
-> Cc: Pavel Roskin <proski@gnu.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-3a059c76f4eb ath5k: pcu: Add a description for 'band' remove one for 'mode'
-691c7a4d4fd7 wil6210: Demote non-kerneldoc headers to standard comment blocks
-1d4f5c15cf65 ath5k: Fix kerneldoc formatting issue
+42f5fe34a701 ath6kl: fix spelling mistake "initilisation" -> "initialization"
 
 -- 
-https://patchwork.kernel.org/patch/11714405/
+https://patchwork.kernel.org/patch/11703485/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
