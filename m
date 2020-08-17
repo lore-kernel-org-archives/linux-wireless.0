@@ -8,57 +8,57 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3139C433E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:08:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73943C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:08:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99BFC206C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:08:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DD4C2063A
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:08:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HXLn54FB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qXUGS1RM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728795AbgHQJIF (ORCPT
+        id S1727927AbgHQJI1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Aug 2020 05:08:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59384 "EHLO
+        Mon, 17 Aug 2020 05:08:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728169AbgHQJH4 (ORCPT
+        with ESMTP id S1728087AbgHQJIV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Aug 2020 05:07:56 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C03AC061343;
-        Mon, 17 Aug 2020 02:07:56 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id s14so1212062plp.4;
-        Mon, 17 Aug 2020 02:07:56 -0700 (PDT)
+        Mon, 17 Aug 2020 05:08:21 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8062C06138A;
+        Mon, 17 Aug 2020 02:08:18 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id p37so7816186pgl.3;
+        Mon, 17 Aug 2020 02:08:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UBB+n9cDuI7XYF/pC4eNjD5U8+6JcYZBRuNgqS2AGgk=;
-        b=HXLn54FBex80tHRNmwdKihOrEPyVtnLNdQf8TwlOBItoHYMgb7yHJ2oObwwvgiLVnE
-         0UCPuPAPAPCdbPoSbPrpsbYWOFqTyGBExI+zGlB9BnPOZ7q7Qhrn82VJ3hcBHkitc1O0
-         zAXjATodOhOkHExhgL+2sPPBkBg12CZB4iuyv7U0heF96xu0F+FXrhGu2likERpqGWYK
-         asu0KNI5V0TWhz699ZzySTQ4uNmNZuuEaWIl2kphgmdxu0v74gt2EJVtNBYoqrxCDUc0
-         TTCwdm+cl6qPFrdE0dDSpQI6GLPUzLH5UFov4kccjv7l1pq6L5LN7YikWzJzpEY/uLGn
-         3psQ==
+        bh=6sU8o1XQWmR2sc7LetPQwvecEyprB+Gwia5I48gR5I8=;
+        b=qXUGS1RMqtA2xbUCujNZntnf2zOYYcE4h+WiPza4dc2NxIOQswDgtwqqFOqtfM6jgC
+         QuPK4TVQO9JSJ4I9FqbXKzWHKoUV9OR1GBGMMdT4TvLd6U8K9zRNhWk/oIz7pL+upc/s
+         Yp1OG7Ab2JGPN3/+SRfK22DJjo8TVGcxcDYk1usgMWMU9cvO48EffkFfAiCqd9dMcv6E
+         9J788afLBfzzkubzeWyn5SsGC46VcFAV2NFjBPlRNM1lYvubWAAHatDIbjpESVOW8nQp
+         uzcFM8Ey1dfVFDbdyp3UKtEQxPt9zLE3MjO4bZvlfFdv2PJkh1UZKYJnKIGmth6UIQge
+         AJDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=UBB+n9cDuI7XYF/pC4eNjD5U8+6JcYZBRuNgqS2AGgk=;
-        b=MOCnB5KoMPs92C4NLwMIliD12KFUQcopwcC02IR4VbfNW/+8XCGUNjjIhoSZM1Grj0
-         ZcalP2PZDSnZQOkcX76Y4UbyUxkcLFBbgYvE/J8qJpnBorM54FXQJihH0jIjqCurdMMZ
-         spiuqHnQ7GllV4+Ow9EAHviCrmwHMp7kfa8ys0ZWqYUUKFVVuM+4QL704kUnLg/kkd96
-         lLLYqnNdK4twth80iZ0QeF8aP492mvCk4j6TSd2kR/YJ8xvzAEORqn6YRv+KVidanaqO
-         /1WgjUxfnTMjJT7aoVwgaQH6nSetkANiugys0iGSBbWdfxOk3UQABaTC0vkvfKG86qpj
-         SyFg==
-X-Gm-Message-State: AOAM533JdCk5BWfi0z0roTFeURJx8nIbXJMnoBitKbg3Y7qXGcvFBHsl
-        BA5F9eFRK3YpxZbd78ZTWvM=
-X-Google-Smtp-Source: ABdhPJwm30IhDFLAzIdPcu0mrZMovl5JKjumtUizmN8j8X1WRRm412RMOp37kioXJ3J/qaYvQ8weqg==
-X-Received: by 2002:a17:90a:950a:: with SMTP id t10mr11677353pjo.107.1597655275673;
-        Mon, 17 Aug 2020 02:07:55 -0700 (PDT)
+        bh=6sU8o1XQWmR2sc7LetPQwvecEyprB+Gwia5I48gR5I8=;
+        b=VvG39ZUs9mZeE6tnDJAiuDvIy3Yg1kIixT9Tgyp59WgdQvY7/QiINyWMA87OvPRtDX
+         nAvHqeZINayACQkutEqCtlQ2Dd88hUJ9porX19K4MBSg9lX6d4DFALQ5inls67Wd72Mz
+         MkJlWE+6JUZtW5KFHOQV9TfVQivB6M9ikTggHdX6d3dnSTY983A66GVSc1kIT1TOt1I2
+         U3sSzB4xLDuLiex78iWiWOWkmSdjIeIm8z22MJdTasr+6Z3O84A6OxtZQiXUg760N0QL
+         cdrj7mB/ml2F4sjeHdicW7M8zAr90KBjLUmVX2TB/ii7on2NS4ZYkb3ScKrkwKASPDDx
+         lSKQ==
+X-Gm-Message-State: AOAM531YZN+5qDpIXRbUbipbPhN99POIWopowFQgjWyPr4Nh9yQYQnCz
+        NWbJdYoV340bCENJsw3Zbko=
+X-Google-Smtp-Source: ABdhPJzR0Lmnn1LKu2ZlXZNS9fQDRnVIaqr85aSxwYitxzM90mPxjkiagXju+vNO4oP8X/WAoR5E4w==
+X-Received: by 2002:a63:5049:: with SMTP id q9mr9560233pgl.219.1597655298339;
+        Mon, 17 Aug 2020 02:08:18 -0700 (PDT)
 Received: from localhost.localdomain ([49.207.202.98])
-        by smtp.gmail.com with ESMTPSA id t14sm16616237pgb.51.2020.08.17.02.07.48
+        by smtp.gmail.com with ESMTPSA id t14sm16616237pgb.51.2020.08.17.02.08.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 02:07:55 -0700 (PDT)
+        Mon, 17 Aug 2020 02:08:17 -0700 (PDT)
 From:   Allen Pais <allen.cryptic@gmail.com>
 To:     kvalo@codeaurora.org, kuba@kernel.org, jirislaby@kernel.org,
         mickflemm@gmail.com, mcgrof@kernel.org, chunkeey@googlemail.com,
@@ -71,9 +71,9 @@ Cc:     keescook@chromium.org, ath11k@lists.infradead.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, Allen Pais <allen.lkml@gmail.com>,
         Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH 08/16] wireless: ipw2x00: convert tasklets to use new tasklet_setup() API
-Date:   Mon, 17 Aug 2020 14:36:29 +0530
-Message-Id: <20200817090637.26887-9-allen.cryptic@gmail.com>
+Subject: [PATCH 11/16] wireless: marvell: convert tasklets to use new tasklet_setup() API
+Date:   Mon, 17 Aug 2020 14:36:32 +0530
+Message-Id: <20200817090637.26887-12-allen.cryptic@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200817090637.26887-1-allen.cryptic@gmail.com>
 References: <20200817090637.26887-1-allen.cryptic@gmail.com>
@@ -92,71 +92,53 @@ and from_tasklet() to pass the tasklet pointer explicitly.
 Signed-off-by: Romain Perier <romain.perier@gmail.com>
 Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 9 ++++-----
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 7 +++----
- 2 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwl8k.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 461e955aa259..b7fbfc77b612 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -3204,9 +3204,9 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
+diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+index 97f23f93f6e7..23efd7075df6 100644
+--- a/drivers/net/wireless/marvell/mwl8k.c
++++ b/drivers/net/wireless/marvell/mwl8k.c
+@@ -4630,10 +4630,10 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void mwl8k_tx_poll(unsigned long data)
++static void mwl8k_tx_poll(struct tasklet_struct *t)
+ {
+-	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+-	struct mwl8k_priv *priv = hw->priv;
++	struct mwl8k_priv *priv = from_tasklet(priv, t, poll_tx_task);
++	struct ieee80211_hw *hw = pci_get_drvdata(priv->pdev);
+ 	int limit;
+ 	int i;
+ 
+@@ -4659,10 +4659,10 @@ static void mwl8k_tx_poll(unsigned long data)
  	}
  }
  
--static void ipw2100_irq_tasklet(unsigned long data)
-+static void ipw2100_irq_tasklet(struct tasklet_struct *t)
+-static void mwl8k_rx_poll(unsigned long data)
++static void mwl8k_rx_poll(struct tasklet_struct *t)
  {
--	struct ipw2100_priv *priv = (struct ipw2100_priv *)data;
-+	struct ipw2100_priv *priv = from_tasklet(priv, t, irq_tasklet);
- 	struct net_device *dev = priv->net_dev;
- 	unsigned long flags;
- 	u32 inta, tmp;
-@@ -6005,7 +6005,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
- 	spin_unlock_irqrestore(&priv->low_lock, flags);
- }
+-	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+-	struct mwl8k_priv *priv = hw->priv;
++	struct mwl8k_priv *priv = from_tasklet(priv, t, poll_rx_task);
++	struct ieee80211_hw *hw = pci_get_drvdata(priv->pdev);
+ 	int limit;
  
--static void ipw2100_irq_tasklet(unsigned long data);
-+static void ipw2100_irq_tasklet(struct tasklet_struct *t);
+ 	limit = 32;
+@@ -6120,9 +6120,9 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ 	INIT_WORK(&priv->fw_reload, mwl8k_hw_restart_work);
  
- static const struct net_device_ops ipw2100_netdev_ops = {
- 	.ndo_open		= ipw2100_open,
-@@ -6135,8 +6135,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
- 	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
+ 	/* TX reclaim and RX tasklets.  */
+-	tasklet_init(&priv->poll_tx_task, mwl8k_tx_poll, (unsigned long)hw);
++	tasklet_setup(&priv->poll_tx_task, mwl8k_tx_poll);
+ 	tasklet_disable(&priv->poll_tx_task);
+-	tasklet_init(&priv->poll_rx_task, mwl8k_rx_poll, (unsigned long)hw);
++	tasklet_setup(&priv->poll_rx_task, mwl8k_rx_poll);
+ 	tasklet_disable(&priv->poll_rx_task);
  
--	tasklet_init(&priv->irq_tasklet,
--		     ipw2100_irq_tasklet, (unsigned long)priv);
-+	tasklet_setup(&priv->irq_tasklet, ipw2100_irq_tasklet);
- 
- 	/* NOTE:  We do not start the deferred work for status checks yet */
- 	priv->stop_rf_kill = 1;
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 129ef2f6248a..5af1c548a564 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1945,9 +1945,9 @@ static void notify_wx_assoc_event(struct ipw_priv *priv)
- 	wireless_send_event(priv->net_dev, SIOCGIWAP, &wrqu, NULL);
- }
- 
--static void ipw_irq_tasklet(unsigned long data)
-+static void ipw_irq_tasklet(struct tasklet_struct *t)
- {
--	struct ipw_priv *priv = (struct ipw_priv *)data;
-+	struct ipw_priv *priv = from_tasklet(priv, t, irq_tasklet);
- 	u32 inta, inta_mask, handled = 0;
- 	unsigned long flags;
- 	int rc = 0;
-@@ -10673,8 +10673,7 @@ static void ipw_setup_deferred_work(struct ipw_priv *priv)
- 	INIT_WORK(&priv->qos_activate, ipw_bg_qos_activate);
- #endif				/* CONFIG_IPW2200_QOS */
- 
--	tasklet_init(&priv->irq_tasklet,
--		     ipw_irq_tasklet, (unsigned long)priv);
-+	tasklet_setup(&priv->irq_tasklet, ipw_irq_tasklet);
- }
- 
- static void shim__set_security(struct net_device *dev,
+ 	/* Power management cookie */
 -- 
 2.17.1
 
