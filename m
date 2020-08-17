@@ -2,86 +2,98 @@ Return-Path: <SRS0=ru0V=B3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F278BC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:59:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A8F7C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:15:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE3F3206FA
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 09:59:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1971220738
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Aug 2020 10:15:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ehmn6u/o"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZEkIKG3f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726904AbgHQJ7C (ORCPT
+        id S1726575AbgHQKPf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Aug 2020 05:59:02 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:55868 "EHLO
+        Mon, 17 Aug 2020 06:15:35 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:54529 "EHLO
         mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726366AbgHQJ7B (ORCPT
+        by vger.kernel.org with ESMTP id S1726265AbgHQKPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Aug 2020 05:59:01 -0400
+        Mon, 17 Aug 2020 06:15:33 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597658341; h=Content-Transfer-Encoding: Content-Type:
- MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
- To: From: Sender; bh=r47RPWSXqNT1XWwAvDmNKYquEbOTrGWH9VNHjFO0QdY=; b=ehmn6u/oA1cjexF/hOBHWr6INcW362nJY17CP22nfdvYN8yIR5yjoZriD6JtdmmOiWzzJUr6
- YrASbUNDpQHI90CSyMIrjhgM//dNAncWXRaqhoi3gmkkqkMhLs7wK5iZKNu4G6crZpqY8CkZ
- 2MsKZbL9f1ivZOqru2EF0+fOfU4=
+ s=smtp; t=1597659333; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=fuNBwC0msFti1eZ9hSK4W46yyf8aoKLP8ISRQvXZqGQ=;
+ b=ZEkIKG3fULnW1CjbMqRqp+rEAuepvag/jMh4/U2sOw+iI0R5H6fQxRDWf85XwW2Jl1iU4vmq
+ Qb6EcvbBxWOwlqILL2HK0AHdut1ZLhzKiTKwzdL1EVgr4K9FYcMCAOT4jO5pxgTakJAPI9Sp
+ rUCfrFS5IF28kQAWb6PDCtF3reU=
 X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f3a54e161f1d418342a2767 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 Aug 2020 09:58:57
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5f3a58b161f1d41834363d02 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 Aug 2020 10:15:13
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5DA09C433CB; Mon, 17 Aug 2020 09:58:56 +0000 (UTC)
+        id C2949C43387; Mon, 17 Aug 2020 10:15:12 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A557CC433CA;
-        Mon, 17 Aug 2020 09:58:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A557CC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A1C0EC433C6;
+        Mon, 17 Aug 2020 10:15:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A1C0EC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>
-Cc:     ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: CVE-2020-3702: Firmware updates for ath9k and ath10k chips
-References: <20200810090126.mtu3uocpcjg5se5e@pali>
-Date:   Mon, 17 Aug 2020 12:58:52 +0300
-In-Reply-To: <20200810090126.mtu3uocpcjg5se5e@pali> ("Pali \=\?utf-8\?Q\?Roh\?\=
- \=\?utf-8\?Q\?\=C3\=A1r\=22's\?\= message of
-        "Mon, 10 Aug 2020 11:01:26 +0200")
-Message-ID: <87a6ytlhk3.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 01/10] ath11k: do not depend on ARCH_QCOM for ath11k
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1597309466-19688-2-git-send-email-kvalo@codeaurora.org>
+References: <1597309466-19688-2-git-send-email-kvalo@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200817101512.C2949C43387@smtp.codeaurora.org>
+Date:   Mon, 17 Aug 2020 10:15:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pali Roh=C3=A1r <pali@kernel.org> writes:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> ESET engineers on their blog published some information about new
-> security vulnerability CVE-2020-3702 in ath9k wifi cards:
-> https://www.welivesecurity.com/2020/08/06/beyond-kr00k-even-more-wifi-chi=
-ps-vulnerable-eavesdropping/
->
-> According to Qualcomm security bulletin this CVE-2020-3702 affects also
-> some Qualcomm IPQ chips which are handled by ath10k driver:
-> https://www.qualcomm.com/company/product-security/bulletins/august-2020-s=
-ecurity-bulletin#_cve-2020-3702
+> With only IPQ8074 supported ath11k was only usable on Qualcomm architectures.
+> But now that we are adding QCA6390 PCI support to ath11k that's not the case
+> anymore and it can be used on any architecture supporting PCI. So remove the
+> dependency on ARCH_QCOM. After that there is also no need to depend on
+> COMPILE_TEST.
+> 
+> Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
+> 
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I can't find any refererences to ath10k, or hardware with ath10k
-chipsets, in the links above. Where did you see it?
+10 patches applied to ath-next branch of ath.git, thanks.
 
---=20
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+322b60ceb0f3 ath11k: do not depend on ARCH_QCOM for ath11k
+9de2ad43d46c ath11k: add hw_params entry for QCA6390
+34d5a3a88436 ath11k: move ring mask definitions to hw_params
+6e0355afaeb2 ath11k: add simple PCI client driver for QCA6390 chipset
+5762613ededb ath11k: pci: setup resources
+5697a564d369 ath11k: pci: add MSI config initialisation
+b8246f884684 ath11k: implement ath11k_core_pre_init()
+1399fb87ea3e ath11k: register MHI controller device for QCA6390
+7f4beda2ba03 ath11k: pci: add HAL, CE and core initialisation
+1ff8ed786d5d ath11k: use remoteproc only with AHB devices
+
+-- 
+https://patchwork.kernel.org/patch/11712273/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
