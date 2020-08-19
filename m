@@ -4,37 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C80C433E3
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1CFC433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:19:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DAB62054F
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A46F220738
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:19:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727942AbgHSHHf (ORCPT
+        id S1726887AbgHSHTM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Aug 2020 03:07:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36690 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726630AbgHSG44 (ORCPT
+        Wed, 19 Aug 2020 03:19:12 -0400
+Received: from smtp12.smtpout.orange.fr ([80.12.242.134]:46723 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726794AbgHSHTL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Aug 2020 02:56:56 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B360C061343
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2020 23:56:56 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1k8I1j-006gw0-Mz; Wed, 19 Aug 2020 08:56:51 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: use NLA_POLICY_RANGE(NLA_BINARY, ...) for a few attributes
-Date:   Wed, 19 Aug 2020 08:56:43 +0200
-Message-Id: <20200819085642.8f12ffa14f33.I9d948d59870e521febcd79bb4a986b1de1dca47b@changeid>
-X-Mailer: git-send-email 2.26.2
+        Wed, 19 Aug 2020 03:19:11 -0400
+Received: from localhost.localdomain ([92.140.170.113])
+        by mwinf5d35 with ME
+        id HKK12300E2T8iuL03KK3bd; Wed, 19 Aug 2020 09:19:09 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Wed, 19 Aug 2020 09:19:09 +0200
+X-ME-IP: 92.140.170.113
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     amitkarwar@gmail.com, ganapathi.bhat@nxp.com,
+        huxinming820@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] mwifiex: Clean up some err and dbg messages
+Date:   Wed, 19 Aug 2020 09:18:53 +0200
+Message-Id: <20200819071853.113185-1-christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,105 +46,103 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+The error message if 'pci_set_consistent_dma_mask()' fails is misleading.
+The function call uses 32 bits, but the error message reports 64.
 
-We have a few attributes with minimum and maximum lengths that are
-not the same, use the new feature of being able to specify both in
-the policy to validate them, removing code and allowing this to be
-advertised to userspace in the policy export.
+Moreover, according to the comment above 'dma_set_mask_and_coherent()'
+definition, such an error can never happen.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+So, simplify code, axe the misleading message and use
+'dma_set_mask_and_coherent()' instead of 'dma_set_mask()' +
+'dma_set_coherent_mask()'
+
+While at it, make some clean-up:
+   - add # when reporting allocated length to be consistent between
+     functions
+   - s/consistent/coherent/
+   - s/unsigned int/u32/ to be consistent between functions
+   - align some code
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- net/wireless/nl80211.c | 36 ++++++++++++++----------------------
- 1 file changed, 14 insertions(+), 22 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 25 +++++++++------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 96e55c18ffd5..461b4038c615 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -574,14 +574,20 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = NLA_POLICY_MIN_LEN(2),
--	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
-+	/*
-+	 * The value of the Length field of the Supported Operating
-+	 * Classes element is between 2 and 253.
-+	 */
-+	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] =
-+		NLA_POLICY_RANGE(NLA_BINARY, 2, 253),
- 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_OPMODE_NOTIF] = { .type = NLA_U8 },
- 	[NL80211_ATTR_VENDOR_ID] = { .type = NLA_U32 },
- 	[NL80211_ATTR_VENDOR_SUBCMD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_VENDOR_DATA] = { .type = NLA_BINARY },
--	[NL80211_ATTR_QOS_MAP] = { .type = NLA_BINARY,
--				   .len = IEEE80211_QOS_MAP_LEN_MAX },
-+	[NL80211_ATTR_QOS_MAP] = NLA_POLICY_RANGE(NLA_BINARY,
-+						  IEEE80211_QOS_MAP_LEN_MIN,
-+						  IEEE80211_QOS_MAP_LEN_MAX),
- 	[NL80211_ATTR_MAC_HINT] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
-@@ -636,9 +642,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_TXQ_LIMIT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TXQ_MEMORY_LIMIT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
--	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
--					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
--
-+	[NL80211_ATTR_HE_CAPABILITY] =
-+		NLA_POLICY_RANGE(NLA_BINARY,
-+				 NL80211_HE_MIN_CAPABILITY_LEN,
-+				 NL80211_HE_MAX_CAPABILITY_LEN),
- 	[NL80211_ATTR_FTM_RESPONDER] =
- 		NLA_POLICY_NESTED(nl80211_ftm_responder_policy),
- 	[NL80211_ATTR_TIMEOUT] = NLA_POLICY_MIN(NLA_U32, 1),
-@@ -5852,13 +5859,6 @@ static int nl80211_parse_sta_channel_info(struct genl_info *info,
- 		 nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
- 		params->supported_oper_classes_len =
- 		  nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
--		/*
--		 * The value of the Length field of the Supported Operating
--		 * Classes element is between 2 and 253.
--		 */
--		if (params->supported_oper_classes_len < 2 ||
--		    params->supported_oper_classes_len > 253)
--			return -EINVAL;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 94fe121bc45f..cc6289aaf6c0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -850,13 +850,14 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+ 						   GFP_KERNEL);
+ 	if (!card->txbd_ring_vbase) {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "allocate consistent memory (%d bytes) failed!\n",
++			    "allocate coherent memory (%d bytes) failed!\n",
+ 			    card->txbd_ring_size);
+ 		return -ENOMEM;
  	}
- 	return 0;
- }
-@@ -5881,9 +5881,6 @@ static int nl80211_set_station_tdls(struct genl_info *info,
- 			nla_data(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
- 		params->he_capa_len =
- 			nla_len(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
++
+ 	mwifiex_dbg(adapter, DATA,
+-		    "info: txbd_ring - base: %p, pbase: %#x:%x, len: %x\n",
+-		    card->txbd_ring_vbase, (unsigned int)card->txbd_ring_pbase,
++		    "info: txbd_ring - base: %p, pbase: %#x:%x, len: %#x\n",
++		    card->txbd_ring_vbase, (u32)card->txbd_ring_pbase,
+ 		    (u32)((u64)card->txbd_ring_pbase >> 32),
+ 		    card->txbd_ring_size);
+ 
+@@ -915,7 +916,7 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
+ 						   GFP_KERNEL);
+ 	if (!card->rxbd_ring_vbase) {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "allocate consistent memory (%d bytes) failed!\n",
++			    "allocate coherent memory (%d bytes) failed!\n",
+ 			    card->rxbd_ring_size);
+ 		return -ENOMEM;
+ 	}
+@@ -973,14 +974,14 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
+ 
+ 	mwifiex_dbg(adapter, INFO,
+ 		    "info: evtbd_ring: Allocating %d bytes\n",
+-		card->evtbd_ring_size);
++		    card->evtbd_ring_size);
+ 	card->evtbd_ring_vbase = dma_alloc_coherent(&card->dev->dev,
+ 						    card->evtbd_ring_size,
+ 						    &card->evtbd_ring_pbase,
+ 						    GFP_KERNEL);
+ 	if (!card->evtbd_ring_vbase) {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "allocate consistent memory (%d bytes) failed!\n",
++			    "allocate coherent memory (%d bytes) failed!\n",
+ 			    card->evtbd_ring_size);
+ 		return -ENOMEM;
+ 	}
+@@ -1086,7 +1087,7 @@ static int mwifiex_pcie_alloc_sleep_cookie_buf(struct mwifiex_adapter *adapter)
+ 						      GFP_KERNEL);
+ 	if (!card->sleep_cookie_vbase) {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "pci_alloc_consistent failed!\n");
++			    "dma_alloc_coherent failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 	/* Init val of Sleep Cookie */
+@@ -2928,15 +2929,9 @@ static int mwifiex_init_pcie(struct mwifiex_adapter *adapter)
+ 
+ 	pci_set_master(pdev);
+ 
+-	ret = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (ret) {
+-		pr_err("set_dma_mask(32) failed: %d\n", ret);
+-		goto err_set_dma_mask;
+-	}
 -
--		if (params->he_capa_len < NL80211_HE_MIN_CAPABILITY_LEN)
--			return -EINVAL;
+-	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
++	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 	if (ret) {
+-		pr_err("set_consistent_dma_mask(64) failed\n");
++		pr_err("dma_set_mask(32) failed: %d\n", ret);
+ 		goto err_set_dma_mask;
  	}
  
- 	err = nl80211_parse_sta_channel_info(info, params);
-@@ -6142,10 +6139,6 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_data(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
- 		params.he_capa_len =
- 			nla_len(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
--
--		/* max len is validated in nla policy */
--		if (params.he_capa_len < NL80211_HE_MIN_CAPABILITY_LEN)
--			return -EINVAL;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
-@@ -13545,8 +13538,7 @@ static int nl80211_set_qos_map(struct sk_buff *skb,
- 		pos = nla_data(info->attrs[NL80211_ATTR_QOS_MAP]);
- 		len = nla_len(info->attrs[NL80211_ATTR_QOS_MAP]);
- 
--		if (len % 2 || len < IEEE80211_QOS_MAP_LEN_MIN ||
--		    len > IEEE80211_QOS_MAP_LEN_MAX)
-+		if (len % 2)
- 			return -EINVAL;
- 
- 		qos_map = kzalloc(sizeof(struct cfg80211_qos_map), GFP_KERNEL);
 -- 
-2.26.2
+2.25.1
 
