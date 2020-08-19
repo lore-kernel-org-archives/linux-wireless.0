@@ -4,70 +4,70 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9405C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E45C433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:27:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B008220738
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADB7F20738
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:27:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NcS4Udy+"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xP92MXSL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728145AbgHSH0s (ORCPT
+        id S1728063AbgHSH1J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Aug 2020 03:26:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40924 "EHLO
+        Wed, 19 Aug 2020 03:27:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726766AbgHSHZ2 (ORCPT
+        with ESMTP id S1728060AbgHSH0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Aug 2020 03:25:28 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70025C061377
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:31 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id k8so1129701wma.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:31 -0700 (PDT)
+        Wed, 19 Aug 2020 03:26:12 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD5CEC0612EE
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:36 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id p14so1086700wmg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=k4LfX+eIfhn84bRaVRDxoln04YUE9cE/pEH4N9WzhVc=;
-        b=NcS4Udy+0QfOJQwXZnRDrZJmvaN2ZwNGPq6ZoO600fVBkw9RPWxmkzVYF1VN+3IA4S
-         vMwso+oG3++JIQGteREEqHxFeavfGuaPBkGdKGHhrmaIxTJwua3GJDfmuZMwif2kTi09
-         AiM5ckOi4lS9Ocz6Z2uP6eVaGKqeyTwpsE2Ash7GQd8jLSb6tiJ2NFRulVjestOWaUWj
-         1ct0Djil1qFzn67t0Xh/KhWykwTVKv/iYmie6x2ADQVzHuOACqNGGi6aHqiwzqE+NGCO
-         47XiO2WlfQspdYZ9nT8Q/o+X8+gubw0CtquMiFJThj3pyWM503+X4wwgIwSHqbXJRnul
-         mRLw==
+        bh=cz1UC4tnS3N8DfKT/RtvxsKvZMZZyg6WgaNOLEC941U=;
+        b=xP92MXSLUJF3MJNxFN2jeR6pwzN57N/17nqzMGHc349bnPEp6WCiOuot+K7OgLfpJt
+         f0iYoa4HWJlB8sCgu0wHg+/N2DTzUhcBln+Rneg4GeQiflniB8HAy6sxoV0ZNCMJzZvq
+         G3z/S4LMbYHqIfaYEiLpccEGjThSuOHB8PkUjnPqN25gmPp9mNGcrW8CK/iwHlUl2TWV
+         4y0FXqmcVCp22aJZDOBa7fK+OjzFdIEmVnv2xLCQ9JMB6zGygnUjqPecdtoHPsNoX6D2
+         h40jX+Nq2G4g95pz6XLeCpAlECwkZkbtHuyMcS+H8TIY8Nn90RTKYb23YIa+6/o7nmOx
+         1hzw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=k4LfX+eIfhn84bRaVRDxoln04YUE9cE/pEH4N9WzhVc=;
-        b=fV4i5Ua0bl0BTszyeYAz0heX2+iNuRED9iB+ydcZhZAWzMMK30oUZ1Eh5pTSao84jP
-         b9ctlvKS2P1yJ7hvtv7x62dT8JdDL66msTkYQ7trmIKP9RTR/esptZWnnGTz9Nk6dr51
-         7NESDByavjrMOwQYrRHX0TQKBBYPNTOgZ4vBCFuPXhCIDmLs7e2oKOHM19Dz1zl7drpY
-         R/hheNRGMyAkgD/zXRSzAUWmlreJU4ZdXxiMl+4599iS3e/AhMJSefyIF7uSWC6hY+6t
-         OjorAfaHxj4S6jZB0MTGnsVWy9CY4wFVDw2MMGbvCUli3n5APrHbHPFi045t8S5J79QB
-         YRcQ==
-X-Gm-Message-State: AOAM530c/jmWWuWDQoUBCQrmDEGtj6Pg/5bm93AAY9V6tzrnh+m7ebzo
-        W5GEHiW0U3EoieDA4JKTzx4exA==
-X-Google-Smtp-Source: ABdhPJz5JRvSNntryjeJKBrQf1j82+qhnh0KHjwJL0WiJkTm9GoN/DXGc4rUsjvdHE+Uo0MZO9FpPg==
-X-Received: by 2002:a1c:4104:: with SMTP id o4mr3513338wma.101.1597821870048;
-        Wed, 19 Aug 2020 00:24:30 -0700 (PDT)
+        bh=cz1UC4tnS3N8DfKT/RtvxsKvZMZZyg6WgaNOLEC941U=;
+        b=kHwauH29mDjyvHhrBkvJ6A/Pn7L29fh06dekcr7W9KKppRw9+nbquAHBI9DY7ONrQb
+         htxlCYQOF9VPvtA8hc+psqXWYY6+gdsFP9p/kA1VXb8aJp4q+B9LuhCa5zVm6b5NdCF0
+         Jb51aWTJ3WMWoL9eUaJ5AfsiAAUXsOJY9ALSXkC7kD6pJB14MKq2pTc2sVMwMH0SUjIe
+         WeFCmwq44UISiiPAzi7x4FBchHJHhIArHHJe1SJzRWIBNqMaux7WTff/+SwPikrarvcA
+         bqq6ktGibCrjal/D1xkN+3qCtyMSN/mN/Stcf3g7Od30e8FRdL84lZ33yBFErEvbS7wk
+         y6nw==
+X-Gm-Message-State: AOAM530lhpVhdLaghiD+wt4efYWI3wi90WOA6ekATOxXuKiJasSC4nZl
+        JZcpq+nkj/F7n8kWRnuHIl2J3g==
+X-Google-Smtp-Source: ABdhPJwtVnZKagyZXI9pcJiwCbCXkQ4Bf54YFPC6HZzcK+Hqr8GYuPzY3WQ0Lkp1eyxkiIw0iE6kGA==
+X-Received: by 2002:a05:600c:2184:: with SMTP id e4mr3459650wme.24.1597821875302;
+        Wed, 19 Aug 2020 00:24:35 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id c145sm3795808wmd.7.2020.08.19.00.24.28
+        by smtp.gmail.com with ESMTPSA id c145sm3795808wmd.7.2020.08.19.00.24.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2020 00:24:29 -0700 (PDT)
+        Wed, 19 Aug 2020 00:24:34 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Siva Rebbagondla <siva8118@gmail.com>
-Subject: [PATCH 20/28] wireless: rsi: rsi_91x_mgmt: Fix a myriad of documentation issues
-Date:   Wed, 19 Aug 2020 08:23:54 +0100
-Message-Id: <20200819072402.3085022-21-lee.jones@linaro.org>
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Linux Wireless <ilw@linux.intel.com>
+Subject: [PATCH 24/28] wireless: intel: iwlegacy: 4965: Demote a bunch of nonconformant kernel-doc headers
+Date:   Wed, 19 Aug 2020 08:23:58 +0100
+Message-Id: <20200819072402.3085022-25-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200819072402.3085022-1-lee.jones@linaro.org>
 References: <20200819072402.3085022-1-lee.jones@linaro.org>
@@ -78,168 +78,157 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Too many, not enough, misnamed and formatting problems, all resolved.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:24: warning: cannot understand function prototype: 'struct bootup_params boot_params_20 = '
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:487: warning: Excess function parameter 'type' description in 'rsi_mgmt_pkt_to_core'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:538: warning: Function parameter or member 'sta_id' not described in 'rsi_hal_send_sta_notify_frame'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:538: warning: Function parameter or member 'vif' not described in 'rsi_hal_send_sta_notify_frame'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:615: warning: Function parameter or member 'sta_id' not described in 'rsi_send_aggregation_params_frame'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:711: warning: Function parameter or member 'mode' not described in 'rsi_set_vap_capabilities'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:711: warning: Function parameter or member 'mac_addr' not described in 'rsi_set_vap_capabilities'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:711: warning: Function parameter or member 'vap_id' not described in 'rsi_set_vap_capabilities'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:711: warning: Function parameter or member 'vap_status' not described in 'rsi_set_vap_capabilities'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:711: warning: Excess function parameter 'opmode' description in 'rsi_set_vap_capabilities'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:794: warning: Function parameter or member 'sta_id' not described in 'rsi_hal_load_key'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:794: warning: Function parameter or member 'vif' not described in 'rsi_hal_load_key'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1053: warning: Function parameter or member 'curchan' not described in 'rsi_band_check'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1173: warning: Excess function parameter 'channel' description in 'rsi_send_radio_params_update'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1299: warning: Function parameter or member 'sta' not described in 'rsi_send_auto_rate_request'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1299: warning: Function parameter or member 'sta_id' not described in 'rsi_send_auto_rate_request'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1299: warning: Function parameter or member 'vif' not described in 'rsi_send_auto_rate_request'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'opmode' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'addr' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'sta' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'sta_id' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'assoc_cap' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Function parameter or member 'vif' not described in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1459: warning: Excess function parameter 'bssid' description in 'rsi_inform_bss_status'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1543: warning: Function parameter or member 'common' not described in 'rsi_send_block_unblock_frame'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1543: warning: Function parameter or member 'block_event' not described in 'rsi_send_block_unblock_frame'
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1587: warning: Excess function parameter 'Return' description in 'rsi_send_rx_filter_frame'
+ drivers/net/wireless/intel/iwlegacy/4965.c:35: warning: Function parameter or member 'il' not described in 'il4965_verify_inst_sparse'
+ drivers/net/wireless/intel/iwlegacy/4965.c:35: warning: Function parameter or member 'image' not described in 'il4965_verify_inst_sparse'
+ drivers/net/wireless/intel/iwlegacy/4965.c:35: warning: Function parameter or member 'len' not described in 'il4965_verify_inst_sparse'
+ drivers/net/wireless/intel/iwlegacy/4965.c:66: warning: Function parameter or member 'il' not described in 'il4965_verify_inst_full'
+ drivers/net/wireless/intel/iwlegacy/4965.c:66: warning: Function parameter or member 'image' not described in 'il4965_verify_inst_full'
+ drivers/net/wireless/intel/iwlegacy/4965.c:66: warning: Function parameter or member 'len' not described in 'il4965_verify_inst_full'
+ drivers/net/wireless/intel/iwlegacy/4965.c:105: warning: Function parameter or member 'il' not described in 'il4965_verify_ucode'
+ drivers/net/wireless/intel/iwlegacy/4965.c:329: warning: Function parameter or member 'il' not described in 'il4965_load_bsm'
+ drivers/net/wireless/intel/iwlegacy/4965.c:416: warning: Function parameter or member 'il' not described in 'il4965_set_ucode_ptrs'
+ drivers/net/wireless/intel/iwlegacy/4965.c:451: warning: Function parameter or member 'il' not described in 'il4965_init_alive_start'
+ drivers/net/wireless/intel/iwlegacy/4965.c:583: warning: Function parameter or member 'eeprom_voltage' not described in 'il4965_get_voltage_compensation'
+ drivers/net/wireless/intel/iwlegacy/4965.c:583: warning: Function parameter or member 'current_voltage' not described in 'il4965_get_voltage_compensation'
+ drivers/net/wireless/intel/iwlegacy/4965.c:668: warning: Function parameter or member 'il' not described in 'il4965_interpolate_chan'
+ drivers/net/wireless/intel/iwlegacy/4965.c:668: warning: Function parameter or member 'channel' not described in 'il4965_interpolate_chan'
+ drivers/net/wireless/intel/iwlegacy/4965.c:668: warning: Function parameter or member 'chan_info' not described in 'il4965_interpolate_chan'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1242: warning: Function parameter or member 'il' not described in 'il4965_send_tx_power'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1537: warning: Function parameter or member 'il' not described in 'il4965_txq_update_byte_cnt_tbl'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1537: warning: Function parameter or member 'txq' not described in 'il4965_txq_update_byte_cnt_tbl'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1537: warning: Function parameter or member 'byte_cnt' not described in 'il4965_txq_update_byte_cnt_tbl'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1564: warning: Function parameter or member 'il' not described in 'il4965_hw_get_temperature'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1564: warning: Excess function parameter 'stats' description in 'il4965_hw_get_temperature'
+ drivers/net/wireless/intel/iwlegacy/4965.c:1633: warning: Function parameter or member 'il' not described in 'il4965_is_temp_calib_needed'
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Siva Rebbagondla <siva8118@gmail.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Linux Wireless <ilw@linux.intel.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 30 +++++++++++++++++--------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlegacy/4965.c | 25 +++++++++++-----------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 9cc8a335d519d..c331084bdc170 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1,4 +1,4 @@
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965.c b/drivers/net/wireless/intel/iwlegacy/4965.c
+index fc8fa5818de7e..9fa556486511c 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965.c
+@@ -25,7 +25,7 @@
+ #include "common.h"
+ #include "4965.h"
+ 
 -/**
 +/*
-  * Copyright (c) 2014 Redpine Signals Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-@@ -477,7 +477,6 @@ static int rsi_load_radio_caps(struct rsi_common *common)
-  * @common: Pointer to the driver private structure.
-  * @msg: Pointer to received packet.
-  * @msg_len: Length of the received packet.
-- * @type: Type of received packet.
-  *
-  * Return: 0 on success, -1 on failure.
+  * il_verify_inst_sparse - verify runtime uCode image in card vs. host,
+  *   using sample data 100 bytes apart.  If these sample points are good,
+  *   it's a pretty good bet that everything between them is good, too.
+@@ -57,7 +57,7 @@ il4965_verify_inst_sparse(struct il_priv *il, __le32 * image, u32 len)
+ 	return ret;
+ }
+ 
+-/**
++/*
+  * il4965_verify_inst_full - verify runtime uCode image in card vs. host,
+  *     looking at all data.
   */
-@@ -528,6 +527,8 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
-  * @bssid: bssid.
-  * @qos_enable: Qos is enabled.
-  * @aid: Aid (unique for all STA).
-+ * @sta_id: station id.
-+ * @vif: Pointer to the ieee80211_vif structure.
-  *
-  * Return: status: 0 on success, corresponding negative error code on failure.
+@@ -96,7 +96,7 @@ il4965_verify_inst_full(struct il_priv *il, __le32 * image, u32 len)
+ 	return ret;
+ }
+ 
+-/**
++/*
+  * il4965_verify_ucode - determine which instruction image is in SRAM,
+  *    and verify its contents
   */
-@@ -603,6 +604,7 @@ int rsi_hal_send_sta_notify_frame(struct rsi_common *common, enum opmode opmode,
-  * @ssn: ssn.
-  * @buf_size: buffer size.
-  * @event: notification about station connection.
-+ * @sta_id: station id.
+@@ -292,7 +292,7 @@ il4965_verify_bsm(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il4965_load_bsm - Load bootstrap instructions
   *
-  * Return: 0 on success, corresponding negative error code on failure.
-  */
-@@ -699,7 +701,7 @@ static int rsi_program_bb_rf(struct rsi_common *common)
- /**
-  * rsi_set_vap_capabilities() - This function send vap capability to firmware.
-  * @common: Pointer to the driver private structure.
-- * @opmode: Operating mode of device.
-+ * @mode: Operating mode of device.
+  * BSM operation:
+@@ -402,7 +402,7 @@ il4965_load_bsm(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il4965_set_ucode_ptrs - Set uCode address location
   *
-  * Return: 0 on success, corresponding negative error code on failure.
-  */
-@@ -780,6 +782,8 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
-  * @key_type: Type of key: GROUP/PAIRWISE.
-  * @key_id: Key index.
-  * @cipher: Type of cipher used.
-+ * @sta_id: Station id.
-+ * @vif: Pointer to the ieee80211_vif structure.
+  * Tell initialization uCode where to find runtime uCode.
+@@ -435,7 +435,7 @@ il4965_set_ucode_ptrs(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il4965_init_alive_start - Called after N_ALIVE notification received
   *
-  * Return: 0 on success, -1 on failure.
-  */
-@@ -1045,6 +1049,7 @@ static int rsi_send_reset_mac(struct rsi_common *common)
- /**
-  * rsi_band_check() - This function programs the band
-  * @common: Pointer to the driver private structure.
-+ * @curchan: Pointer to the current channel structure.
+  * Called after N_ALIVE notification received from "initialize" uCode.
+@@ -567,7 +567,7 @@ il4965_math_div_round(s32 num, s32 denom, s32 * res)
+ 	return 1;
+ }
+ 
+-/**
++/*
+  * il4965_get_voltage_compensation - Power supply voltage comp for txpower
   *
-  * Return: 0 on success, corresponding error code on failure.
-  */
-@@ -1165,7 +1170,6 @@ int rsi_set_channel(struct rsi_common *common,
-  * rsi_send_radio_params_update() - This function sends the radio
-  *				parameters update to device
-  * @common: Pointer to the driver private structure.
-- * @channel: Channel value to be set.
+  * Determines power supply voltage compensation for txpower calculations.
+@@ -654,7 +654,7 @@ il4965_interpolate_value(s32 x, s32 x1, s32 y1, s32 x2, s32 y2)
+ 	}
+ }
+ 
+-/**
++/*
+  * il4965_interpolate_chan - Interpolate factory measurements for one channel
   *
-  * Return: 0 on success, corresponding error code on failure.
-  */
-@@ -1289,6 +1293,9 @@ static bool rsi_map_rates(u16 rate, int *offset)
-  * rsi_send_auto_rate_request() - This function is to set rates for connection
-  *				  and send autorate request to firmware.
-  * @common: Pointer to the driver private structure.
-+ * @sta: mac80211 station.
-+ * @sta_id: station id.
-+ * @vif: Pointer to the ieee80211_vif structure.
+  * Interpolates factory measurements from the two sample channels within a
+@@ -1231,7 +1231,7 @@ il4965_fill_txpower_tbl(struct il_priv *il, u8 band, u16 channel, u8 is_ht40,
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il4965_send_tx_power - Configure the TXPOWER level user limit
   *
-  * Return: 0 on success, corresponding error code on failure.
+  * Uses the active RXON for channel, band, and characteristics (ht40, high)
+@@ -1528,7 +1528,7 @@ il4965_hw_channel_switch(struct il_priv *il,
+ 	return il_send_cmd_pdu(il, C_CHANNEL_SWITCH, sizeof(cmd), &cmd);
+ }
+ 
+-/**
++/*
+  * il4965_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
   */
-@@ -1439,10 +1446,15 @@ static int rsi_send_auto_rate_request(struct rsi_common *common,
-  *			     help of sta notify params by sending an internal
-  *			     management frame to firmware.
-  * @common: Pointer to the driver private structure.
-+ * @opmode: Operating mode of device.
-  * @status: Bss status type.
-- * @bssid: Bssid.
-+ * @addr: Address of the register.
-  * @qos_enable: Qos is enabled.
-  * @aid: Aid (unique for all STAs).
-+ * @sta: mac80211 station.
-+ * @sta_id: station id.
-+ * @assoc_cap: capabilities.
-+ * @vif: Pointer to the ieee80211_vif structure.
+ static void
+@@ -1553,9 +1553,8 @@ il4965_txq_update_byte_cnt_tbl(struct il_priv *il, struct il_tx_queue *txq,
+ 		    bc_ent;
+ }
+ 
+-/**
++/*
+  * il4965_hw_get_temperature - return the calibrated temperature (in Kelvin)
+- * @stats: Provides the temperature reading from the uCode
   *
-  * Return: None.
+  * A return of <0 indicates bogus data in the stats
   */
-@@ -1535,9 +1547,9 @@ static int rsi_eeprom_read(struct rsi_common *common)
-  * This function sends a frame to block/unblock
-  * data queues in the firmware
+@@ -1619,7 +1618,7 @@ il4965_hw_get_temperature(struct il_priv *il)
+ /* Adjust Txpower only if temperature variance is greater than threshold. */
+ #define IL_TEMPERATURE_THRESHOLD   3
+ 
+-/**
++/*
+  * il4965_is_temp_calib_needed - determines if new calibration is needed
   *
-- * @param common Pointer to the driver private structure.
-- * @param block event - block if true, unblock if false
-- * @return 0 on success, -1 on failure.
-+ * @common: Pointer to the driver private structure.
-+ * @block_event: Event block if true, unblock if false
-+ * returns 0 on success, -1 on failure.
-  */
- int rsi_send_block_unblock_frame(struct rsi_common *common, bool block_event)
- {
-@@ -1581,7 +1593,7 @@ int rsi_send_block_unblock_frame(struct rsi_common *common, bool block_event)
-  * @common: Pointer to the driver private structure.
-  * @rx_filter_word: Flags of filter packets
-  *
-- * @Return: 0 on success, -1 on failure.
-+ * Returns 0 on success, -1 on failure.
-  */
- int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
- {
+  * If the temperature changed has changed sufficiently, then a recalibration
 -- 
 2.25.1
 
