@@ -7,121 +7,110 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4544CC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35701C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12E3620738
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1179C207DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Aug 2020 07:26:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dxRVNmi7"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="C88o+Qk+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727970AbgHSHZa (ORCPT
+        id S1728030AbgHSH0B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Aug 2020 03:25:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40924 "EHLO
+        Wed, 19 Aug 2020 03:26:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727838AbgHSHYt (ORCPT
+        with ESMTP id S1727000AbgHSHZB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Aug 2020 03:24:49 -0400
+        Wed, 19 Aug 2020 03:25:01 -0400
 Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B297C061363
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:22 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id f1so20480205wro.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C0CAC06136A
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:25 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id r15so10540831wrp.13
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2020 00:24:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=bfE7YUSssid0azom0g6vClz47uYcy21+hGTRmt0JTBI=;
-        b=dxRVNmi7LtW/7lmGHRjFCjuxQP1F9s/8kvSh4etZPkfq8exwIAqqPNFL0aK3SmVfDB
-         fHrTrRMVtzuGPBrfz4+XBqHTclM6+fKesqjtjlM2VmRdsOTqBfwh5E+hUcfV6zwLp92b
-         fH2nmZpRtlLMovLVRE2Q9NvPh5Gm4KCpaSZpkxEVqoFQX8WhvR+uCaJn+AOy2H2IRgBE
-         idK19g+Z6/PGsCXH8WA1yRYhKbziLejExH4d1tqRZ3+3G4i2NlG5KHwpM2tG4KFI77hR
-         IcGyMdysPTTn9rGjtpo4ymfWtopmI6cAdfums19zH6QW4KngP6oO2kQIIXzJgAvGGYUb
-         Tb2w==
+        bh=btNFyQ5gdRMB0au+Pev2O+MsXnfVNmHhW/htK7KWPAM=;
+        b=C88o+Qk+rULR4JQYPoSUWw4wAno6u1L/Jayo2cvTR2KjNVmvEdSM1h1wku9pGwoOfs
+         foI9eXC7YM1wMZh1+VDE1EwCzHjUczt4Ty7HGru7Etar8sY75PnzhPQddbcA8KzUrh5M
+         c4KiaW/eol1akNCr2+CxRa8oIFM5Ph1jX4fLbV54K2bj33wlAGaTCq3N+vL20jMoiY/y
+         yolCEAbTd153ahWYLyXSRsSAtZKHYmnOc1GQS4rOzAOVMMOjTfyQRCxnHYOwPrZMPluC
+         c6IMEak/QYh3kbvu6LY3UNu6DW2P5LeoL3GTvR1BZYWxgk6e0fv/HLnk3BofM+GHyI1a
+         K/Sg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bfE7YUSssid0azom0g6vClz47uYcy21+hGTRmt0JTBI=;
-        b=b2YUZD5eiz/rfgomkyFFSD/pCgVuE0G+pEpAu2VtzQNkU8pPTLK/Q3OJfxtuQ6E/Wh
-         +XJcOzoS+KUMbjqsrwEGsCzOCPyaQmawLeljQjUdFoYpk9mdGJH2a9a5966Fnly78MYM
-         hoe3QFRMXKGJMR46deWwN6b3hOx3VmDU6WmPtQ5hmR61jCKOPEQBUkiHVTvMBxijRcPe
-         qU8Y2WgWIfES2Wc2KoVVT+0OkZCj7ypjRe2pS2ScwbyFrHovePSvcjdgcDopykaeCCSK
-         92/97z3XKQnXjaYI0Da21uLocKbUzA0d+Al49AjqTmkncMycng1hbfjYq9gUhMBAjBQN
-         dRog==
-X-Gm-Message-State: AOAM533K6kUTL6H69omaVC+t6bP7DAbV82BZKPeJsDUgnywyJwutZ7o5
-        95j2ATUh9pnAjkEQ8Oov08lPYw==
-X-Google-Smtp-Source: ABdhPJzRWBnbNFHIjAgUYgqM4NWDUtxLUBkI0z4KY8VqkEYCch07riiASN+lmqbrHFo7MFbLN2tOzA==
-X-Received: by 2002:a5d:6401:: with SMTP id z1mr23375743wru.272.1597821861337;
-        Wed, 19 Aug 2020 00:24:21 -0700 (PDT)
+        bh=btNFyQ5gdRMB0au+Pev2O+MsXnfVNmHhW/htK7KWPAM=;
+        b=XZYe7SwGPTRc0ar/19z/k/+xxgUTguEeDT+9I1dMwhjTmusXuIKt7+TdM+pzLUeFbY
+         OtH7Qm+LmMd2gDmU+Ws0f5m6Sjvm9oEKyilqhhkd5Lf1/nnYY3gsIr4Y5D4yPLUqqazm
+         +IkztYf5+wGam9PRljxoh9ZUFxLA+r5vuue/Je9XkNZe4rWUdBZi6vn51GtvSzxhheGk
+         1PEg0aKsXa9WHz2IrSI4CsRO0SwjeWoWflxN05/utfiiZzB6ypT2Ya7CDQEMUyqaXaJd
+         rCkd0UVx3Wx+REqt6GNY/muGtlFPOZ3GhImazBBoTXyzv3kgLzLDqgImaB4W+u7sqTP2
+         33dQ==
+X-Gm-Message-State: AOAM530yuoGGy1uF4CDAAkKW19zVTJlJISNm+LbllMgDmrfQ9/5Vlgan
+        D/CdjjhO3mPWpfPiUZP0VdEd3Q==
+X-Google-Smtp-Source: ABdhPJxnEhoTD05y07X1+zSPuPGwAfaT9pqBtJ+nZfki86mWBsbbmdiKb7qdBf4fpwOBaVZEVRxcfA==
+X-Received: by 2002:adf:e290:: with SMTP id v16mr23353013wri.259.1597821863746;
+        Wed, 19 Aug 2020 00:24:23 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id c145sm3795808wmd.7.2020.08.19.00.24.20
+        by smtp.gmail.com with ESMTPSA id c145sm3795808wmd.7.2020.08.19.00.24.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2020 00:24:20 -0700 (PDT)
+        Wed, 19 Aug 2020 00:24:23 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
-Subject: [PATCH 13/28] wireless: st: cw1200: wsm: Remove 'dummy' variables
-Date:   Wed, 19 Aug 2020 08:23:47 +0100
-Message-Id: <20200819072402.3085022-14-lee.jones@linaro.org>
+        Jakub Kicinski <kubakici@wp.pl>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Felix Fietkau <nbd@openwrt.org>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 15/28] wireless: mediatek: mt7601u: phy: Fix misnaming when documented function parameter 'dac'
+Date:   Wed, 19 Aug 2020 08:23:49 +0100
+Message-Id: <20200819072402.3085022-16-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200819072402.3085022-1-lee.jones@linaro.org>
 References: <20200819072402.3085022-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-They're never read, so there is no reason for them to exist.
-
-They just cause the compiler to complain.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/st/cw1200/wsm.c: In function ‘wsm_ba_timeout_indication’:
- drivers/net/wireless/st/cw1200/wsm.c:1033:5: warning: variable ‘dummy2’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/st/cw1200/wsm.c:1031:6: warning: variable ‘dummy’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/mediatek/mt7601u/phy.c:1216: warning: Function parameter or member 'dac' not described in 'mt7601u_set_tx_dac'
+ drivers/net/wireless/mediatek/mt7601u/phy.c:1216: warning: Excess function parameter 'path' description in 'mt7601u_set_tx_dac'
 
-Cc: Solomon Peachy <pizza@shaftnet.org>
+Cc: Jakub Kicinski <kubakici@wp.pl>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
+Cc: linux-mediatek@lists.infradead.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/st/cw1200/wsm.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
-index c86f31dcc9817..d9b6147bbb528 100644
---- a/drivers/net/wireless/st/cw1200/wsm.c
-+++ b/drivers/net/wireless/st/cw1200/wsm.c
-@@ -1028,14 +1028,12 @@ static int wsm_find_complete_indication(struct cw1200_common *priv,
- static int wsm_ba_timeout_indication(struct cw1200_common *priv,
- 				     struct wsm_buf *buf)
+diff --git a/drivers/net/wireless/mediatek/mt7601u/phy.c b/drivers/net/wireless/mediatek/mt7601u/phy.c
+index d863ab4a66c96..3c4462487ab5c 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/phy.c
++++ b/drivers/net/wireless/mediatek/mt7601u/phy.c
+@@ -1210,7 +1210,7 @@ void mt7601u_set_rx_path(struct mt7601u_dev *dev, u8 path)
+ /**
+  * mt7601u_set_tx_dac - set which tx DAC to use
+  * @dev:	pointer to adapter structure
+- * @path:	DAC index, values are 0-based
++ * @dac:	DAC index, values are 0-based
+  */
+ void mt7601u_set_tx_dac(struct mt7601u_dev *dev, u8 dac)
  {
--	u32 dummy;
- 	u8 tid;
--	u8 dummy2;
- 	u8 addr[ETH_ALEN];
- 
--	dummy = WSM_GET32(buf);
-+	WSM_GET32(buf);
- 	tid = WSM_GET8(buf);
--	dummy2 = WSM_GET8(buf);
-+	WSM_GET8(buf);
- 	WSM_GET(buf, addr, ETH_ALEN);
- 
- 	pr_info("BlockACK timeout, tid %d, addr %pM\n",
 -- 
 2.25.1
 
