@@ -2,105 +2,128 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A4A0C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F28B4C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0414F20656
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1F0020724
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:31:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="GjYRfYbC"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="k56S5Bpo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728514AbgHUQWk (ORCPT
+        id S1728488AbgHUQbc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 12:22:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33648 "EHLO
+        Fri, 21 Aug 2020 12:31:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728415AbgHUQWh (ORCPT
+        with ESMTP id S1728503AbgHUQau (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:22:37 -0400
+        Fri, 21 Aug 2020 12:30:50 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFEACC061573
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 09:22:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E943C061575
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 09:30:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=HagV7JDRm/kfP9ix7ReYcl1/XVHJCqBmI1V8eEPtgGA=; b=GjYRfYbCrvdjJBulFZBCHSWC9i
-        tRV8bL6LBSvQWTm3R1LIhkj5kuv1o7EVx9+Fa36fYVaI2ispvPTmiTqY0aWlxB7SGxw/a6pPGEv0r
-        jsJBvGiCdPRNWUHfOW4hYaXznL9SprrtI36tb/1vsNFTM6yZQv9AxiyqSY/ra/ffeAfU=;
-Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=7L5MHR7o5WBO8O/fCzMc96iDU5bpGglmm7arvUITEW8=; b=k56S5BpokQGaklgzX3tbZp9hYi
+        QYaC8OhSVlJ6iChd8wvbo7d6rQRIV5zgryc6tUx8m7rHN0PtddasiCJ56Z0h4opt/iEjObYpoQpl2
+        6tkRY/Rmc4ruYFyJM/UWjL0JA6TMppX9zb+ewusKov47O8mKuxhqESxYgz6gH85v9XNY=;
+Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k99oE-0002ye-Jl; Fri, 21 Aug 2020 18:22:30 +0200
-Subject: Re: [PATCH 5.9 3/3] mac80211: improve AQL aggregation estimation for
- low data rates
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-References: <20200813155212.97884-1-nbd@nbd.name>
- <20200813155212.97884-3-nbd@nbd.name>
- <c3c5197f-17f7-4f6b-712f-d7c68f39ae38@dd-wrt.com> <87tuww2ggm.fsf@toke.dk>
- <61d66ec8-117e-7c75-2b4a-1de7715f0bce@dd-wrt.com> <87r1s02eve.fsf@toke.dk>
+        id 1k99wF-0003et-JY; Fri, 21 Aug 2020 18:30:47 +0200
 From:   Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <623a2b24-31c8-83be-ae24-1461ecbfc224@nbd.name>
-Date:   Fri, 21 Aug 2020 18:22:30 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5.9 v2 3/3] mac80211: improve AQL aggregation estimation for low data rates
+Date:   Fri, 21 Aug 2020 18:30:45 +0200
+Message-Id: <20200821163045.62140-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200821163045.62140-1-nbd@nbd.name>
+References: <20200821163045.62140-1-nbd@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <87r1s02eve.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-21 17:33, Toke Høiland-Jørgensen wrote:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
-> 
->> i mean airtime fairness policy was not configured
-> 
-> Ah, right, that makes a lot more sense :)
-> 
-> Still not sure why this would affect throughput, though; maybe the
-> change in calculation makes AQL overestimate the airtime and throttle
-> too much? Or does the saving of last_rate_info on tx_status_ext() work
-> badly for ath10k?
-The issue turned out to be missing return code checks on converting the
-tx rate to struct ieee80211_rx_status.
-I'll send v2 of this series with fixes.
+Links with low data rates use much smaller aggregates and are much more
+sensitive to latency added by bufferbloat.
+Tune the assumed aggregation length based on the tx rate duration.
 
-- Felix
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+v2: add missing return code check
+ net/mac80211/airtime.c | 38 ++++++++++++++++++++++++++------------
+ 1 file changed, 26 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index ba95f4ee1f71..314973033d03 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -647,27 +647,41 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 	if (pubsta) {
+ 		struct sta_info *sta = container_of(pubsta, struct sta_info,
+ 						    sta);
++		struct ieee80211_rx_status stat;
+ 		struct ieee80211_tx_rate *rate = &sta->tx_stats.last_rate;
+ 		struct rate_info *ri = &sta->tx_stats.last_rate_info;
+-		u32 airtime;
++		u32 duration, overhead;
++		u8 agg_shift;
+ 
+-		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
+-				     IEEE80211_TX_RC_MCS)))
+-			ampdu = false;
++		if (ieee80211_fill_rx_status(&stat, hw, rate, ri, band, len))
++			return 0;
++
++		if (stat.encoding == RX_ENC_LEGACY || !ampdu)
++			return ieee80211_calc_rx_airtime(hw, &stat, len);
+ 
++		duration = ieee80211_get_rate_duration(hw, &stat, &overhead);
+ 		/*
+ 		 * Assume that HT/VHT transmission on any AC except VO will
+ 		 * use aggregation. Since we don't have reliable reporting
+-		 * of aggregation length, assume an average of 16.
++		 * of aggregation length, assume an average size based on the
++		 * tx rate.
+ 		 * This will not be very accurate, but much better than simply
+-		 * assuming un-aggregated tx.
++		 * assuming un-aggregated tx in all cases.
+ 		 */
+-		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, ri, band,
+-							 ampdu ? len * 16 : len);
+-		if (ampdu)
+-			airtime /= 16;
+-
+-		return airtime;
++		if (duration > 400) /* <= VHT20 MCS2 1S */
++			agg_shift = 1;
++		else if (duration > 250) /* <= VHT20 MCS3 1S or MCS1 2S */
++			agg_shift = 2;
++		else if (duration > 150) /* <= VHT20 MCS5 1S or MCS3 2S */
++			agg_shift = 3;
++		else
++			agg_shift = 4;
++
++		duration *= len;
++		duration /= AVG_PKT_SIZE;
++		duration /= 1024;
++
++		return duration + (overhead >> agg_shift);
+ 	}
+ 
+ 	if (!conf)
+-- 
+2.28.0
+
