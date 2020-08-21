@@ -2,93 +2,96 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 529D5C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF4EC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 248F420702
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:05:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZO16IFhm"
+	by mail.kernel.org (Postfix) with ESMTP id 7A61520656
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598029759;
+	bh=ZS5koshl9P5XnEP6E1J+YO76VIZh7Oth6V8mWrNQ9Ps=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=WRMrlYSmF/yHlO40yd/MIlEJFFZQStvrJhQ1Rjk5yXyP5hMhUTLLKOgT4YHEKubE6
+	 Djm7meJnIL8Dc6kyZclgk+TZ/oNYE5OPs73z60I+RJx9xO8EUI2vImMIXUEh8m3kvB
+	 cPs+4X4vhmRzGQdVqoxxVvE0TRsTfAbmUg6J8v4M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727087AbgHURFq (ORCPT
+        id S1728665AbgHURIf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:05:46 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:30553 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727961AbgHURFQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 13:05:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598029514;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=90C0tk9lG7EAHa53ku1Pvna6aL8rHbPZbMBZTTSPNRQ=;
-        b=ZO16IFhmy95UGd+90E7z5ll2NtkoiK1ncGPpDO54IsCIcghxlGWtn5iCq/PHfvGRtx+ujH
-        UVOSng+I+Lo7tIaDFUOOu8PR7txGmAKuTRQkEMhVijcb80FhEquXeaR7OhpCmmJyo3YPIt
-        as6hJzYR0ArDOhtPk6kW3TgJ7qIZjds=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-246-4qq9IXWbNUiacgIlwZEoTg-1; Fri, 21 Aug 2020 13:05:09 -0400
-X-MC-Unique: 4qq9IXWbNUiacgIlwZEoTg-1
-Received: by mail-wm1-f71.google.com with SMTP id c186so1207568wmd.9
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 10:05:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=90C0tk9lG7EAHa53ku1Pvna6aL8rHbPZbMBZTTSPNRQ=;
-        b=JOCdYiLyJDykmkBeoQ1UqzUV9yZ5O3NK9SLiJrRXvSYY0YI5FyJzB67rMOZL2GzOY7
-         LPkq5U2eYh1cT2vQ9+CveSc8xf69xC06k4no+rSRCDXUfIklrrzJZDnvToM0zSrmiBTB
-         cvOgMqTyiAmxqF/ZjhmvwB+FMbG2MGvUQcY7DAFHL3eC8dtZn7PWAiGAwuYsSwgBJlhM
-         HjuKBwL7djwvNevdbVSydriFQmPvCZRdBsHUL05wfBPjAzUMII6gHv/eniDD1+BNkRsZ
-         PksATazWeAGPsy1qBLqWG6RywIWQSHNw2fzC1jtTcCAOVxfxJxdgk+Zg0yUQSpLrZ2Bi
-         Jz6A==
-X-Gm-Message-State: AOAM533LZxKiiMkhgUinzRRhqVO25CEQ2kvwnEFI8yzkpbn+REs2dfhn
-        RknCxf47/hx5tmu8vO1BXMhW4wS705LO0CVLMU0m76ZFgMITP41vBKGjQ+JX1X/7890BwXuEue8
-        NoVjUBcjVqhbwzT6ZSFb8aD9/ywg=
-X-Received: by 2002:a1c:cc05:: with SMTP id h5mr3907893wmb.129.1598029508619;
-        Fri, 21 Aug 2020 10:05:08 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyT/Z9820P86kzl8kOpMIWEzR1C3OSGb9mBmjZT+v9ZrfUfqYBIJLw5mcFBAUryiY7VKU+s0w==
-X-Received: by 2002:a1c:cc05:: with SMTP id h5mr3907872wmb.129.1598029508402;
-        Fri, 21 Aug 2020 10:05:08 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
-        by smtp.gmail.com with ESMTPSA id t11sm5117886wrs.66.2020.08.21.10.05.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 10:05:07 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 6FA161816A2; Fri, 21 Aug 2020 19:04:37 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: Re: [PATCH 5.9 v2 1/3] mac80211: use rate provided via status->rate
- on ieee80211_tx_status_ext for AQL
-In-Reply-To: <20200821163045.62140-1-nbd@nbd.name>
-References: <20200821163045.62140-1-nbd@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Fri, 21 Aug 2020 19:04:37 +0200
-Message-ID: <87ft8g2amy.fsf@toke.dk>
+        Fri, 21 Aug 2020 13:08:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51618 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728209AbgHUQRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:17:43 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D0F152224D;
+        Fri, 21 Aug 2020 16:17:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598026663;
+        bh=ZS5koshl9P5XnEP6E1J+YO76VIZh7Oth6V8mWrNQ9Ps=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=NeeFBsUcLUVpDtPYPRORZrKTAUK79q4gz5pPPdxjd+XV/CEzn/gvjo2DKoO0CtUy1
+         fFTQFwTo9ibXAogkHSQ0z5rDG0RjcRhFEvJ/uyLoAqWtBzrlEig09Ajx6isUIEJcJ7
+         G8dJw7exBxps66Okkott4D0MpXVboNgeNGCq9SC8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Reto Schneider <code@reto-schneider.ch>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 30/48] rtlwifi: rtl8192cu: Prevent leaking urb
+Date:   Fri, 21 Aug 2020 12:16:46 -0400
+Message-Id: <20200821161704.348164-30-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200821161704.348164-1-sashal@kernel.org>
+References: <20200821161704.348164-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Reto Schneider <code@reto-schneider.ch>
 
-> Since ieee80211_tx_info does not have enough room to encode HE rates, HE
-> drivers use status->rate to provide rate info.
-> Store it in struct sta_info and use it for AQL.
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+[ Upstream commit 03128643eb5453a798db5770952c73dc64fcaf00 ]
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+If usb_submit_urb fails the allocated urb should be unanchored and
+released.
+
+Signed-off-by: Reto Schneider <code@reto-schneider.ch>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20200622132113.14508-3-code@reto-schneider.ch
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index c66c6dc003783..bad06939a247c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -718,8 +718,11 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
+ 
+ 		usb_anchor_urb(urb, &rtlusb->rx_submitted);
+ 		err = usb_submit_urb(urb, GFP_KERNEL);
+-		if (err)
++		if (err) {
++			usb_unanchor_urb(urb);
++			usb_free_urb(urb);
+ 			goto err_out;
++		}
+ 		usb_free_urb(urb);
+ 	}
+ 	return 0;
+-- 
+2.25.1
 
