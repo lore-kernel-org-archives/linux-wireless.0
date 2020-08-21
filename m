@@ -2,95 +2,143 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 487B7C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5349AC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:41:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F3BB2075E
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:40:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KFana9ta"
+	by mail.kernel.org (Postfix) with ESMTP id 3380920732
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:41:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1597992100;
+	bh=zx1WG7372o1PzR/3ixloWF65ocSDbw/i79bZ5GZdrto=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=yInOu5D++kK+MGC6Avjad3savohWNW/nh6E5zEuAt/jOQKQTNr2AKG7gjcVyRtTNX
+	 cRR8QID34g7bHoBEFyjnxlKbMAjWxTlWeqD0ssjEnZlU9cy76uvkcajwQLlm/lBvj3
+	 c2oXZI+zKtUnsNNikn4eYlg3F+C2IgivV9xEbLME=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726345AbgHUGkn (ORCPT
+        id S1726767AbgHUGlf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 02:40:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55894 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726057AbgHUGkm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 02:40:42 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09039C061385
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2020 23:40:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=pFzF9lbACibcmq3/XZ29I1uSuhY6CWHG29F0eID6Hqs=; b=KFana9taOQhDV7fwg3k69kp4dS
-        nWxb2KS/cJIYiPOt0Z1S7HqjWoCNKBcYW7Jk8W76iC82P6adDiZgdXUK/meYcEGTtsi1nUgtt2gRo
-        h7HG17oE9SDOLw3YcWS9Ku2BlOakiOftzZIIM2lVBYQpfY7m2Fli63GWILfM6bEK2j04=;
-Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1k90j9-0005f0-02; Fri, 21 Aug 2020 08:40:39 +0200
-Subject: Re: [PATCH v2 09/13] mac80211: support using ieee80211_tx_status_ext
- to free skbs without status info
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-References: <20200821042001.23388-1-nbd@nbd.name>
- <20200821042001.23388-10-nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <dfb7be42-6fa8-a76f-64ce-177ed3056390@nbd.name>
-Date:   Fri, 21 Aug 2020 08:40:37 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
+        Fri, 21 Aug 2020 02:41:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45490 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726057AbgHUGle (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 02:41:34 -0400
+Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9264120732;
+        Fri, 21 Aug 2020 06:41:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1597992093;
+        bh=zx1WG7372o1PzR/3ixloWF65ocSDbw/i79bZ5GZdrto=;
+        h=Date:From:To:Cc:Subject:From;
+        b=nCS0QGqwHdGXyMA8O6IaQbCQy5vQjpcWkIhd7UOSwZhj0uuEnctoc32wMXe8S0kYC
+         2rd7swzD7dTpFszzAkbNKv6OXKk4xogU1K4YCSZMzlNm5ZHQmBGB05xrckmugfsvMn
+         MXgS9xMSR9WBCRnjRAzxWvn30UaYU60NVWTonAUI=
+Date:   Fri, 21 Aug 2020 01:47:20 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH][next] mwifiex: Use fallthrough pseudo-keyword
+Message-ID: <20200821064720.GA22182@embeddedor>
 MIME-Version: 1.0
-In-Reply-To: <20200821042001.23388-10-nbd@nbd.name>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-21 06:19, Felix Fietkau wrote:
-> For encap-offloaded packets, ieee80211_free_txskb cannot be used, since it
-> does not have the vif pointer.
-> Using ieee80211_tx_status_ext for this purpose has the advantage of being able
-> avoid an extra station lookup for AQL
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Sorry, sent the wrong version of this patch. Will send v3
+Replace the existing /* fall through */ comments and its variants with
+the new pseudo-keyword macro fallthrough[1].
 
-- Felix
+[1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 ++++----
+ drivers/net/wireless/marvell/mwifiex/ie.c       | 2 +-
+ drivers/net/wireless/marvell/mwifiex/scan.c     | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 96848fa0e417..a6b9dc6700b1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1163,7 +1163,7 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 			mwifiex_dbg(priv->adapter, INFO,
+ 				    "%s: kept type as IBSS\n", dev->name);
+-			/* fall through */
++			fallthrough;
+ 		case NL80211_IFTYPE_ADHOC:	/* This shouldn't happen */
+ 			return 0;
+ 		default:
+@@ -1194,7 +1194,7 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 			mwifiex_dbg(priv->adapter, INFO,
+ 				    "%s: kept type as STA\n", dev->name);
+-			/* fall through */
++			fallthrough;
+ 		case NL80211_IFTYPE_STATION:	/* This shouldn't happen */
+ 			return 0;
+ 		default:
+@@ -1217,7 +1217,7 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 			mwifiex_dbg(priv->adapter, INFO,
+ 				    "%s: kept type as AP\n", dev->name);
+-			/* fall through */
++			fallthrough;
+ 		case NL80211_IFTYPE_AP:		/* This shouldn't happen */
+ 			return 0;
+ 		default:
+@@ -1257,7 +1257,7 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 			mwifiex_dbg(priv->adapter, INFO,
+ 				    "%s: kept type as P2P\n", dev->name);
+-			/* fall through */
++			fallthrough;
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_P2P_GO:
+ 			return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
+index 811abe963af2..40e99eaf5a30 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ie.c
++++ b/drivers/net/wireless/marvell/mwifiex/ie.c
+@@ -374,7 +374,7 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
+ 						    (const u8 *)hdr,
+ 						    token_len))
+ 				break;
+-			/* fall through */
++			fallthrough;
+ 		default:
+ 			if (ie_len + token_len > IEEE_MAX_IE_SIZE) {
+ 				err = -EINVAL;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 2fb69a590bd8..c2a685f63e95 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1328,7 +1328,7 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 
+ 		case WLAN_EID_CHANNEL_SWITCH:
+ 			bss_entry->chan_sw_ie_present = true;
+-			/* fall through */
++			fallthrough;
+ 		case WLAN_EID_PWR_CAPABILITY:
+ 		case WLAN_EID_TPC_REPORT:
+ 		case WLAN_EID_QUIET:
+-- 
+2.27.0
+
