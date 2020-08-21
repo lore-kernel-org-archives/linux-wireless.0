@@ -2,109 +2,95 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D554C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 487B7C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:40:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EADCA20732
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:38:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597991914;
-	bh=Ot86Wj7sGjwZ7S3FH9jm1Yn6Pi0PnzBLyHIPsHidRJU=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=c9sSOA/R1jK7xc2HTAMW/doQxjulpi5svLP3So5i0hz8ZJCl9zUJjcro/mBxu/CHB
-	 AivskKbpilQqSuAzX4ewlle8+JXe7eh3JqhTzTrn2VEs7Lz1Ixn2SsfAGXjW9KsZCg
-	 IzDXwFYapBS+EMosejrAOp8IXvp7RD9MI9IQiNso=
+	by mail.kernel.org (Postfix) with ESMTP id 0F3BB2075E
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:40:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KFana9ta"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727110AbgHUGi1 (ORCPT
+        id S1726345AbgHUGkn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 02:38:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44694 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726057AbgHUGiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 02:38:25 -0400
-Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9D2A820732;
-        Fri, 21 Aug 2020 06:38:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597991905;
-        bh=Ot86Wj7sGjwZ7S3FH9jm1Yn6Pi0PnzBLyHIPsHidRJU=;
-        h=Date:From:To:Cc:Subject:From;
-        b=qufkHiis02jnJfGAZaugIRfoT9J+KnnMiuwCZJedt128Z0/B624C0PM3XpxIaswzc
-         4tPz8LUc2UeTxbP0c7Pbr16XRhBhIWwZ7m4HyNCdDlyLkZCZFByOrV1aSGrf01Aqrk
-         BTbG/sGPiRGPaAictnmiuPSPxy6l/hIK7SwBzcpE=
-Date:   Fri, 21 Aug 2020 01:44:12 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH][next] b43legacy: Use fallthrough pseudo-keyword
-Message-ID: <20200821064412.GA20612@embeddedor>
+        Fri, 21 Aug 2020 02:40:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55894 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726057AbgHUGkm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 02:40:42 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09039C061385
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2020 23:40:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=pFzF9lbACibcmq3/XZ29I1uSuhY6CWHG29F0eID6Hqs=; b=KFana9taOQhDV7fwg3k69kp4dS
+        nWxb2KS/cJIYiPOt0Z1S7HqjWoCNKBcYW7Jk8W76iC82P6adDiZgdXUK/meYcEGTtsi1nUgtt2gRo
+        h7HG17oE9SDOLw3YcWS9Ku2BlOakiOftzZIIM2lVBYQpfY7m2Fli63GWILfM6bEK2j04=;
+Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1k90j9-0005f0-02; Fri, 21 Aug 2020 08:40:39 +0200
+Subject: Re: [PATCH v2 09/13] mac80211: support using ieee80211_tx_status_ext
+ to free skbs without status info
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+References: <20200821042001.23388-1-nbd@nbd.name>
+ <20200821042001.23388-10-nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <dfb7be42-6fa8-a76f-64ce-177ed3056390@nbd.name>
+Date:   Fri, 21 Aug 2020 08:40:37 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20200821042001.23388-10-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace the existing /* fall through */ comments and its variants with
-the new pseudo-keyword macro fallthrough[1].
+On 2020-08-21 06:19, Felix Fietkau wrote:
+> For encap-offloaded packets, ieee80211_free_txskb cannot be used, since it
+> does not have the vif pointer.
+> Using ieee80211_tx_status_ext for this purpose has the advantage of being able
+> avoid an extra station lookup for AQL
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Sorry, sent the wrong version of this patch. Will send v3
 
-[1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
-
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/net/wireless/broadcom/b43legacy/dma.c  | 2 +-
- drivers/net/wireless/broadcom/b43legacy/main.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/b43legacy/dma.c b/drivers/net/wireless/broadcom/b43legacy/dma.c
-index f7594e2a896e..7e2f70c4207c 100644
---- a/drivers/net/wireless/broadcom/b43legacy/dma.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/dma.c
-@@ -189,7 +189,7 @@ return dev->dma.tx_ring1;
- 	switch (queue_priority) {
- 	default:
- 		B43legacy_WARN_ON(1);
--		/* fallthrough */
-+		fallthrough;
- 	case 0:
- 		ring = dev->dma.tx_ring3;
- 		break;
-diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
-index 2eaf481f03f1..7fab9f107c10 100644
---- a/drivers/net/wireless/broadcom/b43legacy/main.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-@@ -1537,7 +1537,7 @@ static int do_request_fw(struct b43legacy_wldev *dev,
- 		size = be32_to_cpu(hdr->size);
- 		if (size != (*fw)->size - sizeof(struct b43legacy_fw_header))
- 			goto err_format;
--		/* fallthrough */
-+		fallthrough;
- 	case B43legacy_FW_TYPE_IV:
- 		if (hdr->ver != 1)
- 			goto err_format;
-@@ -2076,7 +2076,7 @@ static void b43legacy_rate_memory_init(struct b43legacy_wldev *dev)
- 		b43legacy_rate_memory_write(dev, B43legacy_OFDM_RATE_36MB, 1);
- 		b43legacy_rate_memory_write(dev, B43legacy_OFDM_RATE_48MB, 1);
- 		b43legacy_rate_memory_write(dev, B43legacy_OFDM_RATE_54MB, 1);
--		/* fallthrough */
-+		fallthrough;
- 	case B43legacy_PHYTYPE_B:
- 		b43legacy_rate_memory_write(dev, B43legacy_CCK_RATE_1MB, 0);
- 		b43legacy_rate_memory_write(dev, B43legacy_CCK_RATE_2MB, 0);
--- 
-2.27.0
-
+- Felix
