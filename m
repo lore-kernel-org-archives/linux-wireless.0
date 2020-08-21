@@ -2,77 +2,77 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEE4C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:21:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FD74C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:22:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C63B220732
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:21:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39CA920732
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:22:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EPloUf9F"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DcJZ8hQu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728328AbgHUHVj (ORCPT
+        id S1728124AbgHUHWD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 03:21:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33530 "EHLO
+        Fri, 21 Aug 2020 03:22:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728132AbgHUHRg (ORCPT
+        with ESMTP id S1728122AbgHUHRf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 03:17:36 -0400
+        Fri, 21 Aug 2020 03:17:35 -0400
 Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07943C061366
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:11 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id k20so812840wmi.5
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 483DEC06135E
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:07 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id c19so685846wmd.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=G4IO+GbezkeOVEDLE59WtvmxZ3aZ2wEvR7+wN6e+wac=;
-        b=EPloUf9FNSKGfd/JfwqfvnJ2z50BA9p6KyWr54B9Ihh5g/EQeTl2llV5rwUaMEB73U
-         Qk3yGlA67JYVyMUYyB0LET/PWO/Fe9fcbNwvt2KX464jE+6PHa5S1O9SDljQeO7n1zf8
-         5T1ug6Fl/yXhp2wczUDWMRVC7eEWn3jDmL2IlkMxarghCL0lNgUE3YQeWdKR1vOGMvON
-         of9MDmiW84uyJ4rVU8AOC9eQY24CaNkYQqFXdSPqT85ad+Y+wQDjE8ctmPdlQJ6r4ANV
-         QOM4P1j3bk65/1OPdHwgUsKprgjfkn+AZZ9F5ZTabufVDsMMPqHIs/uwkG/PG+TqoIrZ
-         Hwew==
+        bh=uRZo+OG6Hd5tjRCL+cwaRg6WHGd80eBlrZKkRkAZZvs=;
+        b=DcJZ8hQuk3gXQzYslkEoyZk0qTBTtF15SsfmdbCXmT9nU9YfRu3E+/wBeN+h5q6Txj
+         FtiLDeoyJbltQE3Rn7axv5cnMowyLL3kuBGy/XJtyM2ge9881DXMGyuVPWusS0ARYyBg
+         eFkIdoqXiDBIvzk1X4q8njFkWFVOUgbf5shy6OZ5MJQ13QhAhP9QH9UdnwY3W5Og8QaU
+         hzBfaJc2Tq/Qfecz3YGb161a0ELTxNlWjUJwpSNZihi65q//hBpkulMvQPC8z0fqq2nm
+         RBvpYrWOl9cDf8+Zqqg4NYSVWOiXURNPQ/E+QkRMWAm5gEmiCAdutmupABe8EIrC4hW3
+         zgZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=G4IO+GbezkeOVEDLE59WtvmxZ3aZ2wEvR7+wN6e+wac=;
-        b=ndFbdpLM0ZA65LfTPeiA//UVhInHQ9A+bXloKCzf3KxikwZmRzLmWJO0PdPHxAV3ui
-         KoA7SjRy6/v8N8H+XuOuLh6hGQO1jQ2Td/dbtqyiyxa4D051UCW0OPueXzaut7bMS/e+
-         8KPXKanuhrfj+rW8zCPiviM/XXxN8q9+p+Ai5I3879DlPEmhjkUKlJqVhU7XWhHngJM9
-         tiObXqf5uY4fuwl9WC+s/7qfzxemdY89oXe06v3FbSkML4o/mLOoiRu8o3FTJKk9A3ah
-         oaIjRDMX0wXcFwYH4U/5mqfL+mHBJiulbBo49uowO1oimmj+Df8kqdTCFcXZZmlZ2TX/
-         N4mA==
-X-Gm-Message-State: AOAM533tJxHXfkonf2tqA4byG6Ej2wnnFEPVdfWm806TaGD65KKlSWY4
-        5lK5GD9AV4cKdGJKvXWm3b+nzg==
-X-Google-Smtp-Source: ABdhPJy3GWSY/U7Nz4v0F4Ce/XY9YhbtphlVpbK0f2gV347IHuAWYjzcTmBRbxBr/zgkzBVM83RFbA==
-X-Received: by 2002:a1c:b4c1:: with SMTP id d184mr2426054wmf.26.1597994229657;
-        Fri, 21 Aug 2020 00:17:09 -0700 (PDT)
+        bh=uRZo+OG6Hd5tjRCL+cwaRg6WHGd80eBlrZKkRkAZZvs=;
+        b=H1Z3HehciywgmgIxe/LiDlmwfkwW2ANes2aceURWNta/cdZ0OtXo05l2HsmFI+xfDi
+         EjdlWY5XIHJf/I62R7Bq6//11X7bASH70DYUr88/KDOHyhpTM0UGk5OnB6Ik2MOJUin/
+         XPig6BzXEd+GFRKhJIPbP80jbeID7o9dewEu4NI54c8Pnf0lNVyH6y0s6uNrzHHwibHh
+         4SRRb6rppsFPx05HzkMPH4SH/D07aXVa3XN5wSc4VE9Iq4ieRqR9qNuNq8O52vgtFGMB
+         azf331MjLvPifn/JmeSVj18EX56d3vZNwqn16ekF23REs+8eksZkUheL8bESWI4wQGCV
+         AsWQ==
+X-Gm-Message-State: AOAM533dHlAACr0vBwzrUIuADcogGvK4Ke7H6pMXsuzvKQtsG8WJu5UA
+        RuElIqI5GS4Jdc0k+2FfBrP49w==
+X-Google-Smtp-Source: ABdhPJza77UpXiyptnjv7Xy9ikVYPOoyWvokXCayEgAe9rtsBs748aPsyicusAEfnDA1SFz42C3f7Q==
+X-Received: by 2002:a1c:b145:: with SMTP id a66mr1737268wmf.133.1597994225950;
+        Fri, 21 Aug 2020 00:17:05 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.08
+        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 00:17:09 -0700 (PDT)
+        Fri, 21 Aug 2020 00:17:05 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        "Alexander A. Klimov" <grandmaster@al2klimov.de>,
-        b43-dev@lists.infradead.org
-Subject: [PATCH 17/32] wireless: broadcom: b43: phy_ht: Remove 9 year old TODO
-Date:   Fri, 21 Aug 2020 08:16:29 +0100
-Message-Id: <20200821071644.109970-18-lee.jones@linaro.org>
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>
+Subject: [PATCH 14/32] wireless: rsi: rsi_91x_coex: File headers are not suitable for kernel-doc
+Date:   Fri, 21 Aug 2020 08:16:26 +0100
+Message-Id: <20200821071644.109970-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821071644.109970-1-lee.jones@linaro.org>
 References: <20200821071644.109970-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -81,35 +81,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/broadcom/b43/phy_ht.c: In function ‘b43_phy_ht_op_init’:
- drivers/net/wireless/broadcom/b43/phy_ht.c:904:3: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
+ drivers/net/wireless/rsi/rsi_91x_coex.c:24: warning: Function parameter or member 'coex_cb' not described in 'rsi_coex_determine_coex_q'
 
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Siva Rebbagondla <siva8118@gmail.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: "Alexander A. Klimov" <grandmaster@al2klimov.de>
 Cc: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/broadcom/b43/phy_ht.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_ht.c b/drivers/net/wireless/broadcom/b43/phy_ht.c
-index c685b4bb5ed6e..d050971d150a5 100644
---- a/drivers/net/wireless/broadcom/b43/phy_ht.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_ht.c
-@@ -900,9 +900,6 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 	b43_phy_write(dev, 0x70, 0x50);
- 	b43_phy_write(dev, 0x1ff, 0x30);
- 
--	if (0) /* TODO: condition */
--		; /* TODO: PHY op on reg 0x217 */
--
- 	if (b43_current_band(dev->wl) == NL80211_BAND_5GHZ)
- 		b43_phy_ht_classifier(dev, B43_PHY_HT_CLASS_CTL_CCK_EN, 0);
- 	else
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+index c8ba148f8c6cf..a0c5d02ae88cf 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_coex.c
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -1,4 +1,4 @@
+-/**
++/*
+  * Copyright (c) 2018 Redpine Signals Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
 -- 
 2.25.1
 
