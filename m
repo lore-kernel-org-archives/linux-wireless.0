@@ -4,131 +4,129 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA00FC433E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E43FCC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D79520732
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1F022072D
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dnImnfFj"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yZCyYlGZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728085AbgHUHUo (ORCPT
+        id S1728140AbgHUHUx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 03:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33532 "EHLO
+        Fri, 21 Aug 2020 03:20:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728116AbgHUHSM (ORCPT
+        with ESMTP id S1728196AbgHUHR7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 03:18:12 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 729E7C06137B
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:19 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id y3so1011772wrl.4
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:19 -0700 (PDT)
+        Fri, 21 Aug 2020 03:17:59 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0388AC061375
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:16 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id 83so819804wme.4
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1SwOdl3qsamQLekmEElFc9JqMKayOsDgTAbLZhvVikk=;
-        b=dnImnfFjiDNFfYpg8z5tV2sLsHw86tH7Jc+5orDMUB1MplgaOUwBUiMJ0coiV8t5Kd
-         Or89x62EZ7WSqJVpjl7E99tdGFe+lsMtoIH10bCg02O6sO49kSY4rsdAdJVbVlh3TD0n
-         DJyysjPrA0/1PGaxfT/LMg2NKe4hbmVZ+Yv9z6bnSvoFmfFGbGbwMYp1E6HayrUv2xtW
-         HS9HkdRvxF/37JBgu/O0LgLDthdxhBLW/LweO6uEmAJCnyLhN5NGgZPAYZJvboD4IxOm
-         LVzeDQJpHAr3qxOYXxUm78DPtzRAOJKYRfIJOQviyRNQq8V7nG85PDxgJkyPVNN9xHsL
-         77cg==
+        bh=QBwZYByjjh942d4ggJkaITmm4qS6KFDbT+209YIFm2k=;
+        b=yZCyYlGZPQ1MpWsar88f0Kj65T7DKm8G0Wa7HonVhN5aQGd+Vq+7PVb/SFeOGmi92G
+         hHV44x78U8WMcfXbgh2b8JwCdhbc/Rsijg6D5HWjJmXliAPJzLye/S8TORjUjoCeFwMO
+         9QYGIsJ4bcQpLqYQlW8G5D5N4o3s6GqVxd7s3Uscz8qkSrRi6ejw0vXhM6XOAcHR+DJg
+         yVncHBseIPKm73fGZ6+F84E6/X66kZVos1vJdfVHRFKXKdjEyQFduxXqTYmZMbPeRHj6
+         2NEwqfOv3PkdCdCWWD7BeX9s7IzW7Kuk00mGlyy7gNAWeOH0WwD7lN/mg0o01WyekcYb
+         dOmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1SwOdl3qsamQLekmEElFc9JqMKayOsDgTAbLZhvVikk=;
-        b=tMxEwOyPudFTbCnbrE8mD1560M61jaURTl9bhMXq54H2OBpV44/XSuldasE6AXLB0K
-         qGStu821GqheaUCta5w6LKkpHrk6hAxQNrvZA5BOB95FTwzxROS5uw8z4Nk5FuhuCsm9
-         p+qUcLepUuWrET/W/hDoCM2CMOEMjVHBkcv3yZnrT7ubhcOVLxmDQbdA3iZxaOLixKRh
-         lnCpQWYguACdhVVRMk+D9SIEFVyT11ea9uZsJMDgELJ3Y8AZTptCxIyWbVzoyIc8gptQ
-         h5FDP3JTjukIHrjUr53qeJ0f38IP9p+xJg8uSOs/CvuPyE/ZUsvbIAMM79ZBeGmgI2+c
-         MM7Q==
-X-Gm-Message-State: AOAM530nbP3mVxOOEn19LJQNGWZttLnOOoD8KChAmMtIFumWp6S8BQ8f
-        pq1Z/cCNl3UHDTxVRusNFtNS4A==
-X-Google-Smtp-Source: ABdhPJzJi0T0vD0alFijUDBN82QjCRhNnnHBSeBmNRlzlDy6K5aaLeA4aB21h/7nMVFAL/QHiEZKmA==
-X-Received: by 2002:a5d:526d:: with SMTP id l13mr1324804wrc.279.1597994238166;
-        Fri, 21 Aug 2020 00:17:18 -0700 (PDT)
+        bh=QBwZYByjjh942d4ggJkaITmm4qS6KFDbT+209YIFm2k=;
+        b=Uv9bu723pwroyKR/cIAVfgwJ+i8qkodcmAMUL/begBqbDxiQr6ryWxdHYBssovWdWR
+         hkpBoYZSg1Rb8I91yQTG631e5N1X4r5hGg5TWMSVHoprhY4I9OMujqSNtbV1hcdjnJRM
+         +kBOKHxQ+JD3Y7e0cgqZf4a1PxD3nOQK+QFSJad8ZDQp3Ci8hVDP0Ve6QtHfXZyp0que
+         hF/q3dJlVkakk42RwMLa9mz7iSeGQFWb1u6qrb7telEwpwGFxj2ZRVr+zCLhfijJAyaB
+         etLeQGjYtCg6tu1W9djKjg6SB+W1eauIzd01apPdVuPoWbLDoRbFNi6MaQZ5vRZJqHLK
+         iyzg==
+X-Gm-Message-State: AOAM531hmhtKWnnFEKuhAyOVpbuz9SxQWIhM/agJnvaal2PGlQK5gTzv
+        GAakUyXot9qVUGkcvsKjp0dzKg==
+X-Google-Smtp-Source: ABdhPJzEikq6XpGtpcWzp71avWyyFdi9ckss9ceBu+daG5QjQTOHDdhnluXUKmFNjNCwxgkBDH31tg==
+X-Received: by 2002:a1c:7702:: with SMTP id t2mr1630905wmi.169.1597994234474;
+        Fri, 21 Aug 2020 00:17:14 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.17
+        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 00:17:17 -0700 (PDT)
+        Fri, 21 Aug 2020 00:17:13 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: [PATCH 24/32] wireless: brcmfmac: fwsignal: Remove unused variable 'brcmf_fws_prio2fifo'
-Date:   Fri, 21 Aug 2020 08:16:36 +0100
-Message-Id: <20200821071644.109970-25-lee.jones@linaro.org>
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Subject: [PATCH 21/32] wireless: intel: iwlwifi: iwl-drv: Provide descriptions debugfs dentries
+Date:   Fri, 21 Aug 2020 08:16:33 +0100
+Message-Id: <20200821071644.109970-22-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821071644.109970-1-lee.jones@linaro.org>
 References: <20200821071644.109970-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Also demote a non-conforming kernel-doc function header.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:504:18: warning: ‘brcmf_fws_prio2fifo’ defined but not used [-Wunused-const-variable=]
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c:124: warning: Function parameter or member 'dbgfs_drv' not described in 'iwl_drv'
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c:124: warning: Function parameter or member 'dbgfs_trans' not described in 'iwl_drv'
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c:124: warning: Function parameter or member 'dbgfs_op_mode' not described in 'iwl_drv'
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c:1329: warning: Function parameter or member 'ucode_raw' not described in 'iwl_req_fw_callback'
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c:1329: warning: Function parameter or member 'context' not described in 'iwl_req_fw_callback'
 
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 14 --------------
- 1 file changed, 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 2df6811c066ef..902b2f65d4605 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -498,20 +498,6 @@ struct brcmf_fws_info {
- 	bool avoid_queueing;
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 04f14bfdd0914..2a9075b1b3747 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -102,6 +102,9 @@ static struct dentry *iwl_dbgfs_root;
+  * @fw_index: firmware revision to try loading
+  * @firmware_name: composite filename of ucode file to load
+  * @request_firmware_complete: the firmware has been obtained from user space
++ * @dbgfs_drv: debugfs root directory entry
++ * @dbgfs_trans: debugfs transport directory entry
++ * @dbgfs_op_mode: debugfs op_mode directory entry
+  */
+ struct iwl_drv {
+ 	struct list_head list;
+@@ -1319,7 +1322,7 @@ static void _iwl_op_mode_stop(struct iwl_drv *drv)
+ 	}
+ }
  
--/*
-- * brcmf_fws_prio2fifo - mapping from 802.1d priority to firmware fifo index.
-- */
--static const int brcmf_fws_prio2fifo[] = {
--	BRCMF_FWS_FIFO_AC_BE,
--	BRCMF_FWS_FIFO_AC_BK,
--	BRCMF_FWS_FIFO_AC_BK,
--	BRCMF_FWS_FIFO_AC_BE,
--	BRCMF_FWS_FIFO_AC_VI,
--	BRCMF_FWS_FIFO_AC_VI,
--	BRCMF_FWS_FIFO_AC_VO,
--	BRCMF_FWS_FIFO_AC_VO
--};
--
- #define BRCMF_FWS_TLV_DEF(name, id, len) \
- 	case BRCMF_FWS_TYPE_ ## name: \
- 		return len;
+-/**
++/*
+  * iwl_req_fw_callback - callback when firmware was loaded
+  *
+  * If loaded successfully, copies the firmware into buffers
 -- 
 2.25.1
 
