@@ -7,213 +7,128 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9ADAC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA00FC433E4
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABEE82072D
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D79520732
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yYPmeaYl"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dnImnfFj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728082AbgHUHUW (ORCPT
+        id S1728085AbgHUHUo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 03:20:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33512 "EHLO
+        Fri, 21 Aug 2020 03:20:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728282AbgHUHSX (ORCPT
+        with ESMTP id S1728116AbgHUHSM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 03:18:23 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EE23C0612F0
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:23 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id a5so1004706wrm.6
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:23 -0700 (PDT)
+        Fri, 21 Aug 2020 03:18:12 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 729E7C06137B
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:19 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id y3so1011772wrl.4
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=jQsNrWwf/ZW8gaxjcAMMQn6N+xNCFvfy7jf13HJfroU=;
-        b=yYPmeaYlf77Eco7ToFMsauBAB+z3GOXABMa1aYo9e0glej4CQQm6u1zbOWuZZZM9Kd
-         BdvMLY+7FSAQ/a/Q/uZ03eqDa/3mbR6PUv7kwWiXs9Unf3QNIPxmnwJUrT8IcjvueiDI
-         ol1xM/r3Jr5U06k0bBSos2u+7/TUo9XAsiSuzUgDhlePPSumHl5m03cigIZra8RbBxGJ
-         SzmMVHfLxtF/4gC3i9iYiBD2wnf2AKpZkmT+toBUceiJu7aThe8w42ceMhK7OYDq3Ylh
-         V2sVd32F5syhUtMJbtpj/fXRjUbzaCuwZXi9Gqf5bNiWuzBd9RkKv+4xg2FFJtUGjtbr
-         ZJsg==
+        bh=1SwOdl3qsamQLekmEElFc9JqMKayOsDgTAbLZhvVikk=;
+        b=dnImnfFjiDNFfYpg8z5tV2sLsHw86tH7Jc+5orDMUB1MplgaOUwBUiMJ0coiV8t5Kd
+         Or89x62EZ7WSqJVpjl7E99tdGFe+lsMtoIH10bCg02O6sO49kSY4rsdAdJVbVlh3TD0n
+         DJyysjPrA0/1PGaxfT/LMg2NKe4hbmVZ+Yv9z6bnSvoFmfFGbGbwMYp1E6HayrUv2xtW
+         HS9HkdRvxF/37JBgu/O0LgLDthdxhBLW/LweO6uEmAJCnyLhN5NGgZPAYZJvboD4IxOm
+         LVzeDQJpHAr3qxOYXxUm78DPtzRAOJKYRfIJOQviyRNQq8V7nG85PDxgJkyPVNN9xHsL
+         77cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jQsNrWwf/ZW8gaxjcAMMQn6N+xNCFvfy7jf13HJfroU=;
-        b=J4Z2SFFl008snocMhxeXeFh5laD1dWMncoAF9JE8Cp49hifWX30Iw/EOfVkS5oI+3w
-         1Gv9yCxX+EH2JC0PF2/hygrLtdLT5/s0thO6Ogo99n58oXHm3Yh0GWd3OfOk2yr/D1/I
-         XZEPxXtQ29pCvgeo7T7vnGcaTWlcOj4QWLI5rDPWT1YnduWJwMhoq+ydaHoQZhAsSVLw
-         y+UqKf/vuLa3mO7BoLm0nJcsE1SocmS6ZYA2XexEa5CfUQM0DTwkI+Won2UDbnyFroHv
-         S4pFTQJO5PbK4Gj4/xkzdYrTQSyEmSOwvoiiCPoJZ/3YUc1ME/DEqfr2W2GzDPLb2zeu
-         W5XQ==
-X-Gm-Message-State: AOAM5306M+m02I4UarxQeeLL2pMMDexTHf8irt7rJs09b5cnlguW2EcW
-        XdVGHTTAKNO7Izx1afgO12hO7A==
-X-Google-Smtp-Source: ABdhPJyQiG+rdngczj4CztmEapm4tMCBuyfk1aOyoz08pAjfQibYcoVQU4TBNy7V2IBDF1K8bOl+Kw==
-X-Received: by 2002:a5d:4d8f:: with SMTP id b15mr1435558wru.341.1597994241834;
-        Fri, 21 Aug 2020 00:17:21 -0700 (PDT)
+        bh=1SwOdl3qsamQLekmEElFc9JqMKayOsDgTAbLZhvVikk=;
+        b=tMxEwOyPudFTbCnbrE8mD1560M61jaURTl9bhMXq54H2OBpV44/XSuldasE6AXLB0K
+         qGStu821GqheaUCta5w6LKkpHrk6hAxQNrvZA5BOB95FTwzxROS5uw8z4Nk5FuhuCsm9
+         p+qUcLepUuWrET/W/hDoCM2CMOEMjVHBkcv3yZnrT7ubhcOVLxmDQbdA3iZxaOLixKRh
+         lnCpQWYguACdhVVRMk+D9SIEFVyT11ea9uZsJMDgELJ3Y8AZTptCxIyWbVzoyIc8gptQ
+         h5FDP3JTjukIHrjUr53qeJ0f38IP9p+xJg8uSOs/CvuPyE/ZUsvbIAMM79ZBeGmgI2+c
+         MM7Q==
+X-Gm-Message-State: AOAM530nbP3mVxOOEn19LJQNGWZttLnOOoD8KChAmMtIFumWp6S8BQ8f
+        pq1Z/cCNl3UHDTxVRusNFtNS4A==
+X-Google-Smtp-Source: ABdhPJzJi0T0vD0alFijUDBN82QjCRhNnnHBSeBmNRlzlDy6K5aaLeA4aB21h/7nMVFAL/QHiEZKmA==
+X-Received: by 2002:a5d:526d:: with SMTP id l13mr1324804wrc.279.1597994238166;
+        Fri, 21 Aug 2020 00:17:18 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.20
+        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 00:17:21 -0700 (PDT)
+        Fri, 21 Aug 2020 00:17:17 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Maya Erez <merez@codeaurora.org>, wil6210@qti.qualcomm.com
-Subject: [PATCH 27/32] wireless: ath: wil6210: txrx: Demote obvious abuse of kernel-doc
-Date:   Fri, 21 Aug 2020 08:16:39 +0100
-Message-Id: <20200821071644.109970-28-lee.jones@linaro.org>
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH 24/32] wireless: brcmfmac: fwsignal: Remove unused variable 'brcmf_fws_prio2fifo'
+Date:   Fri, 21 Aug 2020 08:16:36 +0100
+Message-Id: <20200821071644.109970-25-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821071644.109970-1-lee.jones@linaro.org>
 References: <20200821071644.109970-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-None of these headers provide any parameter documentation.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/wil6210/txrx.c:259: warning: Function parameter or member 'wil' not described in 'wil_vring_alloc_skb'
- drivers/net/wireless/ath/wil6210/txrx.c:259: warning: Function parameter or member 'vring' not described in 'wil_vring_alloc_skb'
- drivers/net/wireless/ath/wil6210/txrx.c:259: warning: Function parameter or member 'i' not described in 'wil_vring_alloc_skb'
- drivers/net/wireless/ath/wil6210/txrx.c:259: warning: Function parameter or member 'headroom' not described in 'wil_vring_alloc_skb'
- drivers/net/wireless/ath/wil6210/txrx.c:309: warning: Function parameter or member 'wil' not described in 'wil_rx_add_radiotap_header'
- drivers/net/wireless/ath/wil6210/txrx.c:309: warning: Function parameter or member 'skb' not described in 'wil_rx_add_radiotap_header'
- drivers/net/wireless/ath/wil6210/txrx.c:444: warning: Function parameter or member 'wil' not described in 'wil_vring_reap_rx'
- drivers/net/wireless/ath/wil6210/txrx.c:444: warning: Function parameter or member 'vring' not described in 'wil_vring_reap_rx'
- drivers/net/wireless/ath/wil6210/txrx.c:610: warning: Function parameter or member 'wil' not described in 'wil_rx_refill'
- drivers/net/wireless/ath/wil6210/txrx.c:610: warning: Function parameter or member 'count' not described in 'wil_rx_refill'
- drivers/net/wireless/ath/wil6210/txrx.c:1011: warning: Function parameter or member 'wil' not described in 'wil_rx_handle'
- drivers/net/wireless/ath/wil6210/txrx.c:1011: warning: Function parameter or member 'quota' not described in 'wil_rx_handle'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'd' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'skb' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'tso_desc_type' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'is_ipv4' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'tcp_hdr_len' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1643: warning: Function parameter or member 'skb_net_hdr_len' not described in 'wil_tx_desc_offload_setup_tso'
- drivers/net/wireless/ath/wil6210/txrx.c:1674: warning: Function parameter or member 'd' not described in 'wil_tx_desc_offload_setup'
- drivers/net/wireless/ath/wil6210/txrx.c:1674: warning: Function parameter or member 'skb' not described in 'wil_tx_desc_offload_setup'
- drivers/net/wireless/ath/wil6210/txrx.c:2240: warning: Function parameter or member 'wil' not described in '__wil_update_net_queues'
- drivers/net/wireless/ath/wil6210/txrx.c:2240: warning: Function parameter or member 'vif' not described in '__wil_update_net_queues'
- drivers/net/wireless/ath/wil6210/txrx.c:2240: warning: Function parameter or member 'ring' not described in '__wil_update_net_queues'
- drivers/net/wireless/ath/wil6210/txrx.c:2240: warning: Function parameter or member 'check_stop' not described in '__wil_update_net_queues'
- drivers/net/wireless/ath/wil6210/txrx.c:2430: warning: Function parameter or member 'vif' not described in 'wil_tx_complete'
- drivers/net/wireless/ath/wil6210/txrx.c:2430: warning: Function parameter or member 'ringid' not described in 'wil_tx_complete'
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:504:18: warning: ‘brcmf_fws_prio2fifo’ defined but not used [-Wunused-const-variable=]
 
-Cc: Maya Erez <merez@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
-Cc: wil6210@qti.qualcomm.com
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 080e5aa60bea4..becf8c6e80bb6 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -249,7 +249,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct wil_ring *vring)
- 	vring->ctx = NULL;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index 2df6811c066ef..902b2f65d4605 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -498,20 +498,6 @@ struct brcmf_fws_info {
+ 	bool avoid_queueing;
+ };
  
--/**
-+/*
-  * Allocate one skb for Rx VRING
-  *
-  * Safe to call from IRQ
-@@ -295,7 +295,7 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct wil_ring *vring,
- 	return 0;
- }
- 
--/**
-+/*
-  * Adds radiotap header
-  *
-  * Any error indicated as "Bad FCS"
-@@ -432,7 +432,7 @@ static int wil_rx_get_cid_by_skb(struct wil6210_priv *wil, struct sk_buff *skb)
- 	return cid;
- }
- 
--/**
-+/*
-  * reap 1 frame from @swhead
-  *
-  * Rx descriptor copied to skb->cb
-@@ -597,7 +597,7 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
- 	return skb;
- }
- 
--/**
-+/*
-  * allocate and fill up to @count buffers in rx ring
-  * buffers posted at @swtail
-  * Note: we have a single RX queue for servicing all VIFs, but we
-@@ -1002,7 +1002,7 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 	wil_netif_rx(skb, ndev, cid, stats, true);
- }
- 
--/**
-+/*
-  * Proceed all completed skb's from Rx VRING
-  *
-  * Safe to call from NAPI poll, i.e. softirq with interrupts enabled
-@@ -1629,7 +1629,7 @@ void wil_tx_desc_set_nr_frags(struct vring_tx_desc *d, int nr_frags)
- 	d->mac.d[2] |= (nr_frags << MAC_CFG_DESC_TX_2_NUM_OF_DESCRIPTORS_POS);
- }
- 
--/**
-+/*
-  * Sets the descriptor @d up for csum and/or TSO offloading. The corresponding
-  * @skb is used to obtain the protocol and headers length.
-  * @tso_desc_type is a descriptor type for TSO: 0 - a header, 1 - first data,
-@@ -1660,7 +1660,7 @@ static void wil_tx_desc_offload_setup_tso(struct vring_tx_desc *d,
- 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_PSEUDO_HEADER_CALC_EN_POS);
- }
- 
--/**
-+/*
-  * Sets the descriptor @d up for csum. The corresponding
-  * @skb is used to obtain the protocol and headers length.
-  * Returns the protocol: 0 - not TCP, 1 - TCPv4, 2 - TCPv6.
-@@ -2216,7 +2216,7 @@ static int wil_tx_ring(struct wil6210_priv *wil, struct wil6210_vif *vif,
- 	return rc;
- }
- 
--/**
-+/*
-  * Check status of tx vrings and stop/wake net queues if needed
-  * It will start/stop net queues of a specific VIF net_device.
-  *
-@@ -2419,7 +2419,7 @@ void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
- 		sta->stats.tx_latency_max_us = skb_time_us;
- }
- 
--/**
-+/*
-  * Clean up transmitted skb's from the Tx VRING
-  *
-  * Return number of descriptors cleared
-@@ -2460,7 +2460,7 @@ int wil_tx_complete(struct wil6210_vif *vif, int ringid)
- 	while (!wil_ring_is_empty(vring)) {
- 		int new_swtail;
- 		struct wil_ctx *ctx = &vring->ctx[vring->swtail];
--		/**
-+		/*
- 		 * For the fragmented skb, HW will set DU bit only for the
- 		 * last fragment. look for it.
- 		 * In TSO the first DU will include hdr desc
+-/*
+- * brcmf_fws_prio2fifo - mapping from 802.1d priority to firmware fifo index.
+- */
+-static const int brcmf_fws_prio2fifo[] = {
+-	BRCMF_FWS_FIFO_AC_BE,
+-	BRCMF_FWS_FIFO_AC_BK,
+-	BRCMF_FWS_FIFO_AC_BK,
+-	BRCMF_FWS_FIFO_AC_BE,
+-	BRCMF_FWS_FIFO_AC_VI,
+-	BRCMF_FWS_FIFO_AC_VI,
+-	BRCMF_FWS_FIFO_AC_VO,
+-	BRCMF_FWS_FIFO_AC_VO
+-};
+-
+ #define BRCMF_FWS_TLV_DEF(name, id, len) \
+ 	case BRCMF_FWS_TYPE_ ## name: \
+ 		return len;
 -- 
 2.25.1
 
