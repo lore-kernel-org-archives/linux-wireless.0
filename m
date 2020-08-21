@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39178C433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7AF0C433E3
 	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14FB8208DB
+	by mail.kernel.org (Postfix) with ESMTP id AA8E5208DB
 	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hpJuccCf"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="c84ioDNE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728138AbgHUIth (ORCPT
+        id S1728146AbgHUIti (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 04:49:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47918 "EHLO
+        Fri, 21 Aug 2020 04:49:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727103AbgHUItd (ORCPT
+        with ESMTP id S1728000AbgHUItd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 21 Aug 2020 04:49:33 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44A49C061387
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B024C061388
         for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 01:49:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,20 +32,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=cBa8HBE/xeev3ZcQtBrtrAB4HqtL28yYOdl7tNsfqmM=; b=hpJuccCfnNQWtVT5MPadYKj5rk
-        pqNL2KeDqVyOilTUfX5qLWnZnTx/Pqs+0J+W8kYS0LMG9iWmhIRWUUtcU4ZxW+sNNd+AXv/88Jd5S
-        LYMu8WUinZ5IuDWaUD9ILVb+YYHjf98qjN5lvxX7O2N0Fi5vuUR8b8hveOL5WH2eDfAM=;
+        bh=8jQwOqOjROEx2njvBUDkqeNOBu4xvvtnhSBXR7qe8sg=; b=c84ioDNEP5DPWmyIkOuT/lkgRD
+        WLdKlRfcIi/+adtCmcBowrGJzukXX7bcz1/Vkk4KvW2M/jNROa1HrcJ0eMTivV8Q8TXUJP7IyjCub
+        1W1bDrw3JFmYeYL6x1RIY/CSsSxNl/Dw13Dzi7OVMwv5wWiBmc3izvQzrjdmxlSqDYZ4=;
 Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k92jp-0005lO-9I; Fri, 21 Aug 2020 10:49:29 +0200
+        id 1k92jp-0005lO-UC; Fri, 21 Aug 2020 10:49:30 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v3 02/13] mac80211: reduce duplication in tx status functions
-Date:   Fri, 21 Aug 2020 10:49:15 +0200
-Message-Id: <20200821084926.10650-3-nbd@nbd.name>
+Subject: [PATCH v3 05/13] mac80211: swap NEED_TXPROCESSING and HW_80211_ENCAP tx flags
+Date:   Fri, 21 Aug 2020 10:49:18 +0200
+Message-Id: <20200821084926.10650-6-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200821084926.10650-1-nbd@nbd.name>
 References: <20200821084926.10650-1-nbd@nbd.name>
@@ -56,198 +56,253 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move redundant functionality from __ieee80211_tx_status into
-ieee80211_tx_status_ext. Preparation for unifying with the 802.3 tx status
-codepath.
+In order to unify the tx status path, the hw 802.11 encapsulation flag
+needs to survive the trip to the tx status call.
+Since we don't have any free bits in info->flags, we need to move one.
+IEEE80211_TX_INTFL_NEED_TXPROCESSING is only used internally in mac80211,
+and only before the call into the driver.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/status.c | 101 +++++++++++++++---------------------------
- 1 file changed, 35 insertions(+), 66 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_tx.c |  4 ++--
+ drivers/net/wireless/ath/ath11k/mac.c   |  4 ++--
+ include/net/mac80211.h                  | 14 +++++++-------
+ net/mac80211/mesh_hwmp.c                |  4 ++--
+ net/mac80211/mesh_ps.c                  |  2 +-
+ net/mac80211/rx.c                       |  2 +-
+ net/mac80211/status.c                   |  4 ++--
+ net/mac80211/tx.c                       | 16 ++++++++--------
+ 8 files changed, 25 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 1af76775b1a8..1c00bd4aea0c 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -14,7 +14,7 @@ ath11k_dp_tx_get_encap_type(struct ath11k_vif *arvif, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 
+-	if (tx_info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++	if (tx_info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
+ 		return HAL_TCL_ENCAP_TYPE_ETHERNET;
+ 
+ 	return HAL_TCL_ENCAP_TYPE_NATIVE_WIFI;
+@@ -93,7 +93,7 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
+ 		return -ESHUTDOWN;
+ 
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
+ 	    !ieee80211_is_data(hdr->frame_control))
+ 		return -ENOTSUPP;
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index c100ac6298ce..4c4ab40bde8f 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3898,7 +3898,7 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
+ 		return -ENOSPC;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)) {
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)) {
+ 		if ((ieee80211_is_action(hdr->frame_control) ||
+ 		     ieee80211_is_deauth(hdr->frame_control) ||
+ 		     ieee80211_is_disassoc(hdr->frame_control)) &&
+@@ -4025,7 +4025,7 @@ static void ath11k_mac_op_tx(struct ieee80211_hw *hw,
+ 	bool is_prb_rsp;
+ 	int ret;
+ 
+-	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+ 		skb_cb->flags |= ATH11K_SKB_HW_80211_ENCAP;
+ 	} else if (ieee80211_is_mgmt(hdr->frame_control)) {
+ 		is_prb_rsp = ieee80211_is_probe_resp(hdr->frame_control);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d635f530300d..0cd8dbe4e688 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -720,9 +720,8 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_OFFCHAN_TX_OK: Internal to mac80211. Used to indicate
+  *	that a frame can be transmitted while the queues are stopped for
+  *	off-channel operation.
+- * @IEEE80211_TX_INTFL_NEED_TXPROCESSING: completely internal to mac80211,
+- *	used to indicate that a pending frame requires TX processing before
+- *	it can be sent out.
++ * @IEEE80211_TX_CTL_HW_80211_ENCAP: This frame uses hardware encapsulation
++ *	(header conversion)
+  * @IEEE80211_TX_INTFL_RETRIED: completely internal to mac80211,
+  *	used to indicate that a frame was already retried due to PS
+  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
+@@ -791,7 +790,7 @@ enum mac80211_tx_info_flags {
+ 	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
+ 	IEEE80211_TX_INTFL_OFFCHAN_TX_OK	= BIT(13),
+-	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
++	IEEE80211_TX_CTL_HW_80211_ENCAP		= BIT(14),
+ 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+ 	IEEE80211_TX_CTL_NO_PS_BUFFER		= BIT(17),
+@@ -823,8 +822,9 @@ enum mac80211_tx_info_flags {
+  * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
+  * @IEEE80211_TX_CTRL_FAST_XMIT: This frame is going through the fast_xmit path
+  * @IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP: This frame skips mesh path lookup
+- * @IEEE80211_TX_CTRL_HW_80211_ENCAP: This frame uses hardware encapsulation
+- *	(header conversion)
++ * @IEEE80211_TX_INTCFL_NEED_TXPROCESSING: completely internal to mac80211,
++ *	used to indicate that a pending frame requires TX processing before
++ *	it can be sent out.
+  * @IEEE80211_TX_CTRL_NO_SEQNO: Do not overwrite the sequence number that
+  *	has already been assigned to this frame.
+  *
+@@ -837,7 +837,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
+ 	IEEE80211_TX_CTRL_FAST_XMIT		= BIT(4),
+ 	IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP	= BIT(5),
+-	IEEE80211_TX_CTRL_HW_80211_ENCAP	= BIT(6),
++	IEEE80211_TX_INTCFL_NEED_TXPROCESSING	= BIT(6),
+ 	IEEE80211_TX_CTRL_NO_SEQNO		= BIT(7),
+ };
+ 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index bec23d2eee7a..313eee12410e 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -212,7 +212,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
+ 	skb->priority = 7;
+ 
+ 	info->control.vif = &sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ 	ieee80211_mps_set_frame_flags(sdata, NULL, hdr);
+ }
+@@ -1163,7 +1163,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+ 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 		skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ 	skb_queue_tail(&mpath->frame_queue, skb);
+ 	if (skb_to_free)
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index 031e905f684a..76d19c09d26e 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -432,7 +432,7 @@ static void mpsp_qos_null_append(struct sta_info *sta,
+ 
+ 	info = IEEE80211_SKB_CB(new_skb);
+ 	info->control.vif = &sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 
+ 	__skb_queue_tail(frames, new_skb);
+ }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bd8c15a65a16..b04d6e01a346 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2896,7 +2896,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	fwd_hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_RETRY);
+ 	info = IEEE80211_SKB_CB(fwd_skb);
+ 	memset(info, 0, sizeof(*info));
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	info->control.vif = &rx->sdata->vif;
+ 	info->control.jiffies = jiffies;
+ 	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
 diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 0f286fb4304e..b3c356b3fc78 100644
+index 28ab29a5694d..c873910d95e0 100644
 --- a/net/mac80211/status.c
 +++ b/net/mac80211/status.c
-@@ -184,18 +184,6 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
- 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
--
--	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
--		sta->status_stats.last_ack = jiffies;
--		if (txinfo->status.is_valid_ack_signal) {
--			sta->status_stats.last_ack_signal =
--					 (s8)txinfo->status.ack_signal;
--			sta->status_stats.ack_signal_filled = true;
--			ewma_avg_signal_add(&sta->status_stats.avg_ack_signal,
--					    -txinfo->status.ack_signal);
--		}
--	}
+@@ -66,8 +66,8 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
  
- 	if (ieee80211_is_data_qos(mgmt->frame_control)) {
- 		struct ieee80211_hdr *hdr = (void *) skb->data;
-@@ -890,7 +878,8 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
- }
+ 	info->control.jiffies = jiffies;
+ 	info->control.vif = &sta->sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING |
+-		       IEEE80211_TX_INTFL_RETRANSMISSION;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
++	info->flags |= IEEE80211_TX_INTFL_RETRANSMISSION;
+ 	info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
  
- static void __ieee80211_tx_status(struct ieee80211_hw *hw,
--				  struct ieee80211_tx_status *status)
-+				  struct ieee80211_tx_status *status,
-+				  int rates_idx, int retry_count)
- {
- 	struct sk_buff *skb = status->skb;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -899,8 +888,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 	struct sta_info *sta;
- 	__le16 fc;
- 	struct ieee80211_supported_band *sband;
--	int retry_count;
--	int rates_idx;
- 	bool send_to_cooked;
- 	bool acked;
- 	bool noack_success;
-@@ -909,8 +896,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 	int tid = IEEE80211_NUM_TIDS;
- 	u16 tx_time_est;
+ 	sta->status_stats.filtered++;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 607dd1e97274..518a1ed4f088 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -531,7 +531,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
  
--	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
--
- 	sband = local->hw.wiphy->bands[info->band];
- 	fc = hdr->frame_control;
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+-		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++		info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
+ 		spin_unlock(&sta->ps_lock);
+@@ -1134,7 +1134,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 				       tx->sta->sta.addr, tx->sta->sta.aid);
+ 			}
+ 			info->control.vif = &tx->sdata->vif;
+-			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++			info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 			__skb_queue_tail(&tid_tx->pending, skb);
+ 			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
+@@ -1179,7 +1179,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	 * we are doing the needed processing, so remove the flag
+ 	 * now.
+ 	 */
+-	info->flags &= ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags &= ~IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
  
-@@ -987,24 +972,14 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 		if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
- 			ieee80211_handle_filtered_frame(local, sta, skb);
- 			return;
--		} else {
-+		} else if (ieee80211_is_data_present(fc)) {
- 			if (!acked && !noack_success)
--				sta->status_stats.retry_failed++;
--			sta->status_stats.retry_count += retry_count;
-+				sta->status_stats.msdu_failed[tid]++;
+ 	hdr = (struct ieee80211_hdr *) skb->data;
  
--			if (ieee80211_is_data_present(fc)) {
--				if (!acked && !noack_success)
--					sta->status_stats.msdu_failed[tid]++;
--
--				sta->status_stats.msdu_retries[tid] +=
--					retry_count;
--			}
-+			sta->status_stats.msdu_retries[tid] +=
-+				retry_count;
+@@ -1258,7 +1258,7 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+ 		return NULL;
+ 
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
+ 	    unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
+ 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
+ 		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
+@@ -3649,7 +3649,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	else
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 
+-	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
+ 		goto encap_out;
+ 
+ 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
+@@ -4256,7 +4256,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
+ 
+-	info->control.flags |= IEEE80211_TX_CTRL_HW_80211_ENCAP;
++	info->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;
+ 	info->control.vif = &sdata->vif;
+ 
+ 	ieee80211_tx_8023(sdata, skb, skb->len, sta, false);
+@@ -4360,7 +4360,7 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
+ 
+ 	sdata = vif_to_sdata(info->control.vif);
+ 
+-	if (info->flags & IEEE80211_TX_INTFL_NEED_TXPROCESSING) {
++	if (info->control.flags & IEEE80211_TX_INTCFL_NEED_TXPROCESSING) {
+ 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 		if (unlikely(!chanctx_conf)) {
+ 			dev_kfree_skb(skb);
+@@ -4368,7 +4368,7 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
  		}
- 
--		rate_control_tx_status(local, sband, status);
--		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
--			ieee80211s_update_metric(local, sta, status);
--
- 		if (!(info->flags & IEEE80211_TX_CTL_INJECTED) && acked)
- 			ieee80211_frame_acked(sta, skb);
- 
-@@ -1029,20 +1004,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 							     true);
- 			ieee80211_info_set_tx_time_est(info, 0);
- 		}
--
--		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
--			if (acked) {
--				if (sta->status_stats.lost_packets)
--					sta->status_stats.lost_packets = 0;
--
--				/* Track when last TDLS packet was ACKed */
--				sta->status_stats.last_pkt_time = jiffies;
--			} else if (noack_success) {
--				/* nothing to do here, do not account as lost */
--			} else {
--				ieee80211_lost_packet(sta, info);
--			}
--		}
- 	}
- 
- 	/* SNMP counters
-@@ -1126,7 +1087,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (sta)
- 		status.sta = &sta->sta;
- 
--	__ieee80211_tx_status(hw, &status);
-+	ieee80211_tx_status_ext(hw, &status);
- 	rcu_read_unlock();
- }
- EXPORT_SYMBOL(ieee80211_tx_status);
-@@ -1138,16 +1099,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info = status->info;
- 	struct ieee80211_sta *pubsta = status->sta;
- 	struct ieee80211_supported_band *sband;
--	int retry_count;
-+	int rates_idx, retry_count;
- 	bool acked, noack_success;
- 
--	if (status->skb)
--		return __ieee80211_tx_status(hw, status);
--
--	if (!status->sta)
--		return;
--
--	ieee80211_tx_get_rates(hw, info, &retry_count);
-+	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
- 
- 	sband = hw->wiphy->bands[info->band];
- 
-@@ -1163,20 +1118,30 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 			sta->status_stats.retry_failed++;
- 		sta->status_stats.retry_count += retry_count;
- 
--		if (acked) {
--			sta->status_stats.last_ack = jiffies;
-+		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
-+			if (acked) {
-+				sta->status_stats.last_ack = jiffies;
- 
--			if (sta->status_stats.lost_packets)
--				sta->status_stats.lost_packets = 0;
-+				if (sta->status_stats.lost_packets)
-+					sta->status_stats.lost_packets = 0;
- 
--			/* Track when last packet was ACKed */
--			sta->status_stats.last_pkt_time = jiffies;
--		} else if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
--			return;
--		} else if (noack_success) {
--			/* nothing to do here, do not account as lost */
--		} else {
--			ieee80211_lost_packet(sta, info);
-+				/* Track when last packet was ACKed */
-+				sta->status_stats.last_pkt_time = jiffies;
-+
-+				if (info->status.is_valid_ack_signal) {
-+					sta->status_stats.last_ack_signal =
-+							 (s8)info->status.ack_signal;
-+					sta->status_stats.ack_signal_filled = true;
-+					ewma_avg_signal_add(&sta->status_stats.avg_ack_signal,
-+							    -info->status.ack_signal);
-+				}
-+			} else if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
-+				return;
-+			} else if (noack_success) {
-+				/* nothing to do here, do not account as lost */
-+			} else {
-+				ieee80211_lost_packet(sta, info);
-+			}
- 		}
- 
- 		rate_control_tx_status(local, sband, status);
-@@ -1184,6 +1149,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 			ieee80211s_update_metric(local, sta, status);
- 	}
- 
-+	if (status->skb)
-+		return __ieee80211_tx_status(hw, status, rates_idx,
-+					     retry_count);
-+
- 	if (acked || noack_success) {
- 		I802_DEBUG_INC(local->dot11TransmittedFrameCount);
- 		if (!pubsta)
+ 		info->band = chanctx_conf->def.chan->band;
+ 		result = ieee80211_tx(sdata, NULL, skb, true);
+-	} else if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++	} else if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+ 		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
+ 			dev_kfree_skb(skb);
+ 			return true;
 -- 
 2.28.0
 
