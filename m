@@ -2,96 +2,262 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07278C433E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6C9C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 20:43:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA27620738
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598030364;
-	bh=ZS5koshl9P5XnEP6E1J+YO76VIZh7Oth6V8mWrNQ9Ps=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IOACFszqiiTfvdiI8qUKNy9IMPirv7pzoyysdt3mohOcoEdYb1OHehXIYy6U7kmMu
-	 xVJt5aFR2ddcHcH6XIuHGnVsP8BfKavmgFai/HFjWX0B4rc41B50ZURn4KvhqjCWYy
-	 gRW5AanmzSHQS9SmABPoX2JtTBKvwDVoGuucH6+Y=
+	by mail.kernel.org (Postfix) with ESMTP id B935D2076E
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 20:43:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b="EzfVuh13"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728980AbgHURQN (ORCPT
+        id S1726440AbgHUUne (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:16:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50002 "EHLO mail.kernel.org"
+        Fri, 21 Aug 2020 16:43:34 -0400
+Received: from mail.as201155.net ([185.84.6.188]:31463 "EHLO mail.as201155.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728092AbgHUQQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:16:35 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B528122BED;
-        Fri, 21 Aug 2020 16:16:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026595;
-        bh=ZS5koshl9P5XnEP6E1J+YO76VIZh7Oth6V8mWrNQ9Ps=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nd1BM8BnK7kWXdVlzFNFgVoQYt0SF3uB8z7HZh0IqUFx9ypJB2UnaFwGFuZOFT8dM
-         DzyqZ5qHBTmS7qJel1IaE87DxRz4g6THsbfQ2tkCrg5vEdbFxJOeABSj5fQUPkVIu7
-         XNn9yV+edNwGa/O0yJGE4Yeys8E1abybRo+ONKxg=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Reto Schneider <code@reto-schneider.ch>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 39/61] rtlwifi: rtl8192cu: Prevent leaking urb
-Date:   Fri, 21 Aug 2020 12:15:23 -0400
-Message-Id: <20200821161545.347622-39-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161545.347622-1-sashal@kernel.org>
-References: <20200821161545.347622-1-sashal@kernel.org>
+        id S1725831AbgHUUnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 16:43:33 -0400
+Received: from smtps.newmedia-net.de ([2a05:a1c0:0:de::167]:34986 helo=webmail.newmedia-net.de)
+        by mail.as201155.net with esmtps (TLSv1:DHE-RSA-AES256-SHA:256)
+        (Exim 4.82_1-5b7a7c0-XX)
+        (envelope-from <s.gottschall@dd-wrt.com>)
+        id 1k9Dsn-0000iD-1A; Fri, 21 Aug 2020 22:43:29 +0200
+X-CTCH-RefID: str=0001.0A782F16.5F4031F1.0023,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=dd-wrt.com; s=mikd;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject; bh=eLyrxKl+VSlNBqgNEVFw1bd5dkz4obs9aWffO9htvAc=;
+        b=EzfVuh13G8CudmNKu/NxX3NvCtNaQnGqhMLyb7XQPF33tezZ2aRgbFdE0QSCvWd7cu4s3HfLQoHZnwaSJwND44lWw/63xfNQeaEFmDeWcvV9a4raaziN5KAHz2/QsiXytZTq7eBCOB/QeEz5M2kPdaGzA/CiGnhiLhw7hWIzYk8=;
+Subject: Re: [PATCH 5.9 v2 2/3] mac80211: factor out code to look up the
+ average packet length duration for a rate
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+References: <20200821163045.62140-1-nbd@nbd.name>
+ <20200821163045.62140-2-nbd@nbd.name>
+From:   Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <add72d7d-40fc-dd42-64db-c016280453dd@dd-wrt.com>
+Date:   Fri, 21 Aug 2020 22:43:27 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101
+ Thunderbird/80.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+In-Reply-To: <20200821163045.62140-2-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Received:  from [2003:c9:3f1f:f100:710f:8705:e461:dfcb]
+        by webmail.newmedia-net.de with esmtpsa (TLSv1:AES128-SHA:128)
+        (Exim 4.72)
+        (envelope-from <s.gottschall@dd-wrt.com>)
+        id 1k9Dsn-000RO1-25; Fri, 21 Aug 2020 22:43:29 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Reto Schneider <code@reto-schneider.ch>
+Am 21.08.2020 um 18:30 schrieb Felix Fietkau:
+> This will be used to enhance AQL estimated aggregation length
+>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> ---
+> v2: add missing return code check
+>   net/mac80211/airtime.c | 121 +++++++++++++++++++++++++----------------
+>   1 file changed, 74 insertions(+), 47 deletions(-)
+>
+> diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+> index 656c9a033714..ba95f4ee1f71 100644
+> --- a/net/mac80211/airtime.c
+> +++ b/net/mac80211/airtime.c
+> @@ -405,18 +405,14 @@ ieee80211_calc_legacy_rate_duration(u16 bitrate, bool short_pre,
+>   	return duration;
+>   }
+>   
+> -u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+> -			      struct ieee80211_rx_status *status,
+> -			      int len)
+> +static u32 ieee80211_get_rate_duration(struct ieee80211_hw *hw,
+> +				       struct ieee80211_rx_status *status,
+> +				       u32 *overhead)
+>   {
+> -	struct ieee80211_supported_band *sband;
+> -	const struct ieee80211_rate *rate;
+>   	bool sgi = status->enc_flags & RX_ENC_FLAG_SHORT_GI;
+> -	bool sp = status->enc_flags & RX_ENC_FLAG_SHORTPRE;
+>   	int bw, streams;
+>   	int group, idx;
+>   	u32 duration;
+> -	bool cck;
+>   
+>   	switch (status->bw) {
+>   	case RATE_INFO_BW_20:
+> @@ -437,20 +433,6 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+>   	}
+>   
+>   	switch (status->encoding) {
+> -	case RX_ENC_LEGACY:
+> -		if (WARN_ON_ONCE(status->band > NL80211_BAND_5GHZ))
+> -			return 0;
+> -
+> -		sband = hw->wiphy->bands[status->band];
+> -		if (!sband || status->rate_idx >= sband->n_bitrates)
+> -			return 0;
+> -
+> -		rate = &sband->bitrates[status->rate_idx];
+> -		cck = rate->flags & IEEE80211_RATE_MANDATORY_B;
+> -
+> -		return ieee80211_calc_legacy_rate_duration(rate->bitrate, sp,
+> -							   cck, len);
+> -
+>   	case RX_ENC_VHT:
+>   		streams = status->nss;
+>   		idx = status->rate_idx;
+> @@ -477,13 +459,47 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+>   
+>   	duration = airtime_mcs_groups[group].duration[idx];
+>   	duration <<= airtime_mcs_groups[group].shift;
+> +	*overhead = 36 + (streams << 2);
+> +
+> +	return duration;
+> +}
+> +
+> +
+> +u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+> +			      struct ieee80211_rx_status *status,
+> +			      int len)
+> +{
+> +	struct ieee80211_supported_band *sband;
+> +	u32 duration, overhead = 0;
+> +
+> +	if (status->encoding == RX_ENC_LEGACY) {
+> +		const struct ieee80211_rate *rate;
+> +		bool sp = status->enc_flags & RX_ENC_FLAG_SHORTPRE;
+> +		bool cck;
+> +
+> +		if (WARN_ON_ONCE(status->band > NL80211_BAND_5GHZ))
+> +			return 0;
+> +
+> +		sband = hw->wiphy->bands[status->band];
+> +		if (!sband || status->rate_idx >= sband->n_bitrates)
+> +			return 0;
+> +
+> +		rate = &sband->bitrates[status->rate_idx];
+> +		cck = rate->flags & IEEE80211_RATE_MANDATORY_B;
+> +
+> +		return ieee80211_calc_legacy_rate_duration(rate->bitrate, sp,
+> +							   cck, len);
+> +	}
+> +
+> +	duration = ieee80211_get_rate_duration(hw, status, &overhead);
+> +	if (!duration)
+> +		return 0;
+> +
+>   	duration *= len;
+>   	duration /= AVG_PKT_SIZE;
+>   	duration /= 1024;
+>   
+> -	duration += 36 + (streams << 2);
+> -
+> -	return duration;
+> +	return duration + overhead;
+>   }
+>   EXPORT_SYMBOL_GPL(ieee80211_calc_rx_airtime);
+>   
+> @@ -530,46 +546,57 @@ static bool ieee80211_fill_rate_info(struct ieee80211_hw *hw,
+>   	return false;
+>   }
+>   
+> -static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
+> -					  struct ieee80211_tx_rate *rate,
+> -					  struct rate_info *ri,
+> -					  u8 band, int len)
+> +static int ieee80211_fill_rx_status(struct ieee80211_rx_status *stat,
+> +				    struct ieee80211_hw *hw,
+> +				    struct ieee80211_tx_rate *rate,
+> +				    struct rate_info *ri, u8 band, int len)
+>   {
+> -	struct ieee80211_rx_status stat = {
+> -		.band = band,
+> -	};
+> +	memset(stat, 0, sizeof(*stat));
+> +	stat->band = band;
+>   
+> -	if (ieee80211_fill_rate_info(hw, &stat, band, ri))
+> -		goto out;
+> +	if (ieee80211_fill_rate_info(hw, stat, band, ri))
+> +		return 0;
+>   
+>   	if (rate->idx < 0 || !rate->count)
+> -		return 0;
+> +		return -1;
+>   
+>   	if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
+> -		stat.bw = RATE_INFO_BW_80;
+> +		stat->bw = RATE_INFO_BW_80;
+>   	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> -		stat.bw = RATE_INFO_BW_40;
+> +		stat->bw = RATE_INFO_BW_40;
+>   	else
+> -		stat.bw = RATE_INFO_BW_20;
+> +		stat->bw = RATE_INFO_BW_20;
 
-[ Upstream commit 03128643eb5453a798db5770952c73dc64fcaf00 ]
+hint:
 
-If usb_submit_urb fails the allocated urb should be unanchored and
-released.
+--- airtime.c
++++ airtime.c
+@@ -560,7 +560,9 @@
+         if (rate->idx < 0 || !rate->count)
+                 return -1;
 
-Signed-off-by: Reto Schneider <code@reto-schneider.ch>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200622132113.14508-3-code@reto-schneider.ch
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+-       if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
++       if (rate->flags & IEEE80211_TX_RC_160_MHZ_WIDTH)
++               stat->bw = RATE_INFO_BW_160;
++       else if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
+                 stat->bw = RATE_INFO_BW_80;
+         else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+                 stat->bw = RATE_INFO_BW_40;
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index c66c6dc003783..bad06939a247c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -718,8 +718,11 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 
- 		usb_anchor_urb(urb, &rtlusb->rx_submitted);
- 		err = usb_submit_urb(urb, GFP_KERNEL);
--		if (err)
-+		if (err) {
-+			usb_unanchor_urb(urb);
-+			usb_free_urb(urb);
- 			goto err_out;
-+		}
- 		usb_free_urb(urb);
- 	}
- 	return 0;
--- 
-2.25.1
-
+>   
+> -	stat.enc_flags = 0;
+> +	stat->enc_flags = 0;
+>   	if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+> -		stat.enc_flags |= RX_ENC_FLAG_SHORTPRE;
+> +		stat->enc_flags |= RX_ENC_FLAG_SHORTPRE;
+>   	if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
+> -		stat.enc_flags |= RX_ENC_FLAG_SHORT_GI;
+> +		stat->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+>   
+> -	stat.rate_idx = rate->idx;
+> +	stat->rate_idx = rate->idx;
+>   	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
+> -		stat.encoding = RX_ENC_VHT;
+> -		stat.rate_idx = ieee80211_rate_get_vht_mcs(rate);
+> -		stat.nss = ieee80211_rate_get_vht_nss(rate);
+> +		stat->encoding = RX_ENC_VHT;
+> +		stat->rate_idx = ieee80211_rate_get_vht_mcs(rate);
+> +		stat->nss = ieee80211_rate_get_vht_nss(rate);
+>   	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
+> -		stat.encoding = RX_ENC_HT;
+> +		stat->encoding = RX_ENC_HT;
+>   	} else {
+> -		stat.encoding = RX_ENC_LEGACY;
+> +		stat->encoding = RX_ENC_LEGACY;
+>   	}
+>   
+> -out:
+> +	return 0;
+> +}
+> +
+> +static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
+> +					  struct ieee80211_tx_rate *rate,
+> +					  struct rate_info *ri,
+> +					  u8 band, int len)
+> +{
+> +	struct ieee80211_rx_status stat;
+> +
+> +	if (ieee80211_fill_rx_status(&stat, hw, rate, ri, band, len))
+> +		return 0;
+> +
+>   	return ieee80211_calc_rx_airtime(hw, &stat, len);
+>   }
+>   
