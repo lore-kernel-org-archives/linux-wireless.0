@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44BBDC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E8FBC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:58:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19FFD20738
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:48:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D538A20702
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:58:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598028513;
-	bh=i0Lq5eSHyAtWx6NrNz0vxD9buMUBKlcRxwhAILT0zEw=;
+	s=default; t=1598029080;
+	bh=jLrsiqJFchZqsU3JqhX9Hjb//ucy/rBP5Iv1hlCWZl0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WYDt6bswa2IGmKHvdz8t85GFRvw1J1YM49pIdMw0z+qoyEoi+RgQ4xy3cvxv4CVU3
-	 lBW+OdMoNtemMFDaLbxBfrxw1b+4/0VbsxRXJX2/mlEh28LWbqB4C1dP/MzcUrCk6O
-	 hdtkrLvIdyWLNngUe1zqR4e6We+AYmE0As/jaWz4=
+	b=mYgKCxM8guhq/sYkm3duIiKUaVGVCP6U9VzoYoguU2CX8K7KCgPLbYmm9ukpah/8W
+	 02LINIBi7PFoGYf1KLb+2XNyKZemsVpOU+bmSk/0OMdZOAC82+oy95fgI8RrLV149D
+	 CG9yDW0LC7k0h2wenBvRv/4Isx8uYgkf+1gfsF/4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727954AbgHUQs3 (ORCPT
+        id S1728492AbgHUQ55 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 12:48:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50060 "EHLO mail.kernel.org"
+        Fri, 21 Aug 2020 12:57:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49882 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726792AbgHUQUM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:20:12 -0400
+        id S1728282AbgHUQT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:19:29 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EE06122CE3;
-        Fri, 21 Aug 2020 16:19:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A75A522CB1;
+        Fri, 21 Aug 2020 16:18:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026764;
-        bh=i0Lq5eSHyAtWx6NrNz0vxD9buMUBKlcRxwhAILT0zEw=;
+        s=default; t=1598026720;
+        bh=jLrsiqJFchZqsU3JqhX9Hjb//ucy/rBP5Iv1hlCWZl0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=toJDWZhh1eYaBYNq+2YA2y3RU4Bj/QTU2FizB7fCCKGrKpEW7vZGCwueWDVUuMpgI
-         EWCO8yof9UO4/mGK48c38LFO3IMjZ461QptuSZmX2Ze8E/HC4hNQkwAFT1+YX6cuRA
-         sluSk1XiQbVAmPAoxygGmFDJh6vTPWBOjW9cMaZA=
+        b=ROh0EcIsIivn+uo/lN/NeAhOrqR5GOAsFt7Z46qT3jou+qf8DbfkwhernC0B7+HyY
+         D+YKLfmtlgKmJpj+2HDI8JDp3Da+zwojnULDPxYdqQCVKQ+RXQ34BvTcNz1Rk5G/ze
+         hH0h37qUV20g1e/ude6ZhtwpTXQ9q0rpxse7XO10=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Reto Schneider <code@reto-schneider.ch>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 20/30] rtlwifi: rtl8192cu: Prevent leaking urb
-Date:   Fri, 21 Aug 2020 12:18:47 -0400
-Message-Id: <20200821161857.348955-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 25/38] rtlwifi: rtl8192cu: Prevent leaking urb
+Date:   Fri, 21 Aug 2020 12:17:54 -0400
+Message-Id: <20200821161807.348600-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161857.348955-1-sashal@kernel.org>
-References: <20200821161857.348955-1-sashal@kernel.org>
+In-Reply-To: <20200821161807.348600-1-sashal@kernel.org>
+References: <20200821161807.348600-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,7 +76,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 7a050a75bdcbb..4fa4d877f913b 100644
+index 1893640555c1e..3d6c0d8c71d7e 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
 @@ -739,8 +739,11 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
