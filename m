@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEDCC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC8CC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37DA8208DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29DC9208DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:49:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hBZSd0Pn"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Pf8KlPww"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728153AbgHUItj (ORCPT
+        id S1728082AbgHUItn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 04:49:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47926 "EHLO
+        Fri, 21 Aug 2020 04:49:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728060AbgHUItd (ORCPT
+        with ESMTP id S1728093AbgHUIte (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 04:49:33 -0400
+        Fri, 21 Aug 2020 04:49:34 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D5A3C061343
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8C52C061345
         for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 01:49:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,20 +32,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=ZVeIXbED33B0oRI14KObhFDllCing8Gcc/5VA62luPM=; b=hBZSd0PnTtLbDWh3MPAsu844Vg
-        JRxUuB9xJmVwAd6HrgJV5wUnQnGjnygL7aRjE6uY00bezv50g8KjNgb5+FH9slYvg0dYFWeXxGgrT
-        dgPLNZC0M0oUm6utBYW7R0f1EZ2s343DNOrWbjLjvf/af7jRbcqBEwuh2HF0d/gdHptM=;
+        bh=OfH6NMfLVLcdKdvTqmI1pBUX/QDrSXkQLZz48xXmMSA=; b=Pf8KlPwwc6P4nR5sxsqgyNHHA6
+        fOoYB3IeQNfoGBBEAydAo6deKdMnqG0RfiAVlZZodCVzMdrDNRrm6G3S+CtYgAROzwQv/DlndaqFO
+        3q2EjOWbpLUcojjrYelO1LH0fBeJEyjI0lN47OHQsEgrpZ4adBPk9SVQt7dDHIZ/ItAw=;
 Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k92jq-0005lO-4j; Fri, 21 Aug 2020 10:49:30 +0200
+        id 1k92jq-0005lO-Ic; Fri, 21 Aug 2020 10:49:30 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v3 06/13] mac80211: unify 802.3 (offload) and 802.11 tx status codepath
-Date:   Fri, 21 Aug 2020 10:49:19 +0200
-Message-Id: <20200821084926.10650-7-nbd@nbd.name>
+Subject: [PATCH v3 08/13] mac80211: check and refresh aggregation session in encap offload tx
+Date:   Fri, 21 Aug 2020 10:49:21 +0200
+Message-Id: <20200821084926.10650-9-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200821084926.10650-1-nbd@nbd.name>
 References: <20200821084926.10650-1-nbd@nbd.name>
@@ -56,173 +56,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make ieee80211_tx_status_8023 call ieee80211_tx_status_ext, similar to
-ieee80211_tx_status.
+Update the last_tx timestamp to avoid tearing down the aggregation session
+early. Fall back to the slow path if the session setup is still running
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/status.c | 93 +++++++++++++------------------------------
- 1 file changed, 28 insertions(+), 65 deletions(-)
+ net/mac80211/tx.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index c873910d95e0..ac4d988556b0 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -894,7 +894,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 	struct ieee80211_bar *bar;
- 	int shift = 0;
- 	int tid = IEEE80211_NUM_TIDS;
--	u16 tx_time_est;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 04d8e528357b..64590ad930fe 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4198,6 +4198,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	bool authorized = false;
+ 	bool multicast;
+ 	unsigned char *ra = ehdr->h_dest;
++	struct tid_ampdu_tx *tid_tx;
++	u8 tid;
  
- 	sband = local->hw.wiphy->bands[info->band];
- 	fc = hdr->frame_control;
-@@ -987,17 +986,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
- 			ieee80211_sta_tx_notify(sta->sdata, (void *) skb->data,
- 						acked, info->status.tx_time);
--
--		if ((tx_time_est = ieee80211_info_get_tx_time_est(info)) > 0) {
--			/* Do this here to avoid the expensive lookup of the sta
--			 * in ieee80211_report_used_skb().
--			 */
--			ieee80211_sta_update_pending_airtime(local, sta,
--							     skb_get_queue_mapping(skb),
--							     tx_time_est,
--							     true);
--			ieee80211_info_set_tx_time_est(info, 0);
--		}
- 	}
+ 	if (IS_ERR(sta) || (sta && !sta->uploaded))
+ 		sta = NULL;
+@@ -4235,6 +4237,22 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
  
- 	/* SNMP counters
-@@ -1092,9 +1080,12 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_tx_info *info = status->info;
- 	struct ieee80211_sta *pubsta = status->sta;
-+	struct sk_buff *skb = status->skb;
-+	struct sta_info *sta = NULL;
- 	struct ieee80211_supported_band *sband;
- 	int rates_idx, retry_count;
- 	bool acked, noack_success;
-+	u16 tx_time_est;
+ 	memset(info, 0, sizeof(*info));
  
- 	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
- 
-@@ -1104,8 +1095,6 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
- 
- 	if (pubsta) {
--		struct sta_info *sta;
--
- 		sta = container_of(pubsta, struct sta_info, sta);
- 
- 		if (!acked && !noack_success)
-@@ -1143,7 +1132,18 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 			ieee80211s_update_metric(local, sta, status);
- 	}
- 
--	if (status->skb)
-+	if (skb && (tx_time_est = ieee80211_info_get_tx_time_est(info)) > 0) {
-+		/* Do this here to avoid the expensive lookup of the sta
-+		 * in ieee80211_report_used_skb().
-+		 */
-+		ieee80211_sta_update_pending_airtime(local, sta,
-+						     skb_get_queue_mapping(skb),
-+						     tx_time_est,
-+						     true);
-+		ieee80211_info_set_tx_time_est(info, 0);
++	if (sta) {
++		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++		if (tid_tx) {
++			if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++				/* fall back to non-offload slow path */
++				__ieee80211_subif_start_xmit(skb, dev, 0, 0, NULL);
++				return;
++			}
++
++			info->flags |= IEEE80211_TX_CTL_AMPDU;
++			if (tid_tx->timeout)
++				tid_tx->last_tx = jiffies;
++		}
 +	}
 +
-+	if (skb && !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP))
- 		return __ieee80211_tx_status(hw, status, rates_idx,
- 					     retry_count);
- 
-@@ -1158,6 +1158,12 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	} else {
- 		I802_DEBUG_INC(local->dot11FailedCount);
- 	}
-+
-+	if (!skb)
-+		return;
-+
-+	ieee80211_report_used_skb(local, skb, false);
-+	dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status_ext);
- 
-@@ -1184,66 +1190,23 @@ void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      struct sk_buff *skb)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_status status = {
-+		.skb = skb,
-+		.info = IEEE80211_SKB_CB(skb),
-+	};
- 	struct sta_info *sta;
--	int retry_count;
--	int rates_idx;
--	bool acked;
- 
- 	sdata = vif_to_sdata(vif);
- 
--	acked = info->flags & IEEE80211_TX_STAT_ACK;
--	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
--
- 	rcu_read_lock();
- 
--	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
--		goto counters_update;
--
--	if (IS_ERR(sta))
--		goto counters_update;
--
--	if (!acked)
--		sta->status_stats.retry_failed++;
--
--	if (rates_idx != -1)
--		sta->tx_stats.last_rate = info->status.rates[rates_idx];
--
--	sta->status_stats.retry_count += retry_count;
--
--	if (ieee80211_hw_check(hw, REPORTS_TX_ACK_STATUS)) {
--		sta->status_stats.last_ack = jiffies;
--		if (info->flags & IEEE80211_TX_STAT_ACK) {
--			if (sta->status_stats.lost_packets)
--				sta->status_stats.lost_packets = 0;
-+	if (!ieee80211_lookup_ra_sta(sdata, skb, &sta) && !IS_ERR(sta))
-+		status.sta = &sta->sta;
- 
--			sta->status_stats.last_pkt_time = jiffies;
--		} else {
--			ieee80211_lost_packet(sta, info);
--		}
--	}
-+	ieee80211_tx_status_ext(hw, &status);
- 
--counters_update:
- 	rcu_read_unlock();
--	ieee80211_led_tx(local);
--
--	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
--	    !(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED))
--		goto skip_stats_update;
--
--	I802_DEBUG_INC(local->dot11TransmittedFrameCount);
--	if (is_multicast_ether_addr(skb->data))
--		I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
--	if (retry_count > 0)
--		I802_DEBUG_INC(local->dot11RetryCount);
--	if (retry_count > 1)
--		I802_DEBUG_INC(local->dot11MultipleRetryCount);
--
--skip_stats_update:
--	ieee80211_report_used_skb(local, skb, false);
--	dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status_8023);
- 
+ 	if (unlikely(!multicast && skb->sk &&
+ 		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS))
+ 		info->ack_frame_id = ieee80211_store_ack_skb(local, skb,
 -- 
 2.28.0
 
