@@ -2,214 +2,110 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEED7C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9F6C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:38:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC2B520724
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:32:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A94BE207BB
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 16:38:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jSr/Rf3O"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="biAl5L+i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727895AbgHUQbz (ORCPT
+        id S1728473AbgHUQic (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 12:31:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34952 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728482AbgHUQat (ORCPT
+        Fri, 21 Aug 2020 12:38:32 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:57218 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728370AbgHUQh6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:30:49 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DA3DC061573
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 09:30:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=uQhJQQITnz3C7SLVQCD8u+Bt7Iip0mypnEhGuUSJQ30=; b=jSr/Rf3OVabsTM5ssWvTEPl2c6
-        O8ImjrVlg6xnELOffGzRvJHN4GK0l+b+d8AuFrw32W9QXFse4HnQum73CpJYMBKaHKZYJ9/8Laieb
-        edYpGFaLmi9tENdHwUQlB6HzmZNB/UsG++58Oim57R6subCaQ33z3KnmuT43uI+EeG6c=;
-Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1k99wF-0003et-3a; Fri, 21 Aug 2020 18:30:47 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
+        Fri, 21 Aug 2020 12:37:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598027875;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=/BpCqlz36u1/crvTEnbIvAbFbtkMSwTldtETWDdR1vY=;
+        b=biAl5L+iHENglyPpVq5p/fqYpJcZ/lxPiG+RqnREgxghCILaKh/GjACicNd0JYCXgUwzKf
+        jcMYyFz+YWLh+MCYDlZBhM9rIn7DO5qI1NdwyU+mNvdPSqjqZZYrjfVr4M1KDNYo/ZI3Sy
+        fSWGqJZzpvhgSG7CUb12Uhkapc0EY0Q=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-60-RWpnp0S7NDqHaKtjXAb18Q-1; Fri, 21 Aug 2020 12:37:53 -0400
+X-MC-Unique: RWpnp0S7NDqHaKtjXAb18Q-1
+Received: by mail-wr1-f69.google.com with SMTP id z12so714644wrl.16
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 09:37:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=/BpCqlz36u1/crvTEnbIvAbFbtkMSwTldtETWDdR1vY=;
+        b=FUcUCLzG+iB/m7Xp7n4t0rEroaj+4aUZNRT87oL0XwTxGk2zVkUrOk0/UWFpOwfc0O
+         W1aBjXNJ0yIIt2S3E8SaBeauAbVkjroRtAzAXuvL7decw1DEPq5FCoqD/8g197ywDsNa
+         5ux3XmM0kNgE24JPLHw+z6BaDYlrWXEGw4Fgtb3dKv2+ADVkqRj0fN7lpnwDqCD8NK6E
+         CopZF7k+pKyq2ckTakuZBmfkEwPSUKMXek/hmXOdD41PlUJjUzwO1R7+yXD86dtIGQI3
+         bXg1oDFtBSpfeOq01BX0CD3+ARjT89G875L3EQNR45aSdJYQVNWXtBwN9Xul8fnzOcuy
+         ksKQ==
+X-Gm-Message-State: AOAM5318y1/reievDH4iKhObYdnUgqunrlMF6fdmKnQ1nl+3Q/YcXLH3
+        MyznjWMEVRcdBe8KRDeliH+f6C0tNIVNTGdoYW2vfw/85K1dwEKLuQMU7HW3wwqDmbh3XhpVQ+G
+        NosJjjqnPlro6yTzdm/2HlQY/ijY=
+X-Received: by 2002:a05:600c:2246:: with SMTP id a6mr4759517wmm.71.1598027872561;
+        Fri, 21 Aug 2020 09:37:52 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJysas+GDGIC0tphXjWA9kTZiHG4HkDhE7Mhz+5maoqZOCFPizENXk1cVcNAOvMUJx6CcZg4rA==
+X-Received: by 2002:a05:600c:2246:: with SMTP id a6mr4759505wmm.71.1598027872349;
+        Fri, 21 Aug 2020 09:37:52 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
+        by smtp.gmail.com with ESMTPSA id z203sm4164417wmc.31.2020.08.21.09.37.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Aug 2020 09:37:51 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id E6B301816A2; Fri, 21 Aug 2020 18:37:50 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5.9 v2 1/3] mac80211: use rate provided via status->rate on ieee80211_tx_status_ext for AQL
-Date:   Fri, 21 Aug 2020 18:30:43 +0200
-Message-Id: <20200821163045.62140-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
+Subject: Re: [PATCH 5.9 3/3] mac80211: improve AQL aggregation estimation
+ for low data rates
+In-Reply-To: <623a2b24-31c8-83be-ae24-1461ecbfc224@nbd.name>
+References: <20200813155212.97884-1-nbd@nbd.name>
+ <20200813155212.97884-3-nbd@nbd.name>
+ <c3c5197f-17f7-4f6b-712f-d7c68f39ae38@dd-wrt.com> <87tuww2ggm.fsf@toke.dk>
+ <61d66ec8-117e-7c75-2b4a-1de7715f0bce@dd-wrt.com> <87r1s02eve.fsf@toke.dk>
+ <623a2b24-31c8-83be-ae24-1461ecbfc224@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Fri, 21 Aug 2020 18:37:50 +0200
+Message-ID: <87lfi82bvl.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since ieee80211_tx_info does not have enough room to encode HE rates, HE
-drivers use status->rate to provide rate info.
-Store it in struct sta_info and use it for AQL.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/airtime.c  | 53 +++++++++++++++++++++++++++++++++++++++--
- net/mac80211/sta_info.h |  1 +
- net/mac80211/status.c   | 12 ++++++----
- 3 files changed, 60 insertions(+), 6 deletions(-)
+> On 2020-08-21 17:33, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>>=20
+>>> i mean airtime fairness policy was not configured
+>>=20
+>> Ah, right, that makes a lot more sense :)
+>>=20
+>> Still not sure why this would affect throughput, though; maybe the
+>> change in calculation makes AQL overestimate the airtime and throttle
+>> too much? Or does the saving of last_rate_info on tx_status_ext() work
+>> badly for ath10k?
+> The issue turned out to be missing return code checks on converting the
+> tx rate to struct ieee80211_rx_status.
+> I'll send v2 of this series with fixes.
 
-diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-index 366f76c9003d..656c9a033714 100644
---- a/net/mac80211/airtime.c
-+++ b/net/mac80211/airtime.c
-@@ -487,14 +487,61 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL_GPL(ieee80211_calc_rx_airtime);
- 
-+static bool ieee80211_fill_rate_info(struct ieee80211_hw *hw,
-+				     struct ieee80211_rx_status *stat, u8 band,
-+				     struct rate_info *ri)
-+{
-+	struct ieee80211_supported_band *sband = hw->wiphy->bands[band];
-+	int i;
-+
-+	if (!ri || !sband)
-+	    return false;
-+
-+	stat->bw = ri->bw;
-+	stat->nss = ri->nss;
-+	stat->rate_idx = ri->mcs;
-+
-+	if (ri->flags & RATE_INFO_FLAGS_HE_MCS)
-+		stat->encoding = RX_ENC_HE;
-+	else if (ri->flags & RATE_INFO_FLAGS_VHT_MCS)
-+		stat->encoding = RX_ENC_VHT;
-+	else if (ri->flags & RATE_INFO_FLAGS_MCS)
-+		stat->encoding = RX_ENC_HT;
-+	else
-+		stat->encoding = RX_ENC_LEGACY;
-+
-+	if (ri->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		stat->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+
-+	stat->he_gi = ri->he_gi;
-+
-+	if (stat->encoding != RX_ENC_LEGACY)
-+		return true;
-+
-+	stat->rate_idx = 0;
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (ri->legacy != sband->bitrates[i].bitrate)
-+			continue;
-+
-+		stat->rate_idx = i;
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
- 					  struct ieee80211_tx_rate *rate,
-+					  struct rate_info *ri,
- 					  u8 band, int len)
- {
- 	struct ieee80211_rx_status stat = {
- 		.band = band,
- 	};
- 
-+	if (ieee80211_fill_rate_info(hw, &stat, band, ri))
-+		goto out;
-+
- 	if (rate->idx < 0 || !rate->count)
- 		return 0;
- 
-@@ -522,6 +569,7 @@ static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
- 		stat.encoding = RX_ENC_LEGACY;
- 	}
- 
-+out:
- 	return ieee80211_calc_rx_airtime(hw, &stat, len);
- }
- 
-@@ -536,7 +584,7 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
- 		struct ieee80211_tx_rate *rate = &info->status.rates[i];
- 		u32 cur_duration;
- 
--		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate,
-+		cur_duration = ieee80211_calc_tx_airtime_rate(hw, rate, NULL,
- 							      info->band, len);
- 		if (!cur_duration)
- 			break;
-@@ -573,6 +621,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
- 		struct sta_info *sta = container_of(pubsta, struct sta_info,
- 						    sta);
- 		struct ieee80211_tx_rate *rate = &sta->tx_stats.last_rate;
-+		struct rate_info *ri = &sta->tx_stats.last_rate_info;
- 		u32 airtime;
- 
- 		if (!(rate->flags & (IEEE80211_TX_RC_VHT_MCS |
-@@ -586,7 +635,7 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
- 		 * This will not be very accurate, but much better than simply
- 		 * assuming un-aggregated tx.
- 		 */
--		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, band,
-+		airtime = ieee80211_calc_tx_airtime_rate(hw, rate, ri, band,
- 							 ampdu ? len * 16 : len);
- 		if (ampdu)
- 			airtime /= 16;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9d398c9daa4c..8060d142e4f1 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -611,6 +611,7 @@ struct sta_info {
- 		u64 packets[IEEE80211_NUM_ACS];
- 		u64 bytes[IEEE80211_NUM_ACS];
- 		struct ieee80211_tx_rate last_rate;
-+		struct rate_info last_rate_info;
- 		u64 msdu[IEEE80211_NUM_TIDS + 1];
- 	} tx_stats;
- 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index adb1d30ce06e..6de63f1d8c7b 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -1137,9 +1137,17 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info = status->info;
- 	struct ieee80211_sta *pubsta = status->sta;
- 	struct ieee80211_supported_band *sband;
-+	struct sta_info *sta;
- 	int retry_count;
- 	bool acked, noack_success;
- 
-+	if (pubsta) {
-+		sta = container_of(pubsta, struct sta_info, sta);
-+
-+		if (status->rate)
-+			sta->tx_stats.last_rate_info = *status->rate;
-+	}
-+
- 	if (status->skb)
- 		return __ieee80211_tx_status(hw, status);
- 
-@@ -1154,10 +1162,6 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
- 
- 	if (pubsta) {
--		struct sta_info *sta;
--
--		sta = container_of(pubsta, struct sta_info, sta);
--
- 		if (!acked && !noack_success)
- 			sta->status_stats.retry_failed++;
- 		sta->status_stats.retry_count += retry_count;
--- 
-2.28.0
+Ah, great! :)
+
+-Toke
 
