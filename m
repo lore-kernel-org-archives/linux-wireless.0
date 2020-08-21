@@ -5,72 +5,74 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC2DC433E3
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E48EFC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 707C3207DA
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:19:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF35B207DA
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:19:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H0If4VwM"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Uy9ndG1a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728372AbgHUHSz (ORCPT
+        id S1728394AbgHUHTI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 03:18:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33572 "EHLO
+        Fri, 21 Aug 2020 03:19:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728260AbgHUHSS (ORCPT
+        with ESMTP id S1728101AbgHUHSZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 03:18:18 -0400
+        Fri, 21 Aug 2020 03:18:25 -0400
 Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6528C0612EC
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:20 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id z18so975742wrm.12
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95ACBC0612F5
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:25 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id a15so987080wrh.10
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=TTQGsHQRzFX5OAR8V7RVO6NwsFWRtOx1Iv9gHAn+3hk=;
-        b=H0If4VwMwvIezRg61jCDmEaLuOIKow/xxH3vRIk99/Excx7uuv8ZG+iiXbt91W245W
-         lwEX5Jdr82u9cSH/oyc8DLIIg12nSWtSV16z8lS/JQ9YM738s0VrfDwPdtpnypTqi4qj
-         0KeTPTduHoy3Y95RNToIJoQHmgTP2FILxLDN21vDRuFja0kAoEM3hLVauutoJyNwaE5D
-         G6zs8cuyZ8Lbm3zMOTAlgp1ODGPDfK9xM6U9lEYqI6ffKXbnkNenysk9t7Rcjx1YdIlq
-         JqM+wuLlWzBCKNpRcwi4v3CXX+iGEwKyYMjda+lXCSS19yGDAnZQkVvOjtnIL5k8Bhag
-         74Ig==
+        bh=ikJrPqLtaYXNecWR7DLDG7Iz5IzAnzmdF64bzAd6wno=;
+        b=Uy9ndG1aCoadDrvykF3vodVZv3Ha9iFVjXPsA3i8oYjvo0l8Gq7q0QToEG4+lZNVYx
+         RUCevn4X3h3KJEjQ4YdlV4Jn+Zoqq1uICmH/b3JBH7BxsNWidjVJZaNvUB0p6Tkes5uq
+         SW9vkChKipu+8P2b1jWgiTAPvXpPywelv9eetzolSy8okZup6sQT6JqndoAhR5SFnLsE
+         skm5LX8p6nnSvPbte4PiGc2OtJgEppTZlAUVIldNxnxhmeIlH/oJXaUT39maHiqdtVB0
+         z88cjcengpbyYlt3NnV12Xiz68I7iUmdsBqHQli9ehfRc+t2UHAUOx+LQ9BFsDG4jDd+
+         JfGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=TTQGsHQRzFX5OAR8V7RVO6NwsFWRtOx1Iv9gHAn+3hk=;
-        b=DVckNbmvNvBiTslhsmeCLupVRkjtRrBu8djPEWj6Gwt19f5pxHUNJ54l3bkvdr0Bq8
-         xy3kYOK5jpmTcdz3+qpsGfjiItx/SSKJnE1Qy5TrCACkWh0SiLaK/7tVmBC16M2lVrWm
-         Tt8qr0tsrrkhdBtgErq/6ShrKBc77/4wfXVMdQQOq5SpmYYLbSoECiJz05VXzWJ5+Z14
-         7z2k/naJvjaMKpUnzmHvAP/cPTKG7eud4e96ZRya9+gN9Gayflm9XwX1Cw3h6zAvdfYZ
-         YTASk3hsmqAKDMaoUHKxUuG8zvhm4VhsqONmUfKSkttIiYycQAQ2mPPsB5oGpl1162Hq
-         dFKw==
-X-Gm-Message-State: AOAM533R0JdCaj4Vr/1GvdXsbtNYrh0L3tQi9Pu25d/Paoi4r5LK4rEO
-        8BUr3lUgIIUT2PetC5mcm+faAA==
-X-Google-Smtp-Source: ABdhPJypR6JBvvKzIdB7X4ufqTk4XMzIbEfdEi/wes3RLIoRYZC6RVUejM/6zRFBlzDuEnIWHyal3Q==
-X-Received: by 2002:adf:de8d:: with SMTP id w13mr1361499wrl.129.1597994239297;
-        Fri, 21 Aug 2020 00:17:19 -0700 (PDT)
+        bh=ikJrPqLtaYXNecWR7DLDG7Iz5IzAnzmdF64bzAd6wno=;
+        b=VSc9117NLeQkYe7ceuGsCDV3MqRc5o+7IqMgyUf1nWCtM9tdQJpGpw2YrqhzNwJLBi
+         pOBb3OTfVhx1qufkp+tULyMdqWLLLkLevijnsKAbkAtI3tlWJ/l5/4nSnZUacz5vaOIb
+         mQ+D9uZTBqZspofXU8vVTjTR6/tS5cZCJNE7xMD38bAx4syxn4ZIRP4ADO/YcGj5VkdM
+         Co27TfLAu3REQySIHZn9bHMky1nPFwwdGmgY+x5LpTHr/JsoQ7LoVt8aX6uHOvpKFl3B
+         X2WdpJzoz0CbzZDjP458ZyJPOkjsAYSdemPyZHNf+2+ou5xONL4UB/i4jZ5nOe/lvECu
+         xghw==
+X-Gm-Message-State: AOAM531KEFjaRB1s2RlbUrUMx8tbXs9/Qo33pr3qTpwYvEw76VqJvcgC
+        RJZz6u4wLBb8KE/qiVwMuXKCMQ==
+X-Google-Smtp-Source: ABdhPJzk/E+GxnhTpj4IxYEkR/RBbYesDLOTF2cF6bkxcCYQCm8TFkuxP3b/YnXUju6Mh+c+JMO2Vw==
+X-Received: by 2002:adf:9ec5:: with SMTP id b5mr1336455wrf.190.1597994244313;
+        Fri, 21 Aug 2020 00:17:24 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.18
+        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 00:17:18 -0700 (PDT)
+        Fri, 21 Aug 2020 00:17:23 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Maya Erez <merez@codeaurora.org>, wil6210@qti.qualcomm.com
-Subject: [PATCH 25/32] wireless: ath: wil6210: wmi: Fix formatting and demote non-conforming function headers
-Date:   Fri, 21 Aug 2020 08:16:37 +0100
-Message-Id: <20200821071644.109970-26-lee.jones@linaro.org>
+        Ping-Ke Shih <pkshih@realtek.com>,
+        zhengbin <zhengbin13@huawei.com>
+Subject: [PATCH 29/32] wireless: realtek: rtl8192c: phy_common: Remove unused variable 'bbvalue'
+Date:   Fri, 21 Aug 2020 08:16:41 +0100
+Message-Id: <20200821071644.109970-30-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821071644.109970-1-lee.jones@linaro.org>
 References: <20200821071644.109970-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -79,164 +81,37 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/wil6210/wmi.c:52: warning: Incorrect use of kernel-doc format:  * Addressing - theory of operations
- drivers/net/wireless/ath/wil6210/wmi.c:70: warning: Incorrect use of kernel-doc format:  * @sparrow_fw_mapping provides memory remapping table for sparrow
- drivers/net/wireless/ath/wil6210/wmi.c:80: warning: cannot understand function prototype: 'const struct fw_map sparrow_fw_mapping[] = '
- drivers/net/wireless/ath/wil6210/wmi.c:107: warning: Cannot understand  * @sparrow_d0_mac_rgf_ext - mac_rgf_ext section for Sparrow D0
- drivers/net/wireless/ath/wil6210/wmi.c:115: warning: Cannot understand  * @talyn_fw_mapping provides memory remapping table for Talyn
- drivers/net/wireless/ath/wil6210/wmi.c:158: warning: Cannot understand  * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
- drivers/net/wireless/ath/wil6210/wmi.c:236: warning: Function parameter or member 'x' not described in 'wmi_addr_remap'
- drivers/net/wireless/ath/wil6210/wmi.c:255: warning: Function parameter or member 'section' not described in 'wil_find_fw_mapping'
- drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function parameter or member 'wil' not described in 'wmi_buffer_block'
- drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function parameter or member 'ptr_' not described in 'wmi_buffer_block'
- drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function parameter or member 'size' not described in 'wmi_buffer_block'
- drivers/net/wireless/ath/wil6210/wmi.c:307: warning: Function parameter or member 'wil' not described in 'wmi_addr'
- drivers/net/wireless/ath/wil6210/wmi.c:307: warning: Function parameter or member 'ptr' not described in 'wmi_addr'
- drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function parameter or member 'wil' not described in 'wil_find_cid_ringid_sta'
- drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function parameter or member 'vif' not described in 'wil_find_cid_ringid_sta'
- drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function parameter or member 'cid' not described in 'wil_find_cid_ringid_sta'
- drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function parameter or member 'ringid' not described in 'wil_find_cid_ringid_sta'
- drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function parameter or member 'vif' not described in 'wmi_evt_ignore'
- drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function parameter or member 'id' not described in 'wmi_evt_ignore'
- drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function parameter or member 'd' not described in 'wmi_evt_ignore'
- drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function parameter or member 'len' not described in 'wmi_evt_ignore'
- drivers/net/wireless/ath/wil6210/wmi.c:2588: warning: Function parameter or member 'wil' not described in 'wmi_rxon'
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c: In function ‘_rtl92c_phy_iq_calibrate’:
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c:1223:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
 
-Cc: Maya Erez <merez@codeaurora.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: zhengbin <zhengbin13@huawei.com>
 Cc: linux-wireless@vger.kernel.org
-Cc: wil6210@qti.qualcomm.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 28 ++++++++++++++------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index c7136ce567eea..3a6ee85acf6c7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -31,7 +31,7 @@ MODULE_PARM_DESC(led_id,
- #define WIL_WAIT_FOR_SUSPEND_RESUME_COMP 200
- #define WIL_WMI_PCP_STOP_TO_MS 5000
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 661249d618c09..70706d51805da 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -1220,10 +1220,9 @@ static void _rtl92c_phy_iq_calibrate(struct ieee80211_hw *hw,
+ 		0x522, 0x550, 0x551, 0x040
+ 	};
+ 	const u32 retrycount = 2;
+-	u32 bbvalue;
  
--/**
-+/*
-  * WMI event receiving - theory of operations
-  *
-  * When firmware about to report WMI event, it fills memory area
-@@ -48,7 +48,7 @@ MODULE_PARM_DESC(led_id,
-  * won't be completed because of blocked IRQ thread.
-  */
+ 	if (t == 0) {
+-		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
++		rtl_get_bbreg(hw, 0x800, MASKDWORD);
  
--/**
-+/*
-  * Addressing - theory of operations
-  *
-  * There are several buses present on the WIL6210 card.
-@@ -66,7 +66,7 @@ MODULE_PARM_DESC(led_id,
-  * AHB address must be used.
-  */
- 
--/**
-+/*
-  * @sparrow_fw_mapping provides memory remapping table for sparrow
-  *
-  * array size should be in sync with the declaration in the wil6210.h
-@@ -103,7 +103,7 @@ const struct fw_map sparrow_fw_mapping[] = {
- 	{0x800000, 0x804000, 0x940000, "uc_data", false, false},
- };
- 
--/**
-+/*
-  * @sparrow_d0_mac_rgf_ext - mac_rgf_ext section for Sparrow D0
-  * it is a bit larger to support extra features
-  */
-@@ -111,7 +111,7 @@ const struct fw_map sparrow_d0_mac_rgf_ext = {
- 	0x88c000, 0x88c500, 0x88c000, "mac_rgf_ext", true, true
- };
- 
--/**
-+/*
-  * @talyn_fw_mapping provides memory remapping table for Talyn
-  *
-  * array size should be in sync with the declaration in the wil6210.h
-@@ -154,7 +154,7 @@ const struct fw_map talyn_fw_mapping[] = {
- 	{0x800000, 0x808000, 0xa78000, "uc_data", false, false},
- };
- 
--/**
-+/*
-  * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
-  *
-  * array size should be in sync with the declaration in the wil6210.h
-@@ -229,7 +229,7 @@ u8 led_polarity = LED_POLARITY_LOW_ACTIVE;
- 
- /**
-  * return AHB address for given firmware internal (linker) address
-- * @x - internal address
-+ * @x: internal address
-  * If address have no valid AHB mapping, return 0
-  */
- static u32 wmi_addr_remap(u32 x)
-@@ -247,7 +247,7 @@ static u32 wmi_addr_remap(u32 x)
- 
- /**
-  * find fw_mapping entry by section name
-- * @section - section name
-+ * @section: section name
-  *
-  * Return pointer to section or NULL if not found
-  */
-@@ -265,8 +265,9 @@ struct fw_map *wil_find_fw_mapping(const char *section)
- 
- /**
-  * Check address validity for WMI buffer; remap if needed
-- * @ptr - internal (linker) fw/ucode address
-- * @size - if non zero, validate the block does not
-+ * @wil: driver data
-+ * @ptr: internal (linker) fw/ucode address
-+ * @size: if non zero, validate the block does not
-  *  exceed the device memory (bar)
-  *
-  * Valid buffer should be DWORD aligned
-@@ -300,7 +301,7 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
- 	return wmi_buffer_block(wil, ptr_, 0);
- }
- 
--/**
-+/*
-  * Check address validity
-  */
- void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr)
-@@ -1577,7 +1578,7 @@ wmi_evt_link_stats(struct wil6210_vif *vif, int id, void *d, int len)
- 			     evt->payload, payload_size);
- }
- 
--/**
-+/*
-  * find cid and ringid for the station vif
-  *
-  * return error, if other interfaces are used or ring was not found
-@@ -1868,7 +1869,7 @@ wmi_evt_link_monitor(struct wil6210_vif *vif, int id, void *d, int len)
- 	cfg80211_cqm_rssi_notify(ndev, event_type, evt->rssi_level, GFP_KERNEL);
- }
- 
--/**
-+/*
-  * Some events are ignored for purpose; and need not be interpreted as
-  * "unhandled events"
-  */
-@@ -2578,6 +2579,7 @@ int wmi_update_ft_ies(struct wil6210_vif *vif, u16 ie_len, const void *ie)
- 
- /**
-  * wmi_rxon - turn radio on/off
-+ * @wil:	driver data
-  * @on:		turn on if true, off otherwise
-  *
-  * Only switch radio. Channel should be set separately.
+ 		_rtl92c_phy_save_adda_registers(hw, adda_reg,
+ 						rtlphy->adda_backup, 16);
 -- 
 2.25.1
 
