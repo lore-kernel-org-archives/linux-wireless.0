@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F4BC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CCAC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:36:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84C7220732
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:33:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EEA520732
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 06:36:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597991638;
-	bh=ZD+mARjckiaOLmEqpc3pkeddGNiVUiqWbUzQlmXxLCA=;
+	s=default; t=1597991797;
+	bh=cKAozKcOdIVr2RmSywSEdjiqOTHDZHUVc293ooDnI5w=;
 	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=s4ZqZs8HUvsIRns5df/yqVxeSi+kwk8hXhkjCQVsFPkYICEYroGSnoa1r1E+JvrPi
-	 ItdQsw5F7FwzulH4KLdORI+pQOAkGUERLkate12eeT5pvme4G487HnfQPKtBxfj79N
-	 21Rle3uQWQpU+46y1viNebRcFYXP/y3lGMEXTKgQ=
+	b=CeDAqtRqXZJPmdIc2GqLjslxMa9im6acHQ5+7G1bWMqnR9Tt7YZHQMJWPUh1Pz0k8
+	 veAnbQetampb6FprVwxUzchn5p/VmOPcwBnqMHs8921Q+AyTSUwDYrWUFeKm5wv7sM
+	 6CnbkctCZeJQcSlGyJJvdlWxkytERjAzsJLlg3F8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727103AbgHUGdt (ORCPT
+        id S1726757AbgHUGgd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 02:33:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42784 "EHLO mail.kernel.org"
+        Fri, 21 Aug 2020 02:36:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43674 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725844AbgHUGds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 02:33:48 -0400
+        id S1725844AbgHUGgb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 02:36:31 -0400
 Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7D47120732;
-        Fri, 21 Aug 2020 06:33:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1DD3F20732;
+        Fri, 21 Aug 2020 06:36:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597991627;
-        bh=ZD+mARjckiaOLmEqpc3pkeddGNiVUiqWbUzQlmXxLCA=;
+        s=default; t=1597991790;
+        bh=cKAozKcOdIVr2RmSywSEdjiqOTHDZHUVc293ooDnI5w=;
         h=Date:From:To:Cc:Subject:From;
-        b=gvw3Zr2z6rjPA/azLcwbRJHjKcQUMRkSQ3pAP/XwJWUrQ7t63UojZ3qZ9Jiyp0lr1
-         KtQDkuf9lxnNDjjisrEg9O1xw3DPAro1fyQL1a5Zrw/82QrIafkYGWDPJSTxNM/uaw
-         73FAvDjrpZDVQgEqTIGLya6Yy/9h/1OPmGR67Ajg=
-Date:   Fri, 21 Aug 2020 01:39:34 -0500
+        b=VLSdtENflm7m6ML1JRA2DxVgucBHtAIegcPwj050K0epPXQ814TjDHApN/ZG+dKzE
+         yYBBea+WN6ZobQuv9cCcjnkFVYPLThQvSa/BdijnXddIDHqt1iw1WiKaKHp1AI/Fbu
+         KNcwIFOJLhuOhsrcXWE0nQ3V03/hGNNImawzVLp8=
+Date:   Fri, 21 Aug 2020 01:42:18 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Stanislaw Gruszka <stf_xl@wp.pl>,
-        Kalle Valo <kvalo@codeaurora.org>,
+To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH][next] iwlegacy: Use fallthrough pseudo-keyword
-Message-ID: <20200821063934.GA17838@embeddedor>
+Subject: [PATCH][next] b43: Use fallthrough pseudo-keyword
+Message-ID: <20200821064218.GA19502@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -66,68 +65,105 @@ the new pseudo-keyword macro fallthrough[1].
 
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 4 ++--
- drivers/net/wireless/intel/iwlegacy/common.c   | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/broadcom/b43/dma.c         | 2 +-
+ drivers/net/wireless/broadcom/b43/main.c        | 8 ++++----
+ drivers/net/wireless/broadcom/b43/phy_n.c       | 2 +-
+ drivers/net/wireless/broadcom/b43/pio.c         | 2 +-
+ drivers/net/wireless/broadcom/b43/tables_nphy.c | 2 +-
+ 5 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 9167c3d2711d..e3f79d6b978d 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -365,7 +365,7 @@ il3945_build_tx_cmd_hwcrypto(struct il_priv *il, struct ieee80211_tx_info *info,
- 
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		tx_cmd->sec_ctl |= TX_CMD_SEC_KEY128;
--		/* fall through */
-+		fallthrough;
- 	case WLAN_CIPHER_SUITE_WEP40:
- 		tx_cmd->sec_ctl |=
- 		    TX_CMD_SEC_WEP | (info->control.hw_key->
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index e73c223a7d28..9295344cd0d7 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -544,7 +544,7 @@ il4965_translate_rx_status(struct il_priv *il, u32 decrypt_in)
- 			decrypt_out |= RX_RES_STATUS_BAD_KEY_TTAK;
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index ca671fc13116..9a7c62bd5e43 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -1317,7 +1317,7 @@ static struct b43_dmaring *select_ring_by_priority(struct b43_wldev *dev,
+ 		switch (queue_prio) {
+ 		default:
+ 			B43_WARN_ON(1);
+-			/* fallthrough */
++			fallthrough;
+ 		case 0:
+ 			ring = dev->dma.tx_ring_AC_VO;
  			break;
- 		}
--		/* fall through - if TTAK OK */
-+		fallthrough;	/* if TTAK OK */
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index a54dd4f7fa54..88def6fa267b 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -1873,7 +1873,7 @@ static void b43_handle_firmware_panic(struct b43_wldev *dev)
+ 	switch (reason) {
  	default:
- 		if (!(decrypt_in & RX_MPDU_RES_STATUS_ICV_OK))
- 			decrypt_out |= RX_RES_STATUS_BAD_ICV_MIC;
-@@ -1617,7 +1617,7 @@ il4965_tx_cmd_build_hwcrypto(struct il_priv *il, struct ieee80211_tx_info *info,
- 
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		tx_cmd->sec_ctl |= TX_CMD_SEC_KEY128;
--		/* fall through */
+ 		b43dbg(dev->wl, "The panic reason is unknown.\n");
+-		/* fallthrough */
 +		fallthrough;
- 	case WLAN_CIPHER_SUITE_WEP40:
- 		tx_cmd->sec_ctl |=
- 		    (TX_CMD_SEC_WEP | (keyconf->keyidx & TX_CMD_SEC_MSK) <<
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index f78e062df572..6ede3b2a0b52 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -2677,7 +2677,7 @@ il_set_decrypted_flag(struct il_priv *il, struct ieee80211_hdr *hdr,
- 		if ((decrypt_res & RX_RES_STATUS_DECRYPT_TYPE_MSK) ==
- 		    RX_RES_STATUS_BAD_KEY_TTAK)
+ 	case B43_FWPANIC_DIE:
+ 		/* Do not restart the controller or firmware.
+ 		 * The device is nonfunctional from now on.
+@@ -2266,7 +2266,7 @@ int b43_do_request_fw(struct b43_request_fw_context *ctx,
+ 		size = be32_to_cpu(hdr->size);
+ 		if (size != ctx->blob->size - sizeof(struct b43_fw_header))
+ 			goto err_format;
+-		/* fallthrough */
++		fallthrough;
+ 	case B43_FW_TYPE_IV:
+ 		if (hdr->ver != 1)
+ 			goto err_format;
+@@ -3178,7 +3178,7 @@ static void b43_rate_memory_init(struct b43_wldev *dev)
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_36MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_48MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_54MB, 1);
+-		/* fallthrough */
++		fallthrough;
+ 	case B43_PHYTYPE_B:
+ 		b43_rate_memory_write(dev, B43_CCK_RATE_1MB, 0);
+ 		b43_rate_memory_write(dev, B43_CCK_RATE_2MB, 0);
+@@ -5329,7 +5329,7 @@ static void b43_supported_bands(struct b43_wldev *dev, bool *have_2ghz_phy,
+ 		/* There are 14e4:4321 PCI devs with 2.4 GHz BCM4321 (N-PHY) */
+ 		if (dev->phy.type != B43_PHYTYPE_G)
  			break;
 -		/* fall through */
 +		fallthrough;
- 
- 	case RX_RES_STATUS_SEC_TYPE_WEP:
- 		if ((decrypt_res & RX_RES_STATUS_DECRYPT_TYPE_MSK) ==
-@@ -2687,7 +2687,7 @@ il_set_decrypted_flag(struct il_priv *il, struct ieee80211_hdr *hdr,
- 			D_RX("Packet destroyed\n");
- 			return -1;
- 		}
--		/* fall through */
+ 	case 0x4313: /* BCM4311 */
+ 	case 0x431a: /* BCM4318 */
+ 	case 0x432a: /* BCM4321 */
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index ca2018da9753..0fe09b3989da 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -3239,7 +3239,7 @@ static void b43_nphy_workarounds_rev3plus(struct b43_wldev *dev)
+ 		if (!(dev->phy.rev >= 4 &&
+ 		      b43_current_band(dev->wl) == NL80211_BAND_2GHZ))
+ 			break;
+-		/* FALL THROUGH */
 +		fallthrough;
- 	case RX_RES_STATUS_SEC_TYPE_CCMP:
- 		if ((decrypt_res & RX_RES_STATUS_DECRYPT_TYPE_MSK) ==
- 		    RX_RES_STATUS_DECRYPT_OK) {
+ 	case 0:
+ 	case 1:
+ 		b43_ntab_write_bulk(dev, B43_NTAB16(8, 0x08), 4, vmid);
+diff --git a/drivers/net/wireless/broadcom/b43/pio.c b/drivers/net/wireless/broadcom/b43/pio.c
+index 1a11c5dfb8d9..8c28a9250cd1 100644
+--- a/drivers/net/wireless/broadcom/b43/pio.c
++++ b/drivers/net/wireless/broadcom/b43/pio.c
+@@ -294,7 +294,7 @@ static struct b43_pio_txqueue *select_queue_by_priority(struct b43_wldev *dev,
+ 		switch (queue_prio) {
+ 		default:
+ 			B43_WARN_ON(1);
+-			/* fallthrough */
++			fallthrough;
+ 		case 0:
+ 			q = dev->pio.tx_queue_AC_VO;
+ 			break;
+diff --git a/drivers/net/wireless/broadcom/b43/tables_nphy.c b/drivers/net/wireless/broadcom/b43/tables_nphy.c
+index 7957db94e84c..41a25d909d0d 100644
+--- a/drivers/net/wireless/broadcom/b43/tables_nphy.c
++++ b/drivers/net/wireless/broadcom/b43/tables_nphy.c
+@@ -3717,7 +3717,7 @@ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev)
+ 		case 5:
+ 			if (sprom->fem.ghz2.extpa_gain == 3)
+ 				return b43_ntab_tx_gain_epa_rev3_hi_pwr_2g;
+-			/* fall through */
++			fallthrough;
+ 		case 4:
+ 		case 3:
+ 			return b43_ntab_tx_gain_epa_rev3_2g;
 -- 
 2.27.0
 
