@@ -2,143 +2,85 @@ Return-Path: <SRS0=HZW5=B7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ACFCC433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 03:27:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92521C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 04:20:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F6D720758
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 03:27:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 709DC2076E
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 04:20:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="T1K/NYOg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbgHUD1Y (ORCPT
+        id S1726062AbgHUEUH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Aug 2020 23:27:24 -0400
-Received: from mga17.intel.com ([192.55.52.151]:26251 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726973AbgHUD1W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Aug 2020 23:27:22 -0400
-IronPort-SDR: jBu3NA8Yfe3eeQmq20F299sngtHcV5GjDOgbNCv+o0J3iy4+xtWF/ZD0wp5cCqXsSBSMqRHy0J
- zM+aAqeUApdg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9719"; a="135513559"
-X-IronPort-AV: E=Sophos;i="5.76,335,1592895600"; 
-   d="scan'208";a="135513559"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2020 20:27:18 -0700
-IronPort-SDR: YPiPiLT0k1RfRc776PuhUEHku3xNcbmC82HIucR2MLxiSIrJARMRdG6z3ZKpmfSjRX7Hu++Qm6
- tuVoaTZ4RdTQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,335,1592895600"; 
-   d="scan'208";a="401355100"
-Received: from lkp-server01.sh.intel.com (HELO 91ed66e1ca04) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 20 Aug 2020 20:27:16 -0700
-Received: from kbuild by 91ed66e1ca04 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1k8xhz-0000Ty-Qn; Fri, 21 Aug 2020 03:27:15 +0000
-Date:   Fri, 21 Aug 2020 11:26:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211:master] BUILD SUCCESS
- fce2ff728f95b8894db14f51c9274dc56c37616f
-Message-ID: <5f3f3ef8.NDYMrEX9H7kXzVrD%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Fri, 21 Aug 2020 00:20:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34232 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725268AbgHUEUG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Aug 2020 00:20:06 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B480DC061385
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2020 21:20:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=kXaNdzZJduRfaOc+V4bsZYNRnkeBw/Drrl0jQEgix/0=; b=T1K/NYOgve0NubyD/nf38NTxdM
+        YJ+WpjBjhd7st5klj7H3UUfrGViY83HsTf5gXNKcqNtPztjwXxaBAq7DhLkpIV0saXn4aS/fu1DOC
+        kVQCAfakSyC3EyFFD6JmqKyl75aQWp363gob72GnHe8eY+w4s8FCcikbCmt4tvhhpEJQ=;
+Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1k8yX6-0005s7-7t; Fri, 21 Aug 2020 06:20:04 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v2 03/13] mac80211: remove tx status call to ieee80211_sta_register_airtime
+Date:   Fri, 21 Aug 2020 06:19:51 +0200
+Message-Id: <20200821042001.23388-4-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200821042001.23388-1-nbd@nbd.name>
+References: <20200821042001.23388-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git  master
-branch HEAD: fce2ff728f95b8894db14f51c9274dc56c37616f  nl80211: fix NL80211_ATTR_HE_6GHZ_CAPABILITY usage
+All drivers using airtime fairness are calling ieee80211_sta_register_airtime
+directly
 
-elapsed time: 722m
-
-configs tested: 72
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-mips                           ip28_defconfig
-arm                            mmp2_defconfig
-h8300                    h8300h-sim_defconfig
-riscv                               defconfig
-m68k                       m5275evb_defconfig
-arm                        keystone_defconfig
-s390                             alldefconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                             defconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a002-20200820
-i386                 randconfig-a004-20200820
-i386                 randconfig-a005-20200820
-i386                 randconfig-a003-20200820
-i386                 randconfig-a006-20200820
-i386                 randconfig-a001-20200820
-x86_64               randconfig-a015-20200820
-x86_64               randconfig-a012-20200820
-x86_64               randconfig-a016-20200820
-x86_64               randconfig-a014-20200820
-x86_64               randconfig-a011-20200820
-x86_64               randconfig-a013-20200820
-i386                 randconfig-a013-20200820
-i386                 randconfig-a012-20200820
-i386                 randconfig-a011-20200820
-i386                 randconfig-a016-20200820
-i386                 randconfig-a014-20200820
-i386                 randconfig-a015-20200820
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ net/mac80211/status.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b3c356b3fc78..67df7a5acee5 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -988,12 +988,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			ieee80211_sta_tx_notify(sta->sdata, (void *) skb->data,
+ 						acked, info->status.tx_time);
+ 
+-		if (info->status.tx_time &&
+-		    wiphy_ext_feature_isset(local->hw.wiphy,
+-					    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
+-			ieee80211_sta_register_airtime(&sta->sta, tid,
+-						       info->status.tx_time, 0);
+-
+ 		if ((tx_time_est = ieee80211_info_get_tx_time_est(info)) > 0) {
+ 			/* Do this here to avoid the expensive lookup of the sta
+ 			 * in ieee80211_report_used_skb().
+-- 
+2.28.0
+
