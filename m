@@ -5,60 +5,60 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27348C433E3
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00684C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:21:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAB7821734
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF9F121744
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 07:21:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ESbKocyH"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GlMRUCt0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728179AbgHUHR5 (ORCPT
+        id S1728524AbgHUHVF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 03:17:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33510 "EHLO
+        Fri, 21 Aug 2020 03:21:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728074AbgHUHRe (ORCPT
+        with ESMTP id S1728008AbgHUHRu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 03:17:34 -0400
+        Fri, 21 Aug 2020 03:17:50 -0400
 Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 260A8C06135B
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:06 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id g75so818811wme.4
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59841C06136E
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:13 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id g75so819061wme.4
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 00:17:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ORROKc4zS4isv+NiIKK9DX3bTWpPv9GkX3d9qrOHUaI=;
-        b=ESbKocyHn40ftV/JsQHpreJTqQKXvQfoEyYUn+BGPFH/aP67/bgZtE1pJuGKZutQ96
-         VInQQ+c5LRUvRrRjKU50ah6UyoNBPt8yz9RUFUSA5mpNaP2IS2uVr2/OYw6MZW3AlcNE
-         kitgklNmt9g/a5lKx5p2M1nI7zlXcBaJNFXFWnDt41uQ3jtcw1lfA3wXgXaInPhavodw
-         8mWSpRKW6Ko+SXeVmtstUVQSd8n+j6A6e8UmapV8oHoPRP0XPS0P2JqnOIr4c9ySm8FZ
-         5SytEiA5l2C6Ri/TU66NwXO+cWl26JD6g/vnolek2KVDoLZdET3Yr7mfd3+TzqOLOQLy
-         QHPQ==
+        bh=bsXVZlb3+RPh6wsFFLtZip9Xh8c8BRLlYFokPA0kQU8=;
+        b=GlMRUCt0tk+ts8PiLe/psgZRUi46xqkZeg3YsyC3FR4geI5DPAC+Z3ksWqLHfcuETg
+         C203xvi1zCzTgBG5JRdq5KLMOwrn4MwgT/luru6MwvDzIWOTv22d8NnO1kjCrbbLRxFL
+         oHGGRX3igK0ZK5o8TFxdGMtir+lIaMP2c4dmh5PU5g4kURn1MyRx5wC274j8d37aLVFp
+         yV8sAyeJec4NYastw6y5fzbnDfOYFbGJMxDnO8IYcqCOI/OX9IsAprz7+j8XQjWN2YGc
+         LlB5fPm1IeR2+ywtO0dOrA2ndf9UiAsa8RZUc4Il6C1Ub3GtmSdchlzvWd7ujSR1U2nW
+         gqeg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ORROKc4zS4isv+NiIKK9DX3bTWpPv9GkX3d9qrOHUaI=;
-        b=PzguAZMebtnGvPPQiztTn9AdOc06I2+en7qbbrt8dZUjO9QGDf8UxU+mRvLsp8EVLw
-         lUh7Eur3RRZXc1EfV0RGpWAU8j/mEwKfqf4tS5R+PEJJTiX0Zi30Be2zSEq0i/5AnG1L
-         2mhpkxGy9B2KID3SPpe3WIxZZUw2X5FHxSvNQK0tf0TTlmfDDAzrr4pTBpbqBIwNCfK2
-         NhuUQJ3E2aRq5IThAg1DF/15+93XF+HzVTDwawf6HgxJBhcJHdx1gwZtyOdoTX23CDKc
-         QAmO2ABA3aEehGumj5YKlLxDK618TJwOIgfcznZr38s6fnvgilxu1UasyBTx6T85kKbx
-         h1oQ==
-X-Gm-Message-State: AOAM530ry9neorqWKPtFObF6TuxXC6dM3nZ+GOlrDCFEUm/SiqKTxF98
-        qrBHpYnrv/bLtTUHmeoz0XDnaQ==
-X-Google-Smtp-Source: ABdhPJyJxmaBQ0Hh4H/E0WBSFApXAvRQNjR8LzJXXhI6vHV5nxNeBzqY83GHvrLiSbs2U+rdRkArZQ==
-X-Received: by 2002:a05:600c:2945:: with SMTP id n5mr2116491wmd.66.1597994224797;
-        Fri, 21 Aug 2020 00:17:04 -0700 (PDT)
+        bh=bsXVZlb3+RPh6wsFFLtZip9Xh8c8BRLlYFokPA0kQU8=;
+        b=eQsF03+24FxuPkwELMcFY1AwTg9/EqCPql0hmMPhEqunGxS0YHtBomWryhvYBZZzOM
+         xuTYRycAQ5Tsz2cI1LkWt35iv9h1PdnJfV675gw1E/s5x5vDo1A9dqriHeOX9RX+1M2i
+         6JU5QtlNO4XHHJ9m7TVJtgCYP+TxTwPsKCDqsUFTROw3Aew8TKUArWXXLXY0dAZ3qzo4
+         wVoueR6CeLoWBAn/4wXgj6EnqkT6SoN0+hsURfDu5++evXvYHoOJQITiSUas3Adz90Bq
+         8yrg/OJlvr96mROpoFuoNqS/7clmog+/mMfPhZ4OgNhOoiWZUzxn4aKLjJIT+BlOYTrg
+         peyA==
+X-Gm-Message-State: AOAM532tMtvL5S54LUNTCGpOmFqsRB8oh1bt89IdWv//sjkuwHDVXHSK
+        ZJzG1ZlxFbyAU3wv5+RHRfPUSA==
+X-Google-Smtp-Source: ABdhPJzCwMbOmP03tTO4spaAbus4rZY09WFAG3Mma7D8oDWodk5Tt/MzWrKwrCrpe5EVtzJu3ncCyw==
+X-Received: by 2002:a1c:6555:: with SMTP id z82mr2359063wmb.67.1597994232048;
+        Fri, 21 Aug 2020 00:17:12 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.03
+        by smtp.gmail.com with ESMTPSA id y24sm2667957wmi.17.2020.08.21.00.17.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2020 00:17:04 -0700 (PDT)
+        Fri, 21 Aug 2020 00:17:11 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>
-Subject: [PATCH 13/32] wireless: intel: iwlwifi: dvm: rxon: Demote non-conformant kernel-doc headers
-Date:   Fri, 21 Aug 2020 08:16:25 +0100
-Message-Id: <20200821071644.109970-14-lee.jones@linaro.org>
+Subject: [PATCH 19/32] wireless: intel: iwlwifi: dvm: devices: Fix function documentation formatting issues
+Date:   Fri, 21 Aug 2020 08:16:31 +0100
+Message-Id: <20200821071644.109970-20-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821071644.109970-1-lee.jones@linaro.org>
 References: <20200821071644.109970-1-lee.jones@linaro.org>
@@ -80,14 +80,16 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Kerneldoc expects attributes/parameters to be in '@*.: ' format and
+gets confused if the variable does not follow the type/attribute
+definitions.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:695: warning: bad line:
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:701: warning: Function parameter or member 'priv' not described in 'iwl_set_rxon_channel'
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:701: warning: Function parameter or member 'ctx' not described in 'iwl_set_rxon_channel'
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:839: warning: Function parameter or member 'ctx' not described in 'iwl_full_rxon_required'
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:1029: warning: Function parameter or member 'priv' not described in 'iwlagn_commit_rxon'
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:1029: warning: Function parameter or member 'ctx' not described in 'iwlagn_commit_rxon'
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c:66: warning: Function parameter or member 'priv' not described in 'iwl_beacon_time_mask_low'
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c:66: warning: Function parameter or member 'tsf_bits' not described in 'iwl_beacon_time_mask_low'
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c:77: warning: Function parameter or member 'priv' not described in 'iwl_beacon_time_mask_high'
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c:77: warning: Function parameter or member 'tsf_bits' not described in 'iwl_beacon_time_mask_high'
 
 Cc: Johannes Berg <johannes.berg@intel.com>
 Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
@@ -100,40 +102,35 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-index 6f37c9fac31d9..12a3d464ae640 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-@@ -689,7 +689,7 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
- 		_iwl_set_rxon_ht(priv, ht_conf, ctx);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
+index d42bc46fe5662..c3e25885d1943 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
+@@ -58,8 +58,8 @@ static void iwl1000_nic_config(struct iwl_priv *priv)
  
--/**
-+/*
-  * iwl_set_rxon_channel - Set the band and channel values in staging RXON
-  * @ch: requested channel as a pointer to struct ieee80211_channel
+ /**
+  * iwl_beacon_time_mask_low - mask of lower 32 bit of beacon time
+- * @priv -- pointer to iwl_priv data structure
+- * @tsf_bits -- number of bits need to shift for masking)
++ * @priv: pointer to iwl_priv data structure
++ * @tsf_bits: number of bits need to shift for masking)
+  */
+ static inline u32 iwl_beacon_time_mask_low(struct iwl_priv *priv,
+ 					   u16 tsf_bits)
+@@ -69,8 +69,8 @@ static inline u32 iwl_beacon_time_mask_low(struct iwl_priv *priv,
  
-@@ -826,7 +826,7 @@ static int iwl_check_rxon_cmd(struct iwl_priv *priv,
- 	return errors ? -EINVAL : 0;
- }
- 
--/**
-+/*
-  * iwl_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
-  * @priv: staging_rxon is compared to active_rxon
-  *
-@@ -1007,7 +1007,7 @@ static void iwl_calc_basic_rates(struct iwl_priv *priv,
- 	ctx->staging.ofdm_basic_rates = ofdm;
- }
- 
--/**
-+/*
-  * iwlagn_commit_rxon - commit staging_rxon to hardware
-  *
-  * The RXON command in staging_rxon is committed to the hardware and
+ /**
+  * iwl_beacon_time_mask_high - mask of higher 32 bit of beacon time
+- * @priv -- pointer to iwl_priv data structure
+- * @tsf_bits -- number of bits need to shift for masking)
++ * @priv: pointer to iwl_priv data structure
++ * @tsf_bits: number of bits need to shift for masking)
+  */
+ static inline u32 iwl_beacon_time_mask_high(struct iwl_priv *priv,
+ 					    u16 tsf_bits)
 -- 
 2.25.1
 
