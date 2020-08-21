@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B11C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4403CC433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:55:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54F77208DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21F75208DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Aug 2020 08:55:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="G23hgFmr"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LITMTDv7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728056AbgHUIyz (ORCPT
+        id S1727921AbgHUIy7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Aug 2020 04:54:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48758 "EHLO
+        Fri, 21 Aug 2020 04:54:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726661AbgHUIyz (ORCPT
+        with ESMTP id S1726661AbgHUIy7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Aug 2020 04:54:55 -0400
+        Fri, 21 Aug 2020 04:54:59 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01A5BC061385
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 01:54:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2DFAC061385
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2020 01:54:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=tN4J3A28OqXx8tQlzfx7F02IaKOi3v/Nv2YrXhB/lYc=; b=G23hgFmrjADUYyX9+y2WOxIR57
-        d62Py+MK9aBdatPJdyHZoX/rD1GLrKfgdz1MACQLZ841896OXA6/nn70gi7uDV63SM5M2n4my6jeU
-        wx9ds4RmjkjHHlomAzSVGV0jvF1/2p8F0V1nEyqCW5HvatEXxehdL2gEZm+X1Hh+Bwak=;
+        bh=RaJjGRXkc8NkBwisJdPioknalkzGou4ilt0uYm6XxvY=; b=LITMTDv7aaEA3PBxxuS09tIDdA
+        C9xOKReL+FVaiCK1Jk3cD7ezsDkaSir7pp4H55P+GmRPIpBLJaPoq/DYu5S9clr/2GGY9yud079LU
+        OeKE2h5taCX9RGNp2+SmUJpcBDE5190SpSRUkVczjUkhv4Yzda37cpEyd3YTQvyboZ5U=;
 Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1k92jq-0005lO-VL; Fri, 21 Aug 2020 10:49:31 +0200
+        id 1k92jr-0005lO-CG; Fri, 21 Aug 2020 10:49:31 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v3 10/13] mac80211: extend ieee80211_tx_status_ext to support bulk free
-Date:   Fri, 21 Aug 2020 10:49:23 +0200
-Message-Id: <20200821084926.10650-11-nbd@nbd.name>
+Subject: [PATCH v3 12/13] mac80211: skip encap offload for tx multicast/control packets
+Date:   Fri, 21 Aug 2020 10:49:25 +0200
+Message-Id: <20200821084926.10650-13-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200821084926.10650-1-nbd@nbd.name>
 References: <20200821084926.10650-1-nbd@nbd.name>
@@ -56,60 +56,165 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Store processed skbs ready to be freed in a list so the driver bulk free them
+This simplifies the checks in the encap offload tx handler and allows using
+it in cases where software crypto is used for multicast packets, e.g. when
+using an AP_VLAN.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h |  2 ++
- net/mac80211/status.c  | 10 ++++++++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ net/mac80211/iface.c |  6 ++--
+ net/mac80211/tx.c    | 74 ++++++++++++--------------------------------
+ 2 files changed, 23 insertions(+), 57 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0cd8dbe4e688..aaec7688e965 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1095,12 +1095,14 @@ ieee80211_info_get_tx_time_est(struct ieee80211_tx_info *info)
-  * @info: Basic tx status information
-  * @skb: Packet skb (can be NULL if not provided by the driver)
-  * @rate: The TX rate that was used when sending the packet
-+ * @free_list: list where processed skbs are stored to be free'd by the driver
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	struct rate_info *rate;
-+	struct list_head *free_list;
- };
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 61883ec1128e..e49ae6de1f0a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -378,7 +378,8 @@ static bool ieee80211_set_sdata_offload_flags(struct ieee80211_sub_if_data *sdat
+ 			if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
+ 			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
+ 			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
+-			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
++			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256 ||
++			    !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
+ 				continue;
+ 			if (key->conf.cipher == WLAN_CIPHER_SUITE_TKIP ||
+ 			    !(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+@@ -1379,7 +1380,8 @@ static void ieee80211_set_vif_encap_ops(struct ieee80211_sub_if_data *sdata)
+ 			if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
+ 			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
+ 			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
+-			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
++			    key->conf.cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256 ||
++			    !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
+ 				continue;
+ 			if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+ 				enabled = false;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 64590ad930fe..4cf4840f2886 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4193,88 +4193,47 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 				struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
+ 	struct ieee80211_local *local = sdata->local;
+-	bool authorized = false;
+-	bool multicast;
+-	unsigned char *ra = ehdr->h_dest;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	u8 tid;
  
- /**
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index a3543c3dbd3d..a0dd926dceb3 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -1044,7 +1044,10 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 	 * with this test...
- 	 */
- 	if (!local->monitors && (!send_to_cooked || !local->cooked_mntrs)) {
--		dev_kfree_skb(skb);
-+		if (status->free_list)
-+			list_add_tail(&skb->list, status->free_list);
-+		else
-+			dev_kfree_skb(skb);
- 		return;
+-	if (IS_ERR(sta) || (sta && !sta->uploaded))
+-		sta = NULL;
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    (!sta || !test_sta_flag(sta, WLAN_STA_TDLS_PEER)))
+-		ra = sdata->u.mgd.bssid;
+-
+-	if (is_zero_ether_addr(ra))
+-		goto out_free;
+-
+ 	if (local->ops->wake_tx_queue) {
+ 		u16 queue = __ieee80211_select_queue(sdata, sta, skb);
+ 		skb_set_queue_mapping(skb, queue);
+ 		skb_get_hash(skb);
  	}
  
-@@ -1169,7 +1172,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 		return;
+-	multicast = is_multicast_ether_addr(ra);
+-
+-	if (sta)
+-		authorized = test_sta_flag(sta, WLAN_STA_AUTHORIZED);
+-
+-	if (!multicast && !authorized &&
+-	    (ehdr->h_proto != sdata->control_port_protocol ||
+-	     !ether_addr_equal(sdata->vif.addr, ehdr->h_source)))
+-		goto out_free;
+-
+-	if (multicast && sdata->vif.type == NL80211_IFTYPE_AP &&
+-	    !atomic_read(&sdata->u.ap.num_mcast_sta))
+-		goto out_free;
+-
+ 	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
+ 	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
+ 		goto out_free;
  
- 	ieee80211_report_used_skb(local, skb, false);
--	dev_kfree_skb(skb);
-+	if (status->free_list)
-+		list_add_tail(&skb->list, status->free_list);
-+	else
-+		dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status_ext);
+ 	memset(info, 0, sizeof(*info));
+ 
+-	if (sta) {
+-		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+-		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-		if (tid_tx) {
+-			if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+-				/* fall back to non-offload slow path */
+-				__ieee80211_subif_start_xmit(skb, dev, 0, 0, NULL);
+-				return;
+-			}
+-
+-			info->flags |= IEEE80211_TX_CTL_AMPDU;
+-			if (tid_tx->timeout)
+-				tid_tx->last_tx = jiffies;
++	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++	if (tid_tx) {
++		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++			/* fall back to non-offload slow path */
++			__ieee80211_subif_start_xmit(skb, dev, 0, 0, NULL);
++			return;
+ 		}
++
++		info->flags |= IEEE80211_TX_CTL_AMPDU;
++		if (tid_tx->timeout)
++			tid_tx->last_tx = jiffies;
+ 	}
+ 
+-	if (unlikely(!multicast && skb->sk &&
++	if (unlikely(skb->sk &&
+ 		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS))
+ 		info->ack_frame_id = ieee80211_store_ack_skb(local, skb,
+ 							     &info->flags, NULL);
+ 
+-	if (unlikely(sdata->control_port_protocol == ehdr->h_proto)) {
+-		if (sdata->control_port_no_encrypt)
+-			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
+-	}
+-
+-	if (multicast)
+-		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+-
+ 	info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+ 
+ 	ieee80211_tx_stats(dev, skb->len);
+ 
+-	if (sta) {
+-		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
+-		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
+-	}
++	sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
++	sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+@@ -4295,6 +4254,7 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
+ 					    struct net_device *dev)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
+ 	struct sta_info *sta;
+ 
+ 	if (unlikely(skb->len < ETH_HLEN)) {
+@@ -4306,6 +4266,10 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
+ 
+ 	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
+ 		kfree_skb(skb);
++	else if (unlikely(IS_ERR_OR_NULL(sta) || !sta->uploaded ||
++			  !test_sta_flag(sta, WLAN_STA_AUTHORIZED) ||
++			  sdata->control_port_protocol == ehdr->h_proto))
++		ieee80211_subif_start_xmit(skb, dev);
+ 	else
+ 		ieee80211_8023_xmit(sdata, dev, sta, skb);
  
 -- 
 2.28.0
