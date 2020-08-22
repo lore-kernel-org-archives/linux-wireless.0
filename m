@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ACEFC433DF
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F8FEC433DF
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36684208E4
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CDD12080D
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C5PhS7mK"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1Fu3DkI3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728614AbgHVXUJ (ORCPT
+        id S1728735AbgHVXUP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Aug 2020 19:20:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38382 "EHLO
+        Sat, 22 Aug 2020 19:20:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728471AbgHVXUH (ORCPT
+        with ESMTP id S1728730AbgHVXUO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Aug 2020 19:20:07 -0400
+        Sat, 22 Aug 2020 19:20:14 -0400
 Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA36FC061573;
-        Sat, 22 Aug 2020 16:20:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C477C061573;
+        Sat, 22 Aug 2020 16:20:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=n0p5iGhWUSGOL3k2alvtEOGSryhOBqldrStK+lXELs4=; b=C5PhS7mKOgpo5YTQOrA5Ge7Y+k
-        Qg0LFMnvGZOj7d7eNawuSbLmwbawTa0nzCjRWZEluF4wEx6laBDEYCe586vICghjmHAPv58yElYTi
-        eBZQMVMluw6bxz4qctjT7gGoEVH5AyGuj5vEP7NuAKm5h33awcFaDat2nzRcL1IXrdJjNYcAyr/G0
-        h1bxulU77MGw46WcPwVK6AIdSSgGLNgaQBtgieQgetwNhU0nXhEOdaUZjvE2S9wqfmYDh2d9aKngY
-        D7S5gEEtXHpUFFnsASyDUUf0q+s9fhewCl7gMyWDwuIaWa4LBCq2M1Bpgd6XJrTtb+l4pnGXGvkL4
-        9b0ZNH0Q==;
+        bh=0wXB/mgeIwbJYY2UNE96VGoeNw63NhFlkhHFN9WE9L8=; b=1Fu3DkI30QaUwOCvEEvpEYo0RF
+        Y/GFySs0HzvPs5whIQGpIFcLtxMU3mzDU/KgdNvVgVaZ9RgDdSRZT1aVirQTHgVavFsy8fYId0p7B
+        Iu7+ucN8+816Be9wpjXd97WlUlpJsyQj9/N1hkD/2vT/seGCnAzgs/xUhibagzGBCqTTS5fPKh90p
+        2D7z52duToGKAClvbvSCTiWcQKb0FqVPYPaxkOgNepWwv7s1jxWXDeWz7hoF44KRGWD0S0uauC7j7
+        D9gMRt/vhBw+cdxDLcuhlxpspnG3vQJu0tS+qvKDTQ2JKQ33dclOLSNp+W+ADpe6YM9ff5wEApvGh
+        HfNmdjiw==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k9cns-0006fS-BH; Sat, 22 Aug 2020 23:20:04 +0000
+        id 1k9cnz-0006fS-8m; Sat, 22 Aug 2020 23:20:11 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     netdev@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 3/7] net: wireless: delete duplicated word + fix grammar
-Date:   Sat, 22 Aug 2020 16:19:49 -0700
-Message-Id: <20200822231953.465-4-rdunlap@infradead.org>
+Subject: [PATCH 6/7] net: wireless: sme.c: delete duplicated word
+Date:   Sat, 22 Aug 2020 16:19:52 -0700
+Message-Id: <20200822231953.465-7-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200822231953.465-1-rdunlap@infradead.org>
 References: <20200822231953.465-1-rdunlap@infradead.org>
@@ -58,26 +58,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Drop the repeated word "Return" + fix verb.
+Drop the repeated word "is".
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Johannes Berg <johannes.berg@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
 ---
- net/wireless/core.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/wireless/sme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-next-20200731.orig/net/wireless/core.h
-+++ linux-next-20200731/net/wireless/core.h
-@@ -466,8 +466,8 @@ extern struct work_struct cfg80211_disco
-  *
-  * Checks if chandef is usable and we can/need start CAC on such channel.
-  *
-- * Return: Return true if all channels available and at least
-- *	   one channel require CAC (NL80211_DFS_USABLE)
-+ * Return: true if all channels available and at least
-+ *	   one channel requires CAC (NL80211_DFS_USABLE)
+--- linux-next-20200731.orig/net/wireless/sme.c
++++ linux-next-20200731/net/wireless/sme.c
+@@ -24,7 +24,7 @@
+ 
+ /*
+  * Software SME in cfg80211, using auth/assoc/deauth calls to the
+- * driver. This is is for implementing nl80211's connect/disconnect
++ * driver. This is for implementing nl80211's connect/disconnect
+  * and wireless extensions (if configured.)
   */
- bool cfg80211_chandef_dfs_usable(struct wiphy *wiphy,
- 				 const struct cfg80211_chan_def *chandef);
+ 
