@@ -2,98 +2,82 @@ Return-Path: <SRS0=4i1v=CA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15626C433DF
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 22:50:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ACEFC433DF
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9C442072D
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 22:50:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36684208E4
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Aug 2020 23:20:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cEqbgIxw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C5PhS7mK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727992AbgHVWul (ORCPT
+        id S1728614AbgHVXUJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Aug 2020 18:50:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33826 "EHLO
+        Sat, 22 Aug 2020 19:20:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727039AbgHVWul (ORCPT
+        with ESMTP id S1728471AbgHVXUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Aug 2020 18:50:41 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0E32C061573;
-        Sat, 22 Aug 2020 15:50:40 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id d11so7173379ejt.13;
-        Sat, 22 Aug 2020 15:50:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=qR1urhH66wEedypGFxjNEaBY4ub7u9Uam3EyOXwxQiQ=;
-        b=cEqbgIxwnyGaQU/WhUIVZQGz5HblJlFMs28ple4cbroKJDq0Jnnl2vOAenygWWLiZE
-         NOhQ0K/pzKc5mMmMo4bU9l5N6HkFY7toziJs5bsrzw5BC7YfgNTD2FVcIS1rWHC3tYaP
-         oO4C0Dw26IvHBx6QabOA3X8rGeEVfA6KAIQe94TAHknPSj0DnIsN7XxWCkLGFlKa9um6
-         IHG6hwNB7stR/qmPC9lv3ILW8o0JnkpWJMyfGZeqOVIycrI1wrMBF+Fql/oMvrXCx0UU
-         hcvLBBM+N6DtgP52priJrRqL418fXyB410fXXHJPPfuUSNCCk/u3k3U5VlcbBKoChPRy
-         WASg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=qR1urhH66wEedypGFxjNEaBY4ub7u9Uam3EyOXwxQiQ=;
-        b=qMDMOfK7HClsQ1k16BpCIQcy7UAF+9V+4vaVhb3zLtYyW3zbsU+sHPGqFMtcNTfZMl
-         IEE17sRRAPe+Hh2KXxVQVHi6mxILAYayAHj+vfe4IkawOq1VoKPLbV42aJn8DDQY5tWY
-         Q20C9s9poTlNzG6VJRTj0Z+960EWhoguBnQUFkU3FTV+OSgzqAry9wkyCviZLkdVppE/
-         1PlrToL/9jJhrTClRiQg49AGz3zB+8w2/eEgouhN5s27C5YGtTyl6Hiy+Fgd87RcqqYr
-         A4rUExdIIeVexlPdr1sUvWIvstQOGhgHHLniboFb9AZmoy/4pUq9eOYxfXhlet73h2DP
-         8uiQ==
-X-Gm-Message-State: AOAM5331D6fkBKxNgcwA8KCXu6KOMKa8UQNVe1nsd2rfKJJSl/D4VaFq
-        DtFeoQ0vxNmgmoPYjEJOfjC96sJ4wdPJag==
-X-Google-Smtp-Source: ABdhPJxsYPiklg2G7SIRT987XZTIH5ZKR50n6lRzV9g9gWMnBzlRiWxhb/guY5j6YmRgB7hT9B/DTw==
-X-Received: by 2002:a17:906:6055:: with SMTP id p21mr9397263ejj.173.1598136638084;
-        Sat, 22 Aug 2020 15:50:38 -0700 (PDT)
-Received: from debian64.daheim (p4fd09171.dip0.t-ipconnect.de. [79.208.145.113])
-        by smtp.gmail.com with ESMTPSA id v23sm4186367ejh.84.2020.08.22.15.50.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Aug 2020 15:50:37 -0700 (PDT)
-Received: from localhost.daheim ([127.0.0.1])
-        by debian64.daheim with esmtp (Exim 4.94)
-        (envelope-from <chunkeey@gmail.com>)
-        id 1k9cLH-000GFF-2O; Sun, 23 Aug 2020 00:50:33 +0200
-Subject: Re: [PATCH][next] carl9170: Use fallthrough pseudo-keyword
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Christian Lamparter <chunkeey@googlemail.com>,
+        Sat, 22 Aug 2020 19:20:07 -0400
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA36FC061573;
+        Sat, 22 Aug 2020 16:20:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=n0p5iGhWUSGOL3k2alvtEOGSryhOBqldrStK+lXELs4=; b=C5PhS7mKOgpo5YTQOrA5Ge7Y+k
+        Qg0LFMnvGZOj7d7eNawuSbLmwbawTa0nzCjRWZEluF4wEx6laBDEYCe586vICghjmHAPv58yElYTi
+        eBZQMVMluw6bxz4qctjT7gGoEVH5AyGuj5vEP7NuAKm5h33awcFaDat2nzRcL1IXrdJjNYcAyr/G0
+        h1bxulU77MGw46WcPwVK6AIdSSgGLNgaQBtgieQgetwNhU0nXhEOdaUZjvE2S9wqfmYDh2d9aKngY
+        D7S5gEEtXHpUFFnsASyDUUf0q+s9fhewCl7gMyWDwuIaWa4LBCq2M1Bpgd6XJrTtb+l4pnGXGvkL4
+        9b0ZNH0Q==;
+Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k9cns-0006fS-BH; Sat, 22 Aug 2020 23:20:04 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     netdev@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Johannes Berg <johannes.berg@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20200821065204.GA24827@embeddedor>
-From:   Christian Lamparter <chunkeey@gmail.com>
-Message-ID: <1bc53e98-b82c-3f36-13e6-e42131adb4ac@gmail.com>
-Date:   Sun, 23 Aug 2020 00:50:32 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] net: wireless: delete duplicated word + fix grammar
+Date:   Sat, 22 Aug 2020 16:19:49 -0700
+Message-Id: <20200822231953.465-4-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200822231953.465-1-rdunlap@infradead.org>
+References: <20200822231953.465-1-rdunlap@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200821065204.GA24827@embeddedor>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-21 08:52, Gustavo A. R. Silva wrote:
-> Replace the existing /* fall through */ comments and its variants with
-> the new pseudo-keyword macro fallthrough[1].
-> 
-> [1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-Acked-by: Christian Lamparter <chunkeey@gmail.com>
+Drop the repeated word "Return" + fix verb.
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+---
+ net/wireless/core.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- linux-next-20200731.orig/net/wireless/core.h
++++ linux-next-20200731/net/wireless/core.h
+@@ -466,8 +466,8 @@ extern struct work_struct cfg80211_disco
+  *
+  * Checks if chandef is usable and we can/need start CAC on such channel.
+  *
+- * Return: Return true if all channels available and at least
+- *	   one channel require CAC (NL80211_DFS_USABLE)
++ * Return: true if all channels available and at least
++ *	   one channel requires CAC (NL80211_DFS_USABLE)
+  */
+ bool cfg80211_chandef_dfs_usable(struct wiphy *wiphy,
+ 				 const struct cfg80211_chan_def *chandef);
