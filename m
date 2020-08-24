@@ -7,38 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7C2C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 17:51:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD35C433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 17:51:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6BA020639
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 17:51:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CA0620639
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 17:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727780AbgHXRvZ (ORCPT
+        id S1727077AbgHXRvZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 24 Aug 2020 13:51:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37166 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726529AbgHXRvX (ORCPT
+        with ESMTP id S1726429AbgHXRvX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 24 Aug 2020 13:51:23 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F32A5C061574;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA907C061573;
         Mon, 24 Aug 2020 10:51:22 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1kAGcp-00A1ue-72; Mon, 24 Aug 2020 19:51:19 +0200
+        id 1kAGco-00A1ue-Dy; Mon, 24 Aug 2020 19:51:18 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org,
         Stephen Hemminger <stephen@networkplumber.org>,
         netdev@vger.kernel.org
 Cc:     David Ahern <dsahern@gmail.com>
-Subject: [PATCH 3/3] genl: ctrl: support dumping netlink policy
-Date:   Mon, 24 Aug 2020 19:51:08 +0200
-Message-Id: <20200824175108.53101-3-johannes@sipsolutions.net>
+Subject: [PATCH 1/3] libnetlink: add rtattr_for_each_nested() iteration macro
+Date:   Mon, 24 Aug 2020 19:51:06 +0200
+Message-Id: <20200824175108.53101-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200824175108.53101-1-johannes@sipsolutions.net>
-References: <20200824175108.53101-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -46,105 +44,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Support dumping the netlink policy of a given generic netlink
-family, the policy (with any sub-policies if appropriate) is
-exported by the kernel in a general fashion.
+This is useful for iterating elements in a nested attribute,
+if they're not parsed with a strict length limit or such.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- genl/ctrl.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ include/libnetlink.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/genl/ctrl.c b/genl/ctrl.c
-index 0fb464b01cfb..68099fe97f1a 100644
---- a/genl/ctrl.c
-+++ b/genl/ctrl.c
-@@ -28,13 +28,15 @@
- static int usage(void)
- {
- 	fprintf(stderr,"Usage: ctrl <CMD>\n" \
--		       "CMD   := get <PARMS> | list | monitor\n" \
-+		       "CMD   := get <PARMS> | list | monitor | policy <PARMS>\n" \
- 		       "PARMS := name <name> | id <id>\n" \
- 		       "Examples:\n" \
- 		       "\tctrl ls\n" \
- 		       "\tctrl monitor\n" \
- 		       "\tctrl get name foobar\n" \
--		       "\tctrl get id 0xF\n");
-+		       "\tctrl get id 0xF\n"
-+		       "\tctrl policy name foobar\n"
-+		       "\tctrl policy id 0xF\n");
- 	return -1;
- }
+diff --git a/include/libnetlink.h b/include/libnetlink.h
+index e27516f7648f..0d4a9f29afbd 100644
+--- a/include/libnetlink.h
++++ b/include/libnetlink.h
+@@ -284,4 +284,9 @@ int rtnl_from_file(FILE *, rtnl_listen_filter_t handler,
+  * messages from dump file */
+ #define NLMSG_TSTAMP	15
  
-@@ -123,7 +125,8 @@ static int print_ctrl(struct rtnl_ctrl_data *ctrl,
- 	    ghdr->cmd != CTRL_CMD_DELFAMILY &&
- 	    ghdr->cmd != CTRL_CMD_NEWFAMILY &&
- 	    ghdr->cmd != CTRL_CMD_NEWMCAST_GRP &&
--	    ghdr->cmd != CTRL_CMD_DELMCAST_GRP) {
-+	    ghdr->cmd != CTRL_CMD_DELMCAST_GRP &&
-+	    ghdr->cmd != CTRL_CMD_GETPOLICY) {
- 		fprintf(stderr, "Unknown controller command %d\n", ghdr->cmd);
- 		return 0;
- 	}
-@@ -136,7 +139,7 @@ static int print_ctrl(struct rtnl_ctrl_data *ctrl,
- 	}
- 
- 	attrs = (struct rtattr *) ((char *) ghdr + GENL_HDRLEN);
--	parse_rtattr(tb, CTRL_ATTR_MAX, attrs, len);
-+	parse_rtattr_flags(tb, CTRL_ATTR_MAX, attrs, len, NLA_F_NESTED);
- 
- 	if (tb[CTRL_ATTR_FAMILY_NAME]) {
- 		char *name = RTA_DATA(tb[CTRL_ATTR_FAMILY_NAME]);
-@@ -159,6 +162,9 @@ static int print_ctrl(struct rtnl_ctrl_data *ctrl,
- 		__u32 *ma = RTA_DATA(tb[CTRL_ATTR_MAXATTR]);
- 		fprintf(fp, " max attribs: %d ",*ma);
- 	}
-+	if (tb[CTRL_ATTR_POLICY])
-+		nl_print_policy(tb[CTRL_ATTR_POLICY], fp);
++#define rtattr_for_each_nested(attr, nest) \
++	for ((attr) = (void *)RTA_DATA(nest); \
++	     RTA_OK(attr, RTA_PAYLOAD(nest) - ((char *)(attr) - (char *)RTA_DATA((nest)))); \
++	     (attr) = RTA_TAIL((attr)))
 +
- 	/* end of family definitions .. */
- 	fprintf(fp,"\n");
- 	if (tb[CTRL_ATTR_OPS]) {
-@@ -235,7 +241,9 @@ static int ctrl_list(int cmd, int argc, char **argv)
- 		exit(1);
- 	}
- 
--	if (cmd == CTRL_CMD_GETFAMILY) {
-+	if (cmd == CTRL_CMD_GETFAMILY || cmd == CTRL_CMD_GETPOLICY) {
-+		req.g.cmd = cmd;
-+
- 		if (argc != 2) {
- 			fprintf(stderr, "Wrong number of params\n");
- 			return -1;
-@@ -260,7 +268,9 @@ static int ctrl_list(int cmd, int argc, char **argv)
- 			fprintf(stderr, "Wrong params\n");
- 			goto ctrl_done;
- 		}
-+	}
- 
-+	if (cmd == CTRL_CMD_GETFAMILY) {
- 		if (rtnl_talk(&rth, nlh, &answer) < 0) {
- 			fprintf(stderr, "Error talking to the kernel\n");
- 			goto ctrl_done;
-@@ -273,7 +283,7 @@ static int ctrl_list(int cmd, int argc, char **argv)
- 
- 	}
- 
--	if (cmd == CTRL_CMD_UNSPEC) {
-+	if (cmd == CTRL_CMD_UNSPEC || cmd == CTRL_CMD_GETPOLICY) {
- 		nlh->nlmsg_flags = NLM_F_ROOT|NLM_F_MATCH|NLM_F_REQUEST;
- 		nlh->nlmsg_seq = rth.dump = ++rth.seq;
- 
-@@ -324,6 +334,8 @@ static int parse_ctrl(struct genl_util *a, int argc, char **argv)
- 	    matches(*argv, "show") == 0 ||
- 	    matches(*argv, "lst") == 0)
- 		return ctrl_list(CTRL_CMD_UNSPEC, argc-1, argv+1);
-+	if (matches(*argv, "policy") == 0)
-+		return ctrl_list(CTRL_CMD_GETPOLICY, argc-1, argv+1);
- 	if (matches(*argv, "help") == 0)
- 		return usage();
- 
+ #endif /* __LIBNETLINK_H__ */
 -- 
 2.26.2
 
