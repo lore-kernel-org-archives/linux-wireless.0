@@ -2,109 +2,115 @@ Return-Path: <SRS0=0jg5=CC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8885BC433E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 10:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F65C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 10:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 665DC2071E
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 10:45:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="potWdMV0"
+	by mail.kernel.org (Postfix) with ESMTP id 40AF020738
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Aug 2020 10:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598266652;
+	bh=3imcF2vxIpoWNFKt4kmwoUwK2ZR2Jf9V1XMMJQrD0Zs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=oXaNX/QdsbToAfWkIiTaDf9D3PU6IaYcfy0j1lKzzXOxjnknTKL0ixXff9qzQrADw
+	 lCwEG/bNLhjK2ggsIyH0D/Qab8s7ueSp2edk2FaIeXVC3YQjCzlPBVns8RwLNA6LnC
+	 EpqznkRIv4ewvfbKfjtAasJQyadWHfy0noqRkPfY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727835AbgHXKpS (ORCPT
+        id S1726964AbgHXK5W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Aug 2020 06:45:18 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:37381 "EHLO m43-7.mailgun.net"
+        Mon, 24 Aug 2020 06:57:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48072 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727042AbgHXKoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Aug 2020 06:44:55 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598265894; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=57L/Zg3bLcwkGTaIY8dQYEeaVA5e5JRYpxQx6rKkgaY=;
- b=potWdMV09K0h0oWDYwcAmnaBab0nT0P751AyTba6DMv0m2v6vohajrxuL5CV/2hbyL+meDTt
- yasTS4HAdQwBHBrE2nAJ9WYptgvcjNbK7+AazPOn5iGL3XBMUaaNlg6u2bZV5VaB1PgxoVy0
- GG6xwbDYXfRJCgdZLrFh9mF2ZxY=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f439a1a54c370a51f7b24f5 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 24 Aug 2020 10:44:42
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CAB34C43391; Mon, 24 Aug 2020 10:44:41 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S1726646AbgHXK5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Aug 2020 06:57:20 -0400
+Received: from lore-desk.redhat.com (unknown [151.48.139.80])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 71E77C433CA;
-        Mon, 24 Aug 2020 10:44:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id ADA5020738;
+        Mon, 24 Aug 2020 10:57:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598266639;
+        bh=3imcF2vxIpoWNFKt4kmwoUwK2ZR2Jf9V1XMMJQrD0Zs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LtUCSsvTEEHLLsmrpVug7hAknPXvGNaYIn1G8etZc6R9ntWngnS053y5D45skcrEG
+         k6iKQw7lD7boK5QnhG19c2etjIfoPnWCSyd+aJP02iGf1fck9ZmgrHtvyk/aUQPJa+
+         jM/7eCh2oakvykoFSfEGQcd1S0lgWrDiWj5v1Fno=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com
+Subject: [PATCH v2] mt76: mt7615: unlock dfs bands
+Date:   Mon, 24 Aug 2020 12:57:13 +0200
+Message-Id: <fc603aeb996a99836f02712ab637f7e9f4841e9e.1598263398.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 24 Aug 2020 18:44:41 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc:     ath10k <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: add flag to protect napi operation to avoid
- dead loop hang for SDIO
-In-Reply-To: <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
-References: <1598243612-4627-1-git-send-email-wgong@codeaurora.org>
- <CABPxzYLjys+cXXRM5J680ZOs+6VrYt=_3rWv-gqkCod=-A1VrA@mail.gmail.com>
- <fd98989a87f2a50655dc95bdcd535c0d@codeaurora.org>
- <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
-Message-ID: <2d6362ce85956d0f7df2e596b89a7028@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-24 18:03, Krishna Chaitanya wrote:
-> On Mon, Aug 24, 2020 at 3:10 PM Wen Gong <wgong@codeaurora.org> wrote:
->> 
->> On 2020-08-24 16:35, Krishna Chaitanya wrote:
->> > On Mon, Aug 24, 2020 at 10:03 AM Wen Gong <wgong@codeaurora.org> wrote:
->> >>
->> >> It happened "Kernel panic - not syncing: hung_task: blocked tasks"
->> >> when
->> >> test simulate crash and ifconfig down/rmmod meanwhile.
->> >>
->> ...
->> >>
->> >>  #ifdef CONFIG_PM
->> > Even though your DUT is SDIO based we should be doing this in general
->> > for all, no?
->> > core_restart + hif_stop is common to all.
->> this patch does not have core_restart.
-> I was referring to the combination which is causing the issue.
-> 
->> I dit not hit the issue for others bus(PCIe,SNOC...), so I can not
->> change them with a
->> assumption they also have this issue.
-> But that doesn't make sense, the combination is being hit for others 
-> also.
-> (they should also endup calling napi_disable twice?) or they are using
-> some other check to avoid this (doesn't appear so from a quick look at 
-> the
-> code).
-Because I only use SDIO, I did not use others BUS, so I did not hit the 
-issue
-on other BUS.
-> 
-> So, I am back to my initial guess that the SDIO specific async_rx_work 
-> is
-> causing/aggravating this issue.
-the commit log of this patch has explain the reason, it is not caused by 
-the
-async_rx_work and I have started the "ath10k: cancel rx worker in 
-hif_stop for SDIO"
-for async_rx_work.
+Unlock dfs channels for mt7615 devices since the driver supports
+radar detection. Dfs pattern detector has been tested successfully by
+mt7615 users.
+Do not unlock DFS frequencies for mt7663 devices since it has not been
+tested yet.
+
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+Changes since v1:
+- do not unlock dfs bands for mt7663
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c  | 25 +++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index a147891953a1..00dc9e18a8a4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -217,6 +217,22 @@ static const struct ieee80211_iface_limit if_limits[] = {
+ 	}
+ };
+ 
++static const struct ieee80211_iface_combination if_comb_radar[] = {
++	{
++		.limits = if_limits,
++		.n_limits = ARRAY_SIZE(if_limits),
++		.max_interfaces = 4,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++				       BIT(NL80211_CHAN_WIDTH_20) |
++				       BIT(NL80211_CHAN_WIDTH_40) |
++				       BIT(NL80211_CHAN_WIDTH_80) |
++				       BIT(NL80211_CHAN_WIDTH_160) |
++				       BIT(NL80211_CHAN_WIDTH_80P80),
++	}
++};
++
+ static const struct ieee80211_iface_combination if_comb[] = {
+ 	{
+ 		.limits = if_limits,
+@@ -315,8 +331,13 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
+ 	hw->sta_data_size = sizeof(struct mt7615_sta);
+ 	hw->vif_data_size = sizeof(struct mt7615_vif);
+ 
+-	wiphy->iface_combinations = if_comb;
+-	wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++	if (is_mt7663(&phy->dev->mt76)) {
++		wiphy->iface_combinations = if_comb;
++		wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++	} else {
++		wiphy->iface_combinations = if_comb_radar;
++		wiphy->n_iface_combinations = ARRAY_SIZE(if_comb_radar);
++	}
+ 	wiphy->reg_notifier = mt7615_regd_notifier;
+ 
+ 	wiphy->max_sched_scan_plan_interval = MT7615_MAX_SCHED_SCAN_INTERVAL;
+-- 
+2.26.2
+
