@@ -2,151 +2,127 @@ Return-Path: <SRS0=45S8=CD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8E0C433E1
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 08:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C612DC433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 08:43:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9226420639
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 08:25:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C63E20706
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 08:43:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XW04ofRE"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vc/EOs2X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728087AbgHYIZC (ORCPT
+        id S1726149AbgHYInf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Aug 2020 04:25:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60306 "EHLO
+        Tue, 25 Aug 2020 04:43:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725924AbgHYIZB (ORCPT
+        with ESMTP id S1726531AbgHYIne (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Aug 2020 04:25:01 -0400
-Received: from mail-yb1-xb42.google.com (mail-yb1-xb42.google.com [IPv6:2607:f8b0:4864:20::b42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F62C061574
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2020 01:25:01 -0700 (PDT)
-Received: by mail-yb1-xb42.google.com with SMTP id e14so6694720ybf.4
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2020 01:25:01 -0700 (PDT)
+        Tue, 25 Aug 2020 04:43:34 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B007C061574
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2020 01:43:33 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id g75so1341108wme.4
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2020 01:43:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fEcm0/mWZVF6Q0LDNpH3ElgXvSjjwXFdNhIuG7jVALc=;
-        b=XW04ofREcAJ0Ifn2Bx7ghqwZAJ6eYmpee02p+fHpWpSGPwdzonQ2HVri24wjPThXbK
-         b8CalkQUcbT1dLkm/ttkJI8kwYMeLls/wQquKAkriwB48QLs49r1UtkPgbbiDTy5leZK
-         MnLat1prRh7M/jV7kvUmAd3j8gJVuU1Q9NmDlVAtbmFwPouf3xmpj9/6YTJvf9c5bMeg
-         8JVp2Lc2k6fYhyPizYbPteRi2C9pEuTwQ3TKo/MMo0U6336im6GAiEtKVziqsKFzdIHB
-         lAXa9X27lnNGPYr/NaXodYlZb3RkKnSwKoov4qq/TWpM9DkbilL9esC1vBkOiPRz+4Eh
-         YOfA==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=eJIrPqYjE0dAhcP4ZkZrj1aYUysa9b1OXixWXQw7McY=;
+        b=vc/EOs2XvrKCpyBoB+0CqxZSDDrqZOwL9j+1S1VdFeqsiDRB3vzpHZaViBORnZ0htc
+         eyjxEUBaZBZzZvmys9xebuxUl6lt76GxgDrpnssWp5OQkpRD8zbdA4jIACSe66TWNW9+
+         zepPS5hRMlZ3GsTUecYthvOP+5zchQqgB6Jt02u/0jssKrxGw5kr6kflMN42Eo/mRp1A
+         HO5WrF5HZAXfStyveN6y5/2xzf4s13Oann37ZW7+O96e81MwDbwmWRGqr3y1j8Vsf/Nj
+         NN1wsab9XTOHgVNiiC69qxQG65g9WhXROb1W+ZEXjIRKdSUbHDRQ9BscGPYzLbwc0oDz
+         ba5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fEcm0/mWZVF6Q0LDNpH3ElgXvSjjwXFdNhIuG7jVALc=;
-        b=ORNikDjESHwnLQdzEoZ2g/exMGfRkrJ2ZSmQWuUq6MPcFCDp+sY00Zvlrg3adfqZjC
-         xn+k1eZ7srlHbEptAoI12ZaSLH794gjqAGM2jGL5gpQEqWuvCe0n3A6Co902O9RI420Q
-         QimrtuYgZUf2t2tewin64sumgGl8+XLy9L4IaYsPUU6PLHg66B2ld96+K2AKs7VYaPrF
-         O5pWZQfY55dySFSqG/S4qTfv6Xcq9A6l2Zi/j0OmeCYlU2jYJNCJaNpa6Y/+Z/zitFkQ
-         pA919C7AyejyfJARCKuUfaKJnxFLD7QUu/mTaQX0yWr3gqI73ZJbzuGiLsVNk9pVj8ba
-         CK5A==
-X-Gm-Message-State: AOAM530iUwVnIuJMawzmNLom+T6hBuhQEZ+f5fU4dj7PrC6FFYOiCxFl
-        fhyYC+WRsuM/dV3+HI9YAeowGG7L5LmfHziUhC4=
-X-Google-Smtp-Source: ABdhPJw72pGJvgkVlDlRvFUsu+dipcuVagCUU/h7RIGOmhCHaJT1eigXiC5mp0od3W8c8S27pJ3MtIUtucZi/XDQ98Q=
-X-Received: by 2002:a5b:308:: with SMTP id j8mr12132440ybp.185.1598343900508;
- Tue, 25 Aug 2020 01:25:00 -0700 (PDT)
-MIME-Version: 1.0
-References: <1598243612-4627-1-git-send-email-wgong@codeaurora.org>
- <CABPxzYLjys+cXXRM5J680ZOs+6VrYt=_3rWv-gqkCod=-A1VrA@mail.gmail.com>
- <fd98989a87f2a50655dc95bdcd535c0d@codeaurora.org> <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
- <2d6362ce85956d0f7df2e596b89a7028@codeaurora.org> <CABPxzY+Fc22ke1ygRnDs0Uds0a7n=792QN8ALXciDrnx9SQuqQ@mail.gmail.com>
- <663fbb682fd8df555b2964d7d86b8eca@codeaurora.org>
-In-Reply-To: <663fbb682fd8df555b2964d7d86b8eca@codeaurora.org>
-From:   Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date:   Tue, 25 Aug 2020 13:54:49 +0530
-Message-ID: <CABPxzYJ982LdcUD3a_tyu3rrqp+iacZrmAp4zG_3HqCiDCR_2w@mail.gmail.com>
-Subject: Re: [PATCH v2] ath10k: add flag to protect napi operation to avoid
- dead loop hang for SDIO
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=eJIrPqYjE0dAhcP4ZkZrj1aYUysa9b1OXixWXQw7McY=;
+        b=LVS/d/aXEXZ/xrM9hDBqNBKyeIxLYZMcVagTyRBjPFKKeWQ7vdBhncXsexhSiv5Y8h
+         GaxV8AgS/476+RieEzInvb1XTZftozPbFKu4nidOm7nThqfn+mYhpELUYKZXdz0I0wFh
+         wjR/8yxoUkkSUvOP3yxieZ5lKIEgh2sA9JZTPeAkgDeZYFUjzBQ4RGVwkzqIaVpr2HUv
+         5dFmr4fxbDiMs1Kqb5RAVhCA5/ECvNxxUg8HjefgJK9l5di5em8dyYavq/L9VgKA1Fyz
+         cEM7X8d3+6dErbXa2xA/me7Xc+9BWTcbpRxhC6Y/eUBZMyTFYGkiWy2kOcmf9f3PBzj5
+         STug==
+X-Gm-Message-State: AOAM533jqX1+fQT2rjSpPy1UjAmFsh+Otbt39rOY8wqDnZz01WHykTNG
+        eLrda02HmGztB7AcHm+R9W8VMA==
+X-Google-Smtp-Source: ABdhPJztzhCA6GBIz1xdsS4VB/ocM3B3MekVavrtjyhJxwbLVXZBjyjUGG5qqogyVRidS2+Od0jLqQ==
+X-Received: by 2002:a1c:ed15:: with SMTP id l21mr1012476wmh.56.1598345011082;
+        Tue, 25 Aug 2020 01:43:31 -0700 (PDT)
+Received: from localhost.localdomain ([88.122.66.28])
+        by smtp.gmail.com with ESMTPSA id u13sm4349613wmm.20.2020.08.25.01.43.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 25 Aug 2020 01:43:30 -0700 (PDT)
+From:   Loic Poulain <loic.poulain@linaro.org>
+To:     kvalo@codeaurora.org
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        bryan.odonoghue@linaro.org, Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wcn36xx: Setup starting bitrate to MCS-5
+Date:   Tue, 25 Aug 2020 10:49:01 +0200
+Message-Id: <1598345341-4505-1-git-send-email-loic.poulain@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 9:11 AM Wen Gong <wgong@codeaurora.org> wrote:
->
-> On 2020-08-24 19:15, Krishna Chaitanya wrote:
-> > On Mon, Aug 24, 2020 at 4:15 PM Wen Gong <wgong@codeaurora.org> wrote:
-> >>
-> >> On 2020-08-24 18:03, Krishna Chaitanya wrote:
-> >> > On Mon, Aug 24, 2020 at 3:10 PM Wen Gong <wgong@codeaurora.org> wrote:
-> >> >>
-> >> >> On 2020-08-24 16:35, Krishna Chaitanya wrote:
-> >> >> > On Mon, Aug 24, 2020 at 10:03 AM Wen Gong <wgong@codeaurora.org> wrote:
-> >> >> >>
-> >> >> >> It happened "Kernel panic - not syncing: hung_task: blocked tasks"
-> >> >> >> when
-> >> >> >> test simulate crash and ifconfig down/rmmod meanwhile.
-> >> >> >>
-> >> >> ...
-> >> >> >>
-> >> >> >>  #ifdef CONFIG_PM
-> >> >> > Even though your DUT is SDIO based we should be doing this in general
-> >> >> > for all, no?
-> >> >> > core_restart + hif_stop is common to all.
-> >> >> this patch does not have core_restart.
-> >> > I was referring to the combination which is causing the issue.
-> >> >
-> >> >> I dit not hit the issue for others bus(PCIe,SNOC...), so I can not
-> >> >> change them with a
-> >> >> assumption they also have this issue.
-> >> > But that doesn't make sense, the combination is being hit for others
-> >> > also.
-> >> > (they should also endup calling napi_disable twice?) or they are using
-> >> > some other check to avoid this (doesn't appear so from a quick look at
-> >> > the
-> >> > code).
-> >> Because I only use SDIO, I did not use others BUS, so I did not hit
-> >> the
-> >> issue
-> >> on other BUS.
-> > I understand, my point was based on the description the issue looks
-> > independent
-> > of the BUS type, so, the fix should also be generic. I understand that
-> > your testing
-> > is only focused on SDIO, but we should have a generic fix and probably
-> > use
-> > communities help to get it tested rather than fixing SDIO only.
-> I checked the ath10k, only sdio.c, snoc.c, pci.c have used napi.
-> I think it can change to move the
-> napi_synchronize/napi_disable/napi_enable from
-> sido.c/snoc.c/pci.c to ath10k_core.ko as below:
-> void ath10k_core_napi_enable(struct ath10k *ar)
-> {
->         if (!ar->napi_enabled) {
->                 napi_enable(&ar->napi);
->                 ar->napi_enabled = true;
->         }
-> }
-> EXPORT_SYMBOL(ath10k_core_napi_enable);
->
-> void ath10k_core_napi_disable_sync(struct ath10k *ar)
-> {
->         if (ar->napi_enabled) {
->                 napi_synchronize(&ar->napi);
->                 napi_disable(&ar->napi);
->                 ar->napi_enabled = false;
->         }
-> }
-> EXPORT_SYMBOL(ath10k_core_napi_disable_sync);
->
-> is it appropriate?
-> ...
-Yes, this is perfect. One minor comment you can just do the
-check initially and return.
+By default, after associated to an AP, the wcn36xx bitrate adjustment
+algorithm starts sending data at 1Mbps, and increases the rate slowly
+(1Mbps, 2Mbps, 6Mbps...) over the further TX packets.
 
-if (ar->napi_enabled)
-   return
+Starting at 1Mbps usually causes the initial throughput to be really
+low and the maximum possible bitrate to be reached after about hundreed
+of TX packets.
+
+That can be improved by setting a different initial bitrate for data
+packets via the ENABLE_DYNAMIC_RA_START_RATE configuration value, this
+value can be a legacy or MCS rate.
+
+This patch sets the starting bitrate value to MCS-5, which seems to be
+a good compromise given it can be quickly adjusted low or up if necessary.
+(and based on what I observed in the wild with some mobile devices)
+
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h | 8 ++++++++
+ drivers/net/wireless/ath/wcn36xx/smd.c | 1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 6ba0fd5..88e1ed5 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -728,6 +728,14 @@ enum pe_stats_mask {
+ #define WCN36XX_HAL_CFG_ENABLE_TDLS_OXYGEN_MODE		104
+ #define WCN36XX_HAL_CFG_MAX_PARAMS			105
+ 
++/* Specify the starting bitrate, 11B and 11A/G rates can be specified in
++ * multiples of 0.5 So for 5.5 mbps => 11. for MCS 0 - 7 rates, Bit 7 should
++ * set to 1 and Bit 0-6 represent the MCS index. so for MCS2 => 130.
++ * Any invalid non-zero value or unsupported rate will set the start rate
++ * to 6 mbps.
++ */
++#define WCN36XX_HAL_CFG_ENABLE_DYNAMIC_RA_START_RATE	210
++
+ /* Message definitons - All the messages below need to be packed */
+ 
+ /* Definition for HAL API Version. */
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 9864c6f..83247d3 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -77,6 +77,7 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
+ 	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
+ 	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
++	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_RA_START_RATE, 133), /* MCS 5 */
+ };
+ 
+ static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
+-- 
+2.7.4
+
