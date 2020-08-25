@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9026EC433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D1CC433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67A2320706
+	by mail.kernel.org (Postfix) with ESMTP id ED76020706
 	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZSy4/135"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XyBCJrsh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728687AbgHYF3Y (ORCPT
+        id S1728715AbgHYF3Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Aug 2020 01:29:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33032 "EHLO
+        Tue, 25 Aug 2020 01:29:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728630AbgHYF3R (ORCPT
+        with ESMTP id S1728653AbgHYF3R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 25 Aug 2020 01:29:17 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4372C061797
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCA48C061799
         for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2020 22:29:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,20 +32,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=vAp1kUCxDhAD2zQ47Xojt01AZLeTeC/elLrg17j7ZvI=; b=ZSy4/1350ZFs/yzkagHOON0M3n
-        cpC2LNsxHJogCqsUjIpss5Qz2oYCzCoBjHJ6/KIhKfQeH3iUV7M67vYDpPfVJMLz3LpA8PZrDiUsG
-        2N49Jtyu5ofb7Or3i8fAuq8xG2dluPXC5wkU7UqFhZv9Hb09QQWyujxVrSzWRhq00vp4=;
+        bh=rA1DOLXwQ59WC5TTbobxF30UxtUDddp+8OTrnM1mI7g=; b=XyBCJrsh8tNXN9PBGYQsWRoQE1
+        KIyZQXlVd5bb8OF+sKFr2xS7z6ffUylGmERKfwBbsO9xhGVxgQSkrIUymx8teD8y4+1bh0e4NB7Ho
+        KEc6DboUAKTeFCK6l2KyDicQOCej49CB3uICZwKdjY/MIPlhjdEZdEEQb5npUvO8iyJE=;
 Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1kARWC-0006jr-L8
-        for linux-wireless@vger.kernel.org; Tue, 25 Aug 2020 07:29:12 +0200
+        id 1kARWB-0006jr-OQ
+        for linux-wireless@vger.kernel.org; Tue, 25 Aug 2020 07:29:11 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 8/9] mt76: add memory barrier to DMA queue kick
-Date:   Tue, 25 Aug 2020 07:29:08 +0200
-Message-Id: <20200825052909.36955-8-nbd@nbd.name>
+Subject: [PATCH 4/9] mt76: mt7915: schedule tx tasklet in mt7915_mac_tx_free
+Date:   Tue, 25 Aug 2020 07:29:04 +0200
+Message-Id: <20200825052909.36955-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200825052909.36955-1-nbd@nbd.name>
 References: <20200825052909.36955-1-nbd@nbd.name>
@@ -56,26 +56,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ensure that descriptor memory has been fully written before letting the
-hardware read it
+The previous scheduling round may have been limited by AQL.
+More frames might be available after the tx free run.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/dma.c | 2 --
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 1 +
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 7545b552db25..24ff21eedbd0 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -143,6 +143,7 @@ mt76_dma_sync_idx(struct mt76_dev *dev, struct mt76_queue *q)
- static void
- mt76_dma_kick_queue(struct mt76_dev *dev, struct mt76_queue *q)
- {
-+	wmb();
- 	writel(q->head, &q->regs->cpu_idx);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+index f6c18a08d414..34e90bb08f0a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+@@ -96,8 +96,6 @@ static int mt7915_poll_tx(struct napi_struct *napi, int budget)
+ 
+ 	mt7915_tx_cleanup(dev);
+ 
+-	tasklet_schedule(&dev->mt76.tx_tasklet);
+-
+ 	if (napi_complete_done(napi, 0))
+ 		mt7915_irq_enable(dev, MT_INT_TX_DONE_ALL);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 06bb8d0103ba..9c920c9f4d2b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -936,6 +936,7 @@ void mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	dev_kfree_skb(skb);
+ 
+ 	mt7915_mac_sta_poll(dev);
++	tasklet_schedule(&dev->mt76.tx_tasklet);
  }
  
+ void mt7915_tx_complete_skb(struct mt76_dev *mdev, enum mt76_txq_id qid,
 -- 
 2.28.0
 
