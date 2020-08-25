@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4004DC433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EFBC433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2178520706
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C85C720706
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="NM31q6Vn"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="O+f1AH8M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728676AbgHYF3R (ORCPT
+        id S1728693AbgHYF3S (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Aug 2020 01:29:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33018 "EHLO
+        Tue, 25 Aug 2020 01:29:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728106AbgHYF3Q (ORCPT
+        with ESMTP id S1728622AbgHYF3R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Aug 2020 01:29:16 -0400
+        Tue, 25 Aug 2020 01:29:17 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2579C061755
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAD24C061796
         for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2020 22:29:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=UjdJ+DqFY1vz3zp2NdZ9v4r61Ys8Xln81rOGSrgrQco=; b=NM31q6Vn0SxmpVPHWtwIg+oQMR
-        4xpZHzqYnYp8y8xKieT0zoT1QVBQc+UOC6mGh/xBQBbxuICDq4/lGw84hxx5vIdySxfLgLt5qImDK
-        mf70QN2tK+TL1rTAHateFNSiWUFs8JfHyV5Vk6levhgJkwVi50wROvgNJnzPa/PJHOGY=;
+        bh=XOwdHT1y0DdvcLP02NShNpxqbyii12ZCmDzCiI4VM8E=; b=O+f1AH8M3A+c0YXri9mK/gQGAd
+        Yb0juthhMRcaSowIqkAdOHg9z9lS5sln+7PAfBATjMb6l0kpZUo4FMKG3Vii5HGvcI/YmF6+PXObV
+        UPsdXP/l8Cb/9f8uKRWD8VgHqYCZ27ndxaEG1fjor70quOKvR7rMpt33F7VHq19cYmXI=;
 Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1kARWB-0006jr-6V
+        id 1kARWB-0006jr-JL
         for linux-wireless@vger.kernel.org; Tue, 25 Aug 2020 07:29:11 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/9] mt76: mt7615: fix reading airtime statistics
-Date:   Tue, 25 Aug 2020 07:29:01 +0200
-Message-Id: <20200825052909.36955-1-nbd@nbd.name>
+Subject: [PATCH 3/9] mt76: dma: update q->queued immediately on cleanup
+Date:   Tue, 25 Aug 2020 07:29:03 +0200
+Message-Id: <20200825052909.36955-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200825052909.36955-1-nbd@nbd.name>
+References: <20200825052909.36955-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,74 +56,96 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-- change the WTBL LMAC access function to set the mapping window only once
-- use ac * 2 as offset, since each AC has separate words for rx and tx
+Tx cleanup and tx enqueuing can run in parallel. In order to avoid queue
+starvation issues under load, update q->queued immediately.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 25 +++++++++++--------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c | 39 +++++++++---------------
+ 1 file changed, 14 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 9e17be5005e9..ff08a59c747c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -88,13 +88,12 @@ bool mt7915_mac_wtbl_update(struct mt7915_dev *dev, int idx, u32 mask)
- 			 0, 5000);
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index ade2d58b8da9..7545b552db25 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -152,10 +152,8 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 	struct mt76_sw_queue *sq = &dev->q_tx[qid];
+ 	struct mt76_queue *q = sq->q;
+ 	struct mt76_queue_entry entry;
+-	unsigned int n_swq_queued[8] = {};
+-	unsigned int n_queued = 0;
+ 	bool wake = false;
+-	int i, last;
++	int last;
+ 
+ 	if (!q)
+ 		return;
+@@ -165,13 +163,14 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 	else
+ 		last = readl(&q->regs->dma_idx);
+ 
+-	while ((q->queued > n_queued) && q->tail != last) {
++	while (q->queued > 0 && q->tail != last) {
++		int swq_qid = -1;
++
+ 		mt76_dma_tx_cleanup_idx(dev, q, q->tail, &entry);
+ 		if (entry.schedule)
+-			n_swq_queued[entry.qid]++;
++			swq_qid = entry.qid;
+ 
+ 		q->tail = (q->tail + 1) % q->ndesc;
+-		n_queued++;
+ 
+ 		if (entry.skb)
+ 			dev->drv->tx_complete_skb(dev, qid, &entry);
+@@ -184,29 +183,21 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 
+ 		if (!flush && q->tail == last)
+ 			last = readl(&q->regs->dma_idx);
+-	}
+-
+-	spin_lock_bh(&q->lock);
+-
+-	q->queued -= n_queued;
+-	for (i = 0; i < 4; i++) {
+-		if (!n_swq_queued[i])
+-			continue;
+ 
+-		dev->q_tx[i].swq_queued -= n_swq_queued[i];
+-	}
+-
+-	/* ext PHY */
+-	for (i = 0; i < 4; i++) {
+-		if (!n_swq_queued[i])
+-			continue;
+-
+-		dev->q_tx[__MT_TXQ_MAX + i].swq_queued -= n_swq_queued[4 + i];
++		spin_lock_bh(&q->lock);
++		if (swq_qid >= 4)
++			dev->q_tx[__MT_TXQ_MAX + swq_qid - 4].swq_queued--;
++		else if (swq_qid >= 0)
++			dev->q_tx[swq_qid].swq_queued--;
++		q->queued--;
++		spin_unlock_bh(&q->lock);
+ 	}
+ 
+ 	if (flush) {
++		spin_lock_bh(&q->lock);
+ 		mt76_dma_sync_idx(dev, q);
+ 		mt76_dma_kick_queue(dev, q);
++		spin_unlock_bh(&q->lock);
+ 	}
+ 
+ 	wake = wake && q->stopped &&
+@@ -217,8 +208,6 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 	if (!q->queued)
+ 		wake_up(&dev->tx_wait);
+ 
+-	spin_unlock_bh(&q->lock);
+-
+ 	if (wake)
+ 		ieee80211_wake_queue(dev->hw, qid);
  }
- 
--static u32 mt7915_mac_wtbl_lmac_read(struct mt7915_dev *dev, u16 wcid,
--				     u16 addr)
-+static u32 mt7915_mac_wtbl_lmac_addr(struct mt7915_dev *dev, u16 wcid)
- {
- 	mt76_wr(dev, MT_WTBLON_TOP_WDUCR,
- 		FIELD_PREP(MT_WTBLON_TOP_WDUCR_GROUP, (wcid >> 7)));
- 
--	return mt76_rr(dev, MT_WTBL_LMAC_OFFS(wcid, addr));
-+	return MT_WTBL_LMAC_OFFS(wcid, 0);
- }
- 
- /* TODO: use txfree airtime info to avoid runtime accessing in the long run */
-@@ -121,6 +120,7 @@ void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 
- 	while (true) {
- 		bool clear = false;
-+		u32 addr;
- 		u16 idx;
- 
- 		spin_lock_bh(&dev->sta_poll_lock);
-@@ -133,20 +133,23 @@ void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 		list_del_init(&msta->poll_list);
- 		spin_unlock_bh(&dev->sta_poll_lock);
- 
--		for (i = 0, idx = msta->wcid.idx; i < IEEE80211_NUM_ACS; i++) {
-+		idx = msta->wcid.idx;
-+		addr = mt7915_mac_wtbl_lmac_addr(dev, idx) + 20 * 4;
-+
-+		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 			u32 tx_last = msta->airtime_ac[i];
--			u32 rx_last = msta->airtime_ac[i + IEEE80211_NUM_ACS];
-+			u32 rx_last = msta->airtime_ac[i + 4];
-+
-+			msta->airtime_ac[i] = mt76_rr(dev, addr);
-+			msta->airtime_ac[i + 4] = mt76_rr(dev, addr + 4);
- 
--			msta->airtime_ac[i] =
--				mt7915_mac_wtbl_lmac_read(dev, idx, 20 + i);
--			msta->airtime_ac[i + IEEE80211_NUM_ACS] =
--				mt7915_mac_wtbl_lmac_read(dev, idx, 21 + i);
- 			tx_time[i] = msta->airtime_ac[i] - tx_last;
--			rx_time[i] = msta->airtime_ac[i + IEEE80211_NUM_ACS] -
--				     rx_last;
-+			rx_time[i] = msta->airtime_ac[i + 4] - rx_last;
- 
- 			if ((tx_last | rx_last) & BIT(30))
- 				clear = true;
-+
-+			addr += 8;
- 		}
- 
- 		if (clear) {
 -- 
 2.28.0
 
