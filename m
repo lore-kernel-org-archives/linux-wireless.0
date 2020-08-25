@@ -2,139 +2,147 @@ Return-Path: <SRS0=45S8=CD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0652C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 03:41:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE1CC433E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA44D20866
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 03:41:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6232020706
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 05:29:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZfnC/e+6"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ob2fivK1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728105AbgHYDlK (ORCPT
+        id S1728663AbgHYF3R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Aug 2020 23:41:10 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:25539 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727011AbgHYDlJ (ORCPT
+        Tue, 25 Aug 2020 01:29:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33016 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726166AbgHYF3Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Aug 2020 23:41:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598326868; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Uvcu1ht5kV9VgGpjCT/tlLrb1xXWHrIjP9OCITouXRM=;
- b=ZfnC/e+6GOoK6L6lb/hlsDWEArDspMyQdpkSzeHPv2wQ1rxNDyd6OOLC5QJEssYbOSjj0LD4
- lO6xMg71zw/9YKkX0gaXZaj7+Wdst/XbrjK+8xRgF48jbDv/2+VJz30h07OZKbSE9To1H+2V
- QpoQ18Wxt7vMyF/q7W782MCsDhI=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5f448850fb5eb2479c4af92b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 25 Aug 2020 03:41:04
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6904CC433CB; Tue, 25 Aug 2020 03:41:04 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7983C433CA;
-        Tue, 25 Aug 2020 03:41:03 +0000 (UTC)
+        Tue, 25 Aug 2020 01:29:16 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A2D1C061574
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2020 22:29:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ji4VBIcwno29gBLF3yej07qC7lixrXX1GXJhNwV01B8=; b=ob2fivK1XvgLcTO5MS05uABedY
+        vXkpkd3perzzhrZL/WbUK3SXsc+8foFWBpfUOQip/3uVorl0Pxn5K2ehbpkIBPf2OtHkFVqhW9nNc
+        zn2ISKZtPfwLiKKBQ6+Qc9/e0YPopN7V4G+cu5dGjIGzGAe/Y7Jy9t10fivizhm0FdrI=;
+Received: from p5b206497.dip0.t-ipconnect.de ([91.32.100.151] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kARWB-0006jr-DB
+        for linux-wireless@vger.kernel.org; Tue, 25 Aug 2020 07:29:11 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/9] mt76: mt7915: optimize mt7915_mac_sta_poll
+Date:   Tue, 25 Aug 2020 07:29:02 +0200
+Message-Id: <20200825052909.36955-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200825052909.36955-1-nbd@nbd.name>
+References: <20200825052909.36955-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 25 Aug 2020 11:41:03 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc:     ath10k <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: add flag to protect napi operation to avoid
- dead loop hang for SDIO
-In-Reply-To: <CABPxzY+Fc22ke1ygRnDs0Uds0a7n=792QN8ALXciDrnx9SQuqQ@mail.gmail.com>
-References: <1598243612-4627-1-git-send-email-wgong@codeaurora.org>
- <CABPxzYLjys+cXXRM5J680ZOs+6VrYt=_3rWv-gqkCod=-A1VrA@mail.gmail.com>
- <fd98989a87f2a50655dc95bdcd535c0d@codeaurora.org>
- <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
- <2d6362ce85956d0f7df2e596b89a7028@codeaurora.org>
- <CABPxzY+Fc22ke1ygRnDs0Uds0a7n=792QN8ALXciDrnx9SQuqQ@mail.gmail.com>
-Message-ID: <663fbb682fd8df555b2964d7d86b8eca@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-24 19:15, Krishna Chaitanya wrote:
-> On Mon, Aug 24, 2020 at 4:15 PM Wen Gong <wgong@codeaurora.org> wrote:
->> 
->> On 2020-08-24 18:03, Krishna Chaitanya wrote:
->> > On Mon, Aug 24, 2020 at 3:10 PM Wen Gong <wgong@codeaurora.org> wrote:
->> >>
->> >> On 2020-08-24 16:35, Krishna Chaitanya wrote:
->> >> > On Mon, Aug 24, 2020 at 10:03 AM Wen Gong <wgong@codeaurora.org> wrote:
->> >> >>
->> >> >> It happened "Kernel panic - not syncing: hung_task: blocked tasks"
->> >> >> when
->> >> >> test simulate crash and ifconfig down/rmmod meanwhile.
->> >> >>
->> >> ...
->> >> >>
->> >> >>  #ifdef CONFIG_PM
->> >> > Even though your DUT is SDIO based we should be doing this in general
->> >> > for all, no?
->> >> > core_restart + hif_stop is common to all.
->> >> this patch does not have core_restart.
->> > I was referring to the combination which is causing the issue.
->> >
->> >> I dit not hit the issue for others bus(PCIe,SNOC...), so I can not
->> >> change them with a
->> >> assumption they also have this issue.
->> > But that doesn't make sense, the combination is being hit for others
->> > also.
->> > (they should also endup calling napi_disable twice?) or they are using
->> > some other check to avoid this (doesn't appear so from a quick look at
->> > the
->> > code).
->> Because I only use SDIO, I did not use others BUS, so I did not hit 
->> the
->> issue
->> on other BUS.
-> I understand, my point was based on the description the issue looks 
-> independent
-> of the BUS type, so, the fix should also be generic. I understand that
-> your testing
-> is only focused on SDIO, but we should have a generic fix and probably 
-> use
-> communities help to get it tested rather than fixing SDIO only.
-I checked the ath10k, only sdio.c, snoc.c, pci.c have used napi.
-I think it can change to move the 
-napi_synchronize/napi_disable/napi_enable from
-sido.c/snoc.c/pci.c to ath10k_core.ko as below:
-void ath10k_core_napi_enable(struct ath10k *ar)
-{
-        if (!ar->napi_enabled) {
-                napi_enable(&ar->napi);
-                ar->napi_enabled = true;
-        }
-}
-EXPORT_SYMBOL(ath10k_core_napi_enable);
+Since DMA completion does not imply tx completion, it makes more sense to
+poll for airtime from mt7915_mac_tx_free.
+Reduce the runtime of the function by moving all items from dev->sta_poll_list
+to a local list once and process any stations that were added afterwards
+on the next run
 
-void ath10k_core_napi_disable_sync(struct ath10k *ar)
-{
-        if (ar->napi_enabled) {
-                napi_synchronize(&ar->napi);
-                napi_disable(&ar->napi);
-                ar->napi_enabled = false;
-        }
-}
-EXPORT_SYMBOL(ath10k_core_napi_disable_sync);
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/dma.c    |  1 -
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c    | 13 ++++++++++---
+ drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h |  1 -
+ 3 files changed, 10 insertions(+), 5 deletions(-)
 
-is it appropriate?
-...
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+index 8a1ae08d9572..f6c18a08d414 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+@@ -95,7 +95,6 @@ static int mt7915_poll_tx(struct napi_struct *napi, int budget)
+ 	dev = container_of(napi, struct mt7915_dev, mt76.tx_napi);
+ 
+ 	mt7915_tx_cleanup(dev);
+-	mt7915_mac_sta_poll(dev);
+ 
+ 	tasklet_schedule(&dev->mt76.tx_tasklet);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index ff08a59c747c..06bb8d0103ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -97,7 +97,7 @@ static u32 mt7915_mac_wtbl_lmac_addr(struct mt7915_dev *dev, u16 wcid)
+ }
+ 
+ /* TODO: use txfree airtime info to avoid runtime accessing in the long run */
+-void mt7915_mac_sta_poll(struct mt7915_dev *dev)
++static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ {
+ 	static const u8 ac_to_tid[] = {
+ 		[IEEE80211_AC_BE] = 0,
+@@ -114,8 +114,13 @@ void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 	struct ieee80211_sta *sta;
+ 	struct mt7915_sta *msta;
+ 	u32 tx_time[IEEE80211_NUM_ACS], rx_time[IEEE80211_NUM_ACS];
++	LIST_HEAD(sta_poll_list);
+ 	int i;
+ 
++	spin_lock_bh(&dev->sta_poll_lock);
++	list_splice_init(&dev->sta_poll_list, &sta_poll_list);
++	spin_unlock_bh(&dev->sta_poll_lock);
++
+ 	rcu_read_lock();
+ 
+ 	while (true) {
+@@ -124,11 +129,11 @@ void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 		u16 idx;
+ 
+ 		spin_lock_bh(&dev->sta_poll_lock);
+-		if (list_empty(&dev->sta_poll_list)) {
++		if (list_empty(&sta_poll_list)) {
+ 			spin_unlock_bh(&dev->sta_poll_lock);
+ 			break;
+ 		}
+-		msta = list_first_entry(&dev->sta_poll_list,
++		msta = list_first_entry(&sta_poll_list,
+ 					struct mt7915_sta, poll_list);
+ 		list_del_init(&msta->poll_list);
+ 		spin_unlock_bh(&dev->sta_poll_lock);
+@@ -929,6 +934,8 @@ void mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
+ 		mt76_put_txwi(mdev, txwi);
+ 	}
+ 	dev_kfree_skb(skb);
++
++	mt7915_mac_sta_poll(dev);
+ }
+ 
+ void mt7915_tx_complete_skb(struct mt76_dev *mdev, enum mt76_txq_id qid,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index cbe84c4aac75..63d4802b4df4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -436,7 +436,6 @@ mt7915_l2_rmw(struct mt7915_dev *dev, u32 addr, u32 mask, u32 val)
+ bool mt7915_mac_wtbl_update(struct mt7915_dev *dev, int idx, u32 mask);
+ void mt7915_mac_reset_counters(struct mt7915_phy *phy);
+ void mt7915_mac_cca_stats_reset(struct mt7915_phy *phy);
+-void mt7915_mac_sta_poll(struct mt7915_dev *dev);
+ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
+ 			   struct sk_buff *skb, struct mt76_wcid *wcid,
+ 			   struct ieee80211_key_conf *key, bool beacon);
+-- 
+2.28.0
+
