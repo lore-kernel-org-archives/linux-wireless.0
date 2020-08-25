@@ -2,149 +2,152 @@ Return-Path: <SRS0=45S8=CD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,RCVD_ILLEGAL_IP,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00022C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 09:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EF1C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 09:59:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8B602067C
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 09:01:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD0652071E
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Aug 2020 09:59:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="bKcNggBt"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="gnHDbeVg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729538AbgHYI7L (ORCPT
+        id S1729534AbgHYJ7P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Aug 2020 04:59:11 -0400
-Received: from mail-dm6nam12on2052.outbound.protection.outlook.com ([40.107.243.52]:53959
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728033AbgHYI7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Aug 2020 04:59:10 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=K/g6npRGDt3zip5HjkdenYT0LYy/YQ5Tu+UZLe5gS05jAUs3CKNKOnKt+RycgoF61ttuAFTAGIJ7AdcSmTI+wdwmePlFO8QCZWhkQvtUMPvb6yoKmFSGSELRz5zKWCiRyr4QTd/3clsMJEKcD0pvw4kUJmULoZ4nJXZm9xTqWrnKFO7gwwWuet/TzedcI/tX1PIztdqH5qhAkTVeGFIuqVRNfZi72N6AgjznGPX+iVi1QxttOlb1jiMtPNqewlp22wupDIIjRJcCGbrOJPivUDpRbN4jVz69wVlr6HFJLMvunfshq+ugBmkXOG8X0AZhfziBvTNdVo/XDWQ41RNsAA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=s0sp6y30pjqI5Gazn1kr2gtAgYJ9qqAzqY75gitmdAo=;
- b=XwodiuVqZpXTin2Hz6IQ0+OwoXbk1nGE8zG+Nh3uUAj6biQIkQzy2JGhsg/WQR4IWQC4ARdi9aHbWXen+tT1NVhSOUUF30W88eS4CDFDK7/r5B50OVQ9GGflKDYlNeo7vEMEJlW06jLXF2cyRBE7GDBxDQsv0QLxSekDYTpRRbC1fqbhtJRAY2w/cxB3Gh+MwuAqdzA+NjiaU7REQesQ1sJMPOY5Hsu1T7HhO7n8KzcieIWH3WkdSrB0a4PA2TKMdwcSHn8pYqYiQEh61e4qNM4RDcBEvn3UFE0kC4lpsqnAEkkA+Dma4sRlMqOG2fJVBjgZ0D9QCgkV1HHGqbeWrA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=s0sp6y30pjqI5Gazn1kr2gtAgYJ9qqAzqY75gitmdAo=;
- b=bKcNggBtOCMlrGWWlRY7NwEGPmgS2Jo1/YwkxHOGjmd2iqLqc9cdqlYRFKcF1NDJA82Pb9EhzNhmyoZfaem4IKelfuUeOVDQnaf4uiMA26UjmaJ0kizZln5MKIKUyDr0xGxabmN7pck3Pmmvx3+x8oMSas7aNbWEfj0+PKmsZLI=
-Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
- header.d=none;driverdev.osuosl.org; dmarc=none action=none
- header.from=silabs.com;
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
- by SN6PR11MB3501.namprd11.prod.outlook.com (2603:10b6:805:d4::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3305.26; Tue, 25 Aug
- 2020 08:58:58 +0000
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::85c9:1aa9:aeab:3fa6]) by SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::85c9:1aa9:aeab:3fa6%4]) with mapi id 15.20.3305.026; Tue, 25 Aug 2020
- 08:58:58 +0000
-From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
-To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
-        <jerome.pouiller@silabs.com>
-Subject: [PATCH v2 03/12] staging: wfx: fix BA when MFP is disabled but BSS is MFP capable
-Date:   Tue, 25 Aug 2020 10:58:19 +0200
-Message-Id: <20200825085828.399505-3-Jerome.Pouiller@silabs.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200825085828.399505-1-Jerome.Pouiller@silabs.com>
-References: <20200825085828.399505-1-Jerome.Pouiller@silabs.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-ClientProxiedBy: PR3P192CA0002.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:102:56::7) To SN6PR11MB2718.namprd11.prod.outlook.com
- (2603:10b6:805:63::18)
+        Tue, 25 Aug 2020 05:59:15 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:28300 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726000AbgHYJ7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Aug 2020 05:59:14 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1598349553; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=gAmumPVKDAbz1OPi9k0aQ0e27mwE/qsDzt35hOJVSOk=;
+ b=gnHDbeVgYxOSvdxn1OLV3mW00J7Wh+V6qKgnGj1BJWMTAy3fF9zJ/LSFE+DnrNBn2ERY96DF
+ Y3eJlDgiUJD+Z0ayPcG6koHnj5bPV8j0+TAOINMIZ+T97gQWbXzld4zNwz8D5pqOVKV5ccOQ
+ Kaa1tB+DRp4OFCBOmlefLYduIEo=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f44e0d53525716afd3b2e79 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 25 Aug 2020 09:58:45
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E90A9C433CB; Tue, 25 Aug 2020 09:58:44 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8F97EC433C6;
+        Tue, 25 Aug 2020 09:58:44 +0000 (UTC)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from 255.255.255.255 (255.255.255.255) by PR3P192CA0002.EURP192.PROD.OUTLOOK.COM (2603:10a6:102:56::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.19 via Frontend Transport; Tue, 25 Aug 2020 08:58:56 +0000
-X-Mailer: git-send-email 2.28.0
-X-Originating-IP: [37.71.187.125]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: de8e4718-8781-483a-64bb-08d848d51a6f
-X-MS-TrafficTypeDiagnostic: SN6PR11MB3501:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR11MB3501820427FCA35D49D7DCC893570@SN6PR11MB3501.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6b/aNcRRR9Z8lU26fqoMPDPKKHiuVlKPbrkOHFlWPbq7H1qfsBICspRxfDQJtFnjeMx3e4rBMmshRB5OMtPOz0TCdEZ1Wwybl08BLjI9+0oIxqW3BMnesu7COwZyyMvuRRPNstASRdqFVm4LnkydM4VHuXWS8PFdm4xAuASt0KjGE8QsZjyFGIeqrhHRtU+/pB6qSDj57YjHFn47BXqe/McugmMvkphbTNzhqNGXdG2lzx+LNbzZq0rc3G5WiwVgBa7ix/svPG0cFpaL+R24VMV6ZYa10x/YohG880wTmY1/bRuSf8PaXHCB/rUl9VLMDlurz8eZdJx4E27LMh7k7Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39830400003)(396003)(346002)(376002)(366004)(316002)(5660300002)(478600001)(107886003)(1076003)(8936002)(83380400001)(16576012)(956004)(66556008)(66476007)(26005)(2616005)(186003)(8676002)(86362001)(66946007)(6486002)(54906003)(6666004)(36756003)(4326008)(66574015)(2906002)(52116002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: L41zHTgrwyPjhzCJGmoQNTtxXXFmYxIPh9prwjvk9lpqsOxyekzeZrtAODyOPPiEfTVC98mrSP2S7ki/c5sA+eR0gNP/HD9/s/E5sxGrBXthMOumU8Rwg8c/f1S3NC05jHyMxZym3wgDooTFFbrbRPMNT6txpDS0O5yuFvjXXw/vxck0pGFSLVnz3CJ9YNaAH8fNSmoJJWxLVJJi9GXDncfM/+Z5o9m2Zeys3lDvzynrGwWcwp1FWplBf3V3HSzROYY0eLv5llg+KQab/xGJgjxrMyUW8/z98ISJpszyq8a+E31l7zrZnMjOKYlTTd3M6FUufD3Q21wUR5KS4o07vU/aqoE8kqUsTTsArmCQJ2cLNe4KaFY9KOB7DwD716se5hoEQPePJBNvy4aSol5J1kstz9iqVVmNjs74JLFrUf4cq4paDzqrUtDMnV+BS2ctFu5bGGXNov00vlTjs5KEA20CJDwinvYFYT3Rmd4cB9nCY4/qiDsh0MzQRKFAbuKILvcZ+1cquSPrmwfmSSGN5MTanwpSJeQrlnuxvGAYINywjDfLCM5tDc1d0ngIiUM8Gx0QkLRBJSxW0VLWrfLR3H2YsEL7li5uCv/VeNCtME6iAATn5WvX4Jd9S07SnPzch0KJmbBpgkAFb8dGvaSK4A==
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: de8e4718-8781-483a-64bb-08d848d51a6f
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2718.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2020 08:58:58.3735
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8ndhZjhv/mq3CZtJxFQwhGYaM5/01+jCf5Cbm/WAD692vsRC3Fewl/bH3OXq206OYL4M9JH01jw1mMTEsMuzKw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3501
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 25 Aug 2020 17:58:44 +0800
+From:   Wen Gong <wgong@codeaurora.org>
+To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc:     ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add flag to protect napi operation to avoid
+ dead loop hang for SDIO
+In-Reply-To: <CABPxzYJ982LdcUD3a_tyu3rrqp+iacZrmAp4zG_3HqCiDCR_2w@mail.gmail.com>
+References: <1598243612-4627-1-git-send-email-wgong@codeaurora.org>
+ <CABPxzYLjys+cXXRM5J680ZOs+6VrYt=_3rWv-gqkCod=-A1VrA@mail.gmail.com>
+ <fd98989a87f2a50655dc95bdcd535c0d@codeaurora.org>
+ <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
+ <2d6362ce85956d0f7df2e596b89a7028@codeaurora.org>
+ <CABPxzY+Fc22ke1ygRnDs0Uds0a7n=792QN8ALXciDrnx9SQuqQ@mail.gmail.com>
+ <663fbb682fd8df555b2964d7d86b8eca@codeaurora.org>
+ <CABPxzYJ982LdcUD3a_tyu3rrqp+iacZrmAp4zG_3HqCiDCR_2w@mail.gmail.com>
+Message-ID: <02d7cee8e356ad7326f8631ba2f97a2c@codeaurora.org>
+X-Sender: wgong@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKVGhl
-IHByb3RlY3Rpb24gb2YgdGhlIG1hbmFnZW1lbnQgZnJhbWVzIGlzIG1haW5seSBkb25lIGJ5IG1h
-YzgwMjExLgpIb3dldmVyLCBmcmFtZXMgZm9yIHRoZSBtYW5hZ2VtZW50IG9mIHRoZSBCbG9ja0Fj
-ayBzZXNzaW9ucyBhcmUgZGlyZWN0bHkKc2VudCBieSB0aGUgZGV2aWNlLiBUaGVzZSBmcmFtZXMg
-aGF2ZSB0byBiZSBwcm90ZWN0ZWQgaWYgTUZQIGlzIGluIHVzZS4KU28gdGhlIGRyaXZlciBoYXMg
-dG8gcGFzcyB0aGUgTUZQIGNvbmZpZ3VyYXRpb24gdG8gdGhlIGRldmljZS4KClVudGlsIG5vdywg
-dGhlIGRyaXZlciBkaXJlY3RseSByZWFkIHRoZSBSU04gSUUgb2YgdGhlIEJTUy4gSG93ZXZlciwg
-aXQKZGlkbid0IHdvcmsgd2hlbiB0aGUgQlNTIHdhcyBNRlAgY2FwYWJsZSAoaWVlZTgwMjExdz0x
-KSBhbmQgdGhlIGxvY2FsCmRldmljZSBoYXMgZGlzYWJsZWQgTUZQIChpZWVlODAyMTF3PTApLgoK
-VGhpcyBwYXRjaCByZWFkIHRoZSBNRlAgaW5mb3JtYXRpb24gZGlyZWN0bHkgZnJvbSB0aGUgc3Ry
-dWN0CmllZWU4MDIxMV9zdGEuIFRoaXMgaW5mb3JtYXRpb24gdGFrZSBpbnRvIGFjY291bnQgdGhl
-IE1GUCBuZWdvdGlhdGVkCmR1cmluZyB0aGUgYXNzb2NpYXRpb24uIEluIGFkZGl0aW9uLCB0aGUg
-Y29kZSBpcyBmYXIgc2ltcGxlci4KClNpZ25lZC1vZmYtYnk6IErDqXLDtG1lIFBvdWlsbGVyIDxq
-ZXJvbWUucG91aWxsZXJAc2lsYWJzLmNvbT4KLS0tCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L3N0YS5j
-IHwgMzQgKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQs
-IDMgaW5zZXJ0aW9ucygrKSwgMzEgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-dGFnaW5nL3dmeC9zdGEuYyBiL2RyaXZlcnMvc3RhZ2luZy93Zngvc3RhLmMKaW5kZXggYjZjY2Iw
-NGYzMDhhLi4yYjg0OGI4OTg1ZGYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc3RhZ2luZy93Zngvc3Rh
-LmMKKysrIGIvZHJpdmVycy9zdGFnaW5nL3dmeC9zdGEuYwpAQCAtMzIzLDM2ICszMjMsNiBAQCB2
-b2lkIHdmeF9zZXRfZGVmYXVsdF91bmljYXN0X2tleShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywK
-IAloaWZfd2VwX2RlZmF1bHRfa2V5X2lkKHd2aWYsIGlkeCk7CiB9CiAKLXN0YXRpYyB2b2lkIHdm
-eF9zZXRfbWZwKHN0cnVjdCB3ZnhfdmlmICp3dmlmLAotCQkJc3RydWN0IGNmZzgwMjExX2JzcyAq
-YnNzKQotewotCWNvbnN0IGludCBwYWlyd2lzZV9jaXBoZXJfc3VpdGVfY291bnRfb2Zmc2V0ID0g
-OCAvIHNpemVvZih1MTYpOwotCWNvbnN0IGludCBwYWlyd2lzZV9jaXBoZXJfc3VpdGVfc2l6ZSA9
-IDQgLyBzaXplb2YodTE2KTsKLQljb25zdCBpbnQgYWttX3N1aXRlX3NpemUgPSA0IC8gc2l6ZW9m
-KHUxNik7Ci0JY29uc3QgdTE2ICpwdHIgPSBOVUxMOwotCWJvb2wgbWZwYyA9IGZhbHNlOwotCWJv
-b2wgbWZwciA9IGZhbHNlOwotCi0JLyogODAyLjExdyBwcm90ZWN0ZWQgbWdtdCBmcmFtZXMgKi8K
-LQotCS8qIHJldHJpZXZlIE1GUEMgYW5kIE1GUFIgZmxhZ3MgZnJvbSBiZWFjb24gb3IgUEJSU1Ag
-Ki8KLQotCXJjdV9yZWFkX2xvY2soKTsKLQlpZiAoYnNzKQotCQlwdHIgPSAoY29uc3QgdTE2ICop
-aWVlZTgwMjExX2Jzc19nZXRfaWUoYnNzLCBXTEFOX0VJRF9SU04pOwotCi0JaWYgKHB0cikgewot
-CQlwdHIgKz0gcGFpcndpc2VfY2lwaGVyX3N1aXRlX2NvdW50X29mZnNldDsKLQkJcHRyICs9IDEg
-KyBwYWlyd2lzZV9jaXBoZXJfc3VpdGVfc2l6ZSAqICpwdHI7Ci0JCXB0ciArPSAxICsgYWttX3N1
-aXRlX3NpemUgKiAqcHRyOwotCQltZnByID0gKnB0ciAmIEJJVCg2KTsKLQkJbWZwYyA9ICpwdHIg
-JiBCSVQoNyk7Ci0JfQotCXJjdV9yZWFkX3VubG9jaygpOwotCi0JaGlmX3NldF9tZnAod3ZpZiwg
-bWZwYywgbWZwcik7Ci19Ci0KIHZvaWQgd2Z4X3Jlc2V0KHN0cnVjdCB3ZnhfdmlmICp3dmlmKQog
-ewogCXN0cnVjdCB3ZnhfZGV2ICp3ZGV2ID0gd3ZpZi0+d2RldjsKQEAgLTQwMCw3ICszNzAsNiBA
-QCBzdGF0aWMgdm9pZCB3ZnhfZG9fam9pbihzdHJ1Y3Qgd2Z4X3ZpZiAqd3ZpZikKIAl9CiAJcmN1
-X3JlYWRfdW5sb2NrKCk7CiAKLQl3Znhfc2V0X21mcCh3dmlmLCBic3MpOwogCWNmZzgwMjExX3B1
-dF9ic3Mod3ZpZi0+d2Rldi0+aHctPndpcGh5LCBic3MpOwogCiAJd3ZpZi0+am9pbl9pbl9wcm9n
-cmVzcyA9IHRydWU7CkBAIC00MjcsNiArMzk2LDkgQEAgaW50IHdmeF9zdGFfYWRkKHN0cnVjdCBp
-ZWVlODAyMTFfaHcgKmh3LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmLAogCiAJc3RhX3ByaXYt
-PnZpZl9pZCA9IHd2aWYtPmlkOwogCisJaWYgKHZpZi0+dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9T
-VEFUSU9OKQorCQloaWZfc2V0X21mcCh3dmlmLCBzdGEtPm1mcCwgc3RhLT5tZnApOworCiAJLy8g
-SW4gc3RhdGlvbiBtb2RlLCB0aGUgZmlybXdhcmUgaW50ZXJwcmV0cyBuZXcgbGluay1pZCBhcyBh
-IFRETFMgcGVlci4KIAlpZiAodmlmLT50eXBlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYg
-IXN0YS0+dGRscykKIAkJcmV0dXJuIDA7Ci0tIAoyLjI4LjAKCg==
+On 2020-08-25 16:24, Krishna Chaitanya wrote:
+> On Tue, Aug 25, 2020 at 9:11 AM Wen Gong <wgong@codeaurora.org> wrote:
+>> 
+>> On 2020-08-24 19:15, Krishna Chaitanya wrote:
+>> > On Mon, Aug 24, 2020 at 4:15 PM Wen Gong <wgong@codeaurora.org> wrote:
+>> >>
+>> >> On 2020-08-24 18:03, Krishna Chaitanya wrote:
+>> >> > On Mon, Aug 24, 2020 at 3:10 PM Wen Gong <wgong@codeaurora.org> wrote:
+>> >> >>
+>> >> >> On 2020-08-24 16:35, Krishna Chaitanya wrote:
+>> >> >> > On Mon, Aug 24, 2020 at 10:03 AM Wen Gong <wgong@codeaurora.org> wrote:
+>> >> >> >>
+>> >> >> >> It happened "Kernel panic - not syncing: hung_task: blocked tasks"
+>> >> >> >> when
+>> >> >> >> test simulate crash and ifconfig down/rmmod meanwhile.
+>> >> >> >>
+>> >> >> ...
+>> >> >> >>
+>> >> >> >>  #ifdef CONFIG_PM
+>> >> >> > Even though your DUT is SDIO based we should be doing this in general
+>> >> >> > for all, no?
+>> >> >> > core_restart + hif_stop is common to all.
+>> >> >> this patch does not have core_restart.
+>> >> > I was referring to the combination which is causing the issue.
+>> >> >
+>> >> >> I dit not hit the issue for others bus(PCIe,SNOC...), so I can not
+>> >> >> change them with a
+>> >> >> assumption they also have this issue.
+>> >> > But that doesn't make sense, the combination is being hit for others
+>> >> > also.
+>> >> > (they should also endup calling napi_disable twice?) or they are using
+>> >> > some other check to avoid this (doesn't appear so from a quick look at
+>> >> > the
+>> >> > code).
+>> >> Because I only use SDIO, I did not use others BUS, so I did not hit
+>> >> the
+>> >> issue
+>> >> on other BUS.
+>> > I understand, my point was based on the description the issue looks
+>> > independent
+>> > of the BUS type, so, the fix should also be generic. I understand that
+>> > your testing
+>> > is only focused on SDIO, but we should have a generic fix and probably
+>> > use
+>> > communities help to get it tested rather than fixing SDIO only.
+>> I checked the ath10k, only sdio.c, snoc.c, pci.c have used napi.
+>> I think it can change to move the
+>> napi_synchronize/napi_disable/napi_enable from
+>> sido.c/snoc.c/pci.c to ath10k_core.ko as below:
+>> void ath10k_core_napi_enable(struct ath10k *ar)
+>> {
+>>         if (!ar->napi_enabled) {
+>>                 napi_enable(&ar->napi);
+>>                 ar->napi_enabled = true;
+>>         }
+>> }
+>> EXPORT_SYMBOL(ath10k_core_napi_enable);
+>> 
+>> void ath10k_core_napi_disable_sync(struct ath10k *ar)
+>> {
+>>         if (ar->napi_enabled) {
+>>                 napi_synchronize(&ar->napi);
+>>                 napi_disable(&ar->napi);
+>>                 ar->napi_enabled = false;
+>>         }
+>> }
+>> EXPORT_SYMBOL(ath10k_core_napi_disable_sync);
+>> 
+>> is it appropriate?
+>> ...
+> Yes, this is perfect. One minor comment you can just do the
+> check initially and return.
+> 
+> if (ar->napi_enabled)
+>    return
+Yes, I will change that.
+But who can test for SNOC and PCIe, I have tested with SDIO, it is OK.
+Govind, could you help to test SNOC?
+If no people test PCIe, I can also test it.
