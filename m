@@ -2,200 +2,243 @@ Return-Path: <SRS0=rnpS=CE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8FCC433E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 11:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 945EFC433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 13:17:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6461220707
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 11:47:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 464E020B1F
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 13:17:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="tj1ZX9Qa"
+	dkim=pass (1024-bit key) header.d=celeno.com header.i=@celeno.com header.b="hD8nCwsj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729161AbgHZLrk (ORCPT
+        id S1730214AbgHZNRi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 07:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728907AbgHZLVk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 07:21:40 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6714C061757
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 04:21:27 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id x5so1382388wmi.2
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 04:21:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=SEDuZLoEMjEHog4pApJjNCMgFg9dzBqJXIk1pFgNb80=;
-        b=tj1ZX9QaB4QGO9d4/spzrqx89NYfYamXLXhILYwshGhtiGjacdxXcGR/ehyTyM9sU/
-         cH2MkkHG8d4hUjmtFhEUgcIrg/US6K/ZezMARZ3YETc2gT8IolPxBNJpBHBk/7I9YcMx
-         8ppmQhFRyLlquFbvQyz6iSJVqJ7Y9XgwPZca62eQJtkzoR3uG9SjxR/6or9jaocJLico
-         gTv+O7jcD+kq3DpraaKuNZOcdxdQL+K/dRZV1l2aQT+mqirwCICbLGGkN+kKuYsCOsit
-         Vd5YRrNP0DmW8AOFBDRzM1LLtt4IifdYL6i7093b3j/NPtKkiNEw8JbuVCErU2VwuSOL
-         pU5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=SEDuZLoEMjEHog4pApJjNCMgFg9dzBqJXIk1pFgNb80=;
-        b=LZk7pSmMmEEVZnQavMP73SrRsMJ8gDiyPDVEEFh9iLEhue1LGdcrysbnQ4DWXnaWDI
-         sIcb7iW8AMVduHvRxyuG2jDjMD4bI/K0cL79CbOmmB/qqDQ9xFne4j+7mJuUz/qoxhU8
-         QokRr/8SuMN/d89G+UHQ95dFc339FSndtOFqVcFssZe6JSdocQtRngcWS0esl+zMqOUT
-         vzn/mkeT0IWgRJSNfhxvj8oNKsfMWXKcDP9TbZINlgDpJfc855pnSuSRSvW4FeWKAM5E
-         UAdGxqOwuKqZTHwOzWjMeIp+0d4A7OVWsBjOguGpYmXb8YLjKEufcx2Yx4WqprEO/DyD
-         wCsw==
-X-Gm-Message-State: AOAM531pBkpEELw0kAwHItsS3epgtFHnJOm5qGXd1L4go/Su+mGRvtcf
-        ELVA2cHMof7AhZ9m4ISNHgn+vvtu96vgeQ==
-X-Google-Smtp-Source: ABdhPJzMnJP2DhJKlKa0q/INIKLrcWwlyHS0fmuV/bjwj4iefa5IJkdfbtDVq8kV6WpCJ0owLKxtUw==
-X-Received: by 2002:a1c:bc45:: with SMTP id m66mr6121110wmf.36.1598440886485;
-        Wed, 26 Aug 2020 04:21:26 -0700 (PDT)
-Received: from dell ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id 3sm4623945wms.36.2020.08.26.04.21.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 04:21:25 -0700 (PDT)
-Date:   Wed, 26 Aug 2020 12:21:24 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     merez@codeaurora.org
-Cc:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, wil6210@qti.qualcomm.com
-Subject: Re: [PATCH 25/32] wireless: ath: wil6210: wmi: Fix formatting and
- demote non-conforming function headers
-Message-ID: <20200826112124.GN3248864@dell>
-References: <20200821071644.109970-1-lee.jones@linaro.org>
- <20200821071644.109970-26-lee.jones@linaro.org>
- <330bc340a4d16f383c9adef2324db60e@codeaurora.org>
+        Wed, 26 Aug 2020 09:17:38 -0400
+Received: from mail-eopbgr150079.outbound.protection.outlook.com ([40.107.15.79]:39557
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729177AbgHZNRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Aug 2020 09:17:37 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lkVuQlgFeakgf/wP9fnxHMLv41y5t3kXv3nOrB5Oaj39TRtez9/5J1xMyOUqQNN/I5SRWLDoUF1Z55XIBw9p0Hx/MWy52b9/khNR60D6lN7CyF9UM1XhdmKVWZ6CQDjhLiUZO3vGISPnI4pgAi2pZahAmneKtyLZRI/CLIXWzI+I4V40U1lR8/jOKtJ79GewmPXnPra5cXOrIrGXznJpOdpCNQddazt06h3H9LG6cvsqthoBU/74Sp8uCFfeDECk80WpYLL1I25hS++0uRPGzGrhCuokUh8w/403KDtoXk976H3C4f3bviEjEj8dZjWJ8ZcnpPux6Vit1P5+OoVzuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XS4dFbbXaLfjBXEFocUwKGtMZYSpiVNY/mFGckSWFQU=;
+ b=Ewnc98K8ryA1wQ0DwFtg5q5Vv8p+/IB6xU9/GrUH+5mjqbRFi+aRCAOcHqkI8fudIjrn8CUZWw0TvvKzLXme3QdYs8Tv0tOh+3Qq0llvNWzvvGFv6hZO7MafRyq1WvdfKh1qa2iIOq1mERm2q8bCjiM2h0sP6nxlZJLeeq+kwjJg62syHmee6ldR9ygminxzZScTrUgzgTEjiA9ufrL9lRs6WV9sA2A/TyGrb5wDgSx7lIqCplr/zf7yIbL7Le1Jx88aGNXXTDwE+0S22nlhdZeQ0+VJUPoV7RHNw69+D1YMrDjHx5LUGNfEX9iRWtJpJwhR/x5JFaC9DMwETBLHFw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
+ dkim=pass header.d=celeno.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XS4dFbbXaLfjBXEFocUwKGtMZYSpiVNY/mFGckSWFQU=;
+ b=hD8nCwsjoSoWYscN8uo8Nbom0De+7HesUvx5SqRMOI/SwzDEd/mgfewRsVXGlj652S99oyMnSyFCH2VwJR+qA6AInvmhdHrsvne4sMyW5EKm8qQKgqKaROjGGG+4dXvRoW1XwW3hhZtBFNMU15qoSo7PALc8o5uwTNm4FVylSiI=
+Authentication-Results: sipsolutions.net; dkim=none (message not signed)
+ header.d=none;sipsolutions.net; dmarc=none action=none
+ header.from=celeno.com;
+Received: from VI1P192MB0479.EURP192.PROD.OUTLOOK.COM (2603:10a6:803:38::31)
+ by VE1P192MB0686.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:16f::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3305.25; Wed, 26 Aug
+ 2020 13:17:33 +0000
+Received: from VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
+ ([fe80::d9f3:c73:3d30:1467]) by VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
+ ([fe80::d9f3:c73:3d30:1467%6]) with mapi id 15.20.3305.026; Wed, 26 Aug 2020
+ 13:17:33 +0000
+From:   Shay Bar <shay.bar@celeno.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, aviad.brikman@celeno.com,
+        eliav.farber@celeno.com
+Subject: [PATCH] nl80211: Trigger channel switch from driver
+Date:   Wed, 26 Aug 2020 16:17:09 +0300
+Message-Id: <20200826131709.25530-1-shay.bar@celeno.com>
+X-Mailer: git-send-email 2.17.1
+Content-Type: text/plain
+X-ClientProxiedBy: LO2P265CA0417.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:a0::21) To VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:803:38::31)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <330bc340a4d16f383c9adef2324db60e@codeaurora.org>
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (77.126.12.128) by LO2P265CA0417.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:a0::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.19 via Frontend Transport; Wed, 26 Aug 2020 13:17:31 +0000
+X-Mailer: git-send-email 2.17.1
+X-Originating-IP: [77.126.12.128]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 2f49ef99-4cda-49a0-6ed0-08d849c26433
+X-MS-TrafficTypeDiagnostic: VE1P192MB0686:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <VE1P192MB0686CA4C34AF49FA98D26699E7540@VE1P192MB0686.EURP192.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: quoted-printable
+X-MS-Oob-TLC-OOBClassifiers: OLM:3826;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: gaOvV1HuRBtZV5H6d8it6eqsycLYNvbj+bJmUDhnFd58SkoYjaxQaEAAwmB/6KNVeIT6vR8+LpQSVW6jNFW8N+jildOTkC6stU61leqw63Q8jhf+zhXQSsLGYmKMtOEOc7CnUEZ2jPL+OnSLk3vKLREyBDHpG6vMaeAzXwFXAhX2LUjfuKuqHYnTTIxSrv7xOuwrIQ9lP4qFlPc5t7YP5DsO5qtuN/MghcbQXad4bcEXPtagIJH9z+5kVnDAcQEToq75ipS4CUxfCyKwMWwvJSLDkYEjerurXqVFH3moMo8sOt3nSsQC9iR7DK9UwEkAO3FqHvc1W4dfOzBbgkj3b9iKAB2tFr3UEr1xV2oDzn+F3DrIh46SwkEJUCqbzOw4
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1P192MB0479.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(366004)(136003)(396003)(39840400004)(376002)(186003)(26005)(6506007)(5660300002)(6666004)(66556008)(52116002)(44832011)(6916009)(2616005)(69590400008)(2906002)(956004)(66476007)(16526019)(1076003)(36756003)(66946007)(6512007)(8676002)(83380400001)(4326008)(86362001)(107886003)(6486002)(8936002)(316002)(478600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: mn2BSEyozRNRMORlxbFSsq8WZWEsAdBZ6rfjNToEFMirvtaA9OFsXn7mQYjCTnc0fb8lC5BRWKvXCBrIJfutyVPqMHWyT4f4V5hZGKNHZwKi1LXTPJkdPTdwK/IwIWd4QhSINQfWQbUoLzGvchfecOA/4kj8/VUIS47hTyAcx6lpU+IKdmL6wyMuVmcJg54XxfJFzNDsSvV7wMavgBJtkl+OoLCU1HwLwGmTXjs3iD4UGmvZDYb7qMKMflBvqk71nBJlb3cuaDRvIz0dtq3gCZdLZNGNrJldEn/giL6tz5ok5/ntzuGz2NliPKvUBu7+ycKaunRg+hH+5Fv5PSqd5l/kSSWWtyA3vcLIr/7X1VTTwajuRvunAj21CbjwoQzO8YzM6S4icLg6qgMPXd8PsENiwQMuzGgTukKzTiB0Eua2j+jeGTJboeSOxY1rFKuvrsOPEkLIEQxTj+qj37bQqBKrRh13+8yuo54WPOy5Kn3UWLWiVNnJQBcNc3aGvUjFD7tjxHM/FtR07HvIUjc9X1bTvQMiM/NvPCQQPHEj+eN+bt4VY3kqkLrY75VlL7a4QMW0JdpItq4b7DweOIOaIe4YfODuM65YvbpTRbaAuSejf/G5DudAaA1InSFtHZkWkBpKr63OuUyZzYmzPg7SuA==
+X-OriginatorOrg: celeno.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2f49ef99-4cda-49a0-6ed0-08d849c26433
+X-MS-Exchange-CrossTenant-AuthSource: VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2020 13:17:33.1527
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zCDrbrym6mW3qUHHjDznmb6BIQ9p2hLOEQyoEbO6FWWP6iWLfgv5l8JlBzeC0JFa/gfgrQ5dedYBTmS2KpXIug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0686
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 26 Aug 2020, merez@codeaurora.org wrote:
+This patch add channel switch event from driver to hostap.
+same as can be triggered from US via hostapd_cli chan_switch.
+using the already existing NL80211_CMD_CHANNEL_SWITCH.
 
-> On 2020-08-21 10:16, Lee Jones wrote:
-> > Fixes the following W=1 kernel build warning(s):
-> > 
-> >  drivers/net/wireless/ath/wil6210/wmi.c:52: warning: Incorrect use of
-> > kernel-doc format:  * Addressing - theory of operations
-> >  drivers/net/wireless/ath/wil6210/wmi.c:70: warning: Incorrect use of
-> > kernel-doc format:  * @sparrow_fw_mapping provides memory remapping
-> > table for sparrow
-> >  drivers/net/wireless/ath/wil6210/wmi.c:80: warning: cannot understand
-> > function prototype: 'const struct fw_map sparrow_fw_mapping[] = '
-> >  drivers/net/wireless/ath/wil6210/wmi.c:107: warning: Cannot
-> > understand  * @sparrow_d0_mac_rgf_ext - mac_rgf_ext section for
-> > Sparrow D0
-> >  drivers/net/wireless/ath/wil6210/wmi.c:115: warning: Cannot
-> > understand  * @talyn_fw_mapping provides memory remapping table for
-> > Talyn
-> >  drivers/net/wireless/ath/wil6210/wmi.c:158: warning: Cannot
-> > understand  * @talyn_mb_fw_mapping provides memory remapping table for
-> > Talyn-MB
-> >  drivers/net/wireless/ath/wil6210/wmi.c:236: warning: Function
-> > parameter or member 'x' not described in 'wmi_addr_remap'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:255: warning: Function
-> > parameter or member 'section' not described in 'wil_find_fw_mapping'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function
-> > parameter or member 'wil' not described in 'wmi_buffer_block'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function
-> > parameter or member 'ptr_' not described in 'wmi_buffer_block'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:278: warning: Function
-> > parameter or member 'size' not described in 'wmi_buffer_block'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:307: warning: Function
-> > parameter or member 'wil' not described in 'wmi_addr'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:307: warning: Function
-> > parameter or member 'ptr' not described in 'wmi_addr'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function
-> > parameter or member 'wil' not described in 'wil_find_cid_ringid_sta'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function
-> > parameter or member 'vif' not described in 'wil_find_cid_ringid_sta'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function
-> > parameter or member 'cid' not described in 'wil_find_cid_ringid_sta'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1589: warning: Function
-> > parameter or member 'ringid' not described in
-> > 'wil_find_cid_ringid_sta'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function
-> > parameter or member 'vif' not described in 'wmi_evt_ignore'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function
-> > parameter or member 'id' not described in 'wmi_evt_ignore'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function
-> > parameter or member 'd' not described in 'wmi_evt_ignore'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:1876: warning: Function
-> > parameter or member 'len' not described in 'wmi_evt_ignore'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:2588: warning: Function
-> > parameter or member 'wil' not described in 'wmi_rxon'
-> > 
-> > Cc: Maya Erez <merez@codeaurora.org>
-> > Cc: Kalle Valo <kvalo@codeaurora.org>
-> > Cc: "David S. Miller" <davem@davemloft.net>
-> > Cc: Jakub Kicinski <kuba@kernel.org>
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: wil6210@qti.qualcomm.com
-> > Cc: netdev@vger.kernel.org
-> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
-> > ---
-> >  drivers/net/wireless/ath/wil6210/wmi.c | 28 ++++++++++++++------------
-> >  1 file changed, 15 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/wil6210/wmi.c
-> > b/drivers/net/wireless/ath/wil6210/wmi.c
-> > index c7136ce567eea..3a6ee85acf6c7 100644
-> > --- a/drivers/net/wireless/ath/wil6210/wmi.c
-> > +++ b/drivers/net/wireless/ath/wil6210/wmi.c
-> > @@ -31,7 +31,7 @@ MODULE_PARM_DESC(led_id,
-> >  #define WIL_WAIT_FOR_SUSPEND_RESUME_COMP 200
-> >  #define WIL_WMI_PCP_STOP_TO_MS 5000
-> > 
-> > -/**
-> > +/*
-> >   * WMI event receiving - theory of operations
-> >   *
-> >   * When firmware about to report WMI event, it fills memory area
-> 
-> The correct format for such documentation blocks is:
-> /**
->  * DOC: Theory of Operation
-> 
-> This comment is also applicable for the rest of such documentation blocks
-> changed in this patch.
+Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
+Signed-off-by: Shay Bar <shay.bar@celeno.com>
+---
+ include/net/cfg80211.h | 11 ++++++
+ net/wireless/nl80211.c | 83 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 94 insertions(+)
 
-Ah yes, good point.  Will fix.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d9e6b9fbd95b..ae02d96eb8ec 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -7416,6 +7416,17 @@ void cfg80211_ch_switch_started_notify(struct net_de=
+vice *dev,
+                                       struct cfg80211_chan_def *chandef,
+                                       u8 count);
 
-> > @@ -66,7 +66,7 @@ MODULE_PARM_DESC(led_id,
-> >   * AHB address must be used.
-> >   */
-> > 
-> > -/**
-> > +/*
-> >   * @sparrow_fw_mapping provides memory remapping table for sparrow
-> >   *
-> >   * array size should be in sync with the declaration in the wil6210.h
-> For files in net/ and drivers/net/ the preferred style for long (multi-line)
-> comments is a different and
-> the text should be in the same line as /*, as follows:
-> /* sparrow_fw_mapping provides memory remapping table for sparrow
-> I would also remove the @ from @sparrow_fw_mapping.
-> This comment is also applicable for the rest of such documentation blocks
-> changed in this patch.
++/*
++ * cfg80211_ch_switch - trigger channel switch from driver
++ * same as is can be triggered from hostapd_cli chan_switch
++ * @dev: the device which switched channels
++ * @chandef: the new channel definition
++ * @csa_count: the number of TBTTs until the channel switch happens
++ */
++bool cfg80211_ch_switch(struct net_device *dev,
++                              struct cfg80211_chan_def *chandef,
++                              u8 csa_count);
++
+ /**
+  * ieee80211_operating_class_to_band - convert operating class to band
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 19dc0ee807f6..c9ed073e5ab3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16854,6 +16854,89 @@ void cfg80211_ch_switch_started_notify(struct net_=
+device *dev,
+ }
+ EXPORT_SYMBOL(cfg80211_ch_switch_started_notify);
 
-Sounds fair.  Will also fix.
++static void nl80211_ch_switch(struct cfg80211_registered_device *rdev,
++                             struct net_device *netdev,
++                             struct cfg80211_chan_def *chandef,
++                             u8 csa_count,
++                             gfp_t gfp)
++{
++       struct sk_buff *msg;
++       void *hdr;
++
++       msg =3D nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++       if (!msg)
++               return;
++
++       hdr =3D nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CHANNEL_SWITCH);
++       if (!hdr) {
++               nlmsg_free(msg);
++               return;
++       }
++
++       if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
++               goto nla_put_failure;
++
++       if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
++               goto nla_put_failure;
++
++       if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
++                       chandef->chan->center_freq))
++               goto nla_put_failure;
++
++       if (nla_put_u32(msg, NL80211_ATTR_CENTER_FREQ1, chandef->center_fre=
+q1))
++               goto nla_put_failure;
++
++       if (nla_put_u32(msg, NL80211_ATTR_CHANNEL_WIDTH, chandef->width))
++               goto nla_put_failure;
++
++       if (chandef->width =3D=3D NL80211_CHAN_WIDTH_40) {
++               enum nl80211_channel_type chan_type =3D NL80211_CHAN_HT40MI=
+NUS;
++
++               if (chandef->center_freq1 > chandef->chan->center_freq)
++                       chan_type =3D NL80211_CHAN_HT40PLUS;
++
++               if (nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++                               chan_type))
++                       goto nla_put_failure;
++       }
++
++       if (nla_put_u32(msg, NL80211_ATTR_CH_SWITCH_COUNT, csa_count))
++               goto nla_put_failure;
++
++       genlmsg_end(msg, hdr);
++
++       genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg,=
+ 0,
++                               NL80211_MCGRP_MLME, gfp);
++       return;
++
++ nla_put_failure:
++       genlmsg_cancel(msg, hdr);
++       nlmsg_free(msg);
++}
++
++bool cfg80211_ch_switch(struct net_device *dev,
++                       struct cfg80211_chan_def *chandef,
++                       u8 csa_count)
++{
++       struct wireless_dev *wdev =3D dev->ieee80211_ptr;
++       struct wiphy *wiphy =3D wdev->wiphy;
++       struct cfg80211_registered_device *rdev =3D wiphy_to_rdev(wiphy);
++
++       if (WARN_ON(wdev->iftype !=3D NL80211_IFTYPE_AP &&
++                   wdev->iftype !=3D NL80211_IFTYPE_P2P_GO &&
++                   wdev->iftype !=3D NL80211_IFTYPE_ADHOC &&
++                   wdev->iftype !=3D NL80211_IFTYPE_MESH_POINT))
++               return false;
++
++       if (WARN_ON(!chandef || !chandef->chan))
++               return false;
++
++       nl80211_ch_switch(rdev, dev, chandef, csa_count, GFP_ATOMIC);
++
++       return true;
++}
++EXPORT_SYMBOL(cfg80211_ch_switch);
++
+ void
+ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
+                     const struct cfg80211_chan_def *chandef,
+--
+2.17.1
 
-Thank you.
+________________________________
+The information transmitted is intended only for the person or entity to wh=
+ich it is addressed and may contain confidential and/or privileged material=
+. Any retransmission, dissemination, copying or other use of, or taking of =
+any action in reliance upon this information is prohibited. If you received=
+ this in error, please contact the sender and delete the material from any =
+computer. Nothing contained herein shall be deemed as a representation, war=
+ranty or a commitment by Celeno. No warranties are expressed or implied, in=
+cluding, but not limited to, any implied warranties of non-infringement, me=
+rchantability and fitness for a particular purpose.
+________________________________
 
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
