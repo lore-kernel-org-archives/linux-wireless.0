@@ -5,68 +5,69 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A39FC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C74A6C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 360DA208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A08AE2087D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uUJKLbTU"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uuXN5vpH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728352AbgHZJi2 (ORCPT
+        id S1728307AbgHZJiv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40992 "EHLO
+        Wed, 26 Aug 2020 05:38:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728335AbgHZJer (ORCPT
+        with ESMTP id S1728116AbgHZJeq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:34:47 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9570C061796
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:24 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id h15so1081010wrt.12
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:24 -0700 (PDT)
+        Wed, 26 Aug 2020 05:34:46 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69A5BC061387
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:20 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id o21so1080699wmc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Bx7yNWclgWagoUc19DO980I/LQpudxltdUcBDgMx82s=;
-        b=uUJKLbTU9CLl0GGHDJpGfj9qHXqTE3vmdSY72df5VY22nwMKPTB/gJEbRC16KsVj7V
-         lqf/Msco72OZwC3/z43E9HJuCf6O4FXc4Ln2h+/SPuM85Apb34/d9LJm1+eeVSKbALFc
-         c2rVrF2Sh84an294dpobLgvr2n7+wlJehzkTlL83PcF2HIXgrzahwnvouyL2GQg8BVCy
-         YzEczRcmVW4jKWDL4pBiFlrSkNOCzvJm1JnA04lj/UemOevD3v2UMxrTXE53HxYDN0d2
-         mIfNdwOUuKYx7/GFEVMKTyGbyVQd+W2euTeJ/u8fddVeUrdSAHX+9rPgTn/5CayY333+
-         iGVQ==
+        bh=UCFXUOCpjL2qkM32iJ3lfLLlxWZFDQ/GxhURnAb0nIs=;
+        b=uuXN5vpHqutLOzjRFB1LQN4QqACjrZnO3CfhEXTW4uUwpqGnIGyj69aDbqsJqUciec
+         sfBjBMD+i20bDh3IFK71nJiZWqu4acSyVq8B9uXpNvZ7s2QuDRUP99eZTilx0r+zMmWm
+         AlIo18wNqtkf2Jv2x7dddDChnzjCAZEJCcBRkPXiPQVCrezWhJKm72iYKgmXpYouki8g
+         NXFoO964YcHGCkUToo1McIx9Yx8mNGuY3iCaFKBNgWonQQ2SHN/RC1Q4cBKEeyEAC4Fe
+         fWn198sSJ2tWARhH24lAubxO3h8RT+rlVh4DCiu9xV2IqguSd1hmH+1IX7CnAJO+JsL7
+         nA+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Bx7yNWclgWagoUc19DO980I/LQpudxltdUcBDgMx82s=;
-        b=dATsFJFG57/Vwh0uWRkRds3TCFusMHiWv/Gjnc09rx5NSSrHi3jfVm7IADN+tO1bww
-         xNRYhk6lrUZJPgDUuxMlz5czL3yujc9IOEgX3HnXZGqsf2LOLEQNCpj16RhE1/QcgQVA
-         CW2jOkZScDbFIX6dXpZfoOT2KMquIA7h970v1bskefgh8j59/kjQBFagNoIgZTX8Mdra
-         hWaAB73FCJs6OXfZVMWY+o6wC6pYVBByN4hmxqPoAwuboHkxg+iVXpEfyj+vCBMfYWNf
-         ASsZ2s1unTV89MSbneDOXYoBVQLf8Ti8pZqKh1+DpXdLBgdCJt7fI4KYzQ25s3h7D31H
-         HbuA==
-X-Gm-Message-State: AOAM531DQunf3z5F0suEuT+cE3Kc0Dzwj/R00m4gbNeZQU3wkqogjSAP
-        SyOIqtxS7XcJKU71mT5bAW0jkA==
-X-Google-Smtp-Source: ABdhPJwQFvrvdmFHV9OPBjwjVStS/qGSXw/JVNaDpgJRCYX+jtI39dQIrk6xIFkbAjhbnJEZSJLl9g==
-X-Received: by 2002:a5d:4050:: with SMTP id w16mr1517291wrp.412.1598434463554;
-        Wed, 26 Aug 2020 02:34:23 -0700 (PDT)
+        bh=UCFXUOCpjL2qkM32iJ3lfLLlxWZFDQ/GxhURnAb0nIs=;
+        b=USuAUapJeFu/OTBZu5a76wshmvaXGYWTdKwnFfdtk9bljZu4Uwpzap3YMyaW2IZ8GE
+         eidEfDjhJT7u628FtslJ2xECNall3t7PKoJN9qVksxIajL5zIzArlVT6CMYEbheU+cfi
+         JKYyvg9FGs2rmKXewqNeQF9Y/e6+bwhmYDNhTWKnUMXPmMsqMQx6VeSCFS5MG1DHL+SQ
+         ye63zbyZfzerQiWRvr2RmG8EnT++SbFmNXP/a0LOw0+XUaz285ctFsSC8/mCWj0LfoK1
+         KXs+g/35mYdqDfYn5Gk1hvhoc8FoYp7MTgqU+vRJlAGRudZkq+yy37tVW4l8mjoDF7N3
+         dnfw==
+X-Gm-Message-State: AOAM531EWQvNKgxFJTPHd5Fs7Q2VE2BDQ/GBJ1iEW6ZFnP1J0fYSIEoK
+        8cJjYvW9WZBwXzs/lzqpP8qpvQ==
+X-Google-Smtp-Source: ABdhPJwxuBu8C5NrALO5Op1yXkaQ7ro+gQ2XCRXU+YQcylBxExwx09MilCl67PeIt1bDwVNSeugVAQ==
+X-Received: by 2002:a1c:b082:: with SMTP id z124mr2255183wme.108.1598434458762;
+        Wed, 26 Aug 2020 02:34:18 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.22
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:22 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:18 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH 15/30] wireless: ti: wlcore: debugfs: Remove unused variable 'res'
-Date:   Wed, 26 Aug 2020 10:33:46 +0100
-Message-Id: <20200826093401.1458456-16-lee.jones@linaro.org>
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>
+Subject: [PATCH 11/30] wireless: zydas: zd1211rw: zd_chip: Correct misspelled function argument
+Date:   Wed, 26 Aug 2020 10:33:42 +0100
+Message-Id: <20200826093401.1458456-12-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
@@ -79,38 +80,34 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
+ drivers/net/wireless/zydas/zd1211rw/zd_chip.c:1385: warning: Function parameter or member 'status' not described in 'zd_rx_rate'
+ drivers/net/wireless/zydas/zd1211rw/zd_chip.c:1385: warning: Excess function parameter 'rx_status' description in 'zd_rx_rate'
+
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/zydas/zd1211rw/zd_chip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.h b/drivers/net/wireless/ti/wlcore/debugfs.h
-index fc3bb0d2ab8da..b143293e694f9 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.h
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.h
-@@ -78,13 +78,13 @@ static ssize_t sub## _ ##name## _read(struct file *file,		\
- 	struct wl1271 *wl = file->private_data;				\
- 	struct struct_type *stats = wl->stats.fw_stats;			\
- 	char buf[DEBUGFS_FORMAT_BUFFER_SIZE] = "";			\
--	int res, i;							\
-+	int i;								\
- 									\
- 	wl1271_debugfs_update_stats(wl);				\
- 									\
- 	for (i = 0; i < len; i++)					\
--		res = snprintf(buf, sizeof(buf), "%s[%d] = %d\n",	\
--			       buf, i, stats->sub.name[i]);		\
-+		snprintf(buf, sizeof(buf), "%s[%d] = %d\n",		\
-+			 buf, i, stats->sub.name[i]);			\
- 									\
- 	return wl1271_format_buffer(userbuf, count, ppos, "%s", buf);	\
- }									\
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_chip.c b/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
+index 0216b1583b48b..3bb51dc8d035f 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
+@@ -1376,7 +1376,7 @@ static inline u8 zd_rate_from_ofdm_plcp_header(const void *rx_frame)
+ /**
+  * zd_rx_rate - report zd-rate
+  * @rx_frame: received frame
+- * @rx_status: rx_status as given by the device
++ * @status: rx_status as given by the device
+  *
+  * This function converts the rate as encoded in the received packet to the
+  * zd-rate, we are using on other places in the driver.
 -- 
 2.25.1
 
