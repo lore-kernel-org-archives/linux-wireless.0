@@ -7,130 +7,132 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F2BC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67893C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CC51208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4478F20897
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:38:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NtAv25hj"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LwLU6UgN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728405AbgHZJhx (ORCPT
+        id S1728603AbgHZJiN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:37:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40934 "EHLO
+        Wed, 26 Aug 2020 05:38:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728370AbgHZJfD (ORCPT
+        with ESMTP id S1728343AbgHZJew (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:35:03 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC4FC061346
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:29 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id o4so1107299wrn.0
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:29 -0700 (PDT)
+        Wed, 26 Aug 2020 05:34:52 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E8E8C061799
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:26 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id x5so1084120wmi.2
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5xYAPYXZqKI3g1GFZmnrzEgVa6jjBFa/aMcqWmXa5Dc=;
-        b=NtAv25hji32BSctbHNSG6hvgojalWPH/q2SbQ6HmZPxPxofhzszwXZbiKeVhObOPRu
-         9FGE5aT64rD+pIVxs5baems82rqFmheemeohT5g0YqsAUxq4VzJ0QDqpHV8+7kaKCHfM
-         7g09v5S3ArlX5RSV2C7h+c9p5TXpyTkOVveKkl1BdsSYSftFphmajGgdnfWZUd6TWOn3
-         V95i0Yav3ECduA2ieGEHHnkRoEckdthoggrF0Hc7vGnmtdWsoz+pbgAWGuTbW+bfOdVJ
-         k03tb/D35hhKdjGQUZLufVJhsvkPrSb9ks8YB8kPodnKxjU/Z0KyjAhF59cMnf/yDq1w
-         bW6g==
+        bh=gXj0QTNi35Mkf/0PfjV36Op7KYk+Sf8/3WVle5YvISs=;
+        b=LwLU6UgNWRhkAICyUcI0WTYo9m6TXWqPAHELcWqUYunSe14/NoTP2Wi3SxwnjRCPYp
+         P8ToArmn9LBzbGkBXZ5NsJr3JcJPxfj4PgpcLvujetjrJ+klZkFbwpqK7c0ENSxr3mNx
+         TZxfs6nglopjKXRQRLOaqoCUM9q4GccbGnin36RbIYanIqRUXWquVts5sYLDdBZYOzzb
+         vAyKkiZ+aFleQE2DfWIpFhUJ+MAVRqtkvonJgyFAONhAPazcEjwPOHxWz+EVcNksSV7I
+         vfNUXi6Qw+KqfZKelE0ChGdvsvJPlz3owrqDYGcVtd3723oXffVMm074IevYrbmxxaLj
+         Gs8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5xYAPYXZqKI3g1GFZmnrzEgVa6jjBFa/aMcqWmXa5Dc=;
-        b=BzbgNHqp5PCxHggw26bwdXkDHUfKxQlZDVIWxU99zP8DF7gMuUo9KhO6FObqw0YqMI
-         jfQHz8MgsRCkij4PgZf10e4cb11VeMSU1NnlBP1zXC50YVExV+u2ScNN3WO3Wr++plsk
-         EX4GlKJmGCv2wTB91+K2xNY+tNqCz25U2kelA43lF2poq2oXC2LqfcVnaYOrOdAtbaBP
-         PzOpr/oL/B5GKkFAV2gQQbDGI3Wo+w8A+3G4c/SRk5P1Ik8Xhc6E53Eh/nlzXPObIFQ8
-         AGFNozGCd8nQ6i0WJMc4slMD6INoGBUoBuzBcOJwZ6b3NeuE/HUJc9pP2XEJ4e0uwD0j
-         GvkA==
-X-Gm-Message-State: AOAM533rgFHcCKc2VF8grblhS8DyiAQG+6l4IeWozCWGhl3u3Qm8gXOW
-        W3QXu1InMvpGXiFfigj7pWA0GA==
-X-Google-Smtp-Source: ABdhPJwlHgHvN4aaFIAjEP8d/rVGWNg4vJOAzlVz1zWIu7YkcH9UYqB9S9fIOyuB6XE6PgXJ4tP9XA==
-X-Received: by 2002:adf:f388:: with SMTP id m8mr15137432wro.338.1598434468397;
-        Wed, 26 Aug 2020 02:34:28 -0700 (PDT)
+        bh=gXj0QTNi35Mkf/0PfjV36Op7KYk+Sf8/3WVle5YvISs=;
+        b=moRkI8OJ4Pd6FUUh/D8M//MgSH/R/5lAS9FvS3PFcHNAUr2p3ou4011efjkO7fzSvh
+         UlMoxNGsDIANJiU2BE8JOf4e+o+SRL5y1PcBp1kXvDotlfICRMJTnWZoE07bAJDASYKU
+         2k9S9CYRIZNLCyDYlcX5mnBXFVFkjd0T/ROqsDXr8+MWA1/I4yQieInV0lAgkb7z9lzy
+         ybXFgOgWpb6usVkF3z/g0N2b8L3iEZQzAVRmmyhdTYim4pwRkjzbJvJM7yAS7NxXR8Hw
+         x9THLtcjDiqbnlVfam37FiOWJQ2Yh+EWCR5JDMfTtf2frmmmfrn+jPDn82K0MNO+fWj1
+         Ob+g==
+X-Gm-Message-State: AOAM5327wQEBwNNOpZvlMJ+bjBzZBLO+tdNNrEUkUXbdNFnkivTlQ36j
+        9VBA+uKpX3tiAXmUdhyGWGijrMM5LEHnsw==
+X-Google-Smtp-Source: ABdhPJzhoiIojiVg/XClYdahPZ4ZyRm0woGPRNGbBc3tfiZLNL944VFpp2XhnfvuIRtgcAevDM0t/Q==
+X-Received: by 2002:a1c:c913:: with SMTP id f19mr5945307wmb.173.1598434464899;
+        Wed, 26 Aug 2020 02:34:24 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.27
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:27 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:24 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Jouni Malinen <j@w1.fi>, Cong Wang <xiyou.wangcong@gmail.com>,
-        Taehee Yoo <ap420073@gmail.com>
-Subject: [PATCH 19/30] wireless: intersil: hostap: hostap_hw: Remove unused variable 'fc'
-Date:   Wed, 26 Aug 2020 10:33:50 +0100
-Message-Id: <20200826093401.1458456-20-lee.jones@linaro.org>
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>
+Subject: [PATCH 16/30] wireless: rsi: rsi_91x_sdio: Fix a few kernel-doc related issues
+Date:   Wed, 26 Aug 2020 10:33:47 +0100
+Message-Id: <20200826093401.1458456-17-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+ - File headers do not make for good kernel-doc candidates
+ - Kernel-doc header lines should start with " *"
+ - Fix doc-rot issue
+
 Fixes the following W=1 kernel build warning(s):
 
- In file included from drivers/net/wireless/intersil/hostap/hostap_cs.c:196:
- drivers/net/wireless/intersil/hostap/hostap_hw.c: In function ‘prism2_tx_80211’:
- drivers/net/wireless/intersil/hostap/hostap_hw.c:1806:18: warning: variable ‘fc’ set but not used [-Wunused-but-set-variable]
- 1806 | u16 tx_control, fc;
- | ^~
- In file included from drivers/net/wireless/intersil/hostap/hostap_plx.c:264:
- drivers/net/wireless/intersil/hostap/hostap_hw.c: In function ‘prism2_tx_80211’:
- drivers/net/wireless/intersil/hostap/hostap_hw.c:1806:18: warning: variable ‘fc’ set but not used [-Wunused-but-set-variable]
- 1806 | u16 tx_control, fc;
- | ^~
- In file included from drivers/net/wireless/intersil/hostap/hostap_pci.c:221:
- drivers/net/wireless/intersil/hostap/hostap_hw.c: In function ‘prism2_tx_80211’:
- drivers/net/wireless/intersil/hostap/hostap_hw.c:1806:18: warning: variable ‘fc’ set but not used [-Wunused-but-set-variable]
- 1806 | u16 tx_control, fc;
- | ^~
+ drivers/net/wireless/rsi/rsi_91x_sdio.c:25: warning: cannot understand function prototype: 'u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL; '
+ drivers/net/wireless/rsi/rsi_91x_sdio.c:802: warning: bad line:                                    from the device.
+ drivers/net/wireless/rsi/rsi_91x_sdio.c:842: warning: Function parameter or member 'pfunction' not described in 'rsi_init_sdio_interface'
+ drivers/net/wireless/rsi/rsi_91x_sdio.c:842: warning: Excess function parameter 'pkt' description in 'rsi_init_sdio_interface'
 
-Cc: Jouni Malinen <j@w1.fi>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Siva Rebbagondla <siva8118@gmail.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: Taehee Yoo <ap420073@gmail.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index b6c497ce12e12..a8aa8f64abe0c 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -1803,7 +1803,7 @@ static int prism2_tx_80211(struct sk_buff *skb, struct net_device *dev)
- 	struct hfa384x_tx_frame txdesc;
- 	struct hostap_skb_tx_data *meta;
- 	int hdr_len, data_len, idx, res, ret = -1;
--	u16 tx_control, fc;
-+	u16 tx_control;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index a04ff75c409f4..a7b8684143f46 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -1,4 +1,4 @@
+-/**
++/*
+  * Copyright (c) 2014 Redpine Signals Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+@@ -799,7 +799,7 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
  
- 	iface = netdev_priv(dev);
- 	local = iface->local;
-@@ -1826,7 +1826,6 @@ static int prism2_tx_80211(struct sk_buff *skb, struct net_device *dev)
- 	/* skb->data starts with txdesc->frame_control */
- 	hdr_len = 24;
- 	skb_copy_from_linear_data(skb, &txdesc.frame_control, hdr_len);
-- 	fc = le16_to_cpu(txdesc.frame_control);
- 	if (ieee80211_is_data(txdesc.frame_control) &&
- 	    ieee80211_has_a4(txdesc.frame_control) &&
- 	    skb->len >= 30) {
+ /**
+  * rsi_sdio_host_intf_read_pkt() - This function reads the packet
+-				   from the device.
++ *				   from the device.
+  * @adapter: Pointer to the adapter data structure.
+  * @pkt: Pointer to the packet data to be read from the the device.
+  * @length: Length of the data to be read from the device.
+@@ -832,11 +832,10 @@ int rsi_sdio_host_intf_read_pkt(struct rsi_hw *adapter,
+  * rsi_init_sdio_interface() - This function does init specific to SDIO.
+  *
+  * @adapter: Pointer to the adapter data structure.
+- * @pkt: Pointer to the packet data to be read from the the device.
++ * @pfunction: Pointer to the sdio_func structure.
+  *
+  * Return: 0 on success, -1 on failure.
+  */
+-
+ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
+ 				   struct sdio_func *pfunction)
+ {
 -- 
 2.25.1
 
