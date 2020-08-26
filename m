@@ -5,71 +5,69 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CFBC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06360C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4FB42087D
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD7D22087D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QHJKMOnZ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JXl7Wb1T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728085AbgHZJjO (ORCPT
+        id S1728651AbgHZJji (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:39:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41002 "EHLO
+        Wed, 26 Aug 2020 05:39:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728284AbgHZJe3 (ORCPT
+        with ESMTP id S1728253AbgHZJeZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:34:29 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14C57C061383
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:19 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id k20so1065888wmi.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:19 -0700 (PDT)
+        Wed, 26 Aug 2020 05:34:25 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84EDBC0617A5
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:12 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id c15so1074778wrs.11
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=lOqkWcILbsAeyAfZ0GfzIi50eF5PW2PXQFze4naQS2g=;
-        b=QHJKMOnZ4tO+oPpdZO1XclI2udxtKXtC1n+sqUbOkrkLwibykUsRORT51V6Hkmmgh/
-         t2XgThhanyCXXUkHdhqimUKMlX98ujIdPf048s1aR3v7hgOP3/8q7x/nJ8HBBGos6wf8
-         lSorCwKC8Zxsxlntp2BNMFDaeK0yCVuJD9uU7Uo7WOoeNbsJRrDgCyd5OmboxWIMY+b+
-         ULLaynAuXVhaNpZirlsqEfKY/DHuk8Qzqjwm4x84UNsBiHXJPjegYxVr+KnAjZFTTFW3
-         Zk8AF2IVK+2d7F/ED6AGsvg9yf18ULdammO9EEvq9dfHEq7n6Vt5AIRLCwep9X2DZRiD
-         E6PQ==
+        bh=ZXzMFpauZUbIvXTpTjTk511d7rH3VOBZcuLvH1EPh6E=;
+        b=JXl7Wb1TDc4vtCMn0jU7O2QGXjAE5ZmvNt2UgRowQia4ULjEjnVwFgycqO/xL1xiQL
+         mGwTh6TOAaoCjozXj2v0shvbn57oE3Xbb5yL1zNlrF02tx8FgyqJdJSQ9UBUE7iHQ8Pq
+         WPWeG8MVNOmVmdJCNGy5SV7kEgbOq+/qq+Y0NJ3svO09zeXVLiYNEIt/AkpRr1P8ZkiO
+         NPuBH1yw62bbpTY/ejBsGMKIcy4LOtPiy05IcYX7RwnO3KH9go0bveQTm87bM8i6nI16
+         rKTfoHx+Xm08R/jH66MdPo3S/AnpzzllpPwufZZhnxpsr6fKuaunZX44bkkmzYRGHhVG
+         S0TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=lOqkWcILbsAeyAfZ0GfzIi50eF5PW2PXQFze4naQS2g=;
-        b=SICqwvlPSrYDhpc3ZzcOPtmZ9w0SXPaa/VNQYdlt+beQKM6T4I4JTifCsfQh88AcI+
-         S5s3Ujxhxt/ypPewIsXLg2HcAPYjvgcGWAu5re9/n7paLznrHAnfWv5QUNC+eeaQYHAy
-         r/tmfDiNfB+U5GO+673nPKjqfqm0rYmFWkNmbp6o71n3Rif1WlC0jfIeP0hmlEcHaRSI
-         R+urIDUo45Fw+6XJkxnHtyhCjRSeWbEbH1VGGXFaUZAKOHOeaby3g7vMeVBjJzA6CQwj
-         aER4kvsoh4DbbgExKUMdDiUCI++R1kRUpntRikYhpCyeQ3QDHuUBqtoJFb8aaPxilQKp
-         fGMQ==
-X-Gm-Message-State: AOAM533qjHoNNsMRwaL8j/xX+cfFj4vt11hFwMFuGr2h8RUFO7P7nRFA
-        f7TM0NVKkIXf1+gv/id+6PT+Ag==
-X-Google-Smtp-Source: ABdhPJwqg8QiNz57jChEdqZYRe6J78RNXFsyTh7fDBKnWvE8IIP9LARAxLgVs6l6Y3kheEFiyzHjtA==
-X-Received: by 2002:a1c:cc05:: with SMTP id h5mr5870886wmb.129.1598434457697;
-        Wed, 26 Aug 2020 02:34:17 -0700 (PDT)
+        bh=ZXzMFpauZUbIvXTpTjTk511d7rH3VOBZcuLvH1EPh6E=;
+        b=lJflF0rHhvUz2ipp9oCRbibDfr4SdayvzMgX0wXlLjdhGDFhuU/wOxZP371EX06QBS
+         /EYCosNllp3bg9P/JkfgDLDZ663I5RRWkOqvUnle188sbLtTqHyx2Y4XPTRvmtMpWFqa
+         Y1Bw0LuzXzpwwcg/dlW5+DbQtrXo7Qf1jvy75J3JtNieQFk0Qn9A6yT/OUpoBlmCGk0m
+         UyNzcLzZGP3q8d/BM6uXUP7iwZhjw6spBQoog8fBxgvpIXDOW+a+/SEkZsjDkHkxrqnx
+         r1/dh7NS3rGcZVnJxXTXQGuGUSEmDPZlrQrSkZ+TNDZAJLLteYRgFsB3Khx8PFl8NM6M
+         2ngg==
+X-Gm-Message-State: AOAM530Xw7+4SurY1mSQOhPE6Tz2xKI5iT3Pk7bbdrykZBCgA0IBuiFg
+        qfH79bmYPCI5HByqrOwvV8BiHQ==
+X-Google-Smtp-Source: ABdhPJwKh1AxTI50soH4xYZxFKCweoABWiKp0VX8Td9mesJOaxcHs7pQEGqY4QhzIJmpdZwz5LGtNg==
+X-Received: by 2002:adf:f041:: with SMTP id t1mr7808292wro.314.1598434450993;
+        Wed, 26 Aug 2020 02:34:10 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.16
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:17 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:10 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        Michael Wu <flamingice@sourmilk.net>,
-        "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Subject: [PATCH 10/30] wireless: zydas: zd1211rw: zd_mac: Add missing or incorrect function documentation
-Date:   Wed, 26 Aug 2020 10:33:41 +0100
-Message-Id: <20200826093401.1458456-11-lee.jones@linaro.org>
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Linux Wireless <ilw@linux.intel.com>
+Subject: [PATCH 05/30] wireless: intel: iwlegacy: 3945: Remove all non-conformant kernel-doc headers
+Date:   Wed, 26 Aug 2020 10:33:36 +0100
+Message-Id: <20200826093401.1458456-6-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
@@ -82,80 +80,270 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:433: warning: Function parameter or member 'hw' not described in 'zd_mac_tx_status'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:433: warning: Function parameter or member 'skb' not described in 'zd_mac_tx_status'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:433: warning: Function parameter or member 'tx_status' not described in 'zd_mac_tx_status'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:433: warning: Excess function parameter 'flags' description in 'zd_mac_tx_status'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:487: warning: Function parameter or member 'urb' not described in 'zd_mac_tx_failed'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:487: warning: Excess function parameter 'dev' description in 'zd_mac_tx_failed'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:927: warning: Function parameter or member 'hw' not described in 'zd_op_tx'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:927: warning: Excess function parameter 'dev' description in 'zd_op_tx'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:963: warning: Function parameter or member 'hw' not described in 'filter_ack'
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c:963: warning: Excess function parameter 'dev' description in 'filter_ack'
+ drivers/net/wireless/intel/iwlegacy/3945.c:104: warning: Function parameter or member 'il' not described in 'il3945_disable_events'
+ drivers/net/wireless/intel/iwlegacy/3945.c:273: warning: Function parameter or member 'il' not described in 'il3945_tx_queue_reclaim'
+ drivers/net/wireless/intel/iwlegacy/3945.c:273: warning: Function parameter or member 'txq_id' not described in 'il3945_tx_queue_reclaim'
+ drivers/net/wireless/intel/iwlegacy/3945.c:273: warning: Function parameter or member 'idx' not described in 'il3945_tx_queue_reclaim'
+ drivers/net/wireless/intel/iwlegacy/3945.c:299: warning: Function parameter or member 'il' not described in 'il3945_hdl_tx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:299: warning: Function parameter or member 'rxb' not described in 'il3945_hdl_tx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:637: warning: Function parameter or member 'il' not described in 'il3945_hw_txq_free_tfd'
+ drivers/net/wireless/intel/iwlegacy/3945.c:637: warning: Function parameter or member 'txq' not described in 'il3945_hw_txq_free_tfd'
+ drivers/net/wireless/intel/iwlegacy/3945.c:686: warning: Function parameter or member 'il' not described in 'il3945_hw_build_tx_cmd_rate'
+ drivers/net/wireless/intel/iwlegacy/3945.c:686: warning: Function parameter or member 'cmd' not described in 'il3945_hw_build_tx_cmd_rate'
+ drivers/net/wireless/intel/iwlegacy/3945.c:686: warning: Function parameter or member 'info' not described in 'il3945_hw_build_tx_cmd_rate'
+ drivers/net/wireless/intel/iwlegacy/3945.c:686: warning: Function parameter or member 'hdr' not described in 'il3945_hw_build_tx_cmd_rate'
+ drivers/net/wireless/intel/iwlegacy/3945.c:686: warning: Function parameter or member 'sta_id' not described in 'il3945_hw_build_tx_cmd_rate'
+ drivers/net/wireless/intel/iwlegacy/3945.c:838: warning: Function parameter or member 'il' not described in 'il3945_txq_ctx_reset'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1003: warning: Function parameter or member 'il' not described in 'il3945_hw_txq_ctx_free'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1044: warning: Function parameter or member 'new_reading' not described in 'il3945_hw_reg_adjust_power_by_temp'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1044: warning: Function parameter or member 'old_reading' not described in 'il3945_hw_reg_adjust_power_by_temp'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1053: warning: Function parameter or member 'temperature' not described in 'il3945_hw_reg_temp_out_of_range'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1069: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_txpower_get_temperature'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1107: warning: Function parameter or member 'il' not described in 'il3945_is_temp_calib_needed'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'scan_tbl_idx' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'rate_idx' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'clip_pwrs' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'ch_info' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1328: warning: Function parameter or member 'band_idx' not described in 'il3945_hw_reg_set_scan_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1383: warning: Function parameter or member 'il' not described in 'il3945_send_tx_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1460: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_set_new_power'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1522: warning: Function parameter or member 'ch_info' not described in 'il3945_hw_reg_get_ch_txpower_limit'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1552: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_comp_txpower_temp'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1712: warning: Function parameter or member 'il' not described in 'il3945_commit_rxon'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1845: warning: Function parameter or member 'il' not described in 'il3945_reg_txpower_periodic'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1889: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_get_ch_grp_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1889: warning: Function parameter or member 'ch_info' not described in 'il3945_hw_reg_get_ch_grp_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1924: warning: Function parameter or member 'il' not described in 'il3945_hw_reg_get_matched_power_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1924: warning: Function parameter or member 'requested_power' not described in 'il3945_hw_reg_get_matched_power_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1924: warning: Function parameter or member 'setting_idx' not described in 'il3945_hw_reg_get_matched_power_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:1924: warning: Function parameter or member 'new_idx' not described in 'il3945_hw_reg_get_matched_power_idx'
+ drivers/net/wireless/intel/iwlegacy/3945.c:2055: warning: Function parameter or member 'il' not described in 'il3945_txpower_set_from_eeprom'
+ drivers/net/wireless/intel/iwlegacy/3945.c:2313: warning: Function parameter or member 'il' not described in 'il3945_init_hw_rate_table'
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: Linux Wireless <ilw@linux.intel.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlegacy/3945.c | 46 +++++++++++-----------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-index a9999d10ae81f..3ef8533205f91 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-@@ -416,11 +416,10 @@ int zd_restore_settings(struct zd_mac *mac)
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945.c b/drivers/net/wireless/intel/iwlegacy/3945.c
+index fd63eba47ba22..0597d828bee1e 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945.c
+@@ -90,7 +90,7 @@ il3945_get_prev_ieee_rate(u8 rate_idx)
+ #define IL_EVT_DISABLE (0)
+ #define IL_EVT_DISABLE_SIZE (1532/32)
  
- /**
-  * zd_mac_tx_status - reports tx status of a packet if required
-- * @hw - a &struct ieee80211_hw pointer
-- * @skb - a sk-buffer
-- * @flags: extra flags to set in the TX status info
-+ * @hw: a &struct ieee80211_hw pointer
-+ * @skb: a sk-buffer
-  * @ackssi: ACK signal strength
-- * @success - True for successful transmission of the frame
-+ * @tx_status: success and/or retry
+-/**
++/*
+  * il3945_disable_events - Disable selected events in uCode event log
   *
-  * This information calls ieee80211_tx_status_irqsafe() if required by the
-  * control information. It copies the control information into the status
-@@ -477,7 +476,7 @@ static void zd_mac_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+  * Disable an event by writing "1"s into "disable"
+@@ -261,7 +261,7 @@ il3945_rs_next_rate(struct il_priv *il, int rate)
+ 	return next_rate;
+ }
  
- /**
-  * zd_mac_tx_failed - callback for failed frames
-- * @dev: the mac80211 wireless device
-+ * @urb: pointer to the urb structure
+-/**
++/*
+  * il3945_tx_queue_reclaim - Reclaim Tx queue entries already Tx'd
   *
-  * This function is called if a frame couldn't be successfully
-  * transferred. The first frame from the tx queue, will be selected and
-@@ -913,9 +912,9 @@ static int fill_ctrlset(struct zd_mac *mac,
- /**
-  * zd_op_tx - transmits a network frame to the device
-  *
-- * @dev: mac80211 hardware device
-- * @skb: socket buffer
-+ * @hw: a &struct ieee80211_hw pointer
-  * @control: the control structure
-+ * @skb: socket buffer
-  *
-  * This function transmit an IEEE 802.11 network frame to the device. The
-  * control block of the skbuff will be initialized. If necessary the incoming
-@@ -946,7 +945,7 @@ static void zd_op_tx(struct ieee80211_hw *hw,
+  * When FW advances 'R' idx, all entries between old and new 'R' idx
+@@ -291,7 +291,7 @@ il3945_tx_queue_reclaim(struct il_priv *il, int txq_id, int idx)
+ 		il_wake_queue(il, txq);
+ }
  
- /**
-  * filter_ack - filters incoming packets for acknowledgements
-- * @dev: the mac80211 device
-+ * @hw: a &struct ieee80211_hw pointer
-  * @rx_hdr: received header
-  * @stats: the status for the received packet
+-/**
++/*
+  * il3945_hdl_tx - Handle Tx response
+  */
+ static void
+@@ -627,7 +627,7 @@ il3945_hw_txq_attach_buf_to_tfd(struct il_priv *il, struct il_tx_queue *txq,
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il3945_hw_txq_free_tfd - Free one TFD, those at idx [txq->q.read_ptr]
   *
+  * Does NOT advance any idxes
+@@ -675,7 +675,7 @@ il3945_hw_txq_free_tfd(struct il_priv *il, struct il_tx_queue *txq)
+ 	}
+ }
+ 
+-/**
++/*
+  * il3945_hw_build_tx_cmd_rate - Add rate portion to TX_CMD:
+  *
+ */
+@@ -828,7 +828,7 @@ il3945_tx_reset(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il3945_txq_ctx_reset - Reset TX queue context
+  *
+  * Destroys all DMA structures and initialize them again
+@@ -993,7 +993,7 @@ il3945_hw_nic_init(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il3945_hw_txq_ctx_free - Free TXQ Context
+  *
+  * Destroy all TX DMA queues and structures
+@@ -1035,7 +1035,7 @@ il3945_hw_txq_ctx_stop(struct il_priv *il)
+ 	}
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_adjust_power_by_temp
+  * return idx delta into power gain settings table
+ */
+@@ -1045,7 +1045,7 @@ il3945_hw_reg_adjust_power_by_temp(int new_reading, int old_reading)
+ 	return (new_reading - old_reading) * (-11) / 100;
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_temp_out_of_range - Keep temperature in sane range
+  */
+ static inline int
+@@ -1060,7 +1060,7 @@ il3945_hw_get_temperature(struct il_priv *il)
+ 	return _il_rd(il, CSR_UCODE_DRV_GP2);
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_txpower_get_temperature
+  * get the current temperature by reading from NIC
+ */
+@@ -1096,7 +1096,7 @@ il3945_hw_reg_txpower_get_temperature(struct il_priv *il)
+  * Both are lower than older versions' 9 degrees */
+ #define IL_TEMPERATURE_LIMIT_TIMER   6
+ 
+-/**
++/*
+  * il3945_is_temp_calib_needed - determines if new calibration is needed
+  *
+  * records new temperature in tx_mgr->temperature.
+@@ -1315,7 +1315,7 @@ il3945_hw_reg_fix_power_idx(int idx)
+ /* Kick off thermal recalibration check every 60 seconds */
+ #define REG_RECALIB_PERIOD (60)
+ 
+-/**
++/*
+  * il3945_hw_reg_set_scan_power - Set Tx power for scan probe requests
+  *
+  * Set (in our channel info database) the direct scan Tx power for 1 Mbit (CCK)
+@@ -1372,7 +1372,7 @@ il3945_hw_reg_set_scan_power(struct il_priv *il, u32 scan_tbl_idx, s32 rate_idx,
+ 	    power_gain_table[band_idx][power_idx].dsp_atten;
+ }
+ 
+-/**
++/*
+  * il3945_send_tx_power - fill in Tx Power command with gain settings
+  *
+  * Configures power settings for all rates for the current channel,
+@@ -1439,7 +1439,7 @@ il3945_send_tx_power(struct il_priv *il)
+ 
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_set_new_power - Configures power tables at new levels
+  * @ch_info: Channel to update.  Uses power_info.requested_power.
+  *
+@@ -1510,7 +1510,7 @@ il3945_hw_reg_set_new_power(struct il_priv *il, struct il_channel_info *ch_info)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_get_ch_txpower_limit - returns new power limit for channel
+  *
+  * NOTE: Returned power limit may be less (but not more) than requested,
+@@ -1537,7 +1537,7 @@ il3945_hw_reg_get_ch_txpower_limit(struct il_channel_info *ch_info)
+ 	return min(max_power, ch_info->max_power_avg);
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_comp_txpower_temp - Compensate for temperature
+  *
+  * Compensate txpower settings of *all* channels for temperature.
+@@ -1699,7 +1699,7 @@ il3945_send_rxon_assoc(struct il_priv *il)
+ 	return rc;
+ }
+ 
+-/**
++/*
+  * il3945_commit_rxon - commit staging_rxon to hardware
+  *
+  * The RXON command in staging_rxon is committed to the hardware and
+@@ -1830,7 +1830,7 @@ il3945_commit_rxon(struct il_priv *il)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * il3945_reg_txpower_periodic -  called when time to check our temperature.
+  *
+  * -- reset periodic timer
+@@ -1873,7 +1873,7 @@ il3945_bg_reg_txpower_periodic(struct work_struct *work)
+ 	mutex_unlock(&il->mutex);
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_get_ch_grp_idx - find the channel-group idx (0-4) for channel.
+  *
+  * This function is used when initializing channel-info structs.
+@@ -1912,7 +1912,7 @@ il3945_hw_reg_get_ch_grp_idx(struct il_priv *il,
+ 	return group_idx;
+ }
+ 
+-/**
++/*
+  * il3945_hw_reg_get_matched_power_idx - Interpolate to get nominal idx
+  *
+  * Interpolate to get nominal (i.e. at factory calibration temperature) idx
+@@ -2035,7 +2035,7 @@ il3945_hw_reg_init_channel_groups(struct il_priv *il)
+ 	}
+ }
+ 
+-/**
++/*
+  * il3945_txpower_set_from_eeprom - Set channel power info based on EEPROM
+  *
+  * Second pass (during init) to set up il->channel_info
+@@ -2305,7 +2305,7 @@ il3945_manage_ibss_station(struct il_priv *il, struct ieee80211_vif *vif,
+ 				 vif->bss_conf.bssid);
+ }
+ 
+-/**
++/*
+  * il3945_init_hw_rate_table - Initialize the hardware rate fallback table
+  */
+ int
+@@ -2520,7 +2520,7 @@ il3945_eeprom_release_semaphore(struct il_priv *il)
+ 	return;
+ }
+ 
+- /**
++ /*
+   * il3945_load_bsm - Load bootstrap instructions
+   *
+   * BSM operation:
 -- 
 2.25.1
 
