@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39145C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 641F4C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BFEA2087D
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 337DB2087D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="avYQsDcI"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Ajx7/Kr/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728478AbgHZJgG (ORCPT
+        id S1728467AbgHZJgE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:36:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40980 "EHLO
+        Wed, 26 Aug 2020 05:36:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728418AbgHZJf2 (ORCPT
+        with ESMTP id S1728425AbgHZJfd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:35:28 -0400
+        Wed, 26 Aug 2020 05:35:33 -0400
 Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18F0BC0617A3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:41 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id y3so1098530wrl.4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C6FC061368
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:43 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id y3so1098648wrl.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gIFuAgbU5KsSZartda2wv/vItp6gRgcDSq7Ia+efgpk=;
-        b=avYQsDcIlHb1v5YkJd/vaqkVLjM5XIcFdZbGcQZAWvKMT1OUpi+Y2PQUXh8dRLs+BR
-         z4rw/6NOguSsCeVFa6gnWDpsAbyQu9Dj83CYvpijW3Qq9SMDOeJepgI4wr+hBDGp5k75
-         QzcY2wKuN/KWNg89b3So2XrfPhyAytAZQTLKt3aU9yjpqGZ+RlnVWKsHleZDYyoWVtne
-         W6IyLZ8w8hUbG50HFhpg21opLILC1ZNMA93YaWgGQSxfMB9pEPBAE2Ml8222w76w7n8s
-         kFmpRxCZlx8vznMIExuKDi67foRE7NJDwkyaZYAuswIfmY2kEUnh+5R+U2fvcLWM4vN4
-         TccQ==
+        bh=EWWkC93UJ7xj7BkZ2b7U7Aw6lomOHNe1aGRj0IYiNWw=;
+        b=Ajx7/Kr/e8GtU4LIIPcwjtWRUh0vF1emJA2VjOu2Gia+48u0R30etyRK1i63xNy7L5
+         hMXIkmWto3dxWPN8FrOWpBl1pqjQ4dLkksZjPNfxFQVcXIlzVqQH+2wEkDf3NQRTgwJ1
+         VU8abeFTBhMh0hlrVZhbR1ni0bThPfgm0f0QKIidxW2P9i7yEtiTPcKCU0bqCScTrdJl
+         nxse+3AwcjpD7ic6ZCoxS6GYLOOaAEDg2uwmoAY1N3brpUTSEsFzJ2D3I5FCnyPV8ox1
+         A+5T6/V5cMM2kr6bgevVjvMLYEjkqjoDNFOlGSuF/tKcGg5cfarQsONjK+8TnMoSEND/
+         FGjA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gIFuAgbU5KsSZartda2wv/vItp6gRgcDSq7Ia+efgpk=;
-        b=r1lcKmJFd4y1/m1kDcXeqlovGplV69wsZlIIGmV51J+lYudW9ndv6C6TexDQv+xlXn
-         LQY2fL23h2UkeP2MRDDAQDNPT04rPPIVqwPPa3/nZT+VHwDjjp9MXUxxOY+XINaCpudV
-         FDft1YA5AmAsfJTcvcQy94MvcTkcO8Wqq0+4lxbk8CZpFyRh71qIeplh5vPxsNoVT80O
-         BZto85BYBW56MD21oInCA8TaUDahFVxaxwyC8kjPC1S7sNxgJis/PZi9MlKZ203k0Uzl
-         hGtn0nXrq2VH/0j9ZVexdhJEvQo2oubej2oPYx/Vz0QduORNbPos7uuVPJbpgjAVvbQX
-         Vacg==
-X-Gm-Message-State: AOAM533HtIPmrffbxmXutono/qBNyWO23uRKOjsVbrY56PQ/ICVOFfHl
-        73Lh6wsrwVX91/BNCNcP1po4Aw==
-X-Google-Smtp-Source: ABdhPJwGiOx6SWFxrf5y6KCMyUCNb/Pbq+bbg4PuiTg8ehYEhO9dGBYbCn1ae2FRCyZ8kjZM3uUqbQ==
-X-Received: by 2002:adf:b1dc:: with SMTP id r28mr14310325wra.242.1598434479728;
-        Wed, 26 Aug 2020 02:34:39 -0700 (PDT)
+        bh=EWWkC93UJ7xj7BkZ2b7U7Aw6lomOHNe1aGRj0IYiNWw=;
+        b=QxeQoMaUC8WDkVKaU49yuyIgsY/d5pAXFDa5Tbgj1vMZXXNn0kJKCpfJojW5vc15jf
+         UOp04p23QGtdAfLLs9zrNUqZIu+zKDYW18LJ/auXj7Ka53OA47ZY9oaPhlHRvbqj1w3z
+         +ycKOp8rzwgTLIkGuOrT9CvwCb8U20j48qrKz8mXgzysdPWOTWLEgragPTYcsCincEcf
+         82BdnZ/kNOV324z0tnUaGFm0zLbqkT2TlspeDzO1pP7VIJWXXsdTGloWGl/ZkHtemX1Z
+         2rwaim6b/qyYaF3weP3G6ABjLrSoSRHlFTitJT2v9LOHngv49UJSQl2czcFc2zcYmY5x
+         SjFg==
+X-Gm-Message-State: AOAM531jol5RVxpH8N/mAbXKMWND06BnHml9oudpWOnF6+tu/dU4sfJy
+        2CwfB2rFWVgARgPOW10gN+trVQ==
+X-Google-Smtp-Source: ABdhPJyEEniXrXM8b6V6fPBEVaHRa3glrYLaPukKyjYAcSu/RiB5EgJ/+SOPvpFgOZOkfqNpKXLIAA==
+X-Received: by 2002:adf:c453:: with SMTP id a19mr1604492wrg.179.1598434482172;
+        Wed, 26 Aug 2020 02:34:42 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.38
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:39 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:41 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -68,11 +68,10 @@ Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        zhong jiang <zhongjiang@huawei.com>,
         brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: [PATCH 28/30] wireless: broadcom: brcm80211: phy_n: Remove a bunch of unused variables
-Date:   Wed, 26 Aug 2020 10:33:59 +0100
-Message-Id: <20200826093401.1458456-29-lee.jones@linaro.org>
+Subject: [PATCH 30/30] wireless: broadcom: brcm80211: phytbl_n: Remove a few unused arrays
+Date:   Wed, 26 Aug 2020 10:34:01 +0100
+Message-Id: <20200826093401.1458456-31-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
@@ -86,22 +85,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- In file included from drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:16:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_spurwar_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:19036:6: warning: variable ‘tempval’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_tempsense_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:21983:28: warning: variable ‘RfctrlMiscReg6_save’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_rssi_compute_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:22986:6: warning: variable ‘phyRx0_l’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_runsamples_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23101:6: warning: variable ‘lpf_bw_ctl_miscreg4’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23100:50: warning: variable ‘lpf_bw_ctl_miscreg3’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_iqcal_gainparams_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23406:6: warning: variable ‘idx’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_a2_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:24707:7: warning: variable ‘phy_a6’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_a3_nphy’:
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:24999:7: warning: variable ‘phy_a11’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c:9218:18: warning: ‘papd_cal_scalars_tbl_core1_rev3’ defined but not used [-Wunused-const-variable=]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c:9151:18: warning: ‘papd_comp_epsilon_tbl_core1_rev3’ defined but not used [-Wunused-const-variable=]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c:9084:18: warning: ‘papd_cal_scalars_tbl_core0_rev3’ defined but not used [-Wunused-const-variable=]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c:9017:18: warning: ‘papd_comp_epsilon_tbl_core0_rev3’ defined but not used [-Wunused-const-variable=]
 
 Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
 Cc: Franky Lin <franky.lin@broadcom.com>
@@ -111,197 +98,294 @@ Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: zhong jiang <zhongjiang@huawei.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: brcm80211-dev-list.pdl@broadcom.com
 Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 47 ++++---------------
- 1 file changed, 8 insertions(+), 39 deletions(-)
+ .../brcm80211/brcmsmac/phy/phytbl_n.c         | 268 ------------------
+ 1 file changed, 268 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-index a3f094568cfb2..8580a27547891 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-@@ -19033,7 +19033,6 @@ static void wlc_phy_spurwar_nphy(struct brcms_phy *pi)
- 	u32 nphy_adj_noise_var_buf[] = { 0x3ff, 0x3ff };
- 	bool isAdjustNoiseVar = false;
- 	uint numTonesAdjust = 0;
--	u32 tempval = 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c
+index 7607e67d20c75..396d005f4d165 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_n.c
+@@ -9014,274 +9014,6 @@ static const u16 papd_comp_rfpwr_tbl_core1_rev3[] = {
+ 	0x01d6,
+ };
  
- 	if (NREV_GE(pi->pubpi.phy_rev, 3)) {
- 		if (pi->phyhang_avoid)
-@@ -19139,9 +19138,6 @@ static void wlc_phy_spurwar_nphy(struct brcms_phy *pi)
- 					numTonesAdjust,
- 					nphy_adj_tone_id_buf,
- 					nphy_adj_noise_var_buf);
+-static const u32 papd_comp_epsilon_tbl_core0_rev3[] = {
+-	0x00000000,
+-	0x00001fa0,
+-	0x00019f78,
+-	0x0001df7e,
+-	0x03fa9f86,
+-	0x03fd1f90,
+-	0x03fe5f8a,
+-	0x03fb1f94,
+-	0x03fd9fa0,
+-	0x00009f98,
+-	0x03fd1fac,
+-	0x03ff9fa2,
+-	0x03fe9fae,
+-	0x00001fae,
+-	0x03fddfb4,
+-	0x03ff1fb8,
+-	0x03ff9fbc,
+-	0x03ffdfbe,
+-	0x03fe9fc2,
+-	0x03fedfc6,
+-	0x03fedfc6,
+-	0x03ff9fc8,
+-	0x03ff5fc6,
+-	0x03fedfc2,
+-	0x03ff9fc0,
+-	0x03ff5fac,
+-	0x03ff5fac,
+-	0x03ff9fa2,
+-	0x03ff9fa6,
+-	0x03ff9faa,
+-	0x03ff5fb0,
+-	0x03ff5fb4,
+-	0x03ff1fca,
+-	0x03ff5fce,
+-	0x03fcdfdc,
+-	0x03fb4006,
+-	0x00000030,
+-	0x03ff808a,
+-	0x03ff80da,
+-	0x0000016c,
+-	0x03ff8318,
+-	0x03ff063a,
+-	0x03fd8bd6,
+-	0x00014ffe,
+-	0x00034ffe,
+-	0x00034ffe,
+-	0x0003cffe,
+-	0x00040ffe,
+-	0x00040ffe,
+-	0x0003cffe,
+-	0x0003cffe,
+-	0x00020ffe,
+-	0x03fe0ffe,
+-	0x03fdcffe,
+-	0x03f94ffe,
+-	0x03f54ffe,
+-	0x03f44ffe,
+-	0x03ef8ffe,
+-	0x03ee0ffe,
+-	0x03ebcffe,
+-	0x03e8cffe,
+-	0x03e74ffe,
+-	0x03e4cffe,
+-	0x03e38ffe,
+-};
 -
--				tempval = 0;
+-static const u32 papd_cal_scalars_tbl_core0_rev3[] = {
+-	0x05af005a,
+-	0x0571005e,
+-	0x05040066,
+-	0x04bd006c,
+-	0x047d0072,
+-	0x04430078,
+-	0x03f70081,
+-	0x03cb0087,
+-	0x03870091,
+-	0x035e0098,
+-	0x032e00a1,
+-	0x030300aa,
+-	0x02d800b4,
+-	0x02ae00bf,
+-	0x028900ca,
+-	0x026400d6,
+-	0x024100e3,
+-	0x022200f0,
+-	0x020200ff,
+-	0x01e5010e,
+-	0x01ca011e,
+-	0x01b0012f,
+-	0x01990140,
+-	0x01830153,
+-	0x016c0168,
+-	0x0158017d,
+-	0x01450193,
+-	0x013301ab,
+-	0x012101c5,
+-	0x011101e0,
+-	0x010201fc,
+-	0x00f4021a,
+-	0x00e6011d,
+-	0x00d9012e,
+-	0x00cd0140,
+-	0x00c20153,
+-	0x00b70167,
+-	0x00ac017c,
+-	0x00a30193,
+-	0x009a01ab,
+-	0x009101c4,
+-	0x008901df,
+-	0x008101fb,
+-	0x007a0219,
+-	0x00730239,
+-	0x006d025b,
+-	0x0067027e,
+-	0x006102a4,
+-	0x005c02cc,
+-	0x005602f6,
+-	0x00520323,
+-	0x004d0353,
+-	0x00490385,
+-	0x004503bb,
+-	0x004103f3,
+-	0x003d042f,
+-	0x003a046f,
+-	0x003704b2,
+-	0x003404f9,
+-	0x00310545,
+-	0x002e0596,
+-	0x002b05f5,
+-	0x00290640,
+-	0x002606a4,
+-};
 -
- 			} else {
- 				wlc_phy_adjust_min_noisevar_nphy(pi, 0, NULL,
- 								 NULL);
-@@ -21980,7 +21976,7 @@ s16 wlc_phy_tempsense_nphy(struct brcms_phy *pi)
- 		u16 auxADC_rssi_ctrlL, auxADC_rssi_ctrlH;
- 		s32 auxADC_Vl;
- 		u16 RfctrlOverride5_save, RfctrlOverride6_save;
--		u16 RfctrlMiscReg5_save, RfctrlMiscReg6_save;
-+		u16 RfctrlMiscReg5_save;
- 		u16 RSSIMultCoef0QPowerDet_save;
- 		u16 tempsense_Rcal;
- 
-@@ -21995,7 +21991,7 @@ s16 wlc_phy_tempsense_nphy(struct brcms_phy *pi)
- 		RfctrlOverride5_save = read_phy_reg(pi, 0x346);
- 		RfctrlOverride6_save = read_phy_reg(pi, 0x347);
- 		RfctrlMiscReg5_save = read_phy_reg(pi, 0x344);
--		RfctrlMiscReg6_save = read_phy_reg(pi, 0x345);
-+		read_phy_reg(pi, 0x345); /* RfctrlMiscReg6_save */
- 
- 		wlc_phy_table_read_nphy(pi, NPHY_TBL_ID_AFECTRL, 1, 0x0A, 16,
- 					&auxADC_Vmid_save);
-@@ -22983,7 +22979,7 @@ int
- wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
- {
- 	s16 rxpwr, rxpwr0, rxpwr1;
--	s16 phyRx0_l, phyRx2_l;
-+	s16 phyRx2_l;
- 
- 	rxpwr = 0;
- 	rxpwr0 = rxh->PhyRxStatus_1 & PRXS1_nphy_PWR0_MASK;
-@@ -22994,7 +22990,6 @@ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
- 	if (rxpwr1 > 127)
- 		rxpwr1 -= 256;
- 
--	phyRx0_l = rxh->PhyRxStatus_0 & 0x00ff;
- 	phyRx2_l = rxh->PhyRxStatus_2 & 0x00ff;
- 	if (phyRx2_l > 127)
- 		phyRx2_l -= 256;
-@@ -23097,8 +23092,7 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
- 	u16 bb_mult;
- 	u8 phy_bw, sample_cmd;
- 	u16 orig_RfseqCoreActv;
--	u16 lpf_bw_ctl_override3, lpf_bw_ctl_override4, lpf_bw_ctl_miscreg3,
--	    lpf_bw_ctl_miscreg4;
-+	u16 lpf_bw_ctl_override3, lpf_bw_ctl_override4;
- 
- 	if (pi->phyhang_avoid)
- 		wlc_phy_stay_in_carriersearch_nphy(pi, true);
-@@ -23111,12 +23105,7 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
- 
- 		lpf_bw_ctl_override3 = read_phy_reg(pi, 0x342) & (0x1 << 7);
- 		lpf_bw_ctl_override4 = read_phy_reg(pi, 0x343) & (0x1 << 7);
--		if (lpf_bw_ctl_override3 | lpf_bw_ctl_override4) {
--			lpf_bw_ctl_miscreg3 = read_phy_reg(pi, 0x340) &
--					      (0x7 << 8);
--			lpf_bw_ctl_miscreg4 = read_phy_reg(pi, 0x341) &
--					      (0x7 << 8);
--		} else {
-+		if (!(lpf_bw_ctl_override3 | lpf_bw_ctl_override4)) {
- 			wlc_phy_rfctrl_override_nphy_rev7(
- 				pi,
- 				(0x1 << 7),
-@@ -23126,12 +23115,9 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
- 				NPHY_REV7_RFCTRLOVERRIDE_ID1);
- 
- 			pi->nphy_sample_play_lpf_bw_ctl_ovr = true;
+-static const u32 papd_comp_epsilon_tbl_core1_rev3[] = {
+-	0x00000000,
+-	0x00001fa0,
+-	0x00019f78,
+-	0x0001df7e,
+-	0x03fa9f86,
+-	0x03fd1f90,
+-	0x03fe5f8a,
+-	0x03fb1f94,
+-	0x03fd9fa0,
+-	0x00009f98,
+-	0x03fd1fac,
+-	0x03ff9fa2,
+-	0x03fe9fae,
+-	0x00001fae,
+-	0x03fddfb4,
+-	0x03ff1fb8,
+-	0x03ff9fbc,
+-	0x03ffdfbe,
+-	0x03fe9fc2,
+-	0x03fedfc6,
+-	0x03fedfc6,
+-	0x03ff9fc8,
+-	0x03ff5fc6,
+-	0x03fedfc2,
+-	0x03ff9fc0,
+-	0x03ff5fac,
+-	0x03ff5fac,
+-	0x03ff9fa2,
+-	0x03ff9fa6,
+-	0x03ff9faa,
+-	0x03ff5fb0,
+-	0x03ff5fb4,
+-	0x03ff1fca,
+-	0x03ff5fce,
+-	0x03fcdfdc,
+-	0x03fb4006,
+-	0x00000030,
+-	0x03ff808a,
+-	0x03ff80da,
+-	0x0000016c,
+-	0x03ff8318,
+-	0x03ff063a,
+-	0x03fd8bd6,
+-	0x00014ffe,
+-	0x00034ffe,
+-	0x00034ffe,
+-	0x0003cffe,
+-	0x00040ffe,
+-	0x00040ffe,
+-	0x0003cffe,
+-	0x0003cffe,
+-	0x00020ffe,
+-	0x03fe0ffe,
+-	0x03fdcffe,
+-	0x03f94ffe,
+-	0x03f54ffe,
+-	0x03f44ffe,
+-	0x03ef8ffe,
+-	0x03ee0ffe,
+-	0x03ebcffe,
+-	0x03e8cffe,
+-	0x03e74ffe,
+-	0x03e4cffe,
+-	0x03e38ffe,
+-};
 -
--			lpf_bw_ctl_miscreg3 = read_phy_reg(pi, 0x340) &
--					      (0x7 << 8);
--			lpf_bw_ctl_miscreg4 = read_phy_reg(pi, 0x341) &
--					      (0x7 << 8);
- 		}
-+		read_phy_reg(pi, 0x340); /* lpf_bw_ctl_miscreg3 */
-+		read_phy_reg(pi, 0x341); /* lpf_bw_ctl_miscreg4 */
- 	}
- 
- 	if ((pi->nphy_bb_mult_save & BB_MULT_VALID_MASK) == 0) {
-@@ -23403,7 +23389,6 @@ wlc_phy_iqcal_gainparams_nphy(struct brcms_phy *pi, u16 core_no,
- 			      struct nphy_iqcal_params *params)
- {
- 	u8 k;
--	int idx;
- 	u16 gain_index;
- 	u8 band_idx = (CHSPEC_IS5G(pi->radio_chanspec) ? 1 : 0);
- 
-@@ -23436,13 +23421,10 @@ wlc_phy_iqcal_gainparams_nphy(struct brcms_phy *pi, u16 core_no,
- 			      (target_gain.pga[core_no] << 4) |
- 			      (target_gain.txgm[core_no] << 8));
- 
--		idx = -1;
- 		for (k = 0; k < NPHY_IQCAL_NUMGAINS; k++) {
- 			if (tbl_iqcal_gainparams_nphy[band_idx][k][0] ==
--			    gain_index) {
--				idx = k;
-+			    gain_index)
- 				break;
--			}
- 		}
- 
- 		params->txgm = tbl_iqcal_gainparams_nphy[band_idx][k][1];
-@@ -24704,7 +24686,6 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
- {
- 	u16 phy_a1, phy_a2, phy_a3;
- 	u16 phy_a4, phy_a5;
--	bool phy_a6;
- 	u8 phy_a7, m[2];
- 	u32 phy_a8 = 0;
- 	struct nphy_txgains phy_a9;
-@@ -24714,9 +24695,6 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
- 
- 	phy_a7 = (core == PHY_CORE_0) ? 1 : 0;
- 
--	phy_a6 = ((cal_mode == CAL_GCTRL)
--		  || (cal_mode == CAL_SOFT)) ? true : false;
+-static const u32 papd_cal_scalars_tbl_core1_rev3[] = {
+-	0x05af005a,
+-	0x0571005e,
+-	0x05040066,
+-	0x04bd006c,
+-	0x047d0072,
+-	0x04430078,
+-	0x03f70081,
+-	0x03cb0087,
+-	0x03870091,
+-	0x035e0098,
+-	0x032e00a1,
+-	0x030300aa,
+-	0x02d800b4,
+-	0x02ae00bf,
+-	0x028900ca,
+-	0x026400d6,
+-	0x024100e3,
+-	0x022200f0,
+-	0x020200ff,
+-	0x01e5010e,
+-	0x01ca011e,
+-	0x01b0012f,
+-	0x01990140,
+-	0x01830153,
+-	0x016c0168,
+-	0x0158017d,
+-	0x01450193,
+-	0x013301ab,
+-	0x012101c5,
+-	0x011101e0,
+-	0x010201fc,
+-	0x00f4021a,
+-	0x00e6011d,
+-	0x00d9012e,
+-	0x00cd0140,
+-	0x00c20153,
+-	0x00b70167,
+-	0x00ac017c,
+-	0x00a30193,
+-	0x009a01ab,
+-	0x009101c4,
+-	0x008901df,
+-	0x008101fb,
+-	0x007a0219,
+-	0x00730239,
+-	0x006d025b,
+-	0x0067027e,
+-	0x006102a4,
+-	0x005c02cc,
+-	0x005602f6,
+-	0x00520323,
+-	0x004d0353,
+-	0x00490385,
+-	0x004503bb,
+-	0x004103f3,
+-	0x003d042f,
+-	0x003a046f,
+-	0x003704b2,
+-	0x003404f9,
+-	0x00310545,
+-	0x002e0596,
+-	0x002b05f5,
+-	0x00290640,
+-	0x002606a4,
+-};
 -
- 	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
- 
- 		phy_a9 = wlc_phy_get_tx_gain_nphy(pi);
-@@ -24996,7 +24974,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 	s32 phy_a7, phy_a8;
- 	u32 phy_a9;
- 	int phy_a10;
--	bool phy_a11 = false;
- 	int phy_a12;
- 	u8 phy_a13 = 0;
- 	u8 phy_a14;
-@@ -25064,8 +25041,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 			if (!phy_a6 && (phy_a3 != phy_a5)) {
- 				if (!phy_a3)
- 					phy_a12 -= (u8) phy_a1;
--
--				phy_a11 = true;
- 				break;
- 			}
- 
-@@ -25079,8 +25054,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 					phy_a12 = phy_a14;
- 				else
- 					phy_a12 = phy_a13;
--
--				phy_a11 = true;
- 				break;
- 			}
- 
-@@ -25110,8 +25083,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 			if (!phy_a6 && (phy_a3 != phy_a5)) {
- 				if (!phy_a3)
- 					phy_a12 -= (u8) phy_a1;
--
--				phy_a11 = true;
- 				break;
- 			}
- 
-@@ -25125,8 +25096,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 					phy_a12 = 0;
- 				else
- 					phy_a12 = 127;
--
--				phy_a11 = true;
- 				break;
- 			}
- 
+ const struct phytbl_info mimophytbl_info_rev3_volatile[] = {
+ 	{&ant_swctrl_tbl_rev3, ARRAY_SIZE(ant_swctrl_tbl_rev3), 9, 0, 16},
+ };
 -- 
 2.25.1
 
