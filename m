@@ -7,66 +7,72 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB902C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39145C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0B522087D
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BFEA2087D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:36:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AwyjC/u6"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="avYQsDcI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728444AbgHZJfg (ORCPT
+        id S1728478AbgHZJgG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:35:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40932 "EHLO
+        Wed, 26 Aug 2020 05:36:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728403AbgHZJfS (ORCPT
+        with ESMTP id S1728418AbgHZJf2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:35:18 -0400
+        Wed, 26 Aug 2020 05:35:28 -0400
 Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16070C06135E
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:38 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id x7so1108340wro.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18F0BC0617A3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:41 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id y3so1098530wrl.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7UKR3rYf74POYGl3zWTm2JLEunC4uofhzAPfhP0pocI=;
-        b=AwyjC/u6v4PkRTDEUzW5YTwptUu33aZaKickGcM2cAwHsFaZSh3VUhKDX1bvVBJrSO
-         4bz4KBORUASDwdQfqAKx3d88J5wrfhGzYxAKrmqBGECjC3c7CnDdGYkY9lBhDFCymUQj
-         EDw6sSFzrbfef9cPsOW9n3jp+dy66uiSFPNf83D/FHYRlKG88XLNNq96ZivWt25TfrVT
-         sdHCBVi+qgdfiq6w8seV/4/KZ/BtO3IBixxQ1EQOKk/to29iEE5l7cDQF8IjNQg4bB7S
-         Rc3gzyrMcyijHr9sVaD/IuJGXpKovsNCxwzzB1BfVsNpF+pBAnlBEJs/Qp9ie+YpI0MZ
-         o1lQ==
+        bh=gIFuAgbU5KsSZartda2wv/vItp6gRgcDSq7Ia+efgpk=;
+        b=avYQsDcIlHb1v5YkJd/vaqkVLjM5XIcFdZbGcQZAWvKMT1OUpi+Y2PQUXh8dRLs+BR
+         z4rw/6NOguSsCeVFa6gnWDpsAbyQu9Dj83CYvpijW3Qq9SMDOeJepgI4wr+hBDGp5k75
+         QzcY2wKuN/KWNg89b3So2XrfPhyAytAZQTLKt3aU9yjpqGZ+RlnVWKsHleZDYyoWVtne
+         W6IyLZ8w8hUbG50HFhpg21opLILC1ZNMA93YaWgGQSxfMB9pEPBAE2Ml8222w76w7n8s
+         kFmpRxCZlx8vznMIExuKDi67foRE7NJDwkyaZYAuswIfmY2kEUnh+5R+U2fvcLWM4vN4
+         TccQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7UKR3rYf74POYGl3zWTm2JLEunC4uofhzAPfhP0pocI=;
-        b=tRU6I6X0/VPRVjhEGMjcc8NoAknjGTVH9s+T2+N4Gbzy07b+QpvkM8/85BWINVvSu/
-         EZBo+/MEyTOkUExLRcqQJlJBkUbEIc7UHpNOsjWx7w3mWZd/pOkm9RMOz2hSgbJ9/CVi
-         5pRkhxOduAHPLDE5tYi1sXilR6592qvSG5Iv0xAylTmIb+sZoXzxl76yD0e0FEzJn/AT
-         N+HJVAgzQWKqC7J8D5zN8gax+oUck/XhkRYW31KrFySXAcX96YEyJmvdi9US/rL12qkR
-         9AJOGWsN3qqLxuN8dp7XvGYS+vYZpFwKi2tR9yyG7c/M/q8NT0eg0tbbyUdGTD/cOgb1
-         ntcQ==
-X-Gm-Message-State: AOAM531mVIayl7h5VgtSKLtv/RBNDnnX9HVlHumY7mb3e3M1oNE+oaXc
-        PhcHi5LsuB8ABEGFaXTTlzqevw==
-X-Google-Smtp-Source: ABdhPJx0+PGYRxM+X3LewS3JB02QeZrJW/r5M6uw0gn3QWnbZnHsBzFex7YLoQ9d6uScoAa3F2SEgA==
-X-Received: by 2002:adf:fc02:: with SMTP id i2mr8811277wrr.165.1598434476657;
-        Wed, 26 Aug 2020 02:34:36 -0700 (PDT)
+        bh=gIFuAgbU5KsSZartda2wv/vItp6gRgcDSq7Ia+efgpk=;
+        b=r1lcKmJFd4y1/m1kDcXeqlovGplV69wsZlIIGmV51J+lYudW9ndv6C6TexDQv+xlXn
+         LQY2fL23h2UkeP2MRDDAQDNPT04rPPIVqwPPa3/nZT+VHwDjjp9MXUxxOY+XINaCpudV
+         FDft1YA5AmAsfJTcvcQy94MvcTkcO8Wqq0+4lxbk8CZpFyRh71qIeplh5vPxsNoVT80O
+         BZto85BYBW56MD21oInCA8TaUDahFVxaxwyC8kjPC1S7sNxgJis/PZi9MlKZ203k0Uzl
+         hGtn0nXrq2VH/0j9ZVexdhJEvQo2oubej2oPYx/Vz0QduORNbPos7uuVPJbpgjAVvbQX
+         Vacg==
+X-Gm-Message-State: AOAM533HtIPmrffbxmXutono/qBNyWO23uRKOjsVbrY56PQ/ICVOFfHl
+        73Lh6wsrwVX91/BNCNcP1po4Aw==
+X-Google-Smtp-Source: ABdhPJwGiOx6SWFxrf5y6KCMyUCNb/Pbq+bbg4PuiTg8ehYEhO9dGBYbCn1ae2FRCyZ8kjZM3uUqbQ==
+X-Received: by 2002:adf:b1dc:: with SMTP id r28mr14310325wra.242.1598434479728;
+        Wed, 26 Aug 2020 02:34:39 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.35
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:35 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:39 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Subject: [PATCH 26/30] wireless: ath: ath9k: ar5008_initvals: Move ar5416Bank{0,1,2,3,7} to where they are used
-Date:   Wed, 26 Aug 2020 10:33:57 +0100
-Message-Id: <20200826093401.1458456-27-lee.jones@linaro.org>
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        zhong jiang <zhongjiang@huawei.com>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH 28/30] wireless: broadcom: brcm80211: phy_n: Remove a bunch of unused variables
+Date:   Wed, 26 Aug 2020 10:33:59 +0100
+Message-Id: <20200826093401.1458456-29-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
@@ -80,143 +86,222 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/ath9k/ar5008_initvals.h:627:18: warning: ‘ar5416Bank7’ defined but not used [-Wunused-const-variable=]
- 627 | static const u32 ar5416Bank7[][2] = {
- | ^~~~~~~~~~~
- drivers/net/wireless/ath/ath9k/ar5008_initvals.h:548:18: warning: ‘ar5416Bank3’ defined but not used [-Wunused-const-variable=]
- 548 | static const u32 ar5416Bank3[][3] = {
- | ^~~~~~~~~~~
- drivers/net/wireless/ath/ath9k/ar5008_initvals.h:542:18: warning: ‘ar5416Bank2’ defined but not used [-Wunused-const-variable=]
- 542 | static const u32 ar5416Bank2[][2] = {
- | ^~~~~~~~~~~
- drivers/net/wireless/ath/ath9k/ar5008_initvals.h:536:18: warning: ‘ar5416Bank1’ defined but not used [-Wunused-const-variable=]
- 536 | static const u32 ar5416Bank1[][2] = {
- | ^~~~~~~~~~~
- drivers/net/wireless/ath/ath9k/ar5008_initvals.h:462:18: warning: ‘ar5416Bank0’ defined but not used [-Wunused-const-variable=]
- 462 | static const u32 ar5416Bank0[][2] = {
- | ^~~~~~~~~~~
+ In file included from drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:16:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_spurwar_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:19036:6: warning: variable ‘tempval’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_tempsense_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:21983:28: warning: variable ‘RfctrlMiscReg6_save’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_rssi_compute_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:22986:6: warning: variable ‘phyRx0_l’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_runsamples_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23101:6: warning: variable ‘lpf_bw_ctl_miscreg4’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23100:50: warning: variable ‘lpf_bw_ctl_miscreg3’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_iqcal_gainparams_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:23406:6: warning: variable ‘idx’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_a2_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:24707:7: warning: variable ‘phy_a6’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function ‘wlc_phy_a3_nphy’:
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:24999:7: warning: variable ‘phy_a11’ set but not used [-Wunused-but-set-variable]
 
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: zhong jiang <zhongjiang@huawei.com>
 Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../net/wireless/ath/ath9k/ar5008_initvals.h  | 31 -------------------
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   | 31 ++++++++++++++++++-
- 2 files changed, 30 insertions(+), 32 deletions(-)
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 47 ++++---------------
+ 1 file changed, 8 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
-index 8d251600d8458..7da8365ae69a8 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
-@@ -459,12 +459,6 @@ static const u32 ar5416Common[][2] = {
- 	{0x0000a3e0, 0x000001ce},
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index a3f094568cfb2..8580a27547891 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -19033,7 +19033,6 @@ static void wlc_phy_spurwar_nphy(struct brcms_phy *pi)
+ 	u32 nphy_adj_noise_var_buf[] = { 0x3ff, 0x3ff };
+ 	bool isAdjustNoiseVar = false;
+ 	uint numTonesAdjust = 0;
+-	u32 tempval = 0;
  
--static const u32 ar5416Bank0[][2] = {
--	/* Addr      allmodes  */
--	{0x000098b0, 0x1e5795e5},
--	{0x000098e0, 0x02008020},
--};
+ 	if (NREV_GE(pi->pubpi.phy_rev, 3)) {
+ 		if (pi->phyhang_avoid)
+@@ -19139,9 +19138,6 @@ static void wlc_phy_spurwar_nphy(struct brcms_phy *pi)
+ 					numTonesAdjust,
+ 					nphy_adj_tone_id_buf,
+ 					nphy_adj_noise_var_buf);
 -
- static const u32 ar5416BB_RfGain[][3] = {
- 	/* Addr      5G          2G        */
- 	{0x00009a00, 0x00000000, 0x00000000},
-@@ -533,23 +527,6 @@ static const u32 ar5416BB_RfGain[][3] = {
- 	{0x00009afc, 0x000000f9, 0x000000f9},
- };
+-				tempval = 0;
+-
+ 			} else {
+ 				wlc_phy_adjust_min_noisevar_nphy(pi, 0, NULL,
+ 								 NULL);
+@@ -21980,7 +21976,7 @@ s16 wlc_phy_tempsense_nphy(struct brcms_phy *pi)
+ 		u16 auxADC_rssi_ctrlL, auxADC_rssi_ctrlH;
+ 		s32 auxADC_Vl;
+ 		u16 RfctrlOverride5_save, RfctrlOverride6_save;
+-		u16 RfctrlMiscReg5_save, RfctrlMiscReg6_save;
++		u16 RfctrlMiscReg5_save;
+ 		u16 RSSIMultCoef0QPowerDet_save;
+ 		u16 tempsense_Rcal;
  
--static const u32 ar5416Bank1[][2] = {
--	/* Addr      allmodes  */
--	{0x000098b0, 0x02108421},
--	{0x000098ec, 0x00000008},
--};
--
--static const u32 ar5416Bank2[][2] = {
--	/* Addr      allmodes  */
--	{0x000098b0, 0x0e73ff17},
--	{0x000098e0, 0x00000420},
--};
--
--static const u32 ar5416Bank3[][3] = {
--	/* Addr      5G          2G        */
--	{0x000098f0, 0x01400018, 0x01c00018},
--};
--
- static const u32 ar5416Bank6TPC[][3] = {
- 	/* Addr      5G          2G        */
- 	{0x0000989c, 0x00000000, 0x00000000},
-@@ -587,13 +564,6 @@ static const u32 ar5416Bank6TPC[][3] = {
- 	{0x000098d0, 0x0000000f, 0x0010000f},
- };
+@@ -21995,7 +21991,7 @@ s16 wlc_phy_tempsense_nphy(struct brcms_phy *pi)
+ 		RfctrlOverride5_save = read_phy_reg(pi, 0x346);
+ 		RfctrlOverride6_save = read_phy_reg(pi, 0x347);
+ 		RfctrlMiscReg5_save = read_phy_reg(pi, 0x344);
+-		RfctrlMiscReg6_save = read_phy_reg(pi, 0x345);
++		read_phy_reg(pi, 0x345); /* RfctrlMiscReg6_save */
  
--static const u32 ar5416Bank7[][2] = {
--	/* Addr      allmodes  */
--	{0x0000989c, 0x00000500},
--	{0x0000989c, 0x00000800},
--	{0x000098cc, 0x0000000e},
--};
+ 		wlc_phy_table_read_nphy(pi, NPHY_TBL_ID_AFECTRL, 1, 0x0A, 16,
+ 					&auxADC_Vmid_save);
+@@ -22983,7 +22979,7 @@ int
+ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
+ {
+ 	s16 rxpwr, rxpwr0, rxpwr1;
+-	s16 phyRx0_l, phyRx2_l;
++	s16 phyRx2_l;
+ 
+ 	rxpwr = 0;
+ 	rxpwr0 = rxh->PhyRxStatus_1 & PRXS1_nphy_PWR0_MASK;
+@@ -22994,7 +22990,6 @@ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
+ 	if (rxpwr1 > 127)
+ 		rxpwr1 -= 256;
+ 
+-	phyRx0_l = rxh->PhyRxStatus_0 & 0x00ff;
+ 	phyRx2_l = rxh->PhyRxStatus_2 & 0x00ff;
+ 	if (phyRx2_l > 127)
+ 		phyRx2_l -= 256;
+@@ -23097,8 +23092,7 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
+ 	u16 bb_mult;
+ 	u8 phy_bw, sample_cmd;
+ 	u16 orig_RfseqCoreActv;
+-	u16 lpf_bw_ctl_override3, lpf_bw_ctl_override4, lpf_bw_ctl_miscreg3,
+-	    lpf_bw_ctl_miscreg4;
++	u16 lpf_bw_ctl_override3, lpf_bw_ctl_override4;
+ 
+ 	if (pi->phyhang_avoid)
+ 		wlc_phy_stay_in_carriersearch_nphy(pi, true);
+@@ -23111,12 +23105,7 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
+ 
+ 		lpf_bw_ctl_override3 = read_phy_reg(pi, 0x342) & (0x1 << 7);
+ 		lpf_bw_ctl_override4 = read_phy_reg(pi, 0x343) & (0x1 << 7);
+-		if (lpf_bw_ctl_override3 | lpf_bw_ctl_override4) {
+-			lpf_bw_ctl_miscreg3 = read_phy_reg(pi, 0x340) &
+-					      (0x7 << 8);
+-			lpf_bw_ctl_miscreg4 = read_phy_reg(pi, 0x341) &
+-					      (0x7 << 8);
+-		} else {
++		if (!(lpf_bw_ctl_override3 | lpf_bw_ctl_override4)) {
+ 			wlc_phy_rfctrl_override_nphy_rev7(
+ 				pi,
+ 				(0x1 << 7),
+@@ -23126,12 +23115,9 @@ wlc_phy_runsamples_nphy(struct brcms_phy *pi, u16 num_samps, u16 loops,
+ 				NPHY_REV7_RFCTRLOVERRIDE_ID1);
+ 
+ 			pi->nphy_sample_play_lpf_bw_ctl_ovr = true;
 -
- static const u32 ar5416Addac[][2] = {
- 	/* Addr      allmodes  */
- 	{0x0000989c, 0x00000000},
-@@ -634,4 +604,3 @@ static const u32 ar5416Addac[][2] = {
- 	{0x0000989c, 0x00000000},
- 	{0x000098c4, 0x00000000},
- };
+-			lpf_bw_ctl_miscreg3 = read_phy_reg(pi, 0x340) &
+-					      (0x7 << 8);
+-			lpf_bw_ctl_miscreg4 = read_phy_reg(pi, 0x341) &
+-					      (0x7 << 8);
+ 		}
++		read_phy_reg(pi, 0x340); /* lpf_bw_ctl_miscreg3 */
++		read_phy_reg(pi, 0x341); /* lpf_bw_ctl_miscreg4 */
+ 	}
+ 
+ 	if ((pi->nphy_bb_mult_save & BB_MULT_VALID_MASK) == 0) {
+@@ -23403,7 +23389,6 @@ wlc_phy_iqcal_gainparams_nphy(struct brcms_phy *pi, u16 core_no,
+ 			      struct nphy_iqcal_params *params)
+ {
+ 	u8 k;
+-	int idx;
+ 	u16 gain_index;
+ 	u8 band_idx = (CHSPEC_IS5G(pi->radio_chanspec) ? 1 : 0);
+ 
+@@ -23436,13 +23421,10 @@ wlc_phy_iqcal_gainparams_nphy(struct brcms_phy *pi, u16 core_no,
+ 			      (target_gain.pga[core_no] << 4) |
+ 			      (target_gain.txgm[core_no] << 8));
+ 
+-		idx = -1;
+ 		for (k = 0; k < NPHY_IQCAL_NUMGAINS; k++) {
+ 			if (tbl_iqcal_gainparams_nphy[band_idx][k][0] ==
+-			    gain_index) {
+-				idx = k;
++			    gain_index)
+ 				break;
+-			}
+ 		}
+ 
+ 		params->txgm = tbl_iqcal_gainparams_nphy[band_idx][k][1];
+@@ -24704,7 +24686,6 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
+ {
+ 	u16 phy_a1, phy_a2, phy_a3;
+ 	u16 phy_a4, phy_a5;
+-	bool phy_a6;
+ 	u8 phy_a7, m[2];
+ 	u32 phy_a8 = 0;
+ 	struct nphy_txgains phy_a9;
+@@ -24714,9 +24695,6 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
+ 
+ 	phy_a7 = (core == PHY_CORE_0) ? 1 : 0;
+ 
+-	phy_a6 = ((cal_mode == CAL_GCTRL)
+-		  || (cal_mode == CAL_SOFT)) ? true : false;
 -
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index dae95402eb3a9..55b2d9aa080d5 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -18,7 +18,6 @@
- #include "hw-ops.h"
- #include "../regd.h"
- #include "ar9002_phy.h"
--#include "ar5008_initvals.h"
+ 	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
  
- /* All code below is for AR5008, AR9001, AR9002 */
+ 		phy_a9 = wlc_phy_get_tx_gain_nphy(pi);
+@@ -24996,7 +24974,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
+ 	s32 phy_a7, phy_a8;
+ 	u32 phy_a9;
+ 	int phy_a10;
+-	bool phy_a11 = false;
+ 	int phy_a12;
+ 	u8 phy_a13 = 0;
+ 	u8 phy_a14;
+@@ -25064,8 +25041,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
+ 			if (!phy_a6 && (phy_a3 != phy_a5)) {
+ 				if (!phy_a3)
+ 					phy_a12 -= (u8) phy_a1;
+-
+-				phy_a11 = true;
+ 				break;
+ 			}
  
-@@ -51,6 +50,36 @@ static const int m2ThreshLowExt_off = 127;
- static const int m1ThreshExt_off = 127;
- static const int m2ThreshExt_off = 127;
+@@ -25079,8 +25054,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
+ 					phy_a12 = phy_a14;
+ 				else
+ 					phy_a12 = phy_a13;
+-
+-				phy_a11 = true;
+ 				break;
+ 			}
  
-+static const u32 ar5416Bank0[][2] = {
-+	/* Addr      allmodes  */
-+	{0x000098b0, 0x1e5795e5},
-+	{0x000098e0, 0x02008020},
-+};
-+
-+static const u32 ar5416Bank1[][2] = {
-+	/* Addr      allmodes  */
-+	{0x000098b0, 0x02108421},
-+	{0x000098ec, 0x00000008},
-+};
-+
-+static const u32 ar5416Bank2[][2] = {
-+	/* Addr      allmodes  */
-+	{0x000098b0, 0x0e73ff17},
-+	{0x000098e0, 0x00000420},
-+};
-+
-+static const u32 ar5416Bank3[][3] = {
-+	/* Addr      5G          2G        */
-+	{0x000098f0, 0x01400018, 0x01c00018},
-+};
-+
-+static const u32 ar5416Bank7[][2] = {
-+	/* Addr      allmodes  */
-+	{0x0000989c, 0x00000500},
-+	{0x0000989c, 0x00000800},
-+	{0x000098cc, 0x0000000e},
-+};
-+
- static const struct ar5416IniArray bank0 = STATIC_INI_ARRAY(ar5416Bank0);
- static const struct ar5416IniArray bank1 = STATIC_INI_ARRAY(ar5416Bank1);
- static const struct ar5416IniArray bank2 = STATIC_INI_ARRAY(ar5416Bank2);
+@@ -25110,8 +25083,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
+ 			if (!phy_a6 && (phy_a3 != phy_a5)) {
+ 				if (!phy_a3)
+ 					phy_a12 -= (u8) phy_a1;
+-
+-				phy_a11 = true;
+ 				break;
+ 			}
+ 
+@@ -25125,8 +25096,6 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
+ 					phy_a12 = 0;
+ 				else
+ 					phy_a12 = 127;
+-
+-				phy_a11 = true;
+ 				break;
+ 			}
+ 
 -- 
 2.25.1
 
