@@ -5,72 +5,72 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AADC6C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79AB3C433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88877208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58D4020897
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 09:39:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PBwJBdkQ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wEtprO+k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728301AbgHZJip (ORCPT
+        id S1728687AbgHZJjR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:38:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40982 "EHLO
+        Wed, 26 Aug 2020 05:39:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728320AbgHZJeq (ORCPT
+        with ESMTP id S1728261AbgHZJe0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:34:46 -0400
+        Wed, 26 Aug 2020 05:34:26 -0400
 Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B034EC06138F
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:23 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id t2so1086367wma.0
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5F0AC061574
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:14 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id b79so482433wmb.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 02:34:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qElmRnHsar7tn4JV1a4MOU4ECliWfWuqmHMN13MnixU=;
-        b=PBwJBdkQlk8+/glvNbz0NN9mU9pLT9iRphNJRoCwUkB7TBfg41MLFYDe9JWU4G4eSz
-         iCZgPMD8KHcs2xTrORTWg9H0xYW4xLdiY/VdZDgZ58k8y9+IngWN8V66vafUV9a4j8mv
-         ZMgrcGPYBYdj3/3d1SQ7JqQCHwSZE6fkwTf4ry/wbHo3DGWpzQWmmveF9yLR8HIBxX6E
-         4txc7BApPS000GyfapvamEZqKo9PpsZ7m1dTFY4Uj144iF4cUUa3nKtjQH39JzVPDoIQ
-         XuwF7EN1CCGOSGA3e6rv9sCVtYV0zOw0RAbFRfsqExehODp8gWDYcuaCSbbz5U1NRWV+
-         aX5A==
+        bh=7NPqtCpN+MJMO4A/dgMyA434mUf+bmEkPLCWrQ+c5YA=;
+        b=wEtprO+kfdTRh0oBj+5B8Yy4ISBKhQwNoTK2RGOv3zTrbnF9ElfliFrU1265sy2Dlk
+         X/Ql8tuDk3rwEZ/h46rhTJo/9PJUV7zVajAOJBku2X0uO34M80zXe45EDRxYuRqQleDC
+         NAP9JiR0oSCosMNy+oDBMCmD/yLLjTIp8xiMSXLlVqiYG1K+qxxyGamKNF7mIOUuyrb5
+         2VSYZ/iMRe2lF+4MMY6QZMN5DYTs+DH4vh/WXqjhBMVd/g37WzOUKzu3gn6NxpqqmLqK
+         OxsVrOTqkJx4HfE7sGwpLwgjM/oHqbOrnto26nf/M69S3VNyhRFIPip5KiAAkOn5l5Qw
+         D+tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qElmRnHsar7tn4JV1a4MOU4ECliWfWuqmHMN13MnixU=;
-        b=G9xLyH435PjLBJVE91ehYg9Jmvg8A4OW3HlfX6vP3UZUjG1Y7A6n07pDd7ZxWzroEO
-         xMbUy+G/kewKELL3o2anm6IwJk7kz527aopWOH3LoUbPBns1KuF0BAwZ60HXYWQTSYOd
-         k0LVV6SaxpXLyICRpvTDxIfCyhMFlu8ehx+rD4d4m8AqPvv39jpq5cBQ+djfYsUj8sMJ
-         7Oed+MzInh8gN1qZL9ZoayQkXxgSBfnNwKTa11rcgavXbhX2+4+1/MRQcJ0p0UKsR9vw
-         9j8ygbHQLHjvrap6fNXuWD01DG5dIZ/XWXaMP2BcsWhz4FSBXtS0ywQ3P8VGMs+tABmm
-         wdZQ==
-X-Gm-Message-State: AOAM530rjbN8xNK0P81b3QkUMtJ3IikfaRVJl5HTRyespjOE8A4jadtq
-        N5qeKgygnNWj0rBHEz0HgVjzOQ==
-X-Google-Smtp-Source: ABdhPJx3h8A3mjpNHgeZ/6rKPE6GI6Xtear6POyYyOrLQKipA1gOfGiBA+GtMpx2b9EQwV0Whzi1Mg==
-X-Received: by 2002:a1c:96c5:: with SMTP id y188mr6392874wmd.72.1598434462418;
-        Wed, 26 Aug 2020 02:34:22 -0700 (PDT)
+        bh=7NPqtCpN+MJMO4A/dgMyA434mUf+bmEkPLCWrQ+c5YA=;
+        b=GPLs86EyJMSinfYtFXiFqOBYINpZ3UMLiuczQhBJL5pe/zLqqmIefcNL1qzWhlboYA
+         HzhBKLz92wCjqYeWD5GyOK9HS++A6DsBQRsI4q6XYCqLnXkekjCpMzRmpmRu/ZrEuFmC
+         qpC27bV+leW7D7/qye4NEuCawv1h96PgH8oRAiKbpS3IXJKbRWkyTKl+PleqyKUrU+hL
+         4veW82RI4Iw7AUbWIYDYfpLtAP+WmWODcIsjb5DCVPfuVYTp2zgACvsBVOvbk79hSH+Q
+         KtoK5lvpRBMCk70RS0w7P8jGpKDdatPq3JS7o5G8cfb4LRDmXPrWfpsKWCmM7e5uN9ZM
+         kTAQ==
+X-Gm-Message-State: AOAM530RhWK/sAPCxqkGjw4+65MS/gXg4FdSUbswXmGKydgOvFWRPPYf
+        K7Jh1N5edMAWQUkwEnLMwz+66A==
+X-Google-Smtp-Source: ABdhPJzqT0DyC5PnoSK/CEUmtrG0VP7Wqe/C2ORblcv2v2YKXnDCylYJ3YnwxTiMZT0M3+HT1whIRA==
+X-Received: by 2002:a1c:b4c1:: with SMTP id d184mr6449203wmf.26.1598434453548;
+        Wed, 26 Aug 2020 02:34:13 -0700 (PDT)
 Received: from dell.default ([95.149.164.62])
-        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.21
+        by smtp.gmail.com with ESMTPSA id u3sm3978759wml.44.2020.08.26.02.34.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 02:34:21 -0700 (PDT)
+        Wed, 26 Aug 2020 02:34:12 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 14/30] wireless: ath: ath6kl: wmi: Remove unused variable 'rate'
-Date:   Wed, 26 Aug 2020 10:33:45 +0100
-Message-Id: <20200826093401.1458456-15-lee.jones@linaro.org>
+        netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Greg Kroah-Hartman <greg@kroah.com>
+Subject: [PATCH 07/30] wireless: intersil: orinoco_usb: Downgrade non-conforming kernel-doc headers
+Date:   Wed, 26 Aug 2020 10:33:38 +0100
+Message-Id: <20200826093401.1458456-8-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org>
 References: <20200826093401.1458456-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -79,50 +79,54 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/ath6kl/wmi.c: In function ‘ath6kl_wmi_bitrate_reply_rx’:
- drivers/net/wireless/ath/ath6kl/wmi.c:1204:6: warning: variable ‘rate’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:434: warning: Function parameter or member 'upriv' not described in 'ezusb_req_queue_run'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'req' not described in 'ezusb_fill_req'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'length' not described in 'ezusb_fill_req'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'rid' not described in 'ezusb_fill_req'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'data' not described in 'ezusb_fill_req'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'frame_type' not described in 'ezusb_fill_req'
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c:716: warning: Function parameter or member 'reply_count' not described in 'ezusb_fill_req'
 
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Greg Kroah-Hartman <greg@kroah.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 6885d2ded53a8..a4339cca661f0 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1201,8 +1201,7 @@ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
- static int ath6kl_wmi_bitrate_reply_rx(struct wmi *wmi, u8 *datap, int len)
- {
- 	struct wmi_bit_rate_reply *reply;
--	s32 rate;
--	u32 sgi, index;
-+	u32 index;
- 
- 	if (len < sizeof(struct wmi_bit_rate_reply))
- 		return -EINVAL;
-@@ -1211,15 +1210,10 @@ static int ath6kl_wmi_bitrate_reply_rx(struct wmi *wmi, u8 *datap, int len)
- 
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "rateindex %d\n", reply->rate_index);
- 
--	if (reply->rate_index == (s8) RATE_AUTO) {
--		rate = RATE_AUTO;
--	} else {
-+	if (reply->rate_index != (s8) RATE_AUTO) {
- 		index = reply->rate_index & 0x7f;
- 		if (WARN_ON_ONCE(index > (RATE_MCS_7_40 + 1)))
- 			return -EINVAL;
--
--		sgi = (reply->rate_index & 0x80) ? 1 : 0;
--		rate = wmi_rate_tbl[index][sgi];
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index 11fa38fedd870..645856bc1796c 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -423,13 +423,13 @@ static void ezusb_ctx_complete(struct request_context *ctx)
  	}
+ }
  
- 	ath6kl_wakeup_event(wmi->parent_dev);
+-/**
++/*
+  * ezusb_req_queue_run:
+  * Description:
+  *	Note: Only one active CTX at any one time, because there's no
+  *	other (reliable) way to match the response URB to the correct
+  *	CTX.
+- **/
++ */
+ static void ezusb_req_queue_run(struct ezusb_priv *upriv)
+ {
+ 	unsigned long flags;
+@@ -704,7 +704,7 @@ static inline u16 build_crc(struct ezusb_packet *data)
+ 	return crc;
+ }
+ 
+-/**
++/*
+  * ezusb_fill_req:
+  *
+  * if data == NULL and length > 0 the data is assumed to be already in
 -- 
 2.25.1
 
