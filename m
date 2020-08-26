@@ -2,79 +2,46 @@ Return-Path: <SRS0=rnpS=CE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3DA9C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 22:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80F8C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 23:20:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EFA1207BC
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 22:57:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7289D20639
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Aug 2020 23:20:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Urv33F11"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="rRlCEZFl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbgHZW4m (ORCPT
+        id S1726186AbgHZXUv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Aug 2020 18:56:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53210 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726071AbgHZW4l (ORCPT
+        Wed, 26 Aug 2020 19:20:51 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:52040 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726077AbgHZXUu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Aug 2020 18:56:41 -0400
-Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F379C061574;
-        Wed, 26 Aug 2020 15:56:40 -0700 (PDT)
-Received: by mail-lj1-x244.google.com with SMTP id f26so4229242ljc.8;
-        Wed, 26 Aug 2020 15:56:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Gyu34eqNIzm7NHyu71tvXj/6BZWs11p7Z/KgaEDFzxg=;
-        b=Urv33F113PADAG1mDhqUyy9F+l6t3eEJtPXqPEm14U5YrOtRAYae7t970B1UxB1QW1
-         ksll53n4tloVnrddAxvshwMERcm0WF8fCA9qb3g2ux1TD3yppKPm/Ek6ziaNAXfTZWX0
-         eq/Z5kawDvjjHztTAGrOX8S6XL2eUwWXrZBUNn1ruAq2QlVDfHwikjUUPGdj8LVHRMeA
-         z5rc4Nx9s/IAw2TzvGgSQ5EQH4TW5+ZzN9NHMsPvdJyq227W7JhMSBR/jp8trbhVenC9
-         oasbftIhwQ2izMAC8r/56u6e9A36c9ASJ2NjCYNrFhvmYz3etttr2P2HF6qrQVLNV4qK
-         IEyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Gyu34eqNIzm7NHyu71tvXj/6BZWs11p7Z/KgaEDFzxg=;
-        b=oahTtYgKBzJVBMDn0s6Tz5qlkg+17IrpC7Gd7gPjllDfHm7WxxLih0G2KyJ7Kx3BED
-         g4Yo5trSqY1VTICZeG9AooN9QnSN2B3kqBa8pqnIFbyuT5ArgsAtOQiyAjbSE2dZspmr
-         Xl/CIUzeybR0ZfFoVVYry6e6M/Cl/kzZley6ZaAMC0rYVLs+nVow9sJ5nLrFkx9te+2u
-         RxzNoSG7bedAuf4BkdLvrdueoVeAKF56OsAcwlUv+ORyVmrC9MhZDxelMNX6lReUpE/G
-         FrtiLguH8lDjXP5T4fs0g/tsvVraEmU1pytvyL/lpCmpv4AmQ4bqa+zdteJCA36ObVpz
-         U1uQ==
-X-Gm-Message-State: AOAM530OzW5tuDcM5DSh/j/rT7Qj4n3amD/LY1F+qGAEY6StLEJ3jwBR
-        Twr8XU09a9VzGEtjnnYmUjA=
-X-Google-Smtp-Source: ABdhPJy5R3OaYZkfrzmMwNaDf/6vVUJyPNM2j0O2fvAcTtmpOckD7xr1Mna4zW+WtossdAx+ebNCpA==
-X-Received: by 2002:a05:651c:155:: with SMTP id c21mr8770175ljd.453.1598482598696;
-        Wed, 26 Aug 2020 15:56:38 -0700 (PDT)
-Received: from localhost.localdomain (h-82-196-111-59.NA.cust.bahnhof.se. [82.196.111.59])
-        by smtp.gmail.com with ESMTPSA id u28sm49075ljd.39.2020.08.26.15.56.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 15:56:37 -0700 (PDT)
-From:   Rikard Falkeborn <rikard.falkeborn@gmail.com>
-To:     "David S . Miller" <davem@davemloft.net>
-Cc:     Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
-        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: [PATCH net-next 0/6] drivers/net: constify static ops-variables
-Date:   Thu, 27 Aug 2020 00:56:02 +0200
-Message-Id: <20200826225608.90299-1-rikard.falkeborn@gmail.com>
-X-Mailer: git-send-email 2.28.0
+        Wed, 26 Aug 2020 19:20:50 -0400
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 718B613C2B0;
+        Wed, 26 Aug 2020 16:20:46 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 718B613C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1598484046;
+        bh=hlkOdEkpj5SSiVXE4RnPDRbOtL3tNfP1w1416ALnnxU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=rRlCEZFlTqdjkguYmr2bzi0umYPmhQiFDARYqdcFOAr9zzPNH5WuuQ26g5YdHVZir
+         z4iPYDPCnHQ4lP3n7VGOWZ18FLv1xxaQ28xCX4Jmd9RYQJa1UBbIRit3ZDYRtEeFm0
+         nvG5sd3YcX+5KJU0iVx4X1r6lrx1ahYU06DAtDt8=
+From:   greearb@candelatech.com
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath11k:  Support loading ELF board files.
+Date:   Wed, 26 Aug 2020 16:20:44 -0700
+Message-Id: <20200826232044.6799-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -82,25 +49,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series constifies a number of static ops variables, to allow the
-compiler to put them in read-only memory. Compile-tested only.
+From: Ben Greear <greearb@candelatech.com>
 
-Rikard Falkeborn (6):
-  net: ethernet: qualcomm: constify qca_serdev_ops
-  net: ethernet: ravb: constify bb_ops
-  net: renesas: sh_eth: constify bb_ops
-  net: phy: at803x: constify static regulator_ops
-  net: phy: mscc: macsec: constify vsc8584_macsec_ops
-  net: ath11k: constify ath11k_thermal_ops
+The QCA6390 board I have, model 8291M-PR comes with an ELF board
+file.  To get this to at least somewhat work, I renamed bdwlan.e04
+to 'board.bin' and then added this patch to check for .ELF as
+starting bytes of the board file.  If that is found, use type
+ELF.  After this the driver loads.
 
- drivers/net/ethernet/qualcomm/qca_uart.c  | 2 +-
- drivers/net/ethernet/renesas/ravb_main.c  | 2 +-
- drivers/net/ethernet/renesas/sh_eth.c     | 2 +-
- drivers/net/phy/at803x.c                  | 4 ++--
- drivers/net/phy/mscc/mscc_macsec.c        | 2 +-
- drivers/net/wireless/ath/ath11k/thermal.c | 2 +-
- 6 files changed, 7 insertions(+), 7 deletions(-)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
+This is on top of recent kvallo ath tree.
+
+ drivers/net/wireless/ath/ath11k/qmi.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 91134510364c..f87f1d1564f4 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -1992,6 +1992,7 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
+ 	struct qmi_txn txn = {};
+ 	int ret;
+ 	const u8 *temp;
++	int bdf_type = ATH11K_QMI_BDF_TYPE_BIN;
+ 
+ 	req = kzalloc(sizeof(*req), GFP_KERNEL);
+ 	if (!req)
+@@ -2008,6 +2009,15 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
+ 	temp = bd.data;
+ 	remaining = bd.len;
+ 
++	if (bd.len >= 4) {
++		char* edata = (char*)(temp);
++		if (edata[1] == 'E' &&
++		    edata[2] == 'L' &&
++		    edata[3] == 'F') {
++			bdf_type = ATH11K_QMI_BDF_TYPE_ELF;
++		}
++	}
++
+ 	while (remaining) {
+ 		req->valid = 1;
+ 		req->file_id_valid = 1;
+@@ -2017,7 +2027,7 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
+ 		req->seg_id_valid = 1;
+ 		req->data_valid = 1;
+ 		req->data_len = ATH11K_QMI_MAX_BDF_FILE_NAME_SIZE;
+-		req->bdf_type = ATH11K_QMI_BDF_TYPE_BIN;
++		req->bdf_type = bdf_type;
+ 		req->bdf_type_valid = 1;
+ 		req->end_valid = 1;
+ 		req->end = 0;
 -- 
-2.28.0
+2.26.2
 
