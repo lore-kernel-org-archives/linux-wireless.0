@@ -2,89 +2,149 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE0BC433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B74CC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DC132054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E54E72054F
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="DY7iNe1f"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yMZhFN+v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728272AbgH0O4r (ORCPT
+        id S1726803AbgH0O5R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 10:56:47 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:57927 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726936AbgH0NHI (ORCPT
+        Thu, 27 Aug 2020 10:57:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729027AbgH0M0v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 09:07:08 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598533628; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=u9lIl1vLYEGvVsC0pWYaHQhU287H0PJA+rdy++KlKeM=;
- b=DY7iNe1fU93RfWdsV9zCivk68R+u4VF6WhOc6sYtPfgmDblcNxiWrsdEfA4z861UKBJG8wEv
- 2oNxotH0UHWkccEe/vRvBfRKs885kZYnI5YZWU24pjomD3BJ6V1E9QRzbOhGbdnA/HgIGyQ3
- +DXwNG9Zkd90mtRGK/CH88fNF1I=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f47afe8630b177c47306021 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 27 Aug 2020 13:06:48
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7E88DC43391; Thu, 27 Aug 2020 13:06:48 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9C479C433C6;
-        Thu, 27 Aug 2020 13:06:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9C479C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] prism54: Use fallthrough pseudo-keyword
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200821062947.GA10202@embeddedor>
-References: <20200821062947.GA10202@embeddedor>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        Thu, 27 Aug 2020 08:26:51 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 816DFC06121B
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 05:16:11 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id r15so5135955wrp.13
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 05:16:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=vG3GFaecRjYGM2orq3QNH3b5bYkLOVwGTg6XiPpRXIc=;
+        b=yMZhFN+veq01+ehZQeqqK0HhK+dnG66FHF62HBnjdjO+Hxk1KWY1W2dTxqnSlNWsZb
+         7NrCYLjtmqs8ZZRBa1rC7WJ+Fjl6xAalt7mPJS+1ciGUOenIil2PbkxIpAV8m+xON24p
+         HlWXtWju0lBA7bVapsr3Q4oD5pC6WldpEU2YOmxfKxAcyd8K2oUU9qweG4mXKEsTB//l
+         vsz1L7puUsSszPyf/ABcYrck5b6BVOl27XPFXKmjgwOEjrDx60iguNCzKJY7rn6dfh/l
+         RTN/txEfeuFNtKyzHnl9bkOrB6H71cOMb8l4Kh0J7GQC2JCosNHe8GyzjufyIM5WRK2o
+         eZ8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=vG3GFaecRjYGM2orq3QNH3b5bYkLOVwGTg6XiPpRXIc=;
+        b=XrzDsNHtyZPcjbzv3uKoMS4rnKBZvpqMdwWRuMo75TqyXhEns6hmEgan9UIJtso0wa
+         GM63IM0SQvN5c0UQPf/aXT+ZnPOSMTmLJ5jxUHDTRd/mX4jQBsRTNjgejS2MUSklH38x
+         c7WS4PKmHuejiwAe/afpKpksMiB2LqPvh/C1J1uwYHZAaBAtxTV19ubVg+V3cqAQyRS9
+         YBv6nS5x66eu4z1crzsCFNsbkYbWW7hYCwUHrPickouzCSsW1D2Zkzd9ar4BJU/HaLOj
+         EegChnN5cAYG9QdHn8hgVH7mVbQIznbVV8fNKH/O5Jk/RYdZdd5uUiPibdAkKxQK+Jvu
+         n7wA==
+X-Gm-Message-State: AOAM532OJbKKZCrnvORRwnHtlDa7wp9MGRepLXjEhPBV2OpblSHrNxDd
+        ne0FDoGpyhFTkDfhNk20hNbHgF9E1rhgfA==
+X-Google-Smtp-Source: ABdhPJxbyF8d5EcngGv3DhfuYhCjndliOt2vwoniXJmdB+7PavRwuar4fgzUKdUkIYi3702fUNwjyw==
+X-Received: by 2002:a5d:6987:: with SMTP id g7mr1722186wru.173.1598530570226;
+        Thu, 27 Aug 2020 05:16:10 -0700 (PDT)
+Received: from dell ([91.110.221.141])
+        by smtp.gmail.com with ESMTPSA id m10sm4756714wmi.9.2020.08.27.05.16.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2020 05:16:09 -0700 (PDT)
+Date:   Thu, 27 Aug 2020 13:16:07 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200827130648.7E88DC43391@smtp.codeaurora.org>
-Date:   Thu, 27 Aug 2020 13:06:48 +0000 (UTC)
+        Maya Erez <merez@codeaurora.org>, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH 12/30] wireless: ath: wil6210: wmi: Correct misnamed
+ function parameter 'ptr_'
+Message-ID: <20200827121607.GF1627017@dell>
+References: <20200826093401.1458456-13-lee.jones@linaro.org>
+ <20200826155625.A5A88C433A1@smtp.codeaurora.org>
+ <20200827063559.GP3248864@dell>
+ <20200827074100.GX3248864@dell>
+ <877dtkb9lm.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <877dtkb9lm.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
+On Thu, 27 Aug 2020, Kalle Valo wrote:
 
-> Replace the existing /* fall through */ comments and its variants with
-> the new pseudo-keyword macro fallthrough[1].
+> Lee Jones <lee.jones@linaro.org> writes:
 > 
-> [1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+> > On Thu, 27 Aug 2020, Lee Jones wrote:
+> >
+> >> On Wed, 26 Aug 2020, Kalle Valo wrote:
+> >> 
+> >> > Lee Jones <lee.jones@linaro.org> wrote:
+> >> > 
+> >> > > Fixes the following W=1 kernel build warning(s):
+> >> > > 
+> >> > >  drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Function
+> >> > > parameter or member 'ptr_' not described in 'wmi_buffer_block'
+> >> > >  drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Excess
+> >> > > function parameter 'ptr' description in 'wmi_buffer_block'
+> >> > > 
+> >> > > Cc: Maya Erez <merez@codeaurora.org>
+> >> > > Cc: Kalle Valo <kvalo@codeaurora.org>
+> >> > > Cc: "David S. Miller" <davem@davemloft.net>
+> >> > > Cc: Jakub Kicinski <kuba@kernel.org>
+> >> > > Cc: linux-wireless@vger.kernel.org
+> >> > > Cc: wil6210@qti.qualcomm.com
+> >> > > Cc: netdev@vger.kernel.org
+> >> > > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> >> > 
+> >> > Failed to apply:
+> >> > 
+> >> > error: patch failed: drivers/net/wireless/ath/wil6210/wmi.c:266
+> >> > error: drivers/net/wireless/ath/wil6210/wmi.c: patch does not apply
+> >> > stg import: Diff does not apply cleanly
+> >> > 
+> >> > Patch set to Changes Requested.
+> >> 
+> >> Are you applying them in order?
+> >> 
+> >> It may be affected by:
+> >> 
+> >>  wireless: ath: wil6210: wmi: Fix formatting and demote
+> >> non-conforming function headers
+> >> 
+> >> I'll also rebase onto the latest -next and resubmit.
+> >
+> > I just rebased all 3 sets onto the latest -next (next-20200827)
+> > without issue.  Not sure what problem you're seeing.  Did you apply
+> > the first set before attempting the second?
 > 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> I can't remember the order, patchwork sorts them based on the order they
+> have been submitted and that's what I usually use.
+> 
+> Do note that there's a separate tree for drivers in
+> drivers/net/wireless/ath:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/
+> 
+> And it takes a week or two before patches go to linux-next.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-f7bba4d94d53 prism54: Use fallthrough pseudo-keyword
+Understood.  Thank you.
 
 -- 
-https://patchwork.kernel.org/patch/11728213/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
