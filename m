@@ -2,88 +2,102 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC09AC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0A9C433E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A50A522B4E
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xlaITFjP"
+	by mail.kernel.org (Postfix) with ESMTP id 0C92622D04
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727972AbgH0Ozm (ORCPT
+        id S1728197AbgH0Ozz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 10:55:42 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:48121 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726289AbgH0NJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 09:09:30 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598533744; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=inzUS5eWiB+AyM6U5dLaww9My5fpNG3NyKg/eTaUdPo=;
- b=xlaITFjPHEcqWU3JWtJt3/+hjVdX09PPBGpLwQ3x959cW6p1tskipZnrCHplTL6ZjQhTSv8l
- 2lGSKT62oEXXA9E2vs2yY9dM0VQjLB9seVNmenza1OF2W7bHfvHbruxL0SEsHgZfmHaS+8HQ
- uH/2WSSzVcdd26FHp+U3MKRQyi8=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 5f47b070c598aced5477d362 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 27 Aug 2020 13:09:04
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7ECD5C433CB; Thu, 27 Aug 2020 13:09:04 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37C6FC433CA;
-        Thu, 27 Aug 2020 13:09:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 37C6FC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 27 Aug 2020 10:55:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45266 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726825AbgH0NJT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Aug 2020 09:09:19 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D4E1C061233
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 06:08:36 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kBHdq-00BbCo-Oy; Thu, 27 Aug 2020 15:08:34 +0200
+Message-ID: <2f1de2e5672f1516ac1d94520f54b00153fd24f3.camel@sipsolutions.net>
+Subject: Re: [PATCH V3 2/9] mac80211: add multiple bssid support to
+ interface handling
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     John Crispin <john@phrozen.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Date:   Thu, 27 Aug 2020 15:08:33 +0200
+In-Reply-To: <20200812150050.2683396-3-john@phrozen.org>
+References: <20200812150050.2683396-1-john@phrozen.org>
+         <20200812150050.2683396-3-john@phrozen.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] b43legacy: Use fallthrough pseudo-keyword
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200821064412.GA20612@embeddedor>
-References: <20200821064412.GA20612@embeddedor>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200827130904.7ECD5C433CB@smtp.codeaurora.org>
-Date:   Thu, 27 Aug 2020 13:09:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
 
-> Replace the existing /* fall through */ comments and its variants with
-> the new pseudo-keyword macro fallthrough[1].
+> +	struct {
+> +		struct ieee80211_vif *parent;
+> +		struct list_head list;
+> +		bool non_transmitted;
+> +	} multiple_bssid;
+
+Oh, and also - surely parent isn't set for the transmitted BSSID, so the
+bool non_transmitted is redundant? It's basically the same as !!parent?
+
+Which also applies at the cfg80211 level.
+
+> +static int ieee80211_set_multiple_bssid_options(struct ieee80211_sub_if_data *sdata,
+> +						struct vif_params *params)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct wiphy *wiphy = local->hw.wiphy;
+> +	struct net_device *parent;
+> +	struct ieee80211_sub_if_data *psdata;
+> +
+> +	if (!ieee80211_hw_check(&local->hw, SUPPORTS_MULTI_BSSID_AP))
+> +		return 0;
+
+That was probably meant to be an error? Otherwise the function can be
+void.
+
+> +++ b/net/mac80211/iface.c
+> @@ -810,6 +810,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>  	bool cancel_scan;
+>  	struct cfg80211_nan_func *func;
+>  
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP &&
+> +	    sdata->vif.multiple_bssid.non_transmitted)
+> +		/* make sure the parent is already down */
+> +		if (sdata->vif.multiple_bssid.parent &&
+> +		    ieee80211_sdata_running(vif_to_sdata(sdata->vif.multiple_bssid.parent)))
+> +			dev_close(vif_to_sdata(sdata->vif.multiple_bssid.parent)->wdev.netdev);
+> +
 > 
-> [1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This is nice but somewhere you also need to actually NULL the pointer.
+As it is now, it seems you could set up two interfaces, say
 
-ce3b6845fc4d b43legacy: Use fallthrough pseudo-keyword
+wlan_nontx
+wlan_tx
 
--- 
-https://patchwork.kernel.org/patch/11728231/
+then ifup both, then delete wlan_tx (forcing wlan_nontx down) and then
+set wlan_nontx back up and back down or whatever, but the parent pointer
+wasn't cleared so ... bad things will happen?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Maybe this stuff could even happen at the cfg80211 level? Might be
+useful for others too.
+
+johannes
 
