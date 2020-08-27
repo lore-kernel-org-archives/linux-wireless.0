@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E1DC433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 22:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96523C433E6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 22:33:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E7F82080C
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 22:33:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DFEB2080C
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 22:33:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728040AbgH0Wdh (ORCPT
+        id S1727940AbgH0Wdg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 18:33:37 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:50542 "EHLO
+        Thu, 27 Aug 2020 18:33:36 -0400
+Received: from mail.adapt-ip.com ([173.164.178.19]:50504 "EHLO
         web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728035AbgH0Wdf (ORCPT
+        with ESMTP id S1728022AbgH0Wdb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 18:33:35 -0400
+        Thu, 27 Aug 2020 18:33:31 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 827264F82E1;
-        Thu, 27 Aug 2020 22:33:34 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTP id 08D244F81B8;
+        Thu, 27 Aug 2020 22:33:30 +0000 (UTC)
 X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
 Received: from web.adapt-ip.com ([127.0.0.1])
         by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id CnBrsVPI9ekd; Thu, 27 Aug 2020 22:33:32 +0000 (UTC)
+        with ESMTP id 2yTAnT3pLQ_7; Thu, 27 Aug 2020 22:33:25 +0000 (UTC)
 Received: from atlas.campbell.adapt-ip.com (gateway.adapt-ip.com [173.164.178.20])
         (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 171674F81D3;
-        Thu, 27 Aug 2020 22:33:12 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTPSA id D6E134F81C0;
+        Thu, 27 Aug 2020 22:33:10 +0000 (UTC)
 From:   Thomas Pedersen <thomas@adapt-ip.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
         Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH 15/22] mac80211: don't calculate duration for S1G
-Date:   Thu, 27 Aug 2020 15:32:57 -0700
-Message-Id: <20200827223304.16155-16-thomas@adapt-ip.com>
+Subject: [PATCH 12/22] mac80211: convert S1G beacon to scan results
+Date:   Thu, 27 Aug 2020 15:32:54 -0700
+Message-Id: <20200827223304.16155-13-thomas@adapt-ip.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200827223304.16155-1-thomas@adapt-ip.com>
 References: <20200827223304.16155-1-thomas@adapt-ip.com>
@@ -49,29 +49,155 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For now just skip the duration calculation for frames
-transmitted on the S1G band and avoid a warning.
+This commit finds the correct offset for Information
+Elements in S1G beacon frames so they can be reported in
+scan results, and track whether a given BSS is S1G.
 
 Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
 ---
- net/mac80211/tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/ieee80211_i.h |  7 +++++++
+ net/mac80211/rx.c          |  3 ++-
+ net/mac80211/scan.c        | 20 ++++++++++++++++----
+ net/mac80211/util.c        | 28 ++++++++++++++++++++++++++++
+ 4 files changed, 53 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index dca01d7e6e3e..424fd9b2aeda 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -82,6 +82,10 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5da2713af500..378945b0f3a0 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -127,6 +127,9 @@ struct ieee80211_bss {
  
- 	erp = txrate->flags & IEEE80211_RATE_ERP_G;
- 
-+	/* TODO */
-+	if (sband->band == NL80211_BAND_S1GHZ)
-+		return 0;
+ 	/* Keep track of what bits of information we have valid info for. */
+ 	u8 valid_data;
 +
- 	/*
- 	 * data and mgmt (except PS Poll):
- 	 * - during CFP: 32768
++	/* BSS info was transmitted by an S1G STA */
++	u8 s1g;
+ };
+ 
+ /**
+@@ -1524,6 +1527,10 @@ struct ieee802_11_elems {
+ 	u8 dtim_count;
+ 	u8 dtim_period;
+ 	const struct ieee80211_addba_ext_ie *addba_ext_ie;
++	const struct ieee80211_s1g_cap *s1g_capab;
++	const struct ieee80211_s1g_oper_ie *s1g_oper;
++	const u8 *s1g_tsbtt;
++	const struct ieee80211_s1g_bcn_compat_ie *s1g_bcn_compat;
+ 
+ 	/* length of them, respectively */
+ 	u8 ext_capab_len;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 836cde516a18..5b92f56682e2 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4586,7 +4586,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	ieee80211_verify_alignment(&rx);
+ 
+ 	if (unlikely(ieee80211_is_probe_resp(hdr->frame_control) ||
+-		     ieee80211_is_beacon(hdr->frame_control)))
++		     ieee80211_is_beacon(hdr->frame_control) ||
++		     ieee80211_is_s1g_beacon(hdr->frame_control)))
+ 		ieee80211_scan_rx(local, skb);
+ 
+ 	if (ieee80211_is_data(fc)) {
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 5002791fe165..3dd65b7c839b 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -124,6 +124,9 @@ ieee80211_update_bss_from_elems(struct ieee80211_local *local,
+ 			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
+ 	}
+ 
++	if (!elems->parse_error && elems->s1g_capab)
++		bss->s1g = true;
++
+ 	if (beacon) {
+ 		struct ieee80211_supported_band *sband =
+ 			local->hw.wiphy->bands[rx_status->band];
+@@ -146,7 +149,8 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			  struct ieee80211_mgmt *mgmt, size_t len,
+ 			  struct ieee80211_channel *channel)
+ {
+-	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
++	bool beacon = ieee80211_is_beacon(mgmt->frame_control) ||
++		      ieee80211_is_s1g_beacon(mgmt->frame_control);
+ 	struct cfg80211_bss *cbss, *non_tx_cbss;
+ 	struct ieee80211_bss *bss, *non_tx_bss;
+ 	struct cfg80211_inform_bss bss_meta = {
+@@ -195,6 +199,11 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 		elements = mgmt->u.probe_resp.variable;
+ 		baselen = offsetof(struct ieee80211_mgmt,
+ 				   u.probe_resp.variable);
++	} else if (ieee80211_is_s1g_beacon(mgmt->frame_control)) {
++		struct ieee80211_ext *ext = (void *) mgmt;
++
++		baselen = offsetof(struct ieee80211_ext, u.s1g_beacon.variable);
++		elements = ext->u.s1g_beacon.variable;
+ 	} else {
+ 		baselen = offsetof(struct ieee80211_mgmt, u.beacon.variable);
+ 		elements = mgmt->u.beacon.variable;
+@@ -246,9 +255,12 @@ void ieee80211_scan_rx(struct ieee80211_local *local, struct sk_buff *skb)
+ 	struct ieee80211_bss *bss;
+ 	struct ieee80211_channel *channel;
+ 
+-	if (skb->len < 24 ||
+-	    (!ieee80211_is_probe_resp(mgmt->frame_control) &&
+-	     !ieee80211_is_beacon(mgmt->frame_control)))
++	if (ieee80211_is_s1g_beacon(mgmt->frame_control)) {
++		if (skb->len < 15)
++			return;
++	} else if (skb->len < 24 ||
++		 (!ieee80211_is_probe_resp(mgmt->frame_control) &&
++		  !ieee80211_is_beacon(mgmt->frame_control)))
+ 		return;
+ 
+ 	sdata1 = rcu_dereference(local->scan_sdata);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c7ab7ab057f9..0fa57349c4e5 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1003,6 +1003,10 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_LINK_ID:
+ 		case WLAN_EID_BSS_MAX_IDLE_PERIOD:
+ 		case WLAN_EID_RSNX:
++		case WLAN_EID_S1G_BCN_COMPAT:
++		case WLAN_EID_S1G_CAPABILITIES:
++		case WLAN_EID_S1G_OPERATION:
++		case WLAN_EID_S1G_SHORT_BCN_INTERVAL:
+ 		/*
+ 		 * not listing WLAN_EID_CHANNEL_SWITCH_WRAPPER -- it seems possible
+ 		 * that if the content gets bigger it might be needed more than once
+@@ -1288,6 +1292,30 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 								&crc : NULL,
+ 							  elem, elems);
+ 			break;
++		case WLAN_EID_S1G_CAPABILITIES:
++			if (elen == 15)
++				elems->s1g_capab = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
++		case WLAN_EID_S1G_OPERATION:
++			if (elen == 6)
++				elems->s1g_oper = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
++		case WLAN_EID_S1G_SHORT_BCN_INTERVAL:
++			if (elen == 2)
++				elems->s1g_tsbtt = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
++		case WLAN_EID_S1G_BCN_COMPAT:
++			if (elen == sizeof(struct ieee80211_s1g_bcn_compat_ie))
++				elems->s1g_bcn_compat = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
+ 		default:
+ 			break;
+ 		}
 -- 
 2.20.1
 
