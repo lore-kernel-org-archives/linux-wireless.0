@@ -2,69 +2,90 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA42C433E4
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1C7FC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:58:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8390E2054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:57:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9802022B4B
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 14:58:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="feycNM2n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727843AbgH0O5m (ORCPT
+        id S1727043AbgH0O6n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 10:57:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38720 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728991AbgH0M0e (ORCPT
+        Thu, 27 Aug 2020 10:58:43 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:33961 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729034AbgH0MOy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 08:26:34 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5852C061236
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 05:26:21 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kBGyy-00BaLQ-2D; Thu, 27 Aug 2020 14:26:20 +0200
-Message-ID: <61219c725630447e832839196e20eb433723ed49.camel@sipsolutions.net>
-Subject: Re: [PATCH V5 4/5] mac80211: add support for BSS coloring
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     John Crispin <john@phrozen.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-Date:   Thu, 27 Aug 2020 14:26:18 +0200
-In-Reply-To: <20200826055650.1101224-4-john@phrozen.org> (sfid-20200826_075710_318035_1DE9E6C8)
-References: <20200826055650.1101224-1-john@phrozen.org>
-         <20200826055650.1101224-4-john@phrozen.org>
-         (sfid-20200826_075710_318035_1DE9E6C8)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        Thu, 27 Aug 2020 08:14:54 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1598530493; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=xKkJldCpFuFFwvk5Ekpm5a9GeD8MRoy70tGm5lWY6Xk=; b=feycNM2nAWmxYGl657imEhdwe4tGv7xc2gGT4PHc5kLlLdtAME/GwDXgNB8XkLcypg5yu6Ey
+ LrVhIXaVdpkYPQWIfSavWlcq09nks/UCqCdH2w2BQq3ibEwBPHfIu6PY8TYdQx0nqyioMwgd
+ 3CwGo483gPpGnNiRDC78olwpEB4=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5f47a11dc9ede11f5eb5592a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 27 Aug 2020 12:03:41
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 2039EC43391; Thu, 27 Aug 2020 12:03:41 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E98DC433C6;
+        Thu, 27 Aug 2020 12:03:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E98DC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 00/30] Set 3: Rid W=1 warnings in Wireless
+References: <20200826093401.1458456-1-lee.jones@linaro.org>
+Date:   Thu, 27 Aug 2020 15:03:37 +0300
+In-Reply-To: <20200826093401.1458456-1-lee.jones@linaro.org> (Lee Jones's
+        message of "Wed, 26 Aug 2020 10:33:31 +0100")
+Message-ID: <87y2m09tye.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Lee Jones <lee.jones@linaro.org> writes:
 
-> + * @color_change_active: marks whether a color change is going on. Internally it is
-> + *	write-protected by sdata_lock and local->mtx so holding either is fine
-> + *	for read access.
-> 
+> This set is part of a larger effort attempting to clean-up W=1
+> kernel builds, which are currently overwhelmingly riddled with
+> niggly little warnings.
+>
+> There are quite a few W=1 warnings in the Wireless.  My plan
+> is to work through all of them over the next few weeks.
+> Hopefully it won't be too long before drivers/net/wireless
+> builds clean with W=1 enabled.
 
-I started fixing up things like that but then I got annoyed and gave up
-...
+How much patches are there going to be? I was first positive about the
+idea but now I am really starting to wonder if this is worth the effort,
+these patches are spamming my patchwork significantly and taking too
+much time. At least please hold of on any new patches for at least a
+week so I can catch up with all patches I have.
 
-Just because checkpatch no longer warns on >80 columns that doesn't mean
-it's suddenly completely acceptable to write very long lines. In flowed
-text like this, it's much nicer to have shorter lines, and long lines
-are just arbitrary.
+And like I said already before, follow the title style we use so that I
+don't need to edit every patch myself:
 
-That's actually in quite a few places in this patch - comments, function
-arguments, etc.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_title_is_wrong
 
-Nothing against going over 80 where that makes the code more readable,
-but long lines for flowed text are *less* readable.
-
-johannes
-
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
