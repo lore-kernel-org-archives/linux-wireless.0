@@ -2,64 +2,66 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C80C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE699C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:13:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1FDE20786
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7705920786
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:13:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SSNJVMkE"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dubMJMWF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727049AbgH0GG3 (ORCPT
+        id S1726266AbgH0GNl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 02:06:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35474 "EHLO
+        Thu, 27 Aug 2020 02:13:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726157AbgH0GF6 (ORCPT
+        with ESMTP id S1725909AbgH0GNk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 02:05:58 -0400
-Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3533FC061249;
-        Wed, 26 Aug 2020 23:05:57 -0700 (PDT)
-Received: by mail-lj1-x242.google.com with SMTP id w25so5039052ljo.12;
-        Wed, 26 Aug 2020 23:05:57 -0700 (PDT)
+        Thu, 27 Aug 2020 02:13:40 -0400
+Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02A84C061258;
+        Wed, 26 Aug 2020 23:13:39 -0700 (PDT)
+Received: by mail-lj1-x244.google.com with SMTP id i10so5106617ljn.2;
+        Wed, 26 Aug 2020 23:13:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=38x/FHPCvUI6C1PMr+cgZ0iy8HiLtsEpmjxfqsfrl/Y=;
-        b=SSNJVMkEHNvDX/DmCTbWERwWBdLLQgom+e0hE6G1ghYZCG1jR5qDYJdmZLXR2Knxgm
-         SlKtBoFxp4Yem1DCeI05lMEIl+rIF3QI4COLd1uI2hswj5jFD6DdYxeQIZEYntRPAgVA
-         USAG3gn0c52GL9A5V+sRgW2T3be7I7xJ8U4Ci5+l2Pdcx5jwgR9Kz+7FglwEQ35ciBW2
-         mijc2MBtPzzsxG47wryZ+3yvtQn68gCSoTj0Ge1JpKxsiltW1E+ysg6UqQwR0AwzZJGP
-         q4PlyFIsPz35z8jFlzCjQNn8xg89biT17b7zGH9Y6hidUabt45xvLE2rC9nUroSWIW4a
-         ZDyQ==
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=yCsGVzEa07QpG25wdJdogsPOJiE4mf7jTXesPysELoE=;
+        b=dubMJMWFseFCK/JlFJEZLfYxiKZ6SlXQuvC6LDPHmsM/qt1zRg1Ck0pfUj9eZNgeca
+         1Oed9X7K110/5xRKzFTKVqDx6SQ0KndBu5iHQZtMqB5lvLN+N446BxTQ9zvt2jrK8lpk
+         NlU/omUmIKDg58VUNe0U7w4JE3Yq6DwA3bEWQ9ClLc78RoV6y/lTK3skBSwp+GXYhmgD
+         b3zXayl5ujX6cmfCjOv1eKYx/qpEvG7d0RJblcqL2qCFEcC7Gd0JQGD9NHgKcdsJvUDd
+         vUGfgsn0nlYe+s8aqDhU6y42xgHTpLNXUDy79h7dYOuPs4D5gzLQ8BgHU2HVNPzcoM9m
+         GdVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=38x/FHPCvUI6C1PMr+cgZ0iy8HiLtsEpmjxfqsfrl/Y=;
-        b=X7pXJgOT8xpCsZjUeOamynTLjGMyy4SwUPCtSOB9xVrOTIcOH/mFbN33Kn/AbBw2TL
-         YxS7UXTfq+ShNmqTfVlGLQD+rgCsISnFkxnnEKPuQizI5TRNyTYMbMzeL/w5fZtR19Zq
-         xdRJkwtFGsD8bh8nnJ1OeZvF2yZjvt+rimDDyLQCrm8ge1uuHfL+9FjRHh7eqYafa1P0
-         DJQ9qtS4EQycbYHMKJwxE3WxAKW8I6ThmiLPaFMYu9S+9EUvBQ6Y0zQlFHGuFWB7daFx
-         wYMiyrosL1J9kWsUI3NzeACZKi3MlFdK7oDhBa3iLFKn40oNRGObYzZESRzo2zOtB7D6
-         7A+w==
-X-Gm-Message-State: AOAM530HJArM6YLIgPDKbd0Yd3u/GYb0JKefB0LrX69lPpbud60qDrln
-        uTIbTUsQicp052npxX+gZEs=
-X-Google-Smtp-Source: ABdhPJwFLyLpiDrInngiKjDlMQnbzdI8mZJVC9hfbrCATktdnCPtvDaaTTWZrQGRFBpJbEYV7pDmHg==
-X-Received: by 2002:a05:651c:152:: with SMTP id c18mr8010629ljd.15.1598508356372;
-        Wed, 26 Aug 2020 23:05:56 -0700 (PDT)
-Received: from localhost.localdomain (109-252-170-211.dynamic.spd-mgts.ru. [109.252.170.211])
-        by smtp.gmail.com with ESMTPSA id z7sm255295lfc.59.2020.08.26.23.05.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 23:05:55 -0700 (PDT)
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=yCsGVzEa07QpG25wdJdogsPOJiE4mf7jTXesPysELoE=;
+        b=Umj3bwsHFOzzut73j8C1rDCoPIkDzyv6/fuVOhTASXk6KnIrqs9SvdXrdFRFNYqVn5
+         er4VwqvoHByCe2PNTcpVxk8MkdA+Ro6Qo5tGqDhAV/CFtOiejtZQ4pAjmfhvUBr/raEr
+         WjCfFEoKQZ1U/KTtNi1BQVfQ8NrLHGb0rQenzBfg3jP82M8Lr3a9Fxj29MmXC72nPCE2
+         FbLlrPq2pOfagmaVLpw8OhYEUvDYk+AUDgiVW4zLdR6Zs1Pae7P+Wj7ow4I7tDnYF/71
+         HmeLe+13sq/sc5qXmvSmXstRtyjTHFWSM5xzJVWw7HRc2y68HUBkmS0S3pCzdbSQb6/X
+         KRHA==
+X-Gm-Message-State: AOAM531XIhgPsVI72CvSV2GZmxLpTzs/tFWpbSMcvsJFpIqgPRwyY4Tz
+        Vlsax18NeLZHqOg9/E3qPUb5+GOYg1I=
+X-Google-Smtp-Source: ABdhPJzpj2rXc21C8Y+4YKa0N4ooD3Kd3IswfRU0tkhitEzjF7/P6HGWsVaPjb6jod4eSKlGxK1Ecg==
+X-Received: by 2002:a2e:8e9a:: with SMTP id z26mr8408692ljk.271.1598508817298;
+        Wed, 26 Aug 2020 23:13:37 -0700 (PDT)
+Received: from [192.168.2.145] (109-252-170-211.dynamic.spd-mgts.ru. [109.252.170.211])
+        by smtp.googlemail.com with ESMTPSA id y64sm260128lfc.50.2020.08.26.23.13.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Aug 2020 23:13:36 -0700 (PDT)
+Subject: Re: [PATCH v2 1/4] brcmfmac: increase F2 watermark for BCM4329
 From:   Dmitry Osipenko <digetx@gmail.com>
 To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -71,43 +73,34 @@ Cc:     linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/4] brcmfmac: increase F2 watermark for BCM4329
-Date:   Thu, 27 Aug 2020 09:04:38 +0300
-Message-Id: <20200827060441.15487-2-digetx@gmail.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200827060441.15487-1-digetx@gmail.com>
 References: <20200827060441.15487-1-digetx@gmail.com>
+ <20200827060441.15487-2-digetx@gmail.com>
+Message-ID: <ba942825-e165-68f1-00d1-81cc66ff518b@gmail.com>
+Date:   Thu, 27 Aug 2020 09:13:00 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20200827060441.15487-2-digetx@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch fixes SDHCI CRC errors during of RX throughput testing on
-BCM4329 chip if SDIO BUS is clocked above 25MHz. In particular the
-checksum problem is observed on NVIDIA Tegra20 SoCs. The good watermark
-value is borrowed from downstream BCMDHD driver and it's matching to the
-value that is already used for the BCM4339 chip, hence let's re-use it
-for BCM4329.
+27.08.2020 09:04, Dmitry Osipenko пишет:
+> This patch fixes SDHCI CRC errors during of RX throughput testing on
+> BCM4329 chip if SDIO BUS is clocked above 25MHz. In particular the
+> checksum problem is observed on NVIDIA Tegra20 SoCs. The good watermark
+> value is borrowed from downstream BCMDHD driver and it's matching to the
+> value that is already used for the BCM4339 chip, hence let's re-use it
+> for BCM4329.
+> 
+> Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+> ---
 
-Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+I accidentally missed to add the r-b from Arend that he gave to the v1:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 3c07d1bbe1c6..ac3ee93a2378 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4278,6 +4278,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
- 					   CY_43012_MESBUSYCTRL, &err);
- 			break;
-+		case SDIO_DEVICE_ID_BROADCOM_4329:
- 		case SDIO_DEVICE_ID_BROADCOM_4339:
- 			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes for 4339\n",
- 				  CY_4339_F2_WATERMARK);
--- 
-2.27.0
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
