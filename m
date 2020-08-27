@@ -2,162 +2,125 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B1BC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 17:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E01D5C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 18:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6B1D2068E
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 17:42:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598550160;
-	bh=zyfUowNsWV1AH9t2Y/OhVrtMRfKaUwAivYAzLDicwBM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=Xga4huBZNVEHSeg8c02oH6KQlEY4p3/C4HB2WiNwF9q8oT/LGDk6nqhCPysLHuqPH
-	 152C+oSNuzuHwHV/BOI4Skfsl0uJRTnkcA/C/sPZQc2hQgckwhvH8i8BWhzTqMc/+E
-	 DajGxgRS4zFGweNL5zEdJHtI8D8dQgxbOUDGuwzo=
+	by mail.kernel.org (Postfix) with ESMTP id C297D22BEA
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 18:17:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="bwQqo9mU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbgH0Rme (ORCPT
+        id S1727008AbgH0SRQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 13:42:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37152 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726307AbgH0Rmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 13:42:33 -0400
-Received: from coco.lan (ip5f5ad5a8.dynamic.kabel-deutschland.de [95.90.213.168])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2A2762087E;
-        Thu, 27 Aug 2020 17:42:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598550152;
-        bh=zyfUowNsWV1AH9t2Y/OhVrtMRfKaUwAivYAzLDicwBM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=07ZU3viQ9K4W/2j7rtUmnY13uTbszZo4JxebwRXpVTU0rbPDvX8crv4sulA5txXDE
-         kYmlUOuNr9MdYmatsOfu9hXzg5jshHEN71HClrwf41F7Sbk0qcHLXN5PzjHJnVgRLn
-         r0uWVOa7IlmgAj8HdF77sDzEoeitLX/MPi0J6RwU=
-Date:   Thu, 27 Aug 2020 19:42:25 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Steve deRosier <derosier@gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linuxarm@huawei.com,
-        mauro.chehab@huawei.com, John Stultz <john.stultz@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, Maital Hahn <maitalm@ti.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Raz Bouganim <r-bouganim@ti.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Fuqian Huang <huangfq.daxian@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Revert "wlcore: Adding suppoprt for IGTK key in wlcore
- driver"
-Message-ID: <20200827194225.281eb7dc@coco.lan>
-In-Reply-To: <CALLGbRL+duiHFd3w7hcD=u47k+JM5rLpOkMrRpW0aQm=oTfUnA@mail.gmail.com>
-References: <f0a2cb7ea606f1a284d4c23cbf983da2954ce9b6.1598420968.git.mchehab+huawei@kernel.org>
-        <CALLGbRL+duiHFd3w7hcD=u47k+JM5rLpOkMrRpW0aQm=oTfUnA@mail.gmail.com>
-X-Mailer: Claws Mail 3.17.6 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        Thu, 27 Aug 2020 14:17:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37356 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726289AbgH0SRP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Aug 2020 14:17:15 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC58AC061232
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 11:17:14 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id u128so4136000pfb.6
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 11:17:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=soeX4jUjZZZTlITUKQ5pcDSGwYI4DnugTTOq/SNIIW8=;
+        b=bwQqo9mUQZ78SYazcavWuleirnFV8qiGz4YuuoqdE7eRmQ2tSTM68j++Et8BP9GqJr
+         syUBg3Kcg7Q9OgEbN+FAt7t4lGugKe8nLewk7Ughsm9qm/jfjiWsNzpi5+yadtKvRkgD
+         9dkaxNNv0wKsa2fEmJKGhE8yW74+BwsjHwwBM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=soeX4jUjZZZTlITUKQ5pcDSGwYI4DnugTTOq/SNIIW8=;
+        b=nA4/QPpB6UMPYDMVbdmFM1Hm66DGZMM4iwYepIXdI9BGWK53nzNMQqPTEjRWp2uRIm
+         N5WNw5zExKNYeIcxkxsyP4GIqqd28HUdO9Av2b86Rbp6+Vv+ZIdkznetxK5TQ6C9C4Rl
+         2eC/FxH39myS0Kjb1D/tfZ7QIfln9e9utttaXB4qvMi/6f7UMEieNv3DjHW49JngQGBk
+         tdXxwnNnBJev2lohJ7JOI0Mc0oSTs8eEwryVPblS8a0LHAf8VHfPTVxXs1cCoGwTyYM6
+         Z02YJu91fuprkawBjh3v17yRNP9tOIq3E7xTNvLfRO4qnGRPHVqMEC+FXd9UPryYk2V9
+         ig4g==
+X-Gm-Message-State: AOAM533fBGbnUmqLdCobwkZ18TZCzFzu+U6nSYGeOGQWZrYcXCXcf5kK
+        58BHLmkcuDPcGZeJAX7ydqTLHA==
+X-Google-Smtp-Source: ABdhPJxQHJQlJtOpVK3cF7+baxJUjdkujQ9/OnK25Ibx+RalSDrSK6OVeL6QkvgSiagIIwSSDUbj5Q==
+X-Received: by 2002:a17:902:b282:: with SMTP id u2mr11532811plr.47.1598552234468;
+        Thu, 27 Aug 2020 11:17:14 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id e29sm3441674pfj.92.2020.08.27.11.17.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2020 11:17:13 -0700 (PDT)
+Date:   Thu, 27 Aug 2020 11:17:12 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Allen Pais <allen.cryptic@gmail.com>, kuba@kernel.org,
+        jirislaby@kernel.org, mickflemm@gmail.com, mcgrof@kernel.org,
+        chunkeey@googlemail.com, Larry.Finger@lwfinger.net,
+        stas.yakovlev@gmail.com, helmut.schaa@googlemail.com,
+        pkshih@realtek.com, yhchuang@realtek.com, dsd@gentoo.org,
+        kune@deine-taler.de, ath11k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, b43-dev@lists.infradead.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Allen Pais <allen.lkml@gmail.com>,
+        Romain Perier <romain.perier@gmail.com>
+Subject: Re: [05/16] atmel: convert tasklets to use new tasklet_setup() API
+Message-ID: <202008271115.A54F087@keescook>
+References: <20200817090637.26887-6-allen.cryptic@gmail.com>
+ <20200827132320.B70A9C433AD@smtp.codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200827132320.B70A9C433AD@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Em Thu, 27 Aug 2020 08:48:30 -0700
-Steve deRosier <derosier@gmail.com> escreveu:
-
-> On Tue, Aug 25, 2020 at 10:49 PM Mauro Carvalho Chehab
-> <mchehab+huawei@kernel.org> wrote:
-> >
-> > This patch causes a regression betwen Kernel 5.7 and 5.8 at wlcore:
-> > with it applied, WiFi stops working, and the Kernel starts printing
-> > this message every second:
-> >
-> >    wlcore: PHY firmware version: Rev 8.2.0.0.242
-> >    wlcore: firmware booted (Rev 8.9.0.0.79)
-> >    wlcore: ERROR command execute failure 14  
+On Thu, Aug 27, 2020 at 01:23:20PM +0000, Kalle Valo wrote:
+> Allen Pais <allen.cryptic@gmail.com> wrote:
 > 
-> Only if NO firmware for the device in question supports the `KEY_IGTK`
-> value, then this revert is appropriate. Otherwise, it likely isn't.
-
-Yeah, that's what I suspect too: some specific firmware is required
-for KEY_IGTK to work.
-
->  My suspicion is that the feature that `KEY_IGTK` is enabling is
-> specific to a newer firmware that Mauro hasn't upgraded to. What the
-> OP should do is find the updated firmware and give it a try.
-
-I didn't try checking if linux-firmware tree has a newer version on
-it. I'm using Debian Bullseye on this device. So, I suspect that
-it may have a relatively new firmware.
-
-Btw, that's also the version that came together with Fedora 32:
-
-	$ strings /lib/firmware/ti-connectivity/wl18xx-fw-4.bin |grep FRev
-	FRev 8.9.0.0.79
-	FRev 8.2.0.0.242
-
-Looking at:
-	https://git.ti.com/cgit/wilink8-wlan/wl18xx_fw/
-
-It sounds that there's a newer version released this year:
-
-	2020-05-28	Updated to FW 8.9.0.0.81
-	2018-07-29	Updated to FW 8.9.0.0.79
-
-However, it doesn't reached linux-firmware upstream yet:
-
-	$ git log --pretty=oneline ti-connectivity/wl18xx-fw-4.bin
-	3a5103fc3c29 wl18xx: update firmware file 8.9.0.0.79
-	65b1c68c63f9 wl18xx: update firmware file 8.9.0.0.76
-	dbb85a5154a5 wl18xx: update firmware file
-	69a250dd556b wl18xx: update firmware file
-	dbe3f134bb69 wl18xx: update firmware file, remove conf file
-	dab4b79b3fbc wl18xx: add version 4 of the wl18xx firmware
-
-> AND - since there's some firmware the feature doesn't work with, the
-> driver should be fixed to detect the running firmware version and not
-> do things that the firmware doesn't support.  AND the firmware writer
-> should also make it so the firmware doesn't barf on bad input and
-> instead rejects it politely.
-
-Agreed. The main issue here seems to be that the current patch
-assumes that this feature is available. A proper approach would 
-be to check if this feature is available before trying to use it.
-
-Now, I dunno if version 8.9.0.0.81 has what's required for it to
-work - or if KEY_IGTK require some custom firmware version.
-
-If it works with such version, one way would be to add a check
-for this specific version, disabling KEY_IGTK otherwise.
-
-Also, someone from TI should be sending the newer version to
-be added at linux-firmware.
-
-I'll try to do a test maybe tomorrow.
-
-> But I will say I'm making an educated guess; while I have played with
-> the TI devices in the past, it was years ago and I won't claim to be
-> an expert. I also am unable to fix it myself at this time.
+> > From: Allen Pais <allen.lkml@gmail.com>
+> > 
+> > In preparation for unconditionally passing the
+> > struct tasklet_struct pointer to all tasklet
+> > callbacks, switch to using the new tasklet_setup()
+> > and from_tasklet() to pass the tasklet pointer explicitly
+> > and remove .data field.
+> > 
+> > Signed-off-by: Romain Perier <romain.perier@gmail.com>
+> > Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 > 
-> I'd just rather see it fixed properly instead of a knee-jerk reaction
-> of reverting it simply because the OP doesn't have current firmware.
+> 11 patches applied to wireless-drivers-next.git, thanks.
+> 
+> a36f50e5b937 atmel: convert tasklets to use new tasklet_setup() API
+> fc6722301428 b43legacy: convert tasklets to use new tasklet_setup() API
+> 427a06beb072 brcmsmac: convert tasklets to use new tasklet_setup() API
+> ae6cf59f80f7 ipw2x00: convert tasklets to use new tasklet_setup() API
+> b81b9d372ac8 iwlegacy: convert tasklets to use new tasklet_setup() API
+> 7433c9690318 intersil: convert tasklets to use new tasklet_setup() API
+> 51c41aa93ef5 mwl8k: convert tasklets to use new tasklet_setup() API
+> aff8e8d02ec2 qtnfmac: convert tasklets to use new tasklet_setup() API
+> a0d6ea9b6e1c rt2x00: convert tasklets to use new tasklet_setup() API
+> d3ccc14dfe95 rtlwifi/rtw88: convert tasklets to use new tasklet_setup() API
+> 26721b02466e zd1211rw: convert tasklets to use new tasklet_setup() API
+> 
+> -- 
+> https://patchwork.kernel.org/patch/11717451/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
-> And let's revisit the discussion of having a kernel splat because an
-> unrelated piece of code fails yet the driver does exactly what it is
-> supposed to do. We shouldn't be dumping registers and stack-trace when
-> the code that crashed has nothing to do with the registers and
-> stack-trace outputted. It is a false positive.  A simple printk WARN
-> or ERROR should output notifying us that the chip firmware has crashed
-> and why.  IMHO.
+FWIW, I don't think a revert is needed here to wait for the from_tasket()
+-> container_from() API to land since from_tasklet() is already being
+used by other trees. Let's just get this done so we can get closer to
+ripping out the old tasklet API. We'll have to do a treewide
+from_timer(), from_tasklet() -> container_from() anyway...
 
-Thanks,
-Mauro
+-- 
+Kees Cook
