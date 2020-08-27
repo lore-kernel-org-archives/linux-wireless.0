@@ -2,121 +2,189 @@ Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FF0C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F14BC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:38:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E87FE22B40
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:36:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C18C3207BC
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 06:38:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H8vbnYW/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="xpzEgaM1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727846AbgH0GgH (ORCPT
+        id S1726395AbgH0Gil (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 02:36:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40236 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727959AbgH0GgE (ORCPT
+        Thu, 27 Aug 2020 02:38:41 -0400
+Received: from gateway34.websitewelcome.com ([192.185.149.13]:19507 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726199AbgH0Gik (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 02:36:04 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C5D8C061265
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 23:36:03 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id w13so4186490wrk.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2020 23:36:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=akR5LsWB+L7ENwYAw9D4wcSK8jvQH6F09dbiIXvyFCk=;
-        b=H8vbnYW/S+H7tZZYYO5Fs3PPBaCtYQdePiDEDqJOjsMv5DF6G2r7fYacs24CCUEaAt
-         M3e1iWPRZPukneXLcYdSJGgvQQ826VwRp17Sv20+QJTNJvXWHfkZABR3zVA0DWOcTzdg
-         WEgIW3cZElL+bglDngYnh1LuIaHi/EV/2I1iKVO3m3j4xIQwohTnASGkYv8BwxHFT6Tg
-         htWl0SMTHiOOLoP79DFGPB7xALFkOssU25a1B7AThZesH2WFhTlnyAwyQG09UCxIlfQt
-         dDsHe95PD32mdOGZohe5PKfcsO5FWScCiMzdkncTi71joxY8dybGZxXjcXIt1WNujlh7
-         /dkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=akR5LsWB+L7ENwYAw9D4wcSK8jvQH6F09dbiIXvyFCk=;
-        b=DpfMFL+TAzf3WJcYjYgd1cbp9BZ858R3QctbtMe4VpS86NxSKj/ys91vu3x7dSfoDw
-         fppJRpfqHD9ykoSJLEahk3zReoaB8nZNsnd5preobOq5WKb4srq7cjknQTUoAhUnQX0b
-         fL10YOTa6Pr4JWkt456sr5FFRrJisjvjMpBY7e6Wvt7Uqan2IB8ti5MF3haZigHbk7K6
-         m9CLEcUJT7rPOkj/LBHtivvFGgj+n5kMpM2RiHEXSrE6arRZAhOeyCFP8toWd2PqXBlE
-         SZetIbrWe5sGHzBl0+QQecBa0tTu7PFK1QxTIB0tZqYHPcKqnjPlqNkJP0+8UHcxKZ+f
-         dvvA==
-X-Gm-Message-State: AOAM533P9QFVchrD+/QCSwfu5gLxub9YmDGkSa9ykh8tMLt+Zlk4p6/X
-        Gl6KT/N53kdMyk8Vv9wzN0Elbw==
-X-Google-Smtp-Source: ABdhPJyUoPKR71NVAZJhTV3U26Io2C1TwglVVoLwoSOZIX2rFDKJaRv5rbS/qFs4nDKGnwNHN81ydA==
-X-Received: by 2002:a05:6000:1c7:: with SMTP id t7mr879463wrx.145.1598510162237;
-        Wed, 26 Aug 2020 23:36:02 -0700 (PDT)
-Received: from dell ([91.110.221.141])
-        by smtp.gmail.com with ESMTPSA id q11sm3530317wrw.61.2020.08.26.23.36.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 23:36:01 -0700 (PDT)
-Date:   Thu, 27 Aug 2020 07:35:59 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Maya Erez <merez@codeaurora.org>, wil6210@qti.qualcomm.com
-Subject: Re: [PATCH 12/30] wireless: ath: wil6210: wmi: Correct misnamed
- function parameter 'ptr_'
-Message-ID: <20200827063559.GP3248864@dell>
-References: <20200826093401.1458456-13-lee.jones@linaro.org>
- <20200826155625.A5A88C433A1@smtp.codeaurora.org>
+        Thu, 27 Aug 2020 02:38:40 -0400
+X-Greylist: delayed 1244 seconds by postgrey-1.27 at vger.kernel.org; Thu, 27 Aug 2020 02:38:39 EDT
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id DB1DD5DC77
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2020 01:17:52 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id BBEOkPIwmCjCVBBEOkAcZR; Thu, 27 Aug 2020 01:17:52 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=qHxOnyBIlnPK0Cq/zWOJblisYvm45RWVknmbdrQpGHk=; b=xpzEgaM11EX/CfqgzsxXGERJgx
+        dRv/NW4pbAJZ6+ZRnGx/+hbiChmfGtgS8uiNtM8AI1HHeR/+caudItE14kZegj7qoEs1X+QN9Zt6B
+        zjcsbquQtKrJ6/UnhAmXoD35QOIPIv5TgJ0dfk4cs7nH1xWACHneMSZ7ciyECo+P5hV+OkMr6sxeb
+        11BbwNM4qDor8EcdZtXn6k2/JIS7uPHD2X+vYhw9bm+XqFZrkYrRboZDGMEH/OSTsaNUnGAhPr6hP
+        Q89kUgZjLeW1h82iskK/q+QVG0NRS82KhqgL/fYPyBgA6B6XeGh/e0j5fO4DU4TWWIFAxSUj5Tpc8
+        PG5KfxSQ==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:44752 helo=[192.168.15.8])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1kBBEO-000D9J-C6; Thu, 27 Aug 2020 01:17:52 -0500
+Subject: Re: [PATCH v2 2/4] brcmfmac: drop unnecessary "fallthrough" comments
+To:     Dmitry Osipenko <digetx@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200827060441.15487-1-digetx@gmail.com>
+ <20200827060441.15487-3-digetx@gmail.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ AP7RWS474w==
+Message-ID: <9ba55d08-879b-cf66-b5d9-cc8fd292a4aa@embeddedor.com>
+Date:   Thu, 27 Aug 2020 01:23:55 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20200827060441.15487-3-digetx@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200826155625.A5A88C433A1@smtp.codeaurora.org>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1kBBEO-000D9J-C6
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:44752
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 8
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 26 Aug 2020, Kalle Valo wrote:
+Hi,
 
-> Lee Jones <lee.jones@linaro.org> wrote:
+There is a patch that address this, already:
+
+https://lore.kernel.org/lkml/20200821063758.GA17783@embeddedor/
+
+Thanks
+--
+Gustavo
+
+On 8/27/20 01:04, Dmitry Osipenko wrote:
+> There is no need to insert the "fallthrough" comment if there is nothing
+> in-between of case switches. Hence let's remove the unnecessary comments
+> in order to make code cleaner a tad.
 > 
-> > Fixes the following W=1 kernel build warning(s):
-> > 
-> >  drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Function parameter or member 'ptr_' not described in 'wmi_buffer_block'
-> >  drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Excess function parameter 'ptr' description in 'wmi_buffer_block'
-> > 
-> > Cc: Maya Erez <merez@codeaurora.org>
-> > Cc: Kalle Valo <kvalo@codeaurora.org>
-> > Cc: "David S. Miller" <davem@davemloft.net>
-> > Cc: Jakub Kicinski <kuba@kernel.org>
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: wil6210@qti.qualcomm.com
-> > Cc: netdev@vger.kernel.org
-> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 2 --
+>  2 files changed, 4 deletions(-)
 > 
-> Failed to apply:
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index 1a7ab49295aa..0dc4de2fa9f6 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -916,9 +916,7 @@ int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+>  		f2_blksz = SDIO_4373_FUNC2_BLOCKSIZE;
+>  		break;
+>  	case SDIO_DEVICE_ID_BROADCOM_4359:
+> -		/* fallthrough */
+>  	case SDIO_DEVICE_ID_BROADCOM_4354:
+> -		/* fallthrough */
+>  	case SDIO_DEVICE_ID_BROADCOM_4356:
+>  		f2_blksz = SDIO_435X_FUNC2_BLOCKSIZE;
+>  		break;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index ac3ee93a2378..b16944a898f9 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -4306,9 +4306,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+>  					   CY_43455_MESBUSYCTRL, &err);
+>  			break;
+>  		case SDIO_DEVICE_ID_BROADCOM_4359:
+> -			/* fallthrough */
+>  		case SDIO_DEVICE_ID_BROADCOM_4354:
+> -			/* fallthrough */
+>  		case SDIO_DEVICE_ID_BROADCOM_4356:
+>  			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
+>  				  CY_435X_F2_WATERMARK);
 > 
-> error: patch failed: drivers/net/wireless/ath/wil6210/wmi.c:266
-> error: drivers/net/wireless/ath/wil6210/wmi.c: patch does not apply
-> stg import: Diff does not apply cleanly
-> 
-> Patch set to Changes Requested.
-
-Are you applying them in order?
-
-It may be affected by:
-
- wireless: ath: wil6210: wmi: Fix formatting and demote non-conforming function headers
-
-I'll also rebase onto the latest -next and resubmit.
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
