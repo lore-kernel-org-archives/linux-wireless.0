@@ -1,333 +1,186 @@
-Return-Path: <SRS0=VRWf=CF=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=CTk3=CG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 082A1C433E6
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 23:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFA8C433E2
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 01:29:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE31D2080C
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Aug 2020 23:30:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="rbQV9JhR"
+	by mail.kernel.org (Postfix) with ESMTP id 8E6532080C
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 01:29:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727955AbgH0XaG (ORCPT
+        id S1728192AbgH1B3r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Aug 2020 19:30:06 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:45054 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726147AbgH0XaF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Aug 2020 19:30:05 -0400
-Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id CC66713C2B1;
-        Thu, 27 Aug 2020 16:30:04 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com CC66713C2B1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1598571004;
-        bh=orCbqzM8OVysPY23eVEHY/Rh4hYSbry4pU60VoHdFe4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=rbQV9JhR0N9o6e572iW5bU1mBs/TXOqKXEMhzWcHilZOOKx6fJk6UTZPEnDFQp94T
-         Du/5tbZS9rL5qrlLU4Cu9XP72VUUO3FkOkT9JNYOVybG5mrISxPJlUrj4VAKFSFF03
-         DacEGPwM3RBc3yqWHQUHpV3onEemnRmyC0cD0xSg=
-From:   greearb@candelatech.com
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath11k:  Support reading fwcfg file for driver options.
-Date:   Thu, 27 Aug 2020 16:30:01 -0700
-Message-Id: <20200827233002.21483-1-greearb@candelatech.com>
-X-Mailer: git-send-email 2.20.1
+        Thu, 27 Aug 2020 21:29:47 -0400
+Received: from mga12.intel.com ([192.55.52.136]:39900 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726147AbgH1B3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Aug 2020 21:29:47 -0400
+IronPort-SDR: FYEMHEz/q1FiHGAy6BZU37sRABcvYBth71wWZOjWMCknmVMCY5PatVQe1/p7TLD/pF097v7NYc
+ 9caRujGbbWpw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9726"; a="136136610"
+X-IronPort-AV: E=Sophos;i="5.76,361,1592895600"; 
+   d="scan'208";a="136136610"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2020 18:29:46 -0700
+IronPort-SDR: mAB4zzDAwCSa5Jdsjz7vU+TBdbarRe2rpqHIqifC/4w53z9NrtyReIRwGmI0+SAGAI0bCDaYrV
+ vzwXblT2FNAQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,361,1592895600"; 
+   d="scan'208";a="332388390"
+Received: from lkp-server01.sh.intel.com (HELO 4f455964fc6c) ([10.239.97.150])
+  by fmsmga002.fm.intel.com with ESMTP; 27 Aug 2020 18:29:45 -0700
+Received: from kbuild by 4f455964fc6c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kBTD7-0002Px-15; Fri, 28 Aug 2020 01:29:45 +0000
+Date:   Fri, 28 Aug 2020 09:29:05 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [mac80211-next:master] BUILD SUCCESS
+ 2831a631022eed6e3f800f08892132c6edde652c
+Message-ID: <5f485de1.S/Kp19zWh/+8i9uD%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  master
+branch HEAD: 2831a631022eed6e3f800f08892132c6edde652c  nl80211: support SAE authentication offload in AP mode
 
-The QCA6390 NIC that I have randomizes the last two octets
-each time the module loads.  So, introduce a 'fwcfg' option
-so that we can specify a MAC for each radio.  This fwcfg
-file will also let one specify the board file name.
+elapsed time: 727m
 
-Example fwcfg file:
+configs tested: 115
+configs skipped: 13
 
-mac = 00:03:7f:00:00:01
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+mips                         bigsur_defconfig
+sh                   sh7770_generic_defconfig
+arm                          iop32x_defconfig
+c6x                              alldefconfig
+arm                          pxa168_defconfig
+powerpc                         ps3_defconfig
+arm                             rpc_defconfig
+arm                            zeus_defconfig
+arm                       aspeed_g4_defconfig
+mips                           xway_defconfig
+mips                     loongson1c_defconfig
+mips                            gpr_defconfig
+s390                          debug_defconfig
+sh                           se7712_defconfig
+arm                           stm32_defconfig
+ia64                             allyesconfig
+sparc64                          alldefconfig
+powerpc                mpc7448_hpc2_defconfig
+ia64                             allmodconfig
+sh                        sh7763rdp_defconfig
+arm                         orion5x_defconfig
+mips                         rt305x_defconfig
+mips                          malta_defconfig
+arm                         lpc32xx_defconfig
+arc                            hsdk_defconfig
+powerpc                     pseries_defconfig
+arc                           tb10x_defconfig
+sh                        sh7757lcr_defconfig
+mips                      maltaaprp_defconfig
+arm                       mainstone_defconfig
+m68k                             allmodconfig
+c6x                         dsk6455_defconfig
+powerpc                     powernv_defconfig
+mips                          rb532_defconfig
+ia64                         bigsur_defconfig
+arm                        multi_v5_defconfig
+sh                         ecovec24_defconfig
+c6x                        evmc6678_defconfig
+sparc                               defconfig
+arc                    vdk_hs38_smp_defconfig
+sh                        apsh4ad0a_defconfig
+powerpc                      pasemi_defconfig
+arm                           omap1_defconfig
+m68k                        m5272c3_defconfig
+m68k                       m5475evb_defconfig
+sh                          sdk7780_defconfig
+mips                           ip22_defconfig
+ia64                                defconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+x86_64               randconfig-a003-20200827
+x86_64               randconfig-a002-20200827
+x86_64               randconfig-a001-20200827
+x86_64               randconfig-a005-20200827
+x86_64               randconfig-a006-20200827
+x86_64               randconfig-a004-20200827
+i386                 randconfig-a002-20200827
+i386                 randconfig-a004-20200827
+i386                 randconfig-a003-20200827
+i386                 randconfig-a005-20200827
+i386                 randconfig-a006-20200827
+i386                 randconfig-a001-20200827
+i386                 randconfig-a013-20200827
+i386                 randconfig-a012-20200827
+i386                 randconfig-a011-20200827
+i386                 randconfig-a016-20200827
+i386                 randconfig-a015-20200827
+i386                 randconfig-a014-20200827
+i386                 randconfig-a013-20200828
+i386                 randconfig-a012-20200828
+i386                 randconfig-a011-20200828
+i386                 randconfig-a016-20200828
+i386                 randconfig-a014-20200828
+i386                 randconfig-a015-20200828
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
 ---
- drivers/net/wireless/ath/ath11k/core.c | 161 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/core.h |   9 ++
- drivers/net/wireless/ath/ath11k/wmi.c  |  12 +-
- 3 files changed, 178 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 55de538aa785..3166b9a9f896 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -7,6 +7,7 @@
- #include <linux/slab.h>
- #include <linux/remoteproc.h>
- #include <linux/firmware.h>
-+#include <linux/ctype.h>
- #include "core.h"
- #include "dp_tx.h"
- #include "dp_rx.h"
-@@ -233,6 +234,8 @@ static int ath11k_core_fetch_board_data_api_n(struct ath11k_base *ab,
- 	int ret, ie_id;
- 
- 	filename = ATH11K_BOARD_API2_FILE;
-+	if (ab->fwcfg.bname[0])
-+		filename = ab->fwcfg.bname;
- 
- 	if (!bd->fw)
- 		bd->fw = ath11k_core_firmware_request(ab, filename);
-@@ -310,6 +313,7 @@ static int ath11k_core_fetch_board_data_api_n(struct ath11k_base *ab,
- 		data += ie_len;
- 	}
- 
-+	strlcpy(ab->fw_board_name, filename, sizeof(ab->fw_board_name));
- out:
- 	if (!bd->data || !bd->len) {
- 		ath11k_err(ab,
-@@ -326,16 +330,160 @@ static int ath11k_core_fetch_board_data_api_n(struct ath11k_base *ab,
- 	return ret;
- }
- 
-+static int ath11k_fetch_fwcfg_file(struct ath11k_base *ab)
-+{
-+	char filename[100];
-+	const char *buf;
-+	size_t i = 0;
-+	char val[100];
-+	size_t key_idx;
-+	size_t val_idx;
-+	char c;
-+	size_t sz;
-+	int ret;
-+	const struct firmware *fw;
-+
-+	ab->fwcfg.flags = 0;
-+
-+	/* fwcfg-<bus>-<id>.txt */
-+	/* If this changes, change ath11k_read_fwinfo as well. */
-+	scnprintf(filename, sizeof(filename), "%s/fwcfg-%s-%s.txt",
-+		  ATH11K_FW_DIR, ath11k_bus_str(ab->hif.bus), dev_name(ab->dev));
-+
-+	ret = firmware_request_nowarn(&fw, filename, ab->dev);
-+	if (ret)
-+		ab->fwcfg_file = ERR_PTR(ret);
-+	else
-+		ab->fwcfg_file = fw;
-+	if (IS_ERR(ab->fwcfg_file)) {
-+		/* FW config file is optional, don't be scary. */
-+		ath11k_dbg(ab, ATH11K_DBG_BOOT,
-+			   "Could not find firmware config file %s, continuing with defaults.\n",
-+			   filename);
-+		return PTR_ERR(ab->fwcfg_file);
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "found firmware config file %s\n",
-+		   filename);
-+
-+	/* Now, attempt to parse results.
-+	 * Format is key=value
-+	 */
-+	buf = (const char *)(ab->fwcfg_file->data);
-+	while (i < ab->fwcfg_file->size) {
-+start_again:
-+		/* First, eat space, or entire line if we have # as first char */
-+		c = buf[i];
-+		while (isspace(c)) {
-+			i++;
-+			if (i >= ab->fwcfg_file->size)
-+				goto done;
-+			c = buf[i];
-+		}
-+		/* Eat comment ? */
-+		if (c == '#') {
-+			i++;
-+			while (i < ab->fwcfg_file->size) {
-+				c = buf[i];
-+				i++;
-+				if (c == '\n')
-+					goto start_again;
-+			}
-+			/* Found no newline, must be done. */
-+			goto done;
-+		}
-+
-+		/* If here, we have start of token, store it in 'filename' to save space */
-+		key_idx = 0;
-+		while (i < ab->fwcfg_file->size) {
-+			c = buf[i];
-+			if (c == '=') {
-+				i++;
-+				c = buf[i];
-+				/* Eat any space after the '=' sign. */
-+				while (i < ab->fwcfg_file->size) {
-+					if (!isspace(c))
-+						break;
-+					i++;
-+					c = buf[i];
-+				}
-+				break;
-+			}
-+			if (isspace(c)) {
-+				i++;
-+				continue;
-+			}
-+			filename[key_idx] = c;
-+			key_idx++;
-+			if (key_idx >= sizeof(filename)) {
-+				/* Too long, bail out. */
-+				goto done;
-+			}
-+			i++;
-+		}
-+		filename[key_idx] = 0; /* null terminate */
-+
-+		/* We have found the key, now find the value */
-+		val_idx = 0;
-+		while (i < ab->fwcfg_file->size) {
-+			c = buf[i];
-+			if (isspace(c))
-+				break;
-+			val[val_idx] = c;
-+			val_idx++;
-+			if (val_idx >= sizeof(val)) {
-+				/* Too long, bail out. */
-+				goto done;
-+			}
-+			i++;
-+		}
-+		val[val_idx] = 0; /* null terminate value */
-+
-+		/* We have key and value now. */
-+		ath11k_warn(ab, "fwcfg key: %s  val: %s\n",
-+			    filename, val);
-+
-+		/* Assign key and values as appropriate */
-+		if (strcasecmp(filename, "mac") == 0) {
-+			if (!mac_pton(val, ab->fwcfg.mac))
-+				ath11k_warn(ab, "Failed to parse fwcfg mac address: %s\n",
-+					    val);
-+			else
-+				ab->fwcfg.flags |= ATH11K_FWCFG_MAC;
-+		} else if (strcasecmp(filename, "bname") == 0) {
-+			sz = sizeof(ab->fwcfg.bname);
-+			strncpy(ab->fwcfg.bname, val, sz);
-+			ab->fwcfg.bname[sz - 1] = 0; /* ensure null term */
-+		} else {
-+			ath11k_warn(ab, "Unknown fwcfg key name -:%s:-, val: %s\n",
-+				    filename, val);
-+		}
-+	}
-+done:
-+	return 0;
-+}
-+
- static int ath11k_core_fetch_board_data_api_1(struct ath11k_base *ab,
- 					      struct ath11k_board_data *bd)
- {
--	bd->fw = ath11k_core_firmware_request(ab, ATH11K_DEFAULT_BOARD_FILE);
-+	if (ab->fwcfg.bname[0])
-+		bd->fw = ath11k_core_firmware_request(ab, ab->fwcfg.bname);
-+	else
-+		bd->fw = ath11k_core_firmware_request(ab, ATH11K_DEFAULT_BOARD_FILE);
- 	if (IS_ERR(bd->fw))
- 		return PTR_ERR(bd->fw);
- 
- 	bd->data = bd->fw->data;
- 	bd->len = bd->fw->size;
- 
-+	/* Save firmware board name so we can display it later. */
-+	if (ab->fwcfg.bname[0])
-+		strlcpy(ab->fw_board_name, ab->fwcfg.bname,
-+			sizeof(ab->fw_board_name));
-+	else
-+		strlcpy(ab->fw_board_name, ATH11K_DEFAULT_BOARD_FILE,
-+			sizeof(ab->fw_board_name));
-+
- 	return 0;
- }
- 
-@@ -483,6 +631,13 @@ static int ath11k_core_start(struct ath11k_base *ab,
- {
- 	int ret;
- 
-+	/* Load optional firmware config from file system */
-+	if (!IS_ERR(ab->fwcfg_file)) {
-+		release_firmware(ab->fwcfg_file);
-+		ab->fwcfg_file = NULL;
-+	}
-+	ath11k_fetch_fwcfg_file(ab);
-+
- 	ret = ath11k_qmi_firmware_start(ab, mode);
- 	if (ret) {
- 		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
-@@ -865,6 +1020,10 @@ void ath11k_core_deinit(struct ath11k_base *ab)
- 	ath11k_hif_power_down(ab);
- 	ath11k_mac_destroy(ab);
- 	ath11k_core_soc_destroy(ab);
-+
-+	if (!IS_ERR(ab->fwcfg_file))
-+		release_firmware(ab->fwcfg_file);
-+	ab->fwcfg_file = NULL;
- }
- EXPORT_SYMBOL(ath11k_core_deinit);
- 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index ef1a934221f0..bb22b41fefaa 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -685,6 +685,15 @@ struct ath11k_base {
- 
- 	const struct firmware *cal_file;
- 
-+	const struct firmware *fwcfg_file;
-+	char fw_board_name[100]; /* whatever board file we actually loaded */
-+	struct {
-+#define ATH11K_FWCFG_MAC            BIT(0)
-+		u32 flags; /* let us know which fields have been set */
-+		char bname[100]; /* board file name */
-+		u8 mac[ETH_ALEN]; /* MAC address to use */
-+	} fwcfg;
-+
- 	/* Below regd's are protected by ab->data_lock */
- 	/* This is the regd set for every radio
- 	 * by the firmware during initializatin
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 03b669de3300..95f2af6bbdcd 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5562,11 +5562,17 @@ static int ath11k_wmi_tlv_rdy_parse(struct ath11k_base *ab, u16 tag, u16 len,
- 		ab->wlan_init_status = fixed_param.ready_event_min.status;
- 		rdy_parse->num_extra_mac_addr =
- 			fixed_param.ready_event_min.num_extra_mac_addr;
--
--		ether_addr_copy(ab->mac_addr,
--				fixed_param.ready_event_min.mac_addr.addr);
-+		if (ab->fwcfg.flags & ATH11K_FWCFG_MAC)
-+			ether_addr_copy(ab->mac_addr, ab->fwcfg.mac);
-+		else
-+			ether_addr_copy(ab->mac_addr,
-+					fixed_param.ready_event_min.mac_addr.addr);
- 		ab->pktlog_defs_checksum = fixed_param.pktlog_defs_checksum;
- 		ab->wmi_ready = true;
-+		ath11k_warn(ab, "tag-ready-event, using mac: %pM  NIC reported: %pM extra-mac: %d  status: %d\n",
-+			    ab->mac_addr,
-+			    fixed_param.ready_event_min.mac_addr.addr,
-+			    rdy_parse->num_extra_mac_addr, ab->wlan_init_status);
- 		break;
- 	case WMI_TAG_ARRAY_FIXED_STRUCT:
- 		addr_list = (struct wmi_mac_addr *)ptr;
--- 
-2.26.2
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
