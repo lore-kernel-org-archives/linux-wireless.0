@@ -2,75 +2,95 @@ Return-Path: <SRS0=CTk3=CG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D85C433E6
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 12:24:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F98FC433E2
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 12:35:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E975920848
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 12:24:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14F612086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Aug 2020 12:35:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mDDexsNT"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vMtVf9B1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729332AbgH1MX7 (ORCPT
+        id S1729438AbgH1MfH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Aug 2020 08:23:59 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:55172 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729195AbgH1MXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Aug 2020 08:23:54 -0400
+        Fri, 28 Aug 2020 08:35:07 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:26582 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729437AbgH1MfA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Aug 2020 08:35:00 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598617434; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=BEqM9FU515T0rTU5P4IpqycDzG9iwNCYRf5BIFd8Fyc=;
- b=mDDexsNTXmZppJNHfhJIQTwNj/MsOlhEOir88ppmNIXh9axuZhIITaKzIuOomyfTa9NgQ6B0
- ar0NXBqjIJSaORuWh5lK3SoPCrpBLyI34Ybswnr+MDkj18yYMaYUdBc0Q7NBvvCNVeGoPnri
- NFr4n0nIDlDMS4f4XZ+Q3T9vmRU=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ s=smtp; t=1598618099; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=CtdehU9Dr6QeodTigewvzpJbkUFQjJ5NNP1mR5H4580=; b=vMtVf9B1T5saQHyIMIbnOyCkP2Shz0Od5PF8Yu5J4fYC7lFD9HNGq5y9jjahEnoXTXAk2YpN
+ pmQB1kGvxw5iiG7dRTMKeSW7ZJf70ion1Wdagt4RDfF7whbp7l9NwHIKBRuDSp1oetHPpTMJ
+ itp13s6sKZWxqqm2fyhzDKP+MI0=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f48f75af4f3e6461369dced (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 28 Aug 2020 12:23:54
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 5f48f9e3c6eb6037971eb90f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 28 Aug 2020 12:34:43
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4C474C433CA; Fri, 28 Aug 2020 12:23:53 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id EDE9FC433A0; Fri, 28 Aug 2020 12:34:42 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 03D79C433C6;
-        Fri, 28 Aug 2020 12:23:52 +0000 (UTC)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 43BDEC43391;
+        Fri, 28 Aug 2020 12:34:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 43BDEC43391
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 15/15] rtlwifi: Remove temporary definition of RT_TRACE
+References: <20200723204244.24457-16-Larry.Finger@lwfinger.net>
+        <20200827094217.72A9BC433CB@smtp.codeaurora.org>
+        <8cc0d79f-ec95-b7a2-1ac1-c20c06dd62ab@lwfinger.net>
+Date:   Fri, 28 Aug 2020 15:34:39 +0300
+In-Reply-To: <8cc0d79f-ec95-b7a2-1ac1-c20c06dd62ab@lwfinger.net> (Larry
+        Finger's message of "Thu, 27 Aug 2020 13:31:06 -0500")
+Message-ID: <87pn7b7xuo.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 28 Aug 2020 20:23:52 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc:     ath10k <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: add flag to protect napi operation to avoid
- dead loop hang for SDIO
-In-Reply-To: <CABPxzYJ982LdcUD3a_tyu3rrqp+iacZrmAp4zG_3HqCiDCR_2w@mail.gmail.com>
-References: <1598243612-4627-1-git-send-email-wgong@codeaurora.org>
- <CABPxzYLjys+cXXRM5J680ZOs+6VrYt=_3rWv-gqkCod=-A1VrA@mail.gmail.com>
- <fd98989a87f2a50655dc95bdcd535c0d@codeaurora.org>
- <CABPxzYKvPwtQwxMfRcv9jT+d92ErhYGR91SKBH86T3Rd2QH9Qg@mail.gmail.com>
- <2d6362ce85956d0f7df2e596b89a7028@codeaurora.org>
- <CABPxzY+Fc22ke1ygRnDs0Uds0a7n=792QN8ALXciDrnx9SQuqQ@mail.gmail.com>
- <663fbb682fd8df555b2964d7d86b8eca@codeaurora.org>
- <CABPxzYJ982LdcUD3a_tyu3rrqp+iacZrmAp4zG_3HqCiDCR_2w@mail.gmail.com>
-Message-ID: <37ae0f512cb677128fbb613e4b64d4c0@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-08-25 16:24, Krishna Chaitanya wrote:
-v3 sent: https://patchwork.kernel.org/patch/11742675/
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+
+> On 8/27/20 4:42 AM, Kalle Valo wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>
+>>> A definition of this macro was kept until all drivers had been converted.
+>>> It can now be deleted.
+>>>
+>>> This change also renames _rtl_dbg_trace() to _rtl_dbg_out().
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Reported-by: kernel test robot <lkp@intel.com>
+>>> Reported-by: kernel test robot <lkp@intel.com>
+>>
+>> Dropping patch 15 due to the reported build error, please resubmit that
+>> separately.
+>>
+>> Patch set to Changes Requested.
+>
+> It turns out that patch 14 is also wrong. Please drop it as well.
+>
+> Would you prefer just those 2 or a v3 for all 15?
+
+I can apply patches 1-13, but can't do it now as patchwork is down. But
+please do send patches 14-15 as v3.
+
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
