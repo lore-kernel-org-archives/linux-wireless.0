@@ -7,66 +7,66 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9CC8C433E6
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 606DFC433E2
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:38:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2E2E20838
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:38:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B89320838
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:38:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Bwwm4eyg"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DywYRRRp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726929AbgH2Dip (ORCPT
+        id S1727044AbgH2Dir (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Aug 2020 23:38:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36982 "EHLO
+        Fri, 28 Aug 2020 23:38:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726946AbgH2DiZ (ORCPT
+        with ESMTP id S1726952AbgH2Di1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Aug 2020 23:38:25 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CEE6C061233
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:24 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id k15so859566wrn.10
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:24 -0700 (PDT)
+        Fri, 28 Aug 2020 23:38:27 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A85AC061235
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:26 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id k15so859598wrn.10
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=QqDt11mrhmiC3IjI/UjDrW3b5x9edV6yQCJKabdElZ4=;
-        b=Bwwm4eygLWjAmmtikit2YuIr/6cNiQeVC3PE7wt6HWj4QyY/skq+bv6NJY1COURw7N
-         iV6dIQGzFXnuo6enxxIfu2gwMHUIlrIlPLH/QCRVx2ZwjPVWbZjYoEqNQD7xm7u9HeDC
-         xPEaMw5HOnvBs71OAOdIqvVqijCXywiaPljSR/A1HjDB90u5PhlSZx59/Gj6vCp9+KOD
-         mulfAj8MHQ82v00Oc8ZNESviG7joVGHmoku7ztOKxUiqK4SaqqHTXxp0lhZj9L1Wt5/y
-         MK89fRPM1/WnXhyuWHMclqPTzP19TDxEPGxtkDjfxUWcvBI8/OmQL/yxbpmN4y3xUA8Q
-         /T5Q==
+        bh=nY+hO7+YD8XCHQqADSniuLxqB82KrBsfnqLkBYlMHwY=;
+        b=DywYRRRpr+7zl7H02erezX/Lq8ylwnbjDFT4gFborvKHBdMYy3UF3+9nEERLiYona3
+         ELPKUI4yewnjsv6phO2TCMDA9FO2ijTGHhLW3Gb02WLoryph8ntLtFRqhALntGuF4DIh
+         11HlZU0vJMgnR8mq9hlRbLsHvunQGIfrzQGdxl4z7WPbsKeYcmHA1W6GpOBgt1Pfrhp8
+         6TXXIj5ken5Om5GF+lCs0/rdbt2p/vBjt+E9W+McMwHROj9RB/+nIz6jAUKl6buV941M
+         wrCAAmqTjr1sqos7w5NcAQddxz4mVeNC5P04JmNXaaHAYBvNDMoYKCvZSm684F1sKwVS
+         8Odw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QqDt11mrhmiC3IjI/UjDrW3b5x9edV6yQCJKabdElZ4=;
-        b=opHEbBCjAA0lxAidywpsMVl9vfKBfoS8TtA0E7NCsq0PPcDbM74m5M46+OYXUCbQ64
-         iMtCjUK9XahOEW8UcvFMFsXzhu++J4jT+CE3pf5tsod5dLdE7kb+2U8IOVEEZpQfLe63
-         Ox/SOi+r9DWIYPKq+4xvzVpaheu6Sw43MvLIqD57DtDWUR/pScbV57G4IG3OAbKdPMFW
-         6U+Lh6XiacKW5+dmQm+/EPx3EedvZcSQ0Rb2H2/XLV8hr3sAitS/VpC29fioQpBLzWCQ
-         +U81GV+2ngyolCu8DJNS12r/8vSQmSzlkzjp1ysMBFNTbfrM2o5reiMfxpEliER2r/8o
-         WDxQ==
-X-Gm-Message-State: AOAM530n+M7mj5ZXzK6gwihHNDUmr6U9xwNXr9HJy3vZPjBasAwVu7jo
-        CwxVa1we7Ktt4qwzOUxW3aaW2A==
-X-Google-Smtp-Source: ABdhPJyVnzToKikFTB2/QFxGZl8CHMU3ZqrkLCq4ZhVES3IO/49nlw6cJb6rPfOshDLBeKVtGabDoA==
-X-Received: by 2002:adf:c983:: with SMTP id f3mr1675278wrh.348.1598672303342;
-        Fri, 28 Aug 2020 20:38:23 -0700 (PDT)
+        bh=nY+hO7+YD8XCHQqADSniuLxqB82KrBsfnqLkBYlMHwY=;
+        b=KykKyyDN/Qr6CeZC+0+5CO3JiaWYvwZFwJQN8RfEa/qMeMvjqdocKKBZx51ELx/iAu
+         pFc1ZHP5I45tKlqPi9w/feye+4146NkXrOEJueG1CXVkGDL/D+PUSPHQVZt+o1WV6mBW
+         OhuMznMSoCFnCw8po1Be83NsKS+Fq7W96T9qzvozAt6bbsESGSziDLocMoY+l4AZm0ZO
+         QR6HhIoTVYBio9XuWIMVguiqUQqyRKOfHK3Aa4vmQg/PDV3DuBcEBjWqDphiuB0XkWeK
+         Lb3XceeKyqNZFowCbhKpJuk8g74rGVkyx1XfeSPsZBxb3BYzx07m8o5PVocHA6agbbWs
+         c8Iw==
+X-Gm-Message-State: AOAM531fB1I8RdfhOuOmbUo+dPic4Sn+K/xkdgl+wHJepIqPwqQxY0eY
+        YFPxJvdYTM1Dt3J2I5UEHoaLZA==
+X-Google-Smtp-Source: ABdhPJyxFvU7DRBDqBwqV/HpYizqxnqRqs7ZfX8FrFLY1OkjvaJXJaMuhA5mSB9P2MUT3Byfp+Nd8g==
+X-Received: by 2002:a5d:66c1:: with SMTP id k1mr1695903wrw.8.1598672305271;
+        Fri, 28 Aug 2020 20:38:25 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id t9sm1649179wmj.47.2020.08.28.20.38.22
+        by smtp.gmail.com with ESMTPSA id t9sm1649179wmj.47.2020.08.28.20.38.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 20:38:22 -0700 (PDT)
+        Fri, 28 Aug 2020 20:38:24 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v2 01/12] wcn36xx: Add VHT fields to parameter data structures
-Date:   Sat, 29 Aug 2020 04:38:57 +0100
-Message-Id: <20200829033908.2167689-2-bryan.odonoghue@linaro.org>
+Subject: [PATCH v2 03/12] wcn36xx: Add wcn36xx_set_default_rates_v1
+Date:   Sat, 29 Aug 2020 04:38:59 +0100
+Message-Id: <20200829033908.2167689-4-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200829033908.2167689-1-bryan.odonoghue@linaro.org>
 References: <20200829033908.2167689-1-bryan.odonoghue@linaro.org>
@@ -77,54 +77,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to pass VHT parameters to wcn3680 we need to use a super-set of
-the V1 data-structures with additional VHT parameters tacked on.
-
-This patch adds the additional fields to the STA and BSS parameter
-structures with some utility macros to make calculation of the structure
-size easier.
+Add a routine to set some additional default parameters associated with the
+V1 data structure.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wcn36xx/main.c    | 8 ++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 573799274a02..3cceeaf0136f 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -1592,9 +1592,15 @@ struct wcn36xx_hal_config_sta_params_v1 {
- 	u8 reserved:4;
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 08e23dbb60fb..d589a00d901b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -793,6 +793,14 @@ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates)
+ 		sizeof(*ofdm_rates) * WCN36XX_HAL_NUM_OFDM_RATES);
+ 	rates->supported_mcs_set[0] = 0xFF;
+ }
++
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates)
++{
++	rates->op_rate_mode = STA_11ac;
++	rates->vht_rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++	rates->vht_tx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++}
++
+ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index d7d349de20e6..2da81d9926c4 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -271,6 +271,7 @@ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
+ 		wcn->fw_revision == revision);
+ }
+ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates);
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates);
  
- 	/* These rates are the intersection of peer and self capabilities. */
--	struct wcn36xx_hal_supported_rates supported_rates;
-+	struct wcn36xx_hal_supported_rates_v1 supported_rates;
-+
-+	u8 vht_capable;
-+	u8 vht_tx_channel_width_set;
-+
- } __packed;
- 
-+#define WCN36XX_DIFF_STA_PARAMS_V1_NOVHT 10
-+
- struct wcn36xx_hal_config_sta_req_msg_v1 {
- 	struct wcn36xx_hal_msg_header header;
- 	struct wcn36xx_hal_config_sta_params_v1 sta_params;
-@@ -2015,8 +2021,14 @@ struct wcn36xx_hal_config_bss_params_v1 {
- 	 *  "STA context"
- 	 */
- 	struct wcn36xx_hal_config_sta_params_v1 sta;
-+
-+	u8 vht_capable;
-+	u8 vht_tx_channel_width_set;
-+
- } __packed;
- 
-+#define WCN36XX_DIFF_BSS_PARAMS_V1_NOVHT (WCN36XX_DIFF_STA_PARAMS_V1_NOVHT + 2)
-+
- struct wcn36xx_hal_config_bss_req_msg_v1 {
- 	struct wcn36xx_hal_msg_header header;
- 	struct wcn36xx_hal_config_bss_params_v1 bss_params;
+ static inline
+ struct ieee80211_sta *wcn36xx_priv_to_sta(struct wcn36xx_sta *sta_priv)
 -- 
 2.27.0
 
