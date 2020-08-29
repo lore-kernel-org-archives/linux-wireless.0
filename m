@@ -2,72 +2,74 @@ Return-Path: <SRS0=lHvG=CH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A021FC433E6
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:39:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6700C433E7
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:39:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B39520872
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:39:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF75020838
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Aug 2020 03:39:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zhnoq0Qq"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QLKHbzn/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727807AbgH2DjO (ORCPT
+        id S1727813AbgH2DjQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Aug 2020 23:39:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37010 "EHLO
+        Fri, 28 Aug 2020 23:39:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727099AbgH2DjC (ORCPT
+        with ESMTP id S1727061AbgH2Diw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Aug 2020 23:39:02 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1462FC061264
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:39:02 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id w2so887866wmi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:39:02 -0700 (PDT)
+        Fri, 28 Aug 2020 23:38:52 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74234C061237
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:52 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id e16so895057wrm.2
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2020 20:38:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=6C+RlpuxfUTNBjxdsuDscPKf8gURD41UbbOvyjhZ5UM=;
-        b=zhnoq0Qqfub1YBnDDb4CW5Uej7EaCQW/r2heI6IJzXhQV68dP5UIkV+Y6/dKNBfDKr
-         SBKvoagSd0YoaZZ9TKJFEQVzSxybVQfdK/JKLSiRWL8n8gBKI1r/ywdlFmach8RUnrMS
-         siUYQEE0tcmTGoIfhHA8g/Lr+sngW4eoOpRVadPo9SRoNqkyIUBL135aa5bRXrovQSW7
-         rRDUcxPlR6rKFJ+igd7H+WkveQoqec0lt9V7g7sYXvzaMEBHWSFcF356sBbAFgrNDi7v
-         3lCa/1Ztq0Mfug5C/i0Qip3PH1up60i1da5QyDOsP4U7o4Pi2NeMp9cL/VE2G231bFFn
-         lO0A==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7wSp9Uc31N+F391d+EwEdxeVPC+PHewHvyf7Qc4RkB8=;
+        b=QLKHbzn/8D5DxiEtkzmemLHocLZctxdRUhXfO4Le6dGH/nXvxM3stqjNvSsvmdwBbW
+         5LVKpiq7x/8KzY4/voVW43ErDPDJgyTmO3lcCXiUpncBP87i8dQLKbxfneui0m5LHgu0
+         ZXDuIB0P31ZiuHWuYbb9gUKFx3fH4k9EaM50MAdhvh9ZR8h5tN7OznpPWRiQnEakwtL0
+         wqHlE+LuVakeOV9e5pbQiOu8h/y9MG7P/8724a/YlEcOMBoXEKd15xgAKcreYT3MBofh
+         5+/2/1f/6+D6dU6AKn22W/JQTbqpi+0pQHMi8/2LsaPAIq0T8hVtW0j3t4Tw2PMjZY0m
+         +SAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=6C+RlpuxfUTNBjxdsuDscPKf8gURD41UbbOvyjhZ5UM=;
-        b=PUvhOgOs35ByGtu2DuZITGIQEJq45fVlqMrNYPQqcoF7/oU1c3hmsUFKPcit0Xj5cb
-         +Z9Lobxc7WGuuIT/mQRWcFh7WGIZ4Rbia6/JIjPxZO0S3V7jDWRk4qMjeCyXQZJDUpR3
-         21m349zxorU8/CBYcBCM30ApUjsj/WoL99FVUnKmSrypsu8yNRu5qN4Gk1TZtqiG4PZO
-         gfOXLJR/zlyr8PWvlKZszF+P2bAQldQRX7w+5lJeBkKbMlwzB1UohHfmMK5NTCfOQYD8
-         zVY2JwrNEh/1Zp2dAvFbiU+H6mMbyIetUTin+2W9qPUXjToESoAcnerXWqDRYb0BhtGu
-         vsZg==
-X-Gm-Message-State: AOAM530sI4tKvDqDr6PA4H61JMP9Ij8NhZr09uaf8eUP30MA59RlJp+p
-        iWdNEIC1F62e2wQCx2oX8qihBw==
-X-Google-Smtp-Source: ABdhPJyWXSy8ExZ1MdVnmka39Szc40bugysTRV8KTCfeLGJFz92WtD3rkhpK5+eUClEqKzO0HIdlNw==
-X-Received: by 2002:a05:600c:410b:: with SMTP id j11mr1556880wmi.38.1598672340781;
-        Fri, 28 Aug 2020 20:39:00 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7wSp9Uc31N+F391d+EwEdxeVPC+PHewHvyf7Qc4RkB8=;
+        b=E6bq9hf2ESwNc1jNibIwExeTA9K2uruY8KSn2Hcx1vcB4VIygnvuIr1ZdI0mIPsrws
+         c//9BUDwKMqcTE5fpi0RZTlgeck/TsLNKahhn7MrPC9Ci3A6kr/9u3O9eNwFhfkLAZby
+         gSHrPBkOAYiT4CnzroZzc5602TPlaN/FEuBFxl6UQto9KathrNvAVcvt4hHV450PmJAv
+         6h7JAtDgpnE2KR8qx1gk+dc51ryRvN2GQI1vjtYafGjJe6ZCLbbEReItkUDxU8fzYAMc
+         keftkKSoWlqlGJevlazN++fBn7pNe9rpspSqGfjAw7io33B52q4ZWA96EhtHLQl9cUCM
+         n6Vw==
+X-Gm-Message-State: AOAM532hAbOSOwptxTqdE8bfeqgy9SOUvOgJVzNWObnjQNkI7YNR4WNl
+        gVc91Nq61H9ONs858feYZ05o2g==
+X-Google-Smtp-Source: ABdhPJxkALG/H6goUDu4JS6Y9HbRlkoW4GKocGchHw2UKtNh6pAaDn63s+Pu0T6KYEmvqXN6wkbi0w==
+X-Received: by 2002:adf:cf10:: with SMTP id o16mr1589985wrj.380.1598672331177;
+        Fri, 28 Aug 2020 20:38:51 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id l9sm1732151wmh.1.2020.08.28.20.38.59
+        by smtp.gmail.com with ESMTPSA id s20sm1691700wmh.21.2020.08.28.20.38.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 20:39:00 -0700 (PDT)
+        Fri, 28 Aug 2020 20:38:50 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v2 0/5] wcn36xx: PHY modifications to support 80MHz operation
-Date:   Sat, 29 Aug 2020 04:39:42 +0100
-Message-Id: <20200829033947.2167817-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v2 6/7] wcn36xx: Convert to using wcn36xx_smd_config_bss_v0()
+Date:   Sat, 29 Aug 2020 04:39:28 +0100
+Message-Id: <20200829033929.2167761-7-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200829033929.2167761-1-bryan.odonoghue@linaro.org>
+References: <20200829033929.2167761-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -75,39 +77,30 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is four of a set of five to add support for wcn3680 at 802.11ac
-data-rates.
+A previous patch added wcn36xx_smd_config_bss_v0() this patch converts the
+version 0 data-path in wcn36xx_smd_config_bss() to use
+wcn36xx_smd_config_bss_v0().
 
-In this set we add the ability to configure up the wcn3680 PHY to get onto
-80MHz channels. To do that, the upper unused bits of the hw_value field of
-the struct ieee80211_channel are used to encode additional PHY settings.
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Accessor macros are provided to encode and decode this additional
-information. Depending on which channel we are on, we need to configure the
-PHY into one of four modes representing four potential adjacent 20MHz
-channels.
-
-The modes describe where the primary channel sits in relation to the other
-three channels giving us 20MHz + 20MHz + 20MHz + 20MHz to get 80MHz.
-
-V2:
-- No difference between V2 and V1 below
-
-V1:
-https://lore.kernel.org/linux-wireless/87eensldhi.fsf@codeaurora.org/T/#t
-
-Bryan O'Donoghue (5):
-  wcn36xx: Add accessor macro HW_VALUE_CHANNEL for hardware channels
-  wcn36xx: Use HW_VALUE_CHANNEL macro to get channel number
-  wcn36xx: Add accessor macro HW_VALUE_PHY for PHY settings
-  wcn36xx: Encode PHY mode for 80MHz channel in hw_value
-  wcn36xx: Set PHY into correct mode for 80MHz channel width
-
- drivers/net/wireless/ath/wcn36xx/main.c    | 50 +++++++++++-----------
- drivers/net/wireless/ath/wcn36xx/smd.c     | 15 +++++--
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++-
- 3 files changed, 42 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 360348456070..9acf1af14c54 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1717,9 +1717,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
+ 		ret = wcn36xx_smd_config_bss_v1(wcn, vif, sta, bssid, update);
+ 	} else {
+-		PREPARE_HAL_BUF(wcn->hal_buf, (*msg));
+-
+-		ret = wcn36xx_smd_send_and_wait(wcn, msg->header.len);
++		ret = wcn36xx_smd_config_bss_v0(wcn, vif, sta, bssid, update);
+ 	}
+ 	if (ret) {
+ 		wcn36xx_err("Sending hal_config_bss failed\n");
 -- 
 2.27.0
 
