@@ -2,63 +2,64 @@ Return-Path: <SRS0=8jSp=CI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE8DAC433E2
-	for <linux-wireless@archiver.kernel.org>; Sun, 30 Aug 2020 19:17:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B239C433E2
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Aug 2020 19:18:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC07A206F0
-	for <linux-wireless@archiver.kernel.org>; Sun, 30 Aug 2020 19:17:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A60C2078D
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Aug 2020 19:18:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tetWJdh5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nVMf6eR/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726446AbgH3TPN (ORCPT
+        id S1727940AbgH3TRr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 30 Aug 2020 15:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36380 "EHLO
+        Sun, 30 Aug 2020 15:17:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726150AbgH3TPG (ORCPT
+        with ESMTP id S1726350AbgH3TPI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Aug 2020 15:15:06 -0400
+        Sun, 30 Aug 2020 15:15:08 -0400
 Received: from mail-lf1-x141.google.com (mail-lf1-x141.google.com [IPv6:2a00:1450:4864:20::141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C44FC061573;
-        Sun, 30 Aug 2020 12:15:05 -0700 (PDT)
-Received: by mail-lf1-x141.google.com with SMTP id r69so1361115lff.4;
-        Sun, 30 Aug 2020 12:15:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E897C061236;
+        Sun, 30 Aug 2020 12:15:07 -0700 (PDT)
+Received: by mail-lf1-x141.google.com with SMTP id j15so2315573lfg.7;
+        Sun, 30 Aug 2020 12:15:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=88QVZJWyYPWGresnObCSdSSijug6Py1JroTlbOaMMms=;
-        b=tetWJdh505+kqkUGmejhoBwUt+0rV8XHFksG14n8GIClO2b75pDS+47oxMFqVMKENG
-         n/+3j6w4fRlEh7rN+5Kbgz9K1ZgSXC2J0/94JfW8neb1uxvPvTtI73Ft4nSFCEGWKlCb
-         1blXk7GgIV4euv3nF8Dtt2TDlFODPPLYqTk+x4keT9hKqXxwJvOHP1VLE2z/zSiZpKjs
-         +O2Z5IAm0Nqj5mIsZaiwtW7PrRGUEnIUJ66qhAMxe8AyJAByJd8WYspGlq79ZQLDjGG6
-         JbyjOGCNKo28WLsHPzbuxx+LBhT++j9Y/0yiQfjoVgxVB9aOJqVZZaq4/f3MpNSwdsFK
-         H/5w==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=85fBH067dHvKQNq6ek+W6lpUInMb+ZStwZLTCqTuQ3g=;
+        b=nVMf6eR/tzJR9bU6YV5ktJWXhIRVVdwtYx5dR5sOF9HNUZJR1lw0R2eZ5yKGcbs3Ij
+         UCrio8mvGQhynAaPTXjMhm57mDu723ApUr0TiZXjmUoJrFQVIFl6VYZeCDu3dXXFGUw0
+         XasSLQZ6ak9UxEk4Xen3Q2U/Zr/P+/jB0QY1vR+MRsiIFzZXwQRQpM9IJzj4yIYopB5X
+         9XhWNhf2QWh9gH61eTumnKsNzptLg/c8atZt15ncup5uu1C2f/rwt/4dav6jO2dmbGAs
+         p9NeFTAyGXpQxrzCtfDUCTXvmsS6UEY3o15iWQaZopVbo0ypnts/6Vg8upR1VNQVxnM7
+         E7Zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=88QVZJWyYPWGresnObCSdSSijug6Py1JroTlbOaMMms=;
-        b=hWvUejdOJ45vaZh0PLp6ZDxEXnSxcTjZzVC2sFGenTi2TX5YxJ+2F9+aLBrUM3SCPB
-         YdwiIZ7I+ALJ86FmTcy1OxUV7/sTob8slZXZJyh1l1A+/EhfQp4oQXYwD3qZr7j3DKtO
-         3uavdYYLeJNNLA5mxTeEDiLehsZTzpz66qHnn8YgT4M05fv5GKzRKN+rwcCC+N7KrHWP
-         /k7GT/l+Pf6nPzyoSBEuso1uxczl9xQS1FqSQVcQdaEMqOtcBiAvJ4skRBTNOKo6eRuR
-         RBPmZbaq8mL9GJ1SCyV5EjnlujqOSKnasqugGjmMua+HZvZcS9unLbkcjdrS8di1Qjax
-         ZWXQ==
-X-Gm-Message-State: AOAM532KSRr2fT1FjDDsfFaRmAsHzjAnt+NXP7u19N7+w+T0jy9mnVim
-        nBl9xnqZWfkPZ1OSl4u7ECQ=
-X-Google-Smtp-Source: ABdhPJx8zDLp5C8fN41g217hWlTE42K7LR2yysraJhgBJ8wBmczZYehRhxbs3wBAf054TqSqKBXgig==
-X-Received: by 2002:a19:30e:: with SMTP id 14mr3994288lfd.48.1598814903934;
-        Sun, 30 Aug 2020 12:15:03 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=85fBH067dHvKQNq6ek+W6lpUInMb+ZStwZLTCqTuQ3g=;
+        b=WwmOJDBXyk7Su9lj9yFvo0X22q549x/nNNUuUYCmUf8OjvUL6LwAkcQ7l+F6X41BtP
+         n1fYqGH6S7w68U3pIL2yyzR7YOl1NDYvZp3LRNGc6Y0dljwZbMMrbTXkdnimwrVneXLQ
+         CLjOSIYQkJgtWX9ZG/Uaq+hnaY7BX9EMntr7mXYbD+O8Xmr8/Zb/jUJSKiKIxAVW48JM
+         z2B7XRLEfmd8ELQoMhqtCw/23wbQ6tnT5tdtt+ngDJWh7aXnUaVgO8i/tQf0Th3JXBdj
+         dB5/P8FDMKrLNwxVYaaHyo/vs86AeUzj+J7Vu+jSQYbWobKSsN0h9FsVwsoEzud1cPlw
+         s9Tg==
+X-Gm-Message-State: AOAM531EgBgv8kHi8OlvBWwXAThNCUT/1OO1iu8iU00rAeqI5Tb40pod
+        ZyIrbVjNZJe6MgLKqLMeZrw=
+X-Google-Smtp-Source: ABdhPJzI4lUuYNLpOO2XLO2AmkS9fShcfxSPyVOk6XVuyEYlvT5tmtBLoLVIApzOMF3Luuy0a5TW7Q==
+X-Received: by 2002:ac2:5e2c:: with SMTP id o12mr3918764lfg.71.1598814905875;
+        Sun, 30 Aug 2020 12:15:05 -0700 (PDT)
 Received: from localhost.localdomain (109-252-170-211.dynamic.spd-mgts.ru. [109.252.170.211])
-        by smtp.gmail.com with ESMTPSA id e23sm1409709lfj.80.2020.08.30.12.15.02
+        by smtp.gmail.com with ESMTPSA id e23sm1409709lfj.80.2020.08.30.12.15.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Aug 2020 12:15:03 -0700 (PDT)
+        Sun, 30 Aug 2020 12:15:05 -0700 (PDT)
 From:   Dmitry Osipenko <digetx@gmail.com>
 To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -70,10 +71,12 @@ Cc:     linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 0/3] Fixes and improvements for brcmfmac driver
-Date:   Sun, 30 Aug 2020 22:14:36 +0300
-Message-Id: <20200830191439.10017-1-digetx@gmail.com>
+Subject: [PATCH v3 2/3] brcmfmac: drop chip id from debug messages
+Date:   Sun, 30 Aug 2020 22:14:38 +0300
+Message-Id: <20200830191439.10017-3-digetx@gmail.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200830191439.10017-1-digetx@gmail.com>
+References: <20200830191439.10017-1-digetx@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -81,77 +84,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello!
+The chip ID was already printed out at the time when debug message about
+the changed F2 watermark is printed, hence let's drop the unnecessary part
+of the debug messages. This cleans code a tad and also allows to re-use
+the F2 watermark debug messages by multiple chips.
 
-Recently I was debugging WiFi performance problems on Acer A500 tablet
-device that got upstreamed recently. This is an older Android device from
-2011-2012 that is powered by NVIDIA Tegra20 SoC and it has BCM4329 chip
-that provides WiFi (SDIO) and Bluetooth (UART). I noticed that WiFi
-throughput on a recent Linux kernel wasn't as great as it could be in
-comparison to older 3.18 kernel that is uses downstream BCMDHD driver
-and this series fixes a major part of the problems that I found.
+Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Found problems:
-
-1. The WiFi SDIO pinmux configuration had a bug in Acer A500 device-tree
-   and MMC refused to work if it was clocked above 25MHz and legacy
-   signaling mode was used. After fixing the bug, WiFi SDIO works perfectly
-   well at 50MHz and this increases TX throughput by 5-10 Mbit/s. I already
-   sent out patches that fix this bug to the Tegra ML.
-
-2. There are occasional SDHCI CRC errors if SDIO is clocked above 25Mhz.
-   The "increase F2 watermark" patch fixes this problem.
-
-3. WiFi TX throughput is lower by 10 Mbit/s than it should be using 512B
-   for maximum F2 SDIO block size. Reducing block size to 128B fixes this
-   problem. The "set F2 SDIO block size to 128 bytes" patch addresses this
-   issue. The exact reason why 128B is more efficient than 512B is unknown,
-   this optimization is borrowed from the BCMDHD driver.
-
-4. While I was bisecting upstream kernel, I found that WiFi RX/TX throughput
-   dropped by 5-10 Mbit/s after 5.2 kernel and reverting the following commit
-   from linux-next resolves the problem:
-
-   commit c07a48c2651965e84d35cf193dfc0e5f7892d612
-   Author: Adrian Hunter <adrian.hunter@intel.com>
-   Date:   Fri Apr 5 15:40:20 2019 +0300
-
-       mmc: sdhci: Remove finish_tasklet
-
-   I'll sent a separate email for discussing this problem [1].
-
-   [1] https://lkml.org/lkml/2020/8/27/54
-
-After fixing all the above problems, I'm now getting a solid 40 Mbit/s
-up/down on Acer A500 on a recent linux-next in comparison to 15 Mbit/s
-that I was getting before the fixes.
-
-Big thanks to Wright Feng who helped me to find and fix some of the problems!
-
-Changelog:
-
-v3: - The v2 "drop unnecessary "fallthrough" comments" patch isn't needed
-      anymore because that change is already applied.
-
-    - Added r-b from Arend van Spriel that he gave to the v1 of "increase F2
-      watermark for BCM4329" patch.
-
-v2: - Added "drop chip id from debug messages" as was requested by
-      Arend Van Spriel in the review comment to v1 of the "increase F2
-      watermark" patch.
-
-    - Added patches that remove unnecessary "fallthrough" comments and
-      change F2 SDIO block size to 128 bytes for BCM4329.
-
-Dmitry Osipenko (3):
-  brcmfmac: increase F2 watermark for BCM4329
-  brcmfmac: drop chip id from debug messages
-  brcmfmac: set F2 SDIO block size to 128 bytes for BCM4329
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 ++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b16944a898f9..d4989e0cd7be 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4280,7 +4280,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 			break;
+ 		case SDIO_DEVICE_ID_BROADCOM_4329:
+ 		case SDIO_DEVICE_ID_BROADCOM_4339:
+-			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes for 4339\n",
++			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
+ 				  CY_4339_F2_WATERMARK);
+ 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
+ 					   CY_4339_F2_WATERMARK, &err);
+@@ -4293,7 +4293,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 					   CY_4339_MESBUSYCTRL, &err);
+ 			break;
+ 		case SDIO_DEVICE_ID_BROADCOM_43455:
+-			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes for 43455\n",
++			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
+ 				  CY_43455_F2_WATERMARK);
+ 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
+ 					   CY_43455_F2_WATERMARK, &err);
 -- 
 2.27.0
 
