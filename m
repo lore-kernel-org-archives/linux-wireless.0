@@ -2,99 +2,111 @@ Return-Path: <SRS0=wavk=CJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 910D2C433E2
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Aug 2020 13:11:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C9DC433E7
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Aug 2020 13:56:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A754206E3
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Aug 2020 13:11:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1D2F20719
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Aug 2020 13:56:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QG/9SKmV"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="MCF3J+G1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726312AbgHaNLy (ORCPT
+        id S1727815AbgHaN4P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Aug 2020 09:11:54 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32302 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726144AbgHaNLp (ORCPT
+        Mon, 31 Aug 2020 09:56:15 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:32000 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726292AbgHaN4N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Aug 2020 09:11:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598879503;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7nF5sKzdQpqrhvwSpdopxfb0fKEw2qVbNLvuVMDTjdc=;
-        b=QG/9SKmVXFV+bPsyLVM0Z835WbAMATm5zFuTX76bMKq+ng9Vj7JR/dGvRMC5rLsonUZ3ub
-        UWrNqjkJVtyNZ/fUrfe5o1tiVgzHQJ0nr6G9MHZme75apwWxKiG6NejEFC9eS1M0lkHK+Y
-        tK0a6mLS0MZbUv5ZnbVmUpqAxk8AuaE=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-399-Fw4RHxYXOwaY36MRJBW4Hg-1; Mon, 31 Aug 2020 09:11:42 -0400
-X-MC-Unique: Fw4RHxYXOwaY36MRJBW4Hg-1
-Received: by mail-ej1-f72.google.com with SMTP id f13so479745ejt.16
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2020 06:11:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=7nF5sKzdQpqrhvwSpdopxfb0fKEw2qVbNLvuVMDTjdc=;
-        b=jvXsABfoVRnrE5i61k0YXMM/7xYzBsu/M67v/EVEk0exNE5QlIUcmASPC1IaVv1ixR
-         HgUDbQzzJcKBpfsDeQ2XASlSSdjjJ8l+XO8PP6q+bsEfSregMSlToUNXnax8ll84l7qz
-         ZPsOgEwF8Op82Ygo+aVVN4e/KKBxGWvevq33OJd7Tw2wLM0B9RzmmDWg1+VcrBHo0JiQ
-         Aw4zKR/vg0TWtduwyQfRS91DJBioak9Lg/B+6WKqkGAdoYjaU/2w9bGdaggla7SGUexY
-         DWN0W8ydfOytpXLXMsrUBrdA7BvvLozVGDnu8vxN03txxw4bo8PO99bsnNsQF42oRIuq
-         HqOQ==
-X-Gm-Message-State: AOAM5303/Yw0/8k38fHLpGD33osgTsI/w/fNIGecqTAMFek2Otc2Cjui
-        o5SIfIoIcjK1w2EQ8/9+m2m+jlZxdemeHUFqWSm6zMym2+wYh18ckYB+I9yu3C1K6idNRnJx1Ve
-        2nqIhdzn0h5J6zbRgE3+feYCGNOA=
-X-Received: by 2002:a17:906:6801:: with SMTP id k1mr1096263ejr.492.1598879501003;
-        Mon, 31 Aug 2020 06:11:41 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzItLH86Ckd/S1T4CSysXzsOleHn5Gn0gTMPopx+V52YiWH6pI5k1RkLYwrROAXQWf5ezYHEw==
-X-Received: by 2002:a17:906:6801:: with SMTP id k1mr1096249ejr.492.1598879500731;
-        Mon, 31 Aug 2020 06:11:40 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
-        by smtp.gmail.com with ESMTPSA id sb9sm8135015ejb.90.2020.08.31.06.11.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2020 06:11:40 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id B0CC518200B; Mon, 31 Aug 2020 15:11:39 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/9] mt76: rely on AQL for burst size limits on tx queueing
-In-Reply-To: <20200831122558.1388-6-nbd@nbd.name>
-References: <20200831122558.1388-1-nbd@nbd.name>
- <20200831122558.1388-6-nbd@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Mon, 31 Aug 2020 15:11:39 +0200
-Message-ID: <87h7sjj6yc.fsf@toke.dk>
+        Mon, 31 Aug 2020 09:56:13 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1598882172; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
+ To: From: Sender; bh=l4ktEq8o7WvDy0rk/XyMBx2xUqUH9rI3Uw2PKVTyEv8=; b=MCF3J+G1JND01Xp1rhd52teXi7wTm1Moh8d24de21jCgWBcEdSbE+t7TFEl+Exf2Z9Ya87KW
+ FBqFtVSueYu0CzhdEx/kGdMBNHJ9FLmDweJyejBEc2iD/oAAASfpnXPqzxuofIqHthsZ6gNH
+ ksapzB0IZj/TsyWoIsg7ahi6A5E=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f4d017c73afa3417e6b8d0b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 31 Aug 2020 13:56:12
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 76E16C433CA; Mon, 31 Aug 2020 13:56:11 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B9EE8C433CA;
+        Mon, 31 Aug 2020 13:56:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B9EE8C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Christian Lamparter <chunkeey@gmail.com>
+Cc:     davem@davemloft.net, kuba@kernel.org,
+        Lee Jones <lee.jones@linaro.org>, linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 08/30] net: wireless: ath: carl9170: Convert 'ar9170_qmap' to inline function
+References: <20200814113933.1903438-1-lee.jones@linaro.org>
+        <20200814113933.1903438-9-lee.jones@linaro.org>
+        <20200827093351.GA1627017@dell> <5498132.V4cn31ggaO@debian64>
+Date:   Mon, 31 Aug 2020 16:56:06 +0300
+In-Reply-To: <5498132.V4cn31ggaO@debian64> (Christian Lamparter's message of
+        "Fri, 28 Aug 2020 22:28:20 +0200")
+Message-ID: <877dte7wcp.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Christian Lamparter <chunkeey@gmail.com> writes:
 
-> Now that AQL works well on all mt76 drivers,
+> On Thursday, 27 August 2020 11:33:51 CEST Lee Jones wrote:
+>> 'ar9170_qmap' is used in some source files which include carl9170.h,
+>> but not all of them.  A 'defined but not used' warning is thrown when
+>> compiling the ones which do not use it.
+>>=20
+>> Fixes the following W=3D1 kernel build warning(s)
+>>=20
+>>  from drivers/net/wireless/ath/carl9170/carl9170.h:57,
+>>  In file included from drivers/net/wireless/ath/carl9170/carl9170.h:57,
+>>  drivers/net/wireless/ath/carl9170/carl9170.h:71:17: warning:
+>> =E2=80=98ar9170_qmap=E2=80=99 defined but not used [-Wunused-const-varia=
+ble=3D]
+>>=20
+>>  NB: Snipped - lots of these repeat
+>>=20
+>> Cc: Christian Lamparter <chunkeey@googlemail.com>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: "David S. Miller" <davem@davemloft.net>
+>> Cc: Jakub Kicinski <kuba@kernel.org>
+>> Cc: Johannes Berg <johannes@sipsolutions.net>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Suggested-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+>> Signed-off-by: Lee Jones <lee.jones@linaro.org>
+>> ---
+>
+> For what it's worth:
+> Acked-by: Christian Lamparter <chunkeey@gmail.com>
 
-Yay, great to hear! :)
+BTW for me Acked-by tags from the maintainer are very useful. Patchwork
+even collects them automatically and shows the statistics so I can
+quickly see what patches are ready to be applied. So please do send them
+if you can :)
 
-> completely replace the arbitrary
-> burst sizing and number of bursts logic for tx scheduling.
-> For the short period of time in which AQL does not work well yet, limit each
-> stations to 16 in-flight packets that have no estimated tx time.
-> This should avoid filling the queue if a station connects and queues up a
-> large number of packets before rate control information is available, especially
-> with hardware rate control
-
-I guess we could do accounting like this in the AQL mechanism itself?
-Presumably this issue is not unique to mt76?
-
--Toke
-
+--=20
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
