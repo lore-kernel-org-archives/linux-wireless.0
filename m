@@ -7,78 +7,115 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3D3C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:41:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA75C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 13:18:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2850A206CD
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:41:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D5F7207EA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 13:18:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="v6w+bozg"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="fGHf39as"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728183AbgIAMlK (ORCPT
+        id S1727906AbgIANR6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Sep 2020 08:41:10 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:58053 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727910AbgIAM3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Sep 2020 08:29:37 -0400
+        Tue, 1 Sep 2020 09:17:58 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:39226 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728183AbgIANRL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Sep 2020 09:17:11 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598963376; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1598966228; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=nJIIlr2acQi+bF+4Pad/ng779N7Kl/gSTFnE7gfQNBc=;
- b=v6w+bozgHw/etFijMHJ6VlwM56yoz86rqU9Xydzi+mPxEJ5IwmDprNLj/LntYDO/kQRKWoXW
- O8h5pbyKPR/bxepIH+VUyP2FyCwDW4BkbTBx7H2taM0tBU5BAM80IqTpxMJFIqKLbRNuJ8qU
- PNReiW/+jqrtYtbizRWYRiYWhbU=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ Content-Type: Sender; bh=cSrZbk7e/jeZSp8Bprl3QgOkG7poAuCV3fNdztHsFvY=;
+ b=fGHf39as71prWedSSD2b21pLU7ilWX1OjCTDnwQe53UdVfADBPODYpHNZX5F6R/lH9zMAlRS
+ fWV62yqoQKoFmsHj7MPtlznHwtlAVQgQzy8xoPzJ1viCyPgfQxLakc3PPGXmMr2QYsVgSWDN
+ CF72ayo//rNGXmgvjsBoxQ073Ag=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5f4e3eaf9f3347551f1e79c4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Sep 2020 12:29:35
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 5f4e4739238e1efa37926921 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Sep 2020 13:06:01
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 44DD7C433C9; Tue,  1 Sep 2020 12:29:35 +0000 (UTC)
+        id 10DFBC43395; Tue,  1 Sep 2020 13:06:01 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DF005C433C6;
-        Tue,  1 Sep 2020 12:29:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DF005C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2DC04C433CA;
+        Tue,  1 Sep 2020 13:05:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2DC04C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: dont enable bss color collision detection on
- non-transmitting BSS
+Content-Transfer-Encoding: 8bit
+Subject: Re: [01/30] mwifiex: pcie: Move tables to the only place they're used
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200822144048.3961875-1-john@phrozen.org>
-References: <20200822144048.3961875-1-john@phrozen.org>
-To:     John Crispin <john@phrozen.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>
+In-Reply-To: <20200826093401.1458456-2-lee.jones@linaro.org>
+References: <20200826093401.1458456-2-lee.jones@linaro.org>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200901122935.44DD7C433C9@smtp.codeaurora.org>
-Date:   Tue,  1 Sep 2020 12:29:35 +0000 (UTC)
+Message-Id: <20200901130601.10DFBC43395@smtp.codeaurora.org>
+Date:   Tue,  1 Sep 2020 13:06:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-John Crispin <john@phrozen.org> wrote:
+Lee Jones <lee.jones@linaro.org> wrote:
 
-> A none transmitting BSS color collision detection should not be enabled.
+> Saves on 10's of complains about 'defined but not used' variables.
 > 
-> This patch depends on the BSS coloring and multiple bssid series.
+> Fixes the following W=1 kernel build warning(s):
 > 
-> Signed-off-by: John Crispin <john@phrozen.org>
+>  In file included from drivers/net/wireless/marvell/mwifiex/main.h:57,
+>  from drivers/net/wireless/marvell/mwifiex/main.c:22:
+>  drivers/net/wireless/marvell/mwifiex/pcie.h:310:41: warning: ‘mwifiex_pcie8997’ defined but not used [-Wunused-const-variable=]
+>  310 | static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
+>  | ^~~~~~~~~~~~~~~~
+>  drivers/net/wireless/marvell/mwifiex/pcie.h:300:41: warning: ‘mwifiex_pcie8897’ defined but not used [-Wunused-const-variable=]
+>  300 | static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+>  | ^~~~~~~~~~~~~~~~
+>  drivers/net/wireless/marvell/mwifiex/pcie.h:292:41: warning: ‘mwifiex_pcie8766’ defined but not used [-Wunused-const-variable=]
+>  292 | static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+>  | ^~~~~~~~~~~~~~~~
+> 
+>  NB: Repeats 10's of times - snipped for brevity.
+> 
+> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+> Cc: Xinming Hu <huxinming820@gmail.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
 
-Tested-on missing, on what hardware and firmware did you test this?
+10 patches applied to wireless-drivers-next.git, thanks.
+
+77dacc8fc64c mwifiex: pcie: Move tables to the only place they're used
+f5c3bf15f34c brcmsmac: ampdu: Remove a couple set but unused variables
+dd13d6dcc24d iwlegacy: 3945-mac: Remove all non-conformant kernel-doc headers
+305fd82aee87 iwlegacy: 3945-rs: Remove all non-conformant kernel-doc headers
+a60e33af4e28 iwlegacy: 3945: Remove all non-conformant kernel-doc headers
+78211e026bd0 brcmfmac: p2p: Fix a couple of function headers
+ef8308d34a93 orinoco_usb: Downgrade non-conforming kernel-doc headers
+1d2389b53c85 brcmsmac: phy_cmn: Remove a unused variables 'vbat' and 'temp'
+2fae7bf8e379 zd1211rw: zd_chip: Fix formatting
+f3242a5ba91d zd1211rw: zd_mac: Add missing or incorrect function documentation
 
 -- 
-https://patchwork.kernel.org/patch/11731143/
+https://patchwork.kernel.org/patch/11737755/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
