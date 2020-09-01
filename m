@@ -7,87 +7,78 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE6CC433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:40:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3D3C433E6
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B51AB206CD
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:40:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2850A206CD
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Sep 2020 12:41:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="KFkf0QsK"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="v6w+bozg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728075AbgIAMkv (ORCPT
+        id S1728183AbgIAMlK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Sep 2020 08:40:51 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:58644 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727949AbgIAMjS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Sep 2020 08:39:18 -0400
+        Tue, 1 Sep 2020 08:41:10 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:58053 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727910AbgIAM3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Sep 2020 08:29:37 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598963957; h=Content-Transfer-Encoding: Content-Type:
- MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
- To: From: Sender; bh=4BZWAUdP2BV+O/N6ISnmEaCGS3o7RyPMKfE16SuDwv4=; b=KFkf0QsKxQV6hDxgr/892/bBxplZg0lS4FTO3vIh5BniQrjmbocXpkL/3KGLamc8I+zrBE0I
- jMz11lA/M1j/RCGFEAIsgScU+VOyyH361Fkb6hDYYuwFfiZlHQuBqTC9h/37eS7ztNFm1MjJ
- CxSQuEsYLLEDYXADhhdtdrfo/K8=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ s=smtp; t=1598963376; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=nJIIlr2acQi+bF+4Pad/ng779N7Kl/gSTFnE7gfQNBc=;
+ b=v6w+bozgHw/etFijMHJ6VlwM56yoz86rqU9Xydzi+mPxEJ5IwmDprNLj/LntYDO/kQRKWoXW
+ O8h5pbyKPR/bxepIH+VUyP2FyCwDW4BkbTBx7H2taM0tBU5BAM80IqTpxMJFIqKLbRNuJ8qU
+ PNReiW/+jqrtYtbizRWYRiYWhbU=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 5f4e40eabe06707b34767a69 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Sep 2020 12:39:06
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f4e3eaf9f3347551f1e79c4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Sep 2020 12:29:35
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 92071C433CA; Tue,  1 Sep 2020 12:39:06 +0000 (UTC)
-Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        id 44DD7C433C9; Tue,  1 Sep 2020 12:29:35 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 23DD6C433C9;
-        Tue,  1 Sep 2020 12:39:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 23DD6C433C9
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DF005C433C6;
+        Tue,  1 Sep 2020 12:29:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DF005C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Jason Yan <yanaijie@huawei.com>
-Cc:     <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] ath6kl: wmi: remove set but not used 'rate'
-References: <20200831080824.3249197-1-yanaijie@huawei.com>
-Date:   Tue, 01 Sep 2020 15:38:58 +0300
-In-Reply-To: <20200831080824.3249197-1-yanaijie@huawei.com> (Jason Yan's
-        message of "Mon, 31 Aug 2020 16:08:24 +0800")
-Message-ID: <871rjl7jtp.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath11k: dont enable bss color collision detection on
+ non-transmitting BSS
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200822144048.3961875-1-john@phrozen.org>
+References: <20200822144048.3961875-1-john@phrozen.org>
+To:     John Crispin <john@phrozen.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        John Crispin <john@phrozen.org>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200901122935.44DD7C433C9@smtp.codeaurora.org>
+Date:   Tue,  1 Sep 2020 12:29:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jason Yan <yanaijie@huawei.com> writes:
+John Crispin <john@phrozen.org> wrote:
 
-> This addresses the following gcc warning with "make W=3D1":
->
-> drivers/net/wireless/ath/ath6kl/wmi.c: In function
-> =E2=80=98ath6kl_wmi_bitrate_reply_rx=E2=80=99:
-> drivers/net/wireless/ath/ath6kl/wmi.c:1204:6: warning: variable =E2=80=98=
-rate=E2=80=99
-> set but not used [-Wunused-but-set-variable]
->  1204 |  s32 rate;
->       |      ^~~~
->
-> The variable 'sgi' is alse removed because after 'rate' is removed, it
-> is not used too.
->
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> A none transmitting BSS color collision detection should not be enabled.
+> 
+> This patch depends on the BSS coloring and multiple bssid series.
+> 
+> Signed-off-by: John Crispin <john@phrozen.org>
 
-Already fixed in ath.git tree.
+Tested-on missing, on what hardware and firmware did you test this?
 
---=20
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+-- 
+https://patchwork.kernel.org/patch/11731143/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
