@@ -2,399 +2,149 @@ Return-Path: <SRS0=XV+2=CL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE843C433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 14:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B6AC433E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 14:36:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8242220829
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 14:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3955720767
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 14:36:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="kvAX7gx5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727903AbgIBOLj (ORCPT
+        id S1727927AbgIBOfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:11:39 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:34372 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727990AbgIBOK7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Sep 2020 10:10:59 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id B87EA5D84FDB52B783ED;
-        Wed,  2 Sep 2020 22:10:25 +0800 (CST)
-Received: from localhost (10.174.179.108) by DGGEMS414-HUB.china.huawei.com
- (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Wed, 2 Sep 2020
- 22:10:14 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     <amitkarwar@gmail.com>, <ganapathi.bhat@nxp.com>,
-        <huxinming820@gmail.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>,
-        <christophe.jaillet@wanadoo.fr>, <yuehaibing@huawei.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] mwifiex: pcie: Fix -Wunused-const-variable warnings
-Date:   Wed, 2 Sep 2020 22:09:33 +0800
-Message-ID: <20200902140933.25852-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        Wed, 2 Sep 2020 10:35:42 -0400
+Received: from gateway30.websitewelcome.com ([192.185.193.11]:36172 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727902AbgIBOfa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Sep 2020 10:35:30 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id 2370D47C7
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2020 09:14:07 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id DTWZkQS9dOIGpDTWZkwUxI; Wed, 02 Sep 2020 09:14:07 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=VfJ4a1TS1d2GvTG5jmxmBPb/Aevm1zxN6E7ujp5j+A8=; b=kvAX7gx5C9K0XM1Ryu373oOKpw
+        E0NaF4mn9DWrfJ1UQZLJRtCKgAK7q4wf6NLuGew17iBMPN6qev8Hp7SO9s17OV8UwPDuWjoDLA1Sm
+        lLZX33byeO4id3zQhorfp+j13HwT7fiKb4l/84pzF02Hs6NikU/+y2lgjr6SB0S6JCqJBfmCN5nhc
+        SQmoz2zofdeMPzPQXwyPn38vsmsyd6qjyU6KrkfCiZMsvLsMLhABqkl/zVi5NuFXWohL6SVQwtZAS
+        EVJ1flVGKa5f7L8b0bNo45HaEO67KpEGgrCYGYbf+sF/EvKzH7AuZYHCj47RKS6VNdtztS+R8D6cG
+        UG5drKZQ==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:47548 helo=[192.168.15.8])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1kDTWY-002Q8v-Lf; Wed, 02 Sep 2020 09:14:06 -0500
+Subject: Re: [PATCH] rt2x00: Use fallthrough pseudo-keyword macro
+To:     Leesoo Ahn <dev@ooseel.net>
+Cc:     Stanislaw Gruszka <stf_xl@wp.pl>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20200902130507.227611-1-dev@ooseel.net>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ AP7RWS474w==
+Message-ID: <88a62415-5859-efb6-f608-db7dcb84ad9b@embeddedor.com>
+Date:   Wed, 2 Sep 2020 09:20:19 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.179.108]
-X-CFilter-Loop: Reflected
+In-Reply-To: <20200902130507.227611-1-dev@ooseel.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1kDTWY-002Q8v-Lf
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:47548
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 7
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-These variables only used in pcie.c, move them to .c file
-can silence these warnings:
-
-In file included from drivers/net/wireless/marvell/mwifiex/main.h:57:0,
-                 from drivers/net/wireless/marvell/mwifiex/init.c:24:
-drivers/net/wireless/marvell/mwifiex/pcie.h:310:41: warning: mwifiex_pcie8997 defined but not used [-Wunused-const-variable=]
- static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
-                                         ^~~~~~~~~~~~~~~~
-drivers/net/wireless/marvell/mwifiex/pcie.h:300:41: warning: mwifiex_pcie8897 defined but not used [-Wunused-const-variable=]
- static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
-                                         ^~~~~~~~~~~~~~~~
-drivers/net/wireless/marvell/mwifiex/pcie.h:292:41: warning: mwifiex_pcie8766 defined but not used [-Wunused-const-variable=]
- static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
-                                         ^~~~~~~~~~~~~~~~
-
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 149 ++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/pcie.h | 149 --------------------
- 2 files changed, 149 insertions(+), 149 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3c1ad0be70a8..04739cbb74f2 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -39,6 +39,155 @@ static const struct of_device_id mwifiex_pcie_of_match_table[] = {
- 	{ }
- };
- 
-+static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
-+	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
-+	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
-+	.cmd_size = PCIE_SCRATCH_2_REG,
-+	.fw_status = PCIE_SCRATCH_3_REG,
-+	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
-+	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
-+	.tx_rdptr = PCIE_SCRATCH_6_REG,
-+	.tx_wrptr = PCIE_SCRATCH_7_REG,
-+	.rx_rdptr = PCIE_SCRATCH_8_REG,
-+	.rx_wrptr = PCIE_SCRATCH_9_REG,
-+	.evt_rdptr = PCIE_SCRATCH_10_REG,
-+	.evt_wrptr = PCIE_SCRATCH_11_REG,
-+	.drv_rdy = PCIE_SCRATCH_12_REG,
-+	.tx_start_ptr = 0,
-+	.tx_mask = MWIFIEX_TXBD_MASK,
-+	.tx_wrap_mask = 0,
-+	.rx_mask = MWIFIEX_RXBD_MASK,
-+	.rx_wrap_mask = 0,
-+	.tx_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
-+	.rx_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
-+	.evt_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
-+	.ring_flag_sop = 0,
-+	.ring_flag_eop = 0,
-+	.ring_flag_xs_sop = 0,
-+	.ring_flag_xs_eop = 0,
-+	.ring_tx_start_ptr = 0,
-+	.pfu_enabled = 0,
-+	.sleep_cookie = 1,
-+	.msix_support = 0,
-+};
-+
-+static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
-+	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
-+	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
-+	.cmd_size = PCIE_SCRATCH_2_REG,
-+	.fw_status = PCIE_SCRATCH_3_REG,
-+	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
-+	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
-+	.tx_rdptr = PCIE_RD_DATA_PTR_Q0_Q1,
-+	.tx_wrptr = PCIE_WR_DATA_PTR_Q0_Q1,
-+	.rx_rdptr = PCIE_WR_DATA_PTR_Q0_Q1,
-+	.rx_wrptr = PCIE_RD_DATA_PTR_Q0_Q1,
-+	.evt_rdptr = PCIE_SCRATCH_10_REG,
-+	.evt_wrptr = PCIE_SCRATCH_11_REG,
-+	.drv_rdy = PCIE_SCRATCH_12_REG,
-+	.tx_start_ptr = 16,
-+	.tx_mask = 0x03FF0000,
-+	.tx_wrap_mask = 0x07FF0000,
-+	.rx_mask = 0x000003FF,
-+	.rx_wrap_mask = 0x000007FF,
-+	.tx_rollover_ind = MWIFIEX_BD_FLAG_TX_ROLLOVER_IND,
-+	.rx_rollover_ind = MWIFIEX_BD_FLAG_RX_ROLLOVER_IND,
-+	.evt_rollover_ind = MWIFIEX_BD_FLAG_EVT_ROLLOVER_IND,
-+	.ring_flag_sop = MWIFIEX_BD_FLAG_SOP,
-+	.ring_flag_eop = MWIFIEX_BD_FLAG_EOP,
-+	.ring_flag_xs_sop = MWIFIEX_BD_FLAG_XS_SOP,
-+	.ring_flag_xs_eop = MWIFIEX_BD_FLAG_XS_EOP,
-+	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
-+	.pfu_enabled = 1,
-+	.sleep_cookie = 0,
-+	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
-+	.fw_dump_start = PCIE_SCRATCH_14_REG,
-+	.fw_dump_end = 0xcff,
-+	.fw_dump_host_ready = 0xee,
-+	.fw_dump_read_done = 0xfe,
-+	.msix_support = 0,
-+};
-+
-+static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
-+	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
-+	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
-+	.cmd_size = PCIE_SCRATCH_2_REG,
-+	.fw_status = PCIE_SCRATCH_3_REG,
-+	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
-+	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
-+	.tx_rdptr = 0xC1A4,
-+	.tx_wrptr = 0xC174,
-+	.rx_rdptr = 0xC174,
-+	.rx_wrptr = 0xC1A4,
-+	.evt_rdptr = PCIE_SCRATCH_10_REG,
-+	.evt_wrptr = PCIE_SCRATCH_11_REG,
-+	.drv_rdy = PCIE_SCRATCH_12_REG,
-+	.tx_start_ptr = 16,
-+	.tx_mask = 0x0FFF0000,
-+	.tx_wrap_mask = 0x1FFF0000,
-+	.rx_mask = 0x00000FFF,
-+	.rx_wrap_mask = 0x00001FFF,
-+	.tx_rollover_ind = BIT(28),
-+	.rx_rollover_ind = BIT(12),
-+	.evt_rollover_ind = MWIFIEX_BD_FLAG_EVT_ROLLOVER_IND,
-+	.ring_flag_sop = MWIFIEX_BD_FLAG_SOP,
-+	.ring_flag_eop = MWIFIEX_BD_FLAG_EOP,
-+	.ring_flag_xs_sop = MWIFIEX_BD_FLAG_XS_SOP,
-+	.ring_flag_xs_eop = MWIFIEX_BD_FLAG_XS_EOP,
-+	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
-+	.pfu_enabled = 1,
-+	.sleep_cookie = 0,
-+	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
-+	.fw_dump_start = PCIE_SCRATCH_14_REG,
-+	.fw_dump_end = 0xcff,
-+	.fw_dump_host_ready = 0xcc,
-+	.fw_dump_read_done = 0xdd,
-+	.msix_support = 0,
-+};
-+
-+static struct memory_type_mapping mem_type_mapping_tbl_w8897[] = {
-+	{"ITCM", NULL, 0, 0xF0},
-+	{"DTCM", NULL, 0, 0xF1},
-+	{"SQRAM", NULL, 0, 0xF2},
-+	{"IRAM", NULL, 0, 0xF3},
-+	{"APU", NULL, 0, 0xF4},
-+	{"CIU", NULL, 0, 0xF5},
-+	{"ICU", NULL, 0, 0xF6},
-+	{"MAC", NULL, 0, 0xF7},
-+};
-+
-+static struct memory_type_mapping mem_type_mapping_tbl_w8997[] = {
-+	{"DUMP", NULL, 0, 0xDD},
-+};
-+
-+static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
-+	.reg            = &mwifiex_reg_8766,
-+	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
-+	.can_dump_fw = false,
-+	.can_ext_scan = true,
-+};
-+
-+static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
-+	.reg            = &mwifiex_reg_8897,
-+	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
-+	.can_dump_fw = true,
-+	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
-+	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
-+	.can_ext_scan = true,
-+};
-+
-+static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
-+	.reg            = &mwifiex_reg_8997,
-+	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
-+	.can_dump_fw = true,
-+	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
-+	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
-+	.can_ext_scan = true,
-+};
-+
- static int mwifiex_pcie_probe_of(struct device *dev)
- {
- 	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index fc59b522f670..843d57eda820 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -158,127 +158,6 @@ struct mwifiex_pcie_card_reg {
- 	u8 msix_support;
- };
- 
--static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
--	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
--	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
--	.cmd_size = PCIE_SCRATCH_2_REG,
--	.fw_status = PCIE_SCRATCH_3_REG,
--	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
--	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
--	.tx_rdptr = PCIE_SCRATCH_6_REG,
--	.tx_wrptr = PCIE_SCRATCH_7_REG,
--	.rx_rdptr = PCIE_SCRATCH_8_REG,
--	.rx_wrptr = PCIE_SCRATCH_9_REG,
--	.evt_rdptr = PCIE_SCRATCH_10_REG,
--	.evt_wrptr = PCIE_SCRATCH_11_REG,
--	.drv_rdy = PCIE_SCRATCH_12_REG,
--	.tx_start_ptr = 0,
--	.tx_mask = MWIFIEX_TXBD_MASK,
--	.tx_wrap_mask = 0,
--	.rx_mask = MWIFIEX_RXBD_MASK,
--	.rx_wrap_mask = 0,
--	.tx_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
--	.rx_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
--	.evt_rollover_ind = MWIFIEX_BD_FLAG_ROLLOVER_IND,
--	.ring_flag_sop = 0,
--	.ring_flag_eop = 0,
--	.ring_flag_xs_sop = 0,
--	.ring_flag_xs_eop = 0,
--	.ring_tx_start_ptr = 0,
--	.pfu_enabled = 0,
--	.sleep_cookie = 1,
--	.msix_support = 0,
--};
--
--static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
--	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
--	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
--	.cmd_size = PCIE_SCRATCH_2_REG,
--	.fw_status = PCIE_SCRATCH_3_REG,
--	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
--	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
--	.tx_rdptr = PCIE_RD_DATA_PTR_Q0_Q1,
--	.tx_wrptr = PCIE_WR_DATA_PTR_Q0_Q1,
--	.rx_rdptr = PCIE_WR_DATA_PTR_Q0_Q1,
--	.rx_wrptr = PCIE_RD_DATA_PTR_Q0_Q1,
--	.evt_rdptr = PCIE_SCRATCH_10_REG,
--	.evt_wrptr = PCIE_SCRATCH_11_REG,
--	.drv_rdy = PCIE_SCRATCH_12_REG,
--	.tx_start_ptr = 16,
--	.tx_mask = 0x03FF0000,
--	.tx_wrap_mask = 0x07FF0000,
--	.rx_mask = 0x000003FF,
--	.rx_wrap_mask = 0x000007FF,
--	.tx_rollover_ind = MWIFIEX_BD_FLAG_TX_ROLLOVER_IND,
--	.rx_rollover_ind = MWIFIEX_BD_FLAG_RX_ROLLOVER_IND,
--	.evt_rollover_ind = MWIFIEX_BD_FLAG_EVT_ROLLOVER_IND,
--	.ring_flag_sop = MWIFIEX_BD_FLAG_SOP,
--	.ring_flag_eop = MWIFIEX_BD_FLAG_EOP,
--	.ring_flag_xs_sop = MWIFIEX_BD_FLAG_XS_SOP,
--	.ring_flag_xs_eop = MWIFIEX_BD_FLAG_XS_EOP,
--	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
--	.pfu_enabled = 1,
--	.sleep_cookie = 0,
--	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
--	.fw_dump_start = PCIE_SCRATCH_14_REG,
--	.fw_dump_end = 0xcff,
--	.fw_dump_host_ready = 0xee,
--	.fw_dump_read_done = 0xfe,
--	.msix_support = 0,
--};
--
--static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
--	.cmd_addr_lo = PCIE_SCRATCH_0_REG,
--	.cmd_addr_hi = PCIE_SCRATCH_1_REG,
--	.cmd_size = PCIE_SCRATCH_2_REG,
--	.fw_status = PCIE_SCRATCH_3_REG,
--	.cmdrsp_addr_lo = PCIE_SCRATCH_4_REG,
--	.cmdrsp_addr_hi = PCIE_SCRATCH_5_REG,
--	.tx_rdptr = 0xC1A4,
--	.tx_wrptr = 0xC174,
--	.rx_rdptr = 0xC174,
--	.rx_wrptr = 0xC1A4,
--	.evt_rdptr = PCIE_SCRATCH_10_REG,
--	.evt_wrptr = PCIE_SCRATCH_11_REG,
--	.drv_rdy = PCIE_SCRATCH_12_REG,
--	.tx_start_ptr = 16,
--	.tx_mask = 0x0FFF0000,
--	.tx_wrap_mask = 0x1FFF0000,
--	.rx_mask = 0x00000FFF,
--	.rx_wrap_mask = 0x00001FFF,
--	.tx_rollover_ind = BIT(28),
--	.rx_rollover_ind = BIT(12),
--	.evt_rollover_ind = MWIFIEX_BD_FLAG_EVT_ROLLOVER_IND,
--	.ring_flag_sop = MWIFIEX_BD_FLAG_SOP,
--	.ring_flag_eop = MWIFIEX_BD_FLAG_EOP,
--	.ring_flag_xs_sop = MWIFIEX_BD_FLAG_XS_SOP,
--	.ring_flag_xs_eop = MWIFIEX_BD_FLAG_XS_EOP,
--	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
--	.pfu_enabled = 1,
--	.sleep_cookie = 0,
--	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
--	.fw_dump_start = PCIE_SCRATCH_14_REG,
--	.fw_dump_end = 0xcff,
--	.fw_dump_host_ready = 0xcc,
--	.fw_dump_read_done = 0xdd,
--	.msix_support = 0,
--};
--
--static struct memory_type_mapping mem_type_mapping_tbl_w8897[] = {
--	{"ITCM", NULL, 0, 0xF0},
--	{"DTCM", NULL, 0, 0xF1},
--	{"SQRAM", NULL, 0, 0xF2},
--	{"IRAM", NULL, 0, 0xF3},
--	{"APU", NULL, 0, 0xF4},
--	{"CIU", NULL, 0, 0xF5},
--	{"ICU", NULL, 0, 0xF6},
--	{"MAC", NULL, 0, 0xF7},
--};
--
--static struct memory_type_mapping mem_type_mapping_tbl_w8997[] = {
--	{"DUMP", NULL, 0, 0xDD},
--};
--
- struct mwifiex_pcie_device {
- 	const struct mwifiex_pcie_card_reg *reg;
- 	u16 blksz_fw_dl;
-@@ -289,34 +168,6 @@ struct mwifiex_pcie_device {
- 	bool can_ext_scan;
- };
- 
--static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
--	.reg            = &mwifiex_reg_8766,
--	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
--	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
--	.can_dump_fw = false,
--	.can_ext_scan = true,
--};
--
--static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
--	.reg            = &mwifiex_reg_8897,
--	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
--	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
--	.can_dump_fw = true,
--	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
--	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
--	.can_ext_scan = true,
--};
--
--static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
--	.reg            = &mwifiex_reg_8997,
--	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
--	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
--	.can_dump_fw = true,
--	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
--	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
--	.can_ext_scan = true,
--};
--
- struct mwifiex_evt_buf_desc {
- 	u64 paddr;
- 	u16 len;
--- 
-2.17.1
 
 
+On 9/2/20 08:05, Leesoo Ahn wrote:
+> Replace all '/* fall through */' comments with the macro[1].
+> 
+> [1]: https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+> 
+
+This looks familiar...
+
+https://lore.kernel.org/lkml/20200821062052.GA8618@embeddedor/
+
+Thanks
+--
+Gustavo
