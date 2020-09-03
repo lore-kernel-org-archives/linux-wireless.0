@@ -1,79 +1,85 @@
-Return-Path: <SRS0=XV+2=CL=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=vk+s=CM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E23C43461
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 22:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD32C433E7
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Sep 2020 03:30:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23E0620767
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Sep 2020 22:54:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="WChM0vVJ"
+	by mail.kernel.org (Postfix) with ESMTP id 3BEF7204FD
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Sep 2020 03:30:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726384AbgIBWyf (ORCPT
+        id S1726654AbgICDal (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Sep 2020 18:54:35 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:35614 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726310AbgIBWye (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Sep 2020 18:54:34 -0400
-Received: from [192.168.254.6] (unknown [50.34.202.127])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id A362A13C2B0;
-        Wed,  2 Sep 2020 15:54:33 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A362A13C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1599087273;
-        bh=pHxVwMxACrBCil+q7AoKu4vAQ8nmnpHC4/aVbpTswGM=;
-        h=To:From:Subject:Date:From;
-        b=WChM0vVJSxgPWIqFy1cQ8hOP5BTpiSNwxr9TPS54zHNLIV4Xd3odBsQxEygE9irDW
-         L4MqKvpkbR3Wf87blUQFXZWrduk5p3+kcl2DHZ6OYF0yKdZSCyh1n2G2cZPGrflu8Z
-         JX3ntO5/Aw5JCHQcVq+BdQMYAqzxDczCjqJDUxDQ=
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Wen Gong <wgong@codeaurora.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: lockdep splat in kvallo ath tree
-Organization: Candela Technologies
-Message-ID: <0ef69472-9613-c265-0635-ff2ef0cf274f@candelatech.com>
-Date:   Wed, 2 Sep 2020 15:54:31 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        Wed, 2 Sep 2020 23:30:41 -0400
+Received: from mga09.intel.com ([134.134.136.24]:39110 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726526AbgICDak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Sep 2020 23:30:40 -0400
+IronPort-SDR: ysxhkXAfRyuHdhBNAr+tE6IqxctWG9cY3NEIvvJ/G2PB2o/ZnYP6WEa7B/ucNyaH/kwRkOrdOw
+ iNf7/slVCMHw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9732"; a="158499128"
+X-IronPort-AV: E=Sophos;i="5.76,385,1592895600"; 
+   d="scan'208";a="158499128"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2020 20:30:40 -0700
+IronPort-SDR: n0Xg9xQVODTXyop4id9uWYS2ujZonXgZUANQWoYN2mKDIqfemekZl6JMzBuWjjrjuXwoONeHiA
+ Yo+5r76yTA2g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,385,1592895600"; 
+   d="scan'208";a="326046526"
+Received: from lkp-server01.sh.intel.com (HELO f1af165c0d27) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 02 Sep 2020 20:30:37 -0700
+Received: from kbuild by f1af165c0d27 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kDfxM-00001y-Ui; Thu, 03 Sep 2020 03:30:36 +0000
+Date:   Thu, 3 Sep 2020 11:30:04 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, wright.feng@cypress.com,
+        brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>, chi-hsien.lin@cypress.com,
+        Jia-Shyr Chuang <joseph.chuang@cypress.com>
+Subject: [RFC PATCH] brcmfmac: brcmf_add_sta can be static
+Message-ID: <20200903033004.GA86348@155f13fc43c6>
+References: <20200901063237.15549-4-wright.feng@cypress.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-MW
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200901063237.15549-4-wright.feng@cypress.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The patch below adds a call to ath10k_debug_fw_stats_request(ar),
-which expects ar->conf_mutex to be held, but it is *not* held in
-this code path.  This leads to warnings when lockdep is enabled.
 
+Signed-off-by: kernel test robot <lkp@intel.com>
+---
+ core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-greearb@bendt7 ath10k]$ git show 4913e675630ec
-commit 4913e675630ec1a15c92651f426a63755c71b91b
-Author: Wen Gong <wgong@codeaurora.org>
-Date:   Thu Apr 23 10:27:58 2020 +0800
-
-     ath10k: enable rx duration report default for wmi tlv
-
-     When run command "iw dev wlan0 station dump", the rx duration is 0.
-     When firmware indicate WMI_UPDATE_STATS_EVENTID, extended flag of
-     statsis not set by default, so firmware do not report rx duration.
-
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 595795e8cf6ac..c71c07e1f245a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1591,7 +1591,7 @@ brcmf_find_sta(struct brcmf_if *ifp, const u8 *ea)
+ }
+ 
+ /** Add STA into the interface's STA list. */
+-struct brcmf_sta *
++static struct brcmf_sta *
+ brcmf_add_sta(struct brcmf_if *ifp, const u8 *ea)
+ {
+ 	struct brcmf_sta *sta;
