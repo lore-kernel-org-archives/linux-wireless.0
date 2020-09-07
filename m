@@ -2,122 +2,94 @@ Return-Path: <SRS0=d+R+=CQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DA5C43461
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 999CAC43461
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 911062080A
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:56:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ADKvl7PX";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="I9C3pr4h"
+	by mail.kernel.org (Postfix) with ESMTP id 628BB207DE
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:00:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599498050;
+	bh=7wc3gCb9H27E8WGzWkxyA39CKqC2wPm7ch/z3ys5BrQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=c6AnErX9D3AyCRDJ87qe8pCBgmsx6zCOt0ad73A82DNE+fsmlHXsRupLB22zyRUkb
+	 V4TyszP/ao9XY6D2PM/0RLzS+Lf1I+3kRB7OojmnUcLVP5v1LGh6sdKugX0bwtpPSD
+	 Oit4YGSPe+tnHczEe3gctcszyzoLTL893P94YARQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731222AbgIGQ4T (ORCPT
+        id S1731111AbgIGQ7F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:56:19 -0400
-Received: from a27-188.smtp-out.us-west-2.amazonses.com ([54.240.27.188]:40078
-        "EHLO a27-188.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729862AbgIGQ4L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:56:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599497771;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
-        bh=E7t//6wwVe6yoHqHO8AWN7Zj46ePVZw+67TGmdShN74=;
-        b=ADKvl7PXpRWu8VlsVX/yoid2s8Dy7P9E14N2iN23DhNiXQgAKMjy9/1cGS/afafx
-        OQgxGiOH4UlczVodr1r+Xb/WCxRBmnchyJhTMXrRcS5OpH4aSVYkvwW5KOMNfq5PQ8H
-        beWANGvMOrO6HZeupYFa8Cw7ZggHEfYa/Dbamcsg=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599497771;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
-        bh=E7t//6wwVe6yoHqHO8AWN7Zj46ePVZw+67TGmdShN74=;
-        b=I9C3pr4hiDDFdD8lrMapzSQBf9H6nWJlfykL5ZWMGssFM4cxW49YMgR1BMhSkrsK
-        zScdkOjCo3DgGtIZaIXuCOtv4U/VS8XYD6nHQZwtvtFdZ9jTcdlHYp6Banf+w0/6XzK
-        qzfGTwBH+0Sg5GQSo4TyObnYnxUFMb8Y49VF5/uo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 12EFBC4B52A
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Karthikeyan Periyasamy <periyasa@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org
-Subject: Re: [PATCH net-next] ath11k: fix uninitialized return in ath11k_spectral_process_data()
-References: <20200619142922.GA267142@mwanda> <87a70vf923.fsf@codeaurora.org>
-        <20200622171846.GE4151@kadam>
-Date:   Mon, 7 Sep 2020 16:56:11 +0000
-In-Reply-To: <20200622171846.GE4151@kadam> (Dan Carpenter's message of "Mon,
-        22 Jun 2020 20:18:47 +0300")
-Message-ID: <01010174697f1805-c885f217-9729-4089-91bd-4bd79645fec0-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Mon, 7 Sep 2020 12:59:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730736AbgIGQdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Sep 2020 12:33:53 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CD0F121789;
+        Mon,  7 Sep 2020 16:33:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599496429;
+        bh=7wc3gCb9H27E8WGzWkxyA39CKqC2wPm7ch/z3ys5BrQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=lrLccKd5l99DYM9s7EK1TAjrvozMuxjKnCbxE2INgPlm58N8y29cdrz/oFTqm+Eh2
+         oP3DpgFjDHwgNlatkRAlKZ21aRRPpnKEewAVG4vQHzr1NZM2INGfv/QwK5OEpzuhbc
+         E56DCboOKeBusEHmqTeHfW/02WgHFfaA+khNMVoE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+d451401ffd00a60677ee@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 15/43] cfg80211: regulatory: reject invalid hints
+Date:   Mon,  7 Sep 2020 12:33:01 -0400
+Message-Id: <20200907163329.1280888-15-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200907163329.1280888-1-sashal@kernel.org>
+References: <20200907163329.1280888-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-SES-Outgoing: 2020.09.07-54.240.27.188
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Mon, Jun 22, 2020 at 05:51:16PM +0300, Kalle Valo wrote:
->> Dan Carpenter <dan.carpenter@oracle.com> writes:
->> 
->> > There is a success path where "ret" isn't initialized where we never
->> > have a ATH11K_SPECTRAL_TAG_SCAN_SEARCH and then ret isn't initialized.
->> >
->> > Fixes: 9d11b7bff950 ("ath11k: add support for spectral scan")
->> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->> > ---
->> >  drivers/net/wireless/ath/ath11k/spectral.c | 2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/net/wireless/ath/ath11k/spectral.c b/drivers/net/wireless/ath/ath11k/spectral.c
->> > index 1c5d65bb411f..bfbf905f7507 100644
->> > --- a/drivers/net/wireless/ath/ath11k/spectral.c
->> > +++ b/drivers/net/wireless/ath/ath11k/spectral.c
->> > @@ -677,7 +677,7 @@ static int ath11k_spectral_process_data(struct ath11k *ar,
->> >  	u32 data_len, i;
->> >  	u8 sign, tag;
->> >  	int tlv_len, sample_sz;
->> > -	int ret;
->> > +	int ret = 0;
->> >  	bool quit = false;
->> 
->> I try to avoid initialising ret variables so I would like find another
->> way. What about doing this (completely untested!) in the end of the
->> function:
->> 
->>         return 0;
->> 
->> err:
->> 	kfree(fft_sample);
->> unlock:
->> 	spin_unlock_bh(&ar->spectral.lock);
->> 	return ret;
->
-> I normally avoid it as well...  If I were to redo this patch, I would
-> probably do:
->
-> 	ret = 0;
-> err:
-> 	kfree(fft_sample);
-> unlock:
-> 	spin_unlock_bh(&ar->spectral.lock);
-> 	return ret;
->
-> Would that be better?
+[ Upstream commit 47caf685a6854593348f216e0b489b71c10cbe03 ]
 
-Ah, my proposal was buggy. So yes, this is definitely better :) I
-changed now the patch in the pending branch, please check:
+Reject invalid hints early in order to not cause a kernel
+WARN later if they're restored to or similar.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=586f8e6779fa75ade112cb48606794e034e0ff1d
+Reported-by: syzbot+d451401ffd00a60677ee@syzkaller.appspotmail.com
+Link: https://syzkaller.appspot.com/bug?extid=d451401ffd00a60677ee
+Link: https://lore.kernel.org/r/20200819084648.13956-1-johannes@sipsolutions.net
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/wireless/reg.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1a8218f1bbe07..20a8e6af88c45 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2941,6 +2941,9 @@ int regulatory_hint_user(const char *alpha2,
+ 	if (WARN_ON(!alpha2))
+ 		return -EINVAL;
+ 
++	if (!is_world_regdom(alpha2) && !is_an_alpha2(alpha2))
++		return -EINVAL;
++
+ 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
+ 	if (!request)
+ 		return -ENOMEM;
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
+
