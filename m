@@ -5,52 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B23DC43461
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:01:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E98EC2BB84
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C084D207DE
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:01:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5797B206B8
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 17:07:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599498068;
-	bh=YB6LMn6dVIAQQecjsMuXES5wSTgr8G+mlKOQ3KV/a/8=;
+	s=default; t=1599498462;
+	bh=mmh0CepIcG1mpL1AKzdAl1yZDSGrYI73gdVhh+oTT+w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Opwv78wemZ+V1gxlvPUE1RnXh813N8m7uJ04rr6VeYD/M2URtJ9kokezx9H8gdnQV
-	 vUqAPzd/+MAd5AwH7w3chXeZLUl7LqBrNY7XCN8kTln0yFv+VASZEtuwZsbGCJXYkD
-	 cglCvDbU3ghVaoKoMd1eoQr5Hi6SxzuzwIXGF4us=
+	b=X+nEx13yD3+zlaGayI5nO1LCsAkDJhSK4L64w1S1E90eTcgtJBfZ6QBsY23rLi2u3
+	 W1jQQpPw+iVbV1NsDMf1hS7MfVPofYCvPiMuSiqFLNShbWRahf4IsLSpl/H47lFVaC
+	 2gEmaVF7cCoeGTQSRKGP7OkKjiqpo3NJgsokD0QY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730760AbgIGQ7D (ORCPT
+        id S1730834AbgIGRHd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:59:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47748 "EHLO mail.kernel.org"
+        Mon, 7 Sep 2020 13:07:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729970AbgIGQdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:33:53 -0400
+        id S1729838AbgIGQcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Sep 2020 12:32:48 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1BD1321927;
-        Mon,  7 Sep 2020 16:33:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9795A217A0;
+        Mon,  7 Sep 2020 16:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599496431;
-        bh=YB6LMn6dVIAQQecjsMuXES5wSTgr8G+mlKOQ3KV/a/8=;
+        s=default; t=1599496368;
+        bh=mmh0CepIcG1mpL1AKzdAl1yZDSGrYI73gdVhh+oTT+w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jrBtNZLbgPDPgOEez+zdRHxQ7E6NjXab+SayYx/ZBK+aSg4JhVnMvfYVDkJCK1osw
-         D6XXJoH9i6uyJE99EIKqkD2CTU1OylkgYYcKzya+/AIRD9KS/L3ygETeOv/HpJOjy/
-         iTEoeMBi7N/N2DX43wbmT7WRHXo7QNyZSTlMBmK4=
+        b=XVNM0NrGrkHncyEKIrsQtYF2jJ9FpCkEJd4C+i5fYbfUieTYtoXbcuduY9fUULBfP
+         fNgHHXtHC1NQDtrQ1SyFHvke065Jor/NR/Zfm37omejgHNVg4BaatGSH/OZKUYjo06
+         o7ITT34d7Ox+rBRgagLE0H0tyquZkonuAhr69EbE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Amar Singhal <asinghal@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 16/43] cfg80211: Adjust 6 GHz frequency to channel conversion
-Date:   Mon,  7 Sep 2020 12:33:02 -0400
-Message-Id: <20200907163329.1280888-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 21/53] cfg80211: Adjust 6 GHz frequency to channel conversion
+Date:   Mon,  7 Sep 2020 12:31:47 -0400
+Message-Id: <20200907163220.1280412-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200907163329.1280888-1-sashal@kernel.org>
-References: <20200907163329.1280888-1-sashal@kernel.org>
+In-Reply-To: <20200907163220.1280412-1-sashal@kernel.org>
+References: <20200907163220.1280412-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 8481e9ac33da5..9abafd76ec50e 100644
+index 4d3b76f94f55e..a72d2ad6ade8b 100644
 --- a/net/wireless/util.c
 +++ b/net/wireless/util.c
-@@ -116,11 +116,13 @@ int ieee80211_frequency_to_channel(int freq)
+@@ -121,11 +121,13 @@ int ieee80211_freq_khz_to_channel(u32 freq)
  		return (freq - 2407) / 5;
  	else if (freq >= 4910 && freq <= 4980)
  		return (freq - 4000) / 5;
