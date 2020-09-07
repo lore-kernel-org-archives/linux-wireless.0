@@ -2,131 +2,123 @@ Return-Path: <SRS0=d+R+=CQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D15C2BB84
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 10:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C55C433E2
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 10:17:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4723207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 10:17:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C5E207C3
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 10:17:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kIWOrjBr";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="oaULAF/U"
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="SGWpwTM5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728830AbgIGKRl (ORCPT
+        id S1728838AbgIGKRr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Sep 2020 06:17:41 -0400
-Received: from a27-186.smtp-out.us-west-2.amazonses.com ([54.240.27.186]:54362
-        "EHLO a27-186.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728808AbgIGKR1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Sep 2020 06:17:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599473846;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding;
-        bh=01VERSWzbigyHGbBCIA/Dqvk0+zsJz0J9iMkJIMgviA=;
-        b=kIWOrjBrc8iRrKrdua9bcuWw3ptT07D7bDhfKVZE8oNbgvtW6nKiyAn+9NfDk0nW
-        TEyvYJWFC+6hGpFUgJLx49a89fO/ta7nvSqkSuyIssiqsEIUDp8BaVyOnpVVJ9bXUdn
-        N7Mdv9m3wC8IbCXt1tMpFb8bjk7niYZGkfpqvcIU=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599473846;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
-        bh=01VERSWzbigyHGbBCIA/Dqvk0+zsJz0J9iMkJIMgviA=;
-        b=oaULAF/Uy8lO56Wz6fVqUvhog8zsvlNY4vwkfB/T95va+9hBLwtu6lj1YE2pXV9D
-        FICBDloEaJ6h1q1cyZnkZM4eB4PBCNU0w5BzF/4a39Tvl98T6LhhqwjsWw3/TNKuW5A
-        G+ZhOdbUkd3z4JvCdCi4fP+qUAim2UXGKo/vciWw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0EDECC2BB59
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
-Cc:     ath11k@lists.infradead.org,
-        Govindaraj Saminathan <gsamin@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath11k: cold boot calibration support
-References: <1594372049-31480-1-git-send-email-ssreeela@codeaurora.org>
-Date:   Mon, 7 Sep 2020 10:17:26 +0000
-In-Reply-To: <1594372049-31480-1-git-send-email-ssreeela@codeaurora.org>
-        (Sowmiya Sree Elavalagan's message of "Fri, 10 Jul 2020 14:37:29
-        +0530")
-Message-ID: <0101017468120799-8c9b63ff-c336-49da-a567-e0dea78382fc-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 7 Sep 2020 06:17:47 -0400
+Received: from mail-mw2nam10on2078.outbound.protection.outlook.com ([40.107.94.78]:7488
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728491AbgIGKRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Sep 2020 06:17:33 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZcKhNdFLaqkLysfFoH33sbdHHCpCCV0rTVrI2mFJfdHVg4RVlhY5vkpXnBiUl0peN7uQzRGwSrFXzG4slSOKfxz+TbQjnnRCL1YTpCUQxv8tU+3ael5HVXnFI+PMJzZPcDcNLGGaKnPdvEIciJis67+IFgKNEB2G9ybYPyW1pNldVGjIMBvO2e5jIP+Pn4MT7BVTwvHPh1/THHLPotWVnda8nOHrJkI21rxNc2kb+qPYoisO+bz5r9VXBC7HGKy1Cz2voEH4XW+JI4E2PAi9bIXERYpSv/3LaBcJH6kDKNc2CL7vH4VSoUK7Tqlv29IezO8WzSehrva+OqFQTIHAqQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uCXLlvSneXCHNUu//m0D2+mQC7GzCWYN0ggpoiqqiTY=;
+ b=IRu6A3oUtetNp0KsHYs4P+gabI0fINidTOvVG4ul0hEisX1RNCR3uoOtq3WLDs2mu+ROZoBSEi8AqXI5FJr/H/7kQunU7ksKpfjlWANg8+J0/cmRplsOoZ5tKGktbWT1SkeIm+bUEBG2fxFoLq+GpvqG0vS3oE9Ov+6+7VdI1QSpc9E5VS9T1GWH0HR9WAPFbtMVnOcqHduTUa6OEcTGsIKLHObQyeijt+FbDubaPPAavTVLlzzpKWEvZ8sjM5e1PC87oM6YRyptrhwC6g7d8P+0hZHPIVzQHuCpZoi00ltpDGcvWi4pP1rugvLWoWOmho+NsSQKjFK5hTbse4HudA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uCXLlvSneXCHNUu//m0D2+mQC7GzCWYN0ggpoiqqiTY=;
+ b=SGWpwTM5z4Gh7PWPam/ocsB05094I+QA4OmkMGDg86CDU8W1rS43QFsMc6u/wTlALHkvEsuulMOxgOzvOVKWhhGBpEl2PNsOipM47eXbaR0EggM4tBkau2nNXGIEBdL2GRFqQ3kYKjOkqKobXB0ZZUyyA/EQXqnh6dO212Kds4k=
+Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
+ header.d=none;driverdev.osuosl.org; dmarc=none action=none
+ header.from=silabs.com;
+Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
+ by SN6PR11MB2720.namprd11.prod.outlook.com (2603:10b6:805:56::27) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3348.15; Mon, 7 Sep
+ 2020 10:16:29 +0000
+Received: from SN6PR11MB2718.namprd11.prod.outlook.com
+ ([fe80::85c9:1aa9:aeab:3fa6]) by SN6PR11MB2718.namprd11.prod.outlook.com
+ ([fe80::85c9:1aa9:aeab:3fa6%4]) with mapi id 15.20.3348.019; Mon, 7 Sep 2020
+ 10:16:29 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 27/31] staging: wfx: fix naming of hif_tx_rate_retry_policy
+Date:   Mon,  7 Sep 2020 12:15:17 +0200
+Message-Id: <20200907101521.66082-28-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200907101521.66082-1-Jerome.Pouiller@silabs.com>
+References: <20200907101521.66082-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: PR0P264CA0109.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:100:19::25) To SN6PR11MB2718.namprd11.prod.outlook.com
+ (2603:10b6:805:63::18)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-SES-Outgoing: 2020.09.07-54.240.27.186
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from pc-42.silabs.com (37.71.187.125) by PR0P264CA0109.FRAP264.PROD.OUTLOOK.COM (2603:10a6:100:19::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3348.16 via Frontend Transport; Mon, 7 Sep 2020 10:16:27 +0000
+X-Mailer: git-send-email 2.28.0
+X-Originating-IP: [37.71.187.125]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: edf85acd-5203-4114-72f5-08d8531715da
+X-MS-TrafficTypeDiagnostic: SN6PR11MB2720:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SN6PR11MB2720A1B6A238C89F9C0E5DD893280@SN6PR11MB2720.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4303;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: pNVjhHygl0Ywz8PHz0ENHdym59F5xvRxTsDhC/fIVANnr4EfweuvrfSxMhhadAeDC3whzHWD3APl9uM7z53hQP7CZHrGtOxB2KoCSRXW6LX6SVmy1o+vITDJNf55OSqwOpup3OVGXomX16gudumqAs0PDQpHCuCEGeCYx3MdECaAmmEYFupuATWl0mjA9ZJi6ANXahUddp0lNOGG/kN/XVdxHfLjlg0xYWLZ05XI/nsnSZoriLbRXycxf1w9eSYIFgwjI55oCtT3PHwZWZtZQZVMhIzP0L5fuYozTvvFl76BjDoH173RW2HGT807b/87X68rOw8hYRoN+WMuJZjQKA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(39850400004)(136003)(346002)(396003)(66946007)(66556008)(66476007)(54906003)(26005)(186003)(16526019)(83380400001)(107886003)(6486002)(8676002)(956004)(2616005)(2906002)(316002)(86362001)(8936002)(478600001)(4326008)(7696005)(36756003)(52116002)(6666004)(1076003)(5660300002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: vPW1i3Y1YFYi2/cxSsQsdsHWW6qAEvOaoHneXjgudfluNF2JKN717o+feLmRZ1YYAsRtviwekaZhPB7Gc3Gxd2nB+Vjkh0tDDsXIK5uyBXrDzKtoc4cJRmxWNi/WLmE+nr+E2/MxgSOq9ymNFaAyBp0Dju/d6TfcVHLT51ZkHVhHqiX+p+fiEUePZPG8mG9Z87GdCHiP5SyvW7e1tS1X9nQMDf7EVhK0XhCc7ICr3BGktGlyT/tCyFSoNIQsIgeSeoQujDP9tOIdIQsT5LGVJ/bMGn++bUWPdzQ6gww48wjfTJB8typoN85oTzvbx2yic25KEiVD+2+FGBKJ5Tg4nqAZcboxEW1FE7yUbYuYXbY11yALr2Mzb4cf749Amau6pGqeSdujIwKjrlC3wkgUqRJG1sc8xj868w9S3O8XjtfkiSkZdHNcKzMWjpPjmPMOIRk+YLDA9vb1wqSxCYDMlmkTHWqmDtjokhRYa55Y+Olld7KhF7dZOK7ZqwaIAUnKQX1W1gOSz3rIWFTLk4fk8mJQmt44Zyt29qDOxOcL57VTMuCLYISNzh6GRWLC7gosRPWr+k4oDqgMs2Mc0MdjSTDA65V+k3S3ZK7dxNpYtbsb1w+TcyWvzqCe8NNjOiYq/FWtUS/vp0TLA+xZdsHu0A==
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: edf85acd-5203-4114-72f5-08d8531715da
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2718.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2020 10:16:29.0645
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YFI3f5LT3oIkGDTPc9C526Tgm2ELevb6BuR3Sdl3FfQrZO12r4HwDzmqXAAmp/xkt/zk4eYZTFoaswhAeyPofg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2720
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sowmiya Sree Elavalagan <ssreeela@codeaurora.org> writes:
-
-> From: Govindaraj Saminathan <gsamin@codeaurora.org>
->
-> cold boot calibration is the process to calibrate all the channels
-> during the boot-up to avoid the calibration delay during the
-> channel change.
-> During the boot-up, firmware started with mode =E2=80=9Ccold_boot_calibra=
-tion=E2=80=9D
-> Firmware calibrate all channels and generate CalDb(DDR).
-> Subsequent WIFI ON will reuse the same CalDb.
-> Firmware restarted with Mission mode to continue the normal operation.
->
-> caldb memory address send to firmware through the QMI message.Firmware
-> use this address to store the caldb data and use it until next reboot.
->
-> This will give the improvement during the channel change. But it is
-> increasing the boot-up time(up to 15sec depend on number of radios).
-> So if the user want to reduce the boot-up time and accepting for channel
-> change delay, user can disable this feature using the module param
-> cold_boot_cal =3D0.
->
-> Signed-off-by: Govindaraj Saminathan <gsamin@codeaurora.org>
-> Co-developed-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
-> Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
-
-Please add a Tested-on tag.
-
-What hardware does support this feature? I guess QCA6390 does not? So I won=
-der
-should we only enable this on hardware which we know supports this? For the
-rest we would just give a warning and not enable the feature. And to do tha=
-t we
-would have a boolean for  each hardware in hw_params.
-
-> +static int ath11k_qmi_process_coldboot_calibration(struct ath11k_base *a=
-b)
-> +{
-> +	int timeout;
-> +	int ret;
-> +
-> +	ret =3D ath11k_qmi_wlanfw_mode_send(ab, ATH11K_FIRMWARE_MODE_COLD_BOOT);
-> +	if (ret < 0) {
-> +		ath11k_warn(ab, "qmi failed to send wlan fw mode:%d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ath11k_warn(ab, "Coldboot calibration wait started\n");
-
-This should be a debug message.
-
-> +	timeout =3D wait_event_timeout(ab->qmi.cold_boot_waitq,
-> +				     (ab->qmi.cal_done  =3D=3D 1),
-> +				     ATH11K_COLD_BOOT_FW_RESET_DELAY);
-> +	if (timeout <=3D 0) {
-> +		ath11k_warn(ab, "Coldboot Calibration timed out\n");
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	ath11k_warn(ab, "Coldboot calibration wait ended\n");
-
-And this too.
-
---=20
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKSW4g
+dGhlIHdmeCBkcml2ZXIsIHRoZSBwcmVmaXggJ2hpZl9taWJfJyBpcyBub3JtYWxseSB1c2VkIGZv
+ciBzdHJ1Y3R1cmVzCnRoYXQgcmVwcmVzZW50IGEgaGFyZHdhcmUgbWVzc2FnZS4gaGlmX21pYl90
+eF9yYXRlX3JldHJ5X3BvbGljeSBkb2VzIG5vdApmYWxsIGluIHRoaXMgY2F0ZWdvcnkuIFNvLCBy
+ZW5hbWUgaXQuCgpTaWduZWQtb2ZmLWJ5OiBKw6lyw7RtZSBQb3VpbGxlciA8amVyb21lLnBvdWls
+bGVyQHNpbGFicy5jb20+Ci0tLQogZHJpdmVycy9zdGFnaW5nL3dmeC9oaWZfYXBpX21pYi5oIHwg
+NCArKy0tCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoK
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3RhZ2luZy93ZngvaGlmX2FwaV9taWIuaCBiL2RyaXZlcnMv
+c3RhZ2luZy93ZngvaGlmX2FwaV9taWIuaAppbmRleCA3Mzg3M2QyOTQ1NmQuLjU1YmQzOTljY2Rm
+YiAxMDA2NDQKLS0tIGEvZHJpdmVycy9zdGFnaW5nL3dmeC9oaWZfYXBpX21pYi5oCisrKyBiL2Ry
+aXZlcnMvc3RhZ2luZy93ZngvaGlmX2FwaV9taWIuaApAQCAtMzA1LDcgKzMwNSw3IEBAIHN0cnVj
+dCBoaWZfbWliX3NldF91YXBzZF9pbmZvcm1hdGlvbiB7CiAJX19sZTE2IGF1dG9fdHJpZ2dlcl9z
+dGVwOwogfSBfX3BhY2tlZDsKIAotc3RydWN0IGhpZl9taWJfdHhfcmF0ZV9yZXRyeV9wb2xpY3kg
+eworc3RydWN0IGhpZl90eF9yYXRlX3JldHJ5X3BvbGljeSB7CiAJdTggICAgIHBvbGljeV9pbmRl
+eDsKIAl1OCAgICAgc2hvcnRfcmV0cnlfY291bnQ7CiAJdTggICAgIGxvbmdfcmV0cnlfY291bnQ7
+CkBAIC0zMjQsNyArMzI0LDcgQEAgc3RydWN0IGhpZl9taWJfdHhfcmF0ZV9yZXRyeV9wb2xpY3kg
+ewogc3RydWN0IGhpZl9taWJfc2V0X3R4X3JhdGVfcmV0cnlfcG9saWN5IHsKIAl1OCAgICAgbnVt
+X3R4X3JhdGVfcG9saWNpZXM7CiAJdTggICAgIHJlc2VydmVkWzNdOwotCXN0cnVjdCBoaWZfbWli
+X3R4X3JhdGVfcmV0cnlfcG9saWN5IHR4X3JhdGVfcmV0cnlfcG9saWN5W107CisJc3RydWN0IGhp
+Zl90eF9yYXRlX3JldHJ5X3BvbGljeSB0eF9yYXRlX3JldHJ5X3BvbGljeVtdOwogfSBfX3BhY2tl
+ZDsKIAogc3RydWN0IGhpZl9taWJfcHJvdGVjdGVkX21nbXRfcG9saWN5IHsKLS0gCjIuMjguMAoK
