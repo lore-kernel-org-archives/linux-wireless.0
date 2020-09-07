@@ -2,115 +2,101 @@ Return-Path: <SRS0=d+R+=CQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A7FC43461
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8ED8C2D0E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:25:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B11F20757
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:24:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7246720678
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:25:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=sslab.ics.keio.ac.jp header.i=@sslab.ics.keio.ac.jp header.b="Wy+lY5pi"
+	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="c7/0AXxm";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="ZQ+WkNJG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730495AbgIGQXv (ORCPT
+        id S1730474AbgIGQZ2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60804 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730424AbgIGQXk (ORCPT
+        Mon, 7 Sep 2020 12:25:28 -0400
+Received: from a27-11.smtp-out.us-west-2.amazonses.com ([54.240.27.11]:36162
+        "EHLO a27-11.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730333AbgIGQZW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:23:40 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E106C061574
-        for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2020 09:23:39 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id y6so2214761plt.9
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2020 09:23:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sslab.ics.keio.ac.jp; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=SDxUUQ+8c+YEIDDJur8rYrh3CcLj60cM5IrQcltAbJU=;
-        b=Wy+lY5pi2y0MXKbzHqJ4nxyLK8FkoENJ+OWduamenQCm/MHiU+zeaS9LOSSiSk7TmX
-         OQwBenpNoA2RRwW+bDYWYnuPBVvGkPeIZJXm0ZMBz4gBd2pC5Kw5z5E0N3ZbM34nAw+k
-         OdteM1Ed8drJUGv6ZCa9m6kJPpuG9BZzrYu+w=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=SDxUUQ+8c+YEIDDJur8rYrh3CcLj60cM5IrQcltAbJU=;
-        b=SrAwX5IQpMjpSUWosWDSVPElRgWtRBoKxFbruqRghc58QD8NY05rIjuNdUNUWaYPwq
-         fS+t2X0t09PyZLKYao8LQ7HQiBXzbRaCNLWOq6MYA8xqnV+0lfBqDc5DzP+cpoZ/5zwt
-         2epNz1ACOu3XxS8Oots3cIKFgaETegsYFbllcrNx/nbWdNZFret2VeLsDKQPUY0CTo1V
-         cqZO+AEamesczKRvAXTFaFt3DAORNTsEOHEP35NEKHpXbFK7hDzVduxpA3UcZnMg/pZj
-         NFYdQ7cZh+oSrt/csUapQtKv2VyFMCbr+hYzPvsF6vYVvbfELgVx+CIKizzKdiZLTyul
-         k2cg==
-X-Gm-Message-State: AOAM531CKwLX8ongtQ+LEyzha9cu4LaFDZs39eXitrrSMTYR+LNfHsQL
-        hYByApGRgSte7xp5xl5IqjqO2w==
-X-Google-Smtp-Source: ABdhPJyt1f1puArMGZEw7H7IWnsOdW3BtYIeDECpZMGG2uhioAhtb/hu+XxvwnoXRKkOXMIXD2nqUQ==
-X-Received: by 2002:a17:902:d353:: with SMTP id l19mr9227410plk.220.1599495818901;
-        Mon, 07 Sep 2020 09:23:38 -0700 (PDT)
-Received: from brooklyn.i.sslab.ics.keio.ac.jp (sslab-relay.ics.keio.ac.jp. [131.113.126.173])
-        by smtp.googlemail.com with ESMTPSA id v1sm3229622pjn.1.2020.09.07.09.23.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2020 09:23:38 -0700 (PDT)
-From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
-Cc:     keitasuzuki.park@sslab.ics.keio.ac.jp,
-        takafumi@sslab.ics.keio.ac.jp,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list@cypress.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmsmac: fix potential memory leak in wlc_phy_attach_lcnphy
-Date:   Mon,  7 Sep 2020 16:22:43 +0000
-Message-Id: <20200907162245.17997-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
-X-Mailer: git-send-email 2.17.1
-To:     unlisted-recipients:; (no To-header on input)
+        Mon, 7 Sep 2020 12:25:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599495922;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
+        bh=uC6aquUmIjDpwEsVJnaHXWj+WFYelQTAusJJrY1BpCc=;
+        b=c7/0AXxmyuCR8uJeBK277Uk60P2jzFf2mJfxLR8kt3el9wVK0eqLH0ArDeFoECad
+        Hu+hs6fO6Mvqos5warmSdxTjqob6I5GakgMR64NtqGurh6Mi0nuCjvhz4SP4539AOkk
+        9Na3xnomZN/NxfsyseNJvPUQB1nHOxRnSh2SrrJk=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599495922;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
+        bh=uC6aquUmIjDpwEsVJnaHXWj+WFYelQTAusJJrY1BpCc=;
+        b=ZQ+WkNJGzQwO9d1MhIMEdKjTE78YOqQ+tT9IhV0akVNcZV+Sree0FTG517qDe5dw
+        +eyYIjmU20BedvCKm8Vg/3ZStXhkgaHsnocPqTIskOb6TTvqUNugUMO75y6Ek/D/wWB
+        3n4PqbHtu9Z6yk/1L9nNoJk4wxzqlIi/KpnrM9YU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3E5C5C560C8
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     akolli@codeaurora.org
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH v6 2/3] ath11k: copy ce service configs to hw_params
+References: <1598287470-1871-1-git-send-email-akolli@codeaurora.org>
+        <1598287470-1871-3-git-send-email-akolli@codeaurora.org>
+        <87363t52nj.fsf@codeaurora.org>
+        <010101746838d751-613bfbba-7cfe-496c-9244-41fc2262f665-000000@us-west-2.amazonses.com>
+Date:   Mon, 7 Sep 2020 16:25:22 +0000
+In-Reply-To: <010101746838d751-613bfbba-7cfe-496c-9244-41fc2262f665-000000@us-west-2.amazonses.com>
+        (akolli@codeaurora.org's message of "Mon, 7 Sep 2020 10:59:49 +0000")
+Message-ID: <010101746962e1ce-dcf1c48c-efdc-4f9f-b28b-7839697630ce-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
+X-SES-Outgoing: 2020.09.07-54.240.27.11
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
-the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
-freed in the caller function.
+akolli@codeaurora.org writes:
 
-Fix this by calling wlc_phy_detach_lcnphy in the error handler of
-wlc_phy_txpwr_srom_read_lcnphy before returning.
+> On 2020-09-07 15:28, Kalle Valo wrote:
+>> Anilkumar Kolli <akolli@codeaurora.org> writes:
+>>
+>>> No functional changes, added target ce service configurations to
+>>> hw_params.
+>>>
+>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/ath/ath11k/core.c
+>>> +++ b/drivers/net/wireless/ath/ath11k/core.c
+>>> @@ -812,12 +812,6 @@ int ath11k_core_init(struct ath11k_base *ab)
+>>>  		return ret;
+>>>  	}
+>>>
+>>> -	ret = ath11k_init_hw_params(ab);
+>>> -	if (ret) {
+>>> -		ath11k_err(ab, "failed to get hw params %d\n", ret);
+>>> -		return ret;
+>>> -	}
+>>
+>> This is very suspicious.
+>
+> ath11k_core_pre_init() is calling ath11k_init_hw_params(), again
+> calling same function in ath11k_core_init() is not needed.
+>
+> Will send this as a new patch ?
 
-Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
----
- .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Yes, please send this in a new patch with a proper commit log explaining
+the situation.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-index 7ef36234a25d..6d70f51b2ddf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -5065,8 +5065,10 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
- 	pi->pi_fptr.radioloftget = wlc_lcnphy_get_radio_loft;
- 	pi->pi_fptr.detach = wlc_phy_detach_lcnphy;
- 
--	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
-+	if (!wlc_phy_txpwr_srom_read_lcnphy(pi)) {
-+		wlc_phy_detach_lcnphy(pi);
- 		return false;
-+	}
- 
- 	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
- 		if (pi_lcn->lcnphy_tempsense_option == 3) {
 -- 
-2.17.1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
