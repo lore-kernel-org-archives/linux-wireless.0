@@ -2,94 +2,64 @@ Return-Path: <SRS0=d+R+=CQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8BE6C43461
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:49:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82245C2BB84
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7159D218AC
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:49:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599497345;
-	bh=TYi4kWw7AUWwK2bR6sXAbhGmQqnAW9uobvtqfk7wdEQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=l56bj7RYIxK6GC1kWBK3OkIr5shRDFTw1/HIAddt2q83QwLPWKZ4MolIbTEDRjHDc
-	 uL+gylq7bJLt73WsDxOXJcPyBvjoucOzi58nK7r2prhfK1Opojql/TzP+GfdfGsHrz
-	 4u+CHbHAFn2RkSMMllZgMackOFzftcF9m6U9JyOY=
+	by mail.kernel.org (Postfix) with ESMTP id 58159207DE
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Sep 2020 16:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730975AbgIGQr5 (ORCPT
+        id S1730905AbgIGQxJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:47:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730350AbgIGQfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:35:12 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E6098221E7;
-        Mon,  7 Sep 2020 16:35:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599496511;
-        bh=TYi4kWw7AUWwK2bR6sXAbhGmQqnAW9uobvtqfk7wdEQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=htTUbge9HPMwxJsWhW9zLUTW1g0sb9hZfPPtXOunfiGrP2kjtrV6I3Ms6HOGeGYOF
-         tNVDGLcJ31gpUvqX1yatW3qqL+cfBSEB/mC+6YrYb+RsbHlLoKjW2Iq+uivUHBp/Su
-         WO3myUq9+wNGbKWEpjhrUCkNRLnRgDvgQUx0qUHI=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+d451401ffd00a60677ee@syzkaller.appspotmail.com,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/17] cfg80211: regulatory: reject invalid hints
-Date:   Mon,  7 Sep 2020 12:34:51 -0400
-Message-Id: <20200907163500.1281543-8-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200907163500.1281543-1-sashal@kernel.org>
-References: <20200907163500.1281543-1-sashal@kernel.org>
+        Mon, 7 Sep 2020 12:53:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37014 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730455AbgIGQwW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Sep 2020 12:52:22 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39BCC061573
+        for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2020 09:52:21 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kFKNM-000Co9-CN; Mon, 07 Sep 2020 18:52:16 +0200
+Message-ID: <b7aaab23072e4c06c3cb245a3ea83f11e9ca9e7f.camel@sipsolutions.net>
+Subject: Re: alternatives to screenscraping iw?
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc:     Paul Cercueil <paul@crapouillou.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>, od@zcrc.me
+Date:   Mon, 07 Sep 2020 18:52:15 +0200
+In-Reply-To: <CABPxzYLAYaXDfEewA5XR+y2Z0N1yLbEQwQM4FNytamHeZt3ySg@mail.gmail.com> (sfid-20200907_182259_380510_19DC3CE1)
+References: <04HAGQ.ASDIWY4TQH8H3@crapouillou.net>
+         <55e3de67208c2120857102d13a896553fbf223b4.camel@sipsolutions.net>
+         <CABPxzYLAYaXDfEewA5XR+y2Z0N1yLbEQwQM4FNytamHeZt3ySg@mail.gmail.com>
+         (sfid-20200907_182259_380510_19DC3CE1)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2020-09-07 at 21:52 +0530, Krishna Chaitanya wrote:
+> 
+> FYI, We have open-sourced our internal library which takes care of abstracting
+> Netlink attributes, just need to define commands and event messages in JSON,
+> https://github.com/bluwireless/py-genl. The initial port of all
+> messages might be an effort but extending it would be easy.
 
-[ Upstream commit 47caf685a6854593348f216e0b489b71c10cbe03 ]
+Nice.
 
-Reject invalid hints early in order to not cause a kernel
-WARN later if they're restored to or similar.
+I wonder if the netlink policy export I wrote for the kernel could be
+used to generate attribute descriptions? Even if it means just running a
+tool in a latest kernel VM to do it.
 
-Reported-by: syzbot+d451401ffd00a60677ee@syzkaller.appspotmail.com
-Link: https://syzkaller.appspot.com/bug?extid=d451401ffd00a60677ee
-Link: https://lore.kernel.org/r/20200819084648.13956-1-johannes@sipsolutions.net
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/wireless/reg.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b95d1c2bdef7e..9eb9d34cef7b1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2408,6 +2408,9 @@ int regulatory_hint_user(const char *alpha2,
- 	if (WARN_ON(!alpha2))
- 		return -EINVAL;
- 
-+	if (!is_world_regdom(alpha2) && !is_an_alpha2(alpha2))
-+		return -EINVAL;
-+
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
--- 
-2.25.1
+johannes
 
