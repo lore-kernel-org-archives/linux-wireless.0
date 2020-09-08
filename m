@@ -2,72 +2,74 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEEB0C43461
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7254C433E2
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2F902080C
+	by mail.kernel.org (Postfix) with ESMTP id 740122080A
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TRFMLOzC"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CyfllJee"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731456AbgIHSeJ (ORCPT
+        id S1729404AbgIHSeI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:34:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50466 "EHLO
+        Tue, 8 Sep 2020 14:34:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731399AbgIHSdj (ORCPT
+        with ESMTP id S1731461AbgIHSdk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:33:39 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD6A9C061755
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:33:37 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id w2so320166wmi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:33:37 -0700 (PDT)
+        Tue, 8 Sep 2020 14:33:40 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C83AC061756
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:33:40 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id z1so263904wrt.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:33:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m6cIfxBcFjZq6+1VuY/24vXo1lFfqHVn9WQbeI8mA4k=;
-        b=TRFMLOzC63yjZB+OPXC2DFboqN0JVhn/89Vq3Zjivo2DUMa3o1PqhL3f4KOQj2Nb0b
-         uvhOLmABxLpbwyCvLCON4gK/W39+ap0Odxa5qgdt6CYPJF+o8jVZaO1GLVF9DrRWbh/C
-         VFi5ywlCK2IH/qIMwcJ8CKiFcvOsS0+pRiurmXQnBa9vJtVV+It58HsWh9NZl3CxUBeQ
-         NxU3He9j1cLLVjcdDXrqXAEK0GohzwEbDebPcWRaW+4qiGP05IFuWkGsOFsojVujkUKw
-         +ick0ogmlK/fzG3PWD9yD+hpwrQA9HEmSIiBvg4q+Hc3Ded9Ziavn1krQzaYmR7QxolB
-         JSww==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=fYS/m1bPyZkdQcLi31wUabR/VQlSuGHp2lU5CceXrgc=;
+        b=CyfllJeeN46yeFryr1S/z5scYIs5a4+SXqm2bhA0jRgEMhF8hn2ozQQkxo68RRsiV0
+         g1Sn+jrSydQwrDsI21h839+RepLjtCQAkOGkT8/pTNeO4jsqfDjnCS66zSTxRL3oYywS
+         VYapWSsfW3HjnpWF14tULNsxcx1U4TbJzrhbgdncavuy2MkwT2Pegv+Bjp7yuUCXtIBB
+         mMydRSsBHZPh4skzyl1qTioW1HMkvReH+qksu0F5EgEzHeNoFo1WtJsNrkG8Af4EsvIl
+         oGEeZ2U1T96Jo3zmJ9HzoEbXon0OjXf+iQDQ09W3ra2rjDKaErFUnkAUfQhrb8gU+w6y
+         xDaA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m6cIfxBcFjZq6+1VuY/24vXo1lFfqHVn9WQbeI8mA4k=;
-        b=WmmwyON33PYU7j6cpREDX9cW0vcUPVMeYnHvoW3zey5p2Wsvldc5Kb+TKg5xwOFxub
-         5Lg3wcPyC4knaKV4P/gr9f4n4RkzOQz/FAHYBIExVZYgyHZM8w9P3Kblqg58X/CH7KGV
-         vJO3ytDNUjvmjDFwf1+65Ztg6xOe+Q/an8+tVzZ8hjkBr7Fha1BCdR0JW6ZZ0VrcCNEw
-         KqAPl5SvX7EB4ID0ShXkbeTHL7fi2F6DQZkDWx9SszpXenkkpAD/qLHN3Ib//2zhFp9a
-         t1lA8TYNrLMlXdH12NDTNWU4ToZwe2CRvoBC06Jv4bQkWjyN85ihbYTwzCKPKQ03Wk5b
-         MSkg==
-X-Gm-Message-State: AOAM530p67BXjKPB5OpbegsXmf3lOghbIlQtQlaLU3BjhRsRFXv2h6sC
-        UyYDlYUFNk56lEnwFr0C/CJQ5nUvKdbOQw==
-X-Google-Smtp-Source: ABdhPJyEI+lVTd1UuRYDzmaBCDS1H7ql5nZNEJPhHzQ2rI6RzwNT+DWkSnIPFNqHu/zjNVAdopBurg==
-X-Received: by 2002:a1c:bdc4:: with SMTP id n187mr402341wmf.109.1599590016609;
-        Tue, 08 Sep 2020 11:33:36 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=fYS/m1bPyZkdQcLi31wUabR/VQlSuGHp2lU5CceXrgc=;
+        b=INbSZJ7P33Jeo4DoEe6uXJEM21mV52lT9IDMjgMszchSqLF3glrWjP2EzY+0pZFbbB
+         PBesJ3GJPmxKljwBWnHi6+2VV+Bali4MvAYN8DWpy/ieUptKm7rnGG0XuCD0C3Wn15YE
+         iGmKUpIcOacec7rZ56bJk2ZG0LLHS2/HWOwQOq/l8iMlYmQqfj+AoougEy0v/5JyjHGz
+         ncG7b/zKvOuJguUJqIwPYHUWDxxfwu89aH/WksmQOsKhc1uu2AhrZyB4UoPQevNMr2RB
+         t8GSmsIw3hOfzdxdmzd+OG16T2XC6DuXMLAgLkdPOP2ChVb/2xnzDppeCtfbneEpVN5F
+         2tvA==
+X-Gm-Message-State: AOAM531xv5E8LyYPcpB7hfJJ3cIBXuaG1pLvRb6BZTe9HMP8PSqd87cK
+        tv4LnOZFSzQoBt2ydmOak0eu7w==
+X-Google-Smtp-Source: ABdhPJyziyqMXadeVj5u6zT/yaXIdYXwkRqxxRLkZ7waYIATDzhK5Z/eFJ2N8m/4HG8kn+XstXsl+Q==
+X-Received: by 2002:a5d:6283:: with SMTP id k3mr969670wru.191.1599590018513;
+        Tue, 08 Sep 2020 11:33:38 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id b194sm294992wmd.42.2020.09.08.11.33.35
+        by smtp.gmail.com with ESMTPSA id b194sm294992wmd.42.2020.09.08.11.33.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:33:36 -0700 (PDT)
+        Tue, 08 Sep 2020 11:33:38 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [RESEND PATCH v3 0/2] wcn36xx: Miscellaneous updates
-Date:   Tue,  8 Sep 2020 19:34:22 +0100
-Message-Id: <20200908183424.2871101-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v3 2/2] wcn36xx: Ensure spaces between functions
+Date:   Tue,  8 Sep 2020 19:34:24 +0100
+Message-Id: <20200908183424.2871101-3-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200908183424.2871101-1-bryan.odonoghue@linaro.org>
+References: <20200908183424.2871101-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -75,32 +77,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is seven in a set of seven to add support for wcn3680 at 802.11ac
-data-rates.
+This is a small update to fix an error I saw where a few functions do not
+have a blank line in between them.
 
-This set marks functions previously declared non-static as static. In order
-to facilitate granular standalone commits and avoid single patch
-code-bombs. A series of functions were previously declared non-static.
-Antecedent changes have made use of those functions so we can now mark them
-static.
+Affects smd.c and main.c - no logic is affected by this change.
 
-In a similar theme of cleanup, I've added on a fix for some whitespace
-damage in main.c and smd.c which while not strictly related to wcn3680 I've
-opted to throw into the bucket under a "miscellaneous update" title.
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 1 +
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++++
+ 2 files changed, 5 insertions(+)
 
-Hope that's OK.
-
-RESEND:
-- Messed up my .git/config resending from my @linaro.org address
-
-Bryan O'Donoghue (2):
-  wcn36xx: Mark internal smd functions static
-  wcn36xx: Ensure spaces between functions
-
- drivers/net/wireless/ath/wcn36xx/main.c |  1 +
- drivers/net/wireless/ath/wcn36xx/smd.c  | 38 ++++++++++++++-----------
- 2 files changed, 23 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 9e97513feeb5..929425415d05 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -775,6 +775,7 @@ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
+ 				sta->vht_cap.vht_mcs.tx_mcs_map;
+ 	}
+ }
++
+ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates)
+ {
+ 	u16 ofdm_rates[WCN36XX_HAL_NUM_OFDM_RATES] = {
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index a8d2af74ef62..b6e49f8f029b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -218,6 +218,7 @@ static inline u8 is_cap_supported(unsigned long caps, unsigned long flag)
+ {
+ 	return caps & flag ? 1 : 0;
+ }
++
+ static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
+ 		struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_bss_params *bss_params)
+@@ -2192,6 +2193,7 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
+ 	mutex_unlock(&wcn->hal_mutex);
+ 	return ret;
+ }
++
+ int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
+ {
+ 	struct wcn36xx_hal_set_power_params_req_msg msg_body;
+@@ -2221,6 +2223,7 @@ int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
+ 	mutex_unlock(&wcn->hal_mutex);
+ 	return ret;
+ }
++
+ /* Notice: This function should be called after associated, or else it
+  * will be invalid
+  */
+@@ -2900,6 +2903,7 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 		kfree(hal_ind_msg);
+ 	}
+ }
++
+ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ {
+ 	wcn->hal_ind_wq = create_freezable_workqueue("wcn36xx_smd_ind");
 -- 
 2.27.0
 
