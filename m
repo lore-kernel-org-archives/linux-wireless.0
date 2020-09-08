@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D68C2D0A7
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98712C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 046882080C
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61AFE2080A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="y4UZqdFw"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h4dRPqir"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731691AbgIHSec (ORCPT
+        id S1731722AbgIHSej (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:34:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50220 "EHLO
+        Tue, 8 Sep 2020 14:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731764AbgIHScu (ORCPT
+        with ESMTP id S1731770AbgIHScq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:32:50 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58946C0617A5
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:16 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id g4so228558wrs.5
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:16 -0700 (PDT)
+        Tue, 8 Sep 2020 14:32:46 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FF4AC061386
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:47 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id k15so198652wrn.10
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HkVQqcl8Y72suOLVUyDLPMVLmKcAEdEBQttsVtZoFdc=;
-        b=y4UZqdFwkp8nFPNtkEBkwllKDqiZ5DJDPAoBQ1pt+AR0JBZGN4f7fZLScqvPdZ+5gN
-         gEWX8+QDG7hzBMrEsrr/M1BMq6I3JpC6U/xpXHG/xXJv89+5qpaY/yP7fQB2B4CiI9hP
-         eH0P2vw4VQ9OBXKugLSNBMx+PyHzV1lcwfkhYLAuXZleCoUzzWqFTc16v/3mN9Rbc+ty
-         xLpxL4Yi88QCh3T2Tq52TctSGCM5ZE2PhazvxteoPr+PRL+RNyBSu+Lcqgp8oAzodc3R
-         kp1g+v3j+qUF2O6OvhUw7D5px4thZ5TCnrgja/98Lk35Frp5n4Y9ur/+nbaqYt0Un1Za
-         oOOQ==
+        bh=hC7svxUBC9+5fAYER72YcMO5aUlPkhhS9EHYF1mTiIk=;
+        b=h4dRPqirVG/ZcKO5UTT1JH1P+lYaS6pw0Ng70MDiUXh/v9D90SgbAsSoEHIwyBh17o
+         BxmLFvEkp5N3amoRRmgk1PpJAGbnisVGUae3b/erXlFemb8FaMBG1rCDYiSlbSlvNG20
+         /JxV6YUSVy1V7oV2/+4IKkizDm9Dulztjm+yrMb1WRuY5fXxyDlIPWeLVkXGc2+z0J2S
+         AJ/vyN0484pPVwPJk+luypI6duA1pWYmZ1zf60UjtKZpxApFha0gV2xdDSG7IJivuSB8
+         SsCRA8DOpaNUdcLYtkquCHdtFPOA+7zdoAgMJmWjleT1gxeLpmluux7p7z2H0ZYgGC1r
+         v7ng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HkVQqcl8Y72suOLVUyDLPMVLmKcAEdEBQttsVtZoFdc=;
-        b=OS6HQRrHLDlqIcNUYFzinxUCkoPLk2mMDrpLLzSYrswzKSnCSqCfU/c4ZtRH41Yo5+
-         fVKqQ0uzLHoPOYNd0zr9oZdshdw2oinkQ9ZYbM0J/gsUQ9AbX3G44jZVSxy9VNoiSM7T
-         ybhdZNUxoKUpTUxX6hrc2XVCGspwJf9/Q1RemaaUNv8aMkn90EuNbd2+B2MYqT6fNw51
-         3WPXhtomnyj04b1KWWgBtqpPbJlFn0lFtRgJAxuHhFT/jo4WNypCCk72IYm4QIjBSggk
-         m5lR4CjVH5NTGi9DU+Nze4qiMK+mb9KbWFj1TPm/QXnHvcs/LdPoNUKoibSxB8nTYd9s
-         73vQ==
-X-Gm-Message-State: AOAM532WehbOw939wBxQKFufA0kBynO1aLbhQjK/c0GBhrxRKoj73Sqr
-        WevFePENQXyVWTFY5TvBIEA6BQ==
-X-Google-Smtp-Source: ABdhPJzlLeVSm6L1QG/FzThUZL/hwPD73T9x+gfpdyG0srSg/leuNMuP7KqPVRpBq7TyfyZgP67tYQ==
-X-Received: by 2002:a5d:46c5:: with SMTP id g5mr951320wrs.416.1599589455037;
-        Tue, 08 Sep 2020 11:24:15 -0700 (PDT)
+        bh=hC7svxUBC9+5fAYER72YcMO5aUlPkhhS9EHYF1mTiIk=;
+        b=hPX/mXiKy5NHh4qo+3XtaQzlTsromAaUOre1naNMRNBbMsvA5TWRTRSulZ4/cV+e+w
+         wwXDmw6FRAuE1k01kA/ScKNdoVOdVInyadh43u7x8BYy0T2gaADn8XAIMM5rueo6kA7K
+         4cP3v905MqQAnNqGfL7+mO2wQ1APIwi6hr5EBmqhTADVuy3mbDfcixc1IJI6Y3qaCHDG
+         +9ngJwDmNij+GwAeCsCUC3I21k/DLUTgztku814W397Vegwm9qk2AFF9YXgenMWoVFl9
+         lg2KUeSu5kezlEAVe3pLFnpid+pPC3q8w/1PIg+B2qvYBVS79eL4p4PPXDiBHb3kvvPh
+         3G1w==
+X-Gm-Message-State: AOAM533mVeMzFjUkTBUHM0UIPbhmmc9e+LD1OnbXYh7EQX2gdw9lYv00
+        JwpNjK+TkC2AaCJgSrOesGjxpQ==
+X-Google-Smtp-Source: ABdhPJz0qKdvDPX3/EyhKr1Mjo26OJBWDZBlgu1+sOq/CkdlNHzfXkzzCa6LSOpjAQ3mcPwQzo21wQ==
+X-Received: by 2002:adf:dccd:: with SMTP id x13mr942502wrm.403.1599589486224;
+        Tue, 08 Sep 2020 11:24:46 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id 189sm330439wmb.3.2020.09.08.11.24.14
+        by smtp.gmail.com with ESMTPSA id b84sm381427wmd.0.2020.09.08.11.24.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:24:14 -0700 (PDT)
+        Tue, 08 Sep 2020 11:24:45 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v3 5/7] wcn36xx: Add wcn36xx_smd_config_bss_v0
-Date:   Tue,  8 Sep 2020 19:24:53 +0100
-Message-Id: <20200908182455.2870345-6-bryan.odonoghue@linaro.org>
+Subject: [PATCH v3 4/4] wcn36xx: Latch VHT specific BSS parameters to firmware
+Date:   Tue,  8 Sep 2020 19:25:29 +0100
+Message-Id: <20200908182529.2870478-5-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200908182455.2870345-1-bryan.odonoghue@linaro.org>
-References: <20200908182455.2870345-1-bryan.odonoghue@linaro.org>
+In-Reply-To: <20200908182529.2870478-1-bryan.odonoghue@linaro.org>
+References: <20200908182529.2870478-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,67 +77,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit adds wcn36xx_smd_config_bss_v0() as a step along the road of
-functionally decomposing wcn36xx_smd_config_bss().
+This commit makes use of wcn36xx_smd_set_bss_vht_params() to extract VHT
+parameters from the 80211_sta structure and latch appropriate bits in the
+bss_params_v1 structure for transmission to the wcnss firmware.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 41 ++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 7e3302ba97fa..e603e2d3be16 100644
+index 4672581a4354..b09a3dba757f 100644
 --- a/drivers/net/wireless/ath/wcn36xx/smd.c
 +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1584,6 +1584,47 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
- 	return ret;
- }
+@@ -1679,6 +1679,8 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 	bss->tx_mgmt_power = bss_v0.tx_mgmt_power;
+ 	bss->max_tx_power = bss_v0.max_tx_power;
  
-+int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			      struct ieee80211_sta *sta, const u8 *bssid,
-+			      bool update)
-+{
-+	struct wcn36xx_hal_config_bss_req_msg *msg;
-+	struct wcn36xx_hal_config_bss_params *bss;
-+	struct wcn36xx_hal_config_sta_params *sta_params;
-+	int ret;
++	wcn36xx_smd_set_bss_vht_params(vif, sta_80211, bss);
 +
-+	msg = kzalloc(sizeof(*msg), GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	INIT_HAL_MSG((*msg), WCN36XX_HAL_CONFIG_BSS_REQ);
-+
-+	bss = &msg->bss_params;
-+	sta_params = &bss->sta;
-+
-+	wcn36xx_smd_set_bss_params(wcn, vif, sta, bssid, update, bss);
-+	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
-+
-+	PREPARE_HAL_BUF(wcn->hal_buf, (*msg));
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL,
-+		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
-+		    bss->bssid, bss->self_mac_addr, bss->bss_type,
-+		    bss->oper_mode, bss->nw_type);
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL,
-+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM\n",
-+		    sta_params->bssid, sta_params->action,
-+		    sta_params->sta_index, sta_params->bssid_index,
-+		    sta_params->aid, sta_params->type,
-+		    sta_params->mac);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, msg->header.len);
-+	kfree(msg);
-+
-+	return ret;
-+}
-+
- static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
- 				      struct ieee80211_sta *sta,
+ 	PREPARE_HAL_BUF(wcn->hal_buf, (*msg_body));
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 -- 
 2.27.0
 
