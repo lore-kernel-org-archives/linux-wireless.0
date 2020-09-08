@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01518C43461
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED486C2BC11
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:18:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A075120768
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:18:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFB4020768
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:18:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="YCgqQkS6"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="S7fkX01H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730181AbgIHVSJ (ORCPT
+        id S1730184AbgIHVSK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 17:18:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48524 "EHLO
+        Tue, 8 Sep 2020 17:18:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728631AbgIHVSD (ORCPT
+        with ESMTP id S1730159AbgIHVSE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 17:18:03 -0400
+        Tue, 8 Sep 2020 17:18:04 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3819C061573
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6294C0613ED
         for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 14:18:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,20 +32,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=xaPk7cTDqaEwfXS7jkKrLqiO9M5K7qzRC7RSwWrn9mM=; b=YCgqQkS6g/8tsXCUNbnIhku6iv
-        PMw5+u8ptbaq6VORH0lK7NPIwUrsKzU2fCBMrByo3GVbJl3EJJyhZKeAImqkoR6jlIcdslRURfCIk
-        bOI4glaUufCHtmT8YGpKyCbydzVoY0vzL2lPZeIoWo2faTBfki/Mh0SdZeWHNKi/tkAE=;
+        bh=DROicD7xQI1KGUrU5PIXUBoYP+VU6OmNWzVs5m7D0vU=; b=S7fkX01HTFX/5TBFmJZjXfuQTd
+        f/+26OTGDDkFfv31+rX74LeyPIcA/IVDRnRpyJymrEGhJBY1wZSSEgUNa77TBrayIapnbkhbpOBKc
+        H17GRDC3sleVNfhABYEL1oCZo4FCniImgv3LYQobaz0doEuRKcpP9YtImk+vAYPjvvso=;
 Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1kFl02-0002Cx-Hi
-        for linux-wireless@vger.kernel.org; Tue, 08 Sep 2020 23:17:58 +0200
+        id 1kFl03-0002Cx-K9
+        for linux-wireless@vger.kernel.org; Tue, 08 Sep 2020 23:17:59 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] mt76: testmode: add a limit for queued tx_frames packets
-Date:   Tue,  8 Sep 2020 23:17:48 +0200
-Message-Id: <20200908211756.15998-3-nbd@nbd.name>
+Subject: [PATCH 09/11] mt76: mt7915: fix queue/tid mapping for airtime reporting
+Date:   Tue,  8 Sep 2020 23:17:54 +0200
+Message-Id: <20200908211756.15998-9-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200908211756.15998-1-nbd@nbd.name>
 References: <20200908211756.15998-1-nbd@nbd.name>
@@ -56,27 +56,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This avoids running out of available tx tokens
+Unlike 7615, 7915 uses the same AC index for rx and tx, which matches the
+LMAC queue mapping
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/testmode.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/testmode.c b/drivers/net/wireless/mediatek/mt76/testmode.c
-index f6fd515dfe57..a38abb6868d5 100644
---- a/drivers/net/wireless/mediatek/mt76/testmode.c
-+++ b/drivers/net/wireless/mediatek/mt76/testmode.c
-@@ -33,7 +33,8 @@ void mt76_testmode_tx_pending(struct mt76_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 54088d8e151f..defd0a98f7e2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -105,12 +105,6 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 		[IEEE80211_AC_VI] = 4,
+ 		[IEEE80211_AC_VO] = 6
+ 	};
+-	static const u8 hw_queue_map[] = {
+-		[IEEE80211_AC_BK] = 0,
+-		[IEEE80211_AC_BE] = 1,
+-		[IEEE80211_AC_VI] = 2,
+-		[IEEE80211_AC_VO] = 3,
+-	};
+ 	struct ieee80211_sta *sta;
+ 	struct mt7915_sta *msta;
+ 	u32 tx_time[IEEE80211_NUM_ACS], rx_time[IEEE80211_NUM_ACS];
+@@ -169,8 +163,9 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 		sta = container_of((void *)msta, struct ieee80211_sta,
+ 				   drv_priv);
+ 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-			u32 tx_cur = tx_time[i];
+-			u32 rx_cur = rx_time[hw_queue_map[i]];
++			u8 q = mt7915_lmac_mapping(dev, i);
++			u32 tx_cur = tx_time[q];
++			u32 rx_cur = rx_time[q];
+ 			u8 tid = ac_to_tid[i];
  
- 	spin_lock_bh(&q->lock);
- 
--	while (td->tx_pending > 0 && q->queued < q->ndesc / 2) {
-+	while (td->tx_pending > 0 && td->tx_queued - td->tx_done < 1000 &&
-+	       q->queued < q->ndesc / 2) {
- 		int ret;
- 
- 		ret = dev->queue_ops->tx_queue_skb(dev, qid, skb_get(skb), wcid, NULL);
+ 			if (!tx_cur && !rx_cur)
 -- 
 2.28.0
 
