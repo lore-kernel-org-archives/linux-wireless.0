@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDCD5C433E2
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9F7C43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 899F520757
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E069020757
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731210AbgIHTEF (ORCPT
+        id S1731693AbgIHTEF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 8 Sep 2020 15:04:05 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:52732 "EHLO
+Received: from mail.adapt-ip.com ([173.164.178.19]:52822 "EHLO
         web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731713AbgIHTDp (ORCPT
+        with ESMTP id S1731731AbgIHTDx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 15:03:45 -0400
+        Tue, 8 Sep 2020 15:03:53 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 0A23E4F9ABB;
-        Tue,  8 Sep 2020 19:03:43 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTP id A3D304F9B0D;
+        Tue,  8 Sep 2020 19:03:49 +0000 (UTC)
 X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
 Received: from web.adapt-ip.com ([127.0.0.1])
         by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id RwR6yMz7_3Cc; Tue,  8 Sep 2020 19:03:39 +0000 (UTC)
+        with ESMTP id 12W6_bXWjoKp; Tue,  8 Sep 2020 19:03:45 +0000 (UTC)
 Received: from atlas.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
         (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 06B144F9B04;
-        Tue,  8 Sep 2020 19:03:23 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTPSA id E6F9D4F9B0B;
+        Tue,  8 Sep 2020 19:03:24 +0000 (UTC)
 From:   Thomas Pedersen <thomas@adapt-ip.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
         Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH v3 13/22] cfg80211: handle Association Response from S1G STA
-Date:   Tue,  8 Sep 2020 12:03:14 -0700
-Message-Id: <20200908190323.15814-14-thomas@adapt-ip.com>
+Subject: [PATCH v3 16/22] mac80211: handle S1G low rates
+Date:   Tue,  8 Sep 2020 12:03:17 -0700
+Message-Id: <20200908190323.15814-17-thomas@adapt-ip.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200908190323.15814-1-thomas@adapt-ip.com>
 References: <20200908190323.15814-1-thomas@adapt-ip.com>
@@ -49,70 +49,110 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The sending STA type is implicit based on beacon or probe
-response content. If sending STA was an S1G STA, adjust
-the Information Element location accordingly.
+S1G doesn't have legacy (sband->bitrates) rates, only MCS.
+For now, just send a frame at MCS 0 if a low rate is
+requested. Note we also redefine (since we're out of TX
+flags) TX_RC_VHT_MCS as TX_RC_S1G_MCS to indicate an S1G
+MCS. This is probably OK as VHT MCS is not valid on S1G
+band and vice versa.
 
 Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
 ---
- include/linux/ieee80211.h |  5 +++++
- net/wireless/mlme.c       | 20 ++++++++++++++++++++
- 2 files changed, 25 insertions(+)
+ include/net/mac80211.h |  2 ++
+ net/mac80211/rate.c    | 33 ++++++++++++++++++++++++++-------
+ 2 files changed, 28 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index bca4bb443291..690d00505649 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1100,6 +1100,11 @@ struct ieee80211_mgmt {
- 			/* followed by Supported rates */
- 			u8 variable[0];
- 		} __packed assoc_resp, reassoc_resp;
-+		struct {
-+			__le16 capab_info;
-+			__le16 status_code;
-+			u8 variable[0];
-+		} __packed s1g_assoc_resp, s1g_reassoc_resp;
- 		struct {
- 			__le16 capab_info;
- 			__le16 listen_interval;
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index db7333e20dd7..f8655452b81a 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -30,6 +30,8 @@ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)buf;
- 	struct cfg80211_connect_resp_params cr;
-+	const struct cfg80211_bss_ies *ies;
-+	const u8 *s1g;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ec148b3e9c41..9ea743afb986 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -812,6 +812,8 @@ enum mac80211_tx_info_flags {
  
- 	memset(&cr, 0, sizeof(cr));
- 	cr.status = (int)le16_to_cpu(mgmt->u.assoc_resp.status_code);
-@@ -42,6 +44,24 @@ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
- 		len - offsetof(struct ieee80211_mgmt, u.assoc_resp.variable);
- 	cr.timeout_reason = NL80211_TIMEOUT_UNSPECIFIED;
+ #define IEEE80211_TX_CTL_STBC_SHIFT		23
  
-+	/* Detect whether this was an S1G Association Response and adjust IE
-+	 * location accordingly.
-+	 */
-+	rcu_read_lock();
-+	ies = rcu_dereference(bss->ies);
-+	if (WARN_ON(!ies)) {
-+		rcu_read_unlock();
++#define IEEE80211_TX_RC_S1G_MCS IEEE80211_TX_RC_VHT_MCS
++
+ /**
+  * enum mac80211_tx_control_flags - flags to describe transmit control
+  *
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index b051f125d3af..63266d73c252 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -266,10 +266,15 @@ void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(!sdata->vif.bss_conf.chandef.chan))
+ 		return;
+ 
++	band = sdata->vif.bss_conf.chandef.chan->band;
++	if (band == NL80211_BAND_S1GHZ) {
++		/* TODO */
 +		return;
 +	}
-+	s1g = cfg80211_find_ie(WLAN_EID_S1G_CAPABILITIES, ies->data, ies->len);
-+	if (s1g) {
-+		cr.resp_ie = (u8 *)&mgmt->u.s1g_assoc_resp.variable;
-+		cr.resp_ie_len =
-+			len - offsetof(struct ieee80211_mgmt,
-+				       u.s1g_assoc_resp.variable);
-+	}
-+	rcu_read_unlock();
 +
- 	trace_cfg80211_send_rx_assoc(dev, bss);
+ 	if (WARN_ON_ONCE(!basic_rates))
+ 		return;
  
- 	/*
+-	band = sdata->vif.bss_conf.chandef.chan->band;
+ 	user_mask = sdata->rc_rateidx_mask[band];
+ 	sband = local->hw.wiphy->bands[band];
+ 
+@@ -296,21 +301,29 @@ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
+ 		!ieee80211_is_data(fc);
+ }
+ 
+-static void rc_send_low_basicrate(s8 *idx, u32 basic_rates,
++static void rc_send_low_basicrate(struct ieee80211_tx_rate *rate,
++				  u32 basic_rates,
+ 				  struct ieee80211_supported_band *sband)
+ {
+ 	u8 i;
+ 
++	if (sband->band == NL80211_BAND_S1GHZ) {
++		/* TODO */
++		rate->flags |= IEEE80211_TX_RC_S1G_MCS;
++		rate->idx = 0;
++		return;
++	}
++
+ 	if (basic_rates == 0)
+ 		return; /* assume basic rates unknown and accept rate */
+-	if (*idx < 0)
++	if (rate->idx < 0)
+ 		return;
+-	if (basic_rates & (1 << *idx))
++	if (basic_rates & (1 << rate->idx))
+ 		return; /* selected rate is a basic rate */
+ 
+-	for (i = *idx + 1; i <= sband->n_bitrates; i++) {
++	for (i = rate->idx + 1; i <= sband->n_bitrates; i++) {
+ 		if (basic_rates & (1 << i)) {
+-			*idx = i;
++			rate->idx = i;
+ 			return;
+ 		}
+ 	}
+@@ -328,6 +341,12 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
+ 	u32 rate_flags =
+ 		ieee80211_chandef_rate_flags(&hw->conf.chandef);
+ 
++	if (sband->band == NL80211_BAND_S1GHZ) {
++		info->control.rates[0].flags |= IEEE80211_TX_RC_S1G_MCS;
++		info->control.rates[0].idx = 0;
++		return;
++	}
++
+ 	if ((sband->band == NL80211_BAND_2GHZ) &&
+ 	    (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
+ 		rate_flags |= IEEE80211_RATE_ERP_G;
+@@ -388,7 +407,7 @@ static bool rate_control_send_low(struct ieee80211_sta *pubsta,
+ 		}
+ 
+ 		if (use_basicrate)
+-			rc_send_low_basicrate(&info->control.rates[0].idx,
++			rc_send_low_basicrate(&info->control.rates[0],
+ 					      txrc->bss_conf->basic_rates,
+ 					      sband);
+ 
 -- 
 2.20.1
 
