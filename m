@@ -2,126 +2,75 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 093F8C43461
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:49:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEDAC43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7FF12078B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:49:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="GkrqEuGs"
+	by mail.kernel.org (Postfix) with ESMTP id 9E66E2074D
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731365AbgIHRs6 (ORCPT
+        id S1732169AbgIHSDj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 13:48:58 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:42006 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730976AbgIHRsy (ORCPT
+        Tue, 8 Sep 2020 14:03:39 -0400
+Received: from mail.adapt-ip.com ([173.164.178.19]:50772 "EHLO
+        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731755AbgIHSAq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 13:48:54 -0400
-Received: from [192.168.254.6] (unknown [50.34.202.127])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 6C81613C2B1;
-        Tue,  8 Sep 2020 10:48:50 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 6C81613C2B1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1599587330;
-        bh=R2QZm8VB7bQ0se94qGtTrscUZxR/PTLC+TUOE7ut3Lc=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=GkrqEuGslGHq54u623e9X2JHcHvwuG/jWa9i8F7dgM+vgs7lyDzkEr7yZQIQsgP0g
-         zBlgFzkvkYYT0D2hnk+QNiLOHCQeCDS7rNnvMjVvFDbN/tVk5fNEg7u6GFQ/oguqGd
-         1ybKH39odhFoi7xcu1qG3OXQAgl05uyK8RiTYRKY=
-Subject: Re: [PATCH,v4] Revert "ath10k: fix DMA related firmware crashes on
- multiple devices"
-To:     Zhi Chen <zhichen@codeaurora.org>, ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-References: <1578976521-6104-1-git-send-email-zhichen@codeaurora.org>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <79a88865-6df5-e7a4-deb6-6025cc9d87e4@candelatech.com>
-Date:   Tue, 8 Sep 2020 10:48:49 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        Tue, 8 Sep 2020 14:00:46 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by web.adapt-ip.com (Postfix) with ESMTP id 71A8B4F9935;
+        Tue,  8 Sep 2020 18:00:39 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
+Received: from web.adapt-ip.com ([127.0.0.1])
+        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id RmcBiJmQjGWv; Tue,  8 Sep 2020 18:00:35 +0000 (UTC)
+Received: from mail.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
+        (Authenticated sender: thomas@adapt-ip.com)
+        by web.adapt-ip.com (Postfix) with ESMTPSA id B72D54F992B;
+        Tue,  8 Sep 2020 18:00:34 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <1578976521-6104-1-git-send-email-zhichen@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-MW
+Date:   Tue, 08 Sep 2020 11:00:33 -0700
+From:   Thomas Pedersen <thomas@adapt-ip.com>
+To:     kernel test robot <rong.a.chen@intel.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        0day robot <lkp@intel.com>, lkp@lists.01.org
+Subject: Re: [mac80211_hwsim] 8cafe19852: hwsim.fst_ap_config_default.fail
+In-Reply-To: <20200906084935.GD31308@shao2-debian>
+References: <20200906084935.GD31308@shao2-debian>
+User-Agent: Roundcube Webmail/1.4.7
+Message-ID: <4b20df478e8e9a1e36dfa92b3c510022@adapt-ip.com>
+X-Sender: thomas@adapt-ip.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+- LKML
 
-Just FYI:  I added this patch to my ath10k-ct driver, and a user reported it causes
-regressions on his particular 9888 system when using ath10k-ct wave-2 firmware:
-
-[   21.204868] ath10k_pci 0000:00:00.0: qca9888 hw2.0 target 0x01000000 chip_id 0x00000000 sub 0000:0000
-[   21.214437] ath10k_pci 0000:00:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 1 testmode 0
-[   21.233298] ath10k_pci 0000:00:00.0: firmware ver 10.4b-ct-9888-tH-13-8c5b2baa2 api 5 features 
-mfp,peer-flow-ctrl,txstatus-noack,wmi-10.x-CT,ratemask-CT,regdump-CT,txrate-CT,flush-all-CT,pingpong-CT,ch-regs-CT,nop-CT,htt-mgt-CT,set-special-CT,no-bmiss-CT,tx-rc-CT,cust-stats-CT,txrate2-CT,beacon-cb-CT,wmi-block-ack-CT,wmi-bcn-rc-CT 
-crc32 a00b5f36
-[   21.596684] ath10k_pci 0000:00:00.0: board_file api 2 bmi_id 0:20 crc32 5bb32c02[   23.546156] ath10k_pci 0000:00:00.0: unsupported HTC service id: 1536
-
-I'll revert this for the 9888 chipset (at least) in my driver, possibly you need to do similar.
-
-https://github.com/greearb/ath10k-ct/issues/153
-
-Thanks,
-Ben
-
-On 1/13/20 8:35 PM, Zhi Chen wrote:
-> This reverts commit 76d164f582150fd0259ec0fcbc485470bcd8033e.
-> PCIe hung issue was observed on multiple platforms. The issue was reproduced
-> when DUT was configured as AP and associated with 50+ STAs.
+On 2020-09-06 01:49, kernel test robot wrote:
+> Greeting,
 > 
-> For QCA9984/QCA9888, the DMA_BURST_SIZE register controls the AXI burst size
-> of the RD/WR access to the HOST MEM.
-> 0 - No split , RAW read/write transfer size from MAC is put out on bus
->      as burst length
-> 1 - Split at 256 byte boundary
-> 2,3 - Reserved
+> FYI, we noticed the following commit (built with gcc-9):
 > 
-> With PCIe protocol analyzer, we can see DMA Read crossing 4KB boundary when
-> issue happened. It broke PCIe spec and caused PCIe stuck. So revert
-> the default value from 0 to 1.
-> 
-> Tested:  IPQ8064 + QCA9984 with firmware 10.4-3.10-00047
->           QCS404 + QCA9984 with firmware 10.4-3.9.0.2--00044
->           Synaptics AS370 + QCA9888  with firmware 10.4-3.9.0.2--00040
-> 
-> Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
-> ---
-> v2: restored 10.2 register configuration
-> v3: modified commit message
-> v4: resolved conflicts
-> ---
->   drivers/net/wireless/ath/ath10k/hw.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-> index 21b7a2a..775fd62 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -816,7 +816,7 @@ ath10k_is_rssi_enable(struct ath10k_hw_params *hw,
->   
->   #define TARGET_10_4_TX_DBG_LOG_SIZE		1024
->   #define TARGET_10_4_NUM_WDS_ENTRIES		32
-> -#define TARGET_10_4_DMA_BURST_SIZE		0
-> +#define TARGET_10_4_DMA_BURST_SIZE		1
->   #define TARGET_10_4_MAC_AGGR_DELIM		0
->   #define TARGET_10_4_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
->   #define TARGET_10_4_VOW_CONFIG			0
-> 
+> commit: 8cafe19852d95d6494cbd8c1ae24dbd621588a91 ("[PATCH v2 21/22]
+> mac80211_hwsim: indicate support for S1G")
+> url:
+> https://github.com/0day-ci/linux/commits/Thomas-Pedersen/add-support-for-S1G-association/20200901-045826
+> base:
+> https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git
+> master
 
+This is really cool. Thanks Rong (?).
+
+I'll move the "fix TSF timestamp write to S1G beacon" patch before the 
+one which actually exposes S1G to hwsim.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+thomas
