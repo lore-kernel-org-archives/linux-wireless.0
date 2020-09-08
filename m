@@ -2,157 +2,126 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5981EC43461
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 093F8C43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:49:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06E7120936
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:44:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7FF12078B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:49:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="lYC28hVZ"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="GkrqEuGs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726369AbgIHRn4 (ORCPT
+        id S1731365AbgIHRs6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 13:43:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56690 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731661AbgIHQOE (ORCPT
+        Tue, 8 Sep 2020 13:48:58 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:42006 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730976AbgIHRsy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 12:14:04 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EB6AC0617BA
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:17:19 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id e11so14217969wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 05:17:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=Xc7i9lFK8Z9R/MbK0MEH717j2fSmQT53OR6EzTp19b0=;
-        b=lYC28hVZNplpFlJguFTo17ufEt4v1awGCLlyg53LDahG1qLKkk2iSqo4q5/BXpF1tP
-         mYYZh6zrtoYhycnLgwHULltqyyIyWY6Yo5mxnHZMOBx3b3nPR3Oc/IhnvmR0JqAkoVew
-         JHhfPTj/embJyrxkmS1f5C9vrO1r0N2xl5Athz/e5qwnJuYUmjzaCZeYqCsMHUsljg96
-         eRbZrszeSGw76h3YoKo9+GB/gnsos1P2uVf4FurbAeWGkBuGDP5Tw/Hzw9xq5vdUCMzb
-         OY5dq7iH6YNBm0tXXp4cJ71ksPLYvIx1E8P+FIOn+xFjqmLEVPnO3GdXjtY0FUpJA5Jz
-         x4OQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=Xc7i9lFK8Z9R/MbK0MEH717j2fSmQT53OR6EzTp19b0=;
-        b=PmOfwhTNaNHjGHgOy4oxZ00dGaBvDF7F7jJz3dfL9S7mavrBwj3eTc9PrhF1iiLpeQ
-         nKLwXm55dkKz8UHhbnnb94VOr5k3f5QcS6bLgaRmdcsQaiRwHsWdkkhG0A/8BgJms62y
-         6bFpmXUtuuJBtX8pbc1Z8uTGUPtw2i4x3PIFqixxGmqHWm6S8xWigb2hG1mVAlmhYC6W
-         DvAobgqFestiu2hHt8jNziR8tI5RoXvllz6dpNrEHY83lVo05yLFG6DDu+73e8tS5zCF
-         GFs1D8aksXDkDepB9DaKO/2DRIcJnhS/lziqHqHTTqcxBMHDZ1k4Qrrzrcg7vM/w5947
-         AjRw==
-X-Gm-Message-State: AOAM532tgW8P57ONZldGjiCK8+wX9Z19S839uOB9EFNFgXl9DByMMw9l
-        +LWmeTYrIULYhMV4KOFznW74zQ3Pjh5ePg==
-X-Google-Smtp-Source: ABdhPJxyI6Xo3tu8zWV1QA/p9cNs1Pi+FbS/Si2RJHDJ9AAZhjuqTxhTHzOs3t4qITlTvFu8PwIiCA==
-X-Received: by 2002:a05:600c:c5:: with SMTP id u5mr4044015wmm.14.1599567438139;
-        Tue, 08 Sep 2020 05:17:18 -0700 (PDT)
-Received: from dell ([91.110.221.179])
-        by smtp.gmail.com with ESMTPSA id g186sm13774918wmg.25.2020.09.08.05.17.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 05:17:17 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 13:17:15 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>
-Subject: Re: [PATCH 16/28] wireless: marvell: mwifiex: init: Move
- 'tos_to_tid_inv' to where it's used
-Message-ID: <20200908121715.GS4400@dell>
-References: <20200819072402.3085022-17-lee.jones@linaro.org>
- <20200831155151.0DCB5C4339C@smtp.codeaurora.org>
- <20200908084953.GJ4400@dell>
- <010101746d98d278-67bb0cbd-fe22-4344-8c2a-9c65e04ff501-000000@us-west-2.amazonses.com>
+        Tue, 8 Sep 2020 13:48:54 -0400
+Received: from [192.168.254.6] (unknown [50.34.202.127])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 6C81613C2B1;
+        Tue,  8 Sep 2020 10:48:50 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 6C81613C2B1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1599587330;
+        bh=R2QZm8VB7bQ0se94qGtTrscUZxR/PTLC+TUOE7ut3Lc=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=GkrqEuGslGHq54u623e9X2JHcHvwuG/jWa9i8F7dgM+vgs7lyDzkEr7yZQIQsgP0g
+         zBlgFzkvkYYT0D2hnk+QNiLOHCQeCDS7rNnvMjVvFDbN/tVk5fNEg7u6GFQ/oguqGd
+         1ybKH39odhFoi7xcu1qG3OXQAgl05uyK8RiTYRKY=
+Subject: Re: [PATCH,v4] Revert "ath10k: fix DMA related firmware crashes on
+ multiple devices"
+To:     Zhi Chen <zhichen@codeaurora.org>, ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+References: <1578976521-6104-1-git-send-email-zhichen@codeaurora.org>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <79a88865-6df5-e7a4-deb6-6025cc9d87e4@candelatech.com>
+Date:   Tue, 8 Sep 2020 10:48:49 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <010101746d98d278-67bb0cbd-fe22-4344-8c2a-9c65e04ff501-000000@us-west-2.amazonses.com>
+In-Reply-To: <1578976521-6104-1-git-send-email-zhichen@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 08 Sep 2020, Kalle Valo wrote:
+Hello,
 
-> Lee Jones <lee.jones@linaro.org> writes:
-> 
-> > On Mon, 31 Aug 2020, Kalle Valo wrote:
-> >
-> >> Lee Jones <lee.jones@linaro.org> wrote:
-> >> 
-> >> > 'tos_to_tid_inv' is only used in 2 of 17 files it's current being
-> >> > included into.
-> >> > 
-> >> > Fixes the following W=1 kernel build warning(s):
-> >> > 
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/main.c:23:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/cmdevt.c:26:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/util.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/txrx.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/11n.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/wmm.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/11n_aggr.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/join.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_cmd.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_ioctl.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_event.c:25:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/uap_txrx.c:23:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/sdio.c:27:
-> >> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_tx.c:25:
-> >> >  drivers/net/wireless/marvell/mwifiex/wmm.h:41:17: warning:
-> >> > ‘tos_to_tid_inv’ defined but not used [-Wunused-const-variable=]
-> >> >  41 | static const u8 tos_to_tid_inv[] = {
-> >> > 
-> >> >  NB: Snipped for brevity
-> >> > 
-> >> > Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-> >> > Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-> >> > Cc: Xinming Hu <huxinming820@gmail.com>
-> >> > Cc: Kalle Valo <kvalo@codeaurora.org>
-> >> > Cc: "David S. Miller" <davem@davemloft.net>
-> >> > Cc: Jakub Kicinski <kuba@kernel.org>
-> >> > Cc: linux-wireless@vger.kernel.org
-> >> > Cc: netdev@vger.kernel.org
-> >> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
-> >> 
-> >> The patch creates two duplicate arrays, this makes it worse than it was
-> >> before.
-> >
-> > We have a choice (and you don't like either of them). :)
-> >
-> > Either add the variable into the file(s) they are used or tell the
-> > compiler that it's okay for other files to declare but not used them
-> > (mark as __maybe_unused).
-> >
-> > What is your preferred solution?
-> 
-> Yue already sent a patch for this (at least I think so, not 100% sure if
-> this is the same case):
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=d56ee19a148edaa9972ca12f817e395ba436078b
-> 
-> But that's the solution I like :) There's only one array and it's shared
-> by all the users.
+Just FYI:  I added this patch to my ath10k-ct driver, and a user reported it causes
+regressions on his particular 9888 system when using ath10k-ct wave-2 firmware:
 
-Any idea if this results in anything different from making use of
-__maybe_unused once compiled?
+[   21.204868] ath10k_pci 0000:00:00.0: qca9888 hw2.0 target 0x01000000 chip_id 0x00000000 sub 0000:0000
+[   21.214437] ath10k_pci 0000:00:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 1 testmode 0
+[   21.233298] ath10k_pci 0000:00:00.0: firmware ver 10.4b-ct-9888-tH-13-8c5b2baa2 api 5 features 
+mfp,peer-flow-ctrl,txstatus-noack,wmi-10.x-CT,ratemask-CT,regdump-CT,txrate-CT,flush-all-CT,pingpong-CT,ch-regs-CT,nop-CT,htt-mgt-CT,set-special-CT,no-bmiss-CT,tx-rc-CT,cust-stats-CT,txrate2-CT,beacon-cb-CT,wmi-block-ack-CT,wmi-bcn-rc-CT 
+crc32 a00b5f36
+[   21.596684] ath10k_pci 0000:00:00.0: board_file api 2 bmi_id 0:20 crc32 5bb32c02[   23.546156] ath10k_pci 0000:00:00.0: unsupported HTC service id: 1536
+
+I'll revert this for the 9888 chipset (at least) in my driver, possibly you need to do similar.
+
+https://github.com/greearb/ath10k-ct/issues/153
+
+Thanks,
+Ben
+
+On 1/13/20 8:35 PM, Zhi Chen wrote:
+> This reverts commit 76d164f582150fd0259ec0fcbc485470bcd8033e.
+> PCIe hung issue was observed on multiple platforms. The issue was reproduced
+> when DUT was configured as AP and associated with 50+ STAs.
+> 
+> For QCA9984/QCA9888, the DMA_BURST_SIZE register controls the AXI burst size
+> of the RD/WR access to the HOST MEM.
+> 0 - No split , RAW read/write transfer size from MAC is put out on bus
+>      as burst length
+> 1 - Split at 256 byte boundary
+> 2,3 - Reserved
+> 
+> With PCIe protocol analyzer, we can see DMA Read crossing 4KB boundary when
+> issue happened. It broke PCIe spec and caused PCIe stuck. So revert
+> the default value from 0 to 1.
+> 
+> Tested:  IPQ8064 + QCA9984 with firmware 10.4-3.10-00047
+>           QCS404 + QCA9984 with firmware 10.4-3.9.0.2--00044
+>           Synaptics AS370 + QCA9888  with firmware 10.4-3.9.0.2--00040
+> 
+> Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
+> ---
+> v2: restored 10.2 register configuration
+> v3: modified commit message
+> v4: resolved conflicts
+> ---
+>   drivers/net/wireless/ath/ath10k/hw.h | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+> index 21b7a2a..775fd62 100644
+> --- a/drivers/net/wireless/ath/ath10k/hw.h
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+> @@ -816,7 +816,7 @@ ath10k_is_rssi_enable(struct ath10k_hw_params *hw,
+>   
+>   #define TARGET_10_4_TX_DBG_LOG_SIZE		1024
+>   #define TARGET_10_4_NUM_WDS_ENTRIES		32
+> -#define TARGET_10_4_DMA_BURST_SIZE		0
+> +#define TARGET_10_4_DMA_BURST_SIZE		1
+>   #define TARGET_10_4_MAC_AGGR_DELIM		0
+>   #define TARGET_10_4_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
+>   #define TARGET_10_4_VOW_CONFIG			0
+> 
+
 
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
