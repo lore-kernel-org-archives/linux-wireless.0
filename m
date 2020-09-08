@@ -2,227 +2,142 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC3DC433E2
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 16:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F9DCC43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D43E8206E7
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 16:43:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C41E720738
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 17:33:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="YnMXpOyH"
+	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CasPNC+K";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="YYzpdjFd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732127AbgIHQmq (ORCPT
+        id S1731732AbgIHRdF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 12:42:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33162 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732019AbgIHQmS (ORCPT
+        Tue, 8 Sep 2020 13:33:05 -0400
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:33420
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731315AbgIHQPT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 12:42:18 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5016C06137E
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:55:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ZVeIXbED33B0oRI14KObhFDllCing8Gcc/5VA62luPM=; b=YnMXpOyHhFG5Rh3diGw5RK7l9Z
-        flJagcBJTybVX05wJJYWlwBT808jTZdwoLJ7W6O5D+Z31ziihIZEFXrMtXs9JZcEx7B5qa7b3aJVW
-        wMCzmRc8URInoS+BJeoMC/a3d9nBeDdaU5X1DasoUJ6eYFsNgJUUUKDobQ3atpFbq1ts=;
-Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kFcry-00050i-EX; Tue, 08 Sep 2020 14:37:06 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH v4 10/14] mac80211: unify 802.3 (offload) and 802.11 tx status codepath
-Date:   Tue,  8 Sep 2020 14:36:58 +0200
-Message-Id: <20200908123702.88454-11-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200908123702.88454-1-nbd@nbd.name>
-References: <20200908123702.88454-1-nbd@nbd.name>
+        Tue, 8 Sep 2020 12:15:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599566566;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding;
+        bh=A0Pg1JJyx96lY6kzESsukz/fsFFg2QJ+mjpfboIMRWc=;
+        b=CasPNC+KAQLq7fbQs/ZX016E5VPiGOgnU5TVmOk/j+oOml3iVfZzlrrRGQNCL5s6
+        Zt56vN2zlw9t3LNw+4h9zWKeNgznCXpYEEb4Y18bGnI7I7HUFZE9g/fNHKOEvMsq5+p
+        LA9GVvP7LhuxaGQrvBo6wCCfCA9EStK1YF3KzOB8=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599566566;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
+        bh=A0Pg1JJyx96lY6kzESsukz/fsFFg2QJ+mjpfboIMRWc=;
+        b=YYzpdjFd4DrmPd7BeZp/TFeYAFS64CzYDs38adPNVsTPlEJoF1WGt/twkFHnsUpW
+        KzOAMQX2IPMZM+HFFzNjdSK1hw2DfdbXaqiRv0MdpJcSsaIDkCxIx9FL4DWZttXwmwW
+        08METUWReBt9Dt3nxeDNIhXDmKAGTfxTLJgYE/Ks=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8FD10C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>
+Subject: Re: [PATCH 16/28] wireless: marvell: mwifiex: init: Move 'tos_to_tid_inv' to where it's used
+References: <20200819072402.3085022-17-lee.jones@linaro.org>
+        <20200831155151.0DCB5C4339C@smtp.codeaurora.org>
+        <20200908084953.GJ4400@dell>
+Date:   Tue, 8 Sep 2020 12:02:46 +0000
+In-Reply-To: <20200908084953.GJ4400@dell> (Lee Jones's message of "Tue, 8 Sep
+        2020 09:49:53 +0100")
+Message-ID: <010101746d98d281-78bf23c9-db60-486f-ada9-fec0467131a4-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-SES-Outgoing: 2020.09.08-54.240.27.187
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make ieee80211_tx_status_8023 call ieee80211_tx_status_ext, similar to
-ieee80211_tx_status.
+Lee Jones <lee.jones@linaro.org> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/status.c | 93 +++++++++++++------------------------------
- 1 file changed, 28 insertions(+), 65 deletions(-)
+> On Mon, 31 Aug 2020, Kalle Valo wrote:
+>
+>> Lee Jones <lee.jones@linaro.org> wrote:
+>>=20
+>> > 'tos_to_tid_inv' is only used in 2 of 17 files it's current being
+>> > included into.
+>> >=20
+>> > Fixes the following W=3D1 kernel build warning(s):
+>> >=20
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/main.c:23:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/cmdevt.c:2=
+6:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/util.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/txrx.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/11n.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/wmm.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/11n_aggr.c=
+:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/11n_rxreor=
+der.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/join.c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_cmd.c:=
+25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_ioctl.=
+c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_event.=
+c:25:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/uap_txrx.c=
+:23:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/sdio.c:27:
+>> >  In file included from drivers/net/wireless/marvell/mwifiex/sta_tx.c:2=
+5:
+>> >  drivers/net/wireless/marvell/mwifiex/wmm.h:41:17: warning:
+>> > =E2=80=98tos_to_tid_inv=E2=80=99 defined but not used [-Wunused-const-=
+variable=3D]
+>> >  41 | static const u8 tos_to_tid_inv[] =3D {
+>> >=20
+>> >  NB: Snipped for brevity
+>> >=20
+>> > Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+>> > Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+>> > Cc: Xinming Hu <huxinming820@gmail.com>
+>> > Cc: Kalle Valo <kvalo@codeaurora.org>
+>> > Cc: "David S. Miller" <davem@davemloft.net>
+>> > Cc: Jakub Kicinski <kuba@kernel.org>
+>> > Cc: linux-wireless@vger.kernel.org
+>> > Cc: netdev@vger.kernel.org
+>> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+>>=20
+>> The patch creates two duplicate arrays, this makes it worse than it was
+>> before.
+>
+> We have a choice (and you don't like either of them). :)
+>
+> Either add the variable into the file(s) they are used or tell the
+> compiler that it's okay for other files to declare but not used them
+> (mark as __maybe_unused).
+>
+> What is your preferred solution?
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index c873910d95e0..ac4d988556b0 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -894,7 +894,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 	struct ieee80211_bar *bar;
- 	int shift = 0;
- 	int tid = IEEE80211_NUM_TIDS;
--	u16 tx_time_est;
- 
- 	sband = local->hw.wiphy->bands[info->band];
- 	fc = hdr->frame_control;
-@@ -987,17 +986,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 		    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
- 			ieee80211_sta_tx_notify(sta->sdata, (void *) skb->data,
- 						acked, info->status.tx_time);
--
--		if ((tx_time_est = ieee80211_info_get_tx_time_est(info)) > 0) {
--			/* Do this here to avoid the expensive lookup of the sta
--			 * in ieee80211_report_used_skb().
--			 */
--			ieee80211_sta_update_pending_airtime(local, sta,
--							     skb_get_queue_mapping(skb),
--							     tx_time_est,
--							     true);
--			ieee80211_info_set_tx_time_est(info, 0);
--		}
- 	}
- 
- 	/* SNMP counters
-@@ -1092,9 +1080,12 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_tx_info *info = status->info;
- 	struct ieee80211_sta *pubsta = status->sta;
-+	struct sk_buff *skb = status->skb;
-+	struct sta_info *sta = NULL;
- 	struct ieee80211_supported_band *sband;
- 	int rates_idx, retry_count;
- 	bool acked, noack_success;
-+	u16 tx_time_est;
- 
- 	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
- 
-@@ -1104,8 +1095,6 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
- 
- 	if (pubsta) {
--		struct sta_info *sta;
--
- 		sta = container_of(pubsta, struct sta_info, sta);
- 
- 		if (!acked && !noack_success)
-@@ -1143,7 +1132,18 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 			ieee80211s_update_metric(local, sta, status);
- 	}
- 
--	if (status->skb)
-+	if (skb && (tx_time_est = ieee80211_info_get_tx_time_est(info)) > 0) {
-+		/* Do this here to avoid the expensive lookup of the sta
-+		 * in ieee80211_report_used_skb().
-+		 */
-+		ieee80211_sta_update_pending_airtime(local, sta,
-+						     skb_get_queue_mapping(skb),
-+						     tx_time_est,
-+						     true);
-+		ieee80211_info_set_tx_time_est(info, 0);
-+	}
-+
-+	if (skb && !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP))
- 		return __ieee80211_tx_status(hw, status, rates_idx,
- 					     retry_count);
- 
-@@ -1158,6 +1158,12 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 	} else {
- 		I802_DEBUG_INC(local->dot11FailedCount);
- 	}
-+
-+	if (!skb)
-+		return;
-+
-+	ieee80211_report_used_skb(local, skb, false);
-+	dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status_ext);
- 
-@@ -1184,66 +1190,23 @@ void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      struct sk_buff *skb)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_status status = {
-+		.skb = skb,
-+		.info = IEEE80211_SKB_CB(skb),
-+	};
- 	struct sta_info *sta;
--	int retry_count;
--	int rates_idx;
--	bool acked;
- 
- 	sdata = vif_to_sdata(vif);
- 
--	acked = info->flags & IEEE80211_TX_STAT_ACK;
--	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
--
- 	rcu_read_lock();
- 
--	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
--		goto counters_update;
--
--	if (IS_ERR(sta))
--		goto counters_update;
--
--	if (!acked)
--		sta->status_stats.retry_failed++;
--
--	if (rates_idx != -1)
--		sta->tx_stats.last_rate = info->status.rates[rates_idx];
--
--	sta->status_stats.retry_count += retry_count;
--
--	if (ieee80211_hw_check(hw, REPORTS_TX_ACK_STATUS)) {
--		sta->status_stats.last_ack = jiffies;
--		if (info->flags & IEEE80211_TX_STAT_ACK) {
--			if (sta->status_stats.lost_packets)
--				sta->status_stats.lost_packets = 0;
-+	if (!ieee80211_lookup_ra_sta(sdata, skb, &sta) && !IS_ERR(sta))
-+		status.sta = &sta->sta;
- 
--			sta->status_stats.last_pkt_time = jiffies;
--		} else {
--			ieee80211_lost_packet(sta, info);
--		}
--	}
-+	ieee80211_tx_status_ext(hw, &status);
- 
--counters_update:
- 	rcu_read_unlock();
--	ieee80211_led_tx(local);
--
--	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
--	    !(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED))
--		goto skip_stats_update;
--
--	I802_DEBUG_INC(local->dot11TransmittedFrameCount);
--	if (is_multicast_ether_addr(skb->data))
--		I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
--	if (retry_count > 0)
--		I802_DEBUG_INC(local->dot11RetryCount);
--	if (retry_count > 1)
--		I802_DEBUG_INC(local->dot11MultipleRetryCount);
--
--skip_stats_update:
--	ieee80211_report_used_skb(local, skb, false);
--	dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status_8023);
- 
--- 
-2.28.0
+Yue already sent a patch for this (at least I think so, not 100% sure if
+this is the same case):
 
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next=
+.git/commit/?id=3Dd56ee19a148edaa9972ca12f817e395ba436078b
+
+But that's the solution I like :) There's only one array and it's shared
+by all the users.
+
+--=20
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
