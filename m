@@ -2,74 +2,72 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03355C433E2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4181AC43461
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFB482080A
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1292E2080A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nB86JucE"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ucbxdG9j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731855AbgIHSex (ORCPT
+        id S1731768AbgIHSey (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:34:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50254 "EHLO
+        Tue, 8 Sep 2020 14:34:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731768AbgIHScq (ORCPT
+        with ESMTP id S1731688AbgIHScm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:32:46 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72315C061384
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:45 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id w5so209654wrp.8
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:45 -0700 (PDT)
+        Tue, 8 Sep 2020 14:32:42 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46621C0617BF
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:43 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id g4so229737wrs.5
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=4pGU/nA6g15qp72AzMRC+uHfqrCO/h9FmNh2p9v6T5o=;
-        b=nB86JucEbA+swApOFbqTnRCSUZV+UhDr/5cI7JDw5kyCTu4oPKPdjNDnNkPB4uR4ub
-         d7GnBZol/Dv/Vicd1K7Ax3qIcwCKeGHnGHHJa3NwPaagPMq+cx1DD8ivYLUzD56629CD
-         A3948XQb0UsbJtOOjrVudMhl9s98BL6ZKP/c3HBQQ2VRPQKEuv8NtO3NIXOweZVZNZjW
-         TjhcAuu/noaJI6Fx18VxH3WtS6O5SKxNn7ttq1RGhIRe0kBZd4WuYPqZNDplHdkQq0pL
-         IN5PklerW7VhSo09TnJCHGbxqX2H2rILibW6+T0UPhJelEo+SMBp3/Qlc9YvM2eXesjW
-         nisw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qmVal2o6VpsWzwKLRZjrXBlSLBI0SBy7tb3BPEz/CLk=;
+        b=ucbxdG9jo8AxIkmpSyk1lJzUMR1qpq377fkvPUy95Z5BY9M43XEk0bDqmkj6hF/ONo
+         Gm2R62JXAd37VC74H5HD7x8VIaWjal5eJ+eSV3u4e8bMn9o+H1uuh4weU94oTXW2F0RE
+         eqf5AkEtgiaS7PwmKd8ISGfGRCiWXfdGLhXFgmpxitYUZhCp/1jYt9fx3epMncYJzFtJ
+         AwZfPVpnhatddsLW4VSQPMk/l6bwxWZeCs9cwUPOvur2KCA4781fw0o7iOFVdZaDnStt
+         yq8q3LXVuCttV/lKYN2/z5TW73o104MqXiRkKnsLDpkZqi0UmTR8IfPXlujnScg1SeoS
+         lEnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=4pGU/nA6g15qp72AzMRC+uHfqrCO/h9FmNh2p9v6T5o=;
-        b=VNNib8cFvAwy2AoYFIOH+58DUyVGdWq2zJOWmLMP03eiTm1IkowiMdkBfdweEra+Sj
-         faztoloKDENs3jSkAvbNzK8Sy3mqTh1/5R/IGq9Q/mG9aw7zJZZ9teDMXvK25OiAqKu6
-         bKgJvUgMZe4R7kcIzafPrw2i3FnGcMTwQIOnYLuiCjQpr5lxFRbeHN3QVcfZOJyvhpsC
-         b6ZJtpC0wu8a9sNOeUuUCb2cImJEaFhoHO1CTPdFTOf4eDo1pzqby0DOAnG+Fi6fdDoj
-         5KsbEjuHkBMFcDBIynPtzifyvNZA1YGmYM9tceMwCPjJS1m3bMgIyIBAyt6C2rlPgeW7
-         /mAw==
-X-Gm-Message-State: AOAM530+gf5bvG7w7InGKDMBCHCt9mzdfWy1egvqYAzCeV8KGZQnW1TE
-        RfO58/EzTWTXDZX4mO63sQEvCw==
-X-Google-Smtp-Source: ABdhPJwIPodEpXvK6F81H35w8+lumqJ6BKSraS/So4uLT/9RcA7gv6vX8UAGTFEv3C1kQvRx6pQDvg==
-X-Received: by 2002:a5d:4e02:: with SMTP id p2mr1007697wrt.276.1599589484150;
-        Tue, 08 Sep 2020 11:24:44 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qmVal2o6VpsWzwKLRZjrXBlSLBI0SBy7tb3BPEz/CLk=;
+        b=mnTKW0i2EqpDQuqNXijBvqhJK+dT3V/JJLjUe+Py5dIXyU3qm2AR/j07AqFcTx5dmY
+         FopVaQ8kafNXv4wKLSNJ8LVEaOC/jmnp5/hzLoTXOdAU994dp0gEAjfQ6DaLKHO9Y5nd
+         moGQD40GoMj22/sXyIUN/WwrmZOxg3QRxE5j6+gJH92QyPxQNhN7XDOEdS/sjV0qB2GY
+         xoUco1avYjYMo4isyJvalgKNDGMV5sZpZpoRGDjOzTytukKFF+tHyVd7WHxzkARuphQH
+         6f1yWZ0BoPeW0iUctlcfX9elCCie11izVKtEAfZe1IrVQNJ0+C5FBgFy9b1//7SCCRg0
+         iBiQ==
+X-Gm-Message-State: AOAM532wkm4SxIH5AIjWFg5hABIiOl82M+0PiXnbgx0EiLqMjTpoFbkB
+        V1V22Y9jk4HFruEtTYaqs8D4nw==
+X-Google-Smtp-Source: ABdhPJxa9L/LsbYhU4fEEieNGVMqiGDuOgtLKlokgTMtjYASkZwSch99zR06gdW0rvdHSnVgdonXiw==
+X-Received: by 2002:adf:e601:: with SMTP id p1mr1011172wrm.172.1599589481964;
+        Tue, 08 Sep 2020 11:24:41 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id b84sm381427wmd.0.2020.09.08.11.24.43
+        by smtp.gmail.com with ESMTPSA id b84sm381427wmd.0.2020.09.08.11.24.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:24:43 -0700 (PDT)
+        Tue, 08 Sep 2020 11:24:41 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v3 2/4] wcn36xx: Define wcn3680 specific firmware parameters
-Date:   Tue,  8 Sep 2020 19:25:27 +0100
-Message-Id: <20200908182529.2870478-3-bryan.odonoghue@linaro.org>
+Subject: [PATCH v3 0/4] wcn36xx: Update firmware config to support wcn3680
+Date:   Tue,  8 Sep 2020 19:25:25 +0100
+Message-Id: <20200908182529.2870478-1-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200908182529.2870478-1-bryan.odonoghue@linaro.org>
-References: <20200908182529.2870478-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,124 +75,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit defines a firmware configuration for the wcn3680 which
-represents a working downstream configuration. This configuration has been
-successfully applied to the upstream driver with antecedent patches
-resulting in the same or better through-put in comparison to the
-downstream driver on the test hardware.
+This series is five in a set of seven to add support for wcn3680 at 802.11ac
+data-rates.
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 96 ++++++++++++++++++++++++++
- 1 file changed, 96 insertions(+)
+This series is about providing a parameters to firmware to get us up onto
+802.11ac data-rates finally.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 04822edaf631..4a53d4b515df 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -80,6 +80,102 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
- 	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_RA_START_RATE, 133), /* MCS 5 */
- };
- 
-+struct wcn36xx_cfg_val wcn3680_cfg_vals[] = {
-+	WCN36XX_CFG_VAL(CURRENT_TX_ANTENNA, 1),
-+	WCN36XX_CFG_VAL(CURRENT_RX_ANTENNA, 1),
-+	WCN36XX_CFG_VAL(LOW_GAIN_OVERRIDE, 0),
-+	WCN36XX_CFG_VAL(POWER_STATE_PER_CHAIN, 785),
-+	WCN36XX_CFG_VAL(CAL_PERIOD, 5),
-+	WCN36XX_CFG_VAL(CAL_CONTROL, 1),
-+	WCN36XX_CFG_VAL(PROXIMITY, 0),
-+	WCN36XX_CFG_VAL(NETWORK_DENSITY, 3),
-+	WCN36XX_CFG_VAL(MAX_MEDIUM_TIME, 4096),
-+	WCN36XX_CFG_VAL(MAX_MPDUS_IN_AMPDU, 64),
-+	WCN36XX_CFG_VAL(RTS_THRESHOLD, 2347),
-+	WCN36XX_CFG_VAL(SHORT_RETRY_LIMIT, 15),
-+	WCN36XX_CFG_VAL(LONG_RETRY_LIMIT, 15),
-+	WCN36XX_CFG_VAL(FRAGMENTATION_THRESHOLD, 8000),
-+	WCN36XX_CFG_VAL(DYNAMIC_THRESHOLD_ZERO, 5),
-+	WCN36XX_CFG_VAL(DYNAMIC_THRESHOLD_ONE, 10),
-+	WCN36XX_CFG_VAL(DYNAMIC_THRESHOLD_TWO, 15),
-+	WCN36XX_CFG_VAL(FIXED_RATE, 0),
-+	WCN36XX_CFG_VAL(RETRYRATE_POLICY, 4),
-+	WCN36XX_CFG_VAL(RETRYRATE_SECONDARY, 0),
-+	WCN36XX_CFG_VAL(RETRYRATE_TERTIARY, 0),
-+	WCN36XX_CFG_VAL(FORCE_POLICY_PROTECTION, 5),
-+	WCN36XX_CFG_VAL(FIXED_RATE_MULTICAST_24GHZ, 1),
-+	WCN36XX_CFG_VAL(FIXED_RATE_MULTICAST_5GHZ, 5),
-+	WCN36XX_CFG_VAL(DEFAULT_RATE_INDEX_24GHZ, 1),
-+	WCN36XX_CFG_VAL(DEFAULT_RATE_INDEX_5GHZ, 5),
-+	WCN36XX_CFG_VAL(MAX_BA_SESSIONS, 40),
-+	WCN36XX_CFG_VAL(PS_DATA_INACTIVITY_TIMEOUT, 200),
-+	WCN36XX_CFG_VAL(PS_ENABLE_BCN_FILTER, 1),
-+	WCN36XX_CFG_VAL(PS_ENABLE_RSSI_MONITOR, 1),
-+	WCN36XX_CFG_VAL(NUM_BEACON_PER_RSSI_AVERAGE, 20),
-+	WCN36XX_CFG_VAL(STATS_PERIOD, 10),
-+	WCN36XX_CFG_VAL(CFP_MAX_DURATION, 30000),
-+	WCN36XX_CFG_VAL(FRAME_TRANS_ENABLED, 0),
-+	WCN36XX_CFG_VAL(BA_THRESHOLD_HIGH, 128),
-+	WCN36XX_CFG_VAL(MAX_BA_BUFFERS, 2560),
-+	WCN36XX_CFG_VAL(DYNAMIC_PS_POLL_VALUE, 0),
-+	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
-+	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
-+	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
-+	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
-+	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
-+	WCN36XX_CFG_VAL(TDLS_PUAPSD_MASK, 0),
-+	WCN36XX_CFG_VAL(TDLS_PUAPSD_BUFFER_STA_CAPABLE, 1),
-+	WCN36XX_CFG_VAL(TDLS_PUAPSD_INACTIVITY_TIME, 0),
-+	WCN36XX_CFG_VAL(TDLS_PUAPSD_RX_FRAME_THRESHOLD, 10),
-+	WCN36XX_CFG_VAL(TDLS_OFF_CHANNEL_CAPABLE, 1),
-+	WCN36XX_CFG_VAL(ENABLE_ADAPTIVE_RX_DRAIN, 1),
-+	WCN36XX_CFG_VAL(FLEXCONNECT_POWER_FACTOR, 0),
-+	WCN36XX_CFG_VAL(ANTENNA_DIVERSITY, 3),
-+	WCN36XX_CFG_VAL(ATH_DISABLE, 0),
-+	WCN36XX_CFG_VAL(BTC_STATIC_OPP_WLAN_ACTIVE_WLAN_LEN, 60000),
-+	WCN36XX_CFG_VAL(BTC_STATIC_OPP_WLAN_ACTIVE_BT_LEN, 90000),
-+	WCN36XX_CFG_VAL(BTC_SAP_STATIC_OPP_ACTIVE_WLAN_LEN, 30000),
-+	WCN36XX_CFG_VAL(BTC_SAP_STATIC_OPP_ACTIVE_BT_LEN, 30000),
-+	WCN36XX_CFG_VAL(ASD_PROBE_INTERVAL, 50),
-+	WCN36XX_CFG_VAL(ASD_TRIGGER_THRESHOLD, -60),
-+	WCN36XX_CFG_VAL(ASD_RTT_RSSI_HYST_THRESHOLD, 3),
-+	WCN36XX_CFG_VAL(BTC_CTS2S_ON_STA_DURING_SCO, 0),
-+	WCN36XX_CFG_VAL(RA_FILTER_ENABLE, 0),
-+	WCN36XX_CFG_VAL(RA_RATE_LIMIT_INTERVAL, 60),
-+	WCN36XX_CFG_VAL(BTC_FATAL_HID_NSNIFF_BLK, 2),
-+	WCN36XX_CFG_VAL(BTC_CRITICAL_HID_NSNIFF_BLK, 1),
-+	WCN36XX_CFG_VAL(BTC_DYN_A2DP_TX_QUEUE_THOLD, 0),
-+	WCN36XX_CFG_VAL(BTC_DYN_OPP_TX_QUEUE_THOLD, 1),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_CONSEC_SP, 10),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_CONSEC_RX_CNT, 50),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_CONSEC_TX_CNT, 50),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_CONSEC_TX_CNT_MEAS_WINDOW, 500),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_CONSEC_RX_CNT_MEAS_WINDOW, 500),
-+	WCN36XX_CFG_VAL(MAX_PSPOLL_IN_WMM_UAPSD_PS_MODE, 0),
-+	WCN36XX_CFG_VAL(MAX_UAPSD_INACTIVITY_INTERVALS, 10),
-+	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_WMMPS, 1),
-+	WCN36XX_CFG_VAL(BURST_MODE_BE_TXOP_VALUE, 0),
-+	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_RA_START_RATE, 136),
-+	WCN36XX_CFG_VAL(BTC_FAST_WLAN_CONN_PREF, 1),
-+	WCN36XX_CFG_VAL(ENABLE_RTSCTS_HTVHT, 0),
-+	WCN36XX_CFG_VAL(BTC_STATIC_OPP_WLAN_IDLE_WLAN_LEN, 30000),
-+	WCN36XX_CFG_VAL(BTC_STATIC_OPP_WLAN_IDLE_BT_LEN, 120000),
-+	WCN36XX_CFG_VAL(LINK_FAIL_TX_CNT, 200),
-+	WCN36XX_CFG_VAL(TOGGLE_ARP_BDRATES, 0),
-+	WCN36XX_CFG_VAL(OPTIMIZE_CA_EVENT, 0),
-+	WCN36XX_CFG_VAL(EXT_SCAN_CONC_MODE, 0),
-+	WCN36XX_CFG_VAL(BAR_WAKEUP_HOST_DISABLE, 0),
-+	WCN36XX_CFG_VAL(SAR_BOFFSET_CORRECTION_ENABLE, 0),
-+	WCN36XX_CFG_VAL(BTC_DISABLE_WLAN_LINK_CRITICAL, 5),
-+	WCN36XX_CFG_VAL(DISABLE_SCAN_DURING_SCO, 2),
-+	WCN36XX_CFG_VAL(CONS_BCNMISS_COUNT, 0),
-+	WCN36XX_CFG_VAL(UNITS_OF_BCN_WAIT_TIME, 0),
-+	WCN36XX_CFG_VAL(TRIGGER_NULLFRAME_BEFORE_HB, 0),
-+	WCN36XX_CFG_VAL(ENABLE_POWERSAVE_OFFLOAD, 0),
-+};
-+
- static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
- {
- 	struct wcn36xx_hal_cfg *entry;
+Once the firmware config is provided to the chip and VHT parameters are
+populated we are good to go in terms of the higher data-rate for the
+wcn3680.
+
+I get typical data-rates of:
+
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-320.00 sec  4.93 GBytes   132 Mbits/sec  445     sender
+[  5]   0.00-320.14 sec  4.93 GBytes   132 Mbits/sec          receiver
+
+Downstream 3.10 prima is getting I'm told 180-200 Mbits/sec on the same
+hardware so with time and effort there's certainly some performance gain to
+be squeezed out of this silicon yet.
+
+However as a first pass, I believe this is good enough and useful enough to
+others to submit for upstream inclusion.
+
+An interesting project and a medium term goal would be to have a unified
+configuration for all three supported chipsets.
+
+For now suggesting a separate firmware configuration to make sure the
+existing lower-speed 802.11n and higher-speed 802.11ac chips don't step on
+each other's toes vis-a-vis firmware parameters.
+
+V3:
+No difference between V3 and V2 below
+https://lore.kernel.org/linux-wireless/20200829034002.2167878-1-bryan.odonoghue@linaro.org/T/#t
+
+V2:
+- Sets the default data-rate for wcn3680 to MCS8
+- Zapps a few firmware settings for power-saving
+  Powersave configuration as a specific wcn3680 topic is WIP on my end
+  and I think therefore better left out of an intiial submission.
+
+V1:
+https://lore.kernel.org/linux-wireless/87eensldhi.fsf@codeaurora.org/T/#t
+
+Bryan O'Donoghue (4):
+  wcn36xx: Extend HAL param config list
+  wcn36xx: Define wcn3680 specific firmware parameters
+  wcn36xx: Add ability to download wcn3680 specific firmware parameters
+  wcn36xx: Latch VHT specific BSS parameters to firmware
+
+ drivers/net/wireless/ath/wcn36xx/hal.h | 124 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wcn36xx/smd.c | 114 ++++++++++++++++++++++-
+ 2 files changed, 234 insertions(+), 4 deletions(-)
+
 -- 
 2.27.0
 
