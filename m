@@ -2,178 +2,124 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D83C43461
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1E87C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:30:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AEC62087D
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ED5F2078B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:30:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=sslab.ics.keio.ac.jp header.i=@sslab.ics.keio.ac.jp header.b="I49U5h01"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731362AbgIHTEl (ORCPT
+        id S1731897AbgIHT3w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 15:04:41 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:52680 "EHLO
-        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731365AbgIHTDc (ORCPT
+        Tue, 8 Sep 2020 15:29:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54564 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730914AbgIHP71 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 15:03:32 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 145A44F9AD6;
-        Tue,  8 Sep 2020 19:03:28 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
-Received: from web.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id SVgKjfAK4VGB; Tue,  8 Sep 2020 19:03:24 +0000 (UTC)
-Received: from atlas.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
-        (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 05A2D4F9AE0;
-        Tue,  8 Sep 2020 19:03:20 +0000 (UTC)
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH v3 03/22] cfg80211: regulatory: handle S1G channels
-Date:   Tue,  8 Sep 2020 12:03:04 -0700
-Message-Id: <20200908190323.15814-4-thomas@adapt-ip.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200908190323.15814-1-thomas@adapt-ip.com>
-References: <20200908190323.15814-1-thomas@adapt-ip.com>
+        Tue, 8 Sep 2020 11:59:27 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F190EC061798
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:02:49 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id z4so18836382wrr.4
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 05:02:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sslab.ics.keio.ac.jp; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=fHKZGBn8DYDZmUzkcQdtFyocASRnUskXF0G0c14zQIY=;
+        b=I49U5h01ldadqbGBSJ+JPwaa/XpVL1RHekltbw+5yb9vJdeb7HlxO2SH/MxU+AXAwy
+         mFX3smUOgYMCiRiMYtlhJgNbB0x45bfB59AcCGTmRd7oJw5HUypGbJ+wDCYeJroaA4or
+         rnyPXVVdanOQ2bOVqv7iQHTy8xceM8lkCF844=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=fHKZGBn8DYDZmUzkcQdtFyocASRnUskXF0G0c14zQIY=;
+        b=ovVQ0yIZFBQlBmgIC4RcaFQby6xGa86tHZgON195pz0Kc3YNoutR2U3CaBSDTL2xCy
+         EkwvOk8mhXIWb09gZrSWX20qBFy9caULWFN8ED4sfTZNvDH6wg9W/hnvRnx7xrTrPAB6
+         Vcok5pRKsc0+g57scahJl4L/QYrjlrggGBQ1jc/as6b74ct1pz2wlGgxI0/UD6OAp5EH
+         7IMrA+QJyXTlc0tF1nyFe+ngjtgSUfW2uQrdeKjFBqpmrv67IPi/pbs+JYHWKEK7mZmg
+         nU2Jc9BNH3oaO6JlYXMIpkl42A1fQF4eXu8zpx6wI5K3g0a1mDWJX2BTMwfYESlDfkDx
+         umZA==
+X-Gm-Message-State: AOAM531kFrCKQhYSoiL5YwXmHVGm/orKXa9A/ezReEynAGNiLqs5NVqQ
+        QIP4r0blWBudu2YU+wwvSYiP6IwoWokSX8vcWu0W/Q==
+X-Google-Smtp-Source: ABdhPJxLDgBM+s6ZLA0Xk5AyltkUhSxI4KJM4wlm9qfxvCvlS9XOiwZ2ahmKEQRp2PPZaiGtIw02aY3u8gSTeR+ZTXc=
+X-Received: by 2002:adf:eecb:: with SMTP id a11mr26936125wrp.356.1599566568481;
+ Tue, 08 Sep 2020 05:02:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <bad4e33a-af2f-b44f-63e5-56386c312a91@broadcom.com>
+ <20200908001324.8215-1-keitasuzuki.park@sslab.ics.keio.ac.jp> <c13ee142-d69d-6d21-6373-acb56507c9ec@broadcom.com>
+In-Reply-To: <c13ee142-d69d-6d21-6373-acb56507c9ec@broadcom.com>
+From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Date:   Tue, 8 Sep 2020 21:02:35 +0900
+Message-ID: <CAEYrHjmG-R4RHn=59AGK8E0jKDXE5sbxQj49VpBvDMvBuBGiig@mail.gmail.com>
+Subject: Re: [PATCH] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Takafumi Kubota <takafumi@sslab.ics.keio.ac.jp>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list@cypress.com>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-S1G channels have a minimum bandwidth of 1Mhz, and there
-is a 1:1 mapping of allowed bandwidth to channel number.
+Thank you for your comment. I am relatively new to the Linux
+kernel community, so I am more than happy to receive comments.
+Please let me know if I'm violating any other rules.
 
-Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+> > Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+> > ---
+> ... changelog here describing difference between previous patch and this
+> version.
 
----
+I will re-send the patch with the change log.
 
-v2:
- - drop the freq_reg_info() interface changes and move the
-   check for S1G band inside. Fixes a driver compile
-   error.
- - fix iterating past bws[] in __freq_reg_info() by
-   setting initial element to 0.
-   Reported-by: kernel test robot <lkp@intel.com>
+Thanks,
+Keita
 
-v3:
-  - use ARRAY_SIZE()
----
- net/wireless/reg.c | 70 ++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 58 insertions(+), 12 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dcd3d39a5372..2864ca2c3cfd 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1617,9 +1617,11 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
- {
- 	const struct ieee80211_regdomain *regd = reg_get_regdomain(wiphy);
- 	const struct ieee80211_reg_rule *reg_rule = NULL;
-+	const u32 bws[] = {0, 1, 2, 4, 5, 8, 10, 16, 20};
-+	int i = ARRAY_SIZE(bws) - 1;
- 	u32 bw;
- 
--	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
-+	for (bw = MHZ_TO_KHZ(bws[i]); bw >= min_bw; bw = MHZ_TO_KHZ(bws[i--])) {
- 		reg_rule = freq_reg_info_regd(center_freq, regd, bw);
- 		if (!IS_ERR(reg_rule))
- 			return reg_rule;
-@@ -1631,7 +1633,9 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
- const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
- 					       u32 center_freq)
- {
--	return __freq_reg_info(wiphy, center_freq, MHZ_TO_KHZ(20));
-+	u32 min_bw = center_freq < MHZ_TO_KHZ(1000) ? 1 : 20;
-+
-+	return __freq_reg_info(wiphy, center_freq, MHZ_TO_KHZ(min_bw));
- }
- EXPORT_SYMBOL(freq_reg_info);
- 
-@@ -1659,6 +1663,7 @@ static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd
- {
- 	const struct ieee80211_freq_range *freq_range = NULL;
- 	u32 max_bandwidth_khz, center_freq_khz, bw_flags = 0;
-+	bool is_s1g = chan->band == NL80211_BAND_S1GHZ;
- 
- 	freq_range = &reg_rule->freq_range;
- 
-@@ -1678,16 +1683,57 @@ static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd
- 					MHZ_TO_KHZ(20)))
- 		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
- 
--	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
--		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
--	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
--		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
--	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
--		bw_flags |= IEEE80211_CHAN_NO_HT40;
--	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
--		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
--	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
--		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
-+	if (is_s1g) {
-+		/* S1G is strict about non overlapping channels. We can
-+		 * calculate which bandwidth is allowed per channel by finding
-+		 * the largest bandwidth which cleanly divides the freq_range.
-+		 */
-+		int edge_offset;
-+		int ch_bw = max_bandwidth_khz;
-+
-+		while (ch_bw) {
-+			edge_offset = (center_freq_khz - ch_bw / 2) -
-+				      freq_range->start_freq_khz;
-+			if (edge_offset % ch_bw == 0) {
-+				switch (KHZ_TO_MHZ(ch_bw)) {
-+				case 1:
-+					bw_flags |= IEEE80211_CHAN_1MHZ;
-+					break;
-+				case 2:
-+					bw_flags |= IEEE80211_CHAN_2MHZ;
-+					break;
-+				case 4:
-+					bw_flags |= IEEE80211_CHAN_4MHZ;
-+					break;
-+				case 8:
-+					bw_flags |= IEEE80211_CHAN_8MHZ;
-+					break;
-+				case 16:
-+					bw_flags |= IEEE80211_CHAN_16MHZ;
-+					break;
-+				default:
-+					/* If we got here, no bandwidths fit on
-+					 * this frequency, ie. band edge.
-+					 */
-+					bw_flags |= IEEE80211_CHAN_DISABLED;
-+					break;
-+				}
-+				break;
-+			}
-+			ch_bw /= 2;
-+		}
-+	} else {
-+		if (max_bandwidth_khz < MHZ_TO_KHZ(10))
-+			bw_flags |= IEEE80211_CHAN_NO_10MHZ;
-+		if (max_bandwidth_khz < MHZ_TO_KHZ(20))
-+			bw_flags |= IEEE80211_CHAN_NO_20MHZ;
-+		if (max_bandwidth_khz < MHZ_TO_KHZ(40))
-+			bw_flags |= IEEE80211_CHAN_NO_HT40;
-+		if (max_bandwidth_khz < MHZ_TO_KHZ(80))
-+			bw_flags |= IEEE80211_CHAN_NO_80MHZ;
-+		if (max_bandwidth_khz < MHZ_TO_KHZ(160))
-+			bw_flags |= IEEE80211_CHAN_NO_160MHZ;
-+	}
- 	return bw_flags;
- }
- 
--- 
-2.20.1
-
+2020=E5=B9=B49=E6=9C=888=E6=97=A5(=E7=81=AB) 20:18 Arend Van Spriel <arend.=
+vanspriel@broadcom.com>:
+>
+> On 9/8/2020 2:13 AM, Keita Suzuki wrote:
+> > When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
+> > the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
+> > freed in the caller function.
+> >
+> > Fix this by calling wlc_phy_detach_lcnphy in the error handler of
+> > wlc_phy_txpwr_srom_read_lcnphy before returning.
+>
+> Thanks for resubmitting the patch addressing my comment. For clarity it
+> is recommended to mark the subject with '[PATCH V2]' and add a ...
+>
+> > Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+> > ---
+> ... changelog here describing difference between previous patch and this
+> version.
+>
+> Regards,
+> Arend
+> ---
+> >   .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++=
+-
+> >   1 file changed, 3 insertions(+), 1 deletion(-)
