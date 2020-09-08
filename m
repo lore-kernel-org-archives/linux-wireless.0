@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21B6EC43461
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF2BCC43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E31A52080C
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B5C221741
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eM/nGswS"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SmTEGwEZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731605AbgIHSeX (ORCPT
+        id S1731646AbgIHSeY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50268 "EHLO
+        Tue, 8 Sep 2020 14:34:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731865AbgIHScz (ORCPT
+        with ESMTP id S1731860AbgIHScx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:32:55 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBD3AC0617BC
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:33 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id a65so274540wme.5
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:33 -0700 (PDT)
+        Tue, 8 Sep 2020 14:32:53 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC38C061797
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:23:52 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id k15so196138wrn.10
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:23:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=mrTOqER7Ro+hee8gyXLo9S/3xLKcWq5aNxrYU4kgAEA=;
-        b=eM/nGswSaJQtep9usH63Ja+wpPAhQ+zIKb8VCATdPqi3jbLtCrM2NZ3edq6PtLr1c2
-         UF7u+82n5N6B8CZjewP5FnNRH5gUVjrpuRRPrMyH7Fg2gfyJqMS8nVlUM/Y9zx1U2KxJ
-         W15bk5wPavz5Vru0hyJyrqPYnj5Zchc2mVbtBSP3SCZtusYkNdxxaDK46Stl1gTwBolC
-         OAskN1Jd8VayZnqzYdUAld5tHQSFu7258BkR7jPjonlfk/XxX3edXeboToXN1V5cn5n5
-         MV2rTOBnJztCJg6MxQlyqSfcAIwKTxSH9zDdAVU1N1TuxEWnOilolxPMp/3TvYJritXL
-         ye5Q==
+        bh=zLRqP0UInT6/AdhLdK71Y86cDeh3fCR/pcMIonkjMoI=;
+        b=SmTEGwEZQG6wXCTPyYjWIn3jeLFANvjtPiQ38Ztow3DkSQ3vc1jTFkqZdoCqjlKjWr
+         S2K75Th1aMeRlRf9sSxFRWFqsvi7fjM5rIHCd64ckGRHwgtPCuAblLMDGf66YX5IH9ip
+         PjtHkysjWJ7D+bAsdaWGOu4B4Y6Oi9epEtnVXelpQ6ypP2IoH21FxEScC/sqmcHWlMu7
+         OW0oI7PEyCyXH6bsPZdvxIZrP8W2hNZ8wzI1/Qznk4S2ydD+2N8u8cKazUSD2ZU7Am+h
+         sQLzebFkAyR2HGV5t3RzO6dJ/muTFDfEG1yDsV//MkN4ApO4tScJe2DCIiLWWGc2woI4
+         4PbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=mrTOqER7Ro+hee8gyXLo9S/3xLKcWq5aNxrYU4kgAEA=;
-        b=OiDsnzVDV3TYcQIGv7c5nFMXY3WojFiACl5Z04PvY2pM3zRQ8qnBDqqptKPSonT3vb
-         JJh3vMcrIyi3Lwbgkdt2+1ve+jNDKZHEsjCFP1L3Zr/GXusBZCt2coR7WPhd+yTpLOOz
-         gsFq8iq3u9xE/ksY9Bvtm52Jk7bnGeMzgMr49e1MgC9nX7swVnIwMUWaNhfij37luxeM
-         x66FpDYvkaadGmviNkmdFogEXmsskfFo3aHL9Z3KonwQqD21PNAFgRhOBR+CkYICaonW
-         UGMJ9MS4vXcRtynDkKKf+C9sxr/Vli5ifNyw+qRF92wzuHk2omLRr2q+vxLNE4UNRBpj
-         xuMw==
-X-Gm-Message-State: AOAM531/BOzQd1Eg6/HI+Ijo4GdgDaF4w2EYgh8Lax8FmMvLuScpVjbi
-        oZJ9AzjnbXjtWLAMJveXA/9CjA==
-X-Google-Smtp-Source: ABdhPJw4nf81vE4P6Spmz3/7sMFU8eOdN18QH0KpcXL0KWblbpJnZW60e634YJ9iba1aVp+VuCYbYA==
-X-Received: by 2002:a05:600c:2155:: with SMTP id v21mr422856wml.118.1599589472460;
-        Tue, 08 Sep 2020 11:24:32 -0700 (PDT)
+        bh=zLRqP0UInT6/AdhLdK71Y86cDeh3fCR/pcMIonkjMoI=;
+        b=A/Xu/Nfjj2bf6WxGofVx1QuboTxzwrVaCiAtSNwzn2pnr1na6z6M62epkWmMjny8cd
+         U9q4AEkVb3BA1vAkKWEJ534zDur/F1yzsHPgN776BW+kCiIqMFwNodOvtgV1zsrrYRma
+         ehM/0QRo3Bis11e3ErZ1a3DSqLX12wxCt017I/wtezxBVbgdJ6DIYGj+/t2ZMI6nzdzG
+         jgknkoP7DNSmSPtf9luzo4hv2wX1UuJIB51puQQLrodCnTfD4PdO+IF1MFPICQWTlTmQ
+         3gOEZkhbSuYL7wxdX9AM3NqaYNxTBziavHjEP08w7ydsK+4Et0F61bB5oMf3Tjpb7hmQ
+         0cVA==
+X-Gm-Message-State: AOAM533U7Xcv8cBCiTBe8i6EAAtxyh7sJhT/tYJne8AiPqA2JcNCKkMK
+        2GzHA2DPQqxK97J+b0+b33J5GQ==
+X-Google-Smtp-Source: ABdhPJz90UAS3wKGMgR//5WUKSyEQz5P21njTPBZ417vPlGfOFtujBhDM5DtiyIE6DsIcayghW7Y3Q==
+X-Received: by 2002:a5d:4d01:: with SMTP id z1mr908365wrt.366.1599589431460;
+        Tue, 08 Sep 2020 11:23:51 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id f14sm352447wrv.72.2020.09.08.11.24.31
+        by smtp.gmail.com with ESMTPSA id k8sm362516wrl.42.2020.09.08.11.23.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:24:31 -0700 (PDT)
+        Tue, 08 Sep 2020 11:23:51 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v3 4/5] wcn36xx: Encode PHY mode for 80MHz channel in hw_value
-Date:   Tue,  8 Sep 2020 19:25:13 +0100
-Message-Id: <20200908182514.2870410-5-bryan.odonoghue@linaro.org>
+Subject: [PATCH v3 1/7] wcn36xx: Add wcn36xx_set_default_rates_v1
+Date:   Tue,  8 Sep 2020 19:24:31 +0100
+Message-Id: <20200908182437.2870281-2-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200908182514.2870410-1-bryan.odonoghue@linaro.org>
-References: <20200908182514.2870410-1-bryan.odonoghue@linaro.org>
+In-Reply-To: <20200908182437.2870281-1-bryan.odonoghue@linaro.org>
+References: <20200908182437.2870281-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,85 +77,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit encodes the 802.11ac PHY mode for a given channel in the upper
-bits of the hw_value field. This allows for a neat read-out and application
-of the relevant PHY setting.
+Add a routine to set some additional default parameters associated with the
+V1 data structure.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 50 ++++++++++++-------------
- 1 file changed, 25 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/main.c    | 8 ++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
+ 2 files changed, 9 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index ba37439352a7..2c2b6178c8cd 100644
+index eb518bd88870..ba37439352a7 100644
 --- a/drivers/net/wireless/ath/wcn36xx/main.c
 +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -39,10 +39,10 @@ MODULE_PARM_DESC(debug_mask, "Debugging mask");
- 	.max_power = 25, \
+@@ -793,6 +793,14 @@ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates)
+ 		sizeof(*ofdm_rates) * WCN36XX_HAL_NUM_OFDM_RATES);
+ 	rates->supported_mcs_set[0] = 0xFF;
  }
- 
--#define CHAN5G(_freq, _idx) { \
-+#define CHAN5G(_freq, _idx, _phy_val) { \
- 	.band = NL80211_BAND_5GHZ, \
- 	.center_freq = (_freq), \
--	.hw_value = (_idx), \
-+	.hw_value = (_phy_val) << HW_VALUE_PHY_SHIFT | HW_VALUE_CHANNEL(_idx), \
- 	.max_power = 25, \
++
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates)
++{
++	rates->op_rate_mode = STA_11ac;
++	rates->vht_rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++	rates->vht_tx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++}
++
+ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index d7d349de20e6..2da81d9926c4 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -271,6 +271,7 @@ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
+ 		wcn->fw_revision == revision);
  }
+ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates);
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates);
  
-@@ -67,29 +67,29 @@ static struct ieee80211_channel wcn_2ghz_channels[] = {
- };
- 
- static struct ieee80211_channel wcn_5ghz_channels[] = {
--	CHAN5G(5180, 36),
--	CHAN5G(5200, 40),
--	CHAN5G(5220, 44),
--	CHAN5G(5240, 48),
--	CHAN5G(5260, 52),
--	CHAN5G(5280, 56),
--	CHAN5G(5300, 60),
--	CHAN5G(5320, 64),
--	CHAN5G(5500, 100),
--	CHAN5G(5520, 104),
--	CHAN5G(5540, 108),
--	CHAN5G(5560, 112),
--	CHAN5G(5580, 116),
--	CHAN5G(5600, 120),
--	CHAN5G(5620, 124),
--	CHAN5G(5640, 128),
--	CHAN5G(5660, 132),
--	CHAN5G(5700, 140),
--	CHAN5G(5745, 149),
--	CHAN5G(5765, 153),
--	CHAN5G(5785, 157),
--	CHAN5G(5805, 161),
--	CHAN5G(5825, 165)
-+	CHAN5G(5180, 36, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5200, 40, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_LOW),
-+	CHAN5G(5220, 44, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5240, 48, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH),
-+	CHAN5G(5260, 52, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5280, 56, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_LOW),
-+	CHAN5G(5300, 60, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5320, 64, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH),
-+	CHAN5G(5500, 100, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5520, 104, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_LOW),
-+	CHAN5G(5540, 108, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5560, 112, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH),
-+	CHAN5G(5580, 116, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5600, 120, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_LOW),
-+	CHAN5G(5620, 124, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5640, 128, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH),
-+	CHAN5G(5660, 132, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5700, 140, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5745, 149, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_LOW),
-+	CHAN5G(5765, 153, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_LOW),
-+	CHAN5G(5785, 157, PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_HIGH),
-+	CHAN5G(5805, 161, PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH),
-+	CHAN5G(5825, 165, 0)
- };
- 
- #define RATE(_bitrate, _hw_rate, _flags) { \
+ static inline
+ struct ieee80211_sta *wcn36xx_priv_to_sta(struct wcn36xx_sta *sta_priv)
 -- 
 2.27.0
 
