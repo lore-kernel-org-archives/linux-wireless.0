@@ -2,51 +2,53 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 740D5C433E2
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 12:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1F45C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 16:13:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 406DF2074D
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 12:26:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599568010;
-	bh=HO7XeQ+j1AMU7+bash//gpa0sxCtmp+N7ND2icgfZ9g=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=Zo9ts5qtFUveUn4vsFGCYN2rJnwoTvOoG7Yw/buZk6X+0Mb/F/QuQN9DWK9BSLgS5
-	 YJcDzkUAE8PZ2KPRZIcaVl77OoRnCZVLI8HTrUr6uZBsotzFIGk/Q1GD/ivq1HPePr
-	 f8ZJ16LJVAvoKCjHpf9MIniulv6RtD6FPzpw44YE=
+	by mail.kernel.org (Postfix) with ESMTP id 42EB5206E7
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 16:13:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WAh+tT7v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730154AbgIHMZQ (ORCPT
+        id S1731581AbgIHQND (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 08:25:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34612 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730193AbgIHLy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 07:54:56 -0400
-Received: from lore-desk.redhat.com (unknown [151.66.86.87])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E76AB206B5;
-        Tue,  8 Sep 2020 11:54:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599566051;
-        bh=HO7XeQ+j1AMU7+bash//gpa0sxCtmp+N7ND2icgfZ9g=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Eo6I1Wyyqd7Lf5yJBxgztk9ZwCs7kOosR6vx3aF6nXfNcYVAeoCYqDDAiQWVIBSlx
-         8BD96G4BtrTzBw1+OwoBkyrqyeG1s5m0sqh+4+Ve3vQu5/LPdoBY17kr5yNQSKiVJW
-         0mbYey3HYIUQZNrPI7x50Zry89EPbqdHNK5L3rHY=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sean.wang@mediatek.com, ryder.lee@mediatek.com
-Subject: [PATCH v2] mt76: mt7622: fix fw hang on mt7622
-Date:   Tue,  8 Sep 2020 13:54:03 +0200
-Message-Id: <2a24709602ee0f83f2e275170254942a87ffeea5.1599558634.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.26.2
+        Tue, 8 Sep 2020 12:13:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56606 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731538AbgIHQMO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Sep 2020 12:12:14 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E433CC061369
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:37:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=6MpNJTE/bjPr1/o9GvogK0t3x4SXuh5iwggJW3V+swc=; b=WAh+tT7v/Nf5QtjzYkHAbVKHzg
+        edDTFkthFi6s6Pv//+egQyiXw9vhvh6Ql6nukxBEIVLBAxDbza0Xh3/P+qGEhT7hzuUaUNeB3l8wO
+        Xv/nwZk17NnVGHoIf2YDNsLosr1HEIjERcO77AW2LtuLbNOC/D1bbQ2x8dEBnw2RhloQ=;
+Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kFcry-00050i-7e; Tue, 08 Sep 2020 14:37:06 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v4 09/14] mac80211: swap NEED_TXPROCESSING and HW_80211_ENCAP tx flags
+Date:   Tue,  8 Sep 2020 14:36:57 +0200
+Message-Id: <20200908123702.88454-10-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200908123702.88454-1-nbd@nbd.name>
+References: <20200908123702.88454-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,109 +56,253 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set poll timeout to 3s for mt7622 devices in order to avoid fw hangs.
-Swap mt7622_trigger_hif_int and doorbell configuration order in
-mt7615_mcu_drv_pmctrl routine.
-Introduce mt7615_mcu_lp_drv_pmctrl routine to take care of drv_own
-configuration for runtime-pm.
+In order to unify the tx status path, the hw 802.11 encapsulation flag
+needs to survive the trip to the tx status call.
+Since we don't have any free bits in info->flags, we need to move one.
+IEEE80211_TX_INTFL_NEED_TXPROCESSING is only used internally in mac80211,
+and only before the call into the driver.
 
-Fixes: 08523a2a1db5 ("mt76: mt7615: add mt7615_pm_wake utility routine")
-Fixes: 894b7767ec2f ("mt76: mt7615: improve mt7615_driver_own reliability")
-Fixes: 757b0e7fd6f4 ("mt76: mt7615: avoid polling in fw_own for mt7663")
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-Changes since v1:
-- introduce mt7615_mcu_lp_drv_pmctrl
-- set mt7615_mcu_drv_pmctrl timeout to 3s
----
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 46 +++++++++++++------
- 1 file changed, 32 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_tx.c |  4 ++--
+ drivers/net/wireless/ath/ath11k/mac.c   |  4 ++--
+ include/net/mac80211.h                  | 14 +++++++-------
+ net/mac80211/mesh_hwmp.c                |  4 ++--
+ net/mac80211/mesh_ps.c                  |  2 +-
+ net/mac80211/rx.c                       |  2 +-
+ net/mac80211/status.c                   |  4 ++--
+ net/mac80211/tx.c                       | 16 ++++++++--------
+ 8 files changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 074cdefba8aa..8630931a656f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -338,28 +338,46 @@ static int mt7615_mcu_drv_pmctrl(struct mt7615_dev *dev)
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 1af76775b1a8..1c00bd4aea0c 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -14,7 +14,7 @@ ath11k_dp_tx_get_encap_type(struct ath11k_vif *arvif, struct sk_buff *skb)
  {
- 	struct mt76_phy *mphy = &dev->mt76.phy;
- 	struct mt76_dev *mdev = &dev->mt76;
--	int i;
-+	u32 addr;
-+	int err;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
  
--	if (!test_and_clear_bit(MT76_STATE_PM, &mphy->state))
--		goto out;
-+	addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
-+	mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
+-	if (tx_info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++	if (tx_info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
+ 		return HAL_TCL_ENCAP_TYPE_ETHERNET;
  
- 	mt7622_trigger_hif_int(dev, true);
+ 	return HAL_TCL_ENCAP_TYPE_NATIVE_WIFI;
+@@ -93,7 +93,7 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
+ 		return -ESHUTDOWN;
  
--	for (i = 0; i < MT7615_DRV_OWN_RETRY_COUNT; i++) {
--		u32 addr;
-+	addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
-+	err = !mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000);
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
+ 	    !ieee80211_is_data(hdr->frame_control))
+ 		return -ENOTSUPP;
  
--		addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
--		mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
-+	mt7622_trigger_hif_int(dev, false);
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index c100ac6298ce..4c4ab40bde8f 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3898,7 +3898,7 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
+ 		return -ENOSPC;
  
--		addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
--		if (mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 50))
--			break;
-+	if (err) {
-+		dev_err(mdev->dev, "driver own failed\n");
-+		return -ETIMEDOUT;
- 	}
+ 	info = IEEE80211_SKB_CB(skb);
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)) {
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)) {
+ 		if ((ieee80211_is_action(hdr->frame_control) ||
+ 		     ieee80211_is_deauth(hdr->frame_control) ||
+ 		     ieee80211_is_disassoc(hdr->frame_control)) &&
+@@ -4025,7 +4025,7 @@ static void ath11k_mac_op_tx(struct ieee80211_hw *hw,
+ 	bool is_prb_rsp;
+ 	int ret;
  
--	mt7622_trigger_hif_int(dev, false);
-+	clear_bit(MT76_STATE_PM, &mphy->state);
-+
-+	return 0;
-+}
-+
-+static int mt7615_mcu_lp_drv_pmctrl(struct mt7615_dev *dev)
-+{
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	int i;
-+
-+	if (!test_and_clear_bit(MT76_STATE_PM, &mphy->state))
-+		goto out;
-+
-+	for (i = 0; i < MT7615_DRV_OWN_RETRY_COUNT; i++) {
-+		mt76_wr(dev, MT_PCIE_DOORBELL_PUSH, MT_CFG_LPCR_HOST_DRV_OWN);
-+		if (mt76_poll_msec(dev, MT_CONN_HIF_ON_LPCTL,
-+				   MT_CFG_LPCR_HOST_FW_OWN, 0, 50))
-+			break;
-+	}
- 
- 	if (i == MT7615_DRV_OWN_RETRY_COUNT) {
--		dev_err(mdev->dev, "driver own failed\n");
-+		dev_err(dev->mt76.dev, "driver own failed\n");
- 		set_bit(MT76_STATE_PM, &mphy->state);
- 		return -EIO;
- 	}
-@@ -386,7 +404,7 @@ static int mt7615_mcu_fw_pmctrl(struct mt7615_dev *dev)
- 
- 	if (is_mt7622(&dev->mt76) &&
- 	    !mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN,
--			    MT_CFG_LPCR_HOST_FW_OWN, 300)) {
-+			    MT_CFG_LPCR_HOST_FW_OWN, 3000)) {
- 		dev_err(dev->mt76.dev, "Timeout for firmware own\n");
- 		clear_bit(MT76_STATE_PM, &mphy->state);
- 		err = -EIO;
-@@ -1900,7 +1918,7 @@ static const struct mt7615_mcu_ops uni_update_ops = {
- 	.add_tx_ba = mt7615_mcu_uni_tx_ba,
- 	.add_rx_ba = mt7615_mcu_uni_rx_ba,
- 	.sta_add = mt7615_mcu_uni_add_sta,
--	.set_drv_ctrl = mt7615_mcu_drv_pmctrl,
-+	.set_drv_ctrl = mt7615_mcu_lp_drv_pmctrl,
- 	.set_fw_ctrl = mt7615_mcu_fw_pmctrl,
+-	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+ 		skb_cb->flags |= ATH11K_SKB_HW_80211_ENCAP;
+ 	} else if (ieee80211_is_mgmt(hdr->frame_control)) {
+ 		is_prb_rsp = ieee80211_is_probe_resp(hdr->frame_control);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 01612a82aacf..fc31976323e6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -720,9 +720,8 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_OFFCHAN_TX_OK: Internal to mac80211. Used to indicate
+  *	that a frame can be transmitted while the queues are stopped for
+  *	off-channel operation.
+- * @IEEE80211_TX_INTFL_NEED_TXPROCESSING: completely internal to mac80211,
+- *	used to indicate that a pending frame requires TX processing before
+- *	it can be sent out.
++ * @IEEE80211_TX_CTL_HW_80211_ENCAP: This frame uses hardware encapsulation
++ *	(header conversion)
+  * @IEEE80211_TX_INTFL_RETRIED: completely internal to mac80211,
+  *	used to indicate that a frame was already retried due to PS
+  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
+@@ -791,7 +790,7 @@ enum mac80211_tx_info_flags {
+ 	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
+ 	IEEE80211_TX_INTFL_OFFCHAN_TX_OK	= BIT(13),
+-	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
++	IEEE80211_TX_CTL_HW_80211_ENCAP		= BIT(14),
+ 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+ 	IEEE80211_TX_CTL_NO_PS_BUFFER		= BIT(17),
+@@ -823,8 +822,9 @@ enum mac80211_tx_info_flags {
+  * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
+  * @IEEE80211_TX_CTRL_FAST_XMIT: This frame is going through the fast_xmit path
+  * @IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP: This frame skips mesh path lookup
+- * @IEEE80211_TX_CTRL_HW_80211_ENCAP: This frame uses hardware encapsulation
+- *	(header conversion)
++ * @IEEE80211_TX_INTCFL_NEED_TXPROCESSING: completely internal to mac80211,
++ *	used to indicate that a pending frame requires TX processing before
++ *	it can be sent out.
+  * @IEEE80211_TX_CTRL_NO_SEQNO: Do not overwrite the sequence number that
+  *	has already been assigned to this frame.
+  *
+@@ -837,7 +837,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
+ 	IEEE80211_TX_CTRL_FAST_XMIT		= BIT(4),
+ 	IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP	= BIT(5),
+-	IEEE80211_TX_CTRL_HW_80211_ENCAP	= BIT(6),
++	IEEE80211_TX_INTCFL_NEED_TXPROCESSING	= BIT(6),
+ 	IEEE80211_TX_CTRL_NO_SEQNO		= BIT(7),
  };
  
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index bec23d2eee7a..313eee12410e 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -212,7 +212,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
+ 	skb->priority = 7;
+ 
+ 	info->control.vif = &sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ 	ieee80211_mps_set_frame_flags(sdata, NULL, hdr);
+ }
+@@ -1163,7 +1163,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+ 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 		skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ 	skb_queue_tail(&mpath->frame_queue, skb);
+ 	if (skb_to_free)
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index 031e905f684a..76d19c09d26e 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -432,7 +432,7 @@ static void mpsp_qos_null_append(struct sta_info *sta,
+ 
+ 	info = IEEE80211_SKB_CB(new_skb);
+ 	info->control.vif = &sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 
+ 	__skb_queue_tail(frames, new_skb);
+ }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bd8c15a65a16..b04d6e01a346 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2896,7 +2896,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	fwd_hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_RETRY);
+ 	info = IEEE80211_SKB_CB(fwd_skb);
+ 	memset(info, 0, sizeof(*info));
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	info->control.vif = &rx->sdata->vif;
+ 	info->control.jiffies = jiffies;
+ 	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 28ab29a5694d..c873910d95e0 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -66,8 +66,8 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 
+ 	info->control.jiffies = jiffies;
+ 	info->control.vif = &sta->sdata->vif;
+-	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING |
+-		       IEEE80211_TX_INTFL_RETRANSMISSION;
++	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
++	info->flags |= IEEE80211_TX_INTFL_RETRANSMISSION;
+ 	info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 
+ 	sta->status_stats.filtered++;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1e829597f32c..01b30c59d4b4 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -531,7 +531,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+-		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++		info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
+ 		spin_unlock(&sta->ps_lock);
+@@ -1134,7 +1134,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 				       tx->sta->sta.addr, tx->sta->sta.aid);
+ 			}
+ 			info->control.vif = &tx->sdata->vif;
+-			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++			info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 			__skb_queue_tail(&tid_tx->pending, skb);
+ 			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
+@@ -1179,7 +1179,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	 * we are doing the needed processing, so remove the flag
+ 	 * now.
+ 	 */
+-	info->flags &= ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.flags &= ~IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 
+@@ -1258,7 +1258,7 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+ 		return NULL;
+ 
+-	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
++	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
+ 	    unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
+ 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
+ 		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
+@@ -3649,7 +3649,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	else
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 
+-	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
+ 		goto encap_out;
+ 
+ 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
+@@ -4239,7 +4239,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
+ 
+-	info->control.flags |= IEEE80211_TX_CTRL_HW_80211_ENCAP;
++	info->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;
+ 	info->control.vif = &sdata->vif;
+ 
+ 	if (key)
+@@ -4364,7 +4364,7 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
+ 
+ 	sdata = vif_to_sdata(info->control.vif);
+ 
+-	if (info->flags & IEEE80211_TX_INTFL_NEED_TXPROCESSING) {
++	if (info->control.flags & IEEE80211_TX_INTCFL_NEED_TXPROCESSING) {
+ 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 		if (unlikely(!chanctx_conf)) {
+ 			dev_kfree_skb(skb);
+@@ -4372,7 +4372,7 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
+ 		}
+ 		info->band = chanctx_conf->def.chan->band;
+ 		result = ieee80211_tx(sdata, NULL, skb, true);
+-	} else if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++	} else if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+ 		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
+ 			dev_kfree_skb(skb);
+ 			return true;
 -- 
-2.26.2
+2.28.0
 
