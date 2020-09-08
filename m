@@ -2,152 +2,79 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A971C43461
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30288C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:41:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39A2E2080A
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:37:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nexus-software-ie.20150623.gappssmtp.com header.i=@nexus-software-ie.20150623.gappssmtp.com header.b="BmeQlZuu"
+	by mail.kernel.org (Postfix) with ESMTP id F3ABE2080A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:41:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731531AbgIHSgt (ORCPT
+        id S1731973AbgIHSle (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50324 "EHLO
+        Tue, 8 Sep 2020 14:41:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731778AbgIHScq (ORCPT
+        with ESMTP id S1731550AbgIHSla (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:32:46 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F202C061389
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:58 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id a9so311856wmm.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nexus-software-ie.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=b80YWigxhp2Bij0sjpEU6Mw77SxZ6jTq1LZAsmGVkXg=;
-        b=BmeQlZuuR6UaVzlxK9RT6pnJ5Idmtcj5x+/TTHzd2kQkxaijREoOfMKq+JT5/2qDtC
-         GiGjo0+ndlCRSLR2kVLm3l8DiTAuvUe9bXmAnzTXldNc1nirOwCBhtpt80pmQy6T4DTG
-         1nw4UJ33xdrxsNYFqOxsT5ACeyRlN6F8HPxHL9YetcHJrXlxJmaf2zNvrcdiuGl2AEEQ
-         G1ZQAfSI3EItDujzlkWmbWgcLprFdduih1uBVaM6DhJ2Qs8AQjF2MTvV3YP7qSLSUzUH
-         etov4Ha2YxpTLbq1AutdxDUDpngNegUcxgcDtm8VsXkz46dRUgaSwhaqxVAzTaDGR1RH
-         aj7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=b80YWigxhp2Bij0sjpEU6Mw77SxZ6jTq1LZAsmGVkXg=;
-        b=gT4ThsNsHtkX0Nof5V6F+RpR7lKsFjujeSYL2s3J/huLueRY2juYYVSSHa8t4BMrdF
-         x8pRli/5k3qeVjLyuNus3fOGDF0P6bhiB8bPBYYayODrAZMz7LCG4PafrjkvoH4So0BC
-         EpjMfWqj4tr+ekJgUrK0uw+0rLw63OJQuGv0/QbhwOipdICPKEfWbdfCDVsxhmrQ3D0w
-         a8Ons8j9/Nay5YeVthvRnYpxdfl9amHpgdzToHCHo8QYd5YoF2J8w27lT4EYEZ8XIwqo
-         pTnVhAwwEt/Ozl9TcStr1ffAEjPqJzHa5/KvzJ4RsCvDcE8Ui+9wNmuSslF9gKI6YQHJ
-         D3LQ==
-X-Gm-Message-State: AOAM533ox/o3BUC7FQYYkEEXG4ASyyWYOT4MzUFaJXsinTiCI5sYG97m
-        CLGbfusAh5SKSK36pw8JtAqyvw==
-X-Google-Smtp-Source: ABdhPJxwR917BxM4zjf/LNaZZTXnoZeZoCN6MJ6fIzVfHtO8MEO0QSSFdhAdyd0NPIiZUMu+rBhPFg==
-X-Received: by 2002:a05:600c:2246:: with SMTP id a6mr436231wmm.38.1599589497240;
-        Tue, 08 Sep 2020 11:24:57 -0700 (PDT)
-Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id c4sm334348wrp.85.2020.09.08.11.24.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:24:56 -0700 (PDT)
-From:   Bryan O'Donoghue <pure.logic@nexus-software.ie>
-To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
-        loic.poulain@linaro.org
-Subject: [PATCH v3 2/2] wcn36xx: Advertise ieee802.11 VHT flags
-Date:   Tue,  8 Sep 2020 19:25:42 +0100
-Message-Id: <20200908182542.2870535-3-pure.logic@nexus-software.ie>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200908182542.2870535-1-pure.logic@nexus-software.ie>
-References: <20200908182542.2870535-1-pure.logic@nexus-software.ie>
+        Tue, 8 Sep 2020 14:41:30 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EBACC061573
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:41:30 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kFiYY-000lMK-C5; Tue, 08 Sep 2020 20:41:26 +0200
+Message-ID: <12f9c1c504053f9119a0965ce468aa1da195421b.camel@sipsolutions.net>
+Subject: Re: [mac80211_hwsim] 8cafe19852: hwsim.fst_ap_config_default.fail
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Thomas Pedersen <thomas@adapt-ip.com>,
+        kernel test robot <rong.a.chen@intel.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        0day robot <lkp@intel.com>, lkp@lists.01.org
+Date:   Tue, 08 Sep 2020 20:41:08 +0200
+In-Reply-To: <4b20df478e8e9a1e36dfa92b3c510022@adapt-ip.com>
+References: <20200906084935.GD31308@shao2-debian>
+         <4b20df478e8e9a1e36dfa92b3c510022@adapt-ip.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+On Tue, 2020-09-08 at 11:00 -0700, Thomas Pedersen wrote:
+> - LKML
+> 
+> On 2020-09-06 01:49, kernel test robot wrote:
+> > Greeting,
+> > 
+> > FYI, we noticed the following commit (built with gcc-9):
+> > 
+> > commit: 8cafe19852d95d6494cbd8c1ae24dbd621588a91 ("[PATCH v2 21/22]
+> > mac80211_hwsim: indicate support for S1G")
+> > url:
+> > https://github.com/0day-ci/linux/commits/Thomas-Pedersen/add-support-for-S1G-association/20200901-045826
+> > base:
+> > https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git
+> > master
+> 
+> This is really cool. Thanks Rong (?).
+> 
+> I'll move the "fix TSF timestamp write to S1G beacon" patch before the 
+> one which actually exposes S1G to hwsim.
 
-This patch adds ieee802.11 VHT flags for the wcn3680b.
+Yeah, I was thinking we should do that anyway.
 
-- RX_STBC1
-- SU Beamformee
-- MU Beamformee
-- VHT80 SGI
-- Single spatial stream
+If those two small things (ARRAY_SIZE & patch reordering) are the only
+changes, I guess I can do that.
 
-RX LDPC is declared as supported in the datasheet but not enabled at this
-time.
+Unless you want to look at the reordering of the nl80211 bands, but you
+seemed to say it won't really matter.
 
-After this patch is applied an AP should see the wcn3680 as an 802.11ac
-capable device.
-
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 32 +++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 9c283c110e07..9e97513feeb5 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1200,6 +1200,35 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
- };
- 
-+static void
-+wcn36xx_set_ieee80211_vht_caps(struct ieee80211_sta_vht_cap *vht_cap)
-+{
-+	vht_cap->vht_supported = true;
-+
-+	vht_cap->cap = (IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
-+			IEEE80211_VHT_CAP_SHORT_GI_80 |
-+			IEEE80211_VHT_CAP_RXSTBC_1 |
-+			IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+			IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE |
-+			3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
-+			7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT);
-+
-+	vht_cap->vht_mcs.rx_mcs_map =
-+		cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_9 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 2 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 4 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
-+
-+	vht_cap->vht_mcs.rx_highest = cpu_to_le16(433);
-+	vht_cap->vht_mcs.tx_highest = vht_cap->vht_mcs.rx_highest;
-+
-+	vht_cap->vht_mcs.tx_mcs_map = vht_cap->vht_mcs.rx_mcs_map;
-+}
-+
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- {
- 	static const u32 cipher_suites[] = {
-@@ -1228,6 +1257,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 		wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] = &wcn_band_5ghz;
- 	}
- 
-+	if (wcn->rf_id == RF_IRIS_WCN3680)
-+		wcn36xx_set_ieee80211_vht_caps(&wcn_band_5ghz.vht_cap);
-+
- 	wcn->hw->wiphy->max_scan_ssids = WCN36XX_MAX_SCAN_SSIDS;
- 	wcn->hw->wiphy->max_scan_ie_len = WCN36XX_MAX_SCAN_IE_LEN;
- 
--- 
-2.27.0
+johannes
 
