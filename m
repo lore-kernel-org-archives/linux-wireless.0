@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63380C2BC11
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D83C43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EDF62087D
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AEC62087D
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:04:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731556AbgIHTEj (ORCPT
+        id S1731362AbgIHTEl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 15:04:39 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:52706 "EHLO
+        Tue, 8 Sep 2020 15:04:41 -0400
+Received: from mail.adapt-ip.com ([173.164.178.19]:52680 "EHLO
         web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731448AbgIHTDd (ORCPT
+        with ESMTP id S1731365AbgIHTDc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 15:03:33 -0400
+        Tue, 8 Sep 2020 15:03:32 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 5EB354F9AF5;
-        Tue,  8 Sep 2020 19:03:31 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTP id 145A44F9AD6;
+        Tue,  8 Sep 2020 19:03:28 +0000 (UTC)
 X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
 Received: from web.adapt-ip.com ([127.0.0.1])
         by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZCL5_lw9_Pyo; Tue,  8 Sep 2020 19:03:28 +0000 (UTC)
+        with ESMTP id SVgKjfAK4VGB; Tue,  8 Sep 2020 19:03:24 +0000 (UTC)
 Received: from atlas.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
         (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 8C0824F9AF6;
-        Tue,  8 Sep 2020 19:03:21 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTPSA id 05A2D4F9AE0;
+        Tue,  8 Sep 2020 19:03:20 +0000 (UTC)
 From:   Thomas Pedersen <thomas@adapt-ip.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
         Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH v3 05/22] nl80211: support setting S1G channels
-Date:   Tue,  8 Sep 2020 12:03:06 -0700
-Message-Id: <20200908190323.15814-6-thomas@adapt-ip.com>
+Subject: [PATCH v3 03/22] cfg80211: regulatory: handle S1G channels
+Date:   Tue,  8 Sep 2020 12:03:04 -0700
+Message-Id: <20200908190323.15814-4-thomas@adapt-ip.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200908190323.15814-1-thomas@adapt-ip.com>
 References: <20200908190323.15814-1-thomas@adapt-ip.com>
@@ -49,244 +49,131 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-S1G channels have a single width defined per frequency, so
-derive it from the channel flags with
-ieee80211_s1g_channel_width().
-
-Also support setting an S1G channel where control frequency may
-differ from operating, and add some basic validation to
-ensure the control channel is with the operating.
+S1G channels have a minimum bandwidth of 1Mhz, and there
+is a 1:1 mapping of allowed bandwidth to channel number.
 
 Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
----
- include/net/cfg80211.h |  10 ++++
- net/wireless/chan.c    | 130 ++++++++++++++++++++++++-----------------
- net/wireless/util.c    |  27 +++++++++
- 3 files changed, 115 insertions(+), 52 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e4d4fbcb2edc..d3d85bd9c0aa 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5293,6 +5293,16 @@ ieee80211_channel_to_khz(const struct ieee80211_channel *chan)
- 	return MHZ_TO_KHZ(chan->center_freq) + chan->freq_offset;
- }
+---
+
+v2:
+ - drop the freq_reg_info() interface changes and move the
+   check for S1G band inside. Fixes a driver compile
+   error.
+ - fix iterating past bws[] in __freq_reg_info() by
+   setting initial element to 0.
+   Reported-by: kernel test robot <lkp@intel.com>
+
+v3:
+  - use ARRAY_SIZE()
+---
+ net/wireless/reg.c | 70 ++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 58 insertions(+), 12 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dcd3d39a5372..2864ca2c3cfd 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1617,9 +1617,11 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
+ {
+ 	const struct ieee80211_regdomain *regd = reg_get_regdomain(wiphy);
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
++	const u32 bws[] = {0, 1, 2, 4, 5, 8, 10, 16, 20};
++	int i = ARRAY_SIZE(bws) - 1;
+ 	u32 bw;
  
-+/**
-+ * ieee80211_s1g_channel_width - get allowed channel width from @chan
-+ *
-+ * Only allowed for band NL80211_BAND_S1GHZ
-+ * @chan: channel
-+ * Return: The allowed channel width for this center_freq
-+ */
-+enum nl80211_chan_width
-+ieee80211_s1g_channel_width(const struct ieee80211_channel *chan);
+-	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
++	for (bw = MHZ_TO_KHZ(bws[i]); bw >= min_bw; bw = MHZ_TO_KHZ(bws[i--])) {
+ 		reg_rule = freq_reg_info_regd(center_freq, regd, bw);
+ 		if (!IS_ERR(reg_rule))
+ 			return reg_rule;
+@@ -1631,7 +1633,9 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
+ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+ 					       u32 center_freq)
+ {
+-	return __freq_reg_info(wiphy, center_freq, MHZ_TO_KHZ(20));
++	u32 min_bw = center_freq < MHZ_TO_KHZ(1000) ? 1 : 20;
 +
- /**
-  * ieee80211_channel_to_freq_khz - convert channel number to frequency
-  * @chan: channel number
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index e97a4f0c32a3..e27a6d5497b5 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -140,9 +140,62 @@ static bool cfg80211_edmg_chandef_valid(const struct cfg80211_chan_def *chandef)
- 	return true;
++	return __freq_reg_info(wiphy, center_freq, MHZ_TO_KHZ(min_bw));
  }
+ EXPORT_SYMBOL(freq_reg_info);
  
-+static int nl80211_chan_width_to_mhz(enum nl80211_chan_width chan_width)
-+{
-+	int mhz;
+@@ -1659,6 +1663,7 @@ static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd
+ {
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+ 	u32 max_bandwidth_khz, center_freq_khz, bw_flags = 0;
++	bool is_s1g = chan->band == NL80211_BAND_S1GHZ;
+ 
+ 	freq_range = &reg_rule->freq_range;
+ 
+@@ -1678,16 +1683,57 @@ static uint32_t reg_rule_to_chan_bw_flags(const struct ieee80211_regdomain *regd
+ 					MHZ_TO_KHZ(20)))
+ 		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
+-		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
+-		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags |= IEEE80211_CHAN_NO_HT40;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
+-		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+-	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+-		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
++	if (is_s1g) {
++		/* S1G is strict about non overlapping channels. We can
++		 * calculate which bandwidth is allowed per channel by finding
++		 * the largest bandwidth which cleanly divides the freq_range.
++		 */
++		int edge_offset;
++		int ch_bw = max_bandwidth_khz;
 +
-+	switch (chan_width) {
-+	case NL80211_CHAN_WIDTH_1:
-+		mhz = 1;
-+		break;
-+	case NL80211_CHAN_WIDTH_2:
-+		mhz = 2;
-+		break;
-+	case NL80211_CHAN_WIDTH_4:
-+		mhz = 4;
-+		break;
-+	case NL80211_CHAN_WIDTH_8:
-+		mhz = 8;
-+		break;
-+	case NL80211_CHAN_WIDTH_16:
-+		mhz = 16;
-+		break;
-+	case NL80211_CHAN_WIDTH_5:
-+		mhz = 5;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		mhz = 10;
-+		break;
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		mhz = 20;
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+		mhz = 40;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_80:
-+		mhz = 80;
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		mhz = 160;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return -1;
++		while (ch_bw) {
++			edge_offset = (center_freq_khz - ch_bw / 2) -
++				      freq_range->start_freq_khz;
++			if (edge_offset % ch_bw == 0) {
++				switch (KHZ_TO_MHZ(ch_bw)) {
++				case 1:
++					bw_flags |= IEEE80211_CHAN_1MHZ;
++					break;
++				case 2:
++					bw_flags |= IEEE80211_CHAN_2MHZ;
++					break;
++				case 4:
++					bw_flags |= IEEE80211_CHAN_4MHZ;
++					break;
++				case 8:
++					bw_flags |= IEEE80211_CHAN_8MHZ;
++					break;
++				case 16:
++					bw_flags |= IEEE80211_CHAN_16MHZ;
++					break;
++				default:
++					/* If we got here, no bandwidths fit on
++					 * this frequency, ie. band edge.
++					 */
++					bw_flags |= IEEE80211_CHAN_DISABLED;
++					break;
++				}
++				break;
++			}
++			ch_bw /= 2;
++		}
++	} else {
++		if (max_bandwidth_khz < MHZ_TO_KHZ(10))
++			bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++		if (max_bandwidth_khz < MHZ_TO_KHZ(20))
++			bw_flags |= IEEE80211_CHAN_NO_20MHZ;
++		if (max_bandwidth_khz < MHZ_TO_KHZ(40))
++			bw_flags |= IEEE80211_CHAN_NO_HT40;
++		if (max_bandwidth_khz < MHZ_TO_KHZ(80))
++			bw_flags |= IEEE80211_CHAN_NO_80MHZ;
++		if (max_bandwidth_khz < MHZ_TO_KHZ(160))
++			bw_flags |= IEEE80211_CHAN_NO_160MHZ;
 +	}
-+	return mhz;
-+}
-+
-+static int cfg80211_chandef_get_width(const struct cfg80211_chan_def *c)
-+{
-+	return nl80211_chan_width_to_mhz(c->width);
-+}
-+
- bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- {
--	u32 control_freq;
-+	u32 control_freq, oper_freq;
-+	int oper_width, control_width;
- 
- 	if (!chandef->chan)
- 		return false;
-@@ -154,10 +207,6 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 
- 	switch (chandef->width) {
- 	case NL80211_CHAN_WIDTH_1:
--	case NL80211_CHAN_WIDTH_2:
--	case NL80211_CHAN_WIDTH_4:
--	case NL80211_CHAN_WIDTH_8:
--	case NL80211_CHAN_WIDTH_16:
- 	case NL80211_CHAN_WIDTH_5:
- 	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20:
-@@ -168,6 +217,30 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 		if (chandef->center_freq2)
- 			return false;
- 		break;
-+	case NL80211_CHAN_WIDTH_2:
-+	case NL80211_CHAN_WIDTH_4:
-+	case NL80211_CHAN_WIDTH_8:
-+	case NL80211_CHAN_WIDTH_16:
-+		control_freq = ieee80211_channel_to_khz(chandef->chan);
-+		oper_freq = ieee80211_chandef_to_khz(chandef);
-+		control_width = nl80211_chan_width_to_mhz(
-+					ieee80211_s1g_channel_width(
-+								chandef->chan));
-+		oper_width = cfg80211_chandef_get_width(chandef);
-+
-+		if (oper_width < 0 || control_width < 0)
-+			return false;
-+		if (chandef->center_freq2)
-+			return false;
-+
-+		if (control_freq + MHZ_TO_KHZ(control_width) / 2 >
-+		    oper_freq + MHZ_TO_KHZ(oper_width) / 2)
-+			return false;
-+
-+		if (control_freq - MHZ_TO_KHZ(control_width) / 2 <
-+		    oper_freq - MHZ_TO_KHZ(oper_width) / 2)
-+			return false;
-+		break;
- 	case NL80211_CHAN_WIDTH_40:
- 		if (chandef->center_freq1 != control_freq + 10 &&
- 		    chandef->center_freq1 != control_freq - 10)
-@@ -263,53 +336,6 @@ static void chandef_primary_freqs(const struct cfg80211_chan_def *c,
- 	}
+ 	return bw_flags;
  }
  
--static int cfg80211_chandef_get_width(const struct cfg80211_chan_def *c)
--{
--	int width;
--
--	switch (c->width) {
--	case NL80211_CHAN_WIDTH_1:
--		width = 1;
--		break;
--	case NL80211_CHAN_WIDTH_2:
--		width = 2;
--		break;
--	case NL80211_CHAN_WIDTH_4:
--		width = 4;
--		break;
--	case NL80211_CHAN_WIDTH_8:
--		width = 8;
--		break;
--	case NL80211_CHAN_WIDTH_16:
--		width = 16;
--		break;
--	case NL80211_CHAN_WIDTH_5:
--		width = 5;
--		break;
--	case NL80211_CHAN_WIDTH_10:
--		width = 10;
--		break;
--	case NL80211_CHAN_WIDTH_20:
--	case NL80211_CHAN_WIDTH_20_NOHT:
--		width = 20;
--		break;
--	case NL80211_CHAN_WIDTH_40:
--		width = 40;
--		break;
--	case NL80211_CHAN_WIDTH_80P80:
--	case NL80211_CHAN_WIDTH_80:
--		width = 80;
--		break;
--	case NL80211_CHAN_WIDTH_160:
--		width = 160;
--		break;
--	default:
--		WARN_ON_ONCE(1);
--		return -1;
--	}
--	return width;
--}
--
- const struct cfg80211_chan_def *
- cfg80211_chandef_compatible(const struct cfg80211_chan_def *c1,
- 			    const struct cfg80211_chan_def *c2)
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 11822cd05a9f..86867b42f8aa 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -111,6 +111,33 @@ u32 ieee80211_channel_to_freq_khz(int chan, enum nl80211_band band)
- }
- EXPORT_SYMBOL(ieee80211_channel_to_freq_khz);
- 
-+enum nl80211_chan_width
-+ieee80211_s1g_channel_width(const struct ieee80211_channel *chan)
-+{
-+	if (WARN_ON(!chan || chan->band != NL80211_BAND_S1GHZ))
-+		return NL80211_CHAN_WIDTH_20_NOHT;
-+
-+	/*S1G defines a single allowed channel width per channel.
-+	 * Extract that width here.
-+	 */
-+	if (chan->flags & IEEE80211_CHAN_1MHZ)
-+		return NL80211_CHAN_WIDTH_1;
-+	else if (chan->flags & IEEE80211_CHAN_2MHZ)
-+		return NL80211_CHAN_WIDTH_2;
-+	else if (chan->flags & IEEE80211_CHAN_4MHZ)
-+		return NL80211_CHAN_WIDTH_4;
-+	else if (chan->flags & IEEE80211_CHAN_8MHZ)
-+		return NL80211_CHAN_WIDTH_8;
-+	else if (chan->flags & IEEE80211_CHAN_16MHZ)
-+		return NL80211_CHAN_WIDTH_16;
-+
-+	pr_err("unknown channel width for channel at %dKHz?\n",
-+	       ieee80211_channel_to_khz(chan));
-+
-+	return NL80211_CHAN_WIDTH_1;
-+}
-+EXPORT_SYMBOL(ieee80211_s1g_channel_width);
-+
- int ieee80211_freq_khz_to_channel(u32 freq)
- {
- 	/* TODO: just handle MHz for now */
 -- 
 2.20.1
 
