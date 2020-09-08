@@ -2,124 +2,252 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1E87C433E2
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C453C2D0A7
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:37:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1ED5F2078B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:30:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E64D2137B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 19:37:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=sslab.ics.keio.ac.jp header.i=@sslab.ics.keio.ac.jp header.b="I49U5h01"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Pn0tFkUQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731897AbgIHT3w (ORCPT
+        id S1732178AbgIHThS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 15:29:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54564 "EHLO
+        Tue, 8 Sep 2020 15:37:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730914AbgIHP71 (ORCPT
+        with ESMTP id S1730978AbgIHP47 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 11:59:27 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F190EC061798
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:02:49 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id z4so18836382wrr.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 05:02:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sslab.ics.keio.ac.jp; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=fHKZGBn8DYDZmUzkcQdtFyocASRnUskXF0G0c14zQIY=;
-        b=I49U5h01ldadqbGBSJ+JPwaa/XpVL1RHekltbw+5yb9vJdeb7HlxO2SH/MxU+AXAwy
-         mFX3smUOgYMCiRiMYtlhJgNbB0x45bfB59AcCGTmRd7oJw5HUypGbJ+wDCYeJroaA4or
-         rnyPXVVdanOQ2bOVqv7iQHTy8xceM8lkCF844=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=fHKZGBn8DYDZmUzkcQdtFyocASRnUskXF0G0c14zQIY=;
-        b=ovVQ0yIZFBQlBmgIC4RcaFQby6xGa86tHZgON195pz0Kc3YNoutR2U3CaBSDTL2xCy
-         EkwvOk8mhXIWb09gZrSWX20qBFy9caULWFN8ED4sfTZNvDH6wg9W/hnvRnx7xrTrPAB6
-         Vcok5pRKsc0+g57scahJl4L/QYrjlrggGBQ1jc/as6b74ct1pz2wlGgxI0/UD6OAp5EH
-         7IMrA+QJyXTlc0tF1nyFe+ngjtgSUfW2uQrdeKjFBqpmrv67IPi/pbs+JYHWKEK7mZmg
-         nU2Jc9BNH3oaO6JlYXMIpkl42A1fQF4eXu8zpx6wI5K3g0a1mDWJX2BTMwfYESlDfkDx
-         umZA==
-X-Gm-Message-State: AOAM531kFrCKQhYSoiL5YwXmHVGm/orKXa9A/ezReEynAGNiLqs5NVqQ
-        QIP4r0blWBudu2YU+wwvSYiP6IwoWokSX8vcWu0W/Q==
-X-Google-Smtp-Source: ABdhPJxLDgBM+s6ZLA0Xk5AyltkUhSxI4KJM4wlm9qfxvCvlS9XOiwZ2ahmKEQRp2PPZaiGtIw02aY3u8gSTeR+ZTXc=
-X-Received: by 2002:adf:eecb:: with SMTP id a11mr26936125wrp.356.1599566568481;
- Tue, 08 Sep 2020 05:02:48 -0700 (PDT)
+        Tue, 8 Sep 2020 11:56:59 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A802EC061367
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 05:37:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=cBa8HBE/xeev3ZcQtBrtrAB4HqtL28yYOdl7tNsfqmM=; b=Pn0tFkUQS+FVbKPq3ukZBaHm3n
+        cPh0qy2ViEu5yeMWT28/NaC8P6SoNCBZpEEx4UEly4LmxObbKO84yBkzXgF1f+qU6YN25z1ke565F
+        y6n3krqoToub+3xc1rNIHpxz8aB0ebVmp8cgEAe2jVcvVxnhbiCENP74h3q8TDp9azwo=;
+Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kFcrx-00050i-K7; Tue, 08 Sep 2020 14:37:05 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v4 06/14] mac80211: reduce duplication in tx status functions
+Date:   Tue,  8 Sep 2020 14:36:54 +0200
+Message-Id: <20200908123702.88454-7-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200908123702.88454-1-nbd@nbd.name>
+References: <20200908123702.88454-1-nbd@nbd.name>
 MIME-Version: 1.0
-References: <bad4e33a-af2f-b44f-63e5-56386c312a91@broadcom.com>
- <20200908001324.8215-1-keitasuzuki.park@sslab.ics.keio.ac.jp> <c13ee142-d69d-6d21-6373-acb56507c9ec@broadcom.com>
-In-Reply-To: <c13ee142-d69d-6d21-6373-acb56507c9ec@broadcom.com>
-From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
-Date:   Tue, 8 Sep 2020 21:02:35 +0900
-Message-ID: <CAEYrHjmG-R4RHn=59AGK8E0jKDXE5sbxQj49VpBvDMvBuBGiig@mail.gmail.com>
-Subject: Re: [PATCH] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Takafumi Kubota <takafumi@sslab.ics.keio.ac.jp>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list@cypress.com>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thank you for your comment. I am relatively new to the Linux
-kernel community, so I am more than happy to receive comments.
-Please let me know if I'm violating any other rules.
+Move redundant functionality from __ieee80211_tx_status into
+ieee80211_tx_status_ext. Preparation for unifying with the 802.3 tx status
+codepath.
 
-> > Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
-> > ---
-> ... changelog here describing difference between previous patch and this
-> version.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/status.c | 101 +++++++++++++++---------------------------
+ 1 file changed, 35 insertions(+), 66 deletions(-)
 
-I will re-send the patch with the change log.
-
-Thanks,
-Keita
-
-2020=E5=B9=B49=E6=9C=888=E6=97=A5(=E7=81=AB) 20:18 Arend Van Spriel <arend.=
-vanspriel@broadcom.com>:
->
-> On 9/8/2020 2:13 AM, Keita Suzuki wrote:
-> > When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
-> > the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
-> > freed in the caller function.
-> >
-> > Fix this by calling wlc_phy_detach_lcnphy in the error handler of
-> > wlc_phy_txpwr_srom_read_lcnphy before returning.
->
-> Thanks for resubmitting the patch addressing my comment. For clarity it
-> is recommended to mark the subject with '[PATCH V2]' and add a ...
->
-> > Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
-> > ---
-> ... changelog here describing difference between previous patch and this
-> version.
->
-> Regards,
-> Arend
-> ---
-> >   .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++=
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 0f286fb4304e..b3c356b3fc78 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -184,18 +184,6 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
 -
-> >   1 file changed, 3 insertions(+), 1 deletion(-)
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
+-		sta->status_stats.last_ack = jiffies;
+-		if (txinfo->status.is_valid_ack_signal) {
+-			sta->status_stats.last_ack_signal =
+-					 (s8)txinfo->status.ack_signal;
+-			sta->status_stats.ack_signal_filled = true;
+-			ewma_avg_signal_add(&sta->status_stats.avg_ack_signal,
+-					    -txinfo->status.ack_signal);
+-		}
+-	}
+ 
+ 	if (ieee80211_is_data_qos(mgmt->frame_control)) {
+ 		struct ieee80211_hdr *hdr = (void *) skb->data;
+@@ -890,7 +878,8 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ }
+ 
+ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+-				  struct ieee80211_tx_status *status)
++				  struct ieee80211_tx_status *status,
++				  int rates_idx, int retry_count)
+ {
+ 	struct sk_buff *skb = status->skb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -899,8 +888,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	struct sta_info *sta;
+ 	__le16 fc;
+ 	struct ieee80211_supported_band *sband;
+-	int retry_count;
+-	int rates_idx;
+ 	bool send_to_cooked;
+ 	bool acked;
+ 	bool noack_success;
+@@ -909,8 +896,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	int tid = IEEE80211_NUM_TIDS;
+ 	u16 tx_time_est;
+ 
+-	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
+-
+ 	sband = local->hw.wiphy->bands[info->band];
+ 	fc = hdr->frame_control;
+ 
+@@ -987,24 +972,14 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 		if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+ 			ieee80211_handle_filtered_frame(local, sta, skb);
+ 			return;
+-		} else {
++		} else if (ieee80211_is_data_present(fc)) {
+ 			if (!acked && !noack_success)
+-				sta->status_stats.retry_failed++;
+-			sta->status_stats.retry_count += retry_count;
++				sta->status_stats.msdu_failed[tid]++;
+ 
+-			if (ieee80211_is_data_present(fc)) {
+-				if (!acked && !noack_success)
+-					sta->status_stats.msdu_failed[tid]++;
+-
+-				sta->status_stats.msdu_retries[tid] +=
+-					retry_count;
+-			}
++			sta->status_stats.msdu_retries[tid] +=
++				retry_count;
+ 		}
+ 
+-		rate_control_tx_status(local, sband, status);
+-		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
+-			ieee80211s_update_metric(local, sta, status);
+-
+ 		if (!(info->flags & IEEE80211_TX_CTL_INJECTED) && acked)
+ 			ieee80211_frame_acked(sta, skb);
+ 
+@@ -1029,20 +1004,6 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 							     true);
+ 			ieee80211_info_set_tx_time_est(info, 0);
+ 		}
+-
+-		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
+-			if (acked) {
+-				if (sta->status_stats.lost_packets)
+-					sta->status_stats.lost_packets = 0;
+-
+-				/* Track when last TDLS packet was ACKed */
+-				sta->status_stats.last_pkt_time = jiffies;
+-			} else if (noack_success) {
+-				/* nothing to do here, do not account as lost */
+-			} else {
+-				ieee80211_lost_packet(sta, info);
+-			}
+-		}
+ 	}
+ 
+ 	/* SNMP counters
+@@ -1126,7 +1087,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (sta)
+ 		status.sta = &sta->sta;
+ 
+-	__ieee80211_tx_status(hw, &status);
++	ieee80211_tx_status_ext(hw, &status);
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL(ieee80211_tx_status);
+@@ -1138,16 +1099,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = status->info;
+ 	struct ieee80211_sta *pubsta = status->sta;
+ 	struct ieee80211_supported_band *sband;
+-	int retry_count;
++	int rates_idx, retry_count;
+ 	bool acked, noack_success;
+ 
+-	if (status->skb)
+-		return __ieee80211_tx_status(hw, status);
+-
+-	if (!status->sta)
+-		return;
+-
+-	ieee80211_tx_get_rates(hw, info, &retry_count);
++	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
+ 
+ 	sband = hw->wiphy->bands[info->band];
+ 
+@@ -1163,20 +1118,30 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 			sta->status_stats.retry_failed++;
+ 		sta->status_stats.retry_count += retry_count;
+ 
+-		if (acked) {
+-			sta->status_stats.last_ack = jiffies;
++		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
++			if (acked) {
++				sta->status_stats.last_ack = jiffies;
+ 
+-			if (sta->status_stats.lost_packets)
+-				sta->status_stats.lost_packets = 0;
++				if (sta->status_stats.lost_packets)
++					sta->status_stats.lost_packets = 0;
+ 
+-			/* Track when last packet was ACKed */
+-			sta->status_stats.last_pkt_time = jiffies;
+-		} else if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+-			return;
+-		} else if (noack_success) {
+-			/* nothing to do here, do not account as lost */
+-		} else {
+-			ieee80211_lost_packet(sta, info);
++				/* Track when last packet was ACKed */
++				sta->status_stats.last_pkt_time = jiffies;
++
++				if (info->status.is_valid_ack_signal) {
++					sta->status_stats.last_ack_signal =
++							 (s8)info->status.ack_signal;
++					sta->status_stats.ack_signal_filled = true;
++					ewma_avg_signal_add(&sta->status_stats.avg_ack_signal,
++							    -info->status.ack_signal);
++				}
++			} else if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
++				return;
++			} else if (noack_success) {
++				/* nothing to do here, do not account as lost */
++			} else {
++				ieee80211_lost_packet(sta, info);
++			}
+ 		}
+ 
+ 		rate_control_tx_status(local, sband, status);
+@@ -1184,6 +1149,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 			ieee80211s_update_metric(local, sta, status);
+ 	}
+ 
++	if (status->skb)
++		return __ieee80211_tx_status(hw, status, rates_idx,
++					     retry_count);
++
+ 	if (acked || noack_success) {
+ 		I802_DEBUG_INC(local->dot11TransmittedFrameCount);
+ 		if (!pubsta)
+-- 
+2.28.0
+
