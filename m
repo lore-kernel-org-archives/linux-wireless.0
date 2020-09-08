@@ -2,93 +2,94 @@ Return-Path: <SRS0=ylPz=CR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04882C2BC11
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A412C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA2FA20768
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:18:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CAE62145D
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 21:23:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BstwodcI"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="sSoIlEK7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729851AbgIHVSa (ORCPT
+        id S1730023AbgIHVXE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 17:18:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48554 "EHLO
+        Tue, 8 Sep 2020 17:23:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730168AbgIHVSG (ORCPT
+        with ESMTP id S1728390AbgIHVXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 17:18:06 -0400
+        Tue, 8 Sep 2020 17:23:03 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84D20C061797
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 14:18:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D7CC061573;
+        Tue,  8 Sep 2020 14:23:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=Is5CAD/ZIm6t03EgYX/3+vaKqFv/sZsDgYtmsy53erk=; b=BstwodcIMTAmfYxk8B24SL7Is5
-        bpmYMOF1qvgqqUjSvwKq7A2XJUU034QYNAe4ceK6q44Cs67GQEoYl0YdrlLItfGuZFrV5FxgIjmLB
-        Hvzgt152c6gkNjWfcgDIf5ap4jbaRVjcIJny4Vgua+RJOUSJAGuLg8l/zhMmKExzxyhs=;
-Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=x4KZwb/FXsI+W5RSvfofLnqf9p6+syUlpwRyvBj+dt4=; b=sSoIlEK7aXIN9zk9W8Eoqcsw8K
+        sVjtVhu+55fEVP/NoI65JZerblv50inuR5mgFV7tbfDq9VRHhEvZrYHEe/QLUoATRp1m354rbeypD
+        wMRv41MR5yWaXy+L6C7pFzZZ5esYwwlR+KokPJHXwkHq5hgaZOZVE59fb8az24qaKmuo=;
+Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1kFl03-0002Cx-EU
-        for linux-wireless@vger.kernel.org; Tue, 08 Sep 2020 23:17:59 +0200
+        id 1kFl4t-0002TF-MO; Tue, 08 Sep 2020 23:22:59 +0200
+Subject: Re: [PATCH -next] mt76: Convert to DEFINE_SHOW_ATTRIBUTE
+To:     Qinglang Miao <miaoqinglang@huawei.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200716085801.11220-1-miaoqinglang@huawei.com>
 From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 08/11] mt76: mt7915: simplify mt7915_lmac_mapping
-Date:   Tue,  8 Sep 2020 23:17:53 +0200
-Message-Id: <20200908211756.15998-8-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200908211756.15998-1-nbd@nbd.name>
-References: <20200908211756.15998-1-nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <b522f546-148f-2348-a627-2b19e1013d11@nbd.name>
+Date:   Tue, 8 Sep 2020 23:22:59 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200716085801.11220-1-miaoqinglang@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Compared to mac80211 ACs, MT7915 queue numbers are in reverse order
-There is no need for the defensive WARN_ON_ONCE, so we can simplify
-the function to avoid the array lookup
+On 2020-07-16 10:58, Qinglang Miao wrote:
+> Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+> 
+> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+This does not seem to apply to the current tree, please rebase.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index ab3f209ff6cd..4b8908fa7eda 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -258,17 +258,8 @@ mt7915_ext_phy(struct mt7915_dev *dev)
- 
- static inline u8 mt7915_lmac_mapping(struct mt7915_dev *dev, u8 ac)
- {
--	static const u8 lmac_queue_map[] = {
--		[IEEE80211_AC_BK] = MT_LMAC_AC00,
--		[IEEE80211_AC_BE] = MT_LMAC_AC01,
--		[IEEE80211_AC_VI] = MT_LMAC_AC02,
--		[IEEE80211_AC_VO] = MT_LMAC_AC03,
--	};
--
--	if (WARN_ON_ONCE(ac >= ARRAY_SIZE(lmac_queue_map)))
--		return MT_LMAC_AC01; /* BE */
--
--	return lmac_queue_map[ac];
-+	/* LMAC uses the reverse order of mac80211 AC indexes */
-+	return 3 - ac;
- }
- 
- extern const struct ieee80211_ops mt7915_ops;
--- 
-2.28.0
-
+- Felix
