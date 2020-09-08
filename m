@@ -3,73 +3,73 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21517C2BC11
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E451C43461
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4E202080A
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5002E2080A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Sep 2020 18:34:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="R/5PR7kx"
+	dkim=pass (2048-bit key) header.d=nexus-software-ie.20150623.gappssmtp.com header.i=@nexus-software-ie.20150623.gappssmtp.com header.b="CyNel8Fr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731688AbgIHSez (ORCPT
+        id S1731453AbgIHSe5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Sep 2020 14:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50310 "EHLO
+        Tue, 8 Sep 2020 14:34:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731730AbgIHScm (ORCPT
+        with ESMTP id S1731665AbgIHScb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Sep 2020 14:32:42 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 664EEC0617AA
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:24:18 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id e17so303478wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:24:18 -0700 (PDT)
+        Tue, 8 Sep 2020 14:32:31 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22EC1C06138B
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2020 11:25:08 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id x23so286454wmi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2020 11:25:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=nexus-software-ie.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=yTFsQ/Thh+oiXlokRzBRhy7fryTyWLYZWgMktev/5uE=;
-        b=R/5PR7kx5bfQao/dqFxTgY6vVvKrEtNMCgcmIzT8IuiRX6AkKDoLQuIu2T/OUZrFRa
-         5NdfNo3Nj8cfkFq0zvoUSU3r8iPIy3IO0bua3rHtdY029+N1mAKp0GeXFDKdtmPCTDSE
-         kfLaUVJ8StB+NaAWiB843vsIR50j55pTpA/zAsY6EgrOFTn0jG45GDj/sYl7QpJtO4Rk
-         0Y3UhlAg6Ui1aMqYVWVGJSd5YlzbUh3sNbpvEQQPO3+a/OiB3rElDdMEALn2qs6LZY/Y
-         d9OMMlkS6K1g1hWqzPKwCF0C8+l1zcB+RhvHCJmKKAs0CWz7eGBFZ4CY2PMjO8Q5DxcA
-         ZWUA==
+        bh=DAf97sptdgLCg/oA6L8vy5HwNzKTVCMj55H39bkxfx4=;
+        b=CyNel8Fr0KQA8GWBzuf0PVqYs0SJ7zHsWSGVXSRDMAc4/i+rzHkGlDe+VdMywSFxRw
+         JiBVorsUnAw33nkk6rf536t8cDBWD3oksA/Og6oEYudkAitMrJP0y0FcbGuaB6lbpL94
+         L62nO8Jhb/KhxanIsc8OqyEtOPsza4BQ9U3X69Rv+ScOll72RP0lDmutDzRjtFQRvgpD
+         c+RlljaF7oGLSCUzgawbNreV3/6GhlBRE/nI46Wm3SaW1/ICh9UZwG5DC4egTSDrAFRl
+         gqgujj4gWqQkf8Th1o/8Ff1l+CalNoAf3mTitYjurzC6G1yEAFom4VgeSz6IcZ3/+tT2
+         /wTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yTFsQ/Thh+oiXlokRzBRhy7fryTyWLYZWgMktev/5uE=;
-        b=MtwoqsiqAEsFmnI6pxK6I0u9X/eFuF1OWO0uO8s6qBJ4whUwW+C2qYWb0TCv1ggL2h
-         axBvB7yuoXG2hxoCzfHrx+nS3COUK51sMiGWvobYTVixK1f9fXVQkFHmxabYWeAWK2Tg
-         K437IM0YIjtrUGGL31Xt8wQCp0P/soOlW5SUlL2ZdWndxup/035O0/NXnHRA1PibuDf+
-         8KdvY0qjHiwwZVUiE9MCCk6Kcw2zpzCGpHS7sEzX4L4pD7ZnQyOApCKrro70kYM/gPbX
-         TLJ+QD6SUoNV0Ijr4r51IwIV6fjIaQyi2VlpLdIDu8LnYUTbBa43oIO/NaJrrX4RWeVq
-         xoCQ==
-X-Gm-Message-State: AOAM531fg8iIxfYMAWBl3VU31fumyMe8OT1CkuA9joMoJqJlspYn+919
-        ETk0/4xsb4yW3gUlCvWm0zi1yw==
-X-Google-Smtp-Source: ABdhPJxSctMZIslzg5qvvruim3fRsoq+FUlU67ow/yttLzUjjiFy4VTlVejKzNMUxxkoBvKcP2NzPQ==
-X-Received: by 2002:a1c:a385:: with SMTP id m127mr373050wme.189.1599589457082;
-        Tue, 08 Sep 2020 11:24:17 -0700 (PDT)
+        bh=DAf97sptdgLCg/oA6L8vy5HwNzKTVCMj55H39bkxfx4=;
+        b=COmUDIP8seBVg6ZXOcN3J3ULF0CyKPGo4SpC3r0BMwrJDyolB/QmiVW+crNOziijOg
+         2gCWSK7LrqoiQceXa8Aj4XFVTp2YwsSglR2eGufJEHKnX2RZQz3zaWDqYZWsEJXm0Gop
+         +VzfnUrDLsYdNZUBOpdsxvHmqNzmKaWdIfJXiPO87o8EDgRAAdKiCyBrfhh974itvK6U
+         fw08vCWTnIKS4dvIj/Gy0oHweOhC8ZDELVSiqfo8mN8Xp2XQiPqXK80Dh1zGOfnrMVXU
+         46bumRwe0285IaE1VG0UmGWwGK253WWrOl+hxiy/ASQK24yHZasR9nNXHNLt4GvN7MPL
+         MouA==
+X-Gm-Message-State: AOAM5310JgbxOc5t4BgCeSXgm7jZ8b/rH/sFeZ68tV56GF67B+BZj53c
+        Dy9cMmTbS/wunelxR7HArnym5A==
+X-Google-Smtp-Source: ABdhPJyukTXjXDtO21zToC6RG82Q5kXHR9bixgiXF2iaahJRpzXfdCWbjgWv7g8iTzO9SY5mMKbdtA==
+X-Received: by 2002:a1c:dd45:: with SMTP id u66mr369833wmg.117.1599589506833;
+        Tue, 08 Sep 2020 11:25:06 -0700 (PDT)
 Received: from localhost.localdomain ([176.61.57.127])
-        by smtp.gmail.com with ESMTPSA id 189sm330439wmb.3.2020.09.08.11.24.16
+        by smtp.gmail.com with ESMTPSA id c18sm376908wrx.63.2020.09.08.11.25.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 11:24:16 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+        Tue, 08 Sep 2020 11:25:06 -0700 (PDT)
+From:   Bryan O'Donoghue <pure.logic@nexus-software.ie>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v3 7/7] wcn36xx: Remove dead code in wcn36xx_smd_config_bss()
-Date:   Tue,  8 Sep 2020 19:24:55 +0100
-Message-Id: <20200908182455.2870345-8-bryan.odonoghue@linaro.org>
+Subject: [PATCH v3 1/2] wcn36xx: Mark internal smd functions static
+Date:   Tue,  8 Sep 2020 19:25:52 +0100
+Message-Id: <20200908182553.2870585-2-pure.logic@nexus-software.ie>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200908182455.2870345-1-bryan.odonoghue@linaro.org>
-References: <20200908182455.2870345-1-bryan.odonoghue@linaro.org>
+In-Reply-To: <20200908182553.2870585-1-pure.logic@nexus-software.ie>
+References: <20200908182553.2870585-1-pure.logic@nexus-software.ie>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,82 +77,122 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-wcn36xx_smd_config_bss_v0() and wcn36xx_smd_config_bss_v1() have been
-designed to operate in standalone fashion. As a result we can drop the
-dead code now present in wcn36xx_smd_config_bss() and happily remove one
-kzalloc from the BSS config path as we do so.
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+
+This commit marks all smd.c functions that are only used inside of smd.c as
+static. Previous commits added some VHT specific setup functions non-static
+which is the right thing to do in terms of having granular git commits that
+compile warning free. What we really want is for local not global scope on
+those functions.
+
+This patch makes the conversion from global to local scope.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 39 ++++----------------------
- 1 file changed, 5 insertions(+), 34 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 34 ++++++++++++++------------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index fc922dd9ccde..ce6536a3185c 100644
+index ac10789332d8..a8d2af74ef62 100644
 --- a/drivers/net/wireless/ath/wcn36xx/smd.c
 +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1673,42 +1673,15 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta, const u8 *bssid,
- 			   bool update)
+@@ -80,7 +80,7 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_RA_START_RATE, 133), /* MCS 5 */
+ };
+ 
+-struct wcn36xx_cfg_val wcn3680_cfg_vals[] = {
++static struct wcn36xx_cfg_val wcn3680_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(CURRENT_TX_ANTENNA, 1),
+ 	WCN36XX_CFG_VAL(CURRENT_RX_ANTENNA, 1),
+ 	WCN36XX_CFG_VAL(LOW_GAIN_OVERRIDE, 0),
+@@ -242,7 +242,7 @@ static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
+ 	}
+ }
+ 
+-void
++static void
+ wcn36xx_smd_set_bss_vht_params(struct ieee80211_vif *vif,
+ 			       struct ieee80211_sta *sta,
+ 			       struct wcn36xx_hal_config_bss_params_v1 *bss)
+@@ -279,7 +279,7 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
+ 	}
+ }
+ 
+-void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
+ 		struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
  {
--	struct wcn36xx_hal_config_bss_req_msg *msg;
--	struct wcn36xx_hal_config_bss_params *bss;
--	struct wcn36xx_hal_config_sta_params *sta_params;
- 	int ret;
+@@ -299,7 +299,7 @@ void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
+ 	}
+ }
  
- 	mutex_lock(&wcn->hal_mutex);
--	msg = kzalloc(sizeof(*msg), GFP_KERNEL);
--	if (!msg) {
--		ret = -ENOMEM;
--		goto out;
--	}
--	INIT_HAL_MSG((*msg), WCN36XX_HAL_CONFIG_BSS_REQ);
--
--	bss = &msg->bss_params;
--	sta_params = &bss->sta;
--
--	wcn36xx_smd_set_bss_params(wcn, vif, sta, bssid, update, bss);
--	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
--
--	wcn36xx_dbg(WCN36XX_DBG_HAL,
--		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
--		    bss->bssid, bss->self_mac_addr, bss->bss_type,
--		    bss->oper_mode, bss->nw_type);
+-void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
++static void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (sta->ht_cap.ht_supported) {
+@@ -324,7 +324,7 @@ static void wcn36xx_smd_set_sta_default_ht_params(
+ 	sta_params->dsss_cck_mode_40mhz = 1;
+ }
  
--	wcn36xx_dbg(WCN36XX_DBG_HAL,
--		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM\n",
--		    sta_params->bssid, sta_params->action,
--		    sta_params->sta_index, sta_params->bssid_index,
--		    sta_params->aid, sta_params->type,
--		    sta_params->mac);
--
--	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
-+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24))
- 		ret = wcn36xx_smd_config_bss_v1(wcn, vif, sta, bssid, update);
--	} else {
-+	else
- 		ret = wcn36xx_smd_config_bss_v0(wcn, vif, sta, bssid, update);
--	}
-+
- 	if (ret) {
- 		wcn36xx_err("Sending hal_config_bss failed\n");
- 		goto out;
-@@ -1718,12 +1691,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 					 sta,
- 					 wcn->hal_buf,
- 					 wcn->hal_rsp_len);
--	if (ret) {
-+	if (ret)
- 		wcn36xx_err("hal_config_bss response failed err=%d\n", ret);
--		goto out;
--	}
-+
- out:
--	kfree(msg);
- 	mutex_unlock(&wcn->hal_mutex);
+-void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (wcn->rf_id == RF_IRIS_WCN3680) {
+@@ -340,7 +340,7 @@ void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
+ 	sta_params->vht_tx_bf_enabled = 0;
+ }
+ 
+-void wcn36xx_smd_set_sta_default_ht_ldpc_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_default_ht_ldpc_params(struct wcn36xx *wcn,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (wcn->rf_id == RF_IRIS_WCN3680)
+@@ -1361,7 +1361,7 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+ 	v1->p2p = orig->p2p;
+ }
+ 
+-void
++static void
+ wcn36xx_smd_set_sta_params_v1(struct wcn36xx *wcn,
+ 			      struct ieee80211_vif *vif,
+ 			      struct ieee80211_sta *sta,
+@@ -1500,12 +1500,12 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
  	return ret;
  }
+ 
+-void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_sta *sta,
+-				const u8 *bssid,
+-				bool update,
+-				struct wcn36xx_hal_config_bss_params *bss)
++static void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_sta *sta,
++				       const u8 *bssid,
++				       bool update,
++				       struct wcn36xx_hal_config_bss_params *bss)
+ {
+ 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	struct wcn36xx_hal_config_sta_params *sta_params;
+@@ -1713,9 +1713,11 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 	return ret;
+ }
+ 
+-int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+-			      struct ieee80211_sta *sta, const u8 *bssid,
+-			      bool update)
++static int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_sta *sta,
++				     const u8 *bssid,
++				     bool update)
+ {
+ 	struct wcn36xx_hal_config_bss_req_msg *msg;
+ 	struct wcn36xx_hal_config_bss_params *bss;
 -- 
 2.27.0
 
