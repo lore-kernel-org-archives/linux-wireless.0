@@ -2,123 +2,195 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C61A6C43461
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DA6C433E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:07:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93B7D2166E
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6CC72166E
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:07:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="lxcfZku/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728442AbgIIRG6 convert rfc822-to-8bit (ORCPT
+        id S1730599AbgIIRHk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 13:06:58 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:55271 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730240AbgIIPjF (ORCPT
+        Wed, 9 Sep 2020 13:07:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48368 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729479AbgIIPhI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 11:39:05 -0400
-Received: from mail-pj1-f71.google.com ([209.85.216.71])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1kG0eZ-0003l9-DD
-        for linux-wireless@vger.kernel.org; Wed, 09 Sep 2020 14:00:51 +0000
-Received: by mail-pj1-f71.google.com with SMTP id ic18so1724725pjb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 07:00:51 -0700 (PDT)
+        Wed, 9 Sep 2020 11:37:08 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B23E8C061360
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 08:37:07 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id c19so2083393wmd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 08:37:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=YTwsOssKLuWm0RN1XuxIWtatvqfRvgRgu4IUBKS+A1E=;
+        b=lxcfZku/uhGuk8yokqH2WaZ+jloQ85lqillMPiqaXSgPvhWT5/qCvOt/LB29RZcYHg
+         mIllMij6oOC4gS/aTj1qiiXjdL6xxeAEE3MUZEpbx8v1iaA9JBC6Dg9RUtHPUWXgueFH
+         xzqsnItJ6S25o8nyjQDZNzAFI5B+qjU4kTckRFaZ7kKf+9F0Bnvz2Aie0Bi6+vVKctLM
+         JjDtMFe0a9Vh+HASj4sW3YcwGueVpy1UN6KAf9YpbHZLI/u8zkOQzQejW8XcmVwttZfE
+         knPSyLxE+CBsvyi5OCbyRRV55R+SUHGqaRNhDzgwIpsbpxSfe9yzxSKHN+xdQSuRRoC3
+         Jx5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=UerQpWjJx3zsxSv3XMGQ5IVVVoYrVWKrJqPq+tgaZ10=;
-        b=kx1tYh/G0XLsEaQTJEkL9+kEpDBBoDzt/buUcc4RjQXZLtIqKfezQpelxpwD0Qp/Ff
-         q9f2b19gQXEkZTB/NouOrnkzKS70Zb9taB14tqMdVao88wXCwemhvu2jZDSldAAPOdmP
-         y7iURlqw94fkZJfJt7BdAHFmW3OBgv0HktsO5t9sJOM+uGj63bR22XonwKUgvFlJd7zw
-         YFwHd2d7YARnm22JFaIOWmrjgf+XGo4IhuRd5XJ/VMpviXJerPc1MKYkQmpsd9ubUoav
-         61kEWpTGKxKS1E8FkKyzFPE2hdoZIf928IGZVxQXM1XJSwsPzpjzaDTBJRhjEKvH+BQV
-         HmcQ==
-X-Gm-Message-State: AOAM533JWe+N2IEHLgeKtD/AMpgUzoZsxFb6fugvHS9te80EzBMl5aww
-        kb+uDhkBaFfcmolcqGiSleI8pCDuvWepmwLRVaamVzc24qo1+UL4c7TOfCe+DvVSsvM/XCbk2VK
-        6+0zB2WaOgcf4zDpz2zDZyAoBSewAQOILGybiY/KJ3hhT
-X-Received: by 2002:a17:90a:528a:: with SMTP id w10mr920284pjh.107.1599660049893;
-        Wed, 09 Sep 2020 07:00:49 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyAVNY/MPKZMX7OIaxd4G9JHrM+Ztrkv6RcCSI8EBNgFRgFk435b1SjpHlYvCKVazyifx3ojQ==
-X-Received: by 2002:a17:90a:528a:: with SMTP id w10mr920244pjh.107.1599660049443;
-        Wed, 09 Sep 2020 07:00:49 -0700 (PDT)
-Received: from [192.168.1.208] (220-133-187-190.HINET-IP.hinet.net. [220.133.187.190])
-        by smtp.gmail.com with ESMTPSA id n7sm2871604pfq.114.2020.09.09.07.00.47
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 09 Sep 2020 07:00:48 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH] rtw88: pci: Power cycle device during shutdown
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <CA+ASDXOizniWUk3pUM1X5UHyGcrJy=ybAwp6_jjXfEGjNPe27g@mail.gmail.com>
-Date:   Wed, 9 Sep 2020 22:00:45 +0800
-Cc:     Tony Chuang <yhchuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "open list:REALTEK WIRELESS DRIVER (rtw88)" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <D2AE780E-6ED6-4732-8A51-D6431E472C7E@canonical.com>
-References: <20200824093225.13689-1-kai.heng.feng@canonical.com>
- <CA+ASDXOizniWUk3pUM1X5UHyGcrJy=ybAwp6_jjXfEGjNPe27g@mail.gmail.com>
-To:     Brian Norris <briannorris@chromium.org>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=YTwsOssKLuWm0RN1XuxIWtatvqfRvgRgu4IUBKS+A1E=;
+        b=OnDOpebYng+wRbUpxGyOVb4MjxRe0wHqdi+fbje8oyEg3Vr4U2la3i5aDtmu1tHhLj
+         EaYbjtL0DNBjn8pvhch0DsTtQqnVULYmhwwVWAVJbJ3CDfJAI9ntit0cR/OCqyFc0vWu
+         s8/PeEXWYmhUa0HyneACRdQ/mhIUZ78HsPUg69Ylhl7XPTYxR6UzGdHMtOfjQ9+0o22k
+         tugX48zfla5SeMWBHUKMxuv0X9elPOAOWdgm8B+4BuhzqD+s3BJbfUtO9TT8fTrLxTya
+         MjLvxO+ZBpZYFRjtrTSJR01qZUPoNFuFEzzWtly9gedvSyVgyFazK4VbNzfT1zKoUJRa
+         JlJQ==
+X-Gm-Message-State: AOAM532j+0SbyNxcrEJt8z5+NJIUN89JfJvPKEIvQ/v8w4WoWS9ruOEs
+        v0gFwZp926AAtNFgbyxyceOYH/z1vvLYeA==
+X-Google-Smtp-Source: ABdhPJwv35pZlNQSjk6iJJG7gqftnATym/+wO2pXthdUXIpL2xmh6lYfYbnkOr+z9jFOEmCmiZ6itw==
+X-Received: by 2002:a7b:c753:: with SMTP id w19mr4009720wmk.157.1599665826371;
+        Wed, 09 Sep 2020 08:37:06 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id a83sm4424122wmh.48.2020.09.09.08.37.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Sep 2020 08:37:05 -0700 (PDT)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        loic.poulain@linaro.org
+Subject: [PATCH v4 1/2] wcn36xx: Mark internal smd functions static
+Date:   Wed,  9 Sep 2020 16:37:52 +0100
+Message-Id: <20200909153753.2905176-2-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200909153753.2905176-1-bryan.odonoghue@linaro.org>
+References: <20200909153753.2905176-1-bryan.odonoghue@linaro.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+This commit marks all smd.c functions that are only used inside of smd.c as
+static. Previous commits added some VHT specific setup functions non-static
+which is the right thing to do in terms of having granular git commits that
+compile warning free. What we really want is for local not global scope on
+those functions.
 
+This patch makes the conversion from global to local scope.
 
-> On Aug 26, 2020, at 08:27, Brian Norris <briannorris@chromium.org> wrote:
-> 
-> On Mon, Aug 24, 2020 at 2:32 AM Kai-Heng Feng
-> <kai.heng.feng@canonical.com> wrote:
->> 
->> Sometimes system freeze on cold/warm boot when rtw88 is probing.
->> 
->> According to [1], platform firmware may not properly power manage the
->> device during shutdown. I did some expirements and putting the device to
->> D3 can workaround the issue.
->> 
->> So let's power cycle the device by putting the device to D3 at shutdown
->> to prevent the issue from happening.
->> 
->> [1] https://bugzilla.kernel.org/show_bug.cgi?id=206411#c9
->> 
->> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> 
-> Can you at least include some more details, like which hardware
-> version and firmware?
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 34 ++++++++++++++------------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
 
-8723DE, 8822BE and 8822CE are affected [1].
-
-> And which platform?
-
-Many x86 laptops.
-
-Some users claim BIOS update can fix the issue, however some are still affected.
-
-> It seems a bit harsh to
-> include a platform workaround to run for everyone, unless there's
-> truly no downside. But even then, it's good to log what you're working
-> with, in case there are ever problems with this in the future.
-
-Ok. I can send V2 with more detailed commit message.
-
-[1] https://bugs.launchpad.net/bugs/1872984
-
-Kai-Heng
-
-> 
-> Brian
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 18507b4d3681..61d9834b080d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -80,7 +80,7 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(ENABLE_DYNAMIC_RA_START_RATE, 133), /* MCS 5 */
+ };
+ 
+-struct wcn36xx_cfg_val wcn3680_cfg_vals[] = {
++static struct wcn36xx_cfg_val wcn3680_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(CURRENT_TX_ANTENNA, 1),
+ 	WCN36XX_CFG_VAL(CURRENT_RX_ANTENNA, 1),
+ 	WCN36XX_CFG_VAL(LOW_GAIN_OVERRIDE, 0),
+@@ -242,7 +242,7 @@ static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
+ 	}
+ }
+ 
+-void
++static void
+ wcn36xx_smd_set_bss_vht_params(struct ieee80211_vif *vif,
+ 			       struct ieee80211_sta *sta,
+ 			       struct wcn36xx_hal_config_bss_params_v1 *bss)
+@@ -279,7 +279,7 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
+ 	}
+ }
+ 
+-void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
+ 		struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+@@ -301,7 +301,7 @@ void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
+ 	}
+ }
+ 
+-void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
++static void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (sta->ht_cap.ht_supported) {
+@@ -326,7 +326,7 @@ static void wcn36xx_smd_set_sta_default_ht_params(
+ 	sta_params->dsss_cck_mode_40mhz = 1;
+ }
+ 
+-void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (wcn->rf_id == RF_IRIS_WCN3680) {
+@@ -342,7 +342,7 @@ void wcn36xx_smd_set_sta_default_vht_params(struct wcn36xx *wcn,
+ 	sta_params->vht_tx_bf_enabled = 0;
+ }
+ 
+-void wcn36xx_smd_set_sta_default_ht_ldpc_params(struct wcn36xx *wcn,
++static void wcn36xx_smd_set_sta_default_ht_ldpc_params(struct wcn36xx *wcn,
+ 		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
+ {
+ 	if (wcn->rf_id == RF_IRIS_WCN3680)
+@@ -1363,7 +1363,7 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+ 	v1->p2p = orig->p2p;
+ }
+ 
+-void
++static void
+ wcn36xx_smd_set_sta_params_v1(struct wcn36xx *wcn,
+ 			      struct ieee80211_vif *vif,
+ 			      struct ieee80211_sta *sta,
+@@ -1502,12 +1502,12 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	return ret;
+ }
+ 
+-void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_sta *sta,
+-				const u8 *bssid,
+-				bool update,
+-				struct wcn36xx_hal_config_bss_params *bss)
++static void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_sta *sta,
++				       const u8 *bssid,
++				       bool update,
++				       struct wcn36xx_hal_config_bss_params *bss)
+ {
+ 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	struct wcn36xx_hal_config_sta_params *sta_params;
+@@ -1715,9 +1715,11 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 	return ret;
+ }
+ 
+-int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+-			      struct ieee80211_sta *sta, const u8 *bssid,
+-			      bool update)
++static int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_sta *sta,
++				     const u8 *bssid,
++				     bool update)
+ {
+ 	struct wcn36xx_hal_config_bss_req_msg *msg;
+ 	struct wcn36xx_hal_config_bss_params *bss;
+-- 
+2.27.0
 
