@@ -2,121 +2,111 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DD6BC433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:41:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798ABC10DAA
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10D1B2078E
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:41:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="T/XA15q3"
+	by mail.kernel.org (Postfix) with ESMTP id 3276A2078E
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729298AbgIIPlR (ORCPT
+        id S1730567AbgIIPss (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 11:41:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48314 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730337AbgIIPgu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 11:36:50 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51C5EC061757
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 08:36:50 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id a65so2710818wme.5
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 08:36:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=x+yPlB3SpPWTohvuvahTspwiXrquAXLGYj1ufX7tRac=;
-        b=T/XA15q3JEw64vle/SJDqe2cwhx5Ytuoy9tyFKBx6FYJOXSiQlk43e+9oTrc7yBX9R
-         UD9ZbP7voxpFd0QAH2NXBx5kOEodqH1tyt/kxtKDmIRE2Gq5GoYyoX+LpE/0V9H80nGP
-         dsSTRSUbWchmawOSL9PwcvMCtMkq6jJjedmtW2Hhrb7f7kOEdUgfk4ljYxxiW4Sfsr59
-         Kp1ZJHrrhMQ8q0aMfTCDs2w2reeU1h2r45Uh9/Cw0wN2t37YqnVtId6LXtSxncFNXEE5
-         jQolc1vhsTpFb32XbtIjieUZtcovZ1M7UU2PHNqDMArCLW99paU3XRDsJ9xnq3CpbkV3
-         KB8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=x+yPlB3SpPWTohvuvahTspwiXrquAXLGYj1ufX7tRac=;
-        b=f6GzQIff4Eu7ukAJ0W7oGZWcM6Art1Ow1Ahu+GPfDQBF91UNxZLkL45y/o5BFkCFMP
-         XXFODl/2uhSvBCEsYq6MoCMCxgJr0iJtGD1ZU5NgPd6HkgDpjw2YQcLSIjiXzaM3eGlM
-         DrJeI01lTikhl4GlY0fqv5bRirxNyJeigBMbwNF9+U6gi1KgNHp0rMOW2oG1KsmFGuOS
-         IkBugdMTHXyi3TbMDVdztCbEkTYXKvZHFN83mA+B0b85s2r703Dhez3RrqXgtkyGyJYb
-         vjv+0BH/ssogWbI1WO2IKSSDF+o7OD3lXujaizekOmHqtCMOQq0lh+VCLjOeskEcYApM
-         gXiQ==
-X-Gm-Message-State: AOAM5333oR97Sltg4oMYOr+aAsMyHJlOp2HlYfW+iHvY0RqGRTqnKLuw
-        3ctb/evhRgEF4LZ049ojic0vkwMjVzcxrQ==
-X-Google-Smtp-Source: ABdhPJwaWbjB6dWq1VBH9CdEs4zed5EcAALfs7E84jp9ii9BNOXRbNxk3DcUeoBwvR35GrEJlu/3UA==
-X-Received: by 2002:a1c:ed16:: with SMTP id l22mr3912572wmh.80.1599665809048;
-        Wed, 09 Sep 2020 08:36:49 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id 128sm4470602wmz.43.2020.09.09.08.36.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2020 08:36:48 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
-        loic.poulain@linaro.org
-Subject: [PATCH v4 1/4] wcn36xx: Define INIT_HAL_MSG_V1()
-Date:   Wed,  9 Sep 2020 16:37:33 +0100
-Message-Id: <20200909153736.2905114-2-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200909153736.2905114-1-bryan.odonoghue@linaro.org>
-References: <20200909153736.2905114-1-bryan.odonoghue@linaro.org>
+        Wed, 9 Sep 2020 11:48:48 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:40364 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730460AbgIIPsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Sep 2020 11:48:47 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 57B99F08137A5C2B9BFE;
+        Wed,  9 Sep 2020 21:45:42 +0800 (CST)
+Received: from localhost (10.174.179.108) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Wed, 9 Sep 2020
+ 21:45:35 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>
+CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] ath11k: Remove unused inline function htt_htt_stats_debug_dump()
+Date:   Wed, 9 Sep 2020 21:45:33 +0800
+Message-ID: <20200909134533.19604-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.174.179.108]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to pass 802.11ac VHT parameters from the SoC to wcn36xx we need to
-use the V1 data structures associated with BSS and STA parameters.
+There is no caller in tree, so can remove it.
 
-The means of identifying a V1 data-structure is via the SMD version field.
-This patch defines a INIT_HAL_MSG_V1() which operates the same way as
-INIT_HAL_MSG() with the exception that it defines VERSION1 as opposed to
-VERSION0.
-
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ .../net/wireless/ath/ath11k/debug_htt_stats.c | 44 -------------------
+ 1 file changed, 44 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ad36d6e744a6..3adb744b093d 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -453,14 +453,20 @@ static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
- 	hdr->len = msg_size + sizeof(*hdr);
+diff --git a/drivers/net/wireless/ath/ath11k/debug_htt_stats.c b/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
+index 6b532dc99c98..ad3f08a5b031 100644
+--- a/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
++++ b/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
+@@ -3895,50 +3895,6 @@ static inline void htt_print_backpressure_stats_tlv_v(const u32 *tag_buf,
+ 	}
  }
  
--#define INIT_HAL_MSG(msg_body, type) \
-+#define __INIT_HAL_MSG(msg_body, type, version) \
- 	do {								\
- 		memset(&msg_body, 0, sizeof(msg_body));			\
- 		msg_body.header.msg_type = type;			\
--		msg_body.header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
-+		msg_body.header.msg_version = version;			\
- 		msg_body.header.len = sizeof(msg_body);			\
- 	} while (0)							\
- 
-+#define INIT_HAL_MSG(msg_body, type)	\
-+	__INIT_HAL_MSG(msg_body, type, WCN36XX_HAL_MSG_VERSION0)
-+
-+#define INIT_HAL_MSG_V1(msg_body, type) \
-+	__INIT_HAL_MSG(msg_body, type, WCN36XX_HAL_MSG_VERSION1)
-+
- #define INIT_HAL_PTT_MSG(p_msg_body, ppt_msg_len) \
- 	do { \
- 		memset(p_msg_body, 0, sizeof(*p_msg_body) + ppt_msg_len); \
+-static inline void htt_htt_stats_debug_dump(const u32 *tag_buf,
+-					    struct debug_htt_stats_req *stats_req)
+-{
+-	u8 *buf = stats_req->buf;
+-	u32 len = stats_req->buf_len;
+-	u32 buf_len = ATH11K_HTT_STATS_BUF_SIZE;
+-	u32 tlv_len = 0, i = 0, word_len = 0;
+-
+-	tlv_len  = FIELD_GET(HTT_TLV_LEN, *tag_buf) + HTT_TLV_HDR_LEN;
+-	word_len = (tlv_len % 4) == 0 ? (tlv_len / 4) : ((tlv_len / 4) + 1);
+-	len += HTT_DBG_OUT(buf + len, buf_len - len,
+-			   "============================================");
+-	len += HTT_DBG_OUT(buf + len, buf_len - len,
+-			   "HKDBG TLV DUMP: (tag_len=%u bytes, words=%u)",
+-			   tlv_len, word_len);
+-
+-	for (i = 0; i + 3 < word_len; i += 4) {
+-		len += HTT_DBG_OUT(buf + len, buf_len - len,
+-				   "0x%08x 0x%08x 0x%08x 0x%08x",
+-				   tag_buf[i], tag_buf[i + 1],
+-				   tag_buf[i + 2], tag_buf[i + 3]);
+-	}
+-
+-	if (i + 3 == word_len) {
+-		len += HTT_DBG_OUT(buf + len, buf_len - len, "0x%08x 0x%08x 0x%08x ",
+-				tag_buf[i], tag_buf[i + 1], tag_buf[i + 2]);
+-	} else if (i + 2 == word_len) {
+-		len += HTT_DBG_OUT(buf + len, buf_len - len, "0x%08x 0x%08x ",
+-				tag_buf[i], tag_buf[i + 1]);
+-	} else if (i + 1 == word_len) {
+-		len += HTT_DBG_OUT(buf + len, buf_len - len, "0x%08x ",
+-				tag_buf[i]);
+-	}
+-	len += HTT_DBG_OUT(buf + len, buf_len - len,
+-			   "============================================");
+-
+-	if (len >= buf_len)
+-		buf[buf_len - 1] = 0;
+-	else
+-		buf[len] = 0;
+-
+-	stats_req->buf_len = len;
+-}
+-
+ static int ath11k_dbg_htt_ext_stats_parse(struct ath11k_base *ab,
+ 					  u16 tag, u16 len, const void *tag_buf,
+ 					  void *user_data)
 -- 
-2.27.0
+2.17.1
+
 
