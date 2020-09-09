@@ -2,106 +2,131 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEF0C43461
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD61DC433E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47D7320C09
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A444A20678
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="T/0yg8Tw"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ISIjZ5JQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730921AbgIIQzP (ORCPT
+        id S1731072AbgIIQzl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 12:55:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50798 "EHLO
+        Wed, 9 Sep 2020 12:55:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730700AbgIIPwj (ORCPT
+        with ESMTP id S1730688AbgIIPwb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 11:52:39 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FA81C061797
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 04:56:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ggZD/IaPV7dTTeEWa6PoBMa66z1vyjZ1H4UdFj0yw3Y=; b=T/0yg8TwKqUgusjDVLJCID2/w5
-        sHDvrdFQU6pnPCMb/2ZNEvlnWMevD6pM8+UjaWHE93Gz5Ut+qhsHqhVRNgw8HC4YUuWtEKLUiR2m8
-        9Qqj8MBugImUGyA0rnLiJzPEcrQxtfIVbcGrX+jqPZcsjX3V/ekz3f47v16gO5lNCD/4=;
-Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kFyhn-0006Ix-SD; Wed, 09 Sep 2020 13:56:03 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5.9 1/2] mac80211: extend AQL aggregation estimation to HE and fix unit mismatch
-Date:   Wed,  9 Sep 2020 13:56:01 +0200
-Message-Id: <20200909115602.21783-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
+        Wed, 9 Sep 2020 11:52:31 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B6BC061371
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 07:17:23 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id j2so3159480wrx.7
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 07:17:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=YTINV8fXf0M3n9PBAJO84TZ3ZWqVa/k8IvPy7N9wgi4=;
+        b=ISIjZ5JQj4TVnnSGapFb7wbJQYYctJNyBV/BPiddD36GRemkQ2jjGJozi7ZZ/kNFgX
+         L+a9BRRcxvMgswArV5WD4NYsCit9c2oH3aiX4oPX4bd3Jz2GsnLqByOiF29v5yx3b5iD
+         uDbebTiq0Z5y1HyVnJZ+YOiaS2S0q+WjKtZ6Tef9eHw7YRu85EZSVkNInnykwrXTIC+n
+         P5rhgZr4VBrBEVyX5ti/2W5iurPZAztgCxVQu0luBxCahAI/N4dSAyW9VNbxVRuO4gwp
+         I7Snb8LSDhaMGjreOX/81es+gdR7Eb9OtmYjiXDDWcimTmOxMQjfw/bK/6V7yYEScTk0
+         wy+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=YTINV8fXf0M3n9PBAJO84TZ3ZWqVa/k8IvPy7N9wgi4=;
+        b=mYsTxYE8WzbkFDt2z8J6+pfMeq+bYa3/FeokQA8qHzfOJlrfX1o5zD6ESxkQg50ziL
+         HPy5U/+ZfSDLYnpwcWwbWNxFcs1f6OuikpemG0Meg1jNBAM/TCWU2bfH6CW9Gwt70s0f
+         d7Qp3vLC+JVrqx5X9OiWxti3t/aVbwlVK2Ff5wABqIA+IRHlz+hnYsJ3uDZqTHGl2xEK
+         EXTC2q1KOVcGegEn/Hx5fA96w61rgFQhyXZzELl+zA4TcHj9ZpUsnfgQ3oBeS8NGZla0
+         mqyp1SA2/TRsGpqXtrXdsch4EqFdPQk82aHNvgUnSEUSwRSuCgP9pWjC/KW4bIxdHOp8
+         D3mw==
+X-Gm-Message-State: AOAM533I3b4qdhSOoz76G1DTSnsixj0IexAZwE4rzXynlYyK4BVSuV7/
+        6Pe8p8nKvTRbNCxr3+2opA4RoA==
+X-Google-Smtp-Source: ABdhPJyylZV7lGE0N2Ov626dsFCzQyMBnovybUKfA++XerEYgGcuyp66iCHpW/4W3EGC5UFcCO7ASQ==
+X-Received: by 2002:adf:82d5:: with SMTP id 79mr4682690wrc.60.1599661042100;
+        Wed, 09 Sep 2020 07:17:22 -0700 (PDT)
+Received: from dell ([91.110.221.208])
+        by smtp.gmail.com with ESMTPSA id m3sm2774942wrs.83.2020.09.09.07.17.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Sep 2020 07:17:21 -0700 (PDT)
+Date:   Wed, 9 Sep 2020 15:17:19 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>
+Subject: Re: [PATCH 01/32] wireless: marvell: mwifiex: sdio: Move 'static
+ const struct's into their own header file
+Message-ID: <20200909141719.GD218742@dell>
+References: <20200821071644.109970-2-lee.jones@linaro.org>
+ <20200901091541.3974FC433C6@smtp.codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200901091541.3974FC433C6@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The unit of the return value of ieee80211_get_rate_duration is nanoseconds, not
-milliseconds. Adjust the duration checks to account for that.
-For higher data rates, allow larger estimated aggregation sizes, and add some
-values for HE as well, which can use much larger aggregates.
-Since small packets with high data rates can now lead to duration values too
-small for info->tx_time_est, return a minimum of 4us.
+On Tue, 01 Sep 2020, Kalle Valo wrote:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/airtime.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+> Lee Jones <lee.jones@linaro.org> wrote:
+> 
+> > Only include these tables in the 1 source file they are used.
+> > 
+> > Fixes hundreds of W=1 warnings!
+> > 
+> > Fixes the following W=1 kernel build warning(s):
+> > 
+> >  In file included from drivers/net/wireless/marvell/mwifiex/main.h:59,
+> >  from drivers/net/wireless/marvell/mwifiex/main.c:22:
+> >  drivers/net/wireless/marvell/mwifiex/sdio.h:705:41: warning: ‘mwifiex_sdio_sd8801’ defined but not used [-Wunused-const-variable=]
+> >  705 | static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
+> >  | ^~~~~~~~~~~~~~~~~~~
+> > 
+> >  NB: There were 100's of these - snipped for brevity.
+> > 
+> > Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> > Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+> > Cc: Xinming Hu <huxinming820@gmail.com>
+> > Cc: Kalle Valo <kvalo@codeaurora.org>
+> > Cc: "David S. Miller" <davem@davemloft.net>
+> > Cc: Jakub Kicinski <kuba@kernel.org>
+> > Cc: linux-wireless@vger.kernel.org
+> > Cc: netdev@vger.kernel.org
+> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> 
+> I don't think static const variables should be in a .h file. Wouldn't
+> sdio.c be the right place for these? At least from a quick look I got
+> that impression.
 
-diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-index 314973033d03..45140e535151 100644
---- a/net/mac80211/airtime.c
-+++ b/net/mac80211/airtime.c
-@@ -668,20 +668,26 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
- 		 * This will not be very accurate, but much better than simply
- 		 * assuming un-aggregated tx in all cases.
- 		 */
--		if (duration > 400) /* <= VHT20 MCS2 1S */
-+		if (duration > 400 * 1024) /* <= VHT20 MCS2 1S */
- 			agg_shift = 1;
--		else if (duration > 250) /* <= VHT20 MCS3 1S or MCS1 2S */
-+		else if (duration > 250 * 1024) /* <= VHT20 MCS3 1S or MCS1 2S */
- 			agg_shift = 2;
--		else if (duration > 150) /* <= VHT20 MCS5 1S or MCS3 2S */
-+		else if (duration > 150 * 1024) /* <= VHT20 MCS5 1S or MCS2 2S */
- 			agg_shift = 3;
--		else
-+		else if (duration > 70 * 1024) /* <= VHT20 MCS5 2S */
- 			agg_shift = 4;
-+		else if (stat.encoding != RX_ENC_HE ||
-+			 duration > 20 * 1024) /* <= HE40 MCS6 2S */
-+			agg_shift = 5;
-+		else
-+			agg_shift = 6;
- 
- 		duration *= len;
- 		duration /= AVG_PKT_SIZE;
- 		duration /= 1024;
-+		duration += (overhead >> agg_shift);
- 
--		return duration + (overhead >> agg_shift);
-+		return max_t(u32, duration, 4);
- 	}
- 
- 	if (!conf)
+That's a bone of contention.  I personally do not like to see C-files
+overwhelmed by a sea of structs/tables and tend to ferry them off into
+*-tables.h header files instead.
+
+As the gate-keeper, what you say goes.  So if you insist we move these
+450 lines of tables into the source file which references them, I will
+of course do as you ask.
+
+> Patch set to Changes Requested.
+
 -- 
-2.28.0
-
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
