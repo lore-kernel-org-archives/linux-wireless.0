@@ -4,77 +4,107 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A31D4C433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 07:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA58AC43461
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 07:31:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 431BB21919
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 07:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A69A521919
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 07:31:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lZ1FxVvz";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="ayM2Mw8V"
+	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PfOl9cBy";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="m+WLbCW3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728970AbgIIHaI (ORCPT
+        id S1727087AbgIIHaz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:30:08 -0400
-Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:50466
-        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725959AbgIIHaH (ORCPT
+        Wed, 9 Sep 2020 03:30:55 -0400
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:49414
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725826AbgIIHay (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 03:30:07 -0400
+        Wed, 9 Sep 2020 03:30:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599636607;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599636653;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
-        bh=jXXUptAJfgSYS6ebgreurAMtuKrLbZ+qmG2W4SgenfY=;
-        b=lZ1FxVvzi9GCgVr4H7oNnOLoyEjLDyu8WFBLOBVZhoUE+qTT76ZXt6DdNMxKFnIi
-        Wiss+JiC81iwDRftN/kk6mGxqLjWON4XslmBRz9M44ey+et+30qycxxjJ3RobYMRyof
-        Lze6y1HZLg8T4IxaVpDlDQMMkS+X8T/zkjMusA4c=
+        bh=Mvz/rO34Eoh3cCV+99ueXvEtc9mS9uQzQUDgN9Kfy3o=;
+        b=PfOl9cByqMReLMwla7goq+0Zsea78A9/994rhGQgsgm/fm/h+bOCzkthpT7xgu36
+        XIN9/ILUaD6jtKAA5y0f5NemL7nRztukE3DlNieLUJ4KWP5cQ1DCZB7nWwP4tnZKewO
+        QxyTMlEfi6XEXYqbhehJRhvqCJBzE9KVSTtHH8cE=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599636607;
+        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599636653;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
-        bh=jXXUptAJfgSYS6ebgreurAMtuKrLbZ+qmG2W4SgenfY=;
-        b=ayM2Mw8V+V/AvbirjCvlRYTXXHbuADK90v0aI4Qoe1RQVXPMO+mhL2u/WF1YhI0x
-        KjvBACLT1p7cpUZmeP7q8d6oqKqEaZO1eaZjqaUaxBdjCdmvWbBUqv/V0RCHc4Q0aqh
-        A/eIFC4SuBiQSBc7DYlT0HpUmNjkdyd21RUWjkgc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7A1D1C433CA
+        bh=Mvz/rO34Eoh3cCV+99ueXvEtc9mS9uQzQUDgN9Kfy3o=;
+        b=m+WLbCW3X54fXDp9w8GIOpnTLWl43nmq6auQiAsvj+tSMEsxxgjacxLUVONy69x8
+        I8AbRddJuEzOQVbAKfuTjolY1Xt3546NcrZ4Q2JxKUQOFZ/KZPztuC7mVH1dwnhfY7s
+        9hIOzagIUHxBc0XT5u9CLFhAEMdAYnqe29w9PXnY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D53E3C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtl8xxxu: prevent potential memory leak
+Subject: Re: [PATCH] mwifiex: remove function pointer check
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200906040424.22022-1-chiu@endlessm.com>
-References: <20200906040424.22022-1-chiu@endlessm.com>
-To:     Chris Chiu <chiu@endlessm.com>
-Cc:     Jes.Sorensen@gmail.com, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Chris Chiu <chiu@endlessm.com>
+In-Reply-To: <20200906200548.18053-1-trix@redhat.com>
+References: <20200906200548.18053-1-trix@redhat.com>
+To:     trix@redhat.com
+Cc:     amitkarwar@gmail.com, ganapathi.bhat@nxp.com,
+        huxinming820@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        natechancellor@gmail.com, ndesaulniers@google.com,
+        bzhao@marvell.com, dkiran@marvell.com, frankh@marvell.com,
+        linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com, Tom Rix <trix@redhat.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-ID: <0101017471c58fb6-37aeeb66-9a11-4846-b395-eae69f2b466c-000000@us-west-2.amazonses.com>
-Date:   Wed, 9 Sep 2020 07:30:06 +0000
-X-SES-Outgoing: 2020.09.09-54.240.27.21
+Message-ID: <0101017471c64568-a07c955e-1b2d-43db-a3b3-900114b1b095-000000@us-west-2.amazonses.com>
+Date:   Wed, 9 Sep 2020 07:30:53 +0000
+X-SES-Outgoing: 2020.09.09-54.240.27.187
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Chris Chiu <chiu@endlessm.com> wrote:
+trix@redhat.com wrote:
 
-> Free the skb if usb_submit_urb fails on rx_urb. And free the urb
-> no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
+> From: Tom Rix <trix@redhat.com>
 > 
-> Signed-off-by: Chris Chiu <chiu@endlessm.com>
+> clang static analyzer reports this problem
+> 
+> init.c:739:8: warning: Called function pointer
+>   is null (null dereference)
+>         ret = adapter->if_ops.check_fw_status( ...
+>               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> In mwifiex_dnld_fw, there is an earlier check for check_fw_status(),
+> The check was introduced for usb support at the same time this
+> check in _mwifiex_fw_dpc() was made
+> 
+> 	if (adapter->if_ops.dnld_fw) {
+> 		ret = adapter->if_ops.dnld_fw(adapter, &fw);
+> 	} else {
+> 		ret = mwifiex_dnld_fw(adapter, &fw);
+> 	}
+> 
+> And a dnld_fw function initialized as part the usb's
+> mwifiex_if_ops.
+> 
+> The other instances of mwifiex_if_ops for pci and sdio
+> both set check_fw_status.
+> 
+> So the first check is not needed and can be removed.
+> 
+> Fixes: 4daffe354366 ("mwifiex: add support for Marvell USB8797 chipset")
+> Signed-off-by: Tom Rix <trix@redhat.com>
+> Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-86279456a4d4 rtl8xxxu: prevent potential memory leak
+eb2c6ca2db8c mwifiex: remove function pointer check
 
 -- 
-https://patchwork.kernel.org/patch/11759447/
+https://patchwork.kernel.org/patch/11759719/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
