@@ -2,101 +2,121 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41534C43461
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22090C43461
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:36:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00B8821919
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:16:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2B4721941
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 15:36:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H5vdJRuk"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bsHZas5H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729129AbgIIPNs (ORCPT
+        id S1730349AbgIIPgH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 11:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42666 "EHLO
+        Wed, 9 Sep 2020 11:36:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730025AbgIIL6A (ORCPT
+        with ESMTP id S1730324AbgIIPfv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 07:58:00 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DB11C0617A1
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 04:58:00 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id l9so2063234wme.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 04:58:00 -0700 (PDT)
+        Wed, 9 Sep 2020 11:35:51 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B00C061348
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 08:35:22 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id w2so2725352wmi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 08:35:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=7jSgqukA/irKhdEa559NBQhmKNIXlBjc6LRgmjLpnkM=;
-        b=H5vdJRukp4bO/YXKUYHJAcSOv5HQugHrMd4cscbXSiDgrq9y/NJGiqHilRgi6t3gJ6
-         bimZQ98onb3aKqALWXLFy/pr0cjpL+NIZ95f61rYzjBFkYH3vuVAvu9lne/OEmLmxzr9
-         U/sS0oicWOj8nA6fkCBPuYlN4QAh/flkkZmF63vhCMAkpZgYmV6aNv6EjUmGD06B6xBb
-         tsRm6NXMNX17sb8DZh2G8elLe7ZoEHTBydgfGh7TRhPSixygjmH1QSskJv9fgtpmLSpK
-         jvk7X939kzA6uM8gEbIhdEEO7FPh5WWDEvUOHgKlWKv/8EA7WmkVe9/6J50p5EEzGbgj
-         Ul8w==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=OT/7V+2xByy/9ST9yJhKKgW312HrOX/Xe+N2WUGIkkU=;
+        b=bsHZas5H2PogNEUA6W0g82l8+D6alBojgldv7kndyF6dhnS7zVICdOWB2x63LbOvpx
+         Sf/9x9WfAYKNaGD2z1Zx639CL3W6BBtuCcrciQxqVmVHWLxbYb8K7a+vdrUjacc6/9wP
+         rP3RPbwCKmNTwjRA30X9y8akpVYQL+MEs7Nho79dkUeV8Bf+4qQcCil2LovECX1HBAWE
+         3Q5yfX+/oLFKwTNAlu4Wfl9fQbvQjLqlIOFVYe6A8hJy+JpEcRZOQiO6nbw6nMjxLxxv
+         EhZbCNeHySRJMLH/3OnOgbSjrkFMZA06ifT+yYTgA2vxGgITVtLIa46vD0BzP+Yr9AqD
+         azYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=7jSgqukA/irKhdEa559NBQhmKNIXlBjc6LRgmjLpnkM=;
-        b=pzNls2wbc4fJcfQ14nI+cv4mkpZBJ/91gbWhQ6sBr5aJygZTMsLjW56d0hfBoG4huf
-         l7EyfWmqqbXY/sWE1oCpdb7lkX6a8W3iO7gIHlSntenM7acA/qJ9bmmP4q+3L6Nj3Smv
-         mBN6zEdhxyhdJMiKSbR9bFGsdkohvldH1LlzeiBfyRn4gxf62svqELLpzWnHFFjetcLB
-         eBYPj51JFJWaStF6fqe0jGqMQTorPugxGShiC5/UoFfiJ32Lf2c38YEdD5fwh4orO9DS
-         mk6UXlQFXcaMJyhaQEKK+wl0ZYQ9tjM6SefnZNjCYYkxd5xmjPiqzDqjF5GuWCFv4hme
-         z6FQ==
-X-Gm-Message-State: AOAM532DuCjCRYNtBkE3GOEzcK+gJS2VJHQH9Lkgr8oaZeeS34choTil
-        Ph5weov95QM3qozu6Sg12i8NTQ==
-X-Google-Smtp-Source: ABdhPJxDpmQDrQekzU6KtBAErNMA/WF5nxFXpnVurTTe63/S2MWlGeqChzbNyyihWqwNboMYaGqFvw==
-X-Received: by 2002:a05:600c:4103:: with SMTP id j3mr3190893wmi.130.1599652679093;
-        Wed, 09 Sep 2020 04:57:59 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id t203sm3475032wmg.43.2020.09.09.04.57.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Sep 2020 04:57:58 -0700 (PDT)
-Subject: Re: [PATCH v3 2/7] wcn36xx: Add
- wcn36xx_smd_set_sta_default_vht_params()
-To:     kernel test robot <lkp@intel.com>, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, shawn.guo@linaro.org,
-        loic.poulain@linaro.org
-References: <20200908182437.2870281-3-bryan.odonoghue@linaro.org>
- <202009091528.AlA4r31j%lkp@intel.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=OT/7V+2xByy/9ST9yJhKKgW312HrOX/Xe+N2WUGIkkU=;
+        b=uGaOXjeuNnopOKPREFfiMffCEbY4oDadVAcbRoG2Jgepe70wvNXoEP9rhUYj3VhoBV
+         z/Aubd2Z4zmTrY7IYK4r9mjLzFkp/e0ZRR+gnLn/nSxE43cn0iKlqgiRjO9CygiXc9Vw
+         mlWsrgnTv0BV91pkZsfypNOtEnUjF25GG59R1h72Dv+82ahYOfLBRwtI9u+No0iMjbY3
+         YVz8e1eMDRFrLT/jnMDm4J7M5OITB0bGWWKB2dV6jihkrD3upRmuX51sfAUQGtClwCFv
+         EbCS6oJXXA/PmhuVp7LOSzORpy+UDbfjxlV5oVbEjWztzF/yOfGETL9ldGKCo3WFx/cl
+         LraA==
+X-Gm-Message-State: AOAM533xSErFnG/1W20KMeEgDQWAvlSzK4ZLM0EG5/DELZJ1//F7GTFz
+        gZGQx1aAT6U/g/PbTKjnoXsebeSZ/n0RLw==
+X-Google-Smtp-Source: ABdhPJwxtt/Q/OUfdEjYwKFN9C8X7r33ruY5xIkjs2fHRhxyeFAsdHNl0pQ3QQrneyP+ex53s7Bm8A==
+X-Received: by 2002:a05:600c:2146:: with SMTP id v6mr3992097wml.159.1599665720668;
+        Wed, 09 Sep 2020 08:35:20 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id s2sm4473335wrw.96.2020.09.09.08.35.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Sep 2020 08:35:20 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Message-ID: <77dc7523-1925-8f3a-2a8f-819682d24f3d@linaro.org>
-Date:   Wed, 9 Sep 2020 12:58:48 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        loic.poulain@linaro.org
+Subject: [PATCH v4 1/7] wcn36xx: Add wcn36xx_set_default_rates_v1
+Date:   Wed,  9 Sep 2020 16:36:01 +0100
+Message-Id: <20200909153607.2904822-2-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200909153607.2904822-1-bryan.odonoghue@linaro.org>
+References: <20200909153607.2904822-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <202009091528.AlA4r31j%lkp@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/09/2020 08:23, kernel test robot wrote:
-> Hi Bryan,
-> 
-> I love your patch! Perhaps something to improve:
-> 
-> [auto build test WARNING on wireless-drivers-next/master]
-> [also build test WARNING on wireless-drivers/master ath6kl/ath-next v5.9-rc4 next-20200908]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch]
+Add a routine to set some additional default parameters associated with the
+V1 data structure.
 
-Applies against
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    | 8 ++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
+ 2 files changed, 9 insertions(+)
 
-ath.git	git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
-160b351d75cb - (tag: ath-202009090652, ath.git/master)
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index c5e94ba8f941..ab6685dc956b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -793,6 +793,14 @@ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates)
+ 		sizeof(*ofdm_rates) * WCN36XX_HAL_NUM_OFDM_RATES);
+ 	rates->supported_mcs_set[0] = 0xFF;
+ }
++
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates)
++{
++	rates->op_rate_mode = STA_11ac;
++	rates->vht_rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++	rates->vht_tx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9;
++}
++
+ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index d7d349de20e6..2da81d9926c4 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -271,6 +271,7 @@ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
+ 		wcn->fw_revision == revision);
+ }
+ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates);
++void wcn36xx_set_default_rates_v1(struct wcn36xx_hal_supported_rates_v1 *rates);
+ 
+ static inline
+ struct ieee80211_sta *wcn36xx_priv_to_sta(struct wcn36xx_sta *sta_priv)
+-- 
+2.27.0
 
-but, I don't mind resending after figuring out how to include --base
