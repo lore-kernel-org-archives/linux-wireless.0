@@ -2,68 +2,106 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C1F9C433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:54:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEF0C43461
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE1862087C
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:54:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47D7320C09
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 16:55:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="T/0yg8Tw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730832AbgIIQDQ (ORCPT
+        id S1730921AbgIIQzP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 12:03:16 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:44702 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730813AbgIIQCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 12:02:55 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 4D69BC5A34816736C8BD;
-        Wed,  9 Sep 2020 22:00:07 +0800 (CST)
-Received: from localhost (10.174.179.108) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Wed, 9 Sep 2020
- 21:59:58 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     <imitsyanko@quantenna.com>, <geomatsi@gmail.com>,
-        <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] qtnfmac: Remove unused macro QTNF_DMP_MAX_LEN
-Date:   Wed, 9 Sep 2020 21:59:51 +0800
-Message-ID: <20200909135951.4028-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        Wed, 9 Sep 2020 12:55:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50798 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730700AbgIIPwj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Sep 2020 11:52:39 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FA81C061797
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 04:56:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ggZD/IaPV7dTTeEWa6PoBMa66z1vyjZ1H4UdFj0yw3Y=; b=T/0yg8TwKqUgusjDVLJCID2/w5
+        sHDvrdFQU6pnPCMb/2ZNEvlnWMevD6pM8+UjaWHE93Gz5Ut+qhsHqhVRNgw8HC4YUuWtEKLUiR2m8
+        9Qqj8MBugImUGyA0rnLiJzPEcrQxtfIVbcGrX+jqPZcsjX3V/ekz3f47v16gO5lNCD/4=;
+Received: from p4ff13fcb.dip0.t-ipconnect.de ([79.241.63.203] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kFyhn-0006Ix-SD; Wed, 09 Sep 2020 13:56:03 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5.9 1/2] mac80211: extend AQL aggregation estimation to HE and fix unit mismatch
+Date:   Wed,  9 Sep 2020 13:56:01 +0200
+Message-Id: <20200909115602.21783-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.179.108]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is no caller in tree, so remove it.
+The unit of the return value of ieee80211_get_rate_duration is nanoseconds, not
+milliseconds. Adjust the duration checks to account for that.
+For higher data rates, allow larger estimated aggregation sizes, and add some
+values for HE as well, which can use much larger aggregates.
+Since small packets with high data rates can now lead to duration values too
+small for info->tx_time_est, return a minimum of 4us.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/quantenna/qtnfmac/core.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/mac80211/airtime.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index 6aafff9d4231..a36d5ec297ab 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -15,7 +15,6 @@
- #include "util.h"
- #include "switchdev.h"
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index 314973033d03..45140e535151 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -668,20 +668,26 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 		 * This will not be very accurate, but much better than simply
+ 		 * assuming un-aggregated tx in all cases.
+ 		 */
+-		if (duration > 400) /* <= VHT20 MCS2 1S */
++		if (duration > 400 * 1024) /* <= VHT20 MCS2 1S */
+ 			agg_shift = 1;
+-		else if (duration > 250) /* <= VHT20 MCS3 1S or MCS1 2S */
++		else if (duration > 250 * 1024) /* <= VHT20 MCS3 1S or MCS1 2S */
+ 			agg_shift = 2;
+-		else if (duration > 150) /* <= VHT20 MCS5 1S or MCS3 2S */
++		else if (duration > 150 * 1024) /* <= VHT20 MCS5 1S or MCS2 2S */
+ 			agg_shift = 3;
+-		else
++		else if (duration > 70 * 1024) /* <= VHT20 MCS5 2S */
+ 			agg_shift = 4;
++		else if (stat.encoding != RX_ENC_HE ||
++			 duration > 20 * 1024) /* <= HE40 MCS6 2S */
++			agg_shift = 5;
++		else
++			agg_shift = 6;
  
--#define QTNF_DMP_MAX_LEN 48
- #define QTNF_PRIMARY_VIF_IDX	0
+ 		duration *= len;
+ 		duration /= AVG_PKT_SIZE;
+ 		duration /= 1024;
++		duration += (overhead >> agg_shift);
  
- static bool slave_radar = true;
+-		return duration + (overhead >> agg_shift);
++		return max_t(u32, duration, 4);
+ 	}
+ 
+ 	if (!conf)
 -- 
-2.17.1
-
+2.28.0
 
