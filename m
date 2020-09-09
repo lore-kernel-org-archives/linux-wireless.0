@@ -2,98 +2,106 @@ Return-Path: <SRS0=opxm=CS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54DCFC433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:03:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C032C433E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:06:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0742D21919
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0ED02166E
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Sep 2020 17:06:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nexus-software-ie.20150623.gappssmtp.com header.i=@nexus-software-ie.20150623.gappssmtp.com header.b="2F8wDB7i"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ryl0P748"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730881AbgIIRDf (ORCPT
+        id S1730277AbgIIPkL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Sep 2020 13:03:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33864 "EHLO
+        Wed, 9 Sep 2020 11:40:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730306AbgIIRDc (ORCPT
+        with ESMTP id S1730357AbgIIPgO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Sep 2020 13:03:32 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55871C061573
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 10:03:31 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id s12so3738663wrw.11
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 10:03:31 -0700 (PDT)
+        Wed, 9 Sep 2020 11:36:14 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B040CC061347
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 08:36:13 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id e17so2730484wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 08:36:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nexus-software-ie.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=m51TriszzIYxuc1SWbPfpaHHdSU7aHqiYR8fjdaYfc0=;
-        b=2F8wDB7iC7sBmBoIilaMlTVET1TpJBGl78yX2qHZFaOOB0smdz3d1bGFOody3YfAbm
-         mIoFCHW4SYJ1E2xMPlkuPMA+v43w2s9peDo/7GDBT4xts+0Q6fqG9riFymEmbSQgOn9h
-         d7IfmT90r392jv722FYTJdow5+jZib3InN4n9u+RJinIiw5EFkiP1A9Xt5g3allLaYYT
-         LPD4i8dBs9TC7+SsNlW724uM6kwju41WPgRoww7VrbVW6pI5k9okBGE+fVZT54Qk4m4d
-         j96Bl4TTnIAZ9IlfCoMacG9YqD/G5g4ZWNEhZxf1K3jnmi/H3blkLjFCzQTBdEmtMPsn
-         yiMQ==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=yBk3qb6esZU21s8yt3ET2KrYd742m2TmS8YznjO4lK8=;
+        b=ryl0P748MZ8rG9TDba0ufAdoBfzNc1lAOrSkQpNfJGTGL1xxNXSKZEu7krXwZiErCo
+         yz65cPyF7XXpl87SBMs3J7aZJKCzF1kcQGM19d4DBEDoHtgPJXQtxg5U2l8uAg97dtli
+         krj4Ib0VH/5fdgT4WutCYHLWeV37MbgWCG32IDsAgV4tVQMrX1+2wuv4cNhBuAG4mDmb
+         Nq6WFCqeO7EPuP/15IhkvAWY1eF2XRicU5RhhI0W8SDCPbseS/6Xzv808rApiJqB0TCT
+         ZctVhcFvf96HqEehmvm8ihygjR75Hfom6qrE6CKgiizx0QL5q+sdZkrVXBdZBpFYkz4L
+         Hcbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=m51TriszzIYxuc1SWbPfpaHHdSU7aHqiYR8fjdaYfc0=;
-        b=C5Hr08h65flMcbeCD4JV7En48F8lWsnXaDCjFxXp8ZMifglTBNDleIgNNWiRY8gtom
-         JxoXEXFQZhFef0HRvho9k2RfYy2OsNwEk+jDTxDHST3DC0OkTF0cmppGhe6HjQJvKBcH
-         Pqlw8X5T40GYMruOrQPNWkLuClpZzBt3R3DqCAiz1oYw6LENup4r4fFiYQwN3cjH9kSt
-         vU45N9Gxtm41tBZYqUgArU6+8zz1O7kfFesSujU5vWdcZ9IJwhEDtU6xY8kq72MNYwv8
-         6z0gSvh+lQ29YPoeZqw5l4TzOeiteupHuFsFDjz4glgmZ5M3Ris3GSPiv+W9PcWpxmNk
-         u4Rg==
-X-Gm-Message-State: AOAM530jMZYtlFNcucO1fBJzGoht5P/56Iw1PG2GXaz+uF6L3eKTSmcJ
-        Jf81vIFCD7PngwUoMhMmiyxfOQ==
-X-Google-Smtp-Source: ABdhPJwByMKselcFKjbR6JGRtEsKfq9Xj12GWVUsDvN9dE9iRaIfbbYgewsfOgunDtEZV96E9tidVw==
-X-Received: by 2002:a5d:684b:: with SMTP id o11mr5083456wrw.101.1599671007128;
-        Wed, 09 Sep 2020 10:03:27 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id d2sm5544352wro.34.2020.09.09.10.03.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Sep 2020 10:03:26 -0700 (PDT)
-Subject: Re: [PATCH v4 0/4] wcn36xx: Enable VHT when supported
-To:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>,
-        kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=yBk3qb6esZU21s8yt3ET2KrYd742m2TmS8YznjO4lK8=;
+        b=Jklf1H5HBGqH2tL91R1p7JBQKWpA3x0r5G4JvlkePwp4E6CuqSFafW096RgeY2WuJc
+         Rkj895ZCF1TCWiDM/o1TFwmJoL7/l/SQy1WJrIwJU7a8gxLoMudInFqPxJcFIrBVEwOY
+         fKxaqLdRlnvjkz516FiKR/FkzHRDp5w5YP5aNQxbEK++kpv8uB9Tv9i9CI+rjeF4sO/2
+         GWzERM3T6vgveZCUuQhhouE8MabUUvXrGXb1629/jJ9ADsc6TC9+pXDnzAGxdtTZeooE
+         5NtaIkgCs3smOo7ByZenvVnLxVMQ/cV7mVLVW+c/4dIzB0/7ZX6S3ntZLWVBBsLa+F42
+         M/WQ==
+X-Gm-Message-State: AOAM533j+tBo7aQzNKbs6y7seFn+iJPPSBKhjXU1EwZ9KuGzm2B8tZL/
+        AuSNOWTBTvSI/CouN+GWXssfIg==
+X-Google-Smtp-Source: ABdhPJwIywolo+xm8jMUXzeMTWkjtZ1rJbb5aBOpTZQ/K8pzRtWSp7SNK6PPWrw9JRNtlB2Z4kNTmg==
+X-Received: by 2002:a1c:2903:: with SMTP id p3mr4281537wmp.170.1599665772328;
+        Wed, 09 Sep 2020 08:36:12 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id v204sm4619807wmg.20.2020.09.09.08.36.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Sep 2020 08:36:11 -0700 (PDT)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
-Cc:     shawn.guo@linaro.org, loic.poulain@linaro.org
-References: <20200909153736.2905114-1-bryan.odonoghue@linaro.org>
-From:   Bryan O'Donoghue <pure.logic@nexus-software.ie>
-Message-ID: <01601cdf-66a6-6362-3710-93cc02ba1c89@nexus-software.ie>
-Date:   Wed, 9 Sep 2020 18:04:16 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        loic.poulain@linaro.org
+Subject: [PATCH v4 1/5] wcn36xx: Add accessor macro HW_VALUE_CHANNEL for hardware channels
+Date:   Wed,  9 Sep 2020 16:36:56 +0100
+Message-Id: <20200909153700.2904977-2-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200909153700.2904977-1-bryan.odonoghue@linaro.org>
+References: <20200909153700.2904977-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20200909153736.2905114-1-bryan.odonoghue@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/09/2020 16:37, Bryan O'Donoghue wrote:
-> This series is six in a set of seven to add support for wcn3680 at 802.11ac
-> data-rates.
-> 
-> These two commits have been moved later in the set of commits so that the
-> patches to enable advertisement of VHT capabilities happen after all of the
-> supporting code has been comitted.
-> 
+Adds HW_VALUE_CHANNEL(hw_value) an access macro that will be used to
+extract the channel number from struct ieee80211_channel->hw_value in
+preparation for also storing PHY settings for 802.11ac in the upper bits of
+hw_value.
 
-No idea why the rest of the patches haven't turned up on the list
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Made it to the wcn36xx list..
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 2da81d9926c4..ebce1ed7adf7 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -83,7 +83,9 @@ enum wcn36xx_ampdu_state {
+ 	WCN36XX_AMPDU_OPERATIONAL,
+ };
+ 
+-#define WCN36XX_HW_CHANNEL(__wcn) (__wcn->hw->conf.chandef.chan->hw_value)
++#define HW_VALUE_CHANNEL(hw_value) ((hw_value) & 0xFF)
++#define WCN36XX_HW_CHANNEL(__wcn)\
++	HW_VALUE_CHANNEL(__wcn->hw->conf.chandef.chan->hw_value)
+ #define WCN36XX_BAND(__wcn) (__wcn->hw->conf.chandef.chan->band)
+ #define WCN36XX_CENTER_FREQ(__wcn) (__wcn->hw->conf.chandef.chan->center_freq)
+ #define WCN36XX_LISTEN_INTERVAL(__wcn) (__wcn->hw->conf.listen_interval)
+-- 
+2.27.0
 
-http://lists.infradead.org/pipermail/wcn36xx/2020-September/thread.html
-
-I guess I will resend the series but, slower...
