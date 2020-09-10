@@ -4,69 +4,69 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4104DC433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B63EC43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E65A320829
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1726F20829
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FhpAm/mF"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vN9AOJBR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbgIJQai (ORCPT
+        id S1726794AbgIJQal (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 12:30:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46260 "EHLO
+        Thu, 10 Sep 2020 12:30:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726816AbgIJQ1h (ORCPT
+        with ESMTP id S1726675AbgIJQ1g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 12:27:37 -0400
+        Thu, 10 Sep 2020 12:27:36 -0400
 Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68C2C061573
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:05 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id e17so388325wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0888DC0617AA
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:06:22 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id k18so361361wmj.5
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:06:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=mL4mzudrzXf2cUTx9eQ/J+GPxyAkKkLNs3IL5Bs2Jrg=;
-        b=FhpAm/mF2S0ktfsReBCbwmNFlAi5VPzeXlMJMmtmVLby9qk8bR0fJkQEL3UY+s1Np3
-         vLce65hZUqyLXnzoSKTWZpQxyMN1VhVUmzvlEweZ8cf2lSI3KN9I1ZpXaO3d4V/lI6wE
-         f+LwN9N41+i1LOJFI3g2mMpeNCNhm+f6+oWCsdIX2VSuUPnHUT7LkYVLHUmMtfJ/t0W2
-         OHIAnJMQUxoxFY3WApy7e7S1CI+PYqxppde+9p6gdoj3IgudYh+feFyVGJRqF0+S+AGs
-         ZEM1KeZjVXGdq4FnZp6m2iTzqIm+itiJ+aBjU6rP9J7wCNNcfmNep9iELlcmAv6ux/yx
-         GVxg==
+        bh=oKhb1tlaziAq0yvNnW8uGhduqVdDMEMiKkNRMF7ABhE=;
+        b=vN9AOJBRJveHlpA1HDYLFrt+U5bpeqKGNP5MFjvT4IAFXBseP9NKZENVwTgzD0TB5p
+         RdK+JOBhi8uRblovCY8mfxo7jptQtTACxAPpwBvUCPedAZp9FwsnJME0Wb/fKlXWdYGh
+         5yw4ZYTAa6udWosZ7xSGhlrBJ2ZjeM9P+JeAg5my6OC0RZ7tCHB+YmZ/fhcO3eWmNVbD
+         L8kCdqwjNkXQXpDoEIjvf3clU01TuKOapb3pGRHOwl7wyXd4Gw+EAalqIWTLg6CDVpKl
+         cn9mNSGqqr9E588deEj8+B+gv6+L1CRXWtK7yxkWjHrbjyQsfuZ6wv76SISW/5oxTZMA
+         98Tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=mL4mzudrzXf2cUTx9eQ/J+GPxyAkKkLNs3IL5Bs2Jrg=;
-        b=XQ8DwWOxnOHAB6WkBDKUdlYs6xSVfZ2fsmjsN47fEmyi9BPPzM3Sc0r0RcxtUtJ+f0
-         4xW1xk1R0ks+c/HZ837TmpSI1v8DLJvE6135K8Ahq/8COblv/qPLhtnfoU7iHGMOgs8f
-         fwi9NnJjqBX7CwCPUk9t6gv0Rf6xJEXwBVMHL+0L2JxSFYIUjcFYe5rA+pTn2pN9ECAt
-         r1jZ2AltHXzRbctvFtez9dPn4QbhjfJsCOTfW22jIgM3+7W4+fV2UHlfpTOhsCNaqWCe
-         SUHq1c9WnMdSvRMXzS3/g2YVFnLWwXXAHLMsgCzaLWFJV2BNSqKfkRC1OrVKeo4Pslif
-         X6Yg==
-X-Gm-Message-State: AOAM532muZbuOi0xs36iNNobSH3/eSHoZ83C+BiS1BETOUfTFjofIQE/
-        HPSDKhpOSdb8Shct8sjSvgBurq/m+rnt9g==
-X-Google-Smtp-Source: ABdhPJwuKKuALwNUcm2VKp7y95gpBWlgd+WkWKrGE1fpOQiOUaE2aET0atnB7uesn5YmOnfIl3USww==
-X-Received: by 2002:a7b:c397:: with SMTP id s23mr454417wmj.174.1599750304517;
-        Thu, 10 Sep 2020 08:05:04 -0700 (PDT)
+        bh=oKhb1tlaziAq0yvNnW8uGhduqVdDMEMiKkNRMF7ABhE=;
+        b=RINL6y21xWym6LEufqKCCBI+aXicM4KCPr8poiArBDYaa7v7XEnSfNPD5UszU8BIwk
+         8n/FvF2AtdkMI+6B27nCVnPcgxZzZ+SGy2Toy1alSOsuBEbJ7D46K/KLA6K6atsv0arV
+         DHj3k6xzLg7EU9+6qPRXluX06R8xq06dFdkYJLSqVLZw0YuOmoMdznc0NQj++bmjYp8s
+         VaBZoVFqLKn9YDVNZHtKB6GNPRuvnScUBK4iqyT+6ZgDirGtorzCKVTT5u1EbYw3XmYn
+         CZr8rpZtIYsuJcyujETZqfvRcrssO3sfO0ug6m94EgX/0zZtYoSArcBS85/tHTtjOhMV
+         mWMA==
+X-Gm-Message-State: AOAM532MW2DF0hXqPQXq9gMx5q+hP6uSozXHMZxCc5dEWT5GdekLW50U
+        QfbCLurKGdQODPtKlAfh0oJaaA==
+X-Google-Smtp-Source: ABdhPJz62e4pkDJxD+FbqAkn+fZMzNh4b0KWd3ZB59jDpSqf6jSei199cSU2tEx5L1Jc4wDiKBoIww==
+X-Received: by 2002:a7b:c1c3:: with SMTP id a3mr506019wmj.68.1599750380692;
+        Thu, 10 Sep 2020 08:06:20 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id g8sm3852620wmd.12.2020.09.10.08.05.03
+        by smtp.gmail.com with ESMTPSA id i11sm8778906wre.32.2020.09.10.08.06.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:05:04 -0700 (PDT)
+        Thu, 10 Sep 2020 08:06:20 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v5 0/7] wcn36xx: Add a set of helpers to enable VHT parameter passing
-Date:   Thu, 10 Sep 2020 16:05:45 +0100
-Message-Id: <20200910150552.2178882-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v5 0/5] wcn36xx: PHY modifications to support 80MHz operation
+Date:   Thu, 10 Sep 2020 16:07:03 +0100
+Message-Id: <20200910150708.2179043-1-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -75,78 +75,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is two in a set of seven to add support for wcn3680 at 802.11ac
+This series is four in a set of seven to add support for wcn3680 at 802.11ac
 data-rates.
 
+In this set we add the ability to configure up the wcn3680 PHY to get onto
+80MHz channels. To do that, the upper unused bits of the hw_value field of
+the struct ieee80211_channel are used to encode additional PHY settings.
+
+Accessor macros are provided to encode and decode this additional
+information. Depending on which channel we are on, we need to configure the
+PHY into one of four modes representing four potential adjacent 20MHz
+channels.
+
+The modes describe where the primary channel sits in relation to the other
+three channels giving us 20MHz + 20MHz + 20MHz + 20MHz to get 80MHz.
+
 V5:
-- Fixes -W=1 warning caught in later patches by kernel build robot
-  I'm still declaring these functions standalone for the purposes of
-  granularity and bisectability, a later patch makes them static.
+- No change to V4 but need to send the set again so that
+  prerequisite-patch-id makes sense to the build robot here.
 
 V4:
 - No functional change.
   Sending out full set again using --base=ath-202009090652 to aid kernel
   test robot
-- https://lore.kernel.org/linux-wireless/20200908182437.2870281-1-bryan.odonoghue@linaro.org/T/#t
+- https://lore.kernel.org/linux-wireless/20200908182514.2870410-1-bryan.odonoghue@linaro.org/T/#t
 
-V3:
-- Enables MU-MIMO bits in wcn36xx_smd_set_sta_vht_params()
-- Adds a set of helper functions. In the previous set these unused
-  declarations would cause a warning during compile because they were
-  declared static with the intention to add code later on to use them.
-
-  To resolve that, I do not declare the functions static. Static
-  declaration is done in a later patch after the functions have been used.
-
-- There are two good reasons for this:
-  1. Granularity. I think its important and useful to have a patch per
-     function that clearly sets out what it does and why.
-  2. Patch size. Declaring seven functions at the time of their first
-     use is not good practice.
-
-I think maintaining patch granularity is a good enough reason to not squash
-these commits down. It is pretty trivial to declare the functions static
-later on without generating compile warnings in the interregnum.
+v3:
+- No difference between V3 and V2 below
+https://lore.kernel.org/linux-wireless/20200829033947.2167817-1-bryan.odonoghue@linaro.org/T/#t
 
 V2:
-This set makes a series of modifications to enable passing of an extended
-V1 data-structure to the firmware.
-
-A series of of helper functions are added to facilitate the setup.
-
-The final step in the process is enabling the extended data-structure
-parameter passing for the wcn3680 only.
-
-Only a firmware that is capable of 80211.ac will accept the larger V1
-messages and only after explicitly enabling the DOT11AC firmware feature
-bit.
-
-- No functional difference from V1 for these patches
-  Breaking into smaller chunks to enable easier review/merging
+- No difference between V2 and V1 below
 
 V1:
-
 https://lore.kernel.org/linux-wireless/87eensldhi.fsf@codeaurora.org/T/#t
 
+Bryan O'Donoghue (5):
+  wcn36xx: Add accessor macro HW_VALUE_CHANNEL for hardware channels
+  wcn36xx: Use HW_VALUE_CHANNEL macro to get channel number
+  wcn36xx: Add accessor macro HW_VALUE_PHY for PHY settings
+  wcn36xx: Encode PHY mode for 80MHz channel in hw_value
+  wcn36xx: Set PHY into correct mode for 80MHz channel width
 
-Bryan O'Donoghue (7):
-  wcn36xx: Add wcn36xx_set_default_rates_v1
-  wcn36xx: Add wcn36xx_smd_set_sta_default_vht_params()
-  wcn36xx: Add wcn36xx_smd_set_sta_default_ht_ldpc_params()
-  wcn36xx: Add wcn36xx_smd_set_sta_vht_params()
-  wcn36xx: Add wcn36xx_smd_set_sta_ht_ldpc_params()
-  wcn36xx: Add wcn36xx_smd_set_bss_vht_params()
-  wcn36xx: Add wrapper function wcn36xx_smd_set_sta_params_v1()
-
- drivers/net/wireless/ath/wcn36xx/main.c    |   8 ++
- drivers/net/wireless/ath/wcn36xx/smd.c     | 108 +++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   1 +
- 3 files changed, 117 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/main.c    | 50 +++++++++++-----------
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 15 +++++--
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++-
+ 3 files changed, 42 insertions(+), 29 deletions(-)
 
 
 base-commit: 160b351d75cb50a0dd2abf9b63e1891935aa9e4a
 prerequisite-patch-id: 9a4ac7faca179f6594c9b3a115ee69a2da540a69
 prerequisite-patch-id: 183286f9c22d1aaa12f356651224e6b337ef1938
+prerequisite-patch-id: af468d413daaf8d2aad195fcb43c6e66390d8468
+prerequisite-patch-id: 08122a9557904ce5358f52dd08cc33270fa202c1
+prerequisite-patch-id: 82e0b7c5b2e9fa80baca001cce12577d98e306a9
+prerequisite-patch-id: 8ee7f5bd6cb5b7b7d713947b554ad93bb90d8230
+prerequisite-patch-id: d05c2253e4523b05b2e43491aa13ceeef68fd2f0
+prerequisite-patch-id: 8be29513d3efa64df15297bcf81ec3db55088ee1
+prerequisite-patch-id: d267dcd834afad75a69bcd2adcccfdad6566a7ba
+prerequisite-patch-id: 47145acae6e24e8e6580fca1dbddfbec24f7b50b
+prerequisite-patch-id: 8c66bccb923be821cf109a3a0d3a1a028edb4930
+prerequisite-patch-id: d0f5f3769b2963208fd2348840726fa1d3501b63
+prerequisite-patch-id: 746f63cf58fa3bf62736435c81dba2558aba8e81
+prerequisite-patch-id: 375bb7847ae74c63d2eacdbd0d73371aef1546fe
+prerequisite-patch-id: 8a598e22a08b0ec233d0ec56eeb53673eb1b8feb
+prerequisite-patch-id: b0eba574ddc35ecec2d0e39c0d3351d1b260420e
 -- 
 2.27.0
 
