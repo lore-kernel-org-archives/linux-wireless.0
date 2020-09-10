@@ -2,72 +2,74 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30064C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32337C43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDBB221D81
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E918121D81
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fcDbbfzT"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vSDGDst8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726440AbgIJTrv (ORCPT
+        id S1726662AbgIJTrj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:47:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33030 "EHLO
+        Thu, 10 Sep 2020 15:47:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730952AbgIJPE3 (ORCPT
+        with ESMTP id S1731240AbgIJPEu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 11:04:29 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EE1EC0617A3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:08 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id x14so7038836wrl.12
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:08 -0700 (PDT)
+        Thu, 10 Sep 2020 11:04:50 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED95C0617AA
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:10 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id z9so380104wmk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OHdpY0CApLqz4yYTmxevGojYcT17gfjN6v5WrrEuc9A=;
-        b=fcDbbfzTN5QxxsnQS+U2i9XUdVKeVXH6IMZHI/pZs0BLVMlMg6/fRJ4ltEYGjcGswq
-         NBfjwIg7l4NfdAD28S6RuoELy6ywJEHmU7bNt7NAo7bXEuwoXYBezbYYMGHSwyeDx+q4
-         ZL7z6rMPQM0Ku7LOpdy7ba2+Fgfq9exQ9JLVUbRI3X7FAgld3/MdqZJnC7rd3uLPxgva
-         HDFyBN2CQOjtH2TxVR0vFIim9p09KXABj7wpDwuu0kN3++0R8d6UTYxE3UBd98+IjBZQ
-         t8W+umTqRjXwehS47KBwjGlvTeWfsVgS+jodsTtqhUuzqdQ+jK3I66VJkrBJ0/IlwOqr
-         E5Fw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=tfNF9Nm72/GLHvVDln+H8GXexy5WDv58YkhHrtQxFnI=;
+        b=vSDGDst8DcY4fX3LcPTgzEiZyU07n0y66ZY8g3HrAnCmDBT/VdRdCCrdsFh4jhQNzT
+         jf5hndZuiHGe0yQnWKCjYq4+wyEG8I0Fm48uvm/N1ul6WMZzBdZjDAjhUHaKD3spbmRz
+         ZwGaE3FfejvkewLaKKjyZsdeZgiAclreWQwp/dmJwpIV6RnMWRbyH/ykDdB4IjVN0K/h
+         Yx/AWWH5MKPirp2UqUrQH15DH4Uws9RtE3MWlChTtIiQQe1aLCL4S4qZytCYqOmNENL3
+         Ma0ANLF+R3bY9RToAXIR84dGSiMejKpiXsy60V9HSsFqUAIUxem37wmqGvvSeFB3pZnD
+         88HA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OHdpY0CApLqz4yYTmxevGojYcT17gfjN6v5WrrEuc9A=;
-        b=cixWvZYn0shocUfMhFSG+3K+/CqjmItH9JXc6/FDFH3PYlHl/bASmXgVgE9qaq74hW
-         MF7ugRhAmBxciPlGKWdthnH6EzqkaoJrsGwdCcj6PBbpvrvJMeRFkC5015F3ahQv9wIW
-         X8XwebvlQPVtPz0gNL87DaaaoMmw3TK/PMw1D4RiMlVZXNXk/OibrUvrKBw2cKr2LBF5
-         d8iFiESOe1MaWFxtVpKFW+pNFnT+gG6UiD0JWo54IkEq0edZVhXS6vU8ABgHw3/n1pyo
-         g5/hs0VduXkpNJuepGg2gXW2Gg3vw5hNHV9evNXddlL/uX8rXGrKL4m5D/AE2g9RLqxc
-         91Qg==
-X-Gm-Message-State: AOAM531vkcakvocA3aA+bD9Ecu98PP4v/FpaH59GbfhtcRmgW+CHetlm
-        6DHVWozOXQQdMzHvgXII2jkKuG4WNsjdnA==
-X-Google-Smtp-Source: ABdhPJzLXf00454JQXfaDZZxLFy61BDvyrkMlwHj8JeFiPG66sY8njHXx/iY0ceyoR1Crg5DMld2WQ==
-X-Received: by 2002:a5d:4ccb:: with SMTP id c11mr9381917wrt.159.1599750246985;
-        Thu, 10 Sep 2020 08:04:06 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=tfNF9Nm72/GLHvVDln+H8GXexy5WDv58YkhHrtQxFnI=;
+        b=STJ7nOPzSR54EADhRA90ECZ++b08u1QXlVawrEVBOjBSajc6sW2cNYbcfPwgnFbGGu
+         8qDZIRMvFdOeyaTEy+39PxOWR0cnAPWQFKTEU+OOqRazHvRNGvQCCQ2gQkDcPDqSnRFB
+         rfMV6z0DaDYfc5cUjwynWyceSvN3C2ShiSnqFyusBLAOeLL0BJgMN6mfRXW5SQ47vwXc
+         0ZoVN+55eDEy786e6U0Y7xsPz/epANXYMVi1BBb8drsYctTJ6z8GjODtVPeHyHFqKMPc
+         TvOmlrn7VFz2hRKhp4Q00ZMsKXtiAkjdbFZGVhTsslXYVBMdHdTwWHE5AMQ8xtpeDPdd
+         Tzpg==
+X-Gm-Message-State: AOAM533Yko6brcuvPojNsox5aOzQvn9MpjbVcUZa3qBRQv8dE9sGJoat
+        IDFeE/197yFhmThjDad0/PiaVg==
+X-Google-Smtp-Source: ABdhPJxBELC+xFOxC4UazE1oHhzDFO6NqcaITjlLQ1T4zFD7Mj9CLmGAA1URqDVCk+ZyuiubwT89XA==
+X-Received: by 2002:a1c:1f42:: with SMTP id f63mr408880wmf.1.1599750249622;
+        Thu, 10 Sep 2020 08:04:09 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id q186sm4075754wma.45.2020.09.10.08.04.05
+        by smtp.gmail.com with ESMTPSA id q186sm4075754wma.45.2020.09.10.08.04.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:04:05 -0700 (PDT)
+        Thu, 10 Sep 2020 08:04:08 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v5 0/2] wcn36xx: Extend V1 data-structures
-Date:   Thu, 10 Sep 2020 16:04:48 +0100
-Message-Id: <20200910150450.2178784-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v5 2/2] wcn36xx: Use V1 data structure to store supported rates
+Date:   Thu, 10 Sep 2020 16:04:50 +0100
+Message-Id: <20200910150450.2178784-3-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200910150450.2178784-1-bryan.odonoghue@linaro.org>
+References: <20200910150450.2178784-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -75,55 +77,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is one in a set of seven to add support for wcn3680 at 802.11ac
-data-rates.
+This patch converts the internal data structure used to store data-rates
+from version 0 to version 1.
 
-V5:
-- No change to V4 sending entire set again for clairty
+This allows us to extend out the internal storage to represent VHT
+parameters.
 
-V4:
-- No functional change.
-  Sending out full set again using --base=ath-202009090652 to aid kernel
-  test robot
-- https://lore.kernel.org/linux-wireless/20200908182428.2870226-1-bryan.odonoghue@linaro.org/T/#t
+Using the extended version 1 data-structure allows us to avoid a whole raft
+of version 1 specific fixup functions.
 
-V3:
-In order to pass VHT parameters to the firmware, we need to extend the
-parameter data-structure. In the V2 series, this was accomplished in two
-patches.
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 5 +++--
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-https://lore.kernel.org/linux-wireless/20200829033908.2167689-13-bryan.odonoghue@linaro.org/T/#u
-https://lore.kernel.org/linux-wireless/20200829033908.2167689-2-bryan.odonoghue@linaro.org/T/#u
-
-However since I was rebasing this series anyway I thought it would be a
-better idea to do the conversion in one go, so that if someone is
-rebasing/bisecting in the future every single patch will still be
-functional and testable on wcn3620. If the data-structure is extended and
-then the code is subsequently updated, then the patches in-between the
-data-structure update and the code update will not be testable on hardware.
-
-As a result I've opted to front-load the conversion. The first patch is
-atomic with respect to ongoing functionality on wcn3620, which I think is a
-better result for not much extra code.
-
-The eventual enabling for wcn3680 comes in a later patch in a later set.
-
-For a similar reason I thought it best to front-load the conversion to
-using the extended V1 data-structure for storing parameters internal to the
-driver.
-
-
-Bryan O'Donoghue (2):
-  wcn36xx: Add VHT fields to parameter data structures
-  wcn36xx: Use V1 data structure to store supported rates
-
- drivers/net/wireless/ath/wcn36xx/hal.h     | 14 +++++++++++++-
- drivers/net/wireless/ath/wcn36xx/smd.c     |  7 +++++--
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
- 3 files changed, 19 insertions(+), 4 deletions(-)
-
-
-base-commit: 160b351d75cb50a0dd2abf9b63e1891935aa9e4a
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 55aaaeb78b14..d5ca9907af86 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -242,9 +242,10 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		sta_params->aid = sta_priv->aid;
+ 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
+ 		memcpy(&sta_params->supported_rates, &sta_priv->supported_rates,
+-			sizeof(sta_priv->supported_rates));
++			sizeof(struct wcn36xx_hal_supported_rates));
+ 	} else {
+-		wcn36xx_set_default_rates(&sta_params->supported_rates);
++		wcn36xx_set_default_rates((struct wcn36xx_hal_supported_rates *)
++					  &sta_params->supported_rates);
+ 		wcn36xx_smd_set_sta_default_ht_params(sta_params);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 342ca0ae7e28..d7d349de20e6 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -169,7 +169,7 @@ struct wcn36xx_sta {
+ 	u8 bss_dpu_desc_index;
+ 	bool is_data_encrypted;
+ 	/* Rates */
+-	struct wcn36xx_hal_supported_rates supported_rates;
++	struct wcn36xx_hal_supported_rates_v1 supported_rates;
+ 
+ 	spinlock_t ampdu_lock;		/* protects next two fields */
+ 	enum wcn36xx_ampdu_state ampdu_state[16];
 -- 
 2.27.0
 
