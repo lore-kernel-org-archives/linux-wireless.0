@@ -2,72 +2,74 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97DA3C2D0E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 17:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 843B3C433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 17:39:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 393CA21582
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 17:39:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C4E821582
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 17:39:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TW1HR7I2"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="M2Wg92rS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726957AbgIJRjH (ORCPT
+        id S1727794AbgIJRjN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 13:39:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57434 "EHLO
+        Thu, 10 Sep 2020 13:39:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727851AbgIJRhg (ORCPT
+        with ESMTP id S1727853AbgIJRhg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 10 Sep 2020 13:37:36 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DBB0C061383
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:01 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id k18so363622wmj.5
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:01 -0700 (PDT)
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1007AC061799
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:48 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id a9so381463wmm.2
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i7FikWtwgz+IgoiYK3wy07v6fSyv51tBJwn8AQvuDiw=;
-        b=TW1HR7I2zKpdA/zc3vuRTjMTGJaySVrCahiGFLMJuIDYaUL6tRkJX4bqDrBeS94hbR
-         yAzrdkVNIM0M+519IX20fHFQXcO3qCgf+yYHBYFUNbyvVzgQ7GUHo4EnmgZ47Tx6kMwh
-         w+AjVPs61NB/P5Fgh3eOZGRssiBZiz9vUqgAtSH9PjYWBOvGKxKe8rWA9WgEafJHks6P
-         oYRoPtpCijmAHwE5FXoh9N/KRVIB3/61uzKlG2mImnlL/zTaGzNrSiqujDC2zkGfO6wf
-         Bm5u6N//xmsXREgm5DYI4+bdC48EsWy1XocPUmZ4z4w+LbwzWKZ0ZyKncCh49FlMr7qb
-         MwHw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=C1kM/nc6ngULE2TMZqCWmpEyLxElDiaI0yH/xvzMhMM=;
+        b=M2Wg92rS/qXH/CKBPOKrB8DyumKnguAlhB9mxAWkLq6IZ7txZ1uptKFQqVwPl/Aldu
+         0HY3u9jPgVS335mW+yaAKF8P4pV7Dmss/dc516MWRktquag0EZcvrD48lLEQvXu/d2wV
+         QSuf9uBMicyCpg5h1ce7geqEBYE1CDvp6hLctVYA+MeYRfkcV5gQH6Of+ItsfqeNDsEr
+         DXb0tLRloFvMLfDyu3lO2KoQmugmxztfH8t5CIEex/cg3Arxa69oKoOOia9hvP7VvGoq
+         I8STni2IgHRP7Yo2qSsO044hW7sdWpv1moMNaQS7z6lVfcXw39HvBYAqWosCUXoCTG5j
+         Nxhw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i7FikWtwgz+IgoiYK3wy07v6fSyv51tBJwn8AQvuDiw=;
-        b=pYpGDKG67aGbal/bkmEzsxjmaf5adECj8+KqeoWuPaMBY70S9rxWgiDFWyZVQbGCce
-         uC441noXpg+b+3KjApiCmfcV4XLFFyjm3mHmKIK6Y7UD42dpNoRV7QCeVIbRCGcrg2Hm
-         2ynSTRKS4qAega2FA1rPTlafhJSo7FzB4n5qTCTsryulGsCh8tdOCB9qiDi8jRQ2RRr7
-         jM+zdx1ZGQP+2QPBAT9NlNbFt2+9v+locF4fkYI/o6R8IhIVgsEz+m7j6dItRkbviF2h
-         6RJHtrRbbgs9nxY9lCr5zpcz/2Er/fE0IqQJimf0zrgTvKpQMfFN89qf64XrrsJDaQho
-         OFXg==
-X-Gm-Message-State: AOAM533j/GQnWbQ/57JzEMkFNRPpXI2jDRFmmk0GxhlDn2AWWYRVQQhu
-        vaFhn/Z7rFZvqWw4EtMVt1ZxfAjA2e/Svw==
-X-Google-Smtp-Source: ABdhPJx/ZsPXv8MRXn40SNomYx/tnVm5l/bzkYa3k2AYy207RNG1T77VXLJco9BoU7iYdH/MqpmOZQ==
-X-Received: by 2002:a1c:cc0c:: with SMTP id h12mr414599wmb.57.1599750420189;
-        Thu, 10 Sep 2020 08:07:00 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=C1kM/nc6ngULE2TMZqCWmpEyLxElDiaI0yH/xvzMhMM=;
+        b=c9wOmO494mkdtI7OIU0XmKQhIdZLAup2Ydus18vv9uV5bcqkBOPIaPkeLRVFz29gSN
+         uBNOcJDy7B3G6/cfNPaDzJdYYAWweVUuSgGtN+mQxRniGu20LMi7RiRFoCEIDeRTyYYS
+         xZykvK2uqroMikr+/kkHvK2TS8sx3ScFVh1ltz+KNjElIONMBoYzQHsugQH18TTlmya6
+         as5F8SRTVQNVQ94p5wLvW2ozJ/ZHM98WV25/ojj6mcmryKQmRTQNIOhbUMKJbgaWM3/a
+         xmXLFzGbRlvrVobtxh2X5JEE+szJyroEOXiphKETL1WuedCjEx9oNdBT5ySl716HbGOL
+         BQUQ==
+X-Gm-Message-State: AOAM533bgjkLiXEf0zzrzzRN65jp1z1OEtOg49s/aEkX+pIGKnXf0RqZ
+        Yc37v1VCFgGALN4YZhhmFOpxzg==
+X-Google-Smtp-Source: ABdhPJyMhq5Oev5MwsqfgmOkHLnBUvi67jZCh7iGWgKNqyWwwmcA5J4VEpIClMWJFJF/3vM0H6QX/w==
+X-Received: by 2002:a1c:2501:: with SMTP id l1mr525100wml.16.1599750346719;
+        Thu, 10 Sep 2020 08:05:46 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id m3sm7597315wrs.83.2020.09.10.08.06.59
+        by smtp.gmail.com with ESMTPSA id k24sm3857005wmj.19.2020.09.10.08.05.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:06:59 -0700 (PDT)
+        Thu, 10 Sep 2020 08:05:46 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v5 0/4] wcn36xx: Update firmware config to support wcn3680
-Date:   Thu, 10 Sep 2020 16:07:43 +0100
-Message-Id: <20200910150747.2179122-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v5 3/7] wcn36xx: Move BSS parameter setup to wcn36xx_smd_set_bss_params()
+Date:   Thu, 10 Sep 2020 16:06:27 +0100
+Message-Id: <20200910150631.2178970-4-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200910150631.2178970-1-bryan.odonoghue@linaro.org>
+References: <20200910150631.2178970-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -75,92 +77,223 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is five in a set of seven to add support for wcn3680 at 802.11ac
-data-rates.
+This commit moves BSS parameter setup to a separate function
+wcn36xx_smd_set_bss_params(). This will allow for further functional
+decomposition and fewer kzalloc() operations in subsequent patches.
 
-This series is about providing a parameters to firmware to get us up onto
-802.11ac data-rates finally.
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 175 ++++++++++++++-----------
+ 1 file changed, 95 insertions(+), 80 deletions(-)
 
-Once the firmware config is provided to the chip and VHT parameters are
-populated we are good to go in terms of the higher data-rate for the
-wcn3680.
-
-I get typical data-rates of:
-
-[ ID] Interval           Transfer     Bitrate         Retr
-[  5]   0.00-320.00 sec  4.93 GBytes   132 Mbits/sec  445     sender
-[  5]   0.00-320.14 sec  4.93 GBytes   132 Mbits/sec          receiver
-
-Downstream 3.10 prima is getting I'm told 180-200 Mbits/sec on the same
-hardware so with time and effort there's certainly some performance gain to
-be squeezed out of this silicon yet.
-
-However as a first pass, I believe this is good enough and useful enough to
-others to submit for upstream inclusion.
-
-An interesting project and a medium term goal would be to have a unified
-configuration for all three supported chipsets.
-
-For now suggesting a separate firmware configuration to make sure the
-existing lower-speed 802.11n and higher-speed 802.11ac chips don't step on
-each other's toes vis-a-vis firmware parameters.
-
-V5:
-- No change to V4 but need to send the set again so that
-  prerequisite-patch-id makes sense to the build robot here.
-
-V4:
-- No functional change.
-  Sending out full set again using --base=ath-202009090652 to aid kernel
-  test robot
-- https://lore.kernel.org/linux-wireless/20200908182529.2870478-1-bryan.odonoghue@linaro.org/T/#t
-
-V3:
-No difference between V3 and V2 below
-https://lore.kernel.org/linux-wireless/20200829034002.2167878-1-bryan.odonoghue@linaro.org/T/#t
-
-V2:
-- Sets the default data-rate for wcn3680 to MCS8
-- Zapps a few firmware settings for power-saving
-  Powersave configuration as a specific wcn3680 topic is WIP on my end
-  and I think therefore better left out of an intiial submission.
-
-V1:
-https://lore.kernel.org/linux-wireless/87eensldhi.fsf@codeaurora.org/T/#t
-
-Bryan O'Donoghue (4):
-  wcn36xx: Extend HAL param config list
-  wcn36xx: Define wcn3680 specific firmware parameters
-  wcn36xx: Add ability to download wcn3680 specific firmware parameters
-  wcn36xx: Latch VHT specific BSS parameters to firmware
-
- drivers/net/wireless/ath/wcn36xx/hal.h | 124 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/wcn36xx/smd.c | 114 ++++++++++++++++++++++-
- 2 files changed, 234 insertions(+), 4 deletions(-)
-
-
-base-commit: 160b351d75cb50a0dd2abf9b63e1891935aa9e4a
-prerequisite-patch-id: 9a4ac7faca179f6594c9b3a115ee69a2da540a69
-prerequisite-patch-id: 183286f9c22d1aaa12f356651224e6b337ef1938
-prerequisite-patch-id: af468d413daaf8d2aad195fcb43c6e66390d8468
-prerequisite-patch-id: 08122a9557904ce5358f52dd08cc33270fa202c1
-prerequisite-patch-id: 82e0b7c5b2e9fa80baca001cce12577d98e306a9
-prerequisite-patch-id: 8ee7f5bd6cb5b7b7d713947b554ad93bb90d8230
-prerequisite-patch-id: d05c2253e4523b05b2e43491aa13ceeef68fd2f0
-prerequisite-patch-id: 8be29513d3efa64df15297bcf81ec3db55088ee1
-prerequisite-patch-id: d267dcd834afad75a69bcd2adcccfdad6566a7ba
-prerequisite-patch-id: 47145acae6e24e8e6580fca1dbddfbec24f7b50b
-prerequisite-patch-id: 8c66bccb923be821cf109a3a0d3a1a028edb4930
-prerequisite-patch-id: d0f5f3769b2963208fd2348840726fa1d3501b63
-prerequisite-patch-id: 746f63cf58fa3bf62736435c81dba2558aba8e81
-prerequisite-patch-id: 375bb7847ae74c63d2eacdbd0d73371aef1546fe
-prerequisite-patch-id: 8a598e22a08b0ec233d0ec56eeb53673eb1b8feb
-prerequisite-patch-id: b0eba574ddc35ecec2d0e39c0d3351d1b260420e
-prerequisite-patch-id: 143a1019813b7e4974a67e9eea1f1d599c0fdfdf
-prerequisite-patch-id: f66d9fe9eb731272b825c9430c15dca89d6c6129
-prerequisite-patch-id: c8c2d2dd1452c357f73fc4c92e5b564d59a05562
-prerequisite-patch-id: 273c13464a69354d32790ed7509472d9c2b11231
-prerequisite-patch-id: adbde1c98b85a16a6500b4210d4f055b9493418c
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index fa4357b36a8e..4be9def9509c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1402,6 +1402,100 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	return ret;
+ }
+ 
++void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				const u8 *bssid,
++				bool update,
++				struct wcn36xx_hal_config_bss_params *bss);
++void wcn36xx_smd_set_bss_params(struct wcn36xx *wcn,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				const u8 *bssid,
++				bool update,
++				struct wcn36xx_hal_config_bss_params *bss)
++{
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
++
++	WARN_ON(is_zero_ether_addr(bssid));
++
++	memcpy(&bss->bssid, bssid, ETH_ALEN);
++
++	memcpy(bss->self_mac_addr, vif->addr, ETH_ALEN);
++
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
++
++		/* STA */
++		bss->oper_mode = 1;
++		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_MODE;
++	} else if (vif->type == NL80211_IFTYPE_AP ||
++		   vif->type == NL80211_IFTYPE_MESH_POINT) {
++		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
++
++		/* AP */
++		bss->oper_mode = 0;
++		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
++	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
++		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
++
++		/* STA */
++		bss->oper_mode = 1;
++	} else {
++		wcn36xx_warn("Unknown type for bss config: %d\n", vif->type);
++	}
++
++	if (vif->type == NL80211_IFTYPE_STATION)
++		wcn36xx_smd_set_bss_nw_type(wcn, sta, bss);
++	else
++		bss->nw_type = WCN36XX_HAL_11N_NW_TYPE;
++
++	bss->short_slot_time_supported = vif->bss_conf.use_short_slot;
++	bss->lla_coexist = 0;
++	bss->llb_coexist = 0;
++	bss->llg_coexist = 0;
++	bss->rifs_mode = 0;
++	bss->beacon_interval = vif->bss_conf.beacon_int;
++	bss->dtim_period = vif_priv->dtim_period;
++
++	wcn36xx_smd_set_bss_ht_params(vif, sta, bss);
++
++	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
++
++	if (conf_is_ht40_minus(&wcn->hw->conf))
++		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++	else if (conf_is_ht40_plus(&wcn->hw->conf))
++		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++	else
++		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_NONE;
++
++	bss->reserved = 0;
++
++	/* wcn->ssid is only valid in AP and IBSS mode */
++	bss->ssid.length = vif_priv->ssid.length;
++	memcpy(bss->ssid.ssid, vif_priv->ssid.ssid, vif_priv->ssid.length);
++
++	bss->obss_prot_enabled = 0;
++	bss->rmf = 0;
++	bss->max_probe_resp_retry_limit = 0;
++	bss->hidden_ssid = vif->bss_conf.hidden_ssid;
++	bss->proxy_probe_resp = 0;
++	bss->edca_params_valid = 0;
++
++	/* FIXME: set acbe, acbk, acvi and acvo */
++
++	bss->ext_set_sta_key_param_valid = 0;
++
++	/* FIXME: set ext_set_sta_key_param */
++
++	bss->spectrum_mgt_enable = 0;
++	bss->tx_mgmt_power = 0;
++	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
++	bss->action = update;
++
++	vif_priv->bss_type = bss->bss_type;
++}
++
+ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 			const struct wcn36xx_hal_config_bss_req_msg *orig)
+ {
+@@ -1505,7 +1599,6 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 	return ret;
+ }
+ 
+-
+ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ 				      struct ieee80211_vif *vif,
+ 				      struct ieee80211_sta *sta,
+@@ -1557,7 +1650,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	struct wcn36xx_hal_config_bss_req_msg *msg;
+ 	struct wcn36xx_hal_config_bss_params *bss;
+ 	struct wcn36xx_hal_config_sta_params *sta_params;
+-	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	int ret;
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+@@ -1571,84 +1663,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	bss = &msg->bss_params;
+ 	sta_params = &bss->sta;
+ 
+-	WARN_ON(is_zero_ether_addr(bssid));
+-
+-	memcpy(&bss->bssid, bssid, ETH_ALEN);
+-
+-	memcpy(bss->self_mac_addr, vif->addr, ETH_ALEN);
+-
+-	if (vif->type == NL80211_IFTYPE_STATION) {
+-		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
+-
+-		/* STA */
+-		bss->oper_mode = 1;
+-		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_MODE;
+-	} else if (vif->type == NL80211_IFTYPE_AP ||
+-		   vif->type == NL80211_IFTYPE_MESH_POINT) {
+-		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
+-
+-		/* AP */
+-		bss->oper_mode = 0;
+-		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
+-	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
+-		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
+-
+-		/* STA */
+-		bss->oper_mode = 1;
+-	} else {
+-		wcn36xx_warn("Unknown type for bss config: %d\n", vif->type);
+-	}
+-
+-	if (vif->type == NL80211_IFTYPE_STATION)
+-		wcn36xx_smd_set_bss_nw_type(wcn, sta, bss);
+-	else
+-		bss->nw_type = WCN36XX_HAL_11N_NW_TYPE;
+-
+-	bss->short_slot_time_supported = vif->bss_conf.use_short_slot;
+-	bss->lla_coexist = 0;
+-	bss->llb_coexist = 0;
+-	bss->llg_coexist = 0;
+-	bss->rifs_mode = 0;
+-	bss->beacon_interval = vif->bss_conf.beacon_int;
+-	bss->dtim_period = vif_priv->dtim_period;
+-
+-	wcn36xx_smd_set_bss_ht_params(vif, sta, bss);
+-
+-	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
+-
+-	if (conf_is_ht40_minus(&wcn->hw->conf))
+-		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-	else if (conf_is_ht40_plus(&wcn->hw->conf))
+-		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-	else
+-		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-
+-	bss->reserved = 0;
+-
+-	/* wcn->ssid is only valid in AP and IBSS mode */
+-	bss->ssid.length = vif_priv->ssid.length;
+-	memcpy(bss->ssid.ssid, vif_priv->ssid.ssid, vif_priv->ssid.length);
+-
+-	bss->obss_prot_enabled = 0;
+-	bss->rmf = 0;
+-	bss->max_probe_resp_retry_limit = 0;
+-	bss->hidden_ssid = vif->bss_conf.hidden_ssid;
+-	bss->proxy_probe_resp = 0;
+-	bss->edca_params_valid = 0;
+-
+-	/* FIXME: set acbe, acbk, acvi and acvo */
+-
+-	bss->ext_set_sta_key_param_valid = 0;
+-
+-	/* FIXME: set ext_set_sta_key_param */
+-
+-	bss->spectrum_mgt_enable = 0;
+-	bss->tx_mgmt_power = 0;
+-	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
+-	bss->action = update;
+-
+-	vif_priv->bss_type = bss->bss_type;
+-
++	wcn36xx_smd_set_bss_params(wcn, vif, sta, bssid, update, bss);
+ 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 -- 
 2.27.0
 
