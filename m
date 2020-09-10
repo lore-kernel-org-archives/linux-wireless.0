@@ -2,126 +2,93 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32337C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E6CEC43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 20:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E918121D81
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 19:48:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vSDGDst8"
+	by mail.kernel.org (Postfix) with ESMTP id C9768208A9
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 20:00:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726662AbgIJTrj (ORCPT
+        id S1726928AbgIJT7Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:47:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731240AbgIJPEu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 11:04:50 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED95C0617AA
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:10 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id z9so380104wmk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:04:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=tfNF9Nm72/GLHvVDln+H8GXexy5WDv58YkhHrtQxFnI=;
-        b=vSDGDst8DcY4fX3LcPTgzEiZyU07n0y66ZY8g3HrAnCmDBT/VdRdCCrdsFh4jhQNzT
-         jf5hndZuiHGe0yQnWKCjYq4+wyEG8I0Fm48uvm/N1ul6WMZzBdZjDAjhUHaKD3spbmRz
-         ZwGaE3FfejvkewLaKKjyZsdeZgiAclreWQwp/dmJwpIV6RnMWRbyH/ykDdB4IjVN0K/h
-         Yx/AWWH5MKPirp2UqUrQH15DH4Uws9RtE3MWlChTtIiQQe1aLCL4S4qZytCYqOmNENL3
-         Ma0ANLF+R3bY9RToAXIR84dGSiMejKpiXsy60V9HSsFqUAIUxem37wmqGvvSeFB3pZnD
-         88HA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=tfNF9Nm72/GLHvVDln+H8GXexy5WDv58YkhHrtQxFnI=;
-        b=STJ7nOPzSR54EADhRA90ECZ++b08u1QXlVawrEVBOjBSajc6sW2cNYbcfPwgnFbGGu
-         8qDZIRMvFdOeyaTEy+39PxOWR0cnAPWQFKTEU+OOqRazHvRNGvQCCQ2gQkDcPDqSnRFB
-         rfMV6z0DaDYfc5cUjwynWyceSvN3C2ShiSnqFyusBLAOeLL0BJgMN6mfRXW5SQ47vwXc
-         0ZoVN+55eDEy786e6U0Y7xsPz/epANXYMVi1BBb8drsYctTJ6z8GjODtVPeHyHFqKMPc
-         TvOmlrn7VFz2hRKhp4Q00ZMsKXtiAkjdbFZGVhTsslXYVBMdHdTwWHE5AMQ8xtpeDPdd
-         Tzpg==
-X-Gm-Message-State: AOAM533Yko6brcuvPojNsox5aOzQvn9MpjbVcUZa3qBRQv8dE9sGJoat
-        IDFeE/197yFhmThjDad0/PiaVg==
-X-Google-Smtp-Source: ABdhPJxBELC+xFOxC4UazE1oHhzDFO6NqcaITjlLQ1T4zFD7Mj9CLmGAA1URqDVCk+ZyuiubwT89XA==
-X-Received: by 2002:a1c:1f42:: with SMTP id f63mr408880wmf.1.1599750249622;
-        Thu, 10 Sep 2020 08:04:09 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id q186sm4075754wma.45.2020.09.10.08.04.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:04:08 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
-        loic.poulain@linaro.org
-Subject: [PATCH v5 2/2] wcn36xx: Use V1 data structure to store supported rates
-Date:   Thu, 10 Sep 2020 16:04:50 +0100
-Message-Id: <20200910150450.2178784-3-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200910150450.2178784-1-bryan.odonoghue@linaro.org>
-References: <20200910150450.2178784-1-bryan.odonoghue@linaro.org>
+        Thu, 10 Sep 2020 15:59:24 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:45084 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730465AbgIJPAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Sep 2020 11:00:45 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 9B246581FA3E06A0396E;
+        Thu, 10 Sep 2020 22:05:33 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.487.0; Thu, 10 Sep 2020
+ 22:05:25 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <arend.vanspriel@broadcom.com>, <franky.lin@broadcom.com>,
+        <hante.meuleman@broadcom.com>, <chi-hsien.lin@cypress.com>,
+        <wright.feng@cypress.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <kuba@kernel.org>, <lee.jones@linaro.org>,
+        <linux-wireless@vger.kernel.org>,
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        <brcm80211-dev-list@cypress.com>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH] brcmsmac: main: Eliminate empty brcms_c_down_del_timer()
+Date:   Thu, 10 Sep 2020 22:04:46 +0800
+Message-ID: <20200910140446.1168049-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch converts the internal data structure used to store data-rates
-from version 0 to version 1.
+This function does nothing so remove it. This addresses the following
+coccicheck warning:
 
-This allows us to extend out the internal storage to represent VHT
-parameters.
+drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c:5103:6-15:
+Unneeded variable: "callbacks". Return "0" on line 5105
 
-Using the extended version 1 data-structure allows us to avoid a whole raft
-of version 1 specific fixup functions.
-
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 5 +++--
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 55aaaeb78b14..d5ca9907af86 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -242,9 +242,10 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		sta_params->aid = sta_priv->aid;
- 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
- 		memcpy(&sta_params->supported_rates, &sta_priv->supported_rates,
--			sizeof(sta_priv->supported_rates));
-+			sizeof(struct wcn36xx_hal_supported_rates));
- 	} else {
--		wcn36xx_set_default_rates(&sta_params->supported_rates);
-+		wcn36xx_set_default_rates((struct wcn36xx_hal_supported_rates *)
-+					  &sta_params->supported_rates);
- 		wcn36xx_smd_set_sta_default_ht_params(sta_params);
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
+index 21691581b532..763e0ec583d7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
+@@ -5085,13 +5085,6 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	return 0;
  }
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 342ca0ae7e28..d7d349de20e6 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -169,7 +169,7 @@ struct wcn36xx_sta {
- 	u8 bss_dpu_desc_index;
- 	bool is_data_encrypted;
- 	/* Rates */
--	struct wcn36xx_hal_supported_rates supported_rates;
-+	struct wcn36xx_hal_supported_rates_v1 supported_rates;
  
- 	spinlock_t ampdu_lock;		/* protects next two fields */
- 	enum wcn36xx_ampdu_state ampdu_state[16];
+-static uint brcms_c_down_del_timer(struct brcms_c_info *wlc)
+-{
+-	uint callbacks = 0;
+-
+-	return callbacks;
+-}
+-
+ static int brcms_b_bmac_down_prep(struct brcms_hardware *wlc_hw)
+ {
+ 	bool dev_gone;
+@@ -5201,8 +5194,6 @@ uint brcms_c_down(struct brcms_c_info *wlc)
+ 			callbacks++;
+ 		wlc->WDarmed = false;
+ 	}
+-	/* cancel all other timers */
+-	callbacks += brcms_c_down_del_timer(wlc);
+ 
+ 	wlc->pub->up = false;
+ 
 -- 
-2.27.0
+2.25.4
 
