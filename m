@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC2B5C433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3DC7C433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:17:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D31E2075B
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:15:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9252E2078B
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:17:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PKx+JXyK"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NSqRghSS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730277AbgIJHPK (ORCPT
+        id S1729993AbgIJHQx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 03:15:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41684 "EHLO
+        Thu, 10 Sep 2020 03:16:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730177AbgIJG45 (ORCPT
+        with ESMTP id S1726961AbgIJG4b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 02:56:57 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF244C06138F
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 23:55:09 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id a9so4638996wmm.2
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 23:55:09 -0700 (PDT)
+        Thu, 10 Sep 2020 02:56:31 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D1A5C061387
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 23:55:07 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id y15so4635403wmi.0
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 23:55:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UFEv542Lhp8Q0f61EAB5CHsxrkFJGeJ0ctv6xlXdr9A=;
-        b=PKx+JXyKX6oNJ99FSi8jIpQx1PBRxa50KrYhj3ZbAsKzw5r4J6yMp99KeO9WcPFB8c
-         Ceceo6MnvArOwhTkJxPQXGShN/2HzVNXnJwyGmbROSYiv+l4qdxh92n/WtlKUSGL4PzO
-         I4V7/mu+d/TlApnB0zv0n0RWo2Wf4r6mk3pEueiHLdFzA1m1LBd3gizya+K8Q7zFVx/b
-         6EoLYVG3XkxF1RHCyOqAOMo3/V1yLm3UW3V4MNcJ/8RMC0wW5a1zinqsSE+SMjhTsZeJ
-         oHUEBLEIe6t2SoaD466VF37n2SXfzhQS8z+1379EkeJp6Oe3m+DmSea4CteDsobRPWxB
-         ZY5Q==
+        bh=watylvtavvjnlIiL88AKksk2UODGv6ozdE6QDJoiV0Y=;
+        b=NSqRghSS5cx169+IIyEEIA1pUSywUIf49yMu9NjwR/xkjzO8d+5PfOmm/TYRQ/f1mB
+         6haERzzrHCa7y3x7YGpFMKZxl18fS2UOM03jbFZpzIxhw5FccwGMDO5OePh43gsFdrB/
+         +5aespm/3GiFg8l6B+zhD45sSafvLk2OGp0CJXT8oBww2J9WynDl3a2vwR+iVNQ/RdbZ
+         /9QQbYRMc2jiSjkec3omZrbtZFJ62tfzvXKNtCU7vvZIOV+Tj3mdh3z0cUa9dmXXIWS9
+         x2RrSWUpMB6gM7zUhAPhiu+5qja0KiPaNBvVhZsENyHzniZz03hBFq+ediLRAtlirXcG
+         UQWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UFEv542Lhp8Q0f61EAB5CHsxrkFJGeJ0ctv6xlXdr9A=;
-        b=CD75ktnk/kdfzg8arUOlmsBEBGzgGh8oxpbIWXl61eEeaOex0jYueMg/yTXfAOJDUH
-         /+tKSAz5bgjYFsk6XSFpUhDBqN0aF2ZJTywBtkJ6eNRvqDHni4pRXTvGtgIaqQfn84WQ
-         CTZkIHc7Zcw5ooyRnOfYCmruklB2K2mkJtwcKabDD7oXem+8uBUzmxYDqcRmJv+JIQvg
-         CD1j/XAqp8SJNu38iweH9NO87XX/adoiLVjz21OsdbqDmWfVQCj3EBw8yuZLTGTB2JUr
-         55335jJHfxtC+Je5A01gjk1/P/fvmmPUdBeuQzn/y1dZmkdjz+3YIjwQLUlxxkwPU3NJ
-         zDyw==
-X-Gm-Message-State: AOAM530eGUjguWHTloCftVFZfIQj5F7PfPiNKRJXmyDoDCv1OR/YDRd0
-        gVYlyC9ZLkgv/rx4KSpuHJ27hA==
-X-Google-Smtp-Source: ABdhPJwglt/9uW5KPkunmXazmtb24J49GEPBxD3Bb9hG8tmIdx9pCeW1n4r7+1K7+lnSzxSbiVjn3g==
-X-Received: by 2002:a7b:c3da:: with SMTP id t26mr6622241wmj.23.1599720908553;
-        Wed, 09 Sep 2020 23:55:08 -0700 (PDT)
+        bh=watylvtavvjnlIiL88AKksk2UODGv6ozdE6QDJoiV0Y=;
+        b=cuVYA4zVNqH+/c/JfSLyEG8zJplYyDvS1yfbfV/42/2mnXSNRkkgikuHH2a3+s8LSm
+         fEQcGpX0YzqELymWYvgibcaFPHF8cx6Pk8gm5xsC79pmByTWbTviPtpadDlW4ZNXKCWs
+         JNfXH2cDfEJq9z9t8zM+9BxgH/yqupXYWWOCAxTFU5n+LphytkJa2arm40oVFAoPfxOF
+         58unhpaNdPq9XDhxnRlqt52pyAatPoIjmHbZsfoTM2iw6xx2/ZvpVg81DXIfQT7RtEZ5
+         Ty2zJuJSM/oJdcw1LNkNTEU0cKvgskpp2H1ynwn/wl1lzEaWThstN1wwErd7F55xKeEh
+         Kw/g==
+X-Gm-Message-State: AOAM530WUxL8OTHgTpX/SOhKGACvmiLCN976S7aBsGy9DLD1+8bBNKWm
+        /1swQmm2GCGSxQK4KOJRiIa9FQ==
+X-Google-Smtp-Source: ABdhPJzWXsjc1qiY/ASKSBUySqorjX/uq7tPPkWgWr2DpV+zKNAZ9eOWEtsMDRTvwiFH7rKrsK7pIw==
+X-Received: by 2002:a1c:6254:: with SMTP id w81mr6750493wmb.94.1599720905943;
+        Wed, 09 Sep 2020 23:55:05 -0700 (PDT)
 Received: from dell.default ([91.110.221.246])
-        by smtp.gmail.com with ESMTPSA id m3sm2444028wme.31.2020.09.09.23.55.07
+        by smtp.gmail.com with ESMTPSA id m3sm2444028wme.31.2020.09.09.23.55.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2020 23:55:08 -0700 (PDT)
+        Wed, 09 Sep 2020 23:55:05 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>
-Subject: [PATCH 13/29] iwlwifi: mvm: tx: Demote misuse of kernel-doc headers
-Date:   Thu, 10 Sep 2020 07:54:15 +0100
-Message-Id: <20200910065431.657636-14-lee.jones@linaro.org>
+Subject: [PATCH 11/29] iwlwifi: dvm: scan: Demote a few nonconformant kernel-doc headers
+Date:   Thu, 10 Sep 2020 07:54:13 +0100
+Message-Id: <20200910065431.657636-12-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200910065431.657636-1-lee.jones@linaro.org>
 References: <20200910065431.657636-1-lee.jones@linaro.org>
@@ -80,11 +80,19 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+2 of which do not attempt to document their parameters, 1 does a poor job.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1379: warning: Function parameter or member 'rate_n_flags' not described in 'iwl_mvm_hwrate_to_tx_status'
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1379: warning: Function parameter or member 'info' not described in 'iwl_mvm_hwrate_to_tx_status'
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1431: warning: Function parameter or member 'mvm' not described in 'iwl_mvm_get_scd_ssn'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:193: warning: Function parameter or member 'priv' not described in 'iwl_scan_cancel'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:205: warning: Function parameter or member 'priv' not described in 'iwl_scan_cancel_timeout'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'frame' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'ta' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'ies' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'ie_len' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'ssid' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'ssid_len' not described in 'iwl_fill_probe_req'
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c:570: warning: Function parameter or member 'left' not described in 'iwl_fill_probe_req'
 
 Cc: Johannes Berg <johannes.berg@intel.com>
 Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
@@ -97,31 +105,46 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 2f6484e0d726c..82ebf264de397 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1371,7 +1371,7 @@ void iwl_mvm_hwrate_to_tx_rate(u32 rate_n_flags,
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/scan.c b/drivers/net/wireless/intel/iwlwifi/dvm/scan.c
+index 1d8590046ff7d..832fcbb787e98 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/scan.c
+@@ -186,7 +186,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ 		IWL_DEBUG_SCAN(priv, "Successfully send scan abort\n");
  }
  
 -/**
 +/*
-  * translate ucode response to mac80211 tx status control values
+  * iwl_scan_cancel - Cancel any currently executing HW scan
   */
- static void iwl_mvm_hwrate_to_tx_status(u32 rate_n_flags,
-@@ -1413,7 +1413,7 @@ static void iwl_mvm_tx_status_check_trigger(struct iwl_mvm *mvm,
- 	}
+ int iwl_scan_cancel(struct iwl_priv *priv)
+@@ -196,10 +196,9 @@ int iwl_scan_cancel(struct iwl_priv *priv)
+ 	return 0;
  }
  
 -/**
 +/*
-  * iwl_mvm_get_scd_ssn - returns the SSN of the SCD
-  * @tx_resp: the Tx response from the fw (agg or non-agg)
-  *
+  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
+  * @ms: amount of time to wait (in milliseconds) for scan to abort
+- *
+  */
+ void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
+@@ -560,10 +559,9 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
+ 	return added;
+ }
+ 
+-/**
++/*
+  * iwl_fill_probe_req - fill in all required fields and IE for probe request
+  */
+-
+ static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
+ 			      const u8 *ies, int ie_len, const u8 *ssid,
+ 			      u8 ssid_len, int left)
 -- 
 2.25.1
 
