@@ -7,69 +7,71 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B34C433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:10:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B94DEC43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:11:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31E41207EA
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:10:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B5822078E
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 07:11:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="deR4l/Sv"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="trv3TSNs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730271AbgIJHJz (ORCPT
+        id S1730339AbgIJHLL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 03:09:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41766 "EHLO
+        Thu, 10 Sep 2020 03:11:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729935AbgIJHBN (ORCPT
+        with ESMTP id S1730309AbgIJHAy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 03:01:13 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6EFAC061370
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 23:55:26 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id s13so4476235wmh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 23:55:26 -0700 (PDT)
+        Thu, 10 Sep 2020 03:00:54 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DEA9C061368
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2020 23:55:23 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id a65so4459230wme.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2020 23:55:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ber61nCfGX/LBYmzLblmZwxpl0GZA9+O2Yw5fYt8Kvw=;
-        b=deR4l/SvWidt++EwWJEQ0E9qOniHgPvaCffVrMJK8v/IkYr3EfA7i5GWTZFOvow8A8
-         gWMvJTMbMWprCF9pH3UNP7lfNeJkZTp3PbFgwKJrGah9//3ZkFntHpJzAwwIYhXORLrk
-         An8/+s0JbkXPgKVaRPMGM4N1vuMZAV4n/+b8vfSKXXxaTUpLSq8qyMxoCJxh/mZmnkq8
-         X4M2JwoZRxjxPrTTGq19Ro1u8mDeHofCGKR3fyNx4u/SDL8IdwtT23FHYzaIARk9TRnV
-         4300x88RRXrgQZxU8pQdD3mR97xYnLNH+UlP8vBbVvvIOwa1nt5I2nUZ/V4A9ZM9a+TY
-         14IA==
+        bh=WVfVHRbfLs77xvEowdNmRYJl1Eqf3t8uGBw9b5yOc7s=;
+        b=trv3TSNssv4jT0t36HHkekyc5oQb9OrM4SsI9V82hbXUfKMjBOl87eNt5/GlaRiJ1N
+         b4CNDROwIGksCc9TQn1MhsscUtgT/gCzPhxxv7ckxHZzRvTEQZQRI4+UyxSQYnsefY4g
+         3atu7eH/kqNeLVaFi3AswTh+b5onrTfyRZT/tX7cIE1CB6xhSCPAHi7uHcYpHkgtNqYe
+         s6Oz2ylbPHLbs+GIgOUP9cmpxIPC0uj8VvmFFHqDLm4uTLp1PvIA1JvhpPmFICzV5CAJ
+         hydx8KqkleMdHQbi2lCMJWP3Air13xuIRIVXhXyjZm4+RYumUgaXf4MZQMY64yV19jso
+         kgdg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ber61nCfGX/LBYmzLblmZwxpl0GZA9+O2Yw5fYt8Kvw=;
-        b=uVwkQIiQXxCUV70Rz7Pa6P8t8h18I8k2/ZDhRS0cf9fxEcYghLcXWtYC9vbL+6Ro6o
-         GAEuMgMMo38VDnAzPmhKDDEzxM14sWsG7rQPJ/pfJ8MlAaKRvwn/8CVRrpLQE0uqRz9F
-         ML+2BpsjSuuOWzZVh50QhPKdp8PKKfmZ329gp2BryNUldVfBYN4fxDSFJbfitMl773Ky
-         UkcTf3GAA1ytForoF+/OXd012sSeq9re/kJlIUugS0U/CY3pLx2+oG6mi7a6Ub4U4fpO
-         puaZoKL8C5ulR+CfXCCXJnk6qhUVbraeeZyGr2rEEcAQ3YAa77C8A+Zrxx9oKqmI7iHE
-         7jTg==
-X-Gm-Message-State: AOAM532lD2rQWP/uHJM1eikXpzI0vahUiy9AbIP/flIlfbmBAq5CFZTi
-        MYKP2TsjK+7sVXVxrMTGT4GMIg==
-X-Google-Smtp-Source: ABdhPJw5H4OWts/YLTGzvF0IpkpQLEtjcIKcDuLQEIfcSNW7xtBFWBzsUCVPlVNJpxVYbV24qw4ajw==
-X-Received: by 2002:a1c:2bc7:: with SMTP id r190mr4663735wmr.116.1599720925509;
-        Wed, 09 Sep 2020 23:55:25 -0700 (PDT)
+        bh=WVfVHRbfLs77xvEowdNmRYJl1Eqf3t8uGBw9b5yOc7s=;
+        b=kKgsJEwqkgSnT70CHKm65shF1tEtI12um/2QKdr11OK2QxTThe8Fergw5TP/5BUH0C
+         XUQSGL5uS8Et1JogQoA1QXX3DtS7wvd0L0rgnkziFILu5D4438+YCWrQR6e2d0L9TMNC
+         znPfWJgEDp7r1nhmKJNM4ckL3BnBD//EoPXYgV8Pw75x9Jz8lD4iDeNz8IZgQkuthFy7
+         6Pi/llB5EeqMBAPpuGZLIC7n89psuhTxCuWPBRb6fwXjxmZldu3OFvnNT+Gn8NiEakpa
+         epXl1FmjtUceRufPKIjT8D5edykAm5dlVogFegz1l84xKvoPT40rR1OF8NIGGklWzOzB
+         Gz6g==
+X-Gm-Message-State: AOAM531KsZA1g7TjXvS5C+aaJMtHWQUM+gVcdYPrWOE4diVof2u1M0IG
+        PL6HxdqJ58avUl0yV+Ss3m0724yyQaK8cw==
+X-Google-Smtp-Source: ABdhPJyK8KGbYnywMP2YHH8s/CfQGpRnnXKWDD5/aH/JPxN4EAvG/bWpYAX3/8b5XNDbUCTa5/8R9Q==
+X-Received: by 2002:a7b:c44b:: with SMTP id l11mr6834265wmi.52.1599720922334;
+        Wed, 09 Sep 2020 23:55:22 -0700 (PDT)
 Received: from dell.default ([91.110.221.246])
-        by smtp.gmail.com with ESMTPSA id m3sm2444028wme.31.2020.09.09.23.55.24
+        by smtp.gmail.com with ESMTPSA id m3sm2444028wme.31.2020.09.09.23.55.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2020 23:55:25 -0700 (PDT)
+        Wed, 09 Sep 2020 23:55:21 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 28/29] brcmsmac: phytbl_lcn: Remove unused array 'dot11lcn_gain_tbl_rev1'
-Date:   Thu, 10 Sep 2020 07:54:30 +0100
-Message-Id: <20200910065431.657636-29-lee.jones@linaro.org>
+        netdev@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Subject: [PATCH 25/29] ath9k: ar9001_initvals: Remove unused array 'ar5416Bank6_9100'
+Date:   Thu, 10 Sep 2020 07:54:27 +0100
+Message-Id: <20200910065431.657636-26-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200910065431.657636-1-lee.jones@linaro.org>
 References: <20200910065431.657636-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -78,124 +80,67 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c:108:18: warning: unused variable 'dot11lcn_gain_tbl_rev1' [-Wunused-const-variable]
- static const u32 dot11lcn_gain_tbl_rev1[] = {
+ drivers/net/wireless/ath/ath9k/ar9001_initvals.h:462:18: warning: ‘ar5416Bank6_9100’ defined but not used [-Wunused-const-variable=]
 
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../brcm80211/brcmsmac/phy/phytbl_lcn.c       | 99 -------------------
- 1 file changed, 99 deletions(-)
+ .../net/wireless/ath/ath9k/ar9001_initvals.h  | 37 -------------------
+ 1 file changed, 37 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-index 7526aa441de11..5331b5468e148 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-@@ -105,105 +105,6 @@ static const u32 dot11lcn_gain_tbl_rev0[] = {
- 	0x00000000,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9001_initvals.h b/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
+index 59524e1d4678c..aa5f086fa3b0b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
+@@ -459,43 +459,6 @@ static const u32 ar5416Common_9100[][2] = {
+ 	{0x0000a3e0, 0x000001ce},
  };
  
--static const u32 dot11lcn_gain_tbl_rev1[] = {
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000008,
--	0x00000004,
--	0x00000008,
--	0x00000001,
--	0x00000005,
--	0x00000009,
--	0x0000000D,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x000000d1,
--	0x00000053,
--	0x00000093,
--	0x000000d3,
--	0x000000d7,
--	0x00000117,
--	0x00000517,
--	0x00000917,
--	0x00000957,
--	0x00000d57,
--	0x00001157,
--	0x00001197,
--	0x00005197,
--	0x00009197,
--	0x0000d197,
--	0x00011197,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000008,
--	0x00000004,
--	0x00000008,
--	0x00000001,
--	0x00000005,
--	0x00000009,
--	0x0000000D,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x000000d1,
--	0x00000053,
--	0x00000093,
--	0x000000d3,
--	0x000000d7,
--	0x00000117,
--	0x00000517,
--	0x00000917,
--	0x00000957,
--	0x00000d57,
--	0x00001157,
--	0x00005157,
--	0x00009157,
--	0x0000d157,
--	0x00011157,
--	0x00015157,
--	0x00019157,
--	0x0001d157,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
+-static const u32 ar5416Bank6_9100[][3] = {
+-	/* Addr      5G          2G        */
+-	{0x0000989c, 0x00000000, 0x00000000},
+-	{0x0000989c, 0x00000000, 0x00000000},
+-	{0x0000989c, 0x00000000, 0x00000000},
+-	{0x0000989c, 0x00e00000, 0x00e00000},
+-	{0x0000989c, 0x005e0000, 0x005e0000},
+-	{0x0000989c, 0x00120000, 0x00120000},
+-	{0x0000989c, 0x00620000, 0x00620000},
+-	{0x0000989c, 0x00020000, 0x00020000},
+-	{0x0000989c, 0x00ff0000, 0x00ff0000},
+-	{0x0000989c, 0x00ff0000, 0x00ff0000},
+-	{0x0000989c, 0x00ff0000, 0x00ff0000},
+-	{0x0000989c, 0x00ff0000, 0x00ff0000},
+-	{0x0000989c, 0x005f0000, 0x005f0000},
+-	{0x0000989c, 0x00870000, 0x00870000},
+-	{0x0000989c, 0x00f90000, 0x00f90000},
+-	{0x0000989c, 0x007b0000, 0x007b0000},
+-	{0x0000989c, 0x00ff0000, 0x00ff0000},
+-	{0x0000989c, 0x00f50000, 0x00f50000},
+-	{0x0000989c, 0x00dc0000, 0x00dc0000},
+-	{0x0000989c, 0x00110000, 0x00110000},
+-	{0x0000989c, 0x006100a8, 0x006100a8},
+-	{0x0000989c, 0x004210a2, 0x004210a2},
+-	{0x0000989c, 0x0014000f, 0x0014000f},
+-	{0x0000989c, 0x00c40002, 0x00c40002},
+-	{0x0000989c, 0x003000f2, 0x003000f2},
+-	{0x0000989c, 0x00440016, 0x00440016},
+-	{0x0000989c, 0x00410040, 0x00410040},
+-	{0x0000989c, 0x000180d6, 0x000180d6},
+-	{0x0000989c, 0x0000c0aa, 0x0000c0aa},
+-	{0x0000989c, 0x000000b1, 0x000000b1},
+-	{0x0000989c, 0x00002000, 0x00002000},
+-	{0x0000989c, 0x000000d4, 0x000000d4},
+-	{0x000098d0, 0x0000000f, 0x0010000f},
 -};
 -
- static const u16 dot11lcn_aux_gain_idx_tbl_rev0[] = {
- 	0x0401,
- 	0x0402,
+ static const u32 ar5416Bank6TPC_9100[][3] = {
+ 	/* Addr      5G          2G        */
+ 	{0x0000989c, 0x00000000, 0x00000000},
 -- 
 2.25.1
 
