@@ -2,74 +2,72 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAEE6C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4104DC433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97A4A20795
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E65A320829
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:30:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uxa8g2AS"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FhpAm/mF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726922AbgIJQ3s (ORCPT
+        id S1726415AbgIJQai (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 12:29:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
+        Thu, 10 Sep 2020 12:30:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726474AbgIJQ16 (ORCPT
+        with ESMTP id S1726816AbgIJQ1h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 12:27:58 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B4EC061387
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:04 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id x23so377152wmi.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:04 -0700 (PDT)
+        Thu, 10 Sep 2020 12:27:37 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68C2C061573
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:05 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id e17so388325wme.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=bt7q4WuJS1fLYjS1vUbuAcQqhXMPVcrVhmoeIcbszdE=;
-        b=uxa8g2ASp9ohHLOccxMhBkdBhNNBA1F6uHZa74fFwBnkZBfhlAxduUXqitKC8pSiNk
-         HrCLYU2LWpN4D2Xf7vNjpg6dySri49048PKbtdwlp0m89Zfr/L8lORklj++AiL0yKr8i
-         H+6201nHBopNlkjJ4Ca5mtBOQM+Zz+2qc4PubB5wTqfRt1PyemYw9J07eqekucZUQuau
-         PLngadCdrI/8knfV2bIJK8c0xh8D3nOuus7HPrNgHsv7RHjEIvfd4wT7ojxAx2GuX8Df
-         kPZPCKYuKgT5tD07qW2L3mVzPx0dilx6VSozy1qWKWqn5YH/EQFMUh20G/rSVYL+KzHA
-         hLzw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mL4mzudrzXf2cUTx9eQ/J+GPxyAkKkLNs3IL5Bs2Jrg=;
+        b=FhpAm/mF2S0ktfsReBCbwmNFlAi5VPzeXlMJMmtmVLby9qk8bR0fJkQEL3UY+s1Np3
+         vLce65hZUqyLXnzoSKTWZpQxyMN1VhVUmzvlEweZ8cf2lSI3KN9I1ZpXaO3d4V/lI6wE
+         f+LwN9N41+i1LOJFI3g2mMpeNCNhm+f6+oWCsdIX2VSuUPnHUT7LkYVLHUmMtfJ/t0W2
+         OHIAnJMQUxoxFY3WApy7e7S1CI+PYqxppde+9p6gdoj3IgudYh+feFyVGJRqF0+S+AGs
+         ZEM1KeZjVXGdq4FnZp6m2iTzqIm+itiJ+aBjU6rP9J7wCNNcfmNep9iELlcmAv6ux/yx
+         GVxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=bt7q4WuJS1fLYjS1vUbuAcQqhXMPVcrVhmoeIcbszdE=;
-        b=Uw8FYCuCIptoehAMPugdqqLy7hs8ou5uwhGVKr+gkeVGzwzb146JyUZV8lLw7EoNi7
-         +mHsBMtUwPoEpSlRyioBbaLluTtyi88N5QDIS7Bq4bZbXRtBu/HdAPUlNETBVc4tJI4e
-         knM6Ce4IHaLyow/os5fXJM9vws1NRE21nt86/oKbP16JP2faIE7iray5ngpBDqPk//cz
-         CWrHNDoDSESR77OLsQCu6dxQXj9/ChxuMWH5zb0ufcoLiruHoUwPsqFjKyGQ3OZmlZY5
-         LbzZXhJR87lG+9k7VYhanqGGJ4172IkHs0fpzpL1lLdMDf4tNWyUJ1kQ5/1EL0h/BCRS
-         CO9g==
-X-Gm-Message-State: AOAM533/1fCONc2eNR6PBmfMVrSHEpzfhrNzRsmBqvx8ObAQQO5Yff1q
-        H86gQ2f04922GPsdCQn/Op/gUA==
-X-Google-Smtp-Source: ABdhPJyG6t/pcDSZMksVJG00RaVNblKl/0vQ05RyvcBH4+xQ0bU3ptMT58FRInmE7OjZrQKfidHfXA==
-X-Received: by 2002:a1c:f008:: with SMTP id a8mr427580wmb.155.1599750423104;
-        Thu, 10 Sep 2020 08:07:03 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mL4mzudrzXf2cUTx9eQ/J+GPxyAkKkLNs3IL5Bs2Jrg=;
+        b=XQ8DwWOxnOHAB6WkBDKUdlYs6xSVfZ2fsmjsN47fEmyi9BPPzM3Sc0r0RcxtUtJ+f0
+         4xW1xk1R0ks+c/HZ837TmpSI1v8DLJvE6135K8Ahq/8COblv/qPLhtnfoU7iHGMOgs8f
+         fwi9NnJjqBX7CwCPUk9t6gv0Rf6xJEXwBVMHL+0L2JxSFYIUjcFYe5rA+pTn2pN9ECAt
+         r1jZ2AltHXzRbctvFtez9dPn4QbhjfJsCOTfW22jIgM3+7W4+fV2UHlfpTOhsCNaqWCe
+         SUHq1c9WnMdSvRMXzS3/g2YVFnLWwXXAHLMsgCzaLWFJV2BNSqKfkRC1OrVKeo4Pslif
+         X6Yg==
+X-Gm-Message-State: AOAM532muZbuOi0xs36iNNobSH3/eSHoZ83C+BiS1BETOUfTFjofIQE/
+        HPSDKhpOSdb8Shct8sjSvgBurq/m+rnt9g==
+X-Google-Smtp-Source: ABdhPJwuKKuALwNUcm2VKp7y95gpBWlgd+WkWKrGE1fpOQiOUaE2aET0atnB7uesn5YmOnfIl3USww==
+X-Received: by 2002:a7b:c397:: with SMTP id s23mr454417wmj.174.1599750304517;
+        Thu, 10 Sep 2020 08:05:04 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id m3sm7597315wrs.83.2020.09.10.08.07.02
+        by smtp.gmail.com with ESMTPSA id g8sm3852620wmd.12.2020.09.10.08.05.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:07:02 -0700 (PDT)
+        Thu, 10 Sep 2020 08:05:04 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v5 3/4] wcn36xx: Add ability to download wcn3680 specific firmware parameters
-Date:   Thu, 10 Sep 2020 16:07:46 +0100
-Message-Id: <20200910150747.2179122-4-bryan.odonoghue@linaro.org>
+Subject: [PATCH v5 0/7] wcn36xx: Add a set of helpers to enable VHT parameter passing
+Date:   Thu, 10 Sep 2020 16:05:45 +0100
+Message-Id: <20200910150552.2178882-1-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200910150747.2179122-1-bryan.odonoghue@linaro.org>
-References: <20200910150747.2179122-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,50 +75,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit modifies wcn36xx_smd_start() so that it can download wcn3680
-specific firmware parameters if we are talking to the wcn3680. If not the
-original generic firmware parameter table should continue to be used for
-wcn3620 and wcn3660.
+This series is two in a set of seven to add support for wcn3680 at 802.11ac
+data-rates.
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+V5:
+- Fixes -W=1 warning caught in later patches by kernel build robot
+  I'm still declaring these functions standalone for the purposes of
+  granularity and bisectability, a later patch makes them static.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 242112ce102a..57523a66a8ee 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -625,6 +625,8 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
- 	int ret;
- 	int i;
- 	size_t len;
-+	int cfg_elements;
-+	static struct wcn36xx_cfg_val *cfg_vals;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_REQ);
-@@ -637,9 +639,17 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
- 	body = (struct wcn36xx_hal_mac_start_req_msg *)wcn->hal_buf;
- 	len = body->header.len;
- 
--	for (i = 0; i < ARRAY_SIZE(wcn36xx_cfg_vals); i++) {
--		ret = put_cfg_tlv_u32(wcn, &len, wcn36xx_cfg_vals[i].cfg_id,
--				      wcn36xx_cfg_vals[i].value);
-+	if (wcn->rf_id == RF_IRIS_WCN3680) {
-+		cfg_vals = wcn3680_cfg_vals;
-+		cfg_elements = ARRAY_SIZE(wcn3680_cfg_vals);
-+	} else {
-+		cfg_vals = wcn36xx_cfg_vals;
-+		cfg_elements = ARRAY_SIZE(wcn36xx_cfg_vals);
-+	}
-+
-+	for (i = 0; i < cfg_elements; i++) {
-+		ret = put_cfg_tlv_u32(wcn, &len, cfg_vals[i].cfg_id,
-+				      cfg_vals[i].value);
- 		if (ret)
- 			goto out;
- 	}
+V4:
+- No functional change.
+  Sending out full set again using --base=ath-202009090652 to aid kernel
+  test robot
+- https://lore.kernel.org/linux-wireless/20200908182437.2870281-1-bryan.odonoghue@linaro.org/T/#t
+
+V3:
+- Enables MU-MIMO bits in wcn36xx_smd_set_sta_vht_params()
+- Adds a set of helper functions. In the previous set these unused
+  declarations would cause a warning during compile because they were
+  declared static with the intention to add code later on to use them.
+
+  To resolve that, I do not declare the functions static. Static
+  declaration is done in a later patch after the functions have been used.
+
+- There are two good reasons for this:
+  1. Granularity. I think its important and useful to have a patch per
+     function that clearly sets out what it does and why.
+  2. Patch size. Declaring seven functions at the time of their first
+     use is not good practice.
+
+I think maintaining patch granularity is a good enough reason to not squash
+these commits down. It is pretty trivial to declare the functions static
+later on without generating compile warnings in the interregnum.
+
+V2:
+This set makes a series of modifications to enable passing of an extended
+V1 data-structure to the firmware.
+
+A series of of helper functions are added to facilitate the setup.
+
+The final step in the process is enabling the extended data-structure
+parameter passing for the wcn3680 only.
+
+Only a firmware that is capable of 80211.ac will accept the larger V1
+messages and only after explicitly enabling the DOT11AC firmware feature
+bit.
+
+- No functional difference from V1 for these patches
+  Breaking into smaller chunks to enable easier review/merging
+
+V1:
+
+https://lore.kernel.org/linux-wireless/87eensldhi.fsf@codeaurora.org/T/#t
+
+
+Bryan O'Donoghue (7):
+  wcn36xx: Add wcn36xx_set_default_rates_v1
+  wcn36xx: Add wcn36xx_smd_set_sta_default_vht_params()
+  wcn36xx: Add wcn36xx_smd_set_sta_default_ht_ldpc_params()
+  wcn36xx: Add wcn36xx_smd_set_sta_vht_params()
+  wcn36xx: Add wcn36xx_smd_set_sta_ht_ldpc_params()
+  wcn36xx: Add wcn36xx_smd_set_bss_vht_params()
+  wcn36xx: Add wrapper function wcn36xx_smd_set_sta_params_v1()
+
+ drivers/net/wireless/ath/wcn36xx/main.c    |   8 ++
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 108 +++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   1 +
+ 3 files changed, 117 insertions(+)
+
+
+base-commit: 160b351d75cb50a0dd2abf9b63e1891935aa9e4a
+prerequisite-patch-id: 9a4ac7faca179f6594c9b3a115ee69a2da540a69
+prerequisite-patch-id: 183286f9c22d1aaa12f356651224e6b337ef1938
 -- 
 2.27.0
 
