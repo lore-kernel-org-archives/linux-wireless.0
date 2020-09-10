@@ -2,145 +2,92 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F20C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:31:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A68C43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:32:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8664A20829
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:31:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2A7C20C09
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 16:32:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ucpAjTCa"
+	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kdb+4Cln";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="lRTq3Z1v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726932AbgIJQaq (ORCPT
+        id S1726837AbgIJQby (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 12:30:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46258 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726815AbgIJQ1g (ORCPT
+        Thu, 10 Sep 2020 12:31:54 -0400
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:41402
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726109AbgIJQbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 12:27:36 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5BC4C0617A1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:49 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id a17so7082474wrn.6
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=DQTt4ZJIu8GTxj+4B1cvxGG4nybh/ZrPxormf6iSTCU=;
-        b=ucpAjTCaNTUlZJQEWLRjLbssJXBm1SZt/yxRqtoouzmk77RdUBsbFmOShJDl8PD6TG
-         d4hbRJLnGhz354i7xar3axwWUh7cBcuwfxj3pCoA90tiBAUdv7fp17i9EZ1sFz0gFH/u
-         R2nNEyrSwuWHVq30F8dDq3BkvOQGUfF3/rCvazqpC5vOEyTWYZxpCZPULItp+YzZA4wv
-         IoarB7c3QNy1ue7JgiQ9/nnGLEpjBUVVT1Te4Quc+FFRXR8g9ZfktV5/M6G+E6IINyL3
-         siYscq+JNeFURo//EjmCllqq/ysPNQzvCOrDeeY9lpp6BLPMd5g36ABIJx5VN/5kh8k8
-         D1LQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=DQTt4ZJIu8GTxj+4B1cvxGG4nybh/ZrPxormf6iSTCU=;
-        b=Q+0uolXp0QJROF0xpLnqfY3ln9y0LI4mNYJYDyj1wGQa65FSjo2DIPbRTSbdpMFXQA
-         TLShMASw42SrFN++eZhaeTULZCtIs3IwTaHUIQMwTKko/tB6q5ZJUD+zFjyz0470E1IU
-         Cki/BJ4ylbA8ttH3wpvBnPyDLj0CYJ+ZqkX0f3mXNJ4+F78gmvm0YHCWWgZiXbMp/jpN
-         nWndUsD2sARIOY/SEtaPuImf85IouoJskwY9goRFBU8pa3QcNXAi9QtZs7lShVPbsjms
-         mFBrimX1nuy4jtrAVM3ZwvB5Zr9jNznUgaonFGEWlgbQvlCUav7d3CkSgaRkBk4Pj35X
-         Yu0A==
-X-Gm-Message-State: AOAM533PnfG/dPsUUzIKUSOxl1Zc2Xh5IvjRPMzDypHodT982BYvPzG4
-        yK5DTVPIwOwv8SdX72U5CUAAkw==
-X-Google-Smtp-Source: ABdhPJz/fUEoROVUDl7E48VmQ537BDAItWSpzRBNr29zyul28DvOpDeBheLu46NjAFCh0vSm8gN0Ow==
-X-Received: by 2002:a5d:4d8a:: with SMTP id b10mr9498645wru.82.1599750348555;
-        Thu, 10 Sep 2020 08:05:48 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id k24sm3857005wmj.19.2020.09.10.08.05.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:05:48 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
-        loic.poulain@linaro.org
-Subject: [PATCH v5 5/7] wcn36xx: Add wcn36xx_smd_config_bss_v0
-Date:   Thu, 10 Sep 2020 16:06:29 +0100
-Message-Id: <20200910150631.2178970-6-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200910150631.2178970-1-bryan.odonoghue@linaro.org>
-References: <20200910150631.2178970-1-bryan.odonoghue@linaro.org>
+        Thu, 10 Sep 2020 12:31:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599755503;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
+        bh=JsEHHJbA/KTCse1B/sa8kRNxBwgyPWQGjQkRyaMNlIE=;
+        b=kdb+4ClnoNgQB9XvuE8wF69B70K5E8XGdqGljaBK6N9y1RJ8UVIbPeJ62qb7V2+4
+        JA6hg5XsqOK1xQH+21gf8xYfnVsKeQCHrSBWiF32xkrgRB3n5Rr/Fz6spB6f1G+xfyT
+        c08PoGZq3QnnPlfeokVeW3n1Dj4nLjuwQ1vrkG4w=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599755503;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
+        bh=JsEHHJbA/KTCse1B/sa8kRNxBwgyPWQGjQkRyaMNlIE=;
+        b=lRTq3Z1vh/fetU1kFqkDu7HdsTb3VjMs/Vinm/bTWNF8NfDcGNjWq6JQuReUyAh4
+        ruGnzCTclrgKvaJBYjxsM+gQFrmn2Rcy40f32kXkC44zRUfQc/jMOq9IW7sy+40BSpc
+        tIfCHOOzhW2zBWBmqdRR7Yf+r6zlbLGE6/lXMVaI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9A6F6C433F0
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 24/29] ath9k: ar9002_initvals: Remove unused array
+ 'ar9280PciePhy_clkreq_off_L1_9280'
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200910065431.657636-25-lee.jones@linaro.org>
+References: <20200910065431.657636-25-lee.jones@linaro.org>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-ID: <0101017478dbc6e7-1d4ddf5e-fade-4e45-a0d5-ecb92bf35a72-000000@us-west-2.amazonses.com>
+Date:   Thu, 10 Sep 2020 16:31:43 +0000
+X-SES-Outgoing: 2020.09.10-54.240.27.187
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit adds wcn36xx_smd_config_bss_v0() as a step along the road of
-functionally decomposing wcn36xx_smd_config_bss().
+Lee Jones <lee.jones@linaro.org> wrote:
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 44 ++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+> Fixes the following W=1 kernel build warning(s):
+> 
+>  drivers/net/wireless/ath/ath9k/ar9002_initvals.h:900:18: warning: ‘ar9280PciePhy_clkreq_off_L1_9280’ defined but not used [-Wunused-const-variable=]
+> 
+> Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 809a4c0899ff..57833eec16eb 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1605,6 +1605,50 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
- 	return ret;
- }
- 
-+int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			      struct ieee80211_sta *sta, const u8 *bssid,
-+			      bool update);
-+int wcn36xx_smd_config_bss_v0(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			      struct ieee80211_sta *sta, const u8 *bssid,
-+			      bool update)
-+{
-+	struct wcn36xx_hal_config_bss_req_msg *msg;
-+	struct wcn36xx_hal_config_bss_params *bss;
-+	struct wcn36xx_hal_config_sta_params *sta_params;
-+	int ret;
-+
-+	msg = kzalloc(sizeof(*msg), GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	INIT_HAL_MSG((*msg), WCN36XX_HAL_CONFIG_BSS_REQ);
-+
-+	bss = &msg->bss_params;
-+	sta_params = &bss->sta;
-+
-+	wcn36xx_smd_set_bss_params(wcn, vif, sta, bssid, update, bss);
-+	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
-+
-+	PREPARE_HAL_BUF(wcn->hal_buf, (*msg));
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL,
-+		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
-+		    bss->bssid, bss->self_mac_addr, bss->bss_type,
-+		    bss->oper_mode, bss->nw_type);
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL,
-+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM\n",
-+		    sta_params->bssid, sta_params->action,
-+		    sta_params->sta_index, sta_params->bssid_index,
-+		    sta_params->aid, sta_params->type,
-+		    sta_params->mac);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, msg->header.len);
-+	kfree(msg);
-+
-+	return ret;
-+}
-+
- static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
- 				      struct ieee80211_sta *sta,
+Already fixed in ath.git.
+
+error: patch failed: drivers/net/wireless/ath/ath9k/ar9002_initvals.h:897
+error: drivers/net/wireless/ath/ath9k/ar9002_initvals.h: patch does not apply
+stg import: Diff does not apply cleanly
+
+Patch set to Rejected.
+
 -- 
-2.27.0
+https://patchwork.kernel.org/patch/11766749/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
