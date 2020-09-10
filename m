@@ -2,84 +2,111 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 462CEC433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 14:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 275D4C433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:24:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F8D8206DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 14:25:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C891A20BED
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:24:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VgXQxDJJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730649AbgIJOZF (ORCPT
+        id S1731257AbgIJPYj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 10:25:05 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:56966 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730068AbgIJOK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 10:10:27 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 96CF9103931C117F82CF;
-        Thu, 10 Sep 2020 22:09:57 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS407-HUB.china.huawei.com
- (10.3.19.207) with Microsoft SMTP Server id 14.3.487.0; Thu, 10 Sep 2020
- 22:09:47 +0800
-From:   Zheng Bin <zhengbin13@huawei.com>
-To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
-Subject: [PATCH -next 2/3] rtlwifi: rtl8723ae: fix comparison pointer to bool warning in trx.c
-Date:   Thu, 10 Sep 2020 22:16:41 +0800
-Message-ID: <20200910141642.127006-3-zhengbin13@huawei.com>
-X-Mailer: git-send-email 2.26.0.106.g9fadedd
-In-Reply-To: <20200910141642.127006-1-zhengbin13@huawei.com>
-References: <20200910141642.127006-1-zhengbin13@huawei.com>
+        Thu, 10 Sep 2020 11:24:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731249AbgIJPF0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Sep 2020 11:05:26 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2601C06179A
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:10 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id x14so7042867wrl.12
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:05:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=J7OETVLDh9JWcogSM8CDzEM26oQ0pGJijOBeVJ880zs=;
+        b=VgXQxDJJradt6PJ+rpPriG71cFDgg04zrawTaOr0wQGs28wSCdRy6a9jMPgJFTufeq
+         gQmZ9yqbKxUKQ5ZtrwTuZsItIbSjuAC3b3Er4JPLZfKB205+Sdudrf9tLveLx5baghF8
+         xUzeRMBq9gukRX+390jzn4t6aNPINlMTG5JZwJ06uM/Xl/G5xqLbsluD03kVRqMZ1clt
+         vpwizbxuT19pzxKnGI+Rs/rEQ1vqcCE/YzCQ96IaYJapbL7j8xFJLx3WI5RQrHHR0bYW
+         hj8JYBFrzYyQPwQxqDbIqRMIy9GdRQad9ubUW1/4zowORaqAnyqetIyY1dDz4XmWWHSW
+         FGfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=J7OETVLDh9JWcogSM8CDzEM26oQ0pGJijOBeVJ880zs=;
+        b=L4jTg/wOLi/n500WNbnXTBaTe83bY5YhwbMsNwMUYUT2o1SHFN+QkDXzc62EwBrhBR
+         pHyegsBaqUDE5rCX9mEzvGRFX75rW7gA2Ro0/U6gXzsgTyvwQVZDdK6Jg5b+AYqF2YkD
+         owa2Z/f+g+4xVGK40c/84yWNDn1mZGF+kArTmPXe0ZitAaagpGZDpvUV1/UlI1/TUJVg
+         EeBkR+KDN7kFUOicp+T9tejo3FF3ZTCrona1zyqkFnhXEVOMeFGB1cpgERAB8mk2gcRf
+         +yAvTQFxZuYSeIuRuxM0A+qNTn9xwPVUtC3LOYRvUzOY4BytF4cr32OBAFCJuLt1Yre6
+         uuYg==
+X-Gm-Message-State: AOAM5328uS0JXkKEx08soUoaWYmS0KVXO2vMifD4deRq2dwk2K2KOV0d
+        MGrnVPT70UmBxWeRFh9Vm5V5Yg==
+X-Google-Smtp-Source: ABdhPJxdTzHFg2dNDzSnltVUbVyOFhFAS4b/miIRWMD1tkzilNTT/H5qJMNHwFYK3IYFnEvy9fNBiQ==
+X-Received: by 2002:a05:6000:d0:: with SMTP id q16mr9492606wrx.24.1599750309722;
+        Thu, 10 Sep 2020 08:05:09 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id g8sm3852620wmd.12.2020.09.10.08.05.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2020 08:05:09 -0700 (PDT)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        loic.poulain@linaro.org
+Subject: [PATCH v5 5/7] wcn36xx: Add wcn36xx_smd_set_sta_ht_ldpc_params()
+Date:   Thu, 10 Sep 2020 16:05:50 +0100
+Message-Id: <20200910150552.2178882-6-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200910150552.2178882-1-bryan.odonoghue@linaro.org>
+References: <20200910150552.2178882-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes coccicheck warning:
+Adds a routine to allow setting the LDPC bit for HT parameter passing
+inside the version 1 STA parameters data structure.
 
-drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c:592:5-9: WARNING: Comparison to bool
-drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c:633:5-9: WARNING: Comparison to bool
-
-Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-index 159f86e665f9..e3ee91b7ea8d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-@@ -589,7 +589,7 @@ void rtl8723e_set_desc(struct ieee80211_hw *hw, u8 *pdesc8,
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 1432f310f758..ab9b6116cc75 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -199,6 +199,17 @@ void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
+ 	}
+ }
+ 
++void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
++		struct wcn36xx_hal_config_sta_params_v1 *sta_params);
++void wcn36xx_smd_set_sta_ht_ldpc_params(struct ieee80211_sta *sta,
++		struct wcn36xx_hal_config_sta_params_v1 *sta_params)
++{
++	if (sta->ht_cap.ht_supported) {
++		sta_params->ht_ldpc_enabled =
++			is_cap_supported(sta->ht_cap.cap, IEEE80211_HT_CAP_LDPC_CODING);
++	}
++}
++
+ static void wcn36xx_smd_set_sta_default_ht_params(
+ 		struct wcn36xx_hal_config_sta_params *sta_params)
  {
- 	__le32 *pdesc = (__le32 *)pdesc8;
-
--	if (istx == true) {
-+	if (istx) {
- 		switch (desc_name) {
- 		case HW_DESC_OWN:
- 			set_tx_desc_own(pdesc, 1);
-@@ -630,7 +630,7 @@ u64 rtl8723e_get_desc(struct ieee80211_hw *hw,
- 	u32 ret = 0;
- 	__le32 *pdesc = (__le32 *)pdesc8;
-
--	if (istx == true) {
-+	if (istx) {
- 		switch (desc_name) {
- 		case HW_DESC_OWN:
- 			ret = get_tx_desc_own(pdesc);
---
-2.26.0.106.g9fadedd
+-- 
+2.27.0
 
