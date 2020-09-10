@@ -7,88 +7,110 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E6CEC43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 20:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E89C43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9768208A9
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 20:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 342DA2080A
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726928AbgIJT7Y (ORCPT
+        id S1727898AbgIJVAj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 15:59:24 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:45084 "EHLO huawei.com"
+        Thu, 10 Sep 2020 17:00:39 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:12220 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730465AbgIJPAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 11:00:45 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 9B246581FA3E06A0396E;
-        Thu, 10 Sep 2020 22:05:33 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.487.0; Thu, 10 Sep 2020
- 22:05:25 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <arend.vanspriel@broadcom.com>, <franky.lin@broadcom.com>,
-        <hante.meuleman@broadcom.com>, <chi-hsien.lin@cypress.com>,
-        <wright.feng@cypress.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <lee.jones@linaro.org>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>, <netdev@vger.kernel.org>,
+        id S1730826AbgIJOpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Sep 2020 10:45:34 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id E32177AABAC7776F98AE;
+        Thu, 10 Sep 2020 21:52:30 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Thu, 10 Sep 2020
+ 21:52:23 +0800
+From:   Zheng Bin <zhengbin13@huawei.com>
+To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <kuba@kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] brcmsmac: main: Eliminate empty brcms_c_down_del_timer()
-Date:   Thu, 10 Sep 2020 22:04:46 +0800
-Message-ID: <20200910140446.1168049-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.25.4
+CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
+Subject: [PATCH -next 3/3] rtlwifi: rtl8188ee: fix comparison pointer to bool warning in hw.c
+Date:   Thu, 10 Sep 2020 21:59:17 +0800
+Message-ID: <20200910135917.143723-4-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.26.0.106.g9fadedd
+In-Reply-To: <20200910135917.143723-1-zhengbin13@huawei.com>
+References: <20200910135917.143723-1-zhengbin13@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
+X-Originating-IP: [10.90.53.225]
 X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This function does nothing so remove it. This addresses the following
-coccicheck warning:
+Fixes coccicheck warning:
 
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c:5103:6-15:
-Unneeded variable: "callbacks". Return "0" on line 5105
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:777:14-20: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:782:13-19: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:787:14-20: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:792:13-19: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:871:6-33: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c:1070:5-13: WARNING: Comparison to bool
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-index 21691581b532..763e0ec583d7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-@@ -5085,13 +5085,6 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 	return 0;
- }
- 
--static uint brcms_c_down_del_timer(struct brcms_c_info *wlc)
--{
--	uint callbacks = 0;
--
--	return callbacks;
--}
--
- static int brcms_b_bmac_down_prep(struct brcms_hardware *wlc_hw)
- {
- 	bool dev_gone;
-@@ -5201,8 +5194,6 @@ uint brcms_c_down(struct brcms_c_info *wlc)
- 			callbacks++;
- 		wlc->WDarmed = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 4c8d71fbdd7a..63f9ea21962f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -774,22 +774,22 @@ static bool _rtl88ee_llt_table_init(struct ieee80211_hw *hw)
+
+ 	for (i = 0; i < (txpktbuf_bndy - 1); i++) {
+ 		status = _rtl88ee_llt_write(hw, i, i + 1);
+-		if (true != status)
++		if (!status)
+ 			return status;
  	}
--	/* cancel all other timers */
--	callbacks += brcms_c_down_del_timer(wlc);
- 
- 	wlc->pub->up = false;
- 
--- 
-2.25.4
+
+ 	status = _rtl88ee_llt_write(hw, (txpktbuf_bndy - 1), 0xFF);
+-	if (true != status)
++	if (!status)
+ 		return status;
+
+ 	for (i = txpktbuf_bndy; i < maxpage; i++) {
+ 		status = _rtl88ee_llt_write(hw, i, (i + 1));
+-		if (true != status)
++		if (!status)
+ 			return status;
+ 	}
+
+ 	status = _rtl88ee_llt_write(hw, maxpage, txpktbuf_bndy);
+-	if (true != status)
++	if (!status)
+ 		return status;
+
+ 	return true;
+@@ -868,7 +868,7 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
+ 	rtl_write_byte(rtlpriv, MSR, 0x00);
+
+ 	if (!rtlhal->mac_func_enable) {
+-		if (_rtl88ee_llt_table_init(hw) == false) {
++		if (!_rtl88ee_llt_table_init(hw)) {
+ 			rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
+ 				"LLT table init fail\n");
+ 			return false;
+@@ -1067,7 +1067,7 @@ int rtl88ee_hw_init(struct ieee80211_hw *hw)
+ 	}
+
+ 	rtstatus = _rtl88ee_init_mac(hw);
+-	if (rtstatus != true) {
++	if (!rtstatus) {
+ 		pr_info("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+--
+2.26.0.106.g9fadedd
 
