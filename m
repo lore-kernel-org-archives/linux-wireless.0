@@ -2,178 +2,120 @@ Return-Path: <SRS0=qoP/=CT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69754C2D0A7
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D90EFC43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:25:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31716221E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:22:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C1B8221E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 21:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728109AbgIJVVw (ORCPT
+        id S1728284AbgIJVYm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 17:21:52 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:54740 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731097AbgIJOYG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Sep 2020 10:24:06 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 69493383A936470940D8;
-        Thu, 10 Sep 2020 22:05:52 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.487.0; Thu, 10 Sep 2020
- 22:05:44 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <arend.vanspriel@broadcom.com>, <franky.lin@broadcom.com>,
-        <hante.meuleman@broadcom.com>, <chi-hsien.lin@cypress.com>,
-        <wright.feng@cypress.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <yanaijie@huawei.com>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] brcmsmac: phytbl_lcn: Eliminate defined but not used 'dot11lcn_gain_tbl_rev1'
-Date:   Thu, 10 Sep 2020 22:05:05 +0800
-Message-ID: <20200910140505.1168317-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        Thu, 10 Sep 2020 17:24:42 -0400
+Received: from foss.arm.com ([217.140.110.172]:37282 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731004AbgIJOXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Sep 2020 10:23:12 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E3BEB11B3;
+        Thu, 10 Sep 2020 07:21:17 -0700 (PDT)
+Received: from [10.57.40.122] (unknown [10.57.40.122])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1B4783F66E;
+        Thu, 10 Sep 2020 07:21:08 -0700 (PDT)
+Subject: Re: [trivial PATCH] treewide: Convert switch/case fallthrough; to
+ break;
+To:     Joe Perches <joe@perches.com>, LKML <linux-kernel@vger.kernel.org>,
+        Jiri Kosina <trivial@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        oss-drivers@netronome.com, nouveau@lists.freedesktop.org,
+        alsa-devel <alsa-devel@alsa-project.org>,
+        dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org,
+        kvmarm@lists.cs.columbia.edu, linux-rtc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dccp@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-afs@lists.infradead.org, coreteam@netfilter.org,
+        intel-wired-lan@lists.osuosl.org, linux-serial@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Kees Cook <kees.cook@canonical.com>,
+        linux-media@vger.kernel.org, linux-pm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-sctp@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-nvme@lists.infradead.org,
+        storagedev@microchip.com, ceph-devel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-parisc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-mips@vger.kernel.org, iommu@lists.linux-foundation.org,
+        netfilter-devel@vger.kernel.org, linux-crypto@vger.kernel.org,
+        bpf@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        Will Deacon <will@kernel.org>
+References: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <9372456a-8dcf-2735-57a4-e126aa5df3a6@arm.com>
+Date:   Thu, 10 Sep 2020 15:21:05 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.175.127.227]
-X-CFilter-Loop: Reflected
+In-Reply-To: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This addresses the following gcc warning with "make W=1":
+On 2020-09-09 21:06, Joe Perches wrote:
+> fallthrough to a separate case/default label break; isn't very readable.
+> 
+> Convert pseudo-keyword fallthrough; statements to a simple break; when
+> the next label is case or default and the only statement in the next
+> label block is break;
+> 
+> Found using:
+> 
+> $ grep-2.5.4 -rP --include=*.[ch] -n "fallthrough;(\s*(case\s+\w+|default)\s*:\s*){1,7}break;" *
+> 
+> Miscellanea:
+> 
+> o Move or coalesce a couple label blocks above a default: block.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+> 
+> Compiled allyesconfig x86-64 only.
+> A few files for other arches were not compiled.
+> 
 
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c:108:18:
-warning: ‘dot11lcn_gain_tbl_rev1’ defined but not used
-[-Wunused-const-variable=]
-  108 | static const u32 dot11lcn_gain_tbl_rev1[] = {
-      |                  ^~~~~~~~~~~~~~~~~~~~~~
+[...]
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> index c192544e874b..743db1abec40 100644
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> @@ -3777,7 +3777,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+>   	switch (FIELD_GET(IDR0_TTF, reg)) {
+>   	case IDR0_TTF_AARCH32_64:
+>   		smmu->ias = 40;
+> -		fallthrough;
+> +		break;
+>   	case IDR0_TTF_AARCH64:
+>   		break;
+>   	default:
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
- .../brcm80211/brcmsmac/phy/phytbl_lcn.c       | 99 -------------------
- 1 file changed, 99 deletions(-)
+I have to say I don't really agree with the readability argument for 
+this one - a fallthrough is semantically correct here, since the first 
+case is a superset of the second. It just happens that anything we would 
+do for the common subset is implicitly assumed (there are other 
+potential cases we simply haven't added support for at the moment), thus 
+the second case is currently empty.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-index 7526aa441de1..5331b5468e14 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c
-@@ -105,105 +105,6 @@ static const u32 dot11lcn_gain_tbl_rev0[] = {
- 	0x00000000,
- };
- 
--static const u32 dot11lcn_gain_tbl_rev1[] = {
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000008,
--	0x00000004,
--	0x00000008,
--	0x00000001,
--	0x00000005,
--	0x00000009,
--	0x0000000D,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x000000d1,
--	0x00000053,
--	0x00000093,
--	0x000000d3,
--	0x000000d7,
--	0x00000117,
--	0x00000517,
--	0x00000917,
--	0x00000957,
--	0x00000d57,
--	0x00001157,
--	0x00001197,
--	0x00005197,
--	0x00009197,
--	0x0000d197,
--	0x00011197,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000008,
--	0x00000004,
--	0x00000008,
--	0x00000001,
--	0x00000005,
--	0x00000009,
--	0x0000000D,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x00000011,
--	0x00000051,
--	0x00000091,
--	0x000000d1,
--	0x00000053,
--	0x00000093,
--	0x000000d3,
--	0x000000d7,
--	0x00000117,
--	0x00000517,
--	0x00000917,
--	0x00000957,
--	0x00000d57,
--	0x00001157,
--	0x00005157,
--	0x00009157,
--	0x0000d157,
--	0x00011157,
--	0x00015157,
--	0x00019157,
--	0x0001d157,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--	0x00000000,
--};
--
- static const u16 dot11lcn_aux_gain_idx_tbl_rev0[] = {
- 	0x0401,
- 	0x0402,
--- 
-2.25.4
+This change actively obfuscates that distinction.
 
+Robin.
