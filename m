@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8414C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:49:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB90DC433E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9241F208E4
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:49:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 810142074B
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Sep 2020 15:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="j+lXJDHc"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zD3wpIpR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728443AbgIJPtj (ORCPT
+        id S1731443AbgIJPuB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Sep 2020 11:49:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39974 "EHLO
+        Thu, 10 Sep 2020 11:50:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731317AbgIJPsN (ORCPT
+        with ESMTP id S1731399AbgIJPsN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 10 Sep 2020 11:48:13 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C22C061344
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:39 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id b79so372235wmb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:07:39 -0700 (PDT)
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93D5DC061348
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:08:00 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id c18so7072191wrm.9
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2020 08:08:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Rwo9ulFXffmBiUSboQ3Oj3Dcuj3Fgxbrid758yS0THY=;
-        b=j+lXJDHcwYuWzsQJt55oO7RJWUviQm/csrE/GGlCgz0iVjB2Pc9M5AegwHyVEtzbrS
-         YOg8tnqBK5NvjYPhESZ44xSxniIan0taVSJEDNuzxs+f4G8pcxBD3KlcnXWMLdn7H2/i
-         Emj26zznQrDrmvaVLRndoiWxTZzFGfSIqIhgIbYLkEsVxl2ETuIaDfyImRv/Mal2lkbG
-         2kEsym85WL+MNI3TXCmw2jB4KmS6i1GZZomoDBmiaHUPe2dRmchWVdRY7/k0EW/gU4lh
-         P8EwRwSDALqyPwDbz0qwdGzDpsLC9ggD66t2nsJI+9gcTm8t4pkb8WFHYWOt2zaJVUVi
-         /g2Q==
+        bh=jLFPvFT3j2ucUrOKv+CXZzEP/po/jvIwEnOoqRXFc6s=;
+        b=zD3wpIpRmsJGa9vb5i2t8lVxubP9ExGeUWJVoxOZwW6zHYetHYrFFZznVdgk5jUNqf
+         vFl3b8QWWeMUdL4a6qwFczTkxoWI6mDpfS91TwyNp49iqdQpuY9DX5AgfCFcxHPEA2/s
+         rMgSOwPd1nBCKJaIChk45TMohRsS6ypb6Mebyvaft9x3M+HJdt6p1W1xE9mAh1fBO4o6
+         rFsukhnIYd9LcXdFfoMomTUcme2NK2f2/0RH8OkxPCruf5kArwpMj8kLDEDJIx3MFDXY
+         Xgwr4IyWX4zuZcywAqIOdXR3e069nLv2NT6twojlVD47U7k9MXdi9StBaG/FHwn+RkSs
+         6eqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Rwo9ulFXffmBiUSboQ3Oj3Dcuj3Fgxbrid758yS0THY=;
-        b=SIYSDny85sIhx38yD2XdigbP+xR/VKBrqJwESGyfMCX3UjS+tIyOANxLoRmiClaXxX
-         lgxQpUIsIpbhany4BTYJAwKjQOnOa5EkO0Ze+kPKz0Tk/uSrDlEycYxT3JCCOO+TPVlB
-         GPrKysBxKYeOb9vIjRkEgGd/nqhgGQDW2jpCUNj/XTLAXq/QTTVfKEQrfS65hO3m1uo4
-         ulTQbdngfMm6RlCBYAf12s0PLjD08QyXnc/HQHw9z3FuDTDMoIFiElalO8ptLYRuY7z9
-         OLl8RHyt96dzcDzh2xgLqG08N6T1WASipMEgqqrWJKcj6n3DbznhKdFotAdT4Doyjuo1
-         9fBA==
-X-Gm-Message-State: AOAM533Rsu60006bVOxr0Mgoasa2T2VJ+5FRjwhCozWLTzYAa8TXOtNC
-        Qkr0K2D1xoz0sHf6UqMSFpROyQ==
-X-Google-Smtp-Source: ABdhPJyQ1Aw636dO1BThgeTra2S+9tnsljogGddMa93qvNWXUlfWRYNbViXWT9Y8rcg3cPl8bSFiRQ==
-X-Received: by 2002:a1c:2ed0:: with SMTP id u199mr405417wmu.125.1599750458078;
-        Thu, 10 Sep 2020 08:07:38 -0700 (PDT)
+        bh=jLFPvFT3j2ucUrOKv+CXZzEP/po/jvIwEnOoqRXFc6s=;
+        b=WJ4tGsu+cZnVwl+EWaN5tR6YNWZ6Ai8kYHzBHjv/iKjI+cz4uu35HaI8mTZeLDzCxt
+         5cmnVLazrUzP4bTWoPIE9zV8oq694Yqj4Mj4KiUwW+XYyFINc2uUzj4vbd7XgidOvIi1
+         nDI4+YmbRKN3ph7uCTC9qWvPbE7g4su2vPr1SJZp31f0vmH/uXfIbfxLtooSnb8DVbQS
+         p1H8dAiy+quaQbUg73wqMT4rgtlD07w0n4PKKAqvRGGwlaW0vWeka7hgYon70rkYAJyQ
+         0TMncpxfsTqCYWmeF/QiT8kD/GgcygkSYWG5N8U2E+giDdIaLj+wJbTTFPkPRYbGfBmg
+         cnUA==
+X-Gm-Message-State: AOAM531NWunfS/MLwUq+to4ltAz1mJCcK1WLgZ1lb5eiW/0ddXFUweEY
+        8LhN/lKT1omM44NZYZ1516k51A==
+X-Google-Smtp-Source: ABdhPJwrR5byj619IrTorj9k0YRpmbfDjUB9uVdEbOgAB9MuTGrpnDd1oAcCoNcal61hykMVSPF4+g==
+X-Received: by 2002:a5d:69c9:: with SMTP id s9mr9424456wrw.348.1599750479241;
+        Thu, 10 Sep 2020 08:07:59 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id o128sm3895678wmo.39.2020.09.10.08.07.37
+        by smtp.gmail.com with ESMTPSA id a17sm9732901wra.24.2020.09.10.08.07.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2020 08:07:37 -0700 (PDT)
+        Thu, 10 Sep 2020 08:07:58 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         loic.poulain@linaro.org
-Subject: [PATCH v5 4/4] wcn36xx: Advertise ieee802.11 VHT flags
-Date:   Thu, 10 Sep 2020 16:08:22 +0100
-Message-Id: <20200910150822.2179261-5-bryan.odonoghue@linaro.org>
+Subject: [PATCH v5 2/2] wcn36xx: Ensure spaces between functions
+Date:   Thu, 10 Sep 2020 16:08:45 +0100
+Message-Id: <20200910150845.2179320-3-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200910150822.2179261-1-bryan.odonoghue@linaro.org>
-References: <20200910150822.2179261-1-bryan.odonoghue@linaro.org>
+In-Reply-To: <20200910150845.2179320-1-bryan.odonoghue@linaro.org>
+References: <20200910150845.2179320-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,75 +77,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds ieee802.11 VHT flags for the wcn3680b.
+This is a small update to fix an error I saw where a few functions do not
+have a blank line in between them.
 
-- RX_STBC1
-- SU Beamformee
-- MU Beamformee
-- VHT80 SGI
-- Single spatial stream
-
-RX LDPC is declared as supported in the datasheet but not enabled at this
-time.
-
-After this patch is applied an AP should see the wcn3680 as an 802.11ac
-capable device.
+Affects smd.c and main.c - no logic is affected by this change.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 32 +++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/main.c | 1 +
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++++
+ 2 files changed, 5 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 720d3fa8ddcb..43596b919ed7 100644
+index 43596b919ed7..706728fba72d 100644
 --- a/drivers/net/wireless/ath/wcn36xx/main.c
 +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1200,6 +1200,35 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
- };
- 
-+static void
-+wcn36xx_set_ieee80211_vht_caps(struct ieee80211_sta_vht_cap *vht_cap)
-+{
-+	vht_cap->vht_supported = true;
+@@ -775,6 +775,7 @@ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
+ 				sta->vht_cap.vht_mcs.tx_mcs_map;
+ 	}
+ }
 +
-+	vht_cap->cap = (IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
-+			IEEE80211_VHT_CAP_SHORT_GI_80 |
-+			IEEE80211_VHT_CAP_RXSTBC_1 |
-+			IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+			IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE |
-+			3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
-+			7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT);
-+
-+	vht_cap->vht_mcs.rx_mcs_map =
-+		cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_9 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 2 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 4 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
-+			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
-+
-+	vht_cap->vht_mcs.rx_highest = cpu_to_le16(433);
-+	vht_cap->vht_mcs.tx_highest = vht_cap->vht_mcs.rx_highest;
-+
-+	vht_cap->vht_mcs.tx_mcs_map = vht_cap->vht_mcs.rx_mcs_map;
-+}
-+
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates)
  {
- 	static const u32 cipher_suites[] = {
-@@ -1226,6 +1255,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	if (wcn->rf_id != RF_IRIS_WCN3620)
- 		wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] = &wcn_band_5ghz;
- 
-+	if (wcn->rf_id == RF_IRIS_WCN3680)
-+		wcn36xx_set_ieee80211_vht_caps(&wcn_band_5ghz.vht_cap);
+ 	u16 ofdm_rates[WCN36XX_HAL_NUM_OFDM_RATES] = {
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index bccdae62ffbc..766400f7b61c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -218,6 +218,7 @@ static inline u8 is_cap_supported(unsigned long caps, unsigned long flag)
+ {
+ 	return caps & flag ? 1 : 0;
+ }
 +
- 	wcn->hw->wiphy->max_scan_ssids = WCN36XX_MAX_SCAN_SSIDS;
- 	wcn->hw->wiphy->max_scan_ie_len = WCN36XX_MAX_SCAN_IE_LEN;
- 
+ static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
+ 		struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_bss_params *bss_params)
+@@ -2191,6 +2192,7 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
+ 	mutex_unlock(&wcn->hal_mutex);
+ 	return ret;
+ }
++
+ int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
+ {
+ 	struct wcn36xx_hal_set_power_params_req_msg msg_body;
+@@ -2220,6 +2222,7 @@ int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
+ 	mutex_unlock(&wcn->hal_mutex);
+ 	return ret;
+ }
++
+ /* Notice: This function should be called after associated, or else it
+  * will be invalid
+  */
+@@ -2899,6 +2902,7 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 		kfree(hal_ind_msg);
+ 	}
+ }
++
+ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ {
+ 	wcn->hal_ind_wq = create_freezable_workqueue("wcn36xx_smd_ind");
 -- 
 2.27.0
 
