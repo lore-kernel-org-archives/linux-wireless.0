@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86859C433E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B12BC433E2
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55B7E221EB
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF3A5221EB
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725841AbgIKRyt (ORCPT
+        id S1725911AbgIKRyx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:54:49 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50260 "EHLO
+        Fri, 11 Sep 2020 13:54:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50266 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726054AbgIKRyq (ORCPT
+        with ESMTP id S1725864AbgIKRyu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Sep 2020 13:54:46 -0400
+        Fri, 11 Sep 2020 13:54:50 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kGn6N-0028eU-W5; Fri, 11 Sep 2020 20:44:48 +0300
+        id 1kGn6M-0028eU-Iu; Fri, 11 Sep 2020 20:44:46 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 11 Sep 2020 20:44:36 +0300
-Message-Id: <iwlwifi.20200911204056.33b55b3ca440.Ib0202c7011d8d0e09f55fcceceb9d3d5051631c6@changeid>
+Date:   Fri, 11 Sep 2020 20:44:34 +0300
+Message-Id: <iwlwifi.20200911204056.37d90f9ceb0c.I8dfe8a7d3a7ac9f0bc9d93e4a03f8165d8c999d2@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200911174439.163225-1-luca@coelho.fi>
 References: <20200911174439.163225-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/11] iwlwifi: wowlan: adapt to wowlan status API version 10
+Subject: [PATCH 06/11] iwlwifi: msix: limit max RX queues for 9000 family
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -44,29 +44,53 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-In version 10 we actually go back to the struct size before 9
-so only for version 9 we need the size fixup
+There is an issue in the HW DMA engine in the 9000 family of devices
+when more than 6 RX queues are used.  The issue is that the FW may
+hang when IWL_MVM_RXQ_NSSN_SYNC notifications are sent.
+
+Fix this by limiting the number of RX queues to 6 in the 9000 family
+of devices.
 
 Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 6 +++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 2a94545d737f..bcdd2b376ce5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1592,7 +1592,8 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 34788e7afc7b..32ea4c3c7d23 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -316,6 +316,7 @@ static inline void iwl_free_rxb(struct iwl_rx_cmd_buffer *r)
+ #define IWL_MGMT_TID		15
+ #define IWL_FRAME_LIMIT	64
+ #define IWL_MAX_RX_HW_QUEUES	16
++#define IWL_9000_MAX_RX_HW_QUEUES	6
  
- 	status_size = sizeof(*status);
+ /**
+  * enum iwl_wowlan_status - WoWLAN image/device status
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index e5160d620868..a59684e82713 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1607,11 +1607,15 @@ iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int max_irqs, num_irqs, i, ret;
+ 	u16 pci_cmd;
++	u32 max_rx_queues = IWL_MAX_RX_HW_QUEUES;
  
--	if (notif_ver == IWL_FW_CMD_VER_UNKNOWN || notif_ver < 9)
-+	/* only ver 9 has a different size */
-+	if (notif_ver == IWL_FW_CMD_VER_UNKNOWN || notif_ver != 9)
- 		status_size = sizeof(*v7);
+ 	if (!cfg_trans->mq_rx_supported)
+ 		goto enable_msi;
  
- 	if (len < status_size) {
+-	max_irqs = min_t(u32, num_online_cpus() + 2, IWL_MAX_RX_HW_QUEUES);
++	if (cfg_trans->device_family <= IWL_DEVICE_FAMILY_9000)
++		max_rx_queues = IWL_9000_MAX_RX_HW_QUEUES;
++
++	max_irqs = min_t(u32, num_online_cpus() + 2, max_rx_queues);
+ 	for (i = 0; i < max_irqs; i++)
+ 		trans_pcie->msix_entries[i].entry = i;
+ 
 -- 
 2.28.0
 
