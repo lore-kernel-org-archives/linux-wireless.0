@@ -7,78 +7,86 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80673C43461
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 09:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2916C433E2
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 09:57:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F2A42078B
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 09:56:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F5D62078B
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 09:57:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QCqBpvJf";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="ij+m4zZW"
+	dkim=pass (1024-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fV8wodTJ";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="fxej2YNL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725842AbgIKJ4l (ORCPT
+        id S1725780AbgIKJ5J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Sep 2020 05:56:41 -0400
-Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:59240
-        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725827AbgIKJ41 (ORCPT
+        Fri, 11 Sep 2020 05:57:09 -0400
+Received: from a27-18.smtp-out.us-west-2.amazonses.com ([54.240.27.18]:38884
+        "EHLO a27-18.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725554AbgIKJ5I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Sep 2020 05:56:27 -0400
+        Fri, 11 Sep 2020 05:57:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599818186;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1599818228;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
-        bh=xcw6hRQLAch8VNhgrocyLwZ8Ck0KQMacj+tGMTKch1w=;
-        b=QCqBpvJfyFuoHTL3AHVZOX5zyT1jZHsn7e60afrvNn+YKUI2bzybWgKTLKqbF2EF
-        2cE6S/5PL86J38VRCvHHwmywzsx/SBhyALsywIoSLOfovdGyIIt+qkywNUpxEKEiSY6
-        WxBmt2ke0EDY054SO1r33sKXImnsWDaCREj8DqXc=
+        bh=ElgRM4NtukT2n8ovEbtIqMOWvX4QC264dSdzTj5EASo=;
+        b=fV8wodTJpioEZBeWXWbWtFVr18zbqlXu3YiTZqMBOuOOUs0pG4ypu+KrpWXmrWwC
+        Kw4v76Su56lMPgTF5LzSw2cXnl+Bygk+7OjNRpN6ZxIuNo9nRSu1cqRF8C/dOmfyfBf
+        IOfJnyqtNRAhh/NMCKFEv0iQrctgQITI4wxgtP+4=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599818186;
+        s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1599818228;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
-        bh=xcw6hRQLAch8VNhgrocyLwZ8Ck0KQMacj+tGMTKch1w=;
-        b=ij+m4zZW8C+TP2Aedvny9vtfisaUGYbHE0IVF0N6gAD+Omb77scUnd0F/cRcFTud
-        u1aB2y9vb1P5u18huZQru5funsK1CUiDDasc8PaKmMEORXauWgsyCfru4pHh7Me2lfC
-        wi5Yf6FDLNN3I0Mb4vw2DwCffoCl0/8s31ex3VZ0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 477A4C433CA
+        bh=ElgRM4NtukT2n8ovEbtIqMOWvX4QC264dSdzTj5EASo=;
+        b=fxej2YNLFu5UBkTV2e3ZRor4HAS5npYQUNP6Ksqu4ff6yRB+/o0MRH7VE/yUkMeN
+        w4YLwer3G500oIAHirE/AGdfSVJBH2SyLZygEXsLUIbCe5u4iOe0RjWCyazi0cqUoCj
+        R9BzP0dXQo7fBAUcr9SMnPjXuo8BVrPys4BIxFiU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D33F1C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 1/3] dt: bindings: net: update compatible for ath11k
+Subject: Re: [PATCHv2] ath11k: add raw mode and software crypto support
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <010101746cb6751a-ca300933-1174-4534-a01b-b1dbf1c1f305-000000@us-west-2.amazonses.com>
-References: <010101746cb6751a-ca300933-1174-4534-a01b-b1dbf1c1f305-000000@us-west-2.amazonses.com>
-To:     Anilkumar Kolli <akolli@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
+In-Reply-To: <010101746c6a52d9-18302a2c-0d6d-4057-aa4b-95960c809646-000000@us-west-2.amazonses.com>
+References: <010101746c6a52d9-18302a2c-0d6d-4057-aa4b-95960c809646-000000@us-west-2.amazonses.com>
+To:     Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-ID: <010101747c983db0-a308ddba-c936-49bd-b511-78107c290572-000000@us-west-2.amazonses.com>
-Date:   Fri, 11 Sep 2020 09:56:26 +0000
-X-SES-Outgoing: 2020.09.11-54.240.27.56
+Message-ID: <010101747c98e0f2-5c341f4f-0d50-4f66-acb8-7ab4a1003d51-000000@us-west-2.amazonses.com>
+Date:   Fri, 11 Sep 2020 09:57:08 +0000
+X-SES-Outgoing: 2020.09.11-54.240.27.18
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Anilkumar Kolli <akolli@codeaurora.org> wrote:
+Venkateswara Naralasetty <vnaralas@codeaurora.org> wrote:
 
-> Add IPQ6018 wireless driver support,
-> its based on ath11k driver.
+> Adding raw mode tx/rx support. Also, adding support
+> for software crypto which depends on raw mode.
 > 
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> Reviewed-by: Rob Herring <robh@kernel.org>
+> To enable raw mode tx/rx:
+> insmod ath11k.ko frame_mode=0
+> 
+> To enable software crypto:
+> insmod ath11k.ko crypto_mode=1
+> 
+> These modes could be helpful in debugging crypto related issues.
+> 
+> Tested-on: IPQ8074 WLAN.HK.2.1.0.1-01228-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-7b5bd15d23c5 dt: bindings: net: update compatible for ath11k
-967c1d1131fa ath11k: move target ce configs to hw_params
-b129699a0c7b ath11k: add ipq6018 support
+aa2092a9bab3 ath11k: add raw mode and software crypto support
 
 -- 
-https://patchwork.kernel.org/patch/11762811/
+https://patchwork.kernel.org/patch/11762567/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
