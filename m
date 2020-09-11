@@ -7,170 +7,191 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA00C43461
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D80CC433E2
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCA5A221ED
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AA83221ED
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Sep 2020 17:54:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726040AbgIKRyj (ORCPT
+        id S1726060AbgIKRyp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:54:39 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50250 "EHLO
+        Fri, 11 Sep 2020 13:54:45 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50256 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725955AbgIKRyV (ORCPT
+        with ESMTP id S1725867AbgIKRyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Sep 2020 13:54:21 -0400
+        Fri, 11 Sep 2020 13:54:40 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kGn6P-0028eU-DQ; Fri, 11 Sep 2020 20:44:49 +0300
+        id 1kGn6N-0028eU-7K; Fri, 11 Sep 2020 20:44:47 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 11 Sep 2020 20:44:38 +0300
-Message-Id: <iwlwifi.20200911204056.21397978115f.Id2d95275a36a6bb6b226d12cb6c5a629334587db@changeid>
+Date:   Fri, 11 Sep 2020 20:44:35 +0300
+Message-Id: <iwlwifi.20200911204056.816130ee75e0.I727a217be7c967a97960b197a816fc053d10c48a@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200911174439.163225-1-luca@coelho.fi>
 References: <20200911174439.163225-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/11] iwlwifi: add new cards for AX201 family
+Subject: [PATCH 07/11] iwlwifi: acpi: evaluate dsm to disable 5.8GHz channels
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ihab Zhaika <ihab.zhaika@intel.com>
+From: Gil Adam <gil.adam@intel.com>
 
-add few PCI ID'S for AX201 family including killer cards.
+Evaluate the appropriate DSM from ACPI to set ETSI SRD 5.8GHz
+channels to passive or disabled, default behaviour is enabled.
+Add enums and refactor evaluation of DSM functions for better
+readablity and more informative debug prints.
 
-Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Gil Adam <gil.adam@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 17 +++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  4 +++-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 15 +++++++++++++++
- 3 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h | 14 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 81 ++++++++++++++++----
+ 2 files changed, 79 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index efe427049a6e..df7346eed14f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -89,6 +89,7 @@
- #define IWL_SO_A_GF4_A_FW_PRE		"iwlwifi-so-a0-gf4-a0-"
- #define IWL_SNJ_A_GF4_A_FW_PRE		"iwlwifi-SoSnj-a0-gf4-a0-"
- #define IWL_SNJ_A_GF_A_FW_PRE		"iwlwifi-SoSnj-a0-gf-a0-"
-+#define IWL_SNJ_A_HR_B_FW_PRE		"iwlwifi-SoSnj-a0-hr-b0-"
- 
- #define IWL_QU_B_HR_B_MODULE_FIRMWARE(api) \
- 	IWL_QU_B_HR_B_FW_PRE __stringify(api) ".ucode"
-@@ -118,6 +119,8 @@
- 	IWL_SNJ_A_GF4_A_FW_PRE __stringify(api) ".ucode"
- #define IWL_SNJ_A_GF_A_MODULE_FIRMWARE(api) \
- 	IWL_SNJ_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+#define IWL_SNJ_A_HR_B_MODULE_FIRMWARE(api) \
-+	IWL_SNJ_A_HR_B_FW_PRE __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl_22000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-@@ -343,6 +346,10 @@ const char iwl_ax200_killer_1650w_name[] =
- 	"Killer(R) Wi-Fi 6 AX1650w 160MHz Wireless Network Adapter (200D2W)";
- const char iwl_ax200_killer_1650x_name[] =
- 	"Killer(R) Wi-Fi 6 AX1650x 160MHz Wireless Network Adapter (200NGW)";
-+const char iwl_ax201_killer_1650s_name[] =
-+	"Killer(R) Wi-Fi 6 AX1650s 160MHz Wireless Network Adapter (201D2W)";
-+const char iwl_ax201_killer_1650i_name[] =
-+	"Killer(R) Wi-Fi 6 AX1650i 160MHz Wireless Network Adapter (201NGW)";
- 
- const struct iwl_cfg iwl_qu_b0_hr1_b0 = {
- 	.fw_name_pre = IWL_QU_B_HR_B_FW_PRE,
-@@ -598,6 +605,14 @@ const struct iwl_cfg iwlax211_cfg_snj_gf_a0 = {
- 	.num_rbds = IWL_NUM_RBDS_AX210_HE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+index 0ada9eddb8b1..bff0260012ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -133,6 +133,20 @@ enum iwl_dsm_funcs_rev_0 {
+ 	DSM_FUNC_ENABLE_INDONESIA_5G2 = 2,
  };
  
-+const struct iwl_cfg iwlax201_cfg_snj_hr_b0 = {
-+	.name = iwl_ax201_name,
-+	.fw_name_pre = IWL_QU_B_HR_B_FW_PRE,
-+	.uhb_supported = true,
-+	IWL_DEVICE_AX210,
-+	.num_rbds = IWL_NUM_RBDS_AX210_HE,
++enum iwl_dsm_values_srd {
++	DSM_VALUE_SRD_ACTIVE,
++	DSM_VALUE_SRD_PASSIVE,
++	DSM_VALUE_SRD_DISABLE,
++	DSM_VALUE_SRD_MAX
 +};
 +
- MODULE_FIRMWARE(IWL_QU_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_QNJ_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_QU_C_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-@@ -612,3 +627,5 @@ MODULE_FIRMWARE(IWL_SO_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_TY_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_SNJ_A_GF4_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_SNJ_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL_SNJ_A_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++enum iwl_dsm_values_indonesia {
++	DSM_VALUE_INDONESIA_DISABLE,
++	DSM_VALUE_INDONESIA_ENABLE,
++	DSM_VALUE_INDONESIA_RESERVED,
++	DSM_VALUE_INDONESIA_MAX
++};
 +
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index e27c13263a23..64e4ba4d96fc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -543,7 +543,8 @@ extern const char iwl_ax201_name[];
- extern const char iwl_ax101_name[];
- extern const char iwl_ax200_killer_1650w_name[];
- extern const char iwl_ax200_killer_1650x_name[];
--
-+extern const char iwl_ax201_killer_1650s_name[];
-+extern const char iwl_ax201_killer_1650i_name[];
- #if IS_ENABLED(CONFIG_IWLDVM)
- extern const struct iwl_cfg iwl5300_agn_cfg;
- extern const struct iwl_cfg iwl5100_agn_cfg;
-@@ -641,6 +642,7 @@ extern const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0;
- extern const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0_long;
- extern const struct iwl_cfg iwlax411_2ax_cfg_sosnj_gf4_a0;
- extern const struct iwl_cfg iwlax211_cfg_snj_gf_a0;
-+extern const struct iwl_cfg iwlax201_cfg_snj_hr_b0;
- #endif /* CONFIG_IWLMVM */
+ #ifdef CONFIG_ACPI
  
- #endif /* __IWL_CONFIG_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index e02bafb8921f..72bb2b38e5b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -540,15 +540,24 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2725, 0x0510, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x0A10, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x00B0, iwlax411_2ax_cfg_sosnj_gf4_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0070, iwlax201_cfg_snj_hr_b0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0074, iwlax201_cfg_snj_hr_b0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0078, iwlax201_cfg_snj_hr_b0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x007C, iwlax201_cfg_snj_hr_b0)},
- 	{IWL_PCI_DEVICE(0x2726, 0x0090, iwlax211_cfg_snj_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0098, iwlax211_cfg_snj_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2726, 0x00B0, iwlax411_2ax_cfg_sosnj_gf4_a0)},
- 	{IWL_PCI_DEVICE(0x2726, 0x0510, iwlax211_cfg_snj_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x2074, iwlax201_cfg_snj_hr_b0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x4070, iwlax201_cfg_snj_hr_b0)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0090, iwlax211_2ax_cfg_so_gf_a0_long)},
-+	{IWL_PCI_DEVICE(0x7A70, 0x0098, iwlax211_2ax_cfg_so_gf_a0_long)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x00B0, iwlax411_2ax_cfg_so_gf4_a0_long)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0310, iwlax211_2ax_cfg_so_gf_a0_long)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0510, iwlax211_2ax_cfg_so_gf_a0_long)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0A10, iwlax211_2ax_cfg_so_gf_a0_long)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0090, iwlax211_2ax_cfg_so_gf_a0)},
-+	{IWL_PCI_DEVICE(0x7AF0, 0x0098, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x00B0, iwlax411_2ax_cfg_so_gf4_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0310, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0510, iwlax211_2ax_cfg_so_gf_a0)},
-@@ -595,6 +604,12 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 	/* QnJ with Hr */
- 	IWL_DEV_INFO(0x2720, IWL_CFG_ANY, iwl_qnj_b0_hr_b0_cfg, iwl_ax201_name),
+ struct iwl_fw_runtime;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 95a613537047..4467359aaa20 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -989,41 +989,90 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
+ 		IWL_DEBUG_RADIO(mvm, "failed to send TAS_CONFIG (%d)\n", ret);
+ }
  
-+	/* SnJ with HR*/
-+	IWL_DEV_INFO(0x2726, 0x0244, iwlax201_cfg_snj_hr_b0, iwl_ax101_name),
-+	IWL_DEV_INFO(0x2726, 0x1651, iwlax201_cfg_snj_hr_b0, iwl_ax201_killer_1650s_name),
-+	IWL_DEV_INFO(0x2726, 0x1652, iwlax201_cfg_snj_hr_b0, iwl_ax201_killer_1650i_name),
-+	IWL_DEV_INFO(0x2726, 0x4244, iwlax201_cfg_snj_hr_b0, iwl_ax101_name),
+-static bool iwl_mvm_eval_dsm_indonesia_5g2(struct iwl_mvm *mvm)
++static u8 iwl_mvm_eval_dsm_indonesia_5g2(struct iwl_mvm *mvm)
+ {
+ 	int ret = iwl_acpi_get_dsm_u8((&mvm->fwrt)->dev, 0,
+ 				      DSM_FUNC_ENABLE_INDONESIA_5G2);
+ 
+-	IWL_DEBUG_RADIO(mvm,
+-			"Evaluated DSM function ENABLE_INDONESIA_5G2, ret=%d\n",
+-			ret);
++	if (ret < 0)
++		IWL_DEBUG_RADIO(mvm,
++				"Failed to evaluate DSM function ENABLE_INDONESIA_5G2, ret=%d\n",
++				ret);
+ 
+-	return ret == 1;
++	else if (ret >= DSM_VALUE_INDONESIA_MAX)
++		IWL_DEBUG_RADIO(mvm,
++				"DSM function ENABLE_INDONESIA_5G2 return invalid value, ret=%d\n",
++				ret);
 +
- 	/* Qu with Hr */
- 	IWL_DEV_INFO(0x43F0, 0x0070, iwl_ax201_cfg_qu_hr, NULL),
- 	IWL_DEV_INFO(0x43F0, 0x0074, iwl_ax201_cfg_qu_hr, NULL),
++	else if (ret == DSM_VALUE_INDONESIA_ENABLE) {
++		IWL_DEBUG_RADIO(mvm,
++				"Evaluated DSM function ENABLE_INDONESIA_5G2: Enabling 5g2\n");
++		return DSM_VALUE_INDONESIA_ENABLE;
++	}
++	/* default behaviour is disabled */
++	return DSM_VALUE_INDONESIA_DISABLE;
++}
++
++static u8 iwl_mvm_eval_dsm_disable_srd(struct iwl_mvm *mvm)
++{
++	int ret = iwl_acpi_get_dsm_u8((&mvm->fwrt)->dev, 0,
++				      DSM_FUNC_DISABLE_SRD);
++
++	if (ret < 0)
++		IWL_DEBUG_RADIO(mvm,
++				"Failed to evaluate DSM function DISABLE_SRD, ret=%d\n",
++				ret);
++
++	else if (ret >= DSM_VALUE_SRD_MAX)
++		IWL_DEBUG_RADIO(mvm,
++				"DSM function DISABLE_SRD return invalid value, ret=%d\n",
++				ret);
++
++	else if (ret == DSM_VALUE_SRD_PASSIVE) {
++		IWL_DEBUG_RADIO(mvm,
++				"Evaluated DSM function DISABLE_SRD: setting SRD to passive\n");
++		return DSM_VALUE_SRD_PASSIVE;
++
++	} else if (ret == DSM_VALUE_SRD_DISABLE) {
++		IWL_DEBUG_RADIO(mvm,
++				"Evaluated DSM function DISABLE_SRD: disabling SRD\n");
++		return DSM_VALUE_SRD_DISABLE;
++	}
++	/* default behaviour is active */
++	return DSM_VALUE_SRD_ACTIVE;
+ }
+ 
+ static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
+ {
+-	int ret;
++	u8 ret;
++	int cmd_ret;
+ 	struct iwl_lari_config_change_cmd cmd = {};
+ 
+-	if (iwl_mvm_eval_dsm_indonesia_5g2(mvm))
++	if (iwl_mvm_eval_dsm_indonesia_5g2(mvm) == DSM_VALUE_INDONESIA_ENABLE)
+ 		cmd.config_bitmap |=
+ 			cpu_to_le32(LARI_CONFIG_ENABLE_5G2_IN_INDONESIA_MSK);
+ 
++	ret = iwl_mvm_eval_dsm_disable_srd(mvm);
++	if (ret == DSM_VALUE_SRD_PASSIVE)
++		cmd.config_bitmap |=
++			cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_PASSIVE_MSK);
++
++	else if (ret == DSM_VALUE_SRD_DISABLE)
++		cmd.config_bitmap |=
++			cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_DISABLED_MSK);
++
+ 	/* apply more config masks here */
+ 
+ 	if (cmd.config_bitmap) {
+-		IWL_DEBUG_RADIO(mvm,
+-				"sending LARI_CONFIG_CHANGE, config_bitmap=0x%x\n",
+-				le32_to_cpu(cmd.config_bitmap));
+-		ret = iwl_mvm_send_cmd_pdu(mvm,
+-					   WIDE_ID(REGULATORY_AND_NVM_GROUP,
+-						   LARI_CONFIG_CHANGE),
+-					   0, sizeof(cmd), &cmd);
+-		if (ret < 0)
++		IWL_DEBUG_RADIO(mvm, "sending LARI_CONFIG_CHANGE\n");
++		cmd_ret = iwl_mvm_send_cmd_pdu(mvm,
++					       WIDE_ID(REGULATORY_AND_NVM_GROUP,
++						       LARI_CONFIG_CHANGE),
++					       0, sizeof(cmd), &cmd);
++		if (cmd_ret < 0)
+ 			IWL_DEBUG_RADIO(mvm,
+ 					"Failed to send LARI_CONFIG_CHANGE (%d)\n",
+-					ret);
++					cmd_ret);
+ 	}
+ }
+ #else /* CONFIG_ACPI */
 -- 
 2.28.0
 
