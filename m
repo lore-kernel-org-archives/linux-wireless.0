@@ -1,225 +1,116 @@
-Return-Path: <SRS0=IRne=CV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=S5e2=CW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B20F6C43461
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Sep 2020 06:43:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A64F8C43461
+	for <linux-wireless@archiver.kernel.org>; Sun, 13 Sep 2020 14:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6BBA1214D8
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Sep 2020 06:43:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6381B21D7E
+	for <linux-wireless@archiver.kernel.org>; Sun, 13 Sep 2020 14:36:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ijXDm4sk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725824AbgILGnk (ORCPT
+        id S1725964AbgIMOfr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Sep 2020 02:43:40 -0400
-Received: from mga06.intel.com ([134.134.136.31]:35323 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725814AbgILGnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Sep 2020 02:43:40 -0400
-IronPort-SDR: JZPMtZ1nNTLmTPPnGPQBaf+x9Bw+9D56DlTgDwY/QYOnmGLmQnHaESIVatP11U6DadcPEGYDA+
- ExDllGpJeenQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9741"; a="220451069"
-X-IronPort-AV: E=Sophos;i="5.76,419,1592895600"; 
-   d="scan'208";a="220451069"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2020 23:43:37 -0700
-IronPort-SDR: /r5AULYZZ6ntIosuUGVdsqp06GkUXSmSeSeSilo3QI3LiaKCY3FDZ00PHb1n1tX/GQdPjtCWF/
- gf4fJKy+nhyg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,419,1592895600"; 
-   d="scan'208";a="305506259"
-Received: from lkp-server01.sh.intel.com (HELO a75722977aa5) ([10.239.97.150])
-  by orsmga006.jf.intel.com with ESMTP; 11 Sep 2020 23:43:35 -0700
-Received: from kbuild by a75722977aa5 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kGzG3-0000Uw-79; Sat, 12 Sep 2020 06:43:35 +0000
-Date:   Sat, 12 Sep 2020 14:42:50 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:master] BUILD SUCCESS WITH WARNING
- 5941d003f0a60877a956cc3cae6e3850b46fad0a
-Message-ID: <5f5c6dea.3xmWL2C6tMcaE42z%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+        Sun, 13 Sep 2020 10:35:47 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:54437 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725928AbgIMOfo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 13 Sep 2020 10:35:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600007742;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=WRuscXYWCpfZvPAJ7zPpDPsF4gN4h/ULkWzJ4TuL7iU=;
+        b=ijXDm4skF3n94ORYNWspIEoIRv2mO6TMuQz87fCgh/1XhwNykVzA4UdQrAPV8aidbe6WWy
+        1T+C5cw6Zq4SY4gZcJNQ/mmuscRd4YCttDtD7rxDOs/+NHPuvVeVuZCmQG+gYE3+dl23Nr
+        7qCzqgBXbAFLgJ0yA7AAF5RvUWfgZow=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-344-JDbfMbSlMLCBdNWNpZy-PA-1; Sun, 13 Sep 2020 10:35:40 -0400
+X-MC-Unique: JDbfMbSlMLCBdNWNpZy-PA-1
+Received: by mail-qk1-f198.google.com with SMTP id h191so8922494qke.1
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2020 07:35:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=WRuscXYWCpfZvPAJ7zPpDPsF4gN4h/ULkWzJ4TuL7iU=;
+        b=bGaE8UdE7j/V4NWJ1fupMQ3Zb0STwX1r/9v3wLUCUT+7cRo1HsTkfNXdRGAa75BI+1
+         w8mF6nYRj+SF1ZSSN/1dSWyelcc8lfSKXL/Q0RYFLhr33UXw6kjdgF9VABIXHNL73fD1
+         7gK9mzGRHxIN52yK2jL8CKeCD+W7dirRT7Vx/5keKpUnXw7byQbH7ZhK038iGBkp9q2R
+         UGXe4r8Gkluvz3DHfJSc2h3dg4NDS4foujCKFD3vpV+eR1Qsh5uFZxOaoLy9hX5spCk/
+         duwihSG/Nn+UQRn8pZ/azOcQCwzo6ddhNj3n8oCy1YZQide/AnhvwjDXTtnRj681YUVY
+         npew==
+X-Gm-Message-State: AOAM532ptZUGWa2qEk6FIEL6qJXFaEWs+HKtUsgDQb81lyCX5DW0q2TE
+        Ww/H+CeTY/NbEqFPoPeaOSQ4FhBAJaCUghKVVA6DkDRrKpvB78S9sBV4x0vynxl1uDeoe+yTBg5
+        1sZYh8/RfZ23LlBpBEY6ErUdXra0=
+X-Received: by 2002:aed:3bdc:: with SMTP id s28mr9897653qte.124.1600007740079;
+        Sun, 13 Sep 2020 07:35:40 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyMvA5jysJ+TSwYlbcfVkXePyz1hdnoWCTbGAyVUUK/RpfXvZbkCOXXf5PjFJiHJG9PubWNxg==
+X-Received: by 2002:aed:3bdc:: with SMTP id s28mr9897624qte.124.1600007739784;
+        Sun, 13 Sep 2020 07:35:39 -0700 (PDT)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id q8sm11830911qkq.57.2020.09.13.07.35.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 13 Sep 2020 07:35:39 -0700 (PDT)
+From:   trix@redhat.com
+To:     arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org, natechancellor@gmail.com, ndesaulniers@google.com,
+        smoch@web.de, dan.carpenter@oracle.com, double.lo@cypress.com,
+        digetx@gmail.com, frank.kao@cypress.com, amsr@cypress.com,
+        stanley.hsu@cypress.com, saravanan.shanmugham@cypress.com,
+        jean-philippe@linaro.org, linville@tuxdriver.com
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH] brcmfmac: initialize variable
+Date:   Sun, 13 Sep 2020 07:35:22 -0700
+Message-Id: <20200913143522.20390-1-trix@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
-branch HEAD: 5941d003f0a60877a956cc3cae6e3850b46fad0a  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
+From: Tom Rix <trix@redhat.com>
 
-Warning in current branch:
+clang static analysis flags this problem
+sdio.c:3265:13: warning: Branch condition evaluates to
+  a garbage value
+        } else if (pending) {
+                   ^~~~~~~
 
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c:361:25: warning: unused variable 'lcnphy_rx_iqcomp_table_rev0' [-Wunused-const-variable]
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phytbl_lcn.c:108:18: warning: unused variable 'dot11lcn_gain_tbl_rev1' [-Wunused-const-variable]
+brcmf_sdio_dcmd_resp_wait() only sets pending to true.
+So pending needs to be initialized to false.
 
-Warning ids grouped by kconfigs:
-
-clang_recent_errors
-`-- powerpc-randconfig-r015-20200909
-    |-- drivers-net-wireless-broadcom-brcm80211-brcmsmac-phy-phy_lcn.c:warning:unused-variable-lcnphy_rx_iqcomp_table_rev0
-    `-- drivers-net-wireless-broadcom-brcm80211-brcmsmac-phy-phytbl_lcn.c:warning:unused-variable-dot11lcn_gain_tbl_rev1
-
-elapsed time: 720m
-
-configs tested: 141
-configs skipped: 2
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-powerpc                  mpc866_ads_defconfig
-powerpc                      pcm030_defconfig
-arm                          gemini_defconfig
-mips                      malta_kvm_defconfig
-sh                            titan_defconfig
-mips                           ci20_defconfig
-powerpc                 mpc8540_ads_defconfig
-sh                          r7780mp_defconfig
-xtensa                          iss_defconfig
-sh                        sh7757lcr_defconfig
-mips                        nlm_xlp_defconfig
-arm                            qcom_defconfig
-powerpc                    amigaone_defconfig
-arm                            pleb_defconfig
-sparc64                             defconfig
-arm                        mini2440_defconfig
-xtensa                    xip_kc705_defconfig
-mips                         db1xxx_defconfig
-sh                        sh7763rdp_defconfig
-powerpc                      ppc6xx_defconfig
-sh                   sh7770_generic_defconfig
-arm                           efm32_defconfig
-arm                              zx_defconfig
-mips                          malta_defconfig
-arc                             nps_defconfig
-alpha                            allyesconfig
-sh                           se7750_defconfig
-sh                          rsk7203_defconfig
-mips                         tb0219_defconfig
-mips                     decstation_defconfig
-arm                        vexpress_defconfig
-arm                     eseries_pxa_defconfig
-arm                        mvebu_v5_defconfig
-sh                           sh2007_defconfig
-arm                        trizeps4_defconfig
-arc                        vdk_hs38_defconfig
-arc                            hsdk_defconfig
-powerpc                        icon_defconfig
-powerpc                      ppc44x_defconfig
-powerpc                 mpc85xx_cds_defconfig
-powerpc                     mpc5200_defconfig
-sh                         apsh4a3a_defconfig
-ia64                        generic_defconfig
-mips                       rbtx49xx_defconfig
-arm                         socfpga_defconfig
-c6x                        evmc6472_defconfig
-powerpc                      pmac32_defconfig
-sh                           se7722_defconfig
-powerpc                 mpc836x_rdk_defconfig
-m68k                       m5249evb_defconfig
-riscv                          rv32_defconfig
-c6x                        evmc6474_defconfig
-sh                          lboxre2_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a004-20200911
-i386                 randconfig-a006-20200911
-i386                 randconfig-a001-20200911
-i386                 randconfig-a003-20200911
-i386                 randconfig-a002-20200911
-i386                 randconfig-a005-20200911
-i386                 randconfig-a004-20200912
-i386                 randconfig-a006-20200912
-i386                 randconfig-a003-20200912
-i386                 randconfig-a001-20200912
-i386                 randconfig-a002-20200912
-i386                 randconfig-a005-20200912
-x86_64               randconfig-a014-20200911
-x86_64               randconfig-a011-20200911
-x86_64               randconfig-a012-20200911
-x86_64               randconfig-a016-20200911
-x86_64               randconfig-a015-20200911
-x86_64               randconfig-a013-20200911
-x86_64               randconfig-a006-20200912
-x86_64               randconfig-a004-20200912
-x86_64               randconfig-a003-20200912
-x86_64               randconfig-a002-20200912
-x86_64               randconfig-a005-20200912
-x86_64               randconfig-a001-20200912
-i386                 randconfig-a015-20200911
-i386                 randconfig-a014-20200911
-i386                 randconfig-a011-20200911
-i386                 randconfig-a013-20200911
-i386                 randconfig-a016-20200911
-i386                 randconfig-a012-20200911
-i386                 randconfig-a015-20200912
-i386                 randconfig-a014-20200912
-i386                 randconfig-a011-20200912
-i386                 randconfig-a013-20200912
-i386                 randconfig-a016-20200912
-i386                 randconfig-a012-20200912
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a004-20200911
-x86_64               randconfig-a006-20200911
-x86_64               randconfig-a003-20200911
-x86_64               randconfig-a002-20200911
-x86_64               randconfig-a005-20200911
-x86_64               randconfig-a001-20200911
-
+Fixes: 5b435de0d786 ("net: wireless: add brcm80211 drivers")
+Signed-off-by: Tom Rix <trix@redhat.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index d4989e0cd7be..403b123710ec 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3233,7 +3233,7 @@ brcmf_sdio_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
+ {
+ 	int timeleft;
+ 	uint rxlen = 0;
+-	bool pending;
++	bool pending = false;
+ 	u8 *buf;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+-- 
+2.18.1
+
