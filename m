@@ -2,183 +2,233 @@ Return-Path: <SRS0=QEcO=CX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB419C43461
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Sep 2020 09:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 435EEC43461
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Sep 2020 13:45:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6306B20719
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Sep 2020 09:29:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01F4120756
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Sep 2020 13:45:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="WeJHDUEW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726354AbgINJ3y (ORCPT
+        id S1726561AbgINNpx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Sep 2020 05:29:54 -0400
-Received: from mail-io1-f78.google.com ([209.85.166.78]:56579 "EHLO
-        mail-io1-f78.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726264AbgINJ3S (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Sep 2020 05:29:18 -0400
-Received: by mail-io1-f78.google.com with SMTP id d21so10540220iow.23
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2020 02:29:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=TH4I0FLdiIpGQ5Tl/2ypovGARPOu1ONo1HGqptIa4OQ=;
-        b=C8dmL1S6rjxyzco01jojlrF9BvRNFTiHh6lF6fgmTKP/6FI8uvlTmMu+y/o7HoFv/a
-         A4MX6blfpsQkncg7sS7QtnygEm0zLj1pJz9B2g6c5XpLqOS3yqCz10/1VspMu+4EVYRN
-         X0O4LurpSDF70aXiOxBGlTf2ZZPSn4UUFGJHeW11z1PJNQhAD4FLbpkJo0NVTqbQW+nu
-         JlKA3eQk77aXMWeOOW6GUgdjOQ7xit1q6DtKX9Ys+8+JkMRxYtE30FZkx4QfG/TWtLog
-         zPwBK02EhiXEemeNJjWDUGgdk6To7RwKIyZfXajxV+ZiernwMLSZ13LF0yGwRNnkQXRl
-         ufTA==
-X-Gm-Message-State: AOAM531Ti4MHFtME/K5h2C4rDd2jDqGN4v0lGx4rZAZIJJlOIfpg3Mdh
-        v6/cOmJS+dl5j3ncrPaZxSGjGUe2qAwKoBIjcTipSvQBXQ2p
-X-Google-Smtp-Source: ABdhPJzP23iVG+WXX/FkJ2v54zMWyx+UEXTrxJNY+GFVWlpIiEJEP44cezQz5Ln1yXBtRMM98RGo39wurcMIIk41Im6zXNAL0w0f
-MIME-Version: 1.0
-X-Received: by 2002:a92:dc47:: with SMTP id x7mr2965857ilq.127.1600075756567;
- Mon, 14 Sep 2020 02:29:16 -0700 (PDT)
-Date:   Mon, 14 Sep 2020 02:29:16 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000015820705af42ab4d@google.com>
-Subject: INFO: trying to register non-static key in cfg80211_release_pmsr
-From:   syzbot <syzbot+7c0d914f0ea7b89ad50c@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 14 Sep 2020 09:45:53 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:51750 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726285AbgINNhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Sep 2020 09:37:21 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600090639; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=nkZq3tauYKxMuSF8a+sf5E8ZcDr4RMeSixqjHpwxUR8=; b=WeJHDUEWzBo8MZL+zZJmn7bkVNQdWo9RzB0Kwh4XZ8A3dA218/+eDRyZe81ZDLJu8PLGVIKv
+ wZYanY0K4uzNOYSaGliG8L9cESQa+S94HzYvvXpqLD2XJ+AO1a5YiD/Ouvs3zgAdNRjDiIVH
+ do63Cx0MyTFBzXAr7kJVK+qFRZY=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f5f7200698ee477d1ecb7c4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 14 Sep 2020 13:37:04
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A2D12C433FF; Mon, 14 Sep 2020 13:37:04 +0000 (UTC)
+Received: from dundi-linux.qualcomm.com (unknown [202.46.22.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: govinds)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4AC02C433CA;
+        Mon, 14 Sep 2020 13:37:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4AC02C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=govinds@codeaurora.org
+From:   Govind Singh <govinds@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH] ath11k: Remove rproc references from common core layer
+Date:   Mon, 14 Sep 2020 19:06:55 +0530
+Message-Id: <1600090615-18904-1-git-send-email-govinds@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+IPQ8074 HW uses rproc with AHB as underlying hif layer.
+Move rproc references from common core layer to target
+hif layer. Remove IS_ENABLED check for CONFIG_REMOTEPROC
+as it's not required anymore.
 
-syzbot found the following issue on:
-
-HEAD commit:    7fe10096 Merge branch 'linus' of git://git.kernel.org/pub/..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1655e245900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=a9075b36a6ae26c9
-dashboard link: https://syzkaller.appspot.com/bug?extid=7c0d914f0ea7b89ad50c
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+7c0d914f0ea7b89ad50c@syzkaller.appspotmail.com
-
-INFO: trying to register non-static key.
-the code is fine but needs lockdep annotation.
-turning off the locking correctness validator.
-CPU: 1 PID: 1483 Comm: syz-executor.4 Not tainted 5.9.0-rc4-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x198/0x1fd lib/dump_stack.c:118
- assign_lock_key kernel/locking/lockdep.c:894 [inline]
- register_lock_class+0x157d/0x1630 kernel/locking/lockdep.c:1206
- __lock_acquire+0xf9/0x5570 kernel/locking/lockdep.c:4305
- lock_acquire+0x1f3/0xae0 kernel/locking/lockdep.c:5006
- __raw_spin_lock_bh include/linux/spinlock_api_smp.h:135 [inline]
- _raw_spin_lock_bh+0x2f/0x40 kernel/locking/spinlock.c:175
- spin_lock_bh include/linux/spinlock.h:359 [inline]
- cfg80211_release_pmsr+0x33/0x166 net/wireless/pmsr.c:621
- nl80211_netlink_notify net/wireless/nl80211.c:17301 [inline]
- nl80211_netlink_notify+0x32e/0x970 net/wireless/nl80211.c:17265
- notifier_call_chain+0xb5/0x200 kernel/notifier.c:83
- __blocking_notifier_call_chain kernel/notifier.c:284 [inline]
- __blocking_notifier_call_chain kernel/notifier.c:271 [inline]
- blocking_notifier_call_chain kernel/notifier.c:295 [inline]
- blocking_notifier_call_chain+0x67/0x90 kernel/notifier.c:292
- netlink_release+0xc51/0x1cf0 net/netlink/af_netlink.c:775
- __sock_release+0xcd/0x280 net/socket.c:596
- sock_close+0x18/0x20 net/socket.c:1277
- __fput+0x285/0x920 fs/file_table.c:281
- task_work_run+0xdd/0x190 kernel/task_work.c:141
- tracehook_notify_resume include/linux/tracehook.h:188 [inline]
- exit_to_user_mode_loop kernel/entry/common.c:163 [inline]
- exit_to_user_mode_prepare+0x1e1/0x200 kernel/entry/common.c:190
- syscall_exit_to_user_mode+0x7e/0x2e0 kernel/entry/common.c:265
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x416f01
-Code: 75 14 b8 03 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 04 1b 00 00 c3 48 83 ec 08 e8 0a fc ff ff 48 89 04 24 b8 03 00 00 00 0f 05 <48> 8b 3c 24 48 89 c2 e8 53 fc ff ff 48 89 d0 48 83 c4 08 48 3d 01
-RSP: 002b:00007fe5ec9199c0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-RAX: 0000000000000000 RBX: 00007fe5ec919a40 RCX: 0000000000416f01
-RDX: 0000000000000200 RSI: 00007fe5ec919a40 RDI: 0000000000000004
-RBP: 0000000000000200 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000293 R12: 0000000000000004
-R13: 000000000169fb6f R14: 00007fe5ec91a9c0 R15: 000000000118cf4c
-BUG: unable to handle page fault for address: ffffffffffffffec
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 9a90067 P4D 9a90067 PUD 9a92067 PMD 0 
-Oops: 0000 [#1] PREEMPT SMP KASAN
-CPU: 1 PID: 1483 Comm: syz-executor.4 Not tainted 5.9.0-rc4-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:cfg80211_release_pmsr+0xce/0x166 net/wireless/pmsr.c:623
-Code: 39 c5 74 6b e8 f3 a6 e8 f9 48 8d 7b 14 48 89 f8 48 c1 e8 03 42 0f b6 14 20 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 04 84 d2 75 62 <44> 8b 7b 14 89 ee 44 89 ff e8 c4 a2 e8 f9 41 39 ef 75 9f e8 ba a6
-RSP: 0018:ffffc90018e2fbe0 EFLAGS: 00010246
-RAX: 0000000000000007 RBX: ffffffffffffffd8 RCX: ffffc90010d5b000
-RDX: 0000000000000000 RSI: ffffffff878ba68d RDI: ffffffffffffffec
-RBP: 0000000000001751 R08: 0000000000000001 R09: 0000000000000003
-R10: fffff520031c5f6e R11: 0000000038343154 R12: dffffc0000000000
-R13: ffff8880001010e0 R14: ffff888000100c10 R15: 0000000000000000
-FS:  00007fe5ec91a700(0000) GS:ffff8880ae700000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffffffffffffec CR3: 000000020d667000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- nl80211_netlink_notify net/wireless/nl80211.c:17301 [inline]
- nl80211_netlink_notify+0x32e/0x970 net/wireless/nl80211.c:17265
- notifier_call_chain+0xb5/0x200 kernel/notifier.c:83
- __blocking_notifier_call_chain kernel/notifier.c:284 [inline]
- __blocking_notifier_call_chain kernel/notifier.c:271 [inline]
- blocking_notifier_call_chain kernel/notifier.c:295 [inline]
- blocking_notifier_call_chain+0x67/0x90 kernel/notifier.c:292
- netlink_release+0xc51/0x1cf0 net/netlink/af_netlink.c:775
- __sock_release+0xcd/0x280 net/socket.c:596
- sock_close+0x18/0x20 net/socket.c:1277
- __fput+0x285/0x920 fs/file_table.c:281
- task_work_run+0xdd/0x190 kernel/task_work.c:141
- tracehook_notify_resume include/linux/tracehook.h:188 [inline]
- exit_to_user_mode_loop kernel/entry/common.c:163 [inline]
- exit_to_user_mode_prepare+0x1e1/0x200 kernel/entry/common.c:190
- syscall_exit_to_user_mode+0x7e/0x2e0 kernel/entry/common.c:265
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x416f01
-Code: 75 14 b8 03 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 04 1b 00 00 c3 48 83 ec 08 e8 0a fc ff ff 48 89 04 24 b8 03 00 00 00 0f 05 <48> 8b 3c 24 48 89 c2 e8 53 fc ff ff 48 89 d0 48 83 c4 08 48 3d 01
-RSP: 002b:00007fe5ec9199c0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-RAX: 0000000000000000 RBX: 00007fe5ec919a40 RCX: 0000000000416f01
-RDX: 0000000000000200 RSI: 00007fe5ec919a40 RDI: 0000000000000004
-RBP: 0000000000000200 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000293 R12: 0000000000000004
-R13: 000000000169fb6f R14: 00007fe5ec91a9c0 R15: 000000000118cf4c
-Modules linked in:
-CR2: ffffffffffffffec
----[ end trace 5d967f6ee373c846 ]---
-RIP: 0010:cfg80211_release_pmsr+0xce/0x166 net/wireless/pmsr.c:623
-Code: 39 c5 74 6b e8 f3 a6 e8 f9 48 8d 7b 14 48 89 f8 48 c1 e8 03 42 0f b6 14 20 48 89 f8 83 e0 07 83 c0 03 38 d0 7c 04 84 d2 75 62 <44> 8b 7b 14 89 ee 44 89 ff e8 c4 a2 e8 f9 41 39 ef 75 9f e8 ba a6
-RSP: 0018:ffffc90018e2fbe0 EFLAGS: 00010246
-RAX: 0000000000000007 RBX: ffffffffffffffd8 RCX: ffffc90010d5b000
-RDX: 0000000000000000 RSI: ffffffff878ba68d RDI: ffffffffffffffec
-RBP: 0000000000001751 R08: 0000000000000001 R09: 0000000000000003
-R10: fffff520031c5f6e R11: 0000000038343154 R12: dffffc0000000000
-R13: ffff8880001010e0 R14: ffff888000100c10 R15: 0000000000000000
-FS:  00007fe5ec91a700(0000) GS:ffff8880ae700000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffffffffffffec CR3: 000000020d667000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-
-
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/net/wireless/ath/ath11k/ahb.c  | 39 ++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/ahb.h  |  8 ++++++
+ drivers/net/wireless/ath/ath11k/core.c | 33 ----------------------
+ drivers/net/wireless/ath/ath11k/core.h |  1 -
+ 4 files changed, 44 insertions(+), 37 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index f6e36e58e1fd..b642e52c4904 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -323,9 +323,10 @@ static void ath11k_ahb_stop(struct ath11k_base *ab)
+ 
+ static int ath11k_ahb_power_up(struct ath11k_base *ab)
+ {
++	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
+ 	int ret;
+ 
+-	ret = rproc_boot(ab->tgt_rproc);
++	ret = rproc_boot(ab_ahb->tgt_rproc);
+ 	if (ret)
+ 		ath11k_err(ab, "failed to boot the remote processor Q6\n");
+ 
+@@ -334,7 +335,9 @@ static int ath11k_ahb_power_up(struct ath11k_base *ab)
+ 
+ static void ath11k_ahb_power_down(struct ath11k_base *ab)
+ {
+-	rproc_shutdown(ab->tgt_rproc);
++	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
++
++	rproc_shutdown(ab_ahb->tgt_rproc);
+ }
+ 
+ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
+@@ -600,6 +603,28 @@ static const struct ath11k_hif_ops ath11k_ahb_hif_ops = {
+ 	.power_up = ath11k_ahb_power_up,
+ };
+ 
++static int ath11k_core_get_rproc(struct ath11k_base *ab)
++{
++	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
++	struct device *dev = ab->dev;
++	struct rproc *prproc;
++	phandle rproc_phandle;
++
++	if (of_property_read_u32(dev->of_node, "qcom,rproc", &rproc_phandle)) {
++		ath11k_err(ab, "failed to get q6_rproc handle\n");
++		return -ENOENT;
++	}
++
++	prproc = rproc_get_by_phandle(rproc_phandle);
++	if (!prproc) {
++		ath11k_err(ab, "failed to get rproc\n");
++		return -EINVAL;
++	}
++	ab_ahb->tgt_rproc = prproc;
++
++	return 0;
++}
++
+ static int ath11k_ahb_probe(struct platform_device *pdev)
+ {
+ 	struct ath11k_base *ab;
+@@ -626,7 +651,9 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	ab = ath11k_core_alloc(&pdev->dev, 0, ATH11K_BUS_AHB, &ath11k_ahb_bus_params);
++	ab = ath11k_core_alloc(&pdev->dev, sizeof(struct ath11k_ahb),
++			       ATH11K_BUS_AHB,
++			       &ath11k_ahb_bus_params);
+ 	if (!ab) {
+ 		dev_err(&pdev->dev, "failed to allocate ath11k base\n");
+ 		return -ENOMEM;
+@@ -655,6 +682,12 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+ 
+ 	ath11k_ahb_init_qmi_ce_config(ab);
+ 
++	ret = ath11k_core_get_rproc(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to get rproc: %d\n", ret);
++		goto err_ce_free;
++	}
++
+ 	ret = ath11k_core_init(ab);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to init core: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.h b/drivers/net/wireless/ath/ath11k/ahb.h
+index 6c7b26ac6545..51e6e4a5f686 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.h
++++ b/drivers/net/wireless/ath/ath11k/ahb.h
+@@ -10,4 +10,12 @@
+ #define ATH11K_AHB_RECOVERY_TIMEOUT (3 * HZ)
+ struct ath11k_base;
+ 
++struct ath11k_ahb {
++	struct rproc *tgt_rproc;
++};
++
++static inline struct ath11k_ahb *ath11k_ahb_priv(struct ath11k_base *ab)
++{
++	return (struct ath11k_ahb *)ab->drv_priv;
++}
+ #endif
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index ce81702b27d2..0e8b1d25f0bc 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -842,43 +842,10 @@ int ath11k_core_pre_init(struct ath11k_base *ab)
+ }
+ EXPORT_SYMBOL(ath11k_core_pre_init);
+ 
+-static int ath11k_core_get_rproc(struct ath11k_base *ab)
+-{
+-	struct device *dev = ab->dev;
+-	struct rproc *prproc;
+-	phandle rproc_phandle;
+-
+-	if (!IS_ENABLED(CONFIG_REMOTEPROC))
+-		return 0;
+-
+-	if (ab->bus_params.mhi_support)
+-		return 0;
+-
+-	if (of_property_read_u32(dev->of_node, "qcom,rproc", &rproc_phandle)) {
+-		ath11k_err(ab, "failed to get q6_rproc handle\n");
+-		return -ENOENT;
+-	}
+-
+-	prproc = rproc_get_by_phandle(rproc_phandle);
+-	if (!prproc) {
+-		ath11k_err(ab, "failed to get rproc\n");
+-		return -EINVAL;
+-	}
+-	ab->tgt_rproc = prproc;
+-
+-	return 0;
+-}
+-
+ int ath11k_core_init(struct ath11k_base *ab)
+ {
+ 	int ret;
+ 
+-	ret = ath11k_core_get_rproc(ab);
+-	if (ret) {
+-		ath11k_err(ab, "failed to get rproc: %d\n", ret);
+-		return ret;
+-	}
+-
+ 	ret = ath11k_core_soc_create(ab);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to create soc core: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 807884687d39..02a87027c4e4 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -648,7 +648,6 @@ struct ath11k_base {
+ 	struct ath11k_qmi qmi;
+ 	struct ath11k_wmi_base wmi_ab;
+ 	struct completion fw_ready;
+-	struct rproc *tgt_rproc;
+ 	int num_radios;
+ 	/* HW channel counters frequency value in hertz common to all MACs */
+ 	u32 cc_freq_hz;
+-- 
+2.22.0
+
