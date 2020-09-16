@@ -2,83 +2,118 @@ Return-Path: <SRS0=bTy4=CZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0A2C2BB84
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Sep 2020 17:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6157C43461
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Sep 2020 18:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4509206B6
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Sep 2020 17:49:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F69821655
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Sep 2020 18:14:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="V1BJ7uaf"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="riEG5XEl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727486AbgIPRs5 (ORCPT
+        id S1727716AbgIPSOZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Sep 2020 13:48:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35764 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727360AbgIPRsf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Sep 2020 13:48:35 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A409AC0086BA
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2020 09:46:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=DGVMZM9Xz1KDLSN38I6p7qDeFLqeK7wWrZlMdW99DO0=; b=V1BJ7uafYcya5kTjJnSF7ZxM6w
-        f80KKmlEN0uZ187e/407OhLmRQogIUYh9J2qrjxGqhNu8Qm9LbXrKE2/c+r1nHGFe36MVxj7uYfkj
-        gOFPl2DJETCdc2go3DC4lq7eTP48MOz/Wm58De1BSUWnepMB8ODAi7hqs3jxoXwMJCCQ=;
-Received: from p4ff134da.dip0.t-ipconnect.de ([79.241.52.218] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kIaZQ-0004If-Is; Wed, 16 Sep 2020 18:46:12 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH] mac80211: allow bigger A-MSDU sizes in VHT, even if HT is limited
-Date:   Wed, 16 Sep 2020 18:46:11 +0200
-Message-Id: <20200916164611.8022-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
+        Wed, 16 Sep 2020 14:14:25 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:45156 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727498AbgIPSON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Sep 2020 14:14:13 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600280052; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=Pd5uhe/W8UlMjCmlPzB8XUm+VW1r6wiAg/jjHPWXtV0=; b=riEG5XElP9BxuxnId9YUFfr3b+IZfAw/NYToW2UPJtUqOa6QwN6WoFoFBRMPSvspvHRD4EQC
+ k5avjRsIyXLUeX3IDuVoDvGAioM4HN3VJNFtBX6Qgo8Tb4JjU0iTCsMVQn+gzOHeTyl15uwW
+ /IPCaf4iPK8Zql2QGOvRn3P2awI=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 5f621f8a24954b1631bfea5f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 16 Sep 2020 14:22:02
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D76F4C433CA; Wed, 16 Sep 2020 14:22:01 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4839EC433C8;
+        Wed, 16 Sep 2020 14:22:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4839EC433C8
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     greearb@candelatech.com
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath11k:  Support loading ELF board files.
+References: <20200826232044.6799-1-greearb@candelatech.com>
+Date:   Wed, 16 Sep 2020 17:21:57 +0300
+In-Reply-To: <20200826232044.6799-1-greearb@candelatech.com>
+        (greearb@candelatech.com's message of "Wed, 26 Aug 2020 16:20:44
+        -0700")
+Message-ID: <874knxkdiy.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some APs (e.g. Asus RT-AC88U) have been observed to report an HT MSDU size
-limit of 3839 and a VHT limit of 7991. These APs can handle bigger frames
-than 3839 bytes just fine, so we should remove the VHT limit based on the
-HT capabilities. This improves tx throughput.
+greearb@candelatech.com writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/vht.c | 4 ----
- 1 file changed, 4 deletions(-)
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The QCA6390 board I have, model 8291M-PR comes with an ELF board
+> file.  To get this to at least somewhat work, I renamed bdwlan.e04
+> to 'board.bin' and then added this patch to check for .ELF as
+> starting bytes of the board file.  If that is found, use type
+> ELF.  After this the driver loads.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>
+> This is on top of recent kvallo ath tree.
+>
+>  drivers/net/wireless/ath/ath11k/qmi.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+> index 91134510364c..f87f1d1564f4 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+> @@ -1992,6 +1992,7 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
+>  	struct qmi_txn txn = {};
+>  	int ret;
+>  	const u8 *temp;
+> +	int bdf_type = ATH11K_QMI_BDF_TYPE_BIN;
+>  
+>  	req = kzalloc(sizeof(*req), GFP_KERNEL);
+>  	if (!req)
+> @@ -2008,6 +2009,15 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
+>  	temp = bd.data;
+>  	remaining = bd.len;
+>  
+> +	if (bd.len >= 4) {
+> +		char* edata = (char*)(temp);
+> +		if (edata[1] == 'E' &&
+> +		    edata[2] == 'L' &&
+> +		    edata[3] == 'F') {
+> +			bdf_type = ATH11K_QMI_BDF_TYPE_ELF;
+> +		}
+> +	}
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 9c6045f9c24d..7e601d067d53 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -315,10 +315,6 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 
- 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
- 
--	/* If HT IE reported 3839 bytes only, stay with that size. */
--	if (sta->sta.max_amsdu_len == IEEE80211_MAX_MPDU_LEN_HT_3839)
--		return;
--
- 	switch (vht_cap->cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK) {
- 	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
- 		sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_11454;
+Thanks, looks good. Expect that the ELF magic check can be simplified to:
+
+strncmp(edata, ELFMAG, SELFMAG)
+
+But I can send v2, I'll soon send some more QCA6390 patches and I'll
+include this to the set.
+
 -- 
-2.28.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
