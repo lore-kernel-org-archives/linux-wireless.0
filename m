@@ -2,67 +2,127 @@ Return-Path: <SRS0=efDY=C3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54190C43464
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB2DC43463
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 18:09:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2E9121734
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:52:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEA6021741
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 18:09:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lW1Ctf+6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726126AbgIRRww (ORCPT
+        id S1726200AbgIRSJC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Sep 2020 13:52:52 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:46048 "EHLO
-        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725955AbgIRRww (ORCPT
+        Fri, 18 Sep 2020 14:09:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33314 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726007AbgIRSJC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Sep 2020 13:52:52 -0400
-X-Greylist: delayed 440 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Sep 2020 13:52:52 EDT
-Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 17BE74F9D9A;
-        Fri, 18 Sep 2020 17:45:32 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
-Received: from web.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id kGALAGXC8HgJ; Fri, 18 Sep 2020 17:45:29 +0000 (UTC)
-Received: from mail.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
-        (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 7B0D24F9D98;
-        Fri, 18 Sep 2020 17:45:29 +0000 (UTC)
+        Fri, 18 Sep 2020 14:09:02 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA3B7C0613CE;
+        Fri, 18 Sep 2020 11:09:01 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id z1so6531529wrt.3;
+        Fri, 18 Sep 2020 11:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:references:in-reply-to:subject:date:message-id
+         :mime-version:content-transfer-encoding:thread-index
+         :content-language;
+        bh=V7TYn/alxMmRQm9PDXJHaR4ciP91a3Wj/zuAejX1JHE=;
+        b=lW1Ctf+6Zej2YzB4z4tRElKnEwvo5EJamrq3WGSeVLT6ftRjxdKk1Zrmy6wY/fOyUy
+         wVEUb7eRA6dSNDxbSkEzuc/QhA1T/zI9tyelDqluu+4/ITx9gRsMtDDpxjBROJyy2ka8
+         pccjObn1Q9H1MBCQmiG0AnvhV3IM1SSwGO922KkdWRL06FkfWGc9aejb+0mfGxJVpaq2
+         fPHoEvpdazaPD/cFWojd+eIIUsw9n9MQWuW8vJn+0JxisWJwz6Vwoi2tD+mQbWCERgAn
+         oOauTZEkZafbPmy4ml2QhNglV7Xm+Pvs0aUOnNpqvf3v5rSk5f0nxNWnkjGAI0j/tMP5
+         EhuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:references:in-reply-to:subject:date
+         :message-id:mime-version:content-transfer-encoding:thread-index
+         :content-language;
+        bh=V7TYn/alxMmRQm9PDXJHaR4ciP91a3Wj/zuAejX1JHE=;
+        b=A7HpRGQRPwHSh2NzOtONRjddVs3rkWUUh/f3gBlSCs36Wp5fhYmFVdLTcFzFu/zRZ8
+         yJcHq3n/1xs6czpmEisbTe/A09asbUhlWEWBOpZgNJis2OAO8s3uG6+Ov2iIFgsn9mcP
+         PPnaMzVN5kvxsGwmZPQZcirM8q4+2eSqc7DxLo7Z0vZNW3DW9ugu/AzfF1kyqEH99T4R
+         +J0G6qZ4LwyGZ/NuUVlM0YegJKe44HHqzTFqlVIPRYIVzVVLAMa1tM7Xfj7cuc+KEEsc
+         UPTba8zxkKPp/Vzxm8pSEWRDyHZMRFLHgu01zAN87MhIAv9ZVs3bKocJvLRQR85rvJRw
+         znBQ==
+X-Gm-Message-State: AOAM531/IPU1zyuJz8PXTQh0zofTIcXaBTieoCQ9gN3dtLFTNN595LSW
+        nWf3tbuGlrRSkS+h+ZinJIM=
+X-Google-Smtp-Source: ABdhPJz6xIijTdoGDOaGOtsRHj23XUIM8Dl2BFmzbpi6A43qDBLuSRluS8Vjuej5WASj7gRAQ+sSnA==
+X-Received: by 2002:a05:6000:1184:: with SMTP id g4mr38640530wrx.20.1600452540424;
+        Fri, 18 Sep 2020 11:09:00 -0700 (PDT)
+Received: from AnsuelXPS (host-95-248-206-89.retail.telecomitalia.it. [95.248.206.89])
+        by smtp.gmail.com with ESMTPSA id c14sm6380766wrv.12.2020.09.18.11.08.56
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 18 Sep 2020 11:08:58 -0700 (PDT)
+From:   <ansuelsmth@gmail.com>
+To:     "'Christian Lamparter'" <chunkeey@gmail.com>,
+        "'Kalle Valo'" <kvalo@codeaurora.org>
+Cc:     <devicetree@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ath10k@lists.infradead.org>,
+        "'David S. Miller'" <davem@davemloft.net>,
+        "'Rob Herring'" <robh+dt@kernel.org>,
+        "'Jakub Kicinski'" <kuba@kernel.org>,
+        <linux-mtd@lists.infradead.org>,
+        "'Srinivas Kandagatla'" <srinivas.kandagatla@linaro.org>,
+        "'Bartosz Golaszewski'" <bgolaszewski@baylibre.com>
+References: <20200918162928.14335-1-ansuelsmth@gmail.com> <20200918162928.14335-2-ansuelsmth@gmail.com> <8f886e3d-e2ee-cbf8-a676-28ebed4977aa@gmail.com>
+In-Reply-To: <8f886e3d-e2ee-cbf8-a676-28ebed4977aa@gmail.com>
+Subject: R: [PATCH 2/2] dt: bindings: ath10k: Document qcom, ath10k-pre-calibration-data-mtd
+Date:   Fri, 18 Sep 2020 20:08:55 +0200
+Message-ID: <018e01d68de6$c72edce0$558c96a0$@gmail.com>
 MIME-Version: 1.0
-Date:   Fri, 18 Sep 2020 10:45:29 -0700
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 04/22] nl80211: correctly validate S1G beacon head
-In-Reply-To: <8b7f1ab8a15a06a23b7db2fb120e3144c482d7b9.camel@sipsolutions.net>
-References: <20200908190323.15814-1-thomas@adapt-ip.com>
- <20200908190323.15814-5-thomas@adapt-ip.com>
- <8b7f1ab8a15a06a23b7db2fb120e3144c482d7b9.camel@sipsolutions.net>
-User-Agent: Roundcube Webmail/1.4.7
-Message-ID: <97924cf65e6806fd896ada049f3d46ea@adapt-ip.com>
-X-Sender: thomas@adapt-ip.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJEWVdigiv7VEZfce04PgG7d9c+lQHuGaaaAYeoZCCod2yTQA==
+Content-Language: it
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-09-18 03:56, Johannes Berg wrote:
-> On Tue, 2020-09-08 at 12:03 -0700, Thomas Pedersen wrote:
->> The S1G beacon has a different header size than regular
->> beacons, so adjust the beacon head validator.
-> 
-> I've applied this already and will keep it, but you later add short
-> beacons - don't they need further adjustments here too?
 
-Yes, but I was planning on doing that in the (yet to be submitted) "add 
-S1G
-short beacon support" patch.
 
--- 
-thomas
+> -----Messaggio originale-----
+> Da: Christian Lamparter <chunkeey@gmail.com>
+> Inviato: venerd=C3=AC 18 settembre 2020 18:54
+> A: Ansuel Smith <ansuelsmth@gmail.com>; Kalle Valo
+> <kvalo@codeaurora.org>
+> Cc: devicetree@vger.kernel.org; netdev@vger.kernel.org; linux-
+> wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
+> ath10k@lists.infradead.org; David S. Miller <davem@davemloft.net>; Rob
+> Herring <robh+dt@kernel.org>; Jakub Kicinski <kuba@kernel.org>; linux-
+> mtd@lists.infradead.org; Srinivas Kandagatla
+> <srinivas.kandagatla@linaro.org>; Bartosz Golaszewski
+> <bgolaszewski@baylibre.com>
+> Oggetto: Re: [PATCH 2/2] dt: bindings: ath10k: Document qcom, ath10k-
+> pre-calibration-data-mtd
+>=20
+> On 2020-09-18 18:29, Ansuel Smith wrote:
+> > Document use of qcom,ath10k-pre-calibration-data-mtd bindings used =
+to
+> > define from where the driver will load the pre-cal data in the =
+defined
+> > mtd partition.
+> >
+> > Signed-off-by: Ansuel Smith <ansuelsmth@gmail.com>
+>=20
+> Q: Doesn't mtd now come with nvmem support from the get go? So
+> the MAC-Addresses and pre-caldata could be specified as a
+> nvmem-node in the devicetree? I remember seeing that this was
+> worked on or was this mtd->nvmem dropped?
+>=20
+> Cheers,
+> Christian
+
+Can you give me some example where this is used? I can't find any =
+reference.
+
