@@ -2,53 +2,99 @@ Return-Path: <SRS0=efDY=C3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A651C43464
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF11C43464
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE555208C3
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:11:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01EC62075E
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:18:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726452AbgIRKLZ (ORCPT
+        id S1726807AbgIRKS3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Sep 2020 06:11:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44244 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725874AbgIRKLY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Sep 2020 06:11:24 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA9B2C06174A
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2020 03:11:24 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kJDMR-006BTQ-0y; Fri, 18 Sep 2020 12:11:23 +0200
-Message-ID: <af858cc36e4b6ba26a1cc8db4d72e7c7046f8f67.camel@sipsolutions.net>
-Subject: Re: [PATCH v4 07/14] mac80211: remove tx status call to
- ieee80211_sta_register_airtime
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Sep 2020 12:11:21 +0200
-In-Reply-To: <20200908123702.88454-8-nbd@nbd.name>
-References: <20200908123702.88454-1-nbd@nbd.name>
-         <20200908123702.88454-8-nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        Fri, 18 Sep 2020 06:18:29 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:56608 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726682AbgIRKS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Sep 2020 06:18:28 -0400
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 322BFC70EA387288DC57;
+        Fri, 18 Sep 2020 18:18:20 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS403-HUB.china.huawei.com
+ (10.3.19.203) with Microsoft SMTP Server id 14.3.487.0; Fri, 18 Sep 2020
+ 18:18:13 +0800
+From:   Zheng Bin <zhengbin13@huawei.com>
+To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <kuba@kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
+Subject: [PATCH -next 8/9] rtlwifi: rtl8192de: fix comparison to bool warning in hw.c
+Date:   Fri, 18 Sep 2020 18:25:04 +0800
+Message-ID: <20200918102505.16036-9-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.26.0.106.g9fadedd
+In-Reply-To: <20200918102505.16036-1-zhengbin13@huawei.com>
+References: <20200918102505.16036-1-zhengbin13@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-09-08 at 14:36 +0200, Felix Fietkau wrote:
-> All drivers using airtime fairness are calling ieee80211_sta_register_airtime
-> directly
+Fixes coccicheck warning:
 
-This really wanted some documentation updates ... I've done some.
+drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c:566:14-20: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c:572:13-19: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c:581:14-20: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c:587:13-19: WARNING: Comparison to bool
 
-johannes
+Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+index 2deadc7339ce..f849291cc587 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+@@ -563,13 +563,13 @@ static bool _rtl92de_llt_table_init(struct ieee80211_hw *hw)
+ 	/* 18.  LLT_table_init(Adapter);  */
+ 	for (i = 0; i < (txpktbuf_bndy - 1); i++) {
+ 		status = _rtl92de_llt_write(hw, i, i + 1);
+-		if (true != status)
++		if (!status)
+ 			return status;
+ 	}
+
+ 	/* end of list */
+ 	status = _rtl92de_llt_write(hw, (txpktbuf_bndy - 1), 0xFF);
+-	if (true != status)
++	if (!status)
+ 		return status;
+
+ 	/* Make the other pages as ring buffer */
+@@ -578,13 +578,13 @@ static bool _rtl92de_llt_table_init(struct ieee80211_hw *hw)
+ 	/* Otherwise used as local loopback buffer.  */
+ 	for (i = txpktbuf_bndy; i < maxpage; i++) {
+ 		status = _rtl92de_llt_write(hw, i, (i + 1));
+-		if (true != status)
++		if (!status)
+ 			return status;
+ 	}
+
+ 	/* Let last entry point to the start entry of ring buffer */
+ 	status = _rtl92de_llt_write(hw, maxpage, txpktbuf_bndy);
+-	if (true != status)
++	if (!status)
+ 		return status;
+
+ 	return true;
+--
+2.26.0.106.g9fadedd
 
