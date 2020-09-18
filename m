@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE226C43463
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1242C43464
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:08:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 609B7206DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:07:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 951D9206DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:08:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398455;
-	bh=StopoSPyCs7EocPsq1Gp2kQ/vfNkfLuq7EPGBHDEt7c=;
+	s=default; t=1600398527;
+	bh=HrjJ0jFLb60o1G6BMxIy8NQyRQ1fSNuPiH83ljiFXX8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PcYPxXza7NnAyuhHZSOwn8sghdGSrqi0b77fg1KIfbzAgasKMOHWYx7Dyq7iS+Tps
-	 2t6uU/+gOwPxB8PYMbWPLsu7q0mxGo7hs6FLJAwI8wFJtGH/by9djEjwZMgTnombZM
-	 LRhN0+6OICthH0ZKBmzmk+RoL83/I7/6pSkYgRz4=
+	b=N3mhQR4LcI2NLet1LY7m7qTTS7UZ7ZnkFy8RyL2p60jbWaUmFmeu0sK7TymW4WAvm
+	 kTGfOMT34aRkA0rzcMPuPgDWPhL85xjGHqlLfCPCuEAuaGmh7YLvjrG+NRIttfHLfG
+	 Wyi5KtTT5Cw/nbxz2BDkf02ec/Xq4pYB9p06x1Xs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730638AbgIRDHH (ORCPT
+        id S1727391AbgIRDIh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:07:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50584 "EHLO mail.kernel.org"
+        Thu, 17 Sep 2020 23:08:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49436 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727167AbgIRCDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:03:50 -0400
+        id S1727038AbgIRCDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:03:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7580E23600;
-        Fri, 18 Sep 2020 02:03:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34B41208DB;
+        Fri, 18 Sep 2020 02:03:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394630;
-        bh=StopoSPyCs7EocPsq1Gp2kQ/vfNkfLuq7EPGBHDEt7c=;
+        s=default; t=1600394600;
+        bh=HrjJ0jFLb60o1G6BMxIy8NQyRQ1fSNuPiH83ljiFXX8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AD5O4+QcRjFfmVpVKcYJRkqMJU1RXEJrbikUu3CEcmZGgmCg5fiavj7chnGma2tKA
-         bVkNjPVgee+ilEei1DLut1t4/i6vMplj2T6uOiPMdXRjOXKKOnXEViXwzDg0uABSIo
-         9Qqe6/IMS+WOaO/3Skb6lguw+dweaN/JLxFNLHS4=
+        b=fkofo3f71+0/RkxpXzA8eOiXLASMKIMSpJ+mTubjRp+zzKf4M4PSqld0TgDz/+Cmo
+         Du2drAk4GOEnJd0S7syS+JEd5Xo7Et2mWgAfRE2CRLXSfGspa/Gk3Ut6MZLiFOXQas
+         KPTMN/hbj9umDM+U6JYA9jiPFZpYRA14x4qBYIJ4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 130/330] mt76: fix handling full tx queues in mt76_dma_tx_queue_skb_raw
-Date:   Thu, 17 Sep 2020 21:57:50 -0400
-Message-Id: <20200918020110.2063155-130-sashal@kernel.org>
+Cc:     Mert Dirik <mertdirik@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 107/330] ar5523: Add USB ID of SMCWUSBT-G2 wireless adapter
+Date:   Thu, 17 Sep 2020 21:57:27 -0400
+Message-Id: <20200918020110.2063155-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 References: <20200918020110.2063155-1-sashal@kernel.org>
@@ -59,49 +59,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Mert Dirik <mertdirik@gmail.com>
 
-[ Upstream commit 93eaec7625f13cffb593b471405b017c7e64d4ee ]
+[ Upstream commit 5b362498a79631f283578b64bf6f4d15ed4cc19a ]
 
-Fixes a theoretical issue where it could potentially overwrite an existing
-descriptor entry (and leaking its skb)
+Add the required USB ID for running SMCWUSBT-G2 wireless adapter (SMC
+"EZ Connect g").
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+This device uses ar5523 chipset and requires firmware to be loaded. Even
+though pid of the device is 4507, this patch adds it as 4506 so that
+AR5523_DEVICE_UG macro can set the AR5523_FLAG_PRE_FIRMWARE flag for pid
+4507.
+
+Signed-off-by: Mert Dirik <mertdirik@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6249a46c19762..026d996612fbe 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -261,10 +261,13 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	struct mt76_queue_buf buf;
- 	dma_addr_t addr;
- 
-+	if (q->queued + 1 >= q->ndesc - 1)
-+		goto error;
-+
- 	addr = dma_map_single(dev->dev, skb->data, skb->len,
- 			      DMA_TO_DEVICE);
- 	if (unlikely(dma_mapping_error(dev->dev, addr)))
--		return -ENOMEM;
-+		goto error;
- 
- 	buf.addr = addr;
- 	buf.len = skb->len;
-@@ -275,6 +278,10 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	spin_unlock_bh(&q->lock);
- 
- 	return 0;
-+
-+error:
-+	dev_kfree_skb(skb);
-+	return -ENOMEM;
- }
- 
- static int
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index da2d179430ca5..4c57e79e5779a 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -1770,6 +1770,8 @@ static const struct usb_device_id ar5523_id_table[] = {
+ 	AR5523_DEVICE_UX(0x0846, 0x4300),	/* Netgear / WG111U */
+ 	AR5523_DEVICE_UG(0x0846, 0x4250),	/* Netgear / WG111T */
+ 	AR5523_DEVICE_UG(0x0846, 0x5f00),	/* Netgear / WPN111 */
++	AR5523_DEVICE_UG(0x083a, 0x4506),	/* SMC / EZ Connect
++						   SMCWUSBT-G2 */
+ 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / AR5523_1 */
+ 	AR5523_DEVICE_UX(0x157e, 0x3205),	/* Umedia / AR5523_2 */
+ 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / TEW444UBEU */
 -- 
 2.25.1
 
