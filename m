@@ -6,39 +6,38 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA85C43464
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B551EC43463
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:47:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB85F21707
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:34:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7884821707
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 17:47:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726273AbgIRReq (ORCPT
+        id S1726205AbgIRRrx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Sep 2020 13:34:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56310 "EHLO
+        Fri, 18 Sep 2020 13:47:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726115AbgIRRep (ORCPT
+        with ESMTP id S1725955AbgIRRrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Sep 2020 13:34:45 -0400
+        Fri, 18 Sep 2020 13:47:53 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3831C0613CE
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2020 10:34:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77774C0613CE
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2020 10:47:53 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1kJKHS-006OZo-MX; Fri, 18 Sep 2020 19:34:42 +0200
-Message-ID: <f6df593556c3f395997dfe42a71a69f4919a5911.camel@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: add NL80211_EXT_FEATURE_CAN_REPLACE_PTK0
- support
+        id 1kJKUB-006Oy8-PI; Fri, 18 Sep 2020 19:47:51 +0200
+Message-ID: <a953c6d139ce7d30b0830574ead2d130817fa12c.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 04/22] nl80211: correctly validate S1G beacon head
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>,
-        linux-wireless@vger.kernel.org
-Cc:     luciano.coelho@intel.com, emmanuel.grumbach@intel.com,
-        linuxwifi@intel.com
-Date:   Fri, 18 Sep 2020 19:34:41 +0200
-In-Reply-To: <20200918171301.6942-1-alexander@wetzel-home.de> (sfid-20200918_192059_393491_AE270348)
-References: <20200918171301.6942-1-alexander@wetzel-home.de>
-         (sfid-20200918_192059_393491_AE270348)
+To:     Thomas Pedersen <thomas@adapt-ip.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Fri, 18 Sep 2020 19:47:49 +0200
+In-Reply-To: <97924cf65e6806fd896ada049f3d46ea@adapt-ip.com>
+References: <20200908190323.15814-1-thomas@adapt-ip.com>
+         <20200908190323.15814-5-thomas@adapt-ip.com>
+         <8b7f1ab8a15a06a23b7db2fb120e3144c482d7b9.camel@sipsolutions.net>
+         <97924cf65e6806fd896ada049f3d46ea@adapt-ip.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
@@ -47,24 +46,19 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2020-09-18 at 19:13 +0200, Alexander Wetzel wrote:
+On Fri, 2020-09-18 at 10:45 -0700, Thomas Pedersen wrote:
+> On 2020-09-18 03:56, Johannes Berg wrote:
+> > On Tue, 2020-09-08 at 12:03 -0700, Thomas Pedersen wrote:
+> > > The S1G beacon has a different header size than regular
+> > > beacons, so adjust the beacon head validator.
+> > 
+> > I've applied this already and will keep it, but you later add short
+> > beacons - don't they need further adjustments here too?
 > 
-> +		/* GCMP and 256 bit CCMP keys the key can't be copied into the
-> +		 * MPDU struct ieee80211_tx_info. We therefore must flush the
-> +		 * queues to ensure there are no MPDUs left which are referring
-> +		 * to the outgoing key.
-> +		 */
-> +		if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE &&
-> +		    (key->cipher == WLAN_CIPHER_SUITE_GCMP ||
-> +		     key->cipher == WLAN_CIPHER_SUITE_GCMP_256 ||
-> +		     key->cipher == WLAN_CIPHER_SUITE_CCMP_256)) {
-> +			ieee80211_stop_queues(hw);
-> +			iwl_mvm_mac_flush(hw, vif, 0, true);
-> +			ieee80211_wake_queues(hw);
-> +		}
+> Yes, but I was planning on doing that in the (yet to be submitted) "add 
+> S1G short beacon support" patch.
 
-Shouldn't the wake be after installing the new key? Otherwise new frames
-can race and be there again?
+OK, fair enough, was just wondering :)
 
 johannes
 
