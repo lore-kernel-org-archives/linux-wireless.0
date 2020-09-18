@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 299D6C43464
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07EDAC43463
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:19:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C87582075E
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:19:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3C852075E
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 10:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726739AbgIRKSX (ORCPT
+        id S1726701AbgIRKSW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Sep 2020 06:18:23 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:56636 "EHLO huawei.com"
+        Fri, 18 Sep 2020 06:18:22 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:56576 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726365AbgIRKSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726305AbgIRKSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 18 Sep 2020 06:18:22 -0400
 Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 221EBF2213E9275D43B8;
+        by Forcepoint Email with ESMTP id 2CC6EA322717D81899F0;
         Fri, 18 Sep 2020 18:18:20 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS403-HUB.china.huawei.com
  (10.3.19.203) with Microsoft SMTP Server id 14.3.487.0; Fri, 18 Sep 2020
- 18:18:12 +0800
+ 18:18:14 +0800
 From:   Zheng Bin <zhengbin13@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <kuba@kernel.org>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
-Subject: [PATCH -next 3/9] rtlwifi: rtl8192cu: fix comparison to bool warning in mac.c
-Date:   Fri, 18 Sep 2020 18:24:59 +0800
-Message-ID: <20200918102505.16036-4-zhengbin13@huawei.com>
+Subject: [PATCH -next 9/9] rtlwifi: rtl8723be: fix comparison to bool warning in hw.c
+Date:   Fri, 18 Sep 2020 18:25:05 +0800
+Message-ID: <20200918102505.16036-10-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.26.0.106.g9fadedd
 In-Reply-To: <20200918102505.16036-1-zhengbin13@huawei.com>
 References: <20200918102505.16036-1-zhengbin13@huawei.com>
@@ -49,54 +49,26 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes coccicheck warning:
 
-drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:161:14-17: WARNING: Comparison to bool
-drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:168:13-16: WARNING: Comparison to bool
-drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:179:14-17: WARNING: Comparison to bool
-drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:186:13-16: WARNING: Comparison to bool
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c:861:6-35: WARNING: Comparison to bool
 
 Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index d7afb6a186df..2890a495a23e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -158,14 +158,14 @@ bool rtl92c_init_llt_table(struct ieee80211_hw *hw, u32 boundary)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 3c7ba8214daf..0748aedce2ad 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -858,7 +858,7 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
+ 	rtl_write_word(rtlpriv, REG_CR, 0x2ff);
 
- 	for (i = 0; i < (boundary - 1); i++) {
- 		rst = rtl92c_llt_write(hw, i , i + 1);
--		if (true != rst) {
-+		if (!rst) {
- 			pr_err("===> %s #1 fail\n", __func__);
- 			return rst;
- 		}
+ 	if (!rtlhal->mac_func_enable) {
+-		if (_rtl8723be_llt_table_init(hw) == false)
++		if (!_rtl8723be_llt_table_init(hw))
+ 			return false;
  	}
- 	/* end of list */
- 	rst = rtl92c_llt_write(hw, (boundary - 1), 0xFF);
--	if (true != rst) {
-+	if (!rst) {
- 		pr_err("===> %s #2 fail\n", __func__);
- 		return rst;
- 	}
-@@ -176,14 +176,14 @@ bool rtl92c_init_llt_table(struct ieee80211_hw *hw, u32 boundary)
- 	 */
- 	for (i = boundary; i < LLT_LAST_ENTRY_OF_TX_PKT_BUFFER; i++) {
- 		rst = rtl92c_llt_write(hw, i, (i + 1));
--		if (true != rst) {
-+		if (!rst) {
- 			pr_err("===> %s #3 fail\n", __func__);
- 			return rst;
- 		}
- 	}
- 	/* Let last entry point to the start entry of ring buffer */
- 	rst = rtl92c_llt_write(hw, LLT_LAST_ENTRY_OF_TX_PKT_BUFFER, boundary);
--	if (true != rst) {
-+	if (!rst) {
- 		pr_err("===> %s #4 fail\n", __func__);
- 		return rst;
- 	}
+
 --
 2.26.0.106.g9fadedd
 
