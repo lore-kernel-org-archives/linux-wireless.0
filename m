@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 638C6C43467
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:36:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0713FC43465
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:39:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15ACC238A0
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:36:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C47EC23770
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:39:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600396578;
-	bh=SUsGi52iwz/b8+clppZmZarS0BghQQJ738U/7mWT4xg=;
+	s=default; t=1600396770;
+	bh=gizUYms1avGM+a5KK5WcbtwwMjQvvFthjI3iF6v7Uz4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=2rB4N1W5xeReB2zs/nehOCRCNwXrzOlk5WCMPfb1n02e7nCQafPzOCblJTVoylN6u
-	 NNf5PhNMpu6H1BgmAAYUsIX/5rQF4tKbyvzEuoZogV3WH01Gv2R1+Afo4dbTKZjn5q
-	 2rUzzLESL0pSEsrcn3Rk43L8WK1Lj0VjfoA8SCT8=
+	b=iQH1hnSRlgBXfRhER5HAMiX7iaIyzAOk8RZci4UvVK9FXa9+X4di+vcbhSl2+p3bg
+	 TUxPYjk8BuBlhwQZtDHWn/vRHLX9TWVGBbzgz2euAzogggL5EklJUqT+IRi6pX5Wne
+	 RWP1C3pzM4iXOPeP6VFmm8JiZwuYvDzIW/ujZmuo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729030AbgIRCgH (ORCPT
+        id S1728706AbgIRCL7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:36:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39778 "EHLO mail.kernel.org"
+        Thu, 17 Sep 2020 22:11:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37808 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728861AbgIRCM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:12:59 -0400
+        id S1728689AbgIRCLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:11:53 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D5BCE208DB;
-        Fri, 18 Sep 2020 02:12:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EA43121582;
+        Fri, 18 Sep 2020 02:11:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395178;
-        bh=SUsGi52iwz/b8+clppZmZarS0BghQQJ738U/7mWT4xg=;
+        s=default; t=1600395112;
+        bh=gizUYms1avGM+a5KK5WcbtwwMjQvvFthjI3iF6v7Uz4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PYzf2ZDUjnWqZYxBcqFrurrHDcFslpTT11qXiFqY0IfQ9NTWfPf/2Rufq5hfZgiiT
-         Ny9vW0jxAMKaa7Xp/5ITXxS+E8MZPqPFUmcD1NsQyQDniHu+rGlE7d2XImdvOM/rh0
-         yStQ8Jguha39cYx94bsbhfRusrLtTjFsyUHG+VbA=
+        b=qVeQ0ViPiZLDzoQqe2IWHrUaH52RigjGmOM6aKXBhd7KALsWwTNSAjEXolD1oeji+
+         Dj7xSfLo1Ze7WUvW5ihQNfqmDTF/FwYuOHcRezoDaNozvVBjcLHHdPI7GG0wDemKuF
+         dXgrNO4ITXLTC5sWGZr4FnxSmlO6YJhmVKWABRIg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mert Dirik <mertdirik@gmail.com>,
+Cc:     Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Tony Lindgren <tony@atomide.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 034/127] ar5523: Add USB ID of SMCWUSBT-G2 wireless adapter
-Date:   Thu, 17 Sep 2020 22:10:47 -0400
-Message-Id: <20200918021220.2066485-34-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 186/206] wlcore: fix runtime pm imbalance in wl1271_tx_work
+Date:   Thu, 17 Sep 2020 22:07:42 -0400
+Message-Id: <20200918020802.2065198-186-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918021220.2066485-1-sashal@kernel.org>
-References: <20200918021220.2066485-1-sashal@kernel.org>
+In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
+References: <20200918020802.2065198-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,38 +60,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mert Dirik <mertdirik@gmail.com>
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
 
-[ Upstream commit 5b362498a79631f283578b64bf6f4d15ed4cc19a ]
+[ Upstream commit 9604617e998b49f7695fea1479ed82421ef8c9f0 ]
 
-Add the required USB ID for running SMCWUSBT-G2 wireless adapter (SMC
-"EZ Connect g").
+There are two error handling paths in this functon. When
+wlcore_tx_work_locked() returns an error code, we should
+decrease the runtime PM usage counter the same way as the
+error handling path beginning from pm_runtime_get_sync().
 
-This device uses ar5523 chipset and requires firmware to be loaded. Even
-though pid of the device is 4507, this patch adds it as 4506 so that
-AR5523_DEVICE_UG macro can set the AR5523_FLAG_PRE_FIRMWARE flag for pid
-4507.
-
-Signed-off-by: Mert Dirik <mertdirik@gmail.com>
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+Acked-by: Tony Lindgren <tony@atomide.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20200520124241.9931-1-dinghao.liu@zju.edu.cn
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ti/wlcore/tx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index ad4a1efc57c97..e1a1d27427cc9 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -1771,6 +1771,8 @@ static const struct usb_device_id ar5523_id_table[] = {
- 	AR5523_DEVICE_UX(0x0846, 0x4300),	/* Netgear / WG111U */
- 	AR5523_DEVICE_UG(0x0846, 0x4250),	/* Netgear / WG111T */
- 	AR5523_DEVICE_UG(0x0846, 0x5f00),	/* Netgear / WPN111 */
-+	AR5523_DEVICE_UG(0x083a, 0x4506),	/* SMC / EZ Connect
-+						   SMCWUSBT-G2 */
- 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / AR5523_1 */
- 	AR5523_DEVICE_UX(0x157e, 0x3205),	/* Umedia / AR5523_2 */
- 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / TEW444UBEU */
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index b6e19c2d66b0a..250bcbf4ea2f2 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -877,6 +877,7 @@ void wl1271_tx_work(struct work_struct *work)
+ 
+ 	ret = wlcore_tx_work_locked(wl);
+ 	if (ret < 0) {
++		pm_runtime_put_noidle(wl->dev);
+ 		wl12xx_queue_recovery_work(wl);
+ 		goto out;
+ 	}
 -- 
 2.25.1
 
