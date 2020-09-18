@@ -5,52 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E202C43463
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EC1C43463
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:28:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CFE0239D1
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:17:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4A35235F7
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:28:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600395441;
-	bh=TYVQuGaZCsaS6HBn6FNNyf29z3P4FsrFBUAxzFSRrUE=;
+	s=default; t=1600396100;
+	bh=KuIx02ZLQcHtYc60sO8az7nsmu847tanrJ4N/NEnmhk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=StcZrKUNpMCMYzlDMpzSKfezFZzNxQD66que5QbrQlysjDm61K397canAEYVsCvf8
-	 IVFQT3mPxGN4Byqi3za4LMutCE1AwnNAPAMIs4NzMRA2SSFl+VObkM8Fh0JYrEjkY8
-	 iSFfW8/LrvY5c80viiIz2sVa/y09e6mUCFHl20+0=
+	b=ktOswbhJfEI5NqkMRTYZIv8xT1R7NtAwj+K5sZFcOUXd31p7wW23mmg4JHtqVaeur
+	 lPX0hdhYV9ewifPlBVhOI4N9ozIh7TdmGPZqo6xku2tu36d7g3X50IsYlXA+7jRvcn
+	 hfyiNyh5EzgRqIMcbJsJi8SbVNCGeHQjSlE/YwDU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729440AbgIRCRU (ORCPT
+        id S1728649AbgIRC2P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:17:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47388 "EHLO mail.kernel.org"
+        Thu, 17 Sep 2020 22:28:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44298 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729498AbgIRCRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:17:05 -0400
+        id S1729226AbgIRCP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:15:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 74283238A0;
-        Fri, 18 Sep 2020 02:17:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C60FB23976;
+        Fri, 18 Sep 2020 02:15:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395425;
-        bh=TYVQuGaZCsaS6HBn6FNNyf29z3P4FsrFBUAxzFSRrUE=;
+        s=default; t=1600395326;
+        bh=KuIx02ZLQcHtYc60sO8az7nsmu847tanrJ4N/NEnmhk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ObJHHYnLj81cl9KOQOUKkw41cieG1jYNPEsWdXaUNBBVdYvyy3fJHr1vtHW5w/C06
-         lkk9atdUNyjalFYyQjUuNSsYISC6YDjfp37/M19CaW5XTnBttbIHc/JnjbHhj3awx+
-         gDTWvTz6XDK/XODCVh4AUbiW1DAUBNSrBAsN05q8=
+        b=ps+FMomPM6tJvPklac9miQBbP2cD7KSY9SkfPawo9UWXldyndvusllujaTqASpMWx
+         ambUcJAg3yMOd7NR7zx+gMPx+bK7BXFEuFnbqHyeS1lkR9+jurM4WaiILL7B7uXr7d
+         tvdrxskq3SgP+E3AUZIxY+abHLUklfHaInqp9T2U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mert Dirik <mertdirik@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 19/64] ar5523: Add USB ID of SMCWUSBT-G2 wireless adapter
-Date:   Thu, 17 Sep 2020 22:15:58 -0400
-Message-Id: <20200918021643.2067895-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 27/90] ar5523: Add USB ID of SMCWUSBT-G2 wireless adapter
+Date:   Thu, 17 Sep 2020 22:13:52 -0400
+Message-Id: <20200918021455.2067301-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
-References: <20200918021643.2067895-1-sashal@kernel.org>
+In-Reply-To: <20200918021455.2067301-1-sashal@kernel.org>
+References: <20200918021455.2067301-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index 5bf22057459e6..bc6330b437958 100644
+index e492c7f0d311a..9f4ee1d125b68 100644
 --- a/drivers/net/wireless/ath/ar5523/ar5523.c
 +++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -1774,6 +1774,8 @@ static struct usb_device_id ar5523_id_table[] = {
+@@ -1769,6 +1769,8 @@ static struct usb_device_id ar5523_id_table[] = {
  	AR5523_DEVICE_UX(0x0846, 0x4300),	/* Netgear / WG111U */
  	AR5523_DEVICE_UG(0x0846, 0x4250),	/* Netgear / WG111T */
  	AR5523_DEVICE_UG(0x0846, 0x5f00),	/* Netgear / WPN111 */
