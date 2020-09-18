@@ -5,50 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D42C43464
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE014C43464
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98828206B6
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:02:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AC8B2083B
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 03:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398145;
-	bh=4aJ98UjtJt7kaQkL7jPD6T/htJNsIC50/6P6Y5BPc+A=;
+	s=default; t=1600398431;
+	bh=EkxvQKN2BiZLqAT9vobDmZp+Guijf7tsfKu/d3ty/Qs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=X6s/VB6XWmE9jC8Ticwdsuxv6LSOGNXSKO6U5B6ODHjME+0SmqS8useUv5KYQqVxH
-	 /gy6u/kEz4qHZBy3qznHqfqHKVZOp/aGtHVvfOkYoVPFCjNV8i2n0jqOLNVM10PJwh
-	 7Jf4p/UTsxak9gy2KgIYsByu7bmKUMww/QxozIb4=
+	b=yvfsY8ZwPud/ZbCjcADBOruC4bg8+4z9jJ1GoeBbNAlmbRWyd2caze/gEoa4ZfV55
+	 UlkKW1CCOkA32bR4HmX3ug6xqUEe7QZTz77VFi2PFnQc6NG+3nDPRSJNnYT/UdOr8Z
+	 RruqnL+9EPWI2JtbDxh5EJ4XcAb3Q3KPF5XWEhhA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730335AbgIRDBA (ORCPT
+        id S1730653AbgIRDHI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:01:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53712 "EHLO mail.kernel.org"
+        Thu, 17 Sep 2020 23:07:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726812AbgIRCF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:05:26 -0400
+        id S1727160AbgIRCDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:03:49 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B109A2376F;
-        Fri, 18 Sep 2020 02:05:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3D36821734;
+        Fri, 18 Sep 2020 02:03:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394725;
-        bh=4aJ98UjtJt7kaQkL7jPD6T/htJNsIC50/6P6Y5BPc+A=;
+        s=default; t=1600394629;
+        bh=EkxvQKN2BiZLqAT9vobDmZp+Guijf7tsfKu/d3ty/Qs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bMNFlgtD90B2gjNKS2bGsLGn6y9ExK/hlnIIks07vZQm8Cotnnw2zzZX5vwBTzTyB
-         WuwzKXMhgP8gEPl1fh9V1+33kytE6VXKattDCGXfXrSqqb1gSrbsi6LsxW1c6p5aIt
-         M+m/2DN3ish6yJDlTwhI1AHPOJ8EZJMEbmH3r7IE=
+        b=fqU3cGrvi56Nv8L89bDbakcTTZOwYQT7M7/JRm/GsuvXOPZEpHoOWH222EfUX1p+Y
+         O/rMNjkbfL3KTgDLsGIToOcUjQQm7FOozJHXsEYUXoU45dk2P364w+TKrSjwUVa++3
+         2dLz2Tj4obhKopE8QmbbxcSpmx76Lf5NdSAjvw9w=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 208/330] brcmfmac: Fix double freeing in the fmac usb data path
-Date:   Thu, 17 Sep 2020 21:59:08 -0400
-Message-Id: <20200918020110.2063155-208-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 129/330] mt76: clear skb pointers from rx aggregation reorder buffer during cleanup
+Date:   Thu, 17 Sep 2020 21:57:49 -0400
+Message-Id: <20200918020110.2063155-129-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 References: <20200918020110.2063155-1-sashal@kernel.org>
@@ -60,39 +59,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Raveendran Somu <raveendran.somu@cypress.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 78179869dc3f5c0059bbf5d931a2717f1ad97ecd ]
+[ Upstream commit 9379df2fd9234e3b67a23101c2370c99f6af6d77 ]
 
-When the brcmf_fws_process_skb() fails to get hanger slot for
-queuing the skb, it tries to free the skb.
-But the caller brcmf_netdev_start_xmit() of that funciton frees
-the packet on error return value.
-This causes the double freeing and which caused the kernel crash.
+During the cleanup of the aggregation session, a rx handler (or release timer)
+on another CPU might still hold a pointer to the reorder buffer and could
+attempt to release some packets.
+Clearing pointers during cleanup avoids a theoretical use-after-free bug here.
 
-Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1585124429-97371-3-git-send-email-chi-hsien.lin@cypress.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/agg-rx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index eadc64454839d..3d36b6ee158bb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -2149,8 +2149,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_DELAYED, fifo, skb);
- 		brcmf_fws_schedule_deq(fws);
- 	} else {
--		bphy_err(drvr, "drop skb: no hanger slot\n");
--		brcmf_txfinalize(ifp, skb, false);
-+		bphy_err(drvr, "no hanger slot available\n");
- 		rc = -ENOMEM;
+diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+index cbff0dfc96311..f8441fd65400c 100644
+--- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
++++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+@@ -268,6 +268,7 @@ static void mt76_rx_aggr_shutdown(struct mt76_dev *dev, struct mt76_rx_tid *tid)
+ 		if (!skb)
+ 			continue;
+ 
++		tid->reorder_buf[i] = NULL;
+ 		tid->nframes--;
+ 		dev_kfree_skb(skb);
  	}
- 	brcmf_fws_unlock(fws);
 -- 
 2.25.1
 
