@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32153C43463
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC3C9C43465
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D541023444
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:48:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A06723444
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600397319;
-	bh=HrjJ0jFLb60o1G6BMxIy8NQyRQ1fSNuPiH83ljiFXX8=;
+	s=default; t=1600397564;
+	bh=TFBY+Z38wtEk9WMdT39GZDD/7X9Gp3KLa48tdL5b0mE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zfFHrOiGzqUWCbiH85NsQ4hf95Nb6l1IqdlKI+9idyfeKzMFZ2SHAWvBkQRsC9Vf1
-	 Nzu0Pi2Qz+D3b6ntUBDgrfwMLC1HLk692lIE3AJyIw36/eSsmZoiWQF8OfQVMJFpqX
-	 zkxRl800SwJB6C8qQpw4x4tB/cEr7WBOEbGgHoZg=
+	b=sBKeBCCQS3fB1/c60p9RMiz/yVph9Qws+Dh4OJLR5pQixshoeQD5HQ658r9EBjk0y
+	 iqEWV/g7HtYg7432vWGQ/GlgqeimHG0hT1bgI1ts8jhafLUXB790ZIvxSw1Jc6w+O2
+	 S1fQ73EydYcc/JeHVNu4Ealb4boeEmlcEbnSq3jE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727923AbgIRCs2 (ORCPT
+        id S1728327AbgIRCw2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:48:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32812 "EHLO mail.kernel.org"
+        Thu, 17 Sep 2020 22:52:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59178 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728258AbgIRCJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:09:15 -0400
+        id S1727390AbgIRCIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:08:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E56DD2395B;
-        Fri, 18 Sep 2020 02:09:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BA732395A;
+        Fri, 18 Sep 2020 02:08:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394954;
-        bh=HrjJ0jFLb60o1G6BMxIy8NQyRQ1fSNuPiH83ljiFXX8=;
+        s=default; t=1600394889;
+        bh=TFBY+Z38wtEk9WMdT39GZDD/7X9Gp3KLa48tdL5b0mE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JWnBYWU5pCfh62sIWrRWKRI2poimneEBau8Atb1cruVEkz2j8MhuxYtu8xHKoXkZY
-         S8f+tLg5wPSVICLfUU+QVpSP4OwPuvtJdiyzpCaHDlB58g0ZKpIBLzcqXjoMkJNF50
-         295l4TaknYkS9ZBjQrt0rjKxDT5emDPlIraUFa+k=
+        b=MP/XXhlp9a7qCt/ndvLv+70YUJ94q5l7IBDoKPZ5XbxUq7jDfiUFqT2r+d5NnIaF9
+         P2wRJKIEIfFodohn+bso0F+JQYkdTWnViuuHo19RePgAxdT3ztE3WAP+wCGqwnWLV6
+         HOzDbNqQTIJ3E1mATwREF3tzaeGyDK2OEB5qbx/s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mert Dirik <mertdirik@gmail.com>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 061/206] ar5523: Add USB ID of SMCWUSBT-G2 wireless adapter
-Date:   Thu, 17 Sep 2020 22:05:37 -0400
-Message-Id: <20200918020802.2065198-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 005/206] ath10k: fix memory leak for tpc_stats_final
+Date:   Thu, 17 Sep 2020 22:04:41 -0400
+Message-Id: <20200918020802.2065198-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
 References: <20200918020802.2065198-1-sashal@kernel.org>
@@ -59,38 +59,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mert Dirik <mertdirik@gmail.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit 5b362498a79631f283578b64bf6f4d15ed4cc19a ]
+[ Upstream commit 486a8849843455298d49e694cca9968336ce2327 ]
 
-Add the required USB ID for running SMCWUSBT-G2 wireless adapter (SMC
-"EZ Connect g").
+The memory of ar->debug.tpc_stats_final is reallocated every debugfs
+reading, it should be freed in ath10k_debug_destroy() for the last
+allocation.
 
-This device uses ar5523 chipset and requires firmware to be loaded. Even
-though pid of the device is 4507, this patch adds it as 4506 so that
-AR5523_DEVICE_UG macro can set the AR5523_FLAG_PRE_FIRMWARE flag for pid
-4507.
+Tested HW: QCA9984
+Tested FW: 10.4-3.9.0.2-00035
 
-Signed-off-by: Mert Dirik <mertdirik@gmail.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/debug.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index da2d179430ca5..4c57e79e5779a 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -1770,6 +1770,8 @@ static const struct usb_device_id ar5523_id_table[] = {
- 	AR5523_DEVICE_UX(0x0846, 0x4300),	/* Netgear / WG111U */
- 	AR5523_DEVICE_UG(0x0846, 0x4250),	/* Netgear / WG111T */
- 	AR5523_DEVICE_UG(0x0846, 0x5f00),	/* Netgear / WPN111 */
-+	AR5523_DEVICE_UG(0x083a, 0x4506),	/* SMC / EZ Connect
-+						   SMCWUSBT-G2 */
- 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / AR5523_1 */
- 	AR5523_DEVICE_UX(0x157e, 0x3205),	/* Umedia / AR5523_2 */
- 	AR5523_DEVICE_UG(0x157e, 0x3006),	/* Umedia / TEW444UBEU */
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index aa333110eaba6..4e980e78ba95c 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2365,6 +2365,7 @@ void ath10k_debug_destroy(struct ath10k *ar)
+ 	ath10k_debug_fw_stats_reset(ar);
+ 
+ 	kfree(ar->debug.tpc_stats);
++	kfree(ar->debug.tpc_stats_final);
+ }
+ 
+ int ath10k_debug_register(struct ath10k *ar)
 -- 
 2.25.1
 
