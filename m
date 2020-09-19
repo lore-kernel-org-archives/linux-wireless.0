@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47554C43463
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Sep 2020 07:43:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA49C43463
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Sep 2020 07:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0252121D42
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Sep 2020 07:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE73F21D42
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Sep 2020 07:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726290AbgISHnN (ORCPT
+        id S1726311AbgISHnY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Sep 2020 03:43:13 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:13328 "EHLO huawei.com"
+        Sat, 19 Sep 2020 03:43:24 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13329 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726041AbgISHnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Sep 2020 03:43:13 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 34AC932C1EE704B44C20;
-        Sat, 19 Sep 2020 15:43:10 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.487.0; Sat, 19 Sep 2020
- 15:43:03 +0800
+        id S1726041AbgISHnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Sep 2020 03:43:24 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id DCD2BD9E564FEBFC79AE;
+        Sat, 19 Sep 2020 15:43:21 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Sat, 19 Sep 2020
+ 15:43:15 +0800
 From:   Jason Yan <yanaijie@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <kuba@kernel.org>,
-        <Larry.Finger@lwfinger.net>, <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+        <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>
 CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] rtlwifi: rtl8192ee: use true,false for bool variable large_cfo_hit
-Date:   Sat, 19 Sep 2020 15:44:12 +0800
-Message-ID: <20200919074412.3459163-1-yanaijie@huawei.com>
+Subject: [PATCH] rtlwifi: rtl8821ae: use true,false for bool variable large_cfo_hit
+Date:   Sat, 19 Sep 2020 15:44:28 +0800
+Message-ID: <20200919074428.3459234-1-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -47,35 +47,37 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 This addresses the following coccinelle warning:
 
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c:721:27-47:
-WARNING: Comparison of 0/1 to bool variable
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c:722:3-23: WARNING:
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:2680:27-47: WARNING:
+Comparison of 0/1 to bool variable
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:2683:3-23: WARNING:
 Assignment of 0/1 to bool variable
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c:725:2-22: WARNING:
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:2686:3-23: WARNING:
 Assignment of 0/1 to bool variable
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c | 6 +++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-index 140f33089c4d..997ff115b9ab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-@@ -718,11 +718,11 @@ static void rtl92ee_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
- 			       (rtldm->cfo_ave_pre - cfo_ave) :
- 			       (cfo_ave - rtldm->cfo_ave_pre);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+index 93893825e6d6..f6bff0ebd6b0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+@@ -2677,13 +2677,13 @@ static void rtl8821ae_dm_dynamic_atc_switch(struct ieee80211_hw *hw)
+ 						(rtldm->cfo_ave_pre - cfo_ave) :
+ 						(cfo_ave - rtldm->cfo_ave_pre);
  
 -		if (cfo_ave_diff > 20 && rtldm->large_cfo_hit == 0) {
--			rtldm->large_cfo_hit = 1;
 +		if (cfo_ave_diff > 20 && !rtldm->large_cfo_hit) {
+ 			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
+ 				"first large CFO hit\n");
+-			rtldm->large_cfo_hit = 1;
 +			rtldm->large_cfo_hit = true;
  			return;
- 		}
--		rtldm->large_cfo_hit = 0;
-+		rtldm->large_cfo_hit = false;
+ 		} else
+-			rtldm->large_cfo_hit = 0;
++			rtldm->large_cfo_hit = false;
  
  		rtldm->cfo_ave_pre = cfo_ave;
  
