@@ -2,86 +2,80 @@ Return-Path: <SRS0=Ix9G=C5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2849C43466
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 12:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 501FAC43463
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:26:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91E7A20EDD
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 12:16:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D52C20EDD
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:26:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726462AbgITMQg (ORCPT
+        id S1726437AbgITN03 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Sep 2020 08:16:36 -0400
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:33987 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726436AbgITMQe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Sep 2020 08:16:34 -0400
-X-Greylist: delayed 431 seconds by postgrey-1.27 at vger.kernel.org; Sun, 20 Sep 2020 08:16:20 EDT
-X-IronPort-AV: E=Sophos;i="5.77,282,1596492000"; 
-   d="scan'208";a="468612196"
-Received: from palace.lip6.fr ([132.227.105.202])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/AES256-SHA256; 20 Sep 2020 14:08:58 +0200
-From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     kernel-janitors@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sun, 20 Sep 2020 09:26:29 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35488 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726327AbgITN0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 Sep 2020 09:26:25 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 4E375ADA8;
+        Sun, 20 Sep 2020 13:26:59 +0000 (UTC)
+From:   =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>
+To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 10/14] iwlwifi: dbg_ini: drop double zeroing
-Date:   Sun, 20 Sep 2020 13:26:22 +0200
-Message-Id: <1600601186-7420-11-git-send-email-Julia.Lawall@inria.fr>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
-References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+        linux-wireless@vger.kernel.org
+Cc:     Chin-Yen Lee <timlee@realtek.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-realtek-soc@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>
+Subject: [PATCH 2/2] rtw88: Fix potential probe error handling race with wow firmware loading
+Date:   Sun, 20 Sep 2020 15:26:21 +0200
+Message-Id: <20200920132621.26468-3-afaerber@suse.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200920132621.26468-1-afaerber@suse.de>
+References: <20200920132621.26468-1-afaerber@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-sg_init_table zeroes its first argument, so the allocation of that argument
-doesn't have to.
+If rtw_core_init() fails to load the wow firmware, rtw_core_deinit()
+will not get called to clean up the regular firmware.
 
-the semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+Ensure that an error loading the wow firmware does not produce an oops
+for the regular firmware by waiting on its completion to be signalled
+before returning. Also release the loaded firmware.
 
-// <smpl>
-@@
-expression x,n,flags;
-@@
-
-x = 
-- kcalloc
-+ kmalloc_array
-  (n,sizeof(*x),flags)
-...
-sg_init_table(x,n)
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
-
+Fixes: c8e5695eae99 ("rtw88: load wowlan firmware if wowlan is supported")
+Cc: Chin-Yen Lee <timlee@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Andreas Färber <afaerber@suse.de>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff -u -p a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -631,7 +631,7 @@ static struct scatterlist *alloc_sgtable
- 	struct scatterlist *table;
- 
- 	nents = DIV_ROUND_UP(size, PAGE_SIZE);
--	table = kcalloc(nents, sizeof(*table), GFP_KERNEL);
-+	table = kmalloc_array(nents, sizeof(*table), GFP_KERNEL);
- 	if (!table)
- 		return NULL;
- 	sg_init_table(table, nents);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index dc48ec4b0a31..cc82c80f0433 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1472,6 +1472,9 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 		ret = rtw_load_firmware(rtwdev, RTW_WOWLAN_FW);
+ 		if (ret) {
+ 			rtw_warn(rtwdev, "no wow firmware loaded\n");
++			wait_for_completion(&rtwdev->fw.completion);
++			if (rtwdev->fw.firmware)
++				release_firmware(rtwdev->fw.firmware);
+ 			return ret;
+ 		}
+ 	}
+-- 
+2.28.0
 
