@@ -2,146 +2,95 @@ Return-Path: <SRS0=Ix9G=C5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B0DC43463
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED76C43463
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:36:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7282020EDD
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:26:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C7B23119
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Sep 2020 13:36:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=mojatatu-com.20150623.gappssmtp.com header.i=@mojatatu-com.20150623.gappssmtp.com header.b="tHTcgXDN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbgITN0i (ORCPT
+        id S1726342AbgITNgB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Sep 2020 09:26:38 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35464 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726306AbgITN0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Sep 2020 09:26:25 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 14C63ABAD;
-        Sun, 20 Sep 2020 13:26:59 +0000 (UTC)
-From:   =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>
-To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Cc:     Chin-Yen Lee <timlee@realtek.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-realtek-soc@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 1/2] rtw88: Fix probe error handling race with firmware loading
-Date:   Sun, 20 Sep 2020 15:26:20 +0200
-Message-Id: <20200920132621.26468-2-afaerber@suse.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200920132621.26468-1-afaerber@suse.de>
-References: <20200920132621.26468-1-afaerber@suse.de>
+        Sun, 20 Sep 2020 09:36:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38318 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726305AbgITNgB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 Sep 2020 09:36:01 -0400
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D87C061755
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2020 06:36:01 -0700 (PDT)
+Received: by mail-qt1-x835.google.com with SMTP id c18so9939277qtw.5
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2020 06:36:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mojatatu-com.20150623.gappssmtp.com; s=20150623;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=AlcJoneKXNfJvO8U/304wgnJFZRKZ49gwNcmCkuy6kI=;
+        b=tHTcgXDNp5QrYl8zImaCTIIBq7jn625bpXdEk8AnTT37aMC+arTYuR0O8MOyHEzbUo
+         joEk6PPh/iPRH5L8Yr8Zjq9KcETr6IEAwFVoYYpGBdnk39TajehNtYwUz8M+BmQFii9a
+         16B86+hDuuuXO6sQ3vmhWS1DZG7BRW8iLHK7LWUhI+ZyYYF9m34kKLsw1ZdJcrL+qXTO
+         r7NWWEtoN0cIcfmdyCqo3mRpYV72dOK0vz3ngTaQgw0guhNEqUlGcDvkwqEOJk+k7r8h
+         siHgCr93AfSDMVLXyuNxjfb4sQo3lSJjpJcrNc3gbplQYMtynkUvqYc23H1ONx+LScMy
+         YYoA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=AlcJoneKXNfJvO8U/304wgnJFZRKZ49gwNcmCkuy6kI=;
+        b=rJbpJ7emJ10lVIJItxcNkJt2gnlUFuJ7BIDJ1GjLECPR2zNFv0m0OtAUpuY2ScNwFo
+         npX5T729S9Cl+hGmGkOuYdHg48/W8pjR6ipe7bGYWafW9DzXUMIbWxz0JdZ9GpDaXDLk
+         hGDkyvuWcivVkTbNi4f8Iy8rWObe8XifUS0werRA8qCWzV2n32hFHd03k23N/hIHVmM2
+         3pL1V7lwWHs8GZo8dKTqfpQQdV0eSpP84B5OJn3pIrkaxpWcN0MEOFJ/7sdMkOoXsPfo
+         I5vPPdPvjZJISDGPMgb3jnl6I1iW49BmUXBxbkm0ZOHwaZALfhW2/O1cB0TF617zSZWi
+         wmJw==
+X-Gm-Message-State: AOAM530g6KY8YeVlcoydeAWAUd6ce4c9+a1goR6U6Glb2uz2+5bk/8QM
+        zNrVqy2m7cjv2BGDDq+sP+UWyg==
+X-Google-Smtp-Source: ABdhPJwD2ou54XRXZOzqX1B5Na/2NQVUqBGtTBGB9AvVWlo94bq11Pv0Fifo2tzLeJ4CgeCKwwlKwQ==
+X-Received: by 2002:ac8:7b2b:: with SMTP id l11mr40177140qtu.126.1600608958971;
+        Sun, 20 Sep 2020 06:35:58 -0700 (PDT)
+Received: from [192.168.2.28] (bras-base-kntaon1617w-grc-10-184-147-165-106.dsl.bell.ca. [184.147.165.106])
+        by smtp.googlemail.com with ESMTPSA id 205sm6490316qki.118.2020.09.20.06.35.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 20 Sep 2020 06:35:58 -0700 (PDT)
+To:     people <people@netdevconf.info>
+Cc:     speakers-0x14@netdevconf.info, prog-committee-0x14@netdevconf.info,
+        attendees-0x14@netdevconf.info,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>, lwn@lwn.net,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netfilter-devel@vger.kernel.org,
+        Christie Geldart <christie@ambedia.com>,
+        Kimberley Jeffries <kimberleyjeffries@gmail.com>
+From:   Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: 0x14: slides and papers posted
+Message-ID: <0257b321-cf56-ef33-5c4a-1cce0fc4c877@mojatatu.com>
+Date:   Sun, 20 Sep 2020 09:35:48 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In case of rtw8822be, a probe failure after successful rtw_core_init()
-has been observed to occasionally lead to an oops from rtw_load_firmware_cb():
 
-[    3.924268] pci 0001:01:00.0: [10ec:b822] type 00 class 0xff0000
-[    3.930531] pci 0001:01:00.0: reg 0x10: [io  0x0000-0x00ff]
-[    3.936360] pci 0001:01:00.0: reg 0x18: [mem 0x00000000-0x0000ffff 64bit]
-[    3.944042] pci 0001:01:00.0: supports D1 D2
-[    3.948438] pci 0001:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-[    3.957312] pci 0001:01:00.0: BAR 2: no space for [mem size 0x00010000 64bit]
-[    3.964645] pci 0001:01:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit]
-[    3.972332] pci 0001:01:00.0: BAR 0: assigned [io  0x10000-0x100ff]
-[    3.986240] rtw_8822be 0001:01:00.0: enabling device (0000 -> 0001)
-[    3.992735] rtw_8822be 0001:01:00.0: failed to map pci memory
-[    3.998638] rtw_8822be 0001:01:00.0: failed to request pci io region
-[    4.005166] rtw_8822be 0001:01:00.0: failed to setup pci resources
-[    4.011580] rtw_8822be: probe of 0001:01:00.0 failed with error -12
-[    4.018827] cfg80211: Loading compiled-in X.509 certificates for regulatory database
-[    4.029121] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
-[    4.050828] Unable to handle kernel paging request at virtual address edafeaac9607952c
-[    4.058975] Mem abort info:
-[    4.058980]   ESR = 0x96000004
-[    4.058990]   EC = 0x25: DABT (current EL), IL = 32 bits
-[    4.070353]   SET = 0, FnV = 0
-[    4.073487]   EA = 0, S1PTW = 0
-[    4.073501] dw-apb-uart 98007800.serial: forbid DMA for kernel console
-[    4.076723] Data abort info:
-[    4.086415]   ISV = 0, ISS = 0x00000004
-[    4.087731] Freeing unused kernel memory: 1792K
-[    4.090391]   CM = 0, WnR = 0
-[    4.098091] [edafeaac9607952c] address between user and kernel address ranges
-[    4.105418] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-[    4.111129] Modules linked in:
-[    4.114275] CPU: 1 PID: 31 Comm: kworker/1:1 Not tainted 5.9.0-rc5-next-20200915+ #700
-[    4.122386] Hardware name: Realtek Saola EVB (DT)
-[    4.127223] Workqueue: events request_firmware_work_func
-[    4.132676] pstate: 60000005 (nZCv daif -PAN -UAO BTYPE=--)
-[    4.138393] pc : rtw_load_firmware_cb+0x54/0xbc
-[    4.143040] lr : request_firmware_work_func+0x44/0xb4
-[    4.148217] sp : ffff800010133d70
-[    4.151616] x29: ffff800010133d70 x28: 0000000000000000
-[    4.157069] x27: 0000000000000000 x26: 0000000000000000
-[    4.162520] x25: 0000000000000000 x24: 0000000000000000
-[    4.167971] x23: ffff00007ac21908 x22: ffff00007ebb2100
-[    4.173424] x21: ffff00007ad35880 x20: edafeaac96079504
-[    4.178877] x19: ffff00007ad35870 x18: 0000000000000000
-[    4.184328] x17: 00000000000044d8 x16: 0000000000004310
-[    4.189780] x15: 0000000000000800 x14: 00000000ef006305
-[    4.195231] x13: ffffffff00000000 x12: ffffffffffffffff
-[    4.200682] x11: 0000000000000020 x10: 0000000000000003
-[    4.206135] x9 : 0000000000000000 x8 : ffff00007e73f680
-[    4.211585] x7 : 0000000000000000 x6 : ffff80001119b588
-[    4.217036] x5 : ffff00007e649c80 x4 : ffff00007e649c80
-[    4.222487] x3 : ffff80001119b588 x2 : ffff8000108d1718
-[    4.227940] x1 : ffff800011bd5000 x0 : ffff00007ac21600
-[    4.233391] Call trace:
-[    4.235906]  rtw_load_firmware_cb+0x54/0xbc
-[    4.240198]  request_firmware_work_func+0x44/0xb4
-[    4.245027]  process_one_work+0x178/0x1e4
-[    4.249142]  worker_thread+0x1d0/0x268
-[    4.252989]  kthread+0xe8/0xf8
-[    4.256127]  ret_from_fork+0x10/0x18
-[    4.259800] Code: f94013f5 a8c37bfd d65f03c0 f9000260 (f9401681)
-[    4.266049] ---[ end trace f822ebae1a8545c2 ]---
+To everyone (PC, organizing committee, speakers, workshop chairs,
+Tutors, sponsors, and attendees) - thank you for making the
+conference the success it was!
 
-To avoid this, wait on the completion callbacks in rtw_core_deinit()
-before releasing firmware and continuing teardown.
+The slides and papers are now up. The videos will come after.
 
-Note that rtw_wait_firmware_completion() was introduced with
-c8e5695eae9959fc5774c0f490f2450be8bad3de ("rtw88: load wowlan firmware
-if wowlan is supported"), so backports to earlier branches may need to
-inline wait_for_completion(&rtwdev->fw.completion) instead.
+The sessions page is at:
+https://netdevconf.info/0x14/accepted-sessions.html
 
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-Fixes: c8e5695eae99 ("rtw88: load wowlan firmware if wowlan is supported")
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Andreas Färber <afaerber@suse.de>
----
- drivers/net/wireless/realtek/rtw88/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+cheers,
+jamal
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 9770982b2f14..dc48ec4b0a31 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1486,6 +1486,8 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
- 	struct rtw_rsvd_page *rsvd_pkt, *tmp;
- 	unsigned long flags;
- 
-+	rtw_wait_firmware_completion(rtwdev);
-+
- 	if (fw->firmware)
- 		release_firmware(fw->firmware);
- 
--- 
-2.28.0
-
+PS: apologies if you receive this multiple times...
