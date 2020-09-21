@@ -7,91 +7,90 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE42C43465
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 13:12:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BF0C43463
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 13:15:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2991F2220C
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 13:12:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74E67218AC
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 13:15:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="m5yGXkG1"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Sms7Wv5r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727691AbgIUNMm (ORCPT
+        id S1726876AbgIUNPF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Sep 2020 09:12:42 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:35905 "EHLO m42-4.mailgun.net"
+        Mon, 21 Sep 2020 09:15:05 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:59545 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727334AbgIUNMk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Sep 2020 09:12:40 -0400
+        id S1726445AbgIUNPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Sep 2020 09:15:05 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600693959; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1600694104; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=jPYut+8RHNZBwsOgqTf/k1AnklrA0DOtviGDY6GteVw=;
- b=m5yGXkG1yR3VQYYHIG7HPIMw230Y9uWHf3Ox+Dgh1N4/dvy/SfgCjsr7WYWQqMkjKryLMqKw
- u177/Fj6vKcGzL5pXduHPewE5GiWt2BMx9mbTYZmAAXj30XUY/wxnzpbBo46zcwGk2vZCYkC
- zSXN52dH423lV/SQFrJcl/NUXHU=
+ Content-Type: Sender; bh=VjKTYWhWJ/rmGHfZ5d7EQdshOGCFQTn+ovP4sIriYg4=;
+ b=Sms7Wv5rm7TNbo/EhnNjdnGr2PDG7D3yBD996+hlRdV3oeoUEXLT8uhotvSAwoE8PEGETc2G
+ G7vTUrCipv3FFqR5w8GDFrQ5hGHoHmnLWH9NvFWEX8qvT+sEcMBa/NW7TY2Nkqr7wDWVTGFd
+ Vj88giSu7spLz6Uo8/OzAmXvZDw=
 X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5f68a49e6ace44caccfba943 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 21 Sep 2020 13:03:26
+ 5f68a7064398385e308c246d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 21 Sep 2020 13:13:42
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 86C53C433FF; Mon, 21 Sep 2020 13:03:25 +0000 (UTC)
+        id 4E1F3C433FF; Mon, 21 Sep 2020 13:13:41 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8C6E0C433CA;
-        Mon, 21 Sep 2020 13:03:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8C6E0C433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 49219C433C8;
+        Mon, 21 Sep 2020 13:13:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 49219C433C8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH -next 1/9] rtlwifi: rtl8192ee: fix comparison to bool
- warning
- in hw.c
+Subject: Re: [PATCH v5 1/2] wcn36xx: Add VHT fields to parameter data
+ structures
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200918102505.16036-2-zhengbin13@huawei.com>
-References: <20200918102505.16036-2-zhengbin13@huawei.com>
-To:     Zheng Bin <zhengbin13@huawei.com>
-Cc:     <pkshih@realtek.com>, <davem@davemloft.net>, <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <yi.zhang@huawei.com>,
-        <zhengbin13@huawei.com>
+In-Reply-To: <20200910150450.2178784-2-bryan.odonoghue@linaro.org>
+References: <20200910150450.2178784-2-bryan.odonoghue@linaro.org>
+To:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        loic.poulain@linaro.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200921130325.86C53C433FF@smtp.codeaurora.org>
-Date:   Mon, 21 Sep 2020 13:03:25 +0000 (UTC)
+Message-Id: <20200921131341.4E1F3C433FF@smtp.codeaurora.org>
+Date:   Mon, 21 Sep 2020 13:13:41 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zheng Bin <zhengbin13@huawei.com> wrote:
+Bryan O'Donoghue <bryan.odonoghue@linaro.org> wrote:
 
-> Fixes coccicheck warning:
+> In order to pass VHT parameters to wcn3680 we need to use a super-set of
+> the V1 data-structures with additional VHT parameters tacked on.
 > 
-> drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c:797:6-33: WARNING: Comparison to bool
+> This patch adds the additional fields to the STA and BSS parameter
+> structures.
 > 
-> Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
+> Since neither wcn3620 nor wcn3660 support VHT the size of the passed
+> message is fixed to the previous message length. Subsequent changes will
+> differentiate between wcn3620/wcn3660 and wcn3680 which does use the larger
+> message size.
+> 
+> Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-9 patches applied to wireless-drivers-next.git, thanks.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-027a4c9c305f rtlwifi: rtl8192ee: fix comparison to bool warning in hw.c
-4cff897cb2f8 rtlwifi: rtl8192c: fix comparison to bool warning in phy_common.c
-03ce81593951 rtlwifi: rtl8192cu: fix comparison to bool warning in mac.c
-d87a8d4d5eef rtlwifi: rtl8821ae: fix comparison to bool warning in hw.c
-07cc5f0345ae rtlwifi: rtl8821ae: fix comparison to bool warning in phy.c
-77205bc3db80 rtlwifi: rtl8192cu: fix comparison to bool warning in hw.c
-d544707ae078 rtlwifi: rtl8192ce: fix comparison to bool warning in hw.c
-9dbde387e283 rtlwifi: rtl8192de: fix comparison to bool warning in hw.c
-02686841d58f rtlwifi: rtl8723be: fix comparison to bool warning in hw.c
+96d6617d64ee wcn36xx: Add VHT fields to parameter data structures
+617e7cf80c92 wcn36xx: Use V1 data structure to store supported rates
 
 -- 
-https://patchwork.kernel.org/patch/11784543/
+https://patchwork.kernel.org/patch/11768987/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
