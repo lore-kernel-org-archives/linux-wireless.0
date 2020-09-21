@@ -2,58 +2,109 @@ Return-Path: <SRS0=BG2g=C6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CCBC4727D
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 21:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE625C4727D
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 23:04:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBBA520709
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 21:55:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F66A23A63
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 23:04:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T9rFgBNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728527AbgIUVzk (ORCPT
+        id S1728704AbgIUXEk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Sep 2020 17:55:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53924 "EHLO
+        Mon, 21 Sep 2020 19:04:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726950AbgIUVzk (ORCPT
+        with ESMTP id S1726457AbgIUXEk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Sep 2020 17:55:40 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01E32C061755;
-        Mon, 21 Sep 2020 14:55:40 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 8219111E49F63;
-        Mon, 21 Sep 2020 14:38:52 -0700 (PDT)
-Date:   Mon, 21 Sep 2020 14:55:39 -0700 (PDT)
-Message-Id: <20200921.145539.611119387193986457.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2020-09-21
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200921132658.26869-1-johannes@sipsolutions.net>
-References: <20200921132658.26869-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 27.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 21 Sep 2020 19:04:40 -0400
+Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 118FFC061755;
+        Mon, 21 Sep 2020 16:04:40 -0700 (PDT)
+Received: by mail-qk1-x742.google.com with SMTP id w12so17141868qki.6;
+        Mon, 21 Sep 2020 16:04:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=buxecpnwFXQjOdy2o4aC6QJJC2voHeLV76sj9RxzVr0=;
+        b=T9rFgBNo0UWnF94bkPIMe1dAJ04AMWR5vKWCv+CA+SF8ztvgW/dfRQqo5jYidlZa0x
+         /MLJW240kxK4Na53BdzkLafvC6igwgKRoBYwOYCfpXzx1fEgrn4qDeG2ZOJGm/OhhMft
+         gu8ELttcPnBSI03NMUanqKwaFdeOYaxbamB1PW6lohutHoqS+7MoC8hwFlxWzGeuI6u0
+         YLrTwvXUtPmsc9aPLqc5rVj8vO28A79tZnqsAzHx+MktaDEBMwYSj/8kGDGavL2STzWv
+         IJHSLnN71bsRLM7rKoIUCviIFto6IkA+HeJavP99253UyNJoXs1RH2m4NaOKHFBQJGNn
+         DoJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=buxecpnwFXQjOdy2o4aC6QJJC2voHeLV76sj9RxzVr0=;
+        b=m4tNjMprzKYzeHNrQGXr1LQHGhyXFLTWkcZIBJ7BEORxfBxWKDgdLCQkOTtCluPNVL
+         mhBqQDud7gSXZY5u2nC7UUZIx6w9AP9WSoc1KtxrqgIuuNHO2PHIHo4VSUSfg4gsS4Sf
+         yc0M/1gdM6K6xp6lYWqDS8I4udzTzq2sj3uGzuCNZGwx8+Xnpf6/2Mx9n5Xve4D+obzq
+         leLm6OjSOHjKx7HOrP8mG4d4wlUWtsm3myDm0QNoxKh89ba9I8Or1LG8W1hmpsH4MV67
+         l21eGJvnZVnMBm8d3yimZvVIQuzmmIYCdB7M1CAnknVwyiDAIZ/RRHVpcYN6UYzZQhI8
+         8DYg==
+X-Gm-Message-State: AOAM531DVXdJG8Vm7wIsYju/kPdH8FLP8/Taur6NLwaQtbqTjFBIasAb
+        Le5o80KbMbhL7xEnis7e5gg=
+X-Google-Smtp-Source: ABdhPJyFGU70pwwEAOnqwQcMZ9oM+i4T70jeGyRyNrU/QnkVxAuaN97VaFZibaOPXz7+SjHnSVGX9g==
+X-Received: by 2002:a37:7ac1:: with SMTP id v184mr2307937qkc.146.1600729479226;
+        Mon, 21 Sep 2020 16:04:39 -0700 (PDT)
+Received: from [192.168.1.181] (pool-173-75-208-99.phlapa.fios.verizon.net. [173.75.208.99])
+        by smtp.gmail.com with ESMTPSA id r21sm11473544qtj.80.2020.09.21.16.04.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Sep 2020 16:04:38 -0700 (PDT)
+Subject: Re: [PATCH] wireless: ath9k: hif_usb: fix race condition between
+ usb_get_urb() and usb_kill_anchored_urbs()
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, syzkaller-bugs@googlegroups.com,
+        syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
+References: <20200911071427.32354-1-brookebasile@gmail.com>
+ <20200921130559.005D8C43382@smtp.codeaurora.org>
+From:   Brooke Basile <brookebasile@gmail.com>
+Message-ID: <22bfd12a-c7ea-f03f-5d44-f94646b083f3@gmail.com>
+Date:   Mon, 21 Sep 2020 19:04:38 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
+MIME-Version: 1.0
+In-Reply-To: <20200921130559.005D8C43382@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [2620:137:e000::1:9]); Mon, 21 Sep 2020 14:38:52 -0700 (PDT)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 21 Sep 2020 15:26:57 +0200
-
-> And for net-next, we have a bit more content. There's more
-> in the pipeline for S1G (see below), but I figure I'd "flush"
-> this out, in particular so Felix can take advantage of it in
-> the driver updates.
+On 9/21/20 9:05 AM, Kalle Valo wrote:
+> Brooke Basile <brookebasile@gmail.com> wrote:
 > 
-> Please pull and let me know if there's any problem.
+>> Calls to usb_kill_anchored_urbs() after usb_kill_urb() on multiprocessor
+>> systems create a race condition in which usb_kill_anchored_urbs() deallocates
+>> the URB before the completer callback is called in usb_kill_urb(), resulting
+>> in a use-after-free.
+>> To fix this, add proper lock protection to usb_kill_urb() calls that can
+>> possibly run concurrently with usb_kill_anchored_urbs().
+>>
+>> Reported-by: syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
+>> Link: https://syzkaller.appspot.com/bug?id=cabffad18eb74197f84871802fd2c5117b61febf
+>> Signed-off-by: Brooke Basile <brookebasile@gmail.com>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> 
+> Patch applied to ath-next branch of ath.git, thanks.
+> 
+> 03fb92a432ea ath9k: hif_usb: fix race condition between usb_get_urb() and usb_kill_anchored_urbs()
+> 
 
-Pulled, thanks.
+Thank you! :)
+
+Best,
+Brooke Basile
