@@ -2,129 +2,91 @@ Return-Path: <SRS0=BG2g=C6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 671B4C43466
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 16:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 916CAC43465
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 16:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35D662396D
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 16:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D36620C09
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 16:59:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600707572;
+	bh=ilYPXYXOrK02dbgWO785dFtleHl2+7nPjk6K0R/PBvw=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:List-ID:From;
+	b=ZsRhgGbwSnSzpnKAuBAnmPUXuq4opwQWUdutuOgbAfhGe/324R3mWoVlZ6ZiYL5eu
+	 OisnqZlvw8kUd87DnYTHQyxlFMC2hHR+jun3b2ayzoUcXdh/CH9Ty4NDOuqyqphUxk
+	 nLiTcXxUwKAweHf4KK4z2WJX+ogXLFuznijQFozU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728173AbgIUQ0s (ORCPT
+        id S1730335AbgIUQ71 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Sep 2020 12:26:48 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:52942 "EHLO
-        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726795AbgIUQ0p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Sep 2020 12:26:45 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 32F904F9DAF;
-        Mon, 21 Sep 2020 16:26:44 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
-Received: from web.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id D3anzeBd18cg; Mon, 21 Sep 2020 16:26:41 +0000 (UTC)
-Received: from mail.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
-        (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 2C3344F9DAE;
-        Mon, 21 Sep 2020 16:26:41 +0000 (UTC)
-MIME-Version: 1.0
-Date:   Mon, 21 Sep 2020 09:26:40 -0700
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 06/22] {cfg,mac}80211: get correct default channel
- width for S1G
-In-Reply-To: <cb2cf1d923975b0115866b5e92efd91950a1b56d.camel@sipsolutions.net>
-References: <20200831205600.21058-1-thomas@adapt-ip.com>
- <20200831205600.21058-7-thomas@adapt-ip.com>
- <c5b93cd207ce780a56ad2689d7660fee48683fe9.camel@sipsolutions.net>
- <18730e757068a05f6531ea204791eae8@adapt-ip.com>
- <cb2cf1d923975b0115866b5e92efd91950a1b56d.camel@sipsolutions.net>
-User-Agent: Roundcube Webmail/1.4.7
-Message-ID: <8d24ea208788ac4dbd63f86bd1ee6eab@adapt-ip.com>
-X-Sender: thomas@adapt-ip.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+        Mon, 21 Sep 2020 12:59:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40096 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730308AbgIUQ7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Sep 2020 12:59:14 -0400
+Received: from localhost (fw-tnat.cambridge.arm.com [217.140.96.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4CAA5235FD;
+        Mon, 21 Sep 2020 16:59:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600707553;
+        bh=ilYPXYXOrK02dbgWO785dFtleHl2+7nPjk6K0R/PBvw=;
+        h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+        b=yyPOpwzx1pKltzf4H+v0LidZoBubumrt/74zHAY5TzeAVoIQ8re/YX4A1pDxLKPo6
+         Vv1/tJnpF8BhoP6or7Ck079oNkAaG4N9D7DU/T8PUoATLp0KQqEJ2DLkYD20jr0P0O
+         GwH9D2LvhnnnkrNBzbXQKA7gy9dil44xEFwmKaEQ=
+Date:   Mon, 21 Sep 2020 17:58:21 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     linux-spi@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-block@vger.kernel.org,
+        Yossi Leybovich <sleybo@amazon.com>,
+        linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        rds-devel@oss.oracle.com
+In-Reply-To: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+Subject: Re: [PATCH 00/14] drop double zeroing
+Message-Id: <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-09-21 00:01, Johannes Berg wrote:
-> On Sun, 2020-09-20 at 21:59 -0700, Thomas Pedersen wrote:
->> 
->> >         default:
->> >                 /* fall back to 20 MHz for unsupported modes */
->> >                 cfg80211_chandef_create(&chandef, cbss->channel,
->> >                                         NL80211_CHAN_NO_HT);
->> 
->> Yes, but then what would we pass to cfg80211_chandef_create()?
-> 
-> I'd say we just shouldn't call it if there's a chance that it's an S1G
-> channel?
-> 
->> We should
->> probably avoid adding an additional NL80211_CHAN_S1G if enum
->> nl80211_channel_type is legacy.
-> 
-> Agree.
-> 
->> It seems like NL80211_CHAN_NO_HT is often used as "give me the default
->> channel width".  See cfg80211_get_chandef_type() when it throws up its
->> hands
->> and returns NL80211_CHAN_NO_HT when encountering an unknown
->> chandef->width.
->> Also IBSS passes NL80211_CHAN_NO_HT when the BSS is actually 5 or 
->> 10MHz.
-> 
-> Yeah, agree it's a bit of a mess, but I'm not really in favour of
-> keeping that mess :)
-> 
-> Also, that's a WARN_ON() there, so the NL80211_CHAN_NO_HT isn't meant 
-> to
-> be anything *valid* in that case, just a value that doesn't cause
-> crashes or other bad behaviour further down the road if we hit that
-> path.
-> 
->> Maybe (instead of adding a new nl80211_channel_type)
->> cfg80211_chandef_create() throws a warning if anything but
->> NL80211_CHAN_NO_HT
->> is passed with an S1G frequency?
-> 
-> I'd literally just add
-> 
-> 	cfg80211_chandef_create_s1g()
-> 
-> and just not have the argument at all? Or just fill the chandef
-> manually, but of course that's a bit tedious sometimes.
+On Sun, 20 Sep 2020 13:26:12 +0200, Julia Lawall wrote:
+> sg_init_table zeroes its first argument, so the allocation of that argument
+> doesn't have to.
 
-Then the caller has to make the determination which function to call 
-based on the chan->band, but we've told the function implicitly by 
-passing chan. It doesn't make sense to me to push that complexity onto 
-the caller.
+Applied to
 
-That said, it actually looks like cfg80211_chandef_create() is only 
-called when a chantype is passed to nl80211 (legacy), in DFS, or HT.
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
 
-After removing this hunk the S1G tests still pass, so how about we just 
-drop it :)
+Thanks!
 
->> > IOW, it seems to me that this function should actually instead throw a
->> > warning (and then perhaps configure something sane?), but not be the
->> > default code path.
->> 
->> Yes, but I'd also like to avoid making the caller worry about the 
->> value
->> of a parameter which only exists for HT reasons (?).
-> 
-> It mostly isn't even for HT reasons ... for HT, we could perfectly well
-> fill the chandef directly, and do in many cases.
-> 
-> johannes
+[1/1] spi/topcliff-pch: drop double zeroing
+      commit: ca03dba30f2b8ff45a2972c6691e4c96d8c52b3b
 
--- 
-thomas
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
+
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
+
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
+
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
+
+Thanks,
+Mark
