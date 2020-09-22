@@ -2,143 +2,106 @@ Return-Path: <SRS0=PYjY=C7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86406C2D0E2
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 20:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E94C4727E
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 20:58:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 211082220D
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 20:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEE7E2065D
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 20:58:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="hYBm8kxy"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="J31XYHpC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbgIVUoo (ORCPT
+        id S1726654AbgIVU6A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 16:44:44 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:47826 "EHLO
+        Tue, 22 Sep 2020 16:58:00 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:48292 "EHLO
         mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726550AbgIVUoo (ORCPT
+        with ESMTP id S1726448AbgIVU56 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 16:44:44 -0400
-Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id CEE3F13C2B0;
-        Tue, 22 Sep 2020 13:44:42 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com CEE3F13C2B0
+        Tue, 22 Sep 2020 16:57:58 -0400
+Received: from [192.168.254.6] (unknown [50.46.158.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id E26B013C2B1;
+        Tue, 22 Sep 2020 13:57:56 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E26B013C2B1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1600807482;
-        bh=Y7BEo9tq5oANxsd2ILjh/8oGhdaRNbkq+0SihhCM+sY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=hYBm8kxyhfi2sSstzflNLjwZr4f4PP+VBv5xMwkakoHcv7RHQXdtjMklNIB1MLIjx
-         rUD1nH1ZWChaosj/gHfi3hlfqFBTS7Vft2ObKual6chdWke+CozdG7MVPnO1dDYOeO
-         InK1BwvIDbnTco1WYQnc55FyXn8rXInR3hhccius=
-From:   greearb@candelatech.com
-To:     linux-wireless@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] wireless:  Add sysfs file to show if radio is unavailable
-Date:   Tue, 22 Sep 2020 13:44:39 -0700
-Message-Id: <20200922204440.25360-1-greearb@candelatech.com>
-X-Mailer: git-send-email 2.20.1
+        s=default; t=1600808277;
+        bh=fK1jUHftaaJuplbD63eSAjwYbSZPP1pPOtRPCJotsuk=;
+        h=Subject:From:To:References:Date:In-Reply-To:From;
+        b=J31XYHpCHtAzlduTpXsZmAU+EtGgEWCLtFjqB6WD2j7du+BZmQeavxhQ0bKboKFwM
+         oo19LOQvuctg++uc80rrDq9wRwU37833ABky6P+fuF8pKtVuFnCyWBZ/4AeXWjY1/v
+         kWYKKsPaYv3dne/g/P5oc8/qptgzp5xzNuFwyyL8=
+Subject: Re: ax200, fw crashes, and sdata-in-driver
+From:   Ben Greear <greearb@candelatech.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <bb23b798-f347-7559-b3dc-d8f713899d26@candelatech.com>
+ <c9525845a8a8b7291988c92b9f427c64e8eef6c4.camel@sipsolutions.net>
+ <024147cd-75ed-bacb-fb7a-e97104886751@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <e8335394-b6a1-0806-b604-9b429c951c7d@candelatech.com>
+Date:   Tue, 22 Sep 2020 13:57:56 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
+In-Reply-To: <024147cd-75ed-bacb-fb7a-e97104886751@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+On 7/30/20 5:58 AM, Ben Greear wrote:
+> On 7/30/20 5:30 AM, Johannes Berg wrote:
+>> Hi,
+>>
+>>> I larded up my 5.4 kernel with KASAN and lockdep, and ran some tests.  This is with my
+>>> patch that keeps from busy-spinning forever (see previous ignored patch).
+>>
+>> Right, sorry, hadn't gotten to patches in a while.
+>>
+>>> After a few restarts and FW crashes, the ax200 could not recover firmware.  There
+>>> were lots of sdata-in-driver errors, and then KASAN hit a use-after-free issue
+>>> related to ax200 accessing sta object that was previously deleted.
+>>>
+>>> Now, I think I know why:
+>>>
+>>> In the ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
+>>> method, it will clear the SDATA_IN_DRIVER flag, and according to comments,
+>>> this is run when firmware cannot be recovered.  But, just because FW is
+>>> dead does not mean that the driver itself has cleaned up its state.
+>>>
+>>> So question is, should ax200 (and all drivers) be responsible for cleaning
+>>> up all state when FW cannot be recovered, or should instead mac80211 do cleanup
+>>> in this case by, among other things, not clearing that flag (and probably
+>>> not doing the ctx->driver_present = false; config as well)?
+>>
+>> I think it should be the driver. It's not clear _why_ the driver failed,
+>> after all. If the firmware is still alive and just rejected something
+>> then perhaps rolling things back will work. But if the firmware just
+>> died again, that will just cause even more trouble.
+> 
+> The current code clears state without actually notifying the driver, so it
+> is causing mac80211 to be out of sync with the driver.  I can't see how that
+> is a good idea.  This is root cause of the issue that causes the busy-spin
+> related to sdata-in-driver / EIO as far as I can tell.
 
-While stress-testing an IPQ4019 based AP, sometimes the firmware and/or
-radio hardware crashes hard enough that it cannot recover.  In this case,
-no wifi can work on that radio again until user-space takes some
-action (such as reboot, or possibly rmmod/modprobe).
+Hello,
 
-Provide a sysfs file so that watchdog or other tools can check to
-see if radios are in such a state and take appropriate action.
+As far as I can tell, no work has gone into the driver(s) to resolve the use-after-free
+issue.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- include/net/cfg80211.h | 13 +++++++++++++
- net/wireless/core.c    |  6 ++++++
- net/wireless/sysfs.c   |  2 ++
- 3 files changed, 21 insertions(+)
+So, maybe worth considering my earlier patch to clean everything up in mac80211
+instead of depending on the drivers to get this correctly cleaned up in all cases?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d9e6b9fbd95ba..926ba62e4b3e2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4778,6 +4778,8 @@ struct wiphy_iftype_akm_suites {
-  * @max_data_retry_count: maximum supported per TID retry count for
-  *	configuration through the %NL80211_TID_CONFIG_ATTR_RETRY_SHORT and
-  *	%NL80211_TID_CONFIG_ATTR_RETRY_LONG attributes
-+ * @unavailable:  Has this radio become unavailable for some reason.
-+ *	0:  It is available, otherwise not.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -4791,6 +4793,7 @@ struct wiphy {
- 
- 	const struct ieee80211_iface_combination *iface_combinations;
- 	int n_iface_combinations;
-+	int unavailable;
- 	u16 software_iftypes;
- 
- 	u16 n_addresses;
-@@ -7696,6 +7699,16 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
-  */
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy);
- 
-+/**
-+ * cfg80211_set_unavailable - Set value indicating resources have become
-+ * unavailable.
-+ *
-+ * This can happen if firmware crashes during restart, for instance.  In this
-+ * case, probably module rmmod/modprobe or reboot is required to get the system
-+ * functional again.
-+ */
-+void cfg80211_set_unavailable(struct wiphy *wiphy, int value);
-+
- /**
-  * wiphy_ext_feature_set - set the extended feature flag
-  *
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 354b0ccbdc240..e1c842acab796 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -259,6 +259,12 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- 	rdev->opencount--;
- }
- 
-+void cfg80211_set_unavailable(struct wiphy *wiphy, int value)
-+{
-+	wiphy->unavailable = value;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_set_unavailable);
-+
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 3ac1f48195d28..077ec8083b887 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -33,6 +33,7 @@ static ssize_t name ## _show(struct device *dev,			\
- static DEVICE_ATTR_RO(name)
- 
- SHOW_FMT(index, "%d", wiphy_idx);
-+SHOW_FMT(unavailable, "%d", wiphy.unavailable);
- SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
- SHOW_FMT(address_mask, "%pM", wiphy.addr_mask);
- 
-@@ -66,6 +67,7 @@ static DEVICE_ATTR_RO(addresses);
- 
- static struct attribute *ieee80211_attrs[] = {
- 	&dev_attr_index.attr,
-+	&dev_attr_unavailable.attr,
- 	&dev_attr_macaddress.attr,
- 	&dev_attr_address_mask.attr,
- 	&dev_attr_addresses.attr,
--- 
-2.26.2
+I'll repost it, freshly rebased against latest linus tree....
+
+Thanks,
+Ben
 
