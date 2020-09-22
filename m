@@ -1,110 +1,117 @@
-Return-Path: <SRS0=BG2g=C6=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=PYjY=C7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE625C4727D
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 23:04:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E022C4363D
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F66A23A63
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Sep 2020 23:04:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T9rFgBNo"
+	by mail.kernel.org (Postfix) with ESMTP id DD33F23A84
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:08:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728704AbgIUXEk (ORCPT
+        id S1728662AbgIVFIk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Sep 2020 19:04:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36356 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbgIUXEk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Sep 2020 19:04:40 -0400
-Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 118FFC061755;
-        Mon, 21 Sep 2020 16:04:40 -0700 (PDT)
-Received: by mail-qk1-x742.google.com with SMTP id w12so17141868qki.6;
-        Mon, 21 Sep 2020 16:04:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=buxecpnwFXQjOdy2o4aC6QJJC2voHeLV76sj9RxzVr0=;
-        b=T9rFgBNo0UWnF94bkPIMe1dAJ04AMWR5vKWCv+CA+SF8ztvgW/dfRQqo5jYidlZa0x
-         /MLJW240kxK4Na53BdzkLafvC6igwgKRoBYwOYCfpXzx1fEgrn4qDeG2ZOJGm/OhhMft
-         gu8ELttcPnBSI03NMUanqKwaFdeOYaxbamB1PW6lohutHoqS+7MoC8hwFlxWzGeuI6u0
-         YLrTwvXUtPmsc9aPLqc5rVj8vO28A79tZnqsAzHx+MktaDEBMwYSj/8kGDGavL2STzWv
-         IJHSLnN71bsRLM7rKoIUCviIFto6IkA+HeJavP99253UyNJoXs1RH2m4NaOKHFBQJGNn
-         DoJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=buxecpnwFXQjOdy2o4aC6QJJC2voHeLV76sj9RxzVr0=;
-        b=m4tNjMprzKYzeHNrQGXr1LQHGhyXFLTWkcZIBJ7BEORxfBxWKDgdLCQkOTtCluPNVL
-         mhBqQDud7gSXZY5u2nC7UUZIx6w9AP9WSoc1KtxrqgIuuNHO2PHIHo4VSUSfg4gsS4Sf
-         yc0M/1gdM6K6xp6lYWqDS8I4udzTzq2sj3uGzuCNZGwx8+Xnpf6/2Mx9n5Xve4D+obzq
-         leLm6OjSOHjKx7HOrP8mG4d4wlUWtsm3myDm0QNoxKh89ba9I8Or1LG8W1hmpsH4MV67
-         l21eGJvnZVnMBm8d3yimZvVIQuzmmIYCdB7M1CAnknVwyiDAIZ/RRHVpcYN6UYzZQhI8
-         8DYg==
-X-Gm-Message-State: AOAM531DVXdJG8Vm7wIsYju/kPdH8FLP8/Taur6NLwaQtbqTjFBIasAb
-        Le5o80KbMbhL7xEnis7e5gg=
-X-Google-Smtp-Source: ABdhPJyFGU70pwwEAOnqwQcMZ9oM+i4T70jeGyRyNrU/QnkVxAuaN97VaFZibaOPXz7+SjHnSVGX9g==
-X-Received: by 2002:a37:7ac1:: with SMTP id v184mr2307937qkc.146.1600729479226;
-        Mon, 21 Sep 2020 16:04:39 -0700 (PDT)
-Received: from [192.168.1.181] (pool-173-75-208-99.phlapa.fios.verizon.net. [173.75.208.99])
-        by smtp.gmail.com with ESMTPSA id r21sm11473544qtj.80.2020.09.21.16.04.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Sep 2020 16:04:38 -0700 (PDT)
-Subject: Re: [PATCH] wireless: ath9k: hif_usb: fix race condition between
- usb_get_urb() and usb_kill_anchored_urbs()
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, syzkaller-bugs@googlegroups.com,
-        syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
-References: <20200911071427.32354-1-brookebasile@gmail.com>
- <20200921130559.005D8C43382@smtp.codeaurora.org>
-From:   Brooke Basile <brookebasile@gmail.com>
-Message-ID: <22bfd12a-c7ea-f03f-5d44-f94646b083f3@gmail.com>
-Date:   Mon, 21 Sep 2020 19:04:38 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        Tue, 22 Sep 2020 01:08:40 -0400
+Received: from mga06.intel.com ([134.134.136.31]:25727 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728290AbgIVFIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 01:08:40 -0400
+IronPort-SDR: QDix34jDfMdZwC7RCB7xNqKU7U83y8Weu6N7QqUsmgRV8EebPjNZjP0GIQeO0H5FItS8E8k/En
+ rJENyYrD5ZbA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9751"; a="222126429"
+X-IronPort-AV: E=Sophos;i="5.77,289,1596524400"; 
+   d="scan'208";a="222126429"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2020 22:08:40 -0700
+IronPort-SDR: fn1+MUgA98m8APppssuckfpm6YMymrFrbRNG3QVi/fvFRcTTHZ5Stz0f7NiKfNZjJeG9ipUxQk
+ pFoi26Nf++3A==
+X-IronPort-AV: E=Sophos;i="5.77,289,1596524400"; 
+   d="scan'208";a="334851899"
+Received: from shao2-debian.sh.intel.com (HELO [10.239.13.3]) ([10.239.13.3])
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2020 22:08:38 -0700
+Subject: Re: [kbuild-all] Re: [PATCH v3] ath11k: cold boot calibration support
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        kernel test robot <lkp@intel.com>
+Cc:     Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        kbuild-all@lists.01.org,
+        Govindaraj Saminathan <gsamin@codeaurora.org>
+References: <1600163991-2093-1-git-send-email-ssreeela@codeaurora.org>
+ <202009160303.xwD2GbBx%lkp@intel.com> <87v9g7459d.fsf@codeaurora.org>
+From:   Rong Chen <rong.a.chen@intel.com>
+Message-ID: <fef872c3-cf44-d89d-3c3a-d305e3a702a5@intel.com>
+Date:   Tue, 22 Sep 2020 13:07:57 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <20200921130559.005D8C43382@smtp.codeaurora.org>
+In-Reply-To: <87v9g7459d.fsf@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/21/20 9:05 AM, Kalle Valo wrote:
-> Brooke Basile <brookebasile@gmail.com> wrote:
-> 
->> Calls to usb_kill_anchored_urbs() after usb_kill_urb() on multiprocessor
->> systems create a race condition in which usb_kill_anchored_urbs() deallocates
->> the URB before the completer callback is called in usb_kill_urb(), resulting
->> in a use-after-free.
->> To fix this, add proper lock protection to usb_kill_urb() calls that can
->> possibly run concurrently with usb_kill_anchored_urbs().
+
+
+On 9/21/20 9:40 PM, Kalle Valo wrote:
+> kernel test robot <lkp@intel.com> writes:
+>
+>> Thank you for the patch! Yet something to improve:
 >>
->> Reported-by: syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
->> Link: https://syzkaller.appspot.com/bug?id=cabffad18eb74197f84871802fd2c5117b61febf
->> Signed-off-by: Brooke Basile <brookebasile@gmail.com>
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> Patch applied to ath-next branch of ath.git, thanks.
-> 
-> 03fb92a432ea ath9k: hif_usb: fix race condition between usb_get_urb() and usb_kill_anchored_urbs()
-> 
+>> [auto build test ERROR on ath6kl/ath-next]
+>> [also build test ERROR on next-20200915]
+>> [cannot apply to v5.9-rc5]
+>> [If your patch is applied to the wrong git tree, kindly drop us a note.
+>> And when submitting patch, we suggest to use '--base' as documented in
+>> https://git-scm.com/docs/git-format-patch]
+>>
+>> url:
+>> https://github.com/0day-ci/linux/commits/Sowmiya-Sree-Elavalagan/ath11k-cold-boot-calibration-support/20200915-180324
+>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
+>> config: mips-allmodconfig (attached as .config)
+>> compiler: mips-linux-gcc (GCC) 9.3.0
+>> reproduce (this is a W=1 build):
+>>          wget
+>> https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross
+>> -O ~/bin/make.cross
+>>          chmod +x ~/bin/make.cross
+>>          # save the attached .config to linux build tree
+>>          COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross ARCH=mips
+>>
+>> If you fix the issue, kindly add following tag as appropriate
+>> Reported-by: kernel test robot <lkp@intel.com>
+>>
+>> All errors (new ones prefixed by >>, old ones prefixed by <<):
+>>
+>> ERROR: modpost: "fw_arg3" [drivers/mtd/parsers/bcm63xxpart.ko] undefined!
+>>>> ERROR: modpost: "ath11k_cold_boot_cal"
+>> [drivers/net/wireless/ath/ath11k/ath11k_ahb.ko] undefined!
+> For some reason I don't see the kbuild bot report above in patchwork:
+>
+> https://patchwork.kernel.org/patch/11775953/
+>
+> This time the message ids seem to be ok:
+>
+> Message-Id: <1600163991-2093-1-git-send-email-ssreeela@codeaurora.org>
+> [...]
+> In-Reply-To: <1600163991-2093-1-git-send-email-ssreeela@codeaurora.org>
+> References: <1600163991-2093-1-git-send-email-ssreeela@codeaurora.org>
+>
+> If anyone has ideas why patchwork doesn't see the report, please let me
+> know.
+>
 
-Thank you! :)
+Hi Kalle,
 
-Best,
-Brooke Basile
+We hided the reports for patchwork, please see 
+https://gitlab.freedesktop.org/patchwork-fdo/patchwork-fdo/-/issues/21
+
+Best Regards,
+Rong Chen
