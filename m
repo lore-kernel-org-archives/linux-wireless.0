@@ -7,80 +7,83 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D9FCC2D0E2
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B34E3C4727F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:47:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33C8E23A1E
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:46:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58EDF23A5F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:47:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NN6aFvxj"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="FOoA/9kG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730149AbgIVHp7 (ORCPT
+        id S1730180AbgIVHrB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 03:45:59 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:44514 "EHLO z5.mailgun.us"
+        Tue, 22 Sep 2020 03:47:01 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:20190 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730066AbgIVHp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 03:45:59 -0400
+        id S1730179AbgIVHrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 03:47:00 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600760758; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1600760819; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=/Q0IKlekSxFI/LNySz/8mlfVQ1aH2i7zmdmrDurMb9o=;
- b=NN6aFvxjchLSy4tvZEhUsE44OSRLUoi+zuVG0w0aPhuvfguy4GSspGZlcLfg9FiZD0nN9DKe
- qIoKlpw6vBc2wblGuhFQcIpIT2EE9jcr8ri6dHy0zRCcK6U11xmG8Vj6Cc8FyVVR+s/SUHga
- PmVVVT3MueSi/BXOse1XgHcrD1A=
+ Content-Type: Sender; bh=huUocu8YlFMMHkoln2+m+5XAAWdXHVlAKN6TwwOZarw=;
+ b=FOoA/9kGxYWwLrfB3hxPdEIuLXH09BQ5F/NkbUhwi9GM3rzRGc5X+lPmfXqWBgF4C6cRM3yQ
+ wQVj9YtArR6KdNDIwX3R5+Ss+5id5SnSGRRkPo+51tOvmWjyE+j2lQrkLRneVjJIyOtAyLDy
+ 2zVTcfhPlrtV3/8REfIUH6NBHTg=
 X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f69ab71d19dddf2f9dfda41 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 07:44:49
+ 5f69abf3cb82ff92d18c1168 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 07:46:59
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C2BDCC433C8; Tue, 22 Sep 2020 07:44:48 +0000 (UTC)
+        id 67A00C43385; Tue, 22 Sep 2020 07:46:58 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 521D7C433CB;
-        Tue, 22 Sep 2020 07:44:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 521D7C433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C8748C433CA;
+        Tue, 22 Sep 2020 07:46:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C8748C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: remove redundant num_keep_alive_pattern
- assignment
+Subject: Re: [PATCH] ath6kl: wmi: prevent a shift wrapping bug in
+ ath6kl_wmi_delete_pstream_cmd()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1600361190-22047-1-git-send-email-kvalo@codeaurora.org>
-References: <1600361190-22047-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20200918142732.GA909725@mwanda>
+References: <20200918142732.GA909725@mwanda>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200922074448.C2BDCC433C8@smtp.codeaurora.org>
-Date:   Tue, 22 Sep 2020 07:44:48 +0000 (UTC)
+Message-Id: <20200922074658.67A00C43385@smtp.codeaurora.org>
+Date:   Tue, 22 Sep 2020 07:46:58 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> There were two asignments to num_keep_alive_pattern, remove the first one which is wrong.
+> The "tsid" is a user controlled u8 which comes from debugfs.  Values
+> more than 15 are invalid because "active_tsids" is a 16 bit variable.
+> If the value of "tsid" is more than 31 then that leads to a shift
+> wrapping bug.
 > 
-> No functional changes. Compile tested only.
-> 
-> Reported-by: Colin Ian King <colin.king@canonical.com>
+> Fixes: 8fffd9e5ec9e ("ath6kl: Implement support for QOS-enable and QOS-disable from userspace")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-9883c0d075f1 ath11k: remove redundant num_keep_alive_pattern assignment
+6a950755cec1 ath6kl: wmi: prevent a shift wrapping bug in ath6kl_wmi_delete_pstream_cmd()
 
 -- 
-https://patchwork.kernel.org/patch/11782897/
+https://patchwork.kernel.org/patch/11785193/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
