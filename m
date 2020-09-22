@@ -7,81 +7,92 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B227BC2D0E2
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C29D1C2D0E2
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:42:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42914239CF
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:41:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58D08239D2
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 07:42:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="j+rNr5Kb"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XmrJq4tE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730066AbgIVHln (ORCPT
+        id S1730069AbgIVHmQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 03:41:43 -0400
+        Tue, 22 Sep 2020 03:42:16 -0400
 Received: from m42-4.mailgun.net ([69.72.42.4]:10488 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729751AbgIVHln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 03:41:43 -0400
+        id S1729751AbgIVHmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 03:42:16 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600760502; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1600760535; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=oUtPTLeBFiuDVxK6/092BYw0o/DBJUk47gV+VLDbkIA=;
- b=j+rNr5KbsZgJuoZAB0nUoG59PciIj8fPWUSGkOwKSdIfKHPsDUCHgRlr0uVA4kNJyos/CqxM
- 6p0tONJZhgYrJCVtC26fY41QgpnT+04aETtLcpK8MUwoZy9axfIRmeQOS0RzXd0Ro5pjxLf2
- A0GLLWuHb1fTtw7hVTHrmE9s55o=
+ Content-Type: Sender; bh=9i2k88Y2UMhNh52PW5o5XuauMfBkl2RWDihpUR6fjl8=;
+ b=XmrJq4tE2N0TJKeipxqUurnC4vmaAkYmYjic+MdnvAYWrqfpO5SHTFRiBW7w97D1RoXSVyLR
+ Ph4VDHScvS5oSsFeEFrz6hvXujxeIP1TsJsnEdm5Us1qknFGH7BdphjRE+BZS6Spq+9AZfJH
+ /BEuUUPl2NIUJgFvypbk5caoCMY=
 X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 5f69aa9bfa736648e8cc38e7 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 07:41:15
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f69aad7cb82ff92d18a93a9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 07:42:15
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 61096C433CB; Tue, 22 Sep 2020 07:41:14 +0000 (UTC)
+        id EB4F0C433C8; Tue, 22 Sep 2020 07:42:14 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5FAD0C433C8;
-        Tue, 22 Sep 2020 07:41:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5FAD0C433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7DC49C433CA;
+        Tue, 22 Sep 2020 07:42:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7DC49C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH -next] ath11k: Add checked value for ath11k_ahb_remove
+Subject: Re: [PATCH 1/4] ath11k: refactor debugfs code into debugfs.c
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200621095136.7xdbzkthoxuw2qow@debian.debian-2>
-References: <20200621095136.7xdbzkthoxuw2qow@debian.debian-2>
-To:     Bo YU <tsu.yubo@gmail.com>
-Cc:     davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, tsu.yubo@gmail.com
+In-Reply-To: <1600264523-12939-1-git-send-email-kvalo@codeaurora.org>
+References: <1600264523-12939-1-git-send-email-kvalo@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200922074114.61096C433CB@smtp.codeaurora.org>
-Date:   Tue, 22 Sep 2020 07:41:14 +0000 (UTC)
+Message-Id: <20200922074214.EB4F0C433C8@smtp.codeaurora.org>
+Date:   Tue, 22 Sep 2020 07:42:14 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bo YU <tsu.yubo@gmail.com> wrote:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> Return value form wait_for_completion_timeout should to be checked.
+> If CONFIG_ATH11K_DEBUGFS is disabled there are warnings debug.c:
 > 
-> This is detected by Coverity: #CID:1464479 (CHECKED_RETURN)
+> drivers/net/wireless/ath/ath11k/debug.c:36:20: warning: 'htt_bp_lmac_ring' defined but not used [-Wunused-variable]
+>    36 | static const char *htt_bp_lmac_ring[HTT_SW_LMAC_RING_IDX_MAX] = {
+>       |                    ^~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath11k/debug.c:15:20: warning: 'htt_bp_umac_ring' defined but not used [-Wunused-variable]
+>    15 | static const char *htt_bp_umac_ring[HTT_SW_UMAC_RING_IDX_MAX] = {
+>       |                    ^~~~~~~~~~~~~~~~
 > 
-> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> Signed-off-by: Bo YU <tsu.yubo@gmail.com>
+> Fix this by refactoring debugfs code to debugfs.c. This also reduces the number
+> of ifdefs in debug.c and makes it easier to maintain the code.
+> 
+> No functional changes. Compile tested only.
+> 
+> Reported-by: YueHaibing <yuehaibing@huawei.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+4 patches applied to ath-next branch of ath.git, thanks.
 
-80b892fc8a90 ath11k: Add checked value for ath11k_ahb_remove
+da3a9d3c1576 ath11k: refactor debugfs code into debugfs.c
+cb4e57db2ff0 ath11k: debugfs: use ath11k_debugfs_ prefix
+56292162b9a2 ath11k: rename debug_htt_stats.[c|h] to debugfs_htt_stats.[c|h]
+568f06036ee2 ath11k: debugfs: move some function declarations to correct header files
 
 -- 
-https://patchwork.kernel.org/patch/11616495/
+https://patchwork.kernel.org/patch/11781017/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
