@@ -2,143 +2,252 @@ Return-Path: <SRS0=PYjY=C7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3CE1C4363D
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 18:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA1EC4363D
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:23:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 165C820756
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 18:45:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="XGmuMRFG"
+	by mail.kernel.org (Postfix) with ESMTP id CDF3F2376F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726652AbgIVSph (ORCPT
+        id S1726583AbgIVTXU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 14:45:37 -0400
-Received: from 2.mo174.mail-out.ovh.net ([178.33.110.43]:41491 "EHLO
-        2.mo174.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726573AbgIVSpe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 14:45:34 -0400
-Received: from mxplan8.mail.ovh.net (unknown [10.109.146.129])
-        by mo174.mail-out.ovh.net (Postfix) with ESMTPS id 08C4A44F2B26;
-        Tue, 22 Sep 2020 20:45:30 +0200 (CEST)
-Received: from awhome.eu (37.59.142.105) by mxplan8.mail.ovh.net (172.16.2.21)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2044.4; Tue, 22 Sep
- 2020 20:45:30 +0200
-Authentication-Results: garm.ovh; auth=pass (GARM-105G00684d37a1e-bfa2-4b27-a5be-75639e02e191,
-                    4C3E3D8FEB463474C42C0B9415162D5E591AC1A3) smtp.auth=postmaster@awhome.eu
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1600800329;
-        bh=D2O/29a+2Ir93722aA1JuMzU1wFGsj/YUTfeTXhvuoI=;
-        h=From:Subject:To:Cc:References:Date:In-Reply-To;
-        b=XGmuMRFGTt/VOuo86KgZ+2VNhbs3HIm625wkkvHexHB68Yvvt9hIsyTOZhUuuChKA
-         NznDlRrPoFzftBOoDpr6Mbf6NN5LAMk63L8zgfGEfkgpo/2VT/6snV//GJAEmzBXRN
-         5t016tMreNnaV1ms/5phMfoYxggnJA7iIK6Telsw=
-Subject: Re: [PATCH] iwlwifi: add NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 support
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc:     "luciano.coelho@intel.com" <luciano.coelho@intel.com>,
-        "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
-        "linuxwifi@intel.com" <linuxwifi@intel.com>
-References: <20200918171301.6942-1-alexander@wetzel-home.de>
- <f6df593556c3f395997dfe42a71a69f4919a5911.camel@sipsolutions.net>
- <c887ae58-983b-0f4b-3b00-8ffbb669f37a@wetzel-home.de>
-Message-ID: <a245ea65-d862-6388-d163-49b99046dc08@wetzel-home.de>
-Date:   Tue, 22 Sep 2020 20:45:26 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        Tue, 22 Sep 2020 15:23:20 -0400
+Received: from mga06.intel.com ([134.134.136.31]:41034 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726448AbgIVTXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 15:23:20 -0400
+IronPort-SDR: 6TpHvGskWC16m7qDsV6OAyKMyBBtW8Eeu5rXhfe2i/blYyymVYQbkfuiLpEf1scl+HGqiwlJ36
+ nCx7IpmfZmEQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9752"; a="222286198"
+X-IronPort-AV: E=Sophos;i="5.77,291,1596524400"; 
+   d="scan'208";a="222286198"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 12:23:17 -0700
+IronPort-SDR: j13qr0EvUMqz4h8n3+6YMoYBBw9wwLhKSLh81cVpthqZR6EtdEDO72r2vowfBzOlQmc4tlfiaz
+ hNLiX8d9enaA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.77,291,1596524400"; 
+   d="scan'208";a="305067186"
+Received: from lkp-server01.sh.intel.com (HELO 928d8e596b58) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 22 Sep 2020 12:23:15 -0700
+Received: from kbuild by 928d8e596b58 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kKnsh-0000cW-3g; Tue, 22 Sep 2020 19:23:15 +0000
+Date:   Wed, 23 Sep 2020 03:23:08 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [wireless-drivers-next:master] BUILD SUCCESS
+ dd7a3a331f5dec4f61fa2ba48512125a89401c25
+Message-ID: <5f6a4f1c.2xVKPuo/bf4JEWVM%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <c887ae58-983b-0f4b-3b00-8ffbb669f37a@wetzel-home.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-GUID: 9f3fffd8-5ab9-49d3-9832-5236c24847a2
-X-Ovh-Tracer-Id: 5064860732984401059
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedujedrudeggdduvdelucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffuvfhfkffffgggjggtgfesthekredttdefjeenucfhrhhomheptehlvgigrghnuggvrhcuhggvthiivghluceorghlvgigrghnuggvrhesfigvthiivghlqdhhohhmvgdruggvqeenucggtffrrghtthgvrhhnpefhueekgfdvieetveehvdelgefgveeufffgvdeuteeufeduieehkefhlefgteegtdenucfkpheptddrtddrtddrtddpfeejrdehledrudegvddruddtheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhhouggvpehsmhhtphdqohhuthdphhgvlhhopehmgihplhgrnhekrdhmrghilhdrohhvhhdrnhgvthdpihhnvghtpedtrddtrddtrddtpdhmrghilhhfrhhomheprghlvgigrghnuggvrhesfigvthiivghlqdhhohhmvgdruggvpdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 20.09.20 um 08:37 schrieb Alexander Wetzel:
-> 
->  >>
->  >> +        /* GCMP and 256 bit CCMP keys the key can't be copied into the
->  >> +         * MPDU struct ieee80211_tx_info. We therefore must flush the
->  >> +         * queues to ensure there are no MPDUs left which are 
-> referring
->  >> +         * to the outgoing key.
->  >> +         */
->  >> +        if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE &&
->  >> +            (key->cipher == WLAN_CIPHER_SUITE_GCMP ||
->  >> +             key->cipher == WLAN_CIPHER_SUITE_GCMP_256 ||
->  >> +             key->cipher == WLAN_CIPHER_SUITE_CCMP_256)) {
->  >> +            ieee80211_stop_queues(hw);
->  >> +            iwl_mvm_mac_flush(hw, vif, 0, true);
->  >> +            ieee80211_wake_queues(hw);
->  >> +        }
->  >
->  > Shouldn't the wake be after installing the new key? Otherwise new frames
->  > can race and be there again?
-> 
-> mac80211 is taking care of that and has already stopped queuing new 
-> MPDUs which would use the key by setting KEY_FLAG_TAINTED on it. So for 
-> a PTK0 rekey we are fine, mac80211 won't queue frames with the key under 
-> deletion.
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
+branch HEAD: dd7a3a331f5dec4f61fa2ba48512125a89401c25  rtlwifi: rtl8723be: use true,false for bool variable large_cfo_hit
 
-Ok, forget this patch, the mvm part is pointless.
-The maximum we have to do is pausing the queues when we delete a key, no 
-flush required at all... I'll look into that again and send an updated 
-version:
+elapsed time: 722m
 
-The hw_key and the keyid is set (again) when we dequeue. So we either 
-get a valid key or ieee80211_tx_dequeue() drops the MPDU itself.
-Therefore it's irrelevant if we lookup the key from a table or store it 
-in the MPDU info struct. Now we may still have a race within the driver 
-but simply pausing dequeuing during key deletion should do the trick.
+configs tested: 179
+configs skipped: 2
 
-> But I think we should start setting KEY_FLAG_TAINTED for *any* PTK 
-> deletion to make sure we are not sending out MPDUs with a zero key or 
-> something like that. This is a special kind of a rekey case we missed so 
-> far but should be trival cover that, too.
-> 
-> That is then basically taking care about the generic Kr00k vulnerability 
->   some months ago.
-> 
-> Now I'm not aware of we have any mitigations in the code for that but 
-> when we set KEY_FLAG_TAINTED for key deletions any driver which is able 
-> to rekey PTK0 correctly can't be affected by Kr00k any longer.
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Looked at the current code and turns out we have at least two 
-mitigations for that now:
-1) commit ce2e1ca70307 "(mac80211: Check port authorization in the 
-ieee80211_tx_dequeue() case)" and
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                     eseries_pxa_defconfig
+arm                            xcep_defconfig
+mips                 decstation_r4k_defconfig
+arc                     nsimosci_hs_defconfig
+xtensa                         virt_defconfig
+powerpc                     asp8347_defconfig
+arc                        nsim_700_defconfig
+arm                        vexpress_defconfig
+arm                       spear13xx_defconfig
+arm                  colibri_pxa300_defconfig
+arm                          pxa3xx_defconfig
+um                           x86_64_defconfig
+m68k                         amcore_defconfig
+arm                       versatile_defconfig
+powerpc                     pq2fads_defconfig
+m68k                            q40_defconfig
+arm                      tct_hammer_defconfig
+arc                            hsdk_defconfig
+xtensa                          iss_defconfig
+parisc                           alldefconfig
+powerpc                      mgcoge_defconfig
+arm                         palmz72_defconfig
+arm                          pxa168_defconfig
+powerpc                     kilauea_defconfig
+arm                           sunxi_defconfig
+sh                      rts7751r2d1_defconfig
+sh                          sdk7786_defconfig
+mips                          rb532_defconfig
+arm                         lpc32xx_defconfig
+mips                            e55_defconfig
+um                            kunit_defconfig
+powerpc                  mpc866_ads_defconfig
+arm                        clps711x_defconfig
+x86_64                              defconfig
+ia64                            zx1_defconfig
+powerpc                      tqm8xx_defconfig
+sh                        edosk7760_defconfig
+powerpc                      arches_defconfig
+mips                      bmips_stb_defconfig
+mips                       capcella_defconfig
+powerpc                      makalu_defconfig
+nios2                            alldefconfig
+arm                            lart_defconfig
+arm                         vf610m4_defconfig
+sh                            shmin_defconfig
+mips                        nlm_xlr_defconfig
+arm                            mps2_defconfig
+powerpc                 xes_mpc85xx_defconfig
+arm                      footbridge_defconfig
+m68k                        mvme147_defconfig
+mips                      malta_kvm_defconfig
+mips                            ar7_defconfig
+sh                            hp6xx_defconfig
+mips                  cavium_octeon_defconfig
+arm                         lpc18xx_defconfig
+sh                          rsk7203_defconfig
+arm                         s5pv210_defconfig
+arm                          exynos_defconfig
+sh                           se7343_defconfig
+powerpc                     tqm8540_defconfig
+arm                          pxa910_defconfig
+m68k                             alldefconfig
+arm                            pleb_defconfig
+c6x                        evmc6474_defconfig
+m68k                          atari_defconfig
+powerpc                     ksi8560_defconfig
+arm                          lpd270_defconfig
+powerpc                 mpc837x_rdb_defconfig
+sh                          landisk_defconfig
+mips                     loongson1b_defconfig
+powerpc                      acadia_defconfig
+mips                       bmips_be_defconfig
+powerpc                     tqm8548_defconfig
+sh                            titan_defconfig
+m68k                          multi_defconfig
+arc                          axs103_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a005-20200920
+x86_64               randconfig-a003-20200920
+x86_64               randconfig-a004-20200920
+x86_64               randconfig-a002-20200920
+x86_64               randconfig-a006-20200920
+x86_64               randconfig-a001-20200920
+i386                 randconfig-a002-20200920
+i386                 randconfig-a006-20200920
+i386                 randconfig-a003-20200920
+i386                 randconfig-a004-20200920
+i386                 randconfig-a005-20200920
+i386                 randconfig-a001-20200920
+i386                 randconfig-a002-20200921
+i386                 randconfig-a006-20200921
+i386                 randconfig-a003-20200921
+i386                 randconfig-a004-20200921
+i386                 randconfig-a005-20200921
+i386                 randconfig-a001-20200921
+i386                 randconfig-a002-20200922
+i386                 randconfig-a006-20200922
+i386                 randconfig-a003-20200922
+i386                 randconfig-a004-20200922
+i386                 randconfig-a005-20200922
+i386                 randconfig-a001-20200922
+x86_64               randconfig-a011-20200921
+x86_64               randconfig-a013-20200921
+x86_64               randconfig-a014-20200921
+x86_64               randconfig-a015-20200921
+x86_64               randconfig-a012-20200921
+x86_64               randconfig-a016-20200921
+i386                 randconfig-a012-20200921
+i386                 randconfig-a014-20200921
+i386                 randconfig-a016-20200921
+i386                 randconfig-a013-20200921
+i386                 randconfig-a011-20200921
+i386                 randconfig-a015-20200921
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
-2) commit a0761a301746 "(mac80211: drop data frames without key on 
-encrypted links)"
+clang tested configs:
+x86_64               randconfig-a005-20200921
+x86_64               randconfig-a003-20200921
+x86_64               randconfig-a004-20200921
+x86_64               randconfig-a002-20200921
+x86_64               randconfig-a006-20200921
+x86_64               randconfig-a001-20200921
+x86_64               randconfig-a011-20200922
+x86_64               randconfig-a013-20200922
+x86_64               randconfig-a014-20200922
+x86_64               randconfig-a015-20200922
+x86_64               randconfig-a012-20200922
+x86_64               randconfig-a016-20200922
+x86_64               randconfig-a011-20200920
+x86_64               randconfig-a013-20200920
+x86_64               randconfig-a014-20200920
+x86_64               randconfig-a015-20200920
+x86_64               randconfig-a012-20200920
+x86_64               randconfig-a016-20200920
 
-> I'll look into that in the next days and prepare a patch for mac8011 to 
-> discuss that.
-
-I've the patch basically ready, but there are already the two 
-mitigations mentioned above in place.
-
-The only thing the new patch seems to improves is deleting an active PTK 
-key without de-authentication which seems to have no valid use cases.
-And it makes KEY_FLAG_TAINTED more logical by also stopping Tx for an 
-outgoing key and not only when we replace it.
-
-I'll probably still send it as an RFC patch to sort out if we still want 
-that or not.
-
-Alexander
-
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
