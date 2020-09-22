@@ -2,252 +2,139 @@ Return-Path: <SRS0=PYjY=C7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA1EC4363D
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C916AC2D0E2
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDF3F2376F
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 847972376F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 19:25:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="O0ZX+rnr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726583AbgIVTXU (ORCPT
+        id S1726576AbgIVTZN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 15:23:20 -0400
-Received: from mga06.intel.com ([134.134.136.31]:41034 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726448AbgIVTXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 15:23:20 -0400
-IronPort-SDR: 6TpHvGskWC16m7qDsV6OAyKMyBBtW8Eeu5rXhfe2i/blYyymVYQbkfuiLpEf1scl+HGqiwlJ36
- nCx7IpmfZmEQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9752"; a="222286198"
-X-IronPort-AV: E=Sophos;i="5.77,291,1596524400"; 
-   d="scan'208";a="222286198"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2020 12:23:17 -0700
-IronPort-SDR: j13qr0EvUMqz4h8n3+6YMoYBBw9wwLhKSLh81cVpthqZR6EtdEDO72r2vowfBzOlQmc4tlfiaz
- hNLiX8d9enaA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,291,1596524400"; 
-   d="scan'208";a="305067186"
-Received: from lkp-server01.sh.intel.com (HELO 928d8e596b58) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 22 Sep 2020 12:23:15 -0700
-Received: from kbuild by 928d8e596b58 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kKnsh-0000cW-3g; Tue, 22 Sep 2020 19:23:15 +0000
-Date:   Wed, 23 Sep 2020 03:23:08 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:master] BUILD SUCCESS
- dd7a3a331f5dec4f61fa2ba48512125a89401c25
-Message-ID: <5f6a4f1c.2xVKPuo/bf4JEWVM%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Tue, 22 Sep 2020 15:25:13 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:44952 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726566AbgIVTZN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 15:25:13 -0400
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 79C9C13C2B0;
+        Tue, 22 Sep 2020 12:20:00 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 79C9C13C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1600802400;
+        bh=/hsZNWlMO8q90+AR3z0NSM2bW5UCcwsFE4SclNmOotk=;
+        h=From:To:Cc:Subject:Date:From;
+        b=O0ZX+rnrhSQhPhAaqQadI6/YcIYSC8plVgVYkT7uTPF8pLKg+qLBeRriFE0gv2+g9
+         DelK4zJw4qHI2nrjNOtERUDIM29YZs1WdJTrcYfVlc6fQrnrZ4M4YQST5vWY+g6xND
+         4PhYXVhiMJFo4/k2mt2JJ8ftTP26nUXyfYAa/goM=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] mac80211:  Support not iterating over not-sdata-in-driver ifaces
+Date:   Tue, 22 Sep 2020 12:19:56 -0700
+Message-Id: <20200922191957.25257-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
-branch HEAD: dd7a3a331f5dec4f61fa2ba48512125a89401c25  rtlwifi: rtl8723be: use true,false for bool variable large_cfo_hit
+From: Ben Greear <greearb@candelatech.com>
 
-elapsed time: 722m
+Allow drivers to request that interface-iterator does NOT iterate
+over interfaces that are not sdata-in-driver.  This will allow
+us to fix crashes in ath10k (and possibly other drivers).
 
-configs tested: 179
-configs skipped: 2
+To summarize Johannes' explanation:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Consider
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm                     eseries_pxa_defconfig
-arm                            xcep_defconfig
-mips                 decstation_r4k_defconfig
-arc                     nsimosci_hs_defconfig
-xtensa                         virt_defconfig
-powerpc                     asp8347_defconfig
-arc                        nsim_700_defconfig
-arm                        vexpress_defconfig
-arm                       spear13xx_defconfig
-arm                  colibri_pxa300_defconfig
-arm                          pxa3xx_defconfig
-um                           x86_64_defconfig
-m68k                         amcore_defconfig
-arm                       versatile_defconfig
-powerpc                     pq2fads_defconfig
-m68k                            q40_defconfig
-arm                      tct_hammer_defconfig
-arc                            hsdk_defconfig
-xtensa                          iss_defconfig
-parisc                           alldefconfig
-powerpc                      mgcoge_defconfig
-arm                         palmz72_defconfig
-arm                          pxa168_defconfig
-powerpc                     kilauea_defconfig
-arm                           sunxi_defconfig
-sh                      rts7751r2d1_defconfig
-sh                          sdk7786_defconfig
-mips                          rb532_defconfig
-arm                         lpc32xx_defconfig
-mips                            e55_defconfig
-um                            kunit_defconfig
-powerpc                  mpc866_ads_defconfig
-arm                        clps711x_defconfig
-x86_64                              defconfig
-ia64                            zx1_defconfig
-powerpc                      tqm8xx_defconfig
-sh                        edosk7760_defconfig
-powerpc                      arches_defconfig
-mips                      bmips_stb_defconfig
-mips                       capcella_defconfig
-powerpc                      makalu_defconfig
-nios2                            alldefconfig
-arm                            lart_defconfig
-arm                         vf610m4_defconfig
-sh                            shmin_defconfig
-mips                        nlm_xlr_defconfig
-arm                            mps2_defconfig
-powerpc                 xes_mpc85xx_defconfig
-arm                      footbridge_defconfig
-m68k                        mvme147_defconfig
-mips                      malta_kvm_defconfig
-mips                            ar7_defconfig
-sh                            hp6xx_defconfig
-mips                  cavium_octeon_defconfig
-arm                         lpc18xx_defconfig
-sh                          rsk7203_defconfig
-arm                         s5pv210_defconfig
-arm                          exynos_defconfig
-sh                           se7343_defconfig
-powerpc                     tqm8540_defconfig
-arm                          pxa910_defconfig
-m68k                             alldefconfig
-arm                            pleb_defconfig
-c6x                        evmc6474_defconfig
-m68k                          atari_defconfig
-powerpc                     ksi8560_defconfig
-arm                          lpd270_defconfig
-powerpc                 mpc837x_rdb_defconfig
-sh                          landisk_defconfig
-mips                     loongson1b_defconfig
-powerpc                      acadia_defconfig
-mips                       bmips_be_defconfig
-powerpc                     tqm8548_defconfig
-sh                            titan_defconfig
-m68k                          multi_defconfig
-arc                          axs103_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a005-20200920
-x86_64               randconfig-a003-20200920
-x86_64               randconfig-a004-20200920
-x86_64               randconfig-a002-20200920
-x86_64               randconfig-a006-20200920
-x86_64               randconfig-a001-20200920
-i386                 randconfig-a002-20200920
-i386                 randconfig-a006-20200920
-i386                 randconfig-a003-20200920
-i386                 randconfig-a004-20200920
-i386                 randconfig-a005-20200920
-i386                 randconfig-a001-20200920
-i386                 randconfig-a002-20200921
-i386                 randconfig-a006-20200921
-i386                 randconfig-a003-20200921
-i386                 randconfig-a004-20200921
-i386                 randconfig-a005-20200921
-i386                 randconfig-a001-20200921
-i386                 randconfig-a002-20200922
-i386                 randconfig-a006-20200922
-i386                 randconfig-a003-20200922
-i386                 randconfig-a004-20200922
-i386                 randconfig-a005-20200922
-i386                 randconfig-a001-20200922
-x86_64               randconfig-a011-20200921
-x86_64               randconfig-a013-20200921
-x86_64               randconfig-a014-20200921
-x86_64               randconfig-a015-20200921
-x86_64               randconfig-a012-20200921
-x86_64               randconfig-a016-20200921
-i386                 randconfig-a012-20200921
-i386                 randconfig-a014-20200921
-i386                 randconfig-a016-20200921
-i386                 randconfig-a013-20200921
-i386                 randconfig-a011-20200921
-i386                 randconfig-a015-20200921
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                               rhel-8.3
-x86_64                                  kexec
+add interface wlan0
+add interface wlan1
+iterate active interfaces -> wlan0 wlan1
+add interface wlan2
+iterate active interfaces -> wlan0 wlan1 wlan2
 
-clang tested configs:
-x86_64               randconfig-a005-20200921
-x86_64               randconfig-a003-20200921
-x86_64               randconfig-a004-20200921
-x86_64               randconfig-a002-20200921
-x86_64               randconfig-a006-20200921
-x86_64               randconfig-a001-20200921
-x86_64               randconfig-a011-20200922
-x86_64               randconfig-a013-20200922
-x86_64               randconfig-a014-20200922
-x86_64               randconfig-a015-20200922
-x86_64               randconfig-a012-20200922
-x86_64               randconfig-a016-20200922
-x86_64               randconfig-a011-20200920
-x86_64               randconfig-a013-20200920
-x86_64               randconfig-a014-20200920
-x86_64               randconfig-a015-20200920
-x86_64               randconfig-a012-20200920
-x86_64               randconfig-a016-20200920
+If you apply this scenario to a restart, which ought to be functionally
+equivalent to the normal startup, just compressed in time, you're
+basically saying that today you get
 
+add interface wlan0
+add interface wlan1
+iterate active interfaces -> wlan0 wlan1 wlan2 << problem here
+add interface wlan2
+iterate active interfaces -> wlan0 wlan1 wlan2
+
+which yeah, totally seems wrong.
+
+But fixing that to be
+
+add interface wlan0
+add interface wlan1
+iterate active interfaces ->
+<nothing>
+add interface wlan2
+iterate active interfaces -> <nothing>
+(or
+maybe -> wlan0 wlan1 wlan2 if the reconfig already completed)
+
+This is also at least somewhat wrong, but better to not iterate
+over something that exists in the driver than iterate over something
+that does not.  Originally the first issue was causing crashes in
+testing with lots of station vdevs on an ath10k radio, combined
+with firmware crashing.
+
+I ran with a similar patch for years with no obvious bad results,
+including significant testing with ath9k and ath10k.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ include/net/mac80211.h | 4 ++++
+ net/mac80211/util.c    | 3 +++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 66e2bfd165e82..9c4bffcaed404 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5344,11 +5344,15 @@ void ieee80211_sched_scan_stopped(struct ieee80211_hw *hw);
+  * @IEEE80211_IFACE_ITER_RESUME_ALL: During resume, iterate over all
+  *	interfaces, even if they haven't been re-added to the driver yet.
+  * @IEEE80211_IFACE_ITER_ACTIVE: Iterate only active interfaces (netdev is up).
++ * @IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER: Skip any interfaces where SDATA
++ *	is not in the driver.  This may fix crashes during firmware recovery
++ *	for instance.
+  */
+ enum ieee80211_interface_iteration_flags {
+ 	IEEE80211_IFACE_ITER_NORMAL	= 0,
+ 	IEEE80211_IFACE_ITER_RESUME_ALL	= BIT(0),
+ 	IEEE80211_IFACE_ITER_ACTIVE	= BIT(1),
++	IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER	= BIT(2),
+ };
+ 
+ /**
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c8504ffc71a11..f3bc05217f741 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -733,6 +733,9 @@ static void __iterate_interfaces(struct ieee80211_local *local,
+ 		if (!(iter_flags & IEEE80211_IFACE_ITER_RESUME_ALL) &&
+ 		    active_only && !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+ 			continue;
++		if ((iter_flags & IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER) &&
++		    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
++			continue;
+ 		if (ieee80211_sdata_running(sdata) || !active_only)
+ 			iterator(data, sdata->vif.addr,
+ 				 &sdata->vif);
+-- 
+2.26.2
+
