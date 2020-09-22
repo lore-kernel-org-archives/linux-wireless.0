@@ -2,268 +2,389 @@ Return-Path: <SRS0=PYjY=C7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF4BEC4363D
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3267BC4363D
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:37:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8113F23A9D
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:37:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4A6723A9D
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Sep 2020 05:37:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LSWDwbFs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729100AbgIVFhq (ORCPT
+        id S1728972AbgIVFhu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Sep 2020 01:37:46 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:34156 "EHLO
-        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728928AbgIVFhq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Sep 2020 01:37:46 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 8EEEE4F9E17;
-        Tue, 22 Sep 2020 05:37:45 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
-Received: from web.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id IZiKz9j3Dhrs; Tue, 22 Sep 2020 05:37:42 +0000 (UTC)
-Received: from atlas.campbell.adapt-ip.com (gateway.adapt-ip.com [173.164.178.20])
-        (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 691004F9E06;
-        Tue, 22 Sep 2020 05:37:21 +0000 (UTC)
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH v4 17/17] mac80211_hwsim: indicate support for S1G
-Date:   Mon, 21 Sep 2020 19:28:18 -0700
-Message-Id: <20200922022818.15855-18-thomas@adapt-ip.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200922022818.15855-1-thomas@adapt-ip.com>
-References: <20200922022818.15855-1-thomas@adapt-ip.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 22 Sep 2020 01:37:50 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:36929 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729097AbgIVFhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Sep 2020 01:37:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600753069; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=p0JQ2ulvewYCOFPPfpRBG2W9Q4eP63ZtkvVOnNcRLSM=; b=LSWDwbFsDXMVrRk54E7xKiw5WOxz2Cnq1eRA98C53rjY9nJxPNK64glotnotWILNCK1bJOVl
+ 4JznLppoDHzfOaQ63G4+y+RKMEZJpCozVp54fCI/KF5Q0n0KaAIGx/gDYiFP8iqlcglrOQiQ
+ +7KI5vX+1ypSHl2fC+biqtcSyc8=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 5f698d860049ea5816bd6294 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 05:37:10
+ GMT
+Sender: cjhuang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 133A2C43382; Tue, 22 Sep 2020 05:37:10 +0000 (UTC)
+Received: from cjhuang-station.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cjhuang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7EF65C433FE;
+        Tue, 22 Sep 2020 05:37:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7EF65C433FE
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
+From:   Carl Huang <cjhuang@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        dianders@chromium.org
+Subject: [RFC 2/2] ath10k: allow dynamic SAR power limits via common API
+Date:   Tue, 22 Sep 2020 13:36:57 +0800
+Message-Id: <1600753017-4614-2-git-send-email-cjhuang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1600753017-4614-1-git-send-email-cjhuang@codeaurora.org>
+References: <1600753017-4614-1-git-send-email-cjhuang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Advertise S1G Capabilities and channels to mac80211.
+ath10k assigns ath10k_mac_set_sar_specs to ath10k_ops, and
+this function is called when user space application calls
+NL80211_CMD_SET_SAR_SPECS. ath10k also registers SAR type,
+and supported frequency ranges to wiphy so user space can
+query SAR capabilities.
 
-Requires a few fixups to account for missing
-sband->bitrates, and a custom regulatory db to actually
-enable the S1G channels.
+ath10k_mac_set_sar_specs further sets the power to firmware
+to limit the TX power.
 
-Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+This feature is controlled by hw parameter: dynamic_sar_support.
 
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 ---
-v2:
- - split out changes to ieee80211.h in a separate commit
-   and use GENMASK + FIELD_GET (Kalle)
+ drivers/net/wireless/ath/ath10k/core.c |  16 +++++
+ drivers/net/wireless/ath/ath10k/core.h |   3 +
+ drivers/net/wireless/ath/ath10k/hw.h   |   2 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 106 +++++++++++++++++++++++++++++++++
+ 4 files changed, 127 insertions(+)
 
-v4:
- - handle new channel widths in debug statements
----
- drivers/net/wireless/mac80211_hwsim.c | 86 ++++++++++++++++++++++++---
- 1 file changed, 78 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 3daf5b399ebf..a50de395727e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -377,6 +377,49 @@ static const struct ieee80211_channel hwsim_channels_5ghz[] = {
- 	CHAN5G(5925), /* Channel 185 */
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 5f4e121..fe53ca9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -90,6 +90,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = true,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA988X_HW_2_0_VERSION,
+@@ -124,6 +125,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = true,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -159,6 +161,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -189,6 +192,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.tx_stats_over_pktlog = false,
+ 		.bmi_large_size_download = true,
+ 		.supports_peer_stats_info = true,
++		.dynamic_sar_support = true,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -223,6 +227,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -257,6 +262,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -291,6 +297,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -329,6 +336,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.fw_diag_ce_download = true,
+ 		.tx_stats_over_pktlog = false,
+ 		.supports_peer_stats_info = true,
++		.dynamic_sar_support = true,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -369,6 +377,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -416,6 +425,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -460,6 +470,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -494,6 +505,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -530,6 +542,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = true,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -557,6 +570,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.uart_pin_workaround = true,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -598,6 +612,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = true,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = false,
+ 	},
+ 	{
+ 		.id = WCN3990_HW_1_0_DEV_VERSION,
+@@ -625,6 +640,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.hw_filter_reset_required = false,
+ 		.fw_diag_ce_download = false,
+ 		.tx_stats_over_pktlog = false,
++		.dynamic_sar_support = true,
+ 	},
  };
  
-+#define NUM_S1G_CHANS_US 51
-+static struct ieee80211_channel hwsim_channels_s1g[NUM_S1G_CHANS_US];
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4cf5bd4..f90c34a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1281,6 +1281,9 @@ struct ath10k {
+ 	bool coex_support;
+ 	int coex_gpio_pin;
+ 
++	u32 tx_power_2g_limit;
++	u32 tx_power_5g_limit;
 +
-+static const struct ieee80211_sta_s1g_cap hwsim_s1g_cap = {
-+	.s1g = true,
-+	.cap = { S1G_CAP0_SGI_1MHZ | S1G_CAP0_SGI_2MHZ,
-+		 0,
-+		 0,
-+		 S1G_CAP3_MAX_MPDU_LEN,
-+		 0,
-+		 S1G_CAP5_AMPDU,
-+		 0,
-+		 S1G_CAP7_DUP_1MHZ,
-+		 S1G_CAP8_TWT_RESPOND | S1G_CAP8_TWT_REQUEST,
-+		 0},
-+	.nss_mcs = { 0xfc | 1, /* MCS 7 for 1 SS */
-+	/* RX Highest Supported Long GI Data Rate 0:7 */
-+		     0,
-+	/* RX Highest Supported Long GI Data Rate 0:7 */
-+	/* TX S1G MCS Map 0:6 */
-+		     0xfa,
-+	/* TX S1G MCS Map :7 */
-+	/* TX Highest Supported Long GI Data Rate 0:6 */
-+		     0x80,
-+	/* TX Highest Supported Long GI Data Rate 7:8 */
-+	/* Rx Single spatial stream and S1G-MCS Map for 1MHz */
-+	/* Tx Single spatial stream and S1G-MCS Map for 1MHz */
-+		     0 },
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index c6ded21..6b03c77 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -623,6 +623,8 @@ struct ath10k_hw_params {
+ 
+ 	/* provides bitrates for sta_statistics using WMI_TLV_PEER_STATS_INFO_EVENTID */
+ 	bool supports_peer_stats_info;
++
++	bool dynamic_sar_support;
+ };
+ 
+ struct htt_rx_desc;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2e3eb5b..830c61f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -81,6 +81,17 @@ static struct ieee80211_rate ath10k_rates_rev2[] = {
+ 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
+ };
+ 
++static const struct cfg80211_sar_freq_ranges ath10k_sar_freq_ranges[] = {
++	{ .index = 0, .start_freq = 2412000, .end_freq = 2484000 },
++	{ .index = 1, .start_freq = 2484000, .end_freq = 5865000 },
 +};
 +
-+static void hwsim_init_s1g_channels(struct ieee80211_channel *channels)
-+{
-+	int ch, freq;
++static const struct cfg80211_sar_capa ath10k_sar_capa = {
++	.type = NL80211_SAR_TYPE_POWER,
++	.num_freq_ranges = (ARRAY_SIZE(ath10k_sar_freq_ranges)),
++	.freq_ranges = &ath10k_sar_freq_ranges[0],
++};
 +
-+	for (ch = 0; ch < NUM_S1G_CHANS_US; ch++) {
-+		freq = 902000 + (ch + 1) * 500;
-+		channels[ch].band = NL80211_BAND_S1GHZ;
-+		channels[ch].center_freq = KHZ_TO_MHZ(freq);
-+		channels[ch].freq_offset = freq % 1000;
-+		channels[ch].hw_value = ch + 1;
+ #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
+ 
+ #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
+@@ -2880,6 +2891,95 @@ static int ath10k_mac_vif_recalc_txbf(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static bool ath10k_mac_is_connected(struct ath10k *ar)
++{
++	struct ath10k_vif *arvif;
++
++	list_for_each_entry(arvif, &ar->arvifs, list) {
++		if (arvif->is_up && arvif->vdev_type == WMI_VDEV_TYPE_STA)
++			return true;
 +	}
++
++	return false;
 +}
 +
- static const struct ieee80211_rate hwsim_rates[] = {
- 	{ .bitrate = 10 },
- 	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-@@ -505,6 +548,7 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_supported_band bands[NUM_NL80211_BANDS];
- 	struct ieee80211_channel channels_2ghz[ARRAY_SIZE(hwsim_channels_2ghz)];
- 	struct ieee80211_channel channels_5ghz[ARRAY_SIZE(hwsim_channels_5ghz)];
-+	struct ieee80211_channel channels_s1g[ARRAY_SIZE(hwsim_channels_s1g)];
- 	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
- 	struct ieee80211_iface_combination if_combination;
- 	struct ieee80211_iface_limit if_limits[3];
-@@ -900,12 +944,14 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	struct sk_buff *skb;
- 	struct hwsim_radiotap_hdr *hdr;
--	u16 flags;
-+	u16 flags, bitrate;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
- 	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
++int ath10k_mac_set_sar_power(struct ath10k *ar)
++{
++	int ret;
++
++	if (!ar->hw_params.dynamic_sar_support)
++		return 0;
++
++	if (ar->tx_power_2g_limit == 0 || ar->tx_power_5g_limit == 0)
++		return 0;
++
++	if (!ath10k_mac_is_connected(ar))
++		return 0;
++
++	ret = ath10k_wmi_pdev_set_param(ar,
++					ar->wmi.pdev_param->txpower_limit2g,
++					ar->tx_power_2g_limit);
++	if (ret) {
++		ath10k_warn(ar, "failed to set 2.4G txpower %d: %d\n",
++			    ar->tx_power_2g_limit, ret);
++		return ret;
++	}
++
++	ret = ath10k_wmi_pdev_set_param(ar,
++					ar->wmi.pdev_param->txpower_limit5g,
++					ar->tx_power_5g_limit);
++	if (ret) {
++		ath10k_warn(ar, "failed to set 5G txpower %d: %d\n",
++			    ar->tx_power_5g_limit, ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "set txpower 2G:%d, 5G:%d successfully\n",
++		   ar->tx_power_2g_limit, ar->tx_power_5g_limit);
++
++	return ret;
++}
++
++static int ath10k_mac_set_sar_specs(struct ieee80211_hw *hw,
++				    const struct cfg80211_sar_specs *sar)
++{
++	struct cfg80211_sar_sub_specs *sub_specs;
++	struct ath10k *ar = hw->priv;
++	int i;
++
++	if (!ar->hw_params.dynamic_sar_support)
++		return -EOPNOTSUPP;
++
++	if (!sar || sar->type != NL80211_SAR_TYPE_POWER ||
++	    sar->num_sub_specs == 0 || !sar->sub_specs)
++		return -EINVAL;
++
++	sub_specs = sar->sub_specs;
++
++	/* note the power is in 0.25dbm unit, while ath10k uses
++	 * 0.5dbm unit.
++	 */
++	for (i = 0; i < sar->num_sub_specs; i++) {
++		if (sub_specs->freq_range_index == NL80211_SAR_ALL_FREQ_RNAGES) {
++			ar->tx_power_2g_limit = sub_specs->power / 2;
++			ar->tx_power_5g_limit = sub_specs->power / 2;
++			goto set_power;
++		}
++
++		if (sub_specs->freq_range_index == 0)
++			ar->tx_power_2g_limit = sub_specs->power / 2;
++		else if (sub_specs->freq_range_index == 1)
++			ar->tx_power_5g_limit = sub_specs->power / 2;
++		else
++			return -EINVAL;
++
++		sub_specs++;
++	}
++
++set_power:
++	return ath10k_mac_set_sar_power(ar);
++}
++
+ /* can be called only in mac80211 callbacks due to `key_count` usage */
+ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+@@ -2968,6 +3068,8 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
  
--	if (WARN_ON(!txrate))
--		return;
-+	if (!txrate)
-+		bitrate = 0;
-+	else
-+		bitrate = txrate->bitrate;
+ 	arvif->is_up = true;
  
- 	if (!netif_running(hwsim_mon))
- 		return;
-@@ -924,10 +970,10 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
- 	hdr->rt_tsft = __mac80211_hwsim_get_tsf(data);
- 	hdr->rt_flags = 0;
--	hdr->rt_rate = txrate->bitrate / 5;
-+	hdr->rt_rate = bitrate / 5;
- 	hdr->rt_channel = cpu_to_le16(chan->center_freq);
- 	flags = IEEE80211_CHAN_2GHZ;
--	if (txrate->flags & IEEE80211_RATE_ERP_G)
-+	if (txrate && txrate->flags & IEEE80211_RATE_ERP_G)
- 		flags |= IEEE80211_CHAN_OFDM;
- 	else
- 		flags |= IEEE80211_CHAN_CCK;
-@@ -1341,6 +1387,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	rx_status.flag |= RX_FLAG_MACTIME_START;
- 	rx_status.freq = chan->center_freq;
-+	rx_status.freq_offset = chan->freq_offset ? 1 : 0;
- 	rx_status.band = chan->band;
- 	if (info->control.rates[0].flags & IEEE80211_TX_RC_VHT_MCS) {
- 		rx_status.rate_idx =
-@@ -1522,14 +1569,18 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 		/* fake header transmission time */
- 		struct ieee80211_mgmt *mgmt;
- 		struct ieee80211_rate *txrate;
-+		/* TODO: get MCS */
-+		int bitrate = 100;
- 		u64 ts;
- 
- 		mgmt = (struct ieee80211_mgmt *)skb->data;
- 		txrate = ieee80211_get_tx_rate(hw, txi);
-+		if (txrate)
-+			bitrate = txrate->bitrate;
- 		ts = mac80211_hwsim_get_tsf_raw();
- 		mgmt->u.probe_resp.timestamp =
- 			cpu_to_le64(ts + data->tsf_offset +
--				    24 * 8 * 10 / txrate->bitrate);
-+				    24 * 8 * 10 / bitrate);
- 	}
- 
- 	mac80211_hwsim_monitor_rx(hw, skb, channel);
-@@ -1664,6 +1715,8 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 	struct ieee80211_rate *txrate;
- 	struct ieee80211_mgmt *mgmt;
- 	struct sk_buff *skb;
-+	/* TODO: get MCS */
-+	int bitrate = 100;
- 
- 	hwsim_check_magic(vif);
- 
-@@ -1683,6 +1736,8 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				       ARRAY_SIZE(info->control.rates));
- 
- 	txrate = ieee80211_get_tx_rate(hw, info);
-+	if (txrate)
-+		bitrate = txrate->bitrate;
- 
- 	mgmt = (struct ieee80211_mgmt *) skb->data;
- 	/* fake header transmission time */
-@@ -1693,12 +1748,12 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 		ext->u.s1g_beacon.timestamp = cpu_to_le32(data->abs_bcn_ts +
- 							  data->tsf_offset +
- 							  10 * 8 * 10 /
--							  txrate->bitrate);
-+							  bitrate);
- 	} else {
- 		mgmt->u.beacon.timestamp = cpu_to_le64(data->abs_bcn_ts +
- 						       data->tsf_offset +
- 						       24 * 8 * 10 /
--						       txrate->bitrate);
-+						       bitrate);
- 	}
- 
- 	mac80211_hwsim_tx_frame(hw, skb,
-@@ -1747,6 +1802,11 @@ static const char * const hwsim_chanwidths[] = {
- 	[NL80211_CHAN_WIDTH_80] = "vht80",
- 	[NL80211_CHAN_WIDTH_80P80] = "vht80p80",
- 	[NL80211_CHAN_WIDTH_160] = "vht160",
-+	[NL80211_CHAN_WIDTH_1] = "1MHz",
-+	[NL80211_CHAN_WIDTH_2] = "2MHz",
-+	[NL80211_CHAN_WIDTH_4] = "4MHz",
-+	[NL80211_CHAN_WIDTH_8] = "8MHz",
-+	[NL80211_CHAN_WIDTH_16] = "16MHz",
++	ath10k_mac_set_sar_power(ar);
++
+ 	/* Workaround: Some firmware revisions (tested with qca6174
+ 	 * WLAN.RM.2.0-00073) have buggy powersave state machine and must be
+ 	 * poked with peer param command.
+@@ -9270,6 +9372,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
+ #endif
++	.set_sar_specs			= ath10k_mac_set_sar_specs,
  };
  
- static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
-@@ -3089,6 +3149,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		sizeof(hwsim_channels_2ghz));
- 	memcpy(data->channels_5ghz, hwsim_channels_5ghz,
- 		sizeof(hwsim_channels_5ghz));
-+	memcpy(data->channels_s1g, hwsim_channels_s1g,
-+	       sizeof(hwsim_channels_s1g));
- 	memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
- 
- 	for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
-@@ -3131,6 +3193,12 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			sband->vht_cap.vht_mcs.tx_mcs_map =
- 				sband->vht_cap.vht_mcs.rx_mcs_map;
- 			break;
-+		case NL80211_BAND_S1GHZ:
-+			memcpy(&sband->s1g_cap, &hwsim_s1g_cap,
-+			       sizeof(sband->s1g_cap));
-+			sband->channels = data->channels_s1g;
-+			sband->n_channels = ARRAY_SIZE(hwsim_channels_s1g);
-+			break;
- 		default:
- 			continue;
- 		}
-@@ -4328,6 +4396,8 @@ static int __init init_mac80211_hwsim(void)
- 		goto out_exit_virtio;
+ #define CHAN2G(_channel, _freq, _flags) { \
+@@ -10009,6 +10112,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		goto err_free;
  	}
  
-+	hwsim_init_s1g_channels(hwsim_channels_s1g);
++	if (ar->hw_params.dynamic_sar_support)
++		ar->hw->wiphy->sar_capa = &ath10k_sar_capa;
 +
- 	for (i = 0; i < radios; i++) {
- 		struct hwsim_new_radio_params param = { 0 };
+ 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+ 		ar->hw->netdev_features = NETIF_F_HW_CSUM;
  
 -- 
-2.20.1
+2.7.4
 
