@@ -4,113 +4,137 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 775CFC4727F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F9D6C4727E
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Sep 2020 17:40:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3587421D7D
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA1CC20708
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Sep 2020 17:40:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=reintjes.nrw header.i=@reintjes.nrw header.b="mKq3yxzI"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Vx9gSYlW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbgIWPWn (ORCPT
+        id S1726761AbgIWRkg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Sep 2020 11:22:43 -0400
-Received: from mo4-p01-ob.smtp.rzone.de ([85.215.255.54]:34512 "EHLO
-        mo4-p01-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbgIWPWm (ORCPT
+        Wed, 23 Sep 2020 13:40:36 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:57814 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726621AbgIWRkg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Sep 2020 11:22:42 -0400
-X-Greylist: delayed 713 seconds by postgrey-1.27 at vger.kernel.org; Wed, 23 Sep 2020 11:22:39 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1600874558;
-        s=strato-dkim-0002; d=reintjes.nrw;
-        h=In-Reply-To:Date:Message-ID:From:References:Cc:To:Subject:
-        X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=R7hI6d/NmZuNcg1vUXN4expafaD5dS9k1NOlJgVsfQ0=;
-        b=mKq3yxzIBoK6eXKDjSaCRr3BwBIqpDKeJr75f5YQmPBPRRn9qdkRISKeudlw+eJUaN
-        i9j0YoD7Nd07ieGLh8UqSmYZ1Ccml4PGsZ2Mglopdz9Hz5rLCJkN670J1l7AKyk9w16x
-        a5x5cVcgZWQk6FXpa0G8mlW7WSJEKPFpozzrnE9Mqlay09jPyJDrOXyUKIYtt6nlhpnO
-        Iws66XTKRoaWIH3voDt0xHa2loKeKKkr2KuI9gRfjll43rW7LApn0Q1chdN5eLyO3daW
-        Z1KVrRhdU65Y8/6yfAJtnadI1+vhAkdCKhH0qGquacG5znElBXtRT3qPa76R5ygpIUbq
-        FhJQ==
-X-RZG-AUTH: ":IGUXYVP6Ne1lB7nQNv+YSUx4qaxF0YAcTeeZr8criwvl+4OoAsy1YB7b8FzONHo5ckdw3KGGkZZ/Zu8="
-X-RZG-CLASS-ID: mo00
-Received: from [192.168.0.198]
-        by smtp.strato.de (RZmta 46.10.7 DYNA|AUTH)
-        with ESMTPSA id Y04b60w8NFAYy22
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-        Wed, 23 Sep 2020 17:10:34 +0200 (CEST)
-Subject: Re: [PATCH 00/14] drop double zeroing
-To:     Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
-        Julia Lawall <Julia.Lawall@inria.fr>
-Cc:     linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-block@vger.kernel.org,
-        Yossi Leybovich <sleybo@amazon.com>,
-        linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-rdma@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        rds-devel@oss.oracle.com
-References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
- <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
-From:   Rolf Reintjes <lists2.rolf@reintjes.nrw>
-Message-ID: <c3b33526-936d-ffa4-c301-4d0485822be1@reintjes.nrw>
-Date:   Wed, 23 Sep 2020 17:10:33 +0200
+        Wed, 23 Sep 2020 13:40:36 -0400
+Received: from [192.168.254.6] (unknown [50.46.158.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 1088213C2B0;
+        Wed, 23 Sep 2020 10:40:34 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 1088213C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1600882835;
+        bh=TrRdEE1bfF/zK54bksFaYOhAOhTZ7EfmGTCdqIY9v0k=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Vx9gSYlWGE+Nftk92BlGpfmCFblu546kBx7nasUUBLPZ1vHkgkQXD6kGNFJ7KvKoz
+         02RQm3aUqtYVZao8kj6XDpRSQ6LKuTXU1dgHmyzVNv3Dts091hyKV47Jfeh1eja402
+         1+G2mIFzUurhPY9+WmNVP6BPe8FjqcU3X2AUyIhQ=
+Subject: Re: Configuring WiFi6 in hostapd
+To:     "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "sugandhgowda@gmail.com" <sugandhgowda@gmail.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "Cedric.Izoard@ceva-dsp.com" <Cedric.Izoard@ceva-dsp.com>,
+        "Hostap@lists.infradead.org" <Hostap@lists.infradead.org>
+References: <CAD_iCC8EyWV8bLdJ+VsRdMHOa6ccOOOOUMM6nMwDk16LtMppcg@mail.gmail.com>
+ <CAD_iCC_1TV_wQK+xOWk48eaJhWo82CZgTL-g4jg7tOdVxvqEZw@mail.gmail.com>
+ <CABPxzY+2OO6nptyE+oH+COLe3pVgKhji=H1trP7m_bcpVqEe7Q@mail.gmail.com>
+ <CAD_iCC-x9J4UB5aVR85WNi4OwaXQiU28+4B1AD176zDu8DBhwQ@mail.gmail.com>
+ <CABPxzY+oy=p4QLHfyVMprigHOpTJEJGsJ-Bsti5b9Ly=eDy+cQ@mail.gmail.com>
+ <CAD_iCC-mCo58fs1v+bqyB=NRXkQDTa20R=NGe+SwTP2s7NPfOA@mail.gmail.com>
+ <CABPxzYKckJ94+96YsTY4Y7D7_z-Pk=b+T1tvu5BzaoVjVi0apw@mail.gmail.com>
+ <CAD_iCC8StVW7Yh9f8fm2Da7LcN6LQzR=ssp+1E8-=YYCM-5tOQ@mail.gmail.com>
+ <CABPxzYKFUN-hyhJnxG_-EcD0L0bsp8rn+b+tyt_ReAf11vzKng@mail.gmail.com>
+ <fd8fafe85f2d75a2563e5be766cce1f45424e2bf.camel@sipsolutions.net>
+ <CABPxzYLEZ5KU5x3w9rex3SQqj+TwGXFOXnC_QXdEu9NLfcRHMQ@mail.gmail.com>
+ <CABPxzYKPHXtJHP4FhdrtJ763ZeHwf4bjyPOr5c7g_88r_pSdLQ@mail.gmail.com>
+ <27c3af2e3128614ffe6321a95935378f35fee1b3.camel@intel.com>
+ <e2cd5f5c162373e367d0e94bf2250e9a7f8144d2.camel@intel.com>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <0ef00fa9-d94a-8049-c711-6a061dabd4aa@candelatech.com>
+Date:   Wed, 23 Sep 2020 10:40:34 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
+In-Reply-To: <e2cd5f5c162373e367d0e94bf2250e9a7f8144d2.camel@intel.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Language: en-MW
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Mark,
+On 9/23/20 1:36 AM, Coelho, Luciano wrote:
+> On Wed, 2020-09-23 at 11:16 +0300, Luciano Coelho wrote:
+>> On Thu, 2020-09-17 at 03:01 +0530, Krishna Chaitanya wrote:
+>>> On Sat, Sep 12, 2020 at 12:56 AM Krishna Chaitanya
+>>> <chaitanya.mgit@gmail.com> wrote:
+>>>> On Fri, Sep 11, 2020 at 10:41 PM Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>> On Fri, 2020-09-11 at 20:37 +0530, Krishna Chaitanya wrote:
+>>>>>
+>>>>>>> [  228.315290] iwlwifi 0000:03:00.0: 0x00002078 | ADVANCED_SYSASSERT
+>>>>>>> [  228.315294] iwlwifi 0000:03:00.0: 0x00A0A200 | trm_hw_status0
+>>>>>>> [  228.315297] iwlwifi 0000:03:00.0: 0x00000000 | trm_hw_status1
+>>>>>>> [  228.315300] iwlwifi 0000:03:00.0: 0x004F8E3C | branchlink2
+>>>>>>> [  228.315303] iwlwifi 0000:03:00.0: 0x004E4FF4 | interruptlink1
+>>>>>>> [  228.315307] iwlwifi 0000:03:00.0: 0x004E4FF4 | interruptlink2
+>>>>>>> [  228.315310] iwlwifi 0000:03:00.0: 0x07000101 | data1
+>>>>>>> [  228.315313] iwlwifi 0000:03:00.0: 0x48308403 | data2
+>>>>>>> [  228.315316] iwlwifi 0000:03:00.0: 0x00000005 | data3
+>>>>>
+>>>>> This means that we got an invalid TX rate, notably an HE rate was
+>>>>> requested/configured on a MAC configuration that didn't have HE.
+>>>>>
+>>>>> I think I saw some patches in this area (configuring the MAC to be HE)
+>>>>> fly by internally recently, but not sure... Luca probably knows.
+>>>> Ah okay. This was reported on 5.4 kernel, do you think is it worth
+>>>> trying on latest iwlwifi-next tree? Or as you are referring to the internal tree
+>>>> the issue is present in the latest as well?
+>>> Hi Luca,
+>>>
+>>> Can you please take a look? Any help is appreciated.
+>>
+>> Hi,
+>>
+>> There have been some new patches in this area, but after a quick look I
+>> didn't find anything specific that jumps out.  I'll take a closer look
+>> and let you know if I find anything.
+> 
+> In the meantime, you could try our public backport-iwlwifi tree, where
+> most of the internal tree is published:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
+> 
+> This is an out-of-tree driver, based on the linux-backports project.
+>   You could try the core56 branch, for instance, or even master and
+> check if the problem is still there.  If not, we can try to look for
+> the patch that fixes it and push it to stable.
 
-On 21.09.20 18:58, Mark Brown wrote:
-> On Sun, 20 Sep 2020 13:26:12 +0200, Julia Lawall wrote:
->> sg_init_table zeroes its first argument, so the allocation of that argument
->> doesn't have to.
-> 
-> Applied to
-> 
->     https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
-> 
-> Thanks!
+I'm curious if anyone is interested in helping to maintain a non-backports version of this,
+something like how I did the ath10k-ct driver.  I'd like to use this driver, but
+don't want to use the rest of the backports funk.
 
-I do not understand which of the 14 patches you applied. Your mail 
-responds to the 00/14 mail.
-
-Rolf
+Thanks,
+Ben
 
 > 
-> [1/1] spi/topcliff-pch: drop double zeroing
->        commit: ca03dba30f2b8ff45a2972c6691e4c96d8c52b3b
-> 
-> All being well this means that it will be integrated into the linux-next
-> tree (usually sometime in the next 24 hours) and sent to Linus during
-> the next merge window (or sooner if it is a bug fix), however if
-> problems are discovered then the patch may be dropped or reverted.
-> 
-> You may get further e-mails resulting from automated or manual testing
-> and review of the tree, please engage with people reporting problems and
-> send followup patches addressing any issues that are reported if needed.
-> 
-> If any updates are required or you are submitting further changes they
-> should be sent as incremental updates against current git, existing
-> patches will not be replaced.
-> 
-> Please add any relevant lists and maintainers to the CCs when replying
-> to this mail.
-> 
-> Thanks,
-> Mark
+> --
+> Cheers,
+> Luca.
 > 
 
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
