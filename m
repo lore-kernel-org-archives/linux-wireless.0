@@ -2,161 +2,92 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4283C4363D
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A30C2D0E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 359C7221EB
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C395923600
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:48:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QCasCKcx"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="WABdGiA5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728509AbgIXPdg (ORCPT
+        id S1728550AbgIXPsm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:33:36 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:39966 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728333AbgIXPdg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 11:33:36 -0400
-X-UUID: 87b2f657d67645e7a48469864f6354a2-20200924
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=OTCsfNo99ojtjb1h0R1ye7ZsuTV+XjaLXSyLcJ3cg0E=;
-        b=QCasCKcx9+Q0MxhQuaujX8t7kahuG83drD+kHDEORaNJEGY/Uh9h0AXjX/FEK8AcDBqvHgCrci9kmOJaep+72eaaL6NqZ6QC/S9dmxHZWQlBapyKYGJ1Dj6RlwPKMAL85pMAwPxyp3KzsaD3TIh5eF+N0Zkuwejkl1pT2qxzApM=;
-X-UUID: 87b2f657d67645e7a48469864f6354a2-20200924
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 938191805; Thu, 24 Sep 2020 23:23:19 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 24 Sep 2020 23:23:13 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 24 Sep 2020 23:23:13 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] mt76: mt7915: measure channel noise and report it via survey
-Date:   Thu, 24 Sep 2020 23:23:13 +0800
-Message-ID: <670fe8dcb9e1308041047718af241225ff5614bb.1600960534.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Thu, 24 Sep 2020 11:48:42 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:39589 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728139AbgIXPsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Sep 2020 11:48:41 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600962521; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=Sjl9wunnHhbDBefPvYSya2E0YyYkeliUtysS/WiPdH0=;
+ b=WABdGiA5gtYWuTLpwJUc3KSB0mLS+rHJSMnVcHysN2UJuGAJ2btTworaJpMddpx2hlN38A2+
+ zT/WukXWTOr9nrI3ZygoodYRhT/u/V3aHo9kaBE1qxPeEkY3GfaUVV6Ow8e61cCNAtyFfqfW
+ 4/iyFpycqJrWjT+VHMieO9FyIzM=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f6cbfbe971b64f61b5afd7f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 15:48:14
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 78757C433FF; Thu, 24 Sep 2020 15:48:13 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DFA09C433CA;
+        Thu, 24 Sep 2020 15:48:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DFA09C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 7E353855B9F60CF3FD2186DF9C4F0CBE4BA96433650EDF6132C8388890D68BEE2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] brcmfmac: check return value of
+ driver_for_each_device()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1600481191-14250-1-git-send-email-zhangchangzhong@huawei.com>
+References: <1600481191-14250-1-git-send-email-zhangchangzhong@huawei.com>
+To:     Zhang Changzhong <zhangchangzhong@huawei.com>
+Cc:     <davem@davemloft.net>, <kuba@kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200924154813.78757C433FF@smtp.codeaurora.org>
+Date:   Thu, 24 Sep 2020 15:48:13 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-UmVhZCBwZXItc3RyZWFtIG1lYXN1cmVtZW50cyBldmVyeSAxMDAgbXMgYW5kIGJ1aWxkIGEgc2lt
-cGxlIG1vdmluZyBhdmVyYWdlLg0KDQpUZXN0ZWQtYnk6IFNoYXluZSBDaGVuIDxzaGF5bmUuY2hl
-bkBtZWRpYXRlay5jb20+DQpTaWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRp
-YXRlay5jb20+DQotLS0NCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21h
-Yy5jICAgfCA1MCArKysrKysrKysrKysrKysrLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRl
-ay9tdDc2L210NzkxNS9tYWluLmMgIHwgIDIgKw0KIC4uLi93aXJlbGVzcy9tZWRpYXRlay9tdDc2
-L210NzkxNS9tdDc5MTUuaCAgICB8ICAxICsNCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
-NzYvbXQ3OTE1L3JlZ3MuaCAgfCAgOCArKysNCiA0IGZpbGVzIGNoYW5nZWQsIDU1IGluc2VydGlv
-bnMoKyksIDYgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
-dGVrL210NzYvbXQ3OTE1L21hYy5jDQppbmRleCBiMzUyMjJjMGUyNzEuLjkwODQ5YTAwYzU1MCAx
-MDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21h
-Yy5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMu
-Yw0KQEAgLTEwODUsMTcgKzEwODUsNDkgQEAgdm9pZCBtdDc5MTVfbWFjX3NldF90aW1pbmcoc3Ry
-dWN0IG10NzkxNV9waHkgKnBoeSkNCiAJCSAgIE1UX0FSQl9TQ1JfVFhfRElTQUJMRSB8IE1UX0FS
-Ql9TQ1JfUlhfRElTQUJMRSk7DQogfQ0KIA0KLS8qDQotICogVE9ETzogbWliIGNvdW50ZXJzIGFy
-ZSByZWFkLWNsZWFyIGFuZCB0aGVyZSdyZSBtYW55IEhFIGZ1bmN0aW9uYWxpdGllcyBuZWVkDQot
-ICogc3VjaCBpbmZvLCBoZW5jZSBmaXJtd2FyZSBwcmVwYXJlcyBhIHRhc2sgdG8gcmVhZCB0aGUg
-ZmllbGRzIG91dCB0byBhIHNoYXJlZA0KLSAqIHN0cnVjdHVyZS4gVXNlciBzaG91bGQgc3dpdGNo
-IHRvIHVzZSBldmVudCBmb3JtYXQgdG8gYXZvaWQgcmFjZSBjb25kaXRpb24uDQotICovDQordm9p
-ZCBtdDc5MTVfbWFjX2VuYWJsZV9uZihzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCBib29sIGV4dF9w
-aHkpDQorew0KKwltdDc5MTVfbDJfc2V0KGRldiwgTVRfV0ZfUEhZX1JYVEQxMihleHRfcGh5KSwN
-CisJCSAgICAgIE1UX1dGX1BIWV9SWFREMTJfSVJQSV9TV19DTFJfT05MWSB8DQorCQkgICAgICBN
-VF9XRl9QSFlfUlhURDEyX0lSUElfU1dfQ0xSKTsNCisNCisJbXQ3OTE1X2wyX3NldChkZXYsIE1U
-X1dGX1BIWV9SWF9DVFJMMShleHRfcGh5KSwNCisJCSAgICAgIEZJRUxEX1BSRVAoTVRfV0ZfUEhZ
-X1JYX0NUUkwxX0lQSV9FTiwgMHg1KSk7DQorfQ0KKw0KK3N0YXRpYyB1OA0KK210NzkxNV9waHlf
-Z2V0X25mKHN0cnVjdCBtdDc5MTVfcGh5ICpwaHksIGludCBpZHgpDQorew0KKwlzdGF0aWMgY29u
-c3QgdTggbmZfcG93ZXJbXSA9IHsgOTIsIDg5LCA4NiwgODMsIDgwLCA3NSwgNzAsIDY1LCA2MCwg
-NTUsIDUyIH07DQorCXN0cnVjdCBtdDc5MTVfZGV2ICpkZXYgPSBwaHktPmRldjsNCisJdTMyIHZh
-bCwgc3VtID0gMCwgbiA9IDA7DQorCWludCBuc3MsIGk7DQorDQorCS8qIFRPRE86IERCREM6IDAs
-MSBmb3IgMi40RywgMiwzIGZvciA1RyAqLw0KKwlmb3IgKG5zcyA9IDA7IG5zcyA8IGh3ZWlnaHQ4
-KHBoeS0+Y2hhaW5tYXNrKTsgbnNzKyspIHsNCisJCXUzMiByZWcgPSBNVF9XRl9JUlBJKG5zcyk7
-DQorDQorCQlmb3IgKGkgPSAwOyBpIDwgQVJSQVlfU0laRShuZl9wb3dlcik7IGkrKywgcmVnICs9
-IDQpIHsNCisJCQl2YWwgPSBtdDc5MTVfbDJfcnIoZGV2LCByZWcpOw0KKwkJCXN1bSArPSB2YWwg
-KiBuZl9wb3dlcltpXTsNCisJCQluICs9IHZhbDsNCisJCX0NCisJfQ0KKw0KKwlpZiAoIW4pDQor
-CQlyZXR1cm4gMDsNCisNCisJcmV0dXJuIHN1bSAvIG47DQorfQ0KKw0KIHN0YXRpYyB2b2lkDQog
-bXQ3OTE1X3BoeV91cGRhdGVfY2hhbm5lbChzdHJ1Y3QgbXQ3Nl9waHkgKm1waHksIGludCBpZHgp
-DQogew0KIAlzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2ID0gY29udGFpbmVyX29mKG1waHktPmRldiwg
-c3RydWN0IG10NzkxNV9kZXYsIG10NzYpOw0KKwlzdHJ1Y3QgbXQ3OTE1X3BoeSAqcGh5ID0gKHN0
-cnVjdCBtdDc5MTVfcGh5ICopbXBoeS0+cHJpdjsNCiAJc3RydWN0IG10NzZfY2hhbm5lbF9zdGF0
-ZSAqc3RhdGU7DQogCXU2NCBidXN5X3RpbWUsIHR4X3RpbWUsIHJ4X3RpbWUsIG9ic3NfdGltZTsN
-CisJaW50IG5mOw0KIA0KIAlidXN5X3RpbWUgPSBtdDc2X2dldF9maWVsZChkZXYsIE1UX01JQl9T
-RFI5KGlkeCksDQogCQkJCSAgIE1UX01JQl9TRFI5X0JVU1lfTUFTSyk7DQpAQCAtMTEwNiwxMiAr
-MTEzOCwxOCBAQCBtdDc5MTVfcGh5X3VwZGF0ZV9jaGFubmVsKHN0cnVjdCBtdDc2X3BoeSAqbXBo
-eSwgaW50IGlkeCkNCiAJb2Jzc190aW1lID0gbXQ3Nl9nZXRfZmllbGQoZGV2LCBNVF9XRl9STUFD
-X01JQl9BSVJUSU1FMTQoaWR4KSwNCiAJCQkJICAgTVRfTUlCX09CU1NUSU1FX01BU0spOw0KIA0K
-LQkvKiBUT0RPOiBzdGF0ZS0+bm9pc2UgKi8NCisJbmYgPSBtdDc5MTVfcGh5X2dldF9uZihwaHks
-IGlkeCk7DQorCWlmICghcGh5LT5ub2lzZSkNCisJCXBoeS0+bm9pc2UgPSBuZiA8PCA0Ow0KKwll
-bHNlIGlmIChuZikNCisJCXBoeS0+bm9pc2UgKz0gbmYgLSAocGh5LT5ub2lzZSA+PiA0KTsNCisN
-CiAJc3RhdGUgPSBtcGh5LT5jaGFuX3N0YXRlOw0KIAlzdGF0ZS0+Y2NfYnVzeSArPSBidXN5X3Rp
-bWU7DQogCXN0YXRlLT5jY190eCArPSB0eF90aW1lOw0KIAlzdGF0ZS0+Y2NfcnggKz0gcnhfdGlt
-ZSArIG9ic3NfdGltZTsNCiAJc3RhdGUtPmNjX2Jzc19yeCArPSByeF90aW1lOw0KKwlzdGF0ZS0+
-bm9pc2UgPSAtKHBoeS0+bm9pc2UgPj4gNCk7DQogfQ0KIA0KIHZvaWQgbXQ3OTE1X3VwZGF0ZV9j
-aGFubmVsKHN0cnVjdCBtdDc2X2RldiAqbWRldikNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMNCmluZGV4IGM0ODE1ODM5MjA1Ny4uNGNiZWZm
-ZWFiYmUxIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9t
-dDc5MTUvbWFpbi5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210
-NzkxNS9tYWluLmMNCkBAIC0zNCwxMiArMzQsMTQgQEAgc3RhdGljIGludCBtdDc5MTVfc3RhcnQo
-c3RydWN0IGllZWU4MDIxMV9odyAqaHcpDQogCQltdDc5MTVfbWN1X3NldF9wbShkZXYsIDAsIDAp
-Ow0KIAkJbXQ3OTE1X21jdV9zZXRfbWFjKGRldiwgMCwgdHJ1ZSwgZmFsc2UpOw0KIAkJbXQ3OTE1
-X21jdV9zZXRfc2NzKGRldiwgMCwgdHJ1ZSk7DQorCQltdDc5MTVfbWFjX2VuYWJsZV9uZihkZXYs
-IDApOw0KIAl9DQogDQogCWlmIChwaHkgIT0gJmRldi0+cGh5KSB7DQogCQltdDc5MTVfbWN1X3Nl
-dF9wbShkZXYsIDEsIDApOw0KIAkJbXQ3OTE1X21jdV9zZXRfbWFjKGRldiwgMSwgdHJ1ZSwgZmFs
-c2UpOw0KIAkJbXQ3OTE1X21jdV9zZXRfc2NzKGRldiwgMSwgdHJ1ZSk7DQorCQltdDc5MTVfbWFj
-X2VuYWJsZV9uZihkZXYsIDEpOw0KIAl9DQogDQogCW10NzkxNV9tY3Vfc2V0X3NrdV9lbihwaHks
-IHRydWUpOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYv
-bXQ3OTE1L210NzkxNS5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5
-MTUvbXQ3OTE1LmgNCmluZGV4IGJhNzk5ODcyNDcxNi4uYzAxYzI3OGViMjdlIDEwMDY0NA0KLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmgNCisr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oDQpA
-QCAtNDI5LDYgKzQyOSw3IEBAIG10NzkxNV9sMl9ybXcoc3RydWN0IG10NzkxNV9kZXYgKmRldiwg
-dTMyIGFkZHIsIHUzMiBtYXNrLCB1MzIgdmFsKQ0KIGJvb2wgbXQ3OTE1X21hY193dGJsX3VwZGF0
-ZShzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCBpbnQgaWR4LCB1MzIgbWFzayk7DQogdm9pZCBtdDc5
-MTVfbWFjX3Jlc2V0X2NvdW50ZXJzKHN0cnVjdCBtdDc5MTVfcGh5ICpwaHkpOw0KIHZvaWQgbXQ3
-OTE1X21hY19jY2Ffc3RhdHNfcmVzZXQoc3RydWN0IG10NzkxNV9waHkgKnBoeSk7DQordm9pZCBt
-dDc5MTVfbWFjX2VuYWJsZV9uZihzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCBib29sIGV4dF9waHkp
-Ow0KIHZvaWQgbXQ3OTE1X21hY193cml0ZV90eHdpKHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYsIF9f
-bGUzMiAqdHh3aSwNCiAJCQkgICBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLCBzdHJ1Y3QgbXQ3Nl93Y2lk
-ICp3Y2lkLA0KIAkJCSAgIHN0cnVjdCBpZWVlODAyMTFfa2V5X2NvbmYgKmtleSwgYm9vbCBiZWFj
-b24pOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3
-OTE1L3JlZ3MuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L3Jl
-Z3MuaA0KaW5kZXggNzBlOThhMjc1MTIyLi42ODM3NTk2Y2IyNWYgMTAwNjQ0DQotLS0gYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9yZWdzLmgNCisrKyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L3JlZ3MuaA0KQEAgLTM5NiwxMSAr
-Mzk2LDE5IEBAIHN0YXRpYyBpbmxpbmUgdTMyIG10NzkxNV9pbnRfcnhfbWFzayhlbnVtIG10NzZf
-cnhxX2lkIHEpDQogI2RlZmluZSBNVF9QQ0lFX01BQyhvZnMpCQkoTVRfUENJRV9NQUNfQkFTRSAr
-IChvZnMpKQ0KICNkZWZpbmUgTVRfUENJRV9NQUNfSU5UX0VOQUJMRQkJTVRfUENJRV9NQUMoMHgx
-ODgpDQogDQorI2RlZmluZSBNVF9XRl9JUlBJX0JBU0UJCQkweDgzMDA2MDAwDQorI2RlZmluZSBN
-VF9XRl9JUlBJKG9mcykJCQkoTVRfV0ZfSVJQSV9CQVNFICsgKChvZnMpIDw8IDE2KSkNCisNCiAv
-KiBQSFk6IGJhbmQgMCgweDgzMDgwMDAwKSwgYmFuZCAxKDB4ODMwOTAwMDApICovDQogI2RlZmlu
-ZSBNVF9XRl9QSFlfQkFTRQkJCTB4ODMwODAwMDANCiAjZGVmaW5lIE1UX1dGX1BIWShvZnMpCQkJ
-KE1UX1dGX1BIWV9CQVNFICsgKG9mcykpDQogDQogI2RlZmluZSBNVF9XRl9QSFlfUlhfQ1RSTDEo
-X3BoeSkJTVRfV0ZfUEhZKDB4MjAwNCArICgoX3BoeSkgPDwgMTYpKQ0KKyNkZWZpbmUgTVRfV0Zf
-UEhZX1JYX0NUUkwxX0lQSV9FTglHRU5NQVNLKDIsIDApDQogI2RlZmluZSBNVF9XRl9QSFlfUlhf
-Q1RSTDFfU1RTQ05UX0VOCUdFTk1BU0soMTEsIDkpDQogDQorI2RlZmluZSBNVF9XRl9QSFlfUlhU
-RDEyKF9waHkpCQlNVF9XRl9QSFkoMHg4MjMwICsgKChfcGh5KSA8PCAxNikpDQorI2RlZmluZSBN
-VF9XRl9QSFlfUlhURDEyX0lSUElfU1dfQ0xSX09OTFkJQklUKDE4KQ0KKyNkZWZpbmUgTVRfV0Zf
-UEhZX1JYVEQxMl9JUlBJX1NXX0NMUglCSVQoMjkpDQorDQogI2VuZGlmDQotLSANCjIuMTguMA0K
+Zhang Changzhong <zhangchangzhong@huawei.com> wrote:
+
+> Fixes the following W=1 kernel build warning(s):
+> 
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1576:6: warning:
+>  variable 'ret' set but not used [-Wunused-but-set-variable]
+>   1576 |  int ret;
+>        |      ^~~
+> 
+> driver_for_each_device() has been declared with __must_check, so the
+> return value should be checked.
+> 
+> Signed-off-by: Zhang Changzhong <zhangchangzhong@huawei.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+72a398a63b88 brcmfmac: check return value of driver_for_each_device()
+
+-- 
+https://patchwork.kernel.org/patch/11786561/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
