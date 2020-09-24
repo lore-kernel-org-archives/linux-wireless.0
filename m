@@ -2,85 +2,245 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033F0C4363D
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A58C4363D
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95F4F20758
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:15:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tuBKXzGX"
+	by mail.kernel.org (Postfix) with ESMTP id F067F238E4
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727850AbgIXNPq (ORCPT
+        id S1727860AbgIXNhJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:15:46 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:40120 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727846AbgIXNPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 09:15:46 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600953346; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=G/pobf+eXErdOYtD3b7hJ+MdOcPjBKqHww1ZUz/A+Y0=;
- b=tuBKXzGXbtPe18fkt+CPfbtEhWnkWH3RZCutHKB05/+icVZIzCuVHaKwk6dCHh/IGDCy6oAv
- rYmp6uGnxWaoSpDyrL+mffcfDvl/Rf5eRZOkAZS2GCaeSfwTNyFTj0+9T+usyTwvXIMXE8Pz
- stKdh+8pJ5D6q9ULwVxX5ZpN5j4=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 5f6c9becefb844e003b2296a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 13:15:24
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 82290C433C8; Thu, 24 Sep 2020 13:15:24 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 36986C433CA;
-        Thu, 24 Sep 2020 13:15:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 36986C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 5.9] mt76: mt7615: reduce maximum VHT MPDU length to 7991
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200923052442.24141-1-nbd@nbd.name>
-References: <20200923052442.24141-1-nbd@nbd.name>
-To:     Felix Fietkau <nbd@nbd.name>
+        Thu, 24 Sep 2020 09:37:09 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:52074 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727846AbgIXNhI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Sep 2020 09:37:08 -0400
+X-Greylist: delayed 805 seconds by postgrey-1.27 at vger.kernel.org; Thu, 24 Sep 2020 09:37:08 EDT
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1kLRDr-002IGj-HG; Thu, 24 Sep 2020 16:23:44 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200924131524.82290C433C8@smtp.codeaurora.org>
-Date:   Thu, 24 Sep 2020 13:15:24 +0000 (UTC)
+Date:   Thu, 24 Sep 2020 16:23:34 +0300
+Message-Id: <iwlwifi.20200924162105.862ef88d1ab2.Iba220a962b5d6d05c030b9275d97a89202d055dc@changeid>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200924132339.337310-1-luca@coelho.fi>
+References: <20200924132339.337310-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 2/7] iwlwifi: iwl-trans: move all txcmd init to trans alloc
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> wrote:
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-> After fixing mac80211 to allow larger A-MSDUs in some cases, there have been
-> reports of performance regressions and packet loss with some clients.
-> It appears that the issue occurs when the hardware is transmitting A-MSDUs
-> bigger than 8k. Limit the local VHT MPDU size capability to 7991, matching
-> the value used for MT7915 as well.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+txcmd fields is not directly related to the PCIe transport,
+so move to the common iwl_trans_alloc function.
 
-Patch applied to wireless-drivers.git, thanks.
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  7 ++---
+ .../net/wireless/intel/iwlwifi/iwl-trans.c    | 28 +++++++++++++++++--
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  7 ++---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  3 --
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 22 ++-------------
+ 5 files changed, 34 insertions(+), 33 deletions(-)
 
-efb1676306f6 mt76: mt7615: reduce maximum VHT MPDU length to 7991
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 82d59b5a5f8c..de2e2ca7a3ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -5,9 +5,8 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -27,9 +26,8 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -61,6 +59,7 @@
+ 
+ #ifndef __iwl_fw_api_tx_h__
+ #define __iwl_fw_api_tx_h__
++#include <linux/ieee80211.h>
+ 
+ /**
+  * enum iwl_tx_flags - bitmasks for tx_flags in TX command
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index f91197e4ae40..4a61ab56d728 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2019 - 2020 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -28,6 +29,7 @@
+  *
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2019 - 2020 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -60,6 +62,7 @@
+ #include <linux/kernel.h>
+ #include <linux/bsearch.h>
+ 
++#include "fw/api/tx.h"
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+ #include "iwl-fh.h"
+@@ -67,10 +70,10 @@
+ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 				  struct device *dev,
+ 				  const struct iwl_trans_ops *ops,
+-				  unsigned int cmd_pool_size,
+-				  unsigned int cmd_pool_align)
++				  const struct iwl_cfg_trans_params *cfg_trans)
+ {
+ 	struct iwl_trans *trans;
++	int txcmd_size, txcmd_align;
+ #ifdef CONFIG_LOCKDEP
+ 	static struct lock_class_key __key;
+ #endif
+@@ -79,6 +82,25 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 	if (!trans)
+ 		return NULL;
+ 
++	trans->trans_cfg = cfg_trans;
++	if (!cfg_trans->gen2) {
++		txcmd_size = sizeof(struct iwl_tx_cmd);
++		txcmd_align = sizeof(void *);
++	} else if (cfg_trans->device_family < IWL_DEVICE_FAMILY_AX210) {
++		txcmd_size = sizeof(struct iwl_tx_cmd_gen2);
++		txcmd_align = 64;
++	} else {
++		txcmd_size = sizeof(struct iwl_tx_cmd_gen3);
++		txcmd_align = 128;
++	}
++
++	txcmd_size += sizeof(struct iwl_cmd_header);
++	txcmd_size += 36; /* biggest possible 802.11 header */
++
++	/* Ensure device TX cmd cannot reach/cross a page boundary in gen2 */
++	if (WARN_ON(cfg_trans->gen2 && txcmd_size >= txcmd_align))
++		return ERR_PTR(-EINVAL);
++
+ #ifdef CONFIG_LOCKDEP
+ 	lockdep_init_map(&trans->sync_cmd_lockdep_map, "sync_cmd_lockdep_map",
+ 			 &__key, 0);
+@@ -92,7 +114,7 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 		 "iwl_cmd_pool:%s", dev_name(trans->dev));
+ 	trans->dev_cmd_pool =
+ 		kmem_cache_create(trans->dev_cmd_pool_name,
+-				  cmd_pool_size, cmd_pool_align,
++				  txcmd_size, txcmd_align,
+ 				  SLAB_HWCACHE_ALIGN, NULL);
+ 	if (!trans->dev_cmd_pool)
+ 		return NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 32ea4c3c7d23..d17eafe31e41 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1436,10 +1436,9 @@ static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
+  * transport helper functions
+  *****************************************************/
+ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+-				  struct device *dev,
+-				  const struct iwl_trans_ops *ops,
+-				  unsigned int cmd_pool_size,
+-				  unsigned int cmd_pool_align);
++			  struct device *dev,
++			  const struct iwl_trans_ops *ops,
++			  const struct iwl_cfg_trans_params *cfg_trans);
+ void iwl_trans_free(struct iwl_trans *trans);
+ 
+ /*****************************************************
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 72bb2b38e5b6..d84afe0013a2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1002,9 +1002,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(iwl_trans);
+ 
+-	/* the trans_cfg should never change, so set it now */
+-	iwl_trans->trans_cfg = trans;
+-
+ 	iwl_trans->hw_rf_id = iwl_read32(iwl_trans, CSR_HW_RF_ID);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(iwl_dev_info_table); i++) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index a59684e82713..43adb6646366 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3502,34 +3502,18 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ {
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	struct iwl_trans *trans;
+-	int ret, addr_size, txcmd_size, txcmd_align;
++	int ret, addr_size;
+ 	const struct iwl_trans_ops *ops = &trans_ops_pcie_gen2;
+ 
+-	if (!cfg_trans->gen2) {
++	if (!cfg_trans->gen2)
+ 		ops = &trans_ops_pcie;
+-		txcmd_size = sizeof(struct iwl_tx_cmd);
+-		txcmd_align = sizeof(void *);
+-	} else if (cfg_trans->device_family < IWL_DEVICE_FAMILY_AX210) {
+-		txcmd_size = sizeof(struct iwl_tx_cmd_gen2);
+-		txcmd_align = 64;
+-	} else {
+-		txcmd_size = sizeof(struct iwl_tx_cmd_gen3);
+-		txcmd_align = 128;
+-	}
+-
+-	txcmd_size += sizeof(struct iwl_cmd_header);
+-	txcmd_size += 36; /* biggest possible 802.11 header */
+-
+-	/* Ensure device TX cmd cannot reach/cross a page boundary in gen2 */
+-	if (WARN_ON(cfg_trans->gen2 && txcmd_size >= txcmd_align))
+-		return ERR_PTR(-EINVAL);
+ 
+ 	ret = pcim_enable_device(pdev);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+ 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie), &pdev->dev, ops,
+-				txcmd_size, txcmd_align);
++				cfg_trans);
+ 	if (!trans)
+ 		return ERR_PTR(-ENOMEM);
+ 
 -- 
-https://patchwork.kernel.org/patch/11793855/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.28.0
 
