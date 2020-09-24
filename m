@@ -7,87 +7,81 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A30C2D0E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB0BDC4346E
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:51:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C395923600
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:48:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DA2D23600
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:51:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="WABdGiA5"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="C5/WpXzI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728550AbgIXPsm (ORCPT
+        id S1728573AbgIXPvN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:48:42 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:39589 "EHLO m42-4.mailgun.net"
+        Thu, 24 Sep 2020 11:51:13 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:63055 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728139AbgIXPsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 11:48:41 -0400
+        id S1728527AbgIXPvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Sep 2020 11:51:07 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600962521; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1600962667; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Sjl9wunnHhbDBefPvYSya2E0YyYkeliUtysS/WiPdH0=;
- b=WABdGiA5gtYWuTLpwJUc3KSB0mLS+rHJSMnVcHysN2UJuGAJ2btTworaJpMddpx2hlN38A2+
- zT/WukXWTOr9nrI3ZygoodYRhT/u/V3aHo9kaBE1qxPeEkY3GfaUVV6Ow8e61cCNAtyFfqfW
- 4/iyFpycqJrWjT+VHMieO9FyIzM=
+ Content-Type: Sender; bh=WHIZh0g9+dX74CULbTN/F8J+UPFPU6ZnaAFr+YCktNg=;
+ b=C5/WpXzIc1JrmQioXaH7zgKYuom6yg7inZPm+QnQfWMGctZVcsI1PVB1JxKbHY2BL6ybrJLn
+ tZ8jd6GzqpToR4ixEui4g0HtkVYklTZtwtvXi15l+HaGOrNy6iNIipMq5A+bezNtafaMXoiw
+ 8XQeo3xB6YOkSniirzRPo3uUNO0=
 X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5f6cbfbe971b64f61b5afd7f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 15:48:14
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5f6cc066ebb17452baf29c44 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 15:51:02
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 78757C433FF; Thu, 24 Sep 2020 15:48:13 +0000 (UTC)
+        id 3B0D0C43382; Thu, 24 Sep 2020 15:51:01 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DFA09C433CA;
-        Thu, 24 Sep 2020 15:48:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DFA09C433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C518EC433CA;
+        Thu, 24 Sep 2020 15:50:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C518EC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] brcmfmac: check return value of
- driver_for_each_device()
+Subject: Re: [PATCH -next] zd1201: simplify the return expression of
+ zd1201_set_maxassoc()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1600481191-14250-1-git-send-email-zhangchangzhong@huawei.com>
-References: <1600481191-14250-1-git-send-email-zhangchangzhong@huawei.com>
-To:     Zhang Changzhong <zhangchangzhong@huawei.com>
-Cc:     <davem@davemloft.net>, <kuba@kernel.org>,
+In-Reply-To: <20200921131115.93504-1-miaoqinglang@huawei.com>
+References: <20200921131115.93504-1-miaoqinglang@huawei.com>
+To:     Qinglang Miao <miaoqinglang@huawei.com>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
+        <linux-kernel@vger.kernel.org>,
+        Qinglang Miao <miaoqinglang@huawei.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200924154813.78757C433FF@smtp.codeaurora.org>
-Date:   Thu, 24 Sep 2020 15:48:13 +0000 (UTC)
+Message-Id: <20200924155101.3B0D0C43382@smtp.codeaurora.org>
+Date:   Thu, 24 Sep 2020 15:51:01 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zhang Changzhong <zhangchangzhong@huawei.com> wrote:
+Qinglang Miao <miaoqinglang@huawei.com> wrote:
 
-> Fixes the following W=1 kernel build warning(s):
+> Simplify the return expression.
 > 
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1576:6: warning:
->  variable 'ret' set but not used [-Wunused-but-set-variable]
->   1576 |  int ret;
->        |      ^~~
-> 
-> driver_for_each_device() has been declared with __must_check, so the
-> return value should be checked.
-> 
-> Signed-off-by: Zhang Changzhong <zhangchangzhong@huawei.com>
+> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-72a398a63b88 brcmfmac: check return value of driver_for_each_device()
+5acbf34e2a2c zd1201: simplify the return expression of zd1201_set_maxassoc()
 
 -- 
-https://patchwork.kernel.org/patch/11786561/
+https://patchwork.kernel.org/patch/11789771/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
