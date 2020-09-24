@@ -2,94 +2,111 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3AFBC4727F
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 06:48:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53021C2D0E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B216220708
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 06:48:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20B0622208
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726908AbgIXGsT (ORCPT
+        id S1727534AbgIXJ0e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 02:48:19 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:44936 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726119AbgIXGsS (ORCPT
+        Thu, 24 Sep 2020 05:26:34 -0400
+Received: from mail-il1-f205.google.com ([209.85.166.205]:48880 "EHLO
+        mail-il1-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727522AbgIXJ0a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 02:48:18 -0400
-Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1kLL31-00029j-H1; Thu, 24 Sep 2020 06:48:08 +0000
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Ben Greear <greearb@candelatech.com>,
-        Tova Mussai <tova.mussai@intel.com>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Naftali Goldstein <naftali.goldstein@intel.com>,
-        linux-wireless@vger.kernel.org (open list:INTEL WIRELESS WIFI LINK
-        (iwlwifi)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] iwlwifi: mvm: Increase session protection duration for association
-Date:   Thu, 24 Sep 2020 14:48:00 +0800
-Message-Id: <20200924064802.3441-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.17.1
+        Thu, 24 Sep 2020 05:26:30 -0400
+Received: by mail-il1-f205.google.com with SMTP id g1so2068320iln.15
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2020 02:26:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=0j+21c+DQEGyv8+YfTh2XFRv26AfNd/g9NxPn8tyeGM=;
+        b=Bka/3pSn6feNNuVl0KJC78IYsXb1DXJnsm7z0pHyB4bWbx7iLA5ygNMCUKYd67VKVp
+         b3hdSVn7pCPCzkLnyt3c80fgwrAZ8d/g0jtGxr+ZgRSl4zsYmAWCEipxU9M8ms0+GllD
+         f7yFogQiBIqmhcx+1WOTjffbB46xOnKGtqAXF29XEj8eFG5xl8ufAG8n/g90hzYMuUit
+         qt5B/NzfsfLWq5ISCYFJaTkgQ8Ux+/zI64Zsc2CN3kqVSyhBbZd7IsJHtZBQulyzYVqv
+         J8nCXzgFyul3M3oMx+wNRe+k6/ALuPLaXbLU2dij/bDQVbKVNaRA6rXn3Mr0zMo0sB30
+         EKvg==
+X-Gm-Message-State: AOAM530PwE6WGyyjCmff51zmw4Vaw0CZ2kSwbvFycLakaNjDTWRa2xCA
+        NFe2tMrD/3H1jpeKWFRI5DnjeFaBC08Ccw5ZaiRyrNZTrKHr
+X-Google-Smtp-Source: ABdhPJxoICtWyO3FtjAwdEqjUFruLN+WepBvCdFwTSxtlAWaaMjwekbWiuFmqw0e5stUZKMnxXhnOsK2azHPEekQFNsdjhpYCASI
+MIME-Version: 1.0
+X-Received: by 2002:a05:6638:1381:: with SMTP id w1mr2933256jad.34.1600939589413;
+ Thu, 24 Sep 2020 02:26:29 -0700 (PDT)
+Date:   Thu, 24 Sep 2020 02:26:29 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000088b1f405b00bcbb8@google.com>
+Subject: WARNING in __cfg80211_ibss_joined (2)
+From:   syzbot <syzbot+7f064ba1704c2466e36d@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sometimes Intel AX201 fails to associate with AP:
-[  839.290042] wlp0s20f3: authenticate with xx:xx:xx:xx:xx:xx
-[  839.291737] wlp0s20f3: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
-[  839.350010] wlp0s20f3: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
-[  839.360826] wlp0s20f3: authenticated
-[  839.363205] wlp0s20f3: associate with xx:xx:xx:xx:xx:xx (try 1/3)
-[  839.370342] wlp0s20f3: RX AssocResp from xx:xx:xx:xx:xx:xx (capab=0x431 status=0 aid=12)
-[  839.378925] wlp0s20f3: associated
-[  839.431788] wlp0s20f3: deauthenticated from xx:xx:xx:xx:xx:xx (Reason: 2=PREV_AUTH_NOT_VALID)
+Hello,
 
-It fails because EAPOL hasn't finished. Increase the  session protection
-duration to 1200TU can eliminate the problem.
+syzbot found the following issue on:
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=209237
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+HEAD commit:    eff48dde Merge tag 'trace-v5.9-rc5' of git://git.kernel.or..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1665b19b900000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5f4c828c9e3cef97
+dashboard link: https://syzkaller.appspot.com/bug?extid=7f064ba1704c2466e36d
+compiler:       gcc (GCC) 10.1.0-syz 20200507
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+7f064ba1704c2466e36d@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 29877 at net/wireless/ibss.c:36 __cfg80211_ibss_joined+0x487/0x520 net/wireless/ibss.c:36
+Kernel panic - not syncing: panic_on_warn set ...
+CPU: 0 PID: 29877 Comm: kworker/u4:3 Not tainted 5.9.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: cfg80211 cfg80211_event_work
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0x198/0x1fd lib/dump_stack.c:118
+ panic+0x382/0x7fb kernel/panic.c:231
+ __warn.cold+0x20/0x4b kernel/panic.c:600
+ report_bug+0x1bd/0x210 lib/bug.c:198
+ handle_bug+0x38/0x90 arch/x86/kernel/traps.c:234
+ exc_invalid_op+0x14/0x40 arch/x86/kernel/traps.c:254
+ asm_exc_invalid_op+0x12/0x20 arch/x86/include/asm/idtentry.h:536
+RIP: 0010:__cfg80211_ibss_joined+0x487/0x520 net/wireless/ibss.c:36
+Code: 0f 0b e9 0c fe ff ff e8 77 54 06 fa e9 41 fc ff ff e8 4d 54 06 fa e9 7d fc ff ff e8 63 54 06 fa e9 0d ff ff ff e8 e9 84 c5 f9 <0f> 0b e9 7e fc ff ff e8 dd 84 c5 f9 0f 0b e8 56 54 06 fa e9 e4 fb
+RSP: 0018:ffffc900177c7bc8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff88809a2d0c10 RCX: ffffffff815b7ea2
+RDX: ffff888097302400 RSI: ffffffff87b0b957 RDI: 0000000000000000
+RBP: ffff88809a2d0000 R08: 0000000000000001 R09: ffffffff8d0b7a3f
+R10: fffffbfff1a16f47 R11: 0000000000000000 R12: 1ffff92002ef8f7b
+R13: ffff888000085a18 R14: 0000000000000000 R15: 0000000000000006
+ cfg80211_process_wdev_events+0x3de/0x5b0 net/wireless/util.c:910
+ cfg80211_process_rdev_events+0x6e/0x100 net/wireless/util.c:936
+ cfg80211_event_work+0x1a/0x20 net/wireless/core.c:320
+ process_one_work+0x94c/0x1670 kernel/workqueue.c:2269
+ worker_thread+0x64c/0x1120 kernel/workqueue.c:2415
+ kthread+0x3b5/0x4a0 kernel/kthread.c:292
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 9374c85c5caf..54acd9a68955 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3297,13 +3297,13 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	 * session for a much longer time since the firmware will internally
- 	 * create two events: a 300TU one with a very high priority that
- 	 * won't be fragmented which should be enough for 99% of the cases,
--	 * and another one (which we configure here to be 900TU long) which
-+	 * and another one (which we configure here to be 1200TU long) which
- 	 * will have a slightly lower priority, but more importantly, can be
- 	 * fragmented so that it'll allow other activities to run.
- 	 */
- 	if (fw_has_capa(&mvm->fw->ucode_capa,
- 			IWL_UCODE_TLV_CAPA_SESSION_PROT_CMD))
--		iwl_mvm_schedule_session_protection(mvm, vif, 900,
-+		iwl_mvm_schedule_session_protection(mvm, vif, 1200,
- 						    min_duration, false);
- 	else
- 		iwl_mvm_protect_session(mvm, vif, duration,
--- 
-2.17.1
-
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
