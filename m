@@ -2,164 +2,287 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9F88C4346E
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 054E6C4363D
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 16:06:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 594E323600
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D06023600
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 16:06:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bf+OlmSz"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="jaZlwLIg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728575AbgIXPvP (ORCPT
+        id S1728501AbgIXQGX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:51:15 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:52119 "EHLO m42-4.mailgun.net"
+        Thu, 24 Sep 2020 12:06:23 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:44873 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728373AbgIXPvK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 11:51:10 -0400
+        id S1728455AbgIXQGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Sep 2020 12:06:23 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600962668; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1600963582; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=9DxyVzBF2Y2HUGEyBmAKPbqDif0hg4W6wg+GG3d3u4k=;
- b=bf+OlmSzH/96KXwOWVoo1rps7pn+9rJlayMQQTv/0LfOPRfihUPxfURvS+U0455o35IVxODE
- Af9QnS36zESKvF81p5EuEOrUHb8yKVnpe0BAxkVRMgVLBU8uvrDTLEePuou4abaws/SSDgoz
- cY5MFqHXTQIkCep96ZmQ6KQtS/Q=
-X-Mailgun-Sending-Ip: 69.72.42.4
+ Content-Type: Sender; bh=09mt+B1UW3BXPnWKAMNNpqyqMQ0BNm/Usqs6d5IZhUM=;
+ b=jaZlwLIghUgaOD/Cgro9/5VW7KQtb23q5ChtEvrPgsRvSTToFNBavH1/S+MaQRUnsQmFZdKC
+ hRQL8ABnsVQcECU6pLsowKsGSki0noQ/4DfYW8HUjzTr2h7O+FLiZFRYB7BTTrp3jH7gCwX/
+ ZAp2SIxP77CDM4Q7Xhufm4q8cOE=
+X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5f6cc03d63643dee6237b42f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 15:50:21
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5f6cc3fd1dcd99b9f2ff50c3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 16:06:21
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5DDE8C4339C; Thu, 24 Sep 2020 15:50:21 +0000 (UTC)
+        id 97C93C433CA; Thu, 24 Sep 2020 16:06:21 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E35B4C433C8;
-        Thu, 24 Sep 2020 15:50:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E35B4C433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 010D6C433CA;
+        Thu, 24 Sep 2020 16:06:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 010D6C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 1/2] rtw88: Fix probe error handling race with firmware
- loading
+Content-Transfer-Encoding: 7bit
+Subject: Re: pull request: mt76 2019-09-23
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200920132621.26468-2-afaerber@suse.de>
-References: <20200920132621.26468-2-afaerber@suse.de>
-To:     =?utf-8?q?Andreas_F=C3=A4rber?= <afaerber@suse.de>
-Cc:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        linux-wireless@vger.kernel.org, Chin-Yen Lee <timlee@realtek.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-realtek-soc@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        =?utf-8?q?Andreas_F=C3=A4rber?= <afaerber@suse.de>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Brian Norris <briannorris@chromium.org>
+In-Reply-To: <13844b9d-6408-1fd7-2b39-0563c1ab43eb@nbd.name>
+References: <13844b9d-6408-1fd7-2b39-0563c1ab43eb@nbd.name>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200924155021.5DDE8C4339C@smtp.codeaurora.org>
-Date:   Thu, 24 Sep 2020 15:50:21 +0000 (UTC)
+Message-Id: <20200924160621.97C93C433CA@smtp.codeaurora.org>
+Date:   Thu, 24 Sep 2020 16:06:21 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Andreas Färber <afaerber@suse.de> wrote:
+Felix Fietkau <nbd@nbd.name> wrote:
 
-> In case of rtw8822be, a probe failure after successful rtw_core_init()
-> has been observed to occasionally lead to an oops from rtw_load_firmware_cb():
+> Hi Kalle,
 > 
-> [    3.924268] pci 0001:01:00.0: [10ec:b822] type 00 class 0xff0000
-> [    3.930531] pci 0001:01:00.0: reg 0x10: [io  0x0000-0x00ff]
-> [    3.936360] pci 0001:01:00.0: reg 0x18: [mem 0x00000000-0x0000ffff 64bit]
-> [    3.944042] pci 0001:01:00.0: supports D1 D2
-> [    3.948438] pci 0001:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    3.957312] pci 0001:01:00.0: BAR 2: no space for [mem size 0x00010000 64bit]
-> [    3.964645] pci 0001:01:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit]
-> [    3.972332] pci 0001:01:00.0: BAR 0: assigned [io  0x10000-0x100ff]
-> [    3.986240] rtw_8822be 0001:01:00.0: enabling device (0000 -> 0001)
-> [    3.992735] rtw_8822be 0001:01:00.0: failed to map pci memory
-> [    3.998638] rtw_8822be 0001:01:00.0: failed to request pci io region
-> [    4.005166] rtw_8822be 0001:01:00.0: failed to setup pci resources
-> [    4.011580] rtw_8822be: probe of 0001:01:00.0 failed with error -12
-> [    4.018827] cfg80211: Loading compiled-in X.509 certificates for regulatory database
-> [    4.029121] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
-> [    4.050828] Unable to handle kernel paging request at virtual address edafeaac9607952c
-> [    4.058975] Mem abort info:
-> [    4.058980]   ESR = 0x96000004
-> [    4.058990]   EC = 0x25: DABT (current EL), IL = 32 bits
-> [    4.070353]   SET = 0, FnV = 0
-> [    4.073487]   EA = 0, S1PTW = 0
-> [    4.073501] dw-apb-uart 98007800.serial: forbid DMA for kernel console
-> [    4.076723] Data abort info:
-> [    4.086415]   ISV = 0, ISS = 0x00000004
-> [    4.087731] Freeing unused kernel memory: 1792K
-> [    4.090391]   CM = 0, WnR = 0
-> [    4.098091] [edafeaac9607952c] address between user and kernel address ranges
-> [    4.105418] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-> [    4.111129] Modules linked in:
-> [    4.114275] CPU: 1 PID: 31 Comm: kworker/1:1 Not tainted 5.9.0-rc5-next-20200915+ #700
-> [    4.122386] Hardware name: Realtek Saola EVB (DT)
-> [    4.127223] Workqueue: events request_firmware_work_func
-> [    4.132676] pstate: 60000005 (nZCv daif -PAN -UAO BTYPE=--)
-> [    4.138393] pc : rtw_load_firmware_cb+0x54/0xbc
-> [    4.143040] lr : request_firmware_work_func+0x44/0xb4
-> [    4.148217] sp : ffff800010133d70
-> [    4.151616] x29: ffff800010133d70 x28: 0000000000000000
-> [    4.157069] x27: 0000000000000000 x26: 0000000000000000
-> [    4.162520] x25: 0000000000000000 x24: 0000000000000000
-> [    4.167971] x23: ffff00007ac21908 x22: ffff00007ebb2100
-> [    4.173424] x21: ffff00007ad35880 x20: edafeaac96079504
-> [    4.178877] x19: ffff00007ad35870 x18: 0000000000000000
-> [    4.184328] x17: 00000000000044d8 x16: 0000000000004310
-> [    4.189780] x15: 0000000000000800 x14: 00000000ef006305
-> [    4.195231] x13: ffffffff00000000 x12: ffffffffffffffff
-> [    4.200682] x11: 0000000000000020 x10: 0000000000000003
-> [    4.206135] x9 : 0000000000000000 x8 : ffff00007e73f680
-> [    4.211585] x7 : 0000000000000000 x6 : ffff80001119b588
-> [    4.217036] x5 : ffff00007e649c80 x4 : ffff00007e649c80
-> [    4.222487] x3 : ffff80001119b588 x2 : ffff8000108d1718
-> [    4.227940] x1 : ffff800011bd5000 x0 : ffff00007ac21600
-> [    4.233391] Call trace:
-> [    4.235906]  rtw_load_firmware_cb+0x54/0xbc
-> [    4.240198]  request_firmware_work_func+0x44/0xb4
-> [    4.245027]  process_one_work+0x178/0x1e4
-> [    4.249142]  worker_thread+0x1d0/0x268
-> [    4.252989]  kthread+0xe8/0xf8
-> [    4.256127]  ret_from_fork+0x10/0x18
-> [    4.259800] Code: f94013f5 a8c37bfd d65f03c0 f9000260 (f9401681)
-> [    4.266049] ---[ end trace f822ebae1a8545c2 ]---
+> here's a mt76 pull request for 5.10
 > 
-> To avoid this, wait on the completion callbacks in rtw_core_deinit()
-> before releasing firmware and continuing teardown.
+> The following changes since commit 02686841d58faa920bf56ff724ab95f619c6374b:
 > 
-> Note that rtw_wait_firmware_completion() was introduced with
-> c8e5695eae9959fc5774c0f490f2450be8bad3de ("rtw88: load wowlan firmware
-> if wowlan is supported"), so backports to earlier branches may need to
-> inline wait_for_completion(&rtwdev->fw.completion) instead.
+>   rtlwifi: rtl8723be: fix comparison to bool warning in hw.c (2020-09-21 16:02:50 +0300)
 > 
-> Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-> Fixes: c8e5695eae99 ("rtw88: load wowlan firmware if wowlan is supported")
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Andreas Färber <afaerber@suse.de>
+> are available in the Git repository at:
+> 
+>   https://github.com/nbd168/wireless tags/mt76-for-kvalo-2020-09-23
+> 
+> for you to fetch changes up to f50fbff68e35582383e0821f82344c244cae4d01:
+> 
+>   mt76: mt7663s: remove max_tx_fragments limitation (2020-09-23 08:16:29 +0200)
+> 
+> ----------------------------------------------------------------
+> mt76 patches for 5.10
+> 
+> * mt7663 runtime power management improvements
+> * performance improvements
+> * sdio support fixes
+> * testmode fixes
+> * mt7622 fixes
+> * 7915 A-MSDU offload
+> * cleanups
+> 
+> ----------------------------------------------------------------
+> Chih-Min Chen (1):
+>       mt76: mt7915: fix unexpected firmware mode
+> 
+> Felix Fietkau (44):
+>       mt76: mt7915: fix crash on tx rate report for invalid stations
+>       mt76: fix double DMA unmap of the first buffer on 7615/7915
+>       mt76: set interrupt mask register to 0 before requesting irq
+>       mt76: mt7915: clean up and fix interrupt masking in the irq handler
+>       mt76: mt7615: only clear unmasked interrupts in irq tasklet
+>       mt76: mt76x02: clean up and fix interrupt masking in the irq handler
+>       mt76: mt7615: do not do any work in napi poll after calling napi_complete_done()
+>       mt76: mt7915: do not do any work in napi poll after calling napi_complete_done()
+>       mt76: mt7915: clean up station stats polling and rate control update
+>       mt76: mt7915: increase tx retry count
+>       mt76: mt7915: enable offloading of sequence number assignment
+>       mt76: move mt76_check_agg_ssn to driver tx_prepare calls
+>       mt76: mt7615: remove mtxq->agg_ssn assignment
+>       mt76: mt7915: simplify aggregation session check
+>       mt76: mt7915: add missing flags in WMM parameter settings
+>       mt76: mt7615: fix reading airtime statistics
+>       mt76: mt7915: optimize mt7915_mac_sta_poll
+>       mt76: dma: update q->queued immediately on cleanup
+>       mt76: mt7915: schedule tx tasklet in mt7915_mac_tx_free
+>       mt76: mt7915: significantly reduce interrupt load
+>       mt76: mt7615: significantly reduce interrupt load
+>       mt76: mt7915: add support for accessing mapped registers via bus ops
+>       mt76: add memory barrier to DMA queue kick
+>       mt76: mt7603: check for single-stream EEPROM configuration
+>       mt76: usb: fix use of q->head and q->tail
+>       mt76: sdio: fix use of q->head and q->tail
+>       mt76: unify queue tx cleanup code
+>       mt76: remove qid argument to drv->tx_complete_skb
+>       mt76: remove swq from struct mt76_sw_queue
+>       mt76: rely on AQL for burst size limits on tx queueing
+>       mt76: remove struct mt76_sw_queue
+>       mt76: mt7603: tune tx ring size
+>       mt76: mt76x02: tune tx ring size
+>       mt76: mt7615: fix MT_ANT_SWITCH_CON register definition
+>       mt76: mt7615: fix antenna selection for testmode tx_frames
+>       mt76: testmode: add a limit for queued tx_frames packets
+>       mt76: add utility functions for deferring work to a kernel thread
+>       mt76: convert from tx tasklet to tx worker thread
+>       mt76: mt7915: fix HE BSS info
+>       mt76: dma: cache dma map address/len in struct mt76_queue_entry
+>       mt76: mt7915: simplify mt7915_lmac_mapping
+>       mt76: mt7915: fix queue/tid mapping for airtime reporting
+>       mt76: move txwi handling code to dma.c, since it is mmio specific
+>       mt76: remove retry_q from struct mt76_txq and related code
+> 
+> Gustavo A. R. Silva (1):
+>       mt76: Use fallthrough pseudo-keyword
+> 
+> Lee Jones (1):
+>       mt76: mt76x0: Move tables used only by init.c to their own header file
+> 
+> Liu Shixin (1):
+>       mt76: mt7915: convert to use le16_add_cpu()
+> 
+> Lorenzo Bianconi (28):
+>       mt76: mt7615: move drv_own/fw_own in mt7615_mcu_ops
+>       mt76: mt7663s: move drv_own/fw_own in mt7615_mcu_ops
+>       mt76: mt7615: hold mt76 lock queueing wd in mt7615_queue_key_update
+>       mt76: do not inject packets if MT76_STATE_PM is set
+>       mt76: mt7615: reschedule runtime-pm receiving a tx interrupt
+>       mt76: mt76s: fix oom in mt76s_tx_queue_skb_raw
+>       mt76: mt76s: move tx processing in a dedicated wq
+>       mt76: mt7663s: move rx processing in txrx wq
+>       mt76: mt76s: move status processing in txrx wq
+>       mt76: mt76s: move tx/rx processing in 2 separate works
+>       mt76: mt76s: get rid of unused variable
+>       mt76: mt7615: release mutex in mt7615_reset_test_set
+>       mt76: mt7663s: use NULL instead of 0 in sdio code
+>       mt76: mt7615: fix possible memory leak in mt7615_tm_set_tx_power
+>       mt76: mt7615: fix a possible NULL pointer dereference in mt7615_pm_wake_work
+>       mt76: fix a possible NULL pointer dereference in mt76_testmode_dump
+>       mt76: mt7663u: fix dma header initialization
+>       mt76: mt7622: fix fw hang on mt7622
+>       mt76: mt7663s: do not use altx for ctl/mgmt traffic
+>       mt76: mt7663s: split mt7663s_tx_update_sched in mt7663s_tx_{pick,update}_quota
+>       mt76: mt7663s: introduce __mt7663s_xmit_queue routine
+>       mt76: move pad estimation out of mt76_skb_adjust_pad
+>       mt76: mt7663s: fix possible quota leak in mt7663s_refill_sched_quota
+>       mt76: mt7663s: introduce sdio tx aggregation
+>       mt76: mt7663: check isr read return value in mt7663s_rx_work
+>       mt76: mt7615: unlock dfs bands
+>       mt76: mt7915: fix possible memory leak in mt7915_mcu_add_beacon
+>       mt76: mt7663s: remove max_tx_fragments limitation
+> 
+> Qinglang Miao (1):
+>       mt76: Convert to DEFINE_SHOW_ATTRIBUTE
+> 
+> Ryder Lee (3):
+>       mt76: mt7915: enable U-APSD on AP side
+>       mt76: mt7915: add Tx A-MSDU offloading support
+>       mt76: mt7615: fix VHT LDPC capability
+> 
+> Sean Wang (2):
+>       mt76: mt7663s: fix resume failure
+>       mt76: mt7663s: fix unable to handle kernel paging request
+> 
+> Shayne Chen (2):
+>       mt76: mt7615: register ext_phy if DBDC is detected
+>       mt76: mt7915: add offchannel condition in switch channel command
+> 
+> Wang Hai (1):
+>       mt76: mt7615: Remove set but unused variable 'index'
+> 
+> Ye Bin (1):
+>       mt76: Fix unsigned expressions compared with zero
+> 
+>  drivers/net/wireless/mediatek/mt76/debugfs.c              |   9 ++-
+>  drivers/net/wireless/mediatek/mt76/dma.c                  | 162 +++++++++++++++++++++++++++++----------------
+>  drivers/net/wireless/mediatek/mt76/mac80211.c             |  43 +++++-------
+>  drivers/net/wireless/mediatek/mt76/mt76.h                 |  61 +++++++++--------
+>  drivers/net/wireless/mediatek/mt76/mt7603/beacon.c        |   8 +--
+>  drivers/net/wireless/mediatek/mt76/mt7603/debugfs.c       |  18 ++---
+>  drivers/net/wireless/mediatek/mt76/mt7603/dma.c           |  26 ++++----
+>  drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c        |  17 ++++-
+>  drivers/net/wireless/mediatek/mt76/mt7603/eeprom.h        |   3 +
+>  drivers/net/wireless/mediatek/mt76/mt7603/init.c          |   5 --
+>  drivers/net/wireless/mediatek/mt76/mt7603/mac.c           |  25 ++++---
+>  drivers/net/wireless/mediatek/mt76/mt7603/main.c          |   4 +-
+>  drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h        |   5 +-
+>  drivers/net/wireless/mediatek/mt76/mt7603/pci.c           |   2 +
+>  drivers/net/wireless/mediatek/mt76/mt7603/soc.c           |   2 +
+>  drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c       |  30 +++------
+>  drivers/net/wireless/mediatek/mt76/mt7615/dma.c           |  55 ++++------------
+>  drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c        |   3 +
+>  drivers/net/wireless/mediatek/mt76/mt7615/init.c          |  25 ++++++-
+>  drivers/net/wireless/mediatek/mt76/mt7615/mac.c           |  42 ++++++++----
+>  drivers/net/wireless/mediatek/mt76/mt7615/main.c          |  11 ++--
+>  drivers/net/wireless/mediatek/mt76/mt7615/mcu.c           | 190 ++++++++++++++++++++++++++++-------------------------
+>  drivers/net/wireless/mediatek/mt76/mt7615/mmio.c          |  25 ++++---
+>  drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h        |  21 +++---
+>  drivers/net/wireless/mediatek/mt76/mt7615/pci.c           |   7 +-
+>  drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c      |   3 +
+>  drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c       |   6 +-
+>  drivers/net/wireless/mediatek/mt76/mt7615/regs.h          |   2 +-
+>  drivers/net/wireless/mediatek/mt76/mt7615/sdio.c          |  38 ++++++++---
+>  drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c      |  22 +++++--
+>  drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c     | 282 +++++++++++++++++++++++++++++++++++++++++++++++-------------------------------
+>  drivers/net/wireless/mediatek/mt76/mt7615/testmode.c      |  11 ++--
+>  drivers/net/wireless/mediatek/mt76/mt7615/usb.c           |   2 -
+>  drivers/net/wireless/mediatek/mt76/mt7615/usb_mcu.c       |   8 ++-
+>  drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c      |  29 ++++----
+>  drivers/net/wireless/mediatek/mt76/mt76x0/init.c          |   1 +
+>  drivers/net/wireless/mediatek/mt76/mt76x0/initvals.h      | 145 ----------------------------------------
+>  drivers/net/wireless/mediatek/mt76/mt76x0/initvals_init.h | 159 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/mediatek/mt76/mt76x0/pci.c           |   4 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x0/phy.c           |   2 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x02.h              |   2 +
+>  drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c      |  34 ++--------
+>  drivers/net/wireless/mediatek/mt76/mt76x02_dfs.c          |   6 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x02_dma.h          |   1 -
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mac.c          |  13 ++--
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mac.h          |   3 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c         |  70 ++++++++------------
+>  drivers/net/wireless/mediatek/mt76/mt76x02_usb.h          |   3 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c     |  12 ++--
+>  drivers/net/wireless/mediatek/mt76/mt76x02_util.c         |   5 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x2/pci.c           |   5 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c      |   2 +-
+>  drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c       |  11 ++--
+>  drivers/net/wireless/mediatek/mt76/mt7915/dma.c           | 146 +++++++++++++++++++++++++++++++++--------
+>  drivers/net/wireless/mediatek/mt76/mt7915/init.c          |  10 +++
+>  drivers/net/wireless/mediatek/mt76/mt7915/mac.c           | 257 +++++++++++++++++++++++++++++++++++++++++++----------------------------
+>  drivers/net/wireless/mediatek/mt76/mt7915/main.c          |  39 ++++++-----
+>  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c           | 132 ++++++++++++++++++++++++++++++++-----
+>  drivers/net/wireless/mediatek/mt76/mt7915/mcu.h           |  33 ++++++++++
+>  drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h        |  48 ++++----------
+>  drivers/net/wireless/mediatek/mt76/mt7915/pci.c           |  30 ++++-----
+>  drivers/net/wireless/mediatek/mt76/mt7915/regs.h          |  17 ++++-
+>  drivers/net/wireless/mediatek/mt76/sdio.c                 | 160 +++++++++++++++++++++------------------------
+>  drivers/net/wireless/mediatek/mt76/testmode.c             |  19 ++++--
+>  drivers/net/wireless/mediatek/mt76/tx.c                   | 330 +++++++++++++++++++++++++++++++++++---------------------------------------------------------
+>  drivers/net/wireless/mediatek/mt76/usb.c                  |  86 +++++++++---------------
+>  drivers/net/wireless/mediatek/mt76/util.c                 |  28 ++++++++
+>  drivers/net/wireless/mediatek/mt76/util.h                 |  76 +++++++++++++++++++++
+>  68 files changed, 1758 insertions(+), 1333 deletions(-)
+>  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/initvals_init.h
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by from committer missing: 6ec05140d65b mt76: mt7663u: fix
+dma header initialization
 
-ecda9cda3338 rtw88: Fix probe error handling race with firmware loading
-ac4bac99161e rtw88: Fix potential probe error handling race with wow firmware loading
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/patch/11787655/
+https://patchwork.kernel.org/patch/11795097/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
