@@ -2,73 +2,96 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,MIME_BASE64_TEXT,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0766C2D0E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8079C4346E
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A21162395C
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A54221EB
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="F1BHQVqC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728064AbgIXNh1 (ORCPT
+        id S1728356AbgIXPde (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:37:27 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:52100 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727993AbgIXNh1 (ORCPT
+        Thu, 24 Sep 2020 11:33:34 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39954 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728139AbgIXPde (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 09:37:27 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1kLRDq-002IGj-SU; Thu, 24 Sep 2020 16:23:43 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 24 Sep 2020 16:23:33 +0300
-Message-Id: <iwlwifi.20200924162105.c12a9b75da6b.I181fc5c80988e7ecea281c60e57a22ae7ec86716@changeid>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200924132339.337310-1-luca@coelho.fi>
-References: <20200924132339.337310-1-luca@coelho.fi>
+        Thu, 24 Sep 2020 11:33:34 -0400
+X-Greylist: delayed 302 seconds by postgrey-1.27 at vger.kernel.org; Thu, 24 Sep 2020 11:33:34 EDT
+X-UUID: b32ec940a2b24fc38ef2cb1e11ff6c4c-20200924
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=LmgvGuej7fW84C6X2+Aw7a3cm/HXAiGlJjhjzE8CYXs=;
+        b=F1BHQVqCB4ed24ksXq9kknq6dbMu5Y1MSajP+aCOKBDSrgAgX8MTDuiU7pwykgsE1ZZSVEQee4oeBk1SIkJO3iFrDyq59IaRwj+TzJ0ps+SM61QDqajOQFOv5AKfzTXCqwMidvQhYCQ8PR5anwBDRP5ljWBe6GDox/wOKQjwtWA=;
+X-UUID: b32ec940a2b24fc38ef2cb1e11ff6c4c-20200924
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 2104916421; Thu, 24 Sep 2020 23:23:19 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 24 Sep 2020 23:23:14 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 24 Sep 2020 23:23:14 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7915: fix VHT LDPC capability
+Date:   Thu, 24 Sep 2020 23:23:14 +0800
+Message-ID: <891f34b8f6b9bf16413514ee054e6e6185e0f12c.1600960534.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <670fe8dcb9e1308041047718af241225ff5614bb.1600960534.git.ryder.lee@mediatek.com>
+References: <670fe8dcb9e1308041047718af241225ff5614bb.1600960534.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 1/7] iwlwifi: enable twt by default
+Content-Type: text/plain
+X-TM-SNTS-SMTP: EBBF17836A4C1B03E52A209B24B98C02C15AE1D64FD20977D621CF462077636E2000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
-
-In a previous patch, a flag for disabling twt by a dbg-cfg
-was added. This will be useful for disabling twt on specific
-cores, after branch-out.
-However, we'd like twt to be enabled on master.
-
-So, enable twt on master.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index b0268f44b2ea..426ca1f86500 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -152,7 +152,7 @@
- #define IWL_MVM_FTM_INITIATOR_ALGO		IWL_TOF_ALGO_TYPE_MAX_LIKE
- #define IWL_MVM_FTM_INITIATOR_DYNACK		true
- #define IWL_MVM_D3_DEBUG			false
--#define IWL_MVM_USE_TWT				false
-+#define IWL_MVM_USE_TWT				true
- #define IWL_MVM_AMPDU_CONSEC_DROPS_DELBA	10
- #define IWL_MVM_USE_NSSN_SYNC			0
- #define IWL_MVM_PHY_FILTER_CHAIN_A		0
--- 
-2.28.0
+VGhlIE1DVSBmaWVsZCBzaG91bGQgY29udGFpbiBhIGJvb2xlYW4gMC8xLCBub3QgdGhlIGZsYWcg
+aXRzZWxmLg0KDQpTaWduZWQtb2ZmLWJ5OiBGZWxpeCBGaWV0a2F1IDxuYmRAbmJkLm5hbWU+DQpT
+aWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQotLS0NCmh0
+dHBzOi8vZ2l0aHViLmNvbS9vcGVud3J0L210NzYvY29tbWl0L2IxZjQyNTY4NjEyNTE0OWViNTg1
+ZDVjM2UwNWY5NmExZjdkYWIyZGINCi0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVr
+L210NzYvbXQ3OTE1L21jdS5jIHwgNiArKystLS0NCiAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRp
+b25zKCspLCAzIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
+YXRlay9tdDc2L210NzkxNS9tY3UuYw0KaW5kZXggZTU0NDU0ZmMwNWI5Li5hNTRlYjgzMWMwYTUg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9t
+Y3UuYw0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1
+LmMNCkBAIC0xNjYyLDcgKzE2NjIsNyBAQCBtdDc5MTVfbWN1X3d0YmxfaHRfdGx2KHN0cnVjdCBz
+a19idWZmICpza2IsIHN0cnVjdCBpZWVlODAyMTFfc3RhICpzdGEsDQogCQl0bHYgPSBtdDc5MTVf
+bWN1X2FkZF9uZXN0ZWRfdGx2KHNrYiwgV1RCTF9IVCwgc2l6ZW9mKCpodCksDQogCQkJCQkJd3Ri
+bF90bHYsIHN0YV93dGJsKTsNCiAJCWh0ID0gKHN0cnVjdCB3dGJsX2h0ICopdGx2Ow0KLQkJaHQt
+PmxkcGMgPSBzdGEtPmh0X2NhcC5jYXAgJiBJRUVFODAyMTFfSFRfQ0FQX0xEUENfQ09ESU5HOw0K
+KwkJaHQtPmxkcGMgPSAhIShzdGEtPmh0X2NhcC5jYXAgJiBJRUVFODAyMTFfSFRfQ0FQX0xEUENf
+Q09ESU5HKTsNCiAJCWh0LT5hZiA9IHN0YS0+aHRfY2FwLmFtcGR1X2ZhY3RvcjsNCiAJCWh0LT5t
+bSA9IHN0YS0+aHRfY2FwLmFtcGR1X2RlbnNpdHk7DQogCQlodC0+aHQgPSB0cnVlOw0KQEAgLTE2
+NzYsNyArMTY3Niw3IEBAIG10NzkxNV9tY3Vfd3RibF9odF90bHYoc3RydWN0IHNrX2J1ZmYgKnNr
+Yiwgc3RydWN0IGllZWU4MDIxMV9zdGEgKnN0YSwNCiAJCXRsdiA9IG10NzkxNV9tY3VfYWRkX25l
+c3RlZF90bHYoc2tiLCBXVEJMX1ZIVCwgc2l6ZW9mKCp2aHQpLA0KIAkJCQkJCXd0YmxfdGx2LCBz
+dGFfd3RibCk7DQogCQl2aHQgPSAoc3RydWN0IHd0Ymxfdmh0ICopdGx2Ow0KLQkJdmh0LT5sZHBj
+ID0gc3RhLT52aHRfY2FwLmNhcCAmIElFRUU4MDIxMV9WSFRfQ0FQX1JYTERQQywNCisJCXZodC0+
+bGRwYyA9ICEhKHN0YS0+dmh0X2NhcC5jYXAgJiBJRUVFODAyMTFfVkhUX0NBUF9SWExEUEMpOw0K
+IAkJdmh0LT52aHQgPSB0cnVlOw0KIA0KIAkJYWYgPSBGSUVMRF9HRVQoSUVFRTgwMjExX1ZIVF9D
+QVBfTUFYX0FfTVBEVV9MRU5HVEhfRVhQT05FTlRfTUFTSywNCkBAIC0yODU4LDcgKzI4NTgsNyBA
+QCBpbnQgbXQ3OTE1X21jdV9pbml0KHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYpDQogCX07DQogCWlu
+dCByZXQ7DQogDQotCWRldi0+bXQ3Ni5tY3Vfb3BzID0gJm10NzkxNV9tY3Vfb3BzLA0KKwlkZXYt
+Pm10NzYubWN1X29wcyA9ICZtdDc5MTVfbWN1X29wczsNCiANCiAJcmV0ID0gbXQ3OTE1X2RyaXZl
+cl9vd24oZGV2KTsNCiAJaWYgKHJldCkNCi0tIA0KMi4xOC4wDQo=
 
