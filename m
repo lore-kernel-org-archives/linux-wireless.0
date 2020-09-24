@@ -7,45 +7,46 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EE1FC4346E
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8294C4727F
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C413D22208
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DFB022208
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727199AbgIXJ2I (ORCPT
+        id S1727388AbgIXJ2Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 05:28:08 -0400
-Received: from mail-io1-f78.google.com ([209.85.166.78]:40334 "EHLO
-        mail-io1-f78.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727368AbgIXJ00 (ORCPT
+        Thu, 24 Sep 2020 05:28:24 -0400
+Received: from mail-io1-f79.google.com ([209.85.166.79]:41414 "EHLO
+        mail-io1-f79.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727453AbgIXJ00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 24 Sep 2020 05:26:26 -0400
-Received: by mail-io1-f78.google.com with SMTP id f8so1939308iow.7
+Received: by mail-io1-f79.google.com with SMTP id j4so1934992iob.8
         for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2020 02:26:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=KwtKvUDMcxdYzs6ADf81+0YwKHEm5MaqSDUuSHizkg8=;
-        b=omOMmfIyZ4iqzBr9GptFqLeEe4mytGerWs7QLG69x25L3BfZ7/fX4EhLjMpW/i4dk9
-         /tqo4EMWW69EjXKMuzvqqnKgZ2g174vN+nr1HMe7BzumkvHUCs+edGusTBESbRHitqca
-         +MJbeAZ4thhfKaKikIz97sb7vhdWtRvbTCg5haV5QUSH8nAriRD9JjGxA6Hh2mJr0VSd
-         gxvvV+JoFQo6bywW1nydk/Y+8KvskyVsdlT64JYhSgyog4Iof6YKNyImIwy7NNkZGNYR
-         meKp+heCB36LuW6q0wt6kaZmEOB4XaSPELCUoKKetfLN85nU4WJQgaetxKldc84q8oV9
-         PiGA==
-X-Gm-Message-State: AOAM530hj9OpoUKfk3JDRj1nIQJhBtADqa51qNE1qeXCwDzd1h/O0dEF
-        +WrM3q5H4TQ5PNH+WFJ6jyn+PHB91zHijxIoRE0RRNvmNkcD
-X-Google-Smtp-Source: ABdhPJzTyRPx3cOgeXGYY4+EUXdletyipVJqYGdcV1OlOfs7BzF1u5fWaj52gYsBTpNencNxqd5zgCjjdih5ydOHOydhQAPHGd+n
+        bh=Xx3C4JNesC+v7KtUAOM42iev2K1jVtLzKqz0VdkuiaU=;
+        b=EvcYOVbBdCaThuhQeL7ukYgafg+3fZt3B4IRczzc6+yawyaiXkk44i2ecSDdRY3keC
+         GkytbJt1cgVM7JLcwJEnUrL4YNa0TT2+EszF8Xl7EzP6kl1T7yIdAJq8N1gr309IEgw2
+         XXip2mB3GJpfMT2y3jOoGrRW2K13DRsbNLKTo2+3+S6yJL0aLZx1/Xz0KnXZS5cV87nh
+         kzTAD3EsNmTxjiUej8ySCUo7fLubM21snm75xNMPFB/40KZ4WTyapLjvZLRiq0I1YAa7
+         ERjvrND5rrhg5ObEudvWr8GI/A3IVX5QBI6ugcKrmP4KMMAWwtjPlgMbr1Fz3Tz0hXo4
+         05cQ==
+X-Gm-Message-State: AOAM531DL9d/rhl0mTr0DNSmmlvdISOwf/wEj9Pl3xx2bi9mAaEPbKmg
+        gcw4BPh2/7gPA8/XNkS1K3pSvCn+gIUEMCfysNbiCxuqTHd6
+X-Google-Smtp-Source: ABdhPJw1wh70zo2cujRhmnbxOdFtQlKJnCID2iuvOdd8eQJEWZQSzAiembA2d8txLrPHeqqSzusfx4yxX2+HZ1NVoF1xF4jUijVr
 MIME-Version: 1.0
-X-Received: by 2002:a02:7fcf:: with SMTP id r198mr2783772jac.24.1600939585536;
+X-Received: by 2002:a6b:3e06:: with SMTP id l6mr2565402ioa.160.1600939585354;
  Thu, 24 Sep 2020 02:26:25 -0700 (PDT)
 Date:   Thu, 24 Sep 2020 02:26:25 -0700
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000004d87c705b00bcb0a@google.com>
-Subject: WARNING in sta_info_insert_rcu
-From:   syzbot <syzbot+ef4ca92d9d6f5ba2f880@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+Message-ID: <0000000000004ac2d105b00bcb72@google.com>
+Subject: KMSAN: uninit-value in hwsim_cloned_frame_received_nl
+From:   syzbot <syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, glider@google.com, johannes@sipsolutions.net,
+        kuba@kernel.org, kvalo@codeaurora.org,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
@@ -57,60 +58,80 @@ Hello,
 
 syzbot found the following issue on:
 
-HEAD commit:    eff48dde Merge tag 'trace-v5.9-rc5' of git://git.kernel.or..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=17b4e8e3900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5f4c828c9e3cef97
-dashboard link: https://syzkaller.appspot.com/bug?extid=ef4ca92d9d6f5ba2f880
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=167e5707900000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1765b19b900000
-
-Bisection is inconclusive: the issue happens on the oldest tested release.
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10341dab900000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=12341dab900000
-console output: https://syzkaller.appspot.com/x/log.txt?x=14341dab900000
+HEAD commit:    c5a13b33 kmsan: clang-format core
+git tree:       https://github.com/google/kmsan.git master
+console output: https://syzkaller.appspot.com/x/log.txt?x=12a19c03900000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=20f149ad694ba4be
+dashboard link: https://syzkaller.appspot.com/bug?extid=b2645b5bf1512b81fa22
+compiler:       clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=118689ab900000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=104fc409900000
 
 IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+ef4ca92d9d6f5ba2f880@syzkaller.appspotmail.com
+Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
 
-wlan1: Created IBSS using preconfigured BSSID 50:50:50:50:50:50
-wlan1: Creating new IBSS network, BSSID 50:50:50:50:50:50
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 72 at net/mac80211/sta_info.c:529 sta_info_insert_check net/mac80211/sta_info.c:529 [inline]
-WARNING: CPU: 0 PID: 72 at net/mac80211/sta_info.c:529 sta_info_insert_rcu+0x27a/0x2ba0 net/mac80211/sta_info.c:707
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 72 Comm: kworker/u4:3 Not tainted 5.9.0-rc6-syzkaller #0
+=====================================================
+BUG: KMSAN: uninit-value in hwsim_cloned_frame_received_nl+0x104e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3553
+CPU: 1 PID: 8531 Comm: syz-executor177 Not tainted 5.9.0-rc4-syzkaller #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Workqueue: phy4 ieee80211_iface_work
 Call Trace:
  __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x198/0x1fd lib/dump_stack.c:118
- panic+0x382/0x7fb kernel/panic.c:231
- __warn.cold+0x20/0x4b kernel/panic.c:600
- report_bug+0x1bd/0x210 lib/bug.c:198
- handle_bug+0x38/0x90 arch/x86/kernel/traps.c:234
- exc_invalid_op+0x14/0x40 arch/x86/kernel/traps.c:254
- asm_exc_invalid_op+0x12/0x20 arch/x86/include/asm/idtentry.h:536
-RIP: 0010:sta_info_insert_check net/mac80211/sta_info.c:529 [inline]
-RIP: 0010:sta_info_insert_rcu+0x27a/0x2ba0 net/mac80211/sta_info.c:707
-Code: 24 e8 3a 79 b8 f9 0f b6 85 50 ff ff ff 31 ff 83 e0 01 41 89 c7 89 c6 e8 44 75 b8 f9 45 84 ff 0f 84 c5 00 00 00 e8 16 79 b8 f9 <0f> 0b 41 bd ea ff ff ff e8 09 79 b8 f9 48 8b bd 30 ff ff ff e8 ed
-RSP: 0018:ffffc90001017958 EFLAGS: 00010293
-RAX: 0000000000000000 RBX: ffff888093338c00 RCX: ffffffff87bdc51c
-RDX: ffff8880a9394040 RSI: ffffffff87bdc52a RDI: 0000000000000001
-RBP: ffffc90001017aa0 R08: 0000000000000000 R09: ffff88809333925f
-R10: 0000000000000000 R11: 0000000000000000 R12: 00000000500177e9
-R13: ffff8880a8916048 R14: ffff8880a8916000 R15: 0000000000000001
- ieee80211_ibss_finish_sta+0x212/0x390 net/mac80211/ibss.c:592
- ieee80211_ibss_work+0x2c7/0xe80 net/mac80211/ibss.c:1699
- ieee80211_iface_work+0x7d2/0x8f0 net/mac80211/iface.c:1438
- process_one_work+0x94c/0x1670 kernel/workqueue.c:2269
- worker_thread+0x64c/0x1120 kernel/workqueue.c:2415
- kthread+0x3b5/0x4a0 kernel/kthread.c:292
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
+ dump_stack+0x21c/0x280 lib/dump_stack.c:118
+ kmsan_report+0xf7/0x1e0 mm/kmsan/kmsan_report.c:122
+ __msan_warning+0x58/0xa0 mm/kmsan/kmsan_instr.c:219
+ hwsim_cloned_frame_received_nl+0x104e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3553
+ genl_family_rcv_msg_doit net/netlink/genetlink.c:669 [inline]
+ genl_family_rcv_msg net/netlink/genetlink.c:714 [inline]
+ genl_rcv_msg+0x1703/0x18a0 net/netlink/genetlink.c:731
+ netlink_rcv_skb+0x6d7/0x7e0 net/netlink/af_netlink.c:2470
+ genl_rcv+0x63/0x80 net/netlink/genetlink.c:742
+ netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
+ netlink_unicast+0x11c8/0x1490 net/netlink/af_netlink.c:1330
+ netlink_sendmsg+0x173a/0x1840 net/netlink/af_netlink.c:1919
+ sock_sendmsg_nosec net/socket.c:651 [inline]
+ sock_sendmsg net/socket.c:671 [inline]
+ __sys_sendto+0x9dc/0xc80 net/socket.c:1992
+ __do_sys_sendto net/socket.c:2004 [inline]
+ __se_sys_sendto+0x107/0x130 net/socket.c:2000
+ __x64_sys_sendto+0x6e/0x90 net/socket.c:2000
+ do_syscall_64+0x9f/0x140 arch/x86/entry/common.c:48
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x401a73
+Code: ff ff ff f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb cd 66 0f 1f 44 00 00 83 3d bd 8c 2d 00 00 75 17 49 89 ca b8 2c 00 00 00 0f 05 <48> 3d 01 f0 ff ff 0f 83 f1 0b 00 00 c3 48 83 ec 08 e8 57 01 00 00
+RSP: 002b:00007ffc0c9fdd58 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
+RAX: ffffffffffffffda RBX: 00007ffc0c9fddd0 RCX: 0000000000401a73
+RDX: 0000000000000034 RSI: 00007ffc0c9fde20 RDI: 0000000000000003
+RBP: 0000000000000000 R08: 00007ffc0c9fdd60 R09: 000000000000000c
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 00007ffc0c9fde20 R15: 0000000000000003
+
+Uninit was created at:
+ kmsan_save_stack_with_flags mm/kmsan/kmsan.c:143 [inline]
+ kmsan_internal_poison_shadow+0x66/0xd0 mm/kmsan/kmsan.c:126
+ kmsan_slab_alloc+0x8a/0xe0 mm/kmsan/kmsan_hooks.c:80
+ slab_alloc_node mm/slub.c:2907 [inline]
+ __kmalloc_node_track_caller+0x9aa/0x12f0 mm/slub.c:4511
+ __kmalloc_reserve net/core/skbuff.c:142 [inline]
+ __alloc_skb+0x35f/0xb30 net/core/skbuff.c:210
+ alloc_skb include/linux/skbuff.h:1094 [inline]
+ hwsim_cloned_frame_received_nl+0x20e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3498
+ genl_family_rcv_msg_doit net/netlink/genetlink.c:669 [inline]
+ genl_family_rcv_msg net/netlink/genetlink.c:714 [inline]
+ genl_rcv_msg+0x1703/0x18a0 net/netlink/genetlink.c:731
+ netlink_rcv_skb+0x6d7/0x7e0 net/netlink/af_netlink.c:2470
+ genl_rcv+0x63/0x80 net/netlink/genetlink.c:742
+ netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
+ netlink_unicast+0x11c8/0x1490 net/netlink/af_netlink.c:1330
+ netlink_sendmsg+0x173a/0x1840 net/netlink/af_netlink.c:1919
+ sock_sendmsg_nosec net/socket.c:651 [inline]
+ sock_sendmsg net/socket.c:671 [inline]
+ __sys_sendto+0x9dc/0xc80 net/socket.c:1992
+ __do_sys_sendto net/socket.c:2004 [inline]
+ __se_sys_sendto+0x107/0x130 net/socket.c:2000
+ __x64_sys_sendto+0x6e/0x90 net/socket.c:2000
+ do_syscall_64+0x9f/0x140 arch/x86/entry/common.c:48
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+=====================================================
 
 
 ---
@@ -120,6 +141,5 @@ syzbot engineers can be reached at syzkaller@googlegroups.com.
 
 syzbot will keep track of this issue. See:
 https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
 syzbot can test patches for this issue, for details see:
 https://goo.gl/tpsmEJ#testing-patches
