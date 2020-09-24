@@ -2,48 +2,49 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B66CC4346E
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FB5C2D0E2
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDA6222208
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31B6722208
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727668AbgIXJ1E (ORCPT
+        id S1726574AbgIXJ1v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 05:27:04 -0400
-Received: from mail-il1-f208.google.com ([209.85.166.208]:47545 "EHLO
-        mail-il1-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727518AbgIXJ03 (ORCPT
+        Thu, 24 Sep 2020 05:27:51 -0400
+Received: from mail-io1-f77.google.com ([209.85.166.77]:50339 "EHLO
+        mail-io1-f77.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727474AbgIXJ01 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 05:26:29 -0400
-Received: by mail-il1-f208.google.com with SMTP id p10so2063559ilp.14
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2020 02:26:28 -0700 (PDT)
+        Thu, 24 Sep 2020 05:26:27 -0400
+Received: by mail-io1-f77.google.com with SMTP id b16so1919783iod.17
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2020 02:26:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=G4/jGwbnu1l2y6Jzi6EOMRaLUdbIWIbqP6WYAAaIhRA=;
-        b=itZVdrgQRz/bw5sOPAHhuJDwOCXfcxGNrYjHa/5MH6TMO3Hze8FN4gQhZwulxITzXR
-         c5rGenpHwNjz4jmL4iiFm+gbY5kLQrQfNn3mNnOW7coNq6RCY+4bwrt4DGmSArRcRyKM
-         5Py+3lbnOkHVf/tAU32BkF/BLSCJv40LV1EmnN1+SzKAvvJLyou7t26F7SjEHprdcoRh
-         eZVf9LOXPdlYE8dy3aheGEXe4Fnpe/jZeNUm5vAOZPac7WNZnt6kwcM9fb7sz4awGZCW
-         uCXB0eEGT8udR0DzUFBhkDg57dpZ9g4veAFg9HrGhHHNzfxasefU3l15OjGyGdE5T8zP
-         Zkug==
-X-Gm-Message-State: AOAM5319K92I7MXUvgbIcaHERUl8Ve4y2xbY9gEMLIZAmo7xGVZevwr9
-        R56OgpJemVOMuTFvMLf1Apf8VNU/rFGgtO5Zh4VPcC1oT4xw
-X-Google-Smtp-Source: ABdhPJzCH79j/NuiC+W9kQ9b8UrZdjUMlgDD7CTrzBW4drN2ngmgn3gt/TxVzhCqovRZhzbDBaDeeEA07CM5dm1TSCgvGztpbOni
+        bh=zkwYPXXqbu6Jbit+dih6xwU3OyHwkBJP9aKMHzOM6ec=;
+        b=StWhtYssZzgNc4wv9qr7fhPGDw+MvMxAltU6mmk6AUMvSq/stjHlwteJBJN8DqtdCc
+         ONA6mRjidGXTHUF8FdZQzYuWsE8OgVaBdZb/V/5oB6K7TbY0fonVsBa9rZRQjzbZnDwW
+         AnQnZQ+y1y23ristT8frJpFtadREAvWLTZmF6gafw5ioXVS3QauF2VkjOFc/93+VOseu
+         XRY3HO4Xni6tldIe6HLgAFBc903yZf+ttHNOtIFscjTv2VCM9hB060XSrfH54zkNvx7f
+         JAGebwdBHy3X1x2RPdr/TyJk2JiJlB89BQr0BAihmrFbSLnYKTZM7xvOJ5aVo01O4LOK
+         MQPg==
+X-Gm-Message-State: AOAM532QEgt3Nj5TscXQM85zIvCLr+OfqVsxYO8UuJUVbes6EoPbwiv9
+        LvjVGAZfd0U41wsp5FJk60wmU4B3j83Iy2d0nzmzEUcDgQyO
+X-Google-Smtp-Source: ABdhPJwfvyxW/EjELvpHYZMhxwKdeNbMg8UUCWaHwdC4LaRjb0YPxjphmEUMlB28B1tXx3++LCtXW7OHL2Nr9e7POvZcNL8/y7C6
 MIME-Version: 1.0
-X-Received: by 2002:a92:d905:: with SMTP id s5mr3330966iln.224.1600939587940;
- Thu, 24 Sep 2020 02:26:27 -0700 (PDT)
-Date:   Thu, 24 Sep 2020 02:26:27 -0700
+X-Received: by 2002:a6b:8f10:: with SMTP id r16mr2597910iod.165.1600939585140;
+ Thu, 24 Sep 2020 02:26:25 -0700 (PDT)
+Date:   Thu, 24 Sep 2020 02:26:25 -0700
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000072391b05b00bcb00@google.com>
-Subject: WARNING in ieee80211_rx_list
-From:   syzbot <syzbot+8830db5d3593b5546d2e@syzkaller.appspotmail.com>
+Message-ID: <000000000000477d5705b00bcbec@google.com>
+Subject: memory leak in ieee80211_check_fast_xmit
+From:   syzbot <syzbot+2e293dbd67de2836ba42@syzkaller.appspotmail.com>
 To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
@@ -56,100 +57,178 @@ Hello,
 
 syzbot found the following issue on:
 
-HEAD commit:    12450081 libbpf: Fix native endian assumption when parsing..
-git tree:       bpf
-console output: https://syzkaller.appspot.com/x/log.txt?x=1236e99b900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5ac0d21536db480b
-dashboard link: https://syzkaller.appspot.com/bug?extid=8830db5d3593b5546d2e
+HEAD commit:    c9c9e6a4 Merge tag 'trace-v5.9-rc5-2' of git://git.kernel...
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=13735209900000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=23de0cdbdd5f681b
+dashboard link: https://syzkaller.appspot.com/bug?extid=2e293dbd67de2836ba42
 compiler:       gcc (GCC) 10.1.0-syz 20200507
-
-Unfortunately, I don't have any reproducer for this issue yet.
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1762d887900000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=174c88ad900000
 
 IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+8830db5d3593b5546d2e@syzkaller.appspotmail.com
+Reported-by: syzbot+2e293dbd67de2836ba42@syzkaller.appspotmail.com
 
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 18094 at net/mac80211/rx.c:4707 ieee80211_rx_list+0x1ba1/0x23a0 net/mac80211/rx.c:4707
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 1 PID: 18094 Comm: syz-executor.4 Not tainted 5.9.0-rc3-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- <IRQ>
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x198/0x1fd lib/dump_stack.c:118
- panic+0x382/0x7fb kernel/panic.c:231
- __warn.cold+0x20/0x4b kernel/panic.c:600
- report_bug+0x1bd/0x210 lib/bug.c:198
- handle_bug+0x38/0x90 arch/x86/kernel/traps.c:234
- exc_invalid_op+0x14/0x40 arch/x86/kernel/traps.c:254
- asm_exc_invalid_op+0x12/0x20 arch/x86/include/asm/idtentry.h:536
-RIP: 0010:ieee80211_rx_list+0x1ba1/0x23a0 net/mac80211/rx.c:4707
-Code: 00 00 48 89 df e8 8f 1c ef f9 e9 08 02 00 00 e8 25 59 ae f9 48 c7 84 24 c4 00 00 00 10 00 00 00 e9 cd ed ff ff e8 0f 59 ae f9 <0f> 0b e9 77 f0 ff ff e8 03 59 ae f9 44 89 e6 48 89 ef e8 e8 2e 9d
-RSP: 0018:ffffc90000da8c98 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffffffff87c7baa0
-RDX: ffff888058a603c0 RSI: ffffffff87c7d3f1 RDI: 0000000000000001
-RBP: ffff8880a614a580 R08: 0000000000000000 R09: ffffffff8d0b69e7
-R10: 0000000000000000 R11: 0000000000000000 R12: ffff88808c653148
-R13: ffff88808c650580 R14: ffff88808c650c80 R15: 0000000000000001
- ieee80211_rx_napi+0xf7/0x3d0 net/mac80211/rx.c:4799
- ieee80211_rx include/net/mac80211.h:4435 [inline]
- ieee80211_tasklet_handler+0xd3/0x130 net/mac80211/main.c:235
- tasklet_action_common.constprop.0+0x237/0x470 kernel/softirq.c:559
- __do_softirq+0x1f8/0xb23 kernel/softirq.c:298
- asm_call_on_stack+0xf/0x20 arch/x86/entry/entry_64.S:706
- </IRQ>
- __run_on_irqstack arch/x86/include/asm/irq_stack.h:22 [inline]
- run_on_irqstack_cond arch/x86/include/asm/irq_stack.h:48 [inline]
- do_softirq_own_stack+0x9d/0xd0 arch/x86/kernel/irq_64.c:77
- invoke_softirq kernel/softirq.c:393 [inline]
- __irq_exit_rcu kernel/softirq.c:423 [inline]
- irq_exit_rcu+0x235/0x280 kernel/softirq.c:435
- sysvec_apic_timer_interrupt+0x51/0xf0 arch/x86/kernel/apic/apic.c:1091
- asm_sysvec_apic_timer_interrupt+0x12/0x20 arch/x86/include/asm/idtentry.h:581
-RIP: 0010:preempt_count arch/x86/include/asm/preempt.h:26 [inline]
-RIP: 0010:check_kcov_mode kernel/kcov.c:163 [inline]
-RIP: 0010:__sanitizer_cov_trace_pc+0x9/0x60 kernel/kcov.c:197
-Code: 5d be 03 00 00 00 e9 b6 82 49 02 66 0f 1f 44 00 00 48 8b be b0 01 00 00 e8 b4 ff ff ff 31 c0 c3 90 65 48 8b 14 25 c0 fe 01 00 <65> 8b 05 70 d1 8b 7e a9 00 01 ff 00 48 8b 34 24 74 0f f6 c4 01 74
-RSP: 0018:ffffc900016d7748 EFLAGS: 00000202
-RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffffffff81a62d1d
-RDX: ffff888058a603c0 RSI: ffff888058a603c0 RDI: 0000000000000005
-RBP: 0000000000000001 R08: 0000000000000000 R09: ffffffff8b591e4f
-R10: 0000000000000000 R11: 0000000000000000 R12: ffff888069ba8a80
-R13: 0000000000000001 R14: 0000000000000363 R15: 0000000001190000
- rcu_read_unlock_sched_notrace include/linux/rcupdate.h:772 [inline]
- trace_rss_stat+0x226/0x2f0 include/trace/events/kmem.h:338
- mm_trace_rss_stat mm/memory.c:160 [inline]
- add_mm_counter include/linux/mm.h:1882 [inline]
- add_mm_rss_vec mm/memory.c:490 [inline]
- zap_pte_range mm/memory.c:1141 [inline]
- zap_pmd_range mm/memory.c:1195 [inline]
- zap_pud_range mm/memory.c:1224 [inline]
- zap_p4d_range mm/memory.c:1245 [inline]
- unmap_page_range+0x16ab/0x2bf0 mm/memory.c:1266
- unmap_single_vma+0x198/0x300 mm/memory.c:1311
- unmap_vmas+0x168/0x2e0 mm/memory.c:1343
- exit_mmap+0x2b1/0x530 mm/mmap.c:3183
- __mmput+0x122/0x470 kernel/fork.c:1076
- mmput+0x53/0x60 kernel/fork.c:1097
- exit_mm kernel/exit.c:483 [inline]
- do_exit+0xa8b/0x29f0 kernel/exit.c:793
- do_group_exit+0x125/0x310 kernel/exit.c:903
- get_signal+0x428/0x1f00 kernel/signal.c:2757
- arch_do_signal+0x82/0x2520 arch/x86/kernel/signal.c:811
- exit_to_user_mode_loop kernel/entry/common.c:136 [inline]
- exit_to_user_mode_prepare+0x1ae/0x200 kernel/entry/common.c:167
- syscall_exit_to_user_mode+0x7e/0x2e0 kernel/entry/common.c:242
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x45e179
-Code: Bad RIP value.
-RSP: 002b:00007fa23411dc78 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffe0 RBX: 000000000002cd80 RCX: 000000000045e179
-RDX: 0000000000040000 RSI: 0000000020000080 RDI: 000000000000000a
-RBP: 000000000118cf80 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 000000000118cf4c
-R13: 00007ffd868e359f R14: 00007fa23411e9c0 R15: 000000000118cf4c
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.340s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.420s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.500s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.580s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.660s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.740s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.820s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
+BUG: memory leak
+unreferenced object 0xffff888115177200 (size 96):
+  comm "kworker/u4:0", pid 7, jiffies 4294961513 (age 31.900s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 1e 0a 04 00 00 00 08 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 50  ..............PP
+  backtrace:
+    [<000000007aa91ff2>] kmemdup+0x23/0x50 mm/util.c:127
+    [<0000000000c381ce>] kmemdup include/linux/string.h:479 [inline]
+    [<0000000000c381ce>] ieee80211_check_fast_xmit+0x33c/0x590 net/mac80211/tx.c:3103
+    [<00000000b3947435>] sta_info_move_state+0xbf/0x3e0 net/mac80211/sta_info.c:2024
+    [<000000008c85d507>] sta_info_pre_move_state net/mac80211/sta_info.h:706 [inline]
+    [<000000008c85d507>] ieee80211_ibss_finish_sta+0x113/0x180 net/mac80211/ibss.c:587
+    [<00000000cf829a1b>] ieee80211_ibss_work+0xfc/0x430 net/mac80211/ibss.c:1699
+    [<00000000beb78158>] ieee80211_iface_work+0x3d0/0x440 net/mac80211/iface.c:1438
+    [<000000001352d51f>] process_one_work+0x213/0x4d0 kernel/workqueue.c:2269
+    [<000000005e0a2f8f>] worker_thread+0x58/0x4b0 kernel/workqueue.c:2415
+    [<000000007ed18dcd>] kthread+0x164/0x190 kernel/kthread.c:292
+    [<000000005a47bdfe>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+
 
 
 ---
@@ -159,3 +238,5 @@ syzbot engineers can be reached at syzkaller@googlegroups.com.
 
 syzbot will keep track of this issue. See:
 https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
