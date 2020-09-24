@@ -2,97 +2,194 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE9BC2D0E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A64DC4363D
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9E69238E3
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E777238E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 13:37:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728019AbgIXNhU (ORCPT
+        id S1727970AbgIXNhW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:37:20 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:52088 "EHLO
+        Thu, 24 Sep 2020 09:37:22 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:52092 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727846AbgIXNhU (ORCPT
+        with ESMTP id S1728022AbgIXNhW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 09:37:20 -0400
+        Thu, 24 Sep 2020 09:37:22 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kLRDp-002IGj-Po; Thu, 24 Sep 2020 16:23:42 +0300
+        id 1kLRDs-002IGj-At; Thu, 24 Sep 2020 16:23:45 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 24 Sep 2020 16:23:32 +0300
-Message-Id: <20200924132339.337310-1-luca@coelho.fi>
+Date:   Thu, 24 Sep 2020 16:23:35 +0300
+Message-Id: <iwlwifi.20200924162105.f6469c62665d.Id920f1ae8f70886b66a98956a6412726d29a9481@changeid>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200924132339.337310-1-luca@coelho.fi>
+References: <20200924132339.337310-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 0/7] iwlwifi: updates intended for v5.10 2020-09-24
+Subject: [PATCH 3/7] iwlwifi: move bc_pool to a common trans header
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Hi,
+The bc_pool code is not directly related to the PCIe transport,
+so move the structures it uses to the common iwl-trans.h header.
 
-Here's the second set of patches intended for v5.10.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 17 +++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  2 ++
+ .../net/wireless/intel/iwlwifi/pcie/internal.h |  1 -
+ .../net/wireless/intel/iwlwifi/pcie/trans.c    | 18 ------------------
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 16 ++++++----------
+ 5 files changed, 25 insertions(+), 29 deletions(-)
 
-The changes are:
-
-* Enable TWT by default;
-* Support for some new cards;
-* Support new PPAG FW command version
-* Move some trans code around for better abstraction;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Gil Adam (1):
-  iwlwifi: acpi: support ppag table command v2
-
-Golan Ben Ami (1):
-  iwlwifi: enable twt by default
-
-Ihab Zhaika (1):
-  iwlwifi: add new cards for MA family
-
-Mordechay Goodstein (4):
-  iwlwifi: iwl-trans: move all txcmd init to trans alloc
-  iwlwifi: move bc_pool to a common trans header
-  iwlwifi: iwl-trans: move tfd to trans layer
-  iwlwifi: move bc_table_dword to a common trans header
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  51 +++++++--
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |   8 +-
- .../net/wireless/intel/iwlwifi/fw/api/power.h |  27 +++--
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   7 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   3 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   9 ++
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |  57 +++++++++-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  23 +++-
- .../wireless/intel/iwlwifi/mvm/constants.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 103 +++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  18 ++-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  15 +--
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  59 ++--------
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  38 +++----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  28 ++---
- 15 files changed, 279 insertions(+), 169 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 4a61ab56d728..105776b39792 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -66,6 +66,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+ #include "iwl-fh.h"
++#include <linux/dmapool.h>
+ 
+ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 				  struct device *dev,
+@@ -110,6 +111,22 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 	trans->ops = ops;
+ 	trans->num_rx_queues = 1;
+ 
++	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
++		trans->txqs.bc_tbl_size = sizeof(struct iwl_gen3_bc_tbl);
++	else
++		trans->txqs.bc_tbl_size = sizeof(struct iwlagn_scd_bc_tbl);
++	/*
++	 * For gen2 devices, we use a single allocation for each byte-count
++	 * table, but they're pretty small (1k) so use a DMA pool that we
++	 * allocate here.
++	 */
++	if (trans->trans_cfg->gen2) {
++		trans->txqs.bc_pool = dmam_pool_create("iwlwifi:bc", dev,
++						       trans->txqs.bc_tbl_size,
++						       256, 0);
++		if (!trans->txqs.bc_pool)
++			return NULL;
++	}
+ 	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
+ 		 "iwl_cmd_pool:%s", dev_name(trans->dev));
+ 	trans->dev_cmd_pool =
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index d17eafe31e41..dbcd89e9546b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -914,6 +914,8 @@ struct iwl_trans_txqs {
+ 	unsigned long queue_used[BITS_TO_LONGS(IWL_MAX_TVQM_QUEUES)];
+ 	unsigned long queue_stopped[BITS_TO_LONGS(IWL_MAX_TVQM_QUEUES)];
+ 	struct iwl_txq *txq[IWL_MAX_TVQM_QUEUES];
++	struct dma_pool *bc_pool;
++	size_t bc_tbl_size;
+ 	struct {
+ 		u8 fifo;
+ 		u8 q_id;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 55808ba10d27..032e858ce7a3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -451,7 +451,6 @@ struct iwl_trans_pcie {
+ 	u32 scd_base_addr;
+ 	struct iwl_dma_ptr scd_bc_tbls;
+ 	struct iwl_dma_ptr kw;
+-	struct dma_pool *bc_pool;
+ 
+ 	struct iwl_txq *txq_memory;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 43adb6646366..354ec140f448 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3649,24 +3649,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 
+ 	init_waitqueue_head(&trans_pcie->sx_waitq);
+ 
+-	/*
+-	 * For gen2 devices, we use a single allocation for each byte-count
+-	 * table, but they're pretty small (1k) so use a DMA pool that we
+-	 * allocate here.
+-	 */
+-	if (cfg_trans->gen2) {
+-		size_t bc_tbl_size;
+-
+-		if (cfg_trans->device_family >= IWL_DEVICE_FAMILY_AX210)
+-			bc_tbl_size = sizeof(struct iwl_gen3_bc_tbl);
+-		else
+-			bc_tbl_size = sizeof(struct iwlagn_scd_bc_tbl);
+-
+-		trans_pcie->bc_pool = dmam_pool_create("iwlwifi:bc", &pdev->dev,
+-						       bc_tbl_size, 256, 0);
+-		if (!trans_pcie->bc_pool)
+-			goto out_no_pci;
+-	}
+ 
+ 	if (trans_pcie->msix_enabled) {
+ 		ret = iwl_pcie_init_msix_handler(pdev, trans_pcie);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 606bef2ecc7b..8b2275bf301c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1225,7 +1225,7 @@ void iwl_pcie_gen2_txq_free_memory(struct iwl_trans *trans,
+ 
+ 	kfree(txq->entries);
+ 	if (txq->bc_tbl.addr)
+-		dma_pool_free(trans_pcie->bc_pool, txq->bc_tbl.addr,
++		dma_pool_free(trans->txqs.bc_pool, txq->bc_tbl.addr,
+ 			      txq->bc_tbl.dma);
+ 	kfree(txq);
+ }
+@@ -1273,18 +1273,14 @@ int iwl_trans_pcie_dyn_txq_alloc_dma(struct iwl_trans *trans,
+ 				     struct iwl_txq **intxq, int size,
+ 				     unsigned int timeout)
+ {
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	size_t bc_tbl_size, bc_tbl_entries;
+ 	struct iwl_txq *txq;
+ 	int ret;
+ 
+-	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
+-		bc_tbl_size = sizeof(struct iwl_gen3_bc_tbl);
+-		bc_tbl_entries = bc_tbl_size / sizeof(u16);
+-	} else {
+-		bc_tbl_size = sizeof(struct iwlagn_scd_bc_tbl);
+-		bc_tbl_entries = bc_tbl_size / sizeof(u16);
+-	}
++	WARN_ON(!trans->txqs.bc_tbl_size);
++
++	bc_tbl_size = trans->txqs.bc_tbl_size;
++	bc_tbl_entries = bc_tbl_size / sizeof(u16);
+ 
+ 	if (WARN_ON(size > bc_tbl_entries))
+ 		return -EINVAL;
+@@ -1293,7 +1289,7 @@ int iwl_trans_pcie_dyn_txq_alloc_dma(struct iwl_trans *trans,
+ 	if (!txq)
+ 		return -ENOMEM;
+ 
+-	txq->bc_tbl.addr = dma_pool_alloc(trans_pcie->bc_pool, GFP_KERNEL,
++	txq->bc_tbl.addr = dma_pool_alloc(trans->txqs.bc_pool, GFP_KERNEL,
+ 					  &txq->bc_tbl.dma);
+ 	if (!txq->bc_tbl.addr) {
+ 		IWL_ERR(trans, "Scheduler BC Table allocation failed\n");
 -- 
 2.28.0
 
