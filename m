@@ -2,144 +2,91 @@ Return-Path: <SRS0=SYB6=DB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8294C4727F
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75F4AC4363D
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 11:58:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DFB022208
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 09:28:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 243742344C
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Sep 2020 11:58:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="iXR8vg0x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727388AbgIXJ2Y (ORCPT
+        id S1727495AbgIXL6V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Sep 2020 05:28:24 -0400
-Received: from mail-io1-f79.google.com ([209.85.166.79]:41414 "EHLO
-        mail-io1-f79.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727453AbgIXJ00 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Sep 2020 05:26:26 -0400
-Received: by mail-io1-f79.google.com with SMTP id j4so1934992iob.8
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2020 02:26:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=Xx3C4JNesC+v7KtUAOM42iev2K1jVtLzKqz0VdkuiaU=;
-        b=EvcYOVbBdCaThuhQeL7ukYgafg+3fZt3B4IRczzc6+yawyaiXkk44i2ecSDdRY3keC
-         GkytbJt1cgVM7JLcwJEnUrL4YNa0TT2+EszF8Xl7EzP6kl1T7yIdAJq8N1gr309IEgw2
-         XXip2mB3GJpfMT2y3jOoGrRW2K13DRsbNLKTo2+3+S6yJL0aLZx1/Xz0KnXZS5cV87nh
-         kzTAD3EsNmTxjiUej8ySCUo7fLubM21snm75xNMPFB/40KZ4WTyapLjvZLRiq0I1YAa7
-         ERjvrND5rrhg5ObEudvWr8GI/A3IVX5QBI6ugcKrmP4KMMAWwtjPlgMbr1Fz3Tz0hXo4
-         05cQ==
-X-Gm-Message-State: AOAM531DL9d/rhl0mTr0DNSmmlvdISOwf/wEj9Pl3xx2bi9mAaEPbKmg
-        gcw4BPh2/7gPA8/XNkS1K3pSvCn+gIUEMCfysNbiCxuqTHd6
-X-Google-Smtp-Source: ABdhPJw1wh70zo2cujRhmnbxOdFtQlKJnCID2iuvOdd8eQJEWZQSzAiembA2d8txLrPHeqqSzusfx4yxX2+HZ1NVoF1xF4jUijVr
-MIME-Version: 1.0
-X-Received: by 2002:a6b:3e06:: with SMTP id l6mr2565402ioa.160.1600939585354;
- Thu, 24 Sep 2020 02:26:25 -0700 (PDT)
-Date:   Thu, 24 Sep 2020 02:26:25 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000004ac2d105b00bcb72@google.com>
-Subject: KMSAN: uninit-value in hwsim_cloned_frame_received_nl
-From:   syzbot <syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, glider@google.com, johannes@sipsolutions.net,
-        kuba@kernel.org, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 24 Sep 2020 07:58:21 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:18261 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727437AbgIXL6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Sep 2020 07:58:20 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600948700; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=EhgEjHcYZNYBNeHV+1T0xrDSZhavD/WHGktUKZJrSNM=; b=iXR8vg0xRTbAv1vdANSrZGJom7jof390IGSC6hdGeb0R7fvDsXrYcA3TNvywz3Gjz2dLAfZy
+ bsDuky4DqBHv2f/2a0GJlnIFc3lHKGfbbqbRD8MEYm61tFeMQ0kfmKLxebAeVyCcsnYyJYdv
+ JBNNDk1857LFaQhrXFujwtwMKiU=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 5f6c89db31df7883e5d4f711 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Sep 2020 11:58:19
+ GMT
+Sender: govinds=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id C9E95C433FE; Thu, 24 Sep 2020 11:58:19 +0000 (UTC)
+Received: from dundi-linux.qualcomm.com (unknown [202.46.22.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: govinds)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 27C81C433CA;
+        Thu, 24 Sep 2020 11:58:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 27C81C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=govinds@codeaurora.org
+From:   Govind Singh <govinds@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH] ath11k: Move non-fatal warn logs to dbg level
+Date:   Thu, 24 Sep 2020 17:28:11 +0530
+Message-Id: <1600948691-6901-1-git-send-email-govinds@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+During driver load below warn logs are printed in the console.
+Since driver may not implement all wmi events sent by fw and
+all of them are non-fatal, move this log to debug level to
+remove un-necessary warn message on console.
 
-syzbot found the following issue on:
+[876.898735] ath11k_pci 0000:06:00.0: Unknown eventid: 0x16005
+[879.283250] ath11k_pci 0000:06:00.0: Unknown eventid: 0x1d00a
 
-HEAD commit:    c5a13b33 kmsan: clang-format core
-git tree:       https://github.com/google/kmsan.git master
-console output: https://syzkaller.appspot.com/x/log.txt?x=12a19c03900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=20f149ad694ba4be
-dashboard link: https://syzkaller.appspot.com/bug?extid=b2645b5bf1512b81fa22
-compiler:       clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=118689ab900000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=104fc409900000
+No functional changes. Compile tested only.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
-
-=====================================================
-BUG: KMSAN: uninit-value in hwsim_cloned_frame_received_nl+0x104e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3553
-CPU: 1 PID: 8531 Comm: syz-executor177 Not tainted 5.9.0-rc4-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x21c/0x280 lib/dump_stack.c:118
- kmsan_report+0xf7/0x1e0 mm/kmsan/kmsan_report.c:122
- __msan_warning+0x58/0xa0 mm/kmsan/kmsan_instr.c:219
- hwsim_cloned_frame_received_nl+0x104e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3553
- genl_family_rcv_msg_doit net/netlink/genetlink.c:669 [inline]
- genl_family_rcv_msg net/netlink/genetlink.c:714 [inline]
- genl_rcv_msg+0x1703/0x18a0 net/netlink/genetlink.c:731
- netlink_rcv_skb+0x6d7/0x7e0 net/netlink/af_netlink.c:2470
- genl_rcv+0x63/0x80 net/netlink/genetlink.c:742
- netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
- netlink_unicast+0x11c8/0x1490 net/netlink/af_netlink.c:1330
- netlink_sendmsg+0x173a/0x1840 net/netlink/af_netlink.c:1919
- sock_sendmsg_nosec net/socket.c:651 [inline]
- sock_sendmsg net/socket.c:671 [inline]
- __sys_sendto+0x9dc/0xc80 net/socket.c:1992
- __do_sys_sendto net/socket.c:2004 [inline]
- __se_sys_sendto+0x107/0x130 net/socket.c:2000
- __x64_sys_sendto+0x6e/0x90 net/socket.c:2000
- do_syscall_64+0x9f/0x140 arch/x86/entry/common.c:48
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x401a73
-Code: ff ff ff f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb cd 66 0f 1f 44 00 00 83 3d bd 8c 2d 00 00 75 17 49 89 ca b8 2c 00 00 00 0f 05 <48> 3d 01 f0 ff ff 0f 83 f1 0b 00 00 c3 48 83 ec 08 e8 57 01 00 00
-RSP: 002b:00007ffc0c9fdd58 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-RAX: ffffffffffffffda RBX: 00007ffc0c9fddd0 RCX: 0000000000401a73
-RDX: 0000000000000034 RSI: 00007ffc0c9fde20 RDI: 0000000000000003
-RBP: 0000000000000000 R08: 00007ffc0c9fdd60 R09: 000000000000000c
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 0000000000000000 R14: 00007ffc0c9fde20 R15: 0000000000000003
-
-Uninit was created at:
- kmsan_save_stack_with_flags mm/kmsan/kmsan.c:143 [inline]
- kmsan_internal_poison_shadow+0x66/0xd0 mm/kmsan/kmsan.c:126
- kmsan_slab_alloc+0x8a/0xe0 mm/kmsan/kmsan_hooks.c:80
- slab_alloc_node mm/slub.c:2907 [inline]
- __kmalloc_node_track_caller+0x9aa/0x12f0 mm/slub.c:4511
- __kmalloc_reserve net/core/skbuff.c:142 [inline]
- __alloc_skb+0x35f/0xb30 net/core/skbuff.c:210
- alloc_skb include/linux/skbuff.h:1094 [inline]
- hwsim_cloned_frame_received_nl+0x20e/0x13e0 drivers/net/wireless/mac80211_hwsim.c:3498
- genl_family_rcv_msg_doit net/netlink/genetlink.c:669 [inline]
- genl_family_rcv_msg net/netlink/genetlink.c:714 [inline]
- genl_rcv_msg+0x1703/0x18a0 net/netlink/genetlink.c:731
- netlink_rcv_skb+0x6d7/0x7e0 net/netlink/af_netlink.c:2470
- genl_rcv+0x63/0x80 net/netlink/genetlink.c:742
- netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
- netlink_unicast+0x11c8/0x1490 net/netlink/af_netlink.c:1330
- netlink_sendmsg+0x173a/0x1840 net/netlink/af_netlink.c:1919
- sock_sendmsg_nosec net/socket.c:651 [inline]
- sock_sendmsg net/socket.c:671 [inline]
- __sys_sendto+0x9dc/0xc80 net/socket.c:1992
- __do_sys_sendto net/socket.c:2004 [inline]
- __se_sys_sendto+0x107/0x130 net/socket.c:2000
- __x64_sys_sendto+0x6e/0x90 net/socket.c:2000
- do_syscall_64+0x9f/0x140 arch/x86/entry/common.c:48
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-=====================================================
-
-
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/net/wireless/ath/ath11k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index adde14a390ec..1e5a46bdaa61 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -6579,7 +6579,7 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ 		break;
+ 	/* TODO: Add remaining events */
+ 	default:
+-		ath11k_warn(ab, "Unknown eventid: 0x%x\n", id);
++		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
+ 		break;
+ 	}
+ 
+-- 
+2.22.0
+
