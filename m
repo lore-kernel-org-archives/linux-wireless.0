@@ -2,54 +2,78 @@ Return-Path: <SRS0=Pl1w=DC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 050D0C4727E
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Sep 2020 20:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32BD7C4727E
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Sep 2020 21:31:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A94D722211
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Sep 2020 20:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3C792075F
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Sep 2020 21:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728333AbgIYUSy (ORCPT
+        id S1728476AbgIYVbA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Sep 2020 16:18:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51300 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727520AbgIYUQx (ORCPT
+        Fri, 25 Sep 2020 17:31:00 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:52290 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727183AbgIYVbA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Sep 2020 16:16:53 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1247C05BD0A;
-        Fri, 25 Sep 2020 13:16:53 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id ECF0D1366538E;
-        Fri, 25 Sep 2020 13:00:05 -0700 (PDT)
-Date:   Fri, 25 Sep 2020 13:16:52 -0700 (PDT)
-Message-Id: <20200925.131652.1276316850791788198.davem@davemloft.net>
+        Fri, 25 Sep 2020 17:31:00 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1kLvIv-002J1P-Mn; Sat, 26 Sep 2020 00:30:58 +0300
+From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next-2020-09-25
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200925163621.D90BDC433FF@smtp.codeaurora.org>
-References: <20200925163621.D90BDC433FF@smtp.codeaurora.org>
-X-Mailer: Mew version 6.8 on Emacs 27.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [2620:137:e000::1:9]); Fri, 25 Sep 2020 13:00:06 -0700 (PDT)
+Cc:     linux-wireless@vger.kernel.org
+Date:   Sat, 26 Sep 2020 00:30:39 +0300
+Message-Id: <iwlwifi.20200926002540.a451fdd0a0ab.Idd8f59a49816d8484fe7dea3f1cec7a36cbf86f7@changeid>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200925213053.454459-1-luca@coelho.fi>
+References: <20200925213053.454459-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 01/15] iwlwifi: dbg: remove IWL_FW_INI_TIME_POINT_WDG_TIMEOUT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 25 Sep 2020 16:36:21 +0000 (UTC)
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
+This timepoint was removed from the FW, so we remove it from here too
+for consistency.  It's now marked as reserved to preserve the
+enumeration.
 
-Also pulled, thank you.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index 74ac65bd545a..8e34b509e6cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -368,7 +368,7 @@ enum iwl_fw_ini_region_type {
+  * @IWL_FW_INI_TIME_POINT_USER_TRIGGER: user trigger time point
+  * @IWL_FW_INI_TIME_POINT_PERIODIC: periodic timepoint that fires in constant
+  *	intervals. data field holds the interval time in msec
+- * @IWL_FW_INI_TIME_POINT_WDG_TIMEOUT: watchdog timeout
++ * @IWL_FW_INI_TIME_POINT_RESERVED: reserved
+  * @IWL_FW_INI_TIME_POINT_HOST_ASSERT: Unused
+  * @IWL_FW_INI_TIME_POINT_HOST_ALIVE_TIMEOUT: alive timeout
+  * @IWL_FW_INI_TIME_POINT_HOST_DEVICE_ENABLE: device enable
+@@ -399,7 +399,7 @@ enum iwl_fw_ini_time_point {
+ 	IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF,
+ 	IWL_FW_INI_TIME_POINT_USER_TRIGGER,
+ 	IWL_FW_INI_TIME_POINT_PERIODIC,
+-	IWL_FW_INI_TIME_POINT_WDG_TIMEOUT,
++	IWL_FW_INI_TIME_POINT_RESERVED,
+ 	IWL_FW_INI_TIME_POINT_HOST_ASSERT,
+ 	IWL_FW_INI_TIME_POINT_HOST_ALIVE_TIMEOUT,
+ 	IWL_FW_INI_TIME_POINT_HOST_DEVICE_ENABLE,
+-- 
+2.28.0
+
