@@ -7,54 +7,51 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C42C4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B81C4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6215423A33
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AAF523A79
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="snXKYTaw";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="dCG7TC8A"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="18wUYjsd";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Uk0vLGNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727024AbgI0T5X (ORCPT
+        id S1727039AbgI0T5Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:57:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726884AbgI0T5R (ORCPT
+        Sun, 27 Sep 2020 15:57:25 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41032 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726885AbgI0T5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:57:17 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D2FBC0613D8;
-        Sun, 27 Sep 2020 12:57:15 -0700 (PDT)
-Message-Id: <20200927194920.529620472@linutronix.de>
+        Sun, 27 Sep 2020 15:57:19 -0400
+Message-Id: <20200927194920.730139599@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236634;
+        s=2020; t=1601236636;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=EDKBcMIgD/09FuiGSNYHhCF3jDv+nrJ0d2CEBofmw7g=;
-        b=snXKYTawQUFS88tiTEow0tXsxP1tLJM9xHT4/iSNgIAGuodQmc9Qp0KQGNZNqlz9QV4M5I
-        Rwhti+lRXO9IB8T3AG1+oqCZy8zEWXsIqGQUGjndLp2o/23CsbScRTMQxV1S+kh8QLeOFq
-        GhrN/1KMvDQQJRY8cCanEj7G/YgGLxhd8+CicY7yErSGgVrutMDhvDA+2Le5tZEPNrhF92
-        HNLfR/nf1tFFd6gkjfLx4iaWWvrDbiiNIpQNQydVKD+szuJ1u60oQehMuNWOmSJiLRtlOZ
-        NjsUY5WOXonQTXiJuGxEgPxLSh81hYb/Q/qsEkT8VlOOAQCtaHM8RWF7F0a1IA==
+        bh=EEFvcB/PwX9I89XLy131RQtWz3cYksfF3sbWg1NgDKQ=;
+        b=18wUYjsdKMHJjgk4Us6khomilIdN25/SxDKIyuwyy0mSiSW/AeUP1NyRsE5FG33qrGO7QW
+        jAw9J0tpj7pkffmpsb/I2xP+dFW27rpV0wEiciSCAhxQ4lnNpojA/FRCq5TQQMHJs+lphz
+        fgNiUXBSNsmvPrgof215OGNS4MuZnGdrVxgP/w3I5rVQS+sGNlkRrVZGKmKgjWg+gIT3ZC
+        R3cytjZp8ns5FunZ7qOWr6CiFfel+oq9NIgBWersYnxzOkskjX86LkiuElpQ5nTvA14pAx
+        TSOmfZ9AKUnaegaoe9jBxklb5wqP3NKRYyZYH2Da+kRNpZ7XfqbG/dYW5gWETg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236634;
+        s=2020e; t=1601236636;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=EDKBcMIgD/09FuiGSNYHhCF3jDv+nrJ0d2CEBofmw7g=;
-        b=dCG7TC8ALt/lqqr+lqrqo16u3cIrM1QEOqBoykQQB7Oqrb7kPbGrYa/ghwEhg4k/GILAkS
-        r43l5jfMGGMm/jDA==
-Date:   Sun, 27 Sep 2020 21:48:53 +0200
+        bh=EEFvcB/PwX9I89XLy131RQtWz3cYksfF3sbWg1NgDKQ=;
+        b=Uk0vLGNob7iKmswDXccCQehW+RKFAsRxN//Pf6BDgW08Dcoqm6jDgpCxycTWKPE0t0GELZ
+        tesv+y7MgSj9WRBg==
+Date:   Sun, 27 Sep 2020 21:48:55 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
         Linus Torvalds <torvalds@linuxfoundation.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
-        Vishal Kulkarni <vishal@chelsio.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
@@ -63,10 +60,10 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-doc@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
         Jay Cliburn <jcliburn@gmail.com>,
         Chris Snook <chris.snook@gmail.com>,
+        Vishal Kulkarni <vishal@chelsio.com>,
         Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
         intel-wired-lan@lists.osuosl.org,
         Shannon Nelson <snelson@pensando.io>,
@@ -103,7 +100,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 07/35] net: cxbg4: Remove pointless in_interrupt() check
+Subject: [patch 09/35] net: fec_mpc52xx: Replace in_interrupt() usage
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -112,40 +109,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-t4_sge_stop() is only ever called from task context and the in_interrupt()
-check is presumably a leftover from copying t3_sge_stop().
+The usage of in_interrupt() in drivers is phased out and Linus clearly
+requested that code which changes behaviour depending on context should
+either be seperated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
 
-Aside of in_interrupt() being deprecated because it's not providing what it
-claims to provide, this check would paper over illegitimate callers.
+mpc52xx_fec_stop() uses in_interrupt() to check if it is safe to sleep. All
+callers run in well defined contexts.
 
-The functions invoked from t4_sge_stop() contain already warnings to catch
-invocations from invalid contexts.
+Pass an argument from the callers indicating whether it is safe to sleep.
 
-Remove it.
-
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Vishal Kulkarni <vishal@chelsio.com>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: netdev@vger.kernel.org
 
-
 ---
- drivers/net/ethernet/chelsio/cxgb4/sge.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/ethernet/freescale/fec_mpc52xx.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -4872,9 +4872,6 @@ void t4_sge_stop(struct adapter *adap)
- 	int i;
- 	struct sge *s = &adap->sge;
+--- a/drivers/net/ethernet/freescale/fec_mpc52xx.c
++++ b/drivers/net/ethernet/freescale/fec_mpc52xx.c
+@@ -74,7 +74,7 @@ struct mpc52xx_fec_priv {
+ static irqreturn_t mpc52xx_fec_interrupt(int, void *);
+ static irqreturn_t mpc52xx_fec_rx_interrupt(int, void *);
+ static irqreturn_t mpc52xx_fec_tx_interrupt(int, void *);
+-static void mpc52xx_fec_stop(struct net_device *dev);
++static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep);
+ static void mpc52xx_fec_start(struct net_device *dev);
+ static void mpc52xx_fec_reset(struct net_device *dev);
  
--	if (in_interrupt())  /* actions below require waiting */
--		return;
--
- 	if (s->rx_timer.function)
- 		del_timer_sync(&s->rx_timer);
- 	if (s->tx_timer.function)
+@@ -283,7 +283,7 @@ static int mpc52xx_fec_close(struct net_
+ 
+ 	netif_stop_queue(dev);
+ 
+-	mpc52xx_fec_stop(dev);
++	mpc52xx_fec_stop(dev, true);
+ 
+ 	mpc52xx_fec_free_rx_buffers(dev, priv->rx_dmatsk);
+ 
+@@ -693,7 +693,7 @@ static void mpc52xx_fec_start(struct net
+  *
+  * stop all activity on fec and empty dma buffers
+  */
+-static void mpc52xx_fec_stop(struct net_device *dev)
++static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep)
+ {
+ 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
+ 	struct mpc52xx_fec __iomem *fec = priv->fec;
+@@ -706,7 +706,7 @@ static void mpc52xx_fec_stop(struct net_
+ 	bcom_disable(priv->rx_dmatsk);
+ 
+ 	/* Wait for tx queue to drain, but only if we're in process context */
+-	if (!in_interrupt()) {
++	if (may_sleep) {
+ 		timeout = jiffies + msecs_to_jiffies(2000);
+ 		while (time_before(jiffies, timeout) &&
+ 				!bcom_queue_empty(priv->tx_dmatsk))
+@@ -738,7 +738,7 @@ static void mpc52xx_fec_reset(struct net
+ 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
+ 	struct mpc52xx_fec __iomem *fec = priv->fec;
+ 
+-	mpc52xx_fec_stop(dev);
++	mpc52xx_fec_stop(dev, false);
+ 
+ 	out_be32(&fec->rfifo_status, in_be32(&fec->rfifo_status));
+ 	out_be32(&fec->reset_cntrl, FEC_RESET_CNTRL_RESET_FIFO);
 
