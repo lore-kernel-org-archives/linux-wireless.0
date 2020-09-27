@@ -7,44 +7,47 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7284C47425
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0914C4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96DE923A53
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C33723A53
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="d1rdgmwn";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="+Iasu9O3"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zPJ0hda+";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hDcBqn6U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727253AbgI0T6w (ORCPT
+        id S1727205AbgI0T6v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:58:52 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:41464 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727145AbgI0T6D (ORCPT
+        Sun, 27 Sep 2020 15:58:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38706 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727151AbgI0T6B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:58:03 -0400
-Message-Id: <20200927194923.249291290@linutronix.de>
+        Sun, 27 Sep 2020 15:58:01 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0D7C0613DE;
+        Sun, 27 Sep 2020 12:57:38 -0700 (PDT)
+Message-Id: <20200927194922.339094192@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236668;
+        s=2020; t=1601236656;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=vdFvMNzU/x4SViOrfq3OSncwJYM+GQFlzT+TSG/Jurw=;
-        b=d1rdgmwnvlZUOMpyU4UwQtQF5yM+v2oLv1PhrnAnkHxJQzIDZgi08y5xJkIOTSE/HAzJEH
-        m73NHuf5Y89Z2k6h38GqvMhbSuHXcsYWEhQFMlCubYP/tF8Jn7+x0BWkiqvq84BZz2au5+
-        jeOQRZ+SbMvIfd0bYm/vRXEfCj8GFf9rdkD2NTEk9issoJjNBodZCfdyRGpCwXRDJ4t3Vj
-        NFI1CZVkn2YaxWM0AceskQU+v5Y6CKEVl7I9HSw0GC9gTC+iEMk2EuYdRrcFbkjWF/toyh
-        50r7CaIT6BWY13Wv5j7G+heQ0084VyqmX0HOzN5sSyE1/j5ABUNMQkw1MxEM2w==
+        bh=/+NkNOFDTNEsvHtoYwvS6e5nGIUJrGWmdKgKhxRiVZQ=;
+        b=zPJ0hda+pKDPbZkQiEtOVllcXiteC26rVxdbQgUPr53iqM/EtEAbi1jtvWq04gLkIbOM6C
+        ujfovK3wMHdZ6FXvajjqwPwbQFJ1LmtPBz5T2j4cEbjdcl/D+0f6GJFyKzRFZgjbfahwNX
+        reMPCs/At1wAnsoD3uJBqkJR3ASHJ1jz71cDvSkEqPFCeHA3unVIKbnfpJH2o2myxU5Yfj
+        jtmwzjKqvGFQUP7fsDit0YJbrYUAo2QclFxUF6MNX5tfRLQRt4fABWO8rJGitwZfVjJkd7
+        jHvsBaHgoyuL08FnoCDIKhTbUfSfoh93d587AamWzDVi2V/ozGa6S40/kgPXeQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236668;
+        s=2020e; t=1601236656;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=vdFvMNzU/x4SViOrfq3OSncwJYM+GQFlzT+TSG/Jurw=;
-        b=+Iasu9O3lwwW7SROFddv+F7Dm0tiCLGVcfnBPStOmcOCHkGfZ9zKVkGE4wbbUA3CekIMz/
-        b5ri9EnSdYCQtJBQ==
-Date:   Sun, 27 Sep 2020 21:49:20 +0200
+        bh=/+NkNOFDTNEsvHtoYwvS6e5nGIUJrGWmdKgKhxRiVZQ=;
+        b=hDcBqn6UXrJKv91FTu0QIgtLv0almCpuRxCTeOsqJHFPOoIM9MsroIFDwncbCe5QtqMrPS
+        AfISOKWlb8O3SEBg==
+Date:   Sun, 27 Sep 2020 21:49:11 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -52,11 +55,15 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
@@ -81,13 +88,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
         Ulrich Kunitz <kune@deine-taler.de>, linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
         Stanislav Yakovlev <stas.yakovlev@gmail.com>,
         Stanislaw Gruszka <stf_xl@wp.pl>,
         Johannes Berg <johannes.berg@intel.com>,
@@ -99,8 +101,9 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Xinming Hu <huxinming820@gmail.com>,
         libertas-dev@lists.infradead.org,
-        Pascal Terjan <pterjan@google.com>
-Subject: [patch 34/35] net: rtlwifi: Remove in_interrupt() from debug macro
+        Pascal Terjan <pterjan@google.com>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [patch 25/35] net: brcmfmac: Use netif_rx_any_context().
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,87 +114,52 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The usage of in_interrupt() in drivers in is phased out.
+The usage of in_interrupt() in non-core code is phased out. Ideally the
+information of the calling context should be passed by the callers or the
+functions be split as appropriate.
 
-rtlwifi uses in_interrupt() in the RT_TRACE() debug macro which is
-sprinkled all over the driver. RT_TRACE() is almost identical to RTPRINT()
-which another hideous debug printk wrapper. The only difference is the
-printout of in_interrupt().
+brcmfmac uses in_interupt() to select the netif_rx*() variant which matches
+the calling context. The attempt to consolidate the code by passing an
+arguemnt or by distangling it failed due lack of knowledge about this
+driver and because the call chains are convoluted and hard to follow.
 
-The decoding of in_interrupt() as hexvalue is non-trivial and aside of
-being phased out for driver use the return value is just by chance the
-masked preempt count value and not a boolean.
-
-These home brewn printk debug aids are tedious to work with and provide
-only minimal context.  They should be replaced by trace_printk() or a debug
-tracepoint which automatically records all context information.
-
-To make progress on the in_interrupt() cleanup, make RT_TRACE() use the
-RTPRINT() debug function and remove _rtl_dbg_trace().
+As a stop gap use netif_rx_any_context() which invokes the correct code
+path depending on context which confines the usage of in_interrupt() to
+core code.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/wireless/realtek/rtlwifi/debug.c |   20 --------------------
- drivers/net/wireless/realtek/rtlwifi/debug.h |    6 +-----
- 2 files changed, 1 insertion(+), 25 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
---- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-@@ -8,26 +8,6 @@
- #include <linux/vmalloc.h>
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -418,14 +418,7 @@ void brcmf_netif_rx(struct brcmf_if *ifp
+ 	ifp->ndev->stats.rx_packets++;
  
- #ifdef CONFIG_RTLWIFI_DEBUG
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
--		    const char *fmt, ...)
--{
--	if (unlikely((comp & rtlpriv->cfg->mod_params->debug_mask) &&
--		     level <= rtlpriv->cfg->mod_params->debug_level)) {
--		struct va_format vaf;
--		va_list args;
--
--		va_start(args, fmt);
--
--		vaf.fmt = fmt;
--		vaf.va = &args;
--
--		pr_info(":<%lx> %pV", in_interrupt(), &vaf);
--
--		va_end(args);
--	}
--}
--EXPORT_SYMBOL_GPL(_rtl_dbg_trace);
--
- void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *fmt, ...)
- {
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -149,10 +149,6 @@ enum dbgp_flag_e {
- struct rtl_priv;
+ 	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
+-	if (in_interrupt())
+-		netif_rx(skb);
+-	else
+-		/* If the receive is not processed inside an ISR,
+-		 * the softirqd must be woken explicitly to service
+-		 * the NET_RX_SOFTIRQ.  This is handled by netif_rx_ni().
+-		 */
+-		netif_rx_ni(skb);
++	netif_rx_any_context(skb);
+ }
  
- __printf(4, 5)
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
--		    const char *fmt, ...);
--
--__printf(4, 5)
- void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *fmt, ...);
- 
-@@ -161,7 +157,7 @@ void _rtl_dbg_print_data(struct rtl_priv
- 			 const void *hexdata, int hexdatalen);
- 
- #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
--	_rtl_dbg_trace(rtlpriv, comp, level,				\
-+	_rtl_dbg_print(rtlpriv, comp, level,				\
- 		       fmt, ##__VA_ARGS__)
- 
- #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
+ void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
 
