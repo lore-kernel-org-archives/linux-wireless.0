@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E71C4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4836C4346E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB80823A54
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 900F2206FB
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="BNwpzMCN";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="RneFpvEa"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ibSynXzN";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="r7tOoEsY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726762AbgI0T7r (ORCPT
+        id S1727441AbgI0UAZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:59:47 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:41714 "EHLO
+        Sun, 27 Sep 2020 16:00:25 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41624 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727137AbgI0T6D (ORCPT
+        with ESMTP id S1727057AbgI0T52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:58:03 -0400
-Message-Id: <20200927194923.031899444@linutronix.de>
+        Sun, 27 Sep 2020 15:57:28 -0400
+Message-Id: <20200927194921.454020115@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236665;
+        s=2020; t=1601236645;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=c0LQ/6xJuhVNob25oG2NjVswf02HdLBqhSkgCWoFfG4=;
-        b=BNwpzMCNvEzgCA9bu4GlhMhhVdvRv79cj4yGgf9wGod1HvEwCRyKBd/mo4XyX569hvlTTV
-        mJ8sDlGJUh0s7n0Kg121twB5Jk9x4633y93i3wCm3n+AR/9NwI9BpWIgkqQHitRErACx1s
-        /nbFmIsYBdEu1M7KDXEbdsnS0ulwBIvX4+s3EZDnz4/QmX9l4+o70l9Y0zTGxuj3CS4iq5
-        SBqQknFV6jUPDMHVq82D4ARNcN/u69R4znf24pft2CAbPGS4EiwY/Gbol8v8VoejFljSKM
-        gyMSl5tgawDOb3rajivW7LKoSbrLaW/EwO+W64Abvivr0Xi1Izy74USxL6KGtQ==
+        bh=nEdxrHzmEZ13nc2oNAX4mlZl848es00xkT/DnJHA5RU=;
+        b=ibSynXzNFO24Tr+9mg9CXt5EtKiOcQOu6V+70RX3ktyhWeVX/mh8yC4e7VKa9o+57Capkj
+        KhAWmT+9NH/kiSAKQWbRNfrwXJSfqUQIIgwqWaNAptujCvdwBy3v9Et11/IKP/zJH5Pclb
+        8ZbPidNYRCIECUt2qnjfkf4v2JwYhqC/T8VEOiCeWQRjnIYDMg1Sxb6O0oTFw8zDUFRdUX
+        5ikkLCLQod9OvgM8+5f6VGE5fFEBxbjLkAl+jK/BRvgHR+W+1leJSduGhEdpl5a2HbciY1
+        ywv3iCDrWrYyuYcB9ZmvZA22aq92oipmto6n+2gX1YQkd5OQjgkNgcDb+QA+Rg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236665;
+        s=2020e; t=1601236645;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=c0LQ/6xJuhVNob25oG2NjVswf02HdLBqhSkgCWoFfG4=;
-        b=RneFpvEarxklOXRwGHvMzSys1JfSZFNJD6ldlfH4hBbqdL6tpHU4K7CeDilZFuYy5rLaD2
-        ADxwxws26Ji8tMAA==
-Date:   Sun, 27 Sep 2020 21:49:18 +0200
+        bh=nEdxrHzmEZ13nc2oNAX4mlZl848es00xkT/DnJHA5RU=;
+        b=r7tOoEsYPpAyx40OdwJ0cukY0N3wA8XromAerzwrBBcIuUAvAIEt2D90A1YdSbKuPruQ8y
+        EaBYrjJM5fK8whAg==
+Date:   Sun, 27 Sep 2020 21:49:02 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -52,12 +52,9 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Pascal Terjan <pterjan@google.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Christian Benvenuti <benve@cisco.com>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -79,7 +76,9 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Edward Cree <ecree@solarflare.com>,
         Martin Habets <mhabets@solarflare.com>,
         Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>, linux-usb@vger.kernel.org,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -98,8 +97,10 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Xinming Hu <huxinming820@gmail.com>,
+        libertas-dev@lists.infradead.org,
+        Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 32/35] net: libertas: Use netif_rx_any_context()
+Subject: [patch 16/35] net: sunbmac: Replace in_interrupt() usage
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -110,58 +111,108 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The usage of in_interrupt() in non-core code is phased out. Ideally the
-information of the calling context should be passed by the callers or the
-functions be split as appropriate.
+bigmac_init_rings() has an argument signaling if it is called from the
+interrupt handler. This is used to decide between GFP_KERNEL and GFP_ATOMIC
+for memory allocations.
 
-libertas uses in_interupt() to select the netif_rx*() variant which matches
-the calling context. The attempt to consolidate the code by passing an
-arguemnt or by distangling it failed due lack of knowledge about this
-driver and because the call chains are hard to follow.
+But it also checks in_interrupt() to handle invocations which come from the
+timer callback bigmac_timer() via bigmac_hw_init(), which is invoked with
+'in_irq = 0'. While the timer callback is clearly not in hard interrupt
+context it is still not sleepable context.
 
-As a stop gap tse netif_rx_any_context() which invokes the correct code
-path depending on context and confines the in_interrupt() usage to core
-code.
+Rename the argument to `non_blocking' and set it to true if invoked from
+the timer callback or the interrupt handler which allows to remove the
+in_interrupt() check and makes the code consistent.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Pascal Terjan <pterjan@google.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/wireless/marvell/libertas/rx.c |   11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ drivers/net/ethernet/sun/sunbmac.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
---- a/drivers/net/wireless/marvell/libertas/rx.c
-+++ b/drivers/net/wireless/marvell/libertas/rx.c
-@@ -147,10 +147,7 @@ int lbs_process_rxed_packet(struct lbs_p
- 	dev->stats.rx_packets++;
+--- a/drivers/net/ethernet/sun/sunbmac.c
++++ b/drivers/net/ethernet/sun/sunbmac.c
+@@ -209,13 +209,13 @@ static void bigmac_clean_rings(struct bi
+ 	}
+ }
  
- 	skb->protocol = eth_type_trans(skb, dev);
--	if (in_interrupt())
--		netif_rx(skb);
--	else
--		netif_rx_ni(skb);
-+	netif_rx_any_context(skb);
+-static void bigmac_init_rings(struct bigmac *bp, int from_irq)
++static void bigmac_init_rings(struct bigmac *bp, bool non_blocking)
+ {
+ 	struct bmac_init_block *bb = bp->bmac_block;
+ 	int i;
+ 	gfp_t gfp_flags = GFP_KERNEL;
  
- 	ret = 0;
- done:
-@@ -265,11 +262,7 @@ static int process_rxed_802_11_packet(st
- 	dev->stats.rx_packets++;
+-	if (from_irq || in_interrupt())
++	if (non_blocking)
+ 		gfp_flags = GFP_ATOMIC;
  
- 	skb->protocol = eth_type_trans(skb, priv->dev);
--
--	if (in_interrupt())
--		netif_rx(skb);
--	else
--		netif_rx_ni(skb);
-+	netif_rx_any_context(skb);
+ 	bp->rx_new = bp->rx_old = bp->tx_new = bp->tx_old = 0;
+@@ -489,7 +489,7 @@ static void bigmac_tcvr_init(struct bigm
+ 	}
+ }
  
- 	ret = 0;
+-static int bigmac_init_hw(struct bigmac *, int);
++static int bigmac_init_hw(struct bigmac *, bool);
+ 
+ static int try_next_permutation(struct bigmac *bp, void __iomem *tregs)
+ {
+@@ -549,7 +549,7 @@ static void bigmac_timer(struct timer_li
+ 				if (ret == -1) {
+ 					printk(KERN_ERR "%s: Link down, cable problem?\n",
+ 					       bp->dev->name);
+-					ret = bigmac_init_hw(bp, 0);
++					ret = bigmac_init_hw(bp, true);
+ 					if (ret) {
+ 						printk(KERN_ERR "%s: Error, cannot re-init the "
+ 						       "BigMAC.\n", bp->dev->name);
+@@ -617,7 +617,7 @@ static void bigmac_begin_auto_negotiatio
+ 	add_timer(&bp->bigmac_timer);
+ }
+ 
+-static int bigmac_init_hw(struct bigmac *bp, int from_irq)
++static int bigmac_init_hw(struct bigmac *bp, bool non_blocking)
+ {
+ 	void __iomem *gregs        = bp->gregs;
+ 	void __iomem *cregs        = bp->creg;
+@@ -635,7 +635,7 @@ static int bigmac_init_hw(struct bigmac
+ 	qec_init(bp);
+ 
+ 	/* Alloc and reset the tx/rx descriptor chains. */
+-	bigmac_init_rings(bp, from_irq);
++	bigmac_init_rings(bp, non_blocking);
+ 
+ 	/* Initialize the PHY. */
+ 	bigmac_tcvr_init(bp);
+@@ -749,7 +749,7 @@ static void bigmac_is_medium_rare(struct
+ 	}
+ 
+ 	printk(" RESET\n");
+-	bigmac_init_hw(bp, 1);
++	bigmac_init_hw(bp, true);
+ }
+ 
+ /* BigMAC transmit complete service routines. */
+@@ -921,7 +921,7 @@ static int bigmac_open(struct net_device
+ 		return ret;
+ 	}
+ 	timer_setup(&bp->bigmac_timer, bigmac_timer, 0);
+-	ret = bigmac_init_hw(bp, 0);
++	ret = bigmac_init_hw(bp, false);
+ 	if (ret)
+ 		free_irq(dev->irq, bp);
+ 	return ret;
+@@ -945,7 +945,7 @@ static void bigmac_tx_timeout(struct net
+ {
+ 	struct bigmac *bp = netdev_priv(dev);
+ 
+-	bigmac_init_hw(bp, 0);
++	bigmac_init_hw(bp, true);
+ 	netif_wake_queue(dev);
+ }
  
 
