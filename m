@@ -7,47 +7,44 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0914C4727E
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BF4C4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C33723A53
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C748B23A53
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zPJ0hda+";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hDcBqn6U"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wj8/tcbv";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="8f2wzbUG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727205AbgI0T6v (ORCPT
+        id S1727315AbgI0T7J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:58:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38706 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727151AbgI0T6B (ORCPT
+        Sun, 27 Sep 2020 15:59:09 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41894 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727126AbgI0T6E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:58:01 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0D7C0613DE;
-        Sun, 27 Sep 2020 12:57:38 -0700 (PDT)
-Message-Id: <20200927194922.339094192@linutronix.de>
+        Sun, 27 Sep 2020 15:58:04 -0400
+Message-Id: <20200927194922.830361303@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236656;
+        s=2020; t=1601236663;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=/+NkNOFDTNEsvHtoYwvS6e5nGIUJrGWmdKgKhxRiVZQ=;
-        b=zPJ0hda+pKDPbZkQiEtOVllcXiteC26rVxdbQgUPr53iqM/EtEAbi1jtvWq04gLkIbOM6C
-        ujfovK3wMHdZ6FXvajjqwPwbQFJ1LmtPBz5T2j4cEbjdcl/D+0f6GJFyKzRFZgjbfahwNX
-        reMPCs/At1wAnsoD3uJBqkJR3ASHJ1jz71cDvSkEqPFCeHA3unVIKbnfpJH2o2myxU5Yfj
-        jtmwzjKqvGFQUP7fsDit0YJbrYUAo2QclFxUF6MNX5tfRLQRt4fABWO8rJGitwZfVjJkd7
-        jHvsBaHgoyuL08FnoCDIKhTbUfSfoh93d587AamWzDVi2V/ozGa6S40/kgPXeQ==
+        bh=aWutwpvby216c/jOr44XERgFZl4JWtXaiUmlGu9Ew5g=;
+        b=wj8/tcbvjbHIE2iyck9XlzqXoukgZyVheOsfUEKrEo4aIBHQd2UAF6C9tE9ne+KwuYig4A
+        a5M7VYVsc+Oywp1tcXKy8izFLMNtYmJZvshZxaHl1+kduoiNkfloFf/1VvZ8boXlgtSn67
+        IjDTrpZm0zDbk7eiZkcQUuor7Nvv5UQi+4ppYjuPbQDElv7mOok7bU4jx4VVLL73NQB0Na
+        0S6Y8ojP+Egk7zUp9PXG1Us71hG8bWKrTl6e7TDLTAoL6zyTvjKhLqZ2OokxU+YAUti1+c
+        ZIkMhdZQ1LizZKopauzd0MRCLso4Yy7mTtcfEa060b3Ij4FjUgIXjPasNmVu/A==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236656;
+        s=2020e; t=1601236663;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=/+NkNOFDTNEsvHtoYwvS6e5nGIUJrGWmdKgKhxRiVZQ=;
-        b=hDcBqn6UXrJKv91FTu0QIgtLv0almCpuRxCTeOsqJHFPOoIM9MsroIFDwncbCe5QtqMrPS
-        AfISOKWlb8O3SEBg==
-Date:   Sun, 27 Sep 2020 21:49:11 +0200
+        bh=aWutwpvby216c/jOr44XERgFZl4JWtXaiUmlGu9Ew5g=;
+        b=8f2wzbUGXSB8jpn1CQ9Mvv39d3JAL0NEKIqF6hUzTpgjDiXKWzLpnuKrothTbqaZQEgcv+
+        ZS9Q0EULAtTY8TBg==
+Date:   Sun, 27 Sep 2020 21:49:16 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -55,15 +52,13 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
@@ -88,22 +83,23 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
         Ulrich Kunitz <kune@deine-taler.de>, linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
         Stanislav Yakovlev <stas.yakovlev@gmail.com>,
         Stanislaw Gruszka <stf_xl@wp.pl>,
         Johannes Berg <johannes.berg@intel.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>,
-        Jouni Malinen <j@w1.fi>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        libertas-dev@lists.infradead.org,
+        Jouni Malinen <j@w1.fi>, libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 25/35] net: brcmfmac: Use netif_rx_any_context().
+Subject: [patch 30/35] net: mwifiex: Use netif_rx_any_context().
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -118,48 +114,59 @@ The usage of in_interrupt() in non-core code is phased out. Ideally the
 information of the calling context should be passed by the callers or the
 functions be split as appropriate.
 
-brcmfmac uses in_interupt() to select the netif_rx*() variant which matches
+mwifiex uses in_interupt() to select the netif_rx*() variant which matches
 the calling context. The attempt to consolidate the code by passing an
 arguemnt or by distangling it failed due lack of knowledge about this
-driver and because the call chains are convoluted and hard to follow.
+driver and because the call chains are hard to follow.
 
 As a stop gap use netif_rx_any_context() which invokes the correct code
-path depending on context which confines the usage of in_interrupt() to
-core code.
+path depending on context and confines the in_interrupt() usage to core
+code.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Cc: Xinming Hu <huxinming820@gmail.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c |    9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c |    6 +-----
+ drivers/net/wireless/marvell/mwifiex/util.c     |    6 +-----
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -418,14 +418,7 @@ void brcmf_netif_rx(struct brcmf_if *ifp
- 	ifp->ndev->stats.rx_packets++;
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -350,11 +350,7 @@ int mwifiex_uap_recv_packet(struct mwifi
+ 		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
  
- 	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
+ 	/* Forward multicast/broadcast packet to upper layer*/
 -	if (in_interrupt())
 -		netif_rx(skb);
 -	else
--		/* If the receive is not processed inside an ISR,
--		 * the softirqd must be woken explicitly to service
--		 * the NET_RX_SOFTIRQ.  This is handled by netif_rx_ni().
--		 */
 -		netif_rx_ni(skb);
+-
 +	netif_rx_any_context(skb);
+ 	return 0;
  }
  
- void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -488,11 +488,7 @@ int mwifiex_recv_packet(struct mwifiex_p
+ 	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
+ 		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
+ 
+-	if (in_interrupt())
+-		netif_rx(skb);
+-	else
+-		netif_rx_ni(skb);
+-
++	netif_rx_any_context(skb);
+ 	return 0;
+ }
+ 
 
