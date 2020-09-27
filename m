@@ -7,44 +7,47 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01106C47423
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C5EC4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2EEC206FB
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A098023977
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tqeU52EO";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wKmY7sgd"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lzOEqmio";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wUWF39OM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726899AbgI0UAV (ORCPT
+        id S1727033AbgI0UA5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 16:00:21 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:42202 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726420AbgI0T5i (ORCPT
+        Sun, 27 Sep 2020 16:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38592 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727032AbgI0T5Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:57:38 -0400
-Message-Id: <20200927194922.245750969@linutronix.de>
+        Sun, 27 Sep 2020 15:57:24 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 487DDC0613D3;
+        Sun, 27 Sep 2020 12:57:24 -0700 (PDT)
+Message-Id: <20200927194921.137019811@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236655;
+        s=2020; t=1601236641;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=Fz/Y8tdPmcPxNZ39xs6OXP7t7GmeJEA09IH+iG5eqPY=;
-        b=tqeU52EO2XBZK/ddxUU5a112arkeHUUJxxE9PSVyDXEDKqBLkWy/SqNPHHwWYyb3sGz1JZ
-        lGkGMNhtwBDXIrEFaClRwhU7/O0vbRat1U/HPln4Q+oDTdQQBOI3q84qp9pf16Ab5g85pJ
-        QlJCaUVOiCLDkYSh2yx2xZN5Noqozpd/Li1JhhqRUGYrArnUjtd0jKAyZYEFp/ajaRPpJD
-        eyOmp0cGo2JKISaMxw/wevnANPyTs9dg/RX9PVhj7eacVPKFmZJwmM2GFlq7wE8TYP6JWV
-        eiML7z2T/jG7bgMjXY9Xv+i/fNSvkYhHG+xKystktSgzm9NEOxUntE/v+kEGnQ==
+        bh=8s7EX2UsQWBhynqUTDd/u8Iv0n6j36sPbMtmCyDJsXY=;
+        b=lzOEqmioF//DgrijcaJYSRsf+YV01CsScdcw9tX79nttFriGA1I6hu2IkEtbuhvmNFVtEm
+        C83RACdG8DHmRN6Otr4E0ijc94wqzv5/KkGesIsSnKU9m9raro0j7Rx4W4yzzr7s9nUUxL
+        s8DcnuH9LuUX0ZQyqOrU5YY807/jTAloRukEG7CL+w/8udtzFa0IPSA0vdsFE4pDs2F1Lh
+        FnBI7fewv/INchgNbCQ/5kWUZZBBUFiTVmtyduitqW2P96GVxQAvbmQCBPBeIsgGqDstEe
+        +A/mlgwlVnexXesZzRSa5TVlhQG6vtEFGHYhUXfpbzGqC9YtNUJ2Z9WnFIk/aw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236655;
+        s=2020e; t=1601236641;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=Fz/Y8tdPmcPxNZ39xs6OXP7t7GmeJEA09IH+iG5eqPY=;
-        b=wKmY7sgdpiakGLwk3efR391mD4s4Ls4MU5X6793GEBWur5GfvH8AeOH68vsN1rg1N5GERz
-        9mCHkioqeemMDuAw==
-Date:   Sun, 27 Sep 2020 21:49:10 +0200
+        bh=8s7EX2UsQWBhynqUTDd/u8Iv0n6j36sPbMtmCyDJsXY=;
+        b=wUWF39OM0ztNTR2+gM6mKrXzVKN6S4B2BfM4TaXs0ECeVzREBTC4rxvaUxiISx1zOW+6zr
+        65wFpaA5Hiqb5GBQ==
+Date:   Sun, 27 Sep 2020 21:48:59 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -52,17 +55,11 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
@@ -77,16 +74,22 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         intel-wired-lan@lists.osuosl.org,
         Shannon Nelson <snelson@pensando.io>,
         Pensando Drivers <drivers@pensando.io>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
         Edward Cree <ecree@solarflare.com>,
         Martin Habets <mhabets@solarflare.com>,
         Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>, linux-usb@vger.kernel.org,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
         Stanislav Yakovlev <stas.yakovlev@gmail.com>,
         Stanislaw Gruszka <stf_xl@wp.pl>,
         Johannes Berg <johannes.berg@intel.com>,
@@ -100,7 +103,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 24/35] net: brcmfmac: Replace in_interrupt()
+Subject: [patch 13/35] net: mdiobus: Remove WARN_ON_ONCE(in_interrupt())
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,82 +114,86 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-brcmf_sdio_isr() is using in_interrupt() to distinguish if it is called
-from a interrupt service routine or from a worker thread.
+in_interrupt() is ill defined and does not provide what the name
+suggests. The usage especially in driver code is deprecated and a tree wide
+effort to clean up and consolidate the (ab)usage of in_interrupt() and
+related checks is happening.
 
-Passing such information from the calling context is preferred and
-requested by Linus, so add an argument `in_isr' to brcmf_sdio_isr() and let
-the callers pass the information about the calling context.
+In this case the check covers only parts of the contexts in which these
+functions cannot be called. It fails to detect preemption or interrupt
+disabled invocations.
+
+As the functions which contain these warnings invoke mutex_lock() which
+contains a broad variety of checks (always enabled or debug option
+dependent) and therefore covers all invalid conditions already, there is no
+point in having inconsistent warnings in those drivers. The conditional
+return is not really valuable in practice either.
+
+Just remove them.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Russell King <linux@armlinux.org.uk>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |    4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |    4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -73,7 +73,7 @@ static irqreturn_t brcmf_sdiod_oob_irqha
- 		sdiodev->irq_en = false;
- 	}
- 
--	brcmf_sdio_isr(sdiodev->bus);
-+	brcmf_sdio_isr(sdiodev->bus, true);
- 
- 	return IRQ_HANDLED;
- }
-@@ -85,7 +85,7 @@ static void brcmf_sdiod_ib_irqhandler(st
- 
- 	brcmf_dbg(INTR, "IB intr triggered\n");
- 
--	brcmf_sdio_isr(sdiodev->bus);
-+	brcmf_sdio_isr(sdiodev->bus, false);
- }
- 
- /* dummy handler for SDIO function 2 interrupt */
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3625,7 +3625,7 @@ void brcmf_sdio_trigger_dpc(struct brcmf
- 	}
- }
- 
--void brcmf_sdio_isr(struct brcmf_sdio *bus)
-+void brcmf_sdio_isr(struct brcmf_sdio *bus, bool in_isr)
+---
+ drivers/net/phy/mdio_bus.c |   15 ---------------
+ 1 file changed, 15 deletions(-)
+
+--- a/drivers/net/phy/mdio_bus.c
++++ b/drivers/net/phy/mdio_bus.c
+@@ -825,9 +825,6 @@ int mdiobus_read_nested(struct mii_bus *
  {
- 	brcmf_dbg(TRACE, "Enter\n");
+ 	int retval;
  
-@@ -3636,7 +3636,7 @@ void brcmf_sdio_isr(struct brcmf_sdio *b
+-	if (WARN_ON_ONCE(in_interrupt()))
+-		return -EINVAL;
+-
+ 	mutex_lock_nested(&bus->mdio_lock, MDIO_MUTEX_NESTED);
+ 	retval = __mdiobus_read(bus, addr, regnum);
+ 	mutex_unlock(&bus->mdio_lock);
+@@ -850,9 +847,6 @@ int mdiobus_read(struct mii_bus *bus, in
+ {
+ 	int retval;
  
- 	/* Count the interrupt call */
- 	bus->sdcnt.intrcount++;
--	if (in_interrupt())
-+	if (in_isr)
- 		atomic_set(&bus->ipend, 1);
- 	else
- 		if (brcmf_sdio_intr_rstatus(bus)) {
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -372,7 +372,7 @@ int brcmf_sdiod_remove(struct brcmf_sdio
+-	if (WARN_ON_ONCE(in_interrupt()))
+-		return -EINVAL;
+-
+ 	mutex_lock(&bus->mdio_lock);
+ 	retval = __mdiobus_read(bus, addr, regnum);
+ 	mutex_unlock(&bus->mdio_lock);
+@@ -879,9 +873,6 @@ int mdiobus_write_nested(struct mii_bus
+ {
+ 	int err;
  
- struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdio_remove(struct brcmf_sdio *bus);
--void brcmf_sdio_isr(struct brcmf_sdio *bus);
-+void brcmf_sdio_isr(struct brcmf_sdio *bus, bool in_isr);
+-	if (WARN_ON_ONCE(in_interrupt()))
+-		return -EINVAL;
+-
+ 	mutex_lock_nested(&bus->mdio_lock, MDIO_MUTEX_NESTED);
+ 	err = __mdiobus_write(bus, addr, regnum, val);
+ 	mutex_unlock(&bus->mdio_lock);
+@@ -905,9 +896,6 @@ int mdiobus_write(struct mii_bus *bus, i
+ {
+ 	int err;
  
- void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, bool active);
- void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
+-	if (WARN_ON_ONCE(in_interrupt()))
+-		return -EINVAL;
+-
+ 	mutex_lock(&bus->mdio_lock);
+ 	err = __mdiobus_write(bus, addr, regnum, val);
+ 	mutex_unlock(&bus->mdio_lock);
+@@ -929,9 +917,6 @@ int mdiobus_modify(struct mii_bus *bus,
+ {
+ 	int err;
+ 
+-	if (WARN_ON_ONCE(in_interrupt()))
+-		return -EINVAL;
+-
+ 	mutex_lock(&bus->mdio_lock);
+ 	err = __mdiobus_modify_changed(bus, addr, regnum, mask, set);
+ 	mutex_unlock(&bus->mdio_lock);
 
