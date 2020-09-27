@@ -7,62 +7,66 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F873C4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C42C4727F
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4398C21D95
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6215423A33
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vuP6S8UX";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="LxBnZ/3k"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="snXKYTaw";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="dCG7TC8A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726923AbgI0T5S (ORCPT
+        id S1727024AbgI0T5X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:57:18 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:40678 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726869AbgI0T5N (ORCPT
+        Sun, 27 Sep 2020 15:57:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38562 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726884AbgI0T5R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:57:13 -0400
-Message-Id: <20200927194920.214592677@linutronix.de>
+        Sun, 27 Sep 2020 15:57:17 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D2FBC0613D8;
+        Sun, 27 Sep 2020 12:57:15 -0700 (PDT)
+Message-Id: <20200927194920.529620472@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236630;
+        s=2020; t=1601236634;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=9orafjgYKDlDKEG62n274dWmcmLVLFnX3OlrGfMTV/Q=;
-        b=vuP6S8UXSfNxWHGc7Yb2QTKmLAxUiHJyEitt9UbeznGeTfFpoA4hIKR0wXAjx9ERlKFh9W
-        B3bju1K9kWHZBkDD4J7eFPdctXUZRyh96hhl3Tx1GvWD8Y/XyJWWryMdeorFYWMQDKrTL5
-        kqEzzHZXGSW+yc33fKh0Hu2PgYS+NeHki6h+C1HvVyfClaaDmUPPyP0mJ9LvLSPNglIAuo
-        ijVHzC9fe4+qCIeoRmB8/Z/YabntsJvY9IgF8P8zl9mXgHpPjJZSKLDCF9g88NWv4FcmbF
-        /sN3MaPfnUFBZt+Ua6vxU4jIFoZjJgzrGe8Wmt35MCdWxPI91VOXLcu/jEI4vQ==
+        bh=EDKBcMIgD/09FuiGSNYHhCF3jDv+nrJ0d2CEBofmw7g=;
+        b=snXKYTawQUFS88tiTEow0tXsxP1tLJM9xHT4/iSNgIAGuodQmc9Qp0KQGNZNqlz9QV4M5I
+        Rwhti+lRXO9IB8T3AG1+oqCZy8zEWXsIqGQUGjndLp2o/23CsbScRTMQxV1S+kh8QLeOFq
+        GhrN/1KMvDQQJRY8cCanEj7G/YgGLxhd8+CicY7yErSGgVrutMDhvDA+2Le5tZEPNrhF92
+        HNLfR/nf1tFFd6gkjfLx4iaWWvrDbiiNIpQNQydVKD+szuJ1u60oQehMuNWOmSJiLRtlOZ
+        NjsUY5WOXonQTXiJuGxEgPxLSh81hYb/Q/qsEkT8VlOOAQCtaHM8RWF7F0a1IA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236630;
+        s=2020e; t=1601236634;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=9orafjgYKDlDKEG62n274dWmcmLVLFnX3OlrGfMTV/Q=;
-        b=LxBnZ/3kK2Kn1E01Ma+vj2UE6c25FltAkOE1MjniUMmLf0trqgyT+SHySRxbhxfte+GZQe
-        x6hYcFF/6UZwDWAA==
-Date:   Sun, 27 Sep 2020 21:48:50 +0200
+        bh=EDKBcMIgD/09FuiGSNYHhCF3jDv+nrJ0d2CEBofmw7g=;
+        b=dCG7TC8ALt/lqqr+lqrqo16u3cIrM1QEOqBoykQQB7Oqrb7kPbGrYa/ghwEhg4k/GILAkS
+        r43l5jfMGGMm/jDA==
+Date:   Sun, 27 Sep 2020 21:48:53 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
         Linus Torvalds <torvalds@linuxfoundation.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Vishal Kulkarni <vishal@chelsio.com>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        netdev@vger.kernel.org, Christian Benvenuti <benve@cisco.com>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
         Jonathan Corbet <corbet@lwn.net>,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-doc@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
+        linux-doc@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
         Chris Snook <chris.snook@gmail.com>,
-        Vishal Kulkarni <vishal@chelsio.com>,
         Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
         intel-wired-lan@lists.osuosl.org,
         Shannon Nelson <snelson@pensando.io>,
@@ -99,7 +103,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 04/35] net: caif: Use netif_rx_any_context()
+Subject: [patch 07/35] net: cxbg4: Remove pointless in_interrupt() check
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -108,65 +112,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-The usage of in_interrupt() in non-core code is phased out. Ideally the
-information of the calling context should be passed by the callers or the
-functions be split as appropriate.
+t4_sge_stop() is only ever called from task context and the in_interrupt()
+check is presumably a leftover from copying t3_sge_stop().
 
-cfhsi_rx_desc() and cfhsi_rx_pld() use in_interrupt() to distinguish if
-they should use netif_rx() or netif_rx_ni() for receiving packets.
+Aside of in_interrupt() being deprecated because it's not providing what it
+claims to provide, this check would paper over illegitimate callers.
 
-The attempt to consolidate the code by passing an arguemnt or by
-distangling it failed due lack of knowledge about this driver and because
-the call chains are hard to follow.
+The functions invoked from t4_sge_stop() contain already warnings to catch
+invocations from invalid contexts.
 
-As a stop gap use netif_rx_any_context() which invokes the correct code path
-depending on context and confines the in_interrupt() usage to core code.
+Remove it.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Vishal Kulkarni <vishal@chelsio.com>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
 Cc: netdev@vger.kernel.org
----
- drivers/net/caif/caif_hsi.c |   19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
 
---- a/drivers/net/caif/caif_hsi.c
-+++ b/drivers/net/caif/caif_hsi.c
-@@ -458,15 +458,7 @@ static int cfhsi_rx_desc(struct cfhsi_de
- 		skb_reset_mac_header(skb);
- 		skb->dev = cfhsi->ndev;
+
+---
+ drivers/net/ethernet/chelsio/cxgb4/sge.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -4872,9 +4872,6 @@ void t4_sge_stop(struct adapter *adap)
+ 	int i;
+ 	struct sge *s = &adap->sge;
  
--		/*
--		 * We are in a callback handler and
--		 * unfortunately we don't know what context we're
--		 * running in.
--		 */
--		if (in_interrupt())
--			netif_rx(skb);
--		else
--			netif_rx_ni(skb);
-+		netif_rx_any_context(skb);
- 
- 		/* Update network statistics. */
- 		cfhsi->ndev->stats.rx_packets++;
-@@ -587,14 +579,7 @@ static int cfhsi_rx_pld(struct cfhsi_des
- 		skb_reset_mac_header(skb);
- 		skb->dev = cfhsi->ndev;
- 
--		/*
--		 * We're called in callback from HSI
--		 * and don't know the context we're running in.
--		 */
--		if (in_interrupt())
--			netif_rx(skb);
--		else
--			netif_rx_ni(skb);
-+		netif_rx_any_context(skb);
- 
- 		/* Update network statistics. */
- 		cfhsi->ndev->stats.rx_packets++;
+-	if (in_interrupt())  /* actions below require waiting */
+-		return;
+-
+ 	if (s->rx_timer.function)
+ 		del_timer_sync(&s->rx_timer);
+ 	if (s->tx_timer.function)
 
