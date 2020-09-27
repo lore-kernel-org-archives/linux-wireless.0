@@ -7,68 +7,65 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 588D3C4346E
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 987B8C47420
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D39423A33
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ECFA23A5A
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:57:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="EcGTRs6k";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hWtxjUGi"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="KbehhohW";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cWc0Cj3h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727007AbgI0T5V (ORCPT
+        id S1726984AbgI0T5U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:57:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38564 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726882AbgI0T5R (ORCPT
+        Sun, 27 Sep 2020 15:57:20 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:40808 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726876AbgI0T5Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:57:17 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 100A5C0613CE;
-        Sun, 27 Sep 2020 12:57:17 -0700 (PDT)
-Message-Id: <20200927194920.621578351@linutronix.de>
+        Sun, 27 Sep 2020 15:57:16 -0400
+Message-Id: <20200927194920.437625772@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236635;
+        s=2020; t=1601236633;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=GmRWTTg+MNTA0DaNDIlEXevW16R3g516zjE3yhxS5XQ=;
-        b=EcGTRs6kb2RDfe2vyrf2+4PlTt9+1DxF8xx4TukwbvrjHvPN/bK00Rh9OwV+XrLtzQQiKp
-        5YkzTiEqP+CUpeMVzxkK770Zn2LqxoGqekXuL4WpC03EEpLfqHHNc+yaATldWUENSYX8uK
-        Fpwww0Eg/kIenfNeKQFWF/4R8zudM55O/i8cF0E+53SJuBr+zlRE42pPnxnUHgpw+PpUuw
-        yxMnpHdK1H6DVKGV2jJT0QVET6zb9XNaf9xXe3Q8emDzLnwU/sRViGNhTqD5hInVKQ4bkZ
-        M6MnBlUz1M+wQzG84vC+cHQ2X8UeSNGr7HJYylvjMNB9y+F5NNaQbmd/ZsW5mA==
+        bh=Nr+HwxG8LNdSmT94mAamQPUuBl65nafz2ip56wkroJ0=;
+        b=KbehhohWE2i0RJJ/I4NPEnvmzRPqQAwTJ9c795tOfUYyQoKJ1QT3SZdKrdNNY0yFoQZY5H
+        Rriou1lrgdkocgTrlrPnbRpu2IiQc+I5ybI6hf2y7FJRJcxRW5lXQHWE+ZqgBQ4Gx1gEah
+        5saPaD1AeNCkcvophqbUNF8e2L8NxLUVk06WFGvAnnSUjwvOcPQF6o5IFK7xzNa2Zpd2CI
+        1QxIChyN4I5dHa9UKRW1gAOgIToLg11A14tDhL7jtoBH5ee30muaiSywjrjn9wpIOOFvs3
+        EWQvhHRwO8Eh7ZInAnN71OVEM2pAMgf15hno4dnlQd53rMB2TtDg6/qVcLJJDg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236635;
+        s=2020e; t=1601236633;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=GmRWTTg+MNTA0DaNDIlEXevW16R3g516zjE3yhxS5XQ=;
-        b=hWtxjUGi2gFRAx8XtEhLw5uROxf7tPRASC/GDVwAj2gS8xyWHVw9Vv65j/9pO1/TwqLZ27
-        FQxcdeBMHBK0AYBw==
-Date:   Sun, 27 Sep 2020 21:48:54 +0200
+        bh=Nr+HwxG8LNdSmT94mAamQPUuBl65nafz2ip56wkroJ0=;
+        b=cWc0Cj3hMdO2yBy/o5JKdrFUXDXwIiJqV12pCuzu1xmC2epM8ctXhUBINnzLyDh82L8Iox
+        bnLfDgsDy3FKXbDw==
+Date:   Sun, 27 Sep 2020 21:48:52 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
         Linus Torvalds <torvalds@linuxfoundation.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Vishal Kulkarni <vishal@chelsio.com>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
         Jonathan Corbet <corbet@lwn.net>,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-doc@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
         Jay Cliburn <jcliburn@gmail.com>,
         Chris Snook <chris.snook@gmail.com>,
-        Vishal Kulkarni <vishal@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        intel-wired-lan@lists.osuosl.org,
         Shannon Nelson <snelson@pensando.io>,
         Pensando Drivers <drivers@pensando.io>,
         Andrew Lunn <andrew@lunn.ch>,
@@ -103,8 +100,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 08/35] net: e100: Remove in_interrupt() usage and pointless
- GFP_ATOMIC allocation
+Subject: [patch 06/35] net: cxgb3: Cleanup in_interrupt() usage
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -113,62 +109,115 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-e100_hw_init() invokes e100_self_test() only if in_interrupt() returns
-false as e100_self_test() uses msleep() which requires sleepable task
-context. The in_interrupt() check is incomplete because in_interrupt()
-cannot catch callers from contexts which have just preemption or interrupts
-disabled.
+t3_sge_stop() is called from task context and from error handlers in
+interrupt context. It relies on in_interrupt() to differentiate the
+contexts.
 
-e100_hw_init() is invoked from:
+in_interrupt() is deprecated as it is ill defined and does not provide what
+it suggests.
 
-  - e100_loopback_test() which clearly is sleepable task context as the
-    function uses msleep() itself.
+Instead of replacing it with some other construct, simply split the
+function into t3_sge_stop_dma(), which can be called from any context, and
+t3_sge_stop() which can be only called from task context.
 
-  - e100_up() which clearly is sleepable task context as well because it
-    invokes e100_alloc_cbs() abd request_irq() which both require sleepable
-    task context due to GFP_KERNEL allocations and mutex_lock() operations.
+This has the advantage that any bogus invocation of t3_sge_stop() from
+wrong contexts can be caught by debug kernels instead of being papered over
+by the conditional.
 
-Remove the pointless in_interrupt() check.
-
-As a side effect of this analysis it turned out that e100_rx_alloc_list()
-which is only invoked from e100_loopback_test() and e100_up() pointlessly
-uses a GFP_ATOMIC allocation. The next invoked function e100_alloc_cbs() is
-using GFP_KERNEL already.
-
-Change the allocation mode in e100_rx_alloc_list() to GFP_KERNEL as well.
-
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Vishal Kulkarni <vishal@chelsio.com>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: intel-wired-lan@lists.osuosl.org
 Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 ---
- drivers/net/ethernet/intel/e100.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb3/adapter.h    |    1 
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |    2 -
+ drivers/net/ethernet/chelsio/cxgb3/sge.c        |   44 ++++++++++++++----------
+ 3 files changed, 29 insertions(+), 18 deletions(-)
 
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -1531,7 +1531,7 @@ static int e100_hw_init(struct nic *nic)
- 	e100_hw_reset(nic);
+--- a/drivers/net/ethernet/chelsio/cxgb3/adapter.h
++++ b/drivers/net/ethernet/chelsio/cxgb3/adapter.h
+@@ -313,6 +313,7 @@ void t3_os_link_fault(struct adapter *ad
+ void t3_os_link_fault_handler(struct adapter *adapter, int port_id);
  
- 	netif_err(nic, hw, nic->netdev, "e100_hw_init\n");
--	if (!in_interrupt() && (err = e100_self_test(nic)))
-+	if ((err = e100_self_test(nic)))
- 		return err;
+ void t3_sge_start(struct adapter *adap);
++void t3_sge_stop_dma(struct adapter *adap);
+ void t3_sge_stop(struct adapter *adap);
+ void t3_start_sge_timers(struct adapter *adap);
+ void t3_stop_sge_timers(struct adapter *adap);
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -2996,7 +2996,7 @@ void t3_fatal_err(struct adapter *adapte
+ 	unsigned int fw_status[4];
  
- 	if ((err = e100_phy_init(nic)))
-@@ -2155,7 +2155,7 @@ static int e100_rx_alloc_list(struct nic
- 	nic->rx_to_use = nic->rx_to_clean = NULL;
- 	nic->ru_running = RU_UNINITIALIZED;
+ 	if (adapter->flags & FULL_INIT_DONE) {
+-		t3_sge_stop(adapter);
++		t3_sge_stop_dma(adapter);
+ 		t3_write_reg(adapter, A_XGM_TX_CTRL, 0);
+ 		t3_write_reg(adapter, A_XGM_RX_CTRL, 0);
+ 		t3_write_reg(adapter, XGM_REG(A_XGM_TX_CTRL, 1), 0);
+--- a/drivers/net/ethernet/chelsio/cxgb3/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/sge.c
+@@ -3271,30 +3271,40 @@ void t3_sge_start(struct adapter *adap)
+ }
  
--	if (!(nic->rxs = kcalloc(count, sizeof(struct rx), GFP_ATOMIC)))
-+	if (!(nic->rxs = kcalloc(count, sizeof(struct rx), GFP_KERNEL)))
- 		return -ENOMEM;
+ /**
+- *	t3_sge_stop - disable SGE operation
++ *	t3_sge_stop_dma - Disable SGE DMA engine operation
+  *	@adap: the adapter
+  *
+- *	Disables the DMA engine.  This can be called in emeregencies (e.g.,
+- *	from error interrupts) or from normal process context.  In the latter
+- *	case it also disables any pending queue restart tasklets.  Note that
+- *	if it is called in interrupt context it cannot disable the restart
+- *	tasklets as it cannot wait, however the tasklets will have no effect
+- *	since the doorbells are disabled and the driver will call this again
+- *	later from process context, at which time the tasklets will be stopped
+- *	if they are still running.
++ *	Can be invoked from interrupt context e.g.  error handler.
++ *
++ *	Note that this function cannot disable the restart of tasklets as
++ *	it cannot wait if called from interrupt context, however the
++ *	tasklets will have no effect since the doorbells are disabled. The
++ *	driver will call tg3_sge_stop() later from process context, at
++ *	which time the tasklets will be stopped if they are still running.
+  */
+-void t3_sge_stop(struct adapter *adap)
++void t3_sge_stop_dma(struct adapter *adap)
+ {
+ 	t3_set_reg_field(adap, A_SG_CONTROL, F_GLOBALENABLE, 0);
+-	if (!in_interrupt()) {
+-		int i;
++}
++
++/**
++ *	t3_sge_stop - disable SGE operation completly
++ *	@adap: the adapter
++ *
++ *	Called from process context. Disables the DMA engine and any
++ *	pending queue restart tasklets.
++ */
++void t3_sge_stop(struct adapter *adap)
++{
++	int i;
++
++	t3_sge_stop_dma(adap);
  
- 	for (rx = nic->rxs, i = 0; i < count; rx++, i++) {
+-		for (i = 0; i < SGE_QSETS; ++i) {
+-			struct sge_qset *qs = &adap->sge.qs[i];
++	for (i = 0; i < SGE_QSETS; ++i) {
++		struct sge_qset *qs = &adap->sge.qs[i];
+ 
+-			tasklet_kill(&qs->txq[TXQ_OFLD].qresume_tsk);
+-			tasklet_kill(&qs->txq[TXQ_CTRL].qresume_tsk);
+-		}
++		tasklet_kill(&qs->txq[TXQ_OFLD].qresume_tsk);
++		tasklet_kill(&qs->txq[TXQ_CTRL].qresume_tsk);
+ 	}
+ }
+ 
 
