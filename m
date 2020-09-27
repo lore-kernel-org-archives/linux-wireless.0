@@ -7,57 +7,56 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2915C4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B557EC4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7F9B22207
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7836723977
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:01:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="CcZFp0N7";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="/M51OKep"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0tG2QVs6";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NeihXZui"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727207AbgI0UBV (ORCPT
+        id S1726945AbgI0T5T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 16:01:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38582 "EHLO
+        Sun, 27 Sep 2020 15:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727011AbgI0T5W (ORCPT
+        with ESMTP id S1726874AbgI0T5N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:57:22 -0400
+        Sun, 27 Sep 2020 15:57:13 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5CF1C0613CE;
-        Sun, 27 Sep 2020 12:57:21 -0700 (PDT)
-Message-Id: <20200927194921.026798214@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3311CC0613D6;
+        Sun, 27 Sep 2020 12:57:13 -0700 (PDT)
+Message-Id: <20200927194920.327665456@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236640;
+        s=2020; t=1601236631;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=WBk7ImKZQAt0d2wxHkRuKN0hWwG1NSVpPJF8H/yNsK4=;
-        b=CcZFp0N7vlQVa6ac97Y3qUNt6v0qDmhHGAiWm+DVU26D8YTbAEQ/PkC0QC11zzMJT2P9o5
-        TNnDh1BmSK0ZRYS0lSzYoN/KOgFhNKSsdWBqm3yiNse+1okDgZPIN2NXGQ9QhZ6eUqFhVm
-        CSOBgqXdigZffn32Pb5n7qcEyOsJogcY3VZwiQFQbkmSNdLcTVB9k7e3PryRCOdw+h+uGT
-        R76KdDe9u8HP73I4StgurzMnoiJ64RCkT/TPW9s7JKijfPp3VfsqFjJCza38Ioizb0NrB2
-        r1uwtapjJCnmt0pUt8Y8PYpYUdxWnkmFR2OIxrin3wIk+KnJipjMDxPeu0UbFA==
+        bh=LDyMI8Hz49Jgdl18F8Ta9e6p+YRh1dkfwAZ1XTos3j8=;
+        b=0tG2QVs6g8rkE0bRdQ8JdMu4aP/Q7FauXbgPsjH7E62PT9jMd3rMuTE30ia2tqheyomNZj
+        f0Q53jlOjvftWeF1ykrxl/rSGqHc13tFUPFffEF+5XM9/IVCCNoMxbdjdjuUJDQeSqrooh
+        Nkd5o4E5Gn17JuQgU6qoel3O9qQzfxkH3FvzJ9KTrb21Zjxj/M4A1vwhx/j+lhhqhcgFOd
+        rJghApRHbvV4oCVU8TIQ6d02sDpEeOE0t2g8CPE2Bu8OP0f+I/nVC9XKjaNAkzU2PU4xs2
+        b7gFIz/eHI7D40fN5R2Rba+BPLJq5DLsKbKtsq8wjrzZ62cKnbc+pPpd/EEj4w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236640;
+        s=2020e; t=1601236631;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=WBk7ImKZQAt0d2wxHkRuKN0hWwG1NSVpPJF8H/yNsK4=;
-        b=/M51OKepEW4g1TnEWDY31pJNtQW3vc0R6kqk1LfTBUqRqWuI1unbYC4XqOEuE3chioiAU/
-        smitcvDvaLkIBJAA==
-Date:   Sun, 27 Sep 2020 21:48:58 +0200
+        bh=LDyMI8Hz49Jgdl18F8Ta9e6p+YRh1dkfwAZ1XTos3j8=;
+        b=NeihXZuinmBVQYVnFomZAN0HcKRGTntP3I3XGFPCfYihWAR3yZ30mG99h+HiZaZcvFyruj
+        L+GdfMd29fk8eJDQ==
+Date:   Sun, 27 Sep 2020 21:48:51 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
         Linus Torvalds <torvalds@linuxfoundation.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Shannon Nelson <snelson@pensando.io>,
-        Pensando Drivers <drivers@pensando.io>,
         "David S. Miller" <davem@davemloft.net>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
         Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
@@ -65,12 +64,14 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-doc@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Jay Cliburn <jcliburn@gmail.com>,
-        Chris Snook <chris.snook@gmail.com>,
         Vishal Kulkarni <vishal@chelsio.com>,
         Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        intel-wired-lan@lists.osuosl.org, Andrew Lunn <andrew@lunn.ch>,
+        intel-wired-lan@lists.osuosl.org,
+        Shannon Nelson <snelson@pensando.io>,
+        Pensando Drivers <drivers@pensando.io>,
+        Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>,
         Russell King <linux@armlinux.org.uk>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
@@ -102,7 +103,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 12/35] net: ionic: Remove WARN_ON(in_interrupt()).
+Subject: [patch 05/35] net: atheros: Remove WARN_ON(in_interrupt())
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,7 +112,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Thomas Gleixner <tglx@linutronix.de>
 
 in_interrupt() is ill defined and does not provide what the name
 suggests. The usage especially in driver code is deprecated and a tree wide
@@ -122,43 +123,55 @@ In this case the check covers only parts of the contexts in which these
 functions cannot be called. It fails to detect preemption or interrupt
 disabled invocations.
 
-As the functions which are invoked from ionic_adminq_post() and
-ionic_dev_cmd_wait() contain a broad variety of checks (always enabled or
-debug option dependent) which cover all invalid conditions already, there
-is no point in having inconsistent warnings in those drivers.
+As the functions which are invoked from at*_reinit_locked() contain a broad
+variety of checks (always enabled or debug option dependent) which cover
+all invalid conditions already, there is no point in having inconsistent
+warnings in those drivers.
 
 Just remove them.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Shannon Nelson <snelson@pensando.io>
-Cc: Pensando Drivers <drivers@pensando.io>
 Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jay Cliburn <jcliburn@gmail.com>
+Cc: Chris Snook <chris.snook@gmail.com>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/ethernet/pensando/ionic/ionic_main.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/ethernet/atheros/atl1c/atl1c_main.c |    1 -
+ drivers/net/ethernet/atheros/atl1e/atl1e_main.c |    2 --
+ drivers/net/ethernet/atheros/atlx/atl2.c        |    1 -
+ 3 files changed, 4 deletions(-)
 
---- a/drivers/net/ethernet/pensando/ionic/ionic_main.c
-+++ b/drivers/net/ethernet/pensando/ionic/ionic_main.c
-@@ -248,8 +248,6 @@ static int ionic_adminq_post(struct ioni
- 	struct ionic_queue *adminq;
- 	int err = 0;
+--- a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
++++ b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
+@@ -220,7 +220,6 @@ static void atl1c_phy_config(struct time
  
+ void atl1c_reinit_locked(struct atl1c_adapter *adapter)
+ {
 -	WARN_ON(in_interrupt());
+ 	atl1c_down(adapter);
+ 	atl1c_up(adapter);
+ 	clear_bit(__AT_RESETTING, &adapter->flags);
+--- a/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
++++ b/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
+@@ -127,8 +127,6 @@ static void atl1e_phy_config(struct time
+ 
+ void atl1e_reinit_locked(struct atl1e_adapter *adapter)
+ {
 -
- 	if (!lif->adminqcq)
- 		return -EIO;
- 
-@@ -346,8 +344,6 @@ int ionic_dev_cmd_wait(struct ionic *ion
- 	int done;
- 	int err;
- 
 -	WARN_ON(in_interrupt());
--
- 	/* Wait for dev cmd to complete, retrying if we get EAGAIN,
- 	 * but don't wait any longer than max_seconds.
- 	 */
+ 	while (test_and_set_bit(__AT_RESETTING, &adapter->flags))
+ 		msleep(1);
+ 	atl1e_down(adapter);
+--- a/drivers/net/ethernet/atheros/atlx/atl2.c
++++ b/drivers/net/ethernet/atheros/atlx/atl2.c
+@@ -1085,7 +1085,6 @@ static int atl2_up(struct atl2_adapter *
+ 
+ static void atl2_reinit_locked(struct atl2_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+ 	while (test_and_set_bit(__ATL2_RESETTING, &adapter->flags))
+ 		msleep(1);
+ 	atl2_down(adapter);
 
