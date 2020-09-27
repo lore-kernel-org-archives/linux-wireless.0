@@ -7,47 +7,44 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F2C8C4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01D9AC47420
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C91F423A53
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5B8923A53
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 20:00:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="XTJskUJm";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NjRg9v14"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="XwDPR8Kf";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="5eiMnruQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbgI0T7u (ORCPT
+        id S1727362AbgI0T7r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:59:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38692 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726632AbgI0T6B (ORCPT
+        Sun, 27 Sep 2020 15:59:47 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41642 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727028AbgI0T6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:58:01 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3352C0613D9;
-        Sun, 27 Sep 2020 12:57:30 -0700 (PDT)
-Message-Id: <20200927194921.746408581@linutronix.de>
+        Sun, 27 Sep 2020 15:58:03 -0400
+Message-Id: <20200927194922.722439719@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236649;
+        s=2020; t=1601236661;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=zmPopyS6CXMMDwaGP3m4hwd4gLG9jhR6sVM2g3xlddU=;
-        b=XTJskUJmRKV81fGPC40eYW25HtP10YSEqIh7BdkU3p6rASbqFmFBs3o6tLYpK8PIwciw2L
-        rGTgrzg1YC3UTjV3aofvi7QzmEUFvhOk4QcAJ3ouaoudqz1BiAbnCOQUY41sdKfmzwHcir
-        uquyAVj3ouMapLsuUeDXC+Hc5Sa8gmXzMWAp94KkcxVhN7bM96FSExXhSRVAwwQyz5P15N
-        Rl/2xZA34G4QfuDYTQtBqcs1M9EYiqVFfxpP20H/jDekVH04rJG0Q0uUBwS8/umOLgW06F
-        6zZB0afQsxN2XkCZa1RyM+rl7RpOYsgYYrvUE6hkpT/cOmlN8ctBg3Cp2wjgBg==
+        bh=WvKjADYjqlirQWpKFkh9jiGNfOCHnSN3m3D0jVUtW0s=;
+        b=XwDPR8KfhhwdgM2h3NXTwz7S032tPQFhsINIdBsrnxyP9xEIwf9JmvxDxIDGkwJhi4fwsG
+        4jvQ/uRtX1vttmdiFbJHm4ezHJNt3bCShDxDaUvSfhBTOm/RkxdeJVnW88dvf9PLLy3OGo
+        vHOr6TBL43ji8aWZNzBoqQJ7OgeTmJ6wp0xFDunenDs+jppIUe4HkFoOgH18K249SYQ6Q3
+        IWsmuizwOoi5ttWgeDOX5I8Zx/OXCLtPXYxotFDSoT8DgXcpWS3+FaUaj2sj338D7H8uqH
+        sT5fHF8WghHkzuK7LQdE7N0LB1JjJR2LsCP5jhxjNwP7oDBbC6vFq6II02AmnA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236649;
+        s=2020e; t=1601236661;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=zmPopyS6CXMMDwaGP3m4hwd4gLG9jhR6sVM2g3xlddU=;
-        b=NjRg9v14IvY/TnpQv3H0FbtqUGHV1yBeMufj1xl5cAKmkVeDgETr51HIDD/3MGK89vNB6w
-        opgsFzlZimgwQoCQ==
-Date:   Sun, 27 Sep 2020 21:49:05 +0200
+        bh=WvKjADYjqlirQWpKFkh9jiGNfOCHnSN3m3D0jVUtW0s=;
+        b=5eiMnruQvx3MYP7nVlqCqSPo+NiHBVbHE0sWnKSIYRXN5H1WKNKQKtiPGb9iUFiHaZTWcN
+        op8hWZ7x4vBnp6Dg==
+Date:   Sun, 27 Sep 2020 21:49:15 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -55,9 +52,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
@@ -82,7 +77,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
         Edward Cree <ecree@solarflare.com>,
         Martin Habets <mhabets@solarflare.com>,
-        Jon Mason <jdmason@kudzu.us>, linux-usb@vger.kernel.org,
+        Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>, linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -97,14 +93,13 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>,
-        Jouni Malinen <j@w1.fi>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Xinming Hu <huxinming820@gmail.com>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 19/35] net: zd1211rw: Remove ZD_ASSERT(in_interrupt())
+Subject: [patch 29/35] net: hostap: Remove in_interrupt() usage
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -116,19 +111,27 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
 in_interrupt() is ill defined and does not provide what the name
-suggests. The usage especially in driver code is deprecated and
-a tree wide effort to clean up and consolidate the (ab)usage of
-in_interrupt() and related checks is happening.
+suggests. The usage especially in driver code is deprecated and a tree wide
+effort to clean up and consolidate the (ab)usage of in_interrupt() and
+related checks is happening.
 
-handle_regs_int() is always invoked as part of URB callback which is either
-invoked from hard or soft interrupt context.
+hfa384x_cmd() and prism2_hw_reset() check in_interrupt() at function entry
+and if true emit a printk at debug loglevel and return. This is clearly debug
+code.
 
-Remove the magic assertion.
+Both functions invoke functions which can sleep. These functions already
+have appropriate debug checks which cover all invalid contexts, while
+in_interrupt() fails to detect context which just has preemption or
+interrupts disabled.
+
+Remove both checks as they are incomplete, debug only and already covered
+by the subsequently invoked functions properly. If called from invalid
+context the resulting back trace is definitely more helpful to analyze the
+problem than a printk at debug loglevel.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Jouni Malinen <j@w1.fi>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -136,17 +139,35 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/intersil/hostap/hostap_hw.c |   12 ------------
+ 1 file changed, 12 deletions(-)
 
---- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-@@ -378,7 +378,6 @@ static inline void handle_regs_int(struc
- 	int len;
- 	u16 int_num;
+--- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+@@ -320,12 +320,6 @@ static int hfa384x_cmd(struct net_device
+ 	iface = netdev_priv(dev);
+ 	local = iface->local;
  
--	ZD_ASSERT(in_interrupt());
- 	spin_lock_irqsave(&intr->lock, flags);
+-	if (in_interrupt()) {
+-		printk(KERN_DEBUG "%s: hfa384x_cmd called from interrupt "
+-		       "context\n", dev->name);
+-		return -1;
+-	}
+-
+ 	if (local->cmd_queue_len >= HOSTAP_CMD_QUEUE_MAX_LEN) {
+ 		printk(KERN_DEBUG "%s: hfa384x_cmd: cmd_queue full\n",
+ 		       dev->name);
+@@ -1560,12 +1554,6 @@ static void prism2_hw_reset(struct net_d
+ 	iface = netdev_priv(dev);
+ 	local = iface->local;
  
- 	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
+-	if (in_interrupt()) {
+-		printk(KERN_DEBUG "%s: driver bug - prism2_hw_reset() called "
+-		       "in interrupt context\n", dev->name);
+-		return;
+-	}
+-
+ 	if (local->hw_downloading)
+ 		return;
+ 
 
