@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C7EC4727F
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EB8C4346E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFF5B23A53
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E9CA23A53
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:59:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="aRaemDy8";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zzK5fOoW"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="aHzJrPYU";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="mU8Ag4Ub"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727288AbgI0T7I (ORCPT
+        id S1727164AbgI0T7H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:59:08 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:40678 "EHLO
+        Sun, 27 Sep 2020 15:59:07 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41008 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727043AbgI0T6E (ORCPT
+        with ESMTP id S1727132AbgI0T6F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Sep 2020 15:58:04 -0400
-Message-Id: <20200927194923.141612955@linutronix.de>
+        Sun, 27 Sep 2020 15:58:05 -0400
+Message-Id: <20200927194923.358900104@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236667;
+        s=2020; t=1601236669;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=3NVHiUJ0MODf+JF7zbRt5KG1SWBJedXgUnlvkcApoik=;
-        b=aRaemDy8UAvPXFzzp7x34douMlfGFq5p7LGV6YOWX2p+DNW9dmcKZmj2Id6JS4W9M+3jW6
-        vVCHALjLZzTH1CXiSStu2TbXu9GU70D7keNkzbbI9MIHVLlY6jsI+ETPfrUJDQm9IfUK2l
-        RAm+62e3u/TlwncvHXnfLLoxy8QKvwu1dPwhk3Ivjutq6RfnaksAnFiRCygaWOmQhxzxvR
-        ldU38PCkRp5UPyITAB82PUUHQXZI6/dKEFOFQ+lq8AdcTyLFVDeQrDxovH5GERQhV2RfkD
-        2smuvY/BL98L6my/Z5qDuAWx8KyGCxRoCdYfsOAojczbQQVRQRbLS9QoLdtKOg==
+        bh=ksaGPqhXSZGY4WnWtBR0byDM8dQ34v3PX/0X3fUvpQM=;
+        b=aHzJrPYU7FfUq814LOC20bsDMxiPF9kl5hv062qPTqnIj6StKd0bSDSLccSvRmXIASHhqf
+        aZR5++WuDmDCfI0fjwrlc0bANro81Ge/6/SkWNWmZ7CknohO75MPmk9RUBx5Zs8csm8eJT
+        +Vmk+qsZAPDw/MNaszn3bnwgnoPnRmygxJEr9cPQJPSgLgnjJpMVakzJ8DEfBCO7HU43Im
+        Ooc/O8v/j4db+A3q92vkqFI0aR/1S7RwPqw3jHr20cFbFMPPTVPePJFAwB/2G0nzplV+hz
+        gvCImYxktX+py8y+YnjKDpKSVo5Z89DdMSDLczbEle3un0h6LIMG4Nn2GX9S8g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236667;
+        s=2020e; t=1601236669;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=3NVHiUJ0MODf+JF7zbRt5KG1SWBJedXgUnlvkcApoik=;
-        b=zzK5fOoWOhU3wmulqRZS7MkzocOYtUrGDxYubXXGENeKkk4rSZUbEmFA5H3htkgxeaxGAI
-        zetSXSRvW60dzWCA==
-Date:   Sun, 27 Sep 2020 21:49:19 +0200
+        bh=ksaGPqhXSZGY4WnWtBR0byDM8dQ34v3PX/0X3fUvpQM=;
+        b=mU8Ag4UbwIj964lLMObE7JECFn2QEeMPOgKxS1KjDCTPv+aDXN3i+2v1K3ZjxYIiCh4FfZ
+        AJv7/jn/6+S5qpBQ==
+Date:   Sun, 27 Sep 2020 21:49:21 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -100,7 +100,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Xinming Hu <huxinming820@gmail.com>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>
-Subject: [patch 33/35] net: rtlwifi: Remove void* casts related to delayed work
+Subject: [patch 35/35] net: rtlwifi: Replace in_interrupt() for context detection
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,25 +111,68 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-INIT_DELAYED_WORK() takes two arguments: A pointer to the delayed work and
-a function reference for the callback.
+rtl_lps_enter() and rtl_lps_leave() are using in_interrupt() to detect
+whether it is safe to acquire a mutex or if it is required to defer to a
+workqueue.
 
-The rtl code casts all function references to (void *) because the
-callbacks in use are not matching the required function signature. That's
-error prone and bad pratice.
+The usage of in_interrupt() in drivers is phased out and Linus clearly
+requested that code which changes behaviour depending on context should
+either be seperated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
 
-Some of the callback functions are also global, but only used in a single
-file.
+in_interrupt() also is only partially correct because it fails to chose the
+correct code path when just preemption or interrupts are disabled.
 
-Clean the mess up by:
+Add an argument 'may_block' to both functions and adjust the callers to
+pass the context information.
 
-  - Adding the proper arguments to the callback functions and using them in
-    the container_of() constructs correctly which removes the hideous
-    container_of_dwork_rtl() macro as well.
+The following call chains were analyzed to be safe to block:
 
-  - Removing the type cast at the initializers
+    rtl_watchdog_wq_callback()
+      rlf_lps_leave/enter()
 
-  - Making the unnecessary global functions static
+    rtl_op_suspend()
+      rtl_lps_leave()
+
+    rtl_op_bss_info_changed()
+      rtl_lps_leave()
+
+    rtl_op_sw_scan_start()
+      rtl_lps_leave()
+
+The following call chains were analyzed to be unsafe to block:
+
+    _rtl_pci_interrupt()
+      _rtl_pci_rx_interrupt()
+	  rtl_lps_leave()
+
+    _rtl_pci_interrupt()
+      _rtl_pci_rx_interrupt()
+        rtl_is_special_data()
+	  rtl_lps_leave()
+
+    _rtl_pci_interrupt()
+      _rtl_pci_rx_interrupt()
+        rtl_is_special_data()
+	  setup_special_tx()
+	    rtl_lps_leave()
+
+    _rtl_pci_interrupt()
+      _rtl_pci_tx_isr
+        rtl_lps_leave()
+
+      halbtc_leave_lps()
+        rtl_lps_leave()
+
+This leaves four callers of rtl_lps_enter/leave() where the analyzis
+stopped dead in the maze of several nested pointer based callchains and
+lack of rtlwifi hardware to debug this via tracing:
+
+     halbtc_leave_lps(), halbtc_enter_lps(), halbtc_normal_lps(),
+     halbtc_pre_normal_lps()
+
+These four have been cautionally marked to be unable to block which is the
+safe option, but the rtwifi wizards should be able to clarify that.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
@@ -141,182 +184,177 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c |   39 +++++++++++++---------------
- drivers/net/wireless/realtek/rtlwifi/base.h |    3 --
- drivers/net/wireless/realtek/rtlwifi/ps.c   |   19 ++++++-------
- drivers/net/wireless/realtek/rtlwifi/ps.h   |    6 ++--
- drivers/net/wireless/realtek/rtlwifi/wifi.h |    3 --
- 5 files changed, 31 insertions(+), 39 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c                   |    8 +++---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c |   12 ++++++----
+ drivers/net/wireless/realtek/rtlwifi/core.c                   |    6 ++---
+ drivers/net/wireless/realtek/rtlwifi/pci.c                    |    4 +--
+ drivers/net/wireless/realtek/rtlwifi/ps.c                     |    8 +++---
+ drivers/net/wireless/realtek/rtlwifi/ps.h                     |    4 +--
+ 6 files changed, 23 insertions(+), 19 deletions(-)
 
 --- a/drivers/net/wireless/realtek/rtlwifi/base.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -436,6 +436,10 @@ static void _rtl_init_mac80211(struct ie
+@@ -1456,7 +1456,7 @@ static void setup_special_tx(struct rtl_
+ 	if (rtlpriv->cfg->ops->get_btc_status())
+ 		rtlpriv->btcoexist.btc_ops->btc_special_packet_notify(
+ 					rtlpriv, type);
+-	rtl_lps_leave(hw);
++	rtl_lps_leave(hw, false);
+ 	ppsc->last_delaylps_stamp_jiffies = jiffies;
+ }
+ 
+@@ -1546,7 +1546,7 @@ u8 rtl_is_special_data(struct ieee80211_
+ 
+ 		if (is_tx) {
+ 			rtlpriv->ra.is_special_data = true;
+-			rtl_lps_leave(hw);
++			rtl_lps_leave(hw, false);
+ 			ppsc->last_delaylps_stamp_jiffies = jiffies;
+ 
+ 			setup_special_tx(rtlpriv, ppsc, PACKET_EAPOL);
+@@ -2147,9 +2147,9 @@ static void rtl_watchdog_wq_callback(str
+ 		if (rtlpriv->link_info.num_rx_inperiod +
+ 		      rtlpriv->link_info.num_tx_inperiod > 8 ||
+ 		    rtlpriv->link_info.num_rx_inperiod > 2)
+-			rtl_lps_leave(hw);
++			rtl_lps_leave(hw, true);
+ 		else
+-			rtl_lps_enter(hw);
++			rtl_lps_enter(hw, true);
+ 
+ label_lps_done:
+ 		;
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -285,7 +285,8 @@ static void halbtc_leave_lps(struct btc_
+ 
+ 	btcoexist->bt_info.bt_ctrl_lps = true;
+ 	btcoexist->bt_info.bt_lps_on = false;
+-	rtl_lps_leave(rtlpriv->mac80211.hw);
++	/* FIXME: Context is unclear. Is it allowed to block? */
++	rtl_lps_leave(rtlpriv->mac80211.hw, false);
+ }
+ 
+ static void halbtc_enter_lps(struct btc_coexist *btcoexist)
+@@ -306,7 +307,8 @@ static void halbtc_enter_lps(struct btc_
+ 
+ 	btcoexist->bt_info.bt_ctrl_lps = true;
+ 	btcoexist->bt_info.bt_lps_on = true;
+-	rtl_lps_enter(rtlpriv->mac80211.hw);
++	/* FIXME: Context is unclear. Is it allowed to block? */
++	rtl_lps_enter(rtlpriv->mac80211.hw, false);
+ }
+ 
+ static void halbtc_normal_lps(struct btc_coexist *btcoexist)
+@@ -317,7 +319,8 @@ static void halbtc_normal_lps(struct btc
+ 
+ 	if (btcoexist->bt_info.bt_ctrl_lps) {
+ 		btcoexist->bt_info.bt_lps_on = false;
+-		rtl_lps_leave(rtlpriv->mac80211.hw);
++		/* FIXME: Context is unclear. Is it allowed to block? */
++		rtl_lps_leave(rtlpriv->mac80211.hw, false);
+ 		btcoexist->bt_info.bt_ctrl_lps = false;
+ 	}
+ }
+@@ -328,7 +331,8 @@ static void halbtc_pre_normal_lps(struct
+ 
+ 	if (btcoexist->bt_info.bt_ctrl_lps) {
+ 		btcoexist->bt_info.bt_lps_on = false;
+-		rtl_lps_leave(rtlpriv->mac80211.hw);
++		/* FIXME: Context is unclear. Is it allowed to block? */
++		rtl_lps_leave(rtlpriv->mac80211.hw, false);
  	}
  }
  
-+static void rtl_watchdog_wq_callback(struct work_struct *work);
-+static void rtl_fwevt_wq_callback(struct work_struct *work);
-+static void rtl_c2hcmd_wq_callback(struct work_struct *work);
-+
- static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -454,17 +458,14 @@ static void _rtl_init_deferred_work(stru
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -544,7 +544,7 @@ static int rtl_op_suspend(struct ieee802
+ 	rtlhal->driver_is_goingto_unload = true;
+ 	rtlhal->enter_pnp_sleep = true;
+ 
+-	rtl_lps_leave(hw);
++	rtl_lps_leave(hw, true);
+ 	rtl_op_stop(hw);
+ 	device_set_wakeup_enable(wiphy_dev(hw->wiphy), true);
+ 	return 0;
+@@ -1151,7 +1151,7 @@ static void rtl_op_bss_info_changed(stru
+ 			mstatus = RT_MEDIA_DISCONNECT;
+ 
+ 			if (mac->link_state == MAC80211_LINKED)
+-				rtl_lps_leave(hw);
++				rtl_lps_leave(hw, true);
+ 			if (ppsc->p2p_ps_info.p2p_ps_mode > P2P_PS_NONE)
+ 				rtl_p2p_ps_cmd(hw, P2P_PS_DISABLE);
+ 			mac->link_state = MAC80211_NOLINK;
+@@ -1448,7 +1448,7 @@ static void rtl_op_sw_scan_start(struct
  	}
  
- 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
--			  (void *)rtl_watchdog_wq_callback);
-+			  rtl_watchdog_wq_callback);
- 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
--			  (void *)rtl_ips_nic_off_wq_callback);
--	INIT_DELAYED_WORK(&rtlpriv->works.ps_work,
--			  (void *)rtl_swlps_wq_callback);
-+			  rtl_ips_nic_off_wq_callback);
-+	INIT_DELAYED_WORK(&rtlpriv->works.ps_work, rtl_swlps_wq_callback);
- 	INIT_DELAYED_WORK(&rtlpriv->works.ps_rfon_wq,
--			  (void *)rtl_swlps_rfon_wq_callback);
--	INIT_DELAYED_WORK(&rtlpriv->works.fwevt_wq,
--			  (void *)rtl_fwevt_wq_callback);
--	INIT_DELAYED_WORK(&rtlpriv->works.c2hcmd_wq,
--			  (void *)rtl_c2hcmd_wq_callback);
-+			  rtl_swlps_rfon_wq_callback);
-+	INIT_DELAYED_WORK(&rtlpriv->works.fwevt_wq, rtl_fwevt_wq_callback);
-+	INIT_DELAYED_WORK(&rtlpriv->works.c2hcmd_wq, rtl_c2hcmd_wq_callback);
+ 	if (mac->link_state == MAC80211_LINKED) {
+-		rtl_lps_leave(hw);
++		rtl_lps_leave(hw, true);
+ 		mac->link_state = MAC80211_LINKED_SCANNING;
+ 	} else {
+ 		rtl_ips_nic_on(hw);
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -622,7 +622,7 @@ static void _rtl_pci_tx_isr(struct ieee8
+ 	if (((rtlpriv->link_info.num_rx_inperiod +
+ 	      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 	      rtlpriv->link_info.num_rx_inperiod > 2)
+-		rtl_lps_leave(hw);
++		rtl_lps_leave(hw, false);
  }
  
- void rtl_deinit_deferred_work(struct ieee80211_hw *hw, bool ips_wq)
-@@ -2042,11 +2043,10 @@ void rtl_collect_scan_list(struct ieee80
- }
- EXPORT_SYMBOL(rtl_collect_scan_list);
- 
--void rtl_watchdog_wq_callback(void *data)
-+static void rtl_watchdog_wq_callback(struct work_struct *work)
- {
--	struct rtl_works *rtlworks = container_of_dwork_rtl(data,
--							    struct rtl_works,
--							    watchdog_wq);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  watchdog_wq.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -2239,10 +2239,10 @@ void rtl_watch_dog_timer_callback(struct
- 		  jiffies + MSECS(RTL_WATCH_DOG_TIME));
- }
- 
--void rtl_fwevt_wq_callback(void *data)
-+static void rtl_fwevt_wq_callback(struct work_struct *work)
- {
--	struct rtl_works *rtlworks =
--		container_of_dwork_rtl(data, struct rtl_works, fwevt_wq);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  fwevt_wq.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
-@@ -2368,11 +2368,10 @@ void rtl_c2hcmd_launcher(struct ieee8021
- 	}
- }
- 
--void rtl_c2hcmd_wq_callback(void *data)
-+static void rtl_c2hcmd_wq_callback(struct work_struct *work)
- {
--	struct rtl_works *rtlworks = container_of_dwork_rtl(data,
--							    struct rtl_works,
--							    c2hcmd_wq);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  c2hcmd_wq.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
- 
- 	rtl_c2hcmd_launcher(hw, 1);
---- a/drivers/net/wireless/realtek/rtlwifi/base.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-@@ -108,9 +108,6 @@ int rtl_rx_agg_start(struct ieee80211_hw
- int rtl_rx_agg_stop(struct ieee80211_hw *hw,
- 		    struct ieee80211_sta *sta, u16 tid);
- void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv);
--void rtl_watchdog_wq_callback(void *data);
--void rtl_fwevt_wq_callback(void *data);
--void rtl_c2hcmd_wq_callback(void *data);
- void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec);
- void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb);
- 
+ static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
+@@ -875,7 +875,7 @@ static void _rtl_pci_rx_interrupt(struct
+ 		if (((rtlpriv->link_info.num_rx_inperiod +
+ 		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 		      rtlpriv->link_info.num_rx_inperiod > 2)
+-			rtl_lps_leave(hw);
++			rtl_lps_leave(hw, false);
+ 		skb = new_skb;
+ no_new:
+ 		if (rtlpriv->use_new_trx_flow) {
 --- a/drivers/net/wireless/realtek/rtlwifi/ps.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -179,10 +179,10 @@ static void _rtl_ps_inactive_ps(struct i
- 	ppsc->swrf_processing = false;
+@@ -653,22 +653,22 @@ void rtl_lps_change_work_callback(struct
  }
+ EXPORT_SYMBOL_GPL(rtl_lps_change_work_callback);
  
--void rtl_ips_nic_off_wq_callback(void *data)
-+void rtl_ips_nic_off_wq_callback(struct work_struct *work)
+-void rtl_lps_enter(struct ieee80211_hw *hw)
++void rtl_lps_enter(struct ieee80211_hw *hw, bool may_block)
  {
--	struct rtl_works *rtlworks =
--	    container_of_dwork_rtl(data, struct rtl_works, ips_nic_off_wq);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  ips_nic_off_wq.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -562,10 +562,10 @@ void rtl_swlps_rf_awake(struct ieee80211
- 	mutex_unlock(&rtlpriv->locks.lps_mutex);
+ 
+-	if (!in_interrupt())
++	if (may_block)
+ 		return rtl_lps_enter_core(hw);
+ 	rtlpriv->enter_ps = true;
+ 	schedule_work(&rtlpriv->works.lps_change_work);
  }
+ EXPORT_SYMBOL_GPL(rtl_lps_enter);
  
--void rtl_swlps_rfon_wq_callback(void *data)
-+void rtl_swlps_rfon_wq_callback(struct work_struct *work)
+-void rtl_lps_leave(struct ieee80211_hw *hw)
++void rtl_lps_leave(struct ieee80211_hw *hw, bool may_block)
  {
--	struct rtl_works *rtlworks =
--	    container_of_dwork_rtl(data, struct rtl_works, ps_rfon_wq);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  ps_rfon_wq.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
- 
- 	rtl_swlps_rf_awake(hw);
-@@ -675,11 +675,10 @@ void rtl_lps_leave(struct ieee80211_hw *
- }
- EXPORT_SYMBOL_GPL(rtl_lps_leave);
- 
--void rtl_swlps_wq_callback(void *data)
-+void rtl_swlps_wq_callback(struct work_struct *work)
- {
--	struct rtl_works *rtlworks = container_of_dwork_rtl(data,
--				     struct rtl_works,
--				     ps_work);
-+	struct rtl_works *rtlworks = container_of(work, struct rtl_works,
-+						  ps_work.work);
- 	struct ieee80211_hw *hw = rtlworks->hw;
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	bool ps = false;
+ 
+-	if (!in_interrupt())
++	if (may_block)
+ 		return rtl_lps_leave_core(hw);
+ 	rtlpriv->enter_ps = false;
+ 	schedule_work(&rtlpriv->works.lps_change_work);
 --- a/drivers/net/wireless/realtek/rtlwifi/ps.h
 +++ b/drivers/net/wireless/realtek/rtlwifi/ps.h
-@@ -10,15 +10,15 @@ bool rtl_ps_enable_nic(struct ieee80211_
- bool rtl_ps_disable_nic(struct ieee80211_hw *hw);
+@@ -11,8 +11,8 @@ bool rtl_ps_disable_nic(struct ieee80211
  void rtl_ips_nic_off(struct ieee80211_hw *hw);
  void rtl_ips_nic_on(struct ieee80211_hw *hw);
--void rtl_ips_nic_off_wq_callback(void *data);
-+void rtl_ips_nic_off_wq_callback(struct work_struct *work);
- void rtl_lps_enter(struct ieee80211_hw *hw);
- void rtl_lps_leave(struct ieee80211_hw *hw);
+ void rtl_ips_nic_off_wq_callback(struct work_struct *work);
+-void rtl_lps_enter(struct ieee80211_hw *hw);
+-void rtl_lps_leave(struct ieee80211_hw *hw);
++void rtl_lps_enter(struct ieee80211_hw *hw, bool may_block);
++void rtl_lps_leave(struct ieee80211_hw *hw, bool may_block);
  
  void rtl_lps_set_psmode(struct ieee80211_hw *hw, u8 rt_psmode);
  
- void rtl_swlps_beacon(struct ieee80211_hw *hw, void *data, unsigned int len);
--void rtl_swlps_wq_callback(void *data);
--void rtl_swlps_rfon_wq_callback(void *data);
-+void rtl_swlps_wq_callback(struct work_struct *work);
-+void rtl_swlps_rfon_wq_callback(struct work_struct *work);
- void rtl_swlps_rf_awake(struct ieee80211_hw *hw);
- void rtl_swlps_rf_sleep(struct ieee80211_hw *hw);
- void rtl_p2p_ps_cmd(struct ieee80211_hw *hw , u8 p2p_ps_state);
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2936,9 +2936,6 @@ enum bt_radio_shared {
- #define	RT_SET_PS_LEVEL(ppsc, _ps_flg)		\
- 	(ppsc->cur_ps_level |= _ps_flg)
- 
--#define container_of_dwork_rtl(x, y, z) \
--	container_of(to_delayed_work(x), y, z)
--
- #define FILL_OCTET_STRING(_os, _octet, _len)	\
- 		(_os).octet = (u8 *)(_octet);		\
- 		(_os).length = (_len);
 
