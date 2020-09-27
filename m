@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A21F0C4346E
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85716C4727E
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B14123A5A
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44D5F23A53
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 19:58:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DgFWCTRm";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jsZYaXiR"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VDYdrR3D";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="iLxGQIzE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726727AbgI0T6W (ORCPT
+        id S1726629AbgI0T6V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 15:58:22 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:41624 "EHLO
+        Sun, 27 Sep 2020 15:58:21 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:41944 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727130AbgI0T6D (ORCPT
+        with ESMTP id S1727131AbgI0T6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 27 Sep 2020 15:58:03 -0400
-Message-Id: <20200927194922.938263514@linutronix.de>
+Message-Id: <20200927194922.536621749@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601236664;
+        s=2020; t=1601236659;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=+EKrA6HqGMF4faSCoLrAtx6KX3hw/q02kTTYVH77/+8=;
-        b=DgFWCTRmyeEjV0+OEYDVbCkMlQbEJFzwD69vMLAlqAaimPSm5lMXaR3fbldN0wOl0BqeFc
-        zQrD8mqr+OmCWZYyLm7RLr56R6Uisc43UcpkNxfH9uStf4GT/Q/fOOinHmuT8RHGl0jL6Z
-        wUdLMut+XHwHPnR1ey1uae/dXTbri3XVyYTJ74NBWHyM13bI0ohdjaz6zEB+4yolDn+ZDF
-        0VIc/HnK6kTk3f3URI1GJAzoEEojDjpAtLIW88F5cK7YtFr4+asZd929ZyG9pTudMogrbw
-        7fLYoNxT5ATayz/0EYF6tk7HKCZLrxinEoIEgQOi3akiNU10TFB4xtu5xojEMQ==
+        bh=daDzhx3DvG51sTf56IB3yW6+rlEuvlygn45KtLExpjQ=;
+        b=VDYdrR3D7XjRpQdJxPO/TxGAWgfhd1RQ4YxZh3nEP39AiPjDDUfpg2sG9x07pOXHmWWrJ0
+        +aHCKBA2Zp00GLghYfZHTOEu2eKzaq76OX8KV8VWxYajhojrwnohq9Hg1WaHhQy+gAgZqN
+        HUhDdkUCchbKQKuhjj16d7aFoOkNs2eNyLz1PFjFoZEeip9z6AU06bV8vl2GrDROb2nzWW
+        UU+rM8Y5XR6G2CnQ/TXBuDnScIVZG8ysLD6H2wZ3k/OUoEZSirqZd3r+OvkkQATgf7CM4F
+        kF12yrb/thtllRj+oGQFnAYUkj+DTnB3Y2SPJ0DYrBQ7MhbkJDWMBd/CQExPig==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601236664;
+        s=2020e; t=1601236659;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=+EKrA6HqGMF4faSCoLrAtx6KX3hw/q02kTTYVH77/+8=;
-        b=jsZYaXiRN4xRZ5BWns5HUuV12Wy5QkGKco5gufMggE6/zBZBdgkjf30s/8iphwg89FOg4S
-        +jX7dKxRVl7/tZBw==
-Date:   Sun, 27 Sep 2020 21:49:17 +0200
+        bh=daDzhx3DvG51sTf56IB3yW6+rlEuvlygn45KtLExpjQ=;
+        b=iLxGQIzE9QQNx58eXUsrAU0S724ow2imBqdAogU5f13GH9anLJFn4KOcXC0gX4kViOxyXb
+        GDpQ8t6ZtZPd4CCQ==
+Date:   Sun, 27 Sep 2020 21:49:13 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -52,11 +52,17 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Paul McKenney <paulmck@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Christian Benvenuti <benve@cisco.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Christian Benvenuti <benve@cisco.com>,
         Govindarajulu Varadarajan <_govind@gmx.com>,
         Dave Miller <davem@davemloft.net>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -86,21 +92,15 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Jouni Malinen <j@w1.fi>,
+        brcm80211-dev-list@cypress.com, Jouni Malinen <j@w1.fi>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Xinming Hu <huxinming820@gmail.com>,
+        libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch 31/35] net: libertas libertas_tf: Remove in_interrupt() from
- debug macro.
+Subject: [patch 27/35] net: ipw2x00,iwlegacy,iwlwifi: Remove in_interrupt()
+ from debug macros
 References: <20200927194846.045411263@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,50 +111,108 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The debug macro prints (INT) when in_interrupt() returns true. The value of
-this information is dubious as it does not distinguish between the various
-contexts which are covered by in_interrupt().
+The usage of in_interrupt() in non-core code is phased out.
 
-As the usage of in_interrupt() in drivers is phased out and the same
-information can be more precisely obtained with tracing, remove the
-in_interrupt() conditional from this debug printk.
+The debugging macros in these drivers use in_interrupt() to print 'I' or
+'U' depending on the return value of in_interrupt(). While 'U' is confusing
+at best and 'I' is not really describing the actual context (hard interupt,
+soft interrupt, bottom half disabled section) these debug macros originate
+from the pre ftrace kernel era and their value today is questionable. They
+probably should be removed completely.
+
+The macros weere added initially for ipw2100 and then spreaded when the
+driver was forked.
+
+Remove the in_interrupt() usage at least..
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: libertas-dev@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 
 ---
- drivers/net/wireless/marvell/libertas/defs.h        |    3 +--
- drivers/net/wireless/marvell/libertas_tf/deb_defs.h |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c   |    3 +--
+ drivers/net/wireless/intel/ipw2x00/ipw2200.h   |    6 ++----
+ drivers/net/wireless/intel/ipw2x00/libipw.h    |    3 +--
+ drivers/net/wireless/intel/iwlegacy/common.h   |    4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.c |    3 +--
+ 5 files changed, 7 insertions(+), 12 deletions(-)
 
---- a/drivers/net/wireless/marvell/libertas/defs.h
-+++ b/drivers/net/wireless/marvell/libertas/defs.h
-@@ -50,8 +50,7 @@ extern unsigned int lbs_debug;
- #ifdef DEBUG
- #define LBS_DEB_LL(grp, grpnam, fmt, args...) \
- do { if ((lbs_debug & (grp)) == (grp)) \
--  printk(KERN_DEBUG DRV_NAME grpnam "%s: " fmt, \
--         in_interrupt() ? " (INT)" : "", ## args); } while (0)
-+  printk(KERN_DEBUG DRV_NAME grpnam ": " fmt, ## args); } while (0)
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -201,8 +201,7 @@ static u32 ipw2100_debug_level = IPW_DL_
+ #define IPW_DEBUG(level, message...) \
+ do { \
+ 	if (ipw2100_debug_level & (level)) { \
+-		printk(KERN_DEBUG "ipw2100: %c %s ", \
+-                       in_interrupt() ? 'I' : 'U',  __func__); \
++		printk(KERN_DEBUG "ipw2100: %s ", __func__); \
+ 		printk(message); \
+ 	} \
+ } while (0)
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.h
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.h
+@@ -1382,14 +1382,12 @@ BIT_ARG16(x)
+ 
+ #define IPW_DEBUG(level, fmt, args...) \
+ do { if (ipw_debug_level & (level)) \
+-  printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
+-         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
++  printk(KERN_DEBUG DRV_NAME": %s " fmt, __func__ , ## args); } while (0)
+ 
+ #ifdef CONFIG_IPW2200_DEBUG
+ #define IPW_LL_DEBUG(level, fmt, args...) \
+ do { if (ipw_debug_level & (level)) \
+-  printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
+-         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
++  printk(KERN_DEBUG DRV_NAME": %s " fmt, __func__ , ## args); } while (0)
  #else
- #define LBS_DEB_LL(grp, grpnam, fmt, args...) do {} while (0)
- #endif
---- a/drivers/net/wireless/marvell/libertas_tf/deb_defs.h
-+++ b/drivers/net/wireless/marvell/libertas_tf/deb_defs.h
-@@ -48,8 +48,7 @@ extern unsigned int lbtf_debug;
- #ifdef DEBUG
- #define LBTF_DEB_LL(grp, grpnam, fmt, args...) \
- do { if ((lbtf_debug & (grp)) == (grp)) \
--  printk(KERN_DEBUG DRV_NAME grpnam "%s: " fmt, \
--         in_interrupt() ? " (INT)" : "", ## args); } while (0)
-+  printk(KERN_DEBUG DRV_NAME grpnam ": " fmt, ## args); } while (0)
+ #define IPW_LL_DEBUG(level, fmt, args...) do {} while (0)
+ #endif				/* CONFIG_IPW2200_DEBUG */
+--- a/drivers/net/wireless/intel/ipw2x00/libipw.h
++++ b/drivers/net/wireless/intel/ipw2x00/libipw.h
+@@ -60,8 +60,7 @@
+ extern u32 libipw_debug_level;
+ #define LIBIPW_DEBUG(level, fmt, args...) \
+ do { if (libipw_debug_level & (level)) \
+-  printk(KERN_DEBUG "libipw: %c %s " fmt, \
+-         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
++  printk(KERN_DEBUG "libipw: %s " fmt, __func__ , ## args); } while (0)
  #else
- #define LBTF_DEB_LL(grp, grpnam, fmt, args...) do {} while (0)
+ #define LIBIPW_DEBUG(level, fmt, args...) do {} while (0)
+ #endif				/* CONFIG_LIBIPW_DEBUG */
+--- a/drivers/net/wireless/intel/iwlegacy/common.h
++++ b/drivers/net/wireless/intel/iwlegacy/common.h
+@@ -2925,8 +2925,8 @@ do {									\
+ #define IL_DBG(level, fmt, args...)					\
+ do {									\
+ 	if (il_get_debug_level(il) & level)				\
+-		dev_err(&il->hw->wiphy->dev, "%c %s " fmt,		\
+-			in_interrupt() ? 'I' : 'U', __func__ , ##args); \
++		dev_err(&il->hw->wiphy->dev, "%s " fmt, __func__,	\
++			 ##args);					\
+ } while (0)
+ 
+ #define il_print_hex_dump(il, level, p, len)				\
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-debug.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-debug.c
+@@ -121,8 +121,7 @@ void __iwl_dbg(struct device *dev,
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (iwl_have_debug_level(level) &&
+ 	    (!limit || net_ratelimit()))
+-		dev_printk(KERN_DEBUG, dev, "%c %s %pV",
+-			   in_interrupt() ? 'I' : 'U', function, &vaf);
++		dev_printk(KERN_DEBUG, dev, "%s %pV", function, &vaf);
  #endif
+ 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
+ 	va_end(args);
 
