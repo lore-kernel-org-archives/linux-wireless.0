@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B36C4741F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A52FCC4727D
 	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 17:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D947E23718
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 17:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68DC023718
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Sep 2020 17:18:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hOej4OoF"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hYISNVTV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726315AbgI0RSz (ORCPT
+        id S1726369AbgI0RS4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Sep 2020 13:18:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42330 "EHLO
+        Sun, 27 Sep 2020 13:18:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
         with ESMTP id S1726280AbgI0RSz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 27 Sep 2020 13:18:55 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EEF5C0613D4
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AE56C0613D4
         for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2020 10:18:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,20 +32,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=rpHo8xelTuKWnoFo2hboJNry9e/+lqJ+2CCIMk77fUg=; b=hOej4OoFZW2V3TRs6R8xGaCl1g
-        3y98HRrIOBSRqpvh7upt6yx8mc0gB9Ua29s8Hluu/Zu28KFNXAGTbfYR8L2IWPmS9MxdyjeM3hpwe
-        L6HEKD/5El5DDxr268N7DcG4vJtsLBho36YDcBBu8YfY/JYuxpy4Md4RdJeO9TUZvYxM=;
+        bh=dZnHe2jLwdtBgthKgZO6QJCRLXX/5rfQXUloZEPEtgo=; b=hYISNVTV4inUIxxIxCSh8OBv2K
+        c81DtdQIQAYsqB0UiztlFvlZ4KO1s8XPDx6lNOfuPXoAcDZSAyOF6JknMoDQgo0xqBUgo1VyXzqcQ
+        2JeYh0FP5ECenv1+u1+tPBAkKp3rrmTtdLDmSy35h/6okd9sfC29cLwG83H+tkuYJ7m0=;
 Received: from p4ff134da.dip0.t-ipconnect.de ([79.241.52.218] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1kMaK5-0002oU-SP
-        for linux-wireless@vger.kernel.org; Sun, 27 Sep 2020 19:18:53 +0200
+        id 1kMaK6-0002oU-7B
+        for linux-wireless@vger.kernel.org; Sun, 27 Sep 2020 19:18:54 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] mt76: use ieee80211_rx_list to pass frames to the network stack as a batch
-Date:   Sun, 27 Sep 2020 19:18:47 +0200
-Message-Id: <20200927171852.48669-3-nbd@nbd.name>
+Subject: [PATCH 5/8] mt76: do not set NEEDS_UNIQUE_STA_ADDR for 7615 and 7915
+Date:   Sun, 27 Sep 2020 19:18:49 +0200
+Message-Id: <20200927171852.48669-5-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200927171852.48669-1-nbd@nbd.name>
 References: <20200927171852.48669-1-nbd@nbd.name>
@@ -55,48 +55,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Improves icache footprint
+The newer chipsets can deal with the same STA on multiple interfaces
+Preparation for supporting more station interfaces
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c     | 1 -
+ drivers/net/wireless/mediatek/mt76/mt7603/init.c  | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 1 +
+ 3 files changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 4befe7f937a9..4e0ed9c79d50 100644
+index 4e0ed9c79d50..a778ecc65261 100644
 --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
 +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -932,7 +932,8 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
- {
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hw *hw;
--	struct sk_buff *skb;
-+	struct sk_buff *skb, *tmp;
-+	LIST_HEAD(list);
+@@ -314,7 +314,6 @@ mt76_phy_init(struct mt76_dev *dev, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(hw, AP_LINK_PS);
+ 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
+-	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
  
- 	spin_lock(&dev->rx_lock);
- 	while ((skb = __skb_dequeue(frames)) != NULL) {
-@@ -942,9 +943,19 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
- 		}
+ 	wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	wiphy->interface_modes =
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index c4848fafd270..619a97a8ea21 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -557,6 +557,7 @@ int mt7603_register_device(struct mt7603_dev *dev)
  
- 		mt76_rx_convert(dev, skb, &hw, &sta);
--		ieee80211_rx_napi(hw, sta, skb, napi);
-+		ieee80211_rx_list(hw, sta, skb, &list);
- 	}
- 	spin_unlock(&dev->rx_lock);
-+
-+	if (!napi) {
-+		netif_receive_skb_list(&list);
-+		return;
-+	}
-+
-+	list_for_each_entry_safe(skb, tmp, &list, list) {
-+		skb_list_del_init(skb);
-+		napi_gro_receive(napi, skb);
-+	}
- }
+ 	ieee80211_hw_set(hw, TX_STATUS_NO_AMPDU_LEN);
+ 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
++	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
  
- void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
+ 	/* init led callbacks */
+ 	if (IS_ENABLED(CONFIG_MT76_LEDS)) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 11b769af2f8f..ea31650a01b8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -186,6 +186,7 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
+ 
+ 	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+ 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
++	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
+ 
+ 	dev->mt76.global_wcid.idx = 255;
+ 	dev->mt76.global_wcid.hw_key_idx = -1;
 -- 
 2.28.0
 
