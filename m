@@ -2,348 +2,66 @@ Return-Path: <SRS0=ZuNb=DF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C67D6C47420
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Sep 2020 12:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 899AFC2D0A8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Sep 2020 12:18:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C86B20774
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Sep 2020 12:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5146B2100A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Sep 2020 12:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726552AbgI1MHY (ORCPT
+        id S1726500AbgI1MSG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Sep 2020 08:07:24 -0400
-Received: from smtprelay0176.hostedemail.com ([216.40.44.176]:45882 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726328AbgI1MHY (ORCPT
+        Mon, 28 Sep 2020 08:18:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48002 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726409AbgI1MSG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Sep 2020 08:07:24 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay05.hostedemail.com (Postfix) with ESMTP id 4551A18045D13;
-        Mon, 28 Sep 2020 12:07:22 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: drug88_35125ab27181
-X-Filterd-Recvd-Size: 9135
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf19.hostedemail.com (Postfix) with ESMTPA;
-        Mon, 28 Sep 2020 12:07:20 +0000 (UTC)
-Message-ID: <c75638782a5a4bc141008c6c3dcec4fd1567da79.camel@perches.com>
-Subject: Re: [PATCH] [v2] wireless: Initial driver submission for pureLiFi
- devices
-From:   Joe Perches <joe@perches.com>
-To:     Srinivasan Raju <srini.raju@purelifi.com>
-Cc:     mostafa.afgani@purelifi.com, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Date:   Mon, 28 Sep 2020 05:07:19 -0700
-In-Reply-To: <20200928102008.32568-1-srini.raju@purelifi.com>
-References: <20200924151910.21693-1-srini.raju@purelifi.com>
-         <20200928102008.32568-1-srini.raju@purelifi.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        Mon, 28 Sep 2020 08:18:06 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA1B2C061755
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2020 05:18:05 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kMs6V-00CTLy-FA; Mon, 28 Sep 2020 14:18:03 +0200
+Message-ID: <1a2ed6b74cf7604c717791bd6cb9e65b49f4a654.camel@sipsolutions.net>
+Subject: Re: [PATCH v4 14/17] mac80211: support S1G association
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Thomas Pedersen <thomas@adapt-ip.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Mon, 28 Sep 2020 14:17:57 +0200
+In-Reply-To: <20200922022818.15855-15-thomas@adapt-ip.com>
+References: <20200922022818.15855-1-thomas@adapt-ip.com>
+         <20200922022818.15855-15-thomas@adapt-ip.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2020-09-28 at 15:49 +0530, Srinivasan Raju wrote:
-> This introduces the pureLiFi LiFi driver for LiFi-X, LiFi-XC
-> and LiFi-XL USB devices, which provide lightweight, highspeed secure and
-> fully networked wireless communications via light.
 
-trivial notes:
-
-> diff --git a/drivers/net/wireless/purelifi/chip.c b/drivers/net/wireless/purelifi/chip.c
-[]
-> +static void print_chip_info(struct purelifi_chip *chip)
-> +{
-> +	u8 *addr = purelifi_mac_get_perm_addr(purelifi_chip_to_mac(chip));
-> +	struct usb_device *udev = interface_to_usbdev(chip->usb.intf);
-> +
-> +	pr_info("purelifi chip %04hx:%04hx v%04hx  %02x-%02x-%02x %s\n",
-
-You don't need to use %04hx for u16's
-any more than you need to use %02hhx for u8's.
-
-	pr_info("purelifi chip %04x:%04x v%04x  %02x-%02x-%02x %s\n",
-
-> +		le16_to_cpu(udev->descriptor.idVendor),
-> +		le16_to_cpu(udev->descriptor.idProduct),
-> +		le16_to_cpu(udev->descriptor.bcdDevice),
-> +		addr[0], addr[1], addr[2],
-> +		speed(udev->speed));
-> +}
-> 
-
-> +static inline void purelifi_mc_add_addr(struct purelifi_mc_hash *hash,
-> +					u8 *addr
-> +					)
-
-Can you use normal close parenthesis locations?
-
-> diff --git a/drivers/net/wireless/purelifi/def.h b/drivers/net/wireless/purelifi/def.h
-> new file mode 100644
-> index 000000000000..295dfb45b568
-> --- /dev/null
-> +++ b/drivers/net/wireless/purelifi/def.h
-> @@ -0,0 +1,46 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +
-> +#ifndef _PURELIFI_DEF_H
-> +#define _PURELIFI_DEF_H
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/stringify.h>
-> +#include <linux/device.h>
-> +
-> +typedef u16 __nocast purelifi_addr_t;
-> +
-> +#define dev_printk_f(level, dev, fmt, args...) \
-> +	dev_printk(level, dev, "%s() " fmt, __func__, ##args)
-
-If you _really_w want __func__ output you could use
-
-#define dev_fmt "%s(): " fmt, __func__
-
-> +
-> +#ifdef DEBUG
-> +#  define dev_dbg_f(dev, fmt, args...) \
-> +	  dev_printk_f(KERN_DEBUG, dev, fmt, ## args)
-> +#  define dev_dbg_f_limit(dev, fmt, args...) do { \
-> +	if (net_ratelimit()) \
-> +		dev_printk_f(KERN_DEBUG, dev, fmt, ## args); \
-> +} while (0)
-> +#  define dev_dbg_f_cond(dev, cond, fmt, args...) ({ \
-> +	bool __cond = !!(cond); \
-> +	if (unlikely(__cond)) \
-> +		dev_printk_f(KERN_DEBUG, dev, fmt, ## args); \
-> +})
-> +#else
-> +#  define dev_dbg_f(dev, fmt, args...)  (void)(dev)
-
-	no_printk
-
-> +#  define dev_dbg_f_limit(dev, fmt, args...) (void)(dev)
-> +#  define dev_dbg_f_cond(dev, cond, fmt, args...) (void)(dev)
-> +#endif /* DEBUG */
-> 
-[]
-> +++ b/drivers/net/wireless/purelifi/log.h
-> @@ -0,0 +1,15 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +
-> +#ifndef _PURELIFI_LOG
-> +#define _PURELIFI_LOG
-> +
-> +#ifdef PL_DEBUG
-> +#define pl_dev_info(dev, fmt, arg...) dev_info(dev, fmt, ##arg)
-> +#define pl_dev_warn(dev, fmt, arg...) dev_warn(dev, fmt, ##arg)
-> +#define  pl_dev_err(dev, fmt, arg...) dev_err(dev, fmt, ##arg)
-
-Seems completely pointless.
-Debugging output should be at KERN_DEBUG
-
-> +#else
-> +#define pl_dev_info(dev, fmt, arg...) (void)(dev)
-> +#define pl_dev_warn(dev, fmt, arg...) (void)(dev)
-> +#define  pl_dev_err(dev, fmt, arg...) (void)(dev)
-> +#endif
-> +#endif
-> diff --git a/drivers/net/wireless/purelifi/mac.c b/drivers/net/wireless/purelifi/mac.c
-[]
-> +int purelifi_mac_init_hw(struct ieee80211_hw *hw)
-> +{
-> +	int r;
-> +	struct purelifi_mac *mac = purelifi_hw_mac(hw);
-> +	struct purelifi_chip *chip = &mac->chip;
-> +
-> +	r = purelifi_chip_init_hw(chip);
-> +	if (r) {
-> +		pl_dev_warn(purelifi_mac_dev(mac), "%s::purelifi_chip_init_hw	failed. (%d)\n",
-> +			    __func__, r);
-
-Odd double colon with odd spacing too.
-
+> @@ -176,6 +177,15 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+>  	memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
+>  	ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
+>  
+> +	if (s1g_oper && sband->band == NL80211_BAND_S1GHZ) {
+> +		ieee80211_chandef_s1g_oper(s1g_oper, chandef);
+> +		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_40MHZ |
+> +		      IEEE80211_STA_DISABLE_VHT |
+> +		      IEEE80211_STA_DISABLE_80P80MHZ |
+> +		      IEEE80211_STA_DISABLE_160MHZ;
 > +		goto out;
 > +	}
-> +	PURELIFI_ASSERT(!irqs_disabled());
-> +
-> +	r = regulatory_hint(hw->wiphy, "CA");
-> +out:
-> +	return r;
-> +}
-> +
-> +void purelifi_mac_release(struct purelifi_mac *mac)
-> +{
-> +	purelifi_chip_release(&mac->chip);
-> +	lockdep_assert_held(&mac->lock);
-> +}
-> +
-> +int purelifi_op_start(struct ieee80211_hw *hw)
-> +{
-> +	regulatory_hint(hw->wiphy, "EU");
-> +	purelifi_hw_mac(hw)->chip.usb.initialized = 1;
-> +	return 0;
-> +}
-> +
-> +void purelifi_op_stop(struct ieee80211_hw *hw)
-> +{
-> +	struct purelifi_mac *mac = purelifi_hw_mac(hw);
-> +	struct purelifi_chip *chip = &mac->chip;
-> +	struct sk_buff *skb;
-> +	struct sk_buff_head *ack_wait_queue = &mac->ack_wait_queue;
-> +
-> +	pl_dev_info(purelifi_mac_dev(mac), "%s", __func__);
 
-Unnecessary as ftrace works well
+I've applied this now (and made some changes in a few patches, please
+check), but this particular thing seems a bit odd, in that it looks for
+HT/VHT elements even on an S1G channel if the s1g oper element isn't
+present? That seems like it shouldn't be the case, can you take a look?
 
-[]
-
-> +static int fill_ctrlset(struct purelifi_mac *mac, struct sk_buff *skb)
-> +{
-> +	unsigned int frag_len = skb->len;
-> +	unsigned int tmp;
-> +	struct purelifi_ctrlset *cs;
-> +
-> +	if (skb_headroom(skb) >= sizeof(struct purelifi_ctrlset)) {
-> +		cs = (struct purelifi_ctrlset *)skb_push(skb,
-> +				sizeof(struct purelifi_ctrlset));
-> +	} else {
-> +		pl_dev_info(purelifi_mac_dev(mac), "Not enough hroom(1)\n");
-> +		return 1;
-> +	}
-
-Reverse the test please
-
-	if (skb_headroom(skb) < sizeof(struct purelifi_ctrlset)) {
-		pl_dev_info(purelifi_mac_dev(mac), "Not enough hroom(1)\n");
-		return 1;
-	}
-
-	cs = (struct purelifi_ctrlset *)skb_push(skb, sizeof(struct purelifi_ctrlset));
-
-> +
-> +	cs->id = USB_REQ_DATA_TX;
-> +	cs->payload_len_nw = frag_len;
-> +	cs->len = cs->payload_len_nw + sizeof(struct purelifi_ctrlset)
-> +		- sizeof(cs->id) - sizeof(cs->len);
-
-[]
-
-> +	/*check if 32 bit aligned */
-> +	tmp = skb->len & 3;
-> +	if (tmp) {
-> +		if (skb_tailroom(skb) >= (3 - tmp)) {
-> +			skb_put(skb, 4 - tmp);
-> +		} else {
-> +			if (skb_headroom(skb) >= 4 - tmp) {
-> +				u8 len;
-> +				u8 *src_pt;
-> +				u8 *dest_pt;
-> +
-> +				len = skb->len;
-> +				src_pt = skb->data;
-> +				dest_pt = skb_push(skb, 4 - tmp);
-> +				memcpy(dest_pt, src_pt, len);
-> +			} else {
-> +				return 1;
-
-and reverse the test here and use and unindent
-
-> +			}
-> +		}
-> +		cs->len +=  4 - tmp;
-> +	}
-> +
-> +	//check if not multiple of 512
-> +	tmp = skb->len & 0x1ff;
-> +	if (!tmp) {
-> +		if (skb_tailroom(skb) >= 4) {
-> +			skb_put(skb, 4);
-> +		} else {
-> +			if (skb_headroom(skb) >= 4) {
-> +				u8 len = skb->len;
-> +				u8 *src_pt = skb->data;
-> +				u8 *dest_pt = skb_push(skb, 4);
-> +
-> +				memcpy(dest_pt, src_pt, len);
-> +			} else {
-> +				/* should never happen b/c
-> +				 * sufficient headroom was reserved
-> +				 */
-> +				return 1;
-> +			}
-> +		}
-> +
-
-and here
-
-[]
-
-> +static int purelifi_op_add_interface(struct ieee80211_hw *hw,
-> +				     struct ieee80211_vif *vif)
-> +{
-> +	struct purelifi_mac *mac = purelifi_hw_mac(hw);
-> +
-> +	pl_dev_info(purelifi_mac_dev(mac), "%s\n", __func__);
-> +
-> +	if (mac->type != NL80211_IFTYPE_UNSPECIFIED)
-> +		return -EOPNOTSUPP;
-> +
-> +	switch (vif->type) {
-> +	case NL80211_IFTYPE_MONITOR:
-> +		pl_dev_info(purelifi_mac_dev(mac),
-> +			    "%s::NL80211_IFTYPE_MONITOR\n",
-> +				__func__);
-> +		break;
-> +	case NL80211_IFTYPE_MESH_POINT:
-> +		pl_dev_info(purelifi_mac_dev(mac),
-> +			    "%s::NL80211_IFTYPE_MESH_POINT\n",
-> +				__func__);
-> +		break;
-> +	case NL80211_IFTYPE_STATION:
-> +		pl_dev_info(purelifi_mac_dev(mac),
-> +			    "%s::NL80211_IFTYPE_STATION\n",
-> +				__func__);
-> +		break;
-> +	case NL80211_IFTYPE_ADHOC:
-> +		pl_dev_info(purelifi_mac_dev(mac),
-> +			    "%s::NL80211_IFTYPE_ADHOC\n",
-> +				__func__);
-> +		break;
-> +	case NL80211_IFTYPE_AP:
-> +		pl_dev_info(purelifi_mac_dev(mac),
-> +			    "%s::vif->type=NL80211_IFTYPE_AP\n",
-> +				__func__);
-> +		break;
-
-Create and use a lookup table and use a single
-output
-
-> +	default:
-> +		return -EOPNOTSUPP;
-> +	}
-> +	mac->type = vif->type;
-> +	mac->vif = vif;
-> +	return 0;
-> +}
-> 
-[]
-> +static void purelifi_get_et_stats(struct ieee80211_hw *hw,
-> +				  struct ieee80211_vif *vif,
-> +		struct ethtool_stats *stats, u64 *data)
-
-odd alignment.
-
-Didn't look at the rest
+johannes
 
