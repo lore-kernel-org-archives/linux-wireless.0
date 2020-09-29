@@ -7,44 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F76C4742F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D63EC47431
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B259B2076B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12A0821707
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VmCI2D2N";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="e77qSX7G"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="pLhqEL6Z";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="BTy/4a8H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729689AbgI2Ugj (ORCPT
+        id S1729413AbgI2Uf5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:36:39 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:49846 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729602AbgI2UgZ (ORCPT
+        Tue, 29 Sep 2020 16:35:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37222 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729166AbgI2Ufz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:25 -0400
-Message-Id: <20200929203502.769744809@linutronix.de>
+        Tue, 29 Sep 2020 16:35:55 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EA2CC0613D6;
+        Tue, 29 Sep 2020 13:35:52 -0700 (PDT)
+Message-Id: <20200929203500.481750554@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411780;
+        s=2020; t=1601411750;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=xQW4uASz9uqznLJIj4qcsFxH9Z8YREJkeiGPclI3SY4=;
-        b=VmCI2D2Ny+qH7axYUwaHrPzomt90DEvNPUFa4athxXyOldRwucZi+mpjH9cQpb7UMMgzEb
-        MQs1EqyE2gm/hUycQGdCuv6ym0XqNHpQtDWesd8GQxGa7V/a2/XeRTQeCOi2+yP48VjE0B
-        NWY9OJIr76Z0C2KFu6M+xQTpBcNgw4txtbJ+ATRSRWYBCn8fHrtffIem0LRZiVblqiEbFE
-        Ld7FipKjWWXNWIpDPynM42KDrzIGh5Hvt9lBpsf6tdpH+P8OQc7oPB4dSLkyFIIhwMPO3m
-        Tq+PSzuBOVUV2kJa9paJLjzsTZ+Gr/PqDAll9JLXUTwC2XTmgPcUpoKWi43CcA==
+        bh=VICDOx2EIISDwW+YF3QvD5vk142qLSDR+atrWMc+BeY=;
+        b=pLhqEL6ZGWSBgJ9nzOjc+QUMoPVWpE4jz349MJWEFKO5TI348m5PQgXEUEoRJaUXnvFLAO
+        Npm+2XlTIkv74YUj7zNV4u3Sc6cTkrdvLjUoxP2HL6M+cfwsbuwusfS/1zRw16DETrQ9MY
+        o1WplOBvkiBCZTbs0NtfUjdRB7LfRyDt8OTmfHQgltGY9H0XG8JYxQxmG2jlRaxsD71vnh
+        vi+3+E067kHa7BSdTsAe5CSthJW6Qb0/ACt9F9YKnWCgIQ5Rg1Qw+MBBSs9Zaqq9dfwcC8
+        XgIGjeEQzb35lFbyQCXkP2jYh3mzF6jSSPUJJsM4l60uyICjlXCZ/SjqGLmoZg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411780;
+        s=2020e; t=1601411751;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=xQW4uASz9uqznLJIj4qcsFxH9Z8YREJkeiGPclI3SY4=;
-        b=e77qSX7G44v7lcRfnWC4fJIgUIsPLTFgN73WQthw0m+L1lyZJXW7/Sici4zIQS1FFRHOHC
-        csgNmx1IMIAG72Cg==
-Date:   Tue, 29 Sep 2020 22:25:42 +0200
+        bh=VICDOx2EIISDwW+YF3QvD5vk142qLSDR+atrWMc+BeY=;
+        b=BTy/4a8HncmpoDwnXDEurZSKOP5mWdJwALMMKLG/chU7a6Y2N0g2DffQlMJcSEODI7DDYP
+        CD/HFFakt7GQE8AQ==
+Date:   Tue, 29 Sep 2020 22:25:19 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -97,8 +100,9 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Xinming Hu <huxinming820@gmail.com>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 33/36] net: libertas: Use netif_rx_any_context()
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Subject: [patch V2 10/36] net: intel: Remove in_interrupt() warnings
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -109,52 +113,128 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The usage of in_interrupt() in non-core code is phased out. Ideally the
-information of the calling context should be passed by the callers or the
-functions be split as appropriate.
+in_interrupt() is ill defined and does not provide what the name
+suggests. The usage especially in driver code is deprecated and a tree wide
+effort to clean up and consolidate the (ab)usage of in_interrupt() and
+related checks is happening.
 
-libertas uses in_interupt() to select the netif_rx*() variant which matches
-the calling context. The attempt to consolidate the code by passing an
-arguemnt or by distangling it failed due lack of knowledge about this
-driver and because the call chains are hard to follow.
+In this case the checks cover only parts of the contexts in which these
+functions cannot be called. They fail to detect preemption or interrupt
+disabled invocations.
 
-As a stop gap use netif_rx_any_context() which invokes the correct code
-path depending on context and confines the in_interrupt() usage to core
-code.
+As the functions which are invoked from the various places contain already
+a broad variety of checks (always enabled or debug option dependent) cover
+all invalid conditions already, there is no point in having inconsistent
+warnings in those drivers.
+
+Just remove them.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/marvell/libertas/rx.c |   11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+Reviewed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
 
---- a/drivers/net/wireless/marvell/libertas/rx.c
-+++ b/drivers/net/wireless/marvell/libertas/rx.c
-@@ -147,10 +147,7 @@ int lbs_process_rxed_packet(struct lbs_p
- 	dev->stats.rx_packets++;
+---
+ drivers/net/ethernet/intel/e1000/e1000_main.c     |    1 -
+ drivers/net/ethernet/intel/fm10k/fm10k_pci.c      |    2 --
+ drivers/net/ethernet/intel/i40e/i40e_main.c       |    4 ----
+ drivers/net/ethernet/intel/ice/ice_main.c         |    1 -
+ drivers/net/ethernet/intel/igb/igb_main.c         |    1 -
+ drivers/net/ethernet/intel/igc/igc_main.c         |    1 -
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c     |    1 -
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c |    2 --
+ 8 files changed, 13 deletions(-)
+
+--- a/drivers/net/ethernet/intel/e1000/e1000_main.c
++++ b/drivers/net/ethernet/intel/e1000/e1000_main.c
+@@ -534,7 +534,6 @@ void e1000_down(struct e1000_adapter *ad
  
- 	skb->protocol = eth_type_trans(skb, dev);
--	if (in_interrupt())
--		netif_rx(skb);
--	else
--		netif_rx_ni(skb);
-+	netif_rx_any_context(skb);
+ void e1000_reinit_locked(struct e1000_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+ 	while (test_and_set_bit(__E1000_RESETTING, &adapter->flags))
+ 		msleep(1);
  
- 	ret = 0;
- done:
-@@ -265,11 +262,7 @@ static int process_rxed_802_11_packet(st
- 	dev->stats.rx_packets++;
+--- a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
++++ b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
+@@ -221,8 +221,6 @@ static bool fm10k_prepare_for_reset(stru
+ {
+ 	struct net_device *netdev = interface->netdev;
  
- 	skb->protocol = eth_type_trans(skb, priv->dev);
+-	WARN_ON(in_interrupt());
 -
--	if (in_interrupt())
--		netif_rx(skb);
--	else
--		netif_rx_ni(skb);
-+	netif_rx_any_context(skb);
+ 	/* put off any impending NetWatchDogTimeout */
+ 	netif_trans_update(netdev);
  
- 	ret = 0;
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -6689,7 +6689,6 @@ static void i40e_vsi_reinit_locked(struc
+ {
+ 	struct i40e_pf *pf = vsi->back;
+ 
+-	WARN_ON(in_interrupt());
+ 	while (test_and_set_bit(__I40E_CONFIG_BUSY, pf->state))
+ 		usleep_range(1000, 2000);
+ 	i40e_down(vsi);
+@@ -8462,9 +8461,6 @@ void i40e_do_reset(struct i40e_pf *pf, u
+ {
+ 	u32 val;
+ 
+-	WARN_ON(in_interrupt());
+-
+-
+ 	/* do the biggest reset indicated */
+ 	if (reset_flags & BIT_ULL(__I40E_GLOBAL_RESET_REQUESTED)) {
+ 
+--- a/drivers/net/ethernet/intel/ice/ice_main.c
++++ b/drivers/net/ethernet/intel/ice/ice_main.c
+@@ -486,7 +486,6 @@ static void ice_do_reset(struct ice_pf *
+ 	struct ice_hw *hw = &pf->hw;
+ 
+ 	dev_dbg(dev, "reset_type 0x%x requested\n", reset_type);
+-	WARN_ON(in_interrupt());
+ 
+ 	ice_prepare_for_reset(pf);
+ 
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -2220,7 +2220,6 @@ void igb_down(struct igb_adapter *adapte
+ 
+ void igb_reinit_locked(struct igb_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+ 	while (test_and_set_bit(__IGB_RESETTING, &adapter->state))
+ 		usleep_range(1000, 2000);
+ 	igb_down(adapter);
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -3831,7 +3831,6 @@ void igc_down(struct igc_adapter *adapte
+ 
+ void igc_reinit_locked(struct igc_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+ 	while (test_and_set_bit(__IGC_RESETTING, &adapter->state))
+ 		usleep_range(1000, 2000);
+ 	igc_down(adapter);
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -5677,7 +5677,6 @@ static void ixgbe_up_complete(struct ixg
+ 
+ void ixgbe_reinit_locked(struct ixgbe_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+ 	/* put off any impending NetWatchDogTimeout */
+ 	netif_trans_update(adapter->netdev);
+ 
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+@@ -2526,8 +2526,6 @@ void ixgbevf_down(struct ixgbevf_adapter
+ 
+ void ixgbevf_reinit_locked(struct ixgbevf_adapter *adapter)
+ {
+-	WARN_ON(in_interrupt());
+-
+ 	while (test_and_set_bit(__IXGBEVF_RESETTING, &adapter->state))
+ 		msleep(1);
  
 
 
