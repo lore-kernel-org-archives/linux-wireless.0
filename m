@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54875C52D1F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF93CC52D6D
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B0502074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F3992074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="flqsN7bh";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oCN2qgxm"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="h2OUx/Xl";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Lwhz4b57"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729546AbgI2UgW (ORCPT
+        id S1729293AbgI2UgV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:36:22 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:48970 "EHLO
+        Tue, 29 Sep 2020 16:36:21 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:49174 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729338AbgI2Ufw (ORCPT
+        with ESMTP id S1728657AbgI2Ufz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:35:52 -0400
-Message-Id: <20200929203500.387065111@linutronix.de>
+        Tue, 29 Sep 2020 16:35:55 -0400
+Message-Id: <20200929203500.675706419@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411749;
+        s=2020; t=1601411753;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=PXfmmgnLqJrKbGfM8Rno7TyW/8sPcCBInVY2ghnpy1k=;
-        b=flqsN7bhcZA5Gw8H61esyNKoIuK+eoQXrensTvj/LyVRl43ik4SPulyUAEKMp1yDYLyGDP
-        D9B0Ixm9oRoH8KTg+e+7s2Fn6Lva3dPkWEMLiHhPp1IlfC19hCBf9zb6E9g71fll8PukQD
-        NRJBtmyojfh7kHqy5+QkuRwvrf9C8DSIqvBSt4LzhfjLEnloUE6vyU4B1N8NUA0N3IiCs5
-        VqBUHxBrHMaDhc1URd/tZkWC4I7J98XWC/UfOyCfyvEPTu8BeiYx/XnUdWjH7qPa4poY5x
-        QzprHXM2q2Ybp0p/gTovJvJHX28WMo2/AYNrPo6uEcgYbnyD26FntiZnhw2FCQ==
+        bh=DMPTCCaBsiS/4xahmtxtf/uVQ4ddpwEhLX/qD7/JBWU=;
+        b=h2OUx/XlVZ4Z35Rj+pvIpshipqwoK40wQ89KyKxeF4ya9XeIMB0j3rZxunF237sg+8h2DN
+        qS+BG1tGqWtCl6QG9X7XRXQ8jpIaW9pbBaZ9shAjht11QpoQIrf5gttLChLh2bUqxuXtQo
+        hHiXrbqGbBcwFUGmMsSYU02ZU9+XBapeWcnKbCK5WgboaUgJfx2MI5ebOsIpxuciTGBstJ
+        9xtdxiBP2ZCdZ4tD9sEenQJwri+Ygee6K7c57EcR9DuEr541RqodDbiXbPjdvbn8L9/bR/
+        fZE6ArqG6pG/rl8E8Uz5qlR0AO96g7/2FV0n+fVHzkz60ORAns644ebeA7SKyQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411749;
+        s=2020e; t=1601411753;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=PXfmmgnLqJrKbGfM8Rno7TyW/8sPcCBInVY2ghnpy1k=;
-        b=oCN2qgxmVrimWJDSWDSzOU3Ho3aP5P7+Iri+NSeJMXl19XYF6nwaQsBCpQWTTc2WCbRWS6
-        cY9ORhiBMg/aoFBQ==
-Date:   Tue, 29 Sep 2020 22:25:18 +0200
+        bh=DMPTCCaBsiS/4xahmtxtf/uVQ4ddpwEhLX/qD7/JBWU=;
+        b=Lwhz4b57yzj5XJOSuBaw/4kkL6sUSqxL5Ln27+2v/4Oj6s51o7T50veSK1FO3iJrapr/yw
+        qTKgCLmwqmbZweAg==
+Date:   Tue, 29 Sep 2020 22:25:21 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -98,7 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 09/36] net: fec_mpc52xx: Replace in_interrupt() usage
+Subject: [patch V2 12/36] net: ionic: Remove WARN_ON(in_interrupt()).
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -109,70 +109,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The usage of in_interrupt() in drivers is phased out and Linus clearly
-requested that code which changes behaviour depending on context should
-either be seperated or the context be conveyed in an argument passed by the
-caller, which usually knows the context.
+in_interrupt() is ill defined and does not provide what the name
+suggests. The usage especially in driver code is deprecated and a tree wide
+effort to clean up and consolidate the (ab)usage of in_interrupt() and
+related checks is happening.
 
-mpc52xx_fec_stop() uses in_interrupt() to check if it is safe to sleep. All
-callers run in well defined contexts.
+In this case the check covers only parts of the contexts in which these
+functions cannot be called. It fails to detect preemption or interrupt
+disabled invocations.
 
-Pass an argument from the callers indicating whether it is safe to sleep.
+As the functions which are invoked from ionic_adminq_post() and
+ionic_dev_cmd_wait() contain a broad variety of checks (always enabled or
+debug option dependent) which cover all invalid conditions already, there
+is no point in having inconsistent warnings in those drivers.
+
+Just remove them.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
+Acked-by: Shannon Nelson <snelson@pensando.io>
 
 ---
- drivers/net/ethernet/freescale/fec_mpc52xx.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/pensando/ionic/ionic_main.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
---- a/drivers/net/ethernet/freescale/fec_mpc52xx.c
-+++ b/drivers/net/ethernet/freescale/fec_mpc52xx.c
-@@ -74,7 +74,7 @@ struct mpc52xx_fec_priv {
- static irqreturn_t mpc52xx_fec_interrupt(int, void *);
- static irqreturn_t mpc52xx_fec_rx_interrupt(int, void *);
- static irqreturn_t mpc52xx_fec_tx_interrupt(int, void *);
--static void mpc52xx_fec_stop(struct net_device *dev);
-+static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep);
- static void mpc52xx_fec_start(struct net_device *dev);
- static void mpc52xx_fec_reset(struct net_device *dev);
+--- a/drivers/net/ethernet/pensando/ionic/ionic_main.c
++++ b/drivers/net/ethernet/pensando/ionic/ionic_main.c
+@@ -255,8 +255,6 @@ static int ionic_adminq_post(struct ioni
+ 	struct ionic_queue *q;
+ 	int err = 0;
  
-@@ -283,7 +283,7 @@ static int mpc52xx_fec_close(struct net_
+-	WARN_ON(in_interrupt());
+-
+ 	if (!lif->adminqcq)
+ 		return -EIO;
  
- 	netif_stop_queue(dev);
+@@ -328,8 +326,6 @@ int ionic_dev_cmd_wait(struct ionic *ion
+ 	int done;
+ 	int err;
  
--	mpc52xx_fec_stop(dev);
-+	mpc52xx_fec_stop(dev, true);
- 
- 	mpc52xx_fec_free_rx_buffers(dev, priv->rx_dmatsk);
- 
-@@ -693,7 +693,7 @@ static void mpc52xx_fec_start(struct net
-  *
-  * stop all activity on fec and empty dma buffers
-  */
--static void mpc52xx_fec_stop(struct net_device *dev)
-+static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep)
- {
- 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
- 	struct mpc52xx_fec __iomem *fec = priv->fec;
-@@ -706,7 +706,7 @@ static void mpc52xx_fec_stop(struct net_
- 	bcom_disable(priv->rx_dmatsk);
- 
- 	/* Wait for tx queue to drain, but only if we're in process context */
--	if (!in_interrupt()) {
-+	if (may_sleep) {
- 		timeout = jiffies + msecs_to_jiffies(2000);
- 		while (time_before(jiffies, timeout) &&
- 				!bcom_queue_empty(priv->tx_dmatsk))
-@@ -738,7 +738,7 @@ static void mpc52xx_fec_reset(struct net
- 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
- 	struct mpc52xx_fec __iomem *fec = priv->fec;
- 
--	mpc52xx_fec_stop(dev);
-+	mpc52xx_fec_stop(dev, false);
- 
- 	out_be32(&fec->rfifo_status, in_be32(&fec->rfifo_status));
- 	out_be32(&fec->reset_cntrl, FEC_RESET_CNTRL_RESET_FIFO);
-
+-	WARN_ON(in_interrupt());
+-
+ 	/* Wait for dev cmd to complete, retrying if we get EAGAIN,
+ 	 * but don't wait any longer than max_seconds.
+ 	 */
 
