@@ -7,47 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E5DDC47432
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B781FC4CC65
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:37:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 318422311A
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D2A32074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:37:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="HzxVHlMd";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="AP696r0w"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="l7O2A6/Q";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="bLrHMcsX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729433AbgI2Uf7 (ORCPT
+        id S1729593AbgI2Ugv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:35:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37224 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729377AbgI2Ufz (ORCPT
+        Tue, 29 Sep 2020 16:36:51 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:50070 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729586AbgI2UgZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:35:55 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C691DC0613D5;
-        Tue, 29 Sep 2020 13:35:49 -0700 (PDT)
-Message-Id: <20200929203500.277654701@linutronix.de>
+        Tue, 29 Sep 2020 16:36:25 -0400
+Message-Id: <20200929203502.671989314@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411748;
+        s=2020; t=1601411779;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=DoiuWbaGrJj5/c3USazAYMMXEWWUqbiKOatMAut30pk=;
-        b=HzxVHlMdgb94UaYPHpwz+MEPemrrTkEw8Ef4XL7EiZHIAb2tMW2TemaDbJp2BUr2sGrd05
-        wqajwjp0PXXFRFQl9mFaR2Ta9ECE7zorLELEL/kBveROZMbIMATjc79T3UZsHknCXcW43N
-        IhGeQDJv1lDfJLMfb48AjLj1sxrwZbBI7a7atGV+qcIG1sAZScO7Qmgp9unPNo+5Mq8gJz
-        AwCQH+bPeH3Xk9MwFnH+yJwaSRNoy4F1d0OdwV2kqjocbyvThGqfSghThoH2MNUftLcoVQ
-        Sf5JEMttEADrKXPJrIKAD4PxiNJm5kvdcJBtumzYBD8r9QJm24fbOl8hs27g/g==
+        bh=EqxozfqBtipmIats65m831JGC3HHr4xn8GBnbPIM4zk=;
+        b=l7O2A6/QxYmQLoa0FMbzMhQqersw27HIoh3x7/QHy78RyP03udgI3rgaeFkLJcMQz2WMvF
+        ShcBAZMws+vlVzRzozY1+7TEmLsTfXgaQlJA0KJ8XhaaOtDYaYlKj9+hZMRmOfTeKJhfd/
+        ZIE7ovtbqO7c6Uqyfpzkhqb8GP8xEXtDLg33xn0MgdwqG2BILZ9cpSbChPrMpXVSpA8bbe
+        +1MLwcawS/j+m9gQzapOVOv0CCMyMGDb2x6oMxhV2ascqA8+KFM1onTgk6fBdJvrAV/7Ag
+        4KCmGVYHXUxLVgBQyXelXbGrR5flgqEUfrMMf9FnGuvP4M/mXVVZJczPPIoBsw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411748;
+        s=2020e; t=1601411779;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=DoiuWbaGrJj5/c3USazAYMMXEWWUqbiKOatMAut30pk=;
-        b=AP696r0wjZ7zq0tAyrsYrx9ijlb4aNHTGIz/9+R0U2SBJsEIt4rHBNRgTYGW3lea8k1yrS
-        hlCuDdq0PZynrFDA==
-Date:   Tue, 29 Sep 2020 22:25:17 +0200
+        bh=EqxozfqBtipmIats65m831JGC3HHr4xn8GBnbPIM4zk=;
+        b=bLrHMcsXENSLn4pZdy3UNKy0dODEaFHxcqN9oeYQjwQkChw/ngIbRYJ9Di30RP42chl0hh
+        9dPs4v2Z0pXbn+AQ==
+Date:   Tue, 29 Sep 2020 22:25:41 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -101,8 +98,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 08/36] net: e100: Remove in_interrupt() usage and pointless
- GFP_ATOMIC allocation
+Subject: [patch V2 32/36] net: libertas libertas_tf: Remove in_interrupt()
+ from debug macro.
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -113,57 +110,46 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-e100_hw_init() invokes e100_self_test() only if in_interrupt() returns
-false as e100_self_test() uses msleep() which requires sleepable task
-context. The in_interrupt() check is incomplete because in_interrupt()
-cannot catch callers from contexts which have just preemption or interrupts
-disabled.
+The debug macro prints (INT) when in_interrupt() returns true. The value of
+this information is dubious as it does not distinguish between the various
+contexts which are covered by in_interrupt().
 
-e100_hw_init() is invoked from:
-
-  - e100_loopback_test() which clearly is sleepable task context as the
-    function uses msleep() itself.
-
-  - e100_up() which clearly is sleepable task context as well because it
-    invokes e100_alloc_cbs() abd request_irq() which both require sleepable
-    task context due to GFP_KERNEL allocations and mutex_lock() operations.
-
-Remove the pointless in_interrupt() check.
-
-As a side effect of this analysis it turned out that e100_rx_alloc_list()
-which is only invoked from e100_loopback_test() and e100_up() pointlessly
-uses a GFP_ATOMIC allocation. The next invoked function e100_alloc_cbs() is
-using GFP_KERNEL already.
-
-Change the allocation mode in e100_rx_alloc_list() to GFP_KERNEL as well.
+As the usage of in_interrupt() in drivers is phased out and the same
+information can be more precisely obtained with tracing, remove the
+in_interrupt() conditional from this debug printk.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
 ---
- drivers/net/ethernet/intel/e100.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/libertas/defs.h        |    3 +--
+ drivers/net/wireless/marvell/libertas_tf/deb_defs.h |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -1531,7 +1531,7 @@ static int e100_hw_init(struct nic *nic)
- 	e100_hw_reset(nic);
- 
- 	netif_err(nic, hw, nic->netdev, "e100_hw_init\n");
--	if (!in_interrupt() && (err = e100_self_test(nic)))
-+	if ((err = e100_self_test(nic)))
- 		return err;
- 
- 	if ((err = e100_phy_init(nic)))
-@@ -2155,7 +2155,7 @@ static int e100_rx_alloc_list(struct nic
- 	nic->rx_to_use = nic->rx_to_clean = NULL;
- 	nic->ru_running = RU_UNINITIALIZED;
- 
--	if (!(nic->rxs = kcalloc(count, sizeof(struct rx), GFP_ATOMIC)))
-+	if (!(nic->rxs = kcalloc(count, sizeof(struct rx), GFP_KERNEL)))
- 		return -ENOMEM;
- 
- 	for (rx = nic->rxs, i = 0; i < count; rx++, i++) {
+--- a/drivers/net/wireless/marvell/libertas/defs.h
++++ b/drivers/net/wireless/marvell/libertas/defs.h
+@@ -50,8 +50,7 @@ extern unsigned int lbs_debug;
+ #ifdef DEBUG
+ #define LBS_DEB_LL(grp, grpnam, fmt, args...) \
+ do { if ((lbs_debug & (grp)) == (grp)) \
+-  printk(KERN_DEBUG DRV_NAME grpnam "%s: " fmt, \
+-         in_interrupt() ? " (INT)" : "", ## args); } while (0)
++  printk(KERN_DEBUG DRV_NAME grpnam ": " fmt, ## args); } while (0)
+ #else
+ #define LBS_DEB_LL(grp, grpnam, fmt, args...) do {} while (0)
+ #endif
+--- a/drivers/net/wireless/marvell/libertas_tf/deb_defs.h
++++ b/drivers/net/wireless/marvell/libertas_tf/deb_defs.h
+@@ -48,8 +48,7 @@ extern unsigned int lbtf_debug;
+ #ifdef DEBUG
+ #define LBTF_DEB_LL(grp, grpnam, fmt, args...) \
+ do { if ((lbtf_debug & (grp)) == (grp)) \
+-  printk(KERN_DEBUG DRV_NAME grpnam "%s: " fmt, \
+-         in_interrupt() ? " (INT)" : "", ## args); } while (0)
++  printk(KERN_DEBUG DRV_NAME grpnam ": " fmt, ## args); } while (0)
+ #else
+ #define LBTF_DEB_LL(grp, grpnam, fmt, args...) do {} while (0)
+ #endif
 
 
