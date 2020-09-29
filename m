@@ -7,44 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB28C4742E
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F981C4742C
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 435A92074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE07E2074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DsOiiyLn";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="aTr/bQVc"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hcqY4Eb9";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="mBgOGD8k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729544AbgI2UjH (ORCPT
+        id S1730068AbgI2UjW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:39:07 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:49690 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729375AbgI2UgE (ORCPT
+        Tue, 29 Sep 2020 16:39:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37246 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729457AbgI2UgA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:04 -0400
-Message-Id: <20200929203501.384359804@linutronix.de>
+        Tue, 29 Sep 2020 16:36:00 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1FC5C0613D1;
+        Tue, 29 Sep 2020 13:35:59 -0700 (PDT)
+Message-Id: <20200929203501.078203643@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411762;
+        s=2020; t=1601411758;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=fic2oF38maLPjPgIPYA9CNGhq9WYNsn4UUVLjOIQ4Yc=;
-        b=DsOiiyLnllJKv8DXD1ITRdFwttZavH4BitIxzxhOTLKbM3lFF+1Uy1bhGv2oWrUg038FUI
-        IpkF7hWFGSKqKyu3vlZfdCWRAsxpfcuPQivMhcDL29MWeXAr99TUc5J+jZ0OnwchOglAfT
-        HEeU6CwQwamjWVo4nxnsJdNpCTXW6ysfCLORlvzVb0lShFeBhRg9kyQHHAQA554LEALUsO
-        yawJTzO61XnnOGqrXdnKma8Pg9IrJcWeWcgFg7NI9YtvHYMMSeC0ZhjKYyl3B4pNpDc3vP
-        JXYT9WRa47XoB1N5GFk9s4eFPHwj1TvJhQdB3sbArhGNNueV/S3EmNAMQevysQ==
+        bh=1mw81ufRFRCp2aG/qoi440f0F5QAZ6+ab8RMphLuW6Y=;
+        b=hcqY4Eb9BwH9ixOQkW8m/7oDwSHLfLRLg1XMSyoqwIgaydn66YsMUihz1+PNHaha23NQZO
+        a0Ap+7uA/aypW0fQGPvz5tdjc6PdvdCwNGk2HMMDUkKZ5QTEzQ+uDNUifZzlqoyGS4u//d
+        f5UdDNCJ4Yr6SwdVvT/4iKWqBc2w/nX1uCRzq1zlktjkKhmBG8bB8XYUu2BNsVyBAQ88df
+        LszRwEsqyCwGBZsJTI8724R6lAFGDfzwgX5xvOvk7nUb8xlXcoQW0/wndxocTfdp4tbFQF
+        OGMWHdcMaVfPMVvv5j6zC9Lv2R4pL/4aPTP+duweRv90SvMhQQ7oTc4sQ1ugEQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411762;
+        s=2020e; t=1601411758;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=fic2oF38maLPjPgIPYA9CNGhq9WYNsn4UUVLjOIQ4Yc=;
-        b=aTr/bQVceg0LVg317+omnTdQBuqT2WpvaGqxz6OuJWvQIe93iXRiXC9t4tZxlEDWJDn0LI
-        yCuQHq64Gj46/3CQ==
-Date:   Tue, 29 Sep 2020 22:25:28 +0200
+        bh=1mw81ufRFRCp2aG/qoi440f0F5QAZ6+ab8RMphLuW6Y=;
+        b=mBgOGD8k4/NRFUrOKoSz6C+5WUL/ao2yEae+dB33cW5vi9ywdOUwBcwK7CF0jDMJFZwPIn
+        q0TVSbFzFe0ipPDg==
+Date:   Tue, 29 Sep 2020 22:25:25 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -98,7 +101,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 19/36] net: vxge: Remove in_interrupt() conditionals
+Subject: [patch V2 16/36] net: sfc: Use GFP_KERNEL in efx_ef10_try_update_nic_stats()
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -109,78 +112,27 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-vxge_os_dma_malloc() and vxge_os_dma_malloc_async() are both called from
-callchains which use GFP_KERNEL allocations unconditionally or have other
-requirements to be called from fully preemptible task context..
+efx_ef10_try_update_nic_stats_vf() is now only invoked from thread context
+and can sleep after efx::stats_lock is dropped.
 
-vxge_os_dma_malloc():
-  1)  __vxge_hw_blockpool_create() <- GFP_KERNEL
-	
-  2)  __vxge_hw_mempool_grow() <- vzalloc()
-        __vxge_hw_blockpool_malloc()
-
-vxge_os_dma_malloc_async():
-  1  __vxge_hw_mempool_grow() <- vzalloc()
-      __vxge_hw_blockpool_malloc()
-	__vxge_hw_blockpool_blocks_add()
-
-  2)  vxge_hw_vpath_open()	<- vzalloc()
-	__vxge_hw_blockpool_block_allocate()
-
-That means neither of these functions needs a conditional allocation mode.
-
-Remove the in_interrupt() conditional and use GFP_KERNEL.
-
+Change the allocation mode from GFP_ATOMIC to GFP_KERNEL.
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
-
 ---
- drivers/net/ethernet/neterion/vxge/vxge-config.c |    9 +--------
- drivers/net/ethernet/neterion/vxge/vxge-config.h |    7 +------
- 2 files changed, 2 insertions(+), 14 deletions(-)
+V2: Adjust to Edward's stats update split
+---
+ drivers/net/ethernet/sfc/ef10.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/net/ethernet/neterion/vxge/vxge-config.c
-+++ b/drivers/net/ethernet/neterion/vxge/vxge-config.c
-@@ -2303,16 +2303,9 @@ static void vxge_hw_blockpool_block_add(
- static inline void
- vxge_os_dma_malloc_async(struct pci_dev *pdev, void *devh, unsigned long size)
- {
--	gfp_t flags;
- 	void *vaddr;
+--- a/drivers/net/ethernet/sfc/ef10.c
++++ b/drivers/net/ethernet/sfc/ef10.c
+@@ -1873,7 +1873,7 @@ static int efx_ef10_try_update_nic_stats
  
--	if (in_interrupt())
--		flags = GFP_ATOMIC | GFP_DMA;
--	else
--		flags = GFP_KERNEL | GFP_DMA;
--
--	vaddr = kmalloc((size), flags);
--
-+	vaddr = kmalloc(size, GFP_KERNEL | GFP_DMA);
- 	vxge_hw_blockpool_block_add(devh, vaddr, size, pdev, pdev);
- }
+ 	efx_ef10_get_stat_mask(efx, mask);
  
---- a/drivers/net/ethernet/neterion/vxge/vxge-config.h
-+++ b/drivers/net/ethernet/neterion/vxge/vxge-config.h
-@@ -1899,18 +1899,13 @@ static inline void *vxge_os_dma_malloc(s
- 			struct pci_dev **p_dmah,
- 			struct pci_dev **p_dma_acch)
- {
--	gfp_t flags;
- 	void *vaddr;
- 	unsigned long misaligned = 0;
- 	int realloc_flag = 0;
- 	*p_dma_acch = *p_dmah = NULL;
- 
--	if (in_interrupt())
--		flags = GFP_ATOMIC | GFP_DMA;
--	else
--		flags = GFP_KERNEL | GFP_DMA;
- realloc:
--	vaddr = kmalloc((size), flags);
-+	vaddr = kmalloc(size, GFP_KERNEL | GFP_DMA);
- 	if (vaddr == NULL)
- 		return vaddr;
- 	misaligned = (unsigned long)VXGE_ALIGN((unsigned long)vaddr,
-
+-	rc = efx_nic_alloc_buffer(efx, &stats_buf, dma_len, GFP_ATOMIC);
++	rc = efx_nic_alloc_buffer(efx, &stats_buf, dma_len, GFP_KERNEL);
+ 	if (rc) {
+ 		spin_lock_bh(&efx->stats_lock);
+ 		return rc;
 
