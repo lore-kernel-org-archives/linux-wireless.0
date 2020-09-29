@@ -7,47 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C0AC47436
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54875C52D1F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A78E92074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B0502074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="X5jRvRte";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3NH8ludg"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="flqsN7bh";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oCN2qgxm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729859AbgI2UiD (ORCPT
+        id S1729546AbgI2UgW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:38:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37312 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729562AbgI2UgX (ORCPT
+        Tue, 29 Sep 2020 16:36:22 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:48970 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729338AbgI2Ufw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:23 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4DEC0613D4;
-        Tue, 29 Sep 2020 13:36:09 -0700 (PDT)
-Message-Id: <20200929203501.797721723@linutronix.de>
+        Tue, 29 Sep 2020 16:35:52 -0400
+Message-Id: <20200929203500.387065111@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411767;
+        s=2020; t=1601411749;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ZYBXpJ38nCHBGNGrQ61L4m29u8uExLNlXY3Uz9kDNqQ=;
-        b=X5jRvRteDmwr01pblgOHbT+cmMPQ+zeutwNA9Ip0pQzvNAGvglRSUXiwCc6J8ibqVGvGik
-        2/vWk7vjtl/UPDwX2wRtIAWwhfwVMC/BbBhOWZWw/LU1q4c43akgBy+Tu61fxvlm7G0zh5
-        8U9eAYzVkS+cruk4SnaN4qyPzMQKyz2+tpqq7OMOskGjJZ5c8d+M6L63fNJfKhEWO2nlC/
-        puKijlzCJMpkAByo6ONP9KJVe668411YpfUdvzfpufI3e3axleWluXBcJepPBTAbRb+TkJ
-        LEGCqnlcnBOGl6MpRtgRCfN57/L1OgIwtmzpPhA+QVm0s+g//Rmok3fbt6vifw==
+        bh=PXfmmgnLqJrKbGfM8Rno7TyW/8sPcCBInVY2ghnpy1k=;
+        b=flqsN7bhcZA5Gw8H61esyNKoIuK+eoQXrensTvj/LyVRl43ik4SPulyUAEKMp1yDYLyGDP
+        D9B0Ixm9oRoH8KTg+e+7s2Fn6Lva3dPkWEMLiHhPp1IlfC19hCBf9zb6E9g71fll8PukQD
+        NRJBtmyojfh7kHqy5+QkuRwvrf9C8DSIqvBSt4LzhfjLEnloUE6vyU4B1N8NUA0N3IiCs5
+        VqBUHxBrHMaDhc1URd/tZkWC4I7J98XWC/UfOyCfyvEPTu8BeiYx/XnUdWjH7qPa4poY5x
+        QzprHXM2q2Ybp0p/gTovJvJHX28WMo2/AYNrPo6uEcgYbnyD26FntiZnhw2FCQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411767;
+        s=2020e; t=1601411749;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ZYBXpJ38nCHBGNGrQ61L4m29u8uExLNlXY3Uz9kDNqQ=;
-        b=3NH8ludgbodQd0V2uVIUw0fn0ZtVDhjw2a1CAmrPkaYLThKoM5c9vJm4klq9HoenfYtqfI
-        6PEdzQCwIZeC4MAw==
-Date:   Tue, 29 Sep 2020 22:25:32 +0200
+        bh=PXfmmgnLqJrKbGfM8Rno7TyW/8sPcCBInVY2ghnpy1k=;
+        b=oCN2qgxmVrimWJDSWDSzOU3Ho3aP5P7+Iri+NSeJMXl19XYF6nwaQsBCpQWTTc2WCbRWS6
+        cY9ORhiBMg/aoFBQ==
+Date:   Tue, 29 Sep 2020 22:25:18 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -101,7 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 23/36] net: usb: net1080: Remove in_interrupt() comment
+Subject: [patch V2 09/36] net: fec_mpc52xx: Replace in_interrupt() usage
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -112,33 +109,70 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The comment above nc_vendor_write() suggests that the function could become
-async so that is usable in `in_interrupt()' context or that it already is
-safe to be called from such a context.
+The usage of in_interrupt() in drivers is phased out and Linus clearly
+requested that code which changes behaviour depending on context should
+either be seperated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
 
-Eitherway: The function did not become async since v2.4.9.2 (2002) and it
-must be not be called from `in_interrupt()' context because it sleeps on
-mutltiple occations.
+mpc52xx_fec_stop() uses in_interrupt() to check if it is safe to sleep. All
+callers run in well defined contexts.
 
-Remove the misleading comment.
+Pass an argument from the callers indicating whether it is safe to sleep.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 
 ---
- drivers/net/usb/net1080.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/ethernet/freescale/fec_mpc52xx.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
---- a/drivers/net/usb/net1080.c
-+++ b/drivers/net/usb/net1080.c
-@@ -113,7 +113,6 @@ nc_register_read(struct usbnet *dev, u8
- 	return nc_vendor_read(dev, REQUEST_REGISTER, regnum, retval_ptr);
- }
+--- a/drivers/net/ethernet/freescale/fec_mpc52xx.c
++++ b/drivers/net/ethernet/freescale/fec_mpc52xx.c
+@@ -74,7 +74,7 @@ struct mpc52xx_fec_priv {
+ static irqreturn_t mpc52xx_fec_interrupt(int, void *);
+ static irqreturn_t mpc52xx_fec_rx_interrupt(int, void *);
+ static irqreturn_t mpc52xx_fec_tx_interrupt(int, void *);
+-static void mpc52xx_fec_stop(struct net_device *dev);
++static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep);
+ static void mpc52xx_fec_start(struct net_device *dev);
+ static void mpc52xx_fec_reset(struct net_device *dev);
  
--// no retval ... can become async, usable in_interrupt()
- static void
- nc_vendor_write(struct usbnet *dev, u8 req, u8 regnum, u16 value)
+@@ -283,7 +283,7 @@ static int mpc52xx_fec_close(struct net_
+ 
+ 	netif_stop_queue(dev);
+ 
+-	mpc52xx_fec_stop(dev);
++	mpc52xx_fec_stop(dev, true);
+ 
+ 	mpc52xx_fec_free_rx_buffers(dev, priv->rx_dmatsk);
+ 
+@@ -693,7 +693,7 @@ static void mpc52xx_fec_start(struct net
+  *
+  * stop all activity on fec and empty dma buffers
+  */
+-static void mpc52xx_fec_stop(struct net_device *dev)
++static void mpc52xx_fec_stop(struct net_device *dev, bool may_sleep)
  {
+ 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
+ 	struct mpc52xx_fec __iomem *fec = priv->fec;
+@@ -706,7 +706,7 @@ static void mpc52xx_fec_stop(struct net_
+ 	bcom_disable(priv->rx_dmatsk);
+ 
+ 	/* Wait for tx queue to drain, but only if we're in process context */
+-	if (!in_interrupt()) {
++	if (may_sleep) {
+ 		timeout = jiffies + msecs_to_jiffies(2000);
+ 		while (time_before(jiffies, timeout) &&
+ 				!bcom_queue_empty(priv->tx_dmatsk))
+@@ -738,7 +738,7 @@ static void mpc52xx_fec_reset(struct net
+ 	struct mpc52xx_fec_priv *priv = netdev_priv(dev);
+ 	struct mpc52xx_fec __iomem *fec = priv->fec;
+ 
+-	mpc52xx_fec_stop(dev);
++	mpc52xx_fec_stop(dev, false);
+ 
+ 	out_be32(&fec->rfifo_status, in_be32(&fec->rfifo_status));
+ 	out_be32(&fec->reset_cntrl, FEC_RESET_CNTRL_RESET_FIFO);
 
 
