@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AAB2C52D78
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6AFC52D7A
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F1112074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E95D52076B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oiKP0Xh0";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Cv7GOQA6"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="RMOQhTVg";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="uynYowaB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729962AbgI2UiT (ORCPT
+        id S1729475AbgI2UiS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:38:19 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:50358 "EHLO
+        Tue, 29 Sep 2020 16:38:18 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:50578 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729159AbgI2UgQ (ORCPT
+        with ESMTP id S1729392AbgI2UgU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:16 -0400
-Message-Id: <20200929203502.290194412@linutronix.de>
+        Tue, 29 Sep 2020 16:36:20 -0400
+Message-Id: <20200929203502.481146256@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411774;
+        s=2020; t=1601411776;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=7Y3JxN63Q/PAehxAHjlctr5zLB/0T1XlCp5sBBJ6ers=;
-        b=oiKP0Xh0hgA+5zrGUYdekn9rQzAC4LdhldgalfF+GD+80VdiZXZKs0d75kx8FgkG4UHHVJ
-        o3rqlCb4K9+JNHIsFIL5WLeFB7ty070G/8LtX60ximHuITgnlH9wpX7tsgz3tkwi44KWwb
-        2HCpK0W6133MFuLdi0x3bknXOXCQKj4vV33vpVcw74G548uIlqDiVhr//B8e1Y70vEooRz
-        FCokcITKwTHomIJfNuDvGD9UcFM++gfJyvxS7AqaLGGogozINtZ+NSuE0Yxm2n6PMhWcpI
-        3xl50c76FhcB18vk4+R5AN/njwD4JesFpZCbRIwbexbhX5MIjp1gUXFbryQa9g==
+        bh=60HDT5DhE8SC2OZ0F8d0KZw6s4EX8xVrL/PVP+OTIeg=;
+        b=RMOQhTVgBWYvgJW6v9UhblZTsppMMIcgZV++8+B2pRW64Kd1HeJ9PGycKLfMxYzhaQdOhc
+        WHLhtFz46AWXPNLluC9Y0nQ9u8U5hhMtcxX7Hvjk9xdWVFUg9cCf7LjpmMqKDXr/0HhjLI
+        hgZi0BPlJ/CSRqqbJ4SNeLzRiJquqT1+jwX6bH8X89mrtJLvd/UaAf1nod/Fwn6FUWA+eG
+        tn7Iz1SxlLG27Q6yjKfPpSkgd9N58IoeBCr+360rmp7lUYqDoIn4n45BLMSaGBMAyLnAuq
+        JHTYp4N3cTYmfh8eT3e1TE+6lTTklQjyAYAtfmeHQ+9BTSkxtFjLKOR3XcUN3A==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411774;
+        s=2020e; t=1601411776;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=7Y3JxN63Q/PAehxAHjlctr5zLB/0T1XlCp5sBBJ6ers=;
-        b=Cv7GOQA6CjaeBoQZgaP2ugJNvaDW0z8PoRHJHLEmmHHtU9PIoDOnTj0hyjRawikbMf+aw1
-        9TZvSn3S/yPlakBw==
-Date:   Tue, 29 Sep 2020 22:25:37 +0200
+        bh=60HDT5DhE8SC2OZ0F8d0KZw6s4EX8xVrL/PVP+OTIeg=;
+        b=uynYowaB8wyvJDh/sGgqeLLNpQ/TnV1z/qETkqkeENX7iVEBdUK0/Bt8J701JfWo79N5al
+        bmpUyhRknzvZKHCg==
+Date:   Tue, 29 Sep 2020 22:25:39 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -98,8 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 28/36] net: ipw2x00,iwlegacy,iwlwifi: Remove in_interrupt()
- from debug macros
+Subject: [patch V2 30/36] net: hostap: Remove in_interrupt() usage
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -110,99 +109,60 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The usage of in_interrupt() in non-core code is phased out.
+in_interrupt() is ill defined and does not provide what the name
+suggests. The usage especially in driver code is deprecated and a tree wide
+effort to clean up and consolidate the (ab)usage of in_interrupt() and
+related checks is happening.
 
-The debugging macros in these drivers use in_interrupt() to print 'I' or
-'U' depending on the return value of in_interrupt(). While 'U' is confusing
-at best and 'I' is not really describing the actual context (hard interupt,
-soft interrupt, bottom half disabled section) these debug macros originate
-from the pre ftrace kernel era and their value today is questionable. They
-probably should be removed completely.
+hfa384x_cmd() and prism2_hw_reset() check in_interrupt() at function entry
+and if true emit a printk at debug loglevel and return. This is clearly debug
+code.
 
-The macros weere added initially for ipw2100 and then spreaded when the
-driver was forked.
+Both functions invoke functions which can sleep. These functions already
+have appropriate debug checks which cover all invalid contexts, while
+in_interrupt() fails to detect context which just has preemption or
+interrupts disabled.
 
-Remove the in_interrupt() usage at least..
+Remove both checks as they are incomplete, debug only and already covered
+by the subsequently invoked functions properly. If called from invalid
+context the resulting back trace is definitely more helpful to analyze the
+problem than a printk at debug loglevel.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c   |    3 +--
- drivers/net/wireless/intel/ipw2x00/ipw2200.h   |    6 ++----
- drivers/net/wireless/intel/ipw2x00/libipw.h    |    3 +--
- drivers/net/wireless/intel/iwlegacy/common.h   |    4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-debug.c |    3 +--
- 5 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intersil/hostap/hostap_hw.c |   12 ------------
+ 1 file changed, 12 deletions(-)
 
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -201,8 +201,7 @@ static u32 ipw2100_debug_level = IPW_DL_
- #define IPW_DEBUG(level, message...) \
- do { \
- 	if (ipw2100_debug_level & (level)) { \
--		printk(KERN_DEBUG "ipw2100: %c %s ", \
--                       in_interrupt() ? 'I' : 'U',  __func__); \
-+		printk(KERN_DEBUG "ipw2100: %s ", __func__); \
- 		printk(message); \
- 	} \
- } while (0)
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.h
-@@ -1382,14 +1382,12 @@ BIT_ARG16(x)
+--- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+@@ -320,12 +320,6 @@ static int hfa384x_cmd(struct net_device
+ 	iface = netdev_priv(dev);
+ 	local = iface->local;
  
- #define IPW_DEBUG(level, fmt, args...) \
- do { if (ipw_debug_level & (level)) \
--  printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
--         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
-+  printk(KERN_DEBUG DRV_NAME": %s " fmt, __func__ , ## args); } while (0)
+-	if (in_interrupt()) {
+-		printk(KERN_DEBUG "%s: hfa384x_cmd called from interrupt "
+-		       "context\n", dev->name);
+-		return -1;
+-	}
+-
+ 	if (local->cmd_queue_len >= HOSTAP_CMD_QUEUE_MAX_LEN) {
+ 		printk(KERN_DEBUG "%s: hfa384x_cmd: cmd_queue full\n",
+ 		       dev->name);
+@@ -1560,12 +1554,6 @@ static void prism2_hw_reset(struct net_d
+ 	iface = netdev_priv(dev);
+ 	local = iface->local;
  
- #ifdef CONFIG_IPW2200_DEBUG
- #define IPW_LL_DEBUG(level, fmt, args...) \
- do { if (ipw_debug_level & (level)) \
--  printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
--         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
-+  printk(KERN_DEBUG DRV_NAME": %s " fmt, __func__ , ## args); } while (0)
- #else
- #define IPW_LL_DEBUG(level, fmt, args...) do {} while (0)
- #endif				/* CONFIG_IPW2200_DEBUG */
---- a/drivers/net/wireless/intel/ipw2x00/libipw.h
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw.h
-@@ -60,8 +60,7 @@
- extern u32 libipw_debug_level;
- #define LIBIPW_DEBUG(level, fmt, args...) \
- do { if (libipw_debug_level & (level)) \
--  printk(KERN_DEBUG "libipw: %c %s " fmt, \
--         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
-+  printk(KERN_DEBUG "libipw: %s " fmt, __func__ , ## args); } while (0)
- #else
- #define LIBIPW_DEBUG(level, fmt, args...) do {} while (0)
- #endif				/* CONFIG_LIBIPW_DEBUG */
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -2925,8 +2925,8 @@ do {									\
- #define IL_DBG(level, fmt, args...)					\
- do {									\
- 	if (il_get_debug_level(il) & level)				\
--		dev_err(&il->hw->wiphy->dev, "%c %s " fmt,		\
--			in_interrupt() ? 'I' : 'U', __func__ , ##args); \
-+		dev_err(&il->hw->wiphy->dev, "%s " fmt, __func__,	\
-+			 ##args);					\
- } while (0)
+-	if (in_interrupt()) {
+-		printk(KERN_DEBUG "%s: driver bug - prism2_hw_reset() called "
+-		       "in interrupt context\n", dev->name);
+-		return;
+-	}
+-
+ 	if (local->hw_downloading)
+ 		return;
  
- #define il_print_hex_dump(il, level, p, len)				\
---- a/drivers/net/wireless/intel/iwlwifi/iwl-debug.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-debug.c
-@@ -121,8 +121,7 @@ void __iwl_dbg(struct device *dev,
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (iwl_have_debug_level(level) &&
- 	    (!limit || net_ratelimit()))
--		dev_printk(KERN_DEBUG, dev, "%c %s %pV",
--			   in_interrupt() ? 'I' : 'U', function, &vaf);
-+		dev_printk(KERN_DEBUG, dev, "%s %pV", function, &vaf);
- #endif
- 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
- 	va_end(args);
 
 
