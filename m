@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB5B6C4727E
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D682BC4727E
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E3E32075A
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:33:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A01B820774
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:35:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601343237;
-	bh=brp7bKmkwE5VDkgoa+MU6Rrefw8r8r9J3NGC26UiEVE=;
+	s=default; t=1601343335;
+	bh=VW7oyLa117MEhwsbhxJr47yJfKkS4dQAVPEAdzhonsk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YYOGrkf6norTGqSoVfwELPm5nDpnb+DE4SZ7ZrtZsppgB7ydUWlOywcr3k0Tq6JzX
-	 nafRYogu+9w87JyQArulqm7Ko5Zg+onFTwOHvyT3G6REYxw8x9ycCyYHiR5pE8Dfe3
-	 nvBpY8XXLdIRrH349ErKQ+4TAolgRcXvbpZNizqc=
+	b=COs+aSZQ8y3sjJ6FP3PpNmtBRpX4wP4Sy/TuKXifjqnRKyFiHBMl/Z3rJgBRc2Zp+
+	 k/uOGU6WC0VbjKFTUgnQOGQ3LNfuAMjjp5g1J9I97Fb8M/6MFM69qkyxde5m3mCq2C
+	 Q90q8H6ta+CtB6IXlRNj8I3VKLWNNQnaq6Xrn0KA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727970AbgI2Bd3 (ORCPT
+        id S1727814AbgI2Be5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Sep 2020 21:33:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41812 "EHLO mail.kernel.org"
+        Mon, 28 Sep 2020 21:34:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40920 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727755AbgI2BcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Sep 2020 21:32:07 -0400
+        id S1727635AbgI2Bba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Sep 2020 21:31:30 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BCA57221F0;
-        Tue, 29 Sep 2020 01:31:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4BC7521D46;
+        Tue, 29 Sep 2020 01:31:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601343114;
-        bh=brp7bKmkwE5VDkgoa+MU6Rrefw8r8r9J3NGC26UiEVE=;
+        s=default; t=1601343082;
+        bh=VW7oyLa117MEhwsbhxJr47yJfKkS4dQAVPEAdzhonsk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kbN9kK+ggav4YXXL8AJlwvlZ7EZc9oRCKmhnK9LEuY7nti8EI3RFJCItjbtioG8Gd
-         6ZnS1VpEv8/N1Fy3x7PCpZFUSKWRuxcScbPJrkktFdtPUYSvftkEgaZ1t+j4EnEsOj
-         /kHVhRsqZy+M0x3hMyj8KgG9hBD8iVRlpaAJLs2Y=
+        b=PJUjEO0vHSGCOQRBCxOZIjVLYekni9blVn2cZD/K0TYVXB2rtCX67zUzCH72VcVxI
+         9rbyBsiHINmZbouUG9Oz+gLGj6U+TXZklw+hxhY0md8OVV2Mo2cJ+sAClQ5PoafCQj
+         kfonebJTzbs6mi3QE3f/cODJHiKLnKGYcPoA9miw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 7/9] mac80211: do not allow bigger VHT MPDUs than the hardware supports
-Date:   Mon, 28 Sep 2020 21:31:42 -0400
-Message-Id: <20200929013144.2406985-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 13/18] mac80211: do not allow bigger VHT MPDUs than the hardware supports
+Date:   Mon, 28 Sep 2020 21:30:59 -0400
+Message-Id: <20200929013105.2406634-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200929013144.2406985-1-sashal@kernel.org>
-References: <20200929013144.2406985-1-sashal@kernel.org>
+In-Reply-To: <20200929013105.2406634-1-sashal@kernel.org>
+References: <20200929013105.2406634-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 19ec2189d3acb..502b3fbb3b0f4 100644
+index ccdcb9ad9ac72..aabc63dadf176 100644
 --- a/net/mac80211/vht.c
 +++ b/net/mac80211/vht.c
-@@ -170,10 +170,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+@@ -168,10 +168,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
  	/* take some capabilities as-is */
  	cap_info = le32_to_cpu(vht_cap_ie->vht_cap_info);
  	vht_cap->cap = cap_info;
@@ -89,7 +89,7 @@ index 19ec2189d3acb..502b3fbb3b0f4 100644
  			IEEE80211_VHT_CAP_VHT_TXOP_PS |
  			IEEE80211_VHT_CAP_HTC_VHT |
  			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
-@@ -182,6 +179,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+@@ -180,6 +177,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
  			IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
  			IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
  
