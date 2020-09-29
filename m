@@ -7,47 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7401C47423
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ED58C4743F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E78B21D7F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 144902076B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:36:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vRU6BfuH";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="LEfYKg1x"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vZl3shb7";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="pUmcG6WS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729508AbgI2UgR (ORCPT
+        id S1729645AbgI2Ug0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37228 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729392AbgI2Uf4 (ORCPT
+        Tue, 29 Sep 2020 16:36:26 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:49316 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729557AbgI2UgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:35:56 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60043C061755;
-        Tue, 29 Sep 2020 13:35:56 -0700 (PDT)
-Message-Id: <20200929203500.772444384@linutronix.de>
+        Tue, 29 Sep 2020 16:36:24 -0400
+Message-Id: <20200929203502.576396860@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411754;
+        s=2020; t=1601411777;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ZU7NcQAsE/kj7cmUnOD5K9JFij/BoI0exU4lajDmnJ4=;
-        b=vRU6BfuHOIAfBrVtu4hT7bOoSqNXK0UJcuUCnpmMR01XxLkNiw61gZAphCtJXKCWE5K1i7
-        IJgQN52kyuidE9vQgzXypCAyr/TpToMGyk9vkHe+DlbJNfFGZSYs/NGwJ9D2ONoM2IU5Zw
-        e+7S0mXG+Q1pyH7obsScTtFz8BiaioaXHn5oAupcsRCsLuGD/BLOGoblxRQGDEX1Q8ApS0
-        CQbP4O88pIhIbkxZySum376e0s3/17XKI+Gu6XgErrMSBBy1fyp3qCjBpD48xFUOUtKKBQ
-        W2NNaEKkJgaL98SY7jwux0HGwK9aR2mFw5NIEs+9NYNIBpgTWAtGu7VZYGiZcw==
+        bh=UnzuSiCObj+zFPVGaKyuZiIb7D6OLcNGc9ENqe1uVGQ=;
+        b=vZl3shb7lESVoE5rGcsQuHjYQ/fa5cDZrNHIl7MWKprP2nDTxh+UiXoGoNhoyPOG3ZR6Ec
+        OqDVY1cwYOIVHljzUvQ8ltfuwFex6OdvuWoxIWITAirpmYpSUnNRITnTlIqsdJtyQHlNNQ
+        zu3a4RaAqYrIMR1hFA5FwaJbXsMDZPnv41GdNsrCiif4/iF8ti4sgby8VnR3GZepWXJruj
+        cqll3nwhvohnYlRT+EtVODCfO3LpycGffxw3iQSGCE7h/aPSLN1q3sWSbw6WRD+2MGym9O
+        9XIPoHKCBg3DCg1ftunbc0jBG68xHKIFgZcYu++27bgNP9AejAvpAlyoGdlccA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411754;
+        s=2020e; t=1601411777;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ZU7NcQAsE/kj7cmUnOD5K9JFij/BoI0exU4lajDmnJ4=;
-        b=LEfYKg1xG9lkdKgkKbBAn3aXuZsx2d/HLM7tuC+OD/dzExOSuTCCuQ+uxV82IUN/TWajPk
-        Ybp+2Mpr+f/6D4Bg==
-Date:   Tue, 29 Sep 2020 22:25:22 +0200
+        bh=UnzuSiCObj+zFPVGaKyuZiIb7D6OLcNGc9ENqe1uVGQ=;
+        b=pUmcG6WSjGiBJSD30L5Ts+Rw8ty5B3RFaWadF1x3qr8P3r4h5t4nPP3NVC5tKR/8VdYiTM
+        BQIKbwyc6AytfhCw==
+Date:   Tue, 29 Sep 2020 22:25:40 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -101,7 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 13/36] net: mdiobus: Remove WARN_ON_ONCE(in_interrupt())
+Subject: [patch V2 31/36] net: mwifiex: Use netif_rx_any_context().
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -112,83 +109,57 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-in_interrupt() is ill defined and does not provide what the name
-suggests. The usage especially in driver code is deprecated and a tree wide
-effort to clean up and consolidate the (ab)usage of in_interrupt() and
-related checks is happening.
+The usage of in_interrupt() in non-core code is phased out. Ideally the
+information of the calling context should be passed by the callers or the
+functions be split as appropriate.
 
-In this case the check covers only parts of the contexts in which these
-functions cannot be called. It fails to detect preemption or interrupt
-disabled invocations.
+mwifiex uses in_interupt() to select the netif_rx*() variant which matches
+the calling context. The attempt to consolidate the code by passing an
+arguemnt or by distangling it failed due lack of knowledge about this
+driver and because the call chains are hard to follow.
 
-As the functions which contain these warnings invoke mutex_lock() which
-contains a broad variety of checks (always enabled or debug option
-dependent) and therefore covers all invalid conditions already, there is no
-point in having inconsistent warnings in those drivers. The conditional
-return is not really valuable in practice either.
-
-Just remove them.
+As a stop gap use netif_rx_any_context() which invokes the correct code
+path depending on context and confines the in_interrupt() usage to core
+code.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Andrew Lunn <andrew@lunn.ch>
-
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
 ---
- drivers/net/phy/mdio_bus.c |   15 ---------------
- 1 file changed, 15 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c |    6 +-----
+ drivers/net/wireless/marvell/mwifiex/util.c     |    6 +-----
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
---- a/drivers/net/phy/mdio_bus.c
-+++ b/drivers/net/phy/mdio_bus.c
-@@ -825,9 +825,6 @@ int mdiobus_read_nested(struct mii_bus *
- {
- 	int retval;
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -350,11 +350,7 @@ int mwifiex_uap_recv_packet(struct mwifi
+ 		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
  
--	if (WARN_ON_ONCE(in_interrupt()))
--		return -EINVAL;
+ 	/* Forward multicast/broadcast packet to upper layer*/
+-	if (in_interrupt())
+-		netif_rx(skb);
+-	else
+-		netif_rx_ni(skb);
 -
- 	mutex_lock_nested(&bus->mdio_lock, MDIO_MUTEX_NESTED);
- 	retval = __mdiobus_read(bus, addr, regnum);
- 	mutex_unlock(&bus->mdio_lock);
-@@ -850,9 +847,6 @@ int mdiobus_read(struct mii_bus *bus, in
- {
- 	int retval;
++	netif_rx_any_context(skb);
+ 	return 0;
+ }
  
--	if (WARN_ON_ONCE(in_interrupt()))
--		return -EINVAL;
--
- 	mutex_lock(&bus->mdio_lock);
- 	retval = __mdiobus_read(bus, addr, regnum);
- 	mutex_unlock(&bus->mdio_lock);
-@@ -879,9 +873,6 @@ int mdiobus_write_nested(struct mii_bus
- {
- 	int err;
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -488,11 +488,7 @@ int mwifiex_recv_packet(struct mwifiex_p
+ 	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
+ 		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
  
--	if (WARN_ON_ONCE(in_interrupt()))
--		return -EINVAL;
+-	if (in_interrupt())
+-		netif_rx(skb);
+-	else
+-		netif_rx_ni(skb);
 -
- 	mutex_lock_nested(&bus->mdio_lock, MDIO_MUTEX_NESTED);
- 	err = __mdiobus_write(bus, addr, regnum, val);
- 	mutex_unlock(&bus->mdio_lock);
-@@ -905,9 +896,6 @@ int mdiobus_write(struct mii_bus *bus, i
- {
- 	int err;
++	netif_rx_any_context(skb);
+ 	return 0;
+ }
  
--	if (WARN_ON_ONCE(in_interrupt()))
--		return -EINVAL;
--
- 	mutex_lock(&bus->mdio_lock);
- 	err = __mdiobus_write(bus, addr, regnum, val);
- 	mutex_unlock(&bus->mdio_lock);
-@@ -929,9 +917,6 @@ int mdiobus_modify(struct mii_bus *bus,
- {
- 	int err;
- 
--	if (WARN_ON_ONCE(in_interrupt()))
--		return -EINVAL;
--
- 	mutex_lock(&bus->mdio_lock);
- 	err = __mdiobus_modify_changed(bus, addr, regnum, mask, set);
- 	mutex_unlock(&bus->mdio_lock);
 
 
