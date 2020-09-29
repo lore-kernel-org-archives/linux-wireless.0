@@ -2,235 +2,253 @@ Return-Path: <SRS0=ETdN=DG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C80B9C47427
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 775ACC47420
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:35:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 635F52076B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:33:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 110172074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:35:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="rLTnlvYV";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="wvOjnrRL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729127AbgI2Ude (ORCPT
+        id S1729254AbgI2Ufm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:33:34 -0400
-Received: from mga03.intel.com ([134.134.136.65]:33950 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725372AbgI2Ude (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:33:34 -0400
-IronPort-SDR: KEg40mqVJ8qp7o/ugwCQtDT87k9zBvIkfsbxGM8JIMxwnk3Rpeitdob7r8M2dyZWynC5GJW+30
- kycxCnVHjhBQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9759"; a="162344760"
-X-IronPort-AV: E=Sophos;i="5.77,319,1596524400"; 
-   d="scan'208";a="162344760"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2020 13:33:31 -0700
-IronPort-SDR: fuMFn/40D7LW2+AnXcdyjAtxmb4AKOvh1QrP8aMonnLWu/YcB+x3eRsl/DSSUQ8eeR1dp5hSm3
- rP7Y43YYUfiw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,319,1596524400"; 
-   d="scan'208";a="312343463"
-Received: from lkp-server02.sh.intel.com (HELO 10ae44db8633) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 29 Sep 2020 13:33:30 -0700
-Received: from kbuild by 10ae44db8633 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kNMJV-0000IA-In; Tue, 29 Sep 2020 20:33:29 +0000
-Date:   Wed, 30 Sep 2020 04:33:23 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:master] BUILD SUCCESS
- 1d2a85382282e7c77cbde5650335c3ffc6073fa1
-Message-ID: <5f739a13.ZpXTbgS3xRYc5TjT%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Tue, 29 Sep 2020 16:35:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728301AbgI2Ufl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Sep 2020 16:35:41 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CDBAC061755;
+        Tue, 29 Sep 2020 13:35:41 -0700 (PDT)
+Message-Id: <20200929203459.515312515@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1601411739;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=ixX5wWeAzYgeqCbxOmX1EtJ/d8bhHMpFSLlTnl3G8oc=;
+        b=rLTnlvYVJ44sP81i5crg2IdrMuAcGvR1WnDMWATS/f0fv0RR8XmXxSpbTNVrghfSgyLCB9
+        7vY05femAXzcPxxt4YIlOmS0NJE78VJjIq9GFCX/1L6H8JXaur/EmNtEhY8tGE8kBAqwsG
+        9ajJnRCuEPM6nBfKtFJNtfUul8IolcgLvlWkXREeiNI4DmCvKoV/DezStYuNOHxEJQcDDo
+        U2fEfjifRbL/wigBLP6EfSWnQL0tuqOtz0Z35yDlX2QuMTQWkHyUwjNZvQ6DnJgOliMIOM
+        u60HRnW1blplXHXswcA2Ee9vOFV2Jy4eF8wRw77i3z0uJ+KbPzDKG13g78y9Lw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1601411739;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=ixX5wWeAzYgeqCbxOmX1EtJ/d8bhHMpFSLlTnl3G8oc=;
+        b=wvOjnrRLLr5mL3R/GZv5MV5UXnvPGrg6RJ3yWooCRQWGteFyFBIq2hmIbxbv4SN0ex5MxU
+        JFYN02SkZqGUSyCA==
+Date:   Tue, 29 Sep 2020 22:25:10 +0200
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Paul McKenney <paulmck@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christian Benvenuti <benve@cisco.com>,
+        Govindarajulu Varadarajan <_govind@gmx.com>,
+        Dave Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        Jonathan Corbet <corbet@lwn.net>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-doc@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        intel-wired-lan@lists.osuosl.org,
+        Shannon Nelson <snelson@pensando.io>,
+        Pensando Drivers <drivers@pensando.io>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+        Edward Cree <ecree@solarflare.com>,
+        Martin Habets <mhabets@solarflare.com>,
+        Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jouni Malinen <j@w1.fi>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        libertas-dev@lists.infradead.org,
+        Pascal Terjan <pterjan@google.com>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [patch V2 01/36] net: enic: Cure the enic api locking trainwreck
+References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-transfer-encoding: 8-bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
-branch HEAD: 1d2a85382282e7c77cbde5650335c3ffc6073fa1  wl3501_cs: Remove unnecessary NULL check
+From: Thomas Gleixner <tglx@linutronix.de>
 
-elapsed time: 723m
+enic_dev_wait() has a BUG_ON(in_interrupt()).
 
-configs tested: 162
-configs skipped: 2
+Chasing the callers of enic_dev_wait() revealed the gems of enic_reset()
+and enic_tx_hang_reset() which are both invoked through work queues in
+order to be able to call rtnl_lock(). So far so good.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+After locking rtnl both functions acquire enic::enic_api_lock which
+serializes against the (ab)use from infiniband. This is where the
+trainwreck starts.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-powerpc                 xes_mpc85xx_defconfig
-arc                      axs103_smp_defconfig
-arc                         haps_hs_defconfig
-arm                         orion5x_defconfig
-powerpc                    ge_imp3a_defconfig
-xtensa                           alldefconfig
-mips                          ath79_defconfig
-sh                        sh7757lcr_defconfig
-arm                    vt8500_v6_v7_defconfig
-m68k                        m5407c3_defconfig
-mips                         db1xxx_defconfig
-powerpc                      cm5200_defconfig
-arm                        keystone_defconfig
-arm                        multi_v5_defconfig
-powerpc                 mpc8540_ads_defconfig
-arm                        mvebu_v7_defconfig
-arm                        spear3xx_defconfig
-s390                       zfcpdump_defconfig
-ia64                        generic_defconfig
-mips                      pistachio_defconfig
-ia64                            zx1_defconfig
-arm                           efm32_defconfig
-arm                         cm_x300_defconfig
-powerpc64                           defconfig
-sh                         apsh4a3a_defconfig
-um                             i386_defconfig
-arm                             ezx_defconfig
-powerpc                      pasemi_defconfig
-powerpc                     sequoia_defconfig
-mips                           ip32_defconfig
-powerpc                  mpc866_ads_defconfig
-nios2                         3c120_defconfig
-powerpc                 mpc832x_mds_defconfig
-mips                             allmodconfig
-powerpc                  mpc885_ads_defconfig
-arm                             pxa_defconfig
-sh                           se7722_defconfig
-riscv                    nommu_virt_defconfig
-mips                      loongson3_defconfig
-arm                       spear13xx_defconfig
-powerpc                     tqm8541_defconfig
-m68k                        mvme16x_defconfig
-powerpc                 mpc8560_ads_defconfig
-s390                                defconfig
-powerpc                 mpc837x_rdb_defconfig
-sh                          polaris_defconfig
-sh                          urquell_defconfig
-arm                           sama5_defconfig
-arc                             nps_defconfig
-arm                          exynos_defconfig
-um                            kunit_defconfig
-arm                          gemini_defconfig
-powerpc                 mpc8313_rdb_defconfig
-powerpc                        fsp2_defconfig
-arm                           sunxi_defconfig
-sh                           se7206_defconfig
-powerpc                      katmai_defconfig
-powerpc                     tqm8560_defconfig
-microblaze                    nommu_defconfig
-arc                        vdk_hs38_defconfig
-powerpc                     akebono_defconfig
-c6x                        evmc6457_defconfig
-ia64                      gensparse_defconfig
-powerpc                     ppa8548_defconfig
-powerpc                    socrates_defconfig
-arm                              zx_defconfig
-c6x                         dsk6455_defconfig
-powerpc                      ppc6xx_defconfig
-arm                      pxa255-idp_defconfig
-mips                        nlm_xlr_defconfig
-powerpc                 mpc836x_mds_defconfig
-sh                   sh7770_generic_defconfig
-arm                          ep93xx_defconfig
-arm                           h5000_defconfig
-sh                           se7780_defconfig
-parisc                           alldefconfig
-arm                             mxs_defconfig
-mips                            gpr_defconfig
-c6x                        evmc6474_defconfig
-powerpc                 mpc836x_rdk_defconfig
-arm                       aspeed_g5_defconfig
-sparc                            alldefconfig
-sh                         ecovec24_defconfig
-riscv                          rv32_defconfig
-mips                        bcm63xx_defconfig
-arm                         hackkit_defconfig
-sh                   sh7724_generic_defconfig
-powerpc64                        alldefconfig
-arm                            mps2_defconfig
-mips                       capcella_defconfig
-powerpc                     mpc83xx_defconfig
-openrisc                    or1ksim_defconfig
-nds32                               defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a006-20200929
-i386                 randconfig-a002-20200929
-i386                 randconfig-a003-20200929
-i386                 randconfig-a004-20200929
-i386                 randconfig-a005-20200929
-i386                 randconfig-a001-20200929
-x86_64               randconfig-a011-20200929
-x86_64               randconfig-a013-20200929
-x86_64               randconfig-a015-20200929
-x86_64               randconfig-a014-20200929
-x86_64               randconfig-a016-20200929
-x86_64               randconfig-a012-20200929
-i386                 randconfig-a012-20200929
-i386                 randconfig-a016-20200929
-i386                 randconfig-a014-20200929
-i386                 randconfig-a013-20200929
-i386                 randconfig-a015-20200929
-i386                 randconfig-a011-20200929
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
+enic::enic_api_lock is a spin_lock() which implicitly disables preemption,
+but both functions invoke a ton of functions under that lock which can
+sleep. The BUG_ON(in_interrupt()) does not trigger in that case because it
+can't detect the preempt disabled condition.
 
-clang tested configs:
-x86_64               randconfig-a005-20200929
-x86_64               randconfig-a003-20200929
-x86_64               randconfig-a004-20200929
-x86_64               randconfig-a002-20200929
-x86_64               randconfig-a006-20200929
-x86_64               randconfig-a001-20200929
+This clearly has never been tested with any of the mandatory debug options
+for 7+ years, which would have caught that for sure.
 
+Cure it by adding a enic_api_busy member to struct enic, which is modified
+and evaluated with enic::enic_api_lock held.
+
+If enic_api_devcmd_proxy_by_index() observes enic::enic_api_busy as true,
+it drops enic::enic_api_lock and busy waits for enic::enic_api_busy to
+become false.
+
+It would be smarter to wait for a completion of that busy period, but
+enic_api_devcmd_proxy_by_index() is called with other spin locks held which
+obviously can't sleep.
+
+Remove the BUG_ON(in_interrupt()) check as well because it's incomplete and
+with proper debugging enabled the problem would have been caught from the
+debug checks in schedule_timeout().
+
+Fixes: 0b038566c0ea ("drivers/net: enic: Add an interface for USNIC to interact with firmware")
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+V2: Cure tglx's last minute rename fail
+---
+ drivers/net/ethernet/cisco/enic/enic.h      |    1 +
+ drivers/net/ethernet/cisco/enic/enic_api.c  |    6 ++++++
+ drivers/net/ethernet/cisco/enic/enic_main.c |   27 +++++++++++++++++++++------
+ 3 files changed, 28 insertions(+), 6 deletions(-)
+
+--- a/drivers/net/ethernet/cisco/enic/enic.h
++++ b/drivers/net/ethernet/cisco/enic/enic.h
+@@ -169,6 +169,7 @@ struct enic {
+ 	u16 num_vfs;
+ #endif
+ 	spinlock_t enic_api_lock;
++	bool enic_api_busy;
+ 	struct enic_port_profile *pp;
+ 
+ 	/* work queue cache line section */
+--- a/drivers/net/ethernet/cisco/enic/enic_api.c
++++ b/drivers/net/ethernet/cisco/enic/enic_api.c
+@@ -34,6 +34,12 @@ int enic_api_devcmd_proxy_by_index(struc
+ 	struct vnic_dev *vdev = enic->vdev;
+ 
+ 	spin_lock(&enic->enic_api_lock);
++	while (enic->enic_api_busy) {
++		spin_unlock(&enic->enic_api_lock);
++		cpu_relax();
++		spin_lock(&enic->enic_api_lock);
++	}
++
+ 	spin_lock_bh(&enic->devcmd_lock);
+ 
+ 	vnic_dev_cmd_proxy_by_index_start(vdev, vf);
+--- a/drivers/net/ethernet/cisco/enic/enic_main.c
++++ b/drivers/net/ethernet/cisco/enic/enic_main.c
+@@ -2107,8 +2107,6 @@ static int enic_dev_wait(struct vnic_dev
+ 	int done;
+ 	int err;
+ 
+-	BUG_ON(in_interrupt());
+-
+ 	err = start(vdev, arg);
+ 	if (err)
+ 		return err;
+@@ -2297,6 +2295,13 @@ static int enic_set_rss_nic_cfg(struct e
+ 		rss_hash_bits, rss_base_cpu, rss_enable);
+ }
+ 
++static void enic_set_api_busy(struct enic *enic, bool busy)
++{
++	spin_lock(&enic->enic_api_lock);
++	enic->enic_api_busy = busy;
++	spin_unlock(&enic->enic_api_lock);
++}
++
+ static void enic_reset(struct work_struct *work)
+ {
+ 	struct enic *enic = container_of(work, struct enic, reset);
+@@ -2306,7 +2311,9 @@ static void enic_reset(struct work_struc
+ 
+ 	rtnl_lock();
+ 
+-	spin_lock(&enic->enic_api_lock);
++	/* Stop any activity from infiniband */
++	enic_set_api_busy(enic, true);
++
+ 	enic_stop(enic->netdev);
+ 	enic_dev_soft_reset(enic);
+ 	enic_reset_addr_lists(enic);
+@@ -2314,7 +2321,10 @@ static void enic_reset(struct work_struc
+ 	enic_set_rss_nic_cfg(enic);
+ 	enic_dev_set_ig_vlan_rewrite_mode(enic);
+ 	enic_open(enic->netdev);
+-	spin_unlock(&enic->enic_api_lock);
++
++	/* Allow infiniband to fiddle with the device again */
++	enic_set_api_busy(enic, false);
++
+ 	call_netdevice_notifiers(NETDEV_REBOOT, enic->netdev);
+ 
+ 	rtnl_unlock();
+@@ -2326,7 +2336,9 @@ static void enic_tx_hang_reset(struct wo
+ 
+ 	rtnl_lock();
+ 
+-	spin_lock(&enic->enic_api_lock);
++	/* Stop any activity from infiniband */
++	enic_set_api_busy(enic, true);
++
+ 	enic_dev_hang_notify(enic);
+ 	enic_stop(enic->netdev);
+ 	enic_dev_hang_reset(enic);
+@@ -2335,7 +2347,10 @@ static void enic_tx_hang_reset(struct wo
+ 	enic_set_rss_nic_cfg(enic);
+ 	enic_dev_set_ig_vlan_rewrite_mode(enic);
+ 	enic_open(enic->netdev);
+-	spin_unlock(&enic->enic_api_lock);
++
++	/* Allow infiniband to fiddle with the device again */
++	enic_set_api_busy(enic, false);
++
+ 	call_netdevice_notifiers(NETDEV_REBOOT, enic->netdev);
+ 
+ 	rtnl_unlock();
+
