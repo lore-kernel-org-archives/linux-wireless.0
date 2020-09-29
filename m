@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5CA4C54EF0
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D51C54F58
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73F152076B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46B7E208FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="EIPi0Lnt";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="X42r9W9i"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jVCtw2lj";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cz/fvbwE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729658AbgI2UjV (ORCPT
+        id S1729695AbgI2Ujo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:39:21 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:49530 "EHLO
+        Tue, 29 Sep 2020 16:39:44 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:48614 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729166AbgI2UgB (ORCPT
+        with ESMTP id S1729388AbgI2Uf6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:01 -0400
-Message-Id: <20200929203501.174106828@linutronix.de>
+        Tue, 29 Sep 2020 16:35:58 -0400
+Message-Id: <20200929203500.870136509@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411759;
+        s=2020; t=1601411756;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=N9BRw1yz6NFV8std4SkT3Uzzn3VXu0GqYfIKNTG6X5E=;
-        b=EIPi0LntqhK+k+BiAUZDRhJJMmDcnV+kcgrq+bczSg+aGDSssk7Ea3eApBpnVjKGhwoL+n
-        72qsKzhkNehonIJ+8illeSoepKWSxXbg4Cqe5sFdvOC6QaqgCM4ahPin4JASuZdOGvNApz
-        24RaaXBvEejgj8YZw1E+geQD5RX30tIl6sgQMjsIb2ji0+z3EmzkvgGIqDM1jVU4akJkNz
-        YCTrOqpB88fM2lmqVAkBWoI6xAnyYK+o1reKhe1OdLqC789iXzyeN5dOSrJRtgJz/aAiyi
-        xuWrTjxhShzL5soeTTapyamaGIcyMGfGxCjgAhjo8Y/borFi7swOz6cSeA49mg==
+        bh=z3moHQN6gl51QG697Ig4fcwx454n2NJK4rp8mf5cNuM=;
+        b=jVCtw2ljxAFvqhAGfu6tMOO+k6YrsNVclMOkPke8dvG+YpIVNxH2QBcy0bO04sbuPXYwUw
+        xZrde8ZuN+JyPv2TTYVvIiktfDoyR2T7ZurcH+IieZjs0HigDqt30ptzHdpdtWBukvdhDI
+        15A+imKV1yQ80015acETWy241+VdPwNHT7wGtVOmknIM1heY5YZlS5kDdHn3V1/YxpTj9z
+        uA+iH1qXViLCb14RpMVnHLY16VbqN045hZ4D1VKoO5b1XKcZ0H0EgJazSX7k51qG2fZYSu
+        KvB/j2+KnuKsoN3n7nceS1o28YzQCbFp4VUvjyRG6BujSIVZZFBAtyeBKTL+9w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411759;
+        s=2020e; t=1601411756;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=N9BRw1yz6NFV8std4SkT3Uzzn3VXu0GqYfIKNTG6X5E=;
-        b=X42r9W9iZllVNjva3r1f0qOSVOALGkcIzlwQM/efS+ROnTSVq2BO4tKuw6c6noyU1EHvkt
-        ZU9zXa3tqQEudFCg==
-Date:   Tue, 29 Sep 2020 22:25:26 +0200
+        bh=z3moHQN6gl51QG697Ig4fcwx454n2NJK4rp8mf5cNuM=;
+        b=cz/fvbwEmtU2I7VB5GFxobVdz4+igLoEhz0hFG5h/u9T4PsPi5iWQ70/vcLbBgcyROmgwp
+        Hr2Z0yFyRFjlJqAg==
+Date:   Tue, 29 Sep 2020 22:25:23 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -98,7 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 17/36] net: sunbmac: Replace in_interrupt() usage
+Subject: [patch V2 14/36] net: natsemi: Replace in_interrupt() usage.
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -107,109 +107,144 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-bigmac_init_rings() has an argument signaling if it is called from the
-interrupt handler. This is used to decide between GFP_KERNEL and GFP_ATOMIC
-for memory allocations.
+The usage of in_interrupt() in drivers is phased out and Linus clearly
+requested that code which changes behaviour depending on context should
+either be seperated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
 
-But it also checks in_interrupt() to handle invocations which come from the
-timer callback bigmac_timer() via bigmac_hw_init(), which is invoked with
-'in_irq = 0'. While the timer callback is clearly not in hard interrupt
-context it is still not sleepable context.
+sonic_quiesce() uses 'in_interrupt() || irqs_disabled()' to chose either
+udelay() or usleep_range() in the wait loop.
 
-Rename the argument to `non_blocking' and set it to true if invoked from
-the timer callback or the interrupt handler which allows to remove the
-in_interrupt() check and makes the code consistent.
+In all callchains leading to it the context is well defined and known.
+
+Add a 'may_sleep' argument and pass it through the various callchains
+leading to this function.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 
 ---
- drivers/net/ethernet/sun/sunbmac.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/ethernet/natsemi/sonic.c |   24 ++++++++++++------------
+ drivers/net/ethernet/natsemi/sonic.h |    2 +-
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
---- a/drivers/net/ethernet/sun/sunbmac.c
-+++ b/drivers/net/ethernet/sun/sunbmac.c
-@@ -209,13 +209,13 @@ static void bigmac_clean_rings(struct bi
- 	}
+--- a/drivers/net/ethernet/natsemi/sonic.c
++++ b/drivers/net/ethernet/natsemi/sonic.c
+@@ -143,7 +143,7 @@ static int sonic_open(struct net_device
+ 	/*
+ 	 * Initialize the SONIC
+ 	 */
+-	sonic_init(dev);
++	sonic_init(dev, true);
+ 
+ 	netif_start_queue(dev);
+ 
+@@ -153,7 +153,7 @@ static int sonic_open(struct net_device
  }
  
--static void bigmac_init_rings(struct bigmac *bp, int from_irq)
-+static void bigmac_init_rings(struct bigmac *bp, bool non_blocking)
+ /* Wait for the SONIC to become idle. */
+-static void sonic_quiesce(struct net_device *dev, u16 mask)
++static void sonic_quiesce(struct net_device *dev, u16 mask, bool may_sleep)
  {
- 	struct bmac_init_block *bb = bp->bmac_block;
+ 	struct sonic_local * __maybe_unused lp = netdev_priv(dev);
  	int i;
- 	gfp_t gfp_flags = GFP_KERNEL;
+@@ -163,7 +163,7 @@ static void sonic_quiesce(struct net_dev
+ 		bits = SONIC_READ(SONIC_CMD) & mask;
+ 		if (!bits)
+ 			return;
+-		if (irqs_disabled() || in_interrupt())
++		if (!may_sleep)
+ 			udelay(20);
+ 		else
+ 			usleep_range(100, 200);
+@@ -187,7 +187,7 @@ static int sonic_close(struct net_device
+ 	 * stop the SONIC, disable interrupts
+ 	 */
+ 	SONIC_WRITE(SONIC_CMD, SONIC_CR_RXDIS);
+-	sonic_quiesce(dev, SONIC_CR_ALL);
++	sonic_quiesce(dev, SONIC_CR_ALL, true);
  
--	if (from_irq || in_interrupt())
-+	if (non_blocking)
- 		gfp_flags = GFP_ATOMIC;
+ 	SONIC_WRITE(SONIC_IMR, 0);
+ 	SONIC_WRITE(SONIC_ISR, 0x7fff);
+@@ -229,7 +229,7 @@ static void sonic_tx_timeout(struct net_
+ 	 * disable all interrupts before releasing DMA buffers
+ 	 */
+ 	SONIC_WRITE(SONIC_CMD, SONIC_CR_RXDIS);
+-	sonic_quiesce(dev, SONIC_CR_ALL);
++	sonic_quiesce(dev, SONIC_CR_ALL, false);
  
- 	bp->rx_new = bp->rx_old = bp->tx_new = bp->tx_old = 0;
-@@ -489,7 +489,7 @@ static void bigmac_tcvr_init(struct bigm
+ 	SONIC_WRITE(SONIC_IMR, 0);
+ 	SONIC_WRITE(SONIC_ISR, 0x7fff);
+@@ -246,7 +246,7 @@ static void sonic_tx_timeout(struct net_
+ 		}
  	}
- }
- 
--static int bigmac_init_hw(struct bigmac *, int);
-+static int bigmac_init_hw(struct bigmac *, bool);
- 
- static int try_next_permutation(struct bigmac *bp, void __iomem *tregs)
- {
-@@ -549,7 +549,7 @@ static void bigmac_timer(struct timer_li
- 				if (ret == -1) {
- 					printk(KERN_ERR "%s: Link down, cable problem?\n",
- 					       bp->dev->name);
--					ret = bigmac_init_hw(bp, 0);
-+					ret = bigmac_init_hw(bp, true);
- 					if (ret) {
- 						printk(KERN_ERR "%s: Error, cannot re-init the "
- 						       "BigMAC.\n", bp->dev->name);
-@@ -617,7 +617,7 @@ static void bigmac_begin_auto_negotiatio
- 	add_timer(&bp->bigmac_timer);
- }
- 
--static int bigmac_init_hw(struct bigmac *bp, int from_irq)
-+static int bigmac_init_hw(struct bigmac *bp, bool non_blocking)
- {
- 	void __iomem *gregs        = bp->gregs;
- 	void __iomem *cregs        = bp->creg;
-@@ -635,7 +635,7 @@ static int bigmac_init_hw(struct bigmac
- 	qec_init(bp);
- 
- 	/* Alloc and reset the tx/rx descriptor chains. */
--	bigmac_init_rings(bp, from_irq);
-+	bigmac_init_rings(bp, non_blocking);
- 
- 	/* Initialize the PHY. */
- 	bigmac_tcvr_init(bp);
-@@ -749,7 +749,7 @@ static void bigmac_is_medium_rare(struct
- 	}
- 
- 	printk(" RESET\n");
--	bigmac_init_hw(bp, 1);
-+	bigmac_init_hw(bp, true);
- }
- 
- /* BigMAC transmit complete service routines. */
-@@ -921,7 +921,7 @@ static int bigmac_open(struct net_device
- 		return ret;
- 	}
- 	timer_setup(&bp->bigmac_timer, bigmac_timer, 0);
--	ret = bigmac_init_hw(bp, 0);
-+	ret = bigmac_init_hw(bp, false);
- 	if (ret)
- 		free_irq(dev->irq, bp);
- 	return ret;
-@@ -945,7 +945,7 @@ static void bigmac_tx_timeout(struct net
- {
- 	struct bigmac *bp = netdev_priv(dev);
- 
--	bigmac_init_hw(bp, 0);
-+	bigmac_init_hw(bp, true);
+ 	/* Try to restart the adaptor. */
+-	sonic_init(dev);
++	sonic_init(dev, false);
+ 	lp->stats.tx_errors++;
+ 	netif_trans_update(dev); /* prevent tx timeout */
  	netif_wake_queue(dev);
- }
+@@ -692,9 +692,9 @@ static void sonic_multicast_list(struct
  
+ 			/* LCAM and TXP commands can't be used simultaneously */
+ 			spin_lock_irqsave(&lp->lock, flags);
+-			sonic_quiesce(dev, SONIC_CR_TXP);
++			sonic_quiesce(dev, SONIC_CR_TXP, false);
+ 			SONIC_WRITE(SONIC_CMD, SONIC_CR_LCAM);
+-			sonic_quiesce(dev, SONIC_CR_LCAM);
++			sonic_quiesce(dev, SONIC_CR_LCAM, false);
+ 			spin_unlock_irqrestore(&lp->lock, flags);
+ 		}
+ 	}
+@@ -708,7 +708,7 @@ static void sonic_multicast_list(struct
+ /*
+  * Initialize the SONIC ethernet controller.
+  */
+-static int sonic_init(struct net_device *dev)
++static int sonic_init(struct net_device *dev, bool may_sleep)
+ {
+ 	struct sonic_local *lp = netdev_priv(dev);
+ 	int i;
+@@ -730,7 +730,7 @@ static int sonic_init(struct net_device
+ 	 */
+ 	SONIC_WRITE(SONIC_CMD, 0);
+ 	SONIC_WRITE(SONIC_CMD, SONIC_CR_RXDIS | SONIC_CR_STP);
+-	sonic_quiesce(dev, SONIC_CR_ALL);
++	sonic_quiesce(dev, SONIC_CR_ALL, may_sleep);
+ 
+ 	/*
+ 	 * initialize the receive resource area
+@@ -759,7 +759,7 @@ static int sonic_init(struct net_device
+ 	netif_dbg(lp, ifup, dev, "%s: issuing RRRA command\n", __func__);
+ 
+ 	SONIC_WRITE(SONIC_CMD, SONIC_CR_RRRA);
+-	sonic_quiesce(dev, SONIC_CR_RRRA);
++	sonic_quiesce(dev, SONIC_CR_RRRA, may_sleep);
+ 
+ 	/*
+ 	 * Initialize the receive descriptors so that they
+@@ -834,7 +834,7 @@ static int sonic_init(struct net_device
+ 	 * load the CAM
+ 	 */
+ 	SONIC_WRITE(SONIC_CMD, SONIC_CR_LCAM);
+-	sonic_quiesce(dev, SONIC_CR_LCAM);
++	sonic_quiesce(dev, SONIC_CR_LCAM, may_sleep);
+ 
+ 	/*
+ 	 * enable receiver, disable loopback
+--- a/drivers/net/ethernet/natsemi/sonic.h
++++ b/drivers/net/ethernet/natsemi/sonic.h
+@@ -338,7 +338,7 @@ static void sonic_rx(struct net_device *
+ static int sonic_close(struct net_device *dev);
+ static struct net_device_stats *sonic_get_stats(struct net_device *dev);
+ static void sonic_multicast_list(struct net_device *dev);
+-static int sonic_init(struct net_device *dev);
++static int sonic_init(struct net_device *dev, bool may_sleep);
+ static void sonic_tx_timeout(struct net_device *dev, unsigned int txqueue);
+ static void sonic_msg_init(struct net_device *dev);
+ static int sonic_alloc_descriptors(struct net_device *dev);
 
 
