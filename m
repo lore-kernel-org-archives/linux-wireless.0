@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9B9CC4743F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C0AC47436
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BBD52074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A78E92074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:38:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="W50wQ+Ga";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="aYCDVQdM"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="X5jRvRte";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3NH8ludg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729873AbgI2Uhp (ORCPT
+        id S1729859AbgI2UiD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37320 "EHLO
+        Tue, 29 Sep 2020 16:38:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729576AbgI2UgX (ORCPT
+        with ESMTP id S1729562AbgI2UgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 29 Sep 2020 16:36:23 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C47C3C0613D9;
-        Tue, 29 Sep 2020 13:36:12 -0700 (PDT)
-Message-Id: <20200929203502.084703195@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4DEC0613D4;
+        Tue, 29 Sep 2020 13:36:09 -0700 (PDT)
+Message-Id: <20200929203501.797721723@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411771;
+        s=2020; t=1601411767;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=LrldQJQw6qypyNQybdI02NG+9/ckddJHjYgk5hlEHHQ=;
-        b=W50wQ+GaNd8R4tSNqTICBdQk/2YIRsw/r76XqikWEnHF2rKl0QKsifKzK/4rpV3JddmiKx
-        5X9q0gc1DwFsx2n5C1lF6JO6j7qwcsl6yNq7fwB7V/6Q3n4KpRPYmTGSv4n00HudhtSxvI
-        fjbk1EPV24IDWvSw+12gnFlG6RBnY4uxWmnrJKPSZdd09LynExhub++x0V0wIKoQTOdcTv
-        vVCFtXASKKnFemHFsTagTjSzQsahMlM34laJrI1RDyJofrTl+M2kz5U+WEWJu5Fu9EURdU
-        9bxJK/Fruu0QWmbEeCkavOHYNgBbhfl4d0nmx0aubAlDJFkABGcbkXcnjeIWqA==
+        bh=ZYBXpJ38nCHBGNGrQ61L4m29u8uExLNlXY3Uz9kDNqQ=;
+        b=X5jRvRteDmwr01pblgOHbT+cmMPQ+zeutwNA9Ip0pQzvNAGvglRSUXiwCc6J8ibqVGvGik
+        2/vWk7vjtl/UPDwX2wRtIAWwhfwVMC/BbBhOWZWw/LU1q4c43akgBy+Tu61fxvlm7G0zh5
+        8U9eAYzVkS+cruk4SnaN4qyPzMQKyz2+tpqq7OMOskGjJZ5c8d+M6L63fNJfKhEWO2nlC/
+        puKijlzCJMpkAByo6ONP9KJVe668411YpfUdvzfpufI3e3axleWluXBcJepPBTAbRb+TkJ
+        LEGCqnlcnBOGl6MpRtgRCfN57/L1OgIwtmzpPhA+QVm0s+g//Rmok3fbt6vifw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411771;
+        s=2020e; t=1601411767;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=LrldQJQw6qypyNQybdI02NG+9/ckddJHjYgk5hlEHHQ=;
-        b=aYCDVQdMR8R7kgHsLF+gsqoZURiRjoLdvdDdOUWZI6x+sX8Je6Xb+rKLwd0K1HqRODWQKz
-        pZYqigkaNJN28jAA==
-Date:   Tue, 29 Sep 2020 22:25:35 +0200
+        bh=ZYBXpJ38nCHBGNGrQ61L4m29u8uExLNlXY3Uz9kDNqQ=;
+        b=3NH8ludgbodQd0V2uVIUw0fn0ZtVDhjw2a1CAmrPkaYLThKoM5c9vJm4klq9HoenfYtqfI
+        6PEdzQCwIZeC4MAw==
+Date:   Tue, 29 Sep 2020 22:25:32 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -101,8 +101,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 26/36] net: brcmfmac: Convey execution context via argument
- to brcmf_netif_rx()
+Subject: [patch V2 23/36] net: usb: net1080: Remove in_interrupt() comment
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -111,287 +110,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-bcrmgf_netif_rx() uses in_interrupt to chose between netif_rx() and
-netif_rx_ni(). in_interrupt() usage in drivers is phased out.
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Convey the execution mode via an 'inirq' argument through the various
-callchains leading to brcmf_netif_rx():
+The comment above nc_vendor_write() suggests that the function could become
+async so that is usable in `in_interrupt()' context or that it already is
+safe to be called from such a context.
 
-brcmf_pcie_isr_thread()		    <- Task context
-  brcmf_proto_msgbuf_rx_trigger()
-    brcmf_msgbuf_process_rx()
-      brcmf_msgbuf_process_msgtype()
-        brcmf_msgbuf_process_rx_complete()
-	  brcmf_netif_mon_rx()
-	     brcmf_netif_rx(isirq = false)
-	  brcmf_netif_rx(isirq = false)
+Eitherway: The function did not become async since v2.4.9.2 (2002) and it
+must be not be called from `in_interrupt()' context because it sleeps on
+mutltiple occations.
 
-brcmf_sdio_readframes()  <- Task context sdio_claim_host() might sleep
-  brcmf_rx_frame(isirq = false)
+Remove the misleading comment.
 
-brcmf_sdio_rxglom()      <- Task context sdio_claim_host() might sleep
-  brcmf_rx_frame(isirq = false)
-
-brcmf_usb_rx_complete()  <- Interrupt context
-  brcmf_rx_frame(isirq = true)
-
-brcmf_rx_frame()
-  brcmf_proto_rxreorder()
-    brcmf_proto_bcdc_rxreorder()
-      brcmf_fws_rxreorder()
-        brcmf_netif_rx()
-      brcmf_netif_rx()
-
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
----
-V2: New patch. Using an argument instead of switching to netif_rx_any_context()
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c     |    4 +--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h      |    3 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     |   16 ++++++------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h     |    2 -
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c |   10 +++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h |    2 -
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c   |    5 ++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h    |    6 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     |    4 +--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      |    2 -
- 10 files changed, 29 insertions(+), 25 deletions(-)
 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -397,9 +397,9 @@ brcmf_proto_bcdc_add_tdls_peer(struct br
+
+---
+ drivers/net/usb/net1080.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+--- a/drivers/net/usb/net1080.c
++++ b/drivers/net/usb/net1080.c
+@@ -113,7 +113,6 @@ nc_register_read(struct usbnet *dev, u8
+ 	return nc_vendor_read(dev, REQUEST_REGISTER, regnum, retval_ptr);
  }
  
- static void brcmf_proto_bcdc_rxreorder(struct brcmf_if *ifp,
--				       struct sk_buff *skb)
-+				       struct sk_buff *skb, bool inirq)
- {
--	brcmf_fws_rxreorder(ifp, skb);
-+	brcmf_fws_rxreorder(ifp, skb, inirq);
- }
- 
+-// no retval ... can become async, usable in_interrupt()
  static void
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -249,7 +249,8 @@ int brcmf_bus_reset(struct brcmf_bus *bu
-  */
- 
- /* Receive frame for delivery to OS.  Callee disposes of rxp. */
--void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
-+void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event,
-+		    bool inirq);
- /* Receive async event packet from firmware. Callee disposes of rxp. */
- void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
- 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -395,7 +395,7 @@ void brcmf_txflowblock_if(struct brcmf_i
- 	spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
- }
- 
--void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
-+void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb, bool inirq)
+ nc_vendor_write(struct usbnet *dev, u8 req, u8 regnum, u16 value)
  {
- 	/* Most of Broadcom's firmwares send 802.11f ADD frame every time a new
- 	 * STA connects to the AP interface. This is an obsoleted standard most
-@@ -418,14 +418,15 @@ void brcmf_netif_rx(struct brcmf_if *ifp
- 	ifp->ndev->stats.rx_packets++;
- 
- 	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
--	if (in_interrupt())
-+	if (inirq) {
- 		netif_rx(skb);
--	else
-+	} else {
- 		/* If the receive is not processed inside an ISR,
- 		 * the softirqd must be woken explicitly to service
- 		 * the NET_RX_SOFTIRQ.  This is handled by netif_rx_ni().
- 		 */
- 		netif_rx_ni(skb);
-+	}
- }
- 
- void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
-@@ -474,7 +475,7 @@ void brcmf_netif_mon_rx(struct brcmf_if
- 	skb->pkt_type = PACKET_OTHERHOST;
- 	skb->protocol = htons(ETH_P_802_2);
- 
--	brcmf_netif_rx(ifp, skb);
-+	brcmf_netif_rx(ifp, skb, false);
- }
- 
- static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
-@@ -496,7 +497,8 @@ static int brcmf_rx_hdrpull(struct brcmf
- 	return 0;
- }
- 
--void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
-+void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event,
-+		    bool inirq)
- {
- 	struct brcmf_if *ifp;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-@@ -508,14 +510,14 @@ void brcmf_rx_frame(struct device *dev,
- 		return;
- 
- 	if (brcmf_proto_is_reorder_skb(skb)) {
--		brcmf_proto_rxreorder(ifp, skb);
-+		brcmf_proto_rxreorder(ifp, skb, inirq);
- 	} else {
- 		/* Process special event packets */
- 		if (handle_event)
- 			brcmf_fweh_process_skb(ifp->drvr, skb,
- 					       BCMILCP_SUBTYPE_VENDOR_LONG);
- 
--		brcmf_netif_rx(ifp, skb);
-+		brcmf_netif_rx(ifp, skb, inirq);
- 	}
- }
- 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -208,7 +208,7 @@ void brcmf_remove_interface(struct brcmf
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
- void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
--void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
-+void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb, bool inirq);
- void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb);
- void brcmf_net_detach(struct net_device *ndev, bool rtnl_locked);
- int brcmf_net_mon_attach(struct brcmf_if *ifp);
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -1664,7 +1664,7 @@ static void brcmf_rxreorder_get_skb_list
- 	rfi->pend_pkts -= skb_queue_len(skb_list);
- }
- 
--void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
-+void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt, bool inirq)
- {
- 	struct brcmf_pub *drvr = ifp->drvr;
- 	u8 *reorder_data;
-@@ -1682,7 +1682,7 @@ void brcmf_fws_rxreorder(struct brcmf_if
- 	/* validate flags and flow id */
- 	if (flags == 0xFF) {
- 		bphy_err(drvr, "invalid flags...so ignore this packet\n");
--		brcmf_netif_rx(ifp, pkt);
-+		brcmf_netif_rx(ifp, pkt, inirq);
- 		return;
- 	}
- 
-@@ -1694,7 +1694,7 @@ void brcmf_fws_rxreorder(struct brcmf_if
- 		if (rfi == NULL) {
- 			brcmf_dbg(INFO, "received flags to cleanup, but no flow (%d) yet\n",
- 				  flow_id);
--			brcmf_netif_rx(ifp, pkt);
-+			brcmf_netif_rx(ifp, pkt, inirq);
- 			return;
- 		}
- 
-@@ -1719,7 +1719,7 @@ void brcmf_fws_rxreorder(struct brcmf_if
- 		rfi = kzalloc(buf_size, GFP_ATOMIC);
- 		if (rfi == NULL) {
- 			bphy_err(drvr, "failed to alloc buffer\n");
--			brcmf_netif_rx(ifp, pkt);
-+			brcmf_netif_rx(ifp, pkt, inirq);
- 			return;
- 		}
- 
-@@ -1833,7 +1833,7 @@ void brcmf_fws_rxreorder(struct brcmf_if
- netif_rx:
- 	skb_queue_walk_safe(&reorder_list, pkt, pnext) {
- 		__skb_unlink(pkt, &reorder_list);
--		brcmf_netif_rx(ifp, pkt);
-+		brcmf_netif_rx(ifp, pkt, inirq);
- 	}
- }
- 
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-@@ -42,6 +42,6 @@ void brcmf_fws_add_interface(struct brcm
- void brcmf_fws_del_interface(struct brcmf_if *ifp);
- void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
- void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
--void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
-+void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb, bool inirq);
- 
- #endif /* FWSIGNAL_H_ */
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -536,7 +536,8 @@ static int brcmf_msgbuf_hdrpull(struct b
- 	return -ENODEV;
- }
- 
--static void brcmf_msgbuf_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb)
-+static void brcmf_msgbuf_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb,
-+				   bool inirq)
- {
- }
- 
-@@ -1190,7 +1191,7 @@ brcmf_msgbuf_process_rx_complete(struct
- 	}
- 
- 	skb->protocol = eth_type_trans(skb, ifp->ndev);
--	brcmf_netif_rx(ifp, skb);
-+	brcmf_netif_rx(ifp, skb, false);
- }
- 
- static void brcmf_msgbuf_process_gen_status(struct brcmf_msgbuf *msgbuf,
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-@@ -32,7 +32,7 @@ struct brcmf_proto {
- 			    u8 peer[ETH_ALEN]);
- 	void (*add_tdls_peer)(struct brcmf_pub *drvr, int ifidx,
- 			      u8 peer[ETH_ALEN]);
--	void (*rxreorder)(struct brcmf_if *ifp, struct sk_buff *skb);
-+	void (*rxreorder)(struct brcmf_if *ifp, struct sk_buff *skb, bool inirq);
- 	void (*add_if)(struct brcmf_if *ifp);
- 	void (*del_if)(struct brcmf_if *ifp);
- 	void (*reset_if)(struct brcmf_if *ifp);
-@@ -109,9 +109,9 @@ static inline bool brcmf_proto_is_reorde
- }
- 
- static inline void
--brcmf_proto_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb)
-+brcmf_proto_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb, bool inirq)
- {
--	ifp->drvr->proto->rxreorder(ifp, skb);
-+	ifp->drvr->proto->rxreorder(ifp, skb, inirq);
- }
- 
- static inline void
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1704,7 +1704,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf
- 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
- 			else
- 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
--					       false);
-+					       false, false);
- 			bus->sdcnt.rxglompkts++;
- 		}
- 
-@@ -2038,7 +2038,7 @@ static uint brcmf_sdio_readframes(struct
- 			brcmf_rx_event(bus->sdiodev->dev, pkt);
- 		else
- 			brcmf_rx_frame(bus->sdiodev->dev, pkt,
--				       false);
-+				       false, false);
- 
- 		/* prepare the descriptor for the next read */
- 		rd->len = rd->len_nxtfrm << 4;
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -532,7 +532,7 @@ static void brcmf_usb_rx_complete(struct
- 	if (devinfo->bus_pub.state == BRCMFMAC_USB_STATE_UP ||
- 	    devinfo->bus_pub.state == BRCMFMAC_USB_STATE_SLEEP) {
- 		skb_put(skb, urb->actual_length);
--		brcmf_rx_frame(devinfo->dev, skb, true);
-+		brcmf_rx_frame(devinfo->dev, skb, true, true);
- 		brcmf_usb_rx_refill(devinfo, req);
- 		usb_mark_last_busy(urb->dev);
- 	} else {
+
 
