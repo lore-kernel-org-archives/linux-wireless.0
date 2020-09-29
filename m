@@ -2,44 +2,38 @@ Return-Path: <SRS0=ETdN=DG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8C3C4727C
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 13:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9824AC47425
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 13:42:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7434E2075A
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 13:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A0E821531
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 13:42:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729822AbgI2NeK (ORCPT
+        id S1730832AbgI2Nmp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 09:34:10 -0400
-Received: from smtprelay0036.hostedemail.com ([216.40.44.36]:56784 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728273AbgI2NeK (ORCPT
+        Tue, 29 Sep 2020 09:42:45 -0400
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:45675 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728493AbgI2Nmo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 09:34:10 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 472EC180A7FFF;
-        Tue, 29 Sep 2020 13:34:08 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: event48_4a081af2718a
-X-Filterd-Recvd-Size: 2674
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf20.hostedemail.com (Postfix) with ESMTPA;
-        Tue, 29 Sep 2020 13:34:03 +0000 (UTC)
-Message-ID: <5f0d2b20f5088281363bb4a35c5652a2c087f159.camel@perches.com>
-Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate
- statements
-From:   Joe Perches <joe@perches.com>
-To:     Julia Lawall <julia.lawall@inria.fr>,
+        Tue, 29 Sep 2020 09:42:44 -0400
+X-IronPort-AV: E=Sophos;i="5.77,318,1596492000"; 
+   d="scan'208";a="470076349"
+Received: from abo-173-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.173])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Sep 2020 15:42:38 +0200
+Date:   Tue, 29 Sep 2020 15:42:32 +0200 (CEST)
+From:   Julia Lawall <julia.lawall@inria.fr>
+X-X-Sender: jll@hadrien
+To:     Joe Perches <joe@perches.com>
+cc:     Julia Lawall <julia.lawall@inria.fr>,
         Dan Carpenter <dan.carpenter@oracle.com>,
-        Shuah Khan <shuah@kernel.org>
-Cc:     Ard Biesheuvel <ardb@kernel.org>, linux-iio@vger.kernel.org,
+        Shuah Khan <shuah@kernel.org>,
+        Ard Biesheuvel <ardb@kernel.org>, linux-iio@vger.kernel.org,
         drbd-dev@tron.linbit.com,
-        Valdis =?UTF-8?Q?Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        =?UTF-8?Q?Valdis_Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
         David Lechner <david@lechnology.com>,
         Neil Armstrong <narmstrong@baylibre.com>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
@@ -57,38 +51,42 @@ Cc:     Ard Biesheuvel <ardb@kernel.org>, linux-iio@vger.kernel.org,
         linux-clk@vger.kernel.org,
         Linux ARM <linux-arm-kernel@lists.infradead.org>,
         Jerome Brunet <jbrunet@baylibre.com>
-Date:   Tue, 29 Sep 2020 06:34:02 -0700
-In-Reply-To: <alpine.DEB.2.22.394.2009291445050.2808@hadrien>
-References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
-         <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
-         <20200929124108.GY4282@kadam>
-         <alpine.DEB.2.22.394.2009291445050.2808@hadrien>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate
+ statements
+In-Reply-To: <5f0d2b20f5088281363bb4a35c5652a2c087f159.camel@perches.com>
+Message-ID: <alpine.DEB.2.22.394.2009291542090.2808@hadrien>
+References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>  <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>  <20200929124108.GY4282@kadam>  <alpine.DEB.2.22.394.2009291445050.2808@hadrien>
+ <5f0d2b20f5088281363bb4a35c5652a2c087f159.camel@perches.com>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-09-29 at 14:47 +0200, Julia Lawall wrote:
-> On Tue, 29 Sep 2020, Dan Carpenter wrote:
-> > The times where commas are used deliberately to replace curly braces are
-> > just evil.  Either way the code is cleaner with semi-colons.
-> 
-> I also found exaamples like the following to be particularly unforunate:
-> 
->                                 fprintf(stderr,
->                                         "page_nr %lu wrong count %Lu %Lu\n",
->                                        page_nr, count,
->                                        count_verify[page_nr]), exit(1);
-> 
-> The exit is very hard to see, unless you know to look for it.
-
-I sent that patch last month.
-https://patchwork.kernel.org/patch/11734877/
-
-It's still not applied.
 
 
+On Tue, 29 Sep 2020, Joe Perches wrote:
 
+> On Tue, 2020-09-29 at 14:47 +0200, Julia Lawall wrote:
+> > On Tue, 29 Sep 2020, Dan Carpenter wrote:
+> > > The times where commas are used deliberately to replace curly braces are
+> > > just evil.  Either way the code is cleaner with semi-colons.
+> >
+> > I also found exaamples like the following to be particularly unforunate:
+> >
+> >                                 fprintf(stderr,
+> >                                         "page_nr %lu wrong count %Lu %Lu\n",
+> >                                        page_nr, count,
+> >                                        count_verify[page_nr]), exit(1);
+> >
+> > The exit is very hard to see, unless you know to look for it.
+>
+> I sent that patch last month.
+> https://patchwork.kernel.org/patch/11734877/
+>
+> It's still not applied.
+
+OK, thanks.  I'll not send those then :)
+
+julia
