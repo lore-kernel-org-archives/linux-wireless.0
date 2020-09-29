@@ -2,167 +2,94 @@ Return-Path: <SRS0=ETdN=DG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F07EFC5516F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 543EBC47423
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 21:22:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A355F206B5
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:41:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DGmRniuw";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="STkATloI"
+	by mail.kernel.org (Postfix) with ESMTP id F1F2420757
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 21:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729568AbgI2Ukn (ORCPT
+        id S1729140AbgI2VWG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:40:43 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:48690 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729296AbgI2Ufq (ORCPT
+        Tue, 29 Sep 2020 17:22:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44402 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727347AbgI2VWF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:35:46 -0400
-Message-Id: <20200929203459.967800092@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411744;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yPLMFV0AoKzVfjkZGD1cBol7ZHiDqQNGHcgytaaR7SU=;
-        b=DGmRniuwLHzIUi4k/mQQVGbmHmlc5hKx7KI3F+Vt92K4HbV+4/N++j7KAiLrK0Aig5EI27
-        OK4nc7WDsMiyTI4/TtPmO0qJWpgf23aOyvOwL6BP3SpKXbLdpDBkbXGes6GmQDAtisSw4+
-        NR9MnI2PyeekW2W3WlcAcAqbaORHvTZ0ER5Zet/4TFYBCqr+vGzjXZ5fWdft3D9FxNtAR7
-        n3LgKckRM18g7rRH5sLOSYPXk62LNNdGaL9Sze7y155ktki/zLKhk0pjW7usA8ejPxRQyh
-        HKGpF2HD9KC7ZuQD0Oc5/IsUAXjLcIZSHxXBZ9Bb8ciVF2E9DukQYKImu4ZOyg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411744;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yPLMFV0AoKzVfjkZGD1cBol7ZHiDqQNGHcgytaaR7SU=;
-        b=STkATloI5Xd/LYwyRA1wjacSEWk8sYNo/Fk8PiYrZnl0nulJcadbqh65bbryKovkMRPRbM
-        i9eLFjLBfU9eplDQ==
-Date:   Tue, 29 Sep 2020 22:25:14 +0200
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Paul McKenney <paulmck@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Benvenuti <benve@cisco.com>,
-        Govindarajulu Varadarajan <_govind@gmx.com>,
-        Dave Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-doc@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Jay Cliburn <jcliburn@gmail.com>,
-        Chris Snook <chris.snook@gmail.com>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        intel-wired-lan@lists.osuosl.org,
-        Shannon Nelson <snelson@pensando.io>,
-        Pensando Drivers <drivers@pensando.io>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        Martin Habets <mhabets@solarflare.com>,
-        Jon Mason <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Tue, 29 Sep 2020 17:22:05 -0400
+Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BF2C061755;
+        Tue, 29 Sep 2020 14:22:05 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 14C3911E48E20;
+        Tue, 29 Sep 2020 14:05:14 -0700 (PDT)
+Date:   Tue, 29 Sep 2020 14:22:00 -0700 (PDT)
+Message-Id: <20200929.142200.67101764735438804.davem@davemloft.net>
+To:     tglx@linutronix.de
+Cc:     linux-kernel@vger.kernel.org, peterz@infradead.org,
+        paulmck@kernel.org, willy@infradead.org, benve@cisco.com,
+        _govind@gmx.com, kuba@kernel.org, netdev@vger.kernel.org,
+        corbet@lwn.net, mchehab+huawei@kernel.org,
+        linux-doc@vger.kernel.org, bigeasy@linutronix.de,
+        luc.vanoostenryck@gmail.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, vishal@chelsio.com,
+        jeffrey.t.kirsher@intel.com, intel-wired-lan@lists.osuosl.org,
+        snelson@pensando.io, drivers@pensando.io, andrew@lunn.ch,
+        hkallweit1@gmail.com, linux@armlinux.org.uk,
+        tsbogend@alpha.franken.de, linux-net-drivers@solarflare.com,
+        ecree@solarflare.com, mhabets@solarflare.com, jdmason@kudzu.us,
+        dsd@gentoo.org, kune@deine-taler.de, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+        gregkh@linuxfoundation.org, arend.vanspriel@broadcom.com,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Jouni Malinen <j@w1.fi>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        libertas-dev@lists.infradead.org,
-        Pascal Terjan <pterjan@google.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 05/36] net: atheros: Remove WARN_ON(in_interrupt())
+        brcm80211-dev-list@cypress.com, stas.yakovlev@gmail.com,
+        stf_xl@wp.pl, johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, linuxwifi@intel.com, j@w1.fi,
+        amitkarwar@gmail.com
+Subject: Re: [patch V2 00/36] net: in_interrupt() cleanup and fixes
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200929202509.673358734@linutronix.de>
 References: <20200929202509.673358734@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-transfer-encoding: 8-bit
+X-Mailer: Mew version 6.8 on Emacs 27.1
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [2620:137:e000::1:9]); Tue, 29 Sep 2020 14:05:15 -0700 (PDT)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
+Date: Tue, 29 Sep 2020 22:25:09 +0200
 
-in_interrupt() is ill defined and does not provide what the name
-suggests. The usage especially in driver code is deprecated and a tree wide
-effort to clean up and consolidate the (ab)usage of in_interrupt() and
-related checks is happening.
+> in the discussion about preempt count consistency accross kernel configurations:
+> 
+>   https://lore.kernel.org/r/20200914204209.256266093@linutronix.de/
+> 
+> Linus clearly requested that code in drivers and libraries which changes
+> behaviour based on execution context should either be split up so that
+> e.g. task context invocations and BH invocations have different interfaces
+> or if that's not possible the context information has to be provided by the
+> caller which knows in which context it is executing.
+> 
+> This includes conditional locking, allocation mode (GFP_*) decisions and
+> avoidance of code paths which might sleep.
+> 
+> In the long run, usage of 'preemptible, in_*irq etc.' should be banned from
+> driver code completely.
+> 
+> This is the second version of the first batch of related changes. V1 can be
+> found here:
+> 
+>      https://lore.kernel.org/r/20200927194846.045411263@linutronix.de
+ ...
 
-In this case the check covers only parts of the contexts in which these
-functions cannot be called. It fails to detect preemption or interrupt
-disabled invocations.
-
-As the functions which are invoked from at*_reinit_locked() contain a broad
-variety of checks (always enabled or debug option dependent) which cover
-all invalid conditions already, there is no point in having inconsistent
-warnings in those drivers.
-
-Just remove them.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-
-
----
- drivers/net/ethernet/atheros/atl1c/atl1c_main.c |    1 -
- drivers/net/ethernet/atheros/atl1e/atl1e_main.c |    2 --
- drivers/net/ethernet/atheros/atlx/atl2.c        |    1 -
- 3 files changed, 4 deletions(-)
-
---- a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
-+++ b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
-@@ -220,7 +220,6 @@ static void atl1c_phy_config(struct time
- 
- void atl1c_reinit_locked(struct atl1c_adapter *adapter)
- {
--	WARN_ON(in_interrupt());
- 	atl1c_down(adapter);
- 	atl1c_up(adapter);
- 	clear_bit(__AT_RESETTING, &adapter->flags);
---- a/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
-+++ b/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
-@@ -127,8 +127,6 @@ static void atl1e_phy_config(struct time
- 
- void atl1e_reinit_locked(struct atl1e_adapter *adapter)
- {
--
--	WARN_ON(in_interrupt());
- 	while (test_and_set_bit(__AT_RESETTING, &adapter->flags))
- 		msleep(1);
- 	atl1e_down(adapter);
---- a/drivers/net/ethernet/atheros/atlx/atl2.c
-+++ b/drivers/net/ethernet/atheros/atlx/atl2.c
-@@ -1086,7 +1086,6 @@ static int atl2_up(struct atl2_adapter *
- 
- static void atl2_reinit_locked(struct atl2_adapter *adapter)
- {
--	WARN_ON(in_interrupt());
- 	while (test_and_set_bit(__ATL2_RESETTING, &adapter->flags))
- 		msleep(1);
- 	atl2_down(adapter);
-
+Series applied to net-next, thanks.
