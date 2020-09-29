@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81FBAC4727F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42FE2C2D0A8
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 455042080A
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:31:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08F202388B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 01:32:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601343092;
-	bh=E1UUb+UT5H5jKz1MdfScJ8hMsgsDOOU4qDs/5khlm5Y=;
+	s=default; t=1601343126;
+	bh=Ak6GE/liPjRXz6MnM8+Df0zDvcpb/b6eeWLGNki6Xa0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GrOu4haAJuC8DjC4f0wLLQOXhLeIiL5brqof3l8Q42HRxY8p51rPhhxNZd5sVxA2r
-	 9SJutXPqIPOJZJ0NPCS/MxinDmCNW0j9NBxadENfTRHb1fbqo2H3jhBOxcbRvHlnha
-	 xBvPI0yYrABEDrbxFx5hTypbdq62kGszUelZYMJM=
+	b=kf8u/MTClp7J4JQgYZeMBikYK035bMpYGSxhg5OJuxuujxtsldzGMfadEXLI3F2GA
+	 ZaLqqYTwEvvjaJxEVUzm9AQEEkZxRRjySLs5rojIOC73IjMfW2pRAU3SWGR1HdM0NA
+	 OQzBYTm2ymfO9HzdrpeF5DTFYJj9lsATfaKO46Qo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727653AbgI2Bbb (ORCPT
+        id S1727728AbgI2Bb4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Sep 2020 21:31:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40916 "EHLO mail.kernel.org"
+        Mon, 28 Sep 2020 21:31:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40922 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727629AbgI2Bb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Sep 2020 21:31:29 -0400
+        id S1727686AbgI2Bbm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Sep 2020 21:31:42 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1982922204;
-        Tue, 29 Sep 2020 01:31:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F3A63239EB;
+        Tue, 29 Sep 2020 01:31:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601343080;
-        bh=E1UUb+UT5H5jKz1MdfScJ8hMsgsDOOU4qDs/5khlm5Y=;
+        s=default; t=1601343101;
+        bh=Ak6GE/liPjRXz6MnM8+Df0zDvcpb/b6eeWLGNki6Xa0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2tb7BVGW1NYxMjL5e05RFUlZEghVfxlU0yaJwlymbkmtoif+x2MupNGNRLvqVvLKS
-         1ug4TlC4PitDkC5hiNYNE91vwPDp1tp2aABnmcQoj5BvcuFU0YaLvkLsfYM0meLqwi
-         RcvIYIOuPgNXecBuGkVOA5QHnmmhLeu2mSdTeB/w=
+        b=sM4Y4rxHAGc2bkp6vLVUeIPT0p8bX+Lnag0H8tTUFCBl+qgoiwOpEy22LMeh4kTvA
+         v1i+SUMehrY21ej4pO4hbIcuQdWIKrhZqQEh6fRt+v/ej/V5IAg+45vf/vMfA5n6ne
+         wiJ5i2R2xAELWJxXXPn5T9AarAXhEANWAGoyjCoM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Aloka Dixit <alokad@codeaurora.org>,
+Cc:     Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 12/18] mac80211: Fix radiotap header channel flag for 6GHz band
-Date:   Mon, 28 Sep 2020 21:30:58 -0400
-Message-Id: <20200929013105.2406634-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 09/11] mac80211: do not allow bigger VHT MPDUs than the hardware supports
+Date:   Mon, 28 Sep 2020 21:31:27 -0400
+Message-Id: <20200929013129.2406832-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200929013105.2406634-1-sashal@kernel.org>
-References: <20200929013105.2406634-1-sashal@kernel.org>
+In-Reply-To: <20200929013129.2406832-1-sashal@kernel.org>
+References: <20200929013129.2406832-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,36 +59,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Aloka Dixit <alokad@codeaurora.org>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 412a84b5714af56f3eb648bba155107b5edddfdf ]
+[ Upstream commit 3bd5c7a28a7c3aba07a2d300d43f8e988809e147 ]
 
-Radiotap header field 'Channel flags' has '2 GHz spectrum' set to
-'true' for 6GHz packet.
-Change it to 5GHz as there isn't a separate option available for 6GHz.
+Limit maximum VHT MPDU size by local capability.
 
-Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
-Link: https://lore.kernel.org/r/010101747ab7b703-1d7c9851-1594-43bf-81f7-f79ce7a67cc6-000000@us-west-2.amazonses.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Link: https://lore.kernel.org/r/20200917125031.45009-1-nbd@nbd.name
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/vht.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e5fb9002d3147..3ab85e1e38d82 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -419,7 +419,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	else if (status->bw == RATE_INFO_BW_5)
- 		channel_flags |= IEEE80211_CHAN_QUARTER;
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 259325cbcc314..4d154efb80c88 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -170,10 +170,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	/* take some capabilities as-is */
+ 	cap_info = le32_to_cpu(vht_cap_ie->vht_cap_info);
+ 	vht_cap->cap = cap_info;
+-	vht_cap->cap &= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
+-			IEEE80211_VHT_CAP_RXLDPC |
++	vht_cap->cap &= IEEE80211_VHT_CAP_RXLDPC |
+ 			IEEE80211_VHT_CAP_VHT_TXOP_PS |
+ 			IEEE80211_VHT_CAP_HTC_VHT |
+ 			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
+@@ -182,6 +179,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 			IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
+ 			IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
  
--	if (status->band == NL80211_BAND_5GHZ)
-+	if (status->band == NL80211_BAND_5GHZ ||
-+	    status->band == NL80211_BAND_6GHZ)
- 		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
- 	else if (status->encoding != RX_ENC_LEGACY)
- 		channel_flags |= IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
++	vht_cap->cap |= min_t(u32, cap_info & IEEE80211_VHT_CAP_MAX_MPDU_MASK,
++			      own_cap.cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK);
++
+ 	/* and some based on our own capabilities */
+ 	switch (own_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
+ 	case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
 -- 
 2.25.1
 
