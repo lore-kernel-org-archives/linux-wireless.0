@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70679C53213
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E54C54EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18EFB2074B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0FE42074B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Sep 2020 20:39:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jnjXIpI3";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oShgwZnI"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lxX+rTT1";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jVvPk/ek"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729499AbgI2Uiz (ORCPT
+        id S1729613AbgI2UjK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Sep 2020 16:38:55 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:49774 "EHLO
+        Tue, 29 Sep 2020 16:39:10 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:49612 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729491AbgI2UgG (ORCPT
+        with ESMTP id S1729480AbgI2UgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Sep 2020 16:36:06 -0400
-Message-Id: <20200929203501.493579905@linutronix.de>
+        Tue, 29 Sep 2020 16:36:03 -0400
+Message-Id: <20200929203501.286933338@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1601411763;
+        s=2020; t=1601411761;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ReSPk9z+UkyzJFbPFHl4mkK3mIZvHsH9ynI/qMcmX0Y=;
-        b=jnjXIpI3i45YTQ5jT2RcskdnwhVSfkgsfdjX/LnuHZYTRNr2AA+OQvX2uU681RdnssE3JW
-        0n8CckwcTCxsnDGBLzGqhLYPwVVFmd2NpWEkeUZwpyBbRZxAHUe9RKtWlpLpaqh4C2Ye/z
-        ddl/id4Cxj0nLfF6EmtNajXAlS6ZmR3yP7GI+h3KXN53V5UBN7bEm3AUGLarCt30t1z93a
-        /VUE9ksSDsiflGWuNefAclPp/DhtlN9Hj5v1dVTUotJEahmnrSTUZmbTnoAOkdeQ1kRlYF
-        X2oqOXxFc1z6AzmDQVMm+AZpUM8z8m9zydIoWEEREZFLXk5ZgCURGoc9tw3rfA==
+        bh=cza+isFpw3pjruNrzTB8YyTwaqZU0A2/Xz5zP+VRSno=;
+        b=lxX+rTT1pI51rZFZT1JdFT4qOji42w0SzxHblZBXZSm8be+ql14IyJD5IYfetVdCq21kTh
+        bZwpBl60iJzu7ftA31P1I7DHnicK0JZKnT+a2aB/1x6S7HHdwpz4zv/NAD6DwmE0dTKset
+        2Kp9fUPpUDJyR06jN8QNKnSGkRxLDfnIY6Lia2c/qw0dnFpDbEs6hRTNVixJJEU8KY+Nck
+        Mm/6Qeu5+G5Emijx3UAxTPhiJlahyQEtrDa5lqfl6IXteQy9xiCsh1NN9eImAadW4Phyxk
+        EqmCGCq5iClRs7LPRLx49nJuW49IwwR6mGEbHT6ow5gUnowkjiuan9fB97h9rA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1601411763;
+        s=2020e; t=1601411761;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=ReSPk9z+UkyzJFbPFHl4mkK3mIZvHsH9ynI/qMcmX0Y=;
-        b=oShgwZnILxMeutUwkuD/E5nmdUV3E0sjRKc1ck0kMKqm8HQdNgPy9Oh5qh4CFk7QF4Ubs5
-        F+CY7e9LE86PXBBQ==
-Date:   Tue, 29 Sep 2020 22:25:29 +0200
+        bh=cza+isFpw3pjruNrzTB8YyTwaqZU0A2/Xz5zP+VRSno=;
+        b=jVvPk/ekodleQluohgeB/CSgyS0z1JUCu+zeuCcBc+VXPVD4aVtIlLcjuNQsP6M1OLn2vE
+        CdUSxMOMzZQ6RECA==
+Date:   Tue, 29 Sep 2020 22:25:27 +0200
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -98,7 +98,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         libertas-dev@lists.infradead.org,
         Pascal Terjan <pterjan@google.com>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [patch V2 20/36] net: zd1211rw: Remove ZD_ASSERT(in_interrupt())
+Subject: [patch V2 18/36] net: sun3lance: Remove redundant checks in interrupt handler
 References: <20200929202509.673358734@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -109,33 +109,51 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-in_interrupt() is ill defined and does not provide what the name
-suggests. The usage especially in driver code is deprecated and
-a tree wide effort to clean up and consolidate the (ab)usage of
-in_interrupt() and related checks is happening.
+lance_interrupt() contains two pointless checks:
 
-handle_regs_int() is always invoked as part of URB callback which is either
-invoked from hard or soft interrupt context.
+ - A check whether the 'dev_id' argument is NULL. 'dev_id' is the pointer
+   which was handed in to request_irq() and the interrupt handler will
+   always be invoked with that pointer as 'dev_id' argument by the core
+   code.
 
-Remove the magic assertion.
+ - A check for interrupt reentrancy. The core code already guarantees
+   non-reentrancy of interrupt handlers.
+
+Remove these check.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
 ---
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/ethernet/amd/sun3lance.c |   11 -----------
+ 1 file changed, 11 deletions(-)
 
---- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-@@ -378,7 +378,6 @@ static inline void handle_regs_int(struc
- 	int len;
- 	u16 int_num;
+--- a/drivers/net/ethernet/amd/sun3lance.c
++++ b/drivers/net/ethernet/amd/sun3lance.c
+@@ -657,16 +657,6 @@ static irqreturn_t lance_interrupt( int
+ 	struct net_device *dev = dev_id;
+ 	struct lance_private *lp = netdev_priv(dev);
+ 	int csr0;
+-	static int in_interrupt;
+-
+-	if (dev == NULL) {
+-		DPRINTK( 1, ( "lance_interrupt(): invalid dev_id\n" ));
+-		return IRQ_NONE;
+-	}
+-
+-	if (in_interrupt)
+-		DPRINTK( 2, ( "%s: Re-entering the interrupt handler.\n", dev->name ));
+-	in_interrupt = 1;
  
--	ZD_ASSERT(in_interrupt());
- 	spin_lock_irqsave(&intr->lock, flags);
+  still_more:
+ 	flush_cache_all();
+@@ -774,7 +764,6 @@ static irqreturn_t lance_interrupt( int
  
- 	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
+ 	DPRINTK( 2, ( "%s: exiting interrupt, csr0=%#04x.\n",
+ 				  dev->name, DREG ));
+-	in_interrupt = 0;
+ 	return IRQ_HANDLED;
+ }
+ 
 
 
