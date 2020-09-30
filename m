@@ -2,139 +2,124 @@ Return-Path: <SRS0=j1Uz=DH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B284C47420
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 12:25:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A31C4727E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E54A62071E
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 12:25:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aYxpVXYI"
+	by mail.kernel.org (Postfix) with ESMTP id 4F20820754
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729890AbgI3MZA (ORCPT
+        id S1730209AbgI3Nb2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 08:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42032 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727997AbgI3MYp (ORCPT
+        Wed, 30 Sep 2020 09:31:28 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53290 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730169AbgI3Nb2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 08:24:45 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C51FC0613D0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2020 05:24:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=5A7Dv3EgpEii8hsCTrA9+wseQDQJnBLziksdXx/lwRk=; b=aYxpVXYICbEsIGC9/UPU3Z2Jlv
-        9B8tTNvN/kVH6Kqibr2uf8BxiWPalnh8zwJctJbOu9A0nFHHcZb2Qfj2dXJFkZWL7YYEIBap5vfyv
-        xxuy/zqRzGpqChfTSyexLnpJN4PXmGPhN8Jr+z3hPz6HRGoRsqbwFzPx+OLF+weHcJG8=;
-Received: from p4ff134da.dip0.t-ipconnect.de ([79.241.52.218] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kNbA4-0005MT-5F
-        for linux-wireless@vger.kernel.org; Wed, 30 Sep 2020 14:24:44 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 07/10] mt76: mt7603: switch to .mcu_skb_send_msg
-Date:   Wed, 30 Sep 2020 14:24:38 +0200
-Message-Id: <20200930122441.64523-7-nbd@nbd.name>
+        Wed, 30 Sep 2020 09:31:28 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1kNcCc-002MJ5-0I; Wed, 30 Sep 2020 16:31:26 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 30 Sep 2020 16:31:11 +0300
+Message-Id: <20200930133123.924256-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200930122441.64523-1-nbd@nbd.name>
-References: <20200930122441.64523-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: [PATCH 00/12]  iwlwifi: updates intended for v5.10 2020-09-30
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Reduces code duplication
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- .../net/wireless/mediatek/mt76/mt7603/mcu.c   | 43 +++----------------
- 1 file changed, 6 insertions(+), 37 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-index f787c9d3088e..b2ccfe6772ce 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-@@ -36,14 +36,16 @@ mt7603_mcu_parse_response(struct mt76_dev *mdev, int cmd,
- }
- 
- static int
--__mt7603_mcu_msg_send(struct mt7603_dev *dev, struct sk_buff *skb,
--		      int cmd, int *wait_seq)
-+mt7603_mcu_skb_send_msg(struct mt76_dev *mdev, struct sk_buff *skb,
-+			int cmd, int *wait_seq)
- {
-+	struct mt7603_dev *dev = container_of(mdev, struct mt7603_dev, mt76);
- 	int hdrlen = dev->mcu_running ? sizeof(struct mt7603_mcu_txd) : 12;
--	struct mt76_dev *mdev = &dev->mt76;
- 	struct mt7603_mcu_txd *txd;
- 	u8 seq;
- 
-+	mdev->mcu.timeout = 3 * HZ;
-+
- 	seq = ++mdev->mcu.msg_seq & 0xf;
- 	if (!seq)
- 		seq = ++mdev->mcu.msg_seq & 0xf;
-@@ -74,39 +76,6 @@ __mt7603_mcu_msg_send(struct mt7603_dev *dev, struct sk_buff *skb,
- 	return mt76_tx_queue_skb_raw(dev, MT_TXQ_MCU, skb, 0);
- }
- 
--static int
--mt7603_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
--		    int len, bool wait_resp)
--{
--	struct mt7603_dev *dev = container_of(mdev, struct mt7603_dev, mt76);
--	unsigned long expires = jiffies + 3 * HZ;
--	struct sk_buff *skb;
--	int ret, seq;
--
--	skb = mt76_mcu_msg_alloc(mdev, data, len);
--	if (!skb)
--		return -ENOMEM;
--
--	mutex_lock(&mdev->mcu.mutex);
--
--	ret = __mt7603_mcu_msg_send(dev, skb, cmd, &seq);
--	if (ret)
--		goto out;
--
--	while (wait_resp) {
--		skb = mt76_mcu_get_response(&dev->mt76, expires);
--		ret = mt7603_mcu_parse_response(mdev, cmd, skb, seq);
--		dev_kfree_skb(skb);
--		if (ret != -EAGAIN)
--			break;
--	}
--
--out:
--	mutex_unlock(&mdev->mcu.mutex);
--
--	return ret;
--}
--
- static int
- mt7603_mcu_init_download(struct mt7603_dev *dev, u32 addr, u32 len)
- {
-@@ -271,7 +240,7 @@ int mt7603_mcu_init(struct mt7603_dev *dev)
- {
- 	static const struct mt76_mcu_ops mt7603_mcu_ops = {
- 		.headroom = sizeof(struct mt7603_mcu_txd),
--		.mcu_send_msg = mt7603_mcu_msg_send,
-+		.mcu_skb_send_msg = mt7603_mcu_skb_send_msg,
- 		.mcu_parse_response = mt7603_mcu_parse_response,
- 		.mcu_restart = mt7603_mcu_restart,
- 	};
+Here's the fourth set of patches intended for v5.10.  It's the usual
+development, new features, cleanups and bugfixes.
+
+The changes are:
+
+* FTM updates;
+* More new FW API version support;
+* A bit of reorganiztion in the queue code;
+* A few debugging infra improvements;
+* Add support for new GTK rekeying;
+* Some other small fixes and clean-ups;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (3):
+  iwlwifi: mvm: location: set the HLTK when PASN station is added
+  iwlwifi: mvm: responder: allow to set only the HLTK for an associated
+    station
+  iwlwifi: mvm: initiator: add option for adding a PASN responder
+
+Gil Adam (1):
+  iwlwifi: thermal: support new temperature measurement API
+
+Ilan Peer (1):
+  iwlwifi: mvm: Add FTM initiator RTT smoothing logic
+
+Johannes Berg (1):
+  iwlwifi: mvm: d3: support GCMP ciphers
+
+Mordechay Goodstein (4):
+  iwlwifi: move all bus-independent TX functions to common code
+  iwlwifi: dbg: remove no filter condition
+  iwlwifi: dbg: run init_cfg function once per driver load
+  iwlwifi: phy-ctxt: add new API VER 3 for phy context cmd
+
+Nathan Errera (1):
+  iwlwifi: mvm: support more GTK rekeying algorithms
+
+Sara Sharon (1):
+  iwlwifi: mvm: add d3 prints
+
+ drivers/net/wireless/intel/iwlwifi/Makefile   |    1 +
+ .../wireless/intel/iwlwifi/fw/api/phy-ctxt.h  |   32 +-
+ .../net/wireless/intel/iwlwifi/fw/api/phy.h   |   13 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |    8 +-
+ .../net/wireless/intel/iwlwifi/iwl-debug.h    |    6 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.c    |   19 +
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |    1 +
+ .../wireless/intel/iwlwifi/mvm/constants.h    |    6 +
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   60 +-
+ .../intel/iwlwifi/mvm/ftm-initiator.c         |  300 +++-
+ .../intel/iwlwifi/mvm/ftm-responder.c         |   62 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |    2 +
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |    7 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   31 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |    1 +
+ .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c |  126 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |   78 +-
+ .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |    2 +-
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  125 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |    2 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |    4 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |   59 +-
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 1078 +------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  311 +---
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c | 1375 +++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/queue/tx.h |  188 +++
+ 26 files changed, 2286 insertions(+), 1611 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/queue/tx.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/queue/tx.h
+
 -- 
 2.28.0
 
