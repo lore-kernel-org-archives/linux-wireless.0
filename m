@@ -2,111 +2,70 @@ Return-Path: <SRS0=j1Uz=DH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC72AC4727C
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 546DBC4741F
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95DB420708
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0ADC920708
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730833AbgI3QUF (ORCPT
+        id S1731207AbgI3QUG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 12:20:05 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53400 "EHLO
+        Wed, 30 Sep 2020 12:20:06 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53406 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726574AbgI3QUF (ORCPT
+        with ESMTP id S1728081AbgI3QUF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 30 Sep 2020 12:20:05 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kNepl-002MPc-WB; Wed, 30 Sep 2020 19:20:02 +0300
+        id 1kNepn-002MPc-5V; Wed, 30 Sep 2020 19:20:03 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 19:19:47 +0300
-Message-Id: <20200930161959.983283-1-luca@coelho.fi>
+Date:   Wed, 30 Sep 2020 19:19:48 +0300
+Message-Id: <iwlwifi.20200930191738.1c22d1bc0a88.I24e57317bdddc6c72f69725e1d95683a935e893d@changeid>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200930161959.983283-1-luca@coelho.fi>
+References: <20200930161959.983283-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/12] iwlwifi: updates intended for v5.10 2020-09-30 part 2
+Subject: [PATCH 01/12] iwlwifi: mvm: remove redundant log in iwl_mvm_tvqm_enable_txq()
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
+We are printing the same thing twice, "Enabling TXQ #%d".  Previously
+the second print was including more information, but now it only
+prints the queue number, which is already in the first print.  Remove
+the redundant one.
 
-Hi,
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Here's the fifth set of patches intended for v5.10.  It's the usual
-development, new features, cleanups and bugfixes.
-
-The changes are:
-
-* Another set of new FW API version support;
-* A fix in the scanning code;
-* More debugging infra improvements;
-* Some other small fixes and clean-ups;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Andrei Otcheretianski (1):
-  iwlwifi: use correct group for alive notification
-
-Avraham Stern (1):
-  iwlwifi: mvm: ignore the scan duration parameter
-
-Ayala Beker (1):
-  iwlwifi: mvm: clear all scan UIDs
-
-Johannes Berg (3):
-  iwlwifi: align RX status flags with firmware
-  iwlwifi: mvm: d3: parse wowlan status version 11
-  iwlwifi: api: fix u32 -> __le32
-
-Luca Coelho (3):
-  iwlwifi: mvm: remove redundant log in iwl_mvm_tvqm_enable_txq()
-  iwlwifi: support version 5 of the alive notification
-  iwlwifi: bump FW API to 57 for AX devices
-
-Mordechay Goodstein (3):
-  iwlwifi: pcie: make iwl_pcie_txq_update_byte_cnt_tbl bus independent
-  iwlwifi: dbg: add debug host notification (DHN) time point
-  iwlwifi: yoyo: add support for internal buffer allocation in D3
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |   2 +-
- .../net/wireless/intel/iwlwifi/fw/api/alive.h |  25 ++-
- .../wireless/intel/iwlwifi/fw/api/commands.h  |   7 +-
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  42 +++-
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |   8 +-
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  23 +-
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  11 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   3 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 133 +++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  21 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   8 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  12 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |  64 ++----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |   2 -
- .../wireless/intel/iwlwifi/pcie/internal.h    |  18 --
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 196 ++----------------
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 154 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/queue/tx.h |  42 ++++
- 19 files changed, 422 insertions(+), 351 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 827e80ff5aa6..72c9235c6bd5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -770,8 +770,6 @@ static int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
+ 	IWL_DEBUG_TX_QUEUES(mvm, "Enabling TXQ #%d for sta %d tid %d\n",
+ 			    queue, sta_id, tid);
+ 
+-	IWL_DEBUG_TX_QUEUES(mvm, "Enabling TXQ #%d\n", queue);
+-
+ 	return queue;
+ }
+ 
 -- 
 2.28.0
 
