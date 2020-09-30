@@ -2,124 +2,157 @@ Return-Path: <SRS0=j1Uz=DH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A31C4727E
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DFA0C4727F
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F20820754
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDA6B20754
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730209AbgI3Nb2 (ORCPT
+        id S1730391AbgI3Nbb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 09:31:28 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53290 "EHLO
+        Wed, 30 Sep 2020 09:31:31 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53302 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730169AbgI3Nb2 (ORCPT
+        with ESMTP id S1728149AbgI3Nba (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 09:31:28 -0400
+        Wed, 30 Sep 2020 09:31:30 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kNcCc-002MJ5-0I; Wed, 30 Sep 2020 16:31:26 +0300
+        id 1kNcCe-002MJ5-9v; Wed, 30 Sep 2020 16:31:28 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 16:31:11 +0300
-Message-Id: <20200930133123.924256-1-luca@coelho.fi>
+Date:   Wed, 30 Sep 2020 16:31:13 +0300
+Message-Id: <iwlwifi.20200930161256.1c7a59fd3164.I68005f0015ad04e53d0239e2d2ee85d5ffdeaa37@changeid>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200930133123.924256-1-luca@coelho.fi>
+References: <20200930133123.924256-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/12]  iwlwifi: updates intended for v5.10 2020-09-30
+Subject: [PATCH 02/12] iwlwifi: mvm: location: set the HLTK when PASN station is added
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-Hi,
+When a PASN station is added, set the HLTK to FW.
 
-Here's the fourth set of patches intended for v5.10.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../intel/iwlwifi/mvm/ftm-responder.c         | 43 ++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 15 +++++++
+ 2 files changed, 47 insertions(+), 11 deletions(-)
 
-The changes are:
-
-* FTM updates;
-* More new FW API version support;
-* A bit of reorganiztion in the queue code;
-* A few debugging infra improvements;
-* Add support for new GTK rekeying;
-* Some other small fixes and clean-ups;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (3):
-  iwlwifi: mvm: location: set the HLTK when PASN station is added
-  iwlwifi: mvm: responder: allow to set only the HLTK for an associated
-    station
-  iwlwifi: mvm: initiator: add option for adding a PASN responder
-
-Gil Adam (1):
-  iwlwifi: thermal: support new temperature measurement API
-
-Ilan Peer (1):
-  iwlwifi: mvm: Add FTM initiator RTT smoothing logic
-
-Johannes Berg (1):
-  iwlwifi: mvm: d3: support GCMP ciphers
-
-Mordechay Goodstein (4):
-  iwlwifi: move all bus-independent TX functions to common code
-  iwlwifi: dbg: remove no filter condition
-  iwlwifi: dbg: run init_cfg function once per driver load
-  iwlwifi: phy-ctxt: add new API VER 3 for phy context cmd
-
-Nathan Errera (1):
-  iwlwifi: mvm: support more GTK rekeying algorithms
-
-Sara Sharon (1):
-  iwlwifi: mvm: add d3 prints
-
- drivers/net/wireless/intel/iwlwifi/Makefile   |    1 +
- .../wireless/intel/iwlwifi/fw/api/phy-ctxt.h  |   32 +-
- .../net/wireless/intel/iwlwifi/fw/api/phy.h   |   13 +-
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |    8 +-
- .../net/wireless/intel/iwlwifi/iwl-debug.h    |    6 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |   19 +
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |    1 +
- .../wireless/intel/iwlwifi/mvm/constants.h    |    6 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   60 +-
- .../intel/iwlwifi/mvm/ftm-initiator.c         |  300 +++-
- .../intel/iwlwifi/mvm/ftm-responder.c         |   62 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |    2 +
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |    7 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   31 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |    1 +
- .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c |  126 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |   78 +-
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |    2 +-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  125 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |    2 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |    4 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |   59 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 1078 +------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  311 +---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 1375 +++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/queue/tx.h |  188 +++
- 26 files changed, 2286 insertions(+), 1611 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/queue/tx.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/queue/tx.h
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
+index e24e5bc7b40c..e940ef138f55 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
+@@ -306,6 +306,16 @@ iwl_mvm_ftm_responder_dyn_cfg_cmd(struct iwl_mvm *mvm,
+ 	return ret;
+ }
+ 
++static void iwl_mvm_resp_del_pasn_sta(struct iwl_mvm *mvm,
++				      struct ieee80211_vif *vif,
++				      struct iwl_mvm_pasn_sta *sta)
++{
++	list_del(&sta->list);
++	iwl_mvm_rm_sta_id(mvm, vif, sta->int_sta.sta_id);
++	iwl_mvm_dealloc_int_sta(mvm, &sta->int_sta);
++	kfree(sta);
++}
++
+ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ 				      struct ieee80211_vif *vif,
+ 				      u8 *addr, u32 cipher, u8 *tk, u32 tk_len,
+@@ -313,9 +323,26 @@ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ {
+ 	int ret;
+ 	struct iwl_mvm_pasn_sta *sta;
++	struct iwl_mvm_pasn_hltk_data hltk_data = {
++		.addr = addr,
++		.hltk = hltk,
++	};
++	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mvm->fw, LOCATION_GROUP,
++					   TOF_RESPONDER_DYN_CONFIG_CMD, 2);
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (cmd_ver < 3) {
++		IWL_ERR(mvm, "Adding PASN station not supported by FW\n");
++		return -ENOTSUPP;
++	}
++
++	hltk_data.cipher = iwl_mvm_cipher_to_location_cipher(cipher);
++	if (hltk_data.cipher == IWL_LOCATION_CIPHER_INVALID) {
++		IWL_ERR(mvm, "invalid cipher: %u\n", cipher);
++		return -EINVAL;
++	}
++
+ 	sta = kmalloc(sizeof(*sta), GFP_KERNEL);
+ 	if (!sta)
+ 		return -ENOBUFS;
+@@ -327,23 +354,17 @@ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ 		return ret;
+ 	}
+ 
+-	// TODO: set the HLTK to fw
++	ret = iwl_mvm_ftm_responder_dyn_cfg_v3(mvm, vif, NULL, &hltk_data);
++	if (ret) {
++		iwl_mvm_resp_del_pasn_sta(mvm, vif, sta);
++		return ret;
++	}
+ 
+ 	memcpy(sta->addr, addr, ETH_ALEN);
+ 	list_add_tail(&sta->list, &mvm->resp_pasn_list);
+ 	return 0;
+ }
+ 
+-static void iwl_mvm_resp_del_pasn_sta(struct iwl_mvm *mvm,
+-				      struct ieee80211_vif *vif,
+-				      struct iwl_mvm_pasn_sta *sta)
+-{
+-	list_del(&sta->list);
+-	iwl_mvm_rm_sta_id(mvm, vif, sta->int_sta.sta_id);
+-	iwl_mvm_dealloc_int_sta(mvm, &sta->int_sta);
+-	kfree(sta);
+-}
+-
+ int iwl_mvm_ftm_resp_remove_pasn_sta(struct iwl_mvm *mvm,
+ 				     struct ieee80211_vif *vif, u8 *addr)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index ba1b74d10577..40e102f2017f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -2161,4 +2161,19 @@ static inline int iwl_umac_scan_get_max_profiles(const struct iwl_fw *fw)
+ 	return (ver == IWL_FW_CMD_VER_UNKNOWN || ver < 3) ?
+ 		IWL_SCAN_MAX_PROFILES : IWL_SCAN_MAX_PROFILES_V2;
+ }
++
++static inline
++enum iwl_location_cipher iwl_mvm_cipher_to_location_cipher(u32 cipher)
++{
++	switch (cipher) {
++	case WLAN_CIPHER_SUITE_CCMP:
++		return IWL_LOCATION_CIPHER_CCMP_128;
++	case WLAN_CIPHER_SUITE_GCMP:
++		return IWL_LOCATION_CIPHER_GCMP_128;
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		return IWL_LOCATION_CIPHER_GCMP_256;
++	default:
++		return IWL_LOCATION_CIPHER_INVALID;
++	}
++}
+ #endif /* __IWL_MVM_H__ */
 -- 
 2.28.0
 
