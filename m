@@ -7,73 +7,88 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C5CC4741F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B863C4727E
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B63F420759
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A35720759
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731243AbgI3QUJ (ORCPT
+        id S1731246AbgI3QUK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 12:20:09 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53424 "EHLO
+        Wed, 30 Sep 2020 12:20:10 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53440 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731218AbgI3QUI (ORCPT
+        with ESMTP id S1731221AbgI3QUJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 12:20:08 -0400
+        Wed, 30 Sep 2020 12:20:09 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kNepp-002MPc-L4; Wed, 30 Sep 2020 19:20:06 +0300
+        id 1kNepr-002MPc-CQ; Wed, 30 Sep 2020 19:20:07 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 19:19:51 +0300
-Message-Id: <iwlwifi.20200930191738.71aacc1a0358.Ie53f7ab07b42e6a5223f33e201b0f862ebda8986@changeid>
+Date:   Wed, 30 Sep 2020 19:19:53 +0300
+Message-Id: <iwlwifi.20200930191738.435fa657a937.I1a36badd4ceecefcdfb47eaacf26c08a4bbd1b08@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200930161959.983283-1-luca@coelho.fi>
 References: <20200930161959.983283-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: mvm: clear all scan UIDs
+Subject: [PATCH 06/12] iwlwifi: dbg: add debug host notification (DHN) time point
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-In case of nic restart flow is called in the middle of scan abort
-flow, aborted scan UIDs might not be cleared.
+This enables to listen only to DHN time point without monitoring
+every rx packet from FW.
 
-Fix it and clean these UIDs as well.
+Also fix a typo NOTIFOCATION->NOTIFICATION in enum declaration.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c    | 1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 02e3b70b36dd..05e0686ff4e0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -2628,6 +2628,15 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 			mvm->scan_uid_status[uid] = 0;
- 		}
-+		uid = iwl_mvm_scan_uid_by_status(mvm,
-+						 IWL_MVM_SCAN_STOPPING_REGULAR);
-+		if (uid >= 0)
-+			mvm->scan_uid_status[uid] = 0;
-+
-+		uid = iwl_mvm_scan_uid_by_status(mvm,
-+						 IWL_MVM_SCAN_STOPPING_SCHED);
-+		if (uid >= 0)
-+			mvm->scan_uid_status[uid] = 0;
- 
- 		/* We shouldn't have any UIDs still set.  Loop over all the
- 		 * UIDs to make sure there's nothing left there and warn if
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index cefd833d1968..55e0c07659b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -384,7 +384,7 @@ enum iwl_fw_ini_region_type {
+  * @IWL_FW_INI_TIME_POINT_FW_ASSERT: FW assert
+  * @IWL_FW_INI_TIME_POINT_FW_HW_ERROR: FW HW error
+  * @IWL_FW_INI_TIME_POINT_FW_TFD_Q_HANG: TFD queue hang
+- * @IWL_FW_INI_TIME_POINT_FW_DHC_NOTIFOCATION: DHC cmd response and notif
++ * @IWL_FW_INI_TIME_POINT_FW_DHC_NOTIFICATION: DHC cmd response and notif
+  * @IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF: FW response or notification.
+  *	data field holds id and group
+  * @IWL_FW_INI_TIME_POINT_USER_TRIGGER: user trigger time point
+@@ -417,7 +417,7 @@ enum iwl_fw_ini_time_point {
+ 	IWL_FW_INI_TIME_POINT_FW_ASSERT,
+ 	IWL_FW_INI_TIME_POINT_FW_HW_ERROR,
+ 	IWL_FW_INI_TIME_POINT_FW_TFD_Q_HANG,
+-	IWL_FW_INI_TIME_POINT_FW_DHC_NOTIFOCATION,
++	IWL_FW_INI_TIME_POINT_FW_DHC_NOTIFICATION,
+ 	IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF,
+ 	IWL_FW_INI_TIME_POINT_USER_TRIGGER,
+ 	IWL_FW_INI_TIME_POINT_PERIODIC,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index ab4b19412906..b3cc9f036f99 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -1085,6 +1085,7 @@ void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
+ 		break;
+ 	case IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF:
+ 	case IWL_FW_INI_TIME_POINT_MISSED_BEACONS:
++	case IWL_FW_INI_TIME_POINT_FW_DHC_NOTIFICATION:
+ 		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
+ 		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data,
+ 				       iwl_dbg_tlv_check_fw_pkt);
 -- 
 2.28.0
 
