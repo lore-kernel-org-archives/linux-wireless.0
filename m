@@ -2,81 +2,96 @@ Return-Path: <SRS0=j1Uz=DH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A62C2D0A8
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 07:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C672C4741F
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:01:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8D082076E
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 07:31:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED9CE2074A
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:01:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xixnRG9y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728376AbgI3Hb2 (ORCPT
+        id S1728389AbgI3IBm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 03:31:28 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53220 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725535AbgI3Hb1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 03:31:27 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1kNWaA-002M9H-QQ; Wed, 30 Sep 2020 10:31:26 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 10:31:20 +0300
-Message-Id: <iwlwifi.20200930102759.58d57c0bdc68.Ib06008665e7bf1199c360aa92691d9c74fb84990@changeid>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <iwlwifi.20200926002540.c76108b9c476.Ib06008665e7bf1199c360aa92691d9c74fb84990@changeid>
-References: <iwlwifi.20200926002540.c76108b9c476.Ib06008665e7bf1199c360aa92691d9c74fb84990@changeid>
+        Wed, 30 Sep 2020 04:01:42 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:24722 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728300AbgI3IBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Sep 2020 04:01:42 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1601452901; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=tlskTQ+EyYvIXFMiKIZ4RubO/8MhQ+hgxykvwjXt5W0=; b=xixnRG9ykd2UFtcbgmc/8ZBXC/iYkfk80fjTIvJT/YYVYvFn6g8S/V68gKU2EcHkYTF+Xfqy
+ WdkJ0uSHw9IW1Li04ilZ5ja/7mJq8fm44d7X4a9AcP8XbKCoTfxgpdhKDYXVp6vX5+iAYkmt
+ Jfqxja6aUw/THANz+j683Zv0XGw=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f743b5c767da8a9bbc7b2f9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 30 Sep 2020 08:01:32
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 79705C433F1; Wed, 30 Sep 2020 08:01:32 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B9F2AC433CA;
+        Wed, 30 Sep 2020 08:01:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B9F2AC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Srinivasan Raju <srini.raju@purelifi.com>,
+        mostafa.afgani@purelifi.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] [v2] wireless: Initial driver submission for pureLiFi devices
+References: <20200924151910.21693-1-srini.raju@purelifi.com>
+        <20200928102008.32568-1-srini.raju@purelifi.com>
+        <20200930051602.GJ3094@unreal>
+Date:   Wed, 30 Sep 2020 11:01:27 +0300
+In-Reply-To: <20200930051602.GJ3094@unreal> (Leon Romanovsky's message of
+        "Wed, 30 Sep 2020 08:16:02 +0300")
+Message-ID: <87d023elrc.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 05/15] iwlwifi: mvm: split a print to avoid a WARNING in ROC
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Leon Romanovsky <leon@kernel.org> writes:
 
-A print in the remain on channel code was too long and caused
-a WARNING, split it.
+>> diff --git a/drivers/net/wireless/purelifi/Kconfig
+> b/drivers/net/wireless/purelifi/Kconfig
+>> new file mode 100644
+>> index 000000000000..ff05eaf0a8d4
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/purelifi/Kconfig
+>> @@ -0,0 +1,38 @@
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +config WLAN_VENDOR_PURELIFI
+>> +	bool "pureLiFi devices"
+>> +	default y
+>
+> "N" is preferred default.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: dc28e12f2125 ("iwlwifi: mvm: ROC: Extend the ROC max delay duration & limit ROC duration")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+In most cases that's true, but for WLAN_VENDOR_ configs 'default y'
+should be used. It's the same as with NET_VENDOR_.
 
-In v2:
-   * Fixed the Fixes tag to point to a real commit in the mainline.
 
-drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6e8af84f386a..73280a2607a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3703,9 +3703,12 @@ static int iwl_mvm_send_aux_roc_cmd(struct iwl_mvm *mvm,
- 	tail->apply_time_max_delay = cpu_to_le32(delay);
- 
- 	IWL_DEBUG_TE(mvm,
--		     "ROC: Requesting to remain on channel %u for %ums (requested = %ums, max_delay = %ums, dtim_interval = %ums)\n",
--		     channel->hw_value, req_dur, duration, delay,
--		     dtim_interval);
-+		     "ROC: Requesting to remain on channel %u for %ums\n",
-+		     channel->hw_value, req_dur);
-+	IWL_DEBUG_TE(mvm,
-+		     "\t(requested = %ums, max_delay = %ums, dtim_interval = %ums)\n",
-+		     duration, delay, dtim_interval);
-+
- 	/* Set the node address */
- 	memcpy(tail->node_addr, vif->addr, ETH_ALEN);
- 
 -- 
-2.28.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
