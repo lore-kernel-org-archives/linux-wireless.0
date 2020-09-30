@@ -2,204 +2,89 @@ Return-Path: <SRS0=j1Uz=DH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F36D3C4741F
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09911C2D0A8
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8AA5206C3
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:07:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBF0420738
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 08:17:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=endlessos-org.20150623.gappssmtp.com header.i=@endlessos-org.20150623.gappssmtp.com header.b="YA/W6xVw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728394AbgI3IHS (ORCPT
+        id S1728425AbgI3IRD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 04:07:18 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:55158 "EHLO
-        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725823AbgI3IHS (ORCPT
+        Wed, 30 Sep 2020 04:17:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60238 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725776AbgI3IQ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 04:07:18 -0400
-X-Greylist: delayed 343 seconds by postgrey-1.27 at vger.kernel.org; Wed, 30 Sep 2020 04:07:17 EDT
-Received: from dispatch1-us1.ppe-hosted.com (localhost.localdomain [127.0.0.1])
-        by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 72F7EAEEF0;
-        Wed, 30 Sep 2020 08:01:35 +0000 (UTC)
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.65.64])
-        by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 2E5B66005E;
-        Wed, 30 Sep 2020 08:01:32 +0000 (UTC)
-Received: from us4-mdac16-12.ut7.mdlocal (unknown [10.7.65.236])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 2A0FD2009B;
-        Wed, 30 Sep 2020 08:01:32 +0000 (UTC)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.65.199])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 8B197220056;
-        Wed, 30 Sep 2020 08:01:31 +0000 (UTC)
-Received: from webmail.solarflare.com (uk.solarflare.com [193.34.186.16])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id DE33618005A;
-        Wed, 30 Sep 2020 08:01:29 +0000 (UTC)
-Received: from mh-desktop (10.17.20.62) by ukex01.SolarFlarecom.com
- (10.17.10.4) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 30 Sep
- 2020 09:01:09 +0100
-Date:   Wed, 30 Sep 2020 09:00:59 +0100
-From:   Martin Habets <mhabets@solarflare.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-CC:     LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Paul McKenney <paulmck@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Benvenuti <benve@cisco.com>,
-        "Govindarajulu Varadarajan" <_govind@gmx.com>,
-        Dave Miller <davem@davemloft.net>,
-        "Jakub Kicinski" <kuba@kernel.org>, <netdev@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        <linux-doc@vger.kernel.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Jay Cliburn <jcliburn@gmail.com>,
-        Chris Snook <chris.snook@gmail.com>,
-        "Vishal Kulkarni" <vishal@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        <intel-wired-lan@lists.osuosl.org>,
-        Shannon Nelson <snelson@pensando.io>,
-        Pensando Drivers <drivers@pensando.io>,
-        Andrew Lunn <andrew@lunn.ch>,
-        "Heiner Kallweit" <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        "Thomas Bogendoerfer" <tsbogend@alpha.franken.de>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        "Jon Mason" <jdmason@kudzu.us>, Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        "Hante Meuleman" <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Intel Linux Wireless" <linuxwifi@intel.com>,
-        Jouni Malinen <j@w1.fi>,
-        "Amitkumar Karwar" <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        <libertas-dev@lists.infradead.org>,
-        Pascal Terjan <pterjan@google.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: Re: [patch V2 16/36] net: sfc: Use GFP_KERNEL in
- efx_ef10_try_update_nic_stats()
-Message-ID: <20200930080059.GA759845@mh-desktop>
-Mail-Followup-To: Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Paul McKenney <paulmck@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Benvenuti <benve@cisco.com>,
-        Govindarajulu Varadarajan <_govind@gmx.com>,
-        Dave Miller <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>,
-        netdev@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-doc@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Jay Cliburn <jcliburn@gmail.com>,
-        Chris Snook <chris.snook@gmail.com>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        intel-wired-lan@lists.osuosl.org,
-        Shannon Nelson <snelson@pensando.io>,
-        Pensando Drivers <drivers@pensando.io>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>, Jon Mason <jdmason@kudzu.us>,
-        Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-        Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        linux-usb@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Wed, 30 Sep 2020 04:16:59 -0400
+Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE4BDC0613D0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2020 01:16:56 -0700 (PDT)
+Received: by mail-oi1-x22f.google.com with SMTP id w16so811699oia.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2020 01:16:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessos-org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=AKQiGQLmY10/gIWA0SDoC53W53f+kHTJ7UW7pSl7JfM=;
+        b=YA/W6xVw9FbWi0Sp3dLaxoj9wD+T2dj7f/a6q8ay7aNoe80KwTLusZVdDA018dYmCP
+         7td6HMS7Bb5kkQD0kMy9mUN5jDJ0lGrxUQ7n5cShVMHYDxNjiysVNNbI53dmip4K9dlE
+         9MQkzFKRiwffiXYzjftbWK5W13+9pUjgN9iUF3qydNLlSV20m34cz3LgYdcMB3R/HN4I
+         Cok5Bscg+p6wZo2LrR1e2SVVDZN72FaBzUJ5TJbv/rS1VCAVi+46tunvalKpT+103Ls/
+         g1ATgIeFhLZdvcEkCZshOMeUT5NR4aWTmvJ390sc9v6eyO9hr45IOoeniSKT+crQC8Rg
+         TePw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=AKQiGQLmY10/gIWA0SDoC53W53f+kHTJ7UW7pSl7JfM=;
+        b=YXjwGo8D3Zs4aciJ3Z5XPVoBFt+7FasJm7VkOgrOQC8BHEWyOu1WUtpjUoHOoZ+L+I
+         h64xcGx0Rtf534WlKqS+0xmJEUmbREkRkgFbNIubbVkYvuXKAL7N6K8jzswrZrurrZXi
+         KvWnZ2/gAVhyGE1DolHTdHsT9y58HPAdZdTb4oDeDayV7Vxh8UHdWt8i6BYofX0Pvtgw
+         4pr2XovELIoztE5FYSrsXF6F90FFCa+KIfSlf5rGd6cq1/NKbJE06aui/YUsvdpiPkfs
+         JHN5DiM7mV3J3jgbBdoZ6DHCwC56glyBWyzOiJfYHxqSG7UhMnLMISTN1J69lj7SD5/H
+         0y6Q==
+X-Gm-Message-State: AOAM531yAFa9gf6Wm+WracrZSIlx7WmvLqOUVY66O25BdmfB8UmY7TBQ
+        XpWJe4v/FX+VJHh+VaulFsO+dD/RpSzWqKhd1erKjQ==
+X-Google-Smtp-Source: ABdhPJz1/708zpvypccyPVVTBws21KyJToPY9rQKjjUg4mtn6ZsOwkottpFEbqjg9GpU0LuekGO0ZcSSR/wm9EW5J7s=
+X-Received: by 2002:aca:57c5:: with SMTP id l188mr721993oib.161.1601453815621;
+ Wed, 30 Sep 2020 01:16:55 -0700 (PDT)
+MIME-Version: 1.0
+From:   Jian-Hong Pan <jhp@endlessos.org>
+Date:   Wed, 30 Sep 2020 16:15:19 +0800
+Message-ID: <CAPpJ_ecS3LOYUMdrodMoxMRQ_4q4M06uyGzBBf+W8MrjP08-EA@mail.gmail.com>
+Subject: [QUESTION] Enable the wireless module on Pinebook Pro
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>, Jouni Malinen <j@w1.fi>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        libertas-dev@lists.infradead.org,
-        Pascal Terjan <pterjan@google.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-References: <20200929202509.673358734@linutronix.de>
- <20200929203501.078203643@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20200929203501.078203643@linutronix.de>
-X-Originating-IP: [10.17.20.62]
-X-ClientProxiedBy: ocex03.SolarFlarecom.com (10.20.40.36) To
- ukex01.SolarFlarecom.com (10.17.10.4)
-X-TM-AS-Product-Ver: SMEX-12.5.0.1300-8.6.1012-25674.003
-X-TM-AS-Result: No-7.055800-8.000000-10
-X-TMASE-MatchedRID: scwq2vQP8OGB3CLPGH9KvB3Pziq4eLUfcabZ5We+Ltbk1kyQDpEj8OLB
-        DcjMHcx7cY+kGWBLq/yUWq3zEclebye/9tnqvgnhalRqQPhHMT4K+4pGZZRa9Bv2iroWthDcakC
-        rXhKzdtmG9zWd04+U3ToQGsWExzeNQrIARMpKwYGolIr4dI9j7+lUxvXGcRIycBqXYDUNCazpVi
-        VUeZmhdJwA7Oe0sQ7+xGosnG/g3+KtiF+p+9BY6Z4CIKY/Hg3AyJ1gFgOMhOn6APa9i04WGCq2r
-        l3dzGQ12iP5mgvODVRaQUD5lj7we1UZlqkyMlpYV+ioo6EPnD+kB99jpcEJJCvslaXspIjpcQ4u
-        3HX+lyoF+PYj6P4xsM/gbmgoU/LhYlIrxAazCupFc1SMC3FJkqE7ZT4hHyDpDA2Nf1xiN0z8VRK
-        OCHTcrEMMprcbiest
-X-TM-AS-User-Approved-Sender: Yes
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--7.055800-8.000000
-X-TMASE-Version: SMEX-12.5.0.1300-8.6.1012-25674.003
-X-MDID: 1601452892-6uUHibGneDxa
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Netdev List <netdev@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Sep 29, 2020 at 10:25:25PM +0200, Thomas Gleixner wrote:
-> From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> 
-> efx_ef10_try_update_nic_stats_vf() is now only invoked from thread context
-> and can sleep after efx::stats_lock is dropped.
-> 
-> Change the allocation mode from GFP_ATOMIC to GFP_KERNEL.
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Hi,
 
-Acked-by: Martin Habets <mhabets@solarflare.com>
+According to the preloaded system Manjaro ARM on Pinebook Pro [1], I
+found the firmware files in ap6256-firmware package [2] enable the
+wireless module, including WiFi and Bluetooth.
+If we want to redistribute the firmware files to linux-firmware
+repository or other distros, which kind of license should follow?
 
-> ---
-> V2: Adjust to Edward's stats update split
-> ---
->  drivers/net/ethernet/sfc/ef10.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- a/drivers/net/ethernet/sfc/ef10.c
-> +++ b/drivers/net/ethernet/sfc/ef10.c
-> @@ -1873,7 +1873,7 @@ static int efx_ef10_try_update_nic_stats
->  
->  	efx_ef10_get_stat_mask(efx, mask);
->  
-> -	rc = efx_nic_alloc_buffer(efx, &stats_buf, dma_len, GFP_ATOMIC);
-> +	rc = efx_nic_alloc_buffer(efx, &stats_buf, dma_len, GFP_KERNEL);
->  	if (rc) {
->  		spin_lock_bh(&efx->stats_lock);
->  		return rc;
+[1] https://www.pine64.org/pinebook-pro/
+[2] https://gitlab.manjaro.org/manjaro-arm/packages/community/ap6256-firmware
+
+Jian-Hong Pan
