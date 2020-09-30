@@ -7,299 +7,173 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47389C4727C
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6A16C4727E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 012E120708
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 815A220708
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 16:20:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731227AbgI3QUI (ORCPT
+        id S1730980AbgI3QUN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 12:20:08 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53416 "EHLO
+        Wed, 30 Sep 2020 12:20:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53448 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731214AbgI3QUI (ORCPT
+        with ESMTP id S1731240AbgI3QUK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 12:20:08 -0400
+        Wed, 30 Sep 2020 12:20:10 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kNepo-002MPc-HQ; Wed, 30 Sep 2020 19:20:05 +0300
+        id 1kNeps-002MPc-3d; Wed, 30 Sep 2020 19:20:08 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 19:19:50 +0300
-Message-Id: <iwlwifi.20200930191738.b7098f097a5c.I4ae1c5b2186b0e04702233a7a7068d69cfd3361a@changeid>
+Date:   Wed, 30 Sep 2020 19:19:54 +0300
+Message-Id: <iwlwifi.20200930191738.6e1d2b8b4489.I9584bb40d44bf31131f57fdd32d5e8848d4fbdd8@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200930161959.983283-1-luca@coelho.fi>
 References: <20200930161959.983283-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 03/12] iwlwifi: mvm: d3: parse wowlan status version 11
+Subject: [PATCH 07/12] iwlwifi: mvm: ignore the scan duration parameter
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-The firmware is being updated to report version 11 of this
-response in order to include BIGTK material. Parse it, but
-for now keep the existing behaviour of disconnecting on any
-rekeying with even IGTK presence, need to fix that before
-BIGTK can be supported.
+The scan request may specify the request scan dwell time.
+However, this value may not always be optimal (e.g. short dwell
+time for a passive channel). This may happen in a scan request
+as a result of beacon report request, in which the AP may request
+an active scan, thus setting a short dwell time, but the station
+will perform a passive scan due to regulatory.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Ignore the scan duration parameter and always use the internal
+scan dwell time which should be optimal.
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  42 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 133 +++++++++++-------
- 2 files changed, 119 insertions(+), 56 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 55 ++++---------------
+ 1 file changed, 10 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-index cc7f89905222..5db301a6a312 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-@@ -661,7 +661,7 @@ struct iwl_wowlan_status_v7 {
- } __packed; /* WOWLAN_STATUSES_API_S_VER_7 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 05e0686ff4e0..1fbb52713493 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -147,7 +147,7 @@ struct iwl_mvm_scan_params {
+ 	struct cfg80211_match_set *match_sets;
+ 	int n_scan_plans;
+ 	struct cfg80211_sched_scan_plan *scan_plans;
+-	u32 measurement_dwell;
++	bool iter_notif;
+ };
  
- /**
-- * struct iwl_wowlan_status - WoWLAN status
-+ * struct iwl_wowlan_status_v9 - WoWLAN status (version 9)
-  * @gtk: GTK data
-  * @igtk: IGTK data
-  * @replay_ctr: GTK rekey replay counter
-@@ -679,7 +679,7 @@ struct iwl_wowlan_status_v7 {
-  * @reserved: unused
-  * @wake_packet: wakeup packet
-  */
--struct iwl_wowlan_status {
-+struct iwl_wowlan_status_v9 {
- 	struct iwl_wowlan_gtk_status gtk[WOWLAN_GTK_KEYS_NUM];
- 	struct iwl_wowlan_igtk_status igtk[WOWLAN_IGTK_KEYS_NUM];
- 	__le64 replay_ctr;
-@@ -697,6 +697,44 @@ struct iwl_wowlan_status {
- 	u8 wake_packet[]; /* can be truncated from _length to _bufsize */
- } __packed; /* WOWLAN_STATUSES_API_S_VER_9 */
- 
-+/**
-+ * struct iwl_wowlan_status - WoWLAN status
-+ * @gtk: GTK data
-+ * @igtk: IGTK data
-+ * @bigtk: BIGTK data
-+ * @replay_ctr: GTK rekey replay counter
-+ * @pattern_number: number of the matched pattern
-+ * @non_qos_seq_ctr: non-QoS sequence counter to use next
-+ * @qos_seq_ctr: QoS sequence counters to use next
-+ * @wakeup_reasons: wakeup reasons, see &enum iwl_wowlan_wakeup_reason
-+ * @num_of_gtk_rekeys: number of GTK rekeys
-+ * @tid_tear_down: bitmap of TIDs torn down
-+ * @reserved: reserved
-+ * @received_beacons: number of received beacons
-+ * @wake_packet_length: wakeup packet length
-+ * @wake_packet_bufsize: wakeup packet buffer size
-+ * @tid_tear_down: bit mask of tids whose BA sessions were closed
-+ *		   in suspend state
-+ * @wake_packet: wakeup packet
-+ */
-+struct iwl_wowlan_status {
-+	struct iwl_wowlan_gtk_status gtk[1];
-+	struct iwl_wowlan_igtk_status igtk[1];
-+	struct iwl_wowlan_igtk_status bigtk[WOWLAN_IGTK_KEYS_NUM];
-+	__le64 replay_ctr;
-+	__le16 pattern_number;
-+	__le16 non_qos_seq_ctr;
-+	__le16 qos_seq_ctr[8];
-+	__le32 wakeup_reasons;
-+	__le32 num_of_gtk_rekeys;
-+	u8 tid_tear_down;
-+	u8 reserved[3];
-+	__le32 received_beacons;
-+	__le32 wake_packet_length;
-+	__le32 wake_packet_bufsize;
-+	u8 wake_packet[]; /* can be truncated from _length to _bufsize */
-+} __packed; /* WOWLAN_STATUSES_API_S_VER_11 */
-+
- static inline u8 iwlmvm_wowlan_gtk_idx(struct iwl_wowlan_gtk_status *gtk)
- {
- 	return gtk->key_flags & IWL_WOWLAN_GTK_IDX_MASK;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 20c30a6be259..e47c0be28656 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1610,15 +1610,60 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 	return true;
+ static inline void *iwl_mvm_get_scan_req_umac_data(struct iwl_mvm *mvm)
+@@ -337,33 +337,6 @@ iwl_mvm_scan_type iwl_mvm_get_scan_type_band(struct iwl_mvm *mvm,
+ 	return _iwl_mvm_get_scan_type(mvm, vif, load, low_latency);
  }
  
-+/* Occasionally, templates would be nice. This is one of those times ... */
-+#define iwl_mvm_parse_wowlan_status_common(_ver)			\
-+static struct iwl_wowlan_status *					\
-+iwl_mvm_parse_wowlan_status_common_ ## _ver(struct iwl_mvm *mvm,	\
-+					    void *_data, int len)	\
-+{									\
-+	struct iwl_wowlan_status *status;				\
-+	struct iwl_wowlan_status_ ##_ver *data = _data;			\
-+	int data_size;							\
-+									\
-+	if (len < sizeof(*data)) {					\
-+		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");	\
-+		return ERR_PTR(-EIO);					\
-+	}								\
-+									\
-+	data_size = ALIGN(le32_to_cpu(data->wake_packet_bufsize), 4);	\
-+	if (len != sizeof(*data) + data_size) {				\
-+		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");	\
-+		return ERR_PTR(-EIO);					\
-+	}								\
-+									\
-+	status = kzalloc(sizeof(*status) + data_size, GFP_KERNEL);	\
-+	if (!status)							\
-+		return ERR_PTR(-ENOMEM);				\
-+									\
-+	/* copy all the common fields */				\
-+	status->replay_ctr = data->replay_ctr;				\
-+	status->pattern_number = data->pattern_number;			\
-+	status->non_qos_seq_ctr = data->non_qos_seq_ctr;		\
-+	memcpy(status->qos_seq_ctr, data->qos_seq_ctr,			\
-+	       sizeof(status->qos_seq_ctr));				\
-+	status->wakeup_reasons = data->wakeup_reasons;			\
-+	status->num_of_gtk_rekeys = data->num_of_gtk_rekeys;		\
-+	status->received_beacons = data->received_beacons;		\
-+	status->wake_packet_length = data->wake_packet_length;		\
-+	status->wake_packet_bufsize = data->wake_packet_bufsize;	\
-+	memcpy(status->wake_packet, data->wake_packet,			\
-+	       le32_to_cpu(status->wake_packet_bufsize));		\
-+									\
-+	return status;							\
-+}
-+
-+iwl_mvm_parse_wowlan_status_common(v6)
-+iwl_mvm_parse_wowlan_status_common(v7)
-+iwl_mvm_parse_wowlan_status_common(v9)
-+
- struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
+-static int
+-iwl_mvm_get_measurement_dwell(struct iwl_mvm *mvm,
+-			      struct cfg80211_scan_request *req,
+-			      struct iwl_mvm_scan_params *params)
+-{
+-	u32 duration = scan_timing[params->type].max_out_time;
+-
+-	if (!req->duration)
+-		return 0;
+-
+-	if (iwl_mvm_is_cdb_supported(mvm)) {
+-		u32 hb_time = scan_timing[params->hb_type].max_out_time;
+-
+-		duration = min_t(u32, duration, hb_time);
+-	}
+-
+-	if (req->duration_mandatory && req->duration > duration) {
+-		IWL_DEBUG_SCAN(mvm,
+-			       "Measurement scan - too long dwell %hu (max out time %u)\n",
+-			       req->duration,
+-			       duration);
+-		return -EOPNOTSUPP;
+-	}
+-
+-	return min_t(u32, (u32)req->duration, duration);
+-}
+-
+ static inline bool iwl_mvm_rrm_scan_needed(struct iwl_mvm *mvm)
  {
--	struct iwl_wowlan_status_v7 *v7;
- 	struct iwl_wowlan_status *status;
- 	struct iwl_host_cmd cmd = {
- 		.id = WOWLAN_GET_STATUSES,
- 		.flags = CMD_WANT_SKB,
- 	};
--	int ret, len, status_size, data_size;
-+	int ret, len;
- 	u8 notif_ver;
+ 	/* require rrm scan whenever the fw supports it */
+@@ -1333,10 +1306,8 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 	u8 active_dwell, passive_dwell;
  
- 	lockdep_assert_held(&mvm->mutex);
-@@ -1630,28 +1675,19 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
- 	}
+ 	timing = &scan_timing[params->type];
+-	active_dwell = params->measurement_dwell ?
+-		params->measurement_dwell : IWL_SCAN_DWELL_ACTIVE;
+-	passive_dwell = params->measurement_dwell ?
+-		params->measurement_dwell : IWL_SCAN_DWELL_PASSIVE;
++	active_dwell = IWL_SCAN_DWELL_ACTIVE;
++	passive_dwell = IWL_SCAN_DWELL_PASSIVE;
  
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
-+
-+	/* default to 7 (when we have IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL) */
-+	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
-+					    WOWLAN_GET_STATUSES, 7);
-+
- 	if (!fw_has_api(&mvm->fw->ucode_capa,
- 			IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL)) {
- 		struct iwl_wowlan_status_v6 *v6 = (void *)cmd.resp_pkt->data;
+ 	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
+ 		cmd->v7.adwell_default_n_aps_social =
+@@ -1389,8 +1360,7 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 			}
+ 		}
+ 	} else {
+-		cmd->v1.extended_dwell = params->measurement_dwell ?
+-			params->measurement_dwell : IWL_SCAN_DWELL_EXTENDED;
++		cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
+ 		cmd->v1.active_dwell = active_dwell;
+ 		cmd->v1.passive_dwell = passive_dwell;
+ 		cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
+@@ -1443,10 +1413,8 @@ iwl_mvm_scan_umac_dwell_v10(struct iwl_mvm *mvm,
+ 	u8 active_dwell, passive_dwell;
  
--		status_size = sizeof(*v6);
+ 	timing = &scan_timing[params->type];
+-	active_dwell = params->measurement_dwell ?
+-		params->measurement_dwell : IWL_SCAN_DWELL_ACTIVE;
+-	passive_dwell = params->measurement_dwell ?
+-		params->measurement_dwell : IWL_SCAN_DWELL_PASSIVE;
++	active_dwell = IWL_SCAN_DWELL_ACTIVE;
++	passive_dwell = IWL_SCAN_DWELL_PASSIVE;
+ 
+ 	general_params->adwell_default_social_chn =
+ 		IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL;
+@@ -1737,7 +1705,7 @@ static u16 iwl_mvm_scan_umac_flags_v2(struct iwl_mvm *mvm,
+ 	if (!iwl_mvm_is_regular_scan(params))
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_V2_PERIODIC;
+ 
+-	if (params->measurement_dwell ||
++	if (params->iter_notif ||
+ 	    mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED)
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_V2_NTFY_ITER_COMPLETE;
+ 
+@@ -1782,7 +1750,7 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
+ 	if (!iwl_mvm_is_regular_scan(params))
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PERIODIC;
+ 
+-	if (params->measurement_dwell)
++	if (params->iter_notif)
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ITER_COMPLETE;
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+@@ -2294,11 +2262,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	iwl_mvm_fill_scan_type(mvm, &params, vif);
+ 
+-	ret = iwl_mvm_get_measurement_dwell(mvm, req, &params);
+-	if (ret < 0)
+-		return ret;
 -
--		if (len < status_size) {
--			IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
--			status = ERR_PTR(-EIO);
--			goto out_free_resp;
--		}
--
--		data_size = ALIGN(le32_to_cpu(v6->wake_packet_bufsize), 4);
--
--		if (len != (status_size + data_size)) {
--			IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
--			status = ERR_PTR(-EIO);
--			goto out_free_resp;
--		}
--
--		status = kzalloc(sizeof(*status) + data_size, GFP_KERNEL);
--		if (!status)
-+		status = iwl_mvm_parse_wowlan_status_common_v6(mvm,
-+							       cmd.resp_pkt->data,
-+							       len);
-+		if (IS_ERR(status))
- 			goto out_free_resp;
+-	params.measurement_dwell = ret;
++	if (req->duration)
++		params.iter_notif = true;
  
- 		BUILD_BUG_ON(sizeof(v6->gtk.decrypt_key) >
-@@ -1676,48 +1712,37 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
- 		 * currently used key.
- 		 */
- 		status->gtk[0].key_flags = v6->gtk.key_index | BIT(7);
-+	} else if (notif_ver == 7) {
-+		struct iwl_wowlan_status_v7 *v7 = (void *)cmd.resp_pkt->data;
+ 	iwl_mvm_build_scan_probe(mvm, vif, ies, &params);
  
--		status->replay_ctr = v6->replay_ctr;
--
--		/* everything starting from pattern_number is identical */
--		memcpy(&status->pattern_number, &v6->pattern_number,
--		       offsetof(struct iwl_wowlan_status, wake_packet) -
--		       offsetof(struct iwl_wowlan_status, pattern_number) +
--		       data_size);
--
--		goto out_free_resp;
--	}
-+		status = iwl_mvm_parse_wowlan_status_common_v7(mvm,
-+							       cmd.resp_pkt->data,
-+							       len);
-+		if (IS_ERR(status))
-+			goto out_free_resp;
- 
--	v7 = (void *)cmd.resp_pkt->data;
--	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
--					    WOWLAN_GET_STATUSES, 0);
-+		status->gtk[0] = v7->gtk[0];
-+		status->igtk[0] = v7->igtk[0];
-+	} else if (notif_ver == 9) {
-+		struct iwl_wowlan_status_v9 *v9 = (void *)cmd.resp_pkt->data;
- 
--	status_size = sizeof(*status);
-+		status = iwl_mvm_parse_wowlan_status_common_v9(mvm,
-+							       cmd.resp_pkt->data,
-+							       len);
-+		if (IS_ERR(status))
-+			goto out_free_resp;
- 
--	/* only ver 9 has a different size */
--	if (notif_ver == IWL_FW_CMD_VER_UNKNOWN || notif_ver != 9)
--		status_size = sizeof(*v7);
-+		status->gtk[0] = v9->gtk[0];
-+		status->igtk[0] = v9->igtk[0];
- 
--	if (len < status_size) {
--		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
--		status = ERR_PTR(-EIO);
--		goto out_free_resp;
--	}
--	data_size = ALIGN(le32_to_cpu(v7->wake_packet_bufsize), 4);
--
--	if (len != (status_size + data_size)) {
--		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
-+		status->tid_tear_down = v9->tid_tear_down;
-+	} else {
-+		IWL_ERR(mvm,
-+			"Firmware advertises unknown WoWLAN status response %d!\n",
-+			notif_ver);
- 		status = ERR_PTR(-EIO);
--		goto out_free_resp;
- 	}
- 
--	status = kzalloc(sizeof(*status) + data_size, GFP_KERNEL);
--	if (!status)
--		goto out_free_resp;
--
--	memcpy(status, v7, status_size);
--	memcpy(status->wake_packet, (u8 *)v7 + status_size, data_size);
--
- out_free_resp:
- 	iwl_free_resp(&cmd);
- 	return status;
 -- 
 2.28.0
 
