@@ -7,309 +7,172 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8086DC47425
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F09CC4727E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4858B2071E
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13AB32071E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Sep 2020 13:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730461AbgI3Nbd (ORCPT
+        id S1730482AbgI3Nbh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Sep 2020 09:31:33 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53316 "EHLO
+        Wed, 30 Sep 2020 09:31:37 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53334 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728149AbgI3Nbc (ORCPT
+        with ESMTP id S1728149AbgI3Nbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Sep 2020 09:31:32 -0400
+        Wed, 30 Sep 2020 09:31:36 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kNcCf-002MJ5-QK; Wed, 30 Sep 2020 16:31:30 +0300
+        id 1kNcCi-002MJ5-ST; Wed, 30 Sep 2020 16:31:33 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Sep 2020 16:31:15 +0300
-Message-Id: <iwlwifi.20200930161256.28c5f5266000.I2d58b72ff92c47ac33a6aacc27fbf3790b6dfc51@changeid>
+Date:   Wed, 30 Sep 2020 16:31:17 +0300
+Message-Id: <iwlwifi.20200930161256.be16c51fef3c.If4fac0fbc5bede4679b5f875b60c4e9a6ea7ca7c@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200930133123.924256-1-luca@coelho.fi>
 References: <20200930133123.924256-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: mvm: initiator: add option for adding a PASN responder
+Subject: [PATCH 06/12] iwlwifi: mvm: support more GTK rekeying algorithms
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Nathan Errera <nathan.errera@intel.com>
 
-Add an option for adding a PASN responder, specifying the HLTK and
-TK (if not associated). When a receiving a range request for a
-PASN responder, the driver will ask for a secured measurement with
-the specified HLTK and TK.
+add and use new API version for GTK rekeying. This will allow our
+firmware to do GTK rekeying for more algorithms (GCMP 128, GCMP 256,
+SAE).
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Nathan Errera <nathan.errera@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 177 +++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   5 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
- 3 files changed, 179 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 29 +++++++++++++++----
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  5 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  6 +++-
+ 3 files changed, 33 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index 65dc443f37df..a0ce761d0c59 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -83,6 +83,96 @@ struct iwl_mvm_smooth_entry {
- 	u64 host_time;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index b152f5a6ba0f..f027029553dd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -81,8 +81,11 @@ void iwl_mvm_set_rekey_data(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	memcpy(mvmvif->rekey_data.kek, data->kek, NL80211_KEK_LEN);
+-	memcpy(mvmvif->rekey_data.kck, data->kck, NL80211_KCK_LEN);
++	mvmvif->rekey_data.kek_len = data->kek_len;
++	mvmvif->rekey_data.kck_len = data->kck_len;
++	memcpy(mvmvif->rekey_data.kek, data->kek, data->kek_len);
++	memcpy(mvmvif->rekey_data.kck, data->kck, data->kck_len);
++	mvmvif->rekey_data.akm = data->akm & 0xFF;
+ 	mvmvif->rekey_data.replay_ctr =
+ 		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
+ 	mvmvif->rekey_data.valid = true;
+@@ -157,6 +160,7 @@ static const u8 *iwl_mvm_find_max_pn(struct ieee80211_key_conf *key,
+ struct wowlan_key_data {
+ 	struct iwl_wowlan_rsc_tsc_params_cmd *rsc_tsc;
+ 	struct iwl_wowlan_tkip_params_cmd *tkip;
++	struct iwl_wowlan_kek_kck_material_cmd_v3 *kek_kck_cmd;
+ 	bool error, use_rsc_tsc, use_tkip, configure_keys;
+ 	int wep_key_idx;
  };
- 
-+struct iwl_mvm_ftm_pasn_entry {
-+	struct list_head list;
-+	u8 addr[ETH_ALEN];
-+	u8 hltk[HLTK_11AZ_LEN];
-+	u8 tk[TK_11AZ_LEN];
-+	u8 cipher;
-+	u8 tx_pn[IEEE80211_CCMP_PN_LEN];
-+	u8 rx_pn[IEEE80211_CCMP_PN_LEN];
-+};
-+
-+int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			     u8 *addr, u32 cipher, u8 *tk, u32 tk_len,
-+			     u8 *hltk, u32 hltk_len)
-+{
-+	struct iwl_mvm_ftm_pasn_entry *pasn = kzalloc(sizeof(*pasn),
-+						      GFP_KERNEL);
-+	u32 expected_tk_len;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	if (!pasn)
-+		return -ENOBUFS;
-+
-+	pasn->cipher = iwl_mvm_cipher_to_location_cipher(cipher);
-+
-+	switch (pasn->cipher) {
-+	case IWL_LOCATION_CIPHER_CCMP_128:
-+	case IWL_LOCATION_CIPHER_GCMP_128:
-+		expected_tk_len = WLAN_KEY_LEN_CCMP;
-+		break;
-+	case IWL_LOCATION_CIPHER_GCMP_256:
-+		expected_tk_len = WLAN_KEY_LEN_GCMP_256;
-+		break;
-+	default:
-+		goto out;
-+	}
-+
-+	/*
-+	 * If associated to this AP and already have security context,
-+	 * the TK is already configured for this station, so it
-+	 * shouldn't be set again here.
-+	 */
-+	if (vif->bss_conf.assoc &&
-+	    !memcmp(addr, vif->bss_conf.bssid, ETH_ALEN)) {
-+		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+		struct ieee80211_sta *sta;
-+
-+		rcu_read_lock();
-+		sta = rcu_dereference(mvm->fw_id_to_mac_id[mvmvif->ap_sta_id]);
-+		if (!IS_ERR_OR_NULL(sta) && sta->mfp)
-+			expected_tk_len = 0;
-+		rcu_read_unlock();
-+	}
-+
-+	if (tk_len != expected_tk_len || hltk_len != sizeof(pasn->hltk)) {
-+		IWL_ERR(mvm, "Invalid key length: tk_len=%u hltk_len=%u\n",
-+			tk_len, hltk_len);
-+		goto out;
-+	}
-+
-+	memcpy(pasn->addr, addr, sizeof(pasn->addr));
-+	memcpy(pasn->hltk, hltk, sizeof(pasn->hltk));
-+
-+	if (tk && tk_len)
-+		memcpy(pasn->tk, tk, sizeof(pasn->tk));
-+
-+	list_add_tail(&pasn->list, &mvm->ftm_initiator.pasn_list);
-+	return 0;
-+out:
-+	kfree(pasn);
-+	return -EINVAL;
-+}
-+
-+void iwl_mvm_ftm_remove_pasn_sta(struct iwl_mvm *mvm, u8 *addr)
-+{
-+	struct iwl_mvm_ftm_pasn_entry *entry, *prev;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	list_for_each_entry_safe(entry, prev, &mvm->ftm_initiator.pasn_list,
-+				 list) {
-+		if (memcmp(entry->addr, addr, sizeof(entry->addr)))
-+			continue;
-+
-+		list_del(&entry->list);
-+		kfree(entry);
+@@ -233,7 +237,12 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 	default:
+ 		data->error = true;
+ 		return;
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++		data->kek_kck_cmd->igtk_cipher = cpu_to_le32(STA_KEY_FLG_GCMP);
 +		return;
-+	}
-+}
-+
- static void iwl_mvm_ftm_reset(struct iwl_mvm *mvm)
- {
- 	struct iwl_mvm_loc_entry *e, *t;
-@@ -595,6 +685,63 @@ static int iwl_mvm_ftm_start_v9(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	return iwl_mvm_ftm_send_cmd(mvm, &hcmd);
- }
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
++		data->kek_kck_cmd->igtk_cipher = cpu_to_le32(STA_KEY_FLG_CCM);
+ 		/*
+ 		 * Ignore CMAC keys -- the WoWLAN firmware doesn't support them
+ 		 * but we also shouldn't abort suspend due to that. It does have
+@@ -271,6 +280,8 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 			  data->rsc_tsc->params.all_tsc_rsc.tkip.multicast_rsc;
+ 			rx_p1ks = data->tkip->rx_multi;
+ 			rx_mic_key = data->tkip->mic_keys.rx_mcast;
++			data->kek_kck_cmd->gtk_cipher =
++				cpu_to_le32(STA_KEY_FLG_TKIP);
+ 		}
  
-+static void iter(struct ieee80211_hw *hw,
-+		 struct ieee80211_vif *vif,
-+		 struct ieee80211_sta *sta,
-+		 struct ieee80211_key_conf *key,
-+		 void *data)
-+{
-+	struct iwl_tof_range_req_ap_entry_v6 *target = data;
-+
-+	if (!sta || memcmp(sta->addr, target->bssid, ETH_ALEN))
-+		return;
-+
-+	WARN_ON(!sta->mfp);
-+
-+	if (WARN_ON(key->keylen > sizeof(target->tk)))
-+		return;
-+
-+	memcpy(target->tk, key->key, key->keylen);
-+	target->cipher = iwl_mvm_cipher_to_location_cipher(key->cipher);
-+	WARN_ON(target->cipher == IWL_LOCATION_CIPHER_INVALID);
-+}
-+
-+static void
-+iwl_mvm_ftm_set_secured_ranging(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				struct iwl_tof_range_req_ap_entry_v7 *target)
-+{
-+	struct iwl_mvm_ftm_pasn_entry *entry;
-+	u32 flags = le32_to_cpu(target->initiator_ap_flags);
-+
-+	if (!(flags & (IWL_INITIATOR_AP_FLAGS_NON_TB |
-+		       IWL_INITIATOR_AP_FLAGS_TB)))
-+		return;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	list_for_each_entry(entry, &mvm->ftm_initiator.pasn_list, list) {
-+		if (memcmp(entry->addr, target->bssid, sizeof(entry->addr)))
-+			continue;
-+
-+		target->cipher = entry->cipher;
-+		memcpy(target->hltk, entry->hltk, sizeof(target->hltk));
-+
-+		if (vif->bss_conf.assoc &&
-+		    !memcmp(vif->bss_conf.bssid, target->bssid,
-+			    sizeof(target->bssid)))
-+			ieee80211_iter_keys(mvm->hw, vif, iter, target);
-+		else
-+			memcpy(target->tk, entry->tk, sizeof(target->tk));
-+
-+		memcpy(target->rx_pn, entry->rx_pn, sizeof(target->rx_pn));
-+		memcpy(target->tx_pn, entry->tx_pn, sizeof(target->tx_pn));
-+
-+		target->initiator_ap_flags |=
-+			cpu_to_le32(IWL_INITIATOR_AP_FLAGS_SECURED);
-+		return;
-+	}
-+}
-+
- static int iwl_mvm_ftm_start_v11(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif,
- 				 struct cfg80211_pmsr_request *req)
-@@ -618,6 +765,8 @@ static int iwl_mvm_ftm_start_v11(struct iwl_mvm *mvm,
- 		err = iwl_mvm_ftm_put_target(mvm, vif, peer, (void *)target);
- 		if (err)
- 			return err;
-+
-+		iwl_mvm_ftm_set_secured_ranging(mvm, vif, target);
- 	}
+ 		/*
+@@ -315,6 +326,10 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 		} else {
+ 			aes_sc =
+ 			   data->rsc_tsc->params.all_tsc_rsc.aes.multicast_rsc;
++			data->kek_kck_cmd->gtk_cipher =
++				key->cipher == WLAN_CIPHER_SUITE_CCMP ?
++				cpu_to_le32(STA_KEY_FLG_CCM) :
++				cpu_to_le32(STA_KEY_FLG_GCMP);
+ 		}
  
- 	return iwl_mvm_ftm_send_cmd(mvm, &hcmd);
-@@ -868,6 +1017,24 @@ static void iwl_mvm_debug_range_resp(struct iwl_mvm *mvm, u8 index,
- 	IWL_DEBUG_INFO(mvm, "\tdistance: %lld\n", rtt_avg);
- }
+ 		/*
+@@ -749,6 +764,7 @@ static int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+ 		.use_rsc_tsc = false,
+ 		.tkip = &tkip_cmd,
+ 		.use_tkip = false,
++		.kek_kck_cmd = &kek_kck_cmd,
+ 	};
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
+@@ -852,12 +868,13 @@ static int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
  
-+static void
-+iwl_mvm_ftm_pasn_update_pn(struct iwl_mvm *mvm,
-+			   struct iwl_tof_range_rsp_ap_entry_ntfy_v6 *fw_ap)
-+{
-+	struct iwl_mvm_ftm_pasn_entry *entry;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	list_for_each_entry(entry, &mvm->ftm_initiator.pasn_list, list) {
-+		if (memcmp(fw_ap->bssid, entry->addr, sizeof(entry->addr)))
-+			continue;
-+
-+		memcpy(entry->rx_pn, fw_ap->rx_pn, sizeof(entry->rx_pn));
-+		memcpy(entry->tx_pn, fw_ap->tx_pn, sizeof(entry->tx_pn));
-+		return;
-+	}
-+}
-+
- void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-@@ -912,13 +1079,15 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		int peer_idx;
+ 		memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
+ 		memcpy(kek_kck_cmd.kck, mvmvif->rekey_data.kck,
+-		       NL80211_KCK_LEN);
+-		kek_kck_cmd.kck_len = cpu_to_le16(NL80211_KCK_LEN);
++		       mvmvif->rekey_data.kck_len);
++		kek_kck_cmd.kck_len = cpu_to_le16(mvmvif->rekey_data.kck_len);
+ 		memcpy(kek_kck_cmd.kek, mvmvif->rekey_data.kek,
+-		       NL80211_KEK_LEN);
+-		kek_kck_cmd.kek_len = cpu_to_le16(NL80211_KEK_LEN);
++		       mvmvif->rekey_data.kek_len);
++		kek_kck_cmd.kek_len = cpu_to_le16(mvmvif->rekey_data.kek_len);
+ 		kek_kck_cmd.replay_ctr = mvmvif->rekey_data.replay_ctr;
++		kek_kck_cmd.akm = cpu_to_le32(mvmvif->rekey_data.akm);
  
- 		if (new_api) {
--			if (mvm->cmd_ver.range_resp == 8)
-+			if (mvm->cmd_ver.range_resp == 8) {
- 				fw_ap = &fw_resp_v8->ap[i];
--			else if (fw_has_api(&mvm->fw->ucode_capa,
--					    IWL_UCODE_TLV_API_FTM_RTT_ACCURACY))
-+				iwl_mvm_ftm_pasn_update_pn(mvm, fw_ap);
-+			} else if (fw_has_api(&mvm->fw->ucode_capa,
-+					      IWL_UCODE_TLV_API_FTM_RTT_ACCURACY)) {
- 				fw_ap = (void *)&fw_resp_v7->ap[i];
--			else
-+			} else {
- 				fw_ap = (void *)&fw_resp_v6->ap[i];
-+			}
+ 		ret = iwl_mvm_send_cmd_pdu(mvm,
+ 					   WOWLAN_KEK_KCK_MATERIAL, cmd_flags,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 1c5f18d1b4c2..5c9bde99ce19 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -666,6 +666,11 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 			IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT))
+ 		hw->wiphy->features |= NL80211_FEATURE_WFA_TPC_IE_IN_PROBES;
  
- 			result.final = fw_ap->last_burst;
- 			result.ap_tsf = le32_to_cpu(fw_ap->start_tsf);
++	if (iwl_fw_lookup_cmd_ver(mvm->fw, IWL_ALWAYS_LONG_GROUP,
++				  WOWLAN_KEK_KCK_MATERIAL,
++				  IWL_FW_CMD_VER_UNKNOWN) == 3)
++		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK;
++
+ 	if (fw_has_api(&mvm->fw->ucode_capa,
+ 		       IWL_UCODE_TLV_API_SCAN_TSF_REPORT)) {
+ 		wiphy_ext_feature_set(hw->wiphy,
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 40e102f2017f..1836589218fa 100644
+index 1836589218fa..9187f8a1126d 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1110,6 +1110,7 @@ struct iwl_mvm {
- 		struct {
- 			struct list_head resp;
- 		} smooth;
-+		struct list_head pasn_list;
- 	} ftm_initiator;
- 
- 	struct list_head resp_pasn_list;
-@@ -2016,6 +2017,10 @@ int iwl_mvm_ftm_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- void iwl_mvm_ftm_abort(struct iwl_mvm *mvm, struct cfg80211_pmsr_request *req);
- void iwl_mvm_ftm_initiator_smooth_config(struct iwl_mvm *mvm);
- void iwl_mvm_ftm_initiator_smooth_stop(struct iwl_mvm *mvm);
-+int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			     u8 *addr, u32 cipher, u8 *tk, u32 tk_len,
-+			     u8 *hltk, u32 hltk_len);
-+void iwl_mvm_ftm_remove_pasn_sta(struct iwl_mvm *mvm, u8 *addr);
- 
- /* TDLS */
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index c59ce3966807..737ef0fd6ff1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -695,6 +695,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	INIT_LIST_HEAD(&mvm->async_handlers_list);
- 	spin_lock_init(&mvm->time_event_lock);
- 	INIT_LIST_HEAD(&mvm->ftm_initiator.loc_list);
-+	INIT_LIST_HEAD(&mvm->ftm_initiator.pasn_list);
- 	INIT_LIST_HEAD(&mvm->resp_pasn_list);
- 
- 	INIT_WORK(&mvm->async_handlers_wk, iwl_mvm_async_handlers_wk);
+@@ -416,7 +416,11 @@ struct iwl_mvm_vif {
+ #ifdef CONFIG_PM
+ 	/* WoWLAN GTK rekey data */
+ 	struct {
+-		u8 kck[NL80211_KCK_LEN], kek[NL80211_KEK_LEN];
++		u8 kck[NL80211_KCK_EXT_LEN];
++		u8 kek[NL80211_KEK_EXT_LEN];
++		size_t kek_len;
++		size_t kck_len;
++		u32 akm;
+ 		__le64 replay_ctr;
+ 		bool valid;
+ 	} rekey_data;
 -- 
 2.28.0
 
