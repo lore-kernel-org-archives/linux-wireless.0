@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39590C4727C
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Oct 2020 09:35:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EC8C4727C
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Oct 2020 09:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F279A20B1F
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Oct 2020 09:35:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 859CB2072E
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Oct 2020 09:35:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xHjEIEqi"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="IsAMCfnC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731774AbgJAJf3 (ORCPT
+        id S1731548AbgJAJfq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 1 Oct 2020 05:35:29 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:21984 "EHLO m42-4.mailgun.net"
+        Thu, 1 Oct 2020 05:35:46 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:11882 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731673AbgJAJf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Oct 2020 05:35:29 -0400
+        id S1725975AbgJAJfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Oct 2020 05:35:46 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1601544928; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1601544946; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=HRCJZhbbxysgF2SDHvFZHDqVX8al17bZ02odqP07/Ng=; b=xHjEIEqiaRnHBGepWIXzq0Gx3zuu9HNoWzWTqYh2ztGW0/9OUOjU39Yf7HbLDuMK4R7IcIdJ
- TRRDZWdLXz9mLdcSI4SgWLCld7WISZHPmvngohI1EqOCQ9VTO/aTlNM8A+UVGHF2HNDESd0z
- zQCap7KdpkXf7ekOTWf8mnCOVOw=
-X-Mailgun-Sending-Ip: 69.72.42.4
+ bh=MZDdKb7tWJ/ILRdnJ7vFlyFuaTvDKHsOvFzzq1ZqwTA=; b=IsAMCfnC0LP5tLS/Lx8Bs38bZcfIDp8ZbJhlO3jAhrfvKs2S3KOu6iWu1xQ8lJRLeGE6fjdT
+ GvmuXj6wnxR1xAJD8WIqqNpMBTptY4q40PH2MPOrWHgclRvLuJs+J6On5cb6cW6T/OFQq5PS
+ 1NRcdVJmAxaTf1CZdt/x2SgD29M=
+X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 5f75a2c87df1a00ff88cf40a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 01 Oct 2020 09:35:04
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5f75a2c03aed3d14c0922ef8 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 01 Oct 2020 09:34:56
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AF313C433CB; Thu,  1 Oct 2020 09:35:03 +0000 (UTC)
+        id 3A9F1C433CB; Thu,  1 Oct 2020 09:34:56 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 66215C433FE;
-        Thu,  1 Oct 2020 09:35:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 66215C433FE
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D7691C433C8;
+        Thu,  1 Oct 2020 09:34:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D7691C433C8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/8] ath11k: start a timer to update HP for CE pipe 4
-Date:   Thu,  1 Oct 2020 12:34:48 +0300
-Message-Id: <1601544890-13450-7-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 1/8] ath11k: read and write registers below unwindowed address
+Date:   Thu,  1 Oct 2020 12:34:43 +0300
+Message-Id: <1601544890-13450-2-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1601544890-13450-1-git-send-email-kvalo@codeaurora.org>
 References: <1601544890-13450-1-git-send-email-kvalo@codeaurora.org>
@@ -63,104 +63,144 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Carl Huang <cjhuang@codeaurora.org>
 
-For QCA6390, Start a timer to update CE pipe 4 ring HP when shadow
-register is enabled. Its' to avoid that HP isn't updated to target
-register.
+For QCA6390, host can read and write registers below unwindowed
+address directly without programming the window register. For
+registers below bar0 + 4k - 32, host can read and write regardless
+of the power save state. Shadow registers are located below
+bar0 + 4K - 32.
+
+Before MHI power up, there is no need to wakeup MHI so ini_done is
+added to indicate it.
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
 Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ce.c | 34 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/ce.h |  1 +
- 2 files changed, 35 insertions(+)
+ drivers/net/wireless/ath/ath11k/pci.c | 35 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/pci.h |  7 +++++++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index caa356dde880..9d730f8ac816 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -187,6 +187,26 @@ const struct ce_attr ath11k_host_ce_config_qca6390[] = {
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 69e5b7c57695..e72dca4fa577 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -28,6 +28,12 @@
+ #define TCSR_SOC_HW_VERSION_MAJOR_MASK	GENMASK(16, 8)
+ #define TCSR_SOC_HW_VERSION_MINOR_MASK	GENMASK(7, 0)
  
- };
++/* BAR0 + 4k is always accessible, and no
++ * need to force wakeup.
++ * 4K - 32 = 0xFE0
++ */
++#define ACCESS_ALWAYS_OFF 0xFE0
++
+ #define QCA6390_DEVICE_ID		0x1101
  
-+static bool ath11k_ce_need_shadow_fix(int ce_id)
-+{
-+	/* only ce4 needs shadow workaroud*/
-+	if (ce_id == 4)
-+		return true;
-+	return false;
-+}
-+
-+static void ath11k_ce_stop_shadow_timers(struct ath11k_base *ab)
-+{
-+	int i;
-+
-+	if (!ab->hw_params.supports_shadow_regs)
-+		return;
-+
-+	for (i = 0; i < ab->hw_params.ce_count; i++)
-+		if (ath11k_ce_need_shadow_fix(i))
-+			ath11k_dp_shadow_stop_timer(ab, &ab->ce.hp_timer[i]);
-+}
-+
- static int ath11k_ce_rx_buf_enqueue_pipe(struct ath11k_ce_pipe *pipe,
- 					 struct sk_buff *skb, dma_addr_t paddr)
+ static const struct pci_device_id ath11k_pci_id_table[] = {
+@@ -128,6 +134,13 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
  {
-@@ -505,6 +525,12 @@ static int ath11k_ce_init_ring(struct ath11k_base *ab,
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
  
- 	ce_ring->hal_ring_id = ret;
- 
-+	if (ab->hw_params.supports_shadow_regs &&
-+	    ath11k_ce_need_shadow_fix(ce_id))
-+		ath11k_dp_shadow_init_timer(ab, &ab->ce.hp_timer[ce_id],
-+					    ATH11K_SHADOW_CTRL_TIMER_INTERVAL,
-+					    ce_ring->hal_ring_id);
++	/* for offset beyond BAR + 4K - 32, may
++	 * need to wakeup MHI to access.
++	 */
++	if (test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
++	    offset >= ACCESS_ALWAYS_OFF)
++		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
 +
- 	return 0;
+ 	if (offset < WINDOW_START) {
+ 		iowrite32(value, ab->mem  + offset);
+ 	} else {
+@@ -136,6 +149,10 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
+ 		iowrite32(value, ab->mem + WINDOW_START + (offset & WINDOW_RANGE_MASK));
+ 		spin_unlock_bh(&ab_pci->window_lock);
+ 	}
++
++	if (test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
++	    offset >= ACCESS_ALWAYS_OFF)
++		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
  }
  
-@@ -677,6 +703,9 @@ int ath11k_ce_send(struct ath11k_base *ab, struct sk_buff *skb, u8 pipe_id,
+ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
+@@ -143,6 +160,13 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 	u32 val;
  
- 	ath11k_hal_srng_access_end(ab, srng);
- 
-+	if (ath11k_ce_need_shadow_fix(pipe_id))
-+		ath11k_dp_shadow_start_timer(ab, srng, &ab->ce.hp_timer[pipe_id]);
++	/* for offset beyond BAR + 4K - 32, may
++	 * need to wakeup MHI to access.
++	 */
++	if (test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
++	    offset >= ACCESS_ALWAYS_OFF)
++		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
 +
- 	spin_unlock_bh(&srng->lock);
+ 	if (offset < WINDOW_START) {
+ 		val = ioread32(ab->mem + offset);
+ 	} else {
+@@ -152,6 +176,10 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
+ 		spin_unlock_bh(&ab_pci->window_lock);
+ 	}
  
- 	spin_unlock_bh(&ab->ce.ce_lock);
-@@ -761,6 +790,8 @@ void ath11k_ce_cleanup_pipes(struct ath11k_base *ab)
- 	struct ath11k_ce_pipe *pipe;
- 	int pipe_num;
- 
-+	ath11k_ce_stop_shadow_timers(ab);
++	if (test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
++	    offset >= ACCESS_ALWAYS_OFF)
++		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
 +
- 	for (pipe_num = 0; pipe_num < ab->hw_params.ce_count; pipe_num++) {
- 		pipe = &ab->ce.ce_pipe[pipe_num];
- 		ath11k_ce_rx_pipe_cleanup(pipe);
-@@ -874,6 +905,9 @@ void ath11k_ce_free_pipes(struct ath11k_base *ab)
- 	for (i = 0; i < ab->hw_params.ce_count; i++) {
- 		pipe = &ab->ce.ce_pipe[i];
+ 	return val;
+ }
  
-+		if (ath11k_ce_need_shadow_fix(i))
-+			ath11k_dp_shadow_stop_timer(ab, &ab->ce.hp_timer[i]);
+@@ -731,6 +759,8 @@ static int ath11k_pci_power_up(struct ath11k_base *ab)
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 	int ret;
+ 
++	ab_pci->register_window = 0;
++	clear_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+ 	ath11k_pci_sw_reset(ab_pci->ab);
+ 
+ 	ret = ath11k_mhi_start(ab_pci);
+@@ -747,6 +777,7 @@ static void ath11k_pci_power_down(struct ath11k_base *ab)
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 
+ 	ath11k_mhi_stop(ab_pci);
++	clear_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+ 	ath11k_pci_force_wake(ab_pci->ab);
+ 	ath11k_pci_sw_reset(ab_pci->ab);
+ }
+@@ -775,6 +806,10 @@ static void ath11k_pci_stop(struct ath11k_base *ab)
+ 
+ static int ath11k_pci_start(struct ath11k_base *ab)
+ {
++	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
 +
- 		if (pipe->src_ring) {
- 			desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_SRC);
- 			dma_free_coherent(ab->dev,
-diff --git a/drivers/net/wireless/ath/ath11k/ce.h b/drivers/net/wireless/ath/ath11k/ce.h
-index 26ef65e2528e..269b599ac0b0 100644
---- a/drivers/net/wireless/ath/ath11k/ce.h
-+++ b/drivers/net/wireless/ath/ath11k/ce.h
-@@ -168,6 +168,7 @@ struct ath11k_ce {
- 	struct ath11k_ce_pipe ce_pipe[CE_COUNT_MAX];
- 	/* Protects rings of all ce pipes */
- 	spinlock_t ce_lock;
-+	struct ath11k_hp_update_timer hp_timer[CE_COUNT_MAX];
++	set_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
++
+ 	ath11k_pci_ce_irqs_enable(ab);
+ 	ath11k_ce_rx_post_buf(ab);
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/pci.h b/drivers/net/wireless/ath/ath11k/pci.h
+index f2f280eb8b55..43562f774a37 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.h
++++ b/drivers/net/wireless/ath/ath11k/pci.h
+@@ -36,6 +36,10 @@ struct ath11k_msi_config {
+ 	struct ath11k_msi_user *users;
  };
  
- extern const struct ce_attr ath11k_host_ce_config_ipq8074[];
++enum ath11k_pci_flags {
++	ATH11K_PCI_FLAG_INIT_DONE,
++};
++
+ struct ath11k_pci {
+ 	struct pci_dev *pdev;
+ 	struct ath11k_base *ab;
+@@ -48,6 +52,9 @@ struct ath11k_pci {
+ 
+ 	/* protects register_window above */
+ 	spinlock_t window_lock;
++
++	/* enum ath11k_pci_flags */
++	unsigned long flags;
+ };
+ 
+ static inline struct ath11k_pci *ath11k_pci_priv(struct ath11k_base *ab)
 -- 
 2.7.4
 
