@@ -2,90 +2,117 @@ Return-Path: <SRS0=MQGE=DM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 853F9C4363A
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 17:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA8AC4363A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 18:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 495482078E
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 17:02:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17876207EA
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 18:04:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OXKb2fbf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727351AbgJERC6 (ORCPT
+        id S1726727AbgJESEH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Oct 2020 13:02:58 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:37164 "EHLO
-        web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726320AbgJERC6 (ORCPT
+        Mon, 5 Oct 2020 14:04:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44596 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726248AbgJESEG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Oct 2020 13:02:58 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id C0EBC4FA159;
-        Mon,  5 Oct 2020 16:51:23 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
-Received: from web.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id u1y-kOCBxBGU; Mon,  5 Oct 2020 16:51:21 +0000 (UTC)
-Received: from atlas.ibsgaard.io (c-73-223-60-234.hsd1.ca.comcast.net [73.223.60.234])
-        (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id BD4DF4FA158;
-        Mon,  5 Oct 2020 16:51:20 +0000 (UTC)
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Pedersen <thomas@adapt-ip.com>,
-        syzbot+92715a0eccd6c881bc32@syzkaller.appspotmail.com
-Subject: [PATCH] cfg80211: only allow S1G channels on S1G band
-Date:   Mon,  5 Oct 2020 09:51:22 -0700
-Message-Id: <20201005165122.17583-1-thomas@adapt-ip.com>
-X-Mailer: git-send-email 2.20.1
+        Mon, 5 Oct 2020 14:04:06 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE08C0613CE
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2020 11:04:06 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id u8so13434283ejg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2020 11:04:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VQapKerqEPOfWjuVkuWjhpBPHOAY0WMdQww5oZQ+egs=;
+        b=OXKb2fbfDYHdc1AbGUIMBgMPVh7d7kxEbrnogtA7tkBCFR9wFHBTnbowM3BhSEljnh
+         UEswPIgw4X463SChT4PQxD9A/LlhUfYNQWfSbDf+C8TBTKfDBnzK13OEqez3jPckrVjv
+         qUxSB2BhkFOZGyy2nFmMHm6nnRfP1HV8q//vo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=VQapKerqEPOfWjuVkuWjhpBPHOAY0WMdQww5oZQ+egs=;
+        b=rM0JgIRDNYFSHDdyB+mS7fkxuuHlfgVvOCZz00FWPSgXZqzTqF8EGuSCD3zLVjprPA
+         yWyLpZXDQK8z3+teUW2nDiPTbRi8RXzB/xVRN8JZwosNjkuB/L/7p4I2pPf+BulKPgBG
+         72oyI8hveaR7OJ2cU2ZAVrWLShHnWRuWgC6z45X/NyPQoED1Olcvvr8sclZA4sj7bz1x
+         C2K7PMxEyVFm61/VaiBZmEo/8svShlKbd3lTmQb2hFQbs8/ItG3qWkkJvGQ0VeZHlu3x
+         +Cv3nx1xVJgN33cqmA77uVY1Jz4CmtKlfrdKzTFqgad931A/5K7knHKV6StyxJ9wBkO8
+         Kb9g==
+X-Gm-Message-State: AOAM530T6ufC4qrSVfezgZlDPX1YgMF3K/zkCTkiZYzMP7zzN/p75dOo
+        yjuTe3j3loJAgAacInO6SnALRAzoIf4pow==
+X-Google-Smtp-Source: ABdhPJwEiM5G2EJaMReVztlgaHaw+IPLWhmju1rJ8ao4VgCYFQjfJByribv+dFRfeXUADA7BQhVWBw==
+X-Received: by 2002:a17:906:940c:: with SMTP id q12mr956520ejx.195.1601921044980;
+        Mon, 05 Oct 2020 11:04:04 -0700 (PDT)
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com. [209.85.208.51])
+        by smtp.gmail.com with ESMTPSA id k13sm373095edj.92.2020.10.05.11.04.04
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Oct 2020 11:04:04 -0700 (PDT)
+Received: by mail-ed1-f51.google.com with SMTP id l24so10437271edj.8
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2020 11:04:04 -0700 (PDT)
+X-Received: by 2002:a19:414b:: with SMTP id o72mr224618lfa.23.1601920723274;
+ Mon, 05 Oct 2020 10:58:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201004131931.29782-1-trix@redhat.com>
+In-Reply-To: <20201004131931.29782-1-trix@redhat.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Mon, 5 Oct 2020 10:58:31 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXOrr7k73mOizNGxPxXQ=bHEMUbTtCnoEusj2vRAaRPufA@mail.gmail.com>
+Message-ID: <CA+ASDXOrr7k73mOizNGxPxXQ=bHEMUbTtCnoEusj2vRAaRPufA@mail.gmail.com>
+Subject: Re: [PATCH] wireless: mwifiex: fix double free
+To:     trix@redhat.com
+Cc:     amit karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        ndesaulniers@google.com, linville@tuxdriver.com,
+        Nishant Sarmukadam <nishants@marvell.com>, rramesh@marvell.com,
+        bzhao@marvell.com, Frank Huang <frankh@marvell.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        clang-built-linux@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As discovered by syzbot, cfg80211 was accepting S1G
-channel widths on non-S1G bands. Add a check for this, and
-consolidate the 1MHz frequency check as it ends up being a
-subset of the others.
+On Sun, Oct 4, 2020 at 6:19 AM <trix@redhat.com> wrote:
+>
+> From: Tom Rix <trix@redhat.com>
+>
+> clang static analysis reports this problem:
+>
+> sdio.c:2403:3: warning: Attempt to free released memory
+>         kfree(card->mpa_rx.buf);
+>         ^~~~~~~~~~~~~~~~~~~~~~~
 
-Reported-by: syzbot+92715a0eccd6c881bc32@syzkaller.appspotmail.com
-Fixes: 11b34737b18a ("nl80211: support setting S1G channels")
-Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
----
- net/wireless/chan.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+That's some interesting static analysis for a compiler.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 96e24ee4c7e8..22d1779ab2b1 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -207,7 +207,6 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 	control_freq = chandef->chan->center_freq;
- 
- 	switch (chandef->width) {
--	case NL80211_CHAN_WIDTH_1:
- 	case NL80211_CHAN_WIDTH_5:
- 	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20:
-@@ -218,10 +217,14 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 		if (chandef->center_freq2)
- 			return false;
- 		break;
-+	case NL80211_CHAN_WIDTH_1:
- 	case NL80211_CHAN_WIDTH_2:
- 	case NL80211_CHAN_WIDTH_4:
- 	case NL80211_CHAN_WIDTH_8:
- 	case NL80211_CHAN_WIDTH_16:
-+		if (chandef->chan->band != NL80211_BAND_S1GHZ)
-+			return false;
-+
- 		control_freq = ieee80211_channel_to_khz(chandef->chan);
- 		oper_freq = ieee80211_chandef_to_khz(chandef);
- 		control_width = nl80211_chan_width_to_mhz(
--- 
-2.20.1
+> When mwifiex_init_sdio() fails in its first call to
+> mwifiex_alloc_sdio_mpa_buffer, it falls back to calling it
+> again.  If the second alloc of mpa_tx.buf fails, the error
+> handler will try to free the old, previously freed mpa_rx.buf.
+> Reviewing the code, it looks like a second double free would
+> happen with mwifiex_cleanup_sdio().
+>
+> So set both pointers to NULL when they are freed.
+>
+> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+> Signed-off-by: Tom Rix <trix@redhat.com>
 
+For whatever it's worth:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
