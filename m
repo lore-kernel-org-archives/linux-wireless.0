@@ -2,110 +2,126 @@ Return-Path: <SRS0=MQGE=DM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C41C4363A
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 11:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34548C4363A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 13:01:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2A9206A1
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 11:36:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601897800;
-	bh=fgGs/g8R7FGxfEERGh9tPEu0YXx3kolUdYs8Lt0EScE=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=1MpQ6IyDltssExsQminaRdU8eeHisGrdBN4SfR/Z2AZWv2nk3ruHvmOwRukASbtjH
-	 BzoJaDlwHfdG3qI0QVgQuWfFuGpX33SZclwGVC/1xp/ibelPQiti9DSjMZTlCt+mPs
-	 AUqXYAhRHo4hzsUwG1AfK3KBh1Mtzh8/LtYbwUu0=
+	by mail.kernel.org (Postfix) with ESMTP id C679C207BC
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 13:01:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AxhWCAo0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725936AbgJELgj (ORCPT
+        id S1725936AbgJENBc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Oct 2020 07:36:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41230 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725891AbgJELgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Oct 2020 07:36:39 -0400
-Received: from lore-desk.redhat.com (unknown [176.207.245.61])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CFB5D2064C;
-        Mon,  5 Oct 2020 11:36:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601897798;
-        bh=fgGs/g8R7FGxfEERGh9tPEu0YXx3kolUdYs8Lt0EScE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lzszI3pIr0lU7lPH3KLW7NciCo2KLn6pH58NypQbxMgFpCNYacScDTIC+VSa5rgQK
-         WSf//wsihd19H9lqwbsUaFC3Iq/9a/cKLCfdx4kBz5GcZWL/EflXyh5Mmletijudkq
-         j+EtZnp5YiARUVIZL41vi/dSE+a+QIUziBkw8UPg=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com
-Subject: [PATCH] mt76: mt7663s: get rid of mt7663s_sta_add
-Date:   Mon,  5 Oct 2020 13:36:31 +0200
-Message-Id: <c8e79c5d55440ff131d58a05efa303cbd7234b57.1601897686.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.26.2
+        Mon, 5 Oct 2020 09:01:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54000 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725891AbgJENBc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Oct 2020 09:01:32 -0400
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67632C0613B8
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2020 06:01:32 -0700 (PDT)
+Received: by mail-ed1-x534.google.com with SMTP id l24so9209127edj.8
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2020 06:01:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+L2aZyvxl4W8khmOuNAlUi/cVzcrgmy9s9w3VWgBV8I=;
+        b=AxhWCAo09E6pqESoPistNy4SDg2FO9APYl38SqOCh5AV0H9XuOvenVZfsrreNQy8q+
+         /Ux6VVOlE8d8LOn193QsvYski1+pdBxIe+pcD3/93MCLZ+QMOvMfi+Dqnm9U0LOqEggq
+         NOR3b5902hm9+AlyFYXZT5zX845k4f92AA3W4vcG4Nf7PNv46HjZsoM56vHmzxyRESUq
+         eUbCpKPPWwypL+dWPM6hlsv27SSupPasGUjTZF59nKTURjsneXS8XCK6mlAM3akdB6jz
+         Yb8AMPaJrgpzusSwNTt9gDOxQ8SRZJHhGHvhhTpyD5UxBMJ6jk7dm8Gg2LdWRQosNCQ6
+         Xjjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=+L2aZyvxl4W8khmOuNAlUi/cVzcrgmy9s9w3VWgBV8I=;
+        b=fqite8d8IbVZ4qebx9VbHI204IfMOQd2jkPxF1R90hkvFvmaERPm1S04mY0gs15+bN
+         uH2hJxruSXZTYDuO1nRy9mGp8insIJJRb7eR+cbF/xt6cobF1O/U6FvJ5BVw+ruJ/ZCE
+         HV6MVWDi8wJdSW4ZXklpGD/esWvU668iUR37YdB4IZx6wPv+sRZl23VOsdgthJH8qUAR
+         DYqQHEENfqhcVdTcSYyIt6tlo8OAjWXdb9HYpH/YBJG54BkCLw4SEPkcGyJg+9hOnHRR
+         295UBthXEbFqipP78jSpURkmwtMyzPrDW8V7A2GFFiOENV+XeN+BkTKKQkfWhQ68/ZLs
+         gBmg==
+X-Gm-Message-State: AOAM533NC/f9NsP/MqM2GszblEVLSvXpJSQIR70gW5zHHfB6Acbqmiwh
+        JemQtklfWteXU2jppGcx9RA=
+X-Google-Smtp-Source: ABdhPJwxOlJhQ4VkFh0fTPQadR8wrdlSgKA6YtHNkOSADBvlx5GXlZ4Ao/tW/UcVRhS0t2BJ8pYMnw==
+X-Received: by 2002:a05:6402:10c9:: with SMTP id p9mr17379911edu.156.1601902890994;
+        Mon, 05 Oct 2020 06:01:30 -0700 (PDT)
+Received: from localhost (catv-86-101-16-255.catv.broadband.hu. [86.101.16.255])
+        by smtp.gmail.com with ESMTPSA id p24sm3489966edq.35.2020.10.05.06.01.28
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 05 Oct 2020 06:01:28 -0700 (PDT)
+Sender: Thomas Nagy <bkil.hu@gmail.com>
+From:   bkil <b.K.il.h.u+tigbuh@gmail.com>
+To:     Seth Forshee <seth.forshee@canonical.com>
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless-regdb: restore channel 12 & 13 limitation in the US
+Date:   Mon,  5 Oct 2020 15:01:22 +0200
+Message-Id: <840438bf70c72d2ab933aee9ae5aa6985b6c1531.1601902881.git.b.K.il.h.u+tigbuh@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Get rid of mt7663s_sta_add routine and rely on mt7615_mac_sta_add
-since sched quota is already initialized in mt7663s_mcu_init_sched
-routine
+The precisely allowed transmission power on channel 12 & 13 is not clear.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+I did some fact checking and document reviews in the past, but still
+failed to come up with an exact reference or calculation regarding what TX
+power should be allowed in general to reduce interference in the
+neighboring restricted band 2483.5-2500 MHz and whether indoor vs. outdoor
+and b/g/n modulation would make a difference (probably yes).
+
+Existing documents that discuss this are vague and pretty much out of date:
+https://en.wikipedia.org/wiki/List_of_WLAN_channels#endnote_B
+
+Following these guidelines, I failed to come up with an approximate
+formula that would prohibit usage of channel 12 & 13, but still allow
+usage of channel 11 with full power, hence at least part of the argument
+for prohibiting channel 12 & 13 needs to be refined.
+
+Until further research, just to stay safe, I propose that we restore the
+previous limitation of disabling channel 12 & 13 as before. We should
+work towards finding a safe transmission power to use on both and specify
+that (like 50mW on channel 13 and 100mW on channel 12?).
+
+I've also started a discussion for investigation on Wikipedia:
+https://en.wikipedia.org/wiki/Talk:List_of_WLAN_channels#Should_the_2.4GHz_=
+channel_12_and_13_in_the_USA_need_updating?
+
+Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/sdio.c  | 26 +------------------
- 1 file changed, 1 insertion(+), 25 deletions(-)
+ db.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-index a3718c501eb8..347975eaba86 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-@@ -294,30 +294,6 @@ static int mt7663s_hw_init(struct mt7615_dev *dev, struct sdio_func *func)
- 	return ret;
- }
- 
--static int mt7663s_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
--			   struct ieee80211_sta *sta)
--{
--	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
--	struct mt76_sdio *sdio = &mdev->sdio;
--	u32 pse, ple;
--	int err;
--
--	err = mt7615_mac_sta_add(mdev, vif, sta);
--	if (err < 0)
--		return err;
--
--	/* init sched data quota */
--	pse = mt76_get_field(dev, MT_PSE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
--	ple = mt76_get_field(dev, MT_PLE_PG_HIF0_GROUP, MT_HIF0_MIN_QUOTA);
--
--	mutex_lock(&sdio->sched.lock);
--	sdio->sched.pse_data_quota = pse;
--	sdio->sched.ple_data_quota = ple;
--	mutex_unlock(&sdio->sched.lock);
--
--	return 0;
--}
--
- static int mt7663s_probe(struct sdio_func *func,
- 			 const struct sdio_device_id *id)
- {
-@@ -329,7 +305,7 @@ static int mt7663s_probe(struct sdio_func *func,
- 		.tx_status_data = mt7663_usb_sdio_tx_status_data,
- 		.rx_skb = mt7615_queue_rx_skb,
- 		.sta_ps = mt7615_sta_ps,
--		.sta_add = mt7663s_sta_add,
-+		.sta_add = mt7615_mac_sta_add,
- 		.sta_remove = mt7615_mac_sta_remove,
- 		.update_survey = mt7615_update_channel,
- 	};
--- 
-2.26.2
-
+diff --git a/db.txt b/db.txt
+index ac32483..68613cf 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1568,8 +1568,12 @@ country UG: DFS-FCC
+=20
+ # https://www.ecfr.gov/cgi-bin/text-idx?SID=3Deed706a2c49fd9271106c3228b06=
+15f3&mc=3Dtrue&node=3Dpt47.1.15&rgn=3Ddiv5
+ # Title 47 Part 15 - Radio Frequency Devices, April 2, 2020
++# Channels 12 and 13 are not forbidden, but are not normally used with full
++# power in order to avoid any potential interference in the adjacent restr=
+icted
++# frequency band, 2,483.5=E2=80=932,500 MHz which is subject to strict emi=
+ssion limits
++# set out in 47 CFR =C2=A7 15.205. TODO: reenable and specify a safe TX po=
+wer here.
+ country US: DFS-FCC
+-	(2400 - 2483.5 @ 40), (30)
++	(2400 - 2472 @ 40), (30)
+ 	# 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
+ 	(5150 - 5250 @ 80), (23), AUTO-BW
+ 	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
