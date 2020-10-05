@@ -2,127 +2,112 @@ Return-Path: <SRS0=MQGE=DM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE18C4727D
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 13:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1888C4363A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 14:13:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84D07207BC
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 13:04:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71FD1205F4
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Oct 2020 14:13:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="poDQ+3dD"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bp8ajK3F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726362AbgJENEZ (ORCPT
+        id S1726323AbgJEONa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Oct 2020 09:04:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54464 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726732AbgJENEK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Oct 2020 09:04:10 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5889C0613AF
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Oct 2020 05:56:50 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id lw21so7770569ejb.6
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2020 05:56:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+L2aZyvxl4W8khmOuNAlUi/cVzcrgmy9s9w3VWgBV8I=;
-        b=poDQ+3dDBBHHsnuLdAryprh10yZj22wwbBMijBWGVx4zvrSdvm7sfnCtNnAAtzPhU6
-         4Ph36acOYz0iQfOqEuU3FQzeDVOT8dsEOEodkIMFyn40TdsPzUeRuuvShO7RQ1eYAkbS
-         ZUg4iGMiHCZdcsrfVFx5Z3nFhdpKruCbs3H1QDSqK/p+UynA5QGc5kjengWnlvYh3bFr
-         HsYHdGEmASM+nlJwMoezB+cWRDzuzUH/ywrutVLstAW/sPKR1S1rCykJIfi1jGEiyjI4
-         7RzOYJ81tHXkzc5VmdJs8VfGDZ4+CPnJce/memitQFtfKMJqJSq7WNp8kycyQpn96WxQ
-         gpIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :mime-version:content-transfer-encoding;
-        bh=+L2aZyvxl4W8khmOuNAlUi/cVzcrgmy9s9w3VWgBV8I=;
-        b=sNnyc4QmIjO5PenvlBeTMv66q5FlIoMS9kgUqUXGyxqFvbjG++tbPTgee8TiMoRuCe
-         nFuCeaC9PJZ6FDUcsHfAEyc4XBdg8UZhhWAKr0BXQrW2pB22G5mUljKL4a51LE0Dke12
-         6yhPJTLY2jeHC0dw4XfMNwyg9f/NFyysnuWlg8hKGRCjXMBtbzRmHzGWubxqoQGHJuVM
-         gh3bo9XjFbnaKERN25rgisatQI4Ad7mIsgN+zTr3t4RF4hjQFNiSfV6f1dhw+uNu3RtB
-         ZVwCpjfPXJjzA7Qy+NnY7MonUwFSstZv8son24HKOWGcWbsyjg/tan9CTFAFFS8eFUrb
-         tZVw==
-X-Gm-Message-State: AOAM533by5IgkazAndFBSmcsvH9l+8O5ZvWukVaPHeBD+GFHkH9lC85p
-        5egrFQMq1Zmqq/QTwtzqDNs=
-X-Google-Smtp-Source: ABdhPJwyHF9oMb4acoT86AJApwwKs1GKVpyalexHqUxVgGazPBhbpbTcl+UzYey9bKrLEa19095Bfg==
-X-Received: by 2002:a17:906:a1d4:: with SMTP id bx20mr15233015ejb.262.1601902609082;
-        Mon, 05 Oct 2020 05:56:49 -0700 (PDT)
-Received: from localhost (catv-86-101-16-255.catv.broadband.hu. [86.101.16.255])
-        by smtp.gmail.com with ESMTPSA id g9sm5816200edv.81.2020.10.05.05.56.47
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Oct 2020 05:56:48 -0700 (PDT)
-Sender: Thomas Nagy <bkil.hu@gmail.com>
-From:   bkil <b.K.il.h.u+tigbuh@gmail.com>
-To:     Seth Forshee <seth.forshee@canonical.com>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless-regdb: restore channel 12 & 13 limitation in the US
-Date:   Mon,  5 Oct 2020 14:56:38 +0200
-Message-Id: <840438bf70c72d2ab933aee9ae5aa6985b6c1531.1601902597.git.b.K.il.h.u+tigbuh@gmail.com>
+        Mon, 5 Oct 2020 10:13:30 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:34585 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726002AbgJEON3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Oct 2020 10:13:29 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1601907209; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=ivNqpv3yu7yxdbxdKQrjC25RCIfxdWN76uDFvPf85LU=; b=bp8ajK3FEYYpH83lCn3V8dfVQlqiqQ8CCdhebQpwNE5sGnk7ueMY2GeQkj/sTcq6FgoF7OR3
+ zkbHvA1rxjCGa0nig53JIt6cL8QitQiHn/PJ4Xrj+azgG7mLeArQCPWeQWYgVwgR5ikm91mv
+ uKHovfgI2mZVkdiNw6ObO+r7k44=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f7b29eb4fce93c117aa342f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 05 Oct 2020 14:12:59
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1B977C433FF; Mon,  5 Oct 2020 14:12:59 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E27FC433C8;
+        Mon,  5 Oct 2020 14:12:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6E27FC433C8
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [RFC] Status of orinoco_usb
+References: <20201002103517.fhsi5gaepzbzo2s4@linutronix.de>
+        <20201002113725.GB3292884@kroah.com>
+        <20201002115358.6aqemcn5vqc5yqtw@linutronix.de>
+        <20201002120625.GA3341753@kroah.com>
+Date:   Mon, 05 Oct 2020 17:12:54 +0300
+In-Reply-To: <20201002120625.GA3341753@kroah.com> (Greg Kroah-Hartman's
+        message of "Fri, 2 Oct 2020 14:06:25 +0200")
+Message-ID: <877ds4damx.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The precisely allowed transmission power on channel 12 & 13 is not clear.
+Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
 
-I did some fact checking and document reviews in the past, but still
-failed to come up with an exact reference or calculation regarding what TX
-power should be allowed in general to reduce interference in the
-neighboring restricted band 2483.5-2500 MHz and whether indoor vs. outdoor
-and b/g/n modulation would make a difference (probably yes).
+> On Fri, Oct 02, 2020 at 01:53:58PM +0200, Sebastian Andrzej Siewior wrote:
+>> On 2020-10-02 13:37:25 [+0200], Greg Kroah-Hartman wrote:
+>> > > Is it possible to end up here in softirq context or is this a relic?
+>> > 
+>> > I think it's a relic of where USB host controllers completed their urbs
+>> > in hard-irq mode.  The BH/tasklet change is a pretty recent change.
+>> 
+>> But the BH thingy for HCDs went in v3.12 for EHCI. XHCI was v5.5. My
+>> guess would be that people using orinoco USB are on EHCI :)
+>
+> USB 3 systems run XHCI, which has a USB 2 controller in it, so these
+> types of things might not have been noticed yet.  Who knows :)
+>
+>> > > Should it be removed?
+>> > 
+>> > We can move it out to drivers/staging/ and then drop it to see if anyone
+>> > complains that they have the device and is willing to test any changes.
+>> 
+>> Not sure moving is easy since it depends on other files in that folder.
+>> USB is one interface next to PCI for instance. Unless you meant to move
+>> the whole driver including all interfaces.
+>> I was suggesting to remove the USB bits.
+>
+> I forgot this was tied into other code, sorry.  I don't know what to
+> suggest other than maybe try to fix it up the best that you can, and
+> let's see if anyone notices...
 
-Existing documents that discuss this are vague and pretty much out of date:
-https://en.wikipedia.org/wiki/List_of_WLAN_channels#endnote_B
+That's what I would suggest as well.
 
-Following these guidelines, I failed to come up with an approximate
-formula that would prohibit usage of channel 12 & 13, but still allow
-usage of channel 11 with full power, hence at least part of the argument
-for prohibiting channel 12 & 13 needs to be refined.
+These drivers for ancient hardware are tricky. Even if there doesn't
+seem to be any users on the driver sometimes people pop up reporting
+that it's still usable. We had that recently with one another wireless
+driver (forgot the name already).
 
-Until further research, just to stay safe, I propose that we restore the
-previous limitation of disabling channel 12 & 13 as before. We should
-work towards finding a safe transmission power to use on both and specify
-that (like 50mW on channel 13 and 100mW on channel 12?).
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-I've also started a discussion for investigation on Wikipedia:
-https://en.wikipedia.org/wiki/Talk:List_of_WLAN_channels#Should_the_2.4GHz_=
-channel_12_and_13_in_the_USA_need_updating?
-
-Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
----
- db.txt | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index ac32483..68613cf 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1568,8 +1568,12 @@ country UG: DFS-FCC
-=20
- # https://www.ecfr.gov/cgi-bin/text-idx?SID=3Deed706a2c49fd9271106c3228b06=
-15f3&mc=3Dtrue&node=3Dpt47.1.15&rgn=3Ddiv5
- # Title 47 Part 15 - Radio Frequency Devices, April 2, 2020
-+# Channels 12 and 13 are not forbidden, but are not normally used with full
-+# power in order to avoid any potential interference in the adjacent restr=
-icted
-+# frequency band, 2,483.5=E2=80=932,500 MHz which is subject to strict emi=
-ssion limits
-+# set out in 47 CFR =C2=A7 15.205. TODO: reenable and specify a safe TX po=
-wer here.
- country US: DFS-FCC
--	(2400 - 2483.5 @ 40), (30)
-+	(2400 - 2472 @ 40), (30)
- 	# 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
- 	(5150 - 5250 @ 80), (23), AUTO-BW
- 	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
