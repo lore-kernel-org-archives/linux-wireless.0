@@ -2,151 +2,152 @@ Return-Path: <SRS0=wUDZ=DN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E3EC41604
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Oct 2020 08:08:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6239C41604
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Oct 2020 08:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3B0C206F4
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Oct 2020 08:08:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 674492078E
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Oct 2020 08:13:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UJk/CbBM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgJFIIe (ORCPT
+        id S1725981AbgJFINo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Oct 2020 04:08:34 -0400
-Received: from mail-io1-f80.google.com ([209.85.166.80]:41247 "EHLO
-        mail-io1-f80.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbgJFII0 (ORCPT
+        Tue, 6 Oct 2020 04:13:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34222 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725891AbgJFINo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Oct 2020 04:08:26 -0400
-Received: by mail-io1-f80.google.com with SMTP id j21so3460057iog.8
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2020 01:08:24 -0700 (PDT)
+        Tue, 6 Oct 2020 04:13:44 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 885EFC061755;
+        Tue,  6 Oct 2020 01:13:42 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id h7so8749728wre.4;
+        Tue, 06 Oct 2020 01:13:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:date:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=fMYP+cTwncpTLOVztv8nSpCnCd5UH8/ESLmq24XFpfc=;
+        b=UJk/CbBM9YT1AvhOT4flOc9Rqcu4jiDsq1OkLSKDM9M4RZaL3qbNXXRVGGRw7wa2RH
+         sEZCpyyc5rH9/w9ehJqsxTRmcMZE/mlrZbc2IROIr5kfLi9krph3F0DRKQn1j4iBfTD/
+         AeJ6U5wOtgcdwz0wEt/UltVPYE6bbipXc9/1oeIEN5NvTC35qZPR4HktzAEy2kxBNA0C
+         hZ9uc9XBV5ceLgqdX93uFoKzMEQGXc2h8SvLZO+oPC6VR65DuOmSMJ6V6V8uMyKO4XJy
+         AwKzSbMQikWijNl3RE3SDv0vODGrqElNIcXDaKg20BMKXh36nNpOsTNPrpJBlA6Vy1z8
+         RLBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=sydOenJGQajPlhoM0PXc+2oq4hJ+EOmmhrpbUxjL0tw=;
-        b=JLh1R7DRIqUh78fB6eqBFGCsN+CGiRC+EwVYB8hdk175ltPdiWDyujmtY9kro2w34a
-         xva7h0USsqEWMrDq3d+Y/6wNn196x0RSO0hxkNpb02jCI9tF3XQt0uz68XVqN/7vEyeA
-         0KL3/lxfFCQQlp9ZWoOwWJHadY2/fTkKITflbs8HMEyic4K9MoyEwo5uiRTYQgJU9RO5
-         aEBsiSfLT7FncKX8FBe1cDciEE6hvZSKecySHbSa6zVvs6xofneg6tq68CkZ7EWVH/oc
-         raLZ8nTFsDy5Fwrkf/LHeZTxKrXktiTQbe0ZU9ohDBsSjalVnX09lt7JFzN13f7KZmEz
-         pheA==
-X-Gm-Message-State: AOAM530+kHsdFRRPIPZCKyh66oTx/TPHSmCZ2R/p6ycqGa8t9U5WlYKS
-        HmZFUKrBRkKwnpoM+a6z7Y/7jfSY6Qt7GjqI0vjH3pbv4HCG
-X-Google-Smtp-Source: ABdhPJyesPChXivxTh3T4y44gAcoOM4VIle8rvY1Pd963iScE0fvL1XyMy4KpRlZauPVbid1IPWe//f2hVOAkHAQPt7DdrxB6gbL
+        h=x-gm-message-state:from:date:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=fMYP+cTwncpTLOVztv8nSpCnCd5UH8/ESLmq24XFpfc=;
+        b=kkCw6Twv38/9C7YtmU8xm/HfYxJVMH2mCTgXBIVB/6Lo2bzViYJCkF3XLML88wqhuS
+         FU0KkCed+KnHdJoQdQPbp5GE/SGzZHkFP2V+Qrsn7jqX1fATeObJ362ifho9lj4rDsmx
+         CtivhGhCpjcX3/HtJpy37tlXk74H0rq/IXEcTrrtF2WNX+SruXPMqvElRngyNYYzSFJy
+         p+EcQPWnLg0XAO9BklCKwoZWrmppBWmatrs09S8xvCJl8MzOx1mP/S5NP0IorN2nzw/q
+         A3/u9PkZCFQuxoUg2B6ApsQT2RoDF+UYB5REvq1RzpJZdnScUVjHDXrkG8+ofOFu15PN
+         eWVw==
+X-Gm-Message-State: AOAM531BgithPGVmL/+nTtN15T3vGsgMK8xUogK/vK1S4amL4oHWxjJO
+        lBd+dE96/02lGK6k331DPr0scjbydH1BsA==
+X-Google-Smtp-Source: ABdhPJyYS3hLjZfwQwPfc0URX2t5CTl5+XXZ8ogjf78i7Ntm9CEf2LwDcK7QBClYu15RAOPPBTmGig==
+X-Received: by 2002:adf:8030:: with SMTP id 45mr3510936wrk.177.1601972021228;
+        Tue, 06 Oct 2020 01:13:41 -0700 (PDT)
+Received: from medion (cpc83661-brig20-2-0-cust443.3-3.cable.virginm.net. [82.28.105.188])
+        by smtp.gmail.com with ESMTPSA id b8sm2823523wmb.4.2020.10.06.01.13.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Oct 2020 01:13:40 -0700 (PDT)
+From:   Alex Dewar <alex.dewar90@gmail.com>
+X-Google-Original-From: Alex Dewar <alex.dewar@gmx.co.uk>
+Date:   Tue, 6 Oct 2020 09:13:21 +0100
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Alex Dewar <alex.dewar90@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        Carl Huang <cjhuang@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath11k: Handle errors if peer creation fails
+Message-ID: <20201006081321.e2tf5xrdhnk4j3nq@medion>
+References: <20201004100218.311653-1-alex.dewar90@gmail.com>
+ <87blhfbysb.fsf@codeaurora.org>
 MIME-Version: 1.0
-X-Received: by 2002:a5d:8b8e:: with SMTP id p14mr121949iol.171.1601971703633;
- Tue, 06 Oct 2020 01:08:23 -0700 (PDT)
-Date:   Tue, 06 Oct 2020 01:08:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000055e16405b0fc1a90@google.com>
-Subject: WARNING in sta_info_alloc
-From:   syzbot <syzbot+45d7c243c006f39dc55a@syzkaller.appspotmail.com>
-To:     a@unstable.cc, b.a.t.m.a.n@lists.open-mesh.org,
-        catalin.marinas@arm.com, davem@davemloft.net,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, mareklindner@neomailbox.ch,
-        netdev@vger.kernel.org, sw@simonwunderlich.de,
-        syzkaller-bugs@googlegroups.com, will.deacon@arm.com,
-        zlim.lnx@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87blhfbysb.fsf@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+On Tue, Oct 06, 2020 at 10:26:28AM +0300, Kalle Valo wrote:
+> Alex Dewar <alex.dewar90@gmail.com> writes:
+> 
+> > ath11k_peer_create() is called without its return value being checked,
+> > meaning errors will be unhandled. Add missing check and, as the mutex is
+> > unconditionally unlocked on leaving this function, simplify the exit
+> > path.
+> >
+> > Addresses-Coverity-ID: 1497531 ("Code maintainability issues")
+> > Fixes: 701e48a43e15 ("ath11k: add packet log support for QCA6390")
+> > Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
+> > ---
+> >  drivers/net/wireless/ath/ath11k/mac.c | 21 +++++++++------------
+> >  1 file changed, 9 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+> > index 7f8dd47d2333..58db1b57b941 100644
+> > --- a/drivers/net/wireless/ath/ath11k/mac.c
+> > +++ b/drivers/net/wireless/ath/ath11k/mac.c
+> > @@ -5211,7 +5211,7 @@ ath11k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
+> >  	struct ath11k *ar = hw->priv;
+> >  	struct ath11k_base *ab = ar->ab;
+> >  	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+> > -	int ret;
+> > +	int ret = 0;
+> 
+> I prefer not to initialise the ret variable.
+> 
+> >  	arvif->is_started = true;
+> >  
+> >  	/* TODO: Setup ps and cts/rts protection */
+> >  
+> > -	mutex_unlock(&ar->conf_mutex);
+> > -
+> > -	return 0;
+> > -
+> > -err:
+> > +unlock:
+> >  	mutex_unlock(&ar->conf_mutex);
+> >  
+> >  	return ret;
+> 
+> So in the pending branch I changed this to:
+> 
+> 	ret = 0;
+> 
+> out:
+> 	mutex_unlock(&ar->conf_mutex);
+> 
+> 	return ret;
+> 
+> Please check.
 
-syzbot found the following issue on:
+Hi Kalle,
 
-HEAD commit:    549738f1 Linux 5.9-rc8
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=15b97ba3900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c06bcf3cc963d91c
-dashboard link: https://syzkaller.appspot.com/bug?extid=45d7c243c006f39dc55a
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12bae9c0500000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1099b1c0500000
+I'm afraid you've introduced a bug ;). The body of the first if-statement
+in the function doesn't set ret because no error has occurred. So now
+it'll jump to the label and the function will return ret uninitialized.
 
-The issue was bisected to:
+With the gcc extension, ret will be initialised to zero anyway, so we're
+not saving anything by explicitly assigning to ret later in the
+function.
 
-commit 643c332d519bdfbf80d21f40d1c0aa0ccf3ec1cb
-Author: Zi Shen Lim <zlim.lnx@gmail.com>
-Date:   Thu Jun 9 04:18:50 2016 +0000
+Best,
+Alex
 
-    arm64: bpf: optimize LD_ABS, LD_IND
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=11d44477900000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=13d44477900000
-console output: https://syzkaller.appspot.com/x/log.txt?x=15d44477900000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+45d7c243c006f39dc55a@syzkaller.appspotmail.com
-Fixes: 643c332d519b ("arm64: bpf: optimize LD_ABS, LD_IND")
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 6879 at net/mac80211/ieee80211_i.h:1447 ieee80211_get_sband net/mac80211/ieee80211_i.h:1447 [inline]
-WARNING: CPU: 0 PID: 6879 at net/mac80211/ieee80211_i.h:1447 sta_info_alloc+0x1900/0x1f90 net/mac80211/sta_info.c:469
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 6879 Comm: syz-executor071 Not tainted 5.9.0-rc8-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x198/0x1fd lib/dump_stack.c:118
- panic+0x382/0x7fb kernel/panic.c:231
- __warn.cold+0x20/0x4b kernel/panic.c:600
- report_bug+0x1bd/0x210 lib/bug.c:198
- handle_bug+0x38/0x90 arch/x86/kernel/traps.c:234
- exc_invalid_op+0x14/0x40 arch/x86/kernel/traps.c:254
- asm_exc_invalid_op+0x12/0x20 arch/x86/include/asm/idtentry.h:536
-RIP: 0010:ieee80211_get_sband net/mac80211/ieee80211_i.h:1447 [inline]
-RIP: 0010:sta_info_alloc+0x1900/0x1f90 net/mac80211/sta_info.c:469
-Code: 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 f0 04 00 00 49 8b 9f 60 01 00 00 e9 fc f6 ff ff e8 80 20 b6 f9 <0f> 0b e8 e9 62 66 00 31 ff 89 c3 89 c6 e8 ce 1c b6 f9 85 db 74 1d
-RSP: 0018:ffffc9000539f498 EFLAGS: 00010293
-RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffffffff87c01d61
-RDX: ffff8880a91ec3c0 RSI: ffffffff87c01e10 RDI: 0000000000000005
-RBP: ffff8880896e0c80 R08: 0000000000000001 R09: ffffffff8d0c29e7
-R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
-R13: ffff8880896e31b0 R14: dffffc0000000000 R15: ffff888092f06000
- ieee80211_add_station+0x28c/0x660 net/mac80211/cfg.c:1586
- rdev_add_station net/wireless/rdev-ops.h:190 [inline]
- nl80211_new_station+0xde7/0x1440 net/wireless/nl80211.c:6294
- genl_family_rcv_msg_doit net/netlink/genetlink.c:669 [inline]
- genl_family_rcv_msg net/netlink/genetlink.c:714 [inline]
- genl_rcv_msg+0x61d/0x980 net/netlink/genetlink.c:731
- netlink_rcv_skb+0x15a/0x430 net/netlink/af_netlink.c:2470
- genl_rcv+0x24/0x40 net/netlink/genetlink.c:742
- netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
- netlink_unicast+0x533/0x7d0 net/netlink/af_netlink.c:1330
- netlink_sendmsg+0x856/0xd90 net/netlink/af_netlink.c:1919
- sock_sendmsg_nosec net/socket.c:651 [inline]
- sock_sendmsg+0xcf/0x120 net/socket.c:671
- ____sys_sendmsg+0x6e8/0x810 net/socket.c:2353
- ___sys_sendmsg+0xf3/0x170 net/socket.c:2407
- __sys_sendmsg+0xe5/0x1b0 net/socket.c:2440
- do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x441999
-Code: e8 dc 05 03 00 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 0f 83 7b 0d fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007ffd9fa54bf8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 0000000000441999
-RDX: 0000000000000000 RSI: 0000000020000040 RDI: 0000000000000005
-RBP: 000000306e616c77 R08: 0000000000000000 R09: 0000002000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000032
-R13: 0000000000000000 R14: 000000000000000c R15: 0000000000000004
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+> 
+> -- 
+> https://patchwork.kernel.org/project/linux-wireless/list/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
