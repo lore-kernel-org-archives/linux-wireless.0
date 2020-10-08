@@ -2,108 +2,85 @@ Return-Path: <SRS0=Edxh=DP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD26C43467
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 11:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B54C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 11:33:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D59F5215A4
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 11:02:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A7652145D
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 11:33:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="YWrjF8eS"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="i8er5Bm4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728622AbgJHLCP (ORCPT
+        id S1729440AbgJHLdV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 07:02:15 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:29238 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726015AbgJHLCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 07:02:13 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1602154933; h=Content-Transfer-Encoding: Content-Type:
- MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
- To: From: Sender; bh=eJBexxd8ncXOiQfY+iAAWapiGqaBRPOkeIcaQjW/Sdw=; b=YWrjF8eSkGmjZXbnNp0Q7beglqF3IQsNz+GyWTHUXqiiU/8lJcWxSGTbuoMsBCad4ju96qwW
- qPRl/3jQrDJlCSpt2Cx1IiuZoX6Nx14EO3SUkMxLmkoIUwTWRAE4L7H5Q69f1v+24ZXcZdPU
- aOSrfe3SJPVN99twW13grR0hlYw=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 5f7ef170856d9308b50ff986 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 08 Oct 2020 11:01:04
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0C905C433F1; Thu,  8 Oct 2020 11:01:04 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C6B91C433CA;
-        Thu,  8 Oct 2020 11:01:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C6B91C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     =?utf-8?B?SsOpcsO0bWU=?= Pouiller <jerome.pouiller@silabs.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 0/7] wfx: move out from the staging area
-References: <20201007101943.749898-1-Jerome.Pouiller@silabs.com>
-        <20201007105513.GA1078344@kroah.com> <87ft6p2n0h.fsf@codeaurora.org>
-        <16184307.3FagCOgvEJ@pc-42>
-Date:   Thu, 08 Oct 2020 14:00:59 +0300
-In-Reply-To: <16184307.3FagCOgvEJ@pc-42> (=?utf-8?B?IkrDqXLDtG1l?=
- Pouiller"'s message of "Thu,
-        08 Oct 2020 12:10:08 +0200")
-Message-ID: <87tuv50yok.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 8 Oct 2020 07:33:21 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:33947 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729371AbgJHLdU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Oct 2020 07:33:20 -0400
+X-UUID: 7703e1a59818488b97e8e9f06925a20d-20201008
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=lB2yOL1yHNpt3oHBOa9YeTNVGOoIXY9o4YvJcmDEOSo=;
+        b=i8er5Bm4u3Nu6JJFAY2mNnNMKf6YabRwkwPJvB8mhiQnIJ5petOEbbklNeTZUUH+Yd6zBEKjuvWR7JsCXjeK5kyylWlNyBvW9oagkJEV+l5+kshiLNfIdVxCqcIIU88zc0MqvqE22N67ckCHO0xs0mYuHKwFlqc/3xSohEjC6Ko=;
+X-UUID: 7703e1a59818488b97e8e9f06925a20d-20201008
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1490517639; Thu, 08 Oct 2020 19:33:15 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 8 Oct 2020 19:33:13 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 8 Oct 2020 19:33:13 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 05/10] mt76: mt7915: fix tx rate related fields in tx descriptor
+Date:   Thu, 8 Oct 2020 19:28:59 +0800
+Message-ID: <20201008112904.10620-5-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201008112904.10620-1-shayne.chen@mediatek.com>
+References: <20201008112904.10620-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-J=C3=A9r=C3=B4me Pouiller <jerome.pouiller@silabs.com> writes:
+Q29ycmVjdCB0aGUgYml0ZmllbGRzIG9mIHR4IHJhdGV2YWwgYW5kIGJ3IGluIHR4IGRlc2NyaXB0
+b3IuDQoNClNpZ25lZC1vZmYtYnk6IFNoYXluZSBDaGVuIDxzaGF5bmUuY2hlbkBtZWRpYXRlay5j
+b20+DQpSZXZpZXdlZC1ieTogUnlkZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KLS0t
+DQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmggfCA2ICsr
+KystLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoN
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9t
+YWMuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21hYy5oDQpp
+bmRleCA0NTZiYjgxLi4wOTIxYjZmIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21l
+ZGlhdGVrL210NzYvbXQ3OTE1L21hYy5oDQpAQCAtMjMxLDcgKzIzMSw3IEBAIGVudW0gdHhfbWN1
+X3BvcnRfcV9pZHggew0KICNkZWZpbmUgTVRfVFhENl9BTlRfSUQJCQlHRU5NQVNLKDcsIDQpDQog
+I2RlZmluZSBNVF9UWEQ2X0RZTl9CVwkJCUJJVCgzKQ0KICNkZWZpbmUgTVRfVFhENl9GSVhFRF9C
+VwkJQklUKDIpDQotI2RlZmluZSBNVF9UWEQ2X0JXCQkJR0VOTUFTSygyLCAwKQ0KKyNkZWZpbmUg
+TVRfVFhENl9CVwkJCUdFTk1BU0soMSwgMCkNCiANCiAjZGVmaW5lIE1UX1RYRDdfVFhEX0xFTgkJ
+CUdFTk1BU0soMzEsIDMwKQ0KICNkZWZpbmUgTVRfVFhEN19VRFBfVENQX1NVTQkJQklUKDI5KQ0K
+QEAgLTI0OCw3ICsyNDgsOSBAQCBlbnVtIHR4X21jdV9wb3J0X3FfaWR4IHsNCiAjZGVmaW5lIE1U
+X1RYX1JBVEVfU1RCQwkJCUJJVCgxMykNCiAjZGVmaW5lIE1UX1RYX1JBVEVfTlNTCQkJR0VOTUFT
+SygxMiwgMTApDQogI2RlZmluZSBNVF9UWF9SQVRFX01PREUJCQlHRU5NQVNLKDksIDYpDQotI2Rl
+ZmluZSBNVF9UWF9SQVRFX0lEWAkJCUdFTk1BU0soNSwgMCkNCisjZGVmaW5lIE1UX1RYX1JBVEVf
+U1VfRVhUX1RPTkUJCUJJVCg1KQ0KKyNkZWZpbmUgTVRfVFhfUkFURV9EQ00JCQlCSVQoNCkNCisj
+ZGVmaW5lIE1UX1RYX1JBVEVfSURYCQkJR0VOTUFTSygzLCAwKQ0KIA0KICNkZWZpbmUgTVRfVFhQ
+X01BWF9CVUZfTlVNCQk2DQogDQotLSANCjIuMTcuMQ0K
 
-> On Thursday 8 October 2020 09:30:06 CEST Kalle Valo wrote:
-> [...]
->> Yes, the driver needs to be reviewed in linux-wireless list. I recommend
->> submitting the whole driver in a patchset with one file per patch, which
->> seems to be the easiest way to review a full driver. The final move will
->> be in just one commit moving the driver, just like patch 7 does here. As
->> an example see how wilc1000 review was done.
->
-> I see. I suppose it is still a bit complicated to review? Maybe I could
-> try to make things easier.
->
-> For my submission to staging/ I had taken time to split the driver in an
-> understandable series of patches[1]. I think it was easier to review than
-> just sending files one by one. I could do the same thing for the
-> submission to linux-wireless. It would ask me a bit of work but, since I
-> already have a template, it is conceivable.
->
-> Do you think it is worth it, or it would be an unnecessary effort?
->
-> [1]
-> https://lore.kernel.org/driverdev-devel/20190919142527.31797-1-Jerome.Pou=
-iller@silabs.com/
->      or commits a7a91ca5a23d^..40115bbc40e2
-
-I don't know how others think, but I prefer to review new drivers "one
-file per patch" style as I get to see the big picture easily. And
-besides, splitting the driver like that would be a huge job for you. I
-don't think it's worth your time in this case. And making changes in the
-driver during review process becomes even more complex.
-
---=20
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
