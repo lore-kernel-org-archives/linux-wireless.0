@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6800CC4727E
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:58:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97DB4C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:58:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B1E421924
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:58:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31006206F0
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:58:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Uns8iLgr"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l9pdMfww"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729322AbgJHP5y (ORCPT
+        id S1732009AbgJHP6R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42378 "EHLO
+        Thu, 8 Oct 2020 11:58:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731892AbgJHP5v (ORCPT
+        with ESMTP id S1731166AbgJHP6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:57:51 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BC27C0613D3;
-        Thu,  8 Oct 2020 08:57:51 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id 34so4634959pgo.13;
-        Thu, 08 Oct 2020 08:57:51 -0700 (PDT)
+        Thu, 8 Oct 2020 11:58:03 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40894C0613D2;
+        Thu,  8 Oct 2020 08:58:03 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id l126so4348289pfd.5;
+        Thu, 08 Oct 2020 08:58:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=g/P3d1o6K+7liSK5tnZOFW29VqzJ83c3uAI9iAPQ7vc=;
-        b=Uns8iLgrOdNab0DKl/a4h5IgljoA7+n01g2c0x9ozuuqQtR/DGSo5LdB387QbsGpgh
-         Nvr4fyVIQ2QmKXMqiaySoxaKDSqb0gXp4Tq75A+QDdv9nWsWv69vBY3oC6xTD7Z5rx+T
-         76foE/jvrw+c0kFH6xjKj3kEYEoQndfqEzV8643hB7uCyYGZw9VBy27x/8Vldd5i4Vfb
-         O/eE80zhE9AhTwGiLC+WAB1Mikw/s3DIrn1+4HnD+hMluIe3AACy7mdLtyj5pYuIw27R
-         6nx+g6IY+2Mby/Q/yLM4wiT278Ap5EdBiIMy+1dGXjyV7nNyMRB9gDPOBOLZI3R9DnRp
-         /l0g==
+        bh=GkTNl3/nsnJPBgnMSizZWf0E4PedPJPKpjsCAjH/rSI=;
+        b=l9pdMfwwUkBmdUfH0BiH+l9UFVL3L4n9wEhKj6JsXB4H31pUdpiKYnKtP+FAtjb9Pv
+         l3gCzsg1LMMBvnDsqMs1KlNzSPf1KVrhxGVSYPZMaOn/3ImTMJYMPJWh3BPPYLmDfUHe
+         r+TnEY8wIWX7bFjbvFVCRH1/aes3F/dgmp8lzWHQzdph3WGtxo+AKihP/BQHeLuBuMhw
+         z6InIOHYxFKf/G7AlGpDyRAgO2RUsi6LzWd30wzAeXTQqGyZpKB6m/Guf9sIIVyDUnfT
+         jFM2nxPXaNIPtMOsI611TbsaUL2CZE/g2/VukAxuNR7yVr/5gcmSDzOdRwwiKEd9IlOG
+         JjEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=g/P3d1o6K+7liSK5tnZOFW29VqzJ83c3uAI9iAPQ7vc=;
-        b=cwq2t6BTpOT+kWP7uQNbz5J548JKs/vgLPvsSJUkOEw0rbeEcqTnUYdAuS/WBl72Q0
-         p/kltl+kZda8h6ycCQdlzTYHpkAl5s6P2cyl1B4rSLYOW3123TCqb3Wo2kuISEduhYDI
-         U3tzsnPho2HM0/RtoOar3Gj84fUO5ncMC/+aCjvMU+Xr88b2u0S2UUitjSSCxYDLt8KR
-         wiXv8QMpBHYbsdBEBNOOGo1rdEC8A/O9ODrQg4g4DdUXcQ0xpiZDctDzeKqAEE8QnAZt
-         8K2mG0HXd6+aXr5Ryxh6ocRnN6n9h67ptL+b/t7RNHU9KwRqRm3W9TbtfYK5tXjYSGd1
-         GlpQ==
-X-Gm-Message-State: AOAM533wxF+bIAKlBXvhvVFVu7jMjTXi3uVOnx2cOQYdVHBnGrtIA5AX
-        bG3P+NnntyNQm4Si0t2WsHI=
-X-Google-Smtp-Source: ABdhPJxDzCULo0sZ8Ln7UbDE2JAQKX+Ad7qA4rJ0F9sQNQ0x4JMbaQLI5d1/lFhg1cuJd/Hn49A5gg==
-X-Received: by 2002:a17:90a:9415:: with SMTP id r21mr8960151pjo.180.1602172670592;
-        Thu, 08 Oct 2020 08:57:50 -0700 (PDT)
+        bh=GkTNl3/nsnJPBgnMSizZWf0E4PedPJPKpjsCAjH/rSI=;
+        b=HaT2FqLxSMyv3TAPhfDKMuJR5YETasjoZZ1Z+2n35+WeP4NI8Q+BeBmIo8nVafjKzZ
+         +2LomIavaJ23vLmXF2YkQlGbtoFfszrvyWjlcmXMn18h0alXkXI0l5VIlujByh+oMUJn
+         UZKe4bXPPgbySvRqgUnDZQki6fPbfRw1szv0cAukupYVx9LTz88l6SBCUwVd3+iOzTZV
+         rT5ie0GaPmmhWlwrsVAO4r+XYBmpU68DGFNTEQcqiT5PS4N8esFKEk5z2LmRhSin7oLE
+         HDFu0k2dnfvmUN3SAewFL+DuC8ohVgTJ4pW3QLgAjrwc95Buh6SRJPvV0I27CZxWYN9F
+         zDTw==
+X-Gm-Message-State: AOAM532X5Q9K8kKWGgzQ0ej1Yhk0eDOAbpJ1ezaYgGd8JAIVwEk0Upzl
+        DqUbRFlV//ooWyYKDMtFEMg=
+X-Google-Smtp-Source: ABdhPJyEbdiyg2r4RhJZiJRw8ba/9x4CpgA8jVNX0HpSWq/BGG/+8FzdHFnUWDmuzRfNbC7KemSmpA==
+X-Received: by 2002:a17:90b:118a:: with SMTP id gk10mr8429327pjb.218.1602172682817;
+        Thu, 08 Oct 2020 08:58:02 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.57.47
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.58.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:57:49 -0700 (PDT)
+        Thu, 08 Oct 2020 08:58:02 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 106/117] Bluetooth: set dut_mode_fops.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:58 +0000
-Message-Id: <20201008155209.18025-106-ap420073@gmail.com>
+Subject: [PATCH net 110/117] Bluetooth: set use_debug_keys_fops.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:52:02 +0000
+Message-Id: <20201008155209.18025-110-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,24 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 4b4148e9acc1 ("Bluetooth: Add support for setting DUT mode")
+Fixes: 0886aea6acd2 ("Bluetooth: Expose debug keys usage setting via debugfs")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- net/bluetooth/hci_core.c | 1 +
+ net/bluetooth/hci_debugfs.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
-index 68bfe57b6625..5c2e65b00e68 100644
---- a/net/bluetooth/hci_core.c
-+++ b/net/bluetooth/hci_core.c
-@@ -116,6 +116,7 @@ static const struct file_operations dut_mode_fops = {
- 	.read		= dut_mode_read,
- 	.write		= dut_mode_write,
+diff --git a/net/bluetooth/hci_debugfs.c b/net/bluetooth/hci_debugfs.c
+index 5e8af2658e44..cdf19e494c31 100644
+--- a/net/bluetooth/hci_debugfs.c
++++ b/net/bluetooth/hci_debugfs.c
+@@ -284,6 +284,7 @@ static const struct file_operations use_debug_keys_fops = {
+ 	.open		= simple_open,
+ 	.read		= use_debug_keys_read,
  	.llseek		= default_llseek,
 +	.owner		= THIS_MODULE,
  };
  
- static ssize_t vendor_diag_read(struct file *file, char __user *user_buf,
+ static ssize_t sc_only_mode_read(struct file *file, char __user *user_buf,
 -- 
 2.17.1
 
