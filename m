@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77D9DC433DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97752C433E7
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19349206F0
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A857206F0
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jkCn4Ovc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S5ZCJbOy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731408AbgJHQAN (ORCPT
+        id S1729910AbgJHPyY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 12:00:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41936 "EHLO
+        Thu, 8 Oct 2020 11:54:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730491AbgJHPzb (ORCPT
+        with ESMTP id S1729753AbgJHPyQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:55:31 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FF8AC0613D3;
-        Thu,  8 Oct 2020 08:55:31 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id x16so4670398pgj.3;
-        Thu, 08 Oct 2020 08:55:31 -0700 (PDT)
+        Thu, 8 Oct 2020 11:54:16 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD7D6C0613D3;
+        Thu,  8 Oct 2020 08:54:16 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id y14so4628027pgf.12;
+        Thu, 08 Oct 2020 08:54:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bo14ePskj/WMnlv8VJyYTmnPSClJHgwJt2g6ezvG6q0=;
-        b=jkCn4OvcqfO4p8OwCRKzL/uoeZNvyT+zCoYhcWCk6+ZELy746LHzyMlnLK10y2PVNY
-         3Z4wpUk/fZQ9pTEaeDUBK3GZ8ap1g6rve91bphqbiDHKBgG22wGFwjR7fczcn+kHLxlp
-         d6GbFGGuip7HXmL197Kyxn1GNpkgMHuD5r7qx7d7duH5DFebD3PDm+9X3KNmzdjNLBV9
-         JflenVregldnSattjMloLBa8552Pc7IQ7FhU4jlIO9qGQfg+WA6/WxS7ECaq2e96ijOl
-         A6lbb+c/kVsjF55daw/JT02Ia4AdtYXigcg61UQoLx4iaGXO9sB7m8DC3vCxwVuLfTKE
-         tOng==
+        bh=iR4S+vy+X8hSsoqTbdxoK8jm+a+g1MB2e+bQrH820wQ=;
+        b=S5ZCJbOy7n/QZlWA+9mN1zhH/XpNcrf9RmWlfwED1GCGVd1W/J6PRDVAcVYXkcCjIc
+         +9BiE0fJ+ET0F7Ce2xrG+CsCd2WMnsRgakevHI+KhA9fgcu8tZo034pH4rhK89WoI/9L
+         DN7gK8yJTQ8N81tWiat1fqk49SEYk91bbY0DrB9c6k5cTPaK9bqvYV3JKgICHxszUaXu
+         lU1D2EioQt5jD8owDbTrfRGyga3RWMWuUsEKOMr/cVnJWhO4K7bXxYHXE0i6mEVFudjb
+         W5gxRxc6rVdtoBfbbwneh1fRmb/w8dCN+pTc9y0Z94jgR15pmBOw9IitRpW8fPyzmVeg
+         mN4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=bo14ePskj/WMnlv8VJyYTmnPSClJHgwJt2g6ezvG6q0=;
-        b=lJ01iTAyfNbNAfmnJSUFWSXgbkKlMtq2C/8iPX73D4dOyqjJSj9WHeFfr3s14Axlxi
-         QiEBxURx96PY6Ky/B+8rQW5j14WCqGqqTC366HT5Y9c1ldYxVae/1qTgPa8GMDPWdwZ8
-         VnWzR/vWUJaP02sXwOfbUlOg/Mr+txDdKzbkVnbRaBLS1W04NfwzHgFyMfOrp8GRDCNB
-         ffXdF6FUfJjXGiHf3csiif7qs2bKMH/FcAzl1aQvg63PkWRNbq1IR9bo1nqkyO5wiC+E
-         0Wvu/9Su4kTD3CcN9P+LQgXaqWdB/ylb26fPSEy0I2ouB6cdJ4soXm9Tv7s1N8kS1+G7
-         s5Cw==
-X-Gm-Message-State: AOAM530GIlJBvy3ZYN90LkcIt4Tb+5IDnaSjj9o1VT0OpCotTohqDKQH
-        6O5KfK0zvKElLUu1k5E+gnk=
-X-Google-Smtp-Source: ABdhPJzKZqbR+KvuT/ap0FpnbN0bvzNbUbTrbtYfupwZyoHWeEJVElXxIhGFVR+zRBPKeNLxCo+BxQ==
-X-Received: by 2002:a62:e706:0:b029:152:5364:f5e4 with SMTP id s6-20020a62e7060000b02901525364f5e4mr8017086pfh.71.1602172530757;
-        Thu, 08 Oct 2020 08:55:30 -0700 (PDT)
+        bh=iR4S+vy+X8hSsoqTbdxoK8jm+a+g1MB2e+bQrH820wQ=;
+        b=fECsPeUeX7IYA7f6NjcoywxtG4zqFtikAlqGfCwDINH1z9LSztr5J91Fwoeq9EL5Nb
+         VNv1PgI3iDpQPTj58xsBPeMOtll0XGgY+moV6WTj41JKtjFHlKa9qFNgintjWBHk8jkY
+         nd+q3N15Fy0fWCh4z8uxTu1XV1ztXi7clizHDuen6ynjd9iaAuglP4zhlpX//2dV73lb
+         OkYkFB/PR6UFjZGCfcM2Z8UNYq69He4rhYhV7vsiz+ER3PC6FzWZID+D00keJ/kaaptk
+         IHjLElX1spam5YZDMD1dKQWO1iC/n+GiHJgFOdvgbZp2dOMqimNNdAY6vMTr+4qhtjGr
+         K/lg==
+X-Gm-Message-State: AOAM532OQB930zcI9bhWbbseF4a8MIn/jtedRn0sab/rbvgA24qCl4Nw
+        8LsLTck7tVhPo+nH0qDkPUE=
+X-Google-Smtp-Source: ABdhPJyT87bpPvkaVRP+RJzdz/UgAQnnKLWZ2eOQ7hEo672A+FnaboJHcfQUmxMmUe5y45OYuEivuw==
+X-Received: by 2002:a17:90a:2a08:: with SMTP id i8mr8980567pjd.65.1602172456402;
+        Thu, 08 Oct 2020 08:54:16 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.55.27
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.54.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:55:30 -0700 (PDT)
+        Thu, 08 Oct 2020 08:54:15 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 061/117] iwlagn: set DEBUGFS_WRITE_FILE_OPS.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:13 +0000
-Message-Id: <20201008155209.18025-61-ap420073@gmail.com>
+Subject: [PATCH net 037/117] wl12xx: set tx_queue_len_ops.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:50:49 +0000
+Message-Id: <20201008155209.18025-37-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,24 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 16db88ba51d6 ("iwlagn: move dump_csr and dump_fh to transport layer")
+Fixes: 2f01a1f58889 ("wl12xx: add driver")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 1 +
+ drivers/net/wireless/ti/wl1251/debugfs.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e408a381c82b..7c13184fc8e7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2513,6 +2513,7 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.write = iwl_dbgfs_##name##_write,                              \
- 	.open = simple_open,						\
- 	.llseek = generic_file_llseek,					\
-+	.owner = THIS_MODULE,						\
+diff --git a/drivers/net/wireless/ti/wl1251/debugfs.c b/drivers/net/wireless/ti/wl1251/debugfs.c
+index 21d432532bc3..165e346bf383 100644
+--- a/drivers/net/wireless/ti/wl1251/debugfs.c
++++ b/drivers/net/wireless/ti/wl1251/debugfs.c
+@@ -214,6 +214,7 @@ static const struct file_operations tx_queue_len_ops = {
+ 	.read = tx_queue_len_read,
+ 	.open = simple_open,
+ 	.llseek = generic_file_llseek,
++	.owner = THIS_MODULE,
  };
  
- #define DEBUGFS_READ_WRITE_FILE_OPS(name)				\
+ static ssize_t tx_queue_status_read(struct file *file, char __user *userbuf,
 -- 
 2.17.1
 
