@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FACC4363C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9777BC4363A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:57:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39DC6206F0
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:57:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E4A8206F0
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:57:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BgqevvE+"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DB1Ecoyp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731662AbgJHP5n (ORCPT
+        id S1731967AbgJHP5u (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:57:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42348 "EHLO
+        Thu, 8 Oct 2020 11:57:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731927AbgJHP5m (ORCPT
+        with ESMTP id S1731892AbgJHP4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:57:42 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A0FC061755;
-        Thu,  8 Oct 2020 08:57:41 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id x13so1724646pfa.9;
-        Thu, 08 Oct 2020 08:57:41 -0700 (PDT)
+        Thu, 8 Oct 2020 11:56:51 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02BC6C061755;
+        Thu,  8 Oct 2020 08:56:52 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id x16so4673628pgj.3;
+        Thu, 08 Oct 2020 08:56:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ZcJvpCxZ9I2vMvuvbdBZLufH22DuxRSXW7G/b4Gx4qE=;
-        b=BgqevvE+jeD3439VKy7MbG3JZ7kEjYY4WJM5FdSKThC5Yfwt89+KzH5I+J6LmxcWT1
-         FBZO/BfWeApkJCQ6RT05ftnRUU4f22KFGw/xQHqKe851dRtfFByI/TA47vN5GiMQElGi
-         PqzlO6DRL0dCoRVNNLCmb8K3nVvWsTw63PIW1clxT3zdYbNTn/M4hu0fHoxC2+Nupuhu
-         2yfDgZnBX+syDgTJ5caRfNUxj83RaxMCEFKwNYKKyZIKwAxZh7t9KBjEjboGZfbegvVK
-         i2RI0JGBzMluLwyWS9G3FUF/rdutWRKjDF/9E5cgectFr6cvkmdqJQvHCMVkiFQ+zmO6
-         RvIw==
+        bh=aGZnGeKXb/4W754G+q1uGMo7EKzQsbVNPjZnlEWbXqo=;
+        b=DB1EcoypNY9HQ9vP/ZQDs+JcVAFPQEoHii3uTKcw8IlqvtDGiqhefgm9CQbAvheovD
+         C+kKKqj/Our4LtqWU/UoYdNYLBnBDcgQ2UqPxGkTUTRERYgs2C8FSWIkvTrMA7ROsu7f
+         UsQY/trOlsAyg1QGifjbr387xACRwUsvDymzII8YqXoBU+JHti2zoeZr4Uj0BevfDEsj
+         3qL8OVzsBfS7+GPz6SlvSEshaTVWmHpdDqS0zsD/c7JaYE54B4GQx9U+yJVgNmuWNwSN
+         ZwRpv7z/yL8+xBD6eo0J63QcSF09aT8EXmSS8YsQYEDnyQ5ab8rJVnagkywdjhcWmN8z
+         88/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ZcJvpCxZ9I2vMvuvbdBZLufH22DuxRSXW7G/b4Gx4qE=;
-        b=BRAocvlpMH9AyZ7FFzF2d8wsIBYqHw+J2PUKCwK9AaO33o4NJwg9DBNfR3suIS89Fw
-         GjkP4V8RsNtWloiFerTMluEigxN0b+kc19ZHCb0Rl+95pXHSZbY4RB5eLr6NTAmfs/uu
-         GvjL4hSkclpm4VhbWCcK7V7UOta7n2RnRr/yraEkKjg/M8Cx0yUwHx0T1jQkS8mzL+h7
-         5VDdp7xgY0NcxcaS+cpN+JkNgObEhfd5Sv3d28+/ikGkHasb5eCxIiGDcVPD+gJd/qqi
-         F9Zp9rYJi2M8Ss5z1nTMGCxij+KvtCVTkx56Bma78p8hTefFFbop/2rf1ksAR1f6esWt
-         azfw==
-X-Gm-Message-State: AOAM533+UjT/NlsaL+NUf2MO1N2uMgapi71Epj4VIkr/GNOwkSdykJi0
-        N/zirAmIgMAtyacyDb9EasU=
-X-Google-Smtp-Source: ABdhPJzYMntBzjPM/ADyty0EBrnqpblHKEG1q9Qm7PrriQgle1UYKPFNNYPi3JUcDgNKYdWax9QkOw==
-X-Received: by 2002:a17:90a:6343:: with SMTP id v3mr4609310pjs.109.1602172661135;
-        Thu, 08 Oct 2020 08:57:41 -0700 (PDT)
+        bh=aGZnGeKXb/4W754G+q1uGMo7EKzQsbVNPjZnlEWbXqo=;
+        b=jgJCAVqPCcOMU7ta1X1csQc+Bd4gtGMdTuCfCJCcgrSDyjctc+u8o4E1gf41oEOjh8
+         UsuvE7/dckVLJ1mBhIFfzHNq4KvHw2/V22PFQP52HmhnysChOkY/9MsAv8zCkgQoEEtC
+         crPS3ctnciwF/BjbMFiF75cuuEwYyUifn9xUqZ+q/oeOxHNts3FrJ1HSSwxgy3Pz5GVS
+         uk8AdFbGrc7uaUfQJxTFE0ZbmRtH5NaRFXO7D+ajwZsDwPhNzGnOcJSbq45fZEfc8vg0
+         TmYN2hpVvhWyWQouuqOcEuvHtLd7ow7JPxB+fN0keR9Xc22suxrE/KMxTl/huhTiwQ1F
+         l+RQ==
+X-Gm-Message-State: AOAM532ebZnch5MGMh6HmziKtGdeM5uOEGk61ZIOFsDnIPdwD5xq9zvQ
+        x45rjpeEs5kH3VXRbVDyomg=
+X-Google-Smtp-Source: ABdhPJwEOpTER7zbhABAZgDD4dvOTJBB90S/ppnvdwrlVJH6yEFLM9shYc/xABwQb/+0kSu35vsqxg==
+X-Received: by 2002:a63:3205:: with SMTP id y5mr4782541pgy.122.1602172611596;
+        Thu, 08 Oct 2020 08:56:51 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.57.38
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.56.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:57:40 -0700 (PDT)
+        Thu, 08 Oct 2020 08:56:50 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 103/117] mt76: set fops_ampdu_stat.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:55 +0000
-Message-Id: <20201008155209.18025-103-ap420073@gmail.com>
+Subject: [PATCH net 087/117] wil6210: set fops_link_stats_global.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:51:39 +0000
+Message-Id: <20201008155209.18025-87-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,32 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Fixes: 0c936b3c9633 ("wil6210: add support for link statistics")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-index ff448a1ad4e3..7d7247a9b3ec 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-@@ -53,6 +53,7 @@ static const struct file_operations fops_ampdu_stat = {
- 	.read = seq_read,
- 	.llseek = seq_lseek,
- 	.release = single_release,
-+	.owner = THIS_MODULE,
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a2dce1ed9d0d..afbe30989ee4 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -2065,6 +2065,7 @@ static const struct file_operations fops_link_stats_global = {
+ 	.read		= seq_read,
+ 	.write		= wil_link_stats_global_write,
+ 	.llseek		= seq_lseek,
++	.owner		= THIS_MODULE,
  };
  
- static int
-@@ -92,6 +93,7 @@ static const struct file_operations fops_dfs_stat = {
- 	.read = seq_read,
- 	.llseek = seq_lseek,
- 	.release = single_release,
-+	.owner = THIS_MODULE,
- };
- 
- static int read_agc(struct seq_file *file, void *data)
+ static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
 -- 
 2.17.1
 
