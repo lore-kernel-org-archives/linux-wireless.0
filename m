@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D613C4363C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E37C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA6E5206F7
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:56:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F66217BA
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:56:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rKqP7eYm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bNwV1OIY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731789AbgJHP4O (ORCPT
+        id S1731778AbgJHP4M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:56:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42070 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731781AbgJHP4M (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 8 Oct 2020 11:56:12 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8F2C0613D7;
-        Thu,  8 Oct 2020 08:56:11 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id k8so4351349pfk.2;
-        Thu, 08 Oct 2020 08:56:11 -0700 (PDT)
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41974 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731368AbgJHPzo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Oct 2020 11:55:44 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3966C061755;
+        Thu,  8 Oct 2020 08:55:43 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id y14so4320568pfp.13;
+        Thu, 08 Oct 2020 08:55:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Sk5F78VcGPn+w7sgfEi3r97SHb8j3ok8zbS2IeIk1ug=;
-        b=rKqP7eYmgW/tQFTs4r1JB9NYk3ez37im6n/Qlk1lPzoct+Sh5ayv2e4e3pj4RoaXD0
-         xsoo9v951BK4whK1el3HMBiTW1IwS0uK+V6WChVgS3N1wmOvQfhT3CNe3XyGlbxYMX32
-         vwBHz/lk/KJKQJVfg4lsrlUG5Qk+iEjxmLFi8Tz9wq+suumY/tLqtGYdmAlsWWsLjymm
-         nZfixauEonWzu4YNSPv1K2bA4XgOOfQH5GrDyLO/r33PZL0HetiPQvLqr6oi0i2jhhYD
-         LD3ksP7XzN/IskBx4bF2KbabsuMI9KD0lyo8DuyHU2XFSd53XKN2aJ/6AzpkUCfksHmG
-         hzVA==
+        bh=h0p8Xt3XdtzkknQZhHMSvFqlGsHM+pNMkA7g9tC8aVQ=;
+        b=bNwV1OIYrYq31PGTPm81oj0LtmtRT+fRvQEPkZBwF5fC08wh0rLWFISYLsTsmRMhQJ
+         1U9H7g1H0cVHXDX7tB6CHD4nOMABoDQEtnSipa4rzBjikeRGqar4wUbhYSHXJj5BzRx+
+         5/8h4m0J47HdAyZZiMtz5wlIh66XhfP2a6IHuz7c7Nq0dB/r/IIxnEAbnxcIOD55wtic
+         P3S8ahAhqsMD/MX6QRChUZRtVq5gO6R6DLBjwlEOzcLQeILaBs+HCu8pUUzMP64aqC6A
+         Ugr/CB0r0NbhTorn6FysNlEZdyAnYtML5bJlDINpUN2JKZtQvStNxOsazu94Aguic3NN
+         HObQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Sk5F78VcGPn+w7sgfEi3r97SHb8j3ok8zbS2IeIk1ug=;
-        b=sez5+BVrSA1poAibvklxJSQEwc8mAP8A16Gj0fUBIStkFl5rZtN1Yg9lWxr2AgxKUm
-         ScOzKCHlO0ffM2ABRl8YWHJVW7rxMiRzLzkUCFJj4Ys7jZPvINOtntr6SEJjp9vCU9uz
-         U8lDV4zwUie6kb3ceWLubyq33Hlf1NNrIRlbeMuhNMx/xeby4el552PxsulUPyIscmh5
-         HjJa70RMnCpbBdnrx8KTbrW8giR0hgm14osv0Ca06Ap2fpFJ4t6Q3110WwaiVzp19cA7
-         BplGjI66PkR3mAyW9AIfyOfcyXUOCuWB4kzEO4zMKJ7JEZvs2mowaFcg0sjZh+ytUeZT
-         4Dlw==
-X-Gm-Message-State: AOAM533GoAvrpLlfDSHB5pF0kDOYfCIJ4q5gpVwAE7CrJsWAaeeCVnu3
-        v2prI3M7UXVEou+e+zDGexw=
-X-Google-Smtp-Source: ABdhPJyNg5hR6o1q/hxSe6JG1qvI6LnFfYlPFM+KTr6/VSTtAScCOzjoNQgPn8PWyexy80zoOdKgJA==
-X-Received: by 2002:a63:ba49:: with SMTP id l9mr312005pgu.246.1602172571471;
-        Thu, 08 Oct 2020 08:56:11 -0700 (PDT)
+        bh=h0p8Xt3XdtzkknQZhHMSvFqlGsHM+pNMkA7g9tC8aVQ=;
+        b=EImcXVmLTjCBNMTt/dBwyIxw6w4xXJhz6tpJegYzOaYPD56sK16fnPhJvzUJ5iGDyi
+         MJ4GopI1mwVESxEs7g3NpBcS7Fpq9DiFtiv5SIHZUpwyBENXqAh5NaduWpSjxNwqms+y
+         OHcqAVbKWxQljqOFfSeAHqk4I6KH4/22J0NTFjqzQMhD5EMkbONuH1mNIUncUJa8mJi3
+         112HGEQXJN3vBHCF+SvsAuoAOm0Yep2/Pw8iQ+O2DOxpmBkC2Lvxh8HcyI2rJpexmdu2
+         2WJGP55D+7JKuh428NhQIq7PwXaEmXGqijPiZpmevL5dBqU+U/JBDY8rQvcOMV7oiiWs
+         ynnA==
+X-Gm-Message-State: AOAM530KPQZSy/oHEh/6PI4LY0goi2KvsSHtZhkesj1Mw+Y02pRjx8aB
+        P8x2WD5GqyuFJv0lRRGQ/E6VB0CK4B8=
+X-Google-Smtp-Source: ABdhPJz/e4VdJLBe/mCNniWHnfrhoiYUmnurgtTy+P04ZaTMruVShtSafOA0vI5BT2LeJ/3XsdUE+g==
+X-Received: by 2002:aa7:8d4a:0:b029:152:4da3:df1 with SMTP id s10-20020aa78d4a0000b02901524da30df1mr8125995pfe.78.1602172543409;
+        Thu, 08 Oct 2020 08:55:43 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.56.08
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.55.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:56:10 -0700 (PDT)
+        Thu, 08 Oct 2020 08:55:42 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 074/117] wcn36xx: set fops_wcn36xx_dump.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:26 +0000
-Message-Id: <20201008155209.18025-74-ap420073@gmail.com>
+Subject: [PATCH net 065/117] ath11k: set fops_extd_rx_stats.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:51:17 +0000
+Message-Id: <20201008155209.18025-65-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,24 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 8e84c2582169 ("wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware")
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/ath/wcn36xx/debug.c | 1 +
+ drivers/net/wireless/ath/ath11k/debug.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
-index 6bd874c0a9f5..4b78be5c67e8 100644
---- a/drivers/net/wireless/ath/wcn36xx/debug.c
-+++ b/drivers/net/wireless/ath/wcn36xx/debug.c
-@@ -135,6 +135,7 @@ static ssize_t write_file_dump(struct file *file,
- static const struct file_operations fops_wcn36xx_dump = {
+diff --git a/drivers/net/wireless/ath/ath11k/debug.c b/drivers/net/wireless/ath/ath11k/debug.c
+index 93461e840c87..8494ddbef7e7 100644
+--- a/drivers/net/wireless/ath/ath11k/debug.c
++++ b/drivers/net/wireless/ath/ath11k/debug.c
+@@ -775,6 +775,7 @@ static const struct file_operations fops_extd_rx_stats = {
+ 	.read = ath11k_read_extd_rx_stats,
+ 	.write = ath11k_write_extd_rx_stats,
  	.open = simple_open,
- 	.write =       write_file_dump,
 +	.owner = THIS_MODULE,
  };
  
- #define ADD_FILE(name, mode, fop, priv_data)		\
+ static int ath11k_fill_bp_stats(struct ath11k_base *ab,
 -- 
 2.17.1
 
