@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A5CC04EBE
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E01C46466
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21EAE206F7
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:53:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24B11206F7
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:53:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WoOrMpBW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DYC0ehBT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731435AbgJHPxG (ORCPT
+        id S1731447AbgJHPxH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:53:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41440 "EHLO
+        Thu, 8 Oct 2020 11:53:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730244AbgJHPxC (ORCPT
+        with ESMTP id S1729869AbgJHPww (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:53:02 -0400
+        Thu, 8 Oct 2020 11:52:52 -0400
 Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E1B1C061755;
-        Thu,  8 Oct 2020 08:53:02 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id k8so4343918pfk.2;
-        Thu, 08 Oct 2020 08:53:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B15FC061755;
+        Thu,  8 Oct 2020 08:52:52 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id f19so4315598pfj.11;
+        Thu, 08 Oct 2020 08:52:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JACHm6oKXj4X805YMJCH36b46IaUgQQqgzNkmYNvOgM=;
-        b=WoOrMpBWzaUaUTxQR0JEyrIKZxlGcIOZfYHA7+rf0Q76HEjIFAGDXa2ZxcQj96xNqX
-         hi26NuzvEN7mDBh2KIgfU0fq5Hin8PgCzaAX3kw5VEahTcZGHrTB+OJiO+tTxpFWcV8J
-         RCyveWW517PsQAp6qiKONhALSpX7mB6/J1Pp2uv4lXeMG8Odoo8ztXa4QIolvNxOB7Dc
-         CdKQvFgLl9jP/JYNQMBrLpATyYRDpY43+c5Q16Qnis28v3ydyPuAtMhAnMmogcgbZd3z
-         12fhOqpIg/MwIUvCc4RHBv4fGHohgy8M1UtUiqhtr3WR2fyXfd3GcMRDpT/qm1ci32rv
-         jXgQ==
+        bh=1lzOTnPcS21YNiqg/E2Mnuwona6C8eTvscN2/7/mNOg=;
+        b=DYC0ehBTNNCdj7kwEdPDtQI6kw5hwwSZaq9IpjJQqdY6R/TdjCxZoaMDxvudZAgA9/
+         BAFVaGc2pu5d2/iXMaTXTS9+6ZqGFTQsygAK+PYPbuaCeuFVzVgIhWczJbHJek3ABjcf
+         kFl0Wxxl1ZkE+G0f5SK1d0dafZgCc37p3rn9RDL2ZOaJTTcD+AZ6GRFe6wiX6rYu1ZbJ
+         k/V7iteXWGFHhV9IMUJt0R0DaUSbRMLCwAPdkBG8tVEcWgxzied5dAVudgMw5EyjvOD2
+         dbCOrEVGr2JaUeaNhqcGECSAJOYjW9KQO8djlXGZmssa1Sr9f5ijKUTfBBH5e1mNs3jO
+         mAcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=JACHm6oKXj4X805YMJCH36b46IaUgQQqgzNkmYNvOgM=;
-        b=TPhVOD8XJJdErpGr9zHDiUg+EoHrzZbeT7Z/hsItw7NTC7WaIF4N7ILbo56zbpFRD0
-         eFI0X5YuCSr9ni0T+Ehld2NJ9kGIEte1iOfUGOkfi3pjdQg/tyowVXGTEj7QVVDz5opf
-         RnejbclWq6oHgInp1ycNdXeNjAo1BatoDe9vzdE08bjy5ArokRK1gCU+l7mFd8qEpQBF
-         7njo3ysl/Ol+QBE/Qbt6nnZrxVPb67vjxj1kwEyHjyIBRuoMxhPFGIGzYMyCpaEceRPS
-         TCg5pdpTW0pQikF04zMiUslMz+u8Je+hwgTkmR0t1ivIPQFlZmcbu5wTAy3xlb26T3jG
-         rq/A==
-X-Gm-Message-State: AOAM5310ZL8ntF5PK8sw6dFxaBGLxnkhesvzKw/IqSOKHg9oMk06YuGL
-        FoZX8knqnrpA87FhElKpgFBVAoq0CPM=
-X-Google-Smtp-Source: ABdhPJzac6JfS6brawVZo1jUEJyMHa8jIGDCvhxgZNpBj6qqDAlOpgXyOVFEou+GUEaqdqlJIaJqsQ==
-X-Received: by 2002:a17:90a:4f0f:: with SMTP id p15mr9126273pjh.10.1602172381666;
-        Thu, 08 Oct 2020 08:53:01 -0700 (PDT)
+        bh=1lzOTnPcS21YNiqg/E2Mnuwona6C8eTvscN2/7/mNOg=;
+        b=Mn8pi6/m10y6TknG12jFvq7cIT7WBREAdRU6JXvEja5YOH3dR6PWjFM5h2GeSm68pA
+         W/kIj8dSfYN61gETepGJN/Q3jxM2pcidInnQtyI4rilq8ie9L96VrLLNvUkOD3tDcj+E
+         vcBi6G0f5vTXetfMf4d+4U0msD6Usn84d7hSh+ghwx7EZ5/3HlsA4JSYl9UNI0OTIneE
+         2r4j0hIq0KglH1dFwdgJz/L0oVsKppavVibkKued9Ash2ci63Xp0lkKSxqnVYD4A5CF4
+         QxWxxVpB0srXAetAS9rfZTimGeAQesEQvIy0aIm7SPliZY66SdRf2W0sBipW+VWche3v
+         YmrQ==
+X-Gm-Message-State: AOAM532L6DCeU0DmUU9qu7e559DLps9jDHBaQk1vgTkv2FIiFe22yc2J
+        jO0bvx7Aj6ltFCAr7Ft5E9U=
+X-Google-Smtp-Source: ABdhPJwpTwyF2uviebYn/JocjFs4QX4iSjwHskFizHx+N5/C0+a4HM4T5DJJmoiphFWrSbJzYycMjA==
+X-Received: by 2002:a17:90a:9b89:: with SMTP id g9mr8948245pjp.123.1602172372146;
+        Thu, 08 Oct 2020 08:52:52 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.52.58
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.52.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:53:00 -0700 (PDT)
+        Thu, 08 Oct 2020 08:52:51 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 013/117] mac80211: set aql_txq_limit_ops.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:50:25 +0000
-Message-Id: <20201008155209.18025-13-ap420073@gmail.com>
+Subject: [PATCH net 010/117] mac80211: set DEBUGFS_READONLY_FILE_OPS.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:50:22 +0000
+Message-Id: <20201008155209.18025-10-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,24 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 3ace10f5b5ad ("mac80211: Implement Airtime-based Queue Limit (AQL)")
+Fixes: e9f207f0ff90 ("[MAC80211]: Add debugfs attributes.")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
  net/mac80211/debugfs.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 794892fe6622..ff690feb56a4 100644
+index 54080290d6e2..669d7e13ffe8 100644
 --- a/net/mac80211/debugfs.c
 +++ b/net/mac80211/debugfs.c
-@@ -285,6 +285,7 @@ static const struct file_operations aql_txq_limit_ops = {
- 	.read = aql_txq_limit_read,
- 	.open = simple_open,
- 	.llseek = default_llseek,
-+	.owner = THIS_MODULE,
+@@ -46,6 +46,7 @@ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = simple_open,						\
+ 	.llseek = generic_file_llseek,					\
++	.owner = THIS_MODULE,						\
  };
  
- static ssize_t force_tx_status_read(struct file *file,
+ #define DEBUGFS_READONLY_FILE(name, fmt, value...)		\
 -- 
 2.17.1
 
