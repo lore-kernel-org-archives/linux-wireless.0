@@ -2,100 +2,66 @@ Return-Path: <SRS0=Edxh=DP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEF9C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BD4C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:07:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63396215A4
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gls/p8Ou"
+	by mail.kernel.org (Postfix) with ESMTP id 5FF5D221F1
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731381AbgJHQAt (ORCPT
+        id S1730538AbgJHQHO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 12:00:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41588 "EHLO
+        Thu, 8 Oct 2020 12:07:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729947AbgJHPxs (ORCPT
+        with ESMTP id S1725802AbgJHQHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:53:48 -0400
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAF1CC0613D3;
-        Thu,  8 Oct 2020 08:53:48 -0700 (PDT)
-Received: by mail-pl1-x644.google.com with SMTP id c6so2959182plr.9;
-        Thu, 08 Oct 2020 08:53:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=eGFJIgP053ScE+PFF1Ivd3oGlVY7ykLxtYi1ouJSioY=;
-        b=gls/p8OuzTkk61NIYH6ttm05V3El7H3svT1l2pGM9oFjtD3D6x8xUJyiDRgVvS2NH/
-         DezwkNHM8I8oDnKKAaZHZ16ik6TWjxzhoR3LXEcqlEfpfVbRPQa5ci1f58JkP6NS74vB
-         CPAUrJFfRgz1EGQv+3rkVSJO1+DPk8oVz9Y2mSU6POwh2YVfVRp0SVPhXzYe8J7Wa+gu
-         FX2yIysimaUhQrgC/MKtdvVPqX9uJ9ju7kSqmQpeBzYC/w0H1LiHw0KlVheC2u6jF9IO
-         BsisPogS5fdZ6RH9S0GzgNyzW3tBualuLLh7SrqYykvc+Uc85aMX3QpXLwuQgKMh3ecs
-         /73w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=eGFJIgP053ScE+PFF1Ivd3oGlVY7ykLxtYi1ouJSioY=;
-        b=h6jzeIM6WYYwCWPYvIQYesd+zKpOlVx49gDKn4k4Dtwm3mXxQhHOHZTPtwTZxI0p2H
-         fFYKaPBKhQYSX0CEYpz4n3BwwP4LAcpA+TyqMnMbKkP/771nuJ/o+QG9bTUjjDGsyw5g
-         MfN8Pc/YV/uMYECh8seNIxl6svFg2EWWj1rTtUcy578uPFd6wV1JLj+nrjFP0gkrWeDK
-         h5W7Py8YfYoGRKFaPRP0ZuOmEdmGkc9dpdV33KtMSkkXBIQU1lZyn+/uFRyZnHSa1+Yv
-         GYy2obQuAOo5jjEBQ2zV5+E5J32kd6F5Qa2dxa6bgB6BH8bv+RDcsnDO9XJMudxhJ7RO
-         zBdA==
-X-Gm-Message-State: AOAM531ybf33qipJkopfN2eaP+8Yy4FZ1WrQZJTx9uQuTc9tL2um/niz
-        xBMGerO7+GgcCnR6S6PalOQ=
-X-Google-Smtp-Source: ABdhPJxsWZMb7ZJCJUG6Q992Mp5ALpIFeteOEDbadcmPYxSfOk5F56jNKdsmk6Cd46ZPPg7cqIpzfg==
-X-Received: by 2002:a17:902:b088:b029:d3:f20c:ed85 with SMTP id p8-20020a170902b088b02900d3f20ced85mr8315735plr.8.1602172428348;
-        Thu, 08 Oct 2020 08:53:48 -0700 (PDT)
-Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.53.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:53:47 -0700 (PDT)
-From:   Taehee Yoo <ap420073@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
-Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
-        linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 028/117] i2400m: set i2400m_tx_stats_fops.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:50:40 +0000
-Message-Id: <20201008155209.18025-28-ap420073@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
+        Thu, 8 Oct 2020 12:07:14 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74976C061755;
+        Thu,  8 Oct 2020 09:07:14 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kQYRW-001jFe-JI; Thu, 08 Oct 2020 18:06:58 +0200
+Message-ID: <e385f0c4d37812d9e69369645082baf4a352b6c3.camel@sipsolutions.net>
+Subject: Re: [PATCH net 001/117] mac80211: set .owner to THIS_MODULE in
+ debugfs_netdev.c
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Taehee Yoo <ap420073@gmail.com>, davem@davemloft.net,
+        kuba@kernel.org, netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        b43-dev@lists.infradead.org, linux-bluetooth@vger.kernel.org
+Date:   Thu, 08 Oct 2020 18:06:56 +0200
+In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com> (sfid-20201008_175239_508186_DB541C11)
 References: <20201008155209.18025-1-ap420073@gmail.com>
+         (sfid-20201008_175239_508186_DB541C11)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If THIS_MODULE is not set, the module would be removed while debugfs is
-being used.
-It eventually makes kernel panic.
+On Thu, 2020-10-08 at 15:50 +0000, Taehee Yoo wrote:
+> If THIS_MODULE is not set, the module would be removed while debugfs is
+> being used.
+> It eventually makes kernel panic.
+> 
+Wow, 117 practically identical patches? No thanks ...
 
-Fixes: c71228caf91e ("i2400m: debugfs controls")
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wimax/i2400m/debugfs.c | 1 +
- 1 file changed, 1 insertion(+)
+Can you merge the ones that belong to a single driver?
 
-diff --git a/drivers/net/wimax/i2400m/debugfs.c b/drivers/net/wimax/i2400m/debugfs.c
-index 9eda1535f777..144f8a7e98af 100644
---- a/drivers/net/wimax/i2400m/debugfs.c
-+++ b/drivers/net/wimax/i2400m/debugfs.c
-@@ -141,6 +141,7 @@ const struct file_operations i2400m_tx_stats_fops = {
- 	.read =		i2400m_tx_stats_read,
- 	.write =	i2400m_tx_stats_write,
- 	.llseek =	default_llseek,
-+	.owner =	THIS_MODULE,
- };
- 
- 
--- 
-2.17.1
+net/mac80211/ -> mac80211
+net/wireless/ -> cfg80211
+
+etc.
+
+I don't think we need more than one patch for each driver/subsystem.
+
+johannes
 
