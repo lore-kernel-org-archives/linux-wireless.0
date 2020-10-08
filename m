@@ -7,84 +7,102 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 827AAC4363C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD90FC04EBE
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:10:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4896A20782
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85E9221789
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730898AbgJHPKF (ORCPT
+        id S1730894AbgJHPKH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:10:05 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54492 "EHLO
+        Thu, 8 Oct 2020 11:10:07 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54454 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730894AbgJHPKB (ORCPT
+        with ESMTP id S1730881AbgJHPJ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:10:01 -0400
+        Thu, 8 Oct 2020 11:09:57 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kQXYM-002Qut-P4; Thu, 08 Oct 2020 18:09:59 +0300
+        id 1kQXYI-002Qut-LV; Thu, 08 Oct 2020 18:09:55 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  8 Oct 2020 18:09:44 +0300
-Message-Id: <iwlwifi.20201008180656.fee389c83ded.I09550fdadb61f899242d7e7b7578672372e2b7fe@changeid>
+Date:   Thu,  8 Oct 2020 18:09:38 +0300
+Message-Id: <iwlwifi.20201008180656.798744ad514e.Ibb0d88586a34acc904bf319974d791faafb7a905@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201008150949.331882-1-luca@coelho.fi>
 References: <20201008150949.331882-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/13] iwlwifi: mvm: re-enable TX after channel switch
+Subject: [PATCH 02/13] iwlwifi: mvm: read and parse SKU ID if available
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-The FW relies on the re-enablement of the TX in order to know
-it can exit quiet mode. Currently in case of CSA with quiet mode,
-the quiet mode is never cancelled, resulting in a complete traffic
-hang.
+In v5 of the ALIVE notification, we may receive the SKU ID of the
+device in use.  Read and store it locally for future access.  This
+will be needed to find the correct PNVM (platform NVM) to pass to the
+firmware.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 4 +---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 +---
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 25 ++++++++++++++++---
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index afd3e220e893..cbdebefb854a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1597,9 +1597,7 @@ void iwl_mvm_channel_switch_noa_notif(struct iwl_mvm *mvm,
- 		RCU_INIT_POINTER(mvm->csa_vif, NULL);
- 		return;
- 	case NL80211_IFTYPE_STATION:
--		if (!fw_has_capa(&mvm->fw->ucode_capa,
--				 IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD))
--			iwl_mvm_csa_client_absent(mvm, vif);
-+		iwl_mvm_csa_client_absent(mvm, vif);
- 		cancel_delayed_work(&mvmvif->csa_work);
- 		ieee80211_chswitch_done(vif, true);
- 		break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 8695041ec3a6..d56458ab5634 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1370,9 +1370,7 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
- 			goto out_unlock;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 45a9df0d42ed..caae7b5aa9e6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -995,6 +995,7 @@ struct iwl_trans {
+ 	u32 hw_rf_id;
+ 	u32 hw_id;
+ 	char hw_id_str[52];
++	u32 sku_id[3];
  
--		if (!fw_has_capa(&mvm->fw->ucode_capa,
--				 IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD))
--			iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
-+		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
+ 	u8 rx_mpdu_cmd, rx_mpdu_cmd_hdr_size;
  
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 1c966586c8a8..fda86c582049 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -216,10 +216,29 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 	u16 status;
+ 	u32 lmac_error_event_table, umac_error_table;
  
+-	/* we don't use the SKU ID from v5 yet, so handle it as v4 */
++	/*
++	 * For v5 and above, we can check the version, for older
++	 * versions we need to check the size.
++	 */
+ 	if (iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
+-				    UCODE_ALIVE_NTFY, 0) == 5 ||
+-	    iwl_rx_packet_payload_len(pkt) == sizeof(struct iwl_alive_ntf_v4)) {
++				    UCODE_ALIVE_NTFY, 0) == 5) {
++		struct iwl_alive_ntf_v5 *palive;
++
++		palive = (void *)pkt->data;
++		umac = &palive->umac_data;
++		lmac1 = &palive->lmac_data[0];
++		lmac2 = &palive->lmac_data[1];
++		status = le16_to_cpu(palive->status);
++
++		mvm->trans->sku_id[0] = le32_to_cpu(palive->sku_id.data[0]);
++		mvm->trans->sku_id[1] = le32_to_cpu(palive->sku_id.data[1]);
++		mvm->trans->sku_id[2] = le32_to_cpu(palive->sku_id.data[2]);
++
++		IWL_DEBUG_FW(mvm, "Got sku_id: 0x0%x 0x0%x 0x0%x\n",
++			     mvm->trans->sku_id[0],
++			     mvm->trans->sku_id[1],
++			     mvm->trans->sku_id[2]);
++	} else if (iwl_rx_packet_payload_len(pkt) == sizeof(struct iwl_alive_ntf_v4)) {
+ 		struct iwl_alive_ntf_v4 *palive;
+ 
+ 		palive = (void *)pkt->data;
 -- 
 2.28.0
 
