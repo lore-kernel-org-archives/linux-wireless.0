@@ -7,86 +7,62 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 445D5C4363A
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96899C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5DD820782
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:14:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D1A620782
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730831AbgJHPO2 (ORCPT
+        id S1730879AbgJHPOa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:14:28 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54640 "EHLO
+        Thu, 8 Oct 2020 11:14:30 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54644 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730650AbgJHPO1 (ORCPT
+        with ESMTP id S1730650AbgJHPOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:14:27 -0400
+        Thu, 8 Oct 2020 11:14:30 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kQXbI-002QxQ-PN; Thu, 08 Oct 2020 18:13:01 +0300
+        id 1kQXbL-002QxQ-2g; Thu, 08 Oct 2020 18:13:03 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  8 Oct 2020 18:12:47 +0300
-Message-Id: <iwlwifi.20201008181047.77300b00d3ce.I89d7e45e71f19fd36d89f363a28b4759b59b8765@changeid>
+Date:   Thu,  8 Oct 2020 18:12:50 +0300
+Message-Id: <iwlwifi.20201008181047.0359498107fe.I559b5140be6abbee5eb759ec6e5ca046f7178f8f@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201008151250.332346-1-luca@coelho.fi>
 References: <20201008151250.332346-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/13] iwlwifi: add trans op to set PNVM
+Subject: [PATCH 13/13] iwlwifi: bump FW API to 59 for AX devices
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Add an op to allow setting the PNVM data in the trans.
+Start supporting API version 59 for AX devices.
 
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index caae7b5aa9e6..5dbb5d45304f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -568,6 +568,8 @@ struct iwl_trans_rxq_dma_data {
-  *	Note that the transport must fill in the proper file headers.
-  * @debugfs_cleanup: used in the driver unload flow to make a proper cleanup
-  *	of the trans debugfs
-+ * @set_pnvm: set the pnvm data in the prph scratch buffer, inside the
-+ *	context info.
-  */
- struct iwl_trans_ops {
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 8b97c2eb2632..d2bbe6a73514 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -57,7 +57,7 @@
+ #include "iwl-prph.h"
  
-@@ -640,6 +642,7 @@ struct iwl_trans_ops {
- 						 u32 dump_mask);
- 	void (*debugfs_cleanup)(struct iwl_trans *trans);
- 	void (*sync_nmi)(struct iwl_trans *trans);
-+	int (*set_pnvm)(struct iwl_trans *trans, const void *data, u32 len);
- };
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	57
++#define IWL_22000_UCODE_API_MAX	59
  
- /**
-@@ -1449,6 +1452,15 @@ static inline void iwl_trans_sync_nmi(struct iwl_trans *trans)
- 		trans->ops->sync_nmi(trans);
- }
- 
-+static inline int iwl_trans_set_pnvm(struct iwl_trans *trans,
-+				     const void *data, u32 len)
-+{
-+	if (trans->ops->set_pnvm)
-+		return trans->ops->set_pnvm(trans, data, len);
-+
-+	return 0;
-+}
-+
- static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
- {
- 	return trans->dbg.internal_ini_cfg != IWL_INI_CFG_STATE_NOT_LOADED ||
+ /* Lowest firmware API version supported */
+ #define IWL_22000_UCODE_API_MIN	39
 -- 
 2.28.0
 
