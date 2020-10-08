@@ -5,68 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE637C4363A
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:55:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B8DCC4363C
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95F1120B1F
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:55:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6D72206F7
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 15:55:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UdXkihan"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="flb3blqz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731658AbgJHPzA (ORCPT
+        id S1730612AbgJHPzI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 11:55:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
+        Thu, 8 Oct 2020 11:55:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731648AbgJHPy5 (ORCPT
+        with ESMTP id S1730546AbgJHPyv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:54:57 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE5C8C061755;
-        Thu,  8 Oct 2020 08:54:57 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id a200so4325757pfa.10;
-        Thu, 08 Oct 2020 08:54:57 -0700 (PDT)
+        Thu, 8 Oct 2020 11:54:51 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA5DC061755;
+        Thu,  8 Oct 2020 08:54:51 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id n9so4643328pgf.9;
+        Thu, 08 Oct 2020 08:54:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uFx8Moi4i7WVgdUfl/NrupmbpWugcIJs+bvy0ZBk4bs=;
-        b=UdXkihanuIU5WhI0tdDk7eOZpPfBcKw9VB8hBv+xe/XTCU6FoHte6AXLpz0Gu1tFtG
-         0v8GxestCC9Lts4khBW/a3qWwbH/rc1pBiPJUq4/oEIAFXOATSyGKNv9oj78Q4YnOziS
-         T2QaVL+HwkRuuIEZm7kQ+NN8RtGJ9foNChZ6wC2UYAN05mhg1AOJPD6DxNywWqxFeFDC
-         mzfWT99gSBWPyV75nQ82HyZWHfkXnKipG1RmXClGcranN9dwGeHNN95xcY+EOYixQBN0
-         pSpd/I2FYC4BzBPg7ceaFFVPtfPlMddY4zBQIY9p7RHBfmcNydDEuROmm4tYYbAJdsmN
-         q2ww==
+        bh=I67jtUWj4lQ6MYmKWTK3k4EslMrchiY8PwIogsFQAm8=;
+        b=flb3blqzo+eiFc/JJwU8SXNLlQ4ORpuqW8vmh12CZQ8as3U1xpH34jEjj5JCv02f23
+         QQpaMMby+NE4pzAEVQ8AjV6LSi/W8XelRS2LGbcOIOewp8+ghvOpJPoX46ZThHgXsoz+
+         xaKaKS9llY47HqywBgcpln3+RnG6ChsR/DVX2ZnIGlsROp95nLCREMWtt+IN7Z5T8J0q
+         +0+ZShUwFLzseLbZUR9fqY3oOAnu6m5lYiX0NOSsB0UbkHD5LjaLROlNdjrHElmp6eAG
+         CitlCjABYrRua14AbuyH9S2fhCBFZ7VD1yFUiHjGnwvuNXjTezEyFJgln//DfFtKoZlk
+         4HnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=uFx8Moi4i7WVgdUfl/NrupmbpWugcIJs+bvy0ZBk4bs=;
-        b=S7nXVmcB/2m7M+Sim1T00q3tTM1Jy3FHOJmNy3JJd2OxbQrvZw9WsGwfaKDoxQPVmT
-         MwX0Ebixx3ywZWUqGZ34CaRj9NORGXRCrpntzqYMPubKz2OV0H4oL5u5MmKrPdtNH06w
-         B+onPW//7T/UDNXTRhOmDOAETzDPH4oD/a2nwvoo+5gm4UQ2KfL4SdJAJVOW3fiAhCnc
-         P6OHDDQKJFc39Xcanodf7ifyWN+3oDqjT4TODGd4+fjZ55kWqk1lqo1pDHlQPE11KiBC
-         RRdmXzcFVo9F4dgZ33AT4Hg9j1XvAbdezoZUX4pFtzplE9bf6YbZBMVU2IbRh0lgMI9e
-         NXdw==
-X-Gm-Message-State: AOAM531m+9/sO+4bcMKevEzXQuwRvTwfty78Dg1vMRYINqb0LGIvsH9r
-        v16+g1xyu/2pJsfg2VFiAsg=
-X-Google-Smtp-Source: ABdhPJy8G0mYcOAWPJqE77rng+1IcMUDZQ2ACQPy0IA8RSAACUsu4zIiK7kV9fkOAibsdtlz0ZcxGw==
-X-Received: by 2002:a17:90a:1702:: with SMTP id z2mr8979835pjd.88.1602172497430;
-        Thu, 08 Oct 2020 08:54:57 -0700 (PDT)
+        bh=I67jtUWj4lQ6MYmKWTK3k4EslMrchiY8PwIogsFQAm8=;
+        b=bMjWf5mfr+vnUpkyJTT7wVqUTNJfVjMcyHglPHwPfnp5A2JEa1WRN/xIew56QQbYiJ
+         2RKs8bZAyB0DQjfolbUsYt7mgQM/6+wKEsyZERlMfc7Qjd7a7tuae87dlJjXKMrviZQa
+         /MjiEW3gswYSiobAWj7Zh7mKOkBtW+G13oTdeka7AvnpTjqetZFG9VVCT6l4q2rC5+bZ
+         lK+BlzxGDiD+P5acgW77pkm7IaAMNAAWD/A/ajg6RtwBqhF9ClhRAflPwX1xBtZv3a8c
+         iIHeN/xcRtMuhCuddIeBGdn6IfaOK8Gc/OiGGI0+9dr0cu2g/pzGwonYDAQg9Yo9zZba
+         oNNw==
+X-Gm-Message-State: AOAM533IBoIb1S91GB8ao6qtk6dRz3VQxaiFFPWJFUzgVP3Xj+f/dKSE
+        FkLdvpoFKVQCxx8GklffuAo=
+X-Google-Smtp-Source: ABdhPJymHPTv4TpZLXvBvwb0Fb+GZUU563h5UpfsusYFzBPHVLNC8P1tCM75H5S0SHKMrajyd4IWtw==
+X-Received: by 2002:a63:f015:: with SMTP id k21mr8056317pgh.422.1602172490991;
+        Thu, 08 Oct 2020 08:54:50 -0700 (PDT)
 Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.54.54
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.54.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:54:56 -0700 (PDT)
+        Thu, 08 Oct 2020 08:54:49 -0700 (PDT)
 From:   Taehee Yoo <ap420073@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
 Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
         linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 050/117] iwlwifi: runtime: set _FWRT_DEBUGFS_READ_WRITE_FILE_OPS.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:02 +0000
-Message-Id: <20201008155209.18025-50-ap420073@gmail.com>
+Subject: [PATCH net 048/117] iwlwifi: mvm: set iwl_dbgfs_mem_ops.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:51:00 +0000
+Message-Id: <20201008155209.18025-48-ap420073@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
 References: <20201008155209.18025-1-ap420073@gmail.com>
@@ -78,24 +78,24 @@ If THIS_MODULE is not set, the module would be removed while debugfs is
 being used.
 It eventually makes kernel panic.
 
-Fixes: 93b167c13a3a ("iwlwifi: runtime: sync FW and host clocks for logs")
+Fixes: 2b55f43f8e47 ("iwlwifi: mvm: Add mem debugfs entry")
 Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.c | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-index c0edf6fb3760..d99ed6b2f781 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-@@ -151,6 +151,7 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
- 	.open = _iwl_dbgfs_##name##_open,				\
- 	.llseek = generic_file_llseek,					\
- 	.release = _iwl_dbgfs_release,					\
-+	.owner = THIS_MODULE,						\
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 8fae7e707374..3bfa91b4cba9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1981,6 +1981,7 @@ static const struct file_operations iwl_dbgfs_mem_ops = {
+ 	.write = iwl_dbgfs_mem_write,
+ 	.open = simple_open,
+ 	.llseek = default_llseek,
++	.owner = THIS_MODULE,
+ };
  
- #define _FWRT_DEBUGFS_WRITE_FILE_OPS(name, buflen, argtype)		\
+ void iwl_mvm_sta_add_debugfs(struct ieee80211_hw *hw,
 -- 
 2.17.1
 
