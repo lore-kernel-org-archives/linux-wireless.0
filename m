@@ -2,102 +2,86 @@ Return-Path: <SRS0=Edxh=DP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E20C64EBC
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20308C63699
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BEEE206F0
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AXIfH/n5"
+	by mail.kernel.org (Postfix) with ESMTP id C3F19206F0
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732060AbgJHQAD (ORCPT
+        id S1731195AbgJHQAB convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 12:00:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42024 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730843AbgJHPz7 (ORCPT
+        Thu, 8 Oct 2020 12:00:01 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:35860 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731418AbgJHP7c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:55:59 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6793DC061755;
-        Thu,  8 Oct 2020 08:55:59 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id b26so4349085pff.3;
-        Thu, 08 Oct 2020 08:55:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=FEsMF5rTN2yDtTQSXVQ9G9SgxRThZwfhT1vI5VStmZk=;
-        b=AXIfH/n5nHLhvpqBNvB1kVQg8+mejpXHXLE8WeJgvAfm9/QBOsDiC6i33wUxdhBv2S
-         wcOh4yzNnRX28Mk5QFR7GJG1FdPDeBNZE2PZzBRSA4WsnN6XVOmT0G61S667smH4D+rV
-         Zz7zjNAcn7rKhyXd1C6X0NwT5sc0P+xUxJRWQ04IqNvkQ0nDB253gEtx9Q9DrAsNLk8K
-         rj52PRwStC/OeRuMHUo1OcmiVs7aj94qFjXpSp40bqKWB05FDck5+dlShYZNOxhTkSBL
-         9RGFh5yIQauKmZpAmsRl07AECKrR9T3pfce1Y5ckC3g8ngaTXPji9HE9EN1GCSeYTEXR
-         km0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=FEsMF5rTN2yDtTQSXVQ9G9SgxRThZwfhT1vI5VStmZk=;
-        b=ta6BsTkXWhpJTn5R60fMt8VWU+mL1zvqYQowjxh689mZYgmfUgQe5VU/WmRszUkxAC
-         dlUZj9D+1BxItoZFAvuuyxvLMZlvN7Ozb4lilqY7z4pBjixEY7WU622zd5FQ/eyz3ZP5
-         FyTYpFCcWXCYd0XSUlA8xkTL+Hmnr5WQNSJYFdTZynqkRXDtIdImobNNoKjf2/adlpEa
-         +YzQRsnSoRruTxS6Io8PjsHBwfNGuywldpqlz9ndA95BmsFoDxRJaSXFs1Hzr7PemwHV
-         I2/Mr34HgN2p0g3sAGTbuDo6WXNOUa1lZblJ7sPML55jX3pwOT2wlIoa8BHEsW3z3mxm
-         L9ig==
-X-Gm-Message-State: AOAM530uHKwK4qs/3++1sBT056rjb87TPjdu+ivT36wJIdFOPZKc+5Ew
-        OZDt9wSm6DPt3+TEm278gR0=
-X-Google-Smtp-Source: ABdhPJyGq5iUC4jQ4EIlM5oj2J9lEyWkLCej77pSpfaniCR8P6eGJcYYSEjE4JfZD0TX/ChrYXzFNQ==
-X-Received: by 2002:a17:90a:46c2:: with SMTP id x2mr9019845pjg.60.1602172558950;
-        Thu, 08 Oct 2020 08:55:58 -0700 (PDT)
-Received: from localhost.localdomain ([180.70.143.152])
-        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.55.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 08:55:58 -0700 (PDT)
-From:   Taehee Yoo <ap420073@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
-Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
-        linux-bluetooth@vger.kernel.org
-Subject: [PATCH net 070/117] ath10k: set fops_btcoex.owner to THIS_MODULE
-Date:   Thu,  8 Oct 2020 15:51:22 +0000
-Message-Id: <20201008155209.18025-70-ap420073@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
-References: <20201008155209.18025-1-ap420073@gmail.com>
+        Thu, 8 Oct 2020 11:59:32 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-238-6KcKqProOHmg7Vl2R1BbrA-1; Thu, 08 Oct 2020 16:59:28 +0100
+X-MC-Unique: 6KcKqProOHmg7Vl2R1BbrA-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Thu, 8 Oct 2020 16:59:28 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Thu, 8 Oct 2020 16:59:28 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Taehee Yoo' <ap420073@gmail.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "wil6210@qti.qualcomm.com" <wil6210@qti.qualcomm.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
+        "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+        "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
+Subject: RE: [PATCH net 000/117] net: avoid to remove module when its debugfs
+ is being used
+Thread-Topic: [PATCH net 000/117] net: avoid to remove module when its debugfs
+ is being used
+Thread-Index: AQHWnYreCEbA8QiKJ0qlgP86SUSOo6mN3D7w
+Date:   Thu, 8 Oct 2020 15:59:28 +0000
+Message-ID: <1cbb69d83188424e99b2d2482848ae64@AcuMS.aculab.com>
+References: <20201008155048.17679-1-ap420073@gmail.com>
+In-Reply-To: <20201008155048.17679-1-ap420073@gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
+MIME-Version: 1.0
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If THIS_MODULE is not set, the module would be removed while debugfs is
-being used.
-It eventually makes kernel panic.
+From: Taehee Yoo
+> Sent: 08 October 2020 16:49
+> 
+> When debugfs file is opened, its module should not be removed until
+> it's closed.
+> Because debugfs internally uses the module's data.
+> So, it could access freed memory.
+> 
+> In order to avoid panic, it just sets .owner to THIS_MODULE.
+> So that all modules will be held when its debugfs file is opened.
 
-Fixes: 844fa5722712 ("ath10k: debugfs file to enable Bluetooth coexistence feature")
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/ath/ath10k/debug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Can't you fix it in common code?
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 9789ef98d25b..d1f8cf0d5604 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2041,7 +2041,8 @@ static ssize_t ath10k_read_btcoex(struct file *file, char __user *ubuf,
- static const struct file_operations fops_btcoex = {
- 	.read = ath10k_read_btcoex,
- 	.write = ath10k_write_btcoex,
--	.open = simple_open
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
- };
- 
- static ssize_t ath10k_write_enable_extd_tx_stats(struct file *file,
--- 
-2.17.1
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
