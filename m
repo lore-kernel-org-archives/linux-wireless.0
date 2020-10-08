@@ -2,86 +2,100 @@ Return-Path: <SRS0=Edxh=DP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20308C63699
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C54C4345A
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3F19206F0
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CF89206F0
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 16:00:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GefW8PYO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731195AbgJHQAB convert rfc822-to-8bit (ORCPT
+        id S1731710AbgJHPzc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 12:00:01 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:35860 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731418AbgJHP7c (ORCPT
+        Thu, 8 Oct 2020 11:55:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41894 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730114AbgJHPzS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 11:59:32 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-238-6KcKqProOHmg7Vl2R1BbrA-1; Thu, 08 Oct 2020 16:59:28 +0100
-X-MC-Unique: 6KcKqProOHmg7Vl2R1BbrA-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Thu, 8 Oct 2020 16:59:28 +0100
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Thu, 8 Oct 2020 16:59:28 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Taehee Yoo' <ap420073@gmail.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "wil6210@qti.qualcomm.com" <wil6210@qti.qualcomm.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-        "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
-Subject: RE: [PATCH net 000/117] net: avoid to remove module when its debugfs
- is being used
-Thread-Topic: [PATCH net 000/117] net: avoid to remove module when its debugfs
- is being used
-Thread-Index: AQHWnYreCEbA8QiKJ0qlgP86SUSOo6mN3D7w
-Date:   Thu, 8 Oct 2020 15:59:28 +0000
-Message-ID: <1cbb69d83188424e99b2d2482848ae64@AcuMS.aculab.com>
-References: <20201008155048.17679-1-ap420073@gmail.com>
-In-Reply-To: <20201008155048.17679-1-ap420073@gmail.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
-MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+        Thu, 8 Oct 2020 11:55:18 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A539EC0613D3;
+        Thu,  8 Oct 2020 08:55:18 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id d23so2964708pll.7;
+        Thu, 08 Oct 2020 08:55:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=qCio2tJg2lTUTBkvGAUFb0+rsX4JAZvslEUHcVRdzr8=;
+        b=GefW8PYO6D7RndDKqWCIMQJZPyBh3jNqq2i9EFUULs4DpDrb/VXpoSpG6fTFEA3+Mz
+         vagsVvUzcEunxu/wHfswwhg1gh2tIFXeMLorxictWx0Ttjbgt5csAQ6fSAJ2bHWHgXUT
+         TMh87r5lgNxDTjINA6ftNwvSIRX+IV3FnB6Zv5rCZX2Y5oenIeI9LlxvHWqdL2oR/CwU
+         4VqB0TvtI5VzzZPMhdMgPuYBppJ9atAMVRzWQzvURhPChOUevRwBCi16i1hYj4RHhE1N
+         Vh/KFd0M3ygSOm+0lomvk2Q9KIUk/yblUbRYxc/gXuW6pXE+vzzAtEjATmJVkMRKJJWI
+         MHyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=qCio2tJg2lTUTBkvGAUFb0+rsX4JAZvslEUHcVRdzr8=;
+        b=YkQDVOIYWQJsTXE38tt9jBHdbLJvwF/VEp62r7KDoZ2I+/bnNoHsdHwBG2MGrwrCU4
+         ZPLyYjtD4+PjVSYx4sGEmIOlWPekv2/8n5T7KJmyBIQkZ+bAljcRG5vttOtChehdnWJT
+         Ay5tLtAUcXARZv18ADiVR7wP1iEJej8rlye6oUhLNCLg9VRBjULPv447wMxs2JS4Rahj
+         hqdsN43HtsoIj+jloFR7UuUFAbrLwpoRPwVPerdUZvUd2s3404Fd/2WU4i5ByotJTrWf
+         Byb9XV6kGovjXI6fXljjuXwOMYjpnpRJKzw3lhXMuvLNrOV9wXWTXA+br+9d4uO5dyss
+         Wugw==
+X-Gm-Message-State: AOAM533Mb65NN7/MpGQ46y01FqsXYBRW6LVsPsvVhXppa7WIg+rxWfVt
+        FaW2TpPnPECs37JF/rDlfFj4XOmDSoU=
+X-Google-Smtp-Source: ABdhPJy4LDME/81FJtjwtsrr2FaEi0X/a0wNFyCR7WyVrNqI0KP/PNroMzHkVqo7QRLUSbOuZsxrcw==
+X-Received: by 2002:a17:902:b592:b029:d3:8dc4:391e with SMTP id a18-20020a170902b592b02900d38dc4391emr8460545pls.76.1602172518244;
+        Thu, 08 Oct 2020 08:55:18 -0700 (PDT)
+Received: from localhost.localdomain ([180.70.143.152])
+        by smtp.gmail.com with ESMTPSA id f1sm5917929pjh.20.2020.10.08.08.55.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Oct 2020 08:55:17 -0700 (PDT)
+From:   Taehee Yoo <ap420073@gmail.com>
+To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org
+Cc:     ap420073@gmail.com, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, b43-dev@lists.infradead.org,
+        linux-bluetooth@vger.kernel.org
+Subject: [PATCH net 057/117] iwlwifi: set rs_sta_dbgfs_stats_table_ops.owner to THIS_MODULE
+Date:   Thu,  8 Oct 2020 15:51:09 +0000
+Message-Id: <20201008155209.18025-57-ap420073@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201008155209.18025-1-ap420073@gmail.com>
+References: <20201008155209.18025-1-ap420073@gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Taehee Yoo
-> Sent: 08 October 2020 16:49
-> 
-> When debugfs file is opened, its module should not be removed until
-> it's closed.
-> Because debugfs internally uses the module's data.
-> So, it could access freed memory.
-> 
-> In order to avoid panic, it just sets .owner to THIS_MODULE.
-> So that all modules will be held when its debugfs file is opened.
+If THIS_MODULE is not set, the module would be removed while debugfs is
+being used.
+It eventually makes kernel panic.
 
-Can't you fix it in common code?
+Fixes: be663ab67077 ("iwlwifi: split the drivers for agn and legacy devices 3945/4965")
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+---
+ drivers/net/wireless/intel/iwlegacy/4965-rs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
+index 43fff3fd18e7..6592726235d4 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
+@@ -2715,6 +2715,7 @@ static const struct file_operations rs_sta_dbgfs_stats_table_ops = {
+ 	.read = il4965_rs_sta_dbgfs_stats_table_read,
+ 	.open = simple_open,
+ 	.llseek = default_llseek,
++	.owner = THIS_MODULE,
+ };
+ 
+ static ssize_t
+-- 
+2.17.1
 
