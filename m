@@ -2,107 +2,88 @@ Return-Path: <SRS0=ugwx=DQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.1 required=3.0 tests=BAYES_40,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,SUBJ_ALL_CAPS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5128C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 14:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C40EC433E7
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 15:05:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CB1C22260
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 14:45:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF66E22260
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 15:05:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=yjaraviagens.com header.i=@yjaraviagens.com header.b="e+cF0/em"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="n5fMIvpy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388846AbgJIOpO (ORCPT
+        id S2389116AbgJIPFp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Oct 2020 10:45:14 -0400
-Received: from vps-3871858.yjara.com ([162.241.101.217]:46398 "EHLO
-        vps-3871858.yjara.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732056AbgJIOpO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Oct 2020 10:45:14 -0400
-X-Greylist: delayed 2426 seconds by postgrey-1.27 at vger.kernel.org; Fri, 09 Oct 2020 10:45:13 EDT
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=yjaraviagens.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/CmoeFF19FPVa8MZlM5WialtMzZ26w0dl4CdBRr1ZD8=; b=e+cF0/emecvBWR2r6M6yfKd6B4
-        GRqn7bc9UrMtLmMyCdvFP6YmkCpkvjMqio1+2HeG77ff7aeB+aq+daaXM7MkEmBjW4+r+/jBPJjOx
-        0EjZmH3QHJo5UdWHb1K1Jlk6s5ROnbziYD1ElA7DK8HkDYqF3QVRInrjAzqKlKVTONnyqn4YvQchd
-        2s8EScVX7FV0NzIP7xsYSYuBA5jydjHZ7tcA1NR1i+Pd3V/ENIJ3B5RZ2p8VffxwaF2gwv4Q5Dt+F
-        7x9L/U140W0do8+9NtrzcmsEl2oY08q7JBRA5oM2etusAaThkJVKmpZs5waZFWkmZkGtVxqzxD7oj
-        O/FbD4tg==;
-Received: from [84.38.134.106] (port=50446 helo=progresssoft-clearinghouse.com)
-        by vps-3871858.yjaraviagens.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <raydouglas@progresssoft-clearinghouse.com>)
-        id 1kQt0n-0000Cd-Uq
-        for linux-wireless@vger.kernel.org; Fri, 09 Oct 2020 11:04:46 -0300
-Reply-To: loan@progresssoft-clearinghouse.com
-From:   "PSCH" <raydouglas@progresssoft-clearinghouse.com>
-To:     linux-wireless@vger.kernel.org
-Subject: INVESTMENT LOAN
-Date:   9 Oct 2020 17:04:45 +0300
-Message-ID: <20201009170445.D0F6FC2A2A6BC6DF@progresssoft-clearinghouse.com>
+        Fri, 9 Oct 2020 11:05:45 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:31668 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389074AbgJIPFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Oct 2020 11:05:45 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1602255944; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=ViQ9++w/TyFWiJCmDpt/D7xG3HMjhN+hmNuDrF+2g5k=;
+ b=n5fMIvpyJMQCdvdAQ8JE3TW068w6uhEbwiFelGAfHHeD/kRsN37pPs6KlpGxRTgTUX3RRwHh
+ xXBq7k0PDUyLqa5uw6DUIDPGsI4foOZLXDGqdrfAViftlagkf+LzJna9lOVPIciUpbjUxvxk
+ 7v7k6tpi9/90GQC63Y3QqQGmDUo=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5f807c3f3711fec7b1d2016f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 09 Oct 2020 15:05:35
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 14B0BC43385; Fri,  9 Oct 2020 15:05:35 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4150EC433FF;
+        Fri,  9 Oct 2020 15:05:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4150EC433FF
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - vps-3871858.yjaraviagens.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - progresssoft-clearinghouse.com
-X-Get-Message-Sender-Via: vps-3871858.yjaraviagens.com: authenticated_id: naoresponda@yjaraviagens.com
-X-Authenticated-Sender: vps-3871858.yjaraviagens.com: naoresponda@yjaraviagens.com
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] Revert "iwlwifi: remove wide_cmd_header field"
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <iwlwifi.20201009122123.3e4ee0ad7a71.Id6d95ae601f048aeb4d2ed63a1712e469da84369@changeid>
+References: <iwlwifi.20201009122123.3e4ee0ad7a71.Id6d95ae601f048aeb4d2ed63a1712e469da84369@changeid>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, alexander@wetzel-home.de,
+        andy.lavr@gmail.com
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20201009150535.14B0BC43385@smtp.codeaurora.org>
+Date:   Fri,  9 Oct 2020 15:05:35 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Luca Coelho <luca@coelho.fi> wrote:
 
-Progresssoft- Clearinghouse
-Aldgate House, 33 Aldgate
-High street, London
-EC3N 1EA
-Tel: + 44 745 127 9845
-Fax: + 44 150 653 7129
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> This reverts commit 0a8159cbd11abf586693f1ec5264d0df587b71d8.
+> 
+> It turns out that this flag is used by iwldvm, so we can't get rid of
+> it.  This broke iwldvm devices with BAD_COMMAND errors.
+> 
+> Fixes: 0a8159cbd11a ("iwlwifi: remove wide_cmd_header field")
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Progresssoft-Clearinghouse Express Business Loan!!!
+Patch applied to wireless-drivers-next.git, thanks.
 
+b7d96bca1f00 Revert "iwlwifi: remove wide_cmd_header field"
 
-Attention: Sir / Madam,
-Good day my names are Mrs. Kate Rolington
-One of the Asian, Middle East and North Agent coordinator for=20
-Progresssoft-Clearinghouse inviting you For Express Business=20
-International Loans
-Business Loan reforms for business expansion.
-Business categories
-1.  Textiles=20
-2.  Investment
-3.  Farmers
-4.  Trading companies
-5.  Contractors
-6.  Mechanic
-7.  for transportation expansion
-8.  Movie producer
-9. Building construction
-10. Real estate
-11. Large scales business project
-12 School industries
-13. Gas & Oil
-Kindly share the International Business Expansion programs to=20
-your family and friends, Apply for your Express business=20
-International loan today.
-Best Regards,
+-- 
+https://patchwork.kernel.org/patch/11825443/
 
-Mr. Ray Douglas
-Transfer Department Dept
-Ext: 021
-Mon =E2=80=93 Fri: 8 am-9 pm ET
-Sat: 8 am-8 pm ET
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
