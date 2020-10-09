@@ -2,165 +2,86 @@ Return-Path: <SRS0=ugwx=DQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177F6C43457
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 22:50:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5C5EC433E7
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 23:16:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BECB2222EB
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 22:50:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uruvwUx8"
+	by mail.kernel.org (Postfix) with ESMTP id 6BC34222EB
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 23:16:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602285406;
+	bh=l6taX0FCEWeJUtB5xJSPpOswP3JU4Ua+gVwYeASRj70=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=kE+VCkZNSkZKXtzwf+TqeQorcbgStABGZY5EG2YZVl0GheDwi/ELYij5UMvnJw0pi
+	 HRt/lAPVKmGW0/SuC0GyAjShEX26q74wpv999mXu2cEKUulsP5/yMxytPU313zry4D
+	 GR2BV4Me7gscdvEE+c1y+0dVbTY1VfizM8pBzWHw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391164AbgJIWuo (ORCPT
+        id S1726650AbgJIXQi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Oct 2020 18:50:44 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:62204 "EHLO m42-4.mailgun.net"
+        Fri, 9 Oct 2020 19:16:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53102 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388159AbgJIWtx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Oct 2020 18:49:53 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1602283792; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=RekaQuzvEuTMKFGRUjGOcQkPbJ8kOe/tSuFlI+cV3EU=; b=uruvwUx89t418JciJGVdYzWX6hRhrwPWdC+gN5IWvPQmpG7KxqfyhnToUVh9IXOR9cSFM+BM
- fTcH0zwVpF9o1SYNkExTcAYKlRMt9rfscubmkBuc7knIluwtBfVXZpZrHUmp357wr/WPJCmH
- WuImHSiagibUBB3kINqNceOXKss=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f80e90f42f9861fb1489a04 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 09 Oct 2020 22:49:51
- GMT
-Sender: pradeepc=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E1B6AC43382; Fri,  9 Oct 2020 22:49:51 +0000 (UTC)
-Received: from pradeepc-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id S1725802AbgJIXQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Oct 2020 19:16:01 -0400
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C5A6FC433CB;
-        Fri,  9 Oct 2020 22:49:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C5A6FC433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pradeepc@codeaurora.org
-From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH] iw: add optional argument to parse 6G band channel
-Date:   Fri,  9 Oct 2020 15:49:29 -0700
-Message-Id: <1602283770-8026-1-git-send-email-pradeepc@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        by mail.kernel.org (Postfix) with ESMTPSA id 5981B222EB;
+        Fri,  9 Oct 2020 23:16:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602285360;
+        bh=l6taX0FCEWeJUtB5xJSPpOswP3JU4Ua+gVwYeASRj70=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=xIc7ck5uziWAG/SSx/mh88eb3LlScn3+0DzlM9FJUMXbsTFPZK3r57aJ13AibdtEB
+         jPhbQyIZ4yIfHnFBNcrlHeD07F8y7bAnOgX0nBBJez0/1BG9ETEHJrpySjmPDqpld8
+         8TztDhpzEvy67xgveMfrjgvJ4Qi30Cq3EIzm8tLo=
+Date:   Fri, 9 Oct 2020 16:15:58 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Aleksandr Nogikh <a.nogikh@gmail.com>
+Cc:     davem@davemloft.net, johannes@sipsolutions.net,
+        edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
+        elver@google.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        nogikh@google.com
+Subject: Re: [PATCH 1/2] net: store KCOV remote handle in sk_buff
+Message-ID: <20201009161558.57792e1a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20201007101726.3149375-2-a.nogikh@gmail.com>
+References: <20201007101726.3149375-1-a.nogikh@gmail.com>
+        <20201007101726.3149375-2-a.nogikh@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Channel numbers of 6G band overlaps with those of 2G or 5G bands.
-Therefore, an optional argument "6G" is added and expected next
-to channel number to map it to correct 6GHz frequency. If not
-specified, defaults to matching 2G or 5G frequency.
+On Wed,  7 Oct 2020 10:17:25 +0000 Aleksandr Nogikh wrote:
+> From: Aleksandr Nogikh <nogikh@google.com>
+> 
+> Remote KCOV coverage collection enables coverage-guided fuzzing of the
+> code that is not reachable during normal system call execution. It is
+> especially helpful for fuzzing networking subsystems, where it is
+> common to perform packet handling in separate work queues even for the
+> packets that originated directly from the user space.
+> 
+> Enable coverage-guided frame injection by adding a kcov_handle
+> parameter to sk_buff structure. Initialization in __alloc_skb ensures
+> that no socket buffer that was generated during a system call will be
+> missed.
+> 
+> Code that is of interest and that performs packet processing should be
+> annotated with kcov_remote_start()/kcov_remote_stop().
+> 
+> An alternative approach is to determine kcov_handle solely on the
+> basis of the device/interface that received the specific socket
+> buffer. However, in this case it would be impossible to distinguish
+> between packets that originated from normal background network
+> processes and those that were intentionally injected from the user
+> space.
+> 
+> Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
 
-example:
-iw wlanX set channel 149 6G 80MHz  --> maps to 6695 MHz
-iw wlanX set channel 149 80MHz     --> maps to 5745 MHz
-
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
- interface.c |  5 +++--
- phy.c       |  8 ++++----
- util.c      | 13 +++++++++----
- 3 files changed, 16 insertions(+), 10 deletions(-)
-
-diff --git a/interface.c b/interface.c
-index 89c95a9ac4ab..8e85f831f9f9 100644
---- a/interface.c
-+++ b/interface.c
-@@ -725,8 +725,9 @@ COMMAND(switch, freq,
- 	"<control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]] [beacons <count>] [block-tx]",
- 	NL80211_CMD_CHANNEL_SWITCH, 0, CIB_NETDEV, handle_freq,
- 	"Switch the operating channel by sending a channel switch announcement (CSA).");
--COMMAND(switch, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz] [beacons <count>] [block-tx]",
--	NL80211_CMD_CHANNEL_SWITCH, 0, CIB_NETDEV, handle_chan, NULL);
-+COMMAND(switch, channel, "<channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz] [beacons <count>] [block-tx]",
-+	NL80211_CMD_CHANNEL_SWITCH, 0, CIB_NETDEV, handle_chan,
-+	"6GHz channels expects '6G' in argument. If not specified, defaults to 5GHz or 2GHz channels");
- 
- 
- static int toggle_tid_param(const char *argv0, const char *argv1,
-diff --git a/phy.c b/phy.c
-index 2d489efd7690..31d96cec7886 100644
---- a/phy.c
-+++ b/phy.c
-@@ -222,9 +222,9 @@ static int handle_chan(struct nl80211_state *state, struct nl_msg *msg,
- 
- 	return put_chandef(msg, &chandef);
- }
--COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]",
-+COMMAND(set, channel, "<channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_chan, NULL);
--COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]",
-+COMMAND(set, channel, "<channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan, NULL);
- 
- 
-@@ -369,12 +369,12 @@ err_out:
- 		free(cac_trigger_argv);
- 	return err;
- }
--TOPLEVEL(cac, "channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+TOPLEVEL(cac, "channel <channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
- 	      "freq <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
- 	      "freq <control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
- 	 0, 0, CIB_NETDEV, handle_cac, NULL);
- COMMAND(cac, trigger,
--	"channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	"channel <channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
- 	"freq <frequency> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
- 	"freq <frequency> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
- 	NL80211_CMD_RADAR_DETECT, 0, CIB_NETDEV, handle_cac_trigger,
-diff --git a/util.c b/util.c
-index 0a9083c613a4..9ca32c5295ae 100644
---- a/util.c
-+++ b/util.c
-@@ -576,7 +576,7 @@ static int parse_freqs(struct chandef *chandef, int argc, char **argv,
-  * user by giving "NOHT" instead.
-  *
-  * The working specifier if chan is set are:
-- *   <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]
-+ *   <channel> [6G] [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]
-  *
-  * And if frequency is set:
-  *   <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz|160MHz]
-@@ -648,7 +648,12 @@ int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv,
- 	if (chan) {
- 		enum nl80211_band band;
- 
--		band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
-+		if (argc > 1 && strcmp(argv[1], "6G") == 0) {
-+			band = NL80211_BAND_6GHZ;
-+			_parsed += 1;
-+		} else {
-+			band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
-+		}
- 		freq = ieee80211_channel_to_frequency(freq, band);
- 	}
- 	chandef->control_freq = freq;
-@@ -656,9 +661,9 @@ int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv,
- 	chandef->center_freq1 = freq;
- 
- 	/* Try to parse HT mode definitions */
--	if (argc > 1) {
-+	if ((argc - _parsed) > 0) {
- 		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
--			if (strcasecmp(chanmode[i].name, argv[1]) == 0) {
-+			if (strcasecmp(chanmode[i].name, argv[_parsed]) == 0) {
- 				chanmode_selected = &chanmode[i];
- 				_parsed += 1;
- 				break;
--- 
-1.9.1
-
+Could you use skb_extensions for this?
