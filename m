@@ -1,193 +1,97 @@
-Return-Path: <SRS0=Edxh=DP=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=ugwx=DQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4929FC433E7
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 23:52:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61312C43457
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 02:18:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D705E2224C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Oct 2020 23:52:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0ED9F221FD
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Oct 2020 02:18:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kq8S6Irr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729236AbgJHXwc (ORCPT
+        id S1731040AbgJICSW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Oct 2020 19:52:32 -0400
-Received: from mga06.intel.com ([134.134.136.31]:30201 "EHLO mga06.intel.com"
+        Thu, 8 Oct 2020 22:18:22 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:54085 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728702AbgJHXwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Oct 2020 19:52:32 -0400
-IronPort-SDR: jB8H6q6/Nm1tilf4LRMe70IHHFHHWXn07J86Ob2c0uFQB5c5v83GKplHcPIL07hkXaQhNyuKou
- w7tX7OJF63KA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9768"; a="227069497"
-X-IronPort-AV: E=Sophos;i="5.77,352,1596524400"; 
-   d="scan'208";a="227069497"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2020 16:52:30 -0700
-IronPort-SDR: FqIToitaT79WJVxN7aaMxQucGtClgBlRcsLff7mwjjibpb0kFQubSGndBHCJltJGxx6yxDx+p/
- lZ6LSs6nuxbQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,352,1596524400"; 
-   d="scan'208";a="298264684"
-Received: from lkp-server02.sh.intel.com (HELO 80eb06af76cf) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 08 Oct 2020 16:52:29 -0700
-Received: from kbuild by 80eb06af76cf with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kQfi0-00001N-G5; Thu, 08 Oct 2020 23:52:28 +0000
-Date:   Fri, 09 Oct 2020 07:51:57 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD SUCCESS
- ba6ff70a3bb76c1ff440d3a0044b82e97abb648f
-Message-ID: <5f7fa61d.tDWZBHVL+aOHbLrU%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+        id S1729724AbgJICSV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Oct 2020 22:18:21 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1602209901; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=LzAohiDpFz2hyyRVpsrPkaURCp3kjctWOwIoGGIXbqU=; b=kq8S6IrrY8ywbPVLrbAP26FcCjEy8oJ61lTjN0pjncU+XI/RVqU4l0tgloc7rRmzRVxRZtDD
+ eQrrhjeG6Ubl8AYabOdDpFBCvWkz3IUS0iRm4HG78uyZQ0Ju6VtbnVaxknZmh0Ztm3SD8o5N
+ +YyxTciPshi9snVMhwRaABFnZAE=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5f7fc86c06d81bc48d41a4fd (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 09 Oct 2020 02:18:20
+ GMT
+Sender: pradeepc=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id ADAEEC43387; Fri,  9 Oct 2020 02:18:20 +0000 (UTC)
+Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pradeepc)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DAA4BC433CB;
+        Fri,  9 Oct 2020 02:18:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DAA4BC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pradeepc@codeaurora.org
+From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH 2/4] ath11k: fix incorrect wmi param for configuring HE operation
+Date:   Thu,  8 Oct 2020 19:18:09 -0700
+Message-Id: <20201009021811.18584-3-pradeepc@codeaurora.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201009021811.18584-1-pradeepc@codeaurora.org>
+References: <20201009021811.18584-1-pradeepc@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  master
-branch HEAD: ba6ff70a3bb76c1ff440d3a0044b82e97abb648f  mac80211: copy configured beacon tx rate to driver
+WMI_VDEV_PARAM_TX_OFDMA_CPLEN has been added with incorrect enum
+value. Fix the enum to represent WMI param for configuring HE
+operation field.
 
-elapsed time: 722m
+This is applicable to firmwares under
+https://github.com/kvalo/ath11k-firmware/tree/master/IPQ8074/hw2.0
+https://github.com/kvalo/ath11k-firmware/tree/master/IPQ6018/hw1.0
+https://github.com/kvalo/ath11k-firmware/tree/master/QCN9074/hw1.0
 
-configs tested: 119
-configs skipped: 2
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01228-QCAHKSWPL_SILICONZ-1
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-powerpc                  mpc885_ads_defconfig
-mips                      bmips_stb_defconfig
-arm                      footbridge_defconfig
-sh                         ap325rxa_defconfig
-powerpc                 xes_mpc85xx_defconfig
-m68k                        m5307c3_defconfig
-arm                             mxs_defconfig
-h8300                               defconfig
-powerpc                         ps3_defconfig
-sh                 kfr2r09-romimage_defconfig
-arm                           h3600_defconfig
-arm                          exynos_defconfig
-powerpc                     mpc512x_defconfig
-parisc                           allyesconfig
-powerpc                       maple_defconfig
-i386                             alldefconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                     powernv_defconfig
-powerpc                      mgcoge_defconfig
-arm                             pxa_defconfig
-mips                           mtx1_defconfig
-mips                          malta_defconfig
-powerpc                      pmac32_defconfig
-c6x                              allyesconfig
-arm                         assabet_defconfig
-sparc                       sparc32_defconfig
-h8300                            alldefconfig
-arm                           viper_defconfig
-powerpc                      ppc44x_defconfig
-h8300                       h8s-sim_defconfig
-m68k                       m5249evb_defconfig
-xtensa                    smp_lx200_defconfig
-arm                        keystone_defconfig
-powerpc                 mpc832x_rdb_defconfig
-arm                       aspeed_g5_defconfig
-mips                     cu1000-neo_defconfig
-sh                           se7619_defconfig
-arm                         nhk8815_defconfig
-arm                         bcm2835_defconfig
-sh                             espt_defconfig
-mips                      loongson3_defconfig
-mips                           ip28_defconfig
-arm                        shmobile_defconfig
-powerpc                      arches_defconfig
-powerpc                    gamecube_defconfig
-powerpc                     ksi8560_defconfig
-powerpc                     ppa8548_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a004-20201008
-x86_64               randconfig-a003-20201008
-x86_64               randconfig-a005-20201008
-x86_64               randconfig-a001-20201008
-x86_64               randconfig-a002-20201008
-x86_64               randconfig-a006-20201008
-i386                 randconfig-a006-20201008
-i386                 randconfig-a005-20201008
-i386                 randconfig-a001-20201008
-i386                 randconfig-a004-20201008
-i386                 randconfig-a002-20201008
-i386                 randconfig-a003-20201008
-i386                 randconfig-a015-20201008
-i386                 randconfig-a013-20201008
-i386                 randconfig-a014-20201008
-i386                 randconfig-a016-20201008
-i386                 randconfig-a011-20201008
-i386                 randconfig-a012-20201008
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a012-20201008
-x86_64               randconfig-a015-20201008
-x86_64               randconfig-a013-20201008
-x86_64               randconfig-a014-20201008
-x86_64               randconfig-a011-20201008
-x86_64               randconfig-a016-20201008
-
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/net/wireless/ath/ath11k/wmi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 5a32ba0eb4f5..55b1a5db206a 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -1032,7 +1032,7 @@ enum wmi_tlv_vdev_param {
+ 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
+ 	WMI_VDEV_PARAM_BSS_COLOR,
+ 	WMI_VDEV_PARAM_SET_HEMU_MODE,
+-	WMI_VDEV_PARAM_TX_OFDMA_CPLEN,
++	WMI_VDEV_PARAM_HEOPS_0_31 = 0x8003,
+ };
+ 
+ enum wmi_tlv_peer_flags {
+-- 
+2.17.1
+
