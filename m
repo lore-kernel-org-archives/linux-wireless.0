@@ -2,122 +2,126 @@ Return-Path: <SRS0=cbTT=DR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B47AC433E7
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F30DAC43457
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18D852080C
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD03A207FB
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602370385;
+	bh=8kVjcuFRI46rDQajLnlADqQP7xJM+Czh0KbJDee7LoA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Vek8WdoA6+2oy0stBMXyAIotN/dMudeecGzkMUafLCu0XydMcAzYGgh9RfSC5+iML
+	 kZ1gcU91Ax0zvgEM+amKRMvECUpzlUNH+p1/CsoSXQRWpghltOQIfLtdSBSvxw/WtX
+	 r3EY48lQWEnhgM1xE0ZcPH/wzsuG0D7AyTd0ewgU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388004AbgJJWxA (ORCPT
+        id S2388027AbgJJWxC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:53:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41592 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731534AbgJJTyP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Oct 2020 18:53:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57004 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731600AbgJJTyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 10 Oct 2020 15:54:15 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1B84C0613A7;
-        Sat, 10 Oct 2020 03:47:27 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kRCPK-002qrG-NC; Sat, 10 Oct 2020 12:47:22 +0200
-Message-ID: <dd78ce5ae126de24a1e24c4e410f3ded69b8bc6a.camel@sipsolutions.net>
-Subject: Re: [CRAZY-RFF] debugfs: track open files and release on remove
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     linux-kernel@vger.kernel.org, nstange@suse.de, ap420073@gmail.com,
-        David.Laight@aculab.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, rafael@kernel.org
-Date:   Sat, 10 Oct 2020 12:47:21 +0200
-In-Reply-To: <20201010093824.GA986556@kroah.com>
-References: <87v9fkgf4i.fsf@suse.de>
-         <20201009095306.0d87c3aa13db.Ib3a7019bff15bb6308f6d259473a1648312a4680@changeid>
-         <20201009080355.GA398994@kroah.com>
-         <be61c6a38d0f6ca1aa0bc3f0cb45bbb216a12982.camel@sipsolutions.net>
-         <20201009081624.GA401030@kroah.com>
-         <1ec056cf3ec0953d2d1abaa05e37e89b29c7cc63.camel@sipsolutions.net>
-         <20201009084729.GA406522@kroah.com>
-         <01fcaf4985f57d97ac03fc0b7deb2c225a2fbca1.camel@sipsolutions.net>
-         <20201010093824.GA986556@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 61BD62222E;
+        Sat, 10 Oct 2020 12:39:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602333590;
+        bh=8kVjcuFRI46rDQajLnlADqQP7xJM+Czh0KbJDee7LoA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mvp7/XeSD/1zsA7y97uFXHjAj3MEnPctdDpxkMxYRg+ipmeaDMH7fVmxYneH3lufn
+         qVXqoBT/yUbPRhA+iVPIo7JCnWi1V/ysegwsYQEHhKsI7fa4wdmOJpatDqnPjJWv4/
+         zrZ5HfwcCg9u6pog2IRHbFgjdplTcmLoI2hvPcuA=
+Date:   Sat, 10 Oct 2020 14:40:34 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 3/8] staging: wfx: standardize the error when vif does
+ not exist
+Message-ID: <20201010124034.GA1701199@kroah.com>
+References: <20201009171307.864608-1-Jerome.Pouiller@silabs.com>
+ <20201009171307.864608-4-Jerome.Pouiller@silabs.com>
+ <87zh4vz0xs.fsf@codeaurora.org>
+ <2632043.z0MBYUB4Ha@pc-42>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2632043.z0MBYUB4Ha@pc-42>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2020-10-10 at 11:38 +0200, Greg KH wrote:
-> On Fri, Oct 09, 2020 at 10:48:09AM +0200, Johannes Berg wrote:
-> > On Fri, 2020-10-09 at 10:47 +0200, Greg KH wrote:
+On Sat, Oct 10, 2020 at 02:22:13PM +0200, Jérôme Pouiller wrote:
+> On Friday 9 October 2020 20:52:47 CEST Kalle Valo wrote:
+> > Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
 > > 
-> > > > I think adding the .owner everywhere would be good, and perhaps we can
-> > > > somehow put a check somewhere like
-> > > > 
-> > > > 	WARN_ON(is_module_address((unsigned long)fops) && !fops->owner);
-> > > > 
-> > > > to prevent the issue in the future?
-> > > 
-> > > That will fail for all of the debugfs_create_* operations, as there is
-> > > only one set of file operations for all of the different files created
-> > > with these calls.
+> > > From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > >
+> > > Smatch complains:
+> > >
+> > >    drivers/staging/wfx/hif_rx.c:177 hif_scan_complete_indication() warn: potential NULL parameter dereference 'wvif'
+> > >    drivers/staging/wfx/data_tx.c:576 wfx_flush() warn: potential NULL parameter dereference 'wvif'
+> > >
+> > > Indeed, if the vif id returned by the device does not exist anymore,
+> > > wdev_to_wvif() could return NULL.
+> > >
+> > > In add, the error is not handled uniformly in the code, sometime a
+> > > WARN() is displayed but code continue, sometime a dev_warn() is
+> > > displayed, sometime it is just not tested, ...
+> > >
+> > > This patch standardize that.
+> > >
+> > > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > > Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > > ---
+> > >  drivers/staging/wfx/data_tx.c |  5 ++++-
+> > >  drivers/staging/wfx/hif_rx.c  | 34 ++++++++++++++++++++++++----------
+> > >  drivers/staging/wfx/sta.c     |  4 ++++
+> > >  3 files changed, 32 insertions(+), 11 deletions(-)
+> > >
+> > > diff --git a/drivers/staging/wfx/data_tx.c b/drivers/staging/wfx/data_tx.c
+> > > index b4d5dd3d2d23..8db0be08daf8 100644
+> > > --- a/drivers/staging/wfx/data_tx.c
+> > > +++ b/drivers/staging/wfx/data_tx.c
+> > > @@ -431,7 +431,10 @@ static void wfx_skb_dtor(struct wfx_vif *wvif, struct sk_buff *skb)
+> > >                             sizeof(struct hif_req_tx) +
+> > >                             req->fc_offset;
+> > >
+> > > -     WARN_ON(!wvif);
+> > > +     if (!wvif) {
+> > > +             pr_warn("%s: vif associated with the skb does not exist anymore\n", __func__);
+> > > +             return;
+> > > +     }
 > > 
-> > Why would it fail? Those have their fops in the core debugfs code, which
-> > might have a .owner assigned but is probably built-in anyway?
+> > I'm not really a fan of using function names in warning or error
+> > messages as it clutters the log. In debug messages I think they are ok.
 > 
-> Bad choice of terms, it would "fail" in that this type of check would
-> never actually work because the debugfs code is built into the kernel,
-> and there is no module owner for it.  But the value it is referencing is
-> an address in a module.
-
-Ahh.
-
-Yes and no. I mean, yes, the check wouldn't really work.
-
-But OTOH, this is exactly what the proxy_fops protects against.
-
-The _only_ thing that proxy_fops *doesn't* proxy is the ->release()
-method.
-
-If you have a debugfs file that's say debugfs_create_u32(), then the
-code is all built into the kernel, and - if ->release() even exists, I
-didn't check now - it would surely not dereference the pointer you gave
-to debugfs_create_u32(). So as long as the file is debugfs_remove()d
-before the pointer becomes invalid, there's no issue.
-
-The check I'm proposing (and actually wrote in my separate RFC patch
-that didn't seem quite as crazy) would basically protect the ->release()
-method only, if needed. Everything else is handled by proxy_fops.
-
-> > > Which, now that I remember it, is why we went down the proxy "solution"
-> > > in the first place :(
-> > 
-> > Not sure I understand. That was related more to (arbitrary) files having
-> > to be disappeared rather than anything else?
+> In the initial code, I used WARN() that far more clutters the log (I
+> have stated that a backtrace won't provide any useful information, so
+> pr_warn() was better suited).
 > 
-> Isn't this the same issue?
+> In add, in my mind, these warnings are debug messages. If they appears,
+> the user should probably report a bug.
+> 
+> Finally, in this patch, I use the same message several times (ok, not
+> this particular one). So the function name is a way to differentiate
+> them.
 
-Well, not exactly? The difference is that proxy_fops basically protects
-the *value*, read/write/etc., but not ->release(). So it protects more
-against bus unbind or the like, where the *device* disappears, rather
-than the *code* disappearing.
+You should use dev_*() for these, that way you can properly determine
+the exact device as well.
 
-Now, you still need to be careful that ->release() doesn't actually
-access anything related to the device, of course. As long as we don't
-have a general revoke() at least.
+thanks,
 
-I guess in that sense this crazy patch actually makes things *better*
-than the RFC patch because it *does* call the ->release() during
-debugfs_remove() and therefore allows even ->release() to access data of
-the device or other data structures that are being removed; whereas the
-RFC patch I also sent doesn't protect that, it just protects the code
-itself.
-
-johannes
-
+greg k-h
