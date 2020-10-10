@@ -2,53 +2,50 @@ Return-Path: <SRS0=cbTT=DR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DDDC433E7
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6F3C433DF
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC06C20760
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFFA620760
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602371747;
-	bh=O7G/XCcPTVmLB+LfQ658dP8/bq3RxUpJpXT8EjDdMTA=;
+	s=default; t=1602371751;
+	bh=889E+muKmUZWiXCo0NGDbO8S8dMIHI5hcTZm7Il+FH0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=Y9LN/ZeE8QNh1zNnukOvV46lItnA41zutJSPjauF2R2y/Kli3L/4OA/mHwdtzKcXF
-	 M+9f9eNU/aIOlqHFsKSk/4CJ6bTaFxfcKCbbiTSitxR/64v2RtnPDbWRpN4ZO5WqaG
-	 tpUkAC5SHnjD2GRZFxoLkU8CiIj2Ob6pCvB0ETJE=
+	b=DGfDsJSxFI/Y1QgfkDoDVfvN4y+EJSTpRpPGfCGyKi2WcTcYF14GA+5b/msmca1XN
+	 IL7EwA2XVx4JFs07+ABnWVe8rKEL+C1T7tkfw9YXxaNPBfi6D4fJmdyVnWNuMc2ozM
+	 h2L0eX0gyX90n4rMJJB4ctmqKrbRzxbM/cpkpr0w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387922AbgJJWwt (ORCPT
+        id S2387894AbgJJWwp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:52:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52068 "EHLO mail.kernel.org"
+        Sat, 10 Oct 2020 18:52:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52042 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731413AbgJJTWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Oct 2020 15:22:38 -0400
+        id S1731440AbgJJTWZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Oct 2020 15:22:25 -0400
 Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 555EB2240C;
-        Sat, 10 Oct 2020 16:51:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5427B223FD;
+        Sat, 10 Oct 2020 16:36:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602348673;
-        bh=O7G/XCcPTVmLB+LfQ658dP8/bq3RxUpJpXT8EjDdMTA=;
+        s=default; t=1602347777;
+        bh=889E+muKmUZWiXCo0NGDbO8S8dMIHI5hcTZm7Il+FH0=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=u4qTV5kSVp7kUBKH8c/SjkbRQfmUs2QzSqgSymfpt1QlVirFKJq/iU0qqpiwH+4NC
-         0KpT1i2VnRu8Q1HeFm5NKffN3f8efGJWlLi38y/9BdkBWXIiP6GtbVnLht2z3Va9sR
-         2xk8TE1YgDJcaHj8dNu1FWEQbuXVtsUCohz44BrE=
-Date:   Sat, 10 Oct 2020 09:51:11 -0700
+        b=juNFMPwcCmEIIz4e/ZQQhYt+30XfWe2M2uI5XP7/y6XPigSqnSjYn0bKl/UJx7Ur1
+         VDlRRJFOjbYIFXQpD7i4vAylTgsY0GEWWSuWyyFA4ZAtyjI97CC6zOepdVh0ymmgr0
+         8BFcg82UDVq8b3/XOszd6DPZ8k8KJ1y06lA9n1CA=
+Date:   Sat, 10 Oct 2020 09:36:15 -0700
 From:   Jakub Kicinski <kuba@kernel.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Subject: Re: pull-request: wireless-drivers-next-2020-10-09
-Message-ID: <20201010095111.655b32ef@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <20201009160759.A44E1C433FE@smtp.codeaurora.org>
-References: <20201009160759.A44E1C433FE@smtp.codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2020-10-08
+Message-ID: <20201010093615.107632f5@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20201008104204.44106-1-johannes@sipsolutions.net>
+References: <20201008104204.44106-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
@@ -56,46 +53,12 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri,  9 Oct 2020 16:07:59 +0000 (UTC) Kalle Valo wrote:
-> Hi,
+On Thu,  8 Oct 2020 12:42:03 +0200 Johannes Berg wrote:
+> Hi Dave,
 > 
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
+> And also a few more patches for net-next, mostly fixes
+> for the work that recently landed there.
 > 
-> Kalle
-> 
-> The following changes since commit c2568c8c9e636a56abf31da4b28b65d3ded02524:
-> 
->   Merge branch 'net-Constify-struct-genl_small_ops' (2020-10-04 21:13:36 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-2020-10-09
-> 
-> for you to fetch changes up to b7d96bca1f004b5f26ee51ea9c9749a28dac8316:
-> 
->   Revert "iwlwifi: remove wide_cmd_header field" (2020-10-09 18:04:50 +0300)
+> Please pull and let me know if there's any problem.
 
-Pulled, thanks Kalle!
-
-Intel folks - do you really need to pack all your structs? 
-Do they come from the device unaligned or something?
-
-+/**
-+ * struct iwl_statistics_duration_ntfy
-+ *
-+ * @hdr: general statistics header
-+ * @cont_burst_chk_cnt: number of times continuation or
-+ *      fragmentation or bursting was checked
-+ * @cont_burst_cnt: number of times continuation or fragmentation
-+ *      or bursting was successful
-+ * @wait_for_silence_timeout_cnt: ???
-+ * @reserved: reserved
-+ */
-+struct iwl_statistics_duration_ntfy {
-+       struct iwl_statistics_ntfy_hdr hdr;
-+       __le32 cont_burst_chk_cnt;
-+       __le32 cont_burst_cnt;
-+       __le32 wait_for_silence_timeout_cnt;
-+       __le32 reserved;
-+} __packed; /* STATISTICS_DURATION_NTFY_API_S_VER_1 */
+.. aand pulled, thanks!
