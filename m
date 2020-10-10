@@ -2,251 +2,179 @@ Return-Path: <SRS0=cbTT=DR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B37C433DF
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 08:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A670C56201
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 124B4207CD
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 08:15:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602317747;
-	bh=qstRlnMhFpppqBbJembTBTYmRUc7bRZGmYp193dRDGg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=isv0XLCmGod8v29zE+VbvPhcMOkWKnTNCPrbUd6rd7PWRoRIosQD0FRNlJT179FPx
-	 Bu2Qa70/F4MgBofnGpP07aWsCsFJlS4Uu8SPkc4Cd6CJkz0YgLPb4H/P/kPwSNO6or
-	 NFZR965Z8T+55t+FedYKM253k3yv+KZcmgQbq7T0=
+	by mail.kernel.org (Postfix) with ESMTP id 545652080C
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fU4ehnUo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729876AbgJJIPO (ORCPT
+        id S2387645AbgJJWv4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Oct 2020 04:15:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38404 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729807AbgJJIMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Oct 2020 04:12:31 -0400
-Received: from localhost.localdomain (unknown [176.207.245.61])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 48BD6207C4;
-        Sat, 10 Oct 2020 08:03:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602317040;
-        bh=qstRlnMhFpppqBbJembTBTYmRUc7bRZGmYp193dRDGg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Lu8yKCKuIFiptvOaFvY+UHJox/DgYR0XPnDttDZq6uIw8HhwQHek3s3AaqckjzdW0
-         re3uKKFBSqz3adY/iDP9TSF2klzyr09Nz1WFFVmbaL6ZUtTVtKrckMjqakF3mjOQl0
-         MVzJ2J+n+LF+/739vJFpqG4erSdNKYEgQK/BGDaI=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        ryder.lee@mediatek.com, john@phrozen.org
-Subject: [PATCH] mt76: mt7915: introduce 802.11ax multi-bss support
-Date:   Sat, 10 Oct 2020 10:03:53 +0200
-Message-Id: <8f612baf1b04165446a9f9f73c85e011f618d4fa.1602316667.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.26.2
+        Sat, 10 Oct 2020 18:51:56 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:38858 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731352AbgJJSnm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Oct 2020 14:43:42 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09ADBttA106263;
+        Sat, 10 Oct 2020 13:18:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=teUTVOba2iGBVDpvjfpiEVZNYULjl/b3B311LmBLjHA=;
+ b=fU4ehnUoC/0KczFjZe5afevFBI459x9ARKCtf0XgZuF/nRHZefu8d2mdi+2F7nyK/nUZ
+ GpxyzZVdHeazyaXzxPfuBm4y+/SCUJO510/6GU4iYgaubIl6pzp+T9Kx8Tv1IJUD131j
+ Y38MjH1FQL6hkihC8TLQ9NrfskZBcVeEdPZ5SyGrQj+8atpx6ksJ6JyY8EvDmjFQym0j
+ BtvFvCM6WkTcp8PL6GR0AfdodzhrBds3hAHM07fmT0DuuKSdfoQPwYUzWzwqzhbrSCB+
+ qHFi67EYyAv/WsQXrimnTIOOCoWq6OMGHVuuQw0txI2TeQ77l54IsWw2NNSTF6pBeBdj 1w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 3432fa8v55-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 10 Oct 2020 13:18:22 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09ADFTqJ017203;
+        Sat, 10 Oct 2020 13:18:22 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 343309jjk4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 10 Oct 2020 13:18:22 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09ADIIHf030406;
+        Sat, 10 Oct 2020 13:18:20 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 10 Oct 2020 06:18:17 -0700
+Date:   Sat, 10 Oct 2020 16:18:11 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S . Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 2/8] staging: wfx: check memory allocation
+Message-ID: <20201010131810.GS18329@kadam>
+References: <20201009171307.864608-1-Jerome.Pouiller@silabs.com>
+ <20201009171307.864608-3-Jerome.Pouiller@silabs.com>
+ <874kn31be2.fsf@codeaurora.org>
+ <2852079.TFTgQsWz4P@pc-42>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <2852079.TFTgQsWz4P@pc-42>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
+ bulkscore=0 mlxlogscore=999 suspectscore=2 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010100125
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 impostorscore=0
+ priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015 malwarescore=0
+ spamscore=0 adultscore=0 mlxscore=0 mlxlogscore=999 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010100124
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce mbss mcu APIs to enable 802.11ax multi-bss AP support for
-mt7915 devices
+On Sat, Oct 10, 2020 at 02:07:13PM +0200, Jérôme Pouiller wrote:
+> On Friday 9 October 2020 20:51:01 CEST Kalle Valo wrote:
+> > CAUTION: This email originated from outside of the organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.
+> > 
+> > 
+> > Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
+> > 
+> > > From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > >
+> > > Smatch complains:
+> > >
+> > >    main.c:228 wfx_send_pdata_pds() warn: potential NULL parameter dereference 'tmp_buf'
+> > >    227          tmp_buf = kmemdup(pds->data, pds->size, GFP_KERNEL);
+> > >    228          ret = wfx_send_pds(wdev, tmp_buf, pds->size);
+> > >                                          ^^^^^^^
+> > >    229          kfree(tmp_buf);
+> > >
+> > > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > > Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > > ---
+> > >  drivers/staging/wfx/main.c | 8 +++++++-
+> > >  1 file changed, 7 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/staging/wfx/main.c b/drivers/staging/wfx/main.c
+> > > index df11c091e094..a8dc2c033410 100644
+> > > --- a/drivers/staging/wfx/main.c
+> > > +++ b/drivers/staging/wfx/main.c
+> > > @@ -222,12 +222,18 @@ static int wfx_send_pdata_pds(struct wfx_dev *wdev)
+> > >       if (ret) {
+> > >               dev_err(wdev->dev, "can't load PDS file %s\n",
+> > >                       wdev->pdata.file_pds);
+> > > -             return ret;
+> > > +             goto err1;
+> > >       }
+> > >       tmp_buf = kmemdup(pds->data, pds->size, GFP_KERNEL);
+> > > +     if (!tmp_buf) {
+> > > +             ret = -ENOMEM;
+> > > +             goto err2;
+> > > +     }
+> > >       ret = wfx_send_pds(wdev, tmp_buf, pds->size);
+> > >       kfree(tmp_buf);
+> > > +err2:
+> > >       release_firmware(pds);
+> > > +err1:
+> > >       return ret;
+> > >  }
+> > 
+> > A minor style issue but using more descriptive error labels make the
+> > code more readable and maintainable, especially in a bigger function.
+> > For example, err2 could be called err_release_firmware.
+> > 
+> > And actually err1 could be removed and the goto replaced with just
+> > "return ret;". Then err2 could be renamed to a simple err.
+> 
+> It was the case in the initial code. However, I have preferred to not
+> mix 'return' and 'goto' inside the same function. Probably a matter of
+> taste.
+>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
-This patch is based on "mt76: mt7915: introduce bss coloring support"
-https://patchwork.kernel.org/patch/11782149/
----
- .../net/wireless/mediatek/mt76/mt7915/init.c  |  2 +
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 81 ++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   | 11 ++-
- 3 files changed, 90 insertions(+), 4 deletions(-)
+Ideally you can read a function from top to bottom and understand with
+out skipping around.  Imagine if novels were written like that "goto
+bottom_of_page;" but then at the bottom it just said "Just kidding".
+"return ret;" is more readable than "goto err;"
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 140222c083dd..21cdb5c8fcd5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -265,6 +265,8 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
- 
- 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
- 	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
-+	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
-+	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID_AP);
- 
- 	hw->max_tx_fragments = 4;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 6cedee285e25..4b9dddba7228 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -755,11 +755,22 @@ mt7915_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
- 	struct tlv *tlv;
- 
- 	tlv = mt7915_mcu_add_tlv(skb, BSS_INFO_BASIC, sizeof(*bss));
-+	bss = (struct bss_info_basic *)tlv;
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_MESH_POINT:
--	case NL80211_IFTYPE_AP:
- 		break;
-+	case NL80211_IFTYPE_AP: {
-+		/* mbss */
-+		int max_bss_id = fls(vif->bss_conf.multiple_bssid.count);
-+
-+		if (max_bss_id > 8)
-+			return -EINVAL;
-+
-+		bss->non_tx_bssid = vif->bss_conf.multiple_bssid.index;
-+		bss->max_bssid = max_bss_id;
-+		break;
-+	}
- 	case NL80211_IFTYPE_STATION:
- 		/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
- 		if (enable) {
-@@ -786,7 +797,6 @@ mt7915_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
- 		break;
- 	}
- 
--	bss = (struct bss_info_basic *)tlv;
- 	memcpy(bss->bssid, vif->bss_conf.bssid, ETH_ALEN);
- 	bss->bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int);
- 	bss->network_type = cpu_to_le32(type);
-@@ -1075,6 +1085,29 @@ mt7915_mcu_muar_config(struct mt7915_phy *phy, struct ieee80211_vif *vif,
- 				   &req, sizeof(req), true);
- }
- 
-+static int
-+mt7915_mcu_mbss_tlv(struct sk_buff *skb, struct ieee80211_vif *vif)
-+{
-+	struct bss_info_mbss *mbss;
-+	struct tlv *tlv;
-+	int max_bss_id;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return -EOPNOTSUPP;
-+
-+	max_bss_id = fls(vif->bss_conf.multiple_bssid.count);
-+	if (max_bss_id > 8)
-+		return -EINVAL;
-+
-+	tlv = mt7915_mcu_add_tlv(skb, BSS_INFO_11V_MBSSID, sizeof(*mbss));
-+	mbss = (struct bss_info_mbss *)tlv;
-+
-+	mbss->bssid_index = vif->bss_conf.multiple_bssid.index;
-+	mbss->max_bssid = max_bss_id;
-+
-+	return 0;
-+}
-+
- int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
- 			    struct ieee80211_vif *vif, int enable)
- {
-@@ -1100,6 +1133,7 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
- 		mt7915_mcu_bss_bmc_tlv(skb, phy);
- 		mt7915_mcu_bss_ra_tlv(skb, vif, phy);
- 		mt7915_mcu_bss_hw_amsdu_tlv(skb);
-+		mt7915_mcu_mbss_tlv(skb, vif);
- 
- 		if (vif->bss_conf.he_support)
- 			mt7915_mcu_bss_he_tlv(skb, vif, phy);
-@@ -2497,6 +2531,43 @@ mt7915_mcu_beacon_cntdwn(struct ieee80211_vif *vif, struct sk_buff *rskb,
- 	info->cnt = skb->data[offs->cntdwn_counter_offs[0]];
- }
- 
-+static void
-+mt7915_mcu_beacon_mbss(struct sk_buff *rskb, struct sk_buff *skb,
-+		       struct ieee80211_vif *vif, struct bss_info_bcn *bcn,
-+		       struct ieee80211_mutable_offsets *offs)
-+{
-+	struct bss_info_bcn_mbss *mbss;
-+	const struct element *elem;
-+	struct tlv *tlv;
-+	int i = 1;
-+
-+	if (!vif->bss_conf.multiple_bssid.count)
-+		return;
-+
-+	tlv = mt7915_mcu_add_nested_subtlv(rskb, BSS_INFO_BCN_MBSSID,
-+					   sizeof(*mbss), &bcn->sub_ntlv,
-+					   &bcn->len);
-+	mbss = (struct bss_info_bcn_mbss *)tlv;
-+	mbss->offset[0] = cpu_to_le16(offs->tim_offset);
-+	mbss->bitmap = cpu_to_le32(1);
-+
-+	for_each_element_id(elem, WLAN_EID_MULTIPLE_BSSID,
-+			    &skb->data[offs->multiple_bssid_offset],
-+			    offs->multiple_bssid_offset) {
-+		const struct element *sub_elem;
-+
-+		for_each_element(sub_elem, elem->data + 1, elem->datalen - 1) {
-+			if (sub_elem->id)
-+				continue;
-+
-+			mbss->offset[i] =
-+				cpu_to_le16((u8 *)sub_elem - skb->data);
-+			mbss->bitmap |= cpu_to_le32(1 << i);
-+			i++;
-+		}
-+	}
-+}
-+
- static void
- mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		       struct sk_buff *rskb, struct sk_buff *skb,
-@@ -2545,6 +2616,10 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
- 	struct bss_info_bcn *bcn;
- 	int len = MT7915_BEACON_UPDATE_SIZE + MAX_BEACON_SIZE;
- 
-+	if (vif->bss_conf.multiple_bssid.count &&
-+	    vif->bss_conf.multiple_bssid.parent)
-+		return 0;
-+
- 	skb = ieee80211_beacon_get_template(hw, vif, &offs);
- 	if (!skb)
- 		return -EINVAL;
-@@ -2570,8 +2645,8 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
- 		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
- 	}
- 
--	/* TODO: subtag - 11v MBSSID */
- 	mt7915_mcu_beacon_cntdwn(vif, rskb, skb, bcn, &offs);
-+	mt7915_mcu_beacon_mbss(rskb, skb, vif, bcn, &offs);
- 	mt7915_mcu_beacon_cont(dev, vif, rskb, skb, bcn, &offs);
- 	dev_kfree_skb(skb);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index e4cfbd26e565..da0d1fb769f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -367,6 +367,14 @@ struct bss_info_sync_mode {
- 	u8 rsv[8];
- } __packed;
- 
-+struct bss_info_mbss {
-+	__le16 tag;
-+	__le16 len;
-+	u8 max_bssid;
-+	u8 bssid_index;
-+	u8 rsv[2];
-+} __packed;
-+
- struct bss_info_bmc_rate {
- 	__le16 tag;
- 	__le16 len;
-@@ -1013,7 +1021,8 @@ enum {
- 					 sizeof(struct bss_info_he) +	\
- 					 sizeof(struct bss_info_bmc_rate) +\
- 					 sizeof(struct bss_info_ext_bss) +\
--					 sizeof(struct bss_info_sync_mode))
-+					 sizeof(struct bss_info_sync_mode) + \
-+					 sizeof(struct bss_info_mbss))
- 
- #define MT7915_BEACON_UPDATE_SIZE	(sizeof(struct sta_req_hdr) +	\
- 					 sizeof(struct bss_info_bcn_cntdwn) + \
--- 
-2.26.2
+These sorts of rules where "there is only one return per function" are
+meant to make people think about cleanup before returning.  But most of
+my work is in error handling code and it doesn't help.  If people don't
+think about cleanup, changing the style won't make them start thinking
+about it.  There was one driver which was written with locked code
+indented one tab and the inventor of that style still introduced a
+locking bug in his code.
 
+	spin_lock(); {
+		frob();
+		frob();
+		if (ret)
+			return ret;  // <-- forgot to unlock;
+		frob();
+	} spin_unlock();
+
+Btw, I have created a new Smatch check to find unwind bugs.  It's called
+check_unwind.c and it's easy to add new alloc/free pairings to that
+code.  This is the best way to prevent unwind bugs.  The style changes
+don't make a measurable difference in real life and they make the code
+messy.
+
+And GW-BASIC label names are a pox upon the earth.
+
+regards,
+dan carpenter
