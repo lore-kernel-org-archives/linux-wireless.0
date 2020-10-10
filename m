@@ -2,167 +2,122 @@ Return-Path: <SRS0=cbTT=DR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88406C43467
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B47AC433E7
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EEA6207FB
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i3B+00Fw"
+	by mail.kernel.org (Postfix) with ESMTP id 18D852080C
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 22:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387948AbgJJWw4 (ORCPT
+        id S2388004AbgJJWxA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:52:56 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38780 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730683AbgJJTuD (ORCPT
+        Sat, 10 Oct 2020 18:53:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41592 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731534AbgJJTyP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Oct 2020 15:50:03 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09ADuDaE007956;
-        Sat, 10 Oct 2020 13:56:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=i12gKFPdJZF7+MNGak6f/dG0rwxLvrt1hj8h/auKFIM=;
- b=i3B+00Fw5SbY6EVbiQNLLPR6tws9qmpxGO+ceQ9+WCQo8jZr+1wh0Str4khZHDYbkulQ
- mUlfE9rcwyem83dZ3H332uHmzlnTMeaLtwzXfA6FaSzN10gsjUx2+RfsPNBQFWl1mNYN
- PZken3BLB3B+Y/3eJqxhfr7GdnztnvxOWC0ZgKr9cubmax2akxHUIKIcpfnmPjCwhxfd
- u3a3f7XlF7Gd+eUXeR6HZkAoIzd7opEhgJU+C5Ds2gtB3h8C8/RTUhEciREQXyCy5RJb
- of+1wRTznOsjKJ+h3AW9op3aR1GCjCQQ1bWuRe9r28cZVQektraeeE2GKGPbdd6bLpWd zA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 3434wk8rfe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 10 Oct 2020 13:56:13 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09ADpOqP125033;
-        Sat, 10 Oct 2020 13:54:12 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 34349jbcjx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 10 Oct 2020 13:54:12 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09ADsBhJ011167;
-        Sat, 10 Oct 2020 13:54:11 GMT
-Received: from kadam (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 10 Oct 2020 06:54:10 -0700
-Date:   Sat, 10 Oct 2020 16:54:03 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 2/8] staging: wfx: check memory allocation
-Message-ID: <20201010135403.GT18329@kadam>
-References: <20201009171307.864608-1-Jerome.Pouiller@silabs.com>
- <20201009171307.864608-3-Jerome.Pouiller@silabs.com>
- <874kn31be2.fsf@codeaurora.org>
- <2852079.TFTgQsWz4P@pc-42>
- <20201010131810.GS18329@kadam>
+        Sat, 10 Oct 2020 15:54:15 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1B84C0613A7;
+        Sat, 10 Oct 2020 03:47:27 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kRCPK-002qrG-NC; Sat, 10 Oct 2020 12:47:22 +0200
+Message-ID: <dd78ce5ae126de24a1e24c4e410f3ded69b8bc6a.camel@sipsolutions.net>
+Subject: Re: [CRAZY-RFF] debugfs: track open files and release on remove
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     linux-kernel@vger.kernel.org, nstange@suse.de, ap420073@gmail.com,
+        David.Laight@aculab.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, rafael@kernel.org
+Date:   Sat, 10 Oct 2020 12:47:21 +0200
+In-Reply-To: <20201010093824.GA986556@kroah.com>
+References: <87v9fkgf4i.fsf@suse.de>
+         <20201009095306.0d87c3aa13db.Ib3a7019bff15bb6308f6d259473a1648312a4680@changeid>
+         <20201009080355.GA398994@kroah.com>
+         <be61c6a38d0f6ca1aa0bc3f0cb45bbb216a12982.camel@sipsolutions.net>
+         <20201009081624.GA401030@kroah.com>
+         <1ec056cf3ec0953d2d1abaa05e37e89b29c7cc63.camel@sipsolutions.net>
+         <20201009084729.GA406522@kroah.com>
+         <01fcaf4985f57d97ac03fc0b7deb2c225a2fbca1.camel@sipsolutions.net>
+         <20201010093824.GA986556@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201010131810.GS18329@kadam>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 phishscore=0 mlxscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010100130
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
- malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010100131
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Oct 10, 2020 at 04:18:11PM +0300, Dan Carpenter wrote:
-> On Sat, Oct 10, 2020 at 02:07:13PM +0200, Jérôme Pouiller wrote:
-> > On Friday 9 October 2020 20:51:01 CEST Kalle Valo wrote:
-> > > CAUTION: This email originated from outside of the organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.
-> > > 
-> > > 
-> > > Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
-> > > 
-> > > > From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> > > >
-> > > > Smatch complains:
-> > > >
-> > > >    main.c:228 wfx_send_pdata_pds() warn: potential NULL parameter dereference 'tmp_buf'
-> > > >    227          tmp_buf = kmemdup(pds->data, pds->size, GFP_KERNEL);
-> > > >    228          ret = wfx_send_pds(wdev, tmp_buf, pds->size);
-> > > >                                          ^^^^^^^
-> > > >    229          kfree(tmp_buf);
-> > > >
-> > > > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > > Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> > > > ---
-> > > >  drivers/staging/wfx/main.c | 8 +++++++-
-> > > >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/drivers/staging/wfx/main.c b/drivers/staging/wfx/main.c
-> > > > index df11c091e094..a8dc2c033410 100644
-> > > > --- a/drivers/staging/wfx/main.c
-> > > > +++ b/drivers/staging/wfx/main.c
-> > > > @@ -222,12 +222,18 @@ static int wfx_send_pdata_pds(struct wfx_dev *wdev)
-> > > >       if (ret) {
-> > > >               dev_err(wdev->dev, "can't load PDS file %s\n",
-> > > >                       wdev->pdata.file_pds);
-> > > > -             return ret;
-> > > > +             goto err1;
-> > > >       }
-> > > >       tmp_buf = kmemdup(pds->data, pds->size, GFP_KERNEL);
-> > > > +     if (!tmp_buf) {
-> > > > +             ret = -ENOMEM;
-> > > > +             goto err2;
-> > > > +     }
-> > > >       ret = wfx_send_pds(wdev, tmp_buf, pds->size);
-> > > >       kfree(tmp_buf);
-> > > > +err2:
-> > > >       release_firmware(pds);
-> > > > +err1:
-> > > >       return ret;
-> > > >  }
-> > > 
-> > > A minor style issue but using more descriptive error labels make the
-> > > code more readable and maintainable, especially in a bigger function.
-> > > For example, err2 could be called err_release_firmware.
-> > > 
-> > > And actually err1 could be removed and the goto replaced with just
-> > > "return ret;". Then err2 could be renamed to a simple err.
+On Sat, 2020-10-10 at 11:38 +0200, Greg KH wrote:
+> On Fri, Oct 09, 2020 at 10:48:09AM +0200, Johannes Berg wrote:
+> > On Fri, 2020-10-09 at 10:47 +0200, Greg KH wrote:
 > > 
-> > It was the case in the initial code. However, I have preferred to not
-> > mix 'return' and 'goto' inside the same function. Probably a matter of
-> > taste.
-> >
+> > > > I think adding the .owner everywhere would be good, and perhaps we can
+> > > > somehow put a check somewhere like
+> > > > 
+> > > > 	WARN_ON(is_module_address((unsigned long)fops) && !fops->owner);
+> > > > 
+> > > > to prevent the issue in the future?
+> > > 
+> > > That will fail for all of the debugfs_create_* operations, as there is
+> > > only one set of file operations for all of the different files created
+> > > with these calls.
+> > 
+> > Why would it fail? Those have their fops in the core debugfs code, which
+> > might have a .owner assigned but is probably built-in anyway?
 > 
-> Ideally you can read a function from top to bottom and understand with
-> out skipping around.  Imagine if novels were written like that "goto
-> bottom_of_page;" but then at the bottom it just said "Just kidding".
-> "return ret;" is more readable than "goto err;"
+> Bad choice of terms, it would "fail" in that this type of check would
+> never actually work because the debugfs code is built into the kernel,
+> and there is no module owner for it.  But the value it is referencing is
+> an address in a module.
 
-More unasked for exposition:  "goto err;" is too vague.  It could be one
-of three things.  1)  Do nothing (like this code).  2)  Do something
-specific (choose a better name like goto unlock).  3) Do everything.
-Do everything code is the most buggy style of error handling.
+Ahh.
 
-The common bug introduced by type 1 and 2 are "Forgot to set the error
-code" bugs.  Type 3 is a whole nother level of bugginess.  Too much bugs
-to explain.
+Yes and no. I mean, yes, the check wouldn't really work.
 
-regards,
-dan carpenter
+But OTOH, this is exactly what the proxy_fops protects against.
+
+The _only_ thing that proxy_fops *doesn't* proxy is the ->release()
+method.
+
+If you have a debugfs file that's say debugfs_create_u32(), then the
+code is all built into the kernel, and - if ->release() even exists, I
+didn't check now - it would surely not dereference the pointer you gave
+to debugfs_create_u32(). So as long as the file is debugfs_remove()d
+before the pointer becomes invalid, there's no issue.
+
+The check I'm proposing (and actually wrote in my separate RFC patch
+that didn't seem quite as crazy) would basically protect the ->release()
+method only, if needed. Everything else is handled by proxy_fops.
+
+> > > Which, now that I remember it, is why we went down the proxy "solution"
+> > > in the first place :(
+> > 
+> > Not sure I understand. That was related more to (arbitrary) files having
+> > to be disappeared rather than anything else?
+> 
+> Isn't this the same issue?
+
+Well, not exactly? The difference is that proxy_fops basically protects
+the *value*, read/write/etc., but not ->release(). So it protects more
+against bus unbind or the like, where the *device* disappears, rather
+than the *code* disappearing.
+
+Now, you still need to be careful that ->release() doesn't actually
+access anything related to the device, of course. As long as we don't
+have a general revoke() at least.
+
+I guess in that sense this crazy patch actually makes things *better*
+than the RFC patch because it *does* call the ->release() during
+debugfs_remove() and therefore allows even ->release() to access data of
+the device or other data structures that are being removed; whereas the
+RFC patch I also sent doesn't protect that, it just protects the code
+itself.
+
+johannes
 
