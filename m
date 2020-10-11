@@ -2,65 +2,80 @@ Return-Path: <SRS0=C4Uy=DS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C65BC433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 11:09:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FDEC433E7
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 11:18:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A915207F7
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 11:09:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9EFC207FB
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 11:18:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729246AbgJKLJ1 convert rfc822-to-8bit (ORCPT
+        id S1729936AbgJKLSH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Oct 2020 07:09:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40952 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725863AbgJKLJ1 (ORCPT
+        Sun, 11 Oct 2020 07:18:07 -0400
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:24868 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729862AbgJKLSE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Oct 2020 07:09:27 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52235C0613CE;
-        Sun, 11 Oct 2020 04:09:27 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kRZDw-003SpC-RF; Sun, 11 Oct 2020 13:09:09 +0200
-Date:   Sun, 11 Oct 2020 13:09:07 +0200
-In-Reply-To: <CAAeHK+y=YaVwU=vgf4Fph_WMLnKgzKEhyypVmsYbF1LnRPfJsg@mail.gmail.com> (sfid-20201011_123742_043414_6A73C31E)
-References: <20201009170202.103512-1-a.nogikh@gmail.com> <C4BF5679-74E6-4F2E-839B-A95D88699DBF@sipsolutions.net> <CAAeHK+y=YaVwU=vgf4Fph_WMLnKgzKEhyypVmsYbF1LnRPfJsg@mail.gmail.com> (sfid-20201011_123742_043414_6A73C31E)
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Re: [PATCH v2 0/3] [PATCH v2 0/3] [PATCH v2 0/3] net, mac80211, kernel: enable KCOV remote coverage collection for 802.11 frame handling
-To:     Andrey Konovalov <andreyknvl@google.com>
-CC:     Aleksandr Nogikh <a.nogikh@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>, kuba@kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Eric Dumazet <edumazet@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Marco Elver <elver@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Aleksandr Nogikh <nogikh@google.com>
-From:   Johannes Berg <johannes@sipsolutions.net>
-Message-ID: <5A216DB0-DB3A-4619-9546-A687549DB543@sipsolutions.net>
+        Sun, 11 Oct 2020 07:18:04 -0400
+X-IronPort-AV: E=Sophos;i="5.77,362,1596492000"; 
+   d="scan'208";a="471985691"
+Received: from palace.rsr.lip6.fr (HELO palace.lip6.fr) ([132.227.105.202])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/AES256-SHA256; 11 Oct 2020 13:18:00 +0200
+From:   Julia Lawall <Julia.Lawall@inria.fr>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     =?UTF-8?q?Valdis=20Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        Joe Perches <joe@perches.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        kernel-janitors@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] mac80211: use semicolons rather than commas to separate statements
+Date:   Sun, 11 Oct 2020 12:34:55 +0200
+Message-Id: <1602412498-32025-3-git-send-email-Julia.Lawall@inria.fr>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1602412498-32025-1-git-send-email-Julia.Lawall@inria.fr>
+References: <1602412498-32025-1-git-send-email-Julia.Lawall@inria.fr>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Replace commas with semicolons.  Commas introduce unnecessary
+variability in the code structure and are hard to see.  What is done
+is essentially described by the following Coccinelle semantic patch
+(http://coccinelle.lip6.fr/):
 
+// <smpl>
+@@ expression e1,e2; @@
+e1
+-,
++;
+e2
+... when any
+// </smpl>
 
-On 11 October 2020 12:37:29 CEST, Andrey Konovalov <andreyknvl@google.com> wrote:
->I initially hesitated to do that, as it would multiply the number of
->kcov callbacks. But perhaps you're right and a clean API look
->outweighs the rest. I will do this in v3.
+Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
 
+---
+ net/mac80211/debugfs_sta.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yeah, OK, dunno. You can always make it an inline calling the "full" API so after compiling it's equivalent. But if course that still has the two APIs. It just seemed to the common case wouldn't worry really (have to) about these things, especially if you plan on changing it again later. 
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 829dcad69c2c..6a51b8b58f9e 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -274,7 +274,7 @@ static ssize_t sta_aql_read(struct file *file, char __user *userbuf,
+ 		"Q limit[low/high]: VO: %u/%u VI: %u/%u BE: %u/%u BK: %u/%u\n",
+ 		q_depth[0], q_depth[1], q_depth[2], q_depth[3],
+ 		q_limit_l[0], q_limit_h[0], q_limit_l[1], q_limit_h[1],
+-		q_limit_l[2], q_limit_h[2], q_limit_l[3], q_limit_h[3]),
++		q_limit_l[2], q_limit_h[2], q_limit_l[3], q_limit_h[3]);
+ 
+ 	rv = simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ 	kfree(buf);
 
-johannes
--- 
-Sent from my phone. 
