@@ -1,181 +1,114 @@
-Return-Path: <SRS0=cbTT=DR=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=C4Uy=DS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 082E5C433E7
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93129C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 10:38:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4EC120760
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Oct 2020 23:15:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D4912083B
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 10:38:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="Jw/+Fc3N"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fyGSM/hs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387826AbgJJWw2 (ORCPT
+        id S1729778AbgJKKhn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:52:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36486 "EHLO
+        Sun, 11 Oct 2020 06:37:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731381AbgJJTQT (ORCPT
+        with ESMTP id S1729681AbgJKKhm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Oct 2020 15:16:19 -0400
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on20615.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe59::615])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E286C05BD30;
-        Sat, 10 Oct 2020 09:05:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=E3+6GzC+SpLLOrcv30yA32/aPTUIAE8u/HMF2SCwr1YMlI1xlHyDuSMfS/+62xcrJkAvxYpepZg/ldDjiZ9jAWeOpo/gs9ky4nvJolxB4NdWu3Br3kObyy2kDeYCpMu+bXW4kK5z8e+jrSgdW8bGtT2f5d5na5DUrtCD3LhWEjCeTuZrcPSO/OqvGAciXcLzlUzfDrF8UXQ0SEvds9LhEVGX5K0HwCJnV7Wj54IbPLhp7SBgo5+LjpL/Eu1Xsz2cjUkhSBv1Zo9vdnL7X3BNWzaeGg/dMLdCvZ4YgnnzFpNO5vTek0BjAdlVKhJ0RDr+fMpS/oGWNuhcg9E4HSnYMA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YzrqwQ0auDXK6VajWD/ZTbccbQ5c9X65kU51fTepi0o=;
- b=huBVGB4eTDwVtC7jVVEY+J8liZFknKenkl+zTco1QjsDMeUZX/326e3/fDe+Uf/Xuxp/OBJ/PXk4MHoygMErs2tltWva7Ofn6K2s8BAi+6UjTVCFALXA5dodMYQNBlku4ML5IOubXBf0aIrpN4IsXmFx8ic+QIfVHONjrDdGILGuzLbC75Md6k8IeISrqhC85ald5tBRqaAqQeJEme9c6nayf6y7KoX8ZkZNC5dQG3ut9w3YUJRO3wNsBo58uLj++4cl+iHrrfX5gpQmOYVrRE++9QorxpdPC8/Ub21IHnUsuEUUOoIWtZpNj++MO3UDCKOw4ZQy1iGl1GQu7jN4aA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
+        Sun, 11 Oct 2020 06:37:42 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76C8CC0613D0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 03:37:40 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id v12so215998ply.12
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 03:37:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YzrqwQ0auDXK6VajWD/ZTbccbQ5c9X65kU51fTepi0o=;
- b=Jw/+Fc3NxAMIInOraaVperKM5BIFGuUW1DaEGrJPcWOLUBrJXLxWTMpcnIpjRjBAx3/BbMPQzhKs2SJRuZTywpUgUA1mxdCQrt1Ln8jtgXwmeLdj4HKY010h7CYQjr2tD1jGCnqtVtIsZD5HdGO/QNKTAiQTT5+YFpKUvuZHAZ4=
-Authentication-Results: linuxfoundation.org; dkim=none (message not signed)
- header.d=none;linuxfoundation.org; dmarc=none action=none
- header.from=silabs.com;
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
- by SA2PR11MB5036.namprd11.prod.outlook.com (2603:10b6:806:114::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.28; Sat, 10 Oct
- 2020 13:29:40 +0000
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::4f5:fbe5:44a7:cb8a]) by SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::4f5:fbe5:44a7:cb8a%5]) with mapi id 15.20.3455.028; Sat, 10 Oct 2020
- 13:29:40 +0000
-From:   =?ISO-8859-1?Q?J=E9r=F4me?= Pouiller <jerome.pouiller@silabs.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 3/8] staging: wfx: standardize the error when vif does not exist
-Date:   Sat, 10 Oct 2020 15:29:34 +0200
-Message-ID: <5203347.001cLfkWmS@pc-42>
-Organization: Silicon Labs
-In-Reply-To: <20201010124034.GA1701199@kroah.com>
-References: <20201009171307.864608-1-Jerome.Pouiller@silabs.com> <2632043.z0MBYUB4Ha@pc-42> <20201010124034.GA1701199@kroah.com>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
-X-Originating-IP: [82.67.86.106]
-X-ClientProxiedBy: DM5PR19CA0017.namprd19.prod.outlook.com
- (2603:10b6:3:151::27) To SN6PR11MB2718.namprd11.prod.outlook.com
- (2603:10b6:805:63::18)
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=IwIdQxaAvtPvdQ7kv8/2HX6fvW7PYAkceLWLP3z3+j0=;
+        b=fyGSM/hsJOE0+XtyetgrP/4oSTaoITF9ynd40QSEjMTurJmPGVfydGEeShfrjnIx46
+         bt3uG5ZSkh68debo5dfPfrAp8wvNUD8IsS5GDoeO5XNxTqGfxrR/aqjxV49upHn5pqmo
+         6mbu4nm2PJaOkxMfymbia6RnuRZNoU4liSZ+kRwILNQ3DFil3jGHMuRWVgWadtUlG0pm
+         UPAXkrs1YKR5H8pdQhL93YcwDIQHoxtG+uvcFRdCidW5Rpd+ksWW0Pd0pZzipCpQWQ81
+         VTw6Ps674GUciAn/Nmh+x6wVwiI7+rl4Wh0JXyEVpFqGEA/U4DWJ41sL6EdlEMnRWiA8
+         iI9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=IwIdQxaAvtPvdQ7kv8/2HX6fvW7PYAkceLWLP3z3+j0=;
+        b=GFLgmDyNKrweErTlxWeOnrgMuFjCBv7xK5/UH45/PMzxQcJj5NB7sAW2G3ewz1ei7M
+         5Xq3qyZB4G1HUS5Y3T1WhNpvAvtZrIW5BPkyiC1aBF3WMjhB2JF5MLwGLUMhSRVvJ78m
+         sFC9n9QourjcYOH0sdLQaMtc96q/HAeptS4sLtAb1H0lKR5glqT+jDRcSIgpgelnWqkE
+         kUIHkitbCYFbYziRyu7RGJuEVheFjs9YyA6XOjE5YP8o9UnLk/CLEru1jX6EvpFspaag
+         h6hYSHCbmHj45BjiGJ57D7Lz+BTxVCguTprQFL0Pgw0vWPJgkh00cf+ltdJbQAQFxH4B
+         B0dQ==
+X-Gm-Message-State: AOAM533ijvaF+aPtI4lXFTZGWu8GY9reWIHQ9uX9IjHaVuGBxQAWgywy
+        jde7nBMdI9CdyGOJ1d6Zp+mmZAlK9staRTIcCm4ajQ==
+X-Google-Smtp-Source: ABdhPJx3URKf9AYK1M9Ikngl4G/r8DiVTS1GIRSdM5JdeFin+So8Y+XY9rUA1QnFioyMCB7L+/WDBgYt7vg2IYTVf0A=
+X-Received: by 2002:a17:902:d716:b029:d3:8e2a:1b5d with SMTP id
+ w22-20020a170902d716b02900d38e2a1b5dmr18272569ply.85.1602412659693; Sun, 11
+ Oct 2020 03:37:39 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.localnet (82.67.86.106) by DM5PR19CA0017.namprd19.prod.outlook.com (2603:10b6:3:151::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.21 via Frontend Transport; Sat, 10 Oct 2020 13:29:38 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d28d021f-a81b-49be-8c53-08d86d208a3f
-X-MS-TrafficTypeDiagnostic: SA2PR11MB5036:
-X-Microsoft-Antispam-PRVS: <SA2PR11MB5036CC8AE76DE53436DBF59C93090@SA2PR11MB5036.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e/uRZLVf6hdZANr17a+rMe9w6xhbSIFKmVN9cw4whODZ6up4lNp1lKHoO3bNkAPYsWbmZWGt7jC/ZY8rdqpu3ezq+jeYV7PHPjYOwktNCE6smgxWLRElUNLApe3a+oAVxbyMYhcAg0kEwyVYk9SbZnrqLy+U0lg1n9I1DsmLiVtHilVq+V4z0yuitnEaAPPna5ryZCRyoJRCYDa+OWVaCC5V5xsCC4sNScZ7jsfRbwmf8tYB18L1ySkCzfu11ICapWoz5xWyfSvSVs/age8NhUOQ1wcQJbvo04LVZ76uxju9QcNNA1YqVhdrvj/1kOfD
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(39850400004)(346002)(366004)(376002)(6486002)(66476007)(66946007)(66556008)(83380400001)(6512007)(54906003)(316002)(66574015)(16526019)(9686003)(4326008)(26005)(36916002)(6506007)(6666004)(5660300002)(186003)(8676002)(6916009)(478600001)(2906002)(86362001)(52116002)(8936002)(956004)(33716001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: K8g50CzrhmMIPh8VJoZI01G5b0ZTI0A1VMbg9s2gbeCx4TaA1Ssr/92CwbyEBMgOyj1vYueXNgBbUuvAwbsBQZGZNU5E6uoZ5e2L6i5Iv5YKRvfRi64x/I9bnLlvlEuMi9EdUaE/dM8bk/4QZIix9Kh5NUDwfiRGLqtW/VVhqVPa0Qza15Wgdq3LwnOC9OqZgsefklCASV+eX8X69x0+OOCej8jUh64YrTtdoa74g8ezG9IFD45QFsunPshahq8MF7IizBdx+JqIdwivo/NHvZfunCcLD4QmuKg85GyRYItKIbgQln12dsde9DNFYwS5HJOIFK3Mwzrk7YFN/UyltQnvfpYZqgK4MJsXhhGRvKmzX/Evn2bGtkyq75rooMRSPkNUoBQwwGpltPRVFN85wT1Kque55iQuko5kNZJPZZHZPgTA2w3mP1OUpqHSNjm+8eSk+YnN6dpH63KYsM1GzCZtJHAk5J9bS6iW47CpGpzzAljZzs5zT4YzF3NB+5jYP/vSftXiqURd21Tldr5goMXaVIueACNOFNzLTRu5dzaRw8ibEleH//tWYLkdDp96ciIJ0P50ZgpDE1Tg3Dx+BJ6JZwcLnbJUk0Wov4sfZ9iud/diDdjHutnpV/9TA9cvNvjpeTMX/1zLHsEzXJSu2w==
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d28d021f-a81b-49be-8c53-08d86d208a3f
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2718.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Oct 2020 13:29:40.1834
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XiZVWbjnCOryDnIj0ELGuAIpcbSnURMDzWo36D6oRLZcCY7/lesXBp+h7EKJ1X11H2CgC2EXOuYJdS6+ADpBhg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB5036
+References: <20201009170202.103512-1-a.nogikh@gmail.com> <C4BF5679-74E6-4F2E-839B-A95D88699DBF@sipsolutions.net>
+In-Reply-To: <C4BF5679-74E6-4F2E-839B-A95D88699DBF@sipsolutions.net>
+From:   Andrey Konovalov <andreyknvl@google.com>
+Date:   Sun, 11 Oct 2020 12:37:29 +0200
+Message-ID: <CAAeHK+y=YaVwU=vgf4Fph_WMLnKgzKEhyypVmsYbF1LnRPfJsg@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] [PATCH v2 0/3] [PATCH v2 0/3] net, mac80211,
+ kernel: enable KCOV remote coverage collection for 802.11 frame handling
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Aleksandr Nogikh <a.nogikh@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>, kuba@kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Eric Dumazet <edumazet@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Marco Elver <elver@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Aleksandr Nogikh <nogikh@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Saturday 10 October 2020 14:40:34 CEST Greg Kroah-Hartman wrote:
-> On Sat, Oct 10, 2020 at 02:22:13PM +0200, J=E9r=F4me Pouiller wrote:
-> > On Friday 9 October 2020 20:52:47 CEST Kalle Valo wrote:
-> > > Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
-> > >
-> > > > From: J=E9r=F4me Pouiller <jerome.pouiller@silabs.com>
-> > > >
-> > > > Smatch complains:
-> > > >
-> > > >    drivers/staging/wfx/hif_rx.c:177 hif_scan_complete_indication() =
-warn: potential NULL parameter dereference 'wvif'
-> > > >    drivers/staging/wfx/data_tx.c:576 wfx_flush() warn: potential NU=
-LL parameter dereference 'wvif'
-> > > >
-> > > > Indeed, if the vif id returned by the device does not exist anymore=
-,
-> > > > wdev_to_wvif() could return NULL.
-> > > >
-> > > > In add, the error is not handled uniformly in the code, sometime a
-> > > > WARN() is displayed but code continue, sometime a dev_warn() is
-> > > > displayed, sometime it is just not tested, ...
-> > > >
-> > > > This patch standardize that.
-> > > >
-> > > > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > > Signed-off-by: J=E9r=F4me Pouiller <jerome.pouiller@silabs.com>
-> > > > ---
-> > > >  drivers/staging/wfx/data_tx.c |  5 ++++-
-> > > >  drivers/staging/wfx/hif_rx.c  | 34 ++++++++++++++++++++++++-------=
----
-> > > >  drivers/staging/wfx/sta.c     |  4 ++++
-> > > >  3 files changed, 32 insertions(+), 11 deletions(-)
-> > > >
-> > > > diff --git a/drivers/staging/wfx/data_tx.c b/drivers/staging/wfx/da=
-ta_tx.c
-> > > > index b4d5dd3d2d23..8db0be08daf8 100644
-> > > > --- a/drivers/staging/wfx/data_tx.c
-> > > > +++ b/drivers/staging/wfx/data_tx.c
-> > > > @@ -431,7 +431,10 @@ static void wfx_skb_dtor(struct wfx_vif *wvif,=
- struct sk_buff *skb)
-> > > >                             sizeof(struct hif_req_tx) +
-> > > >                             req->fc_offset;
-> > > >
-> > > > -     WARN_ON(!wvif);
-> > > > +     if (!wvif) {
-> > > > +             pr_warn("%s: vif associated with the skb does not exi=
-st anymore\n", __func__);
-> > > > +             return;
-> > > > +     }
-> > >
-> > > I'm not really a fan of using function names in warning or error
-> > > messages as it clutters the log. In debug messages I think they are o=
-k.
-> >
-> > In the initial code, I used WARN() that far more clutters the log (I
-> > have stated that a backtrace won't provide any useful information, so
-> > pr_warn() was better suited).
-> >
-> > In add, in my mind, these warnings are debug messages. If they appears,
-> > the user should probably report a bug.
-> >
-> > Finally, in this patch, I use the same message several times (ok, not
-> > this particular one). So the function name is a way to differentiate
-> > them.
->=20
-> You should use dev_*() for these, that way you can properly determine
-> the exact device as well.
+On Fri, Oct 9, 2020 at 7:13 PM Johannes Berg <johannes@sipsolutions.net> wr=
+ote:
+>
+>
+>
+> On 9 October 2020 19:01:59 CEST, Aleksandr Nogikh <a.nogikh@gmail.com> wr=
+ote:
+>
+> >This patch series conflicts with another proposed patch
+> >http://lkml.kernel.org/r/223901affc7bd759b2d6995c2dbfbdd0a29bc88a.160224=
+8029.git.andreyknvl@google.com
+> >One of these patches needs to be rebased once the other one is merged.
+>
+>
+> Maybe that other patch shouldn't do things that way though, and add new A=
+PI (which the existing one could call with some kind of "all contexts" argu=
+ment) instead, so it's only necessary to specify the context (mask?) where =
+its actually needed (the few places in usb or e whatever)?
+>
+> Surely that would also look less tedious in the mac80211 code, for exampl=
+e.
+>
+> And if you ever fix the nesting issue you'd have fewer places to modify a=
+gain.
 
-Totally agree. I initially did that. However, the device is a field of
-wvif which is NULL in this case.
+Hi Johannes,
 
-I could have changed the code to get the real pointer to the device. But
-I didn't want to clutter the code just for a debug message (and also
-because I was a bit lazy).
+I initially hesitated to do that, as it would multiply the number of
+kcov callbacks. But perhaps you're right and a clean API look
+outweighs the rest. I will do this in v3.
 
---=20
-J=E9r=F4me Pouiller
-
-
+Thanks!
