@@ -2,79 +2,80 @@ Return-Path: <SRS0=C4Uy=DS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34881C433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 16:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA376C433E7
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 16:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D52BF207D3
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 16:13:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48018221FF
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Oct 2020 16:20:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GlKsPiQO"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="q2Pq6c7E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729414AbgJKQN1 (ORCPT
+        id S2387769AbgJKQUo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Oct 2020 12:13:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59088 "EHLO
+        Sun, 11 Oct 2020 12:20:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726211AbgJKQN0 (ORCPT
+        with ESMTP id S2387739AbgJKQUo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Oct 2020 12:13:26 -0400
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 876C7C0613CE
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 09:13:26 -0700 (PDT)
-Received: by mail-ej1-x62d.google.com with SMTP id ce10so19904321ejc.5
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 09:13:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=g40do8t/7LxpkF2rWDjYsZ9n0f9pwR9vDeQsHsVKyT8=;
-        b=GlKsPiQOX0u1E+RJvY9p2KDqxTX5noYXtV5aadop6qe6pkYf0A7FcQzJ1rdYWV9++i
-         8/Eg3S5/LUt67XTzC0M2s0IUrQd4qv5SPAB+ysYMLTEjmqN0r/cXo8/snJOOx/AG30xw
-         KfvV0DwzZHqtphQNShlX3TIvkijdci5tPCNcIBwH+q1jzkDQDI/JB81jm2fQzyllQ8qD
-         oYsFZp3ARXyXU4VNUkSOsT7SNezxKpLiuaasT4Wvvz//nRo3igzsbgZ+wpplejffeSj5
-         r383OHGUr6Txldr4hcm1mVDKDII9kMmwqe9KqVfTpxPxfKBPQX8wYQIHXYyQVNVh9ADF
-         ZhHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=g40do8t/7LxpkF2rWDjYsZ9n0f9pwR9vDeQsHsVKyT8=;
-        b=DxAdEgj79jjfmNyG6i0Jf/67NlKwHBFa1E17cILvT+/oSz4N92dbIjKKtCYLp9N8Kq
-         oZLA2o+RRw6sSyYkBNRl3PqjP18mOAu2tZp/0Bmt0e9CbM7iQaw9JFzxR4xMJeJ0HPZe
-         dV6G44FhH2oIYJTLFJ80JgFxSbU4YDzuqmQfpAVErBThGJVzWYcLLsQKSFFu+vMXx2ac
-         S/YN/UBtY2QBGEvU7UPlstGw2SUnzQO+4Y3wFlQlZsfFBxXj7lWVaWYeJ9kItYijMLeB
-         n4GuZqPa/H6XbN9vTMRhUuVYfGwsw6tvrRFvwhuMTmW7PI5cBHLvYCqUVG1JXne3ahmy
-         /RhQ==
-X-Gm-Message-State: AOAM533SkFbqe4I7BiNtVLAfyTQPVni+0aFD0cPue3/6eBHepwZJElwR
-        teWRtukznRkRn/7pBGi47EvBE6voWVrS8G7VXxVfzXpETBaqEA==
-X-Google-Smtp-Source: ABdhPJxJ4XtuuMKrbbmOa5Fg6mGD7qGyGJ+fEDgFTLn/oKFo1l/RmHWt9FHmqw/8cYbLEwsjyTFbatpQ8VmT4YwgWU8=
-X-Received: by 2002:a17:906:cb03:: with SMTP id lk3mr23636846ejb.491.1602432805034;
- Sun, 11 Oct 2020 09:13:25 -0700 (PDT)
-MIME-Version: 1.0
-From:   David Rubio <david.alejandro.rubio@gmail.com>
-Date:   Sun, 11 Oct 2020 13:13:14 -0300
-Message-ID: <CAO6ttSmiXPnA9z_31CV2rS=DO0c48jSJGBAkOgWiD-GOG73Ffw@mail.gmail.com>
-Subject: rtw88 / rtl_8821ce: rfe 2 is not supported
+        Sun, 11 Oct 2020 12:20:44 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F00BC0613CE
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 09:20:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=mf1TU+vAlZ3cuyuDsOHZ8HXxbL4wAGb5TC7oIAhHUH0=; b=q2Pq6c7EgpwDH0lYKi/us2uZ4Q
+        K1CJ7hYopIJMIWHPcKLANAdkwaBEA1a7clI5iDzRaUiKr/tEO/np5EaXUwM1tJI5pmlXYEGZ6AXWV
+        WksO0Eh+fZjYgCeesNdBRxbSypMyxcPTveQypOOXoF+MH7bFThHdn6qaAOVhPPv8tLCU=;
+Received: from p54ae9462.dip0.t-ipconnect.de ([84.174.148.98] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kRe5S-0004gJ-4Q; Sun, 11 Oct 2020 18:20:42 +0200
+From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc:     stable@vger.kernel.org
+Subject: [PATCH] mt76: add back the SUPPORTS_REORDERING_BUFFER flag
+Date:   Sun, 11 Oct 2020 18:20:40 +0200
+Message-Id: <20201011162040.63714-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On the kernel 5.9 there's support for the RTL8821CE chipset, but my
-variant seems to not be supported:
+It was accidentally dropped while adding multiple wiphy support
+Fixes fast-rx support and avoids handling reordering in both mac80211
+and the driver
 
-Oct 11 12:20:39 youmu kernel: rtw_8821ce 0000:02:00.0: rfe 2 isn't supported
-Oct 11 12:20:39 youmu kernel: rtw_8821ce 0000:02:00.0: failed to setup
-chip efuse info
-Oct 11 12:20:39 youmu kernel: rtw_8821ce 0000:02:00.0: failed to setup
-chip information
+Cc: stable@vger.kernel.org
+Fixes: c89d36254155 ("mt76: add function for allocating an extra wiphy")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index a778ecc65261..2bc1ef1cbfea 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -305,6 +305,7 @@ mt76_phy_init(struct mt76_dev *dev, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
+ 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
++	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+ 
+ 	if (!(dev->drv->drv_flags & MT_DRV_AMSDU_OFFLOAD)) {
+ 		ieee80211_hw_set(hw, TX_AMSDU);
+-- 
+2.28.0
 
-If you need any further information please reply with what steps I should take.
-There's no wifi working at all here, and those are all of the messages I get.
-
-Thanks you!
