@@ -2,143 +2,96 @@ Return-Path: <SRS0=vmj3=DT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06730C43467
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58579C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:11:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D5542087D
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:00:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 034CC206F4
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:11:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GcDfopve"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JHWHJ46+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727452AbgJLIAY (ORCPT
+        id S1728914AbgJLILo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Oct 2020 04:00:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35010 "EHLO
+        Mon, 12 Oct 2020 04:11:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726732AbgJLIAX (ORCPT
+        with ESMTP id S1728906AbgJLILn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Oct 2020 04:00:23 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 426C2C0613CE;
-        Mon, 12 Oct 2020 01:00:23 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id u8so21932924ejg.1;
-        Mon, 12 Oct 2020 01:00:23 -0700 (PDT)
+        Mon, 12 Oct 2020 04:11:43 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DFEEC0613CE
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id n9so13516491pgf.9
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:subject:to:cc:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=E6ZQVUiO2275Bcug8uUrW3WsykSr+byogH0GbMVRigw=;
-        b=GcDfopve+WPhIRwCJrdYk1/TfRko9i65Ilpv8HZL+ED4dQxCulnQnRZePaC64NPAr2
-         nmn49sDr6c5oTxnoaD2uTYlCVwQO8ZXYpcby1pF1D2C+klxUKxBdYIrvBNyVr+GmiuG8
-         2bxGIzY8Kxom/n/9bHVET77PZ+zY76sAt0wT5b3JoLdHxzTW8+7RWqIDuoC4DkIKWI6m
-         7HiNZNlq7bhlUSEqBASqo+IrjOTSLh2e3kzN+VzkPV5G32LDlCJJtFw4Om97uHa2w1yJ
-         VkNWhQdsIVRQDbB1ucSjpnk/Fp3cj2MWiyRP9+YPlG7kqDkXi/dXv8baEtjIGqojK2hg
-         0+vQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=gxBKupSKNm0WjlJ2r8d/Ivcf+9kpHIZLqPGV+tgABeU=;
+        b=JHWHJ46+pWa8ObtUAgF3ZY/AjkOhmC3tIpMWj6YrnR46qklQeWoVStiOgY8LIbgeJl
+         /T1d47QcTgvNKEmdBlLlcktvsQAWP/zKgdhpgg2yO2MZw3b8uP0eXjX01AW29ZCv2F1Y
+         roFGujonkXexEAuxJPq5jgHI5vv7oy8cYY66B+TzIbgiE0nQWJVNRSOR9MLdjF9MS8tU
+         PMulu8vJNHVCuyUCVcPf7ixB7I9gxvIvcfdprvdWSMtl61NyEnjlrxNoMBa2xWab9/22
+         ed9Le+5jKYS7eYaoVPN73ZfA/KE+Z8V73SijJSAw/3eai/Ac3w+w+jx9GsdG4Go8ttzM
+         asoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=E6ZQVUiO2275Bcug8uUrW3WsykSr+byogH0GbMVRigw=;
-        b=BeQOuwcxpOp1wFrB1Y2rJvnyX28ggCNQYAG5l8eVgAlbDVWNvU7zCHBoF1H7/MBd7b
-         vt02e8acz3yYPMB4BZAdKM7ZO+54/DD/fSenqd6S2QAih+qjqSLVdbLCDl1Je9AKwG9+
-         sfUkjWY/CjjCtMxY8tV8YjpjXJdjFdJfELWe0P5WSYaDHFyMMdqK/VvGPxpFJtDruQm3
-         eLBBjclouDP+j4cyysP5n4Pw92dZICylVm7VPYMaNft6o9FjnNHJhlBSwrxexAqru7b/
-         VkBTQKqv/KzQoUjcrNCH5ld/z1//wGiBshquPBGA7add1obPFHuA1tCiWt9eZmAQZc1E
-         +7JQ==
-X-Gm-Message-State: AOAM533ZbgJvreW0Re0hlzBR+yMfoStaIDqss6z6fEP613SYAAG63yw6
-        WfQj9QMuyeRR4Kg9R9uQS8U=
-X-Google-Smtp-Source: ABdhPJyM1WPUyaOroCzCzAQo+bFOg9gN1cdZ7Fu41hYLugilC37gIB+LcI36H/p0IumpMavqB/LCXw==
-X-Received: by 2002:a17:907:4365:: with SMTP id nd5mr27607240ejb.56.1602489621917;
-        Mon, 12 Oct 2020 01:00:21 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f00:6a00:f90c:2907:849f:701c? (p200300ea8f006a00f90c2907849f701c.dip0.t-ipconnect.de. [2003:ea:8f00:6a00:f90c:2907:849f:701c])
-        by smtp.googlemail.com with ESMTPSA id r21sm10129690eda.3.2020.10.12.01.00.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 01:00:21 -0700 (PDT)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH net-next v2 00/12] net: add and use function
- dev_fetch_sw_netstats for fetching pcpu_sw_netstats
-To:     David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
-        Oliver Neukum <oneukum@suse.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <geomatsi@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Roopa Prabhu <roopa@nvidia.com>,
-        Nikolay Aleksandrov <nikolay@nvidia.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pravin B Shelar <pshelar@ovn.org>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        bridge@lists.linux-foundation.org
-Message-ID: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
-Date:   Mon, 12 Oct 2020 10:00:11 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=gxBKupSKNm0WjlJ2r8d/Ivcf+9kpHIZLqPGV+tgABeU=;
+        b=gx78WG2oYBaTDEfaadeT52owQM+BVRDje7cSOBmVkszVtcJUOuZNyqh5uAh+2QGemB
+         5lfYOokzMXZluxuBg10rr2MYBf/5BQkRBo4OZMkOARVmpfsWckB1GgfwfXbEU6sr15L2
+         1tnietDKCCsJlwooWGZuCig4DPPZUc1DYV2r2aWRsnIjFnJ5xH1FIQqCGu0lD+521G04
+         j5YnHI6ywKOY9W4OeD0aCdDwBUPwIFaupWJSHeI35lW1raboNmPszcGAwY0miqWUVAYQ
+         5pMjBDJOTTLNn5p0o73uhlDhwqspL7wPH3a34T/2im9SoypdqJT6hcjDb2UtO/i+rWcK
+         fZ2A==
+X-Gm-Message-State: AOAM532ad6XPOKL+jNzSX6h1oAuV0cEyEe1vruAYzFO/mwjDZysI6K7y
+        z5D2a9erYtSQ2XUnHHf9Zg==
+X-Google-Smtp-Source: ABdhPJzWBVFP4Y0hcGyyvVC+mB7vkUBtrFv+k1Kv50GuNX3wqX39ABMNswhqh4e5nIodB3VaNLYmJQ==
+X-Received: by 2002:a63:5653:: with SMTP id g19mr12382750pgm.151.1602490303186;
+        Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
+Received: from localhost.localdomain (60-251-199-163.HINET-IP.hinet.net. [60.251.199.163])
+        by smtp.gmail.com with ESMTPSA id 92sm10966806pjv.32.2020.10.12.01.11.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2020 01:11:42 -0700 (PDT)
+From:   tony0620emma@gmail.com
+To:     tony0620emma@gmail.com, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, tehuang@realtek.com,
+        pkshih@realtek.com
+Subject: [PATCH] MAINTAINERS: update Yan-Hsuan's email address
+Date:   Mon, 12 Oct 2020 16:11:40 +0800
+Message-Id: <20201012081140.18085-1-tony0620emma@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In several places the same code is used to populate rtnl_link_stats64
-fields with data from pcpu_sw_netstats. Therefore factor out this code
-to a new function dev_fetch_sw_netstats().
+From: Yan-Hsuan Chuang <tony0620emma@gmail.com>
 
-v2:
-- constify argument netstats
-- don't ignore netstats being NULL or an ERRPTR
-- switch to EXPORT_SYMBOL_GPL
+Switch my email to gmail.com address.
 
-Heiner Kallweit (12):
-  net: core: add function dev_fetch_sw_netstats for fetching
-    pcpu_sw_netstats
-  IB/hfi1: use new function dev_fetch_sw_netstats
-  net: macsec: use new function dev_fetch_sw_netstats
-  net: usb: qmi_wwan: use new function dev_fetch_sw_netstats
-  net: usbnet: use new function dev_fetch_sw_netstats
-  qtnfmac: use new function dev_fetch_sw_netstats
-  net: bridge: use new function dev_fetch_sw_netstats
-  net: dsa: use new function dev_fetch_sw_netstats
-  iptunnel: use new function dev_fetch_sw_netstats
-  mac80211: use new function dev_fetch_sw_netstats
-  net: openvswitch: use new function dev_fetch_sw_netstats
-  xfrm: use new function dev_fetch_sw_netstats
+Signed-off-by: Yan-Hsuan Chuang <tony0620emma@gmail.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/infiniband/hw/hfi1/ipoib_main.c       | 34 +------------------
- drivers/net/macsec.c                          | 22 +-----------
- drivers/net/usb/qmi_wwan.c                    | 24 +------------
- drivers/net/usb/usbnet.c                      | 24 +------------
- drivers/net/wireless/quantenna/qtnfmac/core.c | 27 +--------------
- include/linux/netdevice.h                     |  2 ++
- net/bridge/br_device.c                        | 21 +-----------
- net/core/dev.c                                | 34 +++++++++++++++++++
- net/dsa/slave.c                               | 21 +-----------
- net/ipv4/ip_tunnel_core.c                     | 23 +------------
- net/mac80211/iface.c                          | 23 +------------
- net/openvswitch/vport-internal_dev.c          | 20 +----------
- net/xfrm/xfrm_interface.c                     | 22 +-----------
- 13 files changed, 47 insertions(+), 250 deletions(-)
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c99577961cc4..f437c4923b12 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14701,7 +14701,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
+ F:	drivers/net/wireless/realtek/rtlwifi/
+ 
+ REALTEK WIRELESS DRIVER (rtw88)
+-M:	Yan-Hsuan Chuang <yhchuang@realtek.com>
++M:	Yan-Hsuan Chuang <tony0620emma@gmail.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ F:	drivers/net/wireless/realtek/rtw88/
 -- 
-2.28.0
-
-
+2.17.1
 
