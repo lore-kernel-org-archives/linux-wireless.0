@@ -2,149 +2,126 @@ Return-Path: <SRS0=vmj3=DT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5503AC433E7
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 03:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6A5C43457
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 06:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91B412076C
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 03:36:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 533FD2074F
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 06:04:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="a5I3j0I8"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RcKAUm7X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgJLDf7 (ORCPT
+        id S1727077AbgJLGEp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Oct 2020 23:35:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50926 "EHLO
+        Mon, 12 Oct 2020 02:04:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726134AbgJLDf7 (ORCPT
+        with ESMTP id S1726513AbgJLGEp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Oct 2020 23:35:59 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 881F1C0613CE
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 20:35:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=yNJUJW5y6kE3RQZKIJlvBAwYPb5xKZVDlMJ3bAbVlyw=; b=a5I3j0I8kH5d3o9RzZFVPc4V8W
-        K05HutY/BKARsiX1/idASE9nIIOy24OBx3dsTRQbrxoiDffQsio9bdzP9ltLpYM9Dia+muCSqMTRa
-        vJJp0ifxYlh3gfqTE0OPtpC5uLoBp7kxxBOGLlnGaa4eSWswUngC4iuYTBQAZfZxXaWc=;
-Received: from p54ae9462.dip0.t-ipconnect.de ([84.174.148.98] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kRocs-0001eW-5f; Mon, 12 Oct 2020 05:35:54 +0200
-Subject: Re: [PATCH v2 08/10] mt76: mt7915: implement testmode rx support
-To:     Shayne Chen <shayne.chen@mediatek.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>
-References: <20201012032538.21314-1-shayne.chen@mediatek.com>
- <20201012032538.21314-8-shayne.chen@mediatek.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Message-ID: <4333ebf5-3d19-3165-3275-6e6fac09abfa@nbd.name>
-Date:   Mon, 12 Oct 2020 05:35:53 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.2
+        Mon, 12 Oct 2020 02:04:45 -0400
+Received: from mail-qv1-xf41.google.com (mail-qv1-xf41.google.com [IPv6:2607:f8b0:4864:20::f41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B958C0613D1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 23:04:45 -0700 (PDT)
+Received: by mail-qv1-xf41.google.com with SMTP id t20so7914337qvv.8
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2020 23:04:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=1yI8jYs2/lZFaIWxLZ/rjVvQ+sNLY30huA6J9bKeQWs=;
+        b=RcKAUm7XE30LvjwktSIVOpda8L78FHBfTGbVdFcE2/BPz9VprsI9jUKte8aio2Nnen
+         c4VU+029KeHaZBqm3or90rscQ/kZxgV0k2PAXM3VYGsyQNjhuAyPy9BThFX8GcCEQ0In
+         9eT4oCCNSrRsFOLWOcMv89Qw+YXdmwN91H5maqzG2xCkk9wlKbeSbAYr6hvKgWUfvjqO
+         X9M5okURon1jOYF7xWHWyhCBIRUuHrQPoBs/4yBvwQ5yKv+Ut+8hxwkmp5f4lVUaXKv/
+         8HGIZ82BwymAeEUjLbpsSFJIyzoWOcll5IdLRSE4gwprUmA/9OEtXFXT6wcnDbZ0PKYu
+         qDyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=1yI8jYs2/lZFaIWxLZ/rjVvQ+sNLY30huA6J9bKeQWs=;
+        b=gxOH/MC7dSBWzUmP5UwuQsv5vO/qKknNEhJB1zhZ14y2RWIg16/YUhTQGUMhwjTU15
+         uPo7YpGIasB81zkEvLqs+jjRIQioR5O0klZPVqWA8apV3jp3fSV28bPFB+9HbeIRYaAr
+         qh+jxZSmkhjsjEcJh+Dh4fEwjlReKlQOXlwBxXhxvdRWccUtjLaefAkAXtPFIoG8PQXW
+         Cu/6bWhLgGK19jRJHLI/AywWlgw46WvxnX8b54E1SF2+T3RI3RZIY+JuF4oA8X9D3qXi
+         HaxW4y1+3clvI62LEiCBNckIn9eJu2gZwfxlUEKOgc5GTgMJdIKsywuTOZscNR3EDoFi
+         wTTA==
+X-Gm-Message-State: AOAM5314XtvKqaFyT8NEIGes1T4ZNNdZZHe+vr8zT4NatQw/ZCypEIQ/
+        FOQs2xcWhESeYDopwlEUj+acODZsX1dD9ccv7JoqRw==
+X-Google-Smtp-Source: ABdhPJzk9yyYIHb6tMn3rAnnLaCzCXcPF/2qBusVxjrttHq08TplYv2Tzc1oqd7dVB9eyqXFLmA3t7FgHBFT5milr7k=
+X-Received: by 2002:a05:6214:222:: with SMTP id j2mr24604054qvt.32.1602482684327;
+ Sun, 11 Oct 2020 23:04:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20201012032538.21314-8-shayne.chen@mediatek.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20201007101726.3149375-1-a.nogikh@gmail.com> <20201007101726.3149375-2-a.nogikh@gmail.com>
+ <20201009161558.57792e1a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <CACT4Y+ZF_umjBpyJiCb8YPQOOSofG-M9h0CB=xn3bCgK=Kr=9w@mail.gmail.com> <20201010081431.1f2d9d0d@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20201010081431.1f2d9d0d@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+From:   Dmitry Vyukov <dvyukov@google.com>
+Date:   Mon, 12 Oct 2020 08:04:33 +0200
+Message-ID: <CACT4Y+aEQoRMO6eA7iQZf4dhOu2cD1ZbbH6TT4Rs_uQwG0PWYg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] net: store KCOV remote handle in sk_buff
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     Aleksandr Nogikh <a.nogikh@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Andrey Konovalov <andreyknvl@google.com>,
+        Marco Elver <elver@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Aleksandr Nogikh <nogikh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Sat, Oct 10, 2020 at 5:14 PM Jakub Kicinski <kuba@kernel.org> wrote:
+>
+> On Sat, 10 Oct 2020 09:54:57 +0200 Dmitry Vyukov wrote:
+> > On Sat, Oct 10, 2020 at 1:16 AM Jakub Kicinski <kuba@kernel.org> wrote:
+> > > On Wed,  7 Oct 2020 10:17:25 +0000 Aleksandr Nogikh wrote:
+> > > > From: Aleksandr Nogikh <nogikh@google.com>
+> > > >
+> > > > Remote KCOV coverage collection enables coverage-guided fuzzing of the
+> > > > code that is not reachable during normal system call execution. It is
+> > > > especially helpful for fuzzing networking subsystems, where it is
+> > > > common to perform packet handling in separate work queues even for the
+> > > > packets that originated directly from the user space.
+> > > >
+> > > > Enable coverage-guided frame injection by adding a kcov_handle
+> > > > parameter to sk_buff structure. Initialization in __alloc_skb ensures
+> > > > that no socket buffer that was generated during a system call will be
+> > > > missed.
+> > > >
+> > > > Code that is of interest and that performs packet processing should be
+> > > > annotated with kcov_remote_start()/kcov_remote_stop().
+> > > >
+> > > > An alternative approach is to determine kcov_handle solely on the
+> > > > basis of the device/interface that received the specific socket
+> > > > buffer. However, in this case it would be impossible to distinguish
+> > > > between packets that originated from normal background network
+> > > > processes and those that were intentionally injected from the user
+> > > > space.
+> > > >
+> > > > Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
+> > >
+> > > Could you use skb_extensions for this?
+> >
+> > Why? If for space, this is already under a non-production ifdef.
+>
+> I understand, but the skb_ext infra is there for uncommon use cases
+> like this one. Any particular reason you don't want to use it?
+> The slight LoC increase?
+>
+> Is there any precedent for adding the kcov field to other performance
+> critical structures?
 
-On 2020-10-12 05:25, Shayne Chen wrote:
-> Support testmode rx and display rx statistic by parsing RXV packet
-> type, which is currently only enabled in testmode.
-> 
-> Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
-> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-> ---
-> v2: change last_snr to u8
-> 
->  .../net/wireless/mediatek/mt76/mt7915/dma.c   |  3 +
->  .../net/wireless/mediatek/mt76/mt7915/mac.c   | 37 +++++++
->  .../net/wireless/mediatek/mt76/mt7915/mac.h   |  5 +
->  .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  1 +
->  .../wireless/mediatek/mt76/mt7915/mt7915.h    |  7 ++
->  .../wireless/mediatek/mt76/mt7915/testmode.c  | 97 +++++++++++++++++++
->  .../wireless/mediatek/mt76/mt7915/testmode.h  | 30 ++++++
->  7 files changed, 180 insertions(+)
-> 
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-> @@ -169,12 +209,69 @@ mt7915_tm_set_state(struct mt76_dev *mdev, enum mt76_testmode_state state)
->  		mt7915_tm_set_tx_frames(dev, false);
->  	else if (state == MT76_TM_STATE_TX_FRAMES)
->  		mt7915_tm_set_tx_frames(dev, true);
-> +	else if (prev_state == MT76_TM_STATE_RX_FRAMES)
-> +		mt7915_tm_set_rx_frames(dev, false);
-> +	else if (state == MT76_TM_STATE_RX_FRAMES)
-> +		mt7915_tm_set_rx_frames(dev, true);
->  	else if (prev_state == MT76_TM_STATE_OFF || state == MT76_TM_STATE_OFF)
->  		mt7915_tm_init(dev);
->  
->  	return 0;
->  }
->  
-> +static int
-> +mt7915_tm_dump_stats(struct mt76_dev *mdev, struct sk_buff *msg)
-> +{
-> +	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
-> +	void *rx, *rssi;
-> +	int i;
-> +
-> +	rx = nla_nest_start(msg, MT76_TM_STATS_ATTR_LAST_RX);
-> +	if (!rx)
-> +		return -ENOMEM;
-> +
-> +	if (nla_put_s32(msg, MT76_TM_RX_ATTR_FREQ_OFFSET, dev->test.last_freq_offset))
-> +		return -ENOMEM;
-> +
-> +	rssi = nla_nest_start(msg, MT76_TM_RX_ATTR_RCPI);
-> +	if (!rssi)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(dev->test.last_rcpi); i++)
-> +		if (nla_put_u8(msg, i, dev->test.last_rcpi[i]))
-> +			return -ENOMEM;
-> +
-> +	nla_nest_end(msg, rssi);
-> +
-> +	rssi = nla_nest_start(msg, MT76_TM_RX_ATTR_IB_RSSI);
-> +	if (!rssi)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(dev->test.last_ib_rssi); i++)
-> +		if (nla_put_s8(msg, i, dev->test.last_ib_rssi[i]))
-> +			return -ENOMEM;
-> +
-> +	nla_nest_end(msg, rssi);
-> +
-> +	rssi = nla_nest_start(msg, MT76_TM_RX_ATTR_WB_RSSI);
-> +	if (!rssi)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(dev->test.last_wb_rssi); i++)
-> +		if (nla_put_s8(msg, i, dev->test.last_wb_rssi[i]))
-> +			return -ENOMEM;
-> +
-> +	nla_nest_end(msg, rssi);
-> +
-> +	if (nla_put_s32(msg, MT76_TM_RX_ATTR_SNR, dev->test.last_snr))
-> +		return -ENOMEM;
-You updated the comment in the header file, but not this part which
-actually generates the attribute.
-
-- Felix
+I see. Yes, increase in complexity for no gain.
+No, KCOV context wasn't added to anything as critical as sk_buff.
+It seems there is no established practice both ways -- I don't see
+anything debug-related in sk_buff nor in skb_ext_id...
