@@ -2,96 +2,180 @@ Return-Path: <SRS0=vmj3=DT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58579C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:11:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55823C43457
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:21:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 034CC206F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:11:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18FD1215A4
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:21:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JHWHJ46+"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LduJxkBQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728914AbgJLILo (ORCPT
+        id S1727077AbgJLIVp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Oct 2020 04:11:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36734 "EHLO
+        Mon, 12 Oct 2020 04:21:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728906AbgJLILn (ORCPT
+        with ESMTP id S1726098AbgJLIVo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Oct 2020 04:11:43 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DFEEC0613CE
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id n9so13516491pgf.9
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
+        Mon, 12 Oct 2020 04:21:44 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5461C0613CE;
+        Mon, 12 Oct 2020 01:21:42 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id lw21so21987481ejb.6;
+        Mon, 12 Oct 2020 01:21:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=gxBKupSKNm0WjlJ2r8d/Ivcf+9kpHIZLqPGV+tgABeU=;
-        b=JHWHJ46+pWa8ObtUAgF3ZY/AjkOhmC3tIpMWj6YrnR46qklQeWoVStiOgY8LIbgeJl
-         /T1d47QcTgvNKEmdBlLlcktvsQAWP/zKgdhpgg2yO2MZw3b8uP0eXjX01AW29ZCv2F1Y
-         roFGujonkXexEAuxJPq5jgHI5vv7oy8cYY66B+TzIbgiE0nQWJVNRSOR9MLdjF9MS8tU
-         PMulu8vJNHVCuyUCVcPf7ixB7I9gxvIvcfdprvdWSMtl61NyEnjlrxNoMBa2xWab9/22
-         ed9Le+5jKYS7eYaoVPN73ZfA/KE+Z8V73SijJSAw/3eai/Ac3w+w+jx9GsdG4Go8ttzM
-         asoQ==
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=XLSw4kk01QDTlGyCDpjTbXYryNnPNFLUaBj1auxatEE=;
+        b=LduJxkBQrSrNHSKIi9bNM0SVbJKluwGhNNT2aFEdJAIcXQtnCSqfTLw3qowTIv7B0k
+         Y2sdAA3ItnlB0Eyk9/Y+cX69aGW3HCYVWUtXlTAPogCWeG65EVyUOxvhsxvbLSgI/FXL
+         1d2O6uk17pOmZozEIZASGi68BNeS0t94JAaVzmR0q7RaZTWdzRwxQ+2YVQ6SpOxOtYoa
+         ogNJ3+MSqbpHQTIjYuj1zw3TFiNd4cDtzgkCvs8x6LTP/Cq33YL4P3S5oSfgqYivBiif
+         gOykekdoeZpwX+yv2b5ceMCRDqgaPBLtKCCviCqQ/ZVVC+f568e5/iu/8ArkXLwT4h0I
+         CsTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=gxBKupSKNm0WjlJ2r8d/Ivcf+9kpHIZLqPGV+tgABeU=;
-        b=gx78WG2oYBaTDEfaadeT52owQM+BVRDje7cSOBmVkszVtcJUOuZNyqh5uAh+2QGemB
-         5lfYOokzMXZluxuBg10rr2MYBf/5BQkRBo4OZMkOARVmpfsWckB1GgfwfXbEU6sr15L2
-         1tnietDKCCsJlwooWGZuCig4DPPZUc1DYV2r2aWRsnIjFnJ5xH1FIQqCGu0lD+521G04
-         j5YnHI6ywKOY9W4OeD0aCdDwBUPwIFaupWJSHeI35lW1raboNmPszcGAwY0miqWUVAYQ
-         5pMjBDJOTTLNn5p0o73uhlDhwqspL7wPH3a34T/2im9SoypdqJT6hcjDb2UtO/i+rWcK
-         fZ2A==
-X-Gm-Message-State: AOAM532ad6XPOKL+jNzSX6h1oAuV0cEyEe1vruAYzFO/mwjDZysI6K7y
-        z5D2a9erYtSQ2XUnHHf9Zg==
-X-Google-Smtp-Source: ABdhPJzWBVFP4Y0hcGyyvVC+mB7vkUBtrFv+k1Kv50GuNX3wqX39ABMNswhqh4e5nIodB3VaNLYmJQ==
-X-Received: by 2002:a63:5653:: with SMTP id g19mr12382750pgm.151.1602490303186;
-        Mon, 12 Oct 2020 01:11:43 -0700 (PDT)
-Received: from localhost.localdomain (60-251-199-163.HINET-IP.hinet.net. [60.251.199.163])
-        by smtp.gmail.com with ESMTPSA id 92sm10966806pjv.32.2020.10.12.01.11.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2020 01:11:42 -0700 (PDT)
-From:   tony0620emma@gmail.com
-To:     tony0620emma@gmail.com, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, tehuang@realtek.com,
-        pkshih@realtek.com
-Subject: [PATCH] MAINTAINERS: update Yan-Hsuan's email address
-Date:   Mon, 12 Oct 2020 16:11:40 +0800
-Message-Id: <20201012081140.18085-1-tony0620emma@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=XLSw4kk01QDTlGyCDpjTbXYryNnPNFLUaBj1auxatEE=;
+        b=T7JyeEToPLM5G5iQLg64g39M/hgvhj/2HRminbH+G6f8NCO4i461NVwiNzDNYGa/ev
+         kge2cYnDNm4Tj5gwlKeCesNJZPe/BJeEzzDUO6U41MvE5eZZtA3cosDyNi5/O90lzjZU
+         DcR/iA0F63WAqV9Jk6MuSkVrm9e2RIS4pcsZlokRqtZk6Aw5aRqaeYW0eV7QkbwyWMvM
+         a6U1DOPa2OmwqfRvP8WPLQzgii3RY4q4v5kFzGPfDcOzIvdrfoiqFjTEdf2UG6cyLbc2
+         TDupCdpGpqHol6xqWfH1BgqPIGsZb4BOXhYzFIXev7RD50oYGIPMlhHGqj2yoloAPJXe
+         H8FQ==
+X-Gm-Message-State: AOAM531rKmmfWw+GYqIz+4/kKa+qrxBH+hEKl6qHhYQAIVJbcGG67Rww
+        xOxJjX6KLDWPLUqkDMVuUAs=
+X-Google-Smtp-Source: ABdhPJztw0xZvWbfVNUpz3P7tinaUOHzrkLOcdFj/n9SfGdrS0NBbEN2EP1ytjOc0wWKTJd8llR84Q==
+X-Received: by 2002:a17:906:4e16:: with SMTP id z22mr20699549eju.527.1602490901540;
+        Mon, 12 Oct 2020 01:21:41 -0700 (PDT)
+Received: from ?IPv6:2003:ea:8f00:6a00:f90c:2907:849f:701c? (p200300ea8f006a00f90c2907849f701c.dip0.t-ipconnect.de. [2003:ea:8f00:6a00:f90c:2907:849f:701c])
+        by smtp.googlemail.com with ESMTPSA id bu23sm10175810edb.69.2020.10.12.01.21.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Oct 2020 01:21:41 -0700 (PDT)
+Subject: [PATCH net-next v2 01/12] net: add function dev_fetch_sw_netstats for
+ fetching pcpu_sw_netstats
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+To:     David Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
+        Oliver Neukum <oneukum@suse.com>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Sergey Matyukevich <geomatsi@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Roopa Prabhu <roopa@nvidia.com>,
+        Nikolay Aleksandrov <nikolay@nvidia.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Vivien Didelot <vivien.didelot@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Vladimir Oltean <olteanv@gmail.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Pravin B Shelar <pshelar@ovn.org>,
+        Steffen Klassert <steffen.klassert@secunet.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-rdma@vger.kernel.org,
+        Linux USB Mailing List <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        bridge@lists.linux-foundation.org
+References: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
+Message-ID: <6d16a338-52f5-df69-0020-6bc771a7d498@gmail.com>
+Date:   Mon, 12 Oct 2020 10:01:27 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
+MIME-Version: 1.0
+In-Reply-To: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <tony0620emma@gmail.com>
+In several places the same code is used to populate rtnl_link_stats64
+fields with data from pcpu_sw_netstats. Therefore factor out this code
+to a new function dev_fetch_sw_netstats().
 
-Switch my email to gmail.com address.
+v2:
+- constify argument netstats
+- don't ignore netstats being NULL or an ERRPTR
+- switch to EXPORT_SYMBOL_GPL
 
-Signed-off-by: Yan-Hsuan Chuang <tony0620emma@gmail.com>
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/netdevice.h |  2 ++
+ net/core/dev.c            | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c99577961cc4..f437c4923b12 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14701,7 +14701,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
- F:	drivers/net/wireless/realtek/rtlwifi/
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index a0df43b13..fa1d8d624 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -4495,6 +4495,8 @@ struct rtnl_link_stats64 *dev_get_stats(struct net_device *dev,
+ 					struct rtnl_link_stats64 *storage);
+ void netdev_stats_to_stats64(struct rtnl_link_stats64 *stats64,
+ 			     const struct net_device_stats *netdev_stats);
++void dev_fetch_sw_netstats(struct rtnl_link_stats64 *s,
++			   const struct pcpu_sw_netstats __percpu *netstats);
  
- REALTEK WIRELESS DRIVER (rtw88)
--M:	Yan-Hsuan Chuang <yhchuang@realtek.com>
-+M:	Yan-Hsuan Chuang <tony0620emma@gmail.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/net/wireless/realtek/rtw88/
+ extern int		netdev_max_backlog;
+ extern int		netdev_tstamp_prequeue;
+diff --git a/net/core/dev.c b/net/core/dev.c
+index a146bac84..26bc10dec 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -10319,6 +10319,40 @@ struct rtnl_link_stats64 *dev_get_stats(struct net_device *dev,
+ }
+ EXPORT_SYMBOL(dev_get_stats);
+ 
++/**
++ *	dev_fetch_sw_netstats - get per-cpu network device statistics
++ *	@s: place to store stats
++ *	@netstats: per-cpu network stats to read from
++ *
++ *	Read per-cpu network statistics and populate the related fields in @s.
++ */
++void dev_fetch_sw_netstats(struct rtnl_link_stats64 *s,
++			   const struct pcpu_sw_netstats __percpu *netstats)
++{
++	int cpu;
++
++	for_each_possible_cpu(cpu) {
++		const struct pcpu_sw_netstats *stats;
++		struct pcpu_sw_netstats tmp;
++		unsigned int start;
++
++		stats = per_cpu_ptr(netstats, cpu);
++		do {
++			start = u64_stats_fetch_begin_irq(&stats->syncp);
++			tmp.rx_packets = stats->rx_packets;
++			tmp.rx_bytes   = stats->rx_bytes;
++			tmp.tx_packets = stats->tx_packets;
++			tmp.tx_bytes   = stats->tx_bytes;
++		} while (u64_stats_fetch_retry_irq(&stats->syncp, start));
++
++		s->rx_packets += tmp.rx_packets;
++		s->rx_bytes   += tmp.rx_bytes;
++		s->tx_packets += tmp.tx_packets;
++		s->tx_bytes   += tmp.tx_bytes;
++	}
++}
++EXPORT_SYMBOL_GPL(dev_fetch_sw_netstats);
++
+ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ {
+ 	struct netdev_queue *queue = dev_ingress_queue(dev);
 -- 
-2.17.1
+2.28.0
+
 
