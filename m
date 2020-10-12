@@ -2,151 +2,118 @@ Return-Path: <SRS0=vmj3=DT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CBBC43457
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3ECEC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:45:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3649208FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7332A2076E
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 08:45:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HiO2yT5U"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="gruFj9fy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728125AbgJLIWQ (ORCPT
+        id S1726988AbgJLIpO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Oct 2020 04:22:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38322 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727267AbgJLIWA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Oct 2020 04:22:00 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46018C0613D6;
-        Mon, 12 Oct 2020 01:21:59 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id ce10so21985713ejc.5;
-        Mon, 12 Oct 2020 01:21:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=gfr3ALYPLKmxZda8jB3ld1N0hpEXjoqgwocV8/nd3X0=;
-        b=HiO2yT5UTj6vL6bTfSks3cTWpyMXE/SKZWGyx2SnXbAhSg52eznHTmoLgXMUze6Xdv
-         srxTM60eheaVspO7HvDZbo75pC+4ORAhuC+aWwABK7ngrr8fcBKl0X8O6pYPBNz2GE1J
-         Zv8Qcc1bJuoTMQN8M7GtgZvabx9aAGgsQTtusQky8VivWdI/lgIm96TwDznP45A4Y56U
-         r8D8fJmBHuFC3fLJV+xrGLWi3x7oor1VidkpI4lZuEbnlriog+sNoEVrKwpFySEw0JD0
-         GtMCUpH0z1SXDATR3ZCe+zoSWCsUQ4xn1at2vKcbIZHPLwiU2mO2sc/er1VofIR6tg2D
-         fwtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gfr3ALYPLKmxZda8jB3ld1N0hpEXjoqgwocV8/nd3X0=;
-        b=n2uLX4KxZyFw7Js0iCNlD+bfpaaT0HylihFrM1kTAuvjp7MdBNVU19pQCCVc6+J6or
-         rC3vLeWUNEZM/7FNGeuD+0ODiEiii3NIU8TCAZRPhsFSGOtFP0GWBpu78StGMF+HQaLO
-         iZkcriVzsxmuU7n0k+nqhVqqZFzP4f0fKbmun2UVMDyGTB3hfFCtEERrv/vGg+1M7VUS
-         ot0QsOyTMSUf0kkQnmc8Z8hRvvhtDqRdqYiCWSc20FwTQubybENCfkk+09qp3dgfmmv/
-         xxqnSDzC3scTsq3d+S5v5/u45KmiQqgS/sawjVl6RCyhr9+3xEPEWjJEXyA/lL6Lb+Qf
-         pToA==
-X-Gm-Message-State: AOAM532O6Pk98XEjj3fdZGsOITUZ90yf9XYTFm/fcAqOmTVblT0XkKAL
-        4ZFMdK2sO+tFprhR+Uj1YuI=
-X-Google-Smtp-Source: ABdhPJxS7FlN03fx5BkaqnAreInjWiPKOWXxXRAr59axtAnnO3Qa/FU7KbcEV3jlPhgKS5wIpdfZKA==
-X-Received: by 2002:a17:906:783:: with SMTP id l3mr27810367ejc.253.1602490917909;
-        Mon, 12 Oct 2020 01:21:57 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f00:6a00:f90c:2907:849f:701c? (p200300ea8f006a00f90c2907849f701c.dip0.t-ipconnect.de. [2003:ea:8f00:6a00:f90c:2907:849f:701c])
-        by smtp.googlemail.com with ESMTPSA id q10sm10280337ejb.117.2020.10.12.01.21.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 01:21:57 -0700 (PDT)
-Subject: [PATCH net-next v2 11/12] net: openvswitch: use new function
- dev_fetch_sw_netstats
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
-        Oliver Neukum <oneukum@suse.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <geomatsi@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Roopa Prabhu <roopa@nvidia.com>,
-        Nikolay Aleksandrov <nikolay@nvidia.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pravin B Shelar <pshelar@ovn.org>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        bridge@lists.linux-foundation.org
-References: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
-Message-ID: <5e52dc91-97b1-82b0-214b-65d404e4a2ec@gmail.com>
-Date:   Mon, 12 Oct 2020 10:19:12 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        Mon, 12 Oct 2020 04:45:14 -0400
+Received: from mail-eopbgr770128.outbound.protection.outlook.com ([40.107.77.128]:32321
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726335AbgJLIpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Oct 2020 04:45:13 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=biu2Blv0BvgmWORa1my07kKfMik+tkioliYgL4jz1ixm4xh/sjKBpAgq8Vkx+KnM9aPIzygcJfATznUE09SHiO1u3JW3hPe+0TEYwQZOGho7apb7HmTgWOKFYYaO4pyswiRLr9GkodXc6xCYVITIWZS+HcppYvCNn9jGrri3RvPf9MvQTRBVd/RUOA/hd+LRr2KwWSlTmk4EKjOGpVRpwYExi0Ic5N7hMxFW0iUS0rD6U6ywah3SZJT8MLMUNGDydPETRChPdjU9e9hBqkYTtUhgGicgV5INIj1tI3VZ2JuPtP3KFhlcGeVM81b2jcYGmcwD91MRji9cShPgSOvphA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MTcoU81N8bhka1yyP96GOI70yJzrabSEnbpmKnByQDw=;
+ b=PRh5yXDqmw299c5FVnH+eRHa663+oDtkEdJXnam8+IgbpUFzyvazRHQeo9trs0tH01bWHWzVkzZ74UTGqrwdyjquho/5ZeT9N4jMISGmHiMmfFKbKn/Oszbbtrki1o4Q0swr8hc5vZj1YARMnwzpCF6FAVQQatERCwEdcBF1SOxh4kQPdYye4avZLwaqwFzXYB+uf+lJ3yu9fC5yBfR1iabw6BfIPOjLTsczuOCACcwHQozT97j71DTAED//d8vcf1z46yegtyuxcG7OH5vgHVTmuMbxgtdvej7HfMEbWXiNdQCU2oqCUdWbAYY1pi7zzYG168rFZwFHxUVrKkKZjQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MTcoU81N8bhka1yyP96GOI70yJzrabSEnbpmKnByQDw=;
+ b=gruFj9fypglzvJtkWTW/apRV4jXFddCOAvuUJu47XAGeyXHW24LY2CmXM8170nCwHSwgKwhFXPzRV0yfS9f+r8w7A51Zq4Be1AJe682fO28KjWb+gTKW0nA5qUNEwmZnKmveqe0qXnbM7fP4uJrPHzRk5QR/Ph7wAR/iHAyEIKM=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none
+ header.from=cypress.com;
+Received: from BN8PR06MB5889.namprd06.prod.outlook.com (2603:10b6:408:c2::25)
+ by BN8PR06MB5380.namprd06.prod.outlook.com (2603:10b6:408:63::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.22; Mon, 12 Oct
+ 2020 08:45:01 +0000
+Received: from BN8PR06MB5889.namprd06.prod.outlook.com
+ ([fe80::14ee:f61:60a2:1e48]) by BN8PR06MB5889.namprd06.prod.outlook.com
+ ([fe80::14ee:f61:60a2:1e48%5]) with mapi id 15.20.3455.029; Mon, 12 Oct 2020
+ 08:45:01 +0000
+From:   Wright Feng <wright.feng@cypress.com>
+To:     linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>, chi-hsien.lin@cypress.com,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc:     wright.feng@cypress.com, brcm80211-dev-list@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Subject: [PATCH v2 0/2] brcmfmac: add DPP feature support
+Date:   Mon, 12 Oct 2020 03:43:45 -0500
+Message-Id: <20201012084347.121557-1-wright.feng@cypress.com>
+X-Mailer: git-send-email 2.25.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [157.95.12.33]
+X-ClientProxiedBy: MN2PR04CA0033.namprd04.prod.outlook.com
+ (2603:10b6:208:d4::46) To BN8PR06MB5889.namprd06.prod.outlook.com
+ (2603:10b6:408:c2::25)
 MIME-Version: 1.0
-In-Reply-To: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from aremote06.aus.cypress.com (157.95.12.33) by MN2PR04CA0033.namprd04.prod.outlook.com (2603:10b6:208:d4::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.23 via Frontend Transport; Mon, 12 Oct 2020 08:45:00 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: df85391d-2564-4f8a-e0ac-08d86e8b1b16
+X-MS-TrafficTypeDiagnostic: BN8PR06MB5380:
+X-LD-Processed: 011addfc-2c09-450d-8938-e0bbc2dd2376,ExtFwd
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN8PR06MB53800A5CE1C219C1F39BAE51FB070@BN8PR06MB5380.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2887;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: mB8pIf8lz5aRozytU/sYuJva7ZaRrvG4Kpy/9i6Y80UqTGx6Yj/7KL30sJ+r8t1Q4qd1YT61yrYc7TUxpcgyre1xkD5M7ptibw8V32dPEpK77HOsTSBAxF6tvL6j84IBoOd0vwcPU6qVTcsQ0wPtQymh1Oh3mDn3noOErmDSZN83hXiXW/rrWrkkd8ntrJfg0buWCFfdExdV5V2caBwKFDGD7gWZuHzWd7bfU2vwUaBpc8SE/pptNbl6D5n+jRe5OOFqmqBrnUwODOXCC54kA5LCzSUZ2UXI9F6dfS4EWyGNy4WyOrye+R9yWEZr8KcA+ErXCDA00B25YogdsXQiMQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR06MB5889.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(396003)(39860400002)(136003)(346002)(376002)(2616005)(83380400001)(956004)(4326008)(86362001)(316002)(16526019)(52116002)(7696005)(5660300002)(4744005)(26005)(186003)(8676002)(44832011)(8936002)(6666004)(36756003)(66946007)(66556008)(66476007)(6486002)(2906002)(1076003)(478600001)(110136005)(54906003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: NHQA05BLedh6Yom5XY1BtxWr4v4l5Lb8tQOXa95M3n65jxQ6kzUypDfDwPQpyVhsux2UW9tw82mLBNax+wuAQm5JGtavv0gHc97cTSXhWjLM6EdgJrzNTtxXTBdKHmAX79+NMiLOw+IwVuDmiR5ebFHZAtC+9RWBRljwyzKJHXfYixzS3IATcS9ERnyAli0do82lmtYle9HsYOdhLvrG4KUJCrQGWRHrCbq+BgjZTRIfb8oda+fXt9oBk6z3DlmmL4RKAKUucr/4QFkFKl4+DvpTb4oEYPRZmQYkhwwZrpz2BiN1CmZOfqn8FKQCM2YYOXUFJ1YtPK57nnbWl6BZbJiphMqijBhrcQXYeJd5rpkLu9f1GJSvnISJy/XFIDXYcALr+fJGDEi8O+BsGMNLmaM+IVY2r/zjZurqAvjYbTureR7YTiCbmEKWECqyEIzWm1uNkcyi4lw5jj0XtdI1A9S7+T3vO4ig9+PrWa4zKl7siyeLz0r2X3fXX0Zmjvghpbu/7N5MW128mF2cHaWBA2sTPxKJEyCsPXJM7Oi1W0KJTNxs8JDs9xbWq379k1z5JfoOIEqG57jE11sJjqAfpbyBKqiiwFNKpOA0tuy8I/HviwXIa4FSF5ky77F7bxdQA3IgYABXau9GRm2ZrKIv7A==
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: df85391d-2564-4f8a-e0ac-08d86e8b1b16
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR06MB5889.namprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2020 08:45:01.6923
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eHHX6KLPf4FXfA687M661RK4PEx4SSkg66fiXxpXq2YApn+RPQ0QqTd7YB148p0+6pSBFkRoJQvKySJkhrc4Gw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR06MB5380
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Simplify the code by using new function dev_fetch_sw_netstats().
+Add DPP(Device Provisioning Protocol) feature support in this patch
+series.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- net/openvswitch/vport-internal_dev.c | 20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+Kurt Lee (2):
+  ieee80211: Add definition for WFA DPP
+  brcmfmac: Support DPP feature
 
-diff --git a/net/openvswitch/vport-internal_dev.c b/net/openvswitch/vport-internal_dev.c
-index d8fe66eea..1e30d8df3 100644
---- a/net/openvswitch/vport-internal_dev.c
-+++ b/net/openvswitch/vport-internal_dev.c
-@@ -86,31 +86,13 @@ static void internal_dev_destructor(struct net_device *dev)
- static void
- internal_get_stats(struct net_device *dev, struct rtnl_link_stats64 *stats)
- {
--	int i;
--
- 	memset(stats, 0, sizeof(*stats));
- 	stats->rx_errors  = dev->stats.rx_errors;
- 	stats->tx_errors  = dev->stats.tx_errors;
- 	stats->tx_dropped = dev->stats.tx_dropped;
- 	stats->rx_dropped = dev->stats.rx_dropped;
- 
--	for_each_possible_cpu(i) {
--		const struct pcpu_sw_netstats *percpu_stats;
--		struct pcpu_sw_netstats local_stats;
--		unsigned int start;
--
--		percpu_stats = per_cpu_ptr(dev->tstats, i);
--
--		do {
--			start = u64_stats_fetch_begin_irq(&percpu_stats->syncp);
--			local_stats = *percpu_stats;
--		} while (u64_stats_fetch_retry_irq(&percpu_stats->syncp, start));
--
--		stats->rx_bytes         += local_stats.rx_bytes;
--		stats->rx_packets       += local_stats.rx_packets;
--		stats->tx_bytes         += local_stats.tx_bytes;
--		stats->tx_packets       += local_stats.tx_packets;
--	}
-+	dev_fetch_sw_netstats(stats, dev->tstats);
- }
- 
- static const struct net_device_ops internal_dev_netdev_ops = {
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 150 ++++++++++--------
+ .../broadcom/brcm80211/brcmfmac/p2p.c         |  81 ++++++++--
+ .../broadcom/brcm80211/brcmfmac/p2p.h         |   4 +-
+ .../broadcom/brcm80211/include/brcmu_wifi.h   |   2 +
+ include/linux/ieee80211.h                     |   3 +
+ 5 files changed, 160 insertions(+), 80 deletions(-)
+
 -- 
-2.28.0
-
+2.25.0
 
