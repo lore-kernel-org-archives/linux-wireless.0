@@ -2,85 +2,134 @@ Return-Path: <SRS0=vmj3=DT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39178C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 11:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE0AC43467
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 12:56:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EADEA208FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 11:21:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DDFD21BE5
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Oct 2020 12:56:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MMpE27Sf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388029AbgJLLVY (ORCPT
+        id S1730216AbgJLM4J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Oct 2020 07:21:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37700 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387859AbgJLLVY (ORCPT
+        Mon, 12 Oct 2020 08:56:09 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:53174 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726640AbgJLM4G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Oct 2020 07:21:24 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 499A6C0613CE;
-        Mon, 12 Oct 2020 04:21:24 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kRvtA-0046Wq-DO; Mon, 12 Oct 2020 13:21:12 +0200
-Message-ID: <af396e563aa41c4f0cce812afa11667ecab09ab0.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/3] [PATCH v2 0/3] [PATCH v2 0/3] net, mac80211,
- kernel: enable KCOV remote coverage collection for 802.11 frame handling
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Aleksandr Nogikh <a.nogikh@gmail.com>
-Cc:     davem@davemloft.net, kuba@kernel.org, akpm@linux-foundation.org,
-        Eric Dumazet <edumazet@google.com>,
-        Andrey Konovalov <andreyknvl@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Marco Elver <elver@google.com>, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        nogikh@google.com
-Date:   Mon, 12 Oct 2020 13:21:11 +0200
-In-Reply-To: <CADpXja8NZDZ_3AMHUMnj90nbQbW2pA_aP=_Y2w2tSfy8EcRZkw@mail.gmail.com> (sfid-20201012_131900_623711_9BAE6766)
-References: <20201009170202.103512-1-a.nogikh@gmail.com>
-         <5d71472dcef4d88786ea6e8f30f0816f8b920bb7.camel@sipsolutions.net>
-         <CADpXja8NZDZ_3AMHUMnj90nbQbW2pA_aP=_Y2w2tSfy8EcRZkw@mail.gmail.com>
-         (sfid-20201012_131900_623711_9BAE6766)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        Mon, 12 Oct 2020 08:56:06 -0400
+X-UUID: dc1a3536ec04496a943d5ac90ee931b9-20201012
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=rWQagjNnldpHKoZuFAPPcwuR5ruQr0oRfLs0nvXHKZg=;
+        b=MMpE27SfpOqbhQcPcDElXD5AzRRfJfFnxy9VLRcv4Bp30RaAHDTvZ05O2VRmZMkrx2ZzA8w31pUEPXOnfcTs2hgbVTnF9rKG/4C/KZeGT9CASWMMFBJPdJ/iD/t7osXFPzLtSzOi/s3EqMwe8NlQtmFYjMcTdtA+Zxj1XIsSGvM=;
+X-UUID: dc1a3536ec04496a943d5ac90ee931b9-20201012
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1824915647; Mon, 12 Oct 2020 20:55:59 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 12 Oct 2020 20:55:56 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 12 Oct 2020 20:55:56 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH v3 09/10] mt76: mt7915: add support to set txpower in testmode
+Date:   Mon, 12 Oct 2020 20:54:02 +0800
+Message-ID: <20201012125403.8608-9-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201012125403.8608-1-shayne.chen@mediatek.com>
+References: <20201012125403.8608-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2020-10-12 at 14:18 +0300, Aleksandr Nogikh wrote:
-> 
-> Currently we're injecting frames via mac80211_hwsim (by pretenting to
-> be wmediumd -
-> https://github.com/google/syzkaller/blob/4a77ae0bdc5cd75ebe88ce7c896aae6bbf457a29/executor/common_linux.h#L4922).
-
-Ah, ok, of course that works too :-)
-
-> Injecting via RAW sockets would definitely be a much cleaner way, but
-> to do that we need to keep a separate monitor interface. That's pretty
-> hard as the fuzzer is constantly trying to break things, and direct
-> injection via mac80211_hwsim seems to be a much more robust way - it
-> will work as long as the virtual device is alive. hwsim0 is
-> unfortunately not available as fuzzer processes are run in separate
-> network namespaces, while this one is created during mac80211_hwsim
-> initialization.
-
-Oh, OK. I guess we _could_ move that also to the new namespace or
-something, but if the wmediumd approach works then I think it's not
-worth it.
-
-> The current approach seems to work fine for management frames - I was
-> able to create seed programs that inject valid management frames and
-> these frames have the expected effect on the subsystem (e.g. injecting
-> AP responses during scan/authentication/authorization forces a station
-> to believe that it has successfully connected to an AP).
-
-Great!
-
-johannes
+U3VwcG9ydCB0eF9wb3dlciBzZXR0aW5nIGluIHRlc3Rtb2RlLiBOb3RlIHRoYXQgdGhlIHR4IHBv
+d2VyIHZhbHVlIG9mDQphbnRlbm5hIDEtMyBlcXVhbCB0byBhbnRlbm5hIDAuDQoNClJldmlld2Vk
+LWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQpTaWduZWQtb2ZmLWJ5OiBT
+aGF5bmUgQ2hlbiA8c2hheW5lLmNoZW5AbWVkaWF0ZWsuY29tPg0KLS0tDQogLi4uL3dpcmVsZXNz
+L21lZGlhdGVrL210NzYvbXQ3OTE1L3Rlc3Rtb2RlLmMgIHwgMTAwICsrKysrKysrKysrKysrKysr
+Kw0KIDEgZmlsZSBjaGFuZ2VkLCAxMDAgaW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvdGVzdG1vZGUuYyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L3Rlc3Rtb2RlLmMNCmluZGV4IGFj
+YWIyNjguLjA3ZDUyNzEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRl
+ay9tdDc2L210NzkxNS90ZXN0bW9kZS5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
+YXRlay9tdDc2L210NzkxNS90ZXN0bW9kZS5jDQpAQCAtNiw2ICs2LDE3IEBADQogI2luY2x1ZGUg
+Im1jdS5oIg0KICNpbmNsdWRlICJ0ZXN0bW9kZS5oIg0KIA0KK2VudW0gew0KKwlUTV9DSEFOR0VE
+X1RYUE9XRVIsDQorDQorCS8qIG11c3QgYmUgbGFzdCAqLw0KKwlOVU1fVE1fQ0hBTkdFRA0KK307
+DQorDQorc3RhdGljIGNvbnN0IHU4IHRtX2NoYW5nZV9tYXBbXSA9IHsNCisJW1RNX0NIQU5HRURf
+VFhQT1dFUl0gPSBNVDc2X1RNX0FUVFJfVFhfUE9XRVIsDQorfTsNCisNCiBzdHJ1Y3QgcmVnX2Jh
+bmQgew0KIAl1MzIgYmFuZFsyXTsNCiB9Ow0KQEAgLTMzLDYgKzQ0LDQyIEBAIHN0YXRpYyBjb25z
+dCBzdHJ1Y3QgcmVnX2JhbmQgcmVnX2JhY2t1cF9saXN0W10gPSB7DQogCVJFR19CQU5EX0lEWChB
+UkJfRFJOR1IwLCAxKSwNCiB9Ow0KIA0KK3N0YXRpYyBpbnQNCittdDc5MTVfdG1fc2V0X3R4X3Bv
+d2VyKHN0cnVjdCBtdDc5MTVfcGh5ICpwaHkpDQorew0KKwlzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2
+ID0gcGh5LT5kZXY7DQorCXN0cnVjdCBtdDc2X3BoeSAqbXBoeSA9IHBoeS0+bXQ3NjsNCisJc3Ry
+dWN0IGNmZzgwMjExX2NoYW5fZGVmICpjaGFuZGVmID0gJm1waHktPmNoYW5kZWY7DQorCWludCBm
+cmVxID0gY2hhbmRlZi0+Y2VudGVyX2ZyZXExOw0KKwlpbnQgcmV0Ow0KKwlzdHJ1Y3Qgew0KKwkJ
+dTggZm9ybWF0X2lkOw0KKwkJdTggZGJkY19pZHg7DQorCQlzOCB0eF9wb3dlcjsNCisJCXU4IGFu
+dF9pZHg7CS8qIE9ubHkgMCBpcyB2YWxpZCAqLw0KKwkJdTggY2VudGVyX2NoYW47DQorCQl1OCBy
+c3ZbM107DQorCX0gX19wYWNrZWQgcmVxID0gew0KKwkJLmZvcm1hdF9pZCA9IDB4ZiwNCisJCS5k
+YmRjX2lkeCA9IHBoeSAhPSAmZGV2LT5waHksDQorCQkuY2VudGVyX2NoYW4gPSBpZWVlODAyMTFf
+ZnJlcXVlbmN5X3RvX2NoYW5uZWwoZnJlcSksDQorCX07DQorCXU4ICp0eF9wb3dlciA9IE5VTEw7
+DQorDQorCWlmIChkZXYtPm10NzYudGVzdC5zdGF0ZSAhPSBNVDc2X1RNX1NUQVRFX09GRikNCisJ
+CXR4X3Bvd2VyID0gZGV2LT5tdDc2LnRlc3QudHhfcG93ZXI7DQorDQorCS8qIFR4IHBvd2VyIG9m
+IHRoZSBvdGhlciBhbnRlbm5hcyBhcmUgdGhlIHNhbWUgYXMgYW50ZW5uYSAwICovDQorCWlmICh0
+eF9wb3dlciAmJiB0eF9wb3dlclswXSkNCisJCXJlcS50eF9wb3dlciA9IHR4X3Bvd2VyWzBdOw0K
+Kw0KKwlyZXQgPSBtdDc2X21jdV9zZW5kX21zZygmZGV2LT5tdDc2LA0KKwkJCQlNQ1VfRVhUX0NN
+RF9UWF9QT1dFUl9GRUFUVVJFX0NUUkwsDQorCQkJCSZyZXEsIHNpemVvZihyZXEpLCBmYWxzZSk7
+DQorDQorCXJldHVybiByZXQ7DQorfQ0KKw0KIHN0YXRpYyBpbnQNCiBtdDc5MTVfdG1fbW9kZV9j
+dHJsKHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYsIGJvb2wgZW5hYmxlKQ0KIHsNCkBAIC0xOTYsNiAr
+MjQzLDEzIEBAIG10NzkxNV90bV9zZXRfcnhfZnJhbWVzKHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYs
+IGJvb2wgZW4pDQogCW10NzkxNV90bV9zZXRfdHJ4KGRldiwgJmRldi0+cGh5LCBUTV9NQUNfUlhf
+UlhWLCBlbik7DQogfQ0KIA0KK3N0YXRpYyB2b2lkDQorbXQ3OTE1X3RtX3VwZGF0ZV9wYXJhbXMo
+c3RydWN0IG10NzkxNV9kZXYgKmRldiwgdTMyIGNoYW5nZWQpDQorew0KKwlpZiAoY2hhbmdlZCAm
+IEJJVChUTV9DSEFOR0VEX1RYUE9XRVIpKQ0KKwkJbXQ3OTE1X3RtX3NldF90eF9wb3dlcigmZGV2
+LT5waHkpOw0KK30NCisNCiBzdGF0aWMgaW50DQogbXQ3OTE1X3RtX3NldF9zdGF0ZShzdHJ1Y3Qg
+bXQ3Nl9kZXYgKm1kZXYsIGVudW0gbXQ3Nl90ZXN0bW9kZV9zdGF0ZSBzdGF0ZSkNCiB7DQpAQCAt
+MjE2LDYgKzI3MCw1MSBAQCBtdDc5MTVfdG1fc2V0X3N0YXRlKHN0cnVjdCBtdDc2X2RldiAqbWRl
+diwgZW51bSBtdDc2X3Rlc3Rtb2RlX3N0YXRlIHN0YXRlKQ0KIAllbHNlIGlmIChwcmV2X3N0YXRl
+ID09IE1UNzZfVE1fU1RBVEVfT0ZGIHx8IHN0YXRlID09IE1UNzZfVE1fU1RBVEVfT0ZGKQ0KIAkJ
+bXQ3OTE1X3RtX2luaXQoZGV2KTsNCiANCisJaWYgKChzdGF0ZSA9PSBNVDc2X1RNX1NUQVRFX0lE
+TEUgJiYNCisJICAgICBwcmV2X3N0YXRlID09IE1UNzZfVE1fU1RBVEVfT0ZGKSB8fA0KKwkgICAg
+KHN0YXRlID09IE1UNzZfVE1fU1RBVEVfT0ZGICYmDQorCSAgICAgcHJldl9zdGF0ZSA9PSBNVDc2
+X1RNX1NUQVRFX0lETEUpKSB7DQorCQl1MzIgY2hhbmdlZCA9IDA7DQorCQlpbnQgaTsNCisNCisJ
+CWZvciAoaSA9IDA7IGkgPCBBUlJBWV9TSVpFKHRtX2NoYW5nZV9tYXApOyBpKyspIHsNCisJCQl1
+MTYgY3VyID0gdG1fY2hhbmdlX21hcFtpXTsNCisNCisJCQlpZiAodGQtPnBhcmFtX3NldFtjdXIg
+LyAzMl0gJiBCSVQoY3VyICUgMzIpKQ0KKwkJCQljaGFuZ2VkIHw9IEJJVChpKTsNCisJCX0NCisN
+CisJCW10NzkxNV90bV91cGRhdGVfcGFyYW1zKGRldiwgY2hhbmdlZCk7DQorCX0NCisNCisJcmV0
+dXJuIDA7DQorfQ0KKw0KK3N0YXRpYyBpbnQNCittdDc5MTVfdG1fc2V0X3BhcmFtcyhzdHJ1Y3Qg
+bXQ3Nl9kZXYgKm1kZXYsIHN0cnVjdCBubGF0dHIgKip0YiwNCisJCSAgICAgZW51bSBtdDc2X3Rl
+c3Rtb2RlX3N0YXRlIG5ld19zdGF0ZSkNCit7DQorCXN0cnVjdCBtdDc5MTVfZGV2ICpkZXYgPSBj
+b250YWluZXJfb2YobWRldiwgc3RydWN0IG10NzkxNV9kZXYsIG10NzYpOw0KKwlzdHJ1Y3QgbXQ3
+Nl90ZXN0bW9kZV9kYXRhICp0ZCA9ICZkZXYtPm10NzYudGVzdDsNCisJdTMyIGNoYW5nZWQgPSAw
+Ow0KKwlpbnQgaTsNCisNCisJQlVJTERfQlVHX09OKE5VTV9UTV9DSEFOR0VEID49IDMyKTsNCisN
+CisJaWYgKG5ld19zdGF0ZSA9PSBNVDc2X1RNX1NUQVRFX09GRiB8fA0KKwkgICAgdGQtPnN0YXRl
+ID09IE1UNzZfVE1fU1RBVEVfT0ZGKQ0KKwkJcmV0dXJuIDA7DQorDQorCWlmICh0ZC0+dHhfYW50
+ZW5uYV9tYXNrICYgfmRldi0+cGh5LmNoYWlubWFzaykNCisJCXJldHVybiAtRUlOVkFMOw0KKw0K
+Kwlmb3IgKGkgPSAwOyBpIDwgQVJSQVlfU0laRSh0bV9jaGFuZ2VfbWFwKTsgaSsrKSB7DQorCQlp
+ZiAodGJbdG1fY2hhbmdlX21hcFtpXV0pDQorCQkJY2hhbmdlZCB8PSBCSVQoaSk7DQorCX0NCisN
+CisJbXQ3OTE1X3RtX3VwZGF0ZV9wYXJhbXMoZGV2LCBjaGFuZ2VkKTsNCisNCiAJcmV0dXJuIDA7
+DQogfQ0KIA0KQEAgLTI3Myw1ICszNzIsNiBAQCBtdDc5MTVfdG1fZHVtcF9zdGF0cyhzdHJ1Y3Qg
+bXQ3Nl9kZXYgKm1kZXYsIHN0cnVjdCBza19idWZmICptc2cpDQogDQogY29uc3Qgc3RydWN0IG10
+NzZfdGVzdG1vZGVfb3BzIG10NzkxNV90ZXN0bW9kZV9vcHMgPSB7DQogCS5zZXRfc3RhdGUgPSBt
+dDc5MTVfdG1fc2V0X3N0YXRlLA0KKwkuc2V0X3BhcmFtcyA9IG10NzkxNV90bV9zZXRfcGFyYW1z
+LA0KIAkuZHVtcF9zdGF0cyA9IG10NzkxNV90bV9kdW1wX3N0YXRzLA0KIH07DQotLSANCjIuMTcu
+MQ0K
 
