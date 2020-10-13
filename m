@@ -2,90 +2,103 @@ Return-Path: <SRS0=0U/s=DU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 451ABC433E7
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 20:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAD97C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 22:43:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2B2720878
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 20:43:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93F8B21D40
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 22:43:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X98OMsUE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727707AbgJMUn2 (ORCPT
+        id S1729076AbgJMWng (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Oct 2020 16:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37318 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727099AbgJMUn1 (ORCPT
+        Tue, 13 Oct 2020 18:43:36 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:34364 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728931AbgJMWnZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Oct 2020 16:43:27 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58883C061755;
-        Tue, 13 Oct 2020 13:43:27 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kSR8d-005E2x-Sv; Tue, 13 Oct 2020 22:43:17 +0200
-Message-ID: <e3ee664f0b892e9d3c41f509e693edbd23ee384e.camel@sipsolutions.net>
-Subject: Re: [PATCH v6 68/80] nl80211: docs: add a description for s1g_cap
- parameter
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Thomas Pedersen <thomas@adapt-ip.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date:   Tue, 13 Oct 2020 22:43:04 +0200
-In-Reply-To: <20201013224103.7f958544@coco.lan>
-References: <cover.1602589096.git.mchehab+huawei@kernel.org>
-         <9633ea7d9b0cb2f997d784df86ba92e67659f29b.1602589096.git.mchehab+huawei@kernel.org>
-         <5ad3c2c6cd096b6fb5c9bedd340b927adb899213.camel@sipsolutions.net>
-         <20201013224103.7f958544@coco.lan>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        Tue, 13 Oct 2020 18:43:25 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09DMYHRI023311;
+        Tue, 13 Oct 2020 22:43:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=BPXVhR8Zcz1sWINwPPKI15oRrSSfJmS7Dk7t6k2FBvc=;
+ b=X98OMsUEJ6iXi28jlvGzIuUNtCUPCHKr9Y26mlldDvGV1tVg0rW4+z19ERv9nUm05fW2
+ 7uLfRfkQC87plb6dqK0JgwDllNVeWHEr4KuohBovrquRB4Wp8Fn55mzzRhERGk86b1R8
+ IUAHuFALM9P0nzG0SMad9VRc3S4BqwSCpX9uXbI7E8E4JWNs+M489BfaOy69s9tMy36o
+ WsDINZk0QvR9KX7AD1uVtYIm858Ec1rCBrQM2cWhu74pWwQ4sERB2XP+p4QlG2a3ov36
+ KsDceZW1Gf6MViMvswmWBcHmPujmAKdJrQLwx9ihpq7sGfN7gk8NuWumGIvUgBivX+8I Nw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 3434wkmr7r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 13 Oct 2020 22:43:19 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09DMZeSv129581;
+        Tue, 13 Oct 2020 22:43:18 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3030.oracle.com with ESMTP id 343phntsx7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 13 Oct 2020 22:43:18 +0000
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 09DMhIGo146795;
+        Tue, 13 Oct 2020 22:43:18 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 343phntswf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Oct 2020 22:43:18 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09DMhFrt005717;
+        Tue, 13 Oct 2020 22:43:16 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 13 Oct 2020 15:43:15 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-spi@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        dmaengine@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-media@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>,
+        linux-serial@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Yossi Leybovich <sleybo@amazon.com>,
+        linux-block@vger.kernel.org, rds-devel@oss.oracle.com
+Subject: Re: [PATCH 00/14] drop double zeroing
+Date:   Tue, 13 Oct 2020 18:42:52 -0400
+Message-Id: <160262862433.3018.13907233755506910409.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
+ malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0 clxscore=1011
+ spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010130158
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-10-13 at 22:41 +0200, Mauro Carvalho Chehab wrote:
-> Em Tue, 13 Oct 2020 20:47:47 +0200
-> Johannes Berg <johannes@sipsolutions.net> escreveu:
-> 
-> > Thanks Mauro.
-> > 
-> > 
-> > On Tue, 2020-10-13 at 13:54 +0200, Mauro Carvalho Chehab wrote:
-> > > Changeset df78a0c0b67d ("nl80211: S1G band and channel definitions")
-> > > added a new parameter, but didn't add the corresponding kernel-doc
-> > > markup, as repoted when doing "make htmldocs":
-> > > 
-> > > 	./include/net/cfg80211.h:471: warning: Function parameter or member 's1g_cap' not described in 'ieee80211_supported_band'
-> > > 
-> > > Add a documentation for it.  
-> > 
-> > Should I take this through my tree, or is that part of a larger set
-> > that'll go somewhere else?
-> 
-> Whatever works best for you ;-)
-> 
-> If you don't pick it via your tree, I'm planning to send it
-> together with the other patches likely on Thursday.
+On Sun, 20 Sep 2020 13:26:12 +0200, Julia Lawall wrote:
 
-OK, please do, and here's an
+> sg_init_table zeroes its first argument, so the allocation of that argument
+> doesn't have to.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Applied to 5.10/scsi-queue, thanks!
 
+[02/14] scsi: target: rd: Drop double zeroing
+        https://git.kernel.org/mkp/scsi/c/4b217e015b75
 
-I don't think I can get it this quickly through net-next at this point,
-and there's just no point if you have stuff to send anyway :-)
-
-Thanks!
-
-johannes
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
