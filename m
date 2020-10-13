@@ -2,135 +2,107 @@ Return-Path: <SRS0=04kx=DV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75313C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 08:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA2A8C433E7
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 09:19:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9BE720BED
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 08:39:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ngUoDnD3"
+	by mail.kernel.org (Postfix) with ESMTP id 7109120878
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 09:19:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729679AbgJNIjh (ORCPT
+        id S1729820AbgJNJTi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Oct 2020 04:39:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33574 "EHLO
+        Wed, 14 Oct 2020 05:19:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726269AbgJNIjh (ORCPT
+        with ESMTP id S1729406AbgJNJTh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Oct 2020 04:39:37 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 616DCC045871;
-        Tue, 13 Oct 2020 23:13:56 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id t25so3060082ejd.13;
-        Tue, 13 Oct 2020 23:13:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=aeWyu0fhicZ35ndvB5G7CKdKzKpJv3Q8+/dMeny8r3E=;
-        b=ngUoDnD3ez3wPljEH7V6ZRJPxi6VyKPo3NxCEGkokrtq2QA/+s/lV/gHCbtL1ccOZM
-         y4RF2dEUkDYGhH4MNBxZg/1KDQafk1w8ITyco6/45YqH8gEgwjnp0z6zsFzKn4IOHj4s
-         SEgx35DPjNeiQzLyJktDf8AGW15iQC8AEp6CWP5YKxFjWBgY54Ck35nwJlqfo9PVt8+y
-         bOUQNnEc8FKh9al2GBvmeJd6AXmxiWSD5M3XIfYFKi7rr36blaxM8b/XEUh/rGL1Hk8R
-         zvF+ytnIvMGQMQUTRgQmPC6Nm15fiVz3SDDpT9DWCqkOjC2BvUYWeMwsgd6Mu48AXDAk
-         ln9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=aeWyu0fhicZ35ndvB5G7CKdKzKpJv3Q8+/dMeny8r3E=;
-        b=Tm9Kt/lLPAzdk9crNClC2f2jWoJjmuysUv/qxZidTNJe8m4l1kD7ue1rNVXN5bQx9B
-         WqyIuwXa+VVVPIdD+3J9cWR80kh7P1VppdTMfZdwXQ0TceS0opbJFLh2w2eL+jFMJ8du
-         /ohjdzr5w0A7rX27y9IyzVxCLlPA0Dx8GdxrQ3tyhlpaqtn4M5gg50NpepFxOLI4iC7m
-         9haBTGdHJdbvTZIaEMqancmL5X4lhLlo4tGvvetlXdOBTCw4bRg4y7q3MNcZlvYiyBAF
-         d4lelbTx94MTxOBp6yMPkoX1oJpmqzGSzJPgvldA4qgZBGKj+eK7fIunKn6r6Zo+iKfZ
-         1pGQ==
-X-Gm-Message-State: AOAM530MUIWlQf/fNc6Y1IbnQFinVRwCLtj7k9PH2k6e8/qoC6Rs7urx
-        O0mE9HWnjSDHVrFzITTmY7w=
-X-Google-Smtp-Source: ABdhPJyZIBVV6msuVArNaw4EDCFq2Apl0m8HnRD2XrtAzYoL6edLcNmhgdgke6mQaAV0e1pcOOmFPA==
-X-Received: by 2002:a17:907:2179:: with SMTP id rl25mr3703878ejb.450.1602656034995;
-        Tue, 13 Oct 2020 23:13:54 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f23:2800:e563:1e0d:2b0d:aba7? (p200300ea8f232800e5631e0d2b0daba7.dip0.t-ipconnect.de. [2003:ea:8f23:2800:e563:1e0d:2b0d:aba7])
-        by smtp.googlemail.com with ESMTPSA id oa19sm1016118ejb.95.2020.10.13.23.13.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Oct 2020 23:13:54 -0700 (PDT)
-Subject: Re: [PATCH net-next v2 00/12] net: add and use function
- dev_fetch_sw_netstats for fetching pcpu_sw_netstats
-To:     Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>
-Cc:     =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
-        Oliver Neukum <oneukum@suse.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <geomatsi@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Roopa Prabhu <roopa@nvidia.com>,
-        Nikolay Aleksandrov <nikolay@nvidia.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pravin B Shelar <pshelar@ovn.org>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        bridge@lists.linux-foundation.org
-References: <d77b65de-1793-f808-66b5-aaa4e7c8a8f0@gmail.com>
- <20201013173951.25677bcc@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <20201014054250.GB6305@unreal>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Message-ID: <3be8fd19-1c7e-0e05-6039-e5404b2682b9@gmail.com>
-Date:   Wed, 14 Oct 2020 08:13:47 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        Wed, 14 Oct 2020 05:19:37 -0400
+Received: from mail.blocktrron.ovh (mars.blocktrron.ovh [IPv6:2001:41d0:401:3000::cbd])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB2A2C08EC6F
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2020 16:55:48 -0700 (PDT)
+Received: from [IPv6:2003:e5:3f10:8a00:199:967e:17ef:50b5] (p200300e53f108a000199967e17ef50b5.dip0.t-ipconnect.de [IPv6:2003:e5:3f10:8a00:199:967e:17ef:50b5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.blocktrron.ovh (Postfix) with ESMTPSA id 4FF2026EA5;
+        Wed, 14 Oct 2020 01:55:46 +0200 (CEST)
+Subject: Re: [PATCH] mt76: mt7603: add additional EEPROM chip ID
+To:     Andreas Ziegler <dev@andreas-ziegler.de>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
+        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        Ron Asimi <ron.asimi@gmail.com>
+References: <20201013142326.8361-1-mail@david-bauer.net>
+ <20201013143219.GA2854@lore-desk>
+ <cbd2ecce-09c8-15ec-e6b3-6e0913d09da4@david-bauer.net>
+ <1dae1d32-8cf5-75f3-8bdc-32ec058faba5@andreas-ziegler.de>
+From:   David Bauer <mail@david-bauer.net>
+Autocrypt: addr=mail@david-bauer.net; prefer-encrypt=mutual; keydata=
+ mQENBFYkGEcBCADbRMHdOXmszxrmE9G/gWUD4/HXklOfn+hyBpEcOul+GKAet0oFxznkchJe
+ hO5MbEFYsnM8TZVxjnEi70c3luF1m4JycjgQ91GJ52+xvLV0dVz+L99JBgVJNRDvvt68rLVq
+ A8/LCdkXctZ+GBfrtTYQ6dOeuQf/qWuwlNTvuG92uWVZjncyWOmQX73gv+1MTRsCmIGNYQu1
+ ZDVyhr3YsTgJIXTHUCxBHQBDglkb3L5lK9WHPf1puQ2grNbUg9VSmo4a9IzUpRauNtCDUFxi
+ 1m1e5VnmU5O5/xZyDzwmpWog9tUfScS7X9pdVNQ+2W3zCRrotFEn6FKdD01mhIsLnczjABEB
+ AAG0IkRhdmlkIEJhdWVyIDxtYWlsQGRhdmlkLWJhdWVyLm5ldD6JAVkEEwEIAEMCGwMHCwkI
+ BwMCAQYVCAIJCgsEFgIDAQIeAQIXgAIZARYhBNcEMml7fEwnOA/No7qzlxS0pLh4BQJe17UP
+ BQkKlNBIAAoJELqzlxS0pLh494UH/irs1e2AucUFddh9bRs6DP7vti3C/wkfg32LpVBeNL7D
+ 0JgGBdEHvCgAZEdorm62rPHZ61oqLnwaFDgqHTZZJO3E843Ax7DfHFY8oZ76eFXQ+Ik4CF4P
+ 2c7JAI1/Q731wwNPRPBucEE6+llaAyLoD5SRpYGkoj2bvgX8Cc7KbH3pyBUx27V5HhscJUAU
+ u6ocDkb58Jx+kH9rMmlKvYFzXZKSmI8roYyTAQCpYJUrM5Z/ecU2UnPTWExJLN1hTGAVrHF6
+ ULG9oD8M7X15y6LQPf4wrTf0L0d7o42NuG1Z1J9yCMnQrAMdJm6K6vcTMEru9Ur6fz6+hALp
+ Xmm1ZolXIqe5AQ0EViQYRwEIALqz1V6kWIvCTVN/6QN9fepVSwSw+5IiiVBGtf2rtdqujCRD
+ bGi96a2ZLYRQzlSQvCZ51skgoZFmIW2YhPP90qiZssSEQxgY1rf+DEYnjWmFSgi3iHqYXRk2
+ cY7OI3ZT8D2tAFu9pIAxZpD5FdQznJmUhljeTJw+lGOoxctf1xjHZcRcU6GUFMpFBc4xaLC0
+ hUN24HT5pDpklxskPFH91VncDaOsLesqszGaUHWx3hogRfogdADvycUp/bQB80kZO/XqexWN
+ GUNJYS4axWM2ND25bWV1h9aFjPpOwFM7FwAyra0VihnnNn7dTL5vBpFztY0IFPlvqyc1Vw8y
+ vgtShA0AEQEAAYkBPAQYAQgAJgIbDBYhBNcEMml7fEwnOA/No7qzlxS0pLh4BQJe17UqBQkK
+ lNBjAAoJELqzlxS0pLh4YrMH/jwiIFJFEr8BFMxCQHiBgyZhmJm1CBJsdneCrVxrTIHdr7uk
+ wCglAio2+/IsB3x2JfzSJjpi0eynkfk7zDF6G1te1CKMfReCDEvMyBZK/X3XWYKJhxDvxuJ7
+ ftf3lwLv6iltQddVEB8/RhG+X89cyBwHirKsZEM7fxYMVRCksqanJwh3TFt+mPP9cUEsg1e8
+ i9SenxZnF11iIbcsmi0C9H8MAW1KJXu61luiS30RXbrH35psA2k4muf8RqE5BgXrJ5wwTxpL
+ MOY7eVfmPmYrr1q1bas8r97ookpcPmavtkk395GtjuCkIfnDx1HtuICczBA8ge41F4tj+Vtx
+ BFwmgiA=
+Message-ID: <4c852fef-b651-a10f-4b46-35df6cddaf9b@david-bauer.net>
+Date:   Wed, 14 Oct 2020 01:55:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20201014054250.GB6305@unreal>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1dae1d32-8cf5-75f3-8bdc-32ec058faba5@andreas-ziegler.de>
+Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 14.10.2020 07:42, Leon Romanovsky wrote:
-> On Tue, Oct 13, 2020 at 05:39:51PM -0700, Jakub Kicinski wrote:
->> On Mon, 12 Oct 2020 10:00:11 +0200 Heiner Kallweit wrote:
->>> In several places the same code is used to populate rtnl_link_stats64
->>> fields with data from pcpu_sw_netstats. Therefore factor out this code
->>> to a new function dev_fetch_sw_netstats().
+Hi Andreas,
+
+On 10/13/20 6:00 PM, Andreas Ziegler wrote:
+> Hi,
+> 
+> David Bauer wrote on 13.10.20 16:42:
 >>>
->>> v2:
->>> - constify argument netstats
->>> - don't ignore netstats being NULL or an ERRPTR
->>> - switch to EXPORT_SYMBOL_GPL
+>>> is it a hw bug or does this part-number really exist?
 >>
->> Applied, thank you!
+>> I assume it's a bug on TP-Links side. However, there's already quite some units with
+>> this chip-id in their EEPROM around.
 > 
-> Jakub,
 > 
-> Is it possible to make sure that changelogs are not part of the commit
-> messages? We don't store previous revisions in the git repo, so it doesn't
-> give too much to anyone who is looking on git log later. The lore link
-> to the patch is more than enough.
-> 
-I remember that once I did it the usual way (changelog below the ---) David
-requested the changelog to be part of the commit message. So obviously he
-sees some benefit in doing so. 
+> to my knowledge, all devices of this specific model (Archer C50 v4) have
+> this chip-id in their EEPROM, not only some.
 
-> 44fa32f008ab ("net: add function dev_fetch_sw_netstats for fetching pcpu_sw_netstats")
-> 
-> Thanks
-> 
+The unit I've got back when the v4 first surfaced has the correct chip-id in the
+2.4GHz EEPROM (0x7628). However, some (if not all) newer units use 0x7600 as the
+chip-id for the MT7628 caldata.
 
+Best wishes
+David
+
+
+> 
+> Regards
+> 
+> Andreas
+> 
