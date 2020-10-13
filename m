@@ -2,73 +2,109 @@ Return-Path: <SRS0=0U/s=DU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D503C433E7
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 14:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1A95C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 14:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B7C724829
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 14:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 816E824820
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Oct 2020 14:32:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602599548;
+	bh=nlrAZjqJxX9vdddn8aXvAscP7F1pvuM9S1dbNM2/jVE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=aMeVvK6yq6xappLFZ1eB7VJmFCshwlVH2R1D15EEDzuQQzNX8qfn0Yf2F/GB59cAC
+	 J1LtrH2ImqbXNmwagzI7SGMGSC4aUicpD7Sl6iau/DISSjzdOoweaefrB+RoYhb05z
+	 XyfbTAzdqcyZsfKULr8xm5a0NrcQDHlW2tcFgZPQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388581AbgJMOae (ORCPT
+        id S2388774AbgJMOc1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Oct 2020 10:30:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36186 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387516AbgJMOad (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Oct 2020 10:30:33 -0400
-X-Greylist: delayed 409 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 13 Oct 2020 07:30:32 PDT
-Received: from mail.blocktrron.ovh (mars.blocktrron.ovh [IPv6:2001:41d0:401:3000::cbd])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBEEBC0613D0
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2020 07:30:32 -0700 (PDT)
-Received: from localhost.localdomain (p200300e53f108a00dce3cb5728203c5a.dip0.t-ipconnect.de [IPv6:2003:e5:3f10:8a00:dce3:cb57:2820:3c5a])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Tue, 13 Oct 2020 10:32:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38044 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388759AbgJMOcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Oct 2020 10:32:24 -0400
+Received: from localhost (unknown [176.207.245.61])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.blocktrron.ovh (Postfix) with ESMTPSA id ADFB226EC4;
-        Tue, 13 Oct 2020 16:23:38 +0200 (CEST)
-From:   David Bauer <mail@david-bauer.net>
-To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc:     dev@andreas-ziegler.de, Ron Asimi <ron.asimi@gmail.com>
-Subject: [PATCH] mt76: mt7603: add additional EEPROM chip ID
-Date:   Tue, 13 Oct 2020 16:23:26 +0200
-Message-Id: <20201013142326.8361-1-mail@david-bauer.net>
-X-Mailer: git-send-email 2.28.0
+        by mail.kernel.org (Postfix) with ESMTPSA id CD37B24820;
+        Tue, 13 Oct 2020 14:32:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602599544;
+        bh=nlrAZjqJxX9vdddn8aXvAscP7F1pvuM9S1dbNM2/jVE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NwB8vz0xRf7LguIsGPgeOEPU6irZJpAhwlOSxaJiTBOqE2WEd4sefGVOQLhth0CiM
+         Ioxzn6MaX2z53FrDUnLsVat8UGl6ot6A9fIle1xKvoR2Z0AM9sdDh4EMVmw/0JvTrW
+         g0ArJ3NlsO6fR6HpTtgQ5l+Sr6OmFbw3NQoziSms=
+Date:   Tue, 13 Oct 2020 16:32:19 +0200
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     David Bauer <mail@david-bauer.net>
+Cc:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        dev@andreas-ziegler.de, Ron Asimi <ron.asimi@gmail.com>
+Subject: Re: [PATCH] mt76: mt7603: add additional EEPROM chip ID
+Message-ID: <20201013143219.GA2854@lore-desk>
+References: <20201013142326.8361-1-mail@david-bauer.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spam: Yes
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+Content-Disposition: inline
+In-Reply-To: <20201013142326.8361-1-mail@david-bauer.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some newer MT7628 based routers (notably the TP-Link Archer C50 v4) are
-shipped with a chip-id of 0x7600 in the on-flash EEPROM. Add this as a
-possible valid ID.
 
-Ref: https://bugs.openwrt.org/index.php?do=details&task_id=2781
+--UugvWAfsgieZRqgk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Suggested-by: Ron Asimi <ron.asimi@gmail.com>
-Signed-off-by: David Bauer <mail@david-bauer.net>
----
- drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c | 1 +
- 1 file changed, 1 insertion(+)
+> Some newer MT7628 based routers (notably the TP-Link Archer C50 v4) are
+> shipped with a chip-id of 0x7600 in the on-flash EEPROM. Add this as a
+> possible valid ID.
+>=20
+> Ref: https://bugs.openwrt.org/index.php?do=3Ddetails&task_id=3D2781
+>=20
+> Suggested-by: Ron Asimi <ron.asimi@gmail.com>
+> Signed-off-by: David Bauer <mail@david-bauer.net>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers=
+/net/wireless/mediatek/mt76/mt7603/eeprom.c
+> index 3ee06e2577b8..422b9d9e8962 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+> @@ -141,6 +141,7 @@ static int mt7603_check_eeprom(struct mt76_dev *dev)
+>  	switch (val) {
+>  	case 0x7628:
+>  	case 0x7603:
+> +	case 0x7600:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-index 3ee06e2577b8..422b9d9e8962 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-@@ -141,6 +141,7 @@ static int mt7603_check_eeprom(struct mt76_dev *dev)
- 	switch (val) {
- 	case 0x7628:
- 	case 0x7603:
-+	case 0x7600:
- 		return 0;
- 	default:
- 		return -EINVAL;
--- 
-2.28.0
+is it a hw bug or does this part-number really exist?
 
+
+>  		return 0;
+>  	default:
+>  		return -EINVAL;
+> --=20
+> 2.28.0
+>=20
+
+--UugvWAfsgieZRqgk
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCX4W6cAAKCRA6cBh0uS2t
+rCraAQD03vio5aoOukhuwyIWHyRQwWl1NcGCxNWnrJnZR98HZQEAtvGu1EFpLnpS
+UjdM09Z8W6a+1xMmU/G+B5xVf8bklAo=
+=oV0x
+-----END PGP SIGNATURE-----
+
+--UugvWAfsgieZRqgk--
