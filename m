@@ -2,107 +2,271 @@ Return-Path: <SRS0=04kx=DV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA2A8C433E7
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 09:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA738C433E7
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 10:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7109120878
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 09:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4973021527
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Oct 2020 10:04:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602669852;
+	bh=wHGlbIwIV9+GcJVMXDlkV+U5R95WsALgYH7wSwY+B1Q=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=qwQzNLrWvK7+Jaiaukf/x1SwTHoT1Ad3hhVIJlPIYe42Lmn10iCEmDE30AA1n3HeL
+	 9eIRzbnJORmqNzJ4AX3c8ca5pVy1jLWFEa4X+hAfd0FZqFeGVtRJzp6UcvT4UQa7Nj
+	 C5JnHUqUq5pJggHohhTAlh3yQYX6MGFh2MtJYP2A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729820AbgJNJTi (ORCPT
+        id S1727470AbgJNKEL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:19:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39948 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729406AbgJNJTh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Oct 2020 05:19:37 -0400
-Received: from mail.blocktrron.ovh (mars.blocktrron.ovh [IPv6:2001:41d0:401:3000::cbd])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB2A2C08EC6F
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2020 16:55:48 -0700 (PDT)
-Received: from [IPv6:2003:e5:3f10:8a00:199:967e:17ef:50b5] (p200300e53f108a000199967e17ef50b5.dip0.t-ipconnect.de [IPv6:2003:e5:3f10:8a00:199:967e:17ef:50b5])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Wed, 14 Oct 2020 06:04:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58096 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725985AbgJNKEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Oct 2020 06:04:11 -0400
+Received: from lore-desk.redhat.com (unknown [176.207.245.61])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.blocktrron.ovh (Postfix) with ESMTPSA id 4FF2026EA5;
-        Wed, 14 Oct 2020 01:55:46 +0200 (CEST)
-Subject: Re: [PATCH] mt76: mt7603: add additional EEPROM chip ID
-To:     Andreas Ziegler <dev@andreas-ziegler.de>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        Ron Asimi <ron.asimi@gmail.com>
-References: <20201013142326.8361-1-mail@david-bauer.net>
- <20201013143219.GA2854@lore-desk>
- <cbd2ecce-09c8-15ec-e6b3-6e0913d09da4@david-bauer.net>
- <1dae1d32-8cf5-75f3-8bdc-32ec058faba5@andreas-ziegler.de>
-From:   David Bauer <mail@david-bauer.net>
-Autocrypt: addr=mail@david-bauer.net; prefer-encrypt=mutual; keydata=
- mQENBFYkGEcBCADbRMHdOXmszxrmE9G/gWUD4/HXklOfn+hyBpEcOul+GKAet0oFxznkchJe
- hO5MbEFYsnM8TZVxjnEi70c3luF1m4JycjgQ91GJ52+xvLV0dVz+L99JBgVJNRDvvt68rLVq
- A8/LCdkXctZ+GBfrtTYQ6dOeuQf/qWuwlNTvuG92uWVZjncyWOmQX73gv+1MTRsCmIGNYQu1
- ZDVyhr3YsTgJIXTHUCxBHQBDglkb3L5lK9WHPf1puQ2grNbUg9VSmo4a9IzUpRauNtCDUFxi
- 1m1e5VnmU5O5/xZyDzwmpWog9tUfScS7X9pdVNQ+2W3zCRrotFEn6FKdD01mhIsLnczjABEB
- AAG0IkRhdmlkIEJhdWVyIDxtYWlsQGRhdmlkLWJhdWVyLm5ldD6JAVkEEwEIAEMCGwMHCwkI
- BwMCAQYVCAIJCgsEFgIDAQIeAQIXgAIZARYhBNcEMml7fEwnOA/No7qzlxS0pLh4BQJe17UP
- BQkKlNBIAAoJELqzlxS0pLh494UH/irs1e2AucUFddh9bRs6DP7vti3C/wkfg32LpVBeNL7D
- 0JgGBdEHvCgAZEdorm62rPHZ61oqLnwaFDgqHTZZJO3E843Ax7DfHFY8oZ76eFXQ+Ik4CF4P
- 2c7JAI1/Q731wwNPRPBucEE6+llaAyLoD5SRpYGkoj2bvgX8Cc7KbH3pyBUx27V5HhscJUAU
- u6ocDkb58Jx+kH9rMmlKvYFzXZKSmI8roYyTAQCpYJUrM5Z/ecU2UnPTWExJLN1hTGAVrHF6
- ULG9oD8M7X15y6LQPf4wrTf0L0d7o42NuG1Z1J9yCMnQrAMdJm6K6vcTMEru9Ur6fz6+hALp
- Xmm1ZolXIqe5AQ0EViQYRwEIALqz1V6kWIvCTVN/6QN9fepVSwSw+5IiiVBGtf2rtdqujCRD
- bGi96a2ZLYRQzlSQvCZ51skgoZFmIW2YhPP90qiZssSEQxgY1rf+DEYnjWmFSgi3iHqYXRk2
- cY7OI3ZT8D2tAFu9pIAxZpD5FdQznJmUhljeTJw+lGOoxctf1xjHZcRcU6GUFMpFBc4xaLC0
- hUN24HT5pDpklxskPFH91VncDaOsLesqszGaUHWx3hogRfogdADvycUp/bQB80kZO/XqexWN
- GUNJYS4axWM2ND25bWV1h9aFjPpOwFM7FwAyra0VihnnNn7dTL5vBpFztY0IFPlvqyc1Vw8y
- vgtShA0AEQEAAYkBPAQYAQgAJgIbDBYhBNcEMml7fEwnOA/No7qzlxS0pLh4BQJe17UqBQkK
- lNBjAAoJELqzlxS0pLh4YrMH/jwiIFJFEr8BFMxCQHiBgyZhmJm1CBJsdneCrVxrTIHdr7uk
- wCglAio2+/IsB3x2JfzSJjpi0eynkfk7zDF6G1te1CKMfReCDEvMyBZK/X3XWYKJhxDvxuJ7
- ftf3lwLv6iltQddVEB8/RhG+X89cyBwHirKsZEM7fxYMVRCksqanJwh3TFt+mPP9cUEsg1e8
- i9SenxZnF11iIbcsmi0C9H8MAW1KJXu61luiS30RXbrH35psA2k4muf8RqE5BgXrJ5wwTxpL
- MOY7eVfmPmYrr1q1bas8r97ookpcPmavtkk395GtjuCkIfnDx1HtuICczBA8ge41F4tj+Vtx
- BFwmgiA=
-Message-ID: <4c852fef-b651-a10f-4b46-35df6cddaf9b@david-bauer.net>
-Date:   Wed, 14 Oct 2020 01:55:45 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        by mail.kernel.org (Postfix) with ESMTPSA id 27D412080A;
+        Wed, 14 Oct 2020 10:04:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602669850;
+        bh=wHGlbIwIV9+GcJVMXDlkV+U5R95WsALgYH7wSwY+B1Q=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XnxzJV1gDNiIz5kUGA0fkc06kpHTpuqIu40+w0cz8qtBhPBIeuwgJuwcoOS5VEAbB
+         jP+j2JplA8vN6vB1e+ltC3ylqV48CnoMiZtf6mQ2JUWQfb7Uf+6lgIvXZJ47JTfJ0z
+         eY4+LM8HWfWvrcgBASsofPk1Zic3H3uuxt5NcKdk=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: move mt76_mcu_send_firmware in common module
+Date:   Wed, 14 Oct 2020 12:03:58 +0200
+Message-Id: <5efb4c7388e85db119c3cfbc8826f714793c636e.1602669770.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <1dae1d32-8cf5-75f3-8bdc-32ec058faba5@andreas-ziegler.de>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Andreas,
+Move mt76_mcu_send_firmware routine in common code since it is actually
+shared between mt7615, mt7663, mt7603 and mt7915 devices
 
-On 10/13/20 6:00 PM, Andreas Ziegler wrote:
-> Hi,
-> 
-> David Bauer wrote on 13.10.20 16:42:
->>>
->>> is it a hw bug or does this part-number really exist?
->>
->> I assume it's a bug on TP-Links side. However, there's already quite some units with
->> this chip-id in their EEPROM around.
-> 
-> 
-> to my knowledge, all devices of this specific model (Archer C50 v4) have
-> this chip-id in their EEPROM, not only some.
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mcu.c      | 23 +++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
+ .../net/wireless/mediatek/mt76/mt7603/mcu.c   | 24 ++------------
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 32 ++++---------------
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 28 +++-------------
+ 5 files changed, 37 insertions(+), 72 deletions(-)
 
-The unit I've got back when the v4 first surfaced has the correct chip-id in the
-2.4GHz EEPROM (0x7628). However, some (if not all) newer units use 0x7600 as the
-chip-id for the MT7628 caldata.
+diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
+index 76dadef7ccfe..30a6515758a8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mcu.c
+@@ -105,3 +105,26 @@ int mt76_mcu_skb_send_and_get_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(mt76_mcu_skb_send_and_get_msg);
++
++int mt76_mcu_send_firmware(struct mt76_dev *dev, int cmd, const void *data,
++			   int len)
++{
++	int err, cur_len;
++
++	while (len > 0) {
++		cur_len = min_t(int, 4096 - dev->mcu_ops->headroom, len);
++
++		err = mt76_mcu_send_msg(dev, cmd, data, cur_len, false);
++		if (err)
++			return err;
++
++		data += cur_len;
++		len -= cur_len;
++
++		if (dev->queue_ops->tx_cleanup)
++			dev->queue_ops->tx_cleanup(dev, MT_TXQ_FWDL, false);
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mt76_mcu_send_firmware);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 639ef7b5c2c3..64683eff76fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1076,6 +1076,8 @@ int mt76_mcu_send_and_get_msg(struct mt76_dev *dev, int cmd, const void *data,
+ 			      int len, bool wait_resp, struct sk_buff **ret);
+ int mt76_mcu_skb_send_and_get_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 				  int cmd, bool wait_resp, struct sk_buff **ret);
++int mt76_mcu_send_firmware(struct mt76_dev *dev, int cmd, const void *data,
++			   int len);
+ static inline int
+ mt76_mcu_send_msg(struct mt76_dev *dev, int cmd, const void *data, int len,
+ 		  bool wait_resp)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+index b2ccfe6772ce..9e6c8e1b7ea5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+@@ -93,27 +93,6 @@ mt7603_mcu_init_download(struct mt7603_dev *dev, u32 addr, u32 len)
+ 				 &req, sizeof(req), true);
+ }
+ 
+-static int
+-mt7603_mcu_send_firmware(struct mt7603_dev *dev, const void *data, int len)
+-{
+-	int cur_len, ret = 0;
+-
+-	while (len > 0) {
+-		cur_len = min_t(int, 4096 - sizeof(struct mt7603_mcu_txd),
+-				len);
+-
+-		ret = mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_FW_SCATTER, data,
+-					cur_len, false);
+-		if (ret)
+-			break;
+-
+-		data += cur_len;
+-		len -= cur_len;
+-	}
+-
+-	return ret;
+-}
+-
+ static int
+ mt7603_mcu_start_firmware(struct mt7603_dev *dev, u32 addr)
+ {
+@@ -200,7 +179,8 @@ static int mt7603_load_firmware(struct mt7603_dev *dev)
+ 		goto out;
+ 	}
+ 
+-	ret = mt7603_mcu_send_firmware(dev, fw->data, dl_len);
++	ret = mt76_mcu_send_firmware(&dev->mt76, -MCU_CMD_FW_SCATTER,
++				     fw->data, dl_len);
+ 	if (ret) {
+ 		dev_err(dev->mt76.dev, "Failed to send firmware to device\n");
+ 		goto out;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 2b17bd1c2a32..8a74775f9ff0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1872,29 +1872,6 @@ static const struct mt7615_mcu_ops uni_update_ops = {
+ 	.set_fw_ctrl = mt7615_mcu_fw_pmctrl,
+ };
+ 
+-static int mt7615_mcu_send_firmware(struct mt7615_dev *dev, const void *data,
+-				    int len)
+-{
+-	int ret = 0, cur_len;
+-
+-	while (len > 0) {
+-		cur_len = min_t(int, 4096 - dev->mt76.mcu_ops->headroom, len);
+-
+-		ret = mt76_mcu_send_msg(&dev->mt76, MCU_CMD_FW_SCATTER, data,
+-					cur_len, false);
+-		if (ret)
+-			break;
+-
+-		data += cur_len;
+-		len -= cur_len;
+-
+-		if (mt76_is_mmio(&dev->mt76))
+-			mt76_queue_tx_cleanup(dev, MT_TXQ_FWDL, false);
+-	}
+-
+-	return ret;
+-}
+-
+ static int mt7615_mcu_start_firmware(struct mt7615_dev *dev, u32 addr,
+ 				     u32 option)
+ {
+@@ -1981,7 +1958,8 @@ static int mt7615_load_patch(struct mt7615_dev *dev, u32 addr, const char *name)
+ 		goto out;
+ 	}
+ 
+-	ret = mt7615_mcu_send_firmware(dev, fw->data + sizeof(*hdr), len);
++	ret = mt76_mcu_send_firmware(&dev->mt76, MCU_CMD_FW_SCATTER,
++				     fw->data + sizeof(*hdr), len);
+ 	if (ret) {
+ 		dev_err(dev->mt76.dev, "Failed to send firmware to device\n");
+ 		goto out;
+@@ -2041,7 +2019,8 @@ mt7615_mcu_send_ram_firmware(struct mt7615_dev *dev,
+ 			return err;
+ 		}
+ 
+-		err = mt7615_mcu_send_firmware(dev, data + offset, len);
++		err = mt76_mcu_send_firmware(&dev->mt76, MCU_CMD_FW_SCATTER,
++					     data + offset, len);
+ 		if (err) {
+ 			dev_err(dev->mt76.dev, "Failed to send firmware to device\n");
+ 			return err;
+@@ -2282,7 +2261,8 @@ static int mt7663_load_n9(struct mt7615_dev *dev, const char *name)
+ 			goto out;
+ 		}
+ 
+-		ret = mt7615_mcu_send_firmware(dev, fw->data + offset, len);
++		ret = mt76_mcu_send_firmware(&dev->mt76, MCU_CMD_FW_SCATTER,
++					     fw->data + offset, len);
+ 		if (ret) {
+ 			dev_err(dev->mt76.dev, "Failed to send firmware\n");
+ 			goto out;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index ce2357550015..1a630e5e4ba1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2486,28 +2486,6 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
+ 				     MCU_EXT_CMD_BSS_INFO_UPDATE, true);
+ }
+ 
+-static int mt7915_mcu_send_firmware(struct mt7915_dev *dev, const void *data,
+-				    int len)
+-{
+-	int ret = 0, cur_len;
+-
+-	while (len > 0) {
+-		cur_len = min_t(int, 4096 - sizeof(struct mt7915_mcu_txd),
+-				len);
+-
+-		ret = mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_FW_SCATTER, data,
+-					cur_len, false);
+-		if (ret)
+-			break;
+-
+-		data += cur_len;
+-		len -= cur_len;
+-		mt76_queue_tx_cleanup(dev, MT_TXQ_FWDL, false);
+-	}
+-
+-	return ret;
+-}
+-
+ static int mt7915_mcu_start_firmware(struct mt7915_dev *dev, u32 addr,
+ 				     u32 option)
+ {
+@@ -2653,7 +2631,8 @@ static int mt7915_load_patch(struct mt7915_dev *dev)
+ 			goto out;
+ 		}
+ 
+-		ret = mt7915_mcu_send_firmware(dev, dl, len);
++		ret = mt76_mcu_send_firmware(&dev->mt76, -MCU_CMD_FW_SCATTER,
++					     dl, len);
+ 		if (ret) {
+ 			dev_err(dev->mt76.dev, "Failed to send patch\n");
+ 			goto out;
+@@ -2721,7 +2700,8 @@ mt7915_mcu_send_ram_firmware(struct mt7915_dev *dev,
+ 			return err;
+ 		}
+ 
+-		err = mt7915_mcu_send_firmware(dev, data + offset, len);
++		err = mt76_mcu_send_firmware(&dev->mt76, -MCU_CMD_FW_SCATTER,
++					     data + offset, len);
+ 		if (err) {
+ 			dev_err(dev->mt76.dev, "Failed to send firmware.\n");
+ 			return err;
+-- 
+2.26.2
 
-Best wishes
-David
-
-
-> 
-> Regards
-> 
-> Andreas
-> 
