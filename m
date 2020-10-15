@@ -2,169 +2,89 @@ Return-Path: <SRS0=htKP=DW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDD9C433E7
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Oct 2020 11:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB10EC43467
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Oct 2020 13:24:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CAD820878
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Oct 2020 11:38:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32C3C22268
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Oct 2020 13:24:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ueIB1Yv7"
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="i5HXmdWP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726493AbgJOLhb (ORCPT
+        id S1729138AbgJONYf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Oct 2020 07:37:31 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:55978 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726309AbgJOLh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Oct 2020 07:37:26 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1602761846; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=r1ehb31RQz1ouAHmpJLctQJs4jh51DviwdM1StDNxY8=;
- b=ueIB1Yv7TYLmSLytN1fiKkwtVA6ikv8mTJp97ZBrCiItymVj5+M3JlPYK2DlN6YMxVGaCJvY
- HvTA/QSPVjfhOQ61PhJkw0837rU3vLS8pM82ZUIqkZ1eS4xfrggdOVZG84r5X4dCdm4Q9JSb
- tzfSD8g+nweFsYxQiIyJ4PSPcts=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 5f88346c588858a304d95393 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 15 Oct 2020 11:37:16
- GMT
-Sender: ssreeela=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4FA6AC433CB; Thu, 15 Oct 2020 11:37:15 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: ssreeela)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 87F7AC433F1;
-        Thu, 15 Oct 2020 11:37:14 +0000 (UTC)
+        Thu, 15 Oct 2020 09:24:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47122 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728639AbgJONYf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Oct 2020 09:24:35 -0400
+X-Greylist: delayed 546 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 15 Oct 2020 06:24:35 PDT
+Received: from dvalin.narfation.org (dvalin.narfation.org [IPv6:2a00:17d8:100::8b1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EFC8C061755;
+        Thu, 15 Oct 2020 06:24:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1602767724;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=OtGm/dfhR5/P3i7g9bPbe0G2sAeMsBvVGJxEpCJumWI=;
+        b=i5HXmdWP+XlalAt5YZiibjn6udv7Iws/fYElEkwacu9NI37tUdvpcRARcM2RxnEakZKA61
+        Mds3VWUq/c7kHxaubFcsLdAGdcPD4WETdFW30u9T7KIY9E2VDcKq6ZOqAi+TdZ5EJojVW0
+        reFOPhne7wK4+mJp970TpEj7z2qVI0Q=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     ath11k@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, devicetree@vger.kernel.org,
+        Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH 1/2] dt: bindings: add new dt entry for ath11k calibration variant
+Date:   Thu, 15 Oct 2020 15:15:00 +0200
+Message-Id: <20201015131501.1939685-1-sven@narfation.org>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
 Content-Transfer-Encoding: 8bit
-Date:   Thu, 15 Oct 2020 17:07:14 +0530
-From:   ssreeela@codeaurora.org
-To:     Peter Oh <peter.oh@eero.com>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govindaraj Saminathan <gsamin@codeaurora.org>
-Subject: Re: [PATCH v3] ath11k: cold boot calibration support
-In-Reply-To: <b0d42c5e-8aac-cea2-bc6d-3a6341689d05@eero.com>
-References: <1600163991-2093-1-git-send-email-ssreeela@codeaurora.org>
- <b0d42c5e-8aac-cea2-bc6d-3a6341689d05@eero.com>
-Message-ID: <66888db2618270660f38a0c89226332f@codeaurora.org>
-X-Sender: ssreeela@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-Spam: Yes
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-09-18 01:24, Peter Oh wrote:
-> On 9/15/20 2:59 AM, Sowmiya Sree Elavalagan wrote:
->> From: Govindaraj Saminathan <gsamin@codeaurora.org>
->> 
->> cold boot calibration is the process to calibrate all the channels
->> during the boot-up to avoid the calibration delay during the
->> channel change.
->> During the boot-up, firmware started with mode “cold_boot_calibration”
->> Firmware calibrate all channels and generate CalDb(DDR).
->> Subsequent WIFI ON will reuse the same CalDb.
-> Can you clarify the definition of "WIFI ON"?
+The bus + qmi-chip-id + qmi-board-id is not enough to identify the correct
+board data file on IPQ6018 based devices. Multiple different boards share
+the same values. Only the original reference designs can currently be
+identified and loaded from the board-2.bin. But these will not result in
+the correct calibration data when combined with the pre-calibration data
+from the device.
 
-WIFI ON here refers to wireless interfaces bring
-up(reinitialised) in normal mode
+An additional "variant" information has to be provided to select the
+correct board data for a design which was modified by an ODM. This follows
+the same approach as ath10k.
 
->> Firmware restarted with Mission mode to continue the normal operation.
-> 
-> Please change the mission mode to normal according to
-> ATH11K_FIRMWARE_MODE_NORMAL.
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ .../devicetree/bindings/net/wireless/qcom,ath11k.yaml       | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Sure we will change that
-> 
-> Which code it sets back to normal mode from cold boot mode? I don't see 
-> it.
-> 
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+index 4b365c9d9378..6af999191559 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+@@ -144,6 +144,12 @@ properties:
+         * reg
+         * reg-names
+ 
++  qcom,ath11k-calibration-variant:
++    $ref: /schemas/types.yaml#/definitions/string
++    description:
++      string to uniquely identify variant of the calibration data in the
++      board-2.bin for designs with colliding bus and device specific ids
++
+ required:
+   - compatible
+   - reg
+-- 
+2.28.0
 
-Please check the function ath11k_qmi_fwreset_from_cold_boot where 
-firmware is reset.
-During restart, firmware mode will be reset to normal.
->> +static int ath11k_qmi_process_coldboot_calibration(struct ath11k_base 
->> *ab)
->> +{
->> +	int timeout;
->> +	int ret;
->> +
->> +	ret = ath11k_qmi_wlanfw_mode_send(ab, 
->> ATH11K_FIRMWARE_MODE_COLD_BOOT);
->> +	if (ret < 0) {
->> +		ath11k_warn(ab, "qmi failed to send wlan fw mode:%d\n", ret);
->> +		return ret;
->> +	}
->> +
->> +	ath11k_dbg(ab, ATH11K_DBG_QMI, "Coldboot calibration wait 
->> started\n");
->> +
->> +	timeout = wait_event_timeout(ab->qmi.cold_boot_waitq,
->> +				     (ab->qmi.cal_done  == 1),
->> +				     ATH11K_COLD_BOOT_FW_RESET_DELAY);
->> +	if (timeout <= 0) {
->> +		ath11k_warn(ab, "Coldboot Calibration timed out\n");
->> +		return -ETIMEDOUT;
-> 
-> Does it make ath11k firmware stay in cold boot mode when timeout 
-> happens?
-> 
-> If so, is it worthy to have WLAN usuable due to cold boot calibration 
-> failure?
-> 
-> As I understand, initial calibration on current operation channel will
-> be done regardless of cold boot calibration
-> 
-
-Agreed, these comments will be addressed in the next patch set.
->> +	}
->> +
->> +	ath11k_dbg(ab, ATH11K_DBG_QMI, "Coldboot calibration wait ended\n");
->> +
->> +	return 0;
->> +}
->> +
->>   static int
->>   ath11k_qmi_driver_event_post(struct ath11k_qmi *qmi,
->>   			     enum ath11k_qmi_event_type type,
->> @@ -2597,9 +2643,16 @@ static void ath11k_qmi_driver_event_work(struct 
->> work_struct *work)
->>   				break;
->>   			}
->>   -			ath11k_core_qmi_firmware_ready(ab);
->> -			ab->qmi.cal_done = 1;
->> -			set_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags);
->> +			if (ath11k_cold_boot_cal && ab->qmi.cal_done == 0 &&
->> +			    ab->hw_params.cold_boot_calib) {
->> +				ath11k_qmi_process_coldboot_calibration(ab);
->> +			} else {
->> +				clear_bit(ATH11K_FLAG_CRASH_FLUSH,
->> +					  &ab->dev_flags);
->> +				clear_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags);
-> Please split this patch into a separate patch. It's not directly
-> related to cold boot.
-
-This resets the flag to commence normal operation when firmware switches 
-to normal mode after cold boot calibration.
-Once the firmware is ready we clear this flag so that it will not block 
-any further communication with firmware.
->> +				ath11k_core_qmi_firmware_ready(ab);
->> +				set_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags);
->> +			}
->>     			break;
->>   		case ATH11K_QMI_EVENT_COLD_BOOT_CAL_DONE:
-> 
-> Thanks,
-> 
-> Peter
