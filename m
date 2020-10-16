@@ -2,85 +2,118 @@ Return-Path: <SRS0=3nlF=DX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C19A3C43457
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 00:27:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF79EC433E7
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 01:08:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 688DF207F7
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 00:27:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94F0E2087D
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 01:08:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="YL9z9UHO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d6gs8eEg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731858AbgJPA07 (ORCPT
+        id S2388756AbgJPBEd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Oct 2020 20:26:59 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:38554 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731753AbgJPA07 (ORCPT
+        Thu, 15 Oct 2020 21:04:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42844 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727698AbgJPBEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Oct 2020 20:26:59 -0400
-X-UUID: aa616be3f0374b52a30e8f6fee3bafcc-20201016
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=bMfVRMKx8CbHQ6zK9+0AUtlDVS68xAYQbTyAUQ/UhAs=;
-        b=YL9z9UHOYCi0OqlZmyqev+ymc//V4tYB0iVlDGjtehIJ8utEYhebjMaJ7ek09ZyGwLguwzH2vBCc+L0RuBABrt7t32OvuLnBu7Vs9LpXOsWO/Md0yGCSiMtLZuB6L9xzP/mom4Vj7+zkenfXyVOcZqFWdXOIsKtPkLoblKTIZW8=;
-X-UUID: aa616be3f0374b52a30e8f6fee3bafcc-20201016
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 266506514; Fri, 16 Oct 2020 08:26:50 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 16 Oct 2020 08:26:47 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 16 Oct 2020 08:26:42 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <ryder.lee@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>, Sean Wang <objelf@gmail.com>,
-        YN Chen <YN.Chen@mediatek.com>
-Subject: [PATCH 1/2] mt76: mt7663: handle failure event for patch semaphore cmd
-Date:   Fri, 16 Oct 2020 08:26:41 +0800
-Message-ID: <267346a9a9c5f71caec03292b6c33b39864b38c5.1602807276.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
+        Thu, 15 Oct 2020 21:04:33 -0400
+Received: from mail-lf1-x141.google.com (mail-lf1-x141.google.com [IPv6:2a00:1450:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B496C061755
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2020 18:04:33 -0700 (PDT)
+Received: by mail-lf1-x141.google.com with SMTP id z2so864653lfr.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2020 18:04:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=cWLcvgRHCQdlC5HKIAZhx48ho8BZ0djIP0nz2utcEXI=;
+        b=d6gs8eEgXnPgKObab+mhRs0FJniuh/EvHC4kcPD8b51kCsBsPDF0nC+P89o3dFvioO
+         iQRmkrwhbm/40lLcsfaQD9Z8Rz+KryRawmwrjekYpYzJdyqpTvpzVd0AtYEzugDSFEGr
+         bERNGtkxeXFEx0n4vEBB5gPVkuYAjrbln87StxEAIlAwP6B3VWWUmtsMbjnmg2DwJgcK
+         FE5LBkjzsKHM2v/B89JIRTxpc202F22HbNRHMh4DFpSo13sLME06Mp2egtJR3yupLFUe
+         Dcd+JZggfMJvdaooE1Vvnd3Um/jPRfUGI4AzZk9Z1hnBBz01P+UN28LeSCnCpf92g8JG
+         64UQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=cWLcvgRHCQdlC5HKIAZhx48ho8BZ0djIP0nz2utcEXI=;
+        b=ZgY2YrBECn3d1EOdxU9EDbYa33THsB+mDd+fJOBhFUrWrhNm1z8L1wU/63K4uwtB2O
+         am/nvquC6n18Jvohn1M/ryvErY2bzA6qUoWe6CtwALE1RfSLv4lonowqgt3c98OZHwUT
+         Gk1Y5XY33DnIWKP14YJEwjGffV632kOVej8KuIrYWFSHYL8F8Bq+i5fq6j5LZtkAHvny
+         j/ndEFNdHONZBPRj9aMbtqWInFEb6Rwm4pNBSq651WnlzAKHb85vkr7mnfYwoG7jUv3j
+         ZK6IPb3zBQA1HiihkdBJud4QKzggMUDZzVQigQFmdSVLDzxBCi9ADrMKXQMvAhI/96Ww
+         ntKQ==
+X-Gm-Message-State: AOAM532Haqi2VuSP9wpj34JanRdL0iki5T1/p3RznwniwNPXrOxWyJy0
+        raIkk2SCg3XQqwzlEKWl+xu7CeeqnpyhxKE8rrs=
+X-Google-Smtp-Source: ABdhPJwBQsFkTYLlprwQbz6Jw0oLof/P3UXX53ZIdXXx96lqKYOe8dv6TLlKh+jH8237HWNEx2pQk8r8OB+0/3nEE4E=
+X-Received: by 2002:ac2:5325:: with SMTP id f5mr428582lfh.86.1602810271223;
+ Thu, 15 Oct 2020 18:04:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 9B668A4925E40B91B0B7B564063D5E6D26155C7129E86D65B82670778F1CCA332000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+References: <3BFCA289-ADD8-4755-80C5-1889A9AFB41D@libreelec.tv>
+In-Reply-To: <3BFCA289-ADD8-4755-80C5-1889A9AFB41D@libreelec.tv>
+From:   Forest Crossman <cyrozap@gmail.com>
+Date:   Thu, 15 Oct 2020 20:04:19 -0500
+Message-ID: <CAO3ALPytXHdb6svA+_EbmV7+g9+FdyQhBKWHUJwOGQxyJgL=kQ@mail.gmail.com>
+Subject: Re: mt76 support for MT7668 SDIO?
+To:     Christian Hewitt <chewitt@libreelec.tv>
+Cc:     Linux Wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogU2VhbiBXYW5nIDxvYmplbGZAZ21haWwuY29tPg0KDQpKdXN0IGZvbGxvdyB1cCB2ZW5k
-b3IgZHJpdmVyIHRvIHJldHJ5IGEgZmV3IHRpbWVzIG9idGFpbmluZyBwYXRjaA0Kc2VtYXBob3Jl
-IHdoZW4gdGhlIGV2ZW50IGlzIFBBVENIX05PVF9ETF9TRU1fRkFJTC4gVGhhdCB1c3VhbGx5DQpo
-YXBwZW5zIGluIEJsdWV0b290aCBhbmQgV2lmaSBkcml2ZXIgY29udGVuZHMgdG8gZG93bmxvYWQg
-cGF0Y2gNCnNpbXVsdGFuZW91c2x5Lg0KDQpDby1kZXZlbG9wZWQtYnk6IFlOIENoZW4gPFlOLkNo
-ZW5AbWVkaWF0ZWsuY29tPg0KU2lnbmVkLW9mZi1ieTogWU4gQ2hlbiA8WU4uQ2hlbkBtZWRpYXRl
-ay5jb20+DQpTaWduZWQtb2ZmLWJ5OiAgU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29t
-Pg0KLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMg
-fCA5ICsrKysrKysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDEgZGVsZXRp
-b24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYv
-bXQ3NjE1L21jdS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUv
-bWN1LmMNCmluZGV4IDJiMTdiZDFjMmEzMi4uYzk5MGNjZDZmNDcyIDEwMDY0NA0KLS0tIGEvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCisrKyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21jdS5jDQpAQCAtMTk0NSwxNCAr
-MTk0NSwyMSBAQCBzdGF0aWMgaW50IG10NzYxNV9sb2FkX3BhdGNoKHN0cnVjdCBtdDc2MTVfZGV2
-ICpkZXYsIHUzMiBhZGRyLCBjb25zdCBjaGFyICpuYW1lKQ0KIHsNCiAJY29uc3Qgc3RydWN0IG10
-NzYxNV9wYXRjaF9oZHIgKmhkcjsNCiAJY29uc3Qgc3RydWN0IGZpcm13YXJlICpmdyA9IE5VTEw7
-DQotCWludCBsZW4sIHJldCwgc2VtOw0KKwlpbnQgbGVuLCByZXQsIHNlbSwgYyA9IDUwOw0KIA0K
-K3JldHJ5Og0KIAlzZW0gPSBtdDc2MTVfbWN1X3BhdGNoX3NlbV9jdHJsKGRldiwgMSk7DQogCXN3
-aXRjaCAoc2VtKSB7DQogCWNhc2UgUEFUQ0hfSVNfREw6DQogCQlyZXR1cm4gMDsNCiAJY2FzZSBQ
-QVRDSF9OT1RfRExfU0VNX1NVQ0NFU1M6DQogCQlicmVhazsNCisJY2FzZSBQQVRDSF9OT1RfRExf
-U0VNX0ZBSUw6DQorCQlpZiAoaXNfbXQ3NjYzKCZkZXYtPm10NzYpICYmIGMtLSkgew0KKwkJCW1z
-bGVlcCgxMDApOw0KKwkJCWdvdG8gcmV0cnk7DQorCQl9DQorCQlmYWxsdGhyb3VnaDsNCiAJZGVm
-YXVsdDoNCiAJCWRldl9lcnIoZGV2LT5tdDc2LmRldiwgIkZhaWxlZCB0byBnZXQgcGF0Y2ggc2Vt
-YXBob3JlXG4iKTsNCiAJCXJldHVybiAtRUFHQUlOOw0KLS0gDQoyLjI1LjENCg==
+CC: linux-mediatek
 
+On Sun, Jun 7, 2020 at 11:52 PM Christian Hewitt <chewitt@libreelec.tv> wro=
+te:
+>
+> I=E2=80=99m a maintainer for a distro that runs Kodi mediacentre on many =
+popular ARM SBCs and Android STBs (replacing Android).
+>
+> Similar to my request on RTL8822CS, I have a number of requests for WiFi =
+support on Amlogic SoC devices using MT7668 chips. The BT side of the modul=
+e is supported in mainline for sometime, but there is no mention of WiFi.
+>
+> Is there any plan or timeline for MT7668 SDIO support in mt76? .. I=E2=80=
+=99m struggling to even find vendor drivers for this chip.
+
+I realize it's been about four months since you sent this email, but
+if you're still looking for sources for the downstream driver, I know
+they're included in the source code releases for the Amazon Fire TV
+Stick 4K[1] (latest one here[2]). Inside that tarball, there's a
+"platform.tar" archive. Inside "platform.tar" you'll find the kernel
+sources for the Fire TV Stick 4K, which includes the WiFi driver for
+the MT7668 and several other devices. Specifically, you'll find the
+MT7668 drivers under
+"kernel/mediatek/mt8695/4.4/drivers/misc/mediatek/connectivity/wlan/gen4"
+and "vendor/amazon/wlan/mediatek/driver/mt76x8" (not sure what the
+difference is).
+
+I, too, am interested in upstream support for the MT7668 since I have
+several USB dongles (well, technically they use custom connectors and
+are custom-made to be used inside specific TVs[3], but they enumerate
+fine on a normal PC) with the USB variant of that chip, so if anyone
+has any plans to add that support, I'd also like to know. And if
+someone is interested in doing this and needs hardware, devices that
+use the USB variant of the MT7668 are pretty widely available and can
+easily be found with this eBay search URL[4]. The user manual[3] for
+the devices listed in that search has the pinout for the custom
+connector on the board, so it's relatively straightforward to solder
+up a USB cable to it to get it working with a computer.
+
+[1]: https://www.amazon.com/gp/help/customer/display.html?nodeId=3D20145268=
+0
+[2]: https://fireos-tv-src.s3.amazonaws.com/o5P7dfByxbBhcfQqI8IqUREyUc/Fire=
+TVStick4K-6.2.7.3-20200724.tar.bz2
+[3]: https://fccid.io/BEJLGSBWAC92/User-Manual/User-Manual-3945059.pdf
+[4]: https://www.ebay.com/sch/i.html?_nkw=3D%28eat64454801%2Clgsbwac92%2Ctw=
+cm-k505d%29
