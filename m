@@ -2,99 +2,113 @@ Return-Path: <SRS0=3nlF=DX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B917AC433E7
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 06:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAFACC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 06:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EAFD207C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 06:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D142207C4
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Oct 2020 06:36:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="moNYnS+Z"
+	dkim=pass (1024-bit key) header.d=purevlc.onmicrosoft.com header.i=@purevlc.onmicrosoft.com header.b="gnsX2K+u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391043AbgJPGB3 (ORCPT
+        id S2394295AbgJPGgv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Oct 2020 02:01:29 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:56164 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390983AbgJPGB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Oct 2020 02:01:28 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1602828087; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=3RniiqB+zkqxMCvtU+f3tA/AMpl7AoAO184Gvby039w=; b=moNYnS+ZxUPeEZjYA2+1ylvDfw8lDUuSK/ovUU/khJFza9nHfnHER5FJ0D85TfOWXWMkDVhs
- sKJECdIOw9Y8KVur0rroNq0Bg+GZLB1qU1l7C0avbKIYKPQ95xasw+jrxeEPOoM8icpPxrG0
- yiPS0ShGgThDxwtgLymhDCn03PY=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f893722a03b63d67333a024 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 16 Oct 2020 06:01:06
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E8865C433CB; Fri, 16 Oct 2020 06:01:05 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CCF45C433C9;
-        Fri, 16 Oct 2020 06:01:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CCF45C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     Wireless <linux-wireless@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>,
-        Ido Schimmel <idosch@mellanox.com>,
+        Fri, 16 Oct 2020 02:36:51 -0400
+Received: from mail-eopbgr110102.outbound.protection.outlook.com ([40.107.11.102]:2336
+        "EHLO GBR01-CWL-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2392207AbgJPGgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Oct 2020 02:36:50 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nQYS5yGV41cFmp8NQD1RHaaYAbK59ldXltypxXpqnSTOFz+Hek314J7Q6AAHR6ahGi5mnxDKFdVK/1WP+r0aeP7dSM/gRitfZ494/AfdYZIaATCENINqEMiAEIwewLStoHTrJPb0h57JnQx9hubZBcWB9nJEQLsfWFo7795KxyLp6ifuWyIkhJRdzCWti5xBAifez6hjaMmcTh7lsKS/6bvbK3vfOBiBBuWJOvb60WjSHzFntgqbIpTFnMSW1+AVNgeU1L69HoS05iP5+UvP89AXY4QnSniKXsPz5FnXjRUq79rwe2qWRUv+1FAbSgRLbzCZ3xPp9PEBRkrMwJYJDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ATWx5aWeV2yYP8Hwg+ssOnHUhsZl0FdjmGg2xBjUnYk=;
+ b=Y2Xq6iI4cKbahgLgsGSv8qWTNYw3tki/MZEy5ptJLibry7j5ZhXoed6Fvi165CjfczuxSpMdDCQ3nioZQLg7kGumYx4h32TSz018WadKGqvbDMC42AIb3ktbtUlGjAfBPx4xmIDjMo4uXS6gedEXdqxvgG6/nnlRRsWGa2PtqV3FX/ia16feitEYjwMGiVWA3cE2RzXBXwhMgffEZ7g+WU8RuzsScE7EPcUS3+tW5nqOVWUJ86jENB6eEnPg7J/wTbExgvOF44mQh3YMOJz0sphfDYHEV7So4zUfLIiDzdoxW+3YWBvQptJCCLKajNfbGLFUvARNxV8ItFfZfY7iUQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=purelifi.com; dmarc=pass action=none header.from=purelifi.com;
+ dkim=pass header.d=purelifi.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=purevlc.onmicrosoft.com; s=selector2-purevlc-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ATWx5aWeV2yYP8Hwg+ssOnHUhsZl0FdjmGg2xBjUnYk=;
+ b=gnsX2K+uyukVrajVj4N9U3vSnYtCbeDNxUGGwpBp98ddwHfq9VZCiHwyxZXNkmOt8NAptP/WzI2sg0WQrca44yinEMkwhOuTBMF2h1EegtFvBfeyeJ9Q8Yss7yOMpW5bBiJ33ki6Yt/uqkPX4AJOgcSvyJFtKL34qcsuvn8ELDA=
+Received: from LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:ef::9) by
+ LNXP265MB0618.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:12::17) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3455.28; Fri, 16 Oct 2020 06:36:47 +0000
+Received: from LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::b8d7:c2a7:cbbd:6c2b]) by LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::b8d7:c2a7:cbbd:6c2b%7]) with mapi id 15.20.3477.021; Fri, 16 Oct 2020
+ 06:36:47 +0000
+From:   Srinivasan Raju <srini.raju@purelifi.com>
+To:     Joe Perches <joe@perches.com>
+CC:     Mostafa Afgani <mostafa.afgani@purelifi.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Michael Jeanson <mjeanson@efficios.com>
-Subject: Re: linux-next: manual merge of the wireless-drivers tree with the net tree
-References: <20201016084419.3c6e048a@canb.auug.org.au>
-Date:   Fri, 16 Oct 2020 09:01:00 +0300
-In-Reply-To: <20201016084419.3c6e048a@canb.auug.org.au> (Stephen Rothwell's
-        message of "Fri, 16 Oct 2020 08:44:19 +1100")
-Message-ID: <87imbazp43.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] [PATCH] [v3] wireless: Initial driver submission for
+ pureLiFi STA devices
+Thread-Topic: [PATCH] [PATCH] [v3] wireless: Initial driver submission for
+ pureLiFi STA devices
+Thread-Index: AQHWofIO6pqL25Wx2UmQlZy/whAuaqmZQxAAgACGOyE=
+Date:   Fri, 16 Oct 2020 06:36:47 +0000
+Message-ID: <LOYP265MB1918B3958A20761CAB5F0F58E0030@LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM>
+References: <20200928102008.32568-1-srini.raju@purelifi.com>
+         <20201014061934.22586-1-srini.raju@purelifi.com>,<cb5dce0a645418d1cbab93448a15d8c3109d9990.camel@perches.com>
+In-Reply-To: <cb5dce0a645418d1cbab93448a15d8c3109d9990.camel@perches.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: perches.com; dkim=none (message not signed)
+ header.d=none;perches.com; dmarc=none action=none header.from=purelifi.com;
+x-originating-ip: [103.104.125.99]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 95ef8462-96a7-483c-3fd0-08d8719ddb2b
+x-ms-traffictypediagnostic: LNXP265MB0618:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <LNXP265MB06185E5F5F31B74E2AFB3707E0030@LNXP265MB0618.GBRP265.PROD.OUTLOOK.COM>
+x-ms-oob-tlc-oobclassifiers: OLM:5236;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: RC3X5HOk9tPcGb9vwcdLesB+pXbAbNXf3qKUWpDNqkrnzVzLi66RQM7euQw3DsUZPqhLC/OlpA17ZbWOzf9k/PR2wEFpDjQvm5LTiwzrO2ErlDDQO0BotSlUR1AFjdy3K5CA+s2/H4N4p5WrehYvejpYw1zjQShiDOlaGRKNEdPoz3BbfUaayIN/E+a7lgIk7EwC2zeVsI3QL5F06iyGMOqFKmnRMplQC7DeaAurhoB+BbBCgvERbMiYeyWtxIXrbBS+xtfezFZzSBxFbaU4btiATYVtj6oXJOE6fuUrC4YRHNwWkUmPNpMflTp2fyNa
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(6029001)(4636009)(39830400003)(396003)(376002)(136003)(346002)(366004)(2906002)(86362001)(52536014)(7416002)(7696005)(66556008)(91956017)(8676002)(558084003)(4270600006)(76116006)(66946007)(66476007)(6916009)(478600001)(64756008)(54906003)(26005)(316002)(186003)(66446008)(8936002)(5660300002)(9686003)(6506007)(4326008)(55016002)(71200400001)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: zLz1zNAyT7ji7hYN2slVwi+3voIF0PrXjwlzL/D2uklY1zRAwMzAtgwdJtn+lV3iYXx1KcI1Rc3+CROtkTkNw6lPyK7OkOqRQkHfb955+o2RlKVy2ok2IS76nZYshRfIfdEJ2pqeXnWJ34VccUrICuSX4bg5k5OPVoWUOlkBby0B+UBtDBXhk+kFsTumWn1TbPh3EoBFeGInykIfWauzBk8FedxuNQZAI/02AoRKld4pRw0A7/lM31pnM705j88iM+i9CiaUfh0BEfF5LG7UqBB4qXZQF6YiCs6Aem6cGgxmPPHK1XQd4up21r7DcXdg277LCZrLL5gNFRRy4wpOeO/VHiOor02AhB914616abNB2ZI0PiLtXTB2fzU+QLJ0yzn9bseCUd08gWDeVYGXvZUs/G509AYPucaASbDR6vbXRCGYA/TdDFkQL6Gc0NmOhQ/PaehhYnW7vuhv4aDfNwOaqvql9jBiRGmLaxcHL8cRBzfHscw4Lm11nMQW9alLOWJ8ToX76AM4A4/3hlKaIstF7AbjaMTe9Jcm3AzBfaSTg55z08cHCovH28to7jSd2rFM5FFiX98/YWHBu6bIhkFvdXDrCsxIHjk6pTlPxhezUcT6dDDYQTtvLmcCFS0d/IKAM98TnziWZTUc2UIONw==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain
+X-OriginatorOrg: purelifi.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 95ef8462-96a7-483c-3fd0-08d8719ddb2b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Oct 2020 06:36:47.3355
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5cf4eba2-7b8f-4236-bed4-a2ac41f1a6dc
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: WMuubhpbzVxw5wuQsxe5A58LsvmiGeDo7DAifnlJ46Wma2dHm8Dz1O0XiFXjf0+v5hRCSC8akpRYxSqVBPjfrQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LNXP265MB0618
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
-
-> Hi all,
->
-> Today's linux-next merge of the wireless-drivers tree got a conflict in:
->
->   tools/testing/selftests/net/Makefile
->
-> between commit:
->
->   1a01727676a8 ("selftests: Add VRF route leaking tests")
->
-> from the net tree and commit:
->
->   b7cc6d3c5c91 ("selftests: net: Add drop monitor test")
->
-> from the wireless-drivers (presumably because it has merged part of the
-> net-next tree) tree.
-
-Correct, I fast forwarded wireless-drivers from net-next to prepare for
-sending bug fixes in the end of the merge window. But I didn't realise
-that it might break linux-next build, so wireless-drivers should always
-follow net tree and not net-next. Sorry about that.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+=0A=
+Thanks for your comments Joe, I have resubmitted with the comments addresse=
+d=0A=
+=0A=
+Regards,=0A=
+Srini=0A=
+=0A=
+=0A=
