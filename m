@@ -2,113 +2,114 @@ Return-Path: <SRS0=676Y=DZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E267C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5C4EC433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 22:51:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA3022269
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:59:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603051153;
-	bh=f3mIBaTX5UcmzkqFWcYCbEA40V1tAclHvuZfTWZ31vQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=L5ywareXKXLBu+jMebFTxefXQCBVsXZgQFqdQAYFUC4BQ24Nk7QmPmyuOMUxIqezv
-	 hG39ugNtD/oKBmQl0yPJToeg3AA5mtop+k0KeEksPkXwVllMozOZj4rx6jyWKOJfSZ
-	 0/5HcofSjCWoAk1BJfQ5SZX3ndmCiUVJ5WESzNes=
+	by mail.kernel.org (Postfix) with ESMTP id 8836322272
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 22:51:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oPvPgn4Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727881AbgJRT7D (ORCPT
+        id S1729478AbgJRWvz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:59:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57236 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727923AbgJRTSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:18:55 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 18A1C22314;
-        Sun, 18 Oct 2020 19:18:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048734;
-        bh=f3mIBaTX5UcmzkqFWcYCbEA40V1tAclHvuZfTWZ31vQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BFiFdUE2QmjruKx0oKWxvRHh1ABSj28Mc7v3oQE0257Qyk9mCM9PLCjpjYXjFT7rF
-         CWDMD99Z20eVlFwX5B7jVxDcPKdlxa4I+DxaZRQfNpOMrUnvqkPcK5y+exiGMcqUgW
-         +pDNa3cfHEH/RO04OauRNEaCc6f8aJemxUT25O8I=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Thomas Pedersen <thomas@adapt-ip.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 038/111] mac80211: handle lack of sband->bitrates in rates
-Date:   Sun, 18 Oct 2020 15:16:54 -0400
-Message-Id: <20201018191807.4052726-38-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
-References: <20201018191807.4052726-1-sashal@kernel.org>
+        Sun, 18 Oct 2020 18:51:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36930 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726681AbgJRWvz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 18:51:55 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E56C2C061755
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2020 15:51:54 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id dn5so8313240edb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2020 15:51:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=t3ZpM9shERXmWg08MXu80HCVYbgk7EEOL98h1/n7aRQ=;
+        b=oPvPgn4YiaZSmaTEH08C3dnrJ6iOUIHtI/KrHCDEQkKG6557BAMyaurOaiEg9zm2zX
+         nmCILaz0DkoBk0wpnukidptI+IG4xa3t7HJfktLMpkQW8Xcur5VzVyBgHG7IoAR2YB1p
+         Q9FUwBJtwSCi3Zoc16RMHNN+t0hKHVYQjwvHL91ANpYyX0sxjigTnGb6k1yJ0e5AmOC0
+         9uik3bBcxGX8iPf/h6kAYX6xtL+AMc9T/Ybt4icqTpBNaTGNVK357F7x5m9Y9U1dfac2
+         YYvDe/0da8FgRSP+EbZRRvIRAQbYlj3JURZZBwmzEVzrMMUm9mG8Cxgey/gD6fMeEhiU
+         h5xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=t3ZpM9shERXmWg08MXu80HCVYbgk7EEOL98h1/n7aRQ=;
+        b=PbuyY+V4an+LASB/r+g7nRChGLstOWuzaiUjokYH3ej8xeRXYhMWeJ2e4yv70/HHAI
+         XYO6TY1NLyemw0+OYAGu5iw6WEkLu2HnkpaVWhPAm+zjTmwAOy1EzRobgEXv/TBVtWyl
+         AMGMLeFzoHHtXKk6PVqRHPZTFDny5msCXEy7cADxIaCCMpRmkKXfGnnU4XZxVPXhH5NR
+         E1CiioHEtsS1CcZeOjTDoyTqeEnmNufRZL1ipF4t02HbbQFZXI4VGkqEtceR9l0p68lW
+         0aGsMIl2hoVOe5sMXe7QyvF8sVc3F2n+gVH+ttuF6nDEh3lWff/lMvMZ7bMDimD1JrTX
+         SU/g==
+X-Gm-Message-State: AOAM531wypNlZOV+aRmgbBXUYpICz67Lw6XqeT28DHi0LD2z9nXz9GxF
+        ZFuMyueaQoVLyjffSzmokFSplWdWU+c42AWbpM4=
+X-Google-Smtp-Source: ABdhPJzUM2MmhboocelG+sAzNqsbwx5k9W6ik/Pp6fDlCfW64Nmh5dxzKxKc9ciB/HWzj6l6YiNo6Mw/4QcJ43aTyR4=
+X-Received: by 2002:aa7:d30f:: with SMTP id p15mr14910274edq.256.1603061513596;
+ Sun, 18 Oct 2020 15:51:53 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <CAO6ttSmiXPnA9z_31CV2rS=DO0c48jSJGBAkOgWiD-GOG73Ffw@mail.gmail.com>
+ <CA+ASDXO75rYv29YvK=0zUkB494DsA_WA+n3UttRiko2awzUkOw@mail.gmail.com>
+ <362f154dff1b4d6f88503af813eae406@realtek.com> <1f33cbf8-ccf9-354e-a0ac-0911c6acded1@lwfinger.net>
+ <CAO6ttS=ABWLQbgRxfbxsqNwr9bkEDJm6dBbvaZAM94GKYP+txw@mail.gmail.com> <87h7qrq4p5.fsf@tynnyri.adurom.net>
+In-Reply-To: <87h7qrq4p5.fsf@tynnyri.adurom.net>
+From:   David Rubio <david.alejandro.rubio@gmail.com>
+Date:   Sun, 18 Oct 2020 19:51:42 -0300
+Message-ID: <CAO6ttSkXSt3UC5P-RDCDUhDC66MRb5UkvCcbT5POzkve9G=GyA@mail.gmail.com>
+Subject: Re: rtw88 / rtl_8821ce: rfe 2 is not supported
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Andy Huang <tehuang@realtek.com>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Pedersen <thomas@adapt-ip.com>
+There's no possibility of including it on 5.10 changes? Seems like a
+trivial patch
+Or did the merge window pass already? I'm not aware of it by now.
 
-[ Upstream commit 8b783d104e7f40684333d2ec155fac39219beb2f ]
+Thanks though. Very much appreciated.
 
-Even though a driver or mac80211 shouldn't produce a
-legacy bitrate if sband->bitrates doesn't exist, don't
-crash if that is the case either.
-
-This fixes a kernel panic if station dump is run before
-last_rate can be updated with a data frame when
-sband->bitrates is missing (eg. in S1G bands).
-
-Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
-Link: https://lore.kernel.org/r/20201005164522.18069-1-thomas@adapt-ip.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/mac80211/cfg.c      | 3 ++-
- net/mac80211/sta_info.c | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 87fddd84c621e..82d516d117385 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -709,7 +709,8 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 		u16 brate;
- 
- 		sband = ieee80211_get_sband(sta->sdata);
--		if (sband) {
-+		WARN_ON_ONCE(sband && !sband->bitrates);
-+		if (sband && sband->bitrates) {
- 			brate = sband->bitrates[rate->idx].bitrate;
- 			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
- 		}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f2840d1d95cfb..fb4f2b9b294f0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2122,6 +2122,10 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
- 		int rate_idx = STA_STATS_GET(LEGACY_IDX, rate);
- 
- 		sband = local->hw.wiphy->bands[band];
-+
-+		if (WARN_ON_ONCE(!sband->bitrates))
-+			break;
-+
- 		brate = sband->bitrates[rate_idx].bitrate;
- 		if (rinfo->bw == RATE_INFO_BW_5)
- 			shift = 2;
--- 
-2.25.1
-
+El dom., 18 oct. 2020 a las 6:11, Kalle Valo (<kvalo@codeaurora.org>) escri=
+bi=C3=B3:
+>
+> David Rubio <david.alejandro.rubio@gmail.com> writes:
+>
+> >> https://lore.kernel.org/linux-wireless/c0c336d806584361992d4b52665fbb8=
+2@realtek.com/
+> >
+> > I tested that patch. Works fine for me for wifi, but I can't test BT
+> > to be sure it works 100%. Most people will be fine with just wifi
+> > though, I guess, considering the objections were mostly about BT (I
+> > understood -from the objection- that connecting to a AP when having a
+> > BT device paired breaks?)
+>
+> If the patch helps people to get wifi working we should take it, BT coex
+> issues can be fixed in followup patches. IIRC there has been multiple
+> reports about this so I'm leaning towards taking the patch to v5.11.
+>
+> I changed the patch to New state and my plan is to take it to
+> wireless-drivers-next once the tree opens:
+>
+> https://patchwork.kernel.org/project/linux-wireless/patch/20200805084559.=
+30092-1-kai.heng.feng@canonical.com/
+>
+> --
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches
