@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 786FBC433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 778C2C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3AC5220714
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 445AB20714
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050456;
-	bh=w/Sna8B+cBW1cHgRCUsiscRCXsumyDFjekjoM3S3xXg=;
+	s=default; t=1603050465;
+	bh=dXX67ugBaay3YEwWMjuBSOIs7iMiA2XdkQBHJ0q0d94=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DCpzwii44ep3uTma6nSWuzzS0KpNCb6M2TuJZD/H3RY0ZPswh7T/xWcRjm5sT02NT
-	 S69pJlr/0tz8ADOZisiEwpVbmlpXDzC9kCl8uG9LmYUSopBq+BiSEPSn+1RHuUkHDJ
-	 dKooEclqaK9YBl0B1cH+39nO5BXIPzDxTKi6ZOQY=
+	b=VdP0X5n+on5W5KdG/Hu9ndUM67AwY0ujf4hawx6rEcRZXKE/Hb4SN0dXSjdxiSOys
+	 jH8flEDv4vrWJtjn32p0mjMq5yR5IXj62Q/d4Ff2k+eKCb74pTCrWFa56kldlCM6HY
+	 CA/D6uzS6xwJOBz40w6rr86E/10kbPnEPZhbejYY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387490AbgJRTra (ORCPT
+        id S1729779AbgJRTWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:47:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35084 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:22:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34926 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729807AbgJRTWW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:22:22 -0400
+        id S1729761AbgJRTWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:22:15 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3B67D22314;
-        Sun, 18 Oct 2020 19:22:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 63004222E7;
+        Sun, 18 Oct 2020 19:22:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048942;
-        bh=w/Sna8B+cBW1cHgRCUsiscRCXsumyDFjekjoM3S3xXg=;
+        s=default; t=1603048934;
+        bh=dXX67ugBaay3YEwWMjuBSOIs7iMiA2XdkQBHJ0q0d94=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P6AUGVM9QCj6JjaWO5WpYU5kRkwzQnFNsvrPdt9AnGNV6HkjAZdjVkdxx1tK001EX
-         gehHJ/AcjUtSsIlcYZn+slnqGj5oEsiWwVGhu4gtOqPIbVnoU6njKh+VdcQ98lwlxM
-         GaablH1GuQGUSNW7BpbLY6EINSvdngalJG2SR8t4=
+        b=Gu1t/gpfUrQeyEkFcKFeqs0tzyq2OCHoWqY7Gnq7h9LstMCx0LzFLJrbNJDZ/u8mG
+         8vtp199b2v3CPVUpzeA6mCkg/6l+EUihn1ZIaBGCWIR2yz3sWKUTGNjRq5OPmxudBi
+         eWMkf5o2WUQGLcPnE+nBAi0oP5L9PBbQ+/DG5D9s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wang Yufen <wangyufen@huawei.com>, Hulk Robot <hulkci@huawei.com>,
+Cc:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
+        syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Brian Norris <briannorris@chromium.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 095/101] brcm80211: fix possible memleak in brcmf_proto_msgbuf_attach
-Date:   Sun, 18 Oct 2020 15:20:20 -0400
-Message-Id: <20201018192026.4053674-95-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 089/101] mwifiex: don't call del_timer_sync() on uninitialized timer
+Date:   Sun, 18 Oct 2020 15:20:14 -0400
+Message-Id: <20201018192026.4053674-89-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
 References: <20201018192026.4053674-1-sashal@kernel.org>
@@ -61,35 +62,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wang Yufen <wangyufen@huawei.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-[ Upstream commit 6c151410d5b57e6bb0d91a735ac511459539a7bf ]
+[ Upstream commit 621a3a8b1c0ecf16e1e5667ea5756a76a082b738 ]
 
-When brcmf_proto_msgbuf_attach fail and msgbuf->txflow_wq != NULL,
-we should destroy the workqueue.
+syzbot is reporting that del_timer_sync() is called from
+mwifiex_usb_cleanup_tx_aggr() from mwifiex_unregister_dev() without
+checking timer_setup() from mwifiex_usb_tx_init() was called [1].
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Wang Yufen <wangyufen@huawei.com>
+Ganapathi Bhat proposed a possibly cleaner fix, but it seems that
+that fix was forgotten [2].
+
+"grep -FrB1 'del_timer' drivers/ | grep -FA1 '.function)'" says that
+currently there are 28 locations which call del_timer[_sync]() only if
+that timer's function field was initialized (because timer_setup() sets
+that timer's function field). Therefore, let's use same approach here.
+
+[1] https://syzkaller.appspot.com/bug?id=26525f643f454dd7be0078423e3cdb0d57744959
+[2] https://lkml.kernel.org/r/CA+ASDXMHt2gq9Hy+iP_BYkWXsSreWdp3_bAfMkNcuqJ3K+-jbQ@mail.gmail.com
+
+Reported-by: syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>
+Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Cc: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Acked-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1595237765-66238-1-git-send-email-wangyufen@huawei.com
+Link: https://lore.kernel.org/r/20200821082720.7716-1-penguin-kernel@I-love.SAKURA.ne.jp
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 8bb4f1fa790e7..1bb270e782ff2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -1619,6 +1619,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 					  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
- 					  msgbuf->ioctbuf,
- 					  msgbuf->ioctbuf_handle);
-+		if (msgbuf->txflow_wq)
-+			destroy_workqueue(msgbuf->txflow_wq);
- 		kfree(msgbuf);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 6f3cfde4654cc..426e39d4ccf0f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -1353,7 +1353,8 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
+ 				skb_dequeue(&port->tx_aggr.aggr_list)))
+ 				mwifiex_write_data_complete(adapter, skb_tmp,
+ 							    0, -1);
+-		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
++		if (port->tx_aggr.timer_cnxt.hold_timer.function)
++			del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
+ 		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
+ 		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
  	}
- 	return -ENOMEM;
 -- 
 2.25.1
 
