@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE4EC433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20BD9C433E7
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:56:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BA1122268
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:55:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5EB222268
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:56:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050925;
-	bh=dXX67ugBaay3YEwWMjuBSOIs7iMiA2XdkQBHJ0q0d94=;
+	s=default; t=1603050975;
+	bh=mTY9y3pxS8i08iT2C0dGcNyVykiKc/+2kfaNjS4clTA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mXhYSEQnKyQvDWVijC8RAFZpY2pZXMUcuvPmhauyNTEbWx4nQQVmOxUN+Vy0TexPP
-	 vlafseV27JaT0lQfiWM+SiGDu9jg+roEcyaw1jtCkwfbOwjEXTq5vh06TDw1au0DhK
-	 xcQVX7MlWxD46/V5WbtQE0rqXSTD5/l2bDScqZ+w=
+	b=kThwrK8YFfCuFDSZ76tfn/dU3fC2KCCPeby67rkO8keW2+pGso+JpDrPLsb3Vv9On
+	 t5lnqjHc/WRyYXStqEh+c+++l3qjpTlNT5al4NQZ6+le4gLB7iIJ2yRbmCR9A0iTD0
+	 on0Vt47VABoXZPQK8k+ARqn55VqdxhL2xbAU4cXM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733188AbgJRTzU (ORCPT
+        id S1728440AbgJRTTp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:55:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59280 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:19:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58704 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728649AbgJRTUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:20:03 -0400
+        id S1728421AbgJRTTo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:19:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CB0D4222C8;
-        Sun, 18 Oct 2020 19:20:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3427822363;
+        Sun, 18 Oct 2020 19:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048802;
-        bh=dXX67ugBaay3YEwWMjuBSOIs7iMiA2XdkQBHJ0q0d94=;
+        s=default; t=1603048784;
+        bh=mTY9y3pxS8i08iT2C0dGcNyVykiKc/+2kfaNjS4clTA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CZJRVK7SQ56Nzt0d/peWIA1CmVVUlyWcXFNxzAyJ96bu+O66ftTsDnQeWF9IMV9gG
-         N7v/WGJNg/1e1dJMY6ZEXCKFAQx0Vjs3mipWNj6ps+Ue76K/+SC9oJxyrEdqwIWgIj
-         BV32PiXzlJe51RDMosckQGm3tgtAD1DnY3oKnACE=
+        b=ln0ZVIYZir1n2RWRMK+wjH2iRLvUnW30gFA6X6MmgELGNuisDUE4IFiGGjZp3LzKn
+         1immWFqpt5h26FyYPX2UpinjHMzb0xAJg/mZOqMcDjuQKQ11IEv7p1SXcDZ7IwTFLe
+         7dXYnDlUMDIpbLS+k/vhe8cUPVncZntBoLFFIXjM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Brian Norris <briannorris@chromium.org>,
+Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 095/111] mwifiex: don't call del_timer_sync() on uninitialized timer
-Date:   Sun, 18 Oct 2020 15:17:51 -0400
-Message-Id: <20201018191807.4052726-95-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 080/111] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
+Date:   Sun, 18 Oct 2020 15:17:36 -0400
+Message-Id: <20201018191807.4052726-80-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
 References: <20201018191807.4052726-1-sashal@kernel.org>
@@ -62,52 +61,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 
-[ Upstream commit 621a3a8b1c0ecf16e1e5667ea5756a76a082b738 ]
+[ Upstream commit f4443293d741d1776b86ed1dd8c4e4285d0775fc ]
 
-syzbot is reporting that del_timer_sync() is called from
-mwifiex_usb_cleanup_tx_aggr() from mwifiex_unregister_dev() without
-checking timer_setup() from mwifiex_usb_tx_init() was called [1].
+When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
+the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
+freed in the caller function.
 
-Ganapathi Bhat proposed a possibly cleaner fix, but it seems that
-that fix was forgotten [2].
+Fix this by calling wlc_phy_detach_lcnphy in the error handler of
+wlc_phy_txpwr_srom_read_lcnphy before returning.
 
-"grep -FrB1 'del_timer' drivers/ | grep -FA1 '.function)'" says that
-currently there are 28 locations which call del_timer[_sync]() only if
-that timer's function field was initialized (because timer_setup() sets
-that timer's function field). Therefore, let's use same approach here.
-
-[1] https://syzkaller.appspot.com/bug?id=26525f643f454dd7be0078423e3cdb0d57744959
-[2] https://lkml.kernel.org/r/CA+ASDXMHt2gq9Hy+iP_BYkWXsSreWdp3_bAfMkNcuqJ3K+-jbQ@mail.gmail.com
-
-Reported-by: syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>
-Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Cc: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Acked-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200821082720.7716-1-penguin-kernel@I-love.SAKURA.ne.jp
+Link: https://lore.kernel.org/r/20200908121743.23108-1-keitasuzuki.park@sslab.ics.keio.ac.jp
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 6f3cfde4654cc..426e39d4ccf0f 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -1353,7 +1353,8 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
- 				skb_dequeue(&port->tx_aggr.aggr_list)))
- 				mwifiex_write_data_complete(adapter, skb_tmp,
- 							    0, -1);
--		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
-+		if (port->tx_aggr.timer_cnxt.hold_timer.function)
-+			del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
- 		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
- 		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+index 7ef36234a25dc..66797dc5e90d5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -5065,8 +5065,10 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
+ 	pi->pi_fptr.radioloftget = wlc_lcnphy_get_radio_loft;
+ 	pi->pi_fptr.detach = wlc_phy_detach_lcnphy;
+ 
+-	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
++	if (!wlc_phy_txpwr_srom_read_lcnphy(pi)) {
++		kfree(pi->u.pi_lcnphy);
+ 		return false;
++	}
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
+ 		if (pi_lcn->lcnphy_tempsense_option == 3) {
 -- 
 2.25.1
 
