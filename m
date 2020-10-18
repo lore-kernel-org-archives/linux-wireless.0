@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8FE7C433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B061C433E7
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EE2E22269
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2A6D22269
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603051082;
-	bh=Il9Br0hKPkszm54/JVjOqIIyHlDSaKWZbOXM3vOFJvM=;
+	s=default; t=1603051108;
+	bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IcpmXOMeQh3bArW38H54R/JBJs3caNi2YyNGhWH9d6U+Gr1RxhGpl7xux7GxRoJCI
-	 f8zPusOa+Wtew9tc4xtuj0j3eHrsNFYs7lbAKnKISeyAu9gOE3c5k+Lm203GHUHIag
-	 3Wmm4/kjY2imbrf2yrSOPZ3It0GPxnriQVYUqxCQ=
+	b=l9gE9YDsBWxk+L+/dx6x/ApHgwe2DI677b29TWqTd3+BtdJ4Y3T53VLgQmiLmUlyo
+	 NziMlXbmCplzz44uAAbcufBgokZgcLvQvhjAqEsGG5DJdxulH6NobDA9ILxGT3I5fI
+	 sb2jVkFZShlrxXgc4sRIXhy+x/qh7iOKn9uYoKEs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729447AbgJRT5z (ORCPT
+        id S2388327AbgJRT6X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:57:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57792 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:58:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57588 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728117AbgJRTTO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:19:14 -0400
+        id S1728048AbgJRTTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:19:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6BA4F222EB;
-        Sun, 18 Oct 2020 19:19:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AE97D222B9;
+        Sun, 18 Oct 2020 19:19:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048754;
-        bh=Il9Br0hKPkszm54/JVjOqIIyHlDSaKWZbOXM3vOFJvM=;
+        s=default; t=1603048747;
+        bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HrC3Ta7h63uoW5XzmWTx3N8H3yStHqAznV4wgv5uYUyoGNcFe1y/BQ/pPbJ3lRXRx
-         iejzdq4By1kPP4mUsVMFFZz+chZtC/O0cqw9/vHW+DGgxy41FbLL9Rkaa6hdcBA5rX
-         7VLN7rdnz3cthD1RhCrC10eV2NDfxpuCk2JC1lz8=
+        b=yfziRND5DXnl34wKBcx4VkPPS4Xw/OlQuobqEX22DXTBi6gFyhEtsW5H7LMLq3z9R
+         qwOM4wBQdZ9ofY9UdN53SG7vncA+AbNL5lzAxaiCnVMbT5/nBoPZEso4wZtFl4l+EE
+         3vAeh7y5QR6a31hZBVZ8YdqUWSxW6Kt0skP+E6vU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.9 055/111] mt76: mt7915: do not do any work in napi poll after calling napi_complete_done()
-Date:   Sun, 18 Oct 2020 15:17:11 -0400
-Message-Id: <20201018191807.4052726-55-sashal@kernel.org>
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 049/111] rtw88: pci: Power cycle device during shutdown
+Date:   Sun, 18 Oct 2020 15:17:05 -0400
+Message-Id: <20201018191807.4052726-49-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
 References: <20201018191807.4052726-1-sashal@kernel.org>
@@ -59,42 +59,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-[ Upstream commit 38b04398c532e9bb9aa90fc07846ad0b0845fe94 ]
+[ Upstream commit 44492e70adc8086c42d3745d21d591657a427f04 ]
 
-Fixes a race condition where multiple tx cleanup or sta poll tasks could run
-in parallel.
+There are reports that 8822CE fails to work rtw88 with "failed to read DBI
+register" error. Also I have a system with 8723DE which freezes the whole
+system when the rtw88 is probing the device.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+According to [1], platform firmware may not properly power manage the
+device during shutdown. I did some expirements and putting the device to
+D3 can workaround the issue.
+
+So let's power cycle the device by putting the device to D3 at shutdown
+to prevent the issue from happening.
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=206411#c9
+
+BugLink: https://bugs.launchpad.net/bugs/1872984
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20200928165508.20775-1-kai.heng.feng@canonical.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/dma.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-index a8832c5e60041..8a1ae08d9572e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-@@ -95,16 +95,13 @@ static int mt7915_poll_tx(struct napi_struct *napi, int budget)
- 	dev = container_of(napi, struct mt7915_dev, mt76.tx_napi);
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 3413973bc4750..7f1f5073b9f4d 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1599,6 +1599,8 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
  
- 	mt7915_tx_cleanup(dev);
--
--	if (napi_complete_done(napi, 0))
--		mt7915_irq_enable(dev, MT_INT_TX_DONE_ALL);
--
--	mt7915_tx_cleanup(dev);
--
- 	mt7915_mac_sta_poll(dev);
- 
- 	tasklet_schedule(&dev->mt76.tx_tasklet);
- 
-+	if (napi_complete_done(napi, 0))
-+		mt7915_irq_enable(dev, MT_INT_TX_DONE_ALL);
+ 	if (chip->ops->shutdown)
+ 		chip->ops->shutdown(rtwdev);
 +
- 	return 0;
++	pci_set_power_state(pdev, PCI_D3hot);
  }
+ EXPORT_SYMBOL(rtw_pci_shutdown);
  
 -- 
 2.25.1
