@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7F4C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE66C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:55:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFFA422263
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:54:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECAFC22263
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:55:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050857;
-	bh=og7teVhvN4vcGvdScK1wcCLZyTGXDMzKSJjn00EVR/8=;
+	s=default; t=1603050904;
+	bh=BYAQTJGgiCU8v3R8HsfKnzr9lgvJfIjcAHFlSnlj/1A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tn3ygpx1Ytcd72ow8PlLbovQG5EIfwPj6zv1O3KlLJ5fEM/UfwgFF19OhYxnH/h7X
-	 ru6LMXfe83T3HHhx8as7Lys7zii+y6zMwRdbgAyJzJPu1tXLl1g0sUXnMn0CcuNKyQ
-	 A61/7hm4L03jbP+/C5AHJp4NDUaZpLhssTz5AtYg=
+	b=N2v/aqibNBHOW++sFFGaqk+/4sYF+mdq8hPcW4LBejZ41I2V9pjpWYpIIETdm4y5c
+	 oqz8vaz/lqmu2HYMop1dzH7qG5oHUM52ri1XH8xqVkBCVaiFanf1uU/85uGBAxobex
+	 UERcjrUn2HURp9DIQlZhiu1hVwVTZTAYbc3+YAFE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728844AbgJRTUZ (ORCPT
+        id S2388515AbgJRTy5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:20:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59954 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:54:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59510 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728824AbgJRTUY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:20:24 -0400
+        id S1728696AbgJRTUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:20:11 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E6010222B9;
-        Sun, 18 Oct 2020 19:20:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B6E0A222B9;
+        Sun, 18 Oct 2020 19:20:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048823;
-        bh=og7teVhvN4vcGvdScK1wcCLZyTGXDMzKSJjn00EVR/8=;
+        s=default; t=1603048810;
+        bh=BYAQTJGgiCU8v3R8HsfKnzr9lgvJfIjcAHFlSnlj/1A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Hdsh6pK9mXiaB0hRbwQsg5iOQeJCUzjdldzd41sflqlK4fsEYhEEv4pSP/3QdOKd/
-         gS8b8zMsx2uu+Cfg2E5WIgnNrNAHVHLYdV+P0DcmAdC+uJ0nnr6fYeNJvcvROturkI
-         EOSPGuTgM0MV0c5CXJTqxDnRlyltLoM+yaEPSwI4=
+        b=h8bn35oOyyh4quORb1oEDl/1ekSdZf2OWJFeuRIFTQXkau7bBlU17aiUgNbURKpV+
+         5aam/Vpy2vMTV6HKyYIIPxt8qOn/9hWSexBYJpAyyvBVBrtLHK+ThKV7960LqDwIFl
+         cpWox0aDl/rHws3ZOTlrrPWyWtaO2JRv82428SRs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+Cc:     Wang Yufen <wangyufen@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 111/111] ath10k: check idx validity in __ath10k_htt_rx_ring_fill_n()
-Date:   Sun, 18 Oct 2020 15:18:07 -0400
-Message-Id: <20201018191807.4052726-111-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 101/111] brcm80211: fix possible memleak in brcmf_proto_msgbuf_attach
+Date:   Sun, 18 Oct 2020 15:17:57 -0400
+Message-Id: <20201018191807.4052726-101-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
 References: <20201018191807.4052726-1-sashal@kernel.org>
@@ -59,66 +61,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Wang Yufen <wangyufen@huawei.com>
 
-[ Upstream commit bad60b8d1a7194df38fd7fe4b22f3f4dcf775099 ]
+[ Upstream commit 6c151410d5b57e6bb0d91a735ac511459539a7bf ]
 
-The idx in __ath10k_htt_rx_ring_fill_n function lives in
-consistent dma region writable by the device. Malfunctional
-or malicious device could manipulate such idx to have a OOB
-write. Either by
-    htt->rx_ring.netbufs_ring[idx] = skb;
-or by
-    ath10k_htt_set_paddrs_ring(htt, paddr, idx);
+When brcmf_proto_msgbuf_attach fail and msgbuf->txflow_wq != NULL,
+we should destroy the workqueue.
 
-The idx can also be negative as it's signed, giving a large
-memory space to write to.
-
-It's possibly exploitable by corruptting a legit pointer with
-a skb pointer. And then fill skb with payload as rougue object.
-
-Part of the log here. Sometimes it appears as UAF when writing
-to a freed memory by chance.
-
- [   15.594376] BUG: unable to handle page fault for address: ffff887f5c1804f0
- [   15.595483] #PF: supervisor write access in kernel mode
- [   15.596250] #PF: error_code(0x0002) - not-present page
- [   15.597013] PGD 0 P4D 0
- [   15.597395] Oops: 0002 [#1] SMP KASAN PTI
- [   15.597967] CPU: 0 PID: 82 Comm: kworker/u2:2 Not tainted 5.6.0 #69
- [   15.598843] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
- BIOS rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
- [   15.600438] Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
- [   15.601389] RIP: 0010:__ath10k_htt_rx_ring_fill_n
- (linux/drivers/net/wireless/ath/ath10k/htt_rx.c:173) ath10k_core
-
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wang Yufen <wangyufen@huawei.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200623221105.3486-1-bruceshenzk@gmail.com
+Link: https://lore.kernel.org/r/1595237765-66238-1-git-send-email-wangyufen@huawei.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index d787cbead56ab..215ade6faf328 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -142,6 +142,14 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
- 	BUILD_BUG_ON(HTT_RX_RING_FILL_LEVEL >= HTT_RX_RING_SIZE / 2);
- 
- 	idx = __le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr);
-+
-+	if (idx < 0 || idx >= htt->rx_ring.size) {
-+		ath10k_err(htt->ar, "rx ring index is not valid, firmware malfunctioning?\n");
-+		idx &= htt->rx_ring.size_mask;
-+		ret = -ENOMEM;
-+		goto fail;
-+	}
-+
- 	while (num > 0) {
- 		skb = dev_alloc_skb(HTT_RX_BUF_SIZE + HTT_RX_DESC_ALIGN);
- 		if (!skb) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index f1a20db8daab9..bfddb851e386e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -1620,6 +1620,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 					  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
+ 					  msgbuf->ioctbuf,
+ 					  msgbuf->ioctbuf_handle);
++		if (msgbuf->txflow_wq)
++			destroy_workqueue(msgbuf->txflow_wq);
+ 		kfree(msgbuf);
+ 	}
+ 	return -ENOMEM;
 -- 
 2.25.1
 
