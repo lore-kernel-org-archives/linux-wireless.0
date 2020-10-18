@@ -5,48 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF010C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEAF6C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4FD22137B
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A66C22267
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049283;
-	bh=I9abcd9KWuhpipgU+LGs2WDKTi0MFSc+wWieyXzN8Dk=;
+	s=default; t=1603049335;
+	bh=jIAekVB3MQm0oOvM6jDIOM8yBr6iMSKLVdA9Kkfu914=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OQdqE4fa8CE9tsseZ95+n7TapjKk7czxa5ThjE7705QNx4UOK2KEpsXRbAaB5w7xX
-	 rN+vGSvZ6P5p+K0JayW6ZdMDLz7xFkW40WvSFqa5aRJ0nZ/ZIScrMjFfA42WTH3EaA
-	 nIxKXh1BD/anh38JKKDOpJfXsjKv4wLVDBtvqMpI=
+	b=xRljX2WFn5PqEVzh89T/EZ2znTdTpvPgajhj9lwpd7ZbYp71TBMmlt4F5VHo3voxs
+	 th6JRlZ5Qo27W8ChKepD6uMFrCXTki9JlqwpGbT4W2xXbtfKDqjptaNoNxW9uQSrs4
+	 6SeArsJpu9TPWj2jdHPRpu5AltlBWcteNm9n4Jf8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732214AbgJRT2C (ORCPT
+        id S1729336AbgJRT2t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:28:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44278 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:28:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44630 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732201AbgJRT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:28:00 -0400
+        id S1732248AbgJRT2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:28:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 30B7A22274;
-        Sun, 18 Oct 2020 19:27:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD2C02226B;
+        Sun, 18 Oct 2020 19:28:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049279;
-        bh=I9abcd9KWuhpipgU+LGs2WDKTi0MFSc+wWieyXzN8Dk=;
+        s=default; t=1603049288;
+        bh=jIAekVB3MQm0oOvM6jDIOM8yBr6iMSKLVdA9Kkfu914=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Bj0egLy5XoUdxNtd7O3cXFjrawInVD9iPufhvupcTjuxbnPtxToDsm6WyYL9kn79w
-         Vxbbny300XqKgwFr7UeO/rt8qofVeEueuz1zSgKyio8GeyPsjlW9BBNpR1vpgsGBwe
-         ugm5g6xTwnJXixX6qJZzpXCzprWQ3wl67t58Xo3Y=
+        b=OYHcZtgLGtDPZFThdeBKtt6x/3P59QCihMWbHxT9OlSrYkb2slcG18nTw+X2n9/xz
+         5hoUfAIAqILjoepmangx21fkpNZcMIRLPZ6xeTHAdHRKYeftqABgE7BLw8Ar6fB2LP
+         9D0yOOQPAiBegSPj98RInr2w581PSqb3JOtH2AMg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 26/33] rtl8xxxu: prevent potential memory leak
-Date:   Sun, 18 Oct 2020 15:27:21 -0400
-Message-Id: <20201018192728.4056577-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 33/33] ath10k: check idx validity in __ath10k_htt_rx_ring_fill_n()
+Date:   Sun, 18 Oct 2020 15:27:28 -0400
+Message-Id: <20201018192728.4056577-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192728.4056577-1-sashal@kernel.org>
 References: <20201018192728.4056577-1-sashal@kernel.org>
@@ -58,63 +59,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessm.com>
+From: Zekun Shen <bruceshenzk@gmail.com>
 
-[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
+[ Upstream commit bad60b8d1a7194df38fd7fe4b22f3f4dcf775099 ]
 
-Free the skb if usb_submit_urb fails on rx_urb. And free the urb
-no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
+The idx in __ath10k_htt_rx_ring_fill_n function lives in
+consistent dma region writable by the device. Malfunctional
+or malicious device could manipulate such idx to have a OOB
+write. Either by
+    htt->rx_ring.netbufs_ring[idx] = skb;
+or by
+    ath10k_htt_set_paddrs_ring(htt, paddr, idx);
 
-Signed-off-by: Chris Chiu <chiu@endlessm.com>
+The idx can also be negative as it's signed, giving a large
+memory space to write to.
+
+It's possibly exploitable by corruptting a legit pointer with
+a skb pointer. And then fill skb with payload as rougue object.
+
+Part of the log here. Sometimes it appears as UAF when writing
+to a freed memory by chance.
+
+ [   15.594376] BUG: unable to handle page fault for address: ffff887f5c1804f0
+ [   15.595483] #PF: supervisor write access in kernel mode
+ [   15.596250] #PF: error_code(0x0002) - not-present page
+ [   15.597013] PGD 0 P4D 0
+ [   15.597395] Oops: 0002 [#1] SMP KASAN PTI
+ [   15.597967] CPU: 0 PID: 82 Comm: kworker/u2:2 Not tainted 5.6.0 #69
+ [   15.598843] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+ BIOS rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
+ [   15.600438] Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
+ [   15.601389] RIP: 0010:__ath10k_htt_rx_ring_fill_n
+ (linux/drivers/net/wireless/ath/ath10k/htt_rx.c:173) ath10k_core
+
+Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
+Link: https://lore.kernel.org/r/20200623221105.3486-1-bruceshenzk@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 8254d4b22c50b..b8d387edde65c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5135,7 +5135,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
- 	if (ret) {
- 		usb_unanchor_urb(urb);
--		usb_free_urb(urb);
- 		goto error;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a65b5d7f59f44..1c6c422dbad64 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -99,6 +99,14 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 	BUILD_BUG_ON(HTT_RX_RING_FILL_LEVEL >= HTT_RX_RING_SIZE / 2);
  
-@@ -5144,6 +5143,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
- 
- error:
-+	usb_free_urb(urb);
- 	return ret;
- }
- 
-@@ -5424,6 +5424,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	struct rtl8xxxu_tx_urb *tx_urb;
-+	struct sk_buff *skb;
- 	unsigned long flags;
- 	int ret, i;
- 
-@@ -5472,6 +5473,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 		rx_urb->hw = hw;
- 
- 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
-+		if (ret) {
-+			if (ret != -ENOMEM) {
-+				skb = (struct sk_buff *)rx_urb->urb.context;
-+				dev_kfree_skb(skb);
-+			}
-+			rtl8xxxu_queue_rx_urb(priv, rx_urb);
-+		}
- 	}
- exit:
- 	/*
+ 	idx = __le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr);
++
++	if (idx < 0 || idx >= htt->rx_ring.size) {
++		ath10k_err(htt->ar, "rx ring index is not valid, firmware malfunctioning?\n");
++		idx &= htt->rx_ring.size_mask;
++		ret = -ENOMEM;
++		goto fail;
++	}
++
+ 	while (num > 0) {
+ 		skb = dev_alloc_skb(HTT_RX_BUF_SIZE + HTT_RX_DESC_ALIGN);
+ 		if (!skb) {
 -- 
 2.25.1
 
