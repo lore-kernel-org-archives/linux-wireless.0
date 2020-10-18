@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C97B5C433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F54FC43457
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:50:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B7E922269
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15AD820714
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:50:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050520;
-	bh=mTY9y3pxS8i08iT2C0dGcNyVykiKc/+2kfaNjS4clTA=;
+	s=default; t=1603050629;
+	bh=W7djoAKVSL07Q8YxcMiprpi1nhnt1rRDRNxZOdBdfkU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CyNflP/Aj0DqUbj9VjGjLuC96sy8hIDeAz7OazeBhatYct7HlgrjOU1c+XEZXKDG/
-	 Fl+y4x//1glwAb7N7zfxPsh765CWXMV+bkIbMMdIJnCqN/naq2f967S5QghdDXnu+0
-	 bPs977xsF/fqj7WG7BW1QPcKvtqTOK7I3z6dFzFc=
+	b=WYmor/QIxQeXdZGl/eUuLCamtrmXUjQ9LReiFFzlMsrAoYDvE4VOxlCGqJ74lDwsb
+	 DejUtYrC5S/Oyg79/Jfn2Mxm3D6LNHpF8AKC4DCCAsaEZJnt5VqNdRqBj2odSAZa3/
+	 O8GaHECcV+eB09ZVyLHiHIvsqYGuLUgR1oiuVZRw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387514AbgJRTse (ORCPT
+        id S1729422AbgJRTV2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:48:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34428 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:21:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729645AbgJRTV4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:21:56 -0400
+        id S1729400AbgJRTV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:21:28 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 116EF222E9;
-        Sun, 18 Oct 2020 19:21:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C3B3D222EA;
+        Sun, 18 Oct 2020 19:21:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048916;
-        bh=mTY9y3pxS8i08iT2C0dGcNyVykiKc/+2kfaNjS4clTA=;
+        s=default; t=1603048887;
+        bh=W7djoAKVSL07Q8YxcMiprpi1nhnt1rRDRNxZOdBdfkU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z4lJUIRXzDekuCIpDWLgjSosuCKO10Hy7NgqEp8CUQTfVvJNB9JdKUJVpJ1Sas6Me
-         F49ZvUG+ciZ8pcx5FSbuVBZ5RTKQIMXOF1i3E4I3SsWbjsPapdT54lT2NhXA/F2MGY
-         qPr26BLkABi5Xe+CcMX41wcdAbH8J5tOTgzYj9KY=
+        b=WmFPeV8BbuRbYpEgvg4HN661eWaqrEm0AV/B8YZaevv1SMvl1r8Vwcu1VU2YIEMbb
+         JNLN20ZatvK5jByTUPtVsGa7gQ+Y2t3BxdpmRdNpJA35ykk7Fuw16qOfoZuMwBOVd8
+         9akXmyKt44fk6LwT3bbG5dZP2IhM2OIPlNCv4iW0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
+Cc:     Tzu-En Huang <tehuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 074/101] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
-Date:   Sun, 18 Oct 2020 15:19:59 -0400
-Message-Id: <20201018192026.4053674-74-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 050/101] rtw88: increse the size of rx buffer size
+Date:   Sun, 18 Oct 2020 15:19:35 -0400
+Message-Id: <20201018192026.4053674-50-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
 References: <20201018192026.4053674-1-sashal@kernel.org>
@@ -61,41 +59,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-[ Upstream commit f4443293d741d1776b86ed1dd8c4e4285d0775fc ]
+[ Upstream commit ee755732b7a16af018daa77d9562d2493fb7092f ]
 
-When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
-the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
-freed in the caller function.
+The vht capability of MAX_MPDU_LENGTH is 11454 in rtw88; however, the rx
+buffer size for each packet is 8192. When receiving packets that are
+larger than rx buffer size, it will leads to rx buffer ring overflow.
 
-Fix this by calling wlc_phy_detach_lcnphy in the error handler of
-wlc_phy_txpwr_srom_read_lcnphy before returning.
-
-Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200908121743.23108-1-keitasuzuki.park@sslab.ics.keio.ac.jp
+Link: https://lore.kernel.org/r/20200925061219.23754-2-tehuang@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/pci.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-index 7ef36234a25dc..66797dc5e90d5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -5065,8 +5065,10 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
- 	pi->pi_fptr.radioloftget = wlc_lcnphy_get_radio_loft;
- 	pi->pi_fptr.detach = wlc_phy_detach_lcnphy;
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index 024c2bc275cbe..ca17aa9cf7dc7 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -9,8 +9,8 @@
+ #define RTK_BEQ_TX_DESC_NUM	256
  
--	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
-+	if (!wlc_phy_txpwr_srom_read_lcnphy(pi)) {
-+		kfree(pi->u.pi_lcnphy);
- 		return false;
-+	}
+ #define RTK_MAX_RX_DESC_NUM	512
+-/* 8K + rx desc size */
+-#define RTK_PCI_RX_BUF_SIZE	(8192 + 24)
++/* 11K + rx desc size */
++#define RTK_PCI_RX_BUF_SIZE	(11454 + 24)
  
- 	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
- 		if (pi_lcn->lcnphy_tempsense_option == 3) {
+ #define RTK_PCI_CTRL		0x300
+ #define BIT_RST_TRXDMA_INTF	BIT(20)
 -- 
 2.25.1
 
