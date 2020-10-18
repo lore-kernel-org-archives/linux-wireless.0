@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2939BC433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF010C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D682C222EA
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4FD22137B
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:28:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049210;
-	bh=1QLGxxB92voLmkhnmWBAgiVBZOvIXqVvypv3m4j7TeY=;
+	s=default; t=1603049283;
+	bh=I9abcd9KWuhpipgU+LGs2WDKTi0MFSc+wWieyXzN8Dk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jVyTIBo3fMqyiEoHJ9fq5hIFt3/+vjqPyjwwoEF76vXNhcQvvIrOZSkDbhQGbOe/c
-	 mD4nMZLEvUHcZXbIlglSVmK8+07GNMyBIFnlPjnPNjWmTzmLnk0UuNDNrvUJ4a97l8
-	 kV6JDTo7uNSj1HJ+sLHV2yFkkSymZpbxI9XNOCfk=
+	b=OQdqE4fa8CE9tsseZ95+n7TapjKk7czxa5ThjE7705QNx4UOK2KEpsXRbAaB5w7xX
+	 rN+vGSvZ6P5p+K0JayW6ZdMDLz7xFkW40WvSFqa5aRJ0nZ/ZIScrMjFfA42WTH3EaA
+	 nIxKXh1BD/anh38JKKDOpJfXsjKv4wLVDBtvqMpI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731705AbgJRT0t (ORCPT
+        id S1732214AbgJRT2C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:26:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38972 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:28:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44278 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730950AbgJRTYs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:24:48 -0400
+        id S1732201AbgJRT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:28:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8FAEC222EC;
-        Sun, 18 Oct 2020 19:24:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 30B7A22274;
+        Sun, 18 Oct 2020 19:27:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049088;
-        bh=1QLGxxB92voLmkhnmWBAgiVBZOvIXqVvypv3m4j7TeY=;
+        s=default; t=1603049279;
+        bh=I9abcd9KWuhpipgU+LGs2WDKTi0MFSc+wWieyXzN8Dk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z8EN4AetkiqdUUTmfHUU8QTvSz0XivywJljd3+BGPg8OaDLVfTW5wX6c5azw3b1Tr
-         wgSbRoLAlQEPCmTV3vqRvJ2OWnxgaSP1UCdEZXAs+3q3PMC+17owdY8t0Muv+x/gKh
-         xsYjbKfbh7FZ/jcI/96kJEX4cWzlgWynyujbrnTQ=
+        b=Bj0egLy5XoUdxNtd7O3cXFjrawInVD9iPufhvupcTjuxbnPtxToDsm6WyYL9kn79w
+         Vxbbny300XqKgwFr7UeO/rt8qofVeEueuz1zSgKyio8GeyPsjlW9BBNpR1vpgsGBwe
+         ugm5g6xTwnJXixX6qJZzpXCzprWQ3wl67t58Xo3Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Thomas Pedersen <thomas@adapt-ip.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 24/56] mac80211: handle lack of sband->bitrates in rates
-Date:   Sun, 18 Oct 2020 15:23:45 -0400
-Message-Id: <20201018192417.4055228-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 26/33] rtl8xxxu: prevent potential memory leak
+Date:   Sun, 18 Oct 2020 15:27:21 -0400
+Message-Id: <20201018192728.4056577-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018192417.4055228-1-sashal@kernel.org>
-References: <20201018192417.4055228-1-sashal@kernel.org>
+In-Reply-To: <20201018192728.4056577-1-sashal@kernel.org>
+References: <20201018192728.4056577-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,56 +58,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Pedersen <thomas@adapt-ip.com>
+From: Chris Chiu <chiu@endlessm.com>
 
-[ Upstream commit 8b783d104e7f40684333d2ec155fac39219beb2f ]
+[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
 
-Even though a driver or mac80211 shouldn't produce a
-legacy bitrate if sband->bitrates doesn't exist, don't
-crash if that is the case either.
+Free the skb if usb_submit_urb fails on rx_urb. And free the urb
+no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
 
-This fixes a kernel panic if station dump is run before
-last_rate can be updated with a data frame when
-sband->bitrates is missing (eg. in S1G bands).
-
-Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
-Link: https://lore.kernel.org/r/20201005164522.18069-1-thomas@adapt-ip.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chris Chiu <chiu@endlessm.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c      | 3 ++-
- net/mac80211/sta_info.c | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b6670e74aeb7b..9926455dd546d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -664,7 +664,8 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 		u16 brate;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 8254d4b22c50b..b8d387edde65c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5135,7 +5135,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
+ 	ret = usb_submit_urb(urb, GFP_KERNEL);
+ 	if (ret) {
+ 		usb_unanchor_urb(urb);
+-		usb_free_urb(urb);
+ 		goto error;
+ 	}
  
- 		sband = ieee80211_get_sband(sta->sdata);
--		if (sband) {
-+		WARN_ON_ONCE(sband && !sband->bitrates);
-+		if (sband && sband->bitrates) {
- 			brate = sband->bitrates[rate->idx].bitrate;
- 			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
- 		}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 2a82d438991b5..9968b8a976f19 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2009,6 +2009,10 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
- 		int rate_idx = STA_STATS_GET(LEGACY_IDX, rate);
+@@ -5144,6 +5143,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
+ 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
  
- 		sband = local->hw.wiphy->bands[band];
-+
-+		if (WARN_ON_ONCE(!sband->bitrates))
-+			break;
-+
- 		brate = sband->bitrates[rate_idx].bitrate;
- 		if (rinfo->bw == RATE_INFO_BW_5)
- 			shift = 2;
+ error:
++	usb_free_urb(urb);
+ 	return ret;
+ }
+ 
+@@ -5424,6 +5424,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct rtl8xxxu_rx_urb *rx_urb;
+ 	struct rtl8xxxu_tx_urb *tx_urb;
++	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	int ret, i;
+ 
+@@ -5472,6 +5473,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 		rx_urb->hw = hw;
+ 
+ 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
++		if (ret) {
++			if (ret != -ENOMEM) {
++				skb = (struct sk_buff *)rx_urb->urb.context;
++				dev_kfree_skb(skb);
++			}
++			rtl8xxxu_queue_rx_urb(priv, rx_urb);
++		}
+ 	}
+ exit:
+ 	/*
 -- 
 2.25.1
 
