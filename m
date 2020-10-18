@@ -7,46 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0F6C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:38:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BD34C43457
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBA77207DE
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:38:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D423C206CA
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:38:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049883;
-	bh=wwPN4s7ZogzxBYcHHVEtJGn1YVr02uf+Mt2MuOwvCsQ=;
+	s=default; t=1603049886;
+	bh=y5uEBq0CMBZP0Qcq7Mbc5G5pWK9ose4iPnukaUataFY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xLZCh1FNfDOeFxITur/NeivFEpjfXnI6onyH1x/zgKk2WbpC8WGsVUEO7jd+Q5hKW
-	 t1ZCzIWlGtkQpxBUncq/8QNA+KQ3Kxo590Y/1ijrKWF/ja/XIG4+zFCfccsZnp6Sof
-	 AZq0MtvenH3AhMYUe+OyMFOFp8HrYgPdOtBl+2+g=
+	b=h6oTMGo+/1y+k7fotgHThr68QExRnlBaEmErlN4dVmg4xOHGd9PcjzqZgu5sIMLLt
+	 FfXGKh9Sjmiley5LlTAItn3gTI4Ojwrzim2EByvvYhh4hFNu56SVoE+cO5X3+M18BE
+	 87TIm3TM/GB6fDlgr48a7mEsr16Cb5Mgg7zISVMs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730928AbgJRTZN (ORCPT
+        id S1731608AbgJRTiF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:25:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39528 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:38:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731182AbgJRTZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:25:11 -0400
+        id S1731173AbgJRTZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:25:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8F120222EB;
-        Sun, 18 Oct 2020 19:25:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34397222EA;
+        Sun, 18 Oct 2020 19:25:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049111;
-        bh=wwPN4s7ZogzxBYcHHVEtJGn1YVr02uf+Mt2MuOwvCsQ=;
+        s=default; t=1603049110;
+        bh=y5uEBq0CMBZP0Qcq7Mbc5G5pWK9ose4iPnukaUataFY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PgiUBq4n/9JBETSxOezG+C7O5QRvLhKCjaoGT0CQI1F7qDoPmIaxEXW/FYzRxritj
-         LJJhH8JmPS0iE2ZGeeEU+HwJqJtFGaiY+1FlZXAWMCDDP4xyaOfA1/pjQH/dUsPh6b
-         tVxvy/Ku8xY9m7oh8604btZ6xDzzvMaGgVCD87c4=
+        b=BhcBlzQimQIRVnUSSDPjbdioXATQPeX19ISTcF5wplWpFvc1ESWycF15Lhgz+Ycsa
+         gFUpWfWSTiTZMxDoQjc8pjh94qEjiAzKEXwWgT/TBV79P70xB156sBaK5lBpDwWDLp
+         rQrVfhFeY+LMGljSxrYxVFZKRn7n8A2fVqyBT8/A=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 44/56] rtl8xxxu: prevent potential memory leak
-Date:   Sun, 18 Oct 2020 15:24:05 -0400
-Message-Id: <20201018192417.4055228-44-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 43/56] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
+Date:   Sun, 18 Oct 2020 15:24:04 -0400
+Message-Id: <20201018192417.4055228-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192417.4055228-1-sashal@kernel.org>
 References: <20201018192417.4055228-1-sashal@kernel.org>
@@ -58,63 +61,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessm.com>
+From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 
-[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
+[ Upstream commit f4443293d741d1776b86ed1dd8c4e4285d0775fc ]
 
-Free the skb if usb_submit_urb fails on rx_urb. And free the urb
-no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
+When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
+the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
+freed in the caller function.
 
-Signed-off-by: Chris Chiu <chiu@endlessm.com>
+Fix this by calling wlc_phy_detach_lcnphy in the error handler of
+wlc_phy_txpwr_srom_read_lcnphy before returning.
+
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
+Link: https://lore.kernel.org/r/20200908121743.23108-1-keitasuzuki.park@sslab.ics.keio.ac.jp
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 070ea0f456abd..b80cff96dea1e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5453,7 +5453,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
- 	if (ret) {
- 		usb_unanchor_urb(urb);
--		usb_free_urb(urb);
- 		goto error;
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+index 9fb0d9fbd9395..d532decc15383 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -5085,8 +5085,10 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
+ 	pi->pi_fptr.radioloftget = wlc_lcnphy_get_radio_loft;
+ 	pi->pi_fptr.detach = wlc_phy_detach_lcnphy;
  
-@@ -5462,6 +5461,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
+-	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
++	if (!wlc_phy_txpwr_srom_read_lcnphy(pi)) {
++		kfree(pi->u.pi_lcnphy);
+ 		return false;
++	}
  
- error:
-+	usb_free_urb(urb);
- 	return ret;
- }
- 
-@@ -5787,6 +5787,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	struct rtl8xxxu_tx_urb *tx_urb;
-+	struct sk_buff *skb;
- 	unsigned long flags;
- 	int ret, i;
- 
-@@ -5837,6 +5838,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 		rx_urb->hw = hw;
- 
- 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
-+		if (ret) {
-+			if (ret != -ENOMEM) {
-+				skb = (struct sk_buff *)rx_urb->urb.context;
-+				dev_kfree_skb(skb);
-+			}
-+			rtl8xxxu_queue_rx_urb(priv, rx_urb);
-+		}
- 	}
- exit:
- 	/*
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
+ 		if (pi_lcn->lcnphy_tempsense_option == 3) {
 -- 
 2.25.1
 
