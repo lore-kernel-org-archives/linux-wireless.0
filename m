@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF88C43457
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7222C43457
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 152F220791
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A802E20791
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049476;
-	bh=lBErSqNfIc6JjwuNWgC5mTOspePfHS9GbRGVP4n6Slo=;
+	s=default; t=1603049490;
+	bh=2uPyItsYv7sh2HwsuonUm6p+JI2jQxPJkHUuWR9M74I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wuG2mQqlk//BSJvGbPToqOqMrs8YTgTEs99xxD3kq/MgDsw/WzLrFOJuAhoSPQAls
-	 0CyL7/518cBuIEJI9n7XdZfLDu7O/iz0vbRif990hwdNvHArljeSO6Gv3CxN7okMIM
-	 H/KsuhgzjTrqKu7O3tg4UkHLCZY1/BGReXZPm7bY=
+	b=G8RwK6Y3z9CJ5rwGg04CgJLsJK/fcRWMwmni/GSuDwmW+h5lulLapgq7ycqi9e1ES
+	 yNhEbsfujFL6K1KeYEnxHLm2uPuE0K9asyC29YZFgB2jk8lygFr06bVsBm6MnuGGXY
+	 TEOO+LQa0WudI62UAd0cm3pbzaE6TdPK9TJgSUuc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731129AbgJRT10 (ORCPT
+        id S1732025AbgJRT1U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:27:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43190 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:27:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42960 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732067AbgJRT1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:27:24 -0400
+        id S1727882AbgJRT1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:27:16 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B20A122272;
-        Sun, 18 Oct 2020 19:27:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 281F5207DE;
+        Sun, 18 Oct 2020 19:27:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049243;
-        bh=lBErSqNfIc6JjwuNWgC5mTOspePfHS9GbRGVP4n6Slo=;
+        s=default; t=1603049236;
+        bh=2uPyItsYv7sh2HwsuonUm6p+JI2jQxPJkHUuWR9M74I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ESnRWMrVzONKA5F+Qran1LjOohPmdBjJSY07FFom78vfaQ/vX06Zabrfm0AWRDrNQ
-         eRApLAlDShlV2f/AcNSMu1Y4RTH24EQdgsdn6bPzCxXOhD0aV3ksYNk9u3OMPAn/p6
-         0pw6hkSen53cZEhBkcH8VHPF9W98qKgUkuN+gPmY=
+        b=Shk2U7gt5zcim6+/KyUYIlEwvklcrfOcS65OOdd7G8MT/22z1HuXDSGevQTaBKnSV
+         o/AO1Wmm1sQRnYjWuatca7K9MUGjxwQXwMKP96VshAMHXOR3PjgIP3iAUNHnjTfghc
+         e1CclH974BVOZEax599zP9aoQ2z0kmy+pUXe3K6U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wang Yufen <wangyufen@huawei.com>, Hulk Robot <hulkci@huawei.com>,
+Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 39/41] brcm80211: fix possible memleak in brcmf_proto_msgbuf_attach
-Date:   Sun, 18 Oct 2020 15:26:33 -0400
-Message-Id: <20201018192635.4056198-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 33/41] brcmsmac: fix memory leak in wlc_phy_attach_lcnphy
+Date:   Sun, 18 Oct 2020 15:26:27 -0400
+Message-Id: <20201018192635.4056198-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192635.4056198-1-sashal@kernel.org>
 References: <20201018192635.4056198-1-sashal@kernel.org>
@@ -61,35 +61,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wang Yufen <wangyufen@huawei.com>
+From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 
-[ Upstream commit 6c151410d5b57e6bb0d91a735ac511459539a7bf ]
+[ Upstream commit f4443293d741d1776b86ed1dd8c4e4285d0775fc ]
 
-When brcmf_proto_msgbuf_attach fail and msgbuf->txflow_wq != NULL,
-we should destroy the workqueue.
+When wlc_phy_txpwr_srom_read_lcnphy fails in wlc_phy_attach_lcnphy,
+the allocated pi->u.pi_lcnphy is leaked, since struct brcms_phy will be
+freed in the caller function.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Wang Yufen <wangyufen@huawei.com>
+Fix this by calling wlc_phy_detach_lcnphy in the error handler of
+wlc_phy_txpwr_srom_read_lcnphy before returning.
+
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1595237765-66238-1-git-send-email-wangyufen@huawei.com
+Link: https://lore.kernel.org/r/20200908121743.23108-1-keitasuzuki.park@sslab.ics.keio.ac.jp
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 ++
- 1 file changed, 2 insertions(+)
+ .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c    | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index ab9f136c15937..e306e5a89dd4f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -1540,6 +1540,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 					  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
- 					  msgbuf->ioctbuf,
- 					  msgbuf->ioctbuf_handle);
-+		if (msgbuf->txflow_wq)
-+			destroy_workqueue(msgbuf->txflow_wq);
- 		kfree(msgbuf);
- 	}
- 	return -ENOMEM;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+index 93d4cde0eb313..c9f48ec46f4a1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -5090,8 +5090,10 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
+ 	pi->pi_fptr.radioloftget = wlc_lcnphy_get_radio_loft;
+ 	pi->pi_fptr.detach = wlc_phy_detach_lcnphy;
+ 
+-	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
++	if (!wlc_phy_txpwr_srom_read_lcnphy(pi)) {
++		kfree(pi->u.pi_lcnphy);
+ 		return false;
++	}
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
+ 		if (pi_lcn->lcnphy_tempsense_option == 3) {
 -- 
 2.25.1
 
