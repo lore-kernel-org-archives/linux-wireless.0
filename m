@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF75C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C748C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4224B222E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EFA62137B
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:23:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603048889;
-	bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
+	s=default; t=1603048997;
+	bh=nJis7b8zLyW0yaZo9EjWgF0T7QqQq3ssWJU411iebuU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NkZ0zVhcxCXMN8mfY+nFfnnfla867E9HULb9XypK8P2Xla0ZnQb3/6nussnBmsEZa
-	 9zoctsSLmAyV+imF6K9ZhA9ewIM9R9lIsNyZuAaJ/jRmJzP9FKWs3oREwboEQiwowk
-	 vO8QfQI/xUFpX7e8zFpfpLymNaBW3SkL2is91wy4=
+	b=fd5stZP7rUgGQXNzxgt9opX2CA9snci9FCgB7i96p3BYj2QTpGj3+Ng7nO2rtcD9H
+	 nphgN66N9DFIdnzjNG2A06y3gBlI2tvHslGsCorrvg7PMVFgKFZf3l+NSdNajkKOdS
+	 3uw/7Os8u8xA1E3ONA6lPV/ondz6fu4qzvZplvHk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729401AbgJRTV1 (ORCPT
+        id S1730190AbgJRTXO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:21:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33486 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:23:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36290 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729379AbgJRTVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:21:25 -0400
+        id S1730175AbgJRTXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:23:13 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A72EC222EB;
-        Sun, 18 Oct 2020 19:21:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5412E2137B;
+        Sun, 18 Oct 2020 19:23:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048884;
-        bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
+        s=default; t=1603048992;
+        bh=nJis7b8zLyW0yaZo9EjWgF0T7QqQq3ssWJU411iebuU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GdP5WVegabMv2ho+LAAml/OpyMxFrV995AOD5/a7Gm2XxFSQQkVnCfDvZWyT6ROW0
-         hty4aDuwfz64dt7k/dlExrruxVLrOMbJU8MrOEoLxx8mBvrJQ8cs6TvV371NCv42Bo
-         eU7bIUBUtjbPKnTnD2jBkXcObeTqoldwHBMzjIz4=
+        b=lXdWETJaOs0h0/YFTwlcZoP3UvMN7umoQHEPakhPqBJXut6zUQM4TxoEoyBN6P3/h
+         54nB6AUmhr2pGj2CdH3gEr2pO5bloCtLMvvm1qwkFC9sKCufNWURHGxOt79CsL8BAf
+         H6sGu3A96YTDDtk5e0IP9YFgpMYPhkM5do9PR6BQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Thomas Pedersen <thomas@adapt-ip.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 047/101] rtw88: pci: Power cycle device during shutdown
-Date:   Sun, 18 Oct 2020 15:19:32 -0400
-Message-Id: <20201018192026.4053674-47-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 30/80] mac80211: handle lack of sband->bitrates in rates
+Date:   Sun, 18 Oct 2020 15:21:41 -0400
+Message-Id: <20201018192231.4054535-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
-References: <20201018192026.4053674-1-sashal@kernel.org>
+In-Reply-To: <20201018192231.4054535-1-sashal@kernel.org>
+References: <20201018192231.4054535-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,45 +59,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+From: Thomas Pedersen <thomas@adapt-ip.com>
 
-[ Upstream commit 44492e70adc8086c42d3745d21d591657a427f04 ]
+[ Upstream commit 8b783d104e7f40684333d2ec155fac39219beb2f ]
 
-There are reports that 8822CE fails to work rtw88 with "failed to read DBI
-register" error. Also I have a system with 8723DE which freezes the whole
-system when the rtw88 is probing the device.
+Even though a driver or mac80211 shouldn't produce a
+legacy bitrate if sband->bitrates doesn't exist, don't
+crash if that is the case either.
 
-According to [1], platform firmware may not properly power manage the
-device during shutdown. I did some expirements and putting the device to
-D3 can workaround the issue.
+This fixes a kernel panic if station dump is run before
+last_rate can be updated with a data frame when
+sband->bitrates is missing (eg. in S1G bands).
 
-So let's power cycle the device by putting the device to D3 at shutdown
-to prevent the issue from happening.
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=206411#c9
-
-BugLink: https://bugs.launchpad.net/bugs/1872984
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200928165508.20775-1-kai.heng.feng@canonical.com
+Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+Link: https://lore.kernel.org/r/20201005164522.18069-1-thomas@adapt-ip.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/cfg.c      | 3 ++-
+ net/mac80211/sta_info.c | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 3413973bc4750..7f1f5073b9f4d 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -1599,6 +1599,8 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a9dda5c228f60..fa293feef935d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -698,7 +698,8 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+ 		u16 brate;
  
- 	if (chip->ops->shutdown)
- 		chip->ops->shutdown(rtwdev);
+ 		sband = ieee80211_get_sband(sta->sdata);
+-		if (sband) {
++		WARN_ON_ONCE(sband && !sband->bitrates);
++		if (sband && sband->bitrates) {
+ 			brate = sband->bitrates[rate->idx].bitrate;
+ 			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
+ 		}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f5d96107af6de..4f14d8a06915a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2083,6 +2083,10 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
+ 		int rate_idx = STA_STATS_GET(LEGACY_IDX, rate);
+ 
+ 		sband = local->hw.wiphy->bands[band];
 +
-+	pci_set_power_state(pdev, PCI_D3hot);
- }
- EXPORT_SYMBOL(rtw_pci_shutdown);
- 
++		if (WARN_ON_ONCE(!sband->bitrates))
++			break;
++
+ 		brate = sband->bitrates[rate_idx].bitrate;
+ 		if (rinfo->bw == RATE_INFO_BW_5)
+ 			shift = 2;
 -- 
 2.25.1
 
