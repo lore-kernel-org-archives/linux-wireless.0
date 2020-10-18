@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF03EC433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF75C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAE4C2237B
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4224B222E7
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603048788;
-	bh=9Sx0IAu1/0/VuI3DDafXQrRZCdENDRmfs4yGwY71IbQ=;
+	s=default; t=1603048889;
+	bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MlQbsZcRkkXjG2S0rRcErWwdY15l8jG4lmf/H7+QEe1BuogM2n6DO4f3FREJo/OSX
-	 eoGRv6sc5lBjapCi5po4iWWAdGZEfOh7qZoLGg+S/YNKuGu2rBMEcHvfK2M8XB+XOT
-	 wO5RenvUQg4ge8NlTZ8PU9QKitRKXN6LWiWZyrGQ=
+	b=NkZ0zVhcxCXMN8mfY+nFfnnfla867E9HULb9XypK8P2Xla0ZnQb3/6nussnBmsEZa
+	 9zoctsSLmAyV+imF6K9ZhA9ewIM9R9lIsNyZuAaJ/jRmJzP9FKWs3oREwboEQiwowk
+	 vO8QfQI/xUFpX7e8zFpfpLymNaBW3SkL2is91wy4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728469AbgJRTTq (ORCPT
+        id S1729401AbgJRTV1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:19:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58762 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:21:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33486 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728436AbgJRTTq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:19:46 -0400
+        id S1729379AbgJRTVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:21:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 86A5722365;
-        Sun, 18 Oct 2020 19:19:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A72EC222EB;
+        Sun, 18 Oct 2020 19:21:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048785;
-        bh=9Sx0IAu1/0/VuI3DDafXQrRZCdENDRmfs4yGwY71IbQ=;
+        s=default; t=1603048884;
+        bh=v2Irryi3FqaIFDpBaCx1TpdVuR2A4FadIVt8z2gYIKo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2ixSI0YNcxb/oxzJOv61F9P9Y3ZfhlX9A55Riy/V0B7tQdD+58WV6JZR2uJ6iJhVi
-         AQAP1Gs4dMH1ZrdqTkaMTi6GgO7RZUHEqe+UWW+9vlLJhMj1c4AFTIX2+1XNzrHK0G
-         Q1NKq+G+EqgMEW8NT2bMddN1CiZX8vXxKQ35kRt4=
+        b=GdP5WVegabMv2ho+LAAml/OpyMxFrV995AOD5/a7Gm2XxFSQQkVnCfDvZWyT6ROW0
+         hty4aDuwfz64dt7k/dlExrruxVLrOMbJU8MrOEoLxx8mBvrJQ8cs6TvV371NCv42Bo
+         eU7bIUBUtjbPKnTnD2jBkXcObeTqoldwHBMzjIz4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 081/111] rtl8xxxu: prevent potential memory leak
-Date:   Sun, 18 Oct 2020 15:17:37 -0400
-Message-Id: <20201018191807.4052726-81-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 047/101] rtw88: pci: Power cycle device during shutdown
+Date:   Sun, 18 Oct 2020 15:19:32 -0400
+Message-Id: <20201018192026.4053674-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
-References: <20201018191807.4052726-1-sashal@kernel.org>
+In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
+References: <20201018192026.4053674-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,63 +59,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessm.com>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
+[ Upstream commit 44492e70adc8086c42d3745d21d591657a427f04 ]
 
-Free the skb if usb_submit_urb fails on rx_urb. And free the urb
-no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
+There are reports that 8822CE fails to work rtw88 with "failed to read DBI
+register" error. Also I have a system with 8723DE which freezes the whole
+system when the rtw88 is probing the device.
 
-Signed-off-by: Chris Chiu <chiu@endlessm.com>
+According to [1], platform firmware may not properly power manage the
+device during shutdown. I did some expirements and putting the device to
+D3 can workaround the issue.
+
+So let's power cycle the device by putting the device to D3 at shutdown
+to prevent the issue from happening.
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=206411#c9
+
+BugLink: https://bugs.launchpad.net/bugs/1872984
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
+Link: https://lore.kernel.org/r/20200928165508.20775-1-kai.heng.feng@canonical.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 19efae462a242..5cd7ef3625c5e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5795,7 +5795,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
- 	if (ret) {
- 		usb_unanchor_urb(urb);
--		usb_free_urb(urb);
- 		goto error;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 3413973bc4750..7f1f5073b9f4d 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1599,6 +1599,8 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
  
-@@ -5804,6 +5803,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
- 
- error:
-+	usb_free_urb(urb);
- 	return ret;
+ 	if (chip->ops->shutdown)
+ 		chip->ops->shutdown(rtwdev);
++
++	pci_set_power_state(pdev, PCI_D3hot);
  }
+ EXPORT_SYMBOL(rtw_pci_shutdown);
  
-@@ -6318,6 +6318,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	struct rtl8xxxu_tx_urb *tx_urb;
-+	struct sk_buff *skb;
- 	unsigned long flags;
- 	int ret, i;
- 
-@@ -6368,6 +6369,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 		rx_urb->hw = hw;
- 
- 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
-+		if (ret) {
-+			if (ret != -ENOMEM) {
-+				skb = (struct sk_buff *)rx_urb->urb.context;
-+				dev_kfree_skb(skb);
-+			}
-+			rtl8xxxu_queue_rx_urb(priv, rx_urb);
-+		}
- 	}
- 
- 	schedule_delayed_work(&priv->ra_watchdog, 2 * HZ);
 -- 
 2.25.1
 
