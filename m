@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD4FC433E7
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 061F2C433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC2BD204FD
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:36:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6113204FD
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:37:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049762;
-	bh=M5h23QEKSYzAsQW1pluqDkFL6Ex4/VF/E/xG4/7dcJo=;
+	s=default; t=1603049824;
+	bh=J1/LT1/AKi8I1u0pP++kL0Kx/j8NXcq4ktyZEqhNL98=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=KuVbwDBWYzt2PrzemGMG4Z8FItSIbOwjQVglx2WXRtKKiSQY4Ph9lU9FlHAAkUYV0
-	 9tj6N5KQfHph8IUhJ4IwC4+AB3qfvirz3NmVeEpV4KU0aUs4E2AgKqUML8wQmAv6rt
-	 yaxXWVOencHIvC3IBfGC1y8R0LdJxsvMgjCqALeo=
+	b=103cgoHTuaVRTkYCFfx4nBOlkSVaTzBxDoLYiKETcfImhBL2eGs5RdByTqnON6r/O
+	 n6z35t8C6pJ+/p4RabvDy4SRG90NoTBsYxT9vccd9zhY3s/8Myj2J7Q/QShlS6LsJx
+	 VcEEs2kyitMPfMZ0bfwneJxQkRhAF9+1ykM8xs/Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732931AbgJRTfI (ORCPT
+        id S1731409AbgJRTgj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:35:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41442 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:36:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41198 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731641AbgJRT0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:26:20 -0400
+        id S1731583AbgJRT0K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:26:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E8544207DE;
-        Sun, 18 Oct 2020 19:26:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5A1C3222E9;
+        Sun, 18 Oct 2020 19:26:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049179;
-        bh=M5h23QEKSYzAsQW1pluqDkFL6Ex4/VF/E/xG4/7dcJo=;
+        s=default; t=1603049170;
+        bh=J1/LT1/AKi8I1u0pP++kL0Kx/j8NXcq4ktyZEqhNL98=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=foNOcloAFx3y+5wJX5t9moPvvoq6ru17V/51aIs38HljlmlA/VxsMZlSfn9lvZy0y
-         GDkOB7C3xV7YJIKAe0M48ngaRylCbEd87hdy20DS/v5hy8kcVTZWk/Fw0NoXUC4Obc
-         oi+A+T32aD1n1O9ksuWvnQFsdigJ+42qLVWPAaoU=
+        b=RppdkjJyEUQGPkc72VQhSRcvHpoV3XcywmxDmfyZM0VnQsEUZ8be5td5krZRw1lAZ
+         8nqQUaTo2743q9cTzBMzfzfutSUdDrVfr6OS+ru4eWsh2PwQwXvmTeftl6NuqqHhjN
+         QKO0W9+DA4/EAy4/bqHG2zgdeOxqpdrMQuevauik=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Brooke Basile <brookebasile@gmail.com>,
+        syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 41/52] rtl8xxxu: prevent potential memory leak
-Date:   Sun, 18 Oct 2020 15:25:18 -0400
-Message-Id: <20201018192530.4055730-41-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 33/52] ath9k: hif_usb: fix race condition between usb_get_urb() and usb_kill_anchored_urbs()
+Date:   Sun, 18 Oct 2020 15:25:10 -0400
+Message-Id: <20201018192530.4055730-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192530.4055730-1-sashal@kernel.org>
 References: <20201018192530.4055730-1-sashal@kernel.org>
@@ -58,63 +60,89 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessm.com>
+From: Brooke Basile <brookebasile@gmail.com>
 
-[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
+[ Upstream commit 03fb92a432ea5abe5909bca1455b7e44a9380480 ]
 
-Free the skb if usb_submit_urb fails on rx_urb. And free the urb
-no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
+Calls to usb_kill_anchored_urbs() after usb_kill_urb() on multiprocessor
+systems create a race condition in which usb_kill_anchored_urbs() deallocates
+the URB before the completer callback is called in usb_kill_urb(), resulting
+in a use-after-free.
+To fix this, add proper lock protection to usb_kill_urb() calls that can
+possibly run concurrently with usb_kill_anchored_urbs().
 
-Signed-off-by: Chris Chiu <chiu@endlessm.com>
+Reported-by: syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
+Link: https://syzkaller.appspot.com/bug?id=cabffad18eb74197f84871802fd2c5117b61febf
+Signed-off-by: Brooke Basile <brookebasile@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
+Link: https://lore.kernel.org/r/20200911071427.32354-1-brookebasile@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 63f37fa72e4ba..5cf61710ae2f1 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5453,7 +5453,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
- 	if (ret) {
- 		usb_unanchor_urb(urb);
--		usb_free_urb(urb);
- 		goto error;
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index e80d509bc5415..ce3a785212740 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -447,10 +447,19 @@ static void hif_usb_stop(void *hif_handle)
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
+ 	/* The pending URBs have to be canceled. */
++	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
+ 				 &hif_dev->tx.tx_pending, list) {
++		usb_get_urb(tx_buf->urb);
++		spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 		usb_kill_urb(tx_buf->urb);
++		list_del(&tx_buf->list);
++		usb_free_urb(tx_buf->urb);
++		kfree(tx_buf->buf);
++		kfree(tx_buf);
++		spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
  	}
++	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
  
-@@ -5462,6 +5461,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
- 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
- 
- error:
-+	usb_free_urb(urb);
- 	return ret;
+ 	usb_kill_anchored_urbs(&hif_dev->mgmt_submitted);
  }
- 
-@@ -5787,6 +5787,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct rtl8xxxu_rx_urb *rx_urb;
- 	struct rtl8xxxu_tx_urb *tx_urb;
-+	struct sk_buff *skb;
+@@ -760,27 +769,37 @@ static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+ 	struct tx_buf *tx_buf = NULL, *tx_buf_tmp = NULL;
  	unsigned long flags;
- 	int ret, i;
  
-@@ -5837,6 +5838,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 		rx_urb->hw = hw;
- 
- 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
-+		if (ret) {
-+			if (ret != -ENOMEM) {
-+				skb = (struct sk_buff *)rx_urb->urb.context;
-+				dev_kfree_skb(skb);
-+			}
-+			rtl8xxxu_queue_rx_urb(priv, rx_urb);
-+		}
++	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
+ 				 &hif_dev->tx.tx_buf, list) {
++		usb_get_urb(tx_buf->urb);
++		spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 		usb_kill_urb(tx_buf->urb);
+ 		list_del(&tx_buf->list);
+ 		usb_free_urb(tx_buf->urb);
+ 		kfree(tx_buf->buf);
+ 		kfree(tx_buf);
++		spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
  	}
- exit:
- 	/*
++	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
+ 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 	hif_dev->tx.flags |= HIF_USB_TX_FLUSH;
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
++	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
+ 				 &hif_dev->tx.tx_pending, list) {
++		usb_get_urb(tx_buf->urb);
++		spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 		usb_kill_urb(tx_buf->urb);
+ 		list_del(&tx_buf->list);
+ 		usb_free_urb(tx_buf->urb);
+ 		kfree(tx_buf->buf);
+ 		kfree(tx_buf);
++		spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 	}
++	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
+ 	usb_kill_anchored_urbs(&hif_dev->mgmt_submitted);
+ }
 -- 
 2.25.1
 
