@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53537C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF03EC433DF
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F9D5222C8
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAE4C2237B
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603048755;
-	bh=W7djoAKVSL07Q8YxcMiprpi1nhnt1rRDRNxZOdBdfkU=;
+	s=default; t=1603048788;
+	bh=9Sx0IAu1/0/VuI3DDafXQrRZCdENDRmfs4yGwY71IbQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=c5EmJYJl0rmbtKVETnjbSGQN2AHv6zecwcwQVJ9DGynawdDwG51A0bRrMCUfaK8Zh
-	 dzhYCSGuKxQwumTY3JWswKZ8egPolQh6iiwJc+6RQJeYkc34/LTh7kkZFOTTkQk27m
-	 QytHgnqJ3iRPKqsetFdql8usGZmDRf5vWS449NKo=
+	b=MlQbsZcRkkXjG2S0rRcErWwdY15l8jG4lmf/H7+QEe1BuogM2n6DO4f3FREJo/OSX
+	 eoGRv6sc5lBjapCi5po4iWWAdGZEfOh7qZoLGg+S/YNKuGu2rBMEcHvfK2M8XB+XOT
+	 wO5RenvUQg4ge8NlTZ8PU9QKitRKXN6LWiWZyrGQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728092AbgJRTTL (ORCPT
+        id S1728469AbgJRTTq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:19:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57696 "EHLO mail.kernel.org"
+        Sun, 18 Oct 2020 15:19:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58762 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728039AbgJRTTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:19:11 -0400
+        id S1728436AbgJRTTq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:19:46 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D4489222B9;
-        Sun, 18 Oct 2020 19:19:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 86A5722365;
+        Sun, 18 Oct 2020 19:19:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048750;
-        bh=W7djoAKVSL07Q8YxcMiprpi1nhnt1rRDRNxZOdBdfkU=;
+        s=default; t=1603048785;
+        bh=9Sx0IAu1/0/VuI3DDafXQrRZCdENDRmfs4yGwY71IbQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d8sdIjBmOxNWW2xgDW/kAUVMLlRw3gP9+BzSBg+FD9lbM06z/yJc7lZ17cjjJZ8T9
-         1z5w4rsi3spXaWlDFipb4g/HZ7UatKBmenxS8wfgYpQ525gPMd7KY3xbDu6noiNTS7
-         DDJiCZVFiTqc6mLDgoE6XtzJwJY6KgUTK+qvjsTA=
+        b=2ixSI0YNcxb/oxzJOv61F9P9Y3ZfhlX9A55Riy/V0B7tQdD+58WV6JZR2uJ6iJhVi
+         AQAP1Gs4dMH1ZrdqTkaMTi6GgO7RZUHEqe+UWW+9vlLJhMj1c4AFTIX2+1XNzrHK0G
+         Q1NKq+G+EqgMEW8NT2bMddN1CiZX8vXxKQ35kRt4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tzu-En Huang <tehuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 052/111] rtw88: increse the size of rx buffer size
-Date:   Sun, 18 Oct 2020 15:17:08 -0400
-Message-Id: <20201018191807.4052726-52-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 081/111] rtl8xxxu: prevent potential memory leak
+Date:   Sun, 18 Oct 2020 15:17:37 -0400
+Message-Id: <20201018191807.4052726-81-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
 References: <20201018191807.4052726-1-sashal@kernel.org>
@@ -59,37 +58,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Chris Chiu <chiu@endlessm.com>
 
-[ Upstream commit ee755732b7a16af018daa77d9562d2493fb7092f ]
+[ Upstream commit 86279456a4d47782398d3cb8193f78f672e36cac ]
 
-The vht capability of MAX_MPDU_LENGTH is 11454 in rtw88; however, the rx
-buffer size for each packet is 8192. When receiving packets that are
-larger than rx buffer size, it will leads to rx buffer ring overflow.
+Free the skb if usb_submit_urb fails on rx_urb. And free the urb
+no matter usb_submit_urb succeeds or not in rtl8xxxu_submit_int_urb.
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Chris Chiu <chiu@endlessm.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200925061219.23754-2-tehuang@realtek.com
+Link: https://lore.kernel.org/r/20200906040424.22022-1-chiu@endlessm.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/pci.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index 024c2bc275cbe..ca17aa9cf7dc7 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -9,8 +9,8 @@
- #define RTK_BEQ_TX_DESC_NUM	256
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 19efae462a242..5cd7ef3625c5e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5795,7 +5795,6 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
+ 	ret = usb_submit_urb(urb, GFP_KERNEL);
+ 	if (ret) {
+ 		usb_unanchor_urb(urb);
+-		usb_free_urb(urb);
+ 		goto error;
+ 	}
  
- #define RTK_MAX_RX_DESC_NUM	512
--/* 8K + rx desc size */
--#define RTK_PCI_RX_BUF_SIZE	(8192 + 24)
-+/* 11K + rx desc size */
-+#define RTK_PCI_RX_BUF_SIZE	(11454 + 24)
+@@ -5804,6 +5803,7 @@ static int rtl8xxxu_submit_int_urb(struct ieee80211_hw *hw)
+ 	rtl8xxxu_write32(priv, REG_USB_HIMR, val32);
  
- #define RTK_PCI_CTRL		0x300
- #define BIT_RST_TRXDMA_INTF	BIT(20)
+ error:
++	usb_free_urb(urb);
+ 	return ret;
+ }
+ 
+@@ -6318,6 +6318,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct rtl8xxxu_rx_urb *rx_urb;
+ 	struct rtl8xxxu_tx_urb *tx_urb;
++	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	int ret, i;
+ 
+@@ -6368,6 +6369,13 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 		rx_urb->hw = hw;
+ 
+ 		ret = rtl8xxxu_submit_rx_urb(priv, rx_urb);
++		if (ret) {
++			if (ret != -ENOMEM) {
++				skb = (struct sk_buff *)rx_urb->urb.context;
++				dev_kfree_skb(skb);
++			}
++			rtl8xxxu_queue_rx_urb(priv, rx_urb);
++		}
+ 	}
+ 
+ 	schedule_delayed_work(&priv->ra_watchdog, 2 * HZ);
 -- 
 2.25.1
 
