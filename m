@@ -2,80 +2,103 @@ Return-Path: <SRS0=676Y=DZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7223EC433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 17:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEE7C43457
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 18:59:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C4E122254
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 17:45:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3493E22266
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Oct 2020 18:59:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UHJIZJK9"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qhWiWAYm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbgJRRpH (ORCPT
+        id S1727653AbgJRS7z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Oct 2020 13:45:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46316 "EHLO
+        Sun, 18 Oct 2020 14:59:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbgJRRpG (ORCPT
+        with ESMTP id S1727427AbgJRS7w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Oct 2020 13:45:06 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91DB0C061755
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2020 10:45:06 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id j30so10407512lfp.4
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2020 10:45:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=JJeJFRHel1iJDd+fwQkAkdIWYIMT4go0GkRWx7kaVR8=;
-        b=UHJIZJK9wWoFCavW9i0Ldwmratwirp4DxObgl+wkPLJRTpuKVOYCeZ50nVf0Wyr132
-         8Y7ZETr/dqL75O2lqQFkaFz7oz+fwOIgpJYrRQ45yxT3Y/LFjER2Ta5O95uinlPcwZhj
-         HcEU2O83SYsOQwf1976gAba2DNeEWf8dIiI7kL37WxR/R6dB2hV9blqaKQqKqW32iQ1c
-         V/dnY2kqA54puVvtuK1q4NuKtoYPECEWXb1PhaOHnXJVv+bMWm+AQuMBDXsOJxmKntAc
-         EO32NNHpF+MyJMFijZCQaNEP5ggZ1seBne7ywr/NyucPz1Pz5cO2srixaQH8aQd5ajCr
-         Ew6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=JJeJFRHel1iJDd+fwQkAkdIWYIMT4go0GkRWx7kaVR8=;
-        b=XJ1lmK1an6UYe9TlANt+ofgSqGeKzkzsMUo1I09OTnJQymSA4CCrn1YXKjUWlSheLu
-         2+iwWlRBnl/bE86/xYY9DUboKhHri1xRT34iuoOaXhOD3ROKaZ2Vn8eHDDIgEZMViaLi
-         4KFvix8gnI6M77KGSSohsKqO/3XolCnEue9uTsafdzvkG8haSNFnX/GFQbv6oWTZHbdm
-         HXun0qvW720A5dNDy3zhdxXVPhmke3jYEx0ZTt7cvgSDvVHAJbMMlGZwCcLJYqvhe5tp
-         mgW4LPcz8+6eKrnAZS5EuxsVdixmKTOmky6M1TL4zRD/sNtYHXjJRf4opxa6NhGNDuO4
-         sGAQ==
-X-Gm-Message-State: AOAM532jVdJxWxd+5+b0pqweU0njoyn49HbYklGAistDk9xWDL6cyJMG
-        mxUbrGvlIVn1jS3Q3siKb13pAXooyo2QjenP0za5hOI8PfySXeqP
-X-Google-Smtp-Source: ABdhPJys7IEiCyJ1scww4xRM8Ef0J+hPUrT67WdjLzQbvzYxTriKBAdYHamqnmsXGSCAR7CEM1iXBzwGwBEQ9vcWDPo=
-X-Received: by 2002:a19:8d3:: with SMTP id 202mr4305807lfi.600.1603043103544;
- Sun, 18 Oct 2020 10:45:03 -0700 (PDT)
+        Sun, 18 Oct 2020 14:59:52 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 790A6C061755;
+        Sun, 18 Oct 2020 11:59:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=q0BhqrN3gbd6Z80uxUuHxnuOGNa3MQpvn/ujKpbjoKc=; b=qhWiWAYm9fZ2KNDR/Yk3WeXFl4
+        HF2RciAjYHBQMCf3sjKhvFkXSfibnOaNYa7rSxO4GAjMdOb5lKFie8w5W48ySlrw8CCYSSnOZO0Xg
+        5v+vzHZ7K/VxCxY2aBAso6UvZLXpaapi00aBgR18RXogoXyWfK3p9m9265NrgW55bmABmFf/ljB+D
+        9Af5uL1UZOzL5n8T3eza+cGiO5HDs2I27gnorvuwnA1XSsP05jdLks+n6C8PrE6p/2IOOkRu9s0Qf
+        2gQIITEDGF8BYWCD3hQsOGqb9beW/Q62vFU/IQef0kDvAQTCEweywjgtWsVjiKxR3wbF0iuVRtPwK
+        m1h79KbA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kUDuB-0007Wk-NT; Sun, 18 Oct 2020 18:59:43 +0000
+Date:   Sun, 18 Oct 2020 19:59:43 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     trix@redhat.com
+Cc:     linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
+        clang-built-linux@googlegroups.com, linux-iio@vger.kernel.org,
+        nouveau@lists.freedesktop.org, storagedev@microchip.com,
+        dri-devel@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        ath10k@lists.infradead.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        usb-storage@lists.one-eyed-alien.net,
+        linux-watchdog@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvdimm@lists.01.org, amd-gfx@lists.freedesktop.org,
+        linux-acpi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-pci@vger.kernel.org, spice-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-nfc@lists.01.org, linux-pm@vger.kernel.org,
+        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-gpio@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-amlogic@lists.infradead.org,
+        openipmi-developer@lists.sourceforge.net,
+        platform-driver-x86@vger.kernel.org,
+        linux-integrity@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org,
+        netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        linux-crypto@vger.kernel.org, patches@opensource.cirrus.com,
+        bpf@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-power@fi.rohmeurope.com
+Subject: Re: [Ocfs2-devel] [RFC] treewide: cleanup unreachable breaks
+Message-ID: <20201018185943.GM20115@casper.infradead.org>
+References: <20201017160928.12698-1-trix@redhat.com>
 MIME-Version: 1.0
-References: <CAPCMANR84rD9pLnoq1S9Oi_J9U+P85=aBu+0z96q=DpGkHxKvQ@mail.gmail.com>
-In-Reply-To: <CAPCMANR84rD9pLnoq1S9Oi_J9U+P85=aBu+0z96q=DpGkHxKvQ@mail.gmail.com>
-From:   Raif Atef <cpmdxe135@gmail.com>
-Date:   Sun, 18 Oct 2020 19:44:37 +0200
-Message-ID: <CAPCMANSrKvR1D=zXecThUwSvx_f4Hdtunb4PFQvNQ76nZe1tow@mail.gmail.com>
-Subject: Re: wireless-regdb: Update regulatory rules for Egypt (EG) on 5GHz
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201017160928.12698-1-trix@redhat.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
-I am from Egypt. The current enforced wireless regdb restrictions for
-my country are out of date and very severe (40 MHz max) and have been
-relaxed by our NTRA (National Telecom Regulatory Authority) in 2018:
-https://nuzeal.com/index.php/2018/01/07/macao-update-to-list-of-exempted-devices-2/
+On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
+> clang has a number of useful, new warnings see
+> https://urldefense.com/v3/__https://clang.llvm.org/docs/DiagnosticsReference.html__;!!GqivPVa7Brio!Krxz78O3RKcB9JBMVo_F98FupVhj_jxX60ddN6tKGEbv_cnooXc1nnBmchm-e_O9ieGnyQ$ 
 
-Kindly update the restrictions based on the official published
-guidelines available on the NTRA website present at this URL:
+Please get your IT department to remove that stupidity.  If you can't,
+please send email from a non-Red Hat email address.
 
-https://www.tra.gov.eg/en/industry/importing-of-equipment/Pages/Regulations-for-use-of-Wireless-Networks-Devices.aspx
+I don't understand why this is a useful warning to fix.  What actual
+problem is caused by the code below?
 
-Thank you very much.
+> return and break
+> 
+>  	switch (c->x86_vendor) {
+>  	case X86_VENDOR_INTEL:
+>  		intel_p5_mcheck_init(c);
+>  		return 1;
+> -		break;
+
+Sure, it's unnecessary, but it's not masking a bug.  It's not unclear.
+Why do we want to enable this warning?
+
