@@ -7,29 +7,28 @@ X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 444CBC4363A
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDF41C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:34:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CADD721D81
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:28:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8432F2080D
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:34:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="sx2pnmhR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="vZfU3lti"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730590AbgJSQ2Y (ORCPT
+        id S1730190AbgJSQeG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Oct 2020 12:28:24 -0400
-Received: from gateway22.websitewelcome.com ([192.185.47.206]:11469 "EHLO
+        Mon, 19 Oct 2020 12:34:06 -0400
+Received: from gateway22.websitewelcome.com ([192.185.47.206]:47558 "EHLO
         gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730404AbgJSQ2W (ORCPT
+        by vger.kernel.org with ESMTP id S1730025AbgJSQeG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Oct 2020 12:28:22 -0400
-X-Greylist: delayed 2236 seconds by postgrey-1.27 at vger.kernel.org; Mon, 19 Oct 2020 12:28:21 EDT
-Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id 0674516B54
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2020 10:50:40 -0500 (CDT)
+        Mon, 19 Oct 2020 12:34:06 -0400
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway22.websitewelcome.com (Postfix) with ESMTP id B64AC4DB97
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2020 11:32:35 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id UXOpkpNSDn9FWUXOpkb5n3; Mon, 19 Oct 2020 10:48:39 -0500
+        id UY5LkBwHtCjCVUY5LkUqwk; Mon, 19 Oct 2020 11:32:35 -0500
 X-Authority-Reason: nr=8
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
@@ -37,17 +36,17 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=odJYZ9d0+pjHgZgCva+iMZ6Ry5+QIMVMpj0o527LzrE=; b=sx2pnmhRmXpWfy+BTimwNrB9En
-        qtwHG90seMXXta/v0Oiv85QNzOQANQNlT3MgbNHgPtA6diKkgJFli75nORi0rBPrBAPWihBkf0slT
-        +zBYi0fXiGj6IaqW41jn24pVXd2hfslvaoGLlQYBqH6mTJXaTaoHlNKy5RabvhmQ0i4KmyInP5gdp
-        aT45U7L/ROdhNYYvnGu/8dWGzIxLNQiDcWlhQgpt9TXNKUXzul2427yOUQ/+f/HdzjrrJrRfk6nH1
-        3+44d/uFwdfDvLizRhOQiisEs86cQ//CcFZsM5VBLUVy9VIq/7EZnl41a0hHzfPb/1fG5ZakfIOGp
-        smj2xjFA==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:59474 helo=[192.168.15.4])
+        bh=v58y/uoe8Kv3a3HEuASe1O7T7WVx11+I5SfIzUyKNiI=; b=vZfU3lti1WUzlZoCDEgltRah+f
+        ag+ZD0dqhHrqTgHuxC5ZvSWs1RsIegE323WH5CV8RKTDeUCreRRjp7xv872aVSDe8Nb6kfb5FxHBA
+        7YQTq0P0wL01gXrNJ7LGwqMNuTiQSdnI8URKgeIf2MhJbAGkZ7/XRDpjNHjTPFiMdLA+OgeypxW0i
+        Rd0Ps8Ki+Rwd704LRHvg89X8Laqu6RSrUgdCVnl7R+rrnRVuN/lXSgid5LRfuGC0VTh840LiTl8av
+        sc9rbaP9e9tlCyGuST1j/6XSJinwzveQZHCiKtGEj8A5rg4HqZvAanZkHH5ZDYaC8eIfVm/mXBk0Y
+        pvgs9DQg==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:32944 helo=[192.168.15.4])
         by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.93)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1kUXOo-001bx0-4u; Mon, 19 Oct 2020 10:48:38 -0500
+        id 1kUY5K-0023px-E1; Mon, 19 Oct 2020 11:32:34 -0500
 Subject: Re: [PATCH] wireless: remove unneeded break
 To:     Joe Perches <joe@perches.com>,
         Christian Lamparter <chunkeey@gmail.com>, trix@redhat.com,
@@ -69,6 +68,8 @@ Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
 References: <20201019150507.20574-1-trix@redhat.com>
  <b31478ea-979a-1c9c-65db-32325233a715@gmail.com>
  <859112e91c3d221dc599e381dbaecb90dd6467a1.camel@perches.com>
+ <fb38b96a-b666-1a6d-211d-b79278a8d878@embeddedor.com>
+ <5964d734e81c198421bb7f6516dabcad37c1740d.camel@perches.com>
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
  xsFNBFssHAwBEADIy3ZoPq3z5UpsUknd2v+IQud4TMJnJLTeXgTf4biSDSrXn73JQgsISBwG
@@ -114,12 +115,12 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9ehGZEO3+gCDFmK
  rjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrSVtSixD1uOgyt
  AP7RWS474w==
-Message-ID: <fb38b96a-b666-1a6d-211d-b79278a8d878@embeddedor.com>
-Date:   Mon, 19 Oct 2020 10:54:29 -0500
+Message-ID: <715ddf72-978c-a525-0625-ea740a104f2a@embeddedor.com>
+Date:   Mon, 19 Oct 2020 11:38:25 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <859112e91c3d221dc599e381dbaecb90dd6467a1.camel@perches.com>
+In-Reply-To: <5964d734e81c198421bb7f6516dabcad37c1740d.camel@perches.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -131,13 +132,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 187.162.31.110
 X-Source-L: No
-X-Exim-ID: 1kUXOo-001bx0-4u
+X-Exim-ID: 1kUY5K-0023px-E1
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.4]) [187.162.31.110]:59474
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.4]) [187.162.31.110]:32944
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 30
+X-Email-Count: 29
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Precedence: bulk
@@ -146,55 +147,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 10/19/20 10:21, Joe Perches wrote:
-> On Mon, 2020-10-19 at 17:14 +0200, Christian Lamparter wrote:
->> On 19/10/2020 17:05, trix@redhat.com wrote:
->>> From: Tom Rix <trix@redhat.com>
->>>
->>> A break is not needed if it is preceded by a return or goto
->>>
->>> Signed-off-by: Tom Rix <trix@redhat.com>
->>> diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
->>> index 5bd35c147e19..3ca9d26df174 100644
->>> --- a/drivers/net/wireless/intersil/p54/eeprom.c
->>> +++ b/drivers/net/wireless/intersil/p54/eeprom.c
->>> @@ -870,7 +870,6 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
->>>   			} else {
->>>   				goto good_eeprom;
->>>   			}
->>> -			break;
->> Won't the compiler (gcc) now complain about a missing fallthrough annotation?
-
-Clang would definitely complain about this.
-
->>>   		default:
->>>   			break;
->>>   		}
+On 10/19/20 11:20, Joe Perches wrote:
+> On Mon, 2020-10-19 at 10:54 -0500, Gustavo A. R. Silva wrote:
+>> On 10/19/20 10:21, Joe Perches wrote:
+>>> On Mon, 2020-10-19 at 17:14 +0200, Christian Lamparter wrote:
+>>>> On 19/10/2020 17:05, trix@redhat.com wrote:
+>>>>> From: Tom Rix <trix@redhat.com>
+>>>>>
+>>>>> A break is not needed if it is preceded by a return or goto
+>>>>>
+>>>>> Signed-off-by: Tom Rix <trix@redhat.com>
+>>>>> diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
+> []
+>>>>> @@ -870,7 +870,6 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+>>>>>   			} else {
+>>>>>   				goto good_eeprom;
+>>>>>   			}
+>>>>> -			break;
+>>>> Won't the compiler (gcc) now complain about a missing fallthrough annotation?
+>>
+>> Clang would definitely complain about this.
 > 
-> No, though the code would be clearer like:
-> ---
-> diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
-> index 5bd35c147e19..233fa072d96d 100644
-> --- a/drivers/net/wireless/intersil/p54/eeprom.c
-> +++ b/drivers/net/wireless/intersil/p54/eeprom.c
-> @@ -867,10 +867,8 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
->  					 "test!\n");
->  				err = -ENOMSG;
->  				goto err;
-> -			} else {
-> -				goto good_eeprom;
->  			}
-> -			break;
-> +			goto good_eeprom;
->  		default:
->  			break;
->  		}
-> 
-> 
+> As far as I can tell, clang 10.0.0 doesn't complain.
 
-This is much better because it'd avoid any complain from Clang.
+Oh, yeah. I didn't see the other "goto err;" in the if clause above. Clang doesn't
+complain because there is actually no chance of any implicit fall-through.
 
 --
 Gustavo
-
-
