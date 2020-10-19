@@ -2,122 +2,307 @@ Return-Path: <SRS0=Yehs=D2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD36C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 12:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42BE3C433E7
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 13:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1432222B8
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 12:35:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83520222C3
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 13:29:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=eworm.de header.i=@eworm.de header.b="vrBEDBWA"
+	dkim=pass (1024-bit key) header.d=celeno.com header.i=@celeno.com header.b="KonvDyW7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727105AbgJSMfy (ORCPT
+        id S1728279AbgJSN3T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Oct 2020 08:35:54 -0400
-Received: from mx.mylinuxtime.de ([195.201.174.144]:33946 "EHLO
-        mx.mylinuxtime.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbgJSMfy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Oct 2020 08:35:54 -0400
-Received: from leda (p200300cf2f11e700625718fffe7f1598.dip0.t-ipconnect.de [IPv6:2003:cf:2f11:e700:6257:18ff:fe7f:1598])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mx.mylinuxtime.de (Postfix) with ESMTPSA id 1232812124F;
-        Mon, 19 Oct 2020 14:25:54 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=eworm.de; s=mail;
-        t=1603110354;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HbeAnW4c9Dm1n3xDUNmcoJFkwlht8FqAxioW4sSFnss=;
-        b=vrBEDBWAYq288Avn9QNnyGLoVt2nS6RZYUCb76YN8NTGdjfVaVM6Rqe2p9UiNlTWcRbWgO
-        D8AMFW59rc/qv9qeBcgy2iQOGUXLVQP9CxrdetvGnViLaNIgEOZ34XH1Og4mupOEfaptxZ
-        dT2Jg9n2DzgKU2Ln4oMqK7I5Ygoe0xU=
-Date:   Mon, 19 Oct 2020 14:25:50 +0200
-From:   Christian Hesse <list@eworm.de>
-To:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-Cc:     Thomas Deutschmann <whissi@gentoo.org>,
-        <johannes@sipsolutions.net>,
-        "davem@davemloft.net" <davem@davemloft.net>, <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, netdev <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        <denkenz@gmail.com>
-Subject: Re: [Regression 5.9][Bisected 1df2bdba528b] Wifi GTK rekeying
- fails: Sending of EAPol packages broken
-Message-ID: <20201019142550.5fe02d7d@leda>
-In-Reply-To: <20201017230818.04896494@mathy-work.localhost>
-References: <4a7f92dc-13bb-697f-1730-ac288e74b730@gentoo.org>
-        <20201017230818.04896494@mathy-work.localhost>
-X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-X-Face: %O:rCSk<c"<MpJ:yn<>HSKf7^4uF|FD$9$I0}g$nbnS1{DYPvs#:,~e`).mzj\$P9]V!WCveE/XdbL,L!{)6v%x4<jA|JaB-SKm74~Wa1m;|\QFlOg>\Bt!b#{;dS&h"7l=ow'^({02!2%XOugod|u*mYBVm-OS:VpZ"ZrRA4[Q&zye,^j;ftj!Hxx\1@;LM)Pz)|B%1#sfF;s;,N?*K*^)
-Face:   iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAGFBMVEUZFRFENy6KVTKEd23CiGHeqofJvrX4+vdHgItOAAAACXBIWXMAAA3XAAAN1wFCKJt4AAACUklEQVQ4y2VUTZeqMAxNxXG2Io5uGd64L35unbF9ax0b3OLxgFs4PcLff0lBHeb1QIq5uelNCEJNq/TIFGyeC+iugH0WJr+B1MvzWASpuP4CYHOB0VfoDdddwA7OIFQIEHjXDiCtV5e9QX0WMu8AG0mB7g7WP4GqeqVdsi4vv/5kFBvaF/zD7zDquL4DxbrDGDyAsgNYOsJOYzth4Q9ZF6iLV+6TLAT1pi2kuvgAtZxSjoG8cL+8vIn251uoe1OOEWwbIPU04gHsmMsoxyyhYsD2FdIigF1yxaVbBuSOCAlCoX324I7wNMhrO1bhOLsRoA6DC6wQ5eQiSG5BiWQfM4gN+uItQTRDMaJUhVbGyKWCuaaUGSVFVKpl4PdoDn3yY8J+YxQxyhlHfoYOyPgyDcO+cSQK6Bvabjcy2nwRo3pxgA8jslnCuYw23ESOzHAPYwo4ITNQMaOO+RGPEGhSlPEZBh2jmBEjQ5cKbxmr0ruAe/WCriUxW76I8T3h7vqY5VR5wXLdERodg2rHEzdxxk5KpXTL4FwnarvndKM5/MWDY5CuBBdQ+3/0ivsUJHicuHd+Xh3jOdBL+FjSGq4SPCwco+orpWlERRTNo7BHCvbNXFVSIQMp+P5QsIL9upmr8kMTUOfxEHoanwzKRcNAe76WbjBwex/RkdHu48xT5YqP70DaMOhBcTHmAVDxLaBdle93oJy1QKFUh2GXT4am+YH/GGel1CeI98GdMXsytjCKIq/9cMrlgxFCROv+3/BU1fijNpcVD6DxE8VfLBaxUGr1D5usgDYdjwiPAAAAAElFTkSuQmCC
+        Mon, 19 Oct 2020 09:29:19 -0400
+Received: from mail-eopbgr130047.outbound.protection.outlook.com ([40.107.13.47]:24215
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727297AbgJSN3T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Oct 2020 09:29:19 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KrMd59NzH+fWvM39n98iZVWJpIQzQu9RH9DxpQgZ0y26U1NE4fr/E9P0XGVyuZvhXjFTWeB9zg2VtRTuK6qzxiP4ND7WyYZGIujKnT0yUJaV2JWcPZJOb6MFWIUMMSyriJQ+P+qDtwb/VO6kzCuyhgTaqt0zD34ZPI5UDuH2aQZ1EWsJY80fWmvzXkvecKb4C2Pf97PN2Ig2/mjZMXSsM/Sg50SStOnajn2KlkvL2stRilKOvBVzx0k0eBjllkQJJUWKURoQLnK6yLWvQAFJX9xLsELjqBawW9wkhs4ugZCDvS3hkwFz0EXZJJDkC0BjdBSSP+R1Yq6AT/hXkHkOsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KEtTDL6TaMVgoxhWmnDg5+2hJ/etakiR90UjfSQgxKw=;
+ b=Pj5goviEWGfOshlh7znQoSYZdkA12NsQ9SFlMFXPqpifxqRGp4i8NFo07/3b5kJyu8no33dCpp+vCNOThCnrcYQdwe/OVxD849Ymy47OqB2WvSVCS4uScBodUeUdslp/h029YiTHmAXZFM4sKUwiHukKSOBwPplzDZ42d+sgjip7UM5etQa4O1wrvmrGWXlPyhynsmGeBiCeDiXbVV1HiNdQXoIxf4DwoyimWvB/o3HOBRF4jVHHTx6AbOhzanJk/yzvl1bJ8VFkJANdy7WMzFPJUlYUeSPsB0ZUDN951CA2XaxkW/F1Sd/M8HcgNzJ0oe+7dOCLbNI38GMm9OfN3g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
+ dkim=pass header.d=celeno.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KEtTDL6TaMVgoxhWmnDg5+2hJ/etakiR90UjfSQgxKw=;
+ b=KonvDyW7anV5oT4PDTFKvjsQFbcdZNE9/DF6Axd9wzdWyTZtpAOqGH+RADGssWbU1facIJqCdvnffZjnA97bEoaZBbCAI01PZGtR5gQaGfVcdbdA7/PG/6tVlSTb5JO0db5r+suPANUpGzy00TSeJ8aNpUNuoiXEYUzOgu8r08Y=
+Authentication-Results: sipsolutions.net; dkim=none (message not signed)
+ header.d=none;sipsolutions.net; dmarc=none action=none
+ header.from=celeno.com;
+Received: from AM0P192MB0468.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:45::15)
+ by AM8P192MB1010.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1eb::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.20; Mon, 19 Oct
+ 2020 13:26:34 +0000
+Received: from AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
+ ([fe80::86f:dc24:7a0f:6189]) by AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
+ ([fe80::86f:dc24:7a0f:6189%4]) with mapi id 15.20.3477.028; Mon, 19 Oct 2020
+ 13:26:34 +0000
+From:   Shay Bar <shay.bar@celeno.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, aviad.brikman@celeno.com,
+        eliav.farber@celeno.com
+Subject: [PATCH v3 v3] mac80211: 160MHz support per IEEE802.11ax standard
+Date:   Mon, 19 Oct 2020 16:26:16 +0300
+Message-Id: <20201019132616.32286-1-shay.bar@celeno.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201019063921.4335-1-shay.bar@celeno.com>
+References: <20201019063921.4335-1-shay.bar@celeno.com>
+Content-Type: text/plain
+X-Originating-IP: [77.124.52.93]
+X-ClientProxiedBy: LNXP265CA0047.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:5c::35) To AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:208:45::15)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-X-Spamd-Bar: ++
-Authentication-Results: mx.mylinuxtime.de;
-        auth=pass smtp.auth=mail@eworm.de smtp.mailfrom=list@eworm.de
-X-Rspamd-Server: mx
-X-Stat-Signature: a4knrgg6w7u93idcbjoyp98uns7wyc1w
-X-Rspamd-Queue-Id: 1232812124F
-X-Spamd-Result: default: False [2.11 / 15.00];
-         ARC_NA(0.00)[];
-         TO_DN_EQ_ADDR_SOME(0.00)[];
-         URIBL_BLOCKED(0.00)[kuleuven.be:email];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         FREEMAIL_ENVRCPT(0.00)[gmail.com];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         MIME_GOOD(-0.20)[multipart/signed,text/plain];
-         BAYES_SPAM(5.08)[99.96%];
-         NEURAL_HAM_LONG(-2.70)[-0.901];
-         DKIM_SIGNED(0.00)[];
-         NEURAL_HAM_SHORT(-0.57)[-0.572];
-         RCPT_COUNT_SEVEN(0.00)[9];
-         RCVD_COUNT_ZERO(0.00)[0];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+,1:+,2:~];
-         MID_RHS_NOT_FQDN(0.50)[];
-         ASN(0.00)[asn:3320, ipnet:2003::/19, country:DE];
-         FREEMAIL_CC(0.00)[gentoo.org,sipsolutions.net,davemloft.net,kernel.org,vger.kernel.org,gmail.com]
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (77.124.52.93) by LNXP265CA0047.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:5c::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.20 via Frontend Transport; Mon, 19 Oct 2020 13:26:33 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ba394a8a-93b7-4eb3-2a06-08d874329946
+X-MS-TrafficTypeDiagnostic: AM8P192MB1010:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <AM8P192MB10108D29C8ACFEDA137B49FDE71E0@AM8P192MB1010.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ByiZABjNQG+ldsGtLCwx1OpqYAtT6QPRiWGXDn/3jDn3Xz5/B0MSoitIclmtgEtRAgEQYqTDx58hlQk5+CDg63GG8vIRO5oO86mtu8gprwrAWxlHl69NfCl7ctmr60wsMP5FCIlPJnwG5UVMcSrbvJG5CbWzBJez5ZUxVDTakmhUc8dHzcJ56r2CjVc97nQ4kUTxpWAabfOmV5q236JJvltptcTucyjioPCbiJcHcXj9xfi3MB7fnWcue3XMVi5wph2hq840p6kF9FpXfCYUNQvVXxPorfdpALWo8Oz8PJmANvJ5drb2nfPSSXaNDeIqr0GLxfVCyML9MDEcfdM9FBsaxqz0isnSB2ZY2Dw2pZ9mDLlAksFCX91DF0Aqbh9e
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0P192MB0468.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(376002)(39850400004)(136003)(396003)(346002)(66556008)(66946007)(316002)(44832011)(66476007)(52116002)(6506007)(6666004)(2906002)(1076003)(5660300002)(956004)(2616005)(8676002)(8936002)(26005)(186003)(16526019)(6916009)(6486002)(4326008)(107886003)(478600001)(6512007)(86362001)(83380400001)(36756003)(69590400008);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: bxvgFx7nl2qYOz1n07K/o4djngyLuwG7SHXrUPX3BBLNh7TIQPHOwMuZQ0F9TJyJxkttOFuYIDL64jK42u06XS2iivIVajF8/+mJdZU2rRLQ9wLAqhzSLO2gnKbhcwya4s2pN/2VTYN55TYumcQ9IsEBFx6GXWRaqbEYV7Kc/w6sElAIpGqFzP29pT9qDH72bPLAudquCr/b+Pm/KKC/0beZ31swLXcymXTOA4kddQkrOvGYvnYktje/+TB7jTF2SYMFqLBYZAWMw0ZtfcAbBHA4JZlSkL4YJVnQmSHKzHZw208RUFFFUJluJF7ZWyy0D9G4QrHI9lcJN8Z3PGIlNGmjxseuIMB9HoNPEUYRWLQ/cDYxdclhPgX1VqbZDSZoopzgnsejoB8WbYjy3k4FYbRHjMtcBtqsv9chCk6xiESXLm3VKfAGOlVgVvF2TF//BJP0unSeWMIyyR24GziTJiDlboBgtpER2j4enUN4L3q2A+UtbpIWPFhMd2weP8cqITLsQ+Tz5unJhnFrHOCJ72+ayTk3STeLGBU5z66d7kkhwM4vtX+194hGihIOKZhwL6Iemry7VrWDxEsAKzkpwQHlQuqwflBW/z1AebqDlHPt0ByU3bxrblLeBgW3klaU7wvVoBbRQA81CRCNBF51hA==
+X-OriginatorOrg: celeno.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ba394a8a-93b7-4eb3-2a06-08d874329946
+X-MS-Exchange-CrossTenant-AuthSource: AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2020 13:26:34.5352
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Oj9EIOkFRig+tN6GrfApA0cyb5uQb9N67uIOBtlTdTUjhRuNHLlTUKrnour6s3MCWkN24n/JPtlG6SyTwwF+UA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1010
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+According to the new IEEE802.11ax standard center frequency of the 160MHz
+should be published in segment2 field of HT operation IE when using EXT NSS
+(when supporting smaller number of NSS in VHT in 160MHz BW).
+This patch adds the required support to mac80211, cfg80211 to parse it properly
+according to the new style as appears in the new standard.
 
-Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be> on Sat, 2020/10/17 23:08:
-> I've managed to reproduce the issue, or at least a related issue. Can
-> you try the draft patch below and see if that fixes it?
+According to the new style, the AP should publish that its bw is 80MHz and not
+160MHz.
+A STA should conclude that an AP is working in 160MHz if it publishes
+the center frequency of the 160MHz bandwidth in seg1 field of VHT operation IE
+or seg2 field of HT operation IE.
 
-This patch fixes the regression for me. Thanks a lot!
---=20
-main(a){char*c=3D/*    Schoene Gruesse                         */"B?IJj;MEH"
-"CX:;",b;for(a/*    Best regards             my address:    */=3D0;b=3Dc[a+=
-+];)
-putchar(b-1/(/*    Chris            cc -ox -xc - && ./x    */b/42*2-3)*42);}
+A little about the old/new style of the channel/bandwidth publish in beacons:
 
---Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+- In the old style bandwidth of 160MHz and center frequency segment 0 are
+  published in vht/he operation information element, while the center_freq_seg0
+  indicates the center frequency of 160MHz.
+- According to the new style, bandwidth of 80MHz is published and also the
+  following:
+    * If the supported number of VHT NSS in 160MHz is at least max VHT NSS
+      support, then center_freq_seg0 indicates the center frequency of 80MHz and
+      center_freq_seg1 indicates the center frequency of 160MHz.
+    * If the supported number of VHT NSS in 160MHz is less than max VHT NSS
+      support, then center_freq_seg0 indicates the center frequency of 80MHz and
+      center_freq_seg1 is 0. The center frequency of 160MHz is published in HT
+      operation information element instead.
 
------BEGIN PGP SIGNATURE-----
+Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
+Signed-off-by: Shay Bar <shay.bar@celeno.com>
+---
+ include/linux/ieee80211.h | 15 ++++++
+ net/mac80211/spectmgmt.c  | 99 ++++++++++++++++++++++++++++++++++++---
+ net/wireless/nl80211.c    | 15 ++++++
+ 3 files changed, 123 insertions(+), 6 deletions(-)
 
-iQEzBAEBCAAdFiEEXHmveYAHrRp+prOviUUh18yA9HYFAl+Nhc4ACgkQiUUh18yA
-9HZMWAgAj0Ppz0rYQxSPoYcQ8xdhh7kFdURLcEp8B7XkZzMhGxpXHssN5RCBoD1O
-NcmbWFulSI8VfpmwVPjvk3E3e7ZfQUVR/RCmp9NNLvI0TYCI+BsHb9EsTADWQTPO
-NaQum9kZWzZUF+oQN57n1bY+7Al7ifWzUBmblTr1BzgDmsrkR0fzGaS2QzPAgjij
-0Kpu+IHr+NRqYAlxWotMULgvxY0N8OhcPW0vGA2E5YMDlXvI+0eDHN/R87xSMdLK
-gWh4ydFCrtgu+sHSssy3EygMtaNuhlor3/7239pxLsoUs/vU4VD8UPJ9nf/JuexZ
-ZIGEYRFL5YtdzvlTIdVOtgSndc6dyQ==
-=WWxr
------END PGP SIGNATURE-----
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 770408b2fdaf..768285b143a3 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1748,6 +1748,21 @@ enum ieee80211_vht_chanwidth {
+ 	IEEE80211_VHT_CHANWIDTH_80P80MHZ	= 3,
+ };
+ 
++/**
++ * enum ieee80211_center_freq_seg1_location - the location of center
++ * frequency segment1
++ * @IEEE80211_CENTER_FREQ_SEG1_NONE: center freq seg1 is located no where
++ * @IEEE80211_CENTER_FREQ_SEG1_VHT_OPER: center freq seg1 is located in VHT
++ * operation IE
++ * @IEEE80211_CENTER_FREQ_SEG1_HT_OPER: center freq seg1 is located in HT
++ * operation IE
++ */
++enum ieee80211_center_freq_seg1 {
++	IEEE80211_CENTER_FREQ_SEG1_NONE		= 0,
++	IEEE80211_CENTER_FREQ_SEG1_VHT_OPER	= 1,
++	IEEE80211_CENTER_FREQ_SEG1_HT_OPER	= 2,
++};
++
+ /**
+  * struct ieee80211_vht_operation - VHT operation IE
+  *
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index ae1cb2c68722..569b9e9d1228 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -19,6 +19,81 @@
+ #include "sta_info.h"
+ #include "wme.h"
+ 
++static enum ieee80211_vht_chanwidth
++ieee80211_vht_get_actual_chwidth(u8 vht_oper_bw,
++				 u8 seg0,
++				 u8 seg1)
++{
++	enum ieee80211_vht_chanwidth ret = IEEE80211_VHT_CHANWIDTH_USE_HT;
++
++	if (vht_oper_bw != IEEE80211_VHT_CHANWIDTH_80MHZ)
++		return vht_oper_bw;
++
++	if (!seg1) {
++		return IEEE80211_VHT_CHANWIDTH_80MHZ;
++	} else {
++		int diff;
++
++		diff = abs((int) seg0 - (int) seg1);
++
++		if (diff == 8)
++			return IEEE80211_VHT_CHANWIDTH_160MHZ;
++
++		if (diff > 16)
++			return IEEE80211_VHT_CHANWIDTH_80P80MHZ;
++	}
++
++	return ret;
++}
++
++static enum ieee80211_center_freq_seg1
++ieee80211_get_center_freq_seg1_location(struct ieee80211_sub_if_data *sdata,
++					u32 vht_cap_info,
++					u8 actual_chanwidth)
++{
++	u8 ext_nss_bw = (vht_cap_info &
++			      IEEE80211_VHT_CAP_EXT_NSS_BW_MASK) >>
++			      IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT;
++	u8 supp_chwidth = (vht_cap_info &
++			   IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) >>
++			   IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
++	enum ieee80211_center_freq_seg1 res =
++					IEEE80211_CENTER_FREQ_SEG1_NONE;
++
++	/* The bandwidth is less than 80+80/160MHz */
++	if (actual_chanwidth < IEEE80211_VHT_CHANWIDTH_160MHZ)
++		return IEEE80211_CENTER_FREQ_SEG1_NONE;
++
++	switch (supp_chwidth) {
++	case 0:
++		if ((ext_nss_bw > 1) ||
++		    ((ext_nss_bw == 1) &&
++		     (actual_chanwidth == IEEE80211_VHT_CHANWIDTH_160MHZ)))
++			/* CCFS2 */
++			res = IEEE80211_CENTER_FREQ_SEG1_HT_OPER;
++		break;
++	case 1:
++		if ((ext_nss_bw > 2) ||
++		    (actual_chanwidth == IEEE80211_VHT_CHANWIDTH_160MHZ))
++			/* CCFS1 */
++			res = IEEE80211_CENTER_FREQ_SEG1_VHT_OPER;
++		else if (ext_nss_bw > 0)
++			/* CCFS2 */
++			res = IEEE80211_CENTER_FREQ_SEG1_HT_OPER;
++		break;
++	case 2:
++		res = IEEE80211_CENTER_FREQ_SEG1_VHT_OPER;
++		if ((ext_nss_bw > 0) && (ext_nss_bw < 3))
++			sdata_info(sdata,
++				   "Invalid ext_nss_bw %u\n", ext_nss_bw);
++		break;
++	default:
++		break;
++	}
++
++	return res;
++}
++
+ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				 struct ieee802_11_elems *elems,
+ 				 enum nl80211_band current_band,
+@@ -133,17 +208,29 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (wide_bw_chansw_ie) {
++		u8 new_channel_width = wide_bw_chansw_ie->new_channel_width;
++		u8 new_seg0 = wide_bw_chansw_ie->new_center_freq_seg0;
++		u8 new_seg1 = wide_bw_chansw_ie->new_center_freq_seg1;
++		enum ieee80211_vht_chanwidth act_chanwidth =
++			ieee80211_vht_get_actual_chwidth(new_channel_width,
++							 new_seg0, new_seg1);
++		enum ieee80211_center_freq_seg1 seg1_location =
++			ieee80211_get_center_freq_seg1_location(sdata,
++								vht_cap_info,
++								act_chanwidth);
+ 		struct ieee80211_vht_operation vht_oper = {
+-			.chan_width =
+-				wide_bw_chansw_ie->new_channel_width,
+-			.center_freq_seg0_idx =
+-				wide_bw_chansw_ie->new_center_freq_seg0,
+-			.center_freq_seg1_idx =
+-				wide_bw_chansw_ie->new_center_freq_seg1,
++			.chan_width = new_channel_width,
++			.center_freq_seg0_idx = new_seg0,
+ 			/* .basic_mcs_set doesn't matter */
+ 		};
+ 		struct ieee80211_ht_operation ht_oper = {};
+ 
++		if (seg1_location == IEEE80211_CENTER_FREQ_SEG1_VHT_OPER)
++			vht_oper.center_freq_seg1_idx = new_seg1;
++		else if (seg1_location == IEEE80211_CENTER_FREQ_SEG1_HT_OPER)
++			ht_oper.operation_mode = (new_seg1 <<
++					 IEEE80211_HT_OP_MODE_CCFS2_SHIFT);
++
+ 		/* default, for the case of IEEE80211_VHT_CHANWIDTH_USE_HT,
+ 		 * to the previously parsed chandef
+ 		 */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 554796a6c6fe..690a5a382d94 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2976,6 +2976,21 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 		chandef->edmg.channels = 0;
+ 	}
+ 
++	if (chandef->width == NL80211_CHAN_WIDTH_80) {
++		if (chandef->center_freq2) {
++			int diff = abs(chandef->center_freq1 -
++				       chandef->center_freq2);
++
++			if (diff == 40)
++				chandef->width = NL80211_CHAN_WIDTH_160;
++			else if (diff > 80)
++				chandef->width = NL80211_CHAN_WIDTH_80P80;
++
++			chandef->center_freq1 = chandef->center_freq2;
++			chandef->center_freq2 = 0;
++		}
++	}
++
+ 	if (!cfg80211_chandef_valid(chandef)) {
+ 		NL_SET_ERR_MSG(extack, "invalid channel definition");
+ 		return -EINVAL;
+-- 
+2.17.1
 
---Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j--
