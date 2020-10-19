@@ -2,101 +2,122 @@ Return-Path: <SRS0=Yehs=D2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51961C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 10:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD36C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 12:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA80822276
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 10:20:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1432222B8
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 12:35:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Uq9CyTIn"
+	dkim=pass (1024-bit key) header.d=eworm.de header.i=@eworm.de header.b="vrBEDBWA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726299AbgJSKUz (ORCPT
+        id S1727105AbgJSMfy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Oct 2020 06:20:55 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:46488 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726319AbgJSKUz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Oct 2020 06:20:55 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603102854; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=pO0FDD57J3zRK84jwOrYtrWoQ4FhQcuNNWfyu+hfw6A=; b=Uq9CyTInRcezxPTNEtKIvBCDSTWGo7k6n7Ceh2/MfRDd4EM9PPEaKxc72oMqmnTWpotHd+0O
- 0BqnNfp4fRlmRfUwM4kUUaAImjGJjZ0+MAk6TKBX8Z+FSRfmxzu1JXxI5dkwIhXeCGv4TBAW
- Xd//l1A7e4rLa+b1LLV9B/GXfJM=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 5f8d6879856d9308b5931717 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 19 Oct 2020 10:20:41
- GMT
-Sender: kathirve=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 19E03C433FF; Mon, 19 Oct 2020 10:20:41 +0000 (UTC)
-Received: from akalaise-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Mon, 19 Oct 2020 08:35:54 -0400
+Received: from mx.mylinuxtime.de ([195.201.174.144]:33946 "EHLO
+        mx.mylinuxtime.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgJSMfy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Oct 2020 08:35:54 -0400
+Received: from leda (p200300cf2f11e700625718fffe7f1598.dip0.t-ipconnect.de [IPv6:2003:cf:2f11:e700:6257:18ff:fe7f:1598])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        (Authenticated sender: kathirve)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6D47CC433F1;
-        Mon, 19 Oct 2020 10:20:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6D47CC433F1
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kathirve@codeaurora.org
-From:   Karthikeyan Kathirvel <kathirve@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Karthikeyan Kathirvel <kathirve@codeaurora.org>
-Subject: [PATCH] mac80211: choosing first channel from the list
-Date:   Mon, 19 Oct 2020 15:50:30 +0530
-Message-Id: <1603102830-28935-1-git-send-email-kathirve@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        by mx.mylinuxtime.de (Postfix) with ESMTPSA id 1232812124F;
+        Mon, 19 Oct 2020 14:25:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=eworm.de; s=mail;
+        t=1603110354;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HbeAnW4c9Dm1n3xDUNmcoJFkwlht8FqAxioW4sSFnss=;
+        b=vrBEDBWAYq288Avn9QNnyGLoVt2nS6RZYUCb76YN8NTGdjfVaVM6Rqe2p9UiNlTWcRbWgO
+        D8AMFW59rc/qv9qeBcgy2iQOGUXLVQP9CxrdetvGnViLaNIgEOZ34XH1Og4mupOEfaptxZ
+        dT2Jg9n2DzgKU2Ln4oMqK7I5Ygoe0xU=
+Date:   Mon, 19 Oct 2020 14:25:50 +0200
+From:   Christian Hesse <list@eworm.de>
+To:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Cc:     Thomas Deutschmann <whissi@gentoo.org>,
+        <johannes@sipsolutions.net>,
+        "davem@davemloft.net" <davem@davemloft.net>, <kuba@kernel.org>,
+        <linux-wireless@vger.kernel.org>, netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        <denkenz@gmail.com>
+Subject: Re: [Regression 5.9][Bisected 1df2bdba528b] Wifi GTK rekeying
+ fails: Sending of EAPol packages broken
+Message-ID: <20201019142550.5fe02d7d@leda>
+In-Reply-To: <20201017230818.04896494@mathy-work.localhost>
+References: <4a7f92dc-13bb-697f-1730-ac288e74b730@gentoo.org>
+        <20201017230818.04896494@mathy-work.localhost>
+X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+X-Face: %O:rCSk<c"<MpJ:yn<>HSKf7^4uF|FD$9$I0}g$nbnS1{DYPvs#:,~e`).mzj\$P9]V!WCveE/XdbL,L!{)6v%x4<jA|JaB-SKm74~Wa1m;|\QFlOg>\Bt!b#{;dS&h"7l=ow'^({02!2%XOugod|u*mYBVm-OS:VpZ"ZrRA4[Q&zye,^j;ftj!Hxx\1@;LM)Pz)|B%1#sfF;s;,N?*K*^)
+Face:   iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAGFBMVEUZFRFENy6KVTKEd23CiGHeqofJvrX4+vdHgItOAAAACXBIWXMAAA3XAAAN1wFCKJt4AAACUklEQVQ4y2VUTZeqMAxNxXG2Io5uGd64L35unbF9ax0b3OLxgFs4PcLff0lBHeb1QIq5uelNCEJNq/TIFGyeC+iugH0WJr+B1MvzWASpuP4CYHOB0VfoDdddwA7OIFQIEHjXDiCtV5e9QX0WMu8AG0mB7g7WP4GqeqVdsi4vv/5kFBvaF/zD7zDquL4DxbrDGDyAsgNYOsJOYzth4Q9ZF6iLV+6TLAT1pi2kuvgAtZxSjoG8cL+8vIn251uoe1OOEWwbIPU04gHsmMsoxyyhYsD2FdIigF1yxaVbBuSOCAlCoX324I7wNMhrO1bhOLsRoA6DC6wQ5eQiSG5BiWQfM4gN+uItQTRDMaJUhVbGyKWCuaaUGSVFVKpl4PdoDn3yY8J+YxQxyhlHfoYOyPgyDcO+cSQK6Bvabjcy2nwRo3pxgA8jslnCuYw23ESOzHAPYwo4ITNQMaOO+RGPEGhSlPEZBh2jmBEjQ5cKbxmr0ruAe/WCriUxW76I8T3h7vqY5VR5wXLdERodg2rHEzdxxk5KpXTL4FwnarvndKM5/MWDY5CuBBdQ+3/0ivsUJHicuHd+Xh3jOdBL+FjSGq4SPCwco+orpWlERRTNo7BHCvbNXFVSIQMp+P5QsIL9upmr8kMTUOfxEHoanwzKRcNAe76WbjBwex/RkdHu48xT5YqP70DaMOhBcTHmAVDxLaBdle93oJy1QKFUh2GXT4am+YH/GGel1CeI98GdMXsytjCKIq/9cMrlgxFCROv+3/BU1fijNpcVD6DxE8VfLBaxUGr1D5usgDYdjwiPAAAAAElFTkSuQmCC
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+X-Spamd-Bar: ++
+Authentication-Results: mx.mylinuxtime.de;
+        auth=pass smtp.auth=mail@eworm.de smtp.mailfrom=list@eworm.de
+X-Rspamd-Server: mx
+X-Stat-Signature: a4knrgg6w7u93idcbjoyp98uns7wyc1w
+X-Rspamd-Queue-Id: 1232812124F
+X-Spamd-Result: default: False [2.11 / 15.00];
+         ARC_NA(0.00)[];
+         TO_DN_EQ_ADDR_SOME(0.00)[];
+         URIBL_BLOCKED(0.00)[kuleuven.be:email];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         FREEMAIL_ENVRCPT(0.00)[gmail.com];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         MIME_GOOD(-0.20)[multipart/signed,text/plain];
+         BAYES_SPAM(5.08)[99.96%];
+         NEURAL_HAM_LONG(-2.70)[-0.901];
+         DKIM_SIGNED(0.00)[];
+         NEURAL_HAM_SHORT(-0.57)[-0.572];
+         RCPT_COUNT_SEVEN(0.00)[9];
+         RCVD_COUNT_ZERO(0.00)[0];
+         FROM_EQ_ENVFROM(0.00)[];
+         MIME_TRACE(0.00)[0:+,1:+,2:~];
+         MID_RHS_NOT_FQDN(0.50)[];
+         ASN(0.00)[asn:3320, ipnet:2003::/19, country:DE];
+         FREEMAIL_CC(0.00)[gentoo.org,sipsolutions.net,davemloft.net,kernel.org,vger.kernel.org,gmail.com]
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Though the first channel from sband channel list is invalid
-or disabled still mac80211 is choosing this disabled channel
-as a default channel for monitor interface. This will end-up
-in choosing wrong channel.
+--Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Fixed by assigning the first available valid or enabled channel
-to the respective radios.
+Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be> on Sat, 2020/10/17 23:08:
+> I've managed to reproduce the issue, or at least a related issue. Can
+> you try the draft patch below and see if that fixes it?
 
-Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
----
+This patch fixes the regression for me. Thanks a lot!
+--=20
+main(a){char*c=3D/*    Schoene Gruesse                         */"B?IJj;MEH"
+"CX:;",b;for(a/*    Best regards             my address:    */=3D0;b=3Dc[a+=
++];)
+putchar(b-1/(/*    Chris            cc -ox -xc - && ./x    */b/42*2-3)*42);}
 
-v2:
-	rebased
+--Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
- net/mac80211/main.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b4a2efe..a4aefd6 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -982,8 +982,15 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 			continue;
- 
- 		if (!dflt_chandef.chan) {
-+			/*
-+			 * Assigning the first enabled channel to dflt_chandef from the
-+			 * list of channels available specific to country
-+			 */
-+			for (i = 0; i < sband->n_channels; i++)
-+				if (!(sband->channels[i].flags & IEEE80211_CHAN_DISABLED))
-+					break;
- 			cfg80211_chandef_create(&dflt_chandef,
--						&sband->channels[0],
-+						&sband->channels[i == sband->n_channels ? 0 : i],
- 						NL80211_CHAN_NO_HT);
- 			/* init channel we're on */
- 			if (!local->use_chanctx && !local->_oper_chandef.chan) {
--- 
-2.7.4
+iQEzBAEBCAAdFiEEXHmveYAHrRp+prOviUUh18yA9HYFAl+Nhc4ACgkQiUUh18yA
+9HZMWAgAj0Ppz0rYQxSPoYcQ8xdhh7kFdURLcEp8B7XkZzMhGxpXHssN5RCBoD1O
+NcmbWFulSI8VfpmwVPjvk3E3e7ZfQUVR/RCmp9NNLvI0TYCI+BsHb9EsTADWQTPO
+NaQum9kZWzZUF+oQN57n1bY+7Al7ifWzUBmblTr1BzgDmsrkR0fzGaS2QzPAgjij
+0Kpu+IHr+NRqYAlxWotMULgvxY0N8OhcPW0vGA2E5YMDlXvI+0eDHN/R87xSMdLK
+gWh4ydFCrtgu+sHSssy3EygMtaNuhlor3/7239pxLsoUs/vU4VD8UPJ9nf/JuexZ
+ZIGEYRFL5YtdzvlTIdVOtgSndc6dyQ==
+=WWxr
+-----END PGP SIGNATURE-----
 
+--Sig_/vNZ.r9uZ.9tb0u1RSbRqb2j--
