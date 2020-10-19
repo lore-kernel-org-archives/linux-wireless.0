@@ -2,178 +2,115 @@ Return-Path: <SRS0=Yehs=D2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1204C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:36:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5707BC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:40:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32B092080D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:36:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDAF721D81
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 16:40:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SSOjrtEB"
+	dkim=pass (1024-bit key) header.d=purevlc.onmicrosoft.com header.i=@purevlc.onmicrosoft.com header.b="VRxkYGbb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730581AbgJSQg5 (ORCPT
+        id S1730336AbgJSQkX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Oct 2020 12:36:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:31507 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730363AbgJSQgy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Oct 2020 12:36:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603125412;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RJ9s8xaYxYBkmCjGVLRdfk2kyqkECbsbWamfUa+vQoA=;
-        b=SSOjrtEBeg7TPCZgn6ZkS227kAG7NoIVaiVjP6w+7zIc/hlHzgldT1oaHvFIcqCeOOSggb
-        IW1u04tWPVnUp1U6OkmLSzJe0KuopAaktSl/xU4WzLiV/ysE/wmFG6lQX0FYskOeE7Vnkj
-        nmknvR3PiR6drkZcUyoCybyxvCSS3dI=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-285-DQ4mhEoXOOq8VxkBXxJRog-1; Mon, 19 Oct 2020 12:36:50 -0400
-X-MC-Unique: DQ4mhEoXOOq8VxkBXxJRog-1
-Received: by mail-qt1-f199.google.com with SMTP id d6so336169qtp.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2020 09:36:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=RJ9s8xaYxYBkmCjGVLRdfk2kyqkECbsbWamfUa+vQoA=;
-        b=OWEXegdCyoQ3zAcxkn2mqi6gKxjrZgmQdnf9lcoExZZRl0APhPGxkMbFABvQQsCr6Y
-         XxN3AqyCFvZ+3MDYVaeRp0HKY0tOC/MBxoiodfQJMUYsrHsT1c/G0d1Kfsopha05OLYw
-         IdmQ5uCY+EIc4uiNa8mdzXjExftiT9oFBBul3PTInvmxyAIU20rOjQ2tXgtxvZCc4UdD
-         Jsw0qiW6xqgJ+2lLc2qolcPkMjgvR5a4cmNJgg8e/aAxP7RWa+0NtghHtXPD/Rtel2p2
-         1X6kcTWXhmaMYJ8ozPnOFfXdN/U7lztedvK43usJr5IrAGba4fTV1c4PiEu9Q2gM1pMn
-         0lRQ==
-X-Gm-Message-State: AOAM532RTlCsX0ghzVPxoIUkRMr9R+azRIuqemJjAnDu7eU3znMkwSG0
-        JVdRFCC1V2SFW+AEoyCW2+1WjcqutTgW2y1ckVUd/pozkrYAfKkBAvZNm+5UtW278Pa3ebK4SCs
-        QDq43dPRa8VODNUKVM1mB8Sl6NPk=
-X-Received: by 2002:a37:648d:: with SMTP id y135mr385734qkb.115.1603125410135;
-        Mon, 19 Oct 2020 09:36:50 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzsvts5SeTR8WovKOLGInNhGSr3+dLgLMhsproUZSM6Q195eZXi9N1XbqSQsptRTh4xrVpRQA==
-X-Received: by 2002:a37:648d:: with SMTP id y135mr385688qkb.115.1603125409803;
-        Mon, 19 Oct 2020 09:36:49 -0700 (PDT)
-Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
-        by smtp.gmail.com with ESMTPSA id v39sm154809qtk.81.2020.10.19.09.36.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 19 Oct 2020 09:36:49 -0700 (PDT)
-Subject: Re: [PATCH] wireless: remove unneeded break
-To:     Joe Perches <joe@perches.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Christian Lamparter <chunkeey@gmail.com>, kvalo@codeaurora.org,
-        davem@davemloft.net, kuba@kernel.org, mcoquelin.stm32@gmail.com,
-        alexandre.torgue@st.com, ath9k-devel@qca.qualcomm.com,
-        johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        chunkeey@googlemail.com, pkshih@realtek.com, sara.sharon@intel.com,
-        tova.mussai@intel.com, nathan.errera@intel.com,
-        lior2.cohen@intel.com, john@phrozen.org, shaul.triebitz@intel.com,
-        shahar.s.matityahu@intel.com, Larry.Finger@lwfinger.net,
-        zhengbin13@huawei.com, christophe.jaillet@wanadoo.fr,
-        yanaijie@huawei.com, saurav.girepunje@gmail.com
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org
-References: <20201019150507.20574-1-trix@redhat.com>
- <b31478ea-979a-1c9c-65db-32325233a715@gmail.com>
- <859112e91c3d221dc599e381dbaecb90dd6467a1.camel@perches.com>
- <fb38b96a-b666-1a6d-211d-b79278a8d878@embeddedor.com>
- <5964d734e81c198421bb7f6516dabcad37c1740d.camel@perches.com>
-From:   Tom Rix <trix@redhat.com>
-Message-ID: <1c358ade-abdf-e4f2-2207-9f4887e90f05@redhat.com>
-Date:   Mon, 19 Oct 2020 09:36:45 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
-MIME-Version: 1.0
-In-Reply-To: <5964d734e81c198421bb7f6516dabcad37c1740d.camel@perches.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+        Mon, 19 Oct 2020 12:40:23 -0400
+Received: from mail-eopbgr110100.outbound.protection.outlook.com ([40.107.11.100]:9687
+        "EHLO GBR01-CWL-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729879AbgJSQkX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Oct 2020 12:40:23 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hkCzrtby9ZKn/jmFxtoQplCC8Y0yz5aanwTde2bujErWtgESQj79IRg2aI6kRi7L6IgLe+0BiAgMGrXUqHwzEphCQkIqmkjSM1Sy9QOkaXB+Ir0XkZmMlLeCmh2lWVPiLLRPRCR8GpuCNLL/xYn9n8oJg3OonhjsJbDY5j+tqnPO2mgA3t0w0mUYHXzSsyJzEg/j4zP4vLPIF0nn4sZjk+4rRv8ChZcxLv6bB4HdYO0FYz6lFOBCMSJGDNW+dYymek9YuNWy/tdnUEvbepk1apSSVekMIUydcoCyd2GwhsGdzg9efnPdH3r7ABR3bEK7Dcn3c2ET6Oa1cn+2ALxFBw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Jt7VgHIx8NbG+Ds4qlxxYKfCHWmI55iZZzKpHh0ODJg=;
+ b=T0ljcSv71N1Ez11i7legQFzei9dnglEH4MLaSnd+dhd/AqoRJZaswYinzRvbTEpKM9Wa59gM6G4rl07mLhNTT3V3jdot9suvFueACH1LLIOyahze543MEnN/wXARejh/zofJvsDrwkBGUbySRyuB6pS+0MCW6eO3aSIVRAycxtavm1Vb/+dp1sbGjf8AGWjHMet1h8HhGUqkYjprp/WEgZOyX1rxSxPmm8xwOFfVErfC0IGGuWGbNll0ZXQXBeVJgsF7F3MWxrAqFzb32gathwCfQf8tlhQMPKnTuCKZV8953sTr08gxA7mKopCeSTm5d6bDrgoGTNMXuF2mF86PCw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=purelifi.com; dmarc=pass action=none header.from=purelifi.com;
+ dkim=pass header.d=purelifi.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=purevlc.onmicrosoft.com; s=selector2-purevlc-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Jt7VgHIx8NbG+Ds4qlxxYKfCHWmI55iZZzKpHh0ODJg=;
+ b=VRxkYGbbD5S7RfqiqG1s3OBputk3zVW63fwllubvjQszxUMlgwzk2LlS7TJStwEKeLxL01pfqMHO9xffprSc98/rqKesqyHJJdoHi9KkXajOrNzWb7WL94qJAGTeiG3RiOm2DPt+W0Q3u0wGTm8agADgA/xweLTw7oXftGEzu4k=
+Received: from LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:ef::9) by
+ LO3P265MB2314.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:107::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3477.21; Mon, 19 Oct 2020 16:40:18 +0000
+Received: from LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::b8d7:c2a7:cbbd:6c2b]) by LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::b8d7:c2a7:cbbd:6c2b%7]) with mapi id 15.20.3477.028; Mon, 19 Oct 2020
+ 16:40:18 +0000
+From:   Srinivasan Raju <srini.raju@purelifi.com>
+To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC:     Mostafa Afgani <mostafa.afgani@purelifi.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] [v6] wireless: Initial driver submission for pureLiFi STA
+ devices
+Thread-Topic: [PATCH] [v6] wireless: Initial driver submission for pureLiFi
+ STA devices
+Thread-Index: AQHWpfNnC69OUf5kyEqGJu+7PrU+76mfGBIAgAAIROQ=
+Date:   Mon, 19 Oct 2020 16:40:18 +0000
+Message-ID: <LOYP265MB1918B212C618FF60333BFD85E01E0@LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM>
+References: <20201019031744.17916-1-srini.raju@purelifi.com>
+ <20201019083914.10932-1-srini.raju@purelifi.com>,<CABPxzYJaB5_zZshs3JCnPDgUZQZc+XRN+DuE3BjGjJKsiJh0uA@mail.gmail.com>
+In-Reply-To: <CABPxzYJaB5_zZshs3JCnPDgUZQZc+XRN+DuE3BjGjJKsiJh0uA@mail.gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=purelifi.com;
+x-originating-ip: [103.8.116.159]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: d15a6967-27ea-40ee-9674-08d8744daa08
+x-ms-traffictypediagnostic: LO3P265MB2314:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <LO3P265MB2314BDAB5CFD5502838C6AC5E01E0@LO3P265MB2314.GBRP265.PROD.OUTLOOK.COM>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: KMg6AFXO29vhVv6O6kaJ7up0Mntw1b7Q5XbD3eVAfiDUELMb2AaK8JCWedDodnBJJk2/bqMnhZmo4z+WFysxk9zd20w74UNmKGA6N4MnfaeN7PZkerqrQZVppkZiRNsKxbi8dqYLriZM2gKgl/ecPPL8cphzOuEWMbDxAAziRr0RncEbgCnX7FivSrecViUlpz4t/RBsjybb0V0+Ay/M+0ValUtoDXLa0OqMCB4/UkfvVBKq8F6TImwVJ+THuM5DB/Id+hzKinm6gZYowVatE9KHl21/hErkPKeDwDfJFOC/xdHUFjJcVFL6NzFT2902
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(6029001)(4636009)(366004)(396003)(376002)(346002)(39830400003)(136003)(9686003)(8936002)(52536014)(8676002)(478600001)(186003)(26005)(7696005)(6506007)(4326008)(66556008)(66476007)(76116006)(66946007)(64756008)(91956017)(66446008)(558084003)(33656002)(6916009)(71200400001)(54906003)(55016002)(7416002)(2906002)(86362001)(5660300002)(316002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 9CrjTJCpjzsUEDJgdrO/B2jbb+eD+KjkcWwp2gaBAuLlG84QawhFMtmjga4H42Mk0sEzUkl7etC3KgTh1qgKJlmEni64c+2AsXCLj7pFZnhEZNkjGBz9nCsT4yUZYOqAU5w+ogT16KuhzWaOMQ3KnNp8NbhKO0ERwwqCdebG3YPuOVe+ynI8hYvnPvLumOKOCsESgJDdXofOZRj+d2NFhLkXKkvYQpEa0xNl41rxV97+OmJziPJZT5R7D2AFm2EScwb9UVqQeRz3jql4WuXDglAFoK+rfaTjlf2hD8c0RVB5UrcP0ZvdxTm+TP/M3UwCm1t1yF4LDa6yVTCzmxxiQpW8RUnhI/Rd7Z9K1t4w6w34to65TiNad2/SrO82ly0HQQjQdBWDWYwm22LZXsgYGXTdEiorY3qWm59XQ8IH8Np7AuIH70QMUIxXrEsTMv2pYVugzPMqUG9IPi5ACeLCApzb3Y+PIFPY/Ym9qt8BDG2aXMKL7U7XjkR8S05rt4OQmqEwFqcLYvO26JYkEE1t2kUEUNvZX2iwPcMg8+zAkZWMIfI6h9XmGKTMwehtCO1YO+++XhFQvblJ5udz9eT/uAxkvEq7+qnU7Er9NAnJJHe8p4Gs/So7MAn2L2A0aUS8OtskTMpQ18OkdXvvIy1UDg==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: purelifi.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LOYP265MB1918.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: d15a6967-27ea-40ee-9674-08d8744daa08
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Oct 2020 16:40:18.5703
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5cf4eba2-7b8f-4236-bed4-a2ac41f1a6dc
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QC3byEguPfVZkJrQ0SlFk1m90RXW8cUUGdCk+fX7b/jb7RuqqLnMuhRYzaVe/szQ8aCUjj6qrkGTTKeaoAU76A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO3P265MB2314
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-On 10/19/20 9:20 AM, Joe Perches wrote:
-> On Mon, 2020-10-19 at 10:54 -0500, Gustavo A. R. Silva wrote:
->> On 10/19/20 10:21, Joe Perches wrote:
->>> On Mon, 2020-10-19 at 17:14 +0200, Christian Lamparter wrote:
->>>> On 19/10/2020 17:05, trix@redhat.com wrote:
->>>>> From: Tom Rix <trix@redhat.com>
->>>>>
->>>>> A break is not needed if it is preceded by a return or goto
->>>>>
->>>>> Signed-off-by: Tom Rix <trix@redhat.com>
->>>>> diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/n=
-et/wireless/intersil/p54/eeprom.c
-> []
->>>>> @@ -870,7 +870,6 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, =
-void *eeprom, int len)
->>>>>   			} else {
->>>>>   				goto good_eeprom;
->>>>>   			}
->>>>> -			break;
->>>> Won't the compiler (gcc) now complain about a missing fallthrough an=
-notation?
->> Clang would definitely complain about this.
-> As far as I can tell, clang 10.0.0 doesn't complain.
->
-> This compiles without fallthrough complaint
->
-> from make V=3D1 W=3D123 CC=3Dclang drivers/net/wireless/intersil/p54/ee=
-prom.o
-> with -Wimplicit-fallthrough added
->
-> $ clang -Wp,-MMD,drivers/net/wireless/intersil/p54/.eeprom.o.d  -nostdi=
-nc -isystem /usr/local/lib/clang/10.0.0/include -I./arch/x86/include -I./=
-arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arc=
-h/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi =
--include ./include/linux/kconfig.h -include ./include/linux/compiler_type=
-s.h -D__KERNEL__ -Qunused-arguments -DKBUILD_EXTRA_WARN1 -DKBUILD_EXTRA_W=
-ARN2 -DKBUILD_EXTRA_WARN3 -Wall -Wundef -Werror=3Dstrict-prototypes -Wno-=
-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=
-=3Dimplicit-function-declaration -Werror=3Dimplicit-int -Wno-format-secur=
-ity -std=3Dgnu89 -no-integrated-as -Werror=3Dunknown-warning-option -mno-=
-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -mno-80387 -mstack-alignm=
-ent=3D8 -mtune=3Dgeneric -mno-red-zone -mcmodel=3Dkernel -DCONFIG_X86_X32=
-_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mretpoline-extern=
-al-thunk -fno-delete-null-pointer-checks -Wno-address-of-packed-member -O=
-2 -Wframe-larger-than=3D2048 -fstack-protector-strong -Wno-format-invalid=
--specifier -Wno-gnu -mno-global-merge -Wno-unused-const-variable -ftrivia=
-l-auto-var-init=3Dpattern -pg -mfentry -DCC_USING_FENTRY -falign-function=
-s=3D32 -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-array-b=
-ounds -fno-strict-overflow -fno-stack-check -Werror=3Ddate-time -Werror=3D=
-incompatible-pointer-types -fcf-protection=3Dnone -Wextra -Wunused -Wno-u=
-nused-parameter -Wmissing-declarations -Wmissing-format-attribute -Wmissi=
-ng-prototypes -Wold-style-definition -Wmissing-include-dirs -Wunused-cons=
-t-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-li=
-mits -Wcast-align -Wdisabled-optimization -Wnested-externs -Wshadow -Wmis=
-sing-field-initializers -Wtype-limits -Wunused-macros -Wbad-function-cast=
- -Wcast-qual -Wconversion -Wpacked -Wpadded -Wpointer-arith -Wredundant-d=
-ecls -Wsign-compare -Wswitch-default     -fsanitize=3Dkernel-address -mll=
-vm -asan-mapping-offset=3D0xdffffc0000000000  -mllvm -asan-globals=3D1  -=
-mllvm -asan-instrumentation-with-call-threshold=3D0  -mllvm -asan-stack=3D=
-0   --param asan-instrument-allocas=3D1   -fsanitize-coverage=3Dtrace-pc =
--fsanitize-coverage=3Dtrace-cmp -Wimplicit-fallthrough    -DKBUILD_MODFIL=
-E=3D'"drivers/net/wireless/intersil/p54/p54common"' -DKBUILD_BASENAME=3D'=
-"eeprom"' -DKBUILD_MODNAME=3D'"p54common"' -c -o drivers/net/wireless/int=
-ersil/p54/eeprom.o drivers/net/wireless/intersil/p54/eeprom.c
->
-I did not intend for if-else; break; changes to be in the patchset.
-
-I will kick this out and respin the patch after i get the first pass of t=
-he other changes out.
-
-Sorry,
-
-Tom
-
-
+> Overall, there are many magic numbers without comments, this makes it har=
+d to=0A=
+> understand the code. Using defines with proper naming helps and for 802.1=
+1 stuff=0A=
+> can use ieee80211_*/IEEE80211_* should be used.=0A=
+=0A=
+Thanks for your comments Krishna, will work on them.=0A=
+=0A=
+Regards,=0A=
+Srini=
