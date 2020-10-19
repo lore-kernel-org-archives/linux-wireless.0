@@ -2,115 +2,198 @@ Return-Path: <SRS0=Yehs=D2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A63A5C433E7
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 04:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A88C43457
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 04:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71E8420709
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 04:02:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YyEN54Pk"
+	by mail.kernel.org (Postfix) with ESMTP id A28F62224D
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Oct 2020 04:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726992AbgJSECE (ORCPT
+        id S1728381AbgJSEzk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Oct 2020 00:02:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56062 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725800AbgJSECE (ORCPT
+        Mon, 19 Oct 2020 00:55:40 -0400
+Received: from smtprelay0054.hostedemail.com ([216.40.44.54]:51006 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726829AbgJSEzk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Oct 2020 00:02:04 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32953C061755;
-        Sun, 18 Oct 2020 21:02:04 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id e7so5202305pfn.12;
-        Sun, 18 Oct 2020 21:02:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=t5eReXO4wqmdOiCBF4R3AZcbfxasgeFRgSN87jtfTOA=;
-        b=YyEN54Pkrupuqjn9CbeFnnwes1U/Mn6o6wmsKwP185/yOGqAfJhYtkg9B+z7AUsyOp
-         RJhD9kYdaA20LVoBfFs+Ph3F8iKmf0JpCsHJEYpnhQG1oCW0BpoQXiqJ6tjVdblLhPRv
-         aaZYSix85W/sdmkEepbRWLkaMLVQpxuScCBGSVvNKPjspj8dMRXleyLwbmdM930sGGVb
-         IUnRo0LaMd4HYCEYhP1wHRz7AH4/inlITmMo5LeuW/ctq44w8XKgyIAYzhPmsFHpXg08
-         hJFhERNTJoEcIUiwMWWZpDXsmkvmb+0494dgikhQgSQWlhrvOa20KCWfXt4TZXUs2mvp
-         EWXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=t5eReXO4wqmdOiCBF4R3AZcbfxasgeFRgSN87jtfTOA=;
-        b=qLAgCuPpWZ3YUj1mI6OTUCSRiEb9RvPDc6l+MMhqdEcDB2DqyUaKUatlO2qHKwV6cd
-         vXEmTojqMTahi4s+8bAl+A7gaFVlBqTNE0UqWZFm2cHStkkcMg2hkdCarM9DkRWUFVyf
-         ALJfR5ngd0MRzosf03tCEOHS+EoECQsHw5atNnesJlMrH5fRw4CoJ+FYfB4ZrnLKGZFC
-         OO0+RnhNgkBqgDEe0tCHkrBqldqyCyjtvGDh4KzDgrRtjCGAKnSNks7Mdi+xU+JB4Owi
-         ctJY6G672zf6v77uehqBB3r0Q+rjNCVI8KmXxM/m1JcdYiuSscZM8jA+kaGPJKhiAiN1
-         GggA==
-X-Gm-Message-State: AOAM533mvBBMA/FtrYjNwZ4YBvt6ZMe38aJrkL5njXUxWp1Id7lH26FK
-        mZrELy7+turckmv1ZrJgLTk=
-X-Google-Smtp-Source: ABdhPJyLFv/LumZgFNS+GjxPxAL9mhR+bbYTIhpaEfPmkIeokoUVjXAIeResNXwq22ZD6hsk9yjq7w==
-X-Received: by 2002:a63:2145:: with SMTP id s5mr11947483pgm.288.1603080123790;
-        Sun, 18 Oct 2020 21:02:03 -0700 (PDT)
-Received: from oslab.tsinghua.edu.cn ([166.111.139.137])
-        by smtp.gmail.com with ESMTPSA id y8sm10096359pfg.104.2020.10.18.21.02.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2020 21:02:03 -0700 (PDT)
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-To:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, Larry.Finger@lwfinger.net,
-        christophe.jaillet@wanadoo.fr, zhengbin13@huawei.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] rtl8188ee: avoid accessing the data mapped to streaming DMA
-Date:   Mon, 19 Oct 2020 12:01:55 +0800
-Message-Id: <20201019040155.6961-1-baijiaju1990@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 19 Oct 2020 00:55:40 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay06.hostedemail.com (Postfix) with ESMTP id DC97B1822494D;
+        Mon, 19 Oct 2020 04:55:36 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: self88_3d141c327234
+X-Filterd-Recvd-Size: 5055
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf17.hostedemail.com (Postfix) with ESMTPA;
+        Mon, 19 Oct 2020 04:55:34 +0000 (UTC)
+Message-ID: <e59c0c575f9d9e1af8c6fdf2911cd9d028de257f.camel@perches.com>
+Subject: Re: [PATCH] [v5] wireless: Initial driver submission for pureLiFi
+ STA devices
+From:   Joe Perches <joe@perches.com>
+To:     Srinivasan Raju <srini.raju@purelifi.com>
+Cc:     mostafa.afgani@purelifi.com, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Date:   Sun, 18 Oct 2020 21:55:33 -0700
+In-Reply-To: <20201019031744.17916-1-srini.raju@purelifi.com>
+References: <20201016063444.29822-1-srini.raju@purelifi.com>
+         <20201019031744.17916-1-srini.raju@purelifi.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In rtl88ee_tx_fill_cmddesc(), skb->data is mapped to streaming DMA on
-line 677:
-  dma_addr_t mapping = dma_map_single(..., skb->data, ...);
+On Mon, 2020-10-19 at 08:47 +0530, Srinivasan Raju wrote:
+> This introduces the pureLiFi LiFi driver for LiFi-X, LiFi-XC
+> and LiFi-XL USB devices.
 
-On line 680, skb->data is assigned to hdr after cast:
-  struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
+Mostly trivial comments:
 
-Then hdr->frame_control is accessed on line 681:
-  __le16 fc = hdr->frame_control;
+> diff --git a/drivers/net/wireless/purelifi/chip.c b/drivers/net/wireless/purelifi/chip.c
+[]
+> +int purelifi_chip_set_rate(struct purelifi_chip *chip, u8 rate)
+> +{
+> +	int r;
+> +	static struct purelifi_chip *chip_p;
 
-This DMA access may cause data inconsistency between CPU and hardwre.
+Isn't chip_p pointless?
 
-To fix this bug, hdr->frame_control is accessed before the DMA mapping.
+> +
+> +	if (chip)
+> +		chip_p = chip;
+> +	if (!chip_p)
+> +		return -EINVAL;
+> +
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+chip_p is otherwise unused.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-index b9775eec4c54..c948dafa0c80 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-@@ -674,12 +674,12 @@ void rtl88ee_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 	u8 fw_queue = QSLT_BEACON;
- 	__le32 *pdesc = (__le32 *)pdesc8;
- 
--	dma_addr_t mapping = dma_map_single(&rtlpci->pdev->dev, skb->data,
--					    skb->len, DMA_TO_DEVICE);
--
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
- 	__le16 fc = hdr->frame_control;
- 
-+	dma_addr_t mapping = dma_map_single(&rtlpci->pdev->dev, skb->data,
-+					    skb->len, DMA_TO_DEVICE);
-+
- 	if (dma_mapping_error(&rtlpci->pdev->dev, mapping)) {
- 		rtl_dbg(rtlpriv, COMP_SEND, DBG_TRACE,
- 			"DMA mapping error\n");
--- 
-2.17.1
+> diff --git a/drivers/net/wireless/purelifi/mac.c b/drivers/net/wireless/purelifi/mac.c
+[]
+> +int purelifi_mac_init_hw(struct ieee80211_hw *hw)
+> +{
+> +	int r;
+> +	struct purelifi_mac *mac = purelifi_hw_mac(hw);
+> +	struct purelifi_chip *chip = &mac->chip;
+> +
+> +	r = purelifi_chip_init_hw(chip);
+> +	if (r) {
+> +		dev_warn(purelifi_mac_dev(mac), "init hw failed (%d)\n", r);
+> +		goto out;
+> +	}
+> +
+> +	dev_dbg(purelifi_mac_dev(mac), "irq_disabled %d\n", irqs_disabled());
+> +
+> +	r = regulatory_hint(hw->wiphy, "CA");
+> +out:
+> +	return r;
+> +}
+
+Simpler without the out: label and a direct return
+
+	if (r) {
+		dev_warn(...)
+		return r;
+	}
+
+	...
+
+	return regulator_hint(hw->wiphy, "CA");
+}
+
+> +static int download_fpga(struct usb_interface *intf)
+> +{
+[]
+> +	if ((le16_to_cpu(udev->descriptor.idVendor) ==
+> +				PURELIFI_X_VENDOR_ID_0) &&
+> +	    (le16_to_cpu(udev->descriptor.idProduct) ==
+> +				PURELIFI_X_PRODUCT_ID_0)) {
+> +		fw_name = "purelifi/li_fi_x/fpga.bit";
+> +		dev_info(&intf->dev, "bit file for X selected.\n");
+> +
+> +	} else if ((le16_to_cpu(udev->descriptor.idVendor)) ==
+> +					PURELIFI_XC_VENDOR_ID_0 &&
+> +		   (le16_to_cpu(udev->descriptor.idProduct) ==
+> +					PURELIFI_XC_PRODUCT_ID_0)) {
+> +		fw_name = "purelifi/li_fi_x/fpga_xc.bit";
+> +		dev_info(&intf->dev, "bit filefor XC selected.\n");
+
+Inconsistent dev_info spacing: "file for" vs "filefor"
+
+> +	for (fw_data_i = 0; fw_data_i < fw->size;) {
+> +		int tbuf_idx;
+> +
+> +		if ((fw->size - fw_data_i) < blk_tran_len)
+> +			blk_tran_len = fw->size - fw_data_i;
+> +
+> +		fw_data = kmalloc(blk_tran_len, GFP_KERNEL);
+> +
+> +		memcpy(fw_data, &fw->data[fw_data_i], blk_tran_len);
+> +
+> +		for (tbuf_idx = 0; tbuf_idx < blk_tran_len; tbuf_idx++) {
+> +			fw_data[tbuf_idx] =
+> +				((fw_data[tbuf_idx] & 128) >> 7) |
+> +				((fw_data[tbuf_idx] &  64) >> 5) |
+> +				((fw_data[tbuf_idx] &  32) >> 3) |
+> +				((fw_data[tbuf_idx] &  16) >> 1) |
+> +				((fw_data[tbuf_idx] &   8) << 1) |
+> +				((fw_data[tbuf_idx] &   4) << 3) |
+> +				((fw_data[tbuf_idx] &   2) << 5) |
+> +				((fw_data[tbuf_idx] &   1) << 7);
+> +		}
+
+pity there isn't an u8_bit_reverse function/mechanism
+
+> +static void pretty_print_mac(struct usb_interface *intf, char *serial_number,
+> +			     unsigned char *hw_address
+> +			    )
+> +{
+> +	unsigned char i;
+> +
+> +	for (i = 0; i < ETH_ALEN; i++)
+> +		dev_info(&intf->dev, "hw_address[%d]=%x\n", i, hw_address[i]);
+
+I don't think this prettier than %pM
+
+> +}
+> +
+> +static int upload_mac_and_serial_number(struct usb_interface *intf,
+> +					unsigned char *hw_address,
+> +					unsigned char *serial_number)
+> +{
+[]
+> +	do {
+> +		unsigned char buf[8];
+> +
+> +		msleep(200);
+> +
+> +		send_vendor_request(udev, 0x40, buf, sizeof(buf));
+> +		flash.enabled = buf[0] & 0xFF;
+> +
+> +		if (flash.enabled) {
+> +			flash.sectors = ((buf[6] & 255) << 24) |
+
+buf is unsigned char[], rather pointless using & 255
+
+> diff --git a/drivers/net/wireless/purelifi/usb.h b/drivers/net/wireless/purelifi/usb.h
+[]
+> +struct station_t {
+> +   //  7...3    |    2     |     1     |     0     |
+> +   // Reserved  | Hearbeat | FIFO full | Connected |
+
+heartbeat
+
 
