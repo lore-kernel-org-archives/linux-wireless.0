@@ -2,224 +2,208 @@ Return-Path: <SRS0=BUAO=D3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 513B4C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Oct 2020 13:02:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63B1AC433E7
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Oct 2020 13:02:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2AD522475
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Oct 2020 13:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01EA922475
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Oct 2020 13:02:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="H796t9DD"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JQN/Et1A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406894AbgJTM7Q (ORCPT
+        id S2406330AbgJTM7P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Oct 2020 08:59:16 -0400
-Received: from mail-dm6nam12on2042.outbound.protection.outlook.com ([40.107.243.42]:21473
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2406886AbgJTM7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Oct 2020 08:59:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27899 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2406884AbgJTM7N (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 20 Oct 2020 08:59:13 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=h4PucN0ZsVQQvo49DeHMCLWPUHzMcb+G09HWN7b/VeSa9MH4t1l2tOMF6a+Rdx1XxzQf7qwcm5X9N5vJR06o4cF9i2MIr/wPwvJY106dtvV7oI9RINcvqxjdIns+o5F2cSHVQXW9Yw3Uk6KJrMgiD6RNtJd2TPCKTAvrwL8CVfFUFjZOX2d+wfR1NKfBohZFghCYi1+VpXQUmN+y85WWmud/MIyHBOzYzUJZfMeYzAz7V0K7hWVap6UeIryeJo24elI7/2ozxhJpH5e/W+MaMrdGLwMJzq9OvpY4ZiUQDLXASiYs0gPt7LaezvSY1XvaffbngqAGDUfDAzMmb3Kl+Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1tp3wYFuvi1fgrePDe+EDIV+7OVFd2InjDeH2C7ogj4=;
- b=GSoudAZG0VoubOJ2uBDeV+QU2slwzyU4j1+OydvCFBIJVdNTqXkgdRCG3TbsUPVxDuo7v3HFuCoWykTrWM9KVmlZGqOPYLPnEF+4D8OI14716MW5mpnDOZBCqOePwe6CX+bnmM9nDYGWaEBXvNrnQeS+zzg6u7lt2ivygyhm7xUIiV39M2JB9NzBO3QMJD0nYOb+PRgsKroEBEbqaAUDLLXA3UHI+gRii9w1bsEn8FL1LQWlWNT3CTPG6YXyDgObniSEjdpXkqEY2AkgKD6mEK9GjN4TjMi8atc1wDQKltpm531qx0deiGxX+hp7IxtR+ple4kf7ytPuvNLxQz2dCA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1tp3wYFuvi1fgrePDe+EDIV+7OVFd2InjDeH2C7ogj4=;
- b=H796t9DDgQ4xrVqRoRXlG0CBRdkB0hLFKyDSFjxz6E26nB6gRyuuzloLmeo0Lkaq9LI6FcJsmFE38B1a9U/7gdidkZccibxEPH9uiIa99Y9LEPxs1nUGT1DlfSxV5ANrrcuklzFtTwhHL6IzscluVjWhZWY33A48wYuFbXay6b0=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=silabs.com;
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
- by SN6PR11MB2656.namprd11.prod.outlook.com (2603:10b6:805:58::28) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.28; Tue, 20 Oct
- 2020 12:58:59 +0000
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::4f5:fbe5:44a7:cb8a]) by SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::4f5:fbe5:44a7:cb8a%5]) with mapi id 15.20.3477.028; Tue, 20 Oct 2020
- 12:58:59 +0000
-From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
-To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        linux-mmc@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
-        <jerome.pouiller@silabs.com>
-Subject: [PATCH v2 08/24] wfx: add bus_sdio.c
-Date:   Tue, 20 Oct 2020 14:58:01 +0200
-Message-Id: <20201020125817.1632995-9-Jerome.Pouiller@silabs.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201020125817.1632995-1-Jerome.Pouiller@silabs.com>
-References: <20201020125817.1632995-1-Jerome.Pouiller@silabs.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-Originating-IP: [37.71.187.125]
-X-ClientProxiedBy: PR3P192CA0026.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:102:56::31) To SN6PR11MB2718.namprd11.prod.outlook.com
- (2603:10b6:805:63::18)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.silabs.com (37.71.187.125) by PR3P192CA0026.EURP192.PROD.OUTLOOK.COM (2603:10a6:102:56::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.21 via Frontend Transport; Tue, 20 Oct 2020 12:58:57 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b9f242b6-4f16-4ba6-d931-08d874f7e957
-X-MS-TrafficTypeDiagnostic: SN6PR11MB2656:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR11MB2656DFA4BA5E90C3C64B7FDA931F0@SN6PR11MB2656.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3968;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: qfUoXZAZL/vpSvHvMuW58rk6bvp6FKj87OjX/CrmFmRlsj3oqgQ15igO7QpC2hCrgJGVW6xnVC+SRDxQFtHaS1GQdn4lR2uea1/TjDwXCnS/fb2q+1/z93IQqn6y3kE2HHpZ3la3MOfxip/lTkbTsfmHUWNieq1euaiO9T1b61gmisyyPazyOZPV96Yr+tJIobOPNqJweMa7vKgs8zTqhMq1aBoAjgNd1jsSK1RVhObcmGzgLcxXwRCddtHqAi+XIVOFzE+UoFUoDwByjfFaXjwIg2Oj4spHucrxPS8NVVjgrRzkN17CvMmblCPSIe1I
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(366004)(136003)(39830400003)(346002)(376002)(186003)(316002)(4326008)(107886003)(8676002)(86362001)(26005)(2906002)(7696005)(478600001)(16526019)(956004)(6486002)(52116002)(36756003)(8936002)(2616005)(54906003)(5660300002)(1076003)(7416002)(66574015)(6666004)(66556008)(66476007)(66946007)(83380400001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: LLEfNLOiBibeoCYdNSA5AZl1LtamCk/kghegKytTF9UEjX4y8YWPXo1CWaJhM9f9R2Ogy6xZVKJshmMt6bRNNQZqf2DGxBLpUc7rxDs/ZvxQkatDcYkFmVg+lLnoN2HzuqNHxDLVhzxNdH7a50mM9HV7UjN8iLRlHby8+VuVfV5OEcukaj+LKpR2y5uynEKRzZGPwe5g3BHs7Au6GDH1bYD9ecglXIkFBM5nzn/NxACjfhFyTtUFTuqFPogqHyKHBP4OAWjdMqCno7Jp0mqPiju1ic65qmNHBkitK70fu1Ra2Nu3GNLOh6kJ70b4YnFgfQmlNYwbpcTNMj4ZW4WoBUokemp8SlUg4uX3cz8saTrINAsa0rX91q63f57SdlqV0EyF78Phh0MHw0zfAXRjKZ8vndf6ZDLO7qfMLliQyH/+5h7GzGm4sWBVRQm6Cfr1oFpfvzNxN+WiDiSuyeWvIhXhDwjUdRjU2tEiIXXFFebQaOT1P+h+gZBc6OV2mO1qbYVtLqQEmaZrpNXPXm4aKOBkloKzI00G6ralptlssV6usNHs6++TOMSJhi67KSoVEx0FnRf4Vogk+2Y4H4uvgP/joBDkbsvZq/F515yFh9pmGy0Rav63fDWiZTS2Rai6Q1BLIhXW4VzFpFhQmfc6NQ==
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b9f242b6-4f16-4ba6-d931-08d874f7e957
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2718.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2020 12:58:59.4967
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6WDzHC+4GAr3ih8mc50rXd5IrYbjF1iCHcxt0u6bXno74WxMQ47ylR0Tf8EVJu5u/jLYalzDwJfsFCpNr9ErIg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2656
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603198751;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=Qw1F19yZpnDVsqc+HFG0m1crxeHycCzf6HaecBeRc7s=;
+        b=JQN/Et1AmRQMOEOtE9CHvdxYvA4JWwlDHrw38rZVjD3vUOP7ifDU49eVzlclb6DES1yMJF
+        VLRAhHUWAR9cgy8wBL/GAllMgikQTw1dL9IupNrfZ302nLM/VuIKoFH5SoZHNFXtM+T8EP
+        vY715kXquHrUHqiu9+t2UOHaQDzn6zA=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-420-BlqhzSYXPdiW0fhZOLbX2w-1; Tue, 20 Oct 2020 08:59:09 -0400
+X-MC-Unique: BlqhzSYXPdiW0fhZOLbX2w-1
+Received: by mail-qt1-f197.google.com with SMTP id x42so1507198qta.13
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2020 05:59:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Qw1F19yZpnDVsqc+HFG0m1crxeHycCzf6HaecBeRc7s=;
+        b=Yn0f01Nj2zlWJOvSCp9kqW4ceMJiFrgNxHldDjTfuI1SZbC9i81ACob5RrRn7H4I2o
+         hteiTE9bQ7qNldCppR3OrVzHztykMkXsoTfPtP5l1SsdQK/199DWq5heX5fzKk1GFDQD
+         7bfBQTaN4zvoKgaVAAiMJEirZTYagqH3Ibk/Gf1l9FpYXX7e/QZuUCAw8MSvlon/EgDL
+         yk7L/kzNnQLt0RoKs+33HSCEKw5RBwYwv4qOwHvH7LgoN0JK8OcaG8tKyTOMmdU9ko+k
+         lKbS9HLBT0P+99T+2p0mxjqMIFQFRLWyj0vqXcHiRba2+U3VaO3v40PgKDQU7HQsNgRr
+         0AsQ==
+X-Gm-Message-State: AOAM533mNYvbjUHTJxaKkVQkmPnBi28MUaJJ5gFbGdLiATxTeucvYu+g
+        TrpN2cBSC7yra+dphxRbc8WzodJwczS6F6us/Ve44lw6c6k89+z5bvQ2jLRBdygpQGkHenFUcGJ
+        UQs7rR8Hxe8xBOL4yKjRJdvmxUc8=
+X-Received: by 2002:ac8:1ab4:: with SMTP id x49mr2308779qtj.39.1603198749165;
+        Tue, 20 Oct 2020 05:59:09 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzSYG8X66Ps2XgHiXhXkimRB74ySBTCmyKFNySnJWuGJUoj6A5ZTEg0bhWDVOn/3M0lAtzsnA==
+X-Received: by 2002:ac8:1ab4:: with SMTP id x49mr2308752qtj.39.1603198748879;
+        Tue, 20 Oct 2020 05:59:08 -0700 (PDT)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id a128sm698132qkc.92.2020.10.20.05.59.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2020 05:59:07 -0700 (PDT)
+From:   trix@redhat.com
+To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
+        mcoquelin.stm32@gmail.com, alexandre.torgue@st.com,
+        ath9k-devel@qca.qualcomm.com, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
+        linuxwifi@intel.com, pkshih@realtek.com, lior2.cohen@intel.com,
+        sara.sharon@intel.com, shahar.s.matityahu@intel.com,
+        nathan.errera@intel.com, tova.mussai@intel.com,
+        shaul.triebitz@intel.com, john@phrozen.org,
+        Larry.Finger@lwfinger.net, christophe.jaillet@wanadoo.fr,
+        zhengbin13@huawei.com, yanaijie@huawei.com, gustavoars@kernel.org,
+        saurav.girepunje@gmail.com, joe@perches.com
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-arm-kernel@lists.infradead.org, Tom Rix <trix@redhat.com>
+Subject: [PATCH v2] wireless: remove unneeded break
+Date:   Tue, 20 Oct 2020 05:58:41 -0700
+Message-Id: <20201020125841.26791-1-trix@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKU2ln
-bmVkLW9mZi1ieTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29t
-PgotLS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVzX3NkaW8uYyB8IDI1OCAr
-KysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAyNTggaW5zZXJ0aW9ucygrKQog
-Y3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVzX3Nk
-aW8uYwoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVzX3Nk
-aW8uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVzX3NkaW8uYwpuZXcgZmls
-ZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwMDAwMDAuLjk0OTExOWQ0OTIwYwotLS0gL2Rldi9u
-dWxsCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVzX3NkaW8uYwpAQCAt
-MCwwICsxLDI1OCBAQAorLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAtb25seQor
-LyoKKyAqIFNESU8gaW50ZXJmYWNlLgorICoKKyAqIENvcHlyaWdodCAoYykgMjAxNy0yMDIwLCBT
-aWxpY29uIExhYm9yYXRvcmllcywgSW5jLgorICogQ29weXJpZ2h0IChjKSAyMDEwLCBTVC1Fcmlj
-c3NvbgorICovCisjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+CisjaW5jbHVkZSA8bGludXgvbW1j
-L3NkaW8uaD4KKyNpbmNsdWRlIDxsaW51eC9tbWMvc2Rpb19mdW5jLmg+CisjaW5jbHVkZSA8bGlu
-dXgvbW1jL2NhcmQuaD4KKyNpbmNsdWRlIDxsaW51eC9pbnRlcnJ1cHQuaD4KKyNpbmNsdWRlIDxs
-aW51eC9vZl9pcnEuaD4KKyNpbmNsdWRlIDxsaW51eC9pcnEuaD4KKworI2luY2x1ZGUgImJ1cy5o
-IgorI2luY2x1ZGUgIndmeC5oIgorI2luY2x1ZGUgImh3aW8uaCIKKyNpbmNsdWRlICJtYWluLmgi
-CisjaW5jbHVkZSAiYmguaCIKKworc3RhdGljIGNvbnN0IHN0cnVjdCB3ZnhfcGxhdGZvcm1fZGF0
-YSB3Znhfc2Rpb19wZGF0YSA9IHsKKwkuZmlsZV9mdyA9ICJ3Zm1fd2YyMDAiLAorCS5maWxlX3Bk
-cyA9ICJ3ZjIwMC5wZHMiLAorfTsKKworc3RydWN0IHdmeF9zZGlvX3ByaXYgeworCXN0cnVjdCBz
-ZGlvX2Z1bmMgKmZ1bmM7CisJc3RydWN0IHdmeF9kZXYgKmNvcmU7CisJdTggYnVmX2lkX3R4Owor
-CXU4IGJ1Zl9pZF9yeDsKKwlpbnQgb2ZfaXJxOworfTsKKworc3RhdGljIGludCB3Znhfc2Rpb19j
-b3B5X2Zyb21faW8odm9pZCAqcHJpdiwgdW5zaWduZWQgaW50IHJlZ19pZCwKKwkJCQkgdm9pZCAq
-ZHN0LCBzaXplX3QgY291bnQpCit7CisJc3RydWN0IHdmeF9zZGlvX3ByaXYgKmJ1cyA9IHByaXY7
-CisJdW5zaWduZWQgaW50IHNkaW9fYWRkciA9IHJlZ19pZCA8PCAyOworCWludCByZXQ7CisKKwlX
-QVJOKHJlZ19pZCA+IDcsICJjaGlwIG9ubHkgaGFzIDcgcmVnaXN0ZXJzIik7CisJV0FSTigoKHVp
-bnRwdHJfdClkc3QpICYgMywgInVuYWxpZ25lZCBidWZmZXIgc2l6ZSIpOworCVdBUk4oY291bnQg
-JiAzLCAidW5hbGlnbmVkIGJ1ZmZlciBhZGRyZXNzIik7CisKKwkvKiBVc2UgcXVldWUgbW9kZSBi
-dWZmZXJzICovCisJaWYgKHJlZ19pZCA9PSBXRlhfUkVHX0lOX09VVF9RVUVVRSkKKwkJc2Rpb19h
-ZGRyIHw9IChidXMtPmJ1Zl9pZF9yeCArIDEpIDw8IDc7CisJcmV0ID0gc2Rpb19tZW1jcHlfZnJv
-bWlvKGJ1cy0+ZnVuYywgZHN0LCBzZGlvX2FkZHIsIGNvdW50KTsKKwlpZiAoIXJldCAmJiByZWdf
-aWQgPT0gV0ZYX1JFR19JTl9PVVRfUVVFVUUpCisJCWJ1cy0+YnVmX2lkX3J4ID0gKGJ1cy0+YnVm
-X2lkX3J4ICsgMSkgJSA0OworCisJcmV0dXJuIHJldDsKK30KKworc3RhdGljIGludCB3Znhfc2Rp
-b19jb3B5X3RvX2lvKHZvaWQgKnByaXYsIHVuc2lnbmVkIGludCByZWdfaWQsCisJCQkgICAgICAg
-Y29uc3Qgdm9pZCAqc3JjLCBzaXplX3QgY291bnQpCit7CisJc3RydWN0IHdmeF9zZGlvX3ByaXYg
-KmJ1cyA9IHByaXY7CisJdW5zaWduZWQgaW50IHNkaW9fYWRkciA9IHJlZ19pZCA8PCAyOworCWlu
-dCByZXQ7CisKKwlXQVJOKHJlZ19pZCA+IDcsICJjaGlwIG9ubHkgaGFzIDcgcmVnaXN0ZXJzIik7
-CisJV0FSTigoKHVpbnRwdHJfdClzcmMpICYgMywgInVuYWxpZ25lZCBidWZmZXIgc2l6ZSIpOwor
-CVdBUk4oY291bnQgJiAzLCAidW5hbGlnbmVkIGJ1ZmZlciBhZGRyZXNzIik7CisKKwkvKiBVc2Ug
-cXVldWUgbW9kZSBidWZmZXJzICovCisJaWYgKHJlZ19pZCA9PSBXRlhfUkVHX0lOX09VVF9RVUVV
-RSkKKwkJc2Rpb19hZGRyIHw9IGJ1cy0+YnVmX2lkX3R4IDw8IDc7CisJLy8gRklYTUU6IGRpc2Nh
-cmRzICdjb25zdCcgcXVhbGlmaWVyIGZvciBzcmMKKwlyZXQgPSBzZGlvX21lbWNweV90b2lvKGJ1
-cy0+ZnVuYywgc2Rpb19hZGRyLCAodm9pZCAqKXNyYywgY291bnQpOworCWlmICghcmV0ICYmIHJl
-Z19pZCA9PSBXRlhfUkVHX0lOX09VVF9RVUVVRSkKKwkJYnVzLT5idWZfaWRfdHggPSAoYnVzLT5i
-dWZfaWRfdHggKyAxKSAlIDMyOworCisJcmV0dXJuIHJldDsKK30KKworc3RhdGljIHZvaWQgd2Z4
-X3NkaW9fbG9jayh2b2lkICpwcml2KQoreworCXN0cnVjdCB3Znhfc2Rpb19wcml2ICpidXMgPSBw
-cml2OworCisJc2Rpb19jbGFpbV9ob3N0KGJ1cy0+ZnVuYyk7Cit9CisKK3N0YXRpYyB2b2lkIHdm
-eF9zZGlvX3VubG9jayh2b2lkICpwcml2KQoreworCXN0cnVjdCB3Znhfc2Rpb19wcml2ICpidXMg
-PSBwcml2OworCisJc2Rpb19yZWxlYXNlX2hvc3QoYnVzLT5mdW5jKTsKK30KKworc3RhdGljIHZv
-aWQgd2Z4X3NkaW9faXJxX2hhbmRsZXIoc3RydWN0IHNkaW9fZnVuYyAqZnVuYykKK3sKKwlzdHJ1
-Y3Qgd2Z4X3NkaW9fcHJpdiAqYnVzID0gc2Rpb19nZXRfZHJ2ZGF0YShmdW5jKTsKKworCXdmeF9i
-aF9yZXF1ZXN0X3J4KGJ1cy0+Y29yZSk7Cit9CisKK3N0YXRpYyBpcnFyZXR1cm5fdCB3Znhfc2Rp
-b19pcnFfaGFuZGxlcl9leHQoaW50IGlycSwgdm9pZCAqcHJpdikKK3sKKwlzdHJ1Y3Qgd2Z4X3Nk
-aW9fcHJpdiAqYnVzID0gcHJpdjsKKworCXNkaW9fY2xhaW1faG9zdChidXMtPmZ1bmMpOworCXdm
-eF9iaF9yZXF1ZXN0X3J4KGJ1cy0+Y29yZSk7CisJc2Rpb19yZWxlYXNlX2hvc3QoYnVzLT5mdW5j
-KTsKKwlyZXR1cm4gSVJRX0hBTkRMRUQ7Cit9CisKK3N0YXRpYyBpbnQgd2Z4X3NkaW9faXJxX3N1
-YnNjcmliZSh2b2lkICpwcml2KQoreworCXN0cnVjdCB3Znhfc2Rpb19wcml2ICpidXMgPSBwcml2
-OworCXUzMiBmbGFnczsKKwlpbnQgcmV0OworCXU4IGNjY3I7CisKKwlpZiAoIWJ1cy0+b2ZfaXJx
-KSB7CisJCXNkaW9fY2xhaW1faG9zdChidXMtPmZ1bmMpOworCQlyZXQgPSBzZGlvX2NsYWltX2ly
-cShidXMtPmZ1bmMsIHdmeF9zZGlvX2lycV9oYW5kbGVyKTsKKwkJc2Rpb19yZWxlYXNlX2hvc3Qo
-YnVzLT5mdW5jKTsKKwkJcmV0dXJuIHJldDsKKwl9CisKKwlzZGlvX2NsYWltX2hvc3QoYnVzLT5m
-dW5jKTsKKwljY2NyID0gc2Rpb19mMF9yZWFkYihidXMtPmZ1bmMsIFNESU9fQ0NDUl9JRU54LCBO
-VUxMKTsKKwljY2NyIHw9IEJJVCgwKTsKKwljY2NyIHw9IEJJVChidXMtPmZ1bmMtPm51bSk7CisJ
-c2Rpb19mMF93cml0ZWIoYnVzLT5mdW5jLCBjY2NyLCBTRElPX0NDQ1JfSUVOeCwgTlVMTCk7CisJ
-c2Rpb19yZWxlYXNlX2hvc3QoYnVzLT5mdW5jKTsKKwlmbGFncyA9IGlycV9nZXRfdHJpZ2dlcl90
-eXBlKGJ1cy0+b2ZfaXJxKTsKKwlpZiAoIWZsYWdzKQorCQlmbGFncyA9IElSUUZfVFJJR0dFUl9I
-SUdIOworCWZsYWdzIHw9IElSUUZfT05FU0hPVDsKKwlyZXR1cm4gZGV2bV9yZXF1ZXN0X3RocmVh
-ZGVkX2lycSgmYnVzLT5mdW5jLT5kZXYsIGJ1cy0+b2ZfaXJxLCBOVUxMLAorCQkJCQkgd2Z4X3Nk
-aW9faXJxX2hhbmRsZXJfZXh0LCBmbGFncywKKwkJCQkJICJ3ZngiLCBidXMpOworfQorCitzdGF0
-aWMgaW50IHdmeF9zZGlvX2lycV91bnN1YnNjcmliZSh2b2lkICpwcml2KQoreworCXN0cnVjdCB3
-Znhfc2Rpb19wcml2ICpidXMgPSBwcml2OworCWludCByZXQ7CisKKwlpZiAoYnVzLT5vZl9pcnEp
-CisJCWRldm1fZnJlZV9pcnEoJmJ1cy0+ZnVuYy0+ZGV2LCBidXMtPm9mX2lycSwgYnVzKTsKKwlz
-ZGlvX2NsYWltX2hvc3QoYnVzLT5mdW5jKTsKKwlyZXQgPSBzZGlvX3JlbGVhc2VfaXJxKGJ1cy0+
-ZnVuYyk7CisJc2Rpb19yZWxlYXNlX2hvc3QoYnVzLT5mdW5jKTsKKwlyZXR1cm4gcmV0OworfQor
-CitzdGF0aWMgc2l6ZV90IHdmeF9zZGlvX2FsaWduX3NpemUodm9pZCAqcHJpdiwgc2l6ZV90IHNp
-emUpCit7CisJc3RydWN0IHdmeF9zZGlvX3ByaXYgKmJ1cyA9IHByaXY7CisKKwlyZXR1cm4gc2Rp
-b19hbGlnbl9zaXplKGJ1cy0+ZnVuYywgc2l6ZSk7Cit9CisKK3N0YXRpYyBjb25zdCBzdHJ1Y3Qg
-aHdidXNfb3BzIHdmeF9zZGlvX2h3YnVzX29wcyA9IHsKKwkuY29weV9mcm9tX2lvID0gd2Z4X3Nk
-aW9fY29weV9mcm9tX2lvLAorCS5jb3B5X3RvX2lvID0gd2Z4X3NkaW9fY29weV90b19pbywKKwku
-aXJxX3N1YnNjcmliZSA9IHdmeF9zZGlvX2lycV9zdWJzY3JpYmUsCisJLmlycV91bnN1YnNjcmli
-ZSA9IHdmeF9zZGlvX2lycV91bnN1YnNjcmliZSwKKwkubG9jawkJCT0gd2Z4X3NkaW9fbG9jaywK
-KwkudW5sb2NrCQkJPSB3Znhfc2Rpb191bmxvY2ssCisJLmFsaWduX3NpemUJCT0gd2Z4X3NkaW9f
-YWxpZ25fc2l6ZSwKK307CisKK3N0YXRpYyBjb25zdCBzdHJ1Y3Qgb2ZfZGV2aWNlX2lkIHdmeF9z
-ZGlvX29mX21hdGNoW10gPSB7CisJeyAuY29tcGF0aWJsZSA9ICJzaWxhYnMsd2Z4LXNkaW8iIH0s
-CisJeyAuY29tcGF0aWJsZSA9ICJzaWxhYnMsd2YyMDAiIH0sCisJeyB9LAorfTsKK01PRFVMRV9E
-RVZJQ0VfVEFCTEUob2YsIHdmeF9zZGlvX29mX21hdGNoKTsKKworc3RhdGljIGludCB3Znhfc2Rp
-b19wcm9iZShzdHJ1Y3Qgc2Rpb19mdW5jICpmdW5jLAorCQkJICBjb25zdCBzdHJ1Y3Qgc2Rpb19k
-ZXZpY2VfaWQgKmlkKQoreworCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBmdW5jLT5kZXYub2Zf
-bm9kZTsKKwlzdHJ1Y3Qgd2Z4X3NkaW9fcHJpdiAqYnVzOworCWludCByZXQ7CisKKwlpZiAoZnVu
-Yy0+bnVtICE9IDEpIHsKKwkJZGV2X2VycigmZnVuYy0+ZGV2LCAiU0RJTyBmdW5jdGlvbiBudW1i
-ZXIgaXMgJWQgd2hpbGUgaXQgc2hvdWxkIGFsd2F5cyBiZSAxICh1bnN1cHBvcnRlZCBjaGlwPylc
-biIsCisJCQlmdW5jLT5udW0pOworCQlyZXR1cm4gLUVOT0RFVjsKKwl9CisKKwlidXMgPSBkZXZt
-X2t6YWxsb2MoJmZ1bmMtPmRldiwgc2l6ZW9mKCpidXMpLCBHRlBfS0VSTkVMKTsKKwlpZiAoIWJ1
-cykKKwkJcmV0dXJuIC1FTk9NRU07CisKKwlpZiAoIW5wIHx8ICFvZl9tYXRjaF9ub2RlKHdmeF9z
-ZGlvX29mX21hdGNoLCBucCkpIHsKKwkJZGV2X3dhcm4oJmZ1bmMtPmRldiwgIm5vIGNvbXBhdGli
-bGUgZGV2aWNlIGZvdW5kIGluIERUXG4iKTsKKwkJcmV0dXJuIC1FTk9ERVY7CisJfQorCisJYnVz
-LT5mdW5jID0gZnVuYzsKKwlidXMtPm9mX2lycSA9IGlycV9vZl9wYXJzZV9hbmRfbWFwKG5wLCAw
-KTsKKwlzZGlvX3NldF9kcnZkYXRhKGZ1bmMsIGJ1cyk7CisJZnVuYy0+Y2FyZC0+cXVpcmtzIHw9
-IE1NQ19RVUlSS19MRU5JRU5UX0ZOMCB8CisJCQkgICAgICBNTUNfUVVJUktfQkxLU1pfRk9SX0JZ
-VEVfTU9ERSB8CisJCQkgICAgICBNTUNfUVVJUktfQlJPS0VOX0JZVEVfTU9ERV81MTI7CisKKwlz
-ZGlvX2NsYWltX2hvc3QoZnVuYyk7CisJcmV0ID0gc2Rpb19lbmFibGVfZnVuYyhmdW5jKTsKKwkv
-LyBCbG9jayBvZiA2NCBieXRlcyBpcyBtb3JlIGVmZmljaWVudCB0aGFuIDUxMkIgZm9yIGZyYW1l
-IHNpemVzIDwgNGsKKwlzZGlvX3NldF9ibG9ja19zaXplKGZ1bmMsIDY0KTsKKwlzZGlvX3JlbGVh
-c2VfaG9zdChmdW5jKTsKKwlpZiAocmV0KQorCQlnb3RvIGVycjA7CisKKwlidXMtPmNvcmUgPSB3
-ZnhfaW5pdF9jb21tb24oJmZ1bmMtPmRldiwgJndmeF9zZGlvX3BkYXRhLAorCQkJCSAgICAmd2Z4
-X3NkaW9faHdidXNfb3BzLCBidXMpOworCWlmICghYnVzLT5jb3JlKSB7CisJCXJldCA9IC1FSU87
-CisJCWdvdG8gZXJyMTsKKwl9CisKKwlyZXQgPSB3ZnhfcHJvYmUoYnVzLT5jb3JlKTsKKwlpZiAo
-cmV0KQorCQlnb3RvIGVycjE7CisKKwlyZXR1cm4gMDsKKworZXJyMToKKwlzZGlvX2NsYWltX2hv
-c3QoZnVuYyk7CisJc2Rpb19kaXNhYmxlX2Z1bmMoZnVuYyk7CisJc2Rpb19yZWxlYXNlX2hvc3Qo
-ZnVuYyk7CitlcnIwOgorCXJldHVybiByZXQ7Cit9CisKK3N0YXRpYyB2b2lkIHdmeF9zZGlvX3Jl
-bW92ZShzdHJ1Y3Qgc2Rpb19mdW5jICpmdW5jKQoreworCXN0cnVjdCB3Znhfc2Rpb19wcml2ICpi
-dXMgPSBzZGlvX2dldF9kcnZkYXRhKGZ1bmMpOworCisJd2Z4X3JlbGVhc2UoYnVzLT5jb3JlKTsK
-KwlzZGlvX2NsYWltX2hvc3QoZnVuYyk7CisJc2Rpb19kaXNhYmxlX2Z1bmMoZnVuYyk7CisJc2Rp
-b19yZWxlYXNlX2hvc3QoZnVuYyk7Cit9CisKK3N0YXRpYyBjb25zdCBzdHJ1Y3Qgc2Rpb19kZXZp
-Y2VfaWQgd2Z4X3NkaW9faWRzW10gPSB7CisJeyBTRElPX0RFVklDRShTRElPX1ZFTkRPUl9JRF9T
-SUxBQlMsIFNESU9fREVWSUNFX0lEX1NJTEFCU19XRjIwMCkgfSwKKwl7IH0sCit9OworTU9EVUxF
-X0RFVklDRV9UQUJMRShzZGlvLCB3Znhfc2Rpb19pZHMpOworCitzdHJ1Y3Qgc2Rpb19kcml2ZXIg
-d2Z4X3NkaW9fZHJpdmVyID0geworCS5uYW1lID0gIndmeC1zZGlvIiwKKwkuaWRfdGFibGUgPSB3
-Znhfc2Rpb19pZHMsCisJLnByb2JlID0gd2Z4X3NkaW9fcHJvYmUsCisJLnJlbW92ZSA9IHdmeF9z
-ZGlvX3JlbW92ZSwKKwkuZHJ2ID0geworCQkub3duZXIgPSBUSElTX01PRFVMRSwKKwkJLm9mX21h
-dGNoX3RhYmxlID0gd2Z4X3NkaW9fb2ZfbWF0Y2gsCisJfQorfTsKLS0gCjIuMjguMAoK
+From: Tom Rix <trix@redhat.com>
+
+A break is not needed if it is preceded by a return
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+
+v2: remove intersil/p54/eeprom.c
+
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c             | 1 -
+ drivers/net/wireless/ath/ath6kl/testmode.c           | 1 -
+ drivers/net/wireless/ath/ath9k/hw.c                  | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c    | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c  | 1 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  | 1 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 3 ---
+ 7 files changed, 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 5c1af2021883..9c4e6cf2137a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -3878,7 +3878,6 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		return ath10k_htt_rx_proc_rx_frag_ind(htt,
+ 						      &resp->rx_frag_ind,
+ 						      skb);
+-		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TEST:
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath6kl/testmode.c b/drivers/net/wireless/ath/ath6kl/testmode.c
+index f3906dbe5495..89c7c4e25169 100644
+--- a/drivers/net/wireless/ath/ath6kl/testmode.c
++++ b/drivers/net/wireless/ath/ath6kl/testmode.c
+@@ -94,7 +94,6 @@ int ath6kl_tm_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 		return 0;
+ 
+-		break;
+ 	case ATH6KL_TM_CMD_RX_REPORT:
+ 	default:
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6609ce122e6e..b66eeb577272 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2308,7 +2308,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ 		ath_dbg(ath9k_hw_common(ah), BEACON,
+ 			"%s: unsupported opmode: %d\n", __func__, ah->opmode);
+ 		return;
+-		break;
+ 	}
+ 
+ 	REG_WRITE(ah, AR_BEACON_PERIOD, beacon_period);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index cbdebefb854a..8698ca4d30de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1202,13 +1202,11 @@ static int iwl_mvm_mac_ctx_send(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		return iwl_mvm_mac_ctxt_cmd_sta(mvm, vif, action,
+ 						force_assoc_off,
+ 						bssid_override);
+-		break;
+ 	case NL80211_IFTYPE_AP:
+ 		if (!vif->p2p)
+ 			return iwl_mvm_mac_ctxt_cmd_ap(mvm, vif, action);
+ 		else
+ 			return iwl_mvm_mac_ctxt_cmd_go(mvm, vif, action);
+-		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		return iwl_mvm_mac_ctxt_cmd_listener(mvm, vif, action);
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 63f9ea21962f..bd9160b166c5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1226,7 +1226,6 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+ 	default:
+ 		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+-		break;
+ 	}
+ 
+ 	/* MSR_INFRA == Link in infrastructure network;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index a36dc6e726d2..f8a1de6e9849 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1132,7 +1132,6 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+ 	default:
+ 		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+-		break;
+ 	}
+ 
+ 	/* MSR_INFRA == Link in infrastructure network;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index f41a7643b9c4..225b8cd44f23 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -2085,12 +2085,10 @@ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		return __rtl8821ae_phy_config_with_headerfile(hw,
+ 				radioa_array_table_a, radioa_arraylen_a,
+ 				_rtl8821ae_config_rf_radio_a);
+-		break;
+ 	case RF90_PATH_B:
+ 		return __rtl8821ae_phy_config_with_headerfile(hw,
+ 				radioa_array_table_b, radioa_arraylen_b,
+ 				_rtl8821ae_config_rf_radio_b);
+-		break;
+ 	case RF90_PATH_C:
+ 	case RF90_PATH_D:
+ 		pr_err("switch case %#x not processed\n", rfpath);
+@@ -2116,7 +2114,6 @@ bool rtl8821ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		return __rtl8821ae_phy_config_with_headerfile(hw,
+ 			radioa_array_table, radioa_arraylen,
+ 			_rtl8821ae_config_rf_radio_a);
+-		break;
+ 
+ 	case RF90_PATH_B:
+ 	case RF90_PATH_C:
+-- 
+2.18.1
+
