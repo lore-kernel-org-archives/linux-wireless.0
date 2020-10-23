@@ -2,41 +2,44 @@ Return-Path: <SRS0=EgbJ=D6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B24CBC55178
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Oct 2020 09:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53524C55179
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Oct 2020 09:38:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AF4A241A4
+	by mail.kernel.org (Postfix) with ESMTP id 08FDE24182
 	for <linux-wireless@archiver.kernel.org>; Fri, 23 Oct 2020 09:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S461605AbgJWJih (ORCPT
+        id S461608AbgJWJii (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Oct 2020 05:38:37 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:45981 "EHLO
+        Fri, 23 Oct 2020 05:38:38 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:45986 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S461514AbgJWJig (ORCPT
+        with ESMTP id S461600AbgJWJig (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 23 Oct 2020 05:38:36 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 09N9cTLE1024653, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 09N9cVhoD024667, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 09N9cTLE1024653
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 09N9cVhoD024667
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 23 Oct 2020 17:38:29 +0800
+        Fri, 23 Oct 2020 17:38:31 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Fri, 23 Oct 2020 17:38:29 +0800
+ 15.1.2044.4; Fri, 23 Oct 2020 17:38:31 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/11] rtw88: coex: fix field issues and add debug interfaces
-Date:   Fri, 23 Oct 2020 17:37:31 +0800
-Message-ID: <20201023093742.29908-1-pkshih@realtek.com>
+Subject: [PATCH 11/11] rtw88: coex: simplify the setting and condition about WLAN TX limitation
+Date:   Fri, 23 Oct 2020 17:37:42 +0800
+Message-ID: <20201023093742.29908-12-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201023093742.29908-1-pkshih@realtek.com>
+References: <20201023093742.29908-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -47,42 +50,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-This patchset adds coex code synchronized from our internal tree, in which
-we fix many field issues, and add debug interfaces that is helpful to debug
-in field. Also, some coding style fixes are included.
+Life time related setting is related to WLAN active port number,
+not its mode. The original setting may cause poor WLAN performance.
 
-There are totally 32 patches, so I plan to submit them as three patchsets,
-and this is the first one.
+In most case, WLAN TX limitation is helpful for BT in coexistence
+scenario, especially for A2DP quality.
+So this is necessary to fix the setting and constraint it.
 
-Ching-Te Ku (11):
-  rtw88: coex: fixed some wrong register definition and setting
-  rtw88: coex: update coex parameter to improve A2DP quality
-  rtw88: coex: reduce magic number
-  rtw88: coex: coding style adjustment
-  rtw88: coex: Modify the timing of set_ant_path/set_rf_para
-  rtw88: coex: add separate flag for manual control
-  rtw88: coex: modified for BT info notify
-  rtw88: coex: change the parameter for A2DP when WLAN connecting
-  rtw88: coex: update WLAN 5G AFH parameter for 8822b
-  rtw88: coex: add debug message
-  rtw88: coex: simplify the setting and condition about WLAN TX
-    limitation
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/coex.c | 24 +++++++----------------
+ 1 file changed, 7 insertions(+), 17 deletions(-)
 
- drivers/net/wireless/realtek/rtw88/coex.c     | 678 ++++++++++++++----
- drivers/net/wireless/realtek/rtw88/coex.h     |  36 +-
- drivers/net/wireless/realtek/rtw88/debug.c    |   4 +-
- drivers/net/wireless/realtek/rtw88/main.c     |   4 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  13 +-
- drivers/net/wireless/realtek/rtw88/reg.h      |  15 +-
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  65 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |   3 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.h |   2 -
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  65 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 102 +--
- 11 files changed, 724 insertions(+), 263 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index b388979234a7..6c1158c92582 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -38,7 +38,7 @@ static void rtw_coex_limited_tx(struct rtw_dev *rtwdev,
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+-	bool wifi_under_b_mode = false;
++	u8 num_of_active_port = 1;
+ 
+ 	if (!chip->scbd_support)
+ 		return;
+@@ -70,17 +70,13 @@ static void rtw_coex_limited_tx(struct rtw_dev *rtwdev,
+ 		/* set queue life time to avoid can't reach tx retry limit
+ 		 * if tx is always broken by GNT_BT
+ 		 */
+-		rtw_write8_set(rtwdev, REG_LIFETIME_EN, 0xf);
++		if (num_of_active_port <= 1)
++			rtw_write8_set(rtwdev, REG_LIFETIME_EN, 0xf);
+ 		rtw_write16(rtwdev, REG_RETRY_LIMIT, 0x0808);
+ 
+ 		/* auto rate fallback step within 8 retries */
+-		if (wifi_under_b_mode) {
+-			rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
+-			rtw_write32(rtwdev, REG_DARFRCH, 0x1010101);
+-		} else {
+-			rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
+-			rtw_write32(rtwdev, REG_DARFRCH, 0x4030201);
+-		}
++		rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
++		rtw_write32(rtwdev, REG_DARFRCH, 0x4030201);
+ 	} else {
+ 		rtw_write8_clr(rtwdev, REG_TX_HANG_CTRL, BIT_EN_GNT_BT_AWAKE);
+ 		rtw_write8_clr(rtwdev, REG_LIFETIME_EN, 0xf);
+@@ -101,18 +97,12 @@ static void rtw_coex_limited_wl(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_dm *coex_dm = &coex->dm;
+-	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	bool tx_limit = false;
+ 	bool tx_agg_ctrl = false;
+ 
+-	if (coex->under_5g ||
+-	    coex_dm->bt_status == COEX_BTSTATUS_NCON_IDLE) {
+-		/* no need to limit tx */
+-	} else {
++	if (!coex->under_5g && coex_dm->bt_status != COEX_BTSTATUS_NCON_IDLE) {
+ 		tx_limit = true;
+-		if (coex_stat->bt_hid_exist || coex_stat->bt_hfp_exist ||
+-		    coex_stat->bt_hid_pair_num > 0)
+-			tx_agg_ctrl = true;
++		tx_agg_ctrl = true;
+ 	}
+ 
+ 	rtw_coex_limited_tx(rtwdev, tx_limit, tx_agg_ctrl);
 -- 
 2.21.0
 
