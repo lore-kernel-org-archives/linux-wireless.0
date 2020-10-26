@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85005C83008
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AC9C8300E
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57E0920829
+	by mail.kernel.org (Postfix) with ESMTP id C55222080A
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:46:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1603759570;
-	bh=3Tid0z77FOPAKyxCArbwfdFzfiDVOeZwGFliCQNSh2s=;
+	bh=C9mMF2VOdeFDUWtBZtyeimSiVyQQTfPYGjKoHQ4jZBk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TLoX8bmL3Ofa4tvo3K1yYng4SjFKNxljxR9+7nMiIP0yQwDekpD7uWXg2jBbghRhy
-	 UNxynEM7Dh2uCth4iQTNH5FDpRzfeVxhuqPkTCk4sA9a59Xs1vKEdsB5MeOXX+5lk4
-	 IJKKOZJoyZ4+x3dEomAj7MHTWHuM4m1CPxnNwk6s=
+	b=XyAcwjFPVp0ouNNMjB+vp/aPwNWyT0KhDv02W9Wj7cAu7W8iTB68CLZoz+4AaTp/A
+	 S+Y8WM2C53u9mw1CVh/fnYCWvhJW6jOF1Zz8e9IesOH50GKM/8GhskZFIZzT8WIj6b
+	 2H+8C/rzEiZW5+9j8bVQPqXbMDgfDcSPDwcJatMw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502338AbgJ0AnU (ORCPT
+        id S2502291AbgJ0Aml (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:43:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50406 "EHLO mail.kernel.org"
+        Mon, 26 Oct 2020 20:42:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2409165AbgJZXul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:50:41 -0400
+        id S2408790AbgJZXto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:49:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 053932075B;
-        Mon, 26 Oct 2020 23:50:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 972EC2075B;
+        Mon, 26 Oct 2020 23:49:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756240;
-        bh=3Tid0z77FOPAKyxCArbwfdFzfiDVOeZwGFliCQNSh2s=;
+        s=default; t=1603756183;
+        bh=C9mMF2VOdeFDUWtBZtyeimSiVyQQTfPYGjKoHQ4jZBk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BKOQG7FP4Ot69BcztMBtvhg7cVIaG2KpLQTEaKD92WH7Nc7teAEBb5OkH4ssphZBV
-         2oE+AEuqiboyzsGZ7OoDcgIOhjky8SkT/fUhQHh7OPfTiaPcvbO9NCi5FX/0J+5gdW
-         lJ+gNBTSOx/HomicA13dxE2Pubc1Fx+OF1CnmKqY=
+        b=a3eAptjueu8+kyNbFCB9IoAQtJliM1PjS6diMX/qsqmbeVvfY7Vn4j0PfcV4vYNd4
+         5YqIWFoXJKlxF/15vIL90bjDmIdLfRb7D4bMqv89YDXFbPkQbJjuH1LurHpnZamZx+
+         nLvGlyR+erpNOfSZJVxnzn8KCLN1NxqbWRbHKN/8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Venkateswara Naralasetty <vnaralas@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 077/147] mac80211: add missing queue/hash initialization to 802.3 xmit
-Date:   Mon, 26 Oct 2020 19:47:55 -0400
-Message-Id: <20201026234905.1022767-77-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 030/147] ath10k: fix retry packets update in station dump
+Date:   Mon, 26 Oct 2020 19:47:08 -0400
+Message-Id: <20201026234905.1022767-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201026234905.1022767-1-sashal@kernel.org>
 References: <20201026234905.1022767-1-sashal@kernel.org>
@@ -59,37 +59,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 
-[ Upstream commit 5f8d69eaab1915df97f4f2aca89ea16abdd092d5 ]
+[ Upstream commit 67b927f9820847d30e97510b2f00cd142b9559b6 ]
 
-Fixes AQL for encap-offloaded tx
+When tx status enabled, retry count is updated from tx completion status.
+which is not working as expected due to firmware limitation where
+firmware can not provide per MSDU rate statistics from tx completion
+status. Due to this tx retry count is always 0 in station dump.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Link: https://lore.kernel.org/r/20200908123702.88454-2-nbd@nbd.name
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fix this issue by updating the retry packet count from per peer
+statistics. This patch will not break on SDIO devices since, this retry
+count is already updating from peer statistics for SDIO devices.
+
+Tested-on: QCA9984 PCI 10.4-3.6-00104
+Tested-on: QCA9882 PCI 10.2.4-1.0-00047
+
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1591856446-26977-1-git-send-email-vnaralas@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 8 +++++---
+ drivers/net/wireless/ath/ath10k/mac.c    | 5 +++--
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index dca01d7e6e3e0..282b0bc201eeb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4209,6 +4209,12 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	if (is_zero_ether_addr(ra))
- 		goto out_free;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d787cbead56ab..cac05e7bb6b07 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -3575,12 +3575,14 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+ 	}
  
-+	if (local->ops->wake_tx_queue) {
-+		u16 queue = __ieee80211_select_queue(sdata, sta, skb);
-+		skb_set_queue_mapping(skb, queue);
-+		skb_get_hash(skb);
-+	}
+ 	if (ar->htt.disable_tx_comp) {
+-		arsta->tx_retries += peer_stats->retry_pkts;
+ 		arsta->tx_failed += peer_stats->failed_pkts;
+-		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx retries %d tx failed %d\n",
+-			   arsta->tx_retries, arsta->tx_failed);
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "tx failed %d\n",
++			   arsta->tx_failed);
+ 	}
+ 
++	arsta->tx_retries += peer_stats->retry_pkts;
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx retries %d", arsta->tx_retries);
 +
- 	multicast = is_multicast_ether_addr(ra);
+ 	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
+ 		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
+ 						    rate_idx);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3c0c33a9f30cb..cc7208076ba4c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8542,12 +8542,13 @@ static void ath10k_sta_statistics(struct ieee80211_hw *hw,
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
  
- 	if (sta)
+ 	if (ar->htt.disable_tx_comp) {
+-		sinfo->tx_retries = arsta->tx_retries;
+-		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
+ 		sinfo->tx_failed = arsta->tx_failed;
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+ 	}
+ 
++	sinfo->tx_retries = arsta->tx_retries;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
++
+ 	ath10k_mac_sta_get_peer_stats_info(ar, sta, sinfo);
+ }
+ 
 -- 
 2.25.1
 
