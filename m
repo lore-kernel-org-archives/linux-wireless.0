@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3D5C4363A
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC786C55178
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4AE072224A
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AADF62224A
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iWk0r6Vg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UL0CF+D3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1783307AbgJZPJs (ORCPT
+        id S1783247AbgJZPJl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 11:09:48 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:33052 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2444031AbgJZPJp (ORCPT
+        Mon, 26 Oct 2020 11:09:41 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:34020 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1783225AbgJZPJl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 11:09:45 -0400
-Received: by mail-wr1-f66.google.com with SMTP id b8so13056476wrn.0;
-        Mon, 26 Oct 2020 08:09:43 -0700 (PDT)
+        Mon, 26 Oct 2020 11:09:41 -0400
+Received: by mail-wm1-f67.google.com with SMTP id k21so5920085wmi.1;
+        Mon, 26 Oct 2020 08:09:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=QjFg0mZ8avC6idJO43FWcJE7MDWVLercfhu1t4ztzhU=;
-        b=iWk0r6VgHJ/idi7eaEAYLS+0sY3MiDKm325KVAaG43StA7S4Ftm049iusCYU32fYqS
-         ZdfJT+zXzfHb6B8l4LlEyKstwDdRcQbsJq03D2XmwaVt8PI3+lNJujLq7EwimFmtp8uW
-         4KM0/L9acgUuSKonOvl1LHGZApmYDNiE7fIUtAtieRqeM8InrzMJ97HXa9vKsoEiogmn
-         caPUknB9w/yEq8QCJp9geZk3fg3um/xx4ickm3nvNJ1RleRfHjKaRwhPbLoogjXKmo+e
-         b+dUgnJk4l2QlIC6WhnN2beZadd5LT1FHXU1LZlep5AoxwAqoAjlElv7QE378+Nll5zE
-         mI1A==
+        bh=jGncrBzeSrdZmyOiKkMYe800E1r8xGJD44x4nOUxG2s=;
+        b=UL0CF+D3uiKHsos40I0KWKysJ6LD5+XNTODWaR/a5zr5tSV2YsjL3n2TFtRDveuNAE
+         Y/Mxfv8TTKEVt2X3/Ra8izmjVYTBO3sgxg2OTgIvUsbiUcaN9bjPNaMRNLKZUL+jdVCf
+         iEZatnKIe/IAJP09OUVJMHsrJPV4DZgooyaPsFFSPQXqvKnuUuJvgITbd3Pe5pIkY1l7
+         r5mDvRFy0v1hG5/p+N80/L17k9ngRFXpR8OyfASxeVe7YSAkUd+Av4vvpi6LCERblLF/
+         zVfeEzMS20HQ5KOysHy2bGA6oigcemG6Wo8lTAKjDMEkU1Ixa2Lrufmi/74Rp0WHVWRU
+         z8Dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QjFg0mZ8avC6idJO43FWcJE7MDWVLercfhu1t4ztzhU=;
-        b=SESs2xhZXCaNxe1QKIAwUAUH3SUhP60lW2J5UEjUfl+p4fKERFRrdJ1Ggn4tSxGCWj
-         MVrsRinVYQtr259VTRFYtYN5TKWYkfSrsCNHhZTqDfG1fiYaSHucWNS02ii1yc2bOBjg
-         1ioSOK2OgGwwGx7lZ5Jjoh3Wdtx3k1pEKW4s8LL0jhOK4UmL8HddWUSmHVp6kJ+Jv6n/
-         o7yXw0PdZCChSFjLzCoOX5scdK6ItD7PzwsuuMhhW6FgvBfH8FnmdD0fG6Ihj+cg4BEM
-         rCCNNy80auvHk4ByS2sEquSwGnh45oMVSlHwN38RVhP1Q1feBlXxSmj0UmfYyadk28aR
-         TbxA==
-X-Gm-Message-State: AOAM532psujFooljYf1vHbtCiZAi0iTss9hFFrxD60NMBhqIa2qQ+tfc
-        4TfVO6E83YimMOVBK+UIv24=
-X-Google-Smtp-Source: ABdhPJw53dWIv9EQncXT5M/kVl6SJeogeatP8PgPx1AAH9Pr252TUzKJFjlNPda4mkM8Rw6ki5+Nvw==
-X-Received: by 2002:adf:bc13:: with SMTP id s19mr19057557wrg.338.1603724983034;
-        Mon, 26 Oct 2020 08:09:43 -0700 (PDT)
+        bh=jGncrBzeSrdZmyOiKkMYe800E1r8xGJD44x4nOUxG2s=;
+        b=mH87fKYcGHVFBkVuqgyeCrp0ZXsTK7pLRL7Pc8KO89ENlhKZs4IyShYU4qC/CSPvP1
+         ofF3Xd8+eVU29Sn+EPibxJwZ+AmvzGNTKH1jxHz1eKf1P2xuVlYBSg99YO3Gcw+8mpR0
+         3c6tmZFZFXqlsbA2+CSvAmlCpPwd9nZHlsCQD3Sgz09AVr3fIck1ssrR4WAOQhsSDKlP
+         k1yBYVU9KWN64ET7+esZ0LlonDGouxhyFU8FI/AX+dLaImCU2J5/jcv2QGIh57ppFgyJ
+         hR67bR1xDlmq/AtIsCkzZFb99oBci1u8xPYqbZOgpZ9qgafwApyNWOzjw3z7YgMWOtvm
+         fTSQ==
+X-Gm-Message-State: AOAM530SxTqPT3MBBKSN4p0fa/pvYy2RzS7cSq81DaKak4uT9IQwE9i4
+        ZNZ25cDNfs47J24MUBGtcXBvE9ZhxBXjaTRoawM=
+X-Google-Smtp-Source: ABdhPJx254j9rng1d26VwrYDPLdAk5fayxDDtSTxwWAD6kZqGCrog1IU52MJygYgMeuZLWt+BoWP2A==
+X-Received: by 2002:a7b:cc89:: with SMTP id p9mr17094670wma.4.1603724978723;
+        Mon, 26 Oct 2020 08:09:38 -0700 (PDT)
 Received: from nogikh.c.googlers.com.com (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
-        by smtp.gmail.com with ESMTPSA id 24sm20043967wmf.44.2020.10.26.08.09.42
+        by smtp.gmail.com with ESMTPSA id 24sm20043967wmf.44.2020.10.26.08.09.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2020 08:09:42 -0700 (PDT)
+        Mon, 26 Oct 2020 08:09:38 -0700 (PDT)
 From:   Aleksandr Nogikh <aleksandrnogikh@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net
 Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
@@ -64,9 +64,9 @@ Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         willemdebruijn.kernel@gmail.com,
         Aleksandr Nogikh <nogikh@google.com>
-Subject: [PATCH v3 3/3] mac80211: add KCOV remote annotations to incoming frame processing
-Date:   Mon, 26 Oct 2020 15:08:51 +0000
-Message-Id: <20201026150851.528148-4-aleksandrnogikh@gmail.com>
+Subject: [PATCH v3 1/3] kernel: make kcov_common_handle consider the current context
+Date:   Mon, 26 Oct 2020 15:08:49 +0000
+Message-Id: <20201026150851.528148-2-aleksandrnogikh@gmail.com>
 X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
 In-Reply-To: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
 References: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
@@ -78,54 +78,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Aleksandr Nogikh <nogikh@google.com>
 
-Add KCOV remote annotations to ieee80211_iface_work and
-ieee80211_rx. This will enable coverage-guided fuzzing of
-mac80211 code that processes incoming 802.11 frames.
+kcov_common_handle is a method that is used to obtain a "default" KCOV
+remote handle of the current process. The handle can later be passed
+to kcov_remote_start in order to collect coverage for the processing
+that is initiated by one process, but done in another. For details see
+Documentation/dev-tools/kcov.rst and comments in kernel/kcov.c.
+
+Presently, if kcov_common_handle is called in an IRQ context, it will
+return a handle for the interrupted process. This may lead to
+unreliable and incorrect coverage collection.
+
+Adjust the behavior of kcov_common_handle in the following way. If it
+is called in a task context, return the common handle for the
+currently running task. Otherwise, return 0.
 
 Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
+Reviewed-by: Andrey Konovalov <andreyknvl@google.com>
 ---
-v1 -> v2:
-* The commit now affects ieee80211_rx instead of
-  ieee80211_tasklet_handler.
----
- include/net/mac80211.h | 2 ++
- net/mac80211/iface.c   | 2 ++
- 2 files changed, 4 insertions(+)
+ kernel/kcov.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e8e295dae744..f4c37a1b381e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4499,7 +4499,9 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
-  */
- static inline void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/kernel/kcov.c b/kernel/kcov.c
+index 6b8368be89c8..80bfe71bbe13 100644
+--- a/kernel/kcov.c
++++ b/kernel/kcov.c
+@@ -1023,6 +1023,8 @@ EXPORT_SYMBOL(kcov_remote_stop);
+ /* See the comment before kcov_remote_start() for usage details. */
+ u64 kcov_common_handle(void)
  {
-+	kcov_remote_start_common(skb_get_kcov_handle(skb));
- 	ieee80211_rx_napi(hw, NULL, skb, NULL);
-+	kcov_remote_stop();
++	if (!in_task())
++		return 0;
+ 	return current->kcov_handle;
  }
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 1be775979132..56a1bcea2c1c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1356,6 +1356,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
- 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
- 
-+		kcov_remote_start_common(skb_get_kcov_handle(skb));
- 		if (ieee80211_is_action(mgmt->frame_control) &&
- 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
-@@ -1465,6 +1466,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 		}
- 
- 		kfree_skb(skb);
-+		kcov_remote_stop();
- 	}
- 
- 	/* then other type-dependent work */
+ EXPORT_SYMBOL(kcov_common_handle);
 -- 
 2.29.0.rc1.297.gfa9743e501-goog
 
