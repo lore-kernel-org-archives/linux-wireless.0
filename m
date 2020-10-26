@@ -2,60 +2,61 @@ Return-Path: <SRS0=xhmE=EB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 891E6C4363A
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5A1C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:09:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 477FA2224A
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 663612224A
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:09:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ObfSZkZn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C7idnwP+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1783222AbgJZPJQ (ORCPT
+        id S1737357AbgJZPJt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 11:09:16 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:55843 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404123AbgJZPJP (ORCPT
+        Mon, 26 Oct 2020 11:09:49 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:45924 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2443808AbgJZPJo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 11:09:15 -0400
-Received: by mail-wm1-f67.google.com with SMTP id a72so12013238wme.5;
-        Mon, 26 Oct 2020 08:09:12 -0700 (PDT)
+        Mon, 26 Oct 2020 11:09:44 -0400
+Received: by mail-wr1-f65.google.com with SMTP id e17so12995921wru.12;
+        Mon, 26 Oct 2020 08:09:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J+x1UhkmqmtmdEr4B0LaEa7qXm4z8dBJtIO4mmb7CBo=;
-        b=ObfSZkZngFEmZWxxEhZfGBELFBwIHk7G8xR3tiYx34nveLIbpidn//YH7s05TuxmRj
-         hdytqV8ozjYzWaFgCooqFToRZqT9aotWMFYarduQ3gJ7K/NOBTTGlbHvlb5F15cYb6CR
-         +vIAcqWqN/Yi5EJTYVFZvOWjIgj41XLkZJJ5VY96a4zu5C4QFR75Sj/50CqyOYI32WYV
-         YpsVK6lNyphBAXoD9EgyIV+A2+LaJIIaFgv6Te1/mFkk9CXMJ9js1i8Pw4nQ/cVpLgng
-         qvJyAARbAbAZ0mN8K/aBxiSnaxaAiolOTHHVPc3Lildb4CETex+DvKX//j4TzQOd8zhQ
-         Ay4g==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=nn2oZLRjT+64BciW+Hx/seUtuN7aSBzpzwVj8jN3tsQ=;
+        b=C7idnwP+y3uDL1Ofk5oMTvxHJHIXc0hMrDq2keHCargyWZzY8Cl6CitI6nISeyBTwW
+         D1YSiDl+l0TeGC7nv48Abdx/s6WoGPE8YKojE0AuEZoQIMclfJecW7u2AZKCB229eZhG
+         hP7cCuFYMd0vt9ztAMCIBYuLJClcJxl2kzKgauvoVrm2xzt1nQQdPMp4Lenieg5Xl1n+
+         JeQIhwYy4KfO0qLZmG6tIIms9QrXPNvTphumaKxBk6OIl8z1zHCIhibFPTPQGAB0zH3y
+         tdgTrCvVhTTMhDbYvg6sxAhS1RK/BqSVv/zvfNCtO461u6aeL4jFF6El9/tEzu4n29Yr
+         EUvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J+x1UhkmqmtmdEr4B0LaEa7qXm4z8dBJtIO4mmb7CBo=;
-        b=pX+qtuz5cS+JoK0PGq7HEHhCJgJjccuovnieANFxC0ITiXGaWpYHZIv8TMXdtt8bi3
-         nPptVSnHCziovaaEWIHk4iF0qe6V+MNFf4CwQGxVy/+UdjH1L2Hh0Kz4wbqLb54kzATh
-         Zu+VBC2vxqG/8V2X2ZSgkwvASLBIRssdJA4IFeNZL4MxHn5kMmhKhp2O61ySDTu/0MRN
-         YHxI6lf6HbJncex1B9TexcPW7t6fqpiSiLb6ypGnvznQfBqV2eEeyfpwnRCnqEmWPRxa
-         FOHg1Q/W/KXaMB1T8003wQ3fmyWA5yR8m74K/steNFukOK7cH/qRRvjwF3npGDmRetWn
-         5Nbg==
-X-Gm-Message-State: AOAM532sT9JlztttyboQirvZJWWQurRIl7fMeQFkoF7N8FpmGAz158AN
-        bMaDBOkK9NtzuBmiZqIOVgw=
-X-Google-Smtp-Source: ABdhPJyWVKUwQ1tM9gAqB0j6VzRdQS6PG4/vx42gAhGgCegC2gOFzs3OyraKXyHK6edxylSL/4dEwA==
-X-Received: by 2002:a1c:9a46:: with SMTP id c67mr15876240wme.115.1603724951892;
-        Mon, 26 Oct 2020 08:09:11 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=nn2oZLRjT+64BciW+Hx/seUtuN7aSBzpzwVj8jN3tsQ=;
+        b=XUacBpvZ4j5jVy3Hivj1Ko85lxsh0ppZzRuZ9Tcejd7ncz6Myz19PM+KGDsAZOdwlk
+         xGGkuonng5NYmEzBe7/g5StMGiKZJPnfUxQpcbZMf8DRtmf2n5MuWzoz63BVZ0IyesQT
+         rzNx6wLs3Adp5BB8GRUcv1JGa/YnRHyVTFAhLKG5OyXB5kxsqCaqlKWEVd/BSXnxx8cD
+         yV5gERcyTbVQ2l0y8HoqSFWNp3Q3f3F1PjF0Rm4q7U29KTUu1ihj19Nw5/MKoMHHX4j4
+         kxQQhwrmjwgOQzAhqPCdEBi7FgP5UZe/cPYDF6jFiKO9YfxpHltPYovAnZzFt79jIVKv
+         oPUA==
+X-Gm-Message-State: AOAM533Qip/pKKKRSyuPSaC04WysCjEWamK38cHXKmAphS0JeWvJocod
+        xdSyDPbyLGGf/9LofMDPLew=
+X-Google-Smtp-Source: ABdhPJzhNgEcDXqJqCg/MooLOeJUAnn6NwAJuov/VPgKE4f1uGuz7icBHRwTXX6yVQbqDrtiABCcuA==
+X-Received: by 2002:a5d:4103:: with SMTP id l3mr18538567wrp.260.1603724981721;
+        Mon, 26 Oct 2020 08:09:41 -0700 (PDT)
 Received: from nogikh.c.googlers.com.com (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
-        by smtp.gmail.com with ESMTPSA id 24sm20043967wmf.44.2020.10.26.08.09.10
+        by smtp.gmail.com with ESMTPSA id 24sm20043967wmf.44.2020.10.26.08.09.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2020 08:09:11 -0700 (PDT)
+        Mon, 26 Oct 2020 08:09:41 -0700 (PDT)
 From:   Aleksandr Nogikh <aleksandrnogikh@gmail.com>
 To:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net
 Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
@@ -63,10 +64,12 @@ Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         willemdebruijn.kernel@gmail.com,
         Aleksandr Nogikh <nogikh@google.com>
-Subject: [PATCH v3 0/3] net, mac80211, kernel: enable KCOV remote coverage collection for 802.11 frame handling
-Date:   Mon, 26 Oct 2020 15:08:48 +0000
-Message-Id: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
+Subject: [PATCH v3 2/3] net: add kcov handle to skb extensions
+Date:   Mon, 26 Oct 2020 15:08:50 +0000
+Message-Id: <20201026150851.528148-3-aleksandrnogikh@gmail.com>
 X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
+In-Reply-To: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
+References: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -75,66 +78,129 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Aleksandr Nogikh <nogikh@google.com>
 
-This patch series enables remote KCOV coverage collection during
-802.11 frames processing. These changes make it possible to perform
-coverage-guided fuzzing in search of remotely triggerable bugs.
+Remote KCOV coverage collection enables coverage-guided fuzzing of the
+code that is not reachable during normal system call execution. It is
+especially helpful for fuzzing networking subsystems, where it is
+common to perform packet handling in separate work queues even for the
+packets that originated directly from the user space.
 
-Normally, KCOV collects coverage information for the code that is
-executed inside the system call context. It is easy to identify where
-that coverage should go and whether it should be collected at all by
-looking at the current process. If KCOV was enabled on that process,
-coverage will be stored in a buffer specific to that process.
-Howerever, it is not always enough as handling can happen elsewhere
-(e.g. in separate kernel threads).
+Enable coverage-guided frame injection by adding kcov remote handle to
+skb extensions. Default initialization in __alloc_skb and
+__build_skb_around ensures that no socket buffer that was generated
+during a system call will be missed.
 
-When it is impossible to infer KCOV-related info just by looking at
-the currently running process, one needs to manually pass some
-information to the code that should be instrumented. The information
-takes the form of 64 bit integers (KCOV remote handles). Zero is the
-special value that corresponds to an empty handle. More details on
-KCOV and remote coverage collection can be found in
-Documentation/dev-tools/kcov.rst.
+Code that is of interest and that performs packet processing should be
+annotated with kcov_remote_start()/kcov_remote_stop().
 
-The series consists of three commits.
-1. Apply a minor fix to kcov_common_handle() so that it returns a
-valid handle (zero) when called in an interrupt context.
-2. Take the remote handle from KCOV and attach it to newly allocated
-SKBs as an skb extension. If the allocation happens inside a system
-call context, the SKB will be tied to the process that issued the
-syscall (if that process is interested in remote coverage collection).
-3. Annotate the code that processes incoming 802.11 frames with
-kcov_remote_start()/kcov_remote_stop()
+An alternative approach is to determine kcov_handle solely on the
+basis of the device/interface that received the specific socket
+buffer. However, in this case it would be impossible to distinguish
+between packets that originated during normal background network
+processes or were intentionally injected from the user space.
 
-v3:
-* kcov_handle is now stored in skb extensions instead of sk_buff
-  itself.
-* Updated the cover letter.
-
-v2:
-https://lkml.kernel.org/r/20201009170202.103512-1-a.nogikh@gmail.com
-* Moved KCOV annotations from ieee80211_tasklet_handler to
-  ieee80211_rx.
-* Updated kcov_common_handle() to return 0 if it is called in
-  interrupt context.
-* Updated the cover letter.
-
-v1:
-https://lkml.kernel.org/r/20201007101726.3149375-1-a.nogikh@gmail.com
-
-Aleksandr Nogikh (3):
-  kernel: make kcov_common_handle consider the current context
-  net: add kcov handle to skb extensions
-  mac80211: add KCOV remote annotations to incoming frame processing
-
+Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
+--
+v2 -> v3:
+* Reimplemented this change. Now kcov handle is added to skb
+extensions instead of sk_buff.
+v1 -> v2:
+* Updated the commit message.
+---
  include/linux/skbuff.h | 31 +++++++++++++++++++++++++++++++
- include/net/mac80211.h |  2 ++
- kernel/kcov.c          |  2 ++
  net/core/skbuff.c      | 11 +++++++++++
- net/mac80211/iface.c   |  2 ++
- 5 files changed, 48 insertions(+)
+ 2 files changed, 42 insertions(+)
 
-
-base-commit: 2ef991b5fdbe828dc8fb8af473dab160729570ed
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index a828cf99c521..b63d90faa8e9 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -4150,6 +4150,9 @@ enum skb_ext_id {
+ #endif
+ #if IS_ENABLED(CONFIG_MPTCP)
+ 	SKB_EXT_MPTCP,
++#endif
++#if IS_ENABLED(CONFIG_KCOV)
++	SKB_EXT_KCOV_HANDLE,
+ #endif
+ 	SKB_EXT_NUM, /* must be last */
+ };
+@@ -4605,5 +4608,33 @@ static inline void skb_reset_redirect(struct sk_buff *skb)
+ #endif
+ }
+ 
++#ifdef CONFIG_KCOV
++
++static inline void skb_set_kcov_handle(struct sk_buff *skb, const u64 kcov_handle)
++{
++	/* No reason to allocate skb extensions to set kcov_handle if kcov_handle is 0. */
++	if (skb_has_extensions(skb) || kcov_handle) {
++		u64 *kcov_handle_ptr = skb_ext_add(skb, SKB_EXT_KCOV_HANDLE);
++
++		if (kcov_handle_ptr)
++			*kcov_handle_ptr = kcov_handle;
++	}
++}
++
++static inline u64 skb_get_kcov_handle(struct sk_buff *skb)
++{
++	u64 *kcov_handle = skb_ext_find(skb, SKB_EXT_KCOV_HANDLE);
++
++	return kcov_handle ? *kcov_handle : 0;
++}
++
++#else
++
++static inline void skb_set_kcov_handle(struct sk_buff *skb, const u64 kcov_handle) { }
++
++static inline u64 skb_get_kcov_handle(struct sk_buff *skb) { return 0; }
++
++#endif /* CONFIG_KCOV */
++
+ #endif	/* __KERNEL__ */
+ #endif	/* _LINUX_SKBUFF_H */
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index 1ba8f0163744..c5e6c0b83a92 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -249,6 +249,9 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
+ 
+ 		fclones->skb2.fclone = SKB_FCLONE_CLONE;
+ 	}
++
++	skb_set_kcov_handle(skb, kcov_common_handle());
++
+ out:
+ 	return skb;
+ nodata:
+@@ -282,6 +285,8 @@ static struct sk_buff *__build_skb_around(struct sk_buff *skb,
+ 	memset(shinfo, 0, offsetof(struct skb_shared_info, dataref));
+ 	atomic_set(&shinfo->dataref, 1);
+ 
++	skb_set_kcov_handle(skb, kcov_common_handle());
++
+ 	return skb;
+ }
+ 
+@@ -4203,6 +4208,9 @@ static const u8 skb_ext_type_len[] = {
+ #if IS_ENABLED(CONFIG_MPTCP)
+ 	[SKB_EXT_MPTCP] = SKB_EXT_CHUNKSIZEOF(struct mptcp_ext),
+ #endif
++#if IS_ENABLED(CONFIG_KCOV)
++	[SKB_EXT_KCOV_HANDLE] = SKB_EXT_CHUNKSIZEOF(u64),
++#endif
+ };
+ 
+ static __always_inline unsigned int skb_ext_total_length(void)
+@@ -4219,6 +4227,9 @@ static __always_inline unsigned int skb_ext_total_length(void)
+ #endif
+ #if IS_ENABLED(CONFIG_MPTCP)
+ 		skb_ext_type_len[SKB_EXT_MPTCP] +
++#endif
++#if IS_ENABLED(CONFIG_KCOV)
++		skb_ext_type_len[SKB_EXT_KCOV_HANDLE] +
+ #endif
+ 		0;
+ }
 -- 
 2.29.0.rc1.297.gfa9743e501-goog
 
