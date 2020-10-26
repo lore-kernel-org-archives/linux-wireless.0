@@ -7,47 +7,50 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09FFAC4363A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791E2C5DF9D
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:25:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B62AD20759
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:25:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2937D20780
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:25:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603758313;
-	bh=hGuou7LzEiV7Chw+A9QUZwOYpycAQZ55OtpYzWggFHw=;
+	s=default; t=1603758318;
+	bh=3B9S0XhD7Pej9lw7yEH/XIm0PQSZQq0OnocoUCOmsug=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aglV4Xi2yjWEcBQOvlImoCGsQU1HVdSggbSVwL+OU8ZdZUsyAiHpgcZz01S78SXSX
-	 AAVsi0GIjewgO+bj0DgHFxWPyaCU+TytcEzLjYj8qZAOaaHDNQW4VqSp/pu5XepuwV
-	 dH0bK2roi+r4c7sUGJ8bybAzp0CboipkNGiD1ztI=
+	b=NAFpQ/gPIYYPqPtMpk71gs97aZc+GWAs8oIHyy+FhoaYiTo9RHW7EdWkY+leJ+Jno
+	 R7rtAk6lGLutcuvTFkdiaDDdS3OC8yn1u0+xwgnVBEWGHK/K+mgod12pD1rCMFIPzr
+	 gXqDxBUrJzSnqNrKbftNz2mbxvocJqq1eZ22E1t0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410220AbgJZXxv (ORCPT
+        id S2410188AbgJZXxs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:53:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58712 "EHLO mail.kernel.org"
+        Mon, 26 Oct 2020 19:53:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58626 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2410195AbgJZXxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:53:49 -0400
+        id S2410178AbgJZXxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:53:47 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4A99020770;
-        Mon, 26 Oct 2020 23:53:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A147721D41;
+        Mon, 26 Oct 2020 23:53:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756429;
-        bh=hGuou7LzEiV7Chw+A9QUZwOYpycAQZ55OtpYzWggFHw=;
+        s=default; t=1603756426;
+        bh=3B9S0XhD7Pej9lw7yEH/XIm0PQSZQq0OnocoUCOmsug=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PMT4dVheKbnI9frC/SVg4fSouj1tlUfh2CAvORxO1+1XOXBwFujx8l6WrkvYyEhu/
-         dmG4LJTrHTHJqWXdP6G4MNFm7pyO9HCsV3EiiKHlrgw3YndWHGel0IHgTZH+neTMvQ
-         u8FhZwiqJpTvVRRl/CEMuuT1CMqkrvNZcYGHp96Q=
+        b=hS1zCDrUXsmZQBCBK1YPvrSbwvLuOMYH02h/2GHHwfdfLEQTPr2RMJ6xwDMGKcxC4
+         TBVJZBrUDcMa3lgRwfeMMbnu8dbl8N0qVY6eH8GFNlfVuy+hMQL2d5hyHrPfPbXofC
+         4XAEtXmhmrVUanMl22Nih3Gkg7js21bFZkb6WMBo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Carl Huang <cjhuang@codeaurora.org>,
+Cc:     Wright Feng <wright.feng@cypress.com>,
+        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 084/132] ath11k: fix warning caused by lockdep_assert_held
-Date:   Mon, 26 Oct 2020 19:51:16 -0400
-Message-Id: <20201026235205.1023962-84-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 082/132] brcmfmac: Fix warning message after dongle setup failed
+Date:   Mon, 26 Oct 2020 19:51:14 -0400
+Message-Id: <20201026235205.1023962-82-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201026235205.1023962-1-sashal@kernel.org>
 References: <20201026235205.1023962-1-sashal@kernel.org>
@@ -59,75 +62,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Carl Huang <cjhuang@codeaurora.org>
+From: Wright Feng <wright.feng@cypress.com>
 
-[ Upstream commit 2f588660e34a982377109872757f1b99d7748d21 ]
+[ Upstream commit 6aa5a83a7ed8036c1388a811eb8bdfa77b21f19c ]
 
-Fix warning caused by lockdep_assert_held when CONFIG_LOCKDEP is enabled.
+Brcmfmac showed warning message in fweh.c when checking the size of event
+queue which is not initialized. Therefore, we only cancel the worker and
+reset event handler only when it is initialized.
 
-[  271.940647] WARNING: CPU: 6 PID: 0 at drivers/net/wireless/ath/ath11k/hal.c:818 ath11k_hal_srng_access_begin+0x31/0x40 [ath11k]
-[  271.940655] Modules linked in: qrtr_mhi qrtr ns ath11k_pci mhi ath11k qmi_helpers nvme nvme_core
-[  271.940675] CPU: 6 PID: 0 Comm: swapper/6 Kdump: loaded Tainted: G        W         5.9.0-rc5-kalle-bringup-wt-ath+ #4
-[  271.940682] Hardware name: Dell Inc. Inspiron 7590/08717F, BIOS 1.3.0 07/22/2019
-[  271.940698] RIP: 0010:ath11k_hal_srng_access_begin+0x31/0x40 [ath11k]
-[  271.940708] Code: 48 89 f3 85 c0 75 11 48 8b 83 a8 00 00 00 8b 00 89 83 b0 00 00 00 5b c3 48 8d 7e 58 be ff ff ff ff e8 53 24 ec fa 85 c0 75 dd <0f> 0b eb d9 90 66 2e 0f 1f 84 00 00 00 00 00 55 53 48 89 f3 8b 35
-[  271.940718] RSP: 0018:ffffbdf0c0230df8 EFLAGS: 00010246
-[  271.940727] RAX: 0000000000000000 RBX: ffffa12b34e67680 RCX: ffffa12b57a0d800
-[  271.940735] RDX: 0000000000000000 RSI: 00000000ffffffff RDI: ffffa12b34e676d8
-[  271.940742] RBP: ffffa12b34e60000 R08: 0000000000000001 R09: 0000000000000001
-[  271.940753] R10: 0000000000000001 R11: 0000000000000046 R12: 0000000000000000
-[  271.940763] R13: ffffa12b34e60000 R14: ffffa12b34e60000 R15: 0000000000000000
-[  271.940774] FS:  0000000000000000(0000) GS:ffffa12b5a400000(0000) knlGS:0000000000000000
-[  271.940788] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  271.940798] CR2: 00007f8bef282008 CR3: 00000001f4224004 CR4: 00000000003706e0
-[  271.940805] Call Trace:
-[  271.940813]  <IRQ>
-[  271.940835]  ath11k_dp_tx_completion_handler+0x9e/0x950 [ath11k]
-[  271.940847]  ? lock_acquire+0xba/0x3b0
-[  271.940876]  ath11k_dp_service_srng+0x5a/0x2e0 [ath11k]
-[  271.940893]  ath11k_pci_ext_grp_napi_poll+0x1e/0x80 [ath11k_pci]
-[  271.940908]  net_rx_action+0x283/0x4f0
-[  271.940931]  __do_softirq+0xcb/0x499
-[  271.940950]  asm_call_on_stack+0x12/0x20
-[  271.940963]  </IRQ>
-[  271.940979]  do_softirq_own_stack+0x4d/0x60
-[  271.940991]  irq_exit_rcu+0xb0/0xc0
-[  271.941001]  common_interrupt+0xce/0x190
-[  271.941014]  asm_common_interrupt+0x1e/0x40
-[  271.941026] RIP: 0010:cpuidle_enter_state+0x115/0x500
+[  145.505899] brcmfmac 0000:02:00.0: brcmf_pcie_setup: Dongle setup
+[  145.929970] ------------[ cut here ]------------
+[  145.929994] WARNING: CPU: 0 PID: 288 at drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:312
+brcmf_fweh_detach+0xbc/0xd0 [brcmfmac]
+...
+[  145.930029] Call Trace:
+[  145.930036]  brcmf_detach+0x77/0x100 [brcmfmac]
+[  145.930043]  brcmf_pcie_remove+0x79/0x130 [brcmfmac]
+[  145.930046]  pci_device_remove+0x39/0xc0
+[  145.930048]  device_release_driver_internal+0x141/0x200
+[  145.930049]  device_release_driver+0x12/0x20
+[  145.930054]  brcmf_pcie_setup+0x101/0x3c0 [brcmfmac]
+[  145.930060]  brcmf_fw_request_done+0x11d/0x1f0 [brcmfmac]
+[  145.930062]  ? lock_timer_base+0x7d/0xa0
+[  145.930063]  ? internal_add_timer+0x1f/0xa0
+[  145.930064]  ? add_timer+0x11a/0x1d0
+[  145.930066]  ? __kmalloc_track_caller+0x18c/0x230
+[  145.930068]  ? kstrdup_const+0x23/0x30
+[  145.930069]  ? add_dr+0x46/0x80
+[  145.930070]  ? devres_add+0x3f/0x50
+[  145.930072]  ? usermodehelper_read_unlock+0x15/0x20
+[  145.930073]  ? _request_firmware+0x288/0xa20
+[  145.930075]  request_firmware_work_func+0x36/0x60
+[  145.930077]  process_one_work+0x144/0x360
+[  145.930078]  worker_thread+0x4d/0x3c0
+[  145.930079]  kthread+0x112/0x150
+[  145.930080]  ? rescuer_thread+0x340/0x340
+[  145.930081]  ? kthread_park+0x60/0x60
+[  145.930083]  ret_from_fork+0x25/0x30
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
-
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1601463073-12106-5-git-send-email-kvalo@codeaurora.org
+Link: https://lore.kernel.org/r/20200928054922.44580-3-wright.feng@cypress.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fweh.c    | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 41c990aec6b7d..7264bbdf76750 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -509,6 +509,8 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 	u32 msdu_id;
- 	u8 mac_id;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index a5cced2c89ac6..921b94c4f5f9a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -304,10 +304,12 @@ void brcmf_fweh_detach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_fweh_info *fweh = &drvr->fweh;
  
-+	spin_lock_bh(&status_ring->lock);
-+
- 	ath11k_hal_srng_access_begin(ab, status_ring);
+-	/* cancel the worker */
+-	cancel_work_sync(&fweh->event_work);
+-	WARN_ON(!list_empty(&fweh->event_q));
+-	memset(fweh->evt_handler, 0, sizeof(fweh->evt_handler));
++	/* cancel the worker if initialized */
++	if (fweh->event_work.func) {
++		cancel_work_sync(&fweh->event_work);
++		WARN_ON(!list_empty(&fweh->event_q));
++		memset(fweh->evt_handler, 0, sizeof(fweh->evt_handler));
++	}
+ }
  
- 	while ((ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head) !=
-@@ -528,6 +530,8 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 
- 	ath11k_hal_srng_access_end(ab, status_ring);
- 
-+	spin_unlock_bh(&status_ring->lock);
-+
- 	while (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail) != tx_ring->tx_status_head) {
- 		struct hal_wbm_release_ring *tx_status;
- 		u32 desc_id;
+ /**
 -- 
 2.25.1
 
