@@ -2,115 +2,182 @@ Return-Path: <SRS0=xhmE=EB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC786C55178
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0024AC4363A
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 16:58:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AADF62224A
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 15:10:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0D9D223B0
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Oct 2020 16:58:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UL0CF+D3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RfB8rPwj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1783247AbgJZPJl (ORCPT
+        id S1786783AbgJZQ6I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 11:09:41 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:34020 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1783225AbgJZPJl (ORCPT
+        Mon, 26 Oct 2020 12:58:08 -0400
+Received: from mail-vs1-f65.google.com ([209.85.217.65]:46190 "EHLO
+        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1786738AbgJZQ5e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 11:09:41 -0400
-Received: by mail-wm1-f67.google.com with SMTP id k21so5920085wmi.1;
-        Mon, 26 Oct 2020 08:09:39 -0700 (PDT)
+        Mon, 26 Oct 2020 12:57:34 -0400
+Received: by mail-vs1-f65.google.com with SMTP id s6so5110378vss.13
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2020 09:57:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=jGncrBzeSrdZmyOiKkMYe800E1r8xGJD44x4nOUxG2s=;
-        b=UL0CF+D3uiKHsos40I0KWKysJ6LD5+XNTODWaR/a5zr5tSV2YsjL3n2TFtRDveuNAE
-         Y/Mxfv8TTKEVt2X3/Ra8izmjVYTBO3sgxg2OTgIvUsbiUcaN9bjPNaMRNLKZUL+jdVCf
-         iEZatnKIe/IAJP09OUVJMHsrJPV4DZgooyaPsFFSPQXqvKnuUuJvgITbd3Pe5pIkY1l7
-         r5mDvRFy0v1hG5/p+N80/L17k9ngRFXpR8OyfASxeVe7YSAkUd+Av4vvpi6LCERblLF/
-         zVfeEzMS20HQ5KOysHy2bGA6oigcemG6Wo8lTAKjDMEkU1Ixa2Lrufmi/74Rp0WHVWRU
-         z8Dg==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=U0IxDbw9xkqiRVjMXASTPx8jLKp0WDhukG7QJqTfdjM=;
+        b=RfB8rPwjTA8vs3E4K0ZnlkEs3pC7qo0cqceU3vJpfmcdf24Z+E6Jt+ETsXZSJjcxjR
+         UR0TOtj/NLEDWilkee0H9Mb787VHCc9Ab+boZIUrhzTLGIzGyCbOF5zjB0vKMlewdEMK
+         u0gLdIqrEwDC+kXzOwdV3BKPuCS4qMO2hVNOftHYqDeIBwkkMPVCbg9eSMUl41wBN1Dk
+         POy3ShUIQtOQUbcjNwTfQIarlS4x679gUxlein935yq0X22uDWo6f92fGAl0rsyArYwl
+         XoeJngjPMZ4l5G0jOkIPxUFFlL0AtqNuzoIsQQFiIa+fkw2k6BZeIDMTDQfHqDIwyVi9
+         oHhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=jGncrBzeSrdZmyOiKkMYe800E1r8xGJD44x4nOUxG2s=;
-        b=mH87fKYcGHVFBkVuqgyeCrp0ZXsTK7pLRL7Pc8KO89ENlhKZs4IyShYU4qC/CSPvP1
-         ofF3Xd8+eVU29Sn+EPibxJwZ+AmvzGNTKH1jxHz1eKf1P2xuVlYBSg99YO3Gcw+8mpR0
-         3c6tmZFZFXqlsbA2+CSvAmlCpPwd9nZHlsCQD3Sgz09AVr3fIck1ssrR4WAOQhsSDKlP
-         k1yBYVU9KWN64ET7+esZ0LlonDGouxhyFU8FI/AX+dLaImCU2J5/jcv2QGIh57ppFgyJ
-         hR67bR1xDlmq/AtIsCkzZFb99oBci1u8xPYqbZOgpZ9qgafwApyNWOzjw3z7YgMWOtvm
-         fTSQ==
-X-Gm-Message-State: AOAM530SxTqPT3MBBKSN4p0fa/pvYy2RzS7cSq81DaKak4uT9IQwE9i4
-        ZNZ25cDNfs47J24MUBGtcXBvE9ZhxBXjaTRoawM=
-X-Google-Smtp-Source: ABdhPJx254j9rng1d26VwrYDPLdAk5fayxDDtSTxwWAD6kZqGCrog1IU52MJygYgMeuZLWt+BoWP2A==
-X-Received: by 2002:a7b:cc89:: with SMTP id p9mr17094670wma.4.1603724978723;
-        Mon, 26 Oct 2020 08:09:38 -0700 (PDT)
-Received: from nogikh.c.googlers.com.com (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
-        by smtp.gmail.com with ESMTPSA id 24sm20043967wmf.44.2020.10.26.08.09.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2020 08:09:38 -0700 (PDT)
-From:   Aleksandr Nogikh <aleksandrnogikh@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net
-Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
-        elver@google.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        willemdebruijn.kernel@gmail.com,
-        Aleksandr Nogikh <nogikh@google.com>
-Subject: [PATCH v3 1/3] kernel: make kcov_common_handle consider the current context
-Date:   Mon, 26 Oct 2020 15:08:49 +0000
-Message-Id: <20201026150851.528148-2-aleksandrnogikh@gmail.com>
-X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
-In-Reply-To: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
-References: <20201026150851.528148-1-aleksandrnogikh@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=U0IxDbw9xkqiRVjMXASTPx8jLKp0WDhukG7QJqTfdjM=;
+        b=C0/TndPPdNwBKLzbGzdSvL8DEfbZiNIywavo/P8bZUlEVNKMv0fMjWYcDjYRcMiVkm
+         uk0kcL+M3ZiPKFHnk0djZLvvDTxkTUq05nqYjjYVAb6udT4yvUNYdyMOSCYg8QIo+ZeK
+         wf1Qvx950+CpugbxwOi3gHu6YZIM8PZr54C+KXXxgxeSJpqHCfePoaw4UlrZe2VGmNHA
+         bjusEzDuCSVr7ERobf8BsEYgLwEH7/r3JSGv+T/3gBc7E6Bpqt24+CCR8V+96TID7mzD
+         n4p15qGMpTQHtxIUcIOBEsSzGYWw4s2GU9XUYMqQiMQeFb15H1YCM0Fxb8KHzqMLaOwJ
+         sK+g==
+X-Gm-Message-State: AOAM533aJJ2JF+LdrImgiJKIvF4nKUAfOAXs8CWxDeTqBfxUSzt9wkaq
+        kUn/ZRrRjwDPDjwoV4VqjrS7n26DWB4=
+X-Google-Smtp-Source: ABdhPJx8YHz0RSq3o3jcQ/4VbJWWJgczhACRBWlKSC0YqfnWZm49BhW89eExBw4tsYYQJ6AXZcC41g==
+X-Received: by 2002:a67:f919:: with SMTP id t25mr15599754vsq.10.1603731451298;
+        Mon, 26 Oct 2020 09:57:31 -0700 (PDT)
+Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com. [209.85.217.41])
+        by smtp.gmail.com with ESMTPSA id h12sm252623vsg.23.2020.10.26.09.57.29
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Oct 2020 09:57:30 -0700 (PDT)
+Received: by mail-vs1-f41.google.com with SMTP id b4so3127410vsd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2020 09:57:29 -0700 (PDT)
+X-Received: by 2002:a67:b607:: with SMTP id d7mr19582090vsm.28.1603731449199;
+ Mon, 26 Oct 2020 09:57:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201026150851.528148-1-aleksandrnogikh@gmail.com> <20201026150851.528148-3-aleksandrnogikh@gmail.com>
+In-Reply-To: <20201026150851.528148-3-aleksandrnogikh@gmail.com>
+From:   Willem de Bruijn <willemdebruijn.kernel@gmail.com>
+Date:   Mon, 26 Oct 2020 12:56:52 -0400
+X-Gmail-Original-Message-ID: <CA+FuTSeR5n4xSpzMxAYX=kyy0aJYz52FVR=EjqK8_-LVqcqpXA@mail.gmail.com>
+Message-ID: <CA+FuTSeR5n4xSpzMxAYX=kyy0aJYz52FVR=EjqK8_-LVqcqpXA@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] net: add kcov handle to skb extensions
+To:     Aleksandr Nogikh <aleksandrnogikh@gmail.com>
+Cc:     David Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Andrey Konovalov <andreyknvl@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Marco Elver <elver@google.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+        Aleksandr Nogikh <nogikh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Aleksandr Nogikh <nogikh@google.com>
+On Mon, Oct 26, 2020 at 11:11 AM Aleksandr Nogikh
+<aleksandrnogikh@gmail.com> wrote:
+>
+> From: Aleksandr Nogikh <nogikh@google.com>
+>
+> Remote KCOV coverage collection enables coverage-guided fuzzing of the
+> code that is not reachable during normal system call execution. It is
+> especially helpful for fuzzing networking subsystems, where it is
+> common to perform packet handling in separate work queues even for the
+> packets that originated directly from the user space.
+>
+> Enable coverage-guided frame injection by adding kcov remote handle to
+> skb extensions. Default initialization in __alloc_skb and
+> __build_skb_around ensures that no socket buffer that was generated
+> during a system call will be missed.
+>
+> Code that is of interest and that performs packet processing should be
+> annotated with kcov_remote_start()/kcov_remote_stop().
+>
+> An alternative approach is to determine kcov_handle solely on the
+> basis of the device/interface that received the specific socket
+> buffer. However, in this case it would be impossible to distinguish
+> between packets that originated during normal background network
+> processes or were intentionally injected from the user space.
+>
+> Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
+> --
+> v2 -> v3:
+> * Reimplemented this change. Now kcov handle is added to skb
+> extensions instead of sk_buff.
+> v1 -> v2:
+> * Updated the commit message.
+> ---
+>  include/linux/skbuff.h | 31 +++++++++++++++++++++++++++++++
+>  net/core/skbuff.c      | 11 +++++++++++
+>  2 files changed, 42 insertions(+)
+>
+> diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+> index a828cf99c521..b63d90faa8e9 100644
+> --- a/include/linux/skbuff.h
+> +++ b/include/linux/skbuff.h
+> @@ -4150,6 +4150,9 @@ enum skb_ext_id {
+>  #endif
+>  #if IS_ENABLED(CONFIG_MPTCP)
+>         SKB_EXT_MPTCP,
+> +#endif
+> +#if IS_ENABLED(CONFIG_KCOV)
+> +       SKB_EXT_KCOV_HANDLE,
+>  #endif
+>         SKB_EXT_NUM, /* must be last */
+>  };
+> @@ -4605,5 +4608,33 @@ static inline void skb_reset_redirect(struct sk_buff *skb)
+>  #endif
+>  }
+>
+> +#ifdef CONFIG_KCOV
+> +
+> +static inline void skb_set_kcov_handle(struct sk_buff *skb, const u64 kcov_handle)
+> +{
+> +       /* No reason to allocate skb extensions to set kcov_handle if kcov_handle is 0. */
 
-kcov_common_handle is a method that is used to obtain a "default" KCOV
-remote handle of the current process. The handle can later be passed
-to kcov_remote_start in order to collect coverage for the processing
-that is initiated by one process, but done in another. For details see
-Documentation/dev-tools/kcov.rst and comments in kernel/kcov.c.
+If the handle does not need to be set if zero, why then set it if the
+skb has extensions?
 
-Presently, if kcov_common_handle is called in an IRQ context, it will
-return a handle for the interrupted process. This may lead to
-unreliable and incorrect coverage collection.
+> +       if (skb_has_extensions(skb) || kcov_handle) {
+> +               u64 *kcov_handle_ptr = skb_ext_add(skb, SKB_EXT_KCOV_HANDLE);
 
-Adjust the behavior of kcov_common_handle in the following way. If it
-is called in a task context, return the common handle for the
-currently running task. Otherwise, return 0.
+skb_ext_add and skb_ext_find are not defined unless CONFIG_SKB_EXTENSIONS.
 
-Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
-Reviewed-by: Andrey Konovalov <andreyknvl@google.com>
----
- kernel/kcov.c | 2 ++
- 1 file changed, 2 insertions(+)
+Perhaps CONFIG_KCOV should be made to select that?
 
-diff --git a/kernel/kcov.c b/kernel/kcov.c
-index 6b8368be89c8..80bfe71bbe13 100644
---- a/kernel/kcov.c
-+++ b/kernel/kcov.c
-@@ -1023,6 +1023,8 @@ EXPORT_SYMBOL(kcov_remote_stop);
- /* See the comment before kcov_remote_start() for usage details. */
- u64 kcov_common_handle(void)
- {
-+	if (!in_task())
-+		return 0;
- 	return current->kcov_handle;
- }
- EXPORT_SYMBOL(kcov_common_handle);
--- 
-2.29.0.rc1.297.gfa9743e501-goog
 
+
+
+> +
+> +               if (kcov_handle_ptr)
+> +                       *kcov_handle_ptr = kcov_handle;
+> +       }
+> +}
+> +
+> +static inline u64 skb_get_kcov_handle(struct sk_buff *skb)
+> +{
+> +       u64 *kcov_handle = skb_ext_find(skb, SKB_EXT_KCOV_HANDLE);
+> +
+> +       return kcov_handle ? *kcov_handle : 0;
+> +}
+> +
+> +#else
+> +
+> +static inline void skb_set_kcov_handle(struct sk_buff *skb, const u64 kcov_handle) { }
+> +
+> +static inline u64 skb_get_kcov_handle(struct sk_buff *skb) { return 0; }
+> +
+> +#endif /* CONFIG_KCOV */
