@@ -5,52 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F36C6369E
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:15:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29390C56201
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5104620754
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:15:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D446820708
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603757756;
-	bh=YQkA80wXMj7OpP/B6PQ0BklzDYbFaQQK3uULUkKGw3U=;
+	s=default; t=1603757937;
+	bh=5ZRE8XbiB1KT53cD8Xw5hWz79H6Y2Fpl8C9QEXTAoYI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GMUTWj1Zy2QEAp8gRwWPVz4aUosStHSkJ8L3IxTW1ULA8GoFYxtZAZ6FFMhHD0hDG
-	 +iJgzN3ipo2gzDSffAd3tcwZJObXZ9Hi+x9B2c2VatM/8I0G1DrrH152WAVeLV0H/v
-	 fB2jYz4IvaD9M4nErCYBFiclsCMpsKb9JxYiiDyE=
+	b=aVRp8W/3KnqyCOXl9sa24MgXnLzN7ArUFlu2SyU5q5m0EhFuhvnGcfkYGNYO42lqm
+	 Nfs2/kXZxY8q7Ha0waKJazZBr9oQVFsXhVUK2ByPe2m4odnl+nxWq1GCcJq278JIFi
+	 OW9+vbWLQ1tDHk/JPyVJiog43wsJ2G2/pnjj2Ya4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2440514AbgJ0APx (ORCPT
+        id S2439123AbgJ0AKD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:15:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60224 "EHLO mail.kernel.org"
+        Mon, 26 Oct 2020 20:10:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2411641AbgJ0AK4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 20:10:56 -0400
+        id S2439110AbgJ0AKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Oct 2020 20:10:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D9AAA21D42;
-        Tue, 27 Oct 2020 00:10:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DADD821741;
+        Tue, 27 Oct 2020 00:10:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603757455;
-        bh=YQkA80wXMj7OpP/B6PQ0BklzDYbFaQQK3uULUkKGw3U=;
+        s=default; t=1603757401;
+        bh=5ZRE8XbiB1KT53cD8Xw5hWz79H6Y2Fpl8C9QEXTAoYI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jpIQWgNOseqGGD+MCtjxpRo71/pkz7B6ou89QK8QF9t+YN0ACFUOXf4aNLH8AXSms
-         An641weY3MDjfqTxx5uYQ2+J01C7eS0Ub331Kt7ew3oVDn1LklIsm2NFEvTKMMy1WT
-         2lRW+Z7xtdBbL6Ki9a2RqPSTA5MTqa74o34M2z+Q=
+        b=ECLhHBlsHAun+Luz3KSqL78bcYY7AE++WgyMV48pPgpHOzAN9LAfT/1SQPKn5dRir
+         5efc5cnQmBrnTPiIPmKUdNPR5Gh7icJDSSQzTP2W8Od77thxoibD7G/ScVT1qLalP+
+         2FssIuhVc89zbNGrbD1E5TCcKRiQqkZyVHvZzVx8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sathishkumar Muruganandam <murugana@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 09/30] ath10k: fix VHT NSS calculation when STBC is enabled
-Date:   Mon, 26 Oct 2020 20:10:23 -0400
-Message-Id: <20201027001044.1027349-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 12/46] ath10k: fix VHT NSS calculation when STBC is enabled
+Date:   Mon, 26 Oct 2020 20:09:11 -0400
+Message-Id: <20201027000946.1026923-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201027001044.1027349-1-sashal@kernel.org>
-References: <20201027001044.1027349-1-sashal@kernel.org>
+In-Reply-To: <20201027000946.1026923-1-sashal@kernel.org>
+References: <20201027000946.1026923-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,10 +80,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index a3c2180475971..0af144930a2f7 100644
+index 21642bab485a1..4c6091d6d4a42 100644
 --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
 +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -612,6 +612,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+@@ -614,6 +614,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
  	u8 preamble = 0;
  	u8 group_id;
  	u32 info1, info2, info3;
@@ -91,8 +91,8 @@ index a3c2180475971..0af144930a2f7 100644
  
  	info1 = __le32_to_cpu(rxd->ppdu_start.info1);
  	info2 = __le32_to_cpu(rxd->ppdu_start.info2);
-@@ -655,11 +656,16 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- 		   TODO check this */
+@@ -658,11 +659,16 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 		 */
  		bw = info2 & 3;
  		sgi = info3 & 1;
 +		stbc = (info2 >> 3) & 1;
