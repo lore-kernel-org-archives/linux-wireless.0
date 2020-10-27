@@ -2,98 +2,88 @@ Return-Path: <SRS0=2qsG=EC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5BC5C63699
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF84DC4363A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 01:29:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A63A621D7B
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 00:46:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603759607;
-	bh=4+TPWeG1+cUWlkPTZtOZhsSL0qfQ3uIWebqfR5ND2pI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=T+4vMDhxVQET8behzKfrdpln/sAHoeDp4YwyeatHGB9H31q/q2A2CXImxd+NNReNh
-	 e8hHiWX/q0dCSaIGejqkPhtv1WUXE/ongvR9DClhN783i7pOL/KU0uGBCex84+/u2G
-	 8D1/aNerZW8P6vaHIq1MBrmv/wNjQae1jfuwIXBM=
+	by mail.kernel.org (Postfix) with ESMTP id 8B29120829
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 01:29:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502334AbgJ0AnM (ORCPT
+        id S2437613AbgJ0B3y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:43:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49314 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2409049AbgJZXuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:50:12 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 320B820872;
-        Mon, 26 Oct 2020 23:50:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756212;
-        bh=4+TPWeG1+cUWlkPTZtOZhsSL0qfQ3uIWebqfR5ND2pI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CoanZDCYxDBTvbzvWlsLCpdDR/5nB2C6uofr/HxJq3fmXjIKmIjYMpf45+DVJ7zT4
-         OjT0vk44E6khRt//hs6hpS6x01zdTrkJAL2bntAdrapQs71M2Hy277KLQdGvCo0G/G
-         HvijOk+hKwfUI73P8LQlfwbNmEj57CIwGcF+wbB0=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dmitry Osipenko <digetx@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 053/147] brcmfmac: increase F2 watermark for BCM4329
-Date:   Mon, 26 Oct 2020 19:47:31 -0400
-Message-Id: <20201026234905.1022767-53-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201026234905.1022767-1-sashal@kernel.org>
-References: <20201026234905.1022767-1-sashal@kernel.org>
+        Mon, 26 Oct 2020 21:29:54 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:50778 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2410547AbgJ0B3y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Oct 2020 21:29:54 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R1TJrtC025293, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb01.realtek.com.tw[172.21.6.94])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R1TJrtC025293
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 27 Oct 2020 09:29:19 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
+ RTEXMB01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Tue, 27 Oct 2020 09:29:19 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Tue, 27 Oct 2020 09:29:18 +0800
+Received: from RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa]) by
+ RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa%3]) with mapi id
+ 15.01.2044.006; Tue, 27 Oct 2020 09:29:18 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "arnd@kernel.org" <arnd@kernel.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "saurav.girepunje@gmail.com" <saurav.girepunje@gmail.com>,
+        "zhengbin13@huawei.com" <zhengbin13@huawei.com>,
+        "gustavoars@kernel.org" <gustavoars@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH net-next 06/11] rtlwifi: fix -Wpointer-sign warning
+Thread-Topic: [PATCH net-next 06/11] rtlwifi: fix -Wpointer-sign warning
+Thread-Index: AQHWq9+Tm3vvNpn170mPpXALIlujyamqIxyA
+Date:   Tue, 27 Oct 2020 01:29:18 +0000
+Message-ID: <1603762113.2765.1.camel@realtek.com>
+References: <20201026213040.3889546-1-arnd@kernel.org>
+         <20201026213040.3889546-6-arnd@kernel.org>
+In-Reply-To: <20201026213040.3889546-6-arnd@kernel.org>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.213]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <E56EB1C0789D88419866E78DD4B37A86@realtek.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dmitry Osipenko <digetx@gmail.com>
-
-[ Upstream commit 317da69d10b0247c4042354eb90c75b81620ce9d ]
-
-This patch fixes SDHCI CRC errors during of RX throughput testing on
-BCM4329 chip if SDIO BUS is clocked above 25MHz. In particular the
-checksum problem is observed on NVIDIA Tegra20 SoCs. The good watermark
-value is borrowed from downstream BCMDHD driver and it's matching to the
-value that is already used for the BCM4339 chip, hence let's re-use it
-for BCM4329.
-
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200830191439.10017-2-digetx@gmail.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 3c07d1bbe1c6e..ac3ee93a23780 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4278,6 +4278,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
- 					   CY_43012_MESBUSYCTRL, &err);
- 			break;
-+		case SDIO_DEVICE_ID_BROADCOM_4329:
- 		case SDIO_DEVICE_ID_BROADCOM_4339:
- 			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes for 4339\n",
- 				  CY_4339_F2_WATERMARK);
--- 
-2.25.1
-
+T24gTW9uLCAyMDIwLTEwLTI2IGF0IDIyOjI5ICswMTAwLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0K
+PiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KPiANCj4gVGhlcmUgYXJlIHRo
+b3VzYW5kcyBvZiB3YXJuaW5ncyBpbiBhIFc9MiBidWlsZCBmcm9tIGp1c3Qgb25lIGZpbGU6DQo+
+IA0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODgyMWFlL3RhYmxl
+LmM6Mzc4ODoxNTogd2FybmluZzoNCj4gcG9pbnRlciB0YXJnZXRzIGluIGluaXRpYWxpemF0aW9u
+IG9mICd1OCAqJyB7YWthICd1bnNpZ25lZCBjaGFyIConfSBmcm9tICdjaGFyDQo+IConIGRpZmZl
+ciBpbiBzaWduZWRuZXNzIFstV3BvaW50ZXItc2lnbl0NCj4gDQo+IENoYW5nZSB0aGUgdHlwZXMg
+dG8gY29uc2lzdGVudGx5IHVzZSAnY29uc3QgY2hhciAqJyBmb3IgdGhlDQo+IHN0cmluZ3MuDQo+
+IA0KPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KDQpBY2tl
+ZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQoNCj4gLS0tDQo+IMKgLi4u
+L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4ODIxYWUvcGh5LmPCoMKgfCA4MSArKysrKysr
+KysrLS0tLS0tLS0tDQo+IMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9ydGw4ODIxYWUvdGFibGUuY8Kg
+wqDCoMKgwqDCoMKgwqDCoHzCoMKgNCArLQ0KPiDCoC4uLi9yZWFsdGVrL3J0bHdpZmkvcnRsODgy
+MWFlL3RhYmxlLmjCoMKgwqDCoMKgwqDCoMKgwqB8wqDCoDQgKy0NCj4gwqAzIGZpbGVzIGNoYW5n
+ZWQsIDQ1IGluc2VydGlvbnMoKyksIDQ0IGRlbGV0aW9ucygtKQ0KPiANCg0KW3NuaXBdDQoNCg0K
+DQoNCg==
