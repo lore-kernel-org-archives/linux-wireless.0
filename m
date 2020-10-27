@@ -2,120 +2,107 @@ Return-Path: <SRS0=2qsG=EC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13FCCC4363A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 01:49:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E63BC2D0A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:12:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6CD52085B
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 01:49:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="obNNBZeO"
+	by mail.kernel.org (Postfix) with ESMTP id D0EDF20872
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:12:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504111AbgJ0BtV (ORCPT
+        id S2504408AbgJ0CM4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 21:49:21 -0400
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:44861 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2504107AbgJ0BtU (ORCPT
+        Mon, 26 Oct 2020 22:12:56 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36139 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2504393AbgJ0CMz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 21:49:20 -0400
-Received: by mail-qt1-f195.google.com with SMTP id m65so8278171qte.11;
-        Mon, 26 Oct 2020 18:49:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=A+r2NJhCTfNtmf0TnqVFjaFsZaaztFRz19hT+01PSs4=;
-        b=obNNBZeOa1nYyAkUq23VDp7mLzwXVkj6czo0Sem2dvjo5VJXqs15+Q384InGaL08iK
-         MnNWN6ePK79kDvqZYIv1yBuifkc7wumArS35UP0LBOwPhKraeFs5nv/+QYYyMQD8nC7X
-         KYkkoyANGb8jZWTJFW+f0kuBVdedUgjF4PJyR+51w6MraQYZDGqFWpAu8fqQRjGDLt6w
-         4ghujqtj1hLIdZKEdjfmKZsoauRq4K5PKnj813CGRRc0e6wwLfSj+FDyvFiFBvsMEz1A
-         GFpT/uz2ZyzakWqLE8RzvhjxXzCnSDi+dxNJUfQXIGGlpPjqWFU2cz/zhnPgPGVcUNYL
-         5q3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=A+r2NJhCTfNtmf0TnqVFjaFsZaaztFRz19hT+01PSs4=;
-        b=UkfC4tPoDXJOIYNOHdUr0TrlgHS9ou99IbfDE9NVe7OoYbQ0BpF1KdMVL6Q2LYMXCq
-         bm1azW2aNxgyEaKc78GOPaUjnj3uTuf638MIWwUR9tLQiXSsi95PeqFWRanaCpTsUuTI
-         Rts+56OP8jU2+OwJCdiSL+ZCiLasYjPvlSb/YuS8yaY2LTbVVXOwb7iLtWK1J1/xc/13
-         I2BFQ4yxtAeqB20tgDo4xvGaK2RInU0z7CokNCAHeNcBJGkB+4nMsGiwWVPquPnJXUsc
-         MbpGQNfPgDf4r9cjunpQmaWlDAVEBImFliCEcIYFAz0b/Ee305jZ+W+Mfrr1xxBltNMc
-         6NPA==
-X-Gm-Message-State: AOAM532gV+7oFuGDtNsBPELuLeRMMqwaIx6V7n7AOyd8NZUTN2o1Ft0j
-        d4MB7CH1ku+o44LD+O78jlA=
-X-Google-Smtp-Source: ABdhPJwfcK25rsDEcFhyo2Ss23tXc5I5vjdNfTNeKltMdpyka+YN+ziOsp0q/qHSqHXpvXmqUTdnFw==
-X-Received: by 2002:ac8:718a:: with SMTP id w10mr17913043qto.145.1603763359475;
-        Mon, 26 Oct 2020 18:49:19 -0700 (PDT)
-Received: from ubuntu-m3-large-x86 ([2604:1380:45d1:2600::3])
-        by smtp.gmail.com with ESMTPSA id j25sm7868874qkk.124.2020.10.26.18.49.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2020 18:49:18 -0700 (PDT)
-Date:   Mon, 26 Oct 2020 18:49:17 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Chris Chiu <chiu@endlessm.com>,
-        Zong-Zhe Yang <kevin_yang@realtek.com>,
-        Tzu-En Huang <tehuang@realtek.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: Re: [PATCH net-next 07/11] rtw88: remove extraneous 'const' qualifier
-Message-ID: <20201027014917.GB368335@ubuntu-m3-large-x86>
-References: <20201026213040.3889546-1-arnd@kernel.org>
- <20201026213040.3889546-7-arnd@kernel.org>
+        Mon, 26 Oct 2020 22:12:55 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R2CoPvA015814, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R2CoPvA015814
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 27 Oct 2020 10:12:50 +0800
+Received: from localhost.localdomain (172.21.69.213) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Tue, 27 Oct 2020 10:12:49 +0800
+From:   <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 09/11] rtw88: coex: update WLAN 5G AFH parameter for 8822b
+Date:   Tue, 27 Oct 2020 10:11:55 +0800
+Message-ID: <20201027021157.6116-10-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201027021157.6116-1-pkshih@realtek.com>
+References: <20201027021157.6116-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201026213040.3889546-7-arnd@kernel.org>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.213]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 10:29:54PM +0100, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> clang -Wextra warns about functions returning a 'const' integer:
-> 
-> drivers/net/wireless/realtek/rtw88/rtw8822b.c:90:8: warning: 'const' type qualifier on return type has no effect [-Wignored-qualifiers]
-> static const u8 rtw8822b_get_swing_index(struct rtw_dev *rtwdev)
-> 
-> Remove the extra qualifier here.
-> 
-> Fixes: c97ee3e0bea2 ("rtw88: add power tracking support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+Adaptive Frequency Hopping(AFH) is a method of transmitting
+radio signals by rapidly changing the carrier frequency among
+many distinct frequencies, which can avoid interference.
+Add this feature to update AFH parameter for 8822b.
 
-> ---
->  drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-> index 22d0dd640ac9..b420eb914879 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-> @@ -87,7 +87,7 @@ static const u32 rtw8822b_txscale_tbl[RTW_TXSCALE_SIZE] = {
->  	0x2d3, 0x2fe, 0x32b, 0x35c, 0x38e, 0x3c4, 0x3fe
->  };
->  
-> -static const u8 rtw8822b_get_swing_index(struct rtw_dev *rtwdev)
-> +static u8 rtw8822b_get_swing_index(struct rtw_dev *rtwdev)
->  {
->  	u8 i = 0;
->  	u32 swing, table_value;
-> -- 
-> 2.27.0
-> 
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 22 ++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 743a2f6f1965..f7f6a63e576f 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -2260,7 +2260,6 @@ static const struct coex_tdma_para tdma_nsant_8822b[] = {
+ /* rssi in percentage % (dbm = % - 100) */
+ static const u8 wl_rssi_step_8822b[] = {60, 50, 44, 30};
+ static const u8 bt_rssi_step_8822b[] = {30, 30, 30, 30};
+-static const struct coex_5g_afh_map afh_5g_8822b[] = { {0, 0, 0} };
+ 
+ /* wl_tx_dec_power, bt_tx_dec_power, wl_rx_gain, bt_rx_lna_constrain */
+ static const struct coex_rf_para rf_para_tx_8822b[] = {
+@@ -2281,6 +2280,27 @@ static const struct coex_rf_para rf_para_rx_8822b[] = {
+ 	{1, 13, true, 1}
+ };
+ 
++static const struct coex_5g_afh_map afh_5g_8822b[] = {
++	{120, 2, 4},
++	{124, 8, 8},
++	{128, 17, 8},
++	{132, 26, 10},
++	{136, 34, 8},
++	{140, 42, 10},
++	{144, 51, 8},
++	{149, 62, 8},
++	{153, 71, 10},
++	{157, 77, 4},
++	{118, 2, 4},
++	{126, 12, 16},
++	{134, 29, 16},
++	{142, 46, 16},
++	{151, 66, 16},
++	{159, 76, 4},
++	{122, 10, 20},
++	{138, 37, 34},
++	{155, 68, 20}
++};
+ static_assert(ARRAY_SIZE(rf_para_tx_8822b) == ARRAY_SIZE(rf_para_rx_8822b));
+ 
+ static const u8
+-- 
+2.21.0
+
