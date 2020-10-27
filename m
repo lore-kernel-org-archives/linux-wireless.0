@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20F81C56202
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D3AFC5DF9D
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:13:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C92AF20872
+	by mail.kernel.org (Postfix) with ESMTP id ECBBE20790
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:12:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504415AbgJ0CM5 (ORCPT
+        id S2504412AbgJ0CM5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 26 Oct 2020 22:12:57 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36141 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:36143 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2504384AbgJ0CM4 (ORCPT
+        with ESMTP id S2504388AbgJ0CM4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 26 Oct 2020 22:12:56 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R2CoPuA015814, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R2CndeE015795, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R2CoPuA015814
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R2CndeE015795
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 27 Oct 2020 10:12:50 +0800
+        Tue, 27 Oct 2020 10:12:49 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -34,9 +34,9 @@ Received: from localhost.localdomain (172.21.69.213) by
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 08/11] rtw88: coex: change the parameter for A2DP when WLAN connecting
-Date:   Tue, 27 Oct 2020 10:11:54 +0800
-Message-ID: <20201027021157.6116-9-pkshih@realtek.com>
+Subject: [PATCH v2 06/11] rtw88: coex: add separate flag for manual control
+Date:   Tue, 27 Oct 2020 10:11:52 +0800
+Message-ID: <20201027021157.6116-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201027021157.6116-1-pkshih@realtek.com>
 References: <20201027021157.6116-1-pkshih@realtek.com>
@@ -52,131 +52,138 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The original mechanism may cause A2DP glitch during WiFi connecting AP.
-Because the original TDMA may decrease too much A2DP slot.
-This patch add a timer and variable to let the case A2DP + WL_Connecting
-performed more well.
+The original stop_dm flag is shared with the wifi and coexistence
+mechanism internal usage, which represent two meanings, and makes
+developers hard to debug.
+Add a new flag manual_control for coexistence mechanism usage only.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 26 ++++++++++++++++++++---
- drivers/net/wireless/realtek/rtw88/coex.h |  1 +
- drivers/net/wireless/realtek/rtw88/main.c |  2 ++
- drivers/net/wireless/realtek/rtw88/main.h |  2 ++
- 4 files changed, 28 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c  | 18 +++++++++---------
+ drivers/net/wireless/realtek/rtw88/debug.c |  4 ++--
+ drivers/net/wireless/realtek/rtw88/main.h  |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index dc1c6da4ded8..ac3a132f7703 100644
+index 0c17ba7f06cf..2db6d02b75b1 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1538,10 +1538,10 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
- 		else
- 			table_case = 9;
+@@ -124,7 +124,7 @@ static void rtw_coex_wl_ccklock_action(struct rtw_dev *rtwdev)
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	u8 para[6] = {0};
  
--		if (coex_stat->wl_gl_busy)
--			tdma_case = 13;
--		else
-+		if (coex_stat->wl_connecting || !coex_stat->wl_gl_busy)
- 			tdma_case = 14;
-+		else
-+			tdma_case = 13;
- 	} else {
- 		/* Non-Shared-Ant */
- 		table_case = 112;
-@@ -2264,6 +2264,11 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
- 	} else if (type == COEX_ASSOCIATE_START) {
- 		coex_stat->wl_hi_pri_task1 = true;
- 		coex_stat->cnt_wl[COEX_CNT_WL_CONNPKT] = 2;
-+		coex_stat->wl_connecting = true;
-+		ieee80211_queue_delayed_work(rtwdev->hw,
-+					     &coex->wl_connecting_work, 2 * HZ);
-+
-+		rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], 2G start\n");
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
  
- 		/* Force antenna setup for no scan result issue */
- 		rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
-@@ -2280,6 +2285,8 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
- 		coex_stat->wl_hi_pri_task1 = false;
- 		coex->freeze = false;
+ 	para[0] = COEX_H2C69_WL_LEAKAP;
+@@ -829,7 +829,7 @@ static void rtw_coex_ignore_wlan_act(struct rtw_dev *rtwdev, bool enable)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
  
-+		rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], 2G finish\n");
-+
- 		rtw_coex_run_coex(rtwdev, COEX_RSN_2GCONFINISH);
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	rtw_fw_bt_ignore_wlan_action(rtwdev, enable);
+@@ -1981,7 +1981,7 @@ static void rtw_coex_run_coex(struct rtw_dev *rtwdev, u8 reason)
+ 
+ 	rtw_coex_monitor_bt_enable(rtwdev);
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	if (coex_stat->wl_under_ips)
+@@ -2148,7 +2148,7 @@ void rtw_coex_ips_notify(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	if (type == COEX_IPS_ENTER) {
+@@ -2174,7 +2174,7 @@ void rtw_coex_lps_notify(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	if (type == COEX_LPS_ENABLE) {
+@@ -2205,7 +2205,7 @@ void rtw_coex_scan_notify(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	coex->freeze = false;
+@@ -2233,7 +2233,7 @@ void rtw_coex_switchband_notify(struct rtw_dev *rtwdev, u8 type)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	if (type == COEX_SWITCH_TO_5G)
+@@ -2249,7 +2249,7 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_SCAN |
+@@ -2290,7 +2290,7 @@ void rtw_coex_media_status_notify(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	u8 para[6] = {0};
+ 
+-	if (coex->stop_dm)
++	if (coex->manual_control || coex->stop_dm)
+ 		return;
+ 
+ 	if (type == COEX_MEDIA_CONNECT_5G) {
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index 3852c4f0ac0b..5974a8ef8b34 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -775,7 +775,7 @@ static ssize_t rtw_debugfs_set_coex_enable(struct file *filp,
  	}
- }
-@@ -2611,6 +2618,19 @@ void rtw_coex_bt_remain_work(struct work_struct *work)
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-+void rtw_coex_wl_connecting_work(struct work_struct *work)
-+{
-+	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
-+					      coex.wl_connecting_work.work);
-+	struct rtw_coex_stat *coex_stat = &rtwdev->coex.stat;
-+
-+	mutex_lock(&rtwdev->mutex);
-+	coex_stat->wl_connecting = false;
-+	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], WL connecting stop!!\n");
-+	rtw_coex_run_coex(rtwdev, COEX_RSN_WLSTATUS);
-+	mutex_unlock(&rtwdev->mutex);
-+}
-+
- #ifdef CONFIG_RTW88_DEBUGFS
- #define INFO_SIZE	80
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wireless/realtek/rtw88/coex.h
-index e0d0be3f0dcf..712a3adb5d16 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.h
-+++ b/drivers/net/wireless/realtek/rtw88/coex.h
-@@ -366,6 +366,7 @@ void rtw_coex_bt_reenable_work(struct work_struct *work);
- void rtw_coex_defreeze_work(struct work_struct *work);
- void rtw_coex_wl_remain_work(struct work_struct *work);
- void rtw_coex_bt_remain_work(struct work_struct *work);
-+void rtw_coex_wl_connecting_work(struct work_struct *work);
- 
- void rtw_coex_power_on_setting(struct rtw_dev *rtwdev);
- void rtw_coex_init_hw_config(struct rtw_dev *rtwdev, bool wifi_only);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index b3236c788467..e4328482f7dc 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1130,6 +1130,7 @@ void rtw_core_stop(struct rtw_dev *rtwdev)
- 	cancel_delayed_work_sync(&coex->defreeze_work);
- 	cancel_delayed_work_sync(&coex->wl_remain_work);
- 	cancel_delayed_work_sync(&coex->bt_remain_work);
-+	cancel_delayed_work_sync(&coex->wl_connecting_work);
  
  	mutex_lock(&rtwdev->mutex);
+-	coex->stop_dm = enable == 0;
++	coex->manual_control = enable == 0;
+ 	mutex_unlock(&rtwdev->mutex);
  
-@@ -1622,6 +1623,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	INIT_DELAYED_WORK(&coex->defreeze_work, rtw_coex_defreeze_work);
- 	INIT_DELAYED_WORK(&coex->wl_remain_work, rtw_coex_wl_remain_work);
- 	INIT_DELAYED_WORK(&coex->bt_remain_work, rtw_coex_bt_remain_work);
-+	INIT_DELAYED_WORK(&coex->wl_connecting_work, rtw_coex_wl_connecting_work);
- 	INIT_WORK(&rtwdev->c2h_work, rtw_c2h_work);
- 	INIT_WORK(&rtwdev->fw_recovery_work, rtw_fw_recovery_work);
- 	INIT_WORK(&rtwdev->ba_work, rtw_txq_ba_work);
+ 	return count;
+@@ -788,7 +788,7 @@ static int rtw_debugfs_get_coex_enable(struct seq_file *m, void *v)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 
+ 	seq_printf(m, "coex mechanism %s\n",
+-		   coex->stop_dm ? "disabled" : "enabled");
++		   coex->manual_control ? "disabled" : "enabled");
+ 
+ 	return 0;
+ }
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 1400ba21278f..6d720961ce9d 100644
+index ffb02e614217..c7aed2156e46 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1327,6 +1327,7 @@ struct rtw_coex_stat {
- 	bool wl_cck_lock;
- 	bool wl_cck_lock_pre;
- 	bool wl_cck_lock_ever;
-+	bool wl_connecting;
+@@ -1377,6 +1377,7 @@ struct rtw_coex {
+ 	bool freeze;
+ 	bool freerun;
+ 	bool wl_rf_off;
++	bool manual_control;
  
- 	u32 bt_supported_version;
- 	u32 bt_supported_feature;
-@@ -1396,6 +1397,7 @@ struct rtw_coex {
- 	struct delayed_work defreeze_work;
- 	struct delayed_work wl_remain_work;
- 	struct delayed_work bt_remain_work;
-+	struct delayed_work wl_connecting_work;
- };
- 
- #define DPK_RF_REG_NUM 7
+ 	struct rtw_coex_stat stat;
+ 	struct rtw_coex_dm dm;
 -- 
 2.21.0
 
