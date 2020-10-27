@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B163C5DF9E
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:13:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E23FAC2D0A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CECE20882
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:13:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A899920790
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 02:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504420AbgJ0CM7 (ORCPT
+        id S2504423AbgJ0CNB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Oct 2020 22:12:59 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36142 "EHLO
+        Mon, 26 Oct 2020 22:13:01 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36145 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2504397AbgJ0CM6 (ORCPT
+        with ESMTP id S2504396AbgJ0CMz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Oct 2020 22:12:58 -0400
+        Mon, 26 Oct 2020 22:12:55 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R2CndaE015795, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09R2CnddE015795, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R2CndaE015795
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09R2CnddE015795
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Tue, 27 Oct 2020 10:12:49 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Tue, 27 Oct 2020 10:12:48 +0800
+ 15.1.2044.4; Tue, 27 Oct 2020 10:12:49 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 02/11] rtw88: coex: update coex parameter to improve A2DP quality
-Date:   Tue, 27 Oct 2020 10:11:48 +0800
-Message-ID: <20201027021157.6116-3-pkshih@realtek.com>
+Subject: [PATCH v2 05/11] rtw88: coex: Modify the timing of set_ant_path/set_rf_para
+Date:   Tue, 27 Oct 2020 10:11:51 +0800
+Message-ID: <20201027021157.6116-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201027021157.6116-1-pkshih@realtek.com>
 References: <20201027021157.6116-1-pkshih@realtek.com>
@@ -52,365 +52,375 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Update COEX parameters and logic to enhance WL/BT performance
-while WL_Busy + A2DP in a less interference environment.
-It can avoid the interference comes cross from each other
-and earned more performance.
+To make sure the related ANT/RF_PARA setting will be expected result in COEX.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c     |  2 +-
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 61 ++++++++++---------
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 35 ++++++-----
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 28 +++++----
- 4 files changed, 69 insertions(+), 57 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c | 91 ++++++++++++++---------
+ 1 file changed, 55 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index aa08fd7d9fcd..6fb916dae40f 100644
+index cfd78ebb7e4e..0c17ba7f06cf 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1517,7 +1517,7 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
+@@ -1165,6 +1165,8 @@ static void rtw_coex_action_coex_all_off(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 2;
+@@ -1175,7 +1177,6 @@ static void rtw_coex_action_coex_all_off(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1228,6 +1229,9 @@ static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 2;
+@@ -1238,8 +1242,6 @@ static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1250,6 +1252,9 @@ static void rtw_coex_action_bt_relink(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 1;
+@@ -1260,8 +1265,6 @@ static void rtw_coex_action_bt_relink(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1276,6 +1279,8 @@ static void rtw_coex_action_bt_idle(struct rtw_dev *rtwdev)
+ 	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
+ 	u8 table_case = 0xff, tdma_case = 0xff;
+ 
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (coex_rfe->ant_switch_with_bt &&
+ 	    coex_dm->bt_status == COEX_BTSTATUS_NCON_IDLE) {
+ 		if (efuse->share_ant &&
+@@ -1324,7 +1329,6 @@ static void rtw_coex_action_bt_idle(struct rtw_dev *rtwdev)
+ 		}
+ 	}
+ 
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1339,6 +1343,9 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	u32 slot_type = 0;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (coex_stat->wl_linkscan_proc || coex_stat->wl_hi_pri_task1 ||
+ 	    coex_stat->wl_hi_pri_task2)
+ 		wl_hi_pri = true;
+@@ -1404,8 +1411,6 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
+ 	rtw_dbg(rtwdev, RTW_DBG_COEX, "coex: wifi hi(%d), bt page(%d)\n",
+ 		wl_hi_pri, coex_stat->bt_page);
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ }
+@@ -1418,6 +1423,9 @@ static void rtw_coex_action_bt_hfp(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		if (coex_stat->bt_multi_link) {
+@@ -1438,8 +1446,6 @@ static void rtw_coex_action_bt_hfp(struct rtw_dev *rtwdev)
+ 		}
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1453,6 +1459,9 @@ static void rtw_coex_action_bt_hid(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	u32 wl_bw;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	wl_bw = rtwdev->hal.current_band_width;
+ 
+ 	if (efuse->share_ant) {
+@@ -1503,8 +1512,6 @@ static void rtw_coex_action_bt_hid(struct rtw_dev *rtwdev)
+ 		}
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1519,6 +1526,9 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	u32 slot_type = 0;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
  		slot_type = TDMA_4SLOT;
+@@ -1542,8 +1552,6 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
+ 			tdma_case = 113;
+ 	}
  
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ }
+@@ -1557,6 +1565,9 @@ static void rtw_coex_action_bt_a2dpsink(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	bool ap_enable = false;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) { /* Shared-Ant */
+ 		if (ap_enable) {
+ 			table_case = 2;
+@@ -1578,8 +1589,6 @@ static void rtw_coex_action_bt_a2dpsink(struct rtw_dev *rtwdev)
+ 		}
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1592,6 +1601,9 @@ static void rtw_coex_action_bt_pan(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
  		if (coex_stat->wl_gl_busy && coex_stat->wl_noisy_level == 0)
--			table_case = 10;
-+			table_case = 11;
- 		else
- 			table_case = 9;
+@@ -1613,8 +1625,6 @@ static void rtw_coex_action_bt_pan(struct rtw_dev *rtwdev)
+ 			tdma_case = 119;
+ 	}
  
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 01768fec4426..e8b9f371cfaa 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -1949,19 +1949,19 @@ static struct rtw_chip_ops rtw8723d_ops = {
- static const struct coex_table_para table_sant_8723d[] = {
- 	{0xffffffff, 0xffffffff}, /* case-0 */
- 	{0x55555555, 0x55555555},
--	{0x65555555, 0x65555555},
-+	{0x66555555, 0x66555555},
- 	{0xaaaaaaaa, 0xaaaaaaaa},
- 	{0x5a5a5a5a, 0x5a5a5a5a},
- 	{0xfafafafa, 0xfafafafa}, /* case-5 */
--	{0xa5555555, 0xaaaa5aaa},
--	{0x6a5a5a5a, 0x5a5a5a5a},
-+	{0x6a5a5555, 0xaaaaaaaa},
-+	{0x6a5a56aa, 0x6a5a56aa},
- 	{0x6a5a5a5a, 0x6a5a5a5a},
- 	{0x66555555, 0x5a5a5a5a},
--	{0x65555555, 0x6a5a5a5a}, /* case-10 */
--	{0x65555555, 0xfafafafa},
-+	{0x66555555, 0x6a5a5a5a}, /* case-10 */
-+	{0x66555555, 0x6a5a5aaa},
- 	{0x66555555, 0x5a5a5aaa},
--	{0x65555555, 0x5aaa5aaa},
--	{0x65555555, 0xaaaa5aaa},
-+	{0x66555555, 0x6aaa5aaa},
-+	{0x66555555, 0xaaaa5aaa},
- 	{0x66555555, 0xaaaaaaaa}, /* case-15 */
- 	{0xffff55ff, 0xfafafafa},
- 	{0xffff55ff, 0x6afa5afa},
-@@ -1970,38 +1970,41 @@ static const struct coex_table_para table_sant_8723d[] = {
- 	{0xaa5555aa, 0x6a5a5a5a}, /* case-20 */
- 	{0xaa5555aa, 0xaaaaaaaa},
- 	{0xffffffff, 0x5a5a5a5a},
--	{0xffffffff, 0x6a5a5a5a},
-+	{0xffffffff, 0x5a5a5a5a},
- 	{0xffffffff, 0x55555555},
--	{0xffffffff, 0x6a5a5aaa}, /* case-25 */
-+	{0xffffffff, 0x5a5a5aaa}, /* case-25 */
- 	{0x55555555, 0x5a5a5a5a},
- 	{0x55555555, 0xaaaaaaaa},
--	{0x55555555, 0x6a6a6a6a},
--	{0x656a656a, 0x656a656a}
-+	{0x55555555, 0x6a5a6a5a},
-+	{0x66556655, 0x66556655},
-+	{0x66556aaa, 0x6a5a6aaa}, /* case-30 */
-+	{0xffffffff, 0x5aaa5aaa},
-+	{0x56555555, 0x5a5a5aaa}
- };
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1629,6 +1639,9 @@ static void rtw_coex_action_bt_a2dp_hid(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	u32 slot_type = 0;
  
- /* Non-Shared-Antenna Coex Table */
- static const struct coex_table_para table_nsant_8723d[] = {
- 	{0xffffffff, 0xffffffff}, /* case-100 */
- 	{0x55555555, 0x55555555},
--	{0x65555555, 0x65555555},
-+	{0x66555555, 0x66555555},
- 	{0xaaaaaaaa, 0xaaaaaaaa},
- 	{0x5a5a5a5a, 0x5a5a5a5a},
- 	{0xfafafafa, 0xfafafafa}, /* case-105 */
- 	{0x5afa5afa, 0x5afa5afa},
- 	{0x55555555, 0xfafafafa},
--	{0x65555555, 0xfafafafa},
--	{0x65555555, 0x5a5a5a5a},
--	{0x65555555, 0x6a5a5a5a}, /* case-110 */
--	{0x65555555, 0xaaaaaaaa},
-+	{0x66555555, 0xfafafafa},
-+	{0x66555555, 0x5a5a5a5a},
-+	{0x66555555, 0x6a5a5a5a}, /* case-110 */
-+	{0x66555555, 0xaaaaaaaa},
- 	{0xffff55ff, 0xfafafafa},
- 	{0xffff55ff, 0x5afa5afa},
- 	{0xffff55ff, 0xaaaaaaaa},
--	{0xaaffffaa, 0xfafafafa}, /* case-115 */
-+	{0xffff55ff, 0xffff55ff}, /* case-115 */
- 	{0xaaffffaa, 0x5afa5afa},
- 	{0xaaffffaa, 0xaaaaaaaa},
- 	{0xffffffff, 0xfafafafa},
- 	{0xffffffff, 0x5afa5afa},
--	{0xffffffff, 0xaaaaaaaa},/* case-120 */
-+	{0xffffffff, 0xaaaaaaaa}, /* case-120 */
- 	{0x55ff55ff, 0x5afa5afa},
- 	{0x55ff55ff, 0xaaaaaaaa},
- 	{0x55ff55ff, 0x55ff55ff}
-@@ -2009,31 +2012,31 @@ static const struct coex_table_para table_nsant_8723d[] = {
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		slot_type = TDMA_4SLOT;
+@@ -1655,8 +1668,6 @@ static void rtw_coex_action_bt_a2dp_hid(struct rtw_dev *rtwdev)
+ 			tdma_case = 113;
+ 	}
  
- /* Shared-Antenna TDMA */
- static const struct coex_tdma_para tdma_sant_8723d[] = {
--	{ {0x08, 0x00, 0x00, 0x00, 0x00} }, /* case-0 */
-+	{ {0x00, 0x00, 0x00, 0x00, 0x00} }, /* case-0 */
- 	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-1 */
- 	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
--	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x10, 0x03, 0x11, 0x11} }, /* case-5 */
--	{ {0x61, 0x48, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x45, 0x03, 0x11, 0x10} },
- 	{ {0x61, 0x3a, 0x03, 0x11, 0x10} },
- 	{ {0x61, 0x30, 0x03, 0x11, 0x10} },
- 	{ {0x61, 0x20, 0x03, 0x11, 0x10} },
- 	{ {0x61, 0x10, 0x03, 0x11, 0x10} }, /* case-10 */
--	{ {0x61, 0x10, 0x03, 0x11, 0x14} },
-+	{ {0x61, 0x08, 0x03, 0x11, 0x14} },
- 	{ {0x61, 0x08, 0x03, 0x10, 0x14} },
--	{ {0x51, 0x10, 0x03, 0x10, 0x54} },
--	{ {0x51, 0x10, 0x03, 0x10, 0x55} },
--	{ {0x51, 0x10, 0x07, 0x10, 0x54} }, /* case-15 */
-+	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
-+	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
-+	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-15 */
- 	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
--	{ {0x51, 0x15, 0x03, 0x10, 0x50} }, /* case-20 */
-+	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-20 */
- 	{ {0x51, 0x4a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x0c, 0x03, 0x10, 0x54} },
- 	{ {0x55, 0x08, 0x03, 0x10, 0x54} },
--	{ {0x65, 0x10, 0x03, 0x11, 0x11} },
-+	{ {0x65, 0x10, 0x03, 0x11, 0x10} },
- 	{ {0x51, 0x10, 0x03, 0x10, 0x51} }, /* case-25 */
- 	{ {0x51, 0x08, 0x03, 0x10, 0x50} },
- 	{ {0x61, 0x08, 0x03, 0x11, 0x11} }
-@@ -2041,7 +2044,7 @@ static const struct coex_tdma_para tdma_sant_8723d[] = {
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ }
+@@ -1669,6 +1680,9 @@ static void rtw_coex_action_bt_a2dp_pan(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
  
- /* Non-Shared-Antenna TDMA */
- static const struct coex_tdma_para tdma_nsant_8723d[] = {
--	{ {0x00, 0x00, 0x00, 0x40, 0x01} }, /* case-100 */
-+	{ {0x00, 0x00, 0x00, 0x00, 0x01} }, /* case-100 */
- 	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-101 */
- 	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
-@@ -2062,7 +2065,7 @@ static const struct coex_tdma_para tdma_nsant_8723d[] = {
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-120 */
--	{ {0x51, 0x08, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x08, 0x03, 0x10, 0x50} }
- };
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		if (coex_stat->wl_gl_busy &&
+@@ -1691,8 +1705,6 @@ static void rtw_coex_action_bt_a2dp_pan(struct rtw_dev *rtwdev)
+ 			tdma_case = 120;
+ 	}
  
- /* rssi in percentage % (dbm = % - 100) */
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 908f552c7c9d..743a2f6f1965 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -2141,30 +2141,34 @@ static const struct coex_table_para table_sant_8822b[] = {
- 	{0xaaaaaaaa, 0xaaaaaaaa},
- 	{0x5a5a5a5a, 0x5a5a5a5a},
- 	{0xfafafafa, 0xfafafafa}, /* case-5 */
--	{0x6a5a6a5a, 0xaaaaaaaa},
-+	{0x6a5a5555, 0xaaaaaaaa},
- 	{0x6a5a56aa, 0x6a5a56aa},
- 	{0x6a5a5a5a, 0x6a5a5a5a},
- 	{0x66555555, 0x5a5a5a5a},
- 	{0x66555555, 0x6a5a5a5a}, /* case-10 */
- 	{0x66555555, 0xfafafafa},
- 	{0x66555555, 0x5a5a5aaa},
--	{0x66555555, 0x5aaa5aaa},
--	{0x66555555, 0xaaaa5aaa},
--	{0x66555555, 0xaaaaaaaa}, /* case-15 */
-+	{0x66555555, 0x5a5a5aaa},
-+	{0x66555555, 0x6aaa5aaa},
-+	{0x66555555, 0xaaaa5aaa}, /* case-15 */
-+	{0x66555555, 0xaaaaaaaa},
- 	{0xffff55ff, 0xfafafafa},
- 	{0xffff55ff, 0x6afa5afa},
- 	{0xaaffffaa, 0xfafafafa},
--	{0xaa5555aa, 0x5a5a5a5a},
--	{0xaa5555aa, 0x6a5a5a5a}, /* case-20 */
-+	{0xaa5555aa, 0x5a5a5a5a}, /* case-20 */
-+	{0xaa5555aa, 0x6a5a5a5a},
- 	{0xaa5555aa, 0xaaaaaaaa},
- 	{0xffffffff, 0x5a5a5a5a},
--	{0xffffffff, 0x6a5a5a5a},
--	{0xffffffff, 0x55555555},
--	{0xffffffff, 0x6a5a5aaa}, /* case-25 */
-+	{0xffffffff, 0x5a5a5a5a},
-+	{0xffffffff, 0x55555555}, /* case-25 */
-+	{0xffffffff, 0x5a5a5aaa},
- 	{0x55555555, 0x5a5a5a5a},
- 	{0x55555555, 0xaaaaaaaa},
- 	{0x55555555, 0x6a5a6a5a},
--	{0x66556655, 0x66556655}
-+	{0x66556655, 0x66556655}, /* case-30 */
-+	{0x66556aaa, 0x6a5a6aaa},
-+	{0xffffffff, 0x5aaa5aaa},
-+	{0x56555555, 0x5a5a5aaa}
- };
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1705,6 +1717,9 @@ static void rtw_coex_action_bt_pan_hid(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
  
- /* Non-Shared-Antenna Coex Table */
-@@ -2184,7 +2188,7 @@ static const struct coex_table_para table_nsant_8822b[] = {
- 	{0xffff55ff, 0xfafafafa},
- 	{0xffff55ff, 0x5afa5afa},
- 	{0xffff55ff, 0xaaaaaaaa},
--	{0xaaffffaa, 0xfafafafa}, /* case-115 */
-+	{0xffff55ff, 0xffff55ff}, /* case-115 */
- 	{0xaaffffaa, 0x5afa5afa},
- 	{0xaaffffaa, 0xaaaaaaaa},
- 	{0xffffffff, 0xfafafafa},
-@@ -2213,7 +2217,7 @@ static const struct coex_tdma_para tdma_sant_8822b[] = {
- 	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
- 	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
- 	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-15 */
--	{ {0x51, 0x45, 0x03, 0x10, 0x10} },
-+	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
-@@ -2221,7 +2225,7 @@ static const struct coex_tdma_para tdma_sant_8822b[] = {
- 	{ {0x51, 0x4a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x0c, 0x03, 0x10, 0x54} },
- 	{ {0x55, 0x08, 0x03, 0x10, 0x54} },
--	{ {0x65, 0x10, 0x03, 0x11, 0x11} },
-+	{ {0x65, 0x10, 0x03, 0x11, 0x10} },
- 	{ {0x51, 0x10, 0x03, 0x10, 0x51} }, /* case-25 */
- 	{ {0x51, 0x08, 0x03, 0x10, 0x50} },
- 	{ {0x61, 0x08, 0x03, 0x11, 0x11} }
-@@ -2230,7 +2234,7 @@ static const struct coex_tdma_para tdma_sant_8822b[] = {
- /* Non-Shared-Antenna TDMA */
- static const struct coex_tdma_para tdma_nsant_8822b[] = {
- 	{ {0x00, 0x00, 0x00, 0x00, 0x00} }, /* case-100 */
--	{ {0x61, 0x45, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-101 */
- 	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
-@@ -2249,7 +2253,8 @@ static const struct coex_tdma_para tdma_nsant_8822b[] = {
- 	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
--	{ {0x51, 0x10, 0x03, 0x10, 0x50} }  /* case-120 */
-+	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-120 */
-+	{ {0x51, 0x08, 0x03, 0x10, 0x50} }
- };
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 9;
+@@ -1723,8 +1738,6 @@ static void rtw_coex_action_bt_pan_hid(struct rtw_dev *rtwdev)
+ 			tdma_case = 119;
+ 	}
  
- /* rssi in percentage % (dbm = % - 100) */
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 4da79ca987da..fe8a94abc76d 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3983,14 +3983,14 @@ static const struct coex_table_para table_sant_8822c[] = {
- 	{0xaaaaaaaa, 0xaaaaaaaa},
- 	{0x5a5a5a5a, 0x5a5a5a5a},
- 	{0xfafafafa, 0xfafafafa}, /* case-5 */
--	{0x6a5a6a5a, 0xaaaaaaaa},
-+	{0x6a5a5555, 0xaaaaaaaa},
- 	{0x6a5a56aa, 0x6a5a56aa},
- 	{0x6a5a5a5a, 0x6a5a5a5a},
- 	{0x66555555, 0x5a5a5a5a},
- 	{0x66555555, 0x6a5a5a5a}, /* case-10 */
--	{0x66555555, 0xfafafafa},
-+	{0x66555555, 0x6a5a5aaa},
- 	{0x66555555, 0x5a5a5aaa},
--	{0x66555555, 0x5aaa5aaa},
-+	{0x66555555, 0x6aaa5aaa},
- 	{0x66555555, 0xaaaa5aaa},
- 	{0x66555555, 0xaaaaaaaa}, /* case-15 */
- 	{0xffff55ff, 0xfafafafa},
-@@ -4000,13 +4000,16 @@ static const struct coex_table_para table_sant_8822c[] = {
- 	{0xaa5555aa, 0x6a5a5a5a}, /* case-20 */
- 	{0xaa5555aa, 0xaaaaaaaa},
- 	{0xffffffff, 0x5a5a5a5a},
--	{0xffffffff, 0x6a5a5a5a},
-+	{0xffffffff, 0x5a5a5a5a},
- 	{0xffffffff, 0x55555555},
--	{0xffffffff, 0x6a5a5aaa}, /* case-25 */
-+	{0xffffffff, 0x5a5a5aaa}, /* case-25 */
- 	{0x55555555, 0x5a5a5a5a},
- 	{0x55555555, 0xaaaaaaaa},
- 	{0x55555555, 0x6a5a6a5a},
--	{0x66556655, 0x66556655}
-+	{0x66556655, 0x66556655},
-+	{0x66556aaa, 0x6a5a6aaa}, /* case-30 */
-+	{0xffffffff, 0x5aaa5aaa},
-+	{0x56555555, 0x5a5a5aaa}
- };
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1737,6 +1750,9 @@ static void rtw_coex_action_bt_a2dp_pan_hid(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
  
- /* Non-Shared-Antenna Coex Table */
-@@ -4026,12 +4029,12 @@ static const struct coex_table_para table_nsant_8822c[] = {
- 	{0xffff55ff, 0xfafafafa},
- 	{0xffff55ff, 0x5afa5afa},
- 	{0xffff55ff, 0xaaaaaaaa},
--	{0xaaffffaa, 0xfafafafa}, /* case-115 */
-+	{0xffff55ff, 0xffff55ff}, /* case-115 */
- 	{0xaaffffaa, 0x5afa5afa},
- 	{0xaaffffaa, 0xaaaaaaaa},
- 	{0xffffffff, 0xfafafafa},
- 	{0xffffffff, 0x5afa5afa},
--	{0xffffffff, 0xaaaaaaaa},/* case-120 */
-+	{0xffffffff, 0xaaaaaaaa}, /* case-120 */
- 	{0x55ff55ff, 0x5afa5afa},
- 	{0x55ff55ff, 0xaaaaaaaa},
- 	{0x55ff55ff, 0x55ff55ff}
-@@ -4040,7 +4043,7 @@ static const struct coex_table_para table_nsant_8822c[] = {
- /* Shared-Antenna TDMA */
- static const struct coex_tdma_para tdma_sant_8822c[] = {
- 	{ {0x00, 0x00, 0x00, 0x00, 0x00} }, /* case-0 */
--	{ {0x61, 0x45, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-1 */
- 	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
- 	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
-@@ -4055,7 +4058,7 @@ static const struct coex_tdma_para tdma_sant_8822c[] = {
- 	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
- 	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
- 	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-15 */
--	{ {0x51, 0x45, 0x03, 0x10, 0x10} },
-+	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
-@@ -4063,7 +4066,7 @@ static const struct coex_tdma_para tdma_sant_8822c[] = {
- 	{ {0x51, 0x4a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x0c, 0x03, 0x10, 0x54} },
- 	{ {0x55, 0x08, 0x03, 0x10, 0x54} },
--	{ {0x65, 0x10, 0x03, 0x11, 0x11} },
-+	{ {0x65, 0x10, 0x03, 0x11, 0x10} },
- 	{ {0x51, 0x10, 0x03, 0x10, 0x51} }, /* case-25 */
- 	{ {0x51, 0x08, 0x03, 0x10, 0x50} },
- 	{ {0x61, 0x08, 0x03, 0x11, 0x11} }
-@@ -4091,7 +4094,8 @@ static const struct coex_tdma_para tdma_nsant_8822c[] = {
- 	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
- 	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
--	{ {0x51, 0x10, 0x03, 0x10, 0x50} }  /* case-120 */
-+	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-120 */
-+	{ {0x51, 0x08, 0x03, 0x10, 0x50} }
- };
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 10;
+@@ -1755,8 +1771,6 @@ static void rtw_coex_action_bt_a2dp_pan_hid(struct rtw_dev *rtwdev)
+ 			tdma_case = 120;
+ 	}
  
- /* rssi in percentage % (dbm = % - 100) */
+-	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1767,6 +1781,9 @@ static void rtw_coex_action_wl_under5g(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_5G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_FIX2M, false);
+ 
+ 	if (efuse->share_ant) {
+@@ -1779,8 +1796,6 @@ static void rtw_coex_action_wl_under5g(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_5G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1791,6 +1806,9 @@ static void rtw_coex_action_wl_only(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 2;
+@@ -1801,8 +1819,6 @@ static void rtw_coex_action_wl_only(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1817,6 +1833,9 @@ static void rtw_coex_action_wl_native_lps(struct rtw_dev *rtwdev)
+ 	if (coex->under_5g)
+ 		return;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 28;
+@@ -1827,8 +1846,6 @@ static void rtw_coex_action_wl_native_lps(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
+@@ -1842,6 +1859,9 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
+ 	u8 table_case, tdma_case;
+ 	u32 slot_type = 0;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		if (coex_stat->bt_a2dp_exist) {
+@@ -1863,8 +1883,6 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
+ 		}
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ }
+@@ -1875,6 +1893,9 @@ static void rtw_coex_action_wl_not_connected(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
+ 
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		table_case = 1;
+@@ -1885,8 +1906,6 @@ static void rtw_coex_action_wl_not_connected(struct rtw_dev *rtwdev)
+ 		tdma_case = 100;
+ 	}
+ 
+-	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+-	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+ 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ }
 -- 
 2.21.0
 
