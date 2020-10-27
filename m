@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B63DDC388F9
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 22:56:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B55CC388F9
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 22:56:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 681592076D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 22:56:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9FC122202
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Oct 2020 22:56:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0GnEbZql";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="LsJR1NJ1"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IrVDFjU5";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="1hcOJSQq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1832591AbgJ0W4P (ORCPT
+        id S1832609AbgJ0W42 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Oct 2020 18:56:15 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:50108 "EHLO
+        Tue, 27 Oct 2020 18:56:28 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:50198 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1832564AbgJ0W4H (ORCPT
+        with ESMTP id S1832548AbgJ0W4A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Oct 2020 18:56:07 -0400
+        Tue, 27 Oct 2020 18:56:00 -0400
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1603839365;
+        s=2020; t=1603839357;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jttJQYUY921gdQBinUA2N0GBiq3HS7MmOYm/9rq3mlU=;
-        b=0GnEbZqlXJZLQfjONDg/KSujsSvfMvUdN9MjzKaP55p1OEL8105JJGIQe6F3XVpxye4QRG
-        RNPtf8SiqF6hXmGgkfl/1C/UqBtecqyV1R5ba28I2myfZGnsuvT0wtttW7aBU23i8cp0Kp
-        KPePrRqnO5QD3zsNjl0yz3RIKPYR9IqDfkJJwLOramUuxXxYnkd8Z0mwa5+ATFm5MBsojH
-        c1s8YWDtwJjB+Py3JzwS5Sia73LSJCXx75eylZj0Pz3x7x+1Nh9Y0AYUTJPGgc6ryex4na
-        0xwLG2EUr3iK9u8qT5n0uUKslQ2EpAHI1jsLzfDpVY5F44gyFbKLZ6KAepUyjA==
+        bh=DjmStdTYpXx0Q5cgHBNYgoGt1xQMDGvpBhIAE5x62bo=;
+        b=IrVDFjU5wiUh3/1b+EWqAdpLz9jEaa0feaxAB0seewu3KP62xQWrIDIDRFVfJR88akb5V8
+        pixqewfSpPphy6wjIpk84kuwnoRmYibI+WPGXbSjRtkxqKuGHv479c5O+07RtRHzWP9EyO
+        /XS2O6gq02ndIa9jvIju3YeZBwPe7jdNPpcZYA5f5c/yCRKzmmvrHi/lomT6/LJwNTuzDq
+        79tALLYTDN3HvBlJ21WplNePz/PcB96jD/urLc/mb0VXNxgXdrKoOYIKtApY4oS3NuMRJx
+        udPmRn5otfroi+DJXX7goaPxUdhrmyFNBJYKUfaap+PqN/QIS+Vy6OoaWTLFrw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1603839365;
+        s=2020e; t=1603839357;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jttJQYUY921gdQBinUA2N0GBiq3HS7MmOYm/9rq3mlU=;
-        b=LsJR1NJ1kfuG7mH7WHiTgHjGj108g1qTNgV4c1oTVdGNGA/LhmC59JAAm3KDssv9bSM5bW
-        AvG+0+npRHIheYCA==
+        bh=DjmStdTYpXx0Q5cgHBNYgoGt1xQMDGvpBhIAE5x62bo=;
+        b=1hcOJSQqWKvZ0z3m9yg8HSR6q16whMj9tbVFBVxwm9sIAnvgysjdR0EPOnpijehHN6jTXv
+        eMzOMmrlvWnhypDQ==
 To:     netdev@vger.kernel.org
 Cc:     Aymen Sghaier <aymen.sghaier@nxp.com>,
         Daniel Drake <dsd@gentoo.org>,
@@ -67,80 +67,78 @@ Cc:     Aymen Sghaier <aymen.sghaier@nxp.com>,
         Zhu Yanjun <zyjzyj2000@gmail.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH net-next 15/15] crypto: caam: Replace in_irq() usage.
-Date:   Tue, 27 Oct 2020 23:54:54 +0100
-Message-Id: <20201027225454.3492351-16-bigeasy@linutronix.de>
+Subject: [PATCH net-next 10/15] net: zd1211rw: Remove in_atomic() usage.
+Date:   Tue, 27 Oct 2020 23:54:49 +0100
+Message-Id: <20201027225454.3492351-11-bigeasy@linutronix.de>
 In-Reply-To: <20201027225454.3492351-1-bigeasy@linutronix.de>
 References: <20201027225454.3492351-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The driver uses in_irq() + in_serving_softirq() magic to decide if NAPI
-scheduling is required or packet processing.
+The usage of in_atomic() in driver code is deprecated as it can not
+always detect all states where it is not allowed to sleep.
 
-The usage of in_*() in drivers is phased out and Linus clearly requested
-that code which changes behaviour depending on context should either be
-seperated or the context be conveyed in an argument passed by the caller,
-which usually knows the context.
-
-Use the `napi' argument passed by the callback. It is set true if
-called from the interrupt handler and NAPI should be scheduled.
+All callers are in premptible thread context and all functions invoke core
+functions which have checks for invalid calling contexts already.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: "Horia Geant=C4=83" <horia.geanta@nxp.com>
-Cc: Aymen Sghaier <aymen.sghaier@nxp.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Madalin Bucur <madalin.bucur@nxp.com>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Li Yang <leoyang.li@nxp.com>
-Cc: linux-crypto@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-arm-kernel@lists.infradead.org
 ---
- drivers/crypto/caam/qi.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/drivers/crypto/caam/qi.c b/drivers/crypto/caam/qi.c
-index 09ea398304c8b..79dbd90887f8a 100644
---- a/drivers/crypto/caam/qi.c
-+++ b/drivers/crypto/caam/qi.c
-@@ -545,14 +545,10 @@ static void cgr_cb(struct qman_portal *qm, struct qma=
-n_cgr *cgr, int congested)
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wir=
+eless/zydas/zd1211rw/zd_usb.c
+index 66367ab7e4c1e..5c4cd0e1adebb 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+@@ -1711,11 +1711,6 @@ int zd_usb_ioread16v(struct zd_usb *usb, u16 *values,
+ 			 count, USB_MAX_IOREAD16_COUNT);
+ 		return -EINVAL;
  	}
- }
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			 "error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
+ 	if (!usb_int_enabled(usb)) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+ 			  "error: usb interrupt not enabled\n");
+@@ -1882,11 +1877,6 @@ int zd_usb_iowrite16v_async(struct zd_usb *usb, cons=
+t struct zd_ioreq16 *ioreqs,
+ 			count, USB_MAX_IOWRITE16_COUNT);
+ 		return -EINVAL;
+ 	}
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			"error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
 =20
--static int caam_qi_napi_schedule(struct qman_portal *p, struct caam_napi *=
-np)
-+static int caam_qi_napi_schedule(struct qman_portal *p, struct caam_napi *=
-np,
-+				 bool napi)
- {
--	/*
--	 * In case of threaded ISR, for RT kernels in_irq() does not return
--	 * appropriate value, so use in_serving_softirq to distinguish between
--	 * softirq and irq contexts.
--	 */
--	if (unlikely(in_irq() || !in_serving_softirq())) {
-+	if (napi) {
- 		/* Disable QMan IRQ source and invoke NAPI */
- 		qman_p_irqsource_remove(p, QM_PIRQ_DQRI);
- 		np->p =3D p;
-@@ -574,7 +570,7 @@ static enum qman_cb_dqrr_result caam_rsp_fq_dqrr_cb(str=
-uct qman_portal *p,
- 	struct caam_drv_private *priv =3D dev_get_drvdata(qidev);
- 	u32 status;
+ 	udev =3D zd_usb_to_usbdev(usb);
 =20
--	if (caam_qi_napi_schedule(p, caam_napi))
-+	if (caam_qi_napi_schedule(p, caam_napi, napi))
- 		return qman_cb_dqrr_stop;
+@@ -1966,11 +1956,6 @@ int zd_usb_rfwrite(struct zd_usb *usb, u32 value, u8=
+ bits)
+ 	int i, req_len, actual_req_len;
+ 	u16 bit_value_template;
 =20
- 	fd =3D &dqrr->fd;
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			"error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
+ 	if (bits < USB_MIN_RFWRITE_BIT_COUNT) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+ 			"error: bits %d are smaller than"
 --=20
 2.28.0
 
