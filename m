@@ -2,133 +2,215 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3A6C4363A
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4AECC63697
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:37:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB2A02054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E21020790
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:37:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LC4YHuua"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="A8sjR+wh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387525AbgJ1W3L (ORCPT
+        id S2388669AbgJ2Aha (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:29:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387519AbgJ1W3J (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:29:09 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86A4FC0613CF;
-        Wed, 28 Oct 2020 15:29:09 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id h22so754139wmb.0;
-        Wed, 28 Oct 2020 15:29:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=DQuN3G1QJvsPZrMdEIGvp5UTrwD1/Moi8emoV7bj3lU=;
-        b=LC4YHuuaO3S5nUzs7zaNiLYtN3uzYyBPbHmVlyELMjyYQI2K3s5mLTvKZeYQKRBMcq
-         sjORrjlPXAScZvnJSKJ8jtshEw1AYZMyrcZWgtzut8M6MgvPhyNXHh9gFG8nMaYMQlv8
-         w7zxui7LntcCnup3JLTHNAVtq2+d4tyQjUwm9i4mkglptLWMEXCD/0MeW7e/13G6o8zJ
-         qMsdpNv4Pt4d0ZHaeLfukoJoc6YJQxyvV94n6/9IzcOdRoFHPaJUTXXVglbDM7A6iON0
-         UF/JQkV5NVgN9uavRPtlf7UXj7XIiaALHyl6dfFnZmqE7UT7TI52KNfa+BlxgyFb6bX8
-         ixaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=DQuN3G1QJvsPZrMdEIGvp5UTrwD1/Moi8emoV7bj3lU=;
-        b=ZoAKWHN4xrrhF33LxhxhJa+4/x/xR0nFrQgmjd9cg763cSTR2xMeog1ThCi7RInAhf
-         s8Yzk3EsvtRWo6DmHhynsyCWlAyX2ebC7ntsd7EH3XE7RRSmGHpymNWqghF1XnEf2ui+
-         ME14FTBMAkf3wwCNxQyfQYQ7WMLfRun8qZaMxZMpvKIUtLmRTx+rpQIBOXxrrrn24x/Y
-         rz27cDFB5nC0wvJTVBOMudppKEfEzwnaAjQzzOq1Wo037sxSUJ4UXR5I9X/uLfdNq3Q5
-         KUIWJDZgbvwj9a/gV2DJDXXJfqXX7XBWzYrgKuOWRNxHRdBpDRTl7IU+GPxGbapOdMRv
-         XKoA==
-X-Gm-Message-State: AOAM530T95ROvDGRYt3xZ/PyHYuZMSm9ae3/FP4i6epIhd48TczPnKZC
-        PZk3IqZV9g9sKIKRCZ0QqEue68grazVRNw==
-X-Google-Smtp-Source: ABdhPJxeUhBlNyysFLBT7LARqEkmyOal5vA/3C8IvhTxsjlghwyoGttTKXfUBkKui85S/NaXf8eFCw==
-X-Received: by 2002:a1c:7d49:: with SMTP id y70mr40839wmc.103.1603909267772;
-        Wed, 28 Oct 2020 11:21:07 -0700 (PDT)
-Received: from nogikh.c.googlers.com.com (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
-        by smtp.gmail.com with ESMTPSA id r28sm531178wrr.81.2020.10.28.11.21.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 11:21:07 -0700 (PDT)
-From:   Aleksandr Nogikh <aleksandrnogikh@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net
-Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
-        elver@google.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        willemdebruijn.kernel@gmail.com,
-        Aleksandr Nogikh <nogikh@google.com>
-Subject: [PATCH v4 3/3] mac80211: add KCOV remote annotations to incoming frame processing
-Date:   Wed, 28 Oct 2020 18:20:18 +0000
-Message-Id: <20201028182018.1780842-4-aleksandrnogikh@gmail.com>
-X-Mailer: git-send-email 2.29.0.rc2.309.g374f81d7ae-goog
-In-Reply-To: <20201028182018.1780842-1-aleksandrnogikh@gmail.com>
-References: <20201028182018.1780842-1-aleksandrnogikh@gmail.com>
+        Wed, 28 Oct 2020 20:37:30 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:25060 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730689AbgJ2Agx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Oct 2020 20:36:53 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603931812; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: Date: Subject: In-Reply-To: References: Cc:
+ To: From: Sender; bh=3TAscz14oWrbc634rB6juc5q//Mynt4kR9cWgTjp0rw=; b=A8sjR+whuDF5E8fl3+IzpDZo57K+EX4b0+XSC4+C5TgVksKYIbAgHnIGto52YXB9JiKNheAK
+ +4Q4wTvHOxvCesnUkewVzl2DC/KVGCCeZ0ri7aADU1GPIDU2yxXqbF+lCFBFAD9phmtZ+3xr
+ M8xu/UOteSy8bGlUZ5rx6fsKfrQ=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5f999f4ec524f1103641ca43 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 28 Oct 2020 16:41:50
+ GMT
+Sender: pillair=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 80CF2C433FF; Wed, 28 Oct 2020 16:41:49 +0000 (UTC)
+Received: from Pillair (unknown [49.205.247.166])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 435C8C433CB;
+        Wed, 28 Oct 2020 16:41:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 435C8C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pillair@codeaurora.org
+From:   "Rakesh Pillai" <pillair@codeaurora.org>
+To:     "'Doug Anderson'" <dianders@chromium.org>
+Cc:     "'ath10k'" <ath10k@lists.infradead.org>,
+        "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+        "'LKML'" <linux-kernel@vger.kernel.org>,
+        "'Abhishek Kumar'" <kuabhs@chromium.org>,
+        "'Brian Norris'" <briannorris@chromium.org>
+References: <1603811067-23058-1-git-send-email-pillair@codeaurora.org> <CAD=FV=XRyeXcE93nZgOy+x5eWcHcKKwbJccuWFkx+cA8tEXwZQ@mail.gmail.com> <003801d6ad41$a1bb8970$e5329c50$@codeaurora.org> <CAD=FV=U_Dwb=YRMKcKME9vdxbSgSn-08dznoVXY6VzCaHL8OnQ@mail.gmail.com>
+In-Reply-To: <CAD=FV=U_Dwb=YRMKcKME9vdxbSgSn-08dznoVXY6VzCaHL8OnQ@mail.gmail.com>
+Subject: RE: [PATCH] ath10k: Fix the parsing error in service available event
+Date:   Wed, 28 Oct 2020 22:11:43 +0530
+Message-ID: <003a01d6ad49$3a93f040$afbbd0c0$@codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJiqwpvoy2iSO2kR0YP6ePedJFSmQFbRrV/AemjQRUBizF6+6huuv3w
+Content-Language: en-us
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Aleksandr Nogikh <nogikh@google.com>
 
-Add KCOV remote annotations to ieee80211_iface_work and
-ieee80211_rx. This will enable coverage-guided fuzzing of
-mac80211 code that processes incoming 802.11 frames.
 
-Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
----
-v1 -> v2:
-* The commit now affects ieee80211_rx instead of
-  ieee80211_tasklet_handler.
----
- include/net/mac80211.h | 2 ++
- net/mac80211/iface.c   | 2 ++
- 2 files changed, 4 insertions(+)
+> -----Original Message-----
+> From: Doug Anderson <dianders@chromium.org>
+> Sent: Wednesday, October 28, 2020 9:33 PM
+> To: Rakesh Pillai <pillair@codeaurora.org>
+> Cc: ath10k <ath10k@lists.infradead.org>; linux-wireless <linux-
+> wireless@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>; =
+Abhishek
+> Kumar <kuabhs@chromium.org>; Brian Norris <briannorris@chromium.org>
+> Subject: Re: [PATCH] ath10k: Fix the parsing error in service =
+available event
+>=20
+> Hi,
+>=20
+> On Wed, Oct 28, 2020 at 8:47 AM Rakesh Pillai <pillair@codeaurora.org>
+> wrote:
+> >
+> > > -----Original Message-----
+> > > From: Doug Anderson <dianders@chromium.org>
+> > > Sent: Wednesday, October 28, 2020 8:07 PM
+> > > To: Rakesh Pillai <pillair@codeaurora.org>
+> > > Cc: ath10k <ath10k@lists.infradead.org>; linux-wireless <linux-
+> > > wireless@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>;
+> Abhishek
+> > > Kumar <kuabhs@chromium.org>; Brian Norris
+> <briannorris@chromium.org>
+> > > Subject: Re: [PATCH] ath10k: Fix the parsing error in service =
+available
+> event
+> > >
+> > > Hi,
+> > >
+> > > On Tue, Oct 27, 2020 at 8:20 AM Rakesh Pillai =
+<pillair@codeaurora.org>
+> > > wrote:
+> > > >
+> > > > The wmi service available event has been
+> > > > extended to contain extra 128 bit for new services
+> > > > to be indicated by firmware.
+> > > >
+> > > > Currently the presence of any optional TLVs in
+> > > > the wmi service available event leads to a parsing
+> > > > error with the below error message:
+> > > > ath10k_snoc 18800000.wifi: failed to parse svc_avail tlv: -71
+> > > >
+> > > > The wmi service available event parsing should
+> > > > not return error for the newly added optional TLV.
+> > > > Fix this parsing for service available event message.
+> > > >
+> > > > Tested-on: WCN3990 hw1.0 SNOC
+> > > >
+> > > > Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> > > > ---
+> > > >  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 3 +++
+> > > >  1 file changed, 3 insertions(+)
+> > > >
+> > > > diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > > index 932266d..3b49e29 100644
+> > > > --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > > +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > > @@ -1404,9 +1404,12 @@ static int
+> ath10k_wmi_tlv_svc_avail_parse(struct
+> > > ath10k *ar, u16 tag, u16 len,
+> > > >                 arg->service_map_ext_len =3D *(__le32 *)ptr;
+> > > >                 arg->service_map_ext =3D ptr + sizeof(__le32);
+> > > >                 return 0;
+> > > > +       case WMI_TLV_TAG_FIRST_ARRAY_ENUM:
+> > > > +               return 0;
+> > >
+> > > This is at least slightly worrying to me.  If I were calling this
+> > > function, I'd expect that if I didn't get back an error that at =
+least
+> > > "arg->service_map_ext_len" was filled in.  Seems like you should =
+do:
+> > >
+> > > case WMI_TLV_TAG_FIRST_ARRAY_ENUM:
+> > >   arg->service_map_ext_len =3D 0;
+> > >   arg->service_map_ext =3D NULL;
+> > >   return 0;
+> > >
+> > > ...and maybe add a comment about why you're doing that?
+> > >
+> > > At the moment things are working OK because
+> > > ath10k_wmi_event_service_available() happens to init the structure =
+to
+> > > 0 before calling with:
+> > >
+> > >   struct wmi_svc_avail_ev_arg arg =3D {};
+> > >
+> > > ....but it doesn't seem like a great idea to rely on that.
+> > >
+> > > That all being said, I'm just a drive-by reviewer and if everyone =
+else
+> > > likes it the way it is, feel free to ignore my comments.
+> >
+> >
+> > Hi Doug,
+> >
+> > The TLV TAG " WMI_TLV_TAG_STRUCT_SERVICE_AVAILABLE_EVENT" is
+> the first and a mandatory TLV in the service available event.
+> > The subsequent TLVs are optional ones and may or may not be present
+> (based on FW versions).
+> > This patch just fixes the bug, where the presence of any other TLVs =
+are
+> leading to a failure in parsing the service available msg.
+> > If, in future, we plan to use any other services from firmware, =
+which is
+> exposed in the extended TLVs, we will need to add a new variable (and =
+not
+> service_map_ext) to set the service.
+>=20
+> I'm not sure I totally understood your response, but look at it from
+> the perspective of the function ath10k_wmi_event_service_available().
+>=20
+> That function calls:
+>=20
+>   ret =3D ath10k_wmi_pull_svc_avail(ar, skb, &arg);
+>=20
+> ...if it gets back a non-zero error code, it assumes that the
+> "arg.service_map_ext" and "arg.service_map_ext_len" values are now
+> valid and it can use them.
+>=20
+> Before your patch, ath10k_wmi_pull_svc_avail() was returning an error
+> code.  That let ath10k_wmi_event_service_available() know that it
+> shouldn't look at "arg.service_map_ext" and "arg.service_map_ext_len".
+> After your patch, you're not returning an error code but those fields
+> aren't being filled in.
+>=20
+> Said another way, if you remove the initialization of "arg" in
+> ath10k_wmi_event_service_available() then everything is broken.  While
+> things work because you _do_ have an initialization of "arg" in
+> ath10k_wmi_event_service_available(), it feels fragile to me to rely
+> on that.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e8e295dae744..f4c37a1b381e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4499,7 +4499,9 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
-  */
- static inline void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
-+	kcov_remote_start_common(skb_get_kcov_handle(skb));
- 	ieee80211_rx_napi(hw, NULL, skb, NULL);
-+	kcov_remote_stop();
- }
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 1be775979132..56a1bcea2c1c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1356,6 +1356,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
- 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
- 
-+		kcov_remote_start_common(skb_get_kcov_handle(skb));
- 		if (ieee80211_is_action(mgmt->frame_control) &&
- 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
-@@ -1465,6 +1466,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 		}
- 
- 		kfree_skb(skb);
-+		kcov_remote_stop();
- 	}
- 
- 	/* then other type-dependent work */
--- 
-2.29.0.rc2.309.g374f81d7ae-goog
+Hi Doug,
+Got it. I will send a v2 which will address this concern.
+
+>=20
+>=20
+> -Doug
 
