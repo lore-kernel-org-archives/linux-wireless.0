@@ -2,128 +2,81 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5848AC388F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C9BC5517A
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 037F6208C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8F9F20878
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PgW57MjB"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="OEybUJds"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727743AbgJ2CDo (ORCPT
+        id S2387464AbgJ2CES (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 22:03:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726865AbgJ1VsD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:48:03 -0400
-Received: from mail-oi1-x241.google.com (mail-oi1-x241.google.com [IPv6:2607:f8b0:4864:20::241])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBF23C0613D1;
-        Wed, 28 Oct 2020 14:48:03 -0700 (PDT)
-Received: by mail-oi1-x241.google.com with SMTP id x1so1090952oic.13;
-        Wed, 28 Oct 2020 14:48:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=3zaGVF/vRB8F3ZfUMCb7b4cb/WN/x096ZDL+SPEx+Nc=;
-        b=PgW57MjBfkv/pDJis6/z8OJ5FjZvPRloQO8Q8OaNappYffXSAsSfkcDzRsKG+GbBTv
-         ITudr4QvE9TXbsG2R9Dyja7yX4JRx6RIdXGED3Xf7DHv/y+o3CtpwDlNgxnRLibWgTnl
-         x/Qqhog2QHiU4BHKhuO0fjTSJDHPbz4JWsGR8MVcOzityq3d63V9dZhHtx1g4UZbFB1t
-         yqPcJvJ83EEABZohcwrrSJO3DdAzlXHS76U344l1XT0RgDeRa8GNVZ4po7UiG3+3qecD
-         fzR0ApV2PmWz3PVQueHSCMMBpv6LcAeDjqExX4zkJNIa/ou7auEea+splwDD8DeQK6d7
-         GFpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=3zaGVF/vRB8F3ZfUMCb7b4cb/WN/x096ZDL+SPEx+Nc=;
-        b=gvaD/qOFg2/Ln3dq1K4jSJLzbdix5R3z3YKhkCu4jXE4BLBQLPHrXtLjE8zrUEfUKQ
-         Tc2EJ/6gHsVQf2UdQQBTqMbxKrYMh2eSNyzOPk1+ZeQgjBRUqxkiTVxNSJyxuLCjKuYs
-         1p8GJGCNnS7EjxEUoZHOgRnHRcM9gwGlWSq/DAC7jsouMU85MZb2/rx2xoUc8WE3SFdL
-         gyqDmpQ02eOX9ojWtz7FGDNAF89ckegQ1h7x1AaWF3uRCKHL+zxYSdYeCHdPwDrnu/6Z
-         RwmADQgtOpVaEawipsAxjEe1FiHuIe0AkPDyZb9kg/NAnVVmnVX+q+AbGWmmOWpXVEhx
-         yjaA==
-X-Gm-Message-State: AOAM533W/IEV3KQQE7+vhyvX4LybrtdJM6Kz6rGpuIZjZYtTVKhn/G5A
-        ezzuEf4R6KhFlyHOrBgkIBMdsOqJETdRuyK6
-X-Google-Smtp-Source: ABdhPJy4xaFFSb67eIdsE6yHQCjXYR1ulDiZ6JWAFabC/3uwCf7CfY4vHIFnetkjx6OwdcANGFeH+w==
-X-Received: by 2002:a17:90a:e604:: with SMTP id j4mr6796905pjy.204.1603895135618;
-        Wed, 28 Oct 2020 07:25:35 -0700 (PDT)
-Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
-        by smtp.gmail.com with ESMTPSA id 194sm6227192pfz.182.2020.10.28.07.25.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:25:35 -0700 (PDT)
-From:   Tsuchiya Yuto <kitakar@gmail.com>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
-        Tsuchiya Yuto <kitakar@gmail.com>
-Subject: [PATCH 1/3] mwifiex: disable ps_mode explicitly by default instead
-Date:   Wed, 28 Oct 2020 23:24:31 +0900
-Message-Id: <20201028142433.18501-2-kitakar@gmail.com>
-X-Mailer: git-send-email 2.29.1
-In-Reply-To: <20201028142433.18501-1-kitakar@gmail.com>
-References: <20201028142433.18501-1-kitakar@gmail.com>
+        Wed, 28 Oct 2020 22:04:18 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:24722 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727260AbgJ1Vkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:40:51 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603921250; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=wt8VkeKIDUm9k4EBM6zla/qDkcxejK6rCPdTNsrTI1o=;
+ b=OEybUJdsv02Ss+ACvu7SX4fcGNzDUnwkfkfgQrXfRzftF2W3bpckqtjFgETY5HQbhe2uwWF4
+ uDooajdKrgt5D37FzGI3oDxlnxU40aHz5oiTG93Jtf+K5yEoQMoMmo8xCB0Edc44GXXbQHCW
+ zkXA02ANf0dyVHGQJoytpRn0hxw=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 5f9975b5bda0919e91bfa447 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 28 Oct 2020 13:44:21
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4F695C43382; Wed, 28 Oct 2020 13:44:20 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0B627C433FE;
+        Wed, 28 Oct 2020 13:44:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0B627C433FE
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath11k: remove repeated words in comments and warnings
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1603803705-22447-1-git-send-email-kvalo@codeaurora.org>
+References: <1603803705-22447-1-git-send-email-kvalo@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20201028134420.4F695C43382@smtp.codeaurora.org>
+Date:   Wed, 28 Oct 2020 13:44:20 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Microsoft Surface devices (PCIe-88W8897), the ps_mode causes
-connection unstable, especially with 5GHz APs. Then, it eventually causes
-fw crash.
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-This commit disables ps_mode by default instead of enabling it.
+> Found by latest checkpatch.
+> 
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Required code is extracted from mwifiex_drv_set_power().
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+16f283f0a4bb ath11k: remove repeated words in comments and warnings
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index d3a968ef21ef9..9b7b52fbc9c45 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2333,14 +2333,19 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 			return -1;
- 
- 		if (priv->bss_type != MWIFIEX_BSS_TYPE_UAP) {
--			/* Enable IEEE PS by default */
--			priv->adapter->ps_mode = MWIFIEX_802_11_POWER_MODE_PSP;
-+			/* Disable IEEE PS by default */
-+			priv->adapter->ps_mode = MWIFIEX_802_11_POWER_MODE_CAM;
- 			ret = mwifiex_send_cmd(priv,
- 					       HostCmd_CMD_802_11_PS_MODE_ENH,
--					       EN_AUTO_PS, BITMAP_STA_PS, NULL,
-+					       DIS_AUTO_PS, BITMAP_STA_PS, NULL,
- 					       true);
- 			if (ret)
- 				return -1;
-+			ret = mwifiex_send_cmd(priv,
-+					       HostCmd_CMD_802_11_PS_MODE_ENH,
-+					       GET_PS, 0, NULL, false);
-+			if (ret)
-+				return -1;
- 		}
- 
- 		if (drcs) {
 -- 
-2.29.1
+https://patchwork.kernel.org/project/linux-wireless/patch/1603803705-22447-1-git-send-email-kvalo@codeaurora.org/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
