@@ -2,100 +2,107 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6C9C388F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71EE7C388F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C4EB206D5
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:53:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DE3720878
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:03:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ExPEUdPF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728708AbgJ2BxG (ORCPT
+        id S1727800AbgJ2CC6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:53:06 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:39447 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728387AbgJ1V5l (ORCPT
+        Wed, 28 Oct 2020 22:02:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48468 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727956AbgJ1Vss (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:57:41 -0400
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09S4fO121001014, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb03.realtek.com.tw[172.21.6.96])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09S4fO121001014
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 28 Oct 2020 12:41:24 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Wed, 28 Oct 2020 12:41:24 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa]) by
- RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa%3]) with mapi id
- 15.01.2044.006; Wed, 28 Oct 2020 12:41:24 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "baijiaju1990@gmail.com" <baijiaju1990@gmail.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "straube.linux@gmail.com" <straube.linux@gmail.com>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] rtl8192ce: avoid accessing the data mapped to streaming DMA
-Thread-Topic: [PATCH] rtl8192ce: avoid accessing the data mapped to streaming
- DMA
-Thread-Index: AQHWpcVKJ30NZbw/gky3yTJLE0YXfKmr90+A
-Date:   Wed, 28 Oct 2020 04:41:24 +0000
-Message-ID: <1603860037.8609.4.camel@realtek.com>
-References: <20201019030931.4796-1-baijiaju1990@gmail.com>
-In-Reply-To: <20201019030931.4796-1-baijiaju1990@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.213]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1774CA54F780E34FA8A502B26F15290C@realtek.com>
-Content-Transfer-Encoding: base64
+        Wed, 28 Oct 2020 17:48:48 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5CDEC0613CF;
+        Wed, 28 Oct 2020 14:48:47 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id 15so590422pgd.12;
+        Wed, 28 Oct 2020 14:48:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mDFQmbb9Oor+vBAFpLMgolt6lpEwXqSbTwfhoYcmKJ4=;
+        b=ExPEUdPF3Xm+2uS0b9noomj3pH3P6KT7BgV0VGm0Frhpr6pJRfgFDRWQRcAT7WkiDg
+         5l+BiTAKPyG2xu97GJuZlzrA2fMjcJBhlMkD9A2UaXfI37ULPCmNrwjqYDS6DZI8ZHux
+         7RuBfNTPKn1y36urOyfwLuDFAVakUd/1sjbth4Bl81AXFh5EJlrUAtG52H1sX8f4OgAQ
+         A0qspxGC/3lR3zofyDoarZrTg0eRLQxHrzYn46JR6DNcSmBcPj3ZzYaNSS2azefKQGeI
+         u/wIK1+8I+1ShHYo2zvInZ3vhSkww9/6s8VB+vuo8WewXMVAHWkhx78uoNAsw1n2sX5+
+         ksZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mDFQmbb9Oor+vBAFpLMgolt6lpEwXqSbTwfhoYcmKJ4=;
+        b=JUW+aCt6OOOyovtYhVkoEmNO6+0HBdfSm5RAvuKK208BOSOa6Ax+M+FQcu+sehkAin
+         lWSOeIHSZmt7Vz2Mzo8eEEKwkBe1a1SappLO4igA/yWN2ChL3bXNE3f8ohenA9eWj/KC
+         h+2QTuiPgUh6RCyD6DBQ+cdHYfI71OGKbl4EqIBpAVSHebdDwSmHUayr7udqBAeAihr6
+         AEPLalqmfrDhgl2KPWqLBD/nU18mNz4fG79zlXNS4TZFszwhKE1TyNyTuTK2gECxAWOC
+         ZJzR9PCK6y9NFh6BaQup5/E8CZwqzzRbrQn57spypsK98sq/Shy3YAAAdvPgPp1eWVJ4
+         pzIQ==
+X-Gm-Message-State: AOAM531BY6jXPkQZJUfOHNALuBM4QPWqxXov6OpSQ+94S9a1QpUAG75w
+        OE0eU+wW8Ye1HmcyaJCMI9++33HYGM2v4DFF
+X-Google-Smtp-Source: ABdhPJwHgNGzQP+mlfd2dLKOX6i2lZzzISYlYkmDUe4jJyeRFLirQgDbRCiMi/SI8aTLnf4kKdpTUA==
+X-Received: by 2002:a65:6093:: with SMTP id t19mr6615108pgu.234.1603894954787;
+        Wed, 28 Oct 2020 07:22:34 -0700 (PDT)
+Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
+        by smtp.gmail.com with ESMTPSA id c12sm6293543pgi.14.2020.10.28.07.22.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 07:22:34 -0700 (PDT)
+From:   Tsuchiya Yuto <kitakar@gmail.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
+        Tsuchiya Yuto <kitakar@gmail.com>
+Subject: [PATCH 0/2] mwifiex: fixes for shutdown_sw() and reinit_sw()
+Date:   Wed, 28 Oct 2020 23:21:08 +0900
+Message-Id: <20201028142110.18144-1-kitakar@gmail.com>
+X-Mailer: git-send-email 2.29.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gTW9uLCAyMDIwLTEwLTE5IGF0IDExOjA5ICswODAwLCBKaWEtSnUgQmFpIHdyb3RlOg0KPiBJ
-biBydGw5MmNlX3R4X2ZpbGxfY21kZGVzYygpLCBza2ItPmRhdGEgaXMgbWFwcGVkIHRvIHN0cmVh
-bWluZyBETUEgb24NCj4gbGluZSA1MzA6DQo+IMKgIGRtYV9hZGRyX3QgbWFwcGluZyA9IGRtYV9t
-YXBfc2luZ2xlKC4uLiwgc2tiLT5kYXRhLCAuLi4pOw0KPiANCj4gT24gbGluZSA1MzMsIHNrYi0+
-ZGF0YSBpcyBhc3NpZ25lZCB0byBoZHIgYWZ0ZXIgY2FzdDoNCj4gwqAgc3RydWN0IGllZWU4MDIx
-MV9oZHIgKmhkciA9IChzdHJ1Y3QgaWVlZTgwMjExX2hkciAqKShza2ItPmRhdGEpOw0KPiANCj4g
-VGhlbiBoZHItPmZyYW1lX2NvbnRyb2wgaXMgYWNjZXNzZWQgb24gbGluZSA1MzQ6DQo+IMKgIF9f
-bGUxNiBmYyA9IGhkci0+ZnJhbWVfY29udHJvbDsNCj4gDQo+IFRoaXMgRE1BIGFjY2VzcyBtYXkg
-Y2F1c2UgZGF0YSBpbmNvbnNpc3RlbmN5IGJldHdlZW4gQ1BVIGFuZCBoYXJkd3JlLg0KPiANCj4g
-VG8gZml4IHRoaXMgYnVnLCBoZHItPmZyYW1lX2NvbnRyb2wgaXMgYWNjZXNzZWQgYmVmb3JlIHRo
-ZSBETUEgbWFwcGluZy4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEppYS1KdSBCYWkgPGJhaWppYWp1
-MTk5MEBnbWFpbC5jb20+DQo+IC0tLQ0KPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnRsd2lmaS9ydGw4MTkyY2UvdHJ4LmMgfCA2ICsrKy0tLQ0KPiDCoDEgZmlsZSBjaGFuZ2VkLCAz
-IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJjZS90cnguYw0KPiBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTkyY2UvdHJ4LmMNCj4gaW5kZXgg
-YzA2MzUzMDlhOTJkLi40MTY1MTc1Y2Y1YzAgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTkyY2UvdHJ4LmMNCj4gKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJjZS90cnguYw0KPiBAQCAtNTI3LDEy
-ICs1MjcsMTIgQEAgdm9pZCBydGw5MmNlX3R4X2ZpbGxfY21kZGVzYyhzdHJ1Y3QgaWVlZTgwMjEx
-X2h3ICpodywNCj4gwqAJdTggZndfcXVldWUgPSBRU0xUX0JFQUNPTjsNCj4gwqAJX19sZTMyICpw
-ZGVzYyA9IChfX2xlMzIgKilwZGVzYzg7DQo+IMKgDQo+IC0JZG1hX2FkZHJfdCBtYXBwaW5nID0g
-ZG1hX21hcF9zaW5nbGUoJnJ0bHBjaS0+cGRldi0+ZGV2LCBza2ItPmRhdGEsDQo+IC0JCQkJCcKg
-wqDCoMKgc2tiLT5sZW4sIERNQV9UT19ERVZJQ0UpOw0KPiAtDQo+IMKgCXN0cnVjdCBpZWVlODAy
-MTFfaGRyICpoZHIgPSAoc3RydWN0IGllZWU4MDIxMV9oZHIgKikoc2tiLT5kYXRhKTsNCj4gwqAJ
-X19sZTE2IGZjID0gaGRyLT5mcmFtZV9jb250cm9sOw0KPiDCoA0KPiArCWRtYV9hZGRyX3QgbWFw
-cGluZyA9IGRtYV9tYXBfc2luZ2xlKCZydGxwY2ktPnBkZXYtPmRldiwgc2tiLT5kYXRhLA0KPiAr
-CQkJCQnCoMKgwqDCoHNrYi0+bGVuLCBETUFfVE9fREVWSUNFKTsNCj4gKw0KPiDCoAlpZiAoZG1h
-X21hcHBpbmdfZXJyb3IoJnJ0bHBjaS0+cGRldi0+ZGV2LCBtYXBwaW5nKSkgew0KPiDCoAkJcnRs
-X2RiZyhydGxwcml2LCBDT01QX1NFTkQsIERCR19UUkFDRSwNCj4gwqAJCQkiRE1BIG1hcHBpbmcg
-ZXJyb3JcbiIpOw0KDQpUaGUgY2hhbmdlcyBvZiB0aGUgc2VyaWVzIHBhdGNoZXMgYXJlIGdvb2Qg
-dG8gbWUuwqANCkJ1dCwgcGxlYXNlIHVzZSAncnRsd2lmaTogJyBhcyBzdWJqZWN0IHByZWZpeCwg
-bGlrZSAicnRsd2lmaTrCoHJ0bDgxOTJjZTogLi4uIiwNCmFuZCBzZW5kIHRoZW0gYXMgYSBwYXRj
-aHNldCBJIHRoaW5rIHRoaXMgd291bGQgYmUgYmV0dGVyIHRvIG1haW50YWluZXIuDQoNClRoYW5r
-IHlvdQ0KDQotLS0NClBLDQo=
+Hello all,
+
+This series fixes a software level reset feature. We, Microsoft Surface
+devices users observed this issue, where firmware reset requires another
+quirk. The other device users might not notice this issue because if
+the reset is performed for the firmware level, this issue can't be
+observed easily.
+
+While here, update description of shutdown_sw() and reinit_sw() functions
+to reflect current state.
+
+Thanks,
+Tsuchiya Yuto
+
+Tsuchiya Yuto (2):
+  mwifiex: fix mwifiex_shutdown_sw() causing sw reset failure
+  mwifiex: update comment for shutdown_sw()/reinit_sw() to reflect
+    current state
+
+ drivers/net/wireless/marvell/mwifiex/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+-- 
+2.29.1
+
