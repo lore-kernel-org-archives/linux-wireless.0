@@ -2,151 +2,108 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC76FC388F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 979C4C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:11:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 629BC2071A
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3ADC720714
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 01:11:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EEBx/en4"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IyTD+Hke"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731866AbgJ2BEl (ORCPT
+        id S1729778AbgJ2BLt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:04:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51510 "EHLO
+        Wed, 28 Oct 2020 21:11:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728543AbgJ1WGJ (ORCPT
+        with ESMTP id S1729683AbgJ1WFM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:06:09 -0400
-Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46D13C0613CF;
-        Wed, 28 Oct 2020 15:06:08 -0700 (PDT)
-Received: by mail-io1-xd41.google.com with SMTP id p7so1151611ioo.6;
-        Wed, 28 Oct 2020 15:06:08 -0700 (PDT)
+        Wed, 28 Oct 2020 18:05:12 -0400
+Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 968E4C0613D1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 15:05:11 -0700 (PDT)
+Received: by mail-lf1-x143.google.com with SMTP id 184so758830lfd.6
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 15:05:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=AMavcgab6f/G1LUhaSL/VnJNMSO60VRuV52F7ID9Z1w=;
-        b=EEBx/en4jUjbpcytmaGqmQqZoK88eThP+DK9XrxHaN1SQ97f4DrSYomDP9X0SkW/q0
-         0Ber+eFxG+cd5uPhS9kdMvcxwOsNyvUepSmCzF0TsiaP4hVWzXTUgLvgS/dMFSOxyzGk
-         16u+I0XQc8qsTHSPvYyz4rHV/3lQF3ThUC3tsDsCPS7dA5Ch0eGbrwSUZZ0hL3TNeOZG
-         CN+mzBK34uZp1FOpOIHpgudSrBlFlgzn5ZeXE3KM3F4rVihVfxpyLVG39v8DBIYrtkyE
-         jP4hkiJ1Zb4zzHVZo4l6i5dRHdIorBBpHSNi4Xnn8MEx3bY91Z+6rCAstCz6GCl+fxKY
-         ymrg==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6RgMxKcrxfWcCrPGpUNDV3hziCJkG59Qu7/5cCUuIBQ=;
+        b=IyTD+Hke82m6aRlezzLOka0h4MepZinimVyEYyRZqSWlegMfn0lYc8H/2OUV8yMtSq
+         tMzhUkYkKnHUX8dcuDZIbjXEUAObRpf/BEeMw+pgRYZiIMJ96queOmywsDyVJ5OxWOxr
+         HEl8PS8ayrpRyfa9dqdJZlbekwaI2p8yDlWxM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=AMavcgab6f/G1LUhaSL/VnJNMSO60VRuV52F7ID9Z1w=;
-        b=CKpYiUzKGjXL4CxtU6+GaP15fd6Xsqjtz/dqg2P6v2vodl49iA5RdZr4bSTV2cy3iq
-         dDGX8FUFw7YMQtmDKOSZqmTLmMMc6SbFohuC0uRg8/dPmhHvjf1BcQSlHvjsyQnGjGFm
-         PO/UnaQuUbBrWTzN9BLdxsAKQNQzZ3w7gG3ikuLPaNCy6GuHmgyFhVRSb2Lfmr8qHkKG
-         vyPvBQwGayPlrdRRB4rwyd8/xg4a7ir6gcrv9BOCwY1HddWTFv4js6LL8QMRdQRndrjJ
-         WDjJCvVJohq3qmvoiFy9Qu615C/JZqc39FQ/l8nKsda9eP/sli9WSfkSz2sDPW81acKZ
-         2C9Q==
-X-Gm-Message-State: AOAM530SG7VqaJa7OiXisKna++lsnFpXsOKaIaweltNijmCeZU1ZQYhU
-        nQtB9MEYCrhWfa5sFo05UoYfxYh0LodR5Nde
-X-Google-Smtp-Source: ABdhPJxizRPARCHdEsCXjgrcYCTJx2PzRg4bj6IZWfYbOoEie0tP3vFgu3sgYYebDUS52otqnjvptw==
-X-Received: by 2002:a65:62ca:: with SMTP id m10mr6618468pgv.407.1603894962096;
-        Wed, 28 Oct 2020 07:22:42 -0700 (PDT)
-Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
-        by smtp.gmail.com with ESMTPSA id c12sm6293543pgi.14.2020.10.28.07.22.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:22:41 -0700 (PDT)
-From:   Tsuchiya Yuto <kitakar@gmail.com>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6RgMxKcrxfWcCrPGpUNDV3hziCJkG59Qu7/5cCUuIBQ=;
+        b=hL1aJXCt/HnElX8UpALWyMUUwAR5axCV2J/S68QXai4UIGWPZKPcSrX/WlxJYhnTe4
+         Qt9r2Up9yTT3nbj+OKzi7SWnIqUq/j/b0GmI4kOaIpGKaZm/y+naQngFPV6oEZgdBrMn
+         heu5zEA+ykkI8dI13ctfvlZaHr4WWLfZSx2KLEnKKlB3+l04W48EDSed15ei0ZOsXA5p
+         47Xt0zkHqcRXhn4C170vaYv0zqEDJvhqTB2mKCI4ZKuP7QJKaUFVgcYStW7yXkwjEqC2
+         +2UzSzUS930AZAWvla0F96gzgsemgT8JUlg4KZJ8yn4aR2JzADUfsEZa7uuQHvloefXx
+         As9Q==
+X-Gm-Message-State: AOAM532x4DsA639xKrL+GE5jvRPqSr8foU1brr0s9QmwZFaE5kRkc8y4
+        d08s2dDnluQ6EN6JhovosqZSHomQGjGciQ==
+X-Google-Smtp-Source: ABdhPJyBxfyk9mVhNf6ap5xJMi7K7UIpNMVN/KIIRQomsyaX8EEdSVh6PBojUdAE0rdIjigRxyJ+Wg==
+X-Received: by 2002:a19:185:: with SMTP id 127mr441536lfb.356.1603922709744;
+        Wed, 28 Oct 2020 15:05:09 -0700 (PDT)
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
+        by smtp.gmail.com with ESMTPSA id y19sm97548ljc.4.2020.10.28.15.05.07
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2020 15:05:07 -0700 (PDT)
+Received: by mail-lf1-f45.google.com with SMTP id a7so731993lfk.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 15:05:07 -0700 (PDT)
+X-Received: by 2002:ac2:4d03:: with SMTP id r3mr450997lfi.89.1603922707215;
+ Wed, 28 Oct 2020 15:05:07 -0700 (PDT)
+MIME-Version: 1.0
+References: <20201028142433.18501-1-kitakar@gmail.com> <20201028142433.18501-3-kitakar@gmail.com>
+In-Reply-To: <20201028142433.18501-3-kitakar@gmail.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Wed, 28 Oct 2020 15:04:55 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXMXoyOr9oHBjtXZ1w9XxDggv+=XS4nwn0qKWCHQ3kybdw@mail.gmail.com>
+Message-ID: <CA+ASDXMXoyOr9oHBjtXZ1w9XxDggv+=XS4nwn0qKWCHQ3kybdw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] mwifiex: add allow_ps_mode module parameter
+To:     Tsuchiya Yuto <kitakar@gmail.com>
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Xinming Hu <huxinming820@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
         Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
-        Tsuchiya Yuto <kitakar@gmail.com>
-Subject: [PATCH 1/2] mwifiex: fix mwifiex_shutdown_sw() causing sw reset failure
-Date:   Wed, 28 Oct 2020 23:21:09 +0900
-Message-Id: <20201028142110.18144-2-kitakar@gmail.com>
-X-Mailer: git-send-email 2.29.1
-In-Reply-To: <20201028142110.18144-1-kitakar@gmail.com>
-References: <20201028142110.18144-1-kitakar@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When FLR is performed but without fw reset for some reasons (e.g. on
-Surface devices, fw reset requires another quirk), it fails to reset
-properly. You can trigger the issue on such devices via debugfs entry
-for reset:
+On Wed, Oct 28, 2020 at 2:56 PM Tsuchiya Yuto <kitakar@gmail.com> wrote:
+>
+> To make the ps_mode (power_save) control easier, this commit adds a new
+> module parameter allow_ps_mode and set it false (disallowed) by default.
 
-    $ echo 1 | sudo tee /sys/kernel/debug/mwifiex/mlan0/reset
+This sounds like a bad idea, as it breaks all the existing users who
+expect this feature to be allowed. Seems like you should flip the
+defaults. Without some better justification, NACK.
 
-and the resulting dmesg log:
+Also, I can't find the other 2 patches in this alleged series. Maybe
+they're still making it through the mailing lists and archives.
 
-    [   45.740508] mwifiex_pcie 0000:03:00.0: Resetting per request
-    [   45.742937] mwifiex_pcie 0000:03:00.0: info: successfully disconnected from [BSSID]: reason code 3
-    [   45.744666] mwifiex_pcie 0000:03:00.0: info: shutdown mwifiex...
-    [   45.751530] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.751539] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771691] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771695] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   45.771697] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771698] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   45.771699] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771701] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   45.771702] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771703] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   45.771704] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771705] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   45.771707] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [   45.771708] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   53.099343] mwifiex_pcie 0000:03:00.0: info: trying to associate to '[SSID]' bssid [BSSID]
-    [   53.241870] mwifiex_pcie 0000:03:00.0: info: associated to bssid [BSSID] successfully
-    [   75.377942] mwifiex_pcie 0000:03:00.0: cmd_wait_q terminated: -110
-    [   85.385491] mwifiex_pcie 0000:03:00.0: info: successfully disconnected from [BSSID]: reason code 15
-    [   87.539408] mwifiex_pcie 0000:03:00.0: cmd_wait_q terminated: -110
-    [   87.539412] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [   99.699917] mwifiex_pcie 0000:03:00.0: cmd_wait_q terminated: -110
-    [   99.699925] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [  111.859802] mwifiex_pcie 0000:03:00.0: cmd_wait_q terminated: -110
-    [  111.859808] mwifiex_pcie 0000:03:00.0: deleting the crypto keys
-    [...]
+Brian
 
-When comparing mwifiex_shutdown_sw() with mwifiex_pcie_remove(), it
-lacks mwifiex_init_shutdown_fw().
-
-This commit fixes mwifiex_shutdown_sw() by adding the missing
-mwifiex_init_shutdown_fw().
-
-Fixes: 4c5dae59d2e9 ("mwifiex: add PCIe function level reset support")
-Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/main.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 9ba8a8f64976b..6283df5aaaf8b 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1471,6 +1471,8 @@ int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 	mwifiex_deauthenticate(priv, NULL);
- 
-+	mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
-+
- 	mwifiex_uninit_sw(adapter);
- 	adapter->is_up = false;
- 
--- 
-2.29.1
-
+> When this parameter is set to false, changing the power_save mode will
+> be disallowed like the following:
+>
+>     $ sudo iw dev mlan0 set power_save on
+>     command failed: Operation not permitted (-1)
+>
+> Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
