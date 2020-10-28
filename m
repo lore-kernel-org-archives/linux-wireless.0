@@ -2,215 +2,188 @@ Return-Path: <SRS0=YlWr=ED=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23414C4363A
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 23:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F75C4363A
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 23:33:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9989320756
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 23:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C119A207BC
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 23:33:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bWYaHqkY"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="O/Ivy3Ru"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390002AbgJ1XCd (ORCPT
+        id S1727196AbgJ1XdS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 19:02:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32784 "EHLO
+        Wed, 28 Oct 2020 19:33:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731974AbgJ1XBi (ORCPT
+        with ESMTP id S2390507AbgJ1XbU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 19:01:38 -0400
-Received: from mail-oi1-x243.google.com (mail-oi1-x243.google.com [IPv6:2607:f8b0:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07EBEC0613D1;
-        Wed, 28 Oct 2020 16:01:38 -0700 (PDT)
-Received: by mail-oi1-x243.google.com with SMTP id s21so1355516oij.0;
-        Wed, 28 Oct 2020 16:01:38 -0700 (PDT)
+        Wed, 28 Oct 2020 19:31:20 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60218C0613CF
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 16:31:20 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id z24so813681pgk.3
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 16:31:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=c2/gqc31dmi9zA2aGWplgme+HPGKlgH66xNk9nHvWto=;
-        b=bWYaHqkYPc2iXRaUYFoKv/DT1zz6MURWRCPi1TvR3qcDkoPbIekEzmPv9fA0tiUUHV
-         qLFaTfhYLwHIj4DXvnVBM9C9ZBrKzo9LkCpod1qq6woIR35hdnu1t+ycFMMKMOAj/Ouh
-         Q9AFojKT/trJllLTlX57BeemiX4Z1mRdSwoct7hXd8Vp7B1FgQsbEKOFHWUALeuneMxD
-         +RmzbZcrmxneBDs0XbGHQVgyB7Gh6cHVgphxBLSAspUH3QSEjFRkshzy5HcGkHRJf9+U
-         1cssz7sw1CpiMz1/fstMDGMBE2Jx5Wwgp5KyeFceoBBZV7jPIDSN+/Jvrpnb8p6qcPI8
-         9TFQ==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=lutL77mM1puGVoqt7Nw9AlgWOlFK54HVQ3QwD1U+gIM=;
+        b=O/Ivy3Ru9S8NFuMxeUTduXhnV/j5fokiemcD7qvMICg4A0mITpt7rJmU1k54rj5Enz
+         S4KqZc1VRb3Tta1I6shweaTe605FT0mqwJ2X0W0GLhoUNQeQQ22EMr1YDqpuuyTQzqaz
+         HDQkYqtRiXpKAULNF1TMAUuS3O19+WzB2DBZQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=c2/gqc31dmi9zA2aGWplgme+HPGKlgH66xNk9nHvWto=;
-        b=ZXIpwFAWqyOev8e2wEk5q2uqdZN0pMMnhGZRx1rab+VtWzjUm39BJNnP2QIZuvQUO7
-         J3AXgyx2mmZ11o7NN1Xn6Kf+rwf21bl9X2P6dVKZoSRL/IGDOsfvHFMo0LSLtQuoDCU7
-         hmGu7JryFsLhP3dJgzyAPGk1okLGWesPpVS+NNFuzNuqcF+/ossP3ReFmrIH4Fd4F3NH
-         WRk2pvTP47sLNDDqOnaL1l5W7OCGMw96X/9py5d1GEDyGcwW44Ho6DfloxcoJ6tsekr9
-         bLIzcCxTGQITAUEnroFGgeCuQ5VSpDSjO6SqxeMuLaS/udiqCZ+hNlN0iMvFzkYb7FWe
-         VQog==
-X-Gm-Message-State: AOAM530+TypIMzU2COnLGc30l7gCm4IwUZ66cj+UneybQvHSJntJmaJ0
-        X04JplqoOYIeB+aWYFzRGLmc+LfYuFg3LFIa
-X-Google-Smtp-Source: ABdhPJxovUxraliBkm/Bf6MK9y9XXJoeXrAW+xnL9AzhQOMP3GGXkLU/zxjXzieF+ZVTF8XwxspNyw==
-X-Received: by 2002:a17:90a:5885:: with SMTP id j5mr7498189pji.117.1603895264368;
-        Wed, 28 Oct 2020 07:27:44 -0700 (PDT)
-Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
-        by smtp.gmail.com with ESMTPSA id n25sm5977673pgd.67.2020.10.28.07.27.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:27:43 -0700 (PDT)
-From:   Tsuchiya Yuto <kitakar@gmail.com>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
-        Tsuchiya Yuto <kitakar@gmail.com>
-Subject: [RFC PATCH] mwifiex: pcie: use shutdown_sw()/reinit_sw() on suspend/resume
-Date:   Wed, 28 Oct 2020 23:27:19 +0900
-Message-Id: <20201028142719.18765-1-kitakar@gmail.com>
-X-Mailer: git-send-email 2.29.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=lutL77mM1puGVoqt7Nw9AlgWOlFK54HVQ3QwD1U+gIM=;
+        b=Vnl3ZweP8A6tkdx8ddfSZl+/7Iz9yDbS6g8mkmz5Spj+fNysepfvGZcjfCJmVgpBI4
+         vBdriaYkA1ztAxzjW2J5Bj/CvK0+1CUGtThHxGVEey9bu/lX+CjF3wqceawvGipqd+Pg
+         lQKPdguFXQ19kvX8juIKj+SHc0cWESINi9+73GVSYDtk31HV005vzljj9o3XmV6ElwZ0
+         td7lqfP8QaHX4kS0I/WQx2cWctZFR/XQRBQ7lyYDlEutm/1pr6D/52Z31bXaMiQZYilh
+         va2eBU62B9wR+fbPGekqr7Gdly+bZ3201NgAoq0XR+Py26M52VsObVMrmb1YNnWXthvA
+         Ozdg==
+X-Gm-Message-State: AOAM532psu7818F6mMb0hNkV8C/QQORpXvF1s6m9wUGoE4s2f9bPIDeB
+        VLy4PXvuS1DtGYYAcNnTjKU109XkeOlspQ==
+X-Google-Smtp-Source: ABdhPJzb9ePcwTW52KROD9d10rlf+TTpaMZFTa2naLGxQ6Fi93y0F6PMazgcBw/z6sgqmN8XqsqRVw==
+X-Received: by 2002:a1f:ab87:: with SMTP id u129mr71242vke.7.1603900972451;
+        Wed, 28 Oct 2020 09:02:52 -0700 (PDT)
+Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com. [209.85.217.41])
+        by smtp.gmail.com with ESMTPSA id s1sm621200vke.53.2020.10.28.09.02.51
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Oct 2020 09:02:51 -0700 (PDT)
+Received: by mail-vs1-f41.google.com with SMTP id r1so3122481vsi.12
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 09:02:51 -0700 (PDT)
+X-Received: by 2002:a67:b405:: with SMTP id x5mr5981883vsl.4.1603900970936;
+ Wed, 28 Oct 2020 09:02:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1603811067-23058-1-git-send-email-pillair@codeaurora.org>
+ <CAD=FV=XRyeXcE93nZgOy+x5eWcHcKKwbJccuWFkx+cA8tEXwZQ@mail.gmail.com> <003801d6ad41$a1bb8970$e5329c50$@codeaurora.org>
+In-Reply-To: <003801d6ad41$a1bb8970$e5329c50$@codeaurora.org>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Wed, 28 Oct 2020 09:02:39 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=U_Dwb=YRMKcKME9vdxbSgSn-08dznoVXY6VzCaHL8OnQ@mail.gmail.com>
+Message-ID: <CAD=FV=U_Dwb=YRMKcKME9vdxbSgSn-08dznoVXY6VzCaHL8OnQ@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: Fix the parsing error in service available event
+To:     Rakesh Pillai <pillair@codeaurora.org>
+Cc:     ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Abhishek Kumar <kuabhs@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Microsoft Surface devices (PCIe-88W8897), there are issues with S0ix
-achievement and AP scanning after suspend with the current Host Sleep
-method.
+Hi,
 
-When using the Host Sleep method, it prevents the platform to reach S0ix
-during suspend. Also, sometimes AP scanning won't work, resulting in
-non-working wifi after suspend.
+On Wed, Oct 28, 2020 at 8:47 AM Rakesh Pillai <pillair@codeaurora.org> wrote:
+>
+> > -----Original Message-----
+> > From: Doug Anderson <dianders@chromium.org>
+> > Sent: Wednesday, October 28, 2020 8:07 PM
+> > To: Rakesh Pillai <pillair@codeaurora.org>
+> > Cc: ath10k <ath10k@lists.infradead.org>; linux-wireless <linux-
+> > wireless@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>; Abhishek
+> > Kumar <kuabhs@chromium.org>; Brian Norris <briannorris@chromium.org>
+> > Subject: Re: [PATCH] ath10k: Fix the parsing error in service available event
+> >
+> > Hi,
+> >
+> > On Tue, Oct 27, 2020 at 8:20 AM Rakesh Pillai <pillair@codeaurora.org>
+> > wrote:
+> > >
+> > > The wmi service available event has been
+> > > extended to contain extra 128 bit for new services
+> > > to be indicated by firmware.
+> > >
+> > > Currently the presence of any optional TLVs in
+> > > the wmi service available event leads to a parsing
+> > > error with the below error message:
+> > > ath10k_snoc 18800000.wifi: failed to parse svc_avail tlv: -71
+> > >
+> > > The wmi service available event parsing should
+> > > not return error for the newly added optional TLV.
+> > > Fix this parsing for service available event message.
+> > >
+> > > Tested-on: WCN3990 hw1.0 SNOC
+> > >
+> > > Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> > > ---
+> > >  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 3 +++
+> > >  1 file changed, 3 insertions(+)
+> > >
+> > > diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > index 932266d..3b49e29 100644
+> > > --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> > > @@ -1404,9 +1404,12 @@ static int ath10k_wmi_tlv_svc_avail_parse(struct
+> > ath10k *ar, u16 tag, u16 len,
+> > >                 arg->service_map_ext_len = *(__le32 *)ptr;
+> > >                 arg->service_map_ext = ptr + sizeof(__le32);
+> > >                 return 0;
+> > > +       case WMI_TLV_TAG_FIRST_ARRAY_ENUM:
+> > > +               return 0;
+> >
+> > This is at least slightly worrying to me.  If I were calling this
+> > function, I'd expect that if I didn't get back an error that at least
+> > "arg->service_map_ext_len" was filled in.  Seems like you should do:
+> >
+> > case WMI_TLV_TAG_FIRST_ARRAY_ENUM:
+> >   arg->service_map_ext_len = 0;
+> >   arg->service_map_ext = NULL;
+> >   return 0;
+> >
+> > ...and maybe add a comment about why you're doing that?
+> >
+> > At the moment things are working OK because
+> > ath10k_wmi_event_service_available() happens to init the structure to
+> > 0 before calling with:
+> >
+> >   struct wmi_svc_avail_ev_arg arg = {};
+> >
+> > ....but it doesn't seem like a great idea to rely on that.
+> >
+> > That all being said, I'm just a drive-by reviewer and if everyone else
+> > likes it the way it is, feel free to ignore my comments.
+>
+>
+> Hi Doug,
+>
+> The TLV TAG " WMI_TLV_TAG_STRUCT_SERVICE_AVAILABLE_EVENT" is the first and a mandatory TLV in the service available event.
+> The subsequent TLVs are optional ones and may or may not be present (based on FW versions).
+> This patch just fixes the bug, where the presence of any other TLVs are leading to a failure in parsing the service available msg.
+> If, in future, we plan to use any other services from firmware, which is exposed in the extended TLVs, we will need to add a new variable (and not service_map_ext) to set the service.
 
-To fix such issues, perform shutdown_sw()/reinit_sw() instead of Host
-Sleep on suspend/resume.
+I'm not sure I totally understood your response, but look at it from
+the perspective of the function ath10k_wmi_event_service_available().
 
-Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
----
-As a side effect, this patch disables wakeups (means that Wake-On-WLAN
-can't be used anymore, if it was working before), and might also reset
-some internal states.
+That function calls:
 
-Of course it's the best to rather fix Host Sleep itself. But if it's
-difficult, I'm afraid we have to go this way.
+  ret = ath10k_wmi_pull_svc_avail(ar, skb, &arg);
 
-I reused the contents of suspend()/resume() functions as much as possible,
-and removed only the parts that are incompatible or redundant with
-shutdown_sw()/reinit_sw().
+...if it gets back a non-zero error code, it assumes that the
+"arg.service_map_ext" and "arg.service_map_ext_len" values are now
+valid and it can use them.
 
-- Removed wait_for_completion() as redundant
-  mwifiex_shutdown_sw() does this.
-- Removed flush_workqueue() as incompatible
-  Causes kernel crashing.
-- Removed mwifiex_enable_wake()/mwifiex_disable_wake()
-  as incompatible and redundant because the driver will be shut down
-  instead of entering Host Sleep.
+Before your patch, ath10k_wmi_pull_svc_avail() was returning an error
+code.  That let ath10k_wmi_event_service_available() know that it
+shouldn't look at "arg.service_map_ext" and "arg.service_map_ext_len".
+After your patch, you're not returning an error code but those fields
+aren't being filled in.
 
-I'm worried about why flush_workqueue() causes kernel crash with this
-suspend method. Is it OK to just drop it? At least We Microsoft Surface
-devices users used this method for about one month and haven't observed
-any issues.
+Said another way, if you remove the initialization of "arg" in
+ath10k_wmi_event_service_available() then everything is broken.  While
+things work because you _do_ have an initialization of "arg" in
+ath10k_wmi_event_service_available(), it feels fragile to me to rely
+on that.
 
-Note that suspend() no longer checks if it's already suspended.
-With the previous Host Sleep method, the check was done by looking at
-adapter->hs_activated in mwifiex_enable_hs() [sta_ioctl.c], but not
-MWIFIEX_IS_SUSPENDED. So, what the previous method checked was instead
-Host Sleep state, not suspend itself.
 
-Therefore, there is no need to check the suspend state now.
-Also removed comment for suspend state check at top of suspend()
-accordingly.
-
- drivers/net/wireless/marvell/mwifiex/pcie.c | 29 +++++++--------------
- 1 file changed, 10 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6a10ff0377a24..3b5c614def2f5 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -293,8 +293,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
-  * registered functions must have drivers with suspend and resume
-  * methods. Failing that the kernel simply removes the whole card.
-  *
-- * If already not suspended, this function allocates and sends a host
-- * sleep activate request to the firmware and turns off the traffic.
-+ * This function shuts down the adapter.
-  */
- static int mwifiex_pcie_suspend(struct device *dev)
- {
-@@ -302,31 +301,21 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pcie_service_card *card = dev_get_drvdata(dev);
- 
- 
--	/* Might still be loading firmware */
--	wait_for_completion(&card->fw_done);
--
- 	adapter = card->adapter;
- 	if (!adapter) {
- 		dev_err(dev, "adapter is not valid\n");
- 		return 0;
- 	}
- 
--	mwifiex_enable_wake(adapter);
--
--	/* Enable the Host Sleep */
--	if (!mwifiex_enable_hs(adapter)) {
-+	/* Shut down SW */
-+	if (mwifiex_shutdown_sw(adapter)) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "cmd: failed to suspend\n");
--		clear_bit(MWIFIEX_IS_HS_ENABLING, &adapter->work_flags);
--		mwifiex_disable_wake(adapter);
- 		return -EFAULT;
- 	}
- 
--	flush_workqueue(adapter->workqueue);
--
- 	/* Indicate device suspended */
- 	set_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags);
--	clear_bit(MWIFIEX_IS_HS_ENABLING, &adapter->work_flags);
- 
- 	return 0;
- }
-@@ -336,13 +325,13 @@ static int mwifiex_pcie_suspend(struct device *dev)
-  * registered functions must have drivers with suspend and resume
-  * methods. Failing that the kernel simply removes the whole card.
-  *
-- * If already not resumed, this function turns on the traffic and
-- * sends a host sleep cancel request to the firmware.
-+ * If already not resumed, this function reinits the adapter.
-  */
- static int mwifiex_pcie_resume(struct device *dev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card = dev_get_drvdata(dev);
-+	int ret;
- 
- 
- 	if (!card->adapter) {
-@@ -360,9 +349,11 @@ static int mwifiex_pcie_resume(struct device *dev)
- 
- 	clear_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags);
- 
--	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
--			  MWIFIEX_ASYNC_CMD);
--	mwifiex_disable_wake(adapter);
-+	ret = mwifiex_reinit_sw(adapter);
-+	if (ret)
-+		dev_err(dev, "reinit failed: %d\n", ret);
-+	else
-+		mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
- 
- 	return 0;
- }
--- 
-2.29.1
-
+-Doug
