@@ -2,81 +2,108 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C9BC5517A
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 616F4C63697
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8F9F20878
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C53820878
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:04:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="OEybUJds"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bWRA9CAa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387464AbgJ2CES (ORCPT
+        id S1726506AbgJ1Vsu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 22:04:18 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:24722 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727260AbgJ1Vkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:40:51 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603921250; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=wt8VkeKIDUm9k4EBM6zla/qDkcxejK6rCPdTNsrTI1o=;
- b=OEybUJdsv02Ss+ACvu7SX4fcGNzDUnwkfkfgQrXfRzftF2W3bpckqtjFgETY5HQbhe2uwWF4
- uDooajdKrgt5D37FzGI3oDxlnxU40aHz5oiTG93Jtf+K5yEoQMoMmo8xCB0Edc44GXXbQHCW
- zkXA02ANf0dyVHGQJoytpRn0hxw=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f9975b5bda0919e91bfa447 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 28 Oct 2020 13:44:21
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4F695C43382; Wed, 28 Oct 2020 13:44:20 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0B627C433FE;
-        Wed, 28 Oct 2020 13:44:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0B627C433FE
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Oct 2020 17:48:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47128 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727323AbgJ1VlO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:41:14 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF698C0613D1;
+        Wed, 28 Oct 2020 14:41:13 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id a9so594229wrg.12;
+        Wed, 28 Oct 2020 14:41:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=150B9TY9v6fV7KS+jxlyPSKb4srW4lcCjnHLKa1uLvo=;
+        b=bWRA9CAagWShk3n4pjpvMARXxKNk02ECjHV3X5ODSIEVnLIJENmuVQauDRDgevRrQY
+         /3ALFRSJKLiuexGDHPUR/4FYGRcNPOCdzy4Xism2WqbGxc01datBkC9LtVyGVxR1SaEA
+         u+5IegqMUyK9QnIYQopdu67LBTQe9EAKisfqX/XYLJivmZccUHdSEcl6EdXaq65snVQ/
+         yVXIdZvozvdpusCT3n+X7A1JuCq5GzTW7YV7gwlUlyges0H4WMo4b4G82thEp37RYUPR
+         iWNYW+pZznfC5am8DQmPS+I5ko+iZk18BsQ+vJUScnPVJ/aTzJdou40Lbc1Aez/Phb6Q
+         cxdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=150B9TY9v6fV7KS+jxlyPSKb4srW4lcCjnHLKa1uLvo=;
+        b=dP3sJ5Yf2bxDibT6EoYyBsjlyyJ3T63Rdzsx9c/wxspLRNIGyjwPzb8hWgc28gKnwK
+         jfmaa40al9ImU8yFWNjgpLKtczzCcyAm6gMuwL7xk4WCcMHj2pDRskvtCnKUL4YbDUaL
+         IrBB4uehewjYGWiOSokZPWMaNp9x/13LecZx9O7OX960UzaJWw3l8dR3ZUJDC5w2Ol3q
+         BlpUBBEvNPLB2diP14pHqJqWpu4yyq/OdxlMkEfIn5QK+JpxXjOhyCbkaQb5MkdymqLD
+         Rf9H0dL1nC3eSn/MuxrpN02m4ycQXWYZRQECeB7DyDK7IisbEHt8jMhDx1Nhch8zeQmi
+         /TiA==
+X-Gm-Message-State: AOAM530OCZDzTYuBXxwGisKRf6+S8PcDNBp9XQ6My8jExQY+JJs3nTxA
+        QgK6eZ62SOfk/nANO+WuhKClG9uh7qLW4l/l2bKv+aeq
+X-Google-Smtp-Source: ABdhPJyXaf251l2zxK1mU6Ob1m4WfUi/fpjxTE2AHRPuKN9tn4RClWrnnxgQVywhnWfx1KxAIoh7JVkx5mhPW3rWFcg=
+X-Received: by 2002:a17:906:8385:: with SMTP id p5mr872467ejx.538.1603917801870;
+ Wed, 28 Oct 2020 13:43:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: remove repeated words in comments and warnings
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1603803705-22447-1-git-send-email-kvalo@codeaurora.org>
-References: <1603803705-22447-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201028134420.4F695C43382@smtp.codeaurora.org>
-Date:   Wed, 28 Oct 2020 13:44:20 +0000 (UTC)
+References: <20201028182018.1780842-1-aleksandrnogikh@gmail.com> <20201028182018.1780842-3-aleksandrnogikh@gmail.com>
+In-Reply-To: <20201028182018.1780842-3-aleksandrnogikh@gmail.com>
+From:   Willem de Bruijn <willemdebruijn.kernel@gmail.com>
+Date:   Wed, 28 Oct 2020 16:42:45 -0400
+Message-ID: <CAF=yD-J7tJ0+UaMHUQbdChkcE9NQCTn9t7VY9ZJtddeDwoi=rA@mail.gmail.com>
+Subject: Re: [PATCH v4 2/3] net: add kcov handle to skb extensions
+To:     Aleksandr Nogikh <aleksandrnogikh@gmail.com>
+Cc:     David Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Andrey Konovalov <andreyknvl@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Marco Elver <elver@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Aleksandr Nogikh <nogikh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+On Wed, Oct 28, 2020 at 2:21 PM Aleksandr Nogikh
+<aleksandrnogikh@gmail.com> wrote:
+>
+> From: Aleksandr Nogikh <nogikh@google.com>
+>
+> Remote KCOV coverage collection enables coverage-guided fuzzing of the
+> code that is not reachable during normal system call execution. It is
+> especially helpful for fuzzing networking subsystems, where it is
+> common to perform packet handling in separate work queues even for the
+> packets that originated directly from the user space.
+>
+> Enable coverage-guided frame injection by adding kcov remote handle to
+> skb extensions. Default initialization in __alloc_skb and
+> __build_skb_around ensures that no socket buffer that was generated
+> during a system call will be missed.
+>
+> Code that is of interest and that performs packet processing should be
+> annotated with kcov_remote_start()/kcov_remote_stop().
+>
+> An alternative approach is to determine kcov_handle solely on the
+> basis of the device/interface that received the specific socket
+> buffer. However, in this case it would be impossible to distinguish
+> between packets that originated during normal background network
+> processes or were intentionally injected from the user space.
+>
+> Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
 
-> Found by latest checkpatch.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-16f283f0a4bb ath11k: remove repeated words in comments and warnings
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1603803705-22447-1-git-send-email-kvalo@codeaurora.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Acked-by: Willem de Bruijn <willemb@google.com>
