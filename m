@@ -8,58 +8,58 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE74C55179
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 22:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E757C388F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 22:58:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5C5320732
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 22:55:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE71C20756
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Oct 2020 22:58:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RvRQWDXR"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UyEMln7+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389780AbgJ1Wz0 (ORCPT
+        id S2389872AbgJ1W6A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:55:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59754 "EHLO
+        Wed, 28 Oct 2020 18:58:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731840AbgJ1WyC (ORCPT
+        with ESMTP id S1733138AbgJ1W5R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:54:02 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4117C0613CF;
-        Wed, 28 Oct 2020 15:54:01 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id z24so745632pgk.3;
-        Wed, 28 Oct 2020 15:54:01 -0700 (PDT)
+        Wed, 28 Oct 2020 18:57:17 -0400
+Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 535B0C0613CF;
+        Wed, 28 Oct 2020 15:57:17 -0700 (PDT)
+Received: by mail-io1-xd41.google.com with SMTP id p15so1339581ioh.0;
+        Wed, 28 Oct 2020 15:57:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qmvrLB7IH1tGEinPOUC68sap5ydLolJODJfXOc7ByPA=;
-        b=RvRQWDXRKqXfWV1Qf7Fg/btqgFdO6+cXld3893h/BP0HWY/1WVErVSqo7pbWRTd9uW
-         BcCM2LMn4SMYPMMhw0Mf8/X6yjlG2KT47LD9Me3eDW5ggVIq0SUvGrO1VDADfSDh9DTc
-         QWFOWQNxO86T5rgzitA0pLdEDzIXGXc8eBuVmk1/n5KIIyeClJC5o2YT3zobf8H/+zKZ
-         13v8qIJNPdAz/R36oUoJG4mRgCiilam6iyzbkZI8v4v2OYpSu2CQy/zPcXs57oYa4Akt
-         cDZizE+XsfoG0y2skqlWJADlevw+dYlVxZOk3JsZmCQRCGQ30DQUkESKAA3E6K5r2ZkU
-         5Lag==
+        bh=v8SmUy1p8YFPt0UuYt7UcwX4doZKfjAz+2UPXr9oenc=;
+        b=UyEMln7+TFZqUXYaJ1spAOCY0uQKOp53Dkb2khpfw1DKzygHWHJ97MKLUBiXUuELz4
+         Q96DqRl6E0+uw4xkFIebm9e7KX3iNQnaikMFa8rIk1hNtzZl0V2vuEhx8ZTqAqOhcErh
+         gcsEkAb55AW4F3xggiBENAbzL9kOCKYcSxw0fMoqwquEBK5JOpUX6pxewhMp1wn2HVBZ
+         XtIwm7QZPMtwEd5ihshnGyyY8zzgTwdFnPE8adIi1Rym3JP9nchLdeCHP71WqOu+yE+j
+         bsxnLphIqQfuer8EOqDB34acdxGK3ZBTQ6P1r/Gj8RASKtyXgwPrEgc9dwcgb+uX/f4v
+         cF7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qmvrLB7IH1tGEinPOUC68sap5ydLolJODJfXOc7ByPA=;
-        b=OH5M+ac17Lh7CHQS+0gY18nPTqU0HdbHGnUxx4ndsQCQ3nAFd+UK1kGMGLYubqpOgW
-         eCFsVeifjkmRzcVSJqiZjQhLBJZo0t4L7p+psW4KtwvDG3Tkg3E8ee990f6XyHSj0phs
-         ThoAJtskITyS/ydI2jlcu3WsP8QzC7nI2qO3P0uwZbwwgdjDtlN0GPwTIYxWtRhM5RJ2
-         K6rEetVAzqoDKi5ZoP0OVpWzf4qzEUVFkQlOKPKlDxHMABHd/6C/FT0LwR7vyJehANXx
-         SRoCG9NKc4ikIOMZ8XKK94TyV3f7zXjG591JTnPmOLxFEn58RlGcNIPZw1fIl14AAPnn
-         1fMw==
-X-Gm-Message-State: AOAM531WE3VAvDmTvbW7mbIhaL0lF0x6D4nY8GtgbK13ka1Rk1IlbGQJ
-        D72U+DGtuyuLqi6Y1PQyC9hkDuwCIJq5lFr/
-X-Google-Smtp-Source: ABdhPJzTvSsMLNIAWrdEQ/goV55Jb501WYhs5rz8KEKsREYW9U+fmj5apKNge3gsIDMfJRlUVEgtpQ==
-X-Received: by 2002:a17:902:c086:b029:d3:deab:e812 with SMTP id j6-20020a170902c086b02900d3deabe812mr7546840pld.51.1603894968621;
-        Wed, 28 Oct 2020 07:22:48 -0700 (PDT)
+        bh=v8SmUy1p8YFPt0UuYt7UcwX4doZKfjAz+2UPXr9oenc=;
+        b=LgVLIbBdVeUbGjLrRjCGMamSYLIRcUEBB1VeRiJtRgZZcyEIYb+TLib9mjDCa5R2C3
+         yvFhg4Xbsg282hsrRz/pdbaAb3ScnIMKxqL9FA/4bJn4U3yEr0W5P+G6sRyHjqCSHawO
+         SkoDXlgcub+97xMtBV1S73KT42R+5sKE6LrxDpo4sg18dXWEdG/zFelsHleb0wuzSg7R
+         q0LzC1KncYlAsaWcSCbccLPbDAAFnq/A68hxSTnqkGHhGPPf0RtVj3rjp0l0H6B0qlqV
+         Pdkg6ZnVvtQk5VWpLd67X6IeYQIX/HD6Of+xG1ITIt/gx0drtu0VvZWNsemmF0OXU/UH
+         8fSw==
+X-Gm-Message-State: AOAM5328tIkQdG9PNtuvYev6yrthrC0toa7Km97eo42mhsQaJsLHjUvn
+        dHZ49lCgPtDYmnnWztER+e4XSVfszwB37RQC
+X-Google-Smtp-Source: ABdhPJxpWUdzBg5lguJKB9YOMXhmiOL2/FWHw9iEIGsS7ko1RmdRk47qvSzHoNGJPAbc8KWnaI9IoQ==
+X-Received: by 2002:a65:4905:: with SMTP id p5mr6260513pgs.299.1603895167499;
+        Wed, 28 Oct 2020 07:26:07 -0700 (PDT)
 Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
-        by smtp.gmail.com with ESMTPSA id c12sm6293543pgi.14.2020.10.28.07.22.45
+        by smtp.gmail.com with ESMTPSA id 194sm6227192pfz.182.2020.10.28.07.26.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2020 07:22:48 -0700 (PDT)
+        Wed, 28 Oct 2020 07:26:07 -0700 (PDT)
 From:   Tsuchiya Yuto <kitakar@gmail.com>
 To:     Amitkumar Karwar <amitkarwar@gmail.com>,
         Ganapathi Bhat <ganapathi.bhat@nxp.com>,
@@ -72,51 +72,44 @@ Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Maximilian Luz <luzmaximilian@gmail.com>,
         Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
         Tsuchiya Yuto <kitakar@gmail.com>
-Subject: [PATCH 2/2] mwifiex: update comment for shutdown_sw()/reinit_sw() to reflect current state
-Date:   Wed, 28 Oct 2020 23:21:10 +0900
-Message-Id: <20201028142110.18144-3-kitakar@gmail.com>
+Subject: [PATCH 3/3] mwifiex: print message when changing ps_mode
+Date:   Wed, 28 Oct 2020 23:24:33 +0900
+Message-Id: <20201028142433.18501-4-kitakar@gmail.com>
 X-Mailer: git-send-email 2.29.1
-In-Reply-To: <20201028142110.18144-1-kitakar@gmail.com>
-References: <20201028142110.18144-1-kitakar@gmail.com>
+In-Reply-To: <20201028142433.18501-1-kitakar@gmail.com>
+References: <20201028142433.18501-1-kitakar@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The functions mwifiex_shutdown_sw() and mwifiex_reinit_sw() can be used
-for more general purposes than the PCIe function level reset. Also, these
-are even not PCIe-specific.
-
-So, let's update the comments at the top of each function accordingly.
+Users may want to know the ps_mode state change (e.g., diagnosing
+connection issues). This commit adds the print when changing ps_mode.
 
 Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 6283df5aaaf8b..ee52fb839ef77 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1455,7 +1455,7 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 943bc1e8ceaee..a2eb8df8d3854 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -451,6 +451,13 @@ mwifiex_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 		return -EPERM;
+ 	}
+ 
++	if (ps_mode)
++		mwifiex_dbg(priv->adapter, MSG,
++			    "Enabling ps_mode, disable if unstable.\n");
++	else
++		mwifiex_dbg(priv->adapter, MSG,
++			    "Disabling ps_mode.\n");
++
+ 	return mwifiex_drv_set_power(priv, &ps_mode);
  }
  
- /*
-- * This function gets called during PCIe function level reset.
-+ * This function can be used for shutting down the adapter SW.
-  */
- int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
- {
-@@ -1483,7 +1483,7 @@ int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
- }
- EXPORT_SYMBOL_GPL(mwifiex_shutdown_sw);
- 
--/* This function gets called during PCIe function level reset. Required
-+/* This function can be used for reinitting the adapter SW. Required
-  * code is extracted from mwifiex_add_card()
-  */
- int
 -- 
 2.29.1
 
