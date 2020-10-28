@@ -2,107 +2,133 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D81C4363A
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3A6C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:32:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7478B2076C
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:13:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB2A02054F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 00:32:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="YRSR+UuG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LC4YHuua"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729259AbgJ2ANJ (ORCPT
+        id S2387525AbgJ1W3L (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 20:13:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44334 "EHLO
+        Wed, 28 Oct 2020 18:29:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390749AbgJ2ANI (ORCPT
+        with ESMTP id S2387519AbgJ1W3J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 20:13:08 -0400
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07837C0613CF
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 17:13:08 -0700 (PDT)
-Received: by mail-lf1-x144.google.com with SMTP id v6so1018971lfa.13
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 17:13:07 -0700 (PDT)
+        Wed, 28 Oct 2020 18:29:09 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86A4FC0613CF;
+        Wed, 28 Oct 2020 15:29:09 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id h22so754139wmb.0;
+        Wed, 28 Oct 2020 15:29:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=tjZ0C47sBFE4E/dMNMwf9DAUHIodX8mtYvgDRoLI4EA=;
-        b=YRSR+UuG72ciMnSbkIKW71fwluhc008uXS+zCtS9AHDFnFwQEIMMgP/YxKO2Dy1307
-         WP7/iso+nlAS+anmA1lgk8lE/LiU6ECV1Z6zNFlM6NINwI35F0XF+CWuJQeINp59prgV
-         jihocwVqHZpzzVYcqIAvrcvpd/gtQFCguDskE=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=DQuN3G1QJvsPZrMdEIGvp5UTrwD1/Moi8emoV7bj3lU=;
+        b=LC4YHuuaO3S5nUzs7zaNiLYtN3uzYyBPbHmVlyELMjyYQI2K3s5mLTvKZeYQKRBMcq
+         sjORrjlPXAScZvnJSKJ8jtshEw1AYZMyrcZWgtzut8M6MgvPhyNXHh9gFG8nMaYMQlv8
+         w7zxui7LntcCnup3JLTHNAVtq2+d4tyQjUwm9i4mkglptLWMEXCD/0MeW7e/13G6o8zJ
+         qMsdpNv4Pt4d0ZHaeLfukoJoc6YJQxyvV94n6/9IzcOdRoFHPaJUTXXVglbDM7A6iON0
+         UF/JQkV5NVgN9uavRPtlf7UXj7XIiaALHyl6dfFnZmqE7UT7TI52KNfa+BlxgyFb6bX8
+         ixaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=tjZ0C47sBFE4E/dMNMwf9DAUHIodX8mtYvgDRoLI4EA=;
-        b=aet6K+b5jUsVjETw7dgK/nb8zQ2h9R4TwNt0O3DQ9/YtnVmjg1O0zMZBZCVjOhy2lH
-         ZFIPbUyQDYm8KT7f+UrP3SW6tIqrHkC1RNaOdlatn9tM6YptI+vq47YLSGJAFKcZs0Z4
-         PgOva9OsbUXZGBeUp2T4OFFSSbIbGWyXKhhZaskDtkHZu9o6d5ieHmwcU7e+qczGxnW6
-         1917GVwGIGu7ExjqpJzoyb9R1qym6Eoxrkt8zGBZMNNGQPYnUr9TAany5/sOUVNbPVam
-         /o38YK2lczvIkooXQa4uDVKGsVq8+1gO2zGrUXqqLptXsW1BR64P9Kd5tBbSM7NLG+no
-         sivg==
-X-Gm-Message-State: AOAM531ElZTRztTnrY7tHDdK1Ei5F8ejzciamVy4STX0MZxwm+UCI5cK
-        O78h9DbHpofSttDWKtwEZ8B8xCE87X6/PQ==
-X-Google-Smtp-Source: ABdhPJzuzO7SenUGMBmQPxDLY7XOQdg4kxaP+z8YWSgp035Cn+mTCfihBzUxEp13R7DwleEsVI2Oew==
-X-Received: by 2002:ac2:5395:: with SMTP id g21mr523820lfh.330.1603930385227;
-        Wed, 28 Oct 2020 17:13:05 -0700 (PDT)
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com. [209.85.167.53])
-        by smtp.gmail.com with ESMTPSA id f10sm124382ljn.87.2020.10.28.17.13.03
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Oct 2020 17:13:03 -0700 (PDT)
-Received: by mail-lf1-f53.google.com with SMTP id l28so1043728lfp.10
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2020 17:13:03 -0700 (PDT)
-X-Received: by 2002:a19:c703:: with SMTP id x3mr502126lff.105.1603930383060;
- Wed, 28 Oct 2020 17:13:03 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=DQuN3G1QJvsPZrMdEIGvp5UTrwD1/Moi8emoV7bj3lU=;
+        b=ZoAKWHN4xrrhF33LxhxhJa+4/x/xR0nFrQgmjd9cg763cSTR2xMeog1ThCi7RInAhf
+         s8Yzk3EsvtRWo6DmHhynsyCWlAyX2ebC7ntsd7EH3XE7RRSmGHpymNWqghF1XnEf2ui+
+         ME14FTBMAkf3wwCNxQyfQYQ7WMLfRun8qZaMxZMpvKIUtLmRTx+rpQIBOXxrrrn24x/Y
+         rz27cDFB5nC0wvJTVBOMudppKEfEzwnaAjQzzOq1Wo037sxSUJ4UXR5I9X/uLfdNq3Q5
+         KUIWJDZgbvwj9a/gV2DJDXXJfqXX7XBWzYrgKuOWRNxHRdBpDRTl7IU+GPxGbapOdMRv
+         XKoA==
+X-Gm-Message-State: AOAM530T95ROvDGRYt3xZ/PyHYuZMSm9ae3/FP4i6epIhd48TczPnKZC
+        PZk3IqZV9g9sKIKRCZ0QqEue68grazVRNw==
+X-Google-Smtp-Source: ABdhPJxeUhBlNyysFLBT7LARqEkmyOal5vA/3C8IvhTxsjlghwyoGttTKXfUBkKui85S/NaXf8eFCw==
+X-Received: by 2002:a1c:7d49:: with SMTP id y70mr40839wmc.103.1603909267772;
+        Wed, 28 Oct 2020 11:21:07 -0700 (PDT)
+Received: from nogikh.c.googlers.com.com (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
+        by smtp.gmail.com with ESMTPSA id r28sm531178wrr.81.2020.10.28.11.21.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 11:21:07 -0700 (PDT)
+From:   Aleksandr Nogikh <aleksandrnogikh@gmail.com>
+To:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net
+Cc:     edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
+        elver@google.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        willemdebruijn.kernel@gmail.com,
+        Aleksandr Nogikh <nogikh@google.com>
+Subject: [PATCH v4 3/3] mac80211: add KCOV remote annotations to incoming frame processing
+Date:   Wed, 28 Oct 2020 18:20:18 +0000
+Message-Id: <20201028182018.1780842-4-aleksandrnogikh@gmail.com>
+X-Mailer: git-send-email 2.29.0.rc2.309.g374f81d7ae-goog
+In-Reply-To: <20201028182018.1780842-1-aleksandrnogikh@gmail.com>
+References: <20201028182018.1780842-1-aleksandrnogikh@gmail.com>
 MIME-Version: 1.0
-References: <20201028142625.18642-1-kitakar@gmail.com>
-In-Reply-To: <20201028142625.18642-1-kitakar@gmail.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Wed, 28 Oct 2020 17:12:51 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXPX+fadTKLnxNVZQ0CehsHNwvWHXEdLqZVDoQ6hf6Wp8Q@mail.gmail.com>
-Message-ID: <CA+ASDXPX+fadTKLnxNVZQ0CehsHNwvWHXEdLqZVDoQ6hf6Wp8Q@mail.gmail.com>
-Subject: Re: [PATCH] mwifiex: pcie: add enable_device_dump module parameter
-To:     Tsuchiya Yuto <kitakar@gmail.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 3:58 PM Tsuchiya Yuto <kitakar@gmail.com> wrote:
->
-> The devicve_dump may take a little bit long time and users may want to
-> disable the dump for daily usage.
->
-> This commit adds a new module parameter enable_device_dump and disables
-> the device_dump by default.
+From: Aleksandr Nogikh <nogikh@google.com>
 
-As with one of your other patches, please don't change the defaults
-and hide them under a module parameter. If you're adding a module
-parameter, leave the default behavior alone.
+Add KCOV remote annotations to ieee80211_iface_work and
+ieee80211_rx. This will enable coverage-guided fuzzing of
+mac80211 code that processes incoming 802.11 frames.
 
-This also seems like something that might be nicer as a user-space
-knob in generic form (similar to "/sys/class/devcoredump/disabled",
-except on a per-device basis, and fed back to the driver so it doesn't
-waste time generating such dumps), but I suppose I can see why a
-module parameter (so you can just stick your configuration in
-/etc/modprobe.d/) might be easier to deal with in some cases.
+Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
+---
+v1 -> v2:
+* The commit now affects ieee80211_rx instead of
+  ieee80211_tasklet_handler.
+---
+ include/net/mac80211.h | 2 ++
+ net/mac80211/iface.c   | 2 ++
+ 2 files changed, 4 insertions(+)
 
-Brian
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e8e295dae744..f4c37a1b381e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4499,7 +4499,9 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+  */
+ static inline void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
++	kcov_remote_start_common(skb_get_kcov_handle(skb));
+ 	ieee80211_rx_napi(hw, NULL, skb, NULL);
++	kcov_remote_stop();
+ }
+ 
+ /**
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 1be775979132..56a1bcea2c1c 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1356,6 +1356,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+ 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+ 
++		kcov_remote_start_common(skb_get_kcov_handle(skb));
+ 		if (ieee80211_is_action(mgmt->frame_control) &&
+ 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+@@ -1465,6 +1466,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 		}
+ 
+ 		kfree_skb(skb);
++		kcov_remote_stop();
+ 	}
+ 
+ 	/* then other type-dependent work */
+-- 
+2.29.0.rc2.309.g374f81d7ae-goog
+
