@@ -2,82 +2,119 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A7D6C55179
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 081A8C388F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:14:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDFF820878
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:05:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EBFF20720
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 02:14:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NhGCS/3b"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IlSe4xAj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729579AbgJ2CFg (ORCPT
+        id S2404318AbgJ2CN5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Oct 2020 22:05:36 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:58426 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727087AbgJ1ViU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:38:20 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603921100; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=/kOV9eLx6Jma6oBz8tUemmC4ZI0OlHRbmHAdnE7Ewkg=;
- b=NhGCS/3bnXD5GHJypR+PcDE5VbYJjFojqcTROK5OmU09i9AHZogh3d/SpzVFTcHesLjdEsGs
- qOpHLQPyh6T+b21qMdwZ/xoRMtFMpcaGlHyiT8zIvEm6iMPIOmkgCQF5dQnVRwBdMIHQC8/8
- wCzH+pXIZfxpjn5ybcdf6dcdYFg=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f99754eaca26e7bb9522abd (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 28 Oct 2020 13:42:38
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id F3AE5C433FF; Wed, 28 Oct 2020 13:42:37 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BFC36C433C9;
-        Wed, 28 Oct 2020 13:42:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BFC36C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Oct 2020 22:13:57 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:35677 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726786AbgJ1Vfz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:35:55 -0400
+Received: by mail-oi1-f195.google.com with SMTP id w191so1129475oif.2;
+        Wed, 28 Oct 2020 14:35:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GJjCYBDQRA1Y87dVSmn/FJuMApnZK8DW4dsai1PK8Pw=;
+        b=IlSe4xAjzrFl2CN4AabUTHi5rc5PhVzOfz3NYnnC+R/frrrtauN3sUXKxqgUZCjjyD
+         D4NInYinEh6UKEJpIsN+HPQ59yuvb1VDrfq/IWdVvgeZ4zf4IV4YJ8GFQnOHpyy/9xb8
+         cjkcIHrSyhYuzjMS4Yi6XN8P4qG/aC/qsvlGBW6f0kjyVi4iyvkhx3JGVibHFZcrrIKL
+         XD9ZUz/VjWJ+Z2ie0b90YKtYB4lXL5lgPtOORA+bNLR/EKNSypsxJAdRonowhxfqsvz7
+         1/KQRuvV0j4PwmtRgqdAk4jT7qAuN56Aj0168nNkky53Lab0T0DIiO/EpCof06pbnHAM
+         VOmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GJjCYBDQRA1Y87dVSmn/FJuMApnZK8DW4dsai1PK8Pw=;
+        b=G9y8V0gMCcpgLDh0Cs5VuKNFAGjsa8d3pJXJ+8epMyhoxFDzD0FLTdsHx6F4az2t5o
+         luTmymwgR6IEt5Wh7Ljqx4MyilwBbfVtsGZxVJF3oPX88eiKzm8wiizzsk3v8aqtt0tl
+         xpMenuK75fXFhltRBvE0TRV1TW3hEHu8Z5ZATT9QD85VF8l6z3vQR35f7T24CmVWQcvY
+         BRN1Uc33tYEBEE/8/vgC8/p2xiSPCNKniYYBpa4LdJv5JGGfhx9dskb2qla78S37YaE2
+         feW6EElzgx+yasd1WkQ0tsKrk6eYedflDcfPoNHQjpikC9B37JZLrlWLlw++CqI8enMZ
+         4LyA==
+X-Gm-Message-State: AOAM530oLWoFzX2g5GoOdWA6oGPn/kW8Fo0GlG2gA8HSu+BQpKizWrGA
+        Xx0jZ+kRt3cfxX6B/ubu1CguAa4sPS6zuREP
+X-Google-Smtp-Source: ABdhPJxQqTAY26QBlFaEBLgr/WnvE5SDv4jz4MmJ6wZ7NKMd/7P6bvsKyn0mHBpXVIFQt7GPv6+J+A==
+X-Received: by 2002:a17:90a:7784:: with SMTP id v4mr7178120pjk.60.1603895121529;
+        Wed, 28 Oct 2020 07:25:21 -0700 (PDT)
+Received: from k5-sbwpb.flets-east.jp (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
+        by smtp.gmail.com with ESMTPSA id 194sm6227192pfz.182.2020.10.28.07.25.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2020 07:25:20 -0700 (PDT)
+From:   Tsuchiya Yuto <kitakar@gmail.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl,
+        Tsuchiya Yuto <kitakar@gmail.com>
+Subject: [PATCH 0/3] mwifiex: disable ps_mode by default for stability
+Date:   Wed, 28 Oct 2020 23:24:30 +0900
+Message-Id: <20201028142433.18501-1-kitakar@gmail.com>
+X-Mailer: git-send-email 2.29.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] ath10k: remove repeated words in comments
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1603802288-21158-1-git-send-email-kvalo@codeaurora.org>
-References: <1603802288-21158-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201028134237.F3AE5C433FF@smtp.codeaurora.org>
-Date:   Wed, 28 Oct 2020 13:42:37 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Hello all,
 
-> Found by latest checkpatch.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+On Microsoft Surface devices (PCIe-88W8897), we are observing stability
+issues when ps_mode (IEEE power_save) is enabled, then eventually causes
+firmware crash. Especially on 5GHz APs, the connection is completely
+unstable and almost unusable.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+I think the most desirable change is to fix the ps_mode itself. But is
+seems to be hard work [1], I'm afraid we have to go this way.
 
-762fd1aec588 ath10k: remove repeated words in comments
-d2f3f68864a4 ath10k: ath10k_pci_init_irq(): workaround for checkpatch fallthrough warning
+Therefore, the first patch of this series disables the ps_mode by default
+instead of enabling it on driver init. I'm not sure if explicitly
+disabling it is really required or not. I don't have access to the details
+of this chip. Let me know if it's enough to just remove the code that
+enables ps_mode.
+
+The Second patch adds a new module parameter named "allow_ps_mode". Since
+other wifi drivers just disable power_save by default by module parameter
+like this, I also added this.
+
+The third patch adds a message when ps_mode will be changed. Useful when
+diagnosing connection issues.
+
+Thanks,
+Tsuchiya Yuto
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=109681
+
+Tsuchiya Yuto (3):
+  mwifiex: disable ps_mode explicitly by default instead
+  mwifiex: add allow_ps_mode module parameter
+  mwifiex: print message when changing ps_mode
+
+ .../net/wireless/marvell/mwifiex/cfg80211.c   | 23 +++++++++++++++++++
+ .../net/wireless/marvell/mwifiex/sta_cmd.c    | 11 ++++++---
+ 2 files changed, 31 insertions(+), 3 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1603802288-21158-1-git-send-email-kvalo@codeaurora.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.29.1
 
