@@ -2,103 +2,106 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E4D4C55179
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 17:05:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19FF1C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 17:11:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E261320790
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 17:05:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 885CE20790
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 17:11:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GgNxjbKi"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MPcge86V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbgJ2RFQ (ORCPT
+        id S1725972AbgJ2RLX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Oct 2020 13:05:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33244 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725792AbgJ2RFP (ORCPT
+        Thu, 29 Oct 2020 13:11:23 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:42683 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725730AbgJ2RLX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Oct 2020 13:05:15 -0400
-Received: from mail-vs1-xe43.google.com (mail-vs1-xe43.google.com [IPv6:2607:f8b0:4864:20::e43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C2ACC0613CF
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 10:05:15 -0700 (PDT)
-Received: by mail-vs1-xe43.google.com with SMTP id f4so1917269vsk.7
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 10:05:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=WPCxo8dZVoPntUDqM2K1mljtNcAGM6ErEoqv5xxnH0E=;
-        b=GgNxjbKiB0mMhC0k0NjJxuIk4xp6/uBwunh+BV5axtlic73wSrFYm6DTwllRXhN2fB
-         qp0kLs07xY68okdCMuHAU02Y2Dozue63p6bEo93wqPSHnr+abrKlwbmVKHDGK2jAekkZ
-         DaZ+Jwt/y7jWMNa9bFN1iYTPZzPJv3ELgoMUB7EccDCVV7Ftp3KLpBxxZoG8a2VR8/Rd
-         r0U9EyBT1WZzrLj3Y0VvngbS6rmE7dWLcTDn0PPtLELLWPVhx36XxSj0zxs7LudSm2+l
-         VbmU0/lmAPTj++H/QJdPcP7RjiEG8qXsd+/AngGr/yXddjYIkSC6f7q5NK1cxbEa1IEH
-         R+JA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=WPCxo8dZVoPntUDqM2K1mljtNcAGM6ErEoqv5xxnH0E=;
-        b=S3wxhRxIoo/7DnVvP46nW2AYjIBhjiD4GutAiXc4CZmeV2TFcWVyOmj3baMwtHkthh
-         azfVPacMXYq1nxdnKQtORVZJ2rTkrAogpx9StPupNL1Gl/L6r+UrUFAzdCRwJfAcY/AD
-         IAG+2tCyXt7+s1KPpFYi94YWpFvuoAuWynEUpIPv5MyF8BUrkMrWar1PSa1H/j/6oM7d
-         tkf5wQ3pYpaaAdOxJ0YVPYFH7DWEu4+L8jKVSMtoq88olyhmYp6tVxp4J1FGeTL2DXiN
-         Mao36WYwHWFSHRqW08s410J1OLaJeTKLgeqgILBqYhc+JjELYpco8A+sYWfniqsXhy+x
-         4oDw==
-X-Gm-Message-State: AOAM5338z/lTSKKJIplUk18TEj9xk5GHs7wYdjILV09gS+zMdtL6I0bA
-        Pjk3pAXIBFY5UsobZvxL32ELQjoGQio=
-X-Google-Smtp-Source: ABdhPJxCj9ltfo+a8A1cnQKp8AzNg2CosRCFdtk85QyOBpmwJR4LjOpcMgj87Z0hZxcDfF3Tbwg2BQ==
-X-Received: by 2002:a67:2f16:: with SMTP id v22mr4337149vsv.15.1603991113708;
-        Thu, 29 Oct 2020 10:05:13 -0700 (PDT)
-Received: from mail-vs1-f46.google.com (mail-vs1-f46.google.com. [209.85.217.46])
-        by smtp.gmail.com with ESMTPSA id r126sm407904vke.27.2020.10.29.10.05.12
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 29 Oct 2020 10:05:12 -0700 (PDT)
-Received: by mail-vs1-f46.google.com with SMTP id e3so1912116vsr.8
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 10:05:12 -0700 (PDT)
-X-Received: by 2002:a67:f88e:: with SMTP id h14mr3250923vso.22.1603991111738;
- Thu, 29 Oct 2020 10:05:11 -0700 (PDT)
+        Thu, 29 Oct 2020 13:11:23 -0400
+X-UUID: 82bfba6bb00e449f8301719a8ab6430e-20201030
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=1Y/zeZh6Q1NIhynx9eUjorVoZ+repOhjvcxYnJbNTQs=;
+        b=MPcge86VybdKEUiqo58ZdLv/3lUMa+n5F/KK/qK6dt3k4Qu5grUI5nV/Ivw0BG4jIq/UM3QY0Rh5aSFXttlt2xol16/U33Ooltj54I7pXuiwzSfBmZFQkgmPtc94U9gnblwp7sxvdqXokJ8PkGg88vOVJQlZkzYzX3oTQoJTJBw=;
+X-UUID: 82bfba6bb00e449f8301719a8ab6430e-20201030
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 146681960; Fri, 30 Oct 2020 01:11:20 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 30 Oct 2020 01:11:19 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 30 Oct 2020 01:11:18 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/3] mt76: mt7915: remove unused mt7915_mcu_bss_sync_tlv()
+Date:   Fri, 30 Oct 2020 01:11:16 +0800
+Message-ID: <4e10985307260de60fea3fae0b6f41985136082c.1603988327.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <879705a8af8fa44c711feb3aa0351c1138aeef6c.1603988327.git.ryder.lee@mediatek.com>
+References: <879705a8af8fa44c711feb3aa0351c1138aeef6c.1603988327.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-References: <20201028142433.18501-1-kitakar@gmail.com> <20201028142433.18501-3-kitakar@gmail.com>
- <CA+ASDXMXoyOr9oHBjtXZ1w9XxDggv+=XS4nwn0qKWCHQ3kybdw@mail.gmail.com>
-In-Reply-To: <CA+ASDXMXoyOr9oHBjtXZ1w9XxDggv+=XS4nwn0qKWCHQ3kybdw@mail.gmail.com>
-From:   Willem de Bruijn <willemdebruijn.kernel@gmail.com>
-Date:   Thu, 29 Oct 2020 13:04:34 -0400
-X-Gmail-Original-Message-ID: <CA+FuTSdayk_YwH2F_k4HYsYPCn_u-k_qdowHpMJUHvLXrvdZ7g@mail.gmail.com>
-Message-ID: <CA+FuTSdayk_YwH2F_k4HYsYPCn_u-k_qdowHpMJUHvLXrvdZ7g@mail.gmail.com>
-Subject: Re: [PATCH 2/3] mwifiex: add allow_ps_mode module parameter
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Tsuchiya Yuto <kitakar@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 9:13 PM Brian Norris <briannorris@chromium.org> wrote:
->
-> On Wed, Oct 28, 2020 at 2:56 PM Tsuchiya Yuto <kitakar@gmail.com> wrote:
-> >
-> > To make the ps_mode (power_save) control easier, this commit adds a new
-> > module parameter allow_ps_mode and set it false (disallowed) by default.
+bXQ3OTE1X21jdV9ic3Nfc3luY190bHYoKSBpcyBubyBsb25nZXIgdXNlZCwgc28gcmVtb3ZlIGl0
+Lg0KDQpTaWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQot
+LS0NCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jICAgfCAxOSAr
+Ky0tLS0tLS0tLS0tLS0tLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210Nzkx
+NS9tY3UuaCAgIHwgMTEgKy0tLS0tLS0tLS0NCiAyIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9u
+cygrKSwgMjcgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
+dGVrL210NzYvbXQ3OTE1L21jdS5jDQppbmRleCAxODM4M2RjZGFmMzUuLmVkNzY3YjI4YWE4NiAx
+MDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21j
+dS5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3Uu
+Yw0KQEAgLTkzOCwyMCArOTM4LDYgQEAgbXQ3OTE1X21jdV9ic3NfYm1jX3RsdihzdHJ1Y3Qgc2tf
+YnVmZiAqc2tiLCBzdHJ1Y3QgbXQ3OTE1X3BoeSAqcGh5KQ0KIAl9DQogfQ0KIA0KLXN0YXRpYyB2
+b2lkDQotbXQ3OTE1X21jdV9ic3Nfc3luY190bHYoc3RydWN0IHNrX2J1ZmYgKnNrYiwgc3RydWN0
+IGllZWU4MDIxMV92aWYgKnZpZikNCi17DQotCXN0cnVjdCBic3NfaW5mb19zeW5jX21vZGUgKnN5
+bmM7DQotCXN0cnVjdCB0bHYgKnRsdjsNCi0NCi0JdGx2ID0gbXQ3OTE1X21jdV9hZGRfdGx2KHNr
+YiwgQlNTX0lORk9fU1lOQ19NT0RFLCBzaXplb2YoKnN5bmMpKTsNCi0NCi0Jc3luYyA9IChzdHJ1
+Y3QgYnNzX2luZm9fc3luY19tb2RlICopdGx2Ow0KLQlzeW5jLT5iY25faW50ZXJ2YWwgPSBjcHVf
+dG9fbGUxNih2aWYtPmJzc19jb25mLmJlYWNvbl9pbnQpOw0KLQlzeW5jLT5kdGltX3BlcmlvZCA9
+IHZpZi0+YnNzX2NvbmYuZHRpbV9wZXJpb2Q7DQotCXN5bmMtPmVuYWJsZSA9IHRydWU7DQotfQ0K
+LQ0KIHN0YXRpYyBpbnQNCiBtdDc5MTVfbWN1X211YXJfY29uZmlnKHN0cnVjdCBtdDc5MTVfcGh5
+ICpwaHksIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQogCQkgICAgICAgYm9vbCBic3NpZCwg
+Ym9vbCBlbmFibGUpDQpAQCAtMTAxOSw5ICsxMDA1LDggQEAgaW50IG10NzkxNV9tY3VfYWRkX2Jz
+c19pbmZvKHN0cnVjdCBtdDc5MTVfcGh5ICpwaHksDQogCQlpZiAodmlmLT5ic3NfY29uZi5oZV9z
+dXBwb3J0KQ0KIAkJCW10NzkxNV9tY3VfYnNzX2hlX3Rsdihza2IsIHZpZiwgcGh5KTsNCiANCi0J
+CWlmIChtdmlmLT5vbWFjX2lkeCA8IEVYVF9CU1NJRF9TVEFSVCkNCi0JCQltdDc5MTVfbWN1X2Jz
+c19zeW5jX3Rsdihza2IsIHZpZik7DQotCQllbHNlIGlmIChtdmlmLT5vbWFjX2lkeCA8IFJFUEVB
+VEVSX0JTU0lEX1NUQVJUKQ0KKwkJaWYgKG12aWYtPm9tYWNfaWR4ID49IEVYVF9CU1NJRF9TVEFS
+VCAmJg0KKwkJICAgIG12aWYtPm9tYWNfaWR4IDwgUkVQRUFURVJfQlNTSURfU1RBUlQpDQogCQkJ
+bXQ3OTE1X21jdV9ic3NfZXh0X3Rsdihza2IsIG12aWYpOw0KIAl9DQogDQpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmggYi9kcml2ZXJz
+L25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3UuaA0KaW5kZXggNTc0NDZjZDEx
+YzQwLi4zZTA0YTFmOTg2Y2MgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
+YXRlay9tdDc2L210NzkxNS9tY3UuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
+ZWsvbXQ3Ni9tdDc5MTUvbWN1LmgNCkBAIC0zODcsMTUgKzM4Nyw2IEBAIHN0cnVjdCBic3NfaW5m
+b19leHRfYnNzIHsNCiAJdTggcnN2WzhdOw0KIH0gX19wYWNrZWQ7DQogDQotc3RydWN0IGJzc19p
+bmZvX3N5bmNfbW9kZSB7DQotCV9fbGUxNiB0YWc7DQotCV9fbGUxNiBsZW47DQotCV9fbGUxNiBi
+Y25faW50ZXJ2YWw7DQotCXU4IGVuYWJsZTsNCi0JdTggZHRpbV9wZXJpb2Q7DQotCXU4IHJzdls4
+XTsNCi19IF9fcGFja2VkOw0KLQ0KIHN0cnVjdCBic3NfaW5mb19ibWNfcmF0ZSB7DQogCV9fbGUx
+NiB0YWc7DQogCV9fbGUxNiBsZW47DQpAQCAtNTEzLDcgKzUwNCw3IEBAIGVudW0gew0KIAlCU1Nf
+SU5GT19MUV9STSwJCS8qIG9ic29sZXRlZCAqLw0KIAlCU1NfSU5GT19FWFRfQlNTLA0KIAlCU1Nf
+SU5GT19CTUNfUkFURSwJLyogZm9yIGJtYyByYXRlIGNvbnRyb2wgaW4gQ1I0ICovDQotCUJTU19J
+TkZPX1NZTkNfTU9ERSwNCisJQlNTX0lORk9fU1lOQ19NT0RFLAkvKiBvYnNvbGV0ZWQgKi8NCiAJ
+QlNTX0lORk9fUkEsDQogCUJTU19JTkZPX0hXX0FNU0RVLA0KIAlCU1NfSU5GT19CU1NfQ09MT1Is
+DQotLSANCjIuMTguMA0K
 
-This sounds like some form of access control, not something that makes
-power control "easier"? What exactly is the use case.
-
-Also, module params in networking devices are discouraged.
