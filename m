@@ -2,135 +2,122 @@ Return-Path: <SRS0=Fczi=EE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F4EC4363A
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 18:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 925B6C4363A
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 18:57:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02D3920732
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 18:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31BE62076D
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Oct 2020 18:57:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lhruZ3OS"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="B6yphniA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725870AbgJ2SiN (ORCPT
+        id S1725774AbgJ2S5Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Oct 2020 14:38:13 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:36921 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725807AbgJ2SiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Oct 2020 14:38:12 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603996692; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=XA9dKQuycvf4OlYd9/d2zC/N8Qn1ulTaJHN/DPRyW/8=; b=lhruZ3OSWYPgZpBNo/gofBtTtXdURjiE4RGzWCg66npT2ECbswNbemF9t0/pKgkbrz+nb4mx
- 5JwUjCnr68P2+ivjq5JwNg7gs/S6EB7b8NkEzL7NvksPpeNV+IH+8LiMfO8aTsK/kHv2KVrB
- tADzJ9OBtyoLYW7NsaUhlyQY6NY=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5f9b0c13580ed2b2f266389e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 29 Oct 2020 18:38:11
- GMT
-Sender: jouni=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1D1A1C433C9; Thu, 29 Oct 2020 18:38:11 +0000 (UTC)
-Received: from jouni.codeaurora.org (85-76-85-8-nat.elisa-mobile.fi [85.76.85.8])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: jouni)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 61A19C433FF;
-        Thu, 29 Oct 2020 18:38:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 61A19C433FF
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=jouni@codeaurora.org
-From:   Jouni Malinen <jouni@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Vamsi Krishna <vamsin@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH] cfg80211: Add support to calculate and report 4096-QAM HE rates
-Date:   Thu, 29 Oct 2020 20:34:57 +0200
-Message-Id: <20201029183457.7005-1-jouni@codeaurora.org>
-X-Mailer: git-send-email 2.20.1
+        Thu, 29 Oct 2020 14:57:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50748 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbgJ2S5P (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Oct 2020 14:57:15 -0400
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71872C0613CF
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 11:57:15 -0700 (PDT)
+Received: by mail-lj1-x234.google.com with SMTP id m16so4267607ljo.6
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 11:57:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XcpjY/kPuA4EUV38Vs/YpJREclicBfcPi/8OJvF6Zp0=;
+        b=B6yphniAqXI/GkxR8wlQNDbHRgM5TshKPwVtKrK8jOos7zF9eY3gzOl2cccs+yWfDX
+         AjJg7HxGwBrveb2dUENJQqABKBREdFP7zrT9Bgrqunm0xBWw65IuEcQ0CgFpmW2Rz8hN
+         7fCmzEcale9NOmacj68mTfmCccOjFRMQzUMwE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XcpjY/kPuA4EUV38Vs/YpJREclicBfcPi/8OJvF6Zp0=;
+        b=rcDxD925XW4ao0PKDYiZSOMj1Jn4yaRB8/aQuctK20MctD0hKiqMATfMRdAReszfOx
+         fiZcMzpCdZGjWZ6LG7n/nNAubT/rnKQyuE3gVFIyUyHHTZuhsTjpBBvO6F/b1452eJM3
+         54xRTD0GTSWt9W1v9BECdzQlqNhQYciozJEXBkVpvVhiPU5co8ijaoBzlkD2kpWjeGse
+         uW65+zcp1nPXVHSCxyxxrBNffndF8bLyI6H2tFGHn9E0iHdi7qLvK+NiMwdkXVSnvzqS
+         eIgEDlpZCas/60SwxFLo/8F3xtqHMxjXsAe9QyoZAD8OpL/8o2o+ek6+YmGSD05VrQWL
+         v5Dw==
+X-Gm-Message-State: AOAM5318j+1q3c5GWgimobRHjwyAdwlvg4QfF2m4LjRiqmWNc04Afg/x
+        GQKcfyoCfcETbXZLsDBfqkJdn9U+zozbww==
+X-Google-Smtp-Source: ABdhPJwBkkJHkHOavz3D1koIAraxHpMM+q5J0SU6xMCxu/XoNGmjs3dQsStMHBM11wZR70i9NzW8Zw==
+X-Received: by 2002:a2e:8296:: with SMTP id y22mr2351584ljg.174.1603997833389;
+        Thu, 29 Oct 2020 11:57:13 -0700 (PDT)
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com. [209.85.208.180])
+        by smtp.gmail.com with ESMTPSA id d7sm419442ljg.140.2020.10.29.11.57.10
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 29 Oct 2020 11:57:11 -0700 (PDT)
+Received: by mail-lj1-f180.google.com with SMTP id 23so4262875ljv.7
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2020 11:57:10 -0700 (PDT)
+X-Received: by 2002:a2e:8942:: with SMTP id b2mr2536155ljk.441.1603997830537;
+ Thu, 29 Oct 2020 11:57:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201028142433.18501-1-kitakar@gmail.com> <20201028142433.18501-2-kitakar@gmail.com>
+ <CA+ASDXMfuqy=kCECktP_mYm9cAapXukeLhe=1i3uPbTu9wS2Qw@mail.gmail.com> <CAHp75VfUv6cD8BKxircd7dU-5p7Q6JL1dVz5X=0SC-Y4pqYhjA@mail.gmail.com>
+In-Reply-To: <CAHp75VfUv6cD8BKxircd7dU-5p7Q6JL1dVz5X=0SC-Y4pqYhjA@mail.gmail.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Thu, 29 Oct 2020 11:56:57 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXONuRUZ_2+-7PtWigp=ZQsS2_guCbmNP30yL2qQZXHThg@mail.gmail.com>
+Message-ID: <CA+ASDXONuRUZ_2+-7PtWigp=ZQsS2_guCbmNP30yL2qQZXHThg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] mwifiex: disable ps_mode explicitly by default instead
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     Tsuchiya Yuto <kitakar@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Vamsi Krishna <vamsin@codeaurora.org>
+On Thu, Oct 29, 2020 at 11:37 AM Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+> And this feeling (that it's a FW issue) what I have. But the problem
+> here, that Marvell didn't fix and probably won't fix their FW...
 
-Drivers supporting 4096-QAM rates as a vendor extension in HE mode need
-to update the correct rate info to userspace while using 4096-QAM (MCS12
-and MCS13) in HE mode. Add support to calculate bitrates of HE-MCS12 and
-HE-MCS13 which represent the 4096-QAM modulation schemes. The MCS12 and
-MCS13 bitrates are defined in IEEE P802.11be/D0.1.
+Sure, I wouldn't hold your breath. So some of these tactics (disabling
+PS, etc.) may be valid, but you have to do them smartly, acknowledging
+that there are other (more stable) firmwares and chips in use for this
+same driver.
 
-In addition, scale up the bitrates by 3*2048 in order to accommodate
-calculations for the new MCS12 and MCS13 rates without losing fraction
-values.
+> Just wondering if Google (and MS in their turn) use different
+> firmwares to what we have available in Linux.
 
-Signed-off-by: Vamsi Krishna <vamsin@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/wireless/util.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+No clue about MS. But Chrom{e,ium} OS generally publishes all this
+stuff where possible. You can see what we use here:
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f01746894a4e..5b6c80ae564a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1276,20 +1276,22 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 
- static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
- {
--#define SCALE 2048
--	u16 mcs_divisors[12] = {
--		34133, /* 16.666666... */
--		17067, /*  8.333333... */
--		11378, /*  5.555555... */
--		 8533, /*  4.166666... */
--		 5689, /*  2.777777... */
--		 4267, /*  2.083333... */
--		 3923, /*  1.851851... */
--		 3413, /*  1.666666... */
--		 2844, /*  1.388888... */
--		 2560, /*  1.250000... */
--		 2276, /*  1.111111... */
--		 2048, /*  1.000000... */
-+#define SCALE 6144
-+	u32 mcs_divisors[14] = {
-+		102399, /* 16.666666... */
-+		 51201, /*  8.333333... */
-+		 34134, /*  5.555555... */
-+		 25599, /*  4.166666... */
-+		 17067, /*  2.777777... */
-+		 12801, /*  2.083333... */
-+		 11769, /*  1.851851... */
-+		 10239, /*  1.666666... */
-+		  8532, /*  1.388888... */
-+		  7680, /*  1.250000... */
-+		  6828, /*  1.111111... */
-+		  6144, /*  1.000000... */
-+		  5690, /*  0.926106... */
-+		  5120, /*  0.833333... */
- 	};
- 	u32 rates_160M[3] = { 960777777, 907400000, 816666666 };
- 	u32 rates_969[3] =  { 480388888, 453700000, 408333333 };
-@@ -1301,7 +1303,7 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
- 	u64 tmp;
- 	u32 result;
- 
--	if (WARN_ON_ONCE(rate->mcs > 11))
-+	if (WARN_ON_ONCE(rate->mcs > 13))
- 		return 0;
- 
- 	if (WARN_ON_ONCE(rate->he_gi > NL80211_RATE_INFO_HE_GI_3_2))
--- 
-2.20.1
+https://chromium.googlesource.com/chromiumos/third_party/linux-firmware/+/HEAD/mrvl/
+https://chromium.googlesource.com/chromiumos/third_party/marvell/+/HEAD/
 
+We try to stay somewhat in sync / parallel with "upstream"
+linux-firmware, and strongly encourage vendors to send the same
+binaries upstream when they hand them to us, but there are exceptions
+and oversights (e.g., old products might have used a different
+firmware branch).
+
+Notably, I'll repeat: we (Chrome OS) don't actually support the PCIe
+variant of 8897, so the report in question ("PCIe-88W8897") has no
+equivalent in a supported Chrome OS system (even if there are binaries
+in the links above, we don't use them). I would not be surprised if
+there are an enormous number of firmware bugs there, as there were
+initially for PCIe-88W8997 (which we do support).
+
+Brian
