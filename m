@@ -1,81 +1,141 @@
 Return-Path: <SRS0=NAPm=EF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.9 required=3.0 tests=BAYES_40,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3BBC4741F
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39521C4741F
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:40:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3604D20739
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:36:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=persuitflow.com header.i=@persuitflow.com header.b="biJ3zXzN"
+	by mail.kernel.org (Postfix) with ESMTP id D4D172075E
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:40:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgJ3Ig3 (ORCPT
+        id S1726003AbgJ3Ik2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Oct 2020 04:36:29 -0400
-Received: from mail.persuitflow.com ([89.46.74.132]:59514 "EHLO
-        server1.mail.persuitflow.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725790AbgJ3Ig2 (ORCPT
+        Fri, 30 Oct 2020 04:40:28 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48081 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725875AbgJ3Ik0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Oct 2020 04:36:28 -0400
-X-Greylist: delayed 341 seconds by postgrey-1.27 at vger.kernel.org; Fri, 30 Oct 2020 04:36:27 EDT
-Received: by server1.mail.persuitflow.com (Postfix, from userid 1001)
-        id 3B186A4E62; Fri, 30 Oct 2020 08:30:39 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=persuitflow.com;
-        s=mail; t=1604046645;
-        bh=LIG/EV9hZypKEB8e9JkxJFCirHVIBsQt3YrIS4TkXUA=;
-        h=Date:From:To:Subject:From;
-        b=biJ3zXzNuRK+3ndeTmx7LKxybRLoaV1UkFCVwzerjZCu7fKy9hQQ+8SYv1VXqUdmp
-         LqznMWjJsgIB6ED24a5lGqxRTq4/hHgAsmo24O84B9FdNuHClc6uRDsamNsj1Dwv3/
-         aXw+WAJkvi7Q9ujsDkMNjsq5gp8AQYPjTYfQJJXs1TYRGzvRKI2CvZWCfuYgFxEJQd
-         7Yu4L8/Tk7rgrQwV8FuTXk9VcYwcZffSjzZl4xyEaNE+ptpPdJwrOcXHg6RaCwDYqs
-         a5HJWgoZPbwZ+pPVDq8M30SonUQ74/7o96Y+veYF62amcSusviWExaqPu/3bD9yR+C
-         vXL+grHYQyfqw==
-Received: by mail.persuitflow.com for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 08:30:34 GMT
-Message-ID: <20201030074501-0.1.14.31mr.0.aanpae5ecl@persuitflow.com>
-Date:   Fri, 30 Oct 2020 08:30:34 GMT
-From:   "Raquel Carvalho" <raquel.carvalho@persuitflow.com>
-To:     <linux-wireless@vger.kernel.org>
-Subject: Desinfetante
-X-Mailer: mail.persuitflow.com
+        Fri, 30 Oct 2020 04:40:26 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09U8eIeX5008838, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09U8eIeX5008838
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 30 Oct 2020 16:40:18 +0800
+Received: from localhost.localdomain (172.21.69.222) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Fri, 30 Oct 2020 16:40:18 +0800
+From:   <tehuang@realtek.com>
+To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 2/4] rtw88: store firmware feature in firmware header
+Date:   Fri, 30 Oct 2020 16:40:11 +0800
+Message-ID: <20201030084013.8457-3-tehuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201030084013.8457-1-tehuang@realtek.com>
+References: <20201030084013.8457-1-tehuang@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [172.21.69.222]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bom Dia,
+From: Chin-Yen Lee <timlee@realtek.com>
 
-A demanda por desinfetantes eficazes que permitam a elimina=C3=A7=C3=A3o =
-de microrganismos prejudiciais =C3=A9 continuamente alta em todo o mundo.
+Some functions need the support of firmware with special version.
+In order to get the feature of current firmware, we store the information
+in firmware header and parse after firmware is loaded. The current feature
+list in firmware header includes checking leave lps via C2H and
+supported lps deep mode.
 
-Expandir a oferta com uma gama profissional de produtos com atividade vir=
-icida e bactericida permite aumentar a posi=C3=A7=C3=A3o competitiva da e=
-mpresa e construir novas redes de vendas.
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/fw.h   | 10 +++++++++-
+ drivers/net/wireless/realtek/rtw88/main.c | 13 +++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.h |  1 +
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
-Diversificamos a linha de atacadistas e distribuidores com sabonetes, l=C3=
-=ADquidos e g=C3=A9is para desinfec=C3=A7=C3=A3o das m=C3=A3os e outros p=
-rodutos de limpeza, entre eles: g=C3=A9is de banho, shampoos e condiciona=
-dores de cabelo, al=C3=A9m de detergentes concentrados.
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index 08644540d259..5b74830c4d2c 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -72,6 +72,14 @@ enum rtw_fw_rf_type {
+ 	FW_RF_MAX_TYPE = 0xF,
+ };
+ 
++enum rtw_fw_feature {
++	FW_FEATURE_SIG = BIT(0),
++	FW_FEATURE_LPS_C2H = BIT(1),
++	FW_FEATURE_LCLK = BIT(2),
++	FW_FEATURE_PG = BIT(3),
++	FW_FEATURE_MAX = BIT(31),
++};
++
+ struct rtw_coex_info_req {
+ 	u8 seq;
+ 	u8 op_code;
+@@ -177,7 +185,7 @@ struct rtw_fw_hdr {
+ 	u8 subversion;
+ 	u8 subindex;
+ 	__le32 rsvd;		/* 0x08 */
+-	__le32 rsvd2;		/* 0x0C */
++	__le32 feature;		/* 0x0C */
+ 	u8 month;		/* 0x10 */
+ 	u8 day;
+ 	u8 hour;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 565efd880624..259ad849af93 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1259,6 +1259,17 @@ static void rtw_unset_supported_band(struct ieee80211_hw *hw,
+ 	kfree(hw->wiphy->bands[NL80211_BAND_5GHZ]);
+ }
+ 
++static void __update_firmware_feature(struct rtw_dev *rtwdev,
++				      struct rtw_fw_state *fw)
++{
++	u32 feature;
++	const struct rtw_fw_hdr *fw_hdr =
++				(const struct rtw_fw_hdr *)fw->firmware->data;
++
++	feature = le32_to_cpu(fw_hdr->feature);
++	fw->feature = feature & FW_FEATURE_SIG ? feature : 0;
++}
++
+ static void __update_firmware_info(struct rtw_dev *rtwdev,
+ 				   struct rtw_fw_state *fw)
+ {
+@@ -1269,6 +1280,8 @@ static void __update_firmware_info(struct rtw_dev *rtwdev,
+ 	fw->version = le16_to_cpu(fw_hdr->version);
+ 	fw->sub_version = fw_hdr->subversion;
+ 	fw->sub_index = fw_hdr->subindex;
++
++	__update_firmware_feature(rtwdev, fw);
+ }
+ 
+ static void __update_firmware_info_legacy(struct rtw_dev *rtwdev,
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index ffb02e614217..b00235573a13 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1633,6 +1633,7 @@ struct rtw_fw_state {
+ 	u8 sub_index;
+ 	u16 h2c_version;
+ 	u8 prev_dump_seq;
++	u32 feature;
+ };
+ 
+ struct rtw_hal {
+-- 
+2.17.1
 
-Nossos parceiros de neg=C3=B3cios est=C3=A3o aumentando sua participa=C3=A7=
-=C3=A3o no mercado externo devido =C3=A0 crescente satisfa=C3=A7=C3=A3o d=
-o cliente e oferta diversificada.
-
-O potencial de crescimento de nossas solu=C3=A7=C3=B5es resulta de pre=C3=
-=A7os acess=C3=ADveis, alto desempenho e versatilidade para se adaptar a =
-todos os tipos de pele.
-
-A extens=C3=A3o da gama de produtos proposta =C3=A9 um campo interessante=
- para a coopera=C3=A7=C3=A3o?
-
-
-Cumprimentos,
-Raquel Carvalho
-Conselheiro do Cliente
