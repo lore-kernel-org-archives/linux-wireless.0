@@ -1,144 +1,239 @@
-Return-Path: <SRS0=EpEU=EI=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=NAPm=EF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	LOCALPART_IN_SUBJECT,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE0EC388F9
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 20:58:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89125C4363A
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 12:45:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82F5A2074F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 20:58:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604350684;
-	bh=xbZHn8i0jDfuSVEZ0Oksa2dOCGUBfV80Nzny1ZBkJT8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=fO4EFsFJjPewLC/6t1Np48ugxeSYiX5+3ag3CfNbw/eJC36jAbqDxU2WzVyhevAZ7
-	 EQlUGPgZlRtOfpmVqvrNV/qVa0bMatt2+6VjOY6h1mFCVCT7SBEQIuA/Vicfevs3Ay
-	 mPsbnwBr1j+c2B54uwnltfgf5IVyPaNb59M7TOdc=
+	by mail.kernel.org (Postfix) with ESMTP id 04DA320725
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 12:45:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="khalIXAe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726189AbgKBU6C (ORCPT
+        id S1726325AbgJ3MpM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 15:58:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47586 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726203AbgKBU5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 15:57:54 -0500
-Received: from localhost (230.sub-72-107-127.myvzw.com [72.107.127.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CE8AF206E5;
-        Mon,  2 Nov 2020 20:57:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604350674;
-        bh=xbZHn8i0jDfuSVEZ0Oksa2dOCGUBfV80Nzny1ZBkJT8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=km9zzTo5pPmsKfzc8Mq1w+gaXmsX3YfR2RHRQP9ho/Sd03XOtOtlu2Zp0gJjJZSy8
-         DHSlU4qPH9za2kgkK4I/718zibShYPbKnXGvLQz9JBsTWQAZydTChUGo0ZxpG1y34V
-         eM1RFAadDdqM56bwCvGGJcehMt19uC85p2bceyJw=
-Date:   Mon, 2 Nov 2020 14:57:52 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Thomas Krause <thomaskrause@posteo.de>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-        Devin Bayer <dev@doubly.so>,
-        Govind Singh <govinds@codeaurora.org>
-Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
-Message-ID: <20201102205752.GA34153@bjorn-Precision-5520>
+        Fri, 30 Oct 2020 08:45:12 -0400
+Received: from dvalin.narfation.org ([213.160.73.56]:40136 "EHLO
+        dvalin.narfation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725975AbgJ3MpM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Oct 2020 08:45:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1604061908;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=hcGNXoxVuwEEEyeyR1+KamTg81XMipizN4MgTzx567k=;
+        b=khalIXAeXbJfzaKY4u4eDn28ZsE+X/+9xcya6uhY6c6yojb5qD6g+N9Hl6DP08Mk41KJt5
+        9WAVWy9G4tsgjZU+5Bb1l7mNH3u+J6+b3kNA4rs2Irj8UIzMlGd8Ozat6lzJFFdEqzI6zm
+        q3JwMmXcqy00Ym36psBhOWl9erZQnFQ=
+X-Mailbox-Line: From sven@narfation.org Fri Oct 30 12:34:21 2020
+From:   Sven Eckelmann <sven@narfation.org>
+To:     ath11k@lists.infradead.org
+Cc:     sw@simonwunderlich.de
+Subject: ath11k: Country code setting ignored on bootup
+Date:   Fri, 30 Oct 2020 13:34:21 +0100
+Message-ID: <1829665.1PRlr7bOQj@ripper>
+X-KMail-Identity: 80820071
+X-KMail-Transport: 1618418458
+X-KMail-Fcc: 45
+X-KMail-Identity-Name: Sven Eckelmann
+X-KMail-Transport-Name: narfation.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <871rhbvbjk.fsf@codeaurora.org>
+Content-Type: multipart/signed; boundary="nextPart1669516.2VI8MhZXb1"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[+cc Govind, author of 5697a564d369 ("ath11k: pci: add MSI config
-initialisation")]
+--nextPart1669516.2VI8MhZXb1
+Content-Type: multipart/mixed; boundary="nextPart1843920.GhX3yNMNC5"; protected-headers="v1"
+Content-Transfer-Encoding: 7Bit
+From: Sven Eckelmann <sven@narfation.org>
+To: ath11k@lists.infradead.org
+Cc: sw@simonwunderlich.de
+Subject: Country code setting ignored on bootup
+Date: Fri, 30 Oct 2020 13:34:21 +0100
+Message-ID: <1829665.1PRlr7bOQj@ripper>
 
-On Mon, Nov 02, 2020 at 08:49:51PM +0200, Kalle Valo wrote:
-> + linux-wireless, linux-pci, devin
-> 
-> Thomas Krause <thomaskrause@posteo.de> writes:
-> 
-> >> I had the same problem as well back in the days, for me enabling
-> >> CONFIG_IRQ_REMAP helped. If it helps for you also I wonder if we should
-> >> mention that in the ath11k warning above :)
-> >
-> > CONFIG_IRQ_REMAP did not do the trick. I noticed that the Wi-Fi card
-> > is behind a PCI bridge which is also disabled, could this be a
-> > problem?
-> >
-> > 00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20) (prog-if 00
-> > [Normal decode])
-> > 	Flags: bus master, fast devsel, latency 0, IRQ 123
-> > 	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
-> > 	I/O behind bridge: [disabled]
-> > 	Memory behind bridge: 8c300000-8c3fffff [size=1M]
-> > 	Prefetchable memory behind bridge: [disabled]
-> > 	Capabilities: [40] Express Root Port (Slot+), MSI 00
-> > 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
-> > 	Capabilities: [90] Subsystem: Dell Device 0991
-> > 	Capabilities: [a0] Power Management version 3
-> > 	Capabilities: [100] Advanced Error Reporting
-> > 	Capabilities: [220] Access Control Services
-> > 	Capabilities: [150] Precision Time Measurement
-> > 	Capabilities: [200] L1 PM Substates
-> > 	Capabilities: [a00] Downstream Port Containment
-> > 	Kernel driver in use: pcieport
-> 
-> I don't know enough about PCI to say if the bridge is a problem or not.
+This is a multi-part message in MIME format.
 
-I don't think the bridge is an issue here.  AFAICT the bridge's I/O
-and prefetchable memory windows are disabled, but the non-prefetchable
-window *is* enabled and contains the space consumed by the ath11k
-device:
+--nextPart1843920.GhX3yNMNC5
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-  00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20)
-	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
-	Memory behind bridge: 8c300000-8c3fffff [size=1M]
-  56:00.0 Network controller: Qualcomm Device 1101 (rev 01)
-     Region 0: Memory at 8c300000 (64-bit, non-prefetchable) [size=1M]
+Hi,
 
-> To summarise: Thomas is reporting[1] a problem with ath11k on QCA6390
-> PCI device where he is not having enough MSI vectors. ath11k needs 32
-> vectors but pci_alloc_irq_vectors() returns -ENOSPC. PCI support is new
-> for ath11k and introduced in v5.10-rc1. The irq allocation code is in
-> drivers/net/wireless/ath/ath11k/pci.c. [2]
+just tested here with HK01 based board. The firwmare 
+WLAN.HK.2.1.0.1-01228-QCAHKSWPL_SILICONZ-1 doesn't show this problematic 
+behavior all the time but 2.4.0.1.r1-00026-QCAHKSWPL_SILICONZ-2 or WLAN.HK.
+2.4.0.1.r1-00019-QCAHKSWPL_SILICONZ-1 does.
 
-This code is needlessly complicated.  If you absolutely need
-msi_config.total_vectors and can't settle for any less, you can do
-this:
+With 2.1.0.1 I could basically do following:
 
-  num_vectors = pci_alloc_irq_vectors(ab_pci->pdev,
-                                      msi_config.total_vectors,
-                                      msi_config.total_vectors,
-                                      PCI_IRQ_MSI);
+    iw reg set CA
+    echo "c000000.wifi1" > /sys/bus/platform/drivers/ath11k/unbind
+    echo "c000000.wifi1" > /sys/bus/platform/drivers/ath11k/bind
 
-  if (num_vectors < 0) {
-    ath11k_err(ab, "failed to get %d MSI vectors (%d)\n",
-               msi_config.total_vectors, num_vectors);
-    return num_vectors;
-  }
+and the global and self managed country codes were still all CA (in many 
+tests). But with 2.4.0.1, they will end up with CA as global and US as self 
+managed. I can see that the country code change is correctly send by cfg80211 
+when the HW is initializes but the 2.4.0.1 firmware just ignores it.
 
-But it seems a little greedy if the device can't operate at all unless
-it gets 32 vectors.  Are you sure that's a hard requirement?  Most
-devices can work with fewer vectors, even if it reduces performance.
+I can see following send command by ath11k in ath11k_wmi_send_init_country_cmd:
 
-> I would first try with a full distro kernel config, just in case there's
-> some another important kernel config missing.
-> 
-> [1] http://lists.infradead.org/pipermail/ath11k/2020-October/000466.html
+    00000000: 38 00 61 02 00 00 00 00 00 00 00 00 43 41 00 00
 
-Tangent: have you considered getting this list archived on
-https://lore.kernel.org/lists.html?
+and I also receive a CA answer for that. But the response from the firmware comes
+in when the ATH11K_FLAG_REGISTERED bit is still not set. Thus it is rejected by
+ath11k_reg_chan_list_event for the regd_update_work.
 
-> [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/ath/ath11k/pci.c#n633
-> 
-> -- 
-> https://patchwork.kernel.org/project/linux-wireless/list/
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+This seems to be a race between receiving the 
+"ATH11K_QMI_EVENT_FW_READY" event and the ieee80211_register_hw() in 
+__ath11k_mac_register. The ieee80211_register_hw will make the hw responsible 
+for handling the regd updates but they will not be correctly processed until 
+the ATH11K_QMI_EVENT_FW_READY was handled by the firmware. And if the regd 
+change was processed after ath11k_regd_update was called in 
+__ath11k_mac_register (but before the ATH11K_QMI_EVENT_FW_READY was processed)
+then we will just loose the regd change.
+
+So I am a little bit baffled why ATH11K_FLAG_REGISTERED is bound to something 
+which is not related to the  IEEE802211 registration code. Sounds to me like 
+somebody wanted a FW_READY flag but misused the ATH11K_FLAG_REGISTERED flag 
+for this purpose.
+
+Btw. there are similar problems with the use of ATH11K_FLAG_REGISTERED in context
+of ath11k_debug_pdev_create, ath11k_mac_register and ath11k_mac_allocate.
+
+Maybe something like the attached patch could be used to improve this situation.
+
+Kind regards,
+	Sven
+--nextPart1843920.GhX3yNMNC5
+Content-Disposition: attachment; filename="0001-ath11k-Accept-new-regdomain-during-initialization.patch"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/x-patch; charset="UTF-8"; name="0001-ath11k-Accept-new-regdomain-during-initialization.patch"
+
+>From 931e5eb59e64804f3a90598b26c56643c43deb35 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 30 Oct 2020 12:02:21 +0100
+Subject: [RFC PATCH] ath11k: Accept new regdomain during initialization
+
+The driver is registering as iee80211_hw with its OPs and is then able to
+be called by the upper layer. This for example happens early in the phase
+when the correct regulary domain should be set. But the regulary domain
+will only be accepted when the ATH11K_FLAG_REGISTERED flag was set after
+the ATH11K_QMI_EVENT_FW_READY was processed. So it can easily happen that
+the regularly domain is not correctly processed when
+ATH11K_QMI_EVENT_FW_READY isn't handled immediately:
+
+  $ iw reg set CA
+  $ iw reg get|grep country
+  country CA: DFS-FCC
+  country CA: DFS-FCC
+  country CA: DFS-FCC
+
+  $ echo "c000000.wifi1" > /sys/bus/platform/drivers/ath11k/unbind
+  $ echo "c000000.wifi1" > /sys/bus/platform/drivers/ath11k/bind
+  $ iw reg get|grep country
+  country CA: DFS-FCC
+  country US: DFS-FCC
+  country US: DFS-FCC
+
+It is therefore essential to accept the regulatory changes without having
+seen the ATH11K_QMI_EVENT_FW_READY. And since there are also potentially
+more problems in ath11k_debug_pdev_create, ath11k_mac_register and
+ath11k_mac_allocate with their use of ATH11K_FLAG_REGISTERED, it is better
+to move the ATH11K_QMI_EVENT_FW_READY. to a new flag.
+
+Tested with WLAN.HK.2.4.0.1.r1-00019-QCAHKSWPL_SILICONZ-1
+
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath11k/core.h | 2 +-
+ drivers/net/wireless/ath/ath11k/mac.c  | 2 ++
+ drivers/net/wireless/ath/ath11k/qmi.c  | 4 ++--
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 18b97420f0d8..1d214eed9ea1 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -170,7 +170,7 @@ enum ath11k_scan_state {
+ 
+ enum ath11k_dev_flags {
+ 	ATH11K_CAC_RUNNING,
+-	ATH11K_FLAG_CORE_REGISTERED,
++	ATH11K_FLAG_FW_READY,
+ 	ATH11K_FLAG_CRASH_FLUSH,
+ 	ATH11K_FLAG_RAW_MODE,
+ 	ATH11K_FLAG_HW_CRYPTO_DISABLED,
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 7f8dd47d2333..00aca46505a6 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -6280,6 +6280,8 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 		 */
+ 		ar->hw->wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MONITOR);
+ 
++	set_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags);
++
+ 	/* Apply the regd received during initialization */
+ 	ret = ath11k_regd_update(ar, true);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index c2b165158225..417f63d9fb6d 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -2612,7 +2612,7 @@ static void ath11k_qmi_driver_event_work(struct work_struct *work)
+ 			ath11k_qmi_event_load_bdf(qmi);
+ 			break;
+ 		case ATH11K_QMI_EVENT_FW_READY:
+-			if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags)) {
++			if (test_bit(ATH11K_FLAG_FW_READY, &ab->dev_flags)) {
+ 				ath11k_hal_dump_srng_stats(ab);
+ 				queue_work(ab->workqueue, &ab->restart_work);
+ 				break;
+@@ -2620,7 +2620,7 @@ static void ath11k_qmi_driver_event_work(struct work_struct *work)
+ 
+ 			ath11k_core_qmi_firmware_ready(ab);
+ 			ab->qmi.cal_done = 1;
+-			set_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags);
++			set_bit(ATH11K_FLAG_FW_READY, &ab->dev_flags);
+ 
+ 			break;
+ 		case ATH11K_QMI_EVENT_COLD_BOOT_CAL_DONE:
+-- 
+2.28.0
+
+
+--nextPart1843920.GhX3yNMNC5--
+
+--nextPart1669516.2VI8MhZXb1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAl+cCE0ACgkQXYcKB8Em
+e0ZbWhAAjZ7OGMvFIYXT5cKo0xE5ubbOAtaLxciVgqeaku0ZK34LxJMU4bQm0dXc
+jgVeo5grN26wGcr0kDslbS4RnZ2C8BBxNsHG+e45wKCRCwymnOcpqW566/KjcA61
+ciIy4FU49F36hbrUuWjEMe7kG7XRZVK2ocY3J8Rp5wd8uXYoK374q1yTuGXeIkVb
+vIdT39YJWSTXVEc/62G/l6vfdHmmqQHonsRg0B6KISeyAyuZ69rLjaJIAazb7vOr
+P1lUUrwrXhhkiQ1j2G0Lmmz5qzx+scqCfp8T2l+bTPa1D67ND3dByT1ntVfSuRiS
+7eLFfmWeAtjXxS2fnE5CHnlp94ri845TLQaOVVz3srKCynSxIBd0r5cfTvmSAgkU
+D5IkQu1KqNKVOJeaUw6JpxdOsiBArdhawwxiKjx8oEHgxiiq+uqWDI+W6nqU+ymg
+qZo957qeYHKaiyySv0D93/ykN26tj8iruX4ORJj2XLs9w8a4ER/hjyt6IBYozNWh
+Bh5TSrqZr0NIO9bC1gVO5GNgCu3NTkBh5PznO/ZKkvJCmDObarz+n8R7awsh3PMN
+Pu8PxNPjLAFztCIEKiMaXmYrDhcGSlUCYgAgyLzF4ZNgONs3CzFPWNFfICj54lhB
+MQo0KKKGsRp8h08lSoO36/KKBG3BAKRkAcMGuwRS6L3FAvBhZbc=
+=EGTx
+-----END PGP SIGNATURE-----
+
+--nextPart1669516.2VI8MhZXb1--
+
