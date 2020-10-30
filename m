@@ -2,137 +2,110 @@ Return-Path: <SRS0=NAPm=EF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FCBBC56201
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 10:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 471B1C4363A
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 10:20:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F9F920825
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 10:04:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDF8B221EB
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 10:20:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="B9rJTdT0"
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="gEPJy0lA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726210AbgJ3KEU (ORCPT
+        id S1726102AbgJ3KUs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Oct 2020 06:04:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49618 "EHLO
+        Fri, 30 Oct 2020 06:20:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725808AbgJ3KET (ORCPT
+        with ESMTP id S1725905AbgJ3KUs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Oct 2020 06:04:19 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C5EDC0613D2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 03:04:17 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id w14so5766566wrs.9
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 03:04:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=gQH8tfnS5gABqR+rI2vYNKDqWdjjH0cmP3e9KTBgftU=;
-        b=B9rJTdT06fBjkoaC4E33GsRL6XklEaCtgE6RSNGKr1R6NIN6tshFsvlrm73+qDotTs
-         TgtMR2VLSrECST5bfnSTgKL7Wgi9dLvx0b+wOp98ZwTdU4Ui8lhbwxRwAvAFaXlLlBUv
-         kIF79xh7rAnLeAmFUb7OH8iS2qmajJB6f90j1t67g5Zqi8ZvFcvZqslE0Nw79PSToAvD
-         N9OdQRnS+ec6wQ18zcvo4xYOB+MrwDVlSeHj5ODLObBC4OqIgDsKYG4VpZ7Zwf1s+0XG
-         E8uv8pTzD1YjF2GLDWWylcwx+GDZ++SmMtTJoKDLvlekOLEjOvRKbLbn1NSmNnF0g7r5
-         ocZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gQH8tfnS5gABqR+rI2vYNKDqWdjjH0cmP3e9KTBgftU=;
-        b=LjkQbaWdClf4u11wLHb5I+TWQjiSVrEvdCq50SpvP3fwIzkJyY01iHtIs2Us+wHdwK
-         xgJLfwk7WJepSv3gtK2kGJ8/hcN0suDyZ3douLBD4n+TTyLH+sbqrDNb+looVs97Vi8v
-         EjUGIINwRanJg90NpXQ81HbrKIcCdcVqv7XxlURD/Ny0Y58l8mssOniWxF8bg+lGPikO
-         GRmx3fq+jMDm8R7y6Cj1kbAGs70CWbwYgCmdWUYaQsIxNW+N/vlCyrk9QqYoHB4fyrQf
-         uVo0W8Z3kDnd/wwPP8+mG0v/LY91jdSaDYMCB7Oq1Nki0k/7jwIFC5oIqsCt/nfjv3yP
-         sH2A==
-X-Gm-Message-State: AOAM531QWql3Txxfv50SNiliI61cbFLBH8fvZR8g4mpgZw2ijZ6QaeK0
-        yFUgjalelgnCTf2FqsJTKfKsslkQsX6HBA==
-X-Google-Smtp-Source: ABdhPJyiqwsuWF8oCOJ2p5mgrL1UOBEF3qjVNKqZ9hb80Q/uxO4LXY5WvIi3i2M6psl12Cn+2MTVIQ==
-X-Received: by 2002:a5d:40c3:: with SMTP id b3mr2187416wrq.157.1604052256376;
-        Fri, 30 Oct 2020 03:04:16 -0700 (PDT)
-Received: from [192.168.86.34] (cpc86377-aztw32-2-0-cust226.18-1.cable.virginm.net. [92.233.226.227])
-        by smtp.googlemail.com with ESMTPSA id h8sm7699531wro.14.2020.10.30.03.04.14
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 30 Oct 2020 03:04:15 -0700 (PDT)
-Subject: Re: [PATCH v2 19/39] docs: ABI: stable: make files ReST compatible
-To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Daniel Thompson <daniel.thompson@linaro.org>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Jerry Snitselaar <jsnitsel@redhat.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Juergen Gross <jgross@suse.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Oded Gabbay <oded.gabbay@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Tom Rix <trix@redhat.com>,
-        Vaibhav Jain <vaibhav@linux.ibm.com>,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        xen-devel@lists.xenproject.org
-References: <cover.1604042072.git.mchehab+huawei@kernel.org>
- <467a0dfbcdf00db710a629d3fe4a2563750339d8.1604042072.git.mchehab+huawei@kernel.org>
-From:   Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Message-ID: <bc393307-d7dc-1666-f25c-6d756ebf5993@linaro.org>
-Date:   Fri, 30 Oct 2020 10:04:13 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        Fri, 30 Oct 2020 06:20:48 -0400
+Received: from dvalin.narfation.org (dvalin.narfation.org [IPv6:2a00:17d8:100::8b1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 340CCC0613D7
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 03:20:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1604053245;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=FvizhSNK+uh+rIKRB7Bavqq6BcTSN6HK4548HqRc0Po=;
+        b=gEPJy0lAFOYkk8eRrITLiEEG01hEFsg0oBaZvbUOA0uZyALlKGVQaDSsH71q58HVOavqee
+        eLS8bgSbYC/Z8lMza1GT2bPlO0umo1PmhXGqlciismPT2EUz8rz6DLqsHgF5SjzqB1cZm+
+        qPg0t6BMvyKiA+dIgdjV5H5I0qDmkMg=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH] ath11k: Fix number of rules in filtered ETSI regdomain
+Date:   Fri, 30 Oct 2020 11:19:40 +0100
+Message-Id: <20201030101940.2387952-1-sven@narfation.org>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-In-Reply-To: <467a0dfbcdf00db710a629d3fe4a2563750339d8.1604042072.git.mchehab+huawei@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+The ath11k code will try to insert wheather rader related limits when the
+DFS region is set to ETSI. For this reason, it will add two more entries in
+the array of reg_rules. But the 2.4.0.1 firmware is prefiltering the list
+of reg rules it returns for 2.4GHz PHYs. They will then not contain the
+list of 5GHz rules and thus no wheather radar band rules were inserted by
+this code.
 
+But the code didn't fix the n_reg_rules for this regulatory domain and PHY
+when this happened. This resulted in a rejection by is_valid_rd because it
+found rules which start and end at 0khz. This resulted in a splat like:
 
-On 30/10/2020 07:40, Mauro Carvalho Chehab wrote:
-> Several entries at the stable ABI files won't parse if we pass
-> them directly to the ReST output.
-> 
-> Adjust them, in order to allow adding their contents as-is at
-> the stable ABI book.
-> 
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-> ---
->   Documentation/ABI/stable/firewire-cdev        |  4 +
->   Documentation/ABI/stable/sysfs-acpi-pmprofile | 22 +++--
->   Documentation/ABI/stable/sysfs-bus-firewire   |  3 +
->   Documentation/ABI/stable/sysfs-bus-nvmem      | 19 ++--
+  Invalid regulatory domain detected
+  ------------[ cut here ]------------
+  WARNING: at backports-20200628-4.4.60-9a94b73e75/net/wireless/reg.c:3721
+  [...]
+  ath11k c000000.wifi1: failed to perform regd update : -22
 
-for nvmem parts:
+The number of rules must therefore be saved after they were converted from
+the ath11k format to the ieee80211_regdomain format and not before.
 
-Acked-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Tested with IPQ8074 WLAN.HK.2.4.0.1.r1-00019-QCAHKSWPL_SILICONZ-1
 
---srini
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath11k/reg.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
->   Documentation/ABI/stable/sysfs-bus-usb        |  6 +-
->   .../ABI/stable/sysfs-class-backlight          |  1 +
->   .../ABI/stable/sysfs-class-infiniband         | 93 +++++++++++++------
->   Documentation/ABI/stable/sysfs-class-rfkill   | 13 ++-
->   Documentation/ABI/stable/sysfs-class-tpm      | 90 +++++++++---------
->   Documentation/ABI/stable/sysfs-devices        |  5 +-
->   Documentation/ABI/stable/sysfs-driver-ib_srp  |  1 +
->   .../ABI/stable/sysfs-firmware-efi-vars        |  4 +
->   .../ABI/stable/sysfs-firmware-opal-dump       |  5 +
->   .../ABI/stable/sysfs-firmware-opal-elog       |  2 +
->   Documentation/ABI/stable/sysfs-hypervisor-xen |  3 +
->   Documentation/ABI/stable/vdso                 |  5 +-
->   16 files changed, 176 insertions(+), 100 deletions(-)
-> 
+diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
+index f6a1f0352989..26e7e75191c7 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -584,7 +584,6 @@ ath11k_reg_build_regd(struct ath11k_base *ab,
+ 	if (!tmp_regd)
+ 		goto ret;
+ 
+-	tmp_regd->n_reg_rules = num_rules;
+ 	memcpy(tmp_regd->alpha2, reg_info->alpha2, REG_ALPHA2_LEN + 1);
+ 	memcpy(alpha2, reg_info->alpha2, REG_ALPHA2_LEN + 1);
+ 	alpha2[2] = '\0';
+@@ -597,7 +596,7 @@ ath11k_reg_build_regd(struct ath11k_base *ab,
+ 	/* Update reg_rules[] below. Firmware is expected to
+ 	 * send these rules in order(2G rules first and then 5G)
+ 	 */
+-	for (; i < tmp_regd->n_reg_rules; i++) {
++	for (; i < num_rules; i++) {
+ 		if (reg_info->num_2g_reg_rules &&
+ 		    (i < reg_info->num_2g_reg_rules)) {
+ 			reg_rule = reg_info->reg_rules_2g_ptr + i;
+@@ -652,6 +651,8 @@ ath11k_reg_build_regd(struct ath11k_base *ab,
+ 			   flags);
+ 	}
+ 
++	tmp_regd->n_reg_rules = i;
++
+ 	if (intersect) {
+ 		default_regd = ab->default_regd[reg_info->phy_id];
+ 
+-- 
+2.28.0
+
