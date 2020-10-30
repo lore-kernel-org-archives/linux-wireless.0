@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE2BC4741F
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:48:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C09C00A89
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:48:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F24A72083B
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A401F2151B
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 08:48:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726017AbgJ3Isz (ORCPT
+        id S1726028AbgJ3Isz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 30 Oct 2020 04:48:55 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:50440 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:50442 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725355AbgJ3Isz (ORCPT
+        with ESMTP id S1725790AbgJ3Isz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 30 Oct 2020 04:48:55 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09U8mlf87013488, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 09U8mlfB7013488, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09U8mlf87013488
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 09U8mlfB7013488
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Fri, 30 Oct 2020 16:48:47 +0800
 Received: from localhost.localdomain (172.21.69.222) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Fri, 30 Oct 2020 16:48:46 +0800
+ 15.1.2044.4; Fri, 30 Oct 2020 16:48:47 +0800
 From:   <tehuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v2 1/4] rtw88: sync the power state between driver and firmware
-Date:   Fri, 30 Oct 2020 16:48:23 +0800
-Message-ID: <20201030084826.9034-2-tehuang@realtek.com>
+Subject: [PATCH v2 3/4] rtw88: add C2H response for checking firmware leave lps
+Date:   Fri, 30 Oct 2020 16:48:25 +0800
+Message-ID: <20201030084826.9034-4-tehuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201030084826.9034-1-tehuang@realtek.com>
 References: <20201030084826.9034-1-tehuang@realtek.com>
@@ -51,104 +51,166 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chin-Yen Lee <timlee@realtek.com>
 
-In current flow, driver issues power requests to firmware for entering or
-leaving deep power mode. But driver does not wait for an ack from firmware
-via reading CPWM register when driver requests to enter deep power mode.
-The behavior will lead to unsynchronized state between firmware and driver.
-Furthermore, consecutive same power requests may confuse firmware and leads
-to unexpected value of CPWM register. This patch ensures that the power
-request will wait for an ack from firmware and only send one power request
-each time.
+Originally driver checks if firmware has left lps via reading the setting
+of REG_TCR register. But this way may fail when firmware is frequently
+changing power state. Therefore, firmware provides a safer option for
+driver. When firmware leaves lps successfully, it sends a C2H response
+to inform driver.
 
 Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/ps.c | 69 +++++++++++--------------
- 1 file changed, 30 insertions(+), 39 deletions(-)
+ drivers/net/wireless/realtek/rtw88/fw.c   |  3 ++
+ drivers/net/wireless/realtek/rtw88/fw.h   |  1 +
+ drivers/net/wireless/realtek/rtw88/main.c |  1 +
+ drivers/net/wireless/realtek/rtw88/main.h |  1 +
+ drivers/net/wireless/realtek/rtw88/ps.c   | 52 ++++++++++++++++++++---
+ drivers/net/wireless/realtek/rtw88/ps.h   |  1 +
+ 6 files changed, 54 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index 042015bc8055..29fffacf4085 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -183,6 +183,9 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
+ 	case C2H_BT_MP_INFO:
+ 		rtw_coex_info_response(rtwdev, skb);
+ 		break;
++	case C2H_WLAN_RFON:
++		complete(&rtwdev->lps_leave_check);
++		break;
+ 	default:
+ 		/* pass offset for further operation */
+ 		*((u32 *)skb->cb) = pkt_offset;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index 5b74830c4d2c..39c905c1b1d8 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -31,6 +31,7 @@ enum rtw_c2h_cmd_id {
+ 	C2H_RA_RPT = 0x0c,
+ 	C2H_HW_FEATURE_REPORT = 0x19,
+ 	C2H_WLAN_INFO = 0x27,
++	C2H_WLAN_RFON = 0x32,
+ 	C2H_HW_FEATURE_DUMP = 0xfd,
+ 	C2H_HALMAC = 0xff,
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 259ad849af93..5c46f5d2e87c 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1652,6 +1652,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 	mutex_init(&rtwdev->hal.tx_power_mutex);
+ 
+ 	init_waitqueue_head(&rtwdev->coex.wait);
++	init_completion(&rtwdev->lps_leave_check);
+ 
+ 	rtwdev->sec.total_cam_num = 32;
+ 	rtwdev->hal.current_channel = 1;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index b00235573a13..53ddd8661c44 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1740,6 +1740,7 @@ struct rtw_dev {
+ 	/* lps power state & handler work */
+ 	struct rtw_lps_conf lps_conf;
+ 	bool ps_enabled;
++	struct completion lps_leave_check;
+ 
+ 	struct dentry *debugfs;
+ 
 diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
-index 7a189a9926fe..8ed243628dcb 100644
+index 8ed243628dcb..233b3df264b3 100644
 --- a/drivers/net/wireless/realtek/rtw88/ps.c
 +++ b/drivers/net/wireless/realtek/rtw88/ps.c
-@@ -68,48 +68,39 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
- void rtw_power_mode_change(struct rtw_dev *rtwdev, bool enter)
- {
- 	u8 request, confirm, polling;
--	u8 polling_cnt;
--	u8 retry_cnt = 0;
--
--	for (retry_cnt = 0; retry_cnt < 3; retry_cnt++) {
--		request = rtw_read8(rtwdev, rtwdev->hci.rpwm_addr);
--		confirm = rtw_read8(rtwdev, rtwdev->hci.cpwm_addr);
--
--		/* toggle to request power mode, others remain 0 */
--		request ^= request | BIT_RPWM_TOGGLE;
--		if (!enter) {
--			request |= POWER_MODE_ACK;
--		} else {
--			request |= POWER_MODE_LCLK;
--			if (rtw_fw_lps_deep_mode == LPS_DEEP_MODE_PG)
--				request |= POWER_MODE_PG;
--		}
--
--		rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, request);
--
--		if (enter)
--			return;
-+	int ret;
- 
--		/* check confirm power mode has left power save state */
--		for (polling_cnt = 0; polling_cnt < 50; polling_cnt++) {
--			polling = rtw_read8(rtwdev, rtwdev->hci.cpwm_addr);
--			if ((polling ^ confirm) & BIT_RPWM_TOGGLE)
--				return;
--			udelay(100);
--		}
--
--		/* in case of fw/hw missed the request, retry */
--		rtw_warn(rtwdev, "failed to leave deep PS, retry=%d\n",
--			 retry_cnt);
-+	request = rtw_read8(rtwdev, rtwdev->hci.rpwm_addr);
-+	confirm = rtw_read8(rtwdev, rtwdev->hci.cpwm_addr);
-+
-+	/* toggle to request power mode, others remain 0 */
-+	request ^= request | BIT_RPWM_TOGGLE;
-+	if (enter) {
-+		request |= POWER_MODE_LCLK;
-+		if (rtw_fw_lps_deep_mode == LPS_DEEP_MODE_PG)
-+			request |= POWER_MODE_PG;
- 	}
-+	/* Each request require an ack from firmware */
-+	request |= POWER_MODE_ACK;
- 
--	/* Hit here means that driver failed to change hardware power mode to
--	 * active state after retry 3 times. If the power state is locked at
--	 * Deep sleep, most of the hardware circuits is not working, even
--	 * register read/write. It should be treated as fatal error and
--	 * requires an entire analysis about the firmware/hardware
--	 */
--	WARN(1, "Hardware power state locked\n");
-+	rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, request);
-+
-+	/* Check firmware get the power requset and ack via cpwm register */
-+	ret = read_poll_timeout_atomic(rtw_read8, polling,
-+				       (polling ^ confirm) & BIT_RPWM_TOGGLE,
-+				       100, 15000, true, rtwdev,
-+				       rtwdev->hci.cpwm_addr);
-+	if (ret) {
-+		/* Hit here means that driver failed to get an ack from firmware.
-+		 * The reason could be that hardware is locked at Deep sleep,
-+		 * so most of the hardware circuits are not working, even
-+		 * register read/write; or firmware is locked in some state and
-+		 * cannot get the request. It should be treated as fatal error
-+		 * and requires an entire analysis about the firmware/hardware.
-+		 */
-+		WARN(1, "firmware failed to ack driver for %s Deep Power mode\n",
-+		     enter ? "entering" : "leaving");
-+	}
+@@ -109,7 +109,7 @@ static void __rtw_leave_lps_deep(struct rtw_dev *rtwdev)
+ 	rtw_hci_deep_ps(rtwdev, false);
  }
- EXPORT_SYMBOL(rtw_power_mode_change);
  
+-static void rtw_fw_leave_lps_state_check(struct rtw_dev *rtwdev)
++static int __rtw_fw_leave_lps_check_reg(struct rtw_dev *rtwdev)
+ {
+ 	int i;
+ 
+@@ -127,12 +127,53 @@ static void rtw_fw_leave_lps_state_check(struct rtw_dev *rtwdev)
+ 	 */
+ 	for (i = 0 ; i < LEAVE_LPS_TRY_CNT; i++) {
+ 		if (rtw_read32_mask(rtwdev, REG_TCR, BIT_PWRMGT_HWDATA_EN) == 0)
+-			return;
++			return 0;
+ 		msleep(20);
+ 	}
+ 
+-	rtw_write32_mask(rtwdev, REG_TCR, BIT_PWRMGT_HWDATA_EN, 0);
+-	rtw_warn(rtwdev, "firmware failed to restore hardware setting\n");
++	return -EBUSY;
++}
++
++static  int __rtw_fw_leave_lps_check_c2h(struct rtw_dev *rtwdev)
++{
++	if (wait_for_completion_timeout(&rtwdev->lps_leave_check,
++					LEAVE_LPS_TIMEOUT))
++		return 0;
++	return -EBUSY;
++}
++
++static void rtw_fw_leave_lps_check(struct rtw_dev *rtwdev)
++{
++	bool ret = false;
++	struct rtw_fw_state *fw;
++
++	if (test_bit(RTW_FLAG_WOWLAN, rtwdev->flags))
++		fw = &rtwdev->wow_fw;
++	else
++		fw = &rtwdev->fw;
++
++	if (fw->feature & FW_FEATURE_LPS_C2H)
++		ret = __rtw_fw_leave_lps_check_c2h(rtwdev);
++	else
++		ret = __rtw_fw_leave_lps_check_reg(rtwdev);
++
++	if (ret) {
++		rtw_write32_clr(rtwdev, REG_TCR, BIT_PWRMGT_HWDATA_EN);
++		rtw_warn(rtwdev, "firmware failed to leave lps state\n");
++	}
++}
++
++static void rtw_fw_leave_lps_check_prepare(struct rtw_dev *rtwdev)
++{
++	struct rtw_fw_state *fw;
++
++	if (test_bit(RTW_FLAG_WOWLAN, rtwdev->flags))
++		fw = &rtwdev->wow_fw;
++	else
++		fw = &rtwdev->fw;
++
++	if (fw->feature & FW_FEATURE_LPS_C2H)
++		reinit_completion(&rtwdev->lps_leave_check);
+ }
+ 
+ static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
+@@ -145,8 +186,9 @@ static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
+ 	conf->smart_ps = 0;
+ 
+ 	rtw_hci_link_ps(rtwdev, false);
++	rtw_fw_leave_lps_check_prepare(rtwdev);
+ 	rtw_fw_set_pwr_mode(rtwdev);
+-	rtw_fw_leave_lps_state_check(rtwdev);
++	rtw_fw_leave_lps_check(rtwdev);
+ 
+ 	clear_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
+index 19afceca7d0e..915b200081fc 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.h
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -12,6 +12,7 @@
+ #define POWER_MODE_LCLK		BIT(0)
+ 
+ #define LEAVE_LPS_TRY_CNT	5
++#define LEAVE_LPS_TIMEOUT	msecs_to_jiffies(100)
+ 
+ int rtw_enter_ips(struct rtw_dev *rtwdev);
+ int rtw_leave_ips(struct rtw_dev *rtwdev);
 -- 
 2.17.1
 
