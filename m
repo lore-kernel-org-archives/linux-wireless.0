@@ -2,193 +2,223 @@ Return-Path: <SRS0=NAPm=EF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EACF2C00A89
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 14:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01266C00A89
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 15:27:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A499206E5
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 14:36:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9767C2083B
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 15:27:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SYJEgfO4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vU48EE9g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726348AbgJ3OgE (ORCPT
+        id S1727182AbgJ3P1n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Oct 2020 10:36:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35560 "EHLO
+        Fri, 30 Oct 2020 11:27:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725939AbgJ3OgE (ORCPT
+        with ESMTP id S1726939AbgJ3P1n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Oct 2020 10:36:04 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C0AAC0613D2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 07:25:44 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id c20so5426463pfr.8
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 07:25:44 -0700 (PDT)
+        Fri, 30 Oct 2020 11:27:43 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 003CEC0613CF;
+        Fri, 30 Oct 2020 08:27:42 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id 133so5589749pfx.11;
+        Fri, 30 Oct 2020 08:27:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to;
-        bh=w/8x7K3UAWKqFtcltLKAwEAwsbXBm+pQP4LvjDwuXaQ=;
-        b=SYJEgfO4WZTTbJsYveDLPlXrBgxevn/HCrOrJpZUR7ngu2/rYH5tESOt0xUeeZQlja
-         mvTAsWY+S1vlD2pp6qKxftqVnW9TCVTfWV3rgyL75Vku7UZTF6iwYcS92rfJvBPSfvdr
-         MmtEDGS/kG8Q1ISvRmkYwYLdCSRZ+Un30LYgI=
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=cerH7A6E9c/e7WcTUbUIVWqeE/Rr/7wvJ+hfwZcTH2M=;
+        b=vU48EE9gtfxsPSE1qCZVWuji8LUolC0C0N3wjAgbFuG2MkTpF0cVc7AtiitxPCETOF
+         1Z+Lt1XUjUPmZS/+LNdgVdDoYSUtbjzVeh1+gydIBgOKfd3ZRmXd3hvDgkOPGNdYl+Mv
+         AlLhs7VlOcwtFohsSCdvOJ+P9S86UV1Ky8my2UhjjCUAp5bdgFMBPLQZ1L4eVUtHSxX3
+         J+2SsbX0u1JHtWO8+jFYaazhzWHO9B1Zl6ogbXwmXATYwmz35VBRwj3j7IlA09DKM795
+         w56PxDOkjqSE8dmYpm27EUSmwUzLh7Dz7/3AABLDxyvfz6mBebUB4gD+b/u3+wPVdLuz
+         fukg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to;
-        bh=w/8x7K3UAWKqFtcltLKAwEAwsbXBm+pQP4LvjDwuXaQ=;
-        b=Zs+3cPJG7uya6fYDW2i4F7EwiNAnR+m/4VbooEbmWOzf7ZJLOWTEwTCV+m15EboEfU
-         ymou0H8J5TrVe8RCsinsknw9/8Jr6mSscW/CuAH/GIBsgMZlYg0jZQmYqU0fxz01KAgN
-         oRnjjU4Ejd2iNyisLT/ZETLF8sKLa0VfbJsn3FjNYVf1nwkruccSNntdyqsXxkCpG198
-         Eid+OVTB8oXDLDSmcHbNjYK8lW1jhR2ISnHgd9Rr/TxbitMhYSt4bipPcin8gAv717iJ
-         8J8njwiord5lhcSsc50E+HH11tq6JhBaHOCevwpo26xHSbYciiujz4PeefHLXAlok0AF
-         6LMQ==
-X-Gm-Message-State: AOAM533a9MS9Y+haVuABBbiK0OboPWrkgRkwxvTQwj6uj0OBs99iTqmJ
-        aJp1xQx5cEmjhv9+fx5hYOk9QMcUJSHjYGb9hFSpIbSE/EbpLA18ZM0xQq4mEQOOcOGbESgvVm8
-        bAz6S06VqaY3Y+hDkwOpN61mYuhNeh2XrxOllt+vLOvy9+yzVsF48lcpdtK8yFxzN7oDOkK6gY4
-        /qqn5fVlPGHZ6D4GZj
-X-Google-Smtp-Source: ABdhPJx9QifMb1Dzd1BBFYSzCMivNEZ71S7nz7DmpstQA15zfPfeoODoM3RE7w3y4X53MgyTFuaJiw==
-X-Received: by 2002:a17:90a:5806:: with SMTP id h6mr1888373pji.139.1604067943319;
-        Fri, 30 Oct 2020 07:25:43 -0700 (PDT)
-Received: from [10.230.33.93] ([192.19.148.250])
-        by smtp.gmail.com with ESMTPSA id g7sm3639861pjl.11.2020.10.30.07.25.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Oct 2020 07:25:42 -0700 (PDT)
-Subject: Re: [PATCH] staging: rtl8723bs: Add 024c:0627 to the list of SDIO
- device-ids
-To:     Brian O'Keefe <bokeefe@alum.wpi.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-References: <CABtq2xReyqg1wJM7W1d=KWRNTNN0Q6HCgJMWcQ6DH=SmKcxQRg@mail.gmail.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <b0fd8b5a-66f3-871c-fe37-939d814f3f99@broadcom.com>
-Date:   Fri, 30 Oct 2020 15:25:40 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=cerH7A6E9c/e7WcTUbUIVWqeE/Rr/7wvJ+hfwZcTH2M=;
+        b=EopTPaZZmqmhd2g2+YduZ44k3prEkyYph9uKZ36vIBvC1DAdH2eTzZLv9AOGsqk5rP
+         w38F5zhuze25MvUeFrMHo9tcjs2OQsx5FW4gSLXq3WtR3tmaky2OYsDwCVN0zPRJQb+D
+         EwOy+BkT8IVVZmTqC51cCTAXV/1BYzZX5HfNETe9LdDxookeIVZUhVYJAUZRNlawyBWj
+         gkDBPzMMJyWUXBDIbxnh8YTijbb/VYu1mlRwBMhLthkW9sm0Uq7jXky3srMo2df1iKkR
+         9eH5cIyu7tZiuDhoUUgBSLDyGk4TlqS8Txr5tz23OAGChWrclXsI/Fp9ktg6rHqD2Cuo
+         qsiw==
+X-Gm-Message-State: AOAM531Fvrlvv2KAHvt/2045xZVKkj9gZ0Ze3utPeGiUvIp10Xc4IkBQ
+        yGPwz7KEK46zZfFdEEMimOI=
+X-Google-Smtp-Source: ABdhPJwT1P1hFDAuzcrR9sqdQhfD+6b3w88a5fVOPwka4NSUniKB1T7kBqWnKLP7kLK39qyXiDRCeA==
+X-Received: by 2002:a65:6158:: with SMTP id o24mr2757919pgv.120.1604071662384;
+        Fri, 30 Oct 2020 08:27:42 -0700 (PDT)
+Received: from [192.168.1.59] (i60-35-254-237.s41.a020.ap.plala.or.jp. [60.35.254.237])
+        by smtp.gmail.com with ESMTPSA id b4sm6404480pfi.208.2020.10.30.08.27.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Oct 2020 08:27:41 -0700 (PDT)
+Message-ID: <8c56efa5420eb4211b1af789ef63931d3504d8e1.camel@gmail.com>
+Subject: Re: [RFC PATCH] mwifiex: pcie: use shutdown_sw()/reinit_sw() on
+ suspend/resume
+From:   Tsuchiya Yuto <kitakar@gmail.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
+Date:   Sat, 31 Oct 2020 00:27:36 +0900
+In-Reply-To: <20201028142719.18765-1-kitakar@gmail.com>
+References: <20201028142719.18765-1-kitakar@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.1 
 MIME-Version: 1.0
-In-Reply-To: <CABtq2xReyqg1wJM7W1d=KWRNTNN0Q6HCgJMWcQ6DH=SmKcxQRg@mail.gmail.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000fb658505b2e42bce"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000fb658505b2e42bce
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-
-On 10/29/2020 2:52 PM, Brian O'Keefe wrote:
-> Add 024c:0627 to the list of SDIO device-ids, based on hardware found in
-> the wild. This hardware exists on at least some Acer SW1-011 tablets.
-> 
-> Signed-off-by: Brian O'Keefe <bokeefe@alum.wpi.edu>
+On Wed, 2020-10-28 at 23:27 +0900, Tsuchiya Yuto wrote:
+> On Microsoft Surface devices (PCIe-88W8897), there are issues with S0ix
+> achievement and AP scanning after suspend with the current Host Sleep
+> method.
+>
+> When using the Host Sleep method, it prevents the platform to reach S0ix
+> during suspend. Also, sometimes AP scanning won't work, resulting in
+> non-working wifi after suspend.
+>
+> To fix such issues, perform shutdown_sw()/reinit_sw() instead of Host
+> Sleep on suspend/resume.
+>
+> Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
 > ---
->   drivers/staging/rtl8723bs/os_dep/sdio_intf.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
-> b/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
-> index 5b1392deb0a7..7256d55fcc1b 100644
-> --- a/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
-> +++ b/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
-> @@ -21,6 +21,7 @@ static const struct sdio_device_id sdio_ids[] =
->          { SDIO_DEVICE(0x024c, 0x0525), },
->          { SDIO_DEVICE(0x024c, 0x0623), },
->          { SDIO_DEVICE(0x024c, 0x0626), },
-> +       { SDIO_DEVICE(0x024c, 0x0627), },
->          { SDIO_DEVICE(0x024c, 0xb723), },
+> As a side effect, this patch disables wakeups (means that Wake-On-WLAN
+> can't be used anymore, if it was working before), and might also reset
+> some internal states.
+>
+> Of course it's the best to rather fix Host Sleep itself. But if it's
+> difficult, I'm afraid we have to go this way.
+>
+> I reused the contents of suspend()/resume() functions as much as possible,
+> and removed only the parts that are incompatible or redundant with
+> shutdown_sw()/reinit_sw().
+>
+> - Removed wait_for_completion() as redundant
+>   mwifiex_shutdown_sw() does this.
+> - Removed flush_workqueue() as incompatible
+>   Causes kernel crashing.
+> - Removed mwifiex_enable_wake()/mwifiex_disable_wake()
+>   as incompatible and redundant because the driver will be shut down
+>   instead of entering Host Sleep.
+>
+> I'm worried about why flush_workqueue() causes kernel crash with this
+> suspend method. Is it OK to just drop it? At least We Microsoft Surface
+> devices users used this method for about one month and haven't observed
+> any issues.
+>
+> Note that suspend() no longer checks if it's already suspended.
+> With the previous Host Sleep method, the check was done by looking at
+> adapter->hs_activated in mwifiex_enable_hs() [sta_ioctl.c], but not
+> MWIFIEX_IS_SUSPENDED. So, what the previous method checked was instead
+> Host Sleep state, not suspend itself.
+>
+> Therefore, there is no need to check the suspend state now.
+> Also removed comment for suspend state check at top of suspend()
+> accordingly.
 
-shouldn't these be listed in include/linux/mmc/sdio_ids.h ?
+This patch depends on the following mwifiex_shutdown_sw() fix I sent
+separately.
 
-Regards,
-Arend
+[PATCH 1/2] mwifiex: fix mwifiex_shutdown_sw() causing sw reset failure
+https://lore.kernel.org/linux-wireless/20201028142110.18144-2-kitakar@gmail.com/
 
---000000000000fb658505b2e42bce
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 29 +++++++--------------
+>  1 file changed, 10 insertions(+), 19 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 6a10ff0377a24..3b5c614def2f5 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -293,8 +293,7 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+>   * registered functions must have drivers with suspend and resume
+>   * methods. Failing that the kernel simply removes the whole card.
+>   *
+> - * If already not suspended, this function allocates and sends a host
+> - * sleep activate request to the firmware and turns off the traffic.
+> + * This function shuts down the adapter.
+>   */
+>  static int mwifiex_pcie_suspend(struct device *dev)
+>  {
+> @@ -302,31 +301,21 @@ static int mwifiex_pcie_suspend(struct device *dev)
+>  	struct pcie_service_card *card = dev_get_drvdata(dev);
+>  
+>  
+> -	/* Might still be loading firmware */
+> -	wait_for_completion(&card->fw_done);
+> -
+>  	adapter = card->adapter;
+>  	if (!adapter) {
+>  		dev_err(dev, "adapter is not valid\n");
+>  		return 0;
+>  	}
+>  
+> -	mwifiex_enable_wake(adapter);
+> -
+> -	/* Enable the Host Sleep */
+> -	if (!mwifiex_enable_hs(adapter)) {
+> +	/* Shut down SW */
+> +	if (mwifiex_shutdown_sw(adapter)) {
+>  		mwifiex_dbg(adapter, ERROR,
+>  			    "cmd: failed to suspend\n");
+> -		clear_bit(MWIFIEX_IS_HS_ENABLING, &adapter->work_flags);
+> -		mwifiex_disable_wake(adapter);
+>  		return -EFAULT;
+>  	}
+>  
+> -	flush_workqueue(adapter->workqueue);
+> -
+>  	/* Indicate device suspended */
+>  	set_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags);
+> -	clear_bit(MWIFIEX_IS_HS_ENABLING, &adapter->work_flags);
+>  
+>  	return 0;
+>  }
+> @@ -336,13 +325,13 @@ static int mwifiex_pcie_suspend(struct device *dev)
+>   * registered functions must have drivers with suspend and resume
+>   * methods. Failing that the kernel simply removes the whole card.
+>   *
+> - * If already not resumed, this function turns on the traffic and
+> - * sends a host sleep cancel request to the firmware.
+> + * If already not resumed, this function reinits the adapter.
+>   */
+>  static int mwifiex_pcie_resume(struct device *dev)
+>  {
+>  	struct mwifiex_adapter *adapter;
+>  	struct pcie_service_card *card = dev_get_drvdata(dev);
+> +	int ret;
+>  
+>  
+>  	if (!card->adapter) {
+> @@ -360,9 +349,11 @@ static int mwifiex_pcie_resume(struct device *dev)
+>  
+>  	clear_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags);
+>  
+> -	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+> -			  MWIFIEX_ASYNC_CMD);
+> -	mwifiex_disable_wake(adapter);
+> +	ret = mwifiex_reinit_sw(adapter);
+> +	if (ret)
+> +		dev_err(dev, "reinit failed: %d\n", ret);
+> +	else
+> +		mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+>  
+>  	return 0;
+>  }
 
-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
-pra5sIx/TR6gNtLG9MpND9zQt5j42hInkP81vqu9DG8lovoPMuR0JVpFRbPjHZ07cLqqbFMVS/8z
-53iSewIDAQABo4IB0zCCAc8wDgYDVR0PAQH/BAQDAgWgMIGeBggrBgEFBQcBAQSBkTCBjjBNBggr
-BgEFBQcwAoZBaHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NwZXJzb25hbHNp
-Z24yc2hhMmczb2NzcC5jcnQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwMi5nbG9iYWxzaWduLmNv
-bS9nc3BlcnNvbmFsc2lnbjJzaGEyZzMwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYB
-BQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAw
-RAYDVR0fBD0wOzA5oDegNYYzaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc3BlcnNvbmFsc2ln
-bjJzaGEyZzMuY3JsMCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYD
-VR0lBAwwCgYIKwYBBQUHAwQwHwYDVR0jBBgwFoAUaXKCYjFnlUSFd5GAxAQ2SZ17C2EwHQYDVR0O
-BBYEFHAaaA+cRo3vYiA6aKVu1bOs4YAYMA0GCSqGSIb3DQEBCwUAA4IBAQCYLdyC8SuyQV6oa5uH
-kGtqz9FCJC/9gSclQLM8dZLHF3FYX8LlcQg/3Ct5I29YLK3T/r35B2zGljtXqVOIeSEz7sDXfGNy
-3dnLIafB1y04e7aR+thVn5Rp1YTF01FUWYbZrixlVuKvjn8vtKC+HhAoDCxvqnqEuA/8Usn7B0/N
-uOA46oQTLe3kjdIgXWJ29JWVqFUavYdcK0+0zyfeMBCTO6heYABeMP3wzYHfcuFDhqldTCpumqhZ
-WwHVQUbAn+xLMIQpycIQFoJIGJX4MeaTSMfLNP2w7nP2uLNgIeleF284vS0XVkBXSCgIGylP4SN+
-HQYrv7fVCbtp+c7nFvP7MYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
-YmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNI
-QTI1NiAtIEczAgxR3m7Pj6LvQiWjJy0wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIE
-IAHFUgKiEMcu8KxR3xvcbAtLQdiw2gjkhaoLTW5NzIrhMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0B
-BwEwHAYJKoZIhvcNAQkFMQ8XDTIwMTAzMDE0MjU0M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgB
-ZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQow
-CwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCc1bZ6eQmhGbRWYA7f
-EUr/U57xFk2+EJaJugfETeR2Yd5k46OUVHSsPy0h2FBlZQ8zjjB5q2a3a11Z1TsF/5DL7/mLq1+P
-wJO4TkiQ/QC+lkrh/1WPMF/FRZ8buEs5z/px0JMIukEmE2L36+7QMiUNMrihB2rfiEtpn0Fr3+2D
-yYtdO0a/T1XbsD12I8uamK3Ysnj/Vrdq3c6dqH9RSflXLxIlIWru14kyiPKEUc6vqfQmRbOWz6BR
-Xrm/gHEm6LROHI92Zh80YsQCnygjgwsdF0dX4ISn+3XeHfoF0oxrgCG4YhtLuYvMvfqe/qefRexq
-rHIB3s2fnJpSdGhenliZ
---000000000000fb658505b2e42bce--
+
