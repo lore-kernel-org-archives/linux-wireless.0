@@ -1,4 +1,4 @@
-Return-Path: <SRS0=NAPm=EF=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=pUCm=EG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D433FC00A89
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 22:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3428C00A89
+	for <linux-wireless@archiver.kernel.org>; Sat, 31 Oct 2020 01:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7450822227
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Oct 2020 22:23:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F4920665
+	for <linux-wireless@archiver.kernel.org>; Sat, 31 Oct 2020 01:30:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jHQmUW7E"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VA4tsJb5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725839AbgJ3WX4 (ORCPT
+        id S1725786AbgJaBaT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Oct 2020 18:23:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52450 "EHLO
+        Fri, 30 Oct 2020 21:30:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbgJ3WX4 (ORCPT
+        with ESMTP id S1725446AbgJaBaT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Oct 2020 18:23:56 -0400
-Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 058ADC0613D5
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 15:23:56 -0700 (PDT)
-Received: by mail-oo1-xc35.google.com with SMTP id j41so1949316oof.12
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 15:23:55 -0700 (PDT)
+        Fri, 30 Oct 2020 21:30:19 -0400
+Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16A80C0613D5
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 18:30:19 -0700 (PDT)
+Received: by mail-ot1-x32b.google.com with SMTP id i18so2558564ots.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2020 18:30:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+        h=sender:from:subject:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=SAhoaRRnuOp+mj14rN9iY3PUjge0sZsbVMUob9eUL+M=;
-        b=jHQmUW7EcUyl4mEGA//9kOyyQBC20CZ+EqLaT6RVOWPwXcd/vx+IpjkBuKYPt5eUzA
-         SOLIij11VAfLjIHVD3IdN9DFl6pXOTbeWg4VzKO7zjB/UEPmkd62kj+Yl8vSkx+yiDLc
-         ZuaGiwStDaC+fcRQLXeHc1kdhM5fHLM/o2diL8bo+6o2AftMxpbN6vePYlCFa71aarjs
-         eccV1/u83FyvK+OF7b4qMC2WLmpai3oJ+EYaNr6n8j3f3qG4lSPlmGikgypxgZA4U2ai
-         3U4Qz1NrEpUeUl8FwZVT9IQyVhekPzQUqh5MeXqDwvYDuQCchpVU9U2brJ4OsansMX4h
-         3/1A==
+        bh=OP7ewtSP6Fctoq4MSF0rcQn3CGYEJO3Ossdg5uQQTjI=;
+        b=VA4tsJb55Q3aZFmQRkDMXau64moTicPdG2/qIROvzcGtNB3FbMiahC1L34mEt7I81h
+         Kc7pAZztZowd+ZbCUJkQhUa0hgoab2+ty7lKGonXz6qnd6jg6x+M6u4PDrwaw/wsFTPA
+         BgBV1HCrHU3oFPj4i/uZS7M/BPOfAjxdkBzqvI6dlQ8IIh9/T/efJd9nWPu9YZ58Vyet
+         7G5WgjPKh4i5QvemrABs5Zhv1t0vqq04CmFM00COEfpHSow4WZ6WdnLcSqPzXwxJWQxq
+         KjfVjg4k0S56BXfpYkUOL7vwftpt+USWiof0bTqyBVAZyKOtAiH2IpafnYDzk7HI5htt
+         dOJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+        h=x-gm-message-state:sender:from:subject:to:cc:references:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=SAhoaRRnuOp+mj14rN9iY3PUjge0sZsbVMUob9eUL+M=;
-        b=ilvk8mIns80nyrXEYx1f2p9JEKZ0L2E1hV6bajKrT0rZhAibP0HNriatgXIK7VLFDs
-         ZDGEoTQHUl1DqP6z0nyh45Uf+RN8atpF5kHOPP6gNY77oIi/NAT4l5WeVeYwHna4RiD0
-         Qd6rSPbf5CbWzlDmjIYWqn/NUxu8Eg1djZa7Y77ZS6vO1PF2d5/u9sUEO5RZ1vOzEKtc
-         zOKLW4xxI7PsgTQDZqUxrD/XvkppB4Qqx2n2GK/Tsc+fiZYukH5TFV/FmbYmk8YchQhT
-         ZsD7CVEThX9E1GQT2yRwZflVCn8DPIkGqx51yTvsjwL5pMLjln/lDhvc206WOSI0XAt1
-         zJJw==
-X-Gm-Message-State: AOAM530k+aw4A1GFWKSvwnLZuziE9no+QO6n/IBINAjpZQeUuXfnVJBg
-        fBchvSXuDYX5jaV/Bsl68JZrXICiYII=
-X-Google-Smtp-Source: ABdhPJzOItw6SQwWWRH/LsIZCb+zWtDA+OuS/FIvt7kXTgqcjAkKo8MHs2aactrktoEUZunm2NAdqQ==
-X-Received: by 2002:a4a:9607:: with SMTP id q7mr3556102ooi.3.1604096635048;
-        Fri, 30 Oct 2020 15:23:55 -0700 (PDT)
+        bh=OP7ewtSP6Fctoq4MSF0rcQn3CGYEJO3Ossdg5uQQTjI=;
+        b=XhvSQnegojxwEzZbTsGsgAENE6+uD9hULGF3KdnIPbFjWEZsYTwsREhJB7oXRH1arR
+         2U7dvke3mQV/Z2OKb42zz1GzLPX2YsSNnhA8v+ns0IbhpNSxXFBmejQ6vcLECURwzYkF
+         CfYVxScuK6nzp8273S8d/kPZQkQaLkaVsalka5WaEd5MiJi58CnhoYVXPU0iMSrkUelo
+         HTjCapNYztb+HHn//oBe8lJ0n1leibRZEPGSio0XY+0PfXQpZ1LYJ/rDmcoQkLw2Jp3O
+         lQfg+vqa0RTspe7rFOhtOjwQMh9wcIF+UntOTgHex4Gx583YIkLG4eNKfuz9+KRTcafc
+         R/dw==
+X-Gm-Message-State: AOAM5315EEA+WWpkDnS8exss2Mue752B2puRJA4XHqs4wKnIudkqpVH7
+        3N1c0qHoVMriUcwMlfykJcZgwz9giHc=
+X-Google-Smtp-Source: ABdhPJxaVxiX5MFcCcWLWbT6ku41daOZuzWZZzz6HB/1UHyDLFy72gv2kDAQLvO0EJjVNG7GqE6f6w==
+X-Received: by 2002:a9d:bec:: with SMTP id 99mr3968618oth.103.1604107818131;
+        Fri, 30 Oct 2020 18:30:18 -0700 (PDT)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id d199sm1714701oig.31.2020.10.30.15.23.54
+        by smtp.gmail.com with ESMTPSA id x13sm1762109oot.24.2020.10.30.18.30.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Oct 2020 15:23:54 -0700 (PDT)
+        Fri, 30 Oct 2020 18:30:17 -0700 (PDT)
 Sender: Larry Finger <larry.finger@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
 Subject: Re: rtw_8821ce driver in kernel 5.9.1: wifi module inactive
 To:     Michal TOMA <michaltoma@sicoop.com>
 Cc:     linux-wireless@vger.kernel.org
 References: <6173742.tiux6Xeah1@linux-9g0r.site>
  <3c2baab8-bdcf-0679-b396-b42a05a0ef38@lwfinger.net>
  <2483828.eKyWTE2oqM@linux-9g0r.site>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5a6155f1-f8ea-b8b4-e38f-0ebf8bf720d0@lwfinger.net>
-Date:   Fri, 30 Oct 2020 17:23:53 -0500
+Message-ID: <5712da17-6f45-247a-e9ea-a13c6b9b683c@lwfinger.net>
+Date:   Fri, 30 Oct 2020 20:30:16 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
@@ -81,24 +81,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/30/20 4:21 PM, Michal TOMA wrote:
+Michal,
 
-> iwlist wlp7s0 scan
-> 
-> wlp7s0 No scan results
-> 
-
-You should move away from those obsolete commands (iwconfig, iwlist, etc.). The 
-new command would be
-
-sudo iw dev wlp7s0 scan
-
-It might not make any difference, but the new ones are better.
-
-Any additional messages between the start and stop vif messages in dmesg?
-
-I do not have an 8821ce for testing' however, I am not aware of any changes in 
-5.9.1 that should stop it from working/
+My rtl8822ce works fine with 5.10.0-rc1 and 5.9.1 from openSUSE TW.
 
 Larry
-
