@@ -7,54 +7,57 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3494FC388F9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23FF5C2D0A3
 	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0152520756
+	by mail.kernel.org (Postfix) with ESMTP id CF6F820706
 	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Fhb/tJX1";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="KdqQ7mjc"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tLTi8vqX";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ObVIm6HA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727359AbgKAVRV (ORCPT
+        id S1727354AbgKAVRU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Nov 2020 16:17:21 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:54840 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727280AbgKAVRU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 1 Nov 2020 16:17:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59372 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727004AbgKAVRT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 1 Nov 2020 16:17:19 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38515C0617A6
+        for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2020 13:17:19 -0800 (PST)
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1604265438;
+        s=2020; t=1604265437;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kuPd7FRq7scdHyo1TxyQj2+a/5t/jyiPa90zNB96s9U=;
-        b=Fhb/tJX1nBEgSsiyqyhC1bO1LnPg29xfYW2Uy+FbH8cTQF6g0MdOWjIsIfHFFZCFLv9RsX
-        Xu2ce+RglTbtbeS2h5UYe2G6h/sdRSu6pgd3TLvv5jUDe41zIVSZehVKoe34fgtgvgigXW
-        rBdYu4RG2q7wW5VdYZL/VXuGMgml0D8SYS4XM7VZyJE5xDv/g8OWTOyLfx/Y2I9kGcjgS4
-        RHddveU53bd/0nnPuUO2Q/nxIkrTbzmswQcPzxEPKHoeCarNc8LN7Zcx++CVIghBPvpTld
-        /y63K2jSqafPw8aP/xRBDFtpxHIueds2hGi0mg37zbqMGD/bRs+Qye546ildcg==
+        bh=/G6jhunyYonKt/zfjJmfGJ6HFdyJdyKil2v62NvxSdM=;
+        b=tLTi8vqXu05mdK9kFwVSWtCkvZhAO/TAM03VRbJb+oUGEGUpQU1pSZ382fo6gua0J0k7JM
+        ZklW4ZcjrLZE0UKJe+YJVHunqmvOM6N7ClDUFyiA06JmqsrufAtgsR4ixm4MDfyk+PgKbK
+        e0Ox0cZoPn8VAd3LZCfaZZI7iNmj4FdkwIxB0V5SYP9Byz+infjN5y2Oy9VzOAYH8XyLHQ
+        cv0xf33+Kac/Q0U8uN3HPreDDS73df6ZZF8EdXZoKn8YhzOVUPcWgRecg2BxwVusoJAa3G
+        WKGaDjSKerq+BD14YhqqLlLUnPw3QcGywGADJdQYBnpKk7oIel1zxKfxBw1wFw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1604265438;
+        s=2020e; t=1604265437;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kuPd7FRq7scdHyo1TxyQj2+a/5t/jyiPa90zNB96s9U=;
-        b=KdqQ7mjcu1sD8E2HO0tD5g7UBe1awjrFos/C3yBOqdqvaMFKoowZjr5Qc1u6LuIWU/4RZP
-        voasUhV2yG3lRsAg==
+        bh=/G6jhunyYonKt/zfjJmfGJ6HFdyJdyKil2v62NvxSdM=;
+        b=ObVIm6HAiCS49yFAhVJyxq71SKtCTTl/Gy/hPnkh9iGMCv9NXGl06jKksPFkDps/680Py4
+        r0X02n1byu7BNiBQ==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Ulrich Kunitz <kune@deine-taler.de>,
         Thomas Gleixner <tglx@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 6/8] zd1211rw: Remove in_atomic() usage.
-Date:   Sun,  1 Nov 2020 22:15:34 +0100
-Message-Id: <20201101211536.2966644-7-bigeasy@linutronix.de>
+Subject: [PATCH 3/8] airo: Always use JOB_STATS and JOB_EVENT
+Date:   Sun,  1 Nov 2020 22:15:31 +0100
+Message-Id: <20201101211536.2966644-4-bigeasy@linutronix.de>
 In-Reply-To: <20201101211536.2966644-1-bigeasy@linutronix.de>
 References: <20201101211536.2966644-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
@@ -63,63 +66,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The usage of in_atomic() in driver code is deprecated as it can not
-always detect all states where it is not allowed to sleep.
+issuecommand() is using in_atomic() to decide if it is safe to invoke
+schedule() while waiting for the command to be accepted.
 
-All callers are in premptible thread context and all functions invoke core
-functions which have checks for invalid calling contexts already.
+Usage of in_atomic() for this is only half correct as it can not detect all
+condition where it is not allowed to schedule(). Also Linus clearly
+requested that code which changes behaviour depending on context should
+either be seperated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
+
+Chasing the call chains leading up to issuecommand() is straight forward,
+but airo_link() and airo_get_stats() would require to pass the context
+through a quite large amount of functions.
+
+As this is ancient hardware, avoid the churn and enforce the invocation of
+those functions through the JOB machinery.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+ drivers/net/wireless/cisco/airo.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wir=
-eless/zydas/zd1211rw/zd_usb.c
-index 66367ab7e4c1e..5c4cd0e1adebb 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-@@ -1711,11 +1711,6 @@ int zd_usb_ioread16v(struct zd_usb *usb, u16 *values,
- 			 count, USB_MAX_IOREAD16_COUNT);
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco=
+/airo.c
+index ca423f3b6b3ea..369a6ca44d1ff 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -2286,12 +2286,8 @@ static struct net_device_stats *airo_get_stats(struc=
+t net_device *dev)
+ 	struct airo_info *local =3D  dev->ml_priv;
+=20
+ 	if (!test_bit(JOB_STATS, &local->jobs)) {
+-		/* Get stats out of the card if available */
+-		if (down_trylock(&local->sem) !=3D 0) {
+-			set_bit(JOB_STATS, &local->jobs);
+-			wake_up_interruptible(&local->thr_wait);
+-		} else
+-			airo_read_stats(dev);
++		set_bit(JOB_STATS, &local->jobs);
++		wake_up_interruptible(&local->thr_wait);
  	}
--	if (in_atomic()) {
--		dev_dbg_f(zd_usb_dev(usb),
--			 "error: io in atomic context not supported\n");
--		return -EWOULDBLOCK;
--	}
- 	if (!usb_int_enabled(usb)) {
- 		dev_dbg_f(zd_usb_dev(usb),
- 			  "error: usb interrupt not enabled\n");
-@@ -1882,11 +1877,6 @@ int zd_usb_iowrite16v_async(struct zd_usb *usb, cons=
-t struct zd_ioreq16 *ioreqs,
- 			count, USB_MAX_IOWRITE16_COUNT);
- 		return -EINVAL;
- 	}
--	if (in_atomic()) {
--		dev_dbg_f(zd_usb_dev(usb),
--			"error: io in atomic context not supported\n");
--		return -EWOULDBLOCK;
--	}
 =20
- 	udev =3D zd_usb_to_usbdev(usb);
+ 	return &dev->stats;
+@@ -3277,11 +3273,9 @@ static void airo_handle_link(struct airo_info *ai)
+ 		set_bit(FLAG_UPDATE_UNI, &ai->flags);
+ 		set_bit(FLAG_UPDATE_MULTI, &ai->flags);
 =20
-@@ -1966,11 +1956,6 @@ int zd_usb_rfwrite(struct zd_usb *usb, u32 value, u8=
- bits)
- 	int i, req_len, actual_req_len;
- 	u16 bit_value_template;
-=20
--	if (in_atomic()) {
--		dev_dbg_f(zd_usb_dev(usb),
--			"error: io in atomic context not supported\n");
--		return -EWOULDBLOCK;
--	}
- 	if (bits < USB_MIN_RFWRITE_BIT_COUNT) {
- 		dev_dbg_f(zd_usb_dev(usb),
- 			"error: bits %d are smaller than"
+-		if (down_trylock(&ai->sem) !=3D 0) {
+-			set_bit(JOB_EVENT, &ai->jobs);
+-			wake_up_interruptible(&ai->thr_wait);
+-		} else
+-			airo_send_event(ai->dev);
++		set_bit(JOB_EVENT, &ai->jobs);
++		wake_up_interruptible(&ai->thr_wait);
++
+ 		netif_carrier_on(ai->dev);
+ 	} else if (!scan_forceloss) {
+ 		if (auto_wep && !ai->expires) {
 --=20
 2.29.1
 
