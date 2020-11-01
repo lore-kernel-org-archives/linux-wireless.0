@@ -7,57 +7,54 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F17AC4742C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F18CC4741F
 	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 209A5207C3
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE10420756
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="JR89ghZe";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="O2r8x/6O"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="FE5ZDCLt";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3WdxC80E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727335AbgKAVRU (ORCPT
+        id S1727322AbgKAVRT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Nov 2020 16:17:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59374 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727331AbgKAVRT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 1 Nov 2020 16:17:19 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8415AC061A04
-        for <linux-wireless@vger.kernel.org>; Sun,  1 Nov 2020 13:17:19 -0800 (PST)
+Received: from Galois.linutronix.de ([193.142.43.55]:54802 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727004AbgKAVRS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 1 Nov 2020 16:17:18 -0500
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1604265437;
+        s=2020; t=1604265436;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=psH6A7v8XpxWeO9K6sVB4+NN8/b2kgPe6aRvHhvnGOM=;
-        b=JR89ghZeaQ9eFB6bYKOpVIPBmK4udWPaFIKucgOJ00uhAqY0xM2D1R8x4LRisB0Ih2zVJs
-        htz1+SZdaVwgDgsk81WfQ8eP8Iw6Digu/UTvT6mo+CQcL8RKx+cWT+aiQCBnrdKA+Hvy0B
-        FUb3ESdazM3fyVBzYrppxh6yoURbEUPFLjPxFvupnWcaefjgoZKQpKWlMjbgQA5JN8SOK0
-        hjhQrYYw/IOQIDbJYzgH+6KPdNDW5DEUakjsxEoCg39dI/u+ObdH+YuSH+MHI3UWjCKtVb
-        GuJ3Aw8zzJiEREU3qsjRxsflcNJHct9waI03NB1wMQ8JU9hKZYb4e7n8dIjFUw==
+        bh=noj1B5ca/uIxTGRkvRWYeOtEiiJK/kLamBwf0a04x0U=;
+        b=FE5ZDCLtTSGik+U1/WhfQKejt41N1dPm9GEQ40mXwNn12u04UeoTS53Fsi8GbvRA5cBTEE
+        Vr6viBx2jXXU60QOS0n5KEZnb9PQWnk5f9UQTYH4SXD2K3pbLVauFnFIQmQkxsWRILGx3w
+        ZB7QYA0QT954HSgPKCExinlqo0K/kO5cAjn3bn+5hf4eAaqLo49wJZelIV7qM0HYcubJt0
+        1FoNrXDHT8f/eHwv3DSpP4lK7L//JiT2S9EpVve1jw1LPEu8hkkKqf2Ryia+lgJmWf2NYq
+        wtgJX1K0I/3TPlRY3MrZTNocoN4DmKxPHo7x/8Yzly2vbXy05ldeAr6n6zZQIQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1604265437;
+        s=2020e; t=1604265436;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=psH6A7v8XpxWeO9K6sVB4+NN8/b2kgPe6aRvHhvnGOM=;
-        b=O2r8x/6Op5enT8qwna+zYpgGfktp2ufW+6BmH/GA4vAENvumRICFmPr+yrgt4uDMBSIgbO
-        sNNc4qVRxNowHABg==
+        bh=noj1B5ca/uIxTGRkvRWYeOtEiiJK/kLamBwf0a04x0U=;
+        b=3WdxC80E6my0Y09fE6+rw6C/Q9LY2Z2iZAJrKEOaBxrRe4/dwJZFz44BRpnm7F4GOJFLWo
+        z0lz21a2krFUwDCg==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Ulrich Kunitz <kune@deine-taler.de>,
         Thomas Gleixner <tglx@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 5/8] hostap: Remove in_atomic() check.
-Date:   Sun,  1 Nov 2020 22:15:33 +0100
-Message-Id: <20201101211536.2966644-6-bigeasy@linutronix.de>
+Subject: [PATCH 2/8] airo: Invoke airo_read_wireless_stats() directly
+Date:   Sun,  1 Nov 2020 22:15:30 +0100
+Message-Id: <20201101211536.2966644-3-bigeasy@linutronix.de>
 In-Reply-To: <20201101211536.2966644-1-bigeasy@linutronix.de>
 References: <20201101211536.2966644-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
@@ -66,46 +63,92 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-hostap_get_wireless_stats() is the iw_handler_if::get_wireless_stats()
+airo_get_wireless_stats() is the iw_handler_if::get_wireless_stats()
 callback of this driver. This callback was not allowed to sleep until
 commit a160ee69c6a46 ("wext: let get_wireless_stats() sleep") in v2.6.32.
 
-Remove the therefore pointless in_atomic() check.
+airo still delegates the readout to a thread, which is not longer
+necessary.
+
+Invoke airo_read_wireless_stats() directly from the callback and remove
+the now unused JOB_WSTATS handling.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Jouni Malinen <j@w1.fi>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ drivers/net/wireless/cisco/airo.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/=
-net/wireless/intersil/hostap/hostap_ioctl.c
-index 514c7b01dbf6f..49766b285230c 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-@@ -44,19 +44,8 @@ static struct iw_statistics *hostap_get_wireless_stats(s=
-truct net_device *dev)
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco=
+/airo.c
+index 87b9398b03fd4..ca423f3b6b3ea 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -1144,7 +1144,6 @@ static int airo_thread(void *data);
+ static void timer_func(struct net_device *dev);
+ static int airo_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
+ static struct iw_statistics *airo_get_wireless_stats(struct net_device *de=
+v);
+-static void airo_read_wireless_stats(struct airo_info *local);
+ #ifdef CISCO_EXT
+ static int readrids(struct net_device *dev, aironet_ioctl *comp);
+ static int writerids(struct net_device *dev, aironet_ioctl *comp);
+@@ -1200,7 +1199,6 @@ struct airo_info {
+ #define JOB_MIC	5
+ #define JOB_EVENT	6
+ #define JOB_AUTOWEP	7
+-#define JOB_WSTATS	8
+ #define JOB_SCAN_RESULTS  9
+ 	unsigned long jobs;
+ 	int (*bap_read)(struct airo_info*, __le16 *pu16Dst, int bytelen,
+@@ -3155,8 +3153,6 @@ static int airo_thread(void *data)
+ 			airo_end_xmit11(dev);
+ 		else if (test_bit(JOB_STATS, &ai->jobs))
+ 			airo_read_stats(dev);
+-		else if (test_bit(JOB_WSTATS, &ai->jobs))
+-			airo_read_wireless_stats(ai);
+ 		else if (test_bit(JOB_PROMISC, &ai->jobs))
+ 			airo_set_promisc(ai);
+ 		else if (test_bit(JOB_MIC, &ai->jobs))
+@@ -7732,15 +7728,12 @@ static void airo_read_wireless_stats(struct airo_in=
+fo *local)
+ 	__le32 *vals =3D stats_rid.vals;
 =20
- 	if (local->iw_mode !=3D IW_MODE_MASTER &&
- 	    local->iw_mode !=3D IW_MODE_REPEAT) {
--		int update =3D 1;
--#ifdef in_atomic
--		/* RID reading might sleep and it must not be called in
--		 * interrupt context or while atomic. However, this
--		 * function seems to be called while atomic (at least in Linux
--		 * 2.5.59). Update signal quality values only if in suitable
--		 * context. Otherwise, previous values read from tick timer
--		 * will be used. */
--		if (in_atomic())
--			update =3D 0;
--#endif /* in_atomic */
+ 	/* Get stats out of the card */
+-	clear_bit(JOB_WSTATS, &local->jobs);
+-	if (local->power.event) {
+-		up(&local->sem);
++	if (local->power.event)
+ 		return;
+-	}
++
+ 	readCapabilityRid(local, &cap_rid, 0);
+ 	readStatusRid(local, &status_rid, 0);
+ 	readStatsRid(local, &stats_rid, RID_STATS, 0);
+-	up(&local->sem);
 =20
--		if (update && prism2_update_comms_qual(dev) =3D=3D 0)
-+		if (prism2_update_comms_qual(dev) =3D=3D 0)
- 			wstats->qual.updated =3D IW_QUAL_ALL_UPDATED |
- 				IW_QUAL_DBM;
+ 	/* The status */
+ 	local->wstats.status =3D le16_to_cpu(status_rid.mode);
+@@ -7783,15 +7776,10 @@ static struct iw_statistics *airo_get_wireless_stat=
+s(struct net_device *dev)
+ {
+ 	struct airo_info *local =3D  dev->ml_priv;
+=20
+-	if (!test_bit(JOB_WSTATS, &local->jobs)) {
+-		/* Get stats out of the card if available */
+-		if (down_trylock(&local->sem) !=3D 0) {
+-			set_bit(JOB_WSTATS, &local->jobs);
+-			wake_up_interruptible(&local->thr_wait);
+-		} else
+-			airo_read_wireless_stats(local);
++	if (!down_interruptible(&local->sem)) {
++		airo_read_wireless_stats(local);
++		up(&local->sem);
+ 	}
+-
+ 	return &local->wstats;
+ }
 =20
 --=20
 2.29.1
