@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F18CC4741F
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3494FC388F9
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE10420756
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0152520756
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Nov 2020 21:17:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="FE5ZDCLt";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3WdxC80E"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Fhb/tJX1";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="KdqQ7mjc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727322AbgKAVRT (ORCPT
+        id S1727359AbgKAVRV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Nov 2020 16:17:19 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:54802 "EHLO
+        Sun, 1 Nov 2020 16:17:21 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:54840 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727004AbgKAVRS (ORCPT
+        with ESMTP id S1727280AbgKAVRU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Nov 2020 16:17:18 -0500
+        Sun, 1 Nov 2020 16:17:20 -0500
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1604265436;
+        s=2020; t=1604265438;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=noj1B5ca/uIxTGRkvRWYeOtEiiJK/kLamBwf0a04x0U=;
-        b=FE5ZDCLtTSGik+U1/WhfQKejt41N1dPm9GEQ40mXwNn12u04UeoTS53Fsi8GbvRA5cBTEE
-        Vr6viBx2jXXU60QOS0n5KEZnb9PQWnk5f9UQTYH4SXD2K3pbLVauFnFIQmQkxsWRILGx3w
-        ZB7QYA0QT954HSgPKCExinlqo0K/kO5cAjn3bn+5hf4eAaqLo49wJZelIV7qM0HYcubJt0
-        1FoNrXDHT8f/eHwv3DSpP4lK7L//JiT2S9EpVve1jw1LPEu8hkkKqf2Ryia+lgJmWf2NYq
-        wtgJX1K0I/3TPlRY3MrZTNocoN4DmKxPHo7x/8Yzly2vbXy05ldeAr6n6zZQIQ==
+        bh=kuPd7FRq7scdHyo1TxyQj2+a/5t/jyiPa90zNB96s9U=;
+        b=Fhb/tJX1nBEgSsiyqyhC1bO1LnPg29xfYW2Uy+FbH8cTQF6g0MdOWjIsIfHFFZCFLv9RsX
+        Xu2ce+RglTbtbeS2h5UYe2G6h/sdRSu6pgd3TLvv5jUDe41zIVSZehVKoe34fgtgvgigXW
+        rBdYu4RG2q7wW5VdYZL/VXuGMgml0D8SYS4XM7VZyJE5xDv/g8OWTOyLfx/Y2I9kGcjgS4
+        RHddveU53bd/0nnPuUO2Q/nxIkrTbzmswQcPzxEPKHoeCarNc8LN7Zcx++CVIghBPvpTld
+        /y63K2jSqafPw8aP/xRBDFtpxHIueds2hGi0mg37zbqMGD/bRs+Qye546ildcg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1604265436;
+        s=2020e; t=1604265438;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=noj1B5ca/uIxTGRkvRWYeOtEiiJK/kLamBwf0a04x0U=;
-        b=3WdxC80E6my0Y09fE6+rw6C/Q9LY2Z2iZAJrKEOaBxrRe4/dwJZFz44BRpnm7F4GOJFLWo
-        z0lz21a2krFUwDCg==
+        bh=kuPd7FRq7scdHyo1TxyQj2+a/5t/jyiPa90zNB96s9U=;
+        b=KdqQ7mjcu1sD8E2HO0tD5g7UBe1awjrFos/C3yBOqdqvaMFKoowZjr5Qc1u6LuIWU/4RZP
+        voasUhV2yG3lRsAg==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Ulrich Kunitz <kune@deine-taler.de>,
         Thomas Gleixner <tglx@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 2/8] airo: Invoke airo_read_wireless_stats() directly
-Date:   Sun,  1 Nov 2020 22:15:30 +0100
-Message-Id: <20201101211536.2966644-3-bigeasy@linutronix.de>
+Subject: [PATCH 6/8] zd1211rw: Remove in_atomic() usage.
+Date:   Sun,  1 Nov 2020 22:15:34 +0100
+Message-Id: <20201101211536.2966644-7-bigeasy@linutronix.de>
 In-Reply-To: <20201101211536.2966644-1-bigeasy@linutronix.de>
 References: <20201101211536.2966644-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
@@ -63,93 +63,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-airo_get_wireless_stats() is the iw_handler_if::get_wireless_stats()
-callback of this driver. This callback was not allowed to sleep until
-commit a160ee69c6a46 ("wext: let get_wireless_stats() sleep") in v2.6.32.
+The usage of in_atomic() in driver code is deprecated as it can not
+always detect all states where it is not allowed to sleep.
 
-airo still delegates the readout to a thread, which is not longer
-necessary.
-
-Invoke airo_read_wireless_stats() directly from the callback and remove
-the now unused JOB_WSTATS handling.
+All callers are in premptible thread context and all functions invoke core
+functions which have checks for invalid calling contexts already.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/cisco/airo.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+ drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco=
-/airo.c
-index 87b9398b03fd4..ca423f3b6b3ea 100644
---- a/drivers/net/wireless/cisco/airo.c
-+++ b/drivers/net/wireless/cisco/airo.c
-@@ -1144,7 +1144,6 @@ static int airo_thread(void *data);
- static void timer_func(struct net_device *dev);
- static int airo_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
- static struct iw_statistics *airo_get_wireless_stats(struct net_device *de=
-v);
--static void airo_read_wireless_stats(struct airo_info *local);
- #ifdef CISCO_EXT
- static int readrids(struct net_device *dev, aironet_ioctl *comp);
- static int writerids(struct net_device *dev, aironet_ioctl *comp);
-@@ -1200,7 +1199,6 @@ struct airo_info {
- #define JOB_MIC	5
- #define JOB_EVENT	6
- #define JOB_AUTOWEP	7
--#define JOB_WSTATS	8
- #define JOB_SCAN_RESULTS  9
- 	unsigned long jobs;
- 	int (*bap_read)(struct airo_info*, __le16 *pu16Dst, int bytelen,
-@@ -3155,8 +3153,6 @@ static int airo_thread(void *data)
- 			airo_end_xmit11(dev);
- 		else if (test_bit(JOB_STATS, &ai->jobs))
- 			airo_read_stats(dev);
--		else if (test_bit(JOB_WSTATS, &ai->jobs))
--			airo_read_wireless_stats(ai);
- 		else if (test_bit(JOB_PROMISC, &ai->jobs))
- 			airo_set_promisc(ai);
- 		else if (test_bit(JOB_MIC, &ai->jobs))
-@@ -7732,15 +7728,12 @@ static void airo_read_wireless_stats(struct airo_in=
-fo *local)
- 	__le32 *vals =3D stats_rid.vals;
-=20
- 	/* Get stats out of the card */
--	clear_bit(JOB_WSTATS, &local->jobs);
--	if (local->power.event) {
--		up(&local->sem);
-+	if (local->power.event)
- 		return;
--	}
-+
- 	readCapabilityRid(local, &cap_rid, 0);
- 	readStatusRid(local, &status_rid, 0);
- 	readStatsRid(local, &stats_rid, RID_STATS, 0);
--	up(&local->sem);
-=20
- 	/* The status */
- 	local->wstats.status =3D le16_to_cpu(status_rid.mode);
-@@ -7783,15 +7776,10 @@ static struct iw_statistics *airo_get_wireless_stat=
-s(struct net_device *dev)
- {
- 	struct airo_info *local =3D  dev->ml_priv;
-=20
--	if (!test_bit(JOB_WSTATS, &local->jobs)) {
--		/* Get stats out of the card if available */
--		if (down_trylock(&local->sem) !=3D 0) {
--			set_bit(JOB_WSTATS, &local->jobs);
--			wake_up_interruptible(&local->thr_wait);
--		} else
--			airo_read_wireless_stats(local);
-+	if (!down_interruptible(&local->sem)) {
-+		airo_read_wireless_stats(local);
-+		up(&local->sem);
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wir=
+eless/zydas/zd1211rw/zd_usb.c
+index 66367ab7e4c1e..5c4cd0e1adebb 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+@@ -1711,11 +1711,6 @@ int zd_usb_ioread16v(struct zd_usb *usb, u16 *values,
+ 			 count, USB_MAX_IOREAD16_COUNT);
+ 		return -EINVAL;
  	}
--
- 	return &local->wstats;
- }
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			 "error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
+ 	if (!usb_int_enabled(usb)) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+ 			  "error: usb interrupt not enabled\n");
+@@ -1882,11 +1877,6 @@ int zd_usb_iowrite16v_async(struct zd_usb *usb, cons=
+t struct zd_ioreq16 *ioreqs,
+ 			count, USB_MAX_IOWRITE16_COUNT);
+ 		return -EINVAL;
+ 	}
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			"error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
 =20
+ 	udev =3D zd_usb_to_usbdev(usb);
+=20
+@@ -1966,11 +1956,6 @@ int zd_usb_rfwrite(struct zd_usb *usb, u32 value, u8=
+ bits)
+ 	int i, req_len, actual_req_len;
+ 	u16 bit_value_template;
+=20
+-	if (in_atomic()) {
+-		dev_dbg_f(zd_usb_dev(usb),
+-			"error: io in atomic context not supported\n");
+-		return -EWOULDBLOCK;
+-	}
+ 	if (bits < USB_MIN_RFWRITE_BIT_COUNT) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+ 			"error: bits %d are smaller than"
 --=20
 2.29.1
 
