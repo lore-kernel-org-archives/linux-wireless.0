@@ -2,131 +2,63 @@ Return-Path: <SRS0=EpEU=EI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F6CAC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 209DDC4742C
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 12:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEA5D22275
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:29:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mSKuh/oQ"
+	by mail.kernel.org (Postfix) with ESMTP id D7D7B22268
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 12:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729053AbgKBL33 (ORCPT
+        id S1728900AbgKBMt6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:29:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
+        Mon, 2 Nov 2020 07:49:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728563AbgKBLYW (ORCPT
+        with ESMTP id S1728599AbgKBMt6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:22 -0500
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0DF8C0617A6
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:21 -0800 (PST)
-Received: by mail-wm1-x344.google.com with SMTP id k18so9121761wmj.5
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=bTiCTwpSeuoC0ZILvau+EWPZDB/8AsBPEAL01U6W1b4=;
-        b=mSKuh/oQx2l+5azZ5IH6cLue5yw1lvhVyOtk9XfOR4NLK4Cfn48DDs1VUWdigzZ/oh
-         bAkemouy5StWNyflyuH/BRhSA/GHZdyI+I1doII0o+zIRL9pWY08ELzHvboJgjZLRnkt
-         sJ1l59vpWGkXCBhLwGE1bqRW1JyUuK+2ccOxyoqoJ57d/14nFshRVVj69RksJ9ctBxyx
-         kYTZirub27Ts8fWmFyBhFfe1O12tzRa4jf2FCcb8NJGuNnX0p+LNggbE8PB4OOQquZta
-         8gF7AxVGtZY0+RqNapn/npw28v3PtjhDc1ljWTdVlNBLFJUcZce6XwlMDIl4viLfj7r+
-         M9Dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=bTiCTwpSeuoC0ZILvau+EWPZDB/8AsBPEAL01U6W1b4=;
-        b=H1hK/S9J+DPTalHv3RaJuSQoBpf0UIaRmTSx7ScDQwyGDNwhB5AvEBRtkyiYJLCEAk
-         /kpGtB1w0e38AwOd675grP39f89YY9tOLljV+9S0BsBNXonaRmTrSTs7FDdWSKoSrxy3
-         E0U8lo9caLItvds70Urh/75UoQROG0DQaJ16XzMa6M7FqKNSCdTUuWYTRtJjvb+3WY3q
-         N3hGrOLp5tQCZM3sGo9WwsDgGgxg0t6wGDWqpHVqo3SLuvZji8nR6fM259dY/OSTBXJA
-         qtMXcT8vJot+CmldhBpDjulkaFpLpFtZWq5BjE5y/ddOHxwpblizHpH+MyZNKZn11x/h
-         JStQ==
-X-Gm-Message-State: AOAM5302VcTxvyEPoZSAveOcXUBAKuAzPq1MSG6KGkm5mv/PZJJLQTYm
-        JcZgbKhz/R7RsIAM4SrAuJ/jZQ==
-X-Google-Smtp-Source: ABdhPJysV3sSLjorLpfTTVKOdxO80zr1Or3MAdqQyIDLtjVRp2ORjSI2bSJGUUuC/vYvuQGnFzLCNw==
-X-Received: by 2002:a05:600c:2252:: with SMTP id a18mr15786081wmm.139.1604316260550;
-        Mon, 02 Nov 2020 03:24:20 -0800 (PST)
-Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:19 -0800 (PST)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     kvalo@codeaurora.org
-Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 02/41] rsi_91x_usb: Fix some basic kernel-doc issues
-Date:   Mon,  2 Nov 2020 11:23:31 +0000
-Message-Id: <20201102112410.1049272-3-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
-References: <20201102112410.1049272-1-lee.jones@linaro.org>
+        Mon, 2 Nov 2020 07:49:58 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9EEC0617A6;
+        Mon,  2 Nov 2020 04:49:58 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kZZHV-00HFsK-RN; Mon, 02 Nov 2020 13:49:53 +0100
+Message-ID: <79a1775af358e04083c452729e74dbc8ba20fe63.camel@sipsolutions.net>
+Subject: Re: pull-request: mac80211 2020-10-30
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date:   Mon, 02 Nov 2020 13:49:37 +0100
+In-Reply-To: <20201030135237.129a2cfe@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+References: <20201030094349.20847-1-johannes@sipsolutions.net>
+         <20201030135237.129a2cfe@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+On Fri, 2020-10-30 at 13:52 -0700, Jakub Kicinski wrote:
+> On Fri, 30 Oct 2020 10:43:48 +0100 Johannes Berg wrote:
+> > Hi Jakub,
+> > 
+> > Here's a first set of fixes, in particular the nl80211 eapol one
+> > has people waiting for it.
+> > 
+> > Please pull and let me know if there's any problem.
+> 
+> Two patches seem to have your signature twice, do you want to respin?
+> It's not a big deal.
 
- drivers/net/wireless/rsi/rsi_91x_usb.c:26: warning: cannot understand function prototype: 'u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL; '
- drivers/net/wireless/rsi/rsi_91x_usb.c:88: warning: Function parameter or member 'endpoint' not described in 'rsi_write_multiple'
- drivers/net/wireless/rsi/rsi_91x_usb.c:88: warning: Excess function parameter 'addr' description in 'rsi_write_multiple'
- drivers/net/wireless/rsi/rsi_91x_usb.c:320: warning: Function parameter or member 'ep_num' not described in 'rsi_rx_urb_submit'
- drivers/net/wireless/rsi/rsi_91x_usb.c:320: warning: Function parameter or member 'mem_flags' not described in 'rsi_rx_urb_submit'
+That often happens when I pick up my own patches from the list ... let's
+leave it.
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Siva Rebbagondla <siva8118@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index a62d41c0ccbc0..8928e14671512 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -1,4 +1,4 @@
--/**
-+/*
-  * Copyright (c) 2014 Redpine Signals Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-@@ -75,7 +75,7 @@ static int rsi_usb_card_write(struct rsi_hw *adapter,
-  * rsi_write_multiple() - This function writes multiple bytes of information
-  *			  to the USB card.
-  * @adapter: Pointer to the adapter structure.
-- * @addr: Address of the register.
-+ * @endpoint: Type of endpoint.
-  * @data: Pointer to the data that has to be written.
-  * @count: Number of multiple bytes to be written.
-  *
-@@ -313,6 +313,8 @@ static void rsi_rx_urb_kill(struct rsi_hw *adapter, u8 ep_num)
- /**
-  * rsi_rx_urb_submit() - This function submits the given URB to the USB stack.
-  * @adapter: Pointer to the adapter structure.
-+ * @ep_num: Endpoint number.
-+ * @mem_flags: The type of memory to allocate.
-  *
-  * Return: 0 on success, a negative error code on failure.
-  */
--- 
-2.25.1
+johannes
 
