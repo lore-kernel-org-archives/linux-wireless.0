@@ -5,70 +5,73 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8AAC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED0CC00A89
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9A43207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B62752084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="D6UrFCbN"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QvlkOlDa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728783AbgKBL1h (ORCPT
+        id S1728708AbgKBLYm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:27:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48002 "EHLO
+        Mon, 2 Nov 2020 06:24:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728741AbgKBLYs (ORCPT
+        with ESMTP id S1728683AbgKBLYh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:48 -0500
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D498FC061A04
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:47 -0800 (PST)
-Received: by mail-wr1-x442.google.com with SMTP id n18so14133610wrs.5
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:47 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:37 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94CEEC061A52
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:37 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id h22so9150906wmb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=OAyFBnkzLiaZhl/JnY/CqxtoMQBIM48e3o5HHcfQRSE=;
-        b=D6UrFCbNnbIMKjVgRasS/TVPF0VFgetQBPCgu22jy/5xPEaU/MeB37127gXhnJ2Q/v
-         9B8Dc/D11Iuhl9l0wkkX0tPQE/JYuxjYpSYoGoy7jy2VuYHuxGBU+JKVU3ezNh0d6F5L
-         XQRJruZlUj2caVSprleh4QEvkGtsM4Bbz4qxkpPkQYLZzrkOPep5NdtrCCyNb68pNkk0
-         v/3Guv2tYwpyktPn0vilkm7u2eird8Zcx91kYjKNWNXW8efOmE9dlBCs97tfxwpsbZqm
-         XR2EeJuKuB/yGHZiYgjMnQD14vwlRc9Z8sv/+5xPM2o6nUznn/MjCgolB3+x/LB5UcHM
-         4tSA==
+        bh=xuBtucNK6orquLtJMKORaW0tLzjtm6vr9NLgmkKGSZ4=;
+        b=QvlkOlDalMkDg3/bMvwge5T0Ii+8IuTEkO83EKlfjVa/CW7cw8OD3+zV7urVzsZ2MY
+         GMsyeneq3/3u+RRHGTUUXtGbQdJYVU5v7TaLQW4D9sWNFLRbbe4pAwoNWKQR/nD/RG35
+         ARq5Hy8NdBltEOOHwcy9cRPwm7KhLeKN/i+CBN8MAzuaUk8b++WerxEB6TO4AKomC+Y1
+         wDAUtexWJPUD0pJQMpvF3bX2BVnPCGZL5SKXeK9Gy9R5bjbNlvtOPDblxwD34XZ77+xP
+         c9hq/5Sml0YI5zxIIgCXApi6TBTnEX9m/skqJNrV1SjcfzUF76ZozMAfv1UH0uyBf4Wg
+         EICQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=OAyFBnkzLiaZhl/JnY/CqxtoMQBIM48e3o5HHcfQRSE=;
-        b=gujotsu+MUBdyOB36Pz6kxZ6RZ7JrIOjDCWXVxqNQilbafODy+wA1y1QzhCmZtIch/
-         uhgA07rGfbBnwRRgSye6X3JGogYEigS7dvsnWEv7KOUebg8ye3ofRWaCnjdADLUqYRzD
-         Omcns0Fu3iAVcRQi8vac10x4WrehsaqqmnJm1h1pIfYWJsTJG7xIWtwT0SFoZ3SAJT/a
-         KdS44P49rI+0w7DsVSSuzVz/PXkxanW12dTFyWcyfFJvKIIlPm3BjDIuEMO2v4oe/Ckr
-         eYv7BJDEfLdZ+MWroiuG6UokeXorwmuG40/Ug+vG8Xq5xMcogbyUem+HLyFMLlAx3WL7
-         jL1g==
-X-Gm-Message-State: AOAM532ANtelW0vsGt5LWSIVX55bE69n86Q3j076rwUqbtmYoy2+ORta
-        08svqAtWEUbidUonxVEwaoCbaA==
-X-Google-Smtp-Source: ABdhPJz9zMcwVD2AX9EtfnH8vy23WmMsvpYeEmhm18hnzkcD7bKocVRmvzyBo2IqrL3PWlu2YTNv9w==
-X-Received: by 2002:adf:aad0:: with SMTP id i16mr19166015wrc.270.1604316286561;
-        Mon, 02 Nov 2020 03:24:46 -0800 (PST)
+        bh=xuBtucNK6orquLtJMKORaW0tLzjtm6vr9NLgmkKGSZ4=;
+        b=ZaV+yzrlWf+IdQ4vLsf0NIBYsa32nwj45etEVmwt78cWeR6EnZHVJki8jDpKoGhYYm
+         4tTVg2PzpEYePzFIKaSrnRdSDJjU8KrAYVkITl6sj8X5KKXwxAGkRu25sUVR2LHUKsdi
+         omUVsdwqEuKUwc5pEzlxatcl6Ev60M2WXD3OQXzVswyCKlSwyxgFGqeysYF+FaDxZdzp
+         kKIhT0Hm5RoDU3cqfZujgZTfgeNlUPKok8yZIgMzUe69EwaQXUogBdYVMThjniIP4uc4
+         Z+QLd3svVHWIxJzFLu51GlQ01PBGO0fokRPVu99vJ732mBBfVtrGDg8uX+J5im83F8i4
+         MUWA==
+X-Gm-Message-State: AOAM532eFvUDRhXI/KpBcFGueLBBelbhDmIwzY/aX6OCsh8gAjO9P5c3
+        aN4pu0OqQ9BzVuNQNHwcliPG/Q==
+X-Google-Smtp-Source: ABdhPJxl+oUD+eenUUM55ZHK6NU6oy1ZIm6YJN4DNA3V05R69spUoktUQtN9bLIF/DRQiUhiaokCLw==
+X-Received: by 2002:a1c:3503:: with SMTP id c3mr16873385wma.43.1604316276365;
+        Mon, 02 Nov 2020 03:24:36 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.45
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:46 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:35 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 20/41] ath9k: ar5008_phy: Demote half completed function headers
-Date:   Mon,  2 Nov 2020 11:23:49 +0000
-Message-Id: <20201102112410.1049272-21-lee.jones@linaro.org>
+Subject: [PATCH 15/41] iwlwifi: iwl-eeprom-read: Demote one nonconformant function header
+Date:   Mon,  2 Nov 2020 11:23:44 +0000
+Message-Id: <20201102112410.1049272-16-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -80,12 +83,14 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/ath9k/ar5008_phy.c:119: warning: Function parameter or member 'rfBuf' not described in 'ar5008_hw_phy_modify_rx_buffer'
- drivers/net/wireless/ath/ath9k/ar5008_phy.c:119: warning: Function parameter or member 'reg32' not described in 'ar5008_hw_phy_modify_rx_buffer'
- drivers/net/wireless/ath/ath9k/ar5008_phy.c:119: warning: Function parameter or member 'numBits' not described in 'ar5008_hw_phy_modify_rx_buffer'
- drivers/net/wireless/ath/ath9k/ar5008_phy.c:119: warning: Function parameter or member 'firstBit' not described in 'ar5008_hw_phy_modify_rx_buffer'
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'trans' not described in 'iwl_read_eeprom'
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'eeprom' not described in 'iwl_read_eeprom'
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'eeprom_size' not described in 'iwl_read_eeprom'
 
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -93,52 +98,22 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 15 +++------------
- 1 file changed, 3 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 2fa30834a88db..6610d76131fa8 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -102,13 +102,8 @@ static void ar5008_write_bank6(struct ath_hw *ah, unsigned int *writecnt)
- 	REGWRITE_BUFFER_FLUSH(ah);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
+index ad6dc4497437e..1b2d9fd82a3de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
+@@ -335,7 +335,7 @@ static int iwl_find_otp_image(struct iwl_trans *trans,
+ 	return -EINVAL;
  }
  
 -/**
 +/*
-  * ar5008_hw_phy_modify_rx_buffer() - perform analog swizzling of parameters
-- * @rfbuf:
-- * @reg32:
-- * @numBits:
-- * @firstBit:
-- * @column:
+  * iwl_read_eeprom - read EEPROM contents
   *
-  * Performs analog "swizzling" of parameters into their location.
-  * Used on external AR2133/AR5133 radios.
-@@ -198,10 +193,8 @@ static void ar5008_hw_force_bias(struct ath_hw *ah, u16 synth_freq)
- 	ar5008_write_bank6(ah, &reg_writes);
- }
- 
--/**
-+/*
-  * ar5008_hw_set_channel - tune to a channel on the external AR2133/AR5133 radios
-- * @ah: atheros hardware structure
-- * @chan:
-  *
-  * For the external AR2133/AR5133 radios, takes the MHz channel value and set
-  * the channel value. Assumes writes enabled to analog bus and bank6 register
-@@ -430,10 +423,8 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_MASK2_P_61_45, tmp_mask);
- }
- 
--/**
-+/*
-  * ar5008_hw_spur_mitigate - convert baseband spur frequency for external radios
-- * @ah: atheros hardware structure
-- * @chan:
-  *
-  * For non single-chip solutions. Converts to baseband spur frequency given the
-  * input channel frequency and compute register settings below.
+  * Load the EEPROM contents from adapter and return it
 -- 
 2.25.1
 
