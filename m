@@ -2,79 +2,78 @@ Return-Path: <SRS0=EpEU=EI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C70C55179
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 379FFC00A89
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48499223C7
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD606223AB
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EjP7BP5M"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rK8Q/Uw4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728627AbgKBLY2 (ORCPT
+        id S1728684AbgKBLYg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:24:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47862 "EHLO
+        Mon, 2 Nov 2020 06:24:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728600AbgKBLY0 (ORCPT
+        with ESMTP id S1728620AbgKBLYc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:26 -0500
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DF36C061A4D
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:25 -0800 (PST)
-Received: by mail-wm1-x341.google.com with SMTP id 13so9030636wmf.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:25 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:32 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 668ADC061A04
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:31 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id p22so9018662wmg.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=9FRe1RWMH+Ylu+O6C7UB+7j1JllgJXWWCHgzKpeBizs=;
-        b=EjP7BP5M3C9ozo3OlCBonJ+/+JAmTwyGg5DBL+fEJxyatzDpAE1mGujCx4j1CTSiaX
-         1cGrEaWSm7RiD5emw5QEsnwVzcqy9bFe+a6aUxjwK1cxg6XStfW7PTU1U9peU3uwn5J1
-         T5RuZZhxJOSfZKfobxmGg4+obtpV+2k9z3fChJiazNd9NzuLWyCQivC8VBlcIlY5+qxm
-         nlAeOLU4o5aaSh1zvT1oYLSnYw/270827twrimYoyLTeuMILHchjT7hmEb7ounnF7YL5
-         i31414KP446eCiZ6oqXyyieceiob/yYrjt/jO6hko0XzLgrG07AplOC6FDkUVeI8HBv5
-         zY4Q==
+        bh=pe1vvImQ7xpypNGQYr/8kYE+GlHAALRJwr38y3BS0kA=;
+        b=rK8Q/Uw4o4vzZuZdZ4a12AEzk+lH+7EMxb54ZjsaAzO2IyN8XQEqgOTbJNrVYWL1L5
+         ZkmoSKvRdZjYgs1bVoUA+X27NSr/6z87bnkv+D58Y5RuHVFmgEUlXj00C7pfl1pgphUu
+         cnYgt02K8T05rU3Z5Ya7jJ3ll+owAkkvavLKgUOi3+YWOcM1uqaMqDqpIsgzt6muQBgT
+         VyAAa6axy4+Z66UDH9TqnxBdULJDxxEPuAzTkOvKIh1pF6T+EbCD4tvuom+pmOwNMbJX
+         gyzqGuVLLFqK87T+sivKlZ+PNxP/2Oe5kkAOWMytK/XAOLqqKvq/amZzhBjHo/v65v+d
+         8j8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=9FRe1RWMH+Ylu+O6C7UB+7j1JllgJXWWCHgzKpeBizs=;
-        b=kJ2zUMMtU0EaTtZ/usGQAozpxlSvqaXX3cTvCa+auPh3XCEi6DXdQrbZJ7I6Eajb6E
-         nd/lQAHaCVq/UWaKprRFgIroduLjVOOrvw48jZPpUmeCpJwUeaTuwuhilR93rioFY0ba
-         pTHvSoABqtdAn0jUx35gWxs8jPd7/mUOPj+pFQGo6jDW4w8ph5lDbsQWC/1gJJybZ7ku
-         TYXZRBDtPMwcCdGUpC/aj6lYeLqpEBwewp5jjOQ9nR3/fJS0HBkrWDiru5K8sEICG+Wm
-         fYTaev8pwTv4k1GGSQt9ppyPMi0zRbvkReFGzzfyXDv926/SY1DtQyGw3Mlmal1jiubG
-         Db/A==
-X-Gm-Message-State: AOAM532McGTBQkjyNXDKTFJQgh2Xk+sd6FtGeDPXWbPdyVF8z1DMW/FC
-        S3AiupwlFUiIKfA4TBuFRlOcFQ==
-X-Google-Smtp-Source: ABdhPJzc4a5EERRtVUSuIyyhH7uEsVHTARaRs1aPr519ZyLWI5eoxokOiWIe9CFFu7KT3ISPBjgmpQ==
-X-Received: by 2002:a1c:3846:: with SMTP id f67mr17643769wma.33.1604316264008;
-        Mon, 02 Nov 2020 03:24:24 -0800 (PST)
+        bh=pe1vvImQ7xpypNGQYr/8kYE+GlHAALRJwr38y3BS0kA=;
+        b=My80LrUZ3r7z5bAU05pKSBcH17QwGhZZXacS9ZeKqpZ5O5h1rdlDo56zuH2cbEPNMG
+         ZpiNmPtK2FW48yCvYy0FKNl3djofQEdjr+76KJ5XdIgSPuT8KVU03EoPCDQEFuMa6Y+d
+         Yv8uCGInSe9UdGSNEOAOrnAZx7khM8N+KrDSiqeIOBXXlCkcvHhRZCk3Zzff4mQQeAx1
+         r+FMU+e2UG8W3C43pIPFtyXOCcB/GvBla9RcFdyWVATgB0l7mREzI+rBaKuxq+tTguki
+         o1jFpzcmPreUNF6H7ncshW7BbuUBzZTcP23kbQtFMEvfXgyOlphtvCZuBytNkd7Ps4FU
+         912A==
+X-Gm-Message-State: AOAM531MpcTx660viKoGAsJWp9gLD/lKrYljuAUq0nFGxxjwf37lgm/g
+        AQ7+ghUd9NOspaYuH8/yyQzBlw==
+X-Google-Smtp-Source: ABdhPJwA91tKEgsgkd8SoO0bfyTHukOwzFNhDYUGhZwKs8yhHtgnKh2ZKkGWfJBeLjvEurPjz+sxPw==
+X-Received: by 2002:a1c:ed0b:: with SMTP id l11mr16833456wmh.46.1604316270170;
+        Mon, 02 Nov 2020 03:24:30 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.23
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:23 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:29 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 05/41] rtl8192cu: trx: Demote clear abuse of kernel-doc format
-Date:   Mon,  2 Nov 2020 11:23:34 +0000
-Message-Id: <20201102112410.1049272-6-lee.jones@linaro.org>
+Subject: [PATCH 10/41] ath9k: ar9330_1p1_initvals: Remove unused const variable 'ar9331_common_tx_gain_offset1_1'
+Date:   Mon,  2 Nov 2020 11:23:39 +0000
+Message-Id: <20201102112410.1049272-11-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -82,33 +81,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:455: warning: Function parameter or member 'txdesc' not described in '_rtl_tx_desc_checksum'
+ drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h:1013:18: warning: ‘ar9331_common_tx_gain_offset1_1’ defined but not used [-Wunused-const-variable=]
 
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-index 1ad0cf37f60bb..87f959d5d861d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-@@ -448,7 +448,7 @@ static void _rtl_fill_usb_tx_desc(__le32 *txdesc)
- 	set_tx_desc_first_seg(txdesc, 1);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+index 29479afbc4f10..3e783fc13553b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+@@ -1010,11 +1010,4 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a1fc, 0x00000296},
+ };
  
--/**
-+/*
-  *	For HW recovery information
-  */
- static void _rtl_tx_desc_checksum(__le32 *txdesc)
+-static const u32 ar9331_common_tx_gain_offset1_1[][1] = {
+-	{0x00000000},
+-	{0x00000003},
+-	{0x00000000},
+-	{0x00000000},
+-};
+-
+ #endif /* INITVALS_9330_1P1_H */
 -- 
 2.25.1
 
