@@ -7,69 +7,70 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 795E5C2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 777A0C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18A7B207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E15F223AC
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BHv1+3So"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ltQ789qF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728795AbgKBLYz (ORCPT
+        id S1728851AbgKBLZC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:24:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48044 "EHLO
+        Mon, 2 Nov 2020 06:25:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728781AbgKBLYy (ORCPT
+        with ESMTP id S1728813AbgKBLZB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:54 -0500
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5CFFC061A4B
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:53 -0800 (PST)
-Received: by mail-wm1-x341.google.com with SMTP id e2so9132682wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:53 -0800 (PST)
+        Mon, 2 Nov 2020 06:25:01 -0500
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1849FC0617A6
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:01 -0800 (PST)
+Received: by mail-wr1-x443.google.com with SMTP id b8so14175370wrn.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gMQuO0TF59EhdWIenxAilBMJX+Rp4fB3DjjI99oSCiw=;
-        b=BHv1+3SomxmuPswX/ZGrW1AXpziJDvex16QbzeRf/DRoK+AH6DXYdXPMdd6umh+R5I
-         4Qf+/Wz0veGBXlVbhhBueHReG4KVgjg3nM0Gt2buLDoOCI1me92W9rdpAoPI/1zKCm1q
-         cOemdk8wDVdoPeQrx5sxjV4z8VwIvDjwYsm7V8mx32WCIXE5mlp+fZNm6KWRI0J5qgtc
-         ZRn/e71vqC1vc0SvjIKz31s0CjKnI9k+WTunGOOVa/r5287XZti+UiaqH9d4JDtCrA8K
-         HepVguCGrex+KQ3YbEZTuXMIsAxmEpJGM80uZFCTuNtN3/Yh0WLjB4GuE3KC0jkGZNFP
-         x3dw==
+        bh=gRH/26yT2dAaI3IpvhAVivatnrNzkpcErFlaxyXb8UQ=;
+        b=ltQ789qFyVUG0DnMpeIBcHyp11aLEjc0FGrAhnTv1HyvyDlz68ox27lpz56pRgP5dr
+         GN24aKpcLw9GxLT5KfWn5X3E+MFEN5tC3rcIHc0HNIDR4+EfpVmTtLbhllceTVp63poY
+         Dqra9dlmKW2qmU58r9knHxsIC3Y94KZYdfy5KdOpIj5y9x/a9Aa1kAEcKLlteVa+vaSC
+         3NsmBenF7kWNadUuFK5ZCy5lkzBA4qf/aM6Y4LfQaCsQ5OwkFKgjsvwPFYxro/5B+K+5
+         N+KcSjtJgHhF470t1KKy6b4S/WpsuH0o2UnpNtg/kZXZufZehfcd5F4dTCqKfuEzlAua
+         XiRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gMQuO0TF59EhdWIenxAilBMJX+Rp4fB3DjjI99oSCiw=;
-        b=kK7Q7dW2/wZ/w+3D5Y6SlSh1bK9N2zrvcDXDCFmKBFt0ZU3rYISpZLwsHUGCQCkBip
-         hKWYc8b0tuDy20tOv+951LMVMRVqax/JsbxEL6JUtc0G/wIh95Hg0GCMg0M25qeLKWC+
-         kbl8Qlnx6S5tANk42Wnkt7e30vzSQZhfB9KfZ/1qmaLaYVtvSc+Sw8fk2D0qsXqFspYQ
-         /PkCA/NRBcOp60hlBNYQaGoo0G6MMtimi/O7/4E3cWBffyHbHT/SWpTofpdLPXt2ObT2
-         O6VnZK1ftvgskRqqMj4+1Nao2OkkZDX61P/9RFp7yHM2QadvEgojt3tjC0h8KD9Tpzpb
-         MYcg==
-X-Gm-Message-State: AOAM5314mvacNWol2OZGw1E+tVTSEHP15w7t0Nj9w0IQSY+DEYv7LOOA
-        ASDo5MiJx8+kNp9fkbCAfqw4Aw==
-X-Google-Smtp-Source: ABdhPJwMDhnzvBexMyPHGfiCbnnbtTXRuLVR3F3xGz5sejFZlWKqHkSci2Q/45LmneOlsj19L/5t5Q==
-X-Received: by 2002:a1c:e006:: with SMTP id x6mr17661455wmg.107.1604316292584;
-        Mon, 02 Nov 2020 03:24:52 -0800 (PST)
+        bh=gRH/26yT2dAaI3IpvhAVivatnrNzkpcErFlaxyXb8UQ=;
+        b=V79qPv+L1U+sOVgzG6oXIWG4MDp65w/v7w1y5y5sm++/cqs0Cqad6MqUxjt1P6QfOa
+         jyW37Nm9PjPNQMWmzlZVcOj5k/pvPQpLZDyISCKMt7df2poX/qGVRTW0IiisLbH7w5HT
+         Se4+LZCt86SHmlKnh+liaBWhRugQnFSvc86j/eNm9p8HmQWg+ukjt4GPHHcTYX7lxwKD
+         jVu2JMj/av0XZEqD+47wRYcYZ/H8aGwcE8jycHzLZgpn7QEVJ6H4cCAviBMUKPh6YetV
+         wKmt1GWNiORkkCoJH0nOGPex/WB3/4GALtn9HoYbcglDv5xtNb1F+bsIvUZ5w9EL42q7
+         141w==
+X-Gm-Message-State: AOAM532hxQzWFxUsyr5i58lvElkqchhD1oTOhCcBlrbTwXdCjkS8mbgl
+        ks5FPmuB62ZUbDXDZJdXsrep14o1z0vDpw==
+X-Google-Smtp-Source: ABdhPJzXpYDQKVrtg+Ibi/ww9VFD58hlRbz6tBWOvtJTh5DP25hJe/aSaadr6oJQGj9TbU7z1I80bw==
+X-Received: by 2002:a5d:534d:: with SMTP id t13mr18886940wrv.69.1604316299868;
+        Mon, 02 Nov 2020 03:24:59 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.51
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:51 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:59 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 25/41] rtlwifi: halbtc8723b2ant: Remove a bunch of set but unused variables
-Date:   Mon,  2 Nov 2020 11:23:54 +0000
-Message-Id: <20201102112410.1049272-26-lee.jones@linaro.org>
+Subject: [PATCH 31/41] mwifiex: pcie: Remove a couple of unchecked 'ret's
+Date:   Mon,  2 Nov 2020 11:24:00 +0000
+Message-Id: <20201102112410.1049272-32-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -82,220 +83,59 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_wifi_idle_process’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:1631:40: warning: variable ‘bt_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:1631:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_sco’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2767:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_hid’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2810:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_a2dp’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2855:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_a2dp_pan_hs’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2929:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_pan_edr’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2976:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_pan_hs’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3028:22: warning: variable ‘wifi_rssi_state1’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3028:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_pan_edr_a2dp’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3066:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_pan_edr_hid’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3121:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_hid_a2dp_pan_edr’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3185:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c: In function ‘btc8723b2ant_action_hid_a2dp’:
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3244:5: warning: variable ‘wifi_rssi_state’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/marvell/mwifiex/pcie.c: In function ‘mwifiex_pcie_remove’:
+ drivers/net/wireless/marvell/mwifiex/pcie.c:432:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/marvell/mwifiex/pcie.c: In function ‘mwifiex_cleanup_pcie’:
+ drivers/net/wireless/marvell/mwifiex/pcie.c:3142:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
 
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Cc: Xinming Hu <huxinming820@gmail.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../rtlwifi/btcoexist/halbtc8723b2ant.c       | 48 +++++++++----------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index fb57cc8b2e471..7a71f063015ab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1628,17 +1628,17 @@ static void btc8723b2ant_action_wifi_link_process(struct btc_coexist
- static bool btc8723b2ant_action_wifi_idle_process(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1;
- 	u8 ap_num = 0;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 		 coex_dm->switch_thres_offset - coex_dm->switch_thres_offset;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6a10ff0377a24..67e0247ebaa65 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -429,7 +429,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	struct mwifiex_private *priv;
+ 	const struct mwifiex_pcie_card_reg *reg;
+ 	u32 fw_status;
+-	int ret;
  
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
- 	      coex_dm->switch_thres_offset - coex_dm->switch_thres_offset;
--	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
-+	btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 	card = pci_get_drvdata(pdev);
  
- 	btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM, &ap_num);
+@@ -441,7 +440,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
  
-@@ -2764,10 +2764,10 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
- /* SCO only or SCO+PAN(HS) */
- static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state;
-+	u8 bt_rssi_state;
- 	u32 wifi_bw;
+ 	reg = card->pcie.reg;
+ 	if (reg)
+-		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
++		mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
+ 	else
+ 		fw_status = -1;
  
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	bt_rssi_state = btc8723b2ant_bt_rssi_state(
- 		btcoexist, 2, BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
- 					       coex_dm->switch_thres_offset,
-@@ -2807,12 +2807,12 @@ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
+@@ -3139,12 +3138,11 @@ static void mwifiex_cleanup_pcie(struct mwifiex_adapter *adapter)
+ 	struct pcie_service_card *card = adapter->card;
+ 	struct pci_dev *pdev = card->dev;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	int ret;
+ 	u32 fw_status;
  
- static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state;
-+	u8 bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
+ 	cancel_work_sync(&card->work);
  
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-@@ -2852,13 +2852,13 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
- /* A2DP only / PAN(EDR) only/ A2DP+PAN(HS) */
- static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 ap_num = 0;
- 	u8 tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2, 40, 0);
- 	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
- 
-@@ -2926,12 +2926,12 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
- 
- static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
-@@ -2973,12 +2973,12 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 
- static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
-@@ -3025,13 +3025,13 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
- /* PAN(HS) only */
- static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
--	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
-@@ -3063,12 +3063,12 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- /* PAN(EDR) + A2DP */
- static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
-@@ -3118,12 +3118,12 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 
- static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
-@@ -3182,12 +3182,12 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- /* HID + A2DP + PAN(EDR) */
- static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
-@@ -3241,13 +3241,13 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 
- static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 	u8 ap_num = 0;
- 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
- 			coex_dm->switch_thres_offset;
- 
--	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
-+	btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
- 	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
- 							tmp, 0);
- 	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
+-	ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
++	mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
+ 	if (fw_status == FIRMWARE_READY_PCIE) {
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "Clearing driver ready signature\n");
 -- 
 2.25.1
 
