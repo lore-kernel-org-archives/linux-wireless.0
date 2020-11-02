@@ -7,75 +7,73 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED0CC00A89
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04CE4C00A89
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B62752084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D16322275
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QvlkOlDa"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QStDp87E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728708AbgKBLYm (ORCPT
+        id S1728740AbgKBL1z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:24:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47906 "EHLO
+        Mon, 2 Nov 2020 06:27:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728683AbgKBLYh (ORCPT
+        with ESMTP id S1728702AbgKBLYm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:37 -0500
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94CEEC061A52
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:37 -0800 (PST)
-Received: by mail-wm1-x342.google.com with SMTP id h22so9150906wmb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:37 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:42 -0500
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47B3AC061A48
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:41 -0800 (PST)
+Received: by mail-wr1-x442.google.com with SMTP id a9so14113026wrg.12
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=xuBtucNK6orquLtJMKORaW0tLzjtm6vr9NLgmkKGSZ4=;
-        b=QvlkOlDalMkDg3/bMvwge5T0Ii+8IuTEkO83EKlfjVa/CW7cw8OD3+zV7urVzsZ2MY
-         GMsyeneq3/3u+RRHGTUUXtGbQdJYVU5v7TaLQW4D9sWNFLRbbe4pAwoNWKQR/nD/RG35
-         ARq5Hy8NdBltEOOHwcy9cRPwm7KhLeKN/i+CBN8MAzuaUk8b++WerxEB6TO4AKomC+Y1
-         wDAUtexWJPUD0pJQMpvF3bX2BVnPCGZL5SKXeK9Gy9R5bjbNlvtOPDblxwD34XZ77+xP
-         c9hq/5Sml0YI5zxIIgCXApi6TBTnEX9m/skqJNrV1SjcfzUF76ZozMAfv1UH0uyBf4Wg
-         EICQ==
+        bh=qpDdLuf0XmFXhoeCc8tXmAL5epac8Q54EhVeHTK2ADw=;
+        b=QStDp87EefLAQ0xGJp3v1XG9HoP6I2H/6oI26lKpv0EUN4GRH2LcnNrukE05yCl0jp
+         WRCbr02WX3ag4/XpO5So+3kxDEXlavNHMcaCVzy1xxT9isEburuXPrJw4fSCbuqJx+m6
+         BFJbVQgtoYKKs8EYPOxauS4uCH6Xwxh3rnHz4XDOkjUWXGl00sxJTQtIrxSBuL/j61zY
+         FmsZlE8JC6H4CSOUfkFpCgNpJ8fQG1rVBiRwGlYlCLiSS2iDMD0vILqn44ZJEF0JcF6Y
+         S8pz+FOjpFn8lVkphoFj1R27oN+YghlqDmQNRq9ewmXDpXogxFWgB/1p3pUKgDvuP0li
+         J8FA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xuBtucNK6orquLtJMKORaW0tLzjtm6vr9NLgmkKGSZ4=;
-        b=ZaV+yzrlWf+IdQ4vLsf0NIBYsa32nwj45etEVmwt78cWeR6EnZHVJki8jDpKoGhYYm
-         4tTVg2PzpEYePzFIKaSrnRdSDJjU8KrAYVkITl6sj8X5KKXwxAGkRu25sUVR2LHUKsdi
-         omUVsdwqEuKUwc5pEzlxatcl6Ev60M2WXD3OQXzVswyCKlSwyxgFGqeysYF+FaDxZdzp
-         kKIhT0Hm5RoDU3cqfZujgZTfgeNlUPKok8yZIgMzUe69EwaQXUogBdYVMThjniIP4uc4
-         Z+QLd3svVHWIxJzFLu51GlQ01PBGO0fokRPVu99vJ732mBBfVtrGDg8uX+J5im83F8i4
-         MUWA==
-X-Gm-Message-State: AOAM532eFvUDRhXI/KpBcFGueLBBelbhDmIwzY/aX6OCsh8gAjO9P5c3
-        aN4pu0OqQ9BzVuNQNHwcliPG/Q==
-X-Google-Smtp-Source: ABdhPJxl+oUD+eenUUM55ZHK6NU6oy1ZIm6YJN4DNA3V05R69spUoktUQtN9bLIF/DRQiUhiaokCLw==
-X-Received: by 2002:a1c:3503:: with SMTP id c3mr16873385wma.43.1604316276365;
-        Mon, 02 Nov 2020 03:24:36 -0800 (PST)
+        bh=qpDdLuf0XmFXhoeCc8tXmAL5epac8Q54EhVeHTK2ADw=;
+        b=q/BuM1K4TU38JCCdenLY8sE2xZSvjU1MZvXXSDlyhFWvFKP/bG6jb2y5Z7v6xOTX+F
+         pVwDvBTzLOFVZ6GlPyCHZpOAD2vhPBLl9jxTtCBbcsTjSfogTkNWRZEhNAg4tzoGIgEt
+         UbO+p75BhCZW5yWKfs/SwQVnmcI6/GefXyfj7+AdgMCbjucCArFTGj2jTp4hMFIWwgw/
+         8d2plfK49P/jSDnKOKmDzHVA5oFnNLKcteZh8HxDSVJm/EZEDEcLkJgc5qtRkWSGLWOL
+         hVMgNC1BYBD3KOankYbqWv5OWi3kaBWM3m6DVFeOswWlK8ZrUoo1I7OA0s29AWKHINhl
+         EzCA==
+X-Gm-Message-State: AOAM5323mkSqJrXC2bbQGuQeqRVpiow4K3fwu5yycb1e52AmcOVn5ths
+        GHEsW40dB411X7l9G6GCBleoWQ==
+X-Google-Smtp-Source: ABdhPJw3NvquUovDiM9NpuyGkN81PEgqbBFf/hSnyh+5ZVhWq0aZtZb3MOCJzu17flNBgogtpH4Tzw==
+X-Received: by 2002:adf:e64e:: with SMTP id b14mr19582007wrn.68.1604316279996;
+        Mon, 02 Nov 2020 03:24:39 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.35
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:35 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:39 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jouni Malinen <j@w1.fi>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 15/41] iwlwifi: iwl-eeprom-read: Demote one nonconformant function header
-Date:   Mon,  2 Nov 2020 11:23:44 +0000
-Message-Id: <20201102112410.1049272-16-lee.jones@linaro.org>
+Subject: [PATCH 17/41] intersil: hostap_hw: Prevent incompatible function type cast
+Date:   Mon,  2 Nov 2020 11:23:46 +0000
+Message-Id: <20201102112410.1049272-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -83,14 +81,13 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'trans' not described in 'iwl_read_eeprom'
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'eeprom' not described in 'iwl_read_eeprom'
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:347: warning: Function parameter or member 'eeprom_size' not described in 'iwl_read_eeprom'
+ drivers/net/wireless/intersil/hostap/hostap_hw.c: In function ‘prism2_init_local_data’:
+ drivers/net/wireless/intersil/hostap/hostap_hw.c:3173:48: warning: cast between incompatible function types from ‘void (*)(struct tasklet_struct *)’ to ‘void (*)(long unsigned int)’ [-Wcast-function-type]
+ drivers/net/wireless/intersil/hostap/hostap_hw.c:3175:2: note: in expansion of macro ‘HOSTAP_TASKLET_INIT’
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
+ NB: Repeats lots of times - snipped for brevity
+
+Cc: Jouni Malinen <j@w1.fi>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -98,22 +95,50 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/intersil/hostap/hostap_hw.c  | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-index ad6dc4497437e..1b2d9fd82a3de 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-@@ -335,7 +335,7 @@ static int iwl_find_otp_image(struct iwl_trans *trans,
- 	return -EINVAL;
- }
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+index 22cfb64526448..c877b677505ed 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+@@ -36,6 +36,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
+ #include <linux/if_arp.h>
++#include <linux/interrupt.h>
+ #include <linux/delay.h>
+ #include <linux/random.h>
+ #include <linux/wait.h>
+@@ -3169,22 +3170,16 @@ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
  
--/**
-+/*
-  * iwl_read_eeprom - read EEPROM contents
-  *
-  * Load the EEPROM contents from adapter and return it
+ 	/* Initialize tasklets for handling hardware IRQ related operations
+ 	 * outside hw IRQ handler */
+-#define HOSTAP_TASKLET_INIT(q, f, d) \
+-do { memset((q), 0, sizeof(*(q))); (q)->func = (void(*)(unsigned long))(f); } \
+-while (0)
+-	HOSTAP_TASKLET_INIT(&local->bap_tasklet, hostap_bap_tasklet,
+-			    (unsigned long) local);
+-
+-	HOSTAP_TASKLET_INIT(&local->info_tasklet, hostap_info_tasklet,
+-			    (unsigned long) local);
++
++	tasklet_setup(&local->bap_tasklet, hostap_bap_tasklet);
++
++	tasklet_setup(&local->info_tasklet, hostap_info_tasklet);
+ 	hostap_info_init(local);
+ 
+-	HOSTAP_TASKLET_INIT(&local->rx_tasklet,
+-			    hostap_rx_tasklet, (unsigned long) local);
++	tasklet_setup(&local->rx_tasklet, hostap_rx_tasklet);
+ 	skb_queue_head_init(&local->rx_list);
+ 
+-	HOSTAP_TASKLET_INIT(&local->sta_tx_exc_tasklet,
+-			    hostap_sta_tx_exc_tasklet, (unsigned long) local);
++	tasklet_setup(&local->sta_tx_exc_tasklet, hostap_sta_tx_exc_tasklet);
+ 	skb_queue_head_init(&local->sta_tx_exc_list);
+ 
+ 	INIT_LIST_HEAD(&local->cmd_queue);
 -- 
 2.25.1
 
