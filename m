@@ -7,70 +7,68 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 777A0C2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 262B8C388F2
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E15F223AC
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C143A223B0
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ltQ789qF"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xukb2MhF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728851AbgKBLZC (ORCPT
+        id S1728888AbgKBLZK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:25:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48096 "EHLO
+        Mon, 2 Nov 2020 06:25:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728813AbgKBLZB (ORCPT
+        with ESMTP id S1728880AbgKBLZJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:25:01 -0500
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1849FC0617A6
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:01 -0800 (PST)
-Received: by mail-wr1-x443.google.com with SMTP id b8so14175370wrn.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:01 -0800 (PST)
+        Mon, 2 Nov 2020 06:25:09 -0500
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64395C061A04
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:09 -0800 (PST)
+Received: by mail-wm1-x344.google.com with SMTP id p22so9020321wmg.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gRH/26yT2dAaI3IpvhAVivatnrNzkpcErFlaxyXb8UQ=;
-        b=ltQ789qFyVUG0DnMpeIBcHyp11aLEjc0FGrAhnTv1HyvyDlz68ox27lpz56pRgP5dr
-         GN24aKpcLw9GxLT5KfWn5X3E+MFEN5tC3rcIHc0HNIDR4+EfpVmTtLbhllceTVp63poY
-         Dqra9dlmKW2qmU58r9knHxsIC3Y94KZYdfy5KdOpIj5y9x/a9Aa1kAEcKLlteVa+vaSC
-         3NsmBenF7kWNadUuFK5ZCy5lkzBA4qf/aM6Y4LfQaCsQ5OwkFKgjsvwPFYxro/5B+K+5
-         N+KcSjtJgHhF470t1KKy6b4S/WpsuH0o2UnpNtg/kZXZufZehfcd5F4dTCqKfuEzlAua
-         XiRA==
+        bh=UT5EgnUvoHP+GjgilFxQnCqaL6JOwHOcMs3W1ZOmRXU=;
+        b=xukb2MhFxJbVUdsWilattJVsGg0OAs77+oLW3aMTLk/EF/Ai4AANnWiI3wmBS5XwRf
+         zi7tVBPSLiEoKSaopsSuC8MTjW7bGWgXFnsXe5GenkjXYAZ3XF+6Yc/v6MIMR2jYGiEA
+         JccZN775WqcJLqdINDeWs5q/CcQ80igoAj4GphmiroGQwXn4EVHTg2tP0s0nBUTxWM2L
+         Iiy3ylxRXTxxErZbkKpC3QUymQbzduX1rJycnCa03pcZ20vbdAiKvEkmk7c7wQ5Lkf5y
+         vMwRN5JIToSpejVIkfvae9Gc+n2c/GQjELhxciFLObO1W62xiJ9tmDWdsqrJ74MpM93K
+         k/KQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gRH/26yT2dAaI3IpvhAVivatnrNzkpcErFlaxyXb8UQ=;
-        b=V79qPv+L1U+sOVgzG6oXIWG4MDp65w/v7w1y5y5sm++/cqs0Cqad6MqUxjt1P6QfOa
-         jyW37Nm9PjPNQMWmzlZVcOj5k/pvPQpLZDyISCKMt7df2poX/qGVRTW0IiisLbH7w5HT
-         Se4+LZCt86SHmlKnh+liaBWhRugQnFSvc86j/eNm9p8HmQWg+ukjt4GPHHcTYX7lxwKD
-         jVu2JMj/av0XZEqD+47wRYcYZ/H8aGwcE8jycHzLZgpn7QEVJ6H4cCAviBMUKPh6YetV
-         wKmt1GWNiORkkCoJH0nOGPex/WB3/4GALtn9HoYbcglDv5xtNb1F+bsIvUZ5w9EL42q7
-         141w==
-X-Gm-Message-State: AOAM532hxQzWFxUsyr5i58lvElkqchhD1oTOhCcBlrbTwXdCjkS8mbgl
-        ks5FPmuB62ZUbDXDZJdXsrep14o1z0vDpw==
-X-Google-Smtp-Source: ABdhPJzXpYDQKVrtg+Ibi/ww9VFD58hlRbz6tBWOvtJTh5DP25hJe/aSaadr6oJQGj9TbU7z1I80bw==
-X-Received: by 2002:a5d:534d:: with SMTP id t13mr18886940wrv.69.1604316299868;
-        Mon, 02 Nov 2020 03:24:59 -0800 (PST)
+        bh=UT5EgnUvoHP+GjgilFxQnCqaL6JOwHOcMs3W1ZOmRXU=;
+        b=IMhQVdqnEzsPUBZ///94Lh25272NvQ9DQ31wFzq2CFoOp5hCnuWRw9rR1509Sfz4kG
+         5jjPQ1vvXxL/bRaXqP8fgn9pzANu2FY6LTIG1h31Zy3QVhfMlGSXroWKfkbijjzH15Bf
+         8ugJZxbr78SBHBf185FQFTiahlisAdciUKXzXUrM1LVXl7BjqDdguL/NPCmqVRzL93Gc
+         ZChQLuXD5hvP3z0yrv8hAUhv1ilmpOX3iItQ5KqbBZnnr93tuM/x+gp79klnPGmdBge7
+         cnmL64g3am2AvwM7d9oIJBvuDfIO0TdNo4ndZjhH2o8cBz2K7Yz8ngLRZVejcuyU2fei
+         3wxw==
+X-Gm-Message-State: AOAM530JKI+vGQeU1NBwKLIGJcfRDUggUlGV+dxcxuVLKgIknWD/18UT
+        IfK3nOjqHYHYOLszH5oI4MrQQl2YuB8r9g==
+X-Google-Smtp-Source: ABdhPJzxaJagDnvgeH2HbXfAEJ2LYyd+wNu8tVtlIN4gwozyl0vvjVt8g0xrZK5de9DGHD5UPb/VJA==
+X-Received: by 2002:a1c:99d3:: with SMTP id b202mr17030497wme.0.1604316308191;
+        Mon, 02 Nov 2020 03:25:08 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.58
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.25.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:59 -0800 (PST)
+        Mon, 02 Nov 2020 03:25:07 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 31/41] mwifiex: pcie: Remove a couple of unchecked 'ret's
-Date:   Mon,  2 Nov 2020 11:24:00 +0000
-Message-Id: <20201102112410.1049272-32-lee.jones@linaro.org>
+Subject: [PATCH 38/41] realtek: rtw8822c: Remove unused variable 'corr_val'
+Date:   Mon,  2 Nov 2020 11:24:07 +0000
+Message-Id: <20201102112410.1049272-39-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -83,14 +81,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/marvell/mwifiex/pcie.c: In function ‘mwifiex_pcie_remove’:
- drivers/net/wireless/marvell/mwifiex/pcie.c:432:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
- drivers/net/wireless/marvell/mwifiex/pcie.c: In function ‘mwifiex_cleanup_pcie’:
- drivers/net/wireless/marvell/mwifiex/pcie.c:3142:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c: In function ‘rtw8822c_dpk_dc_corr_check’:
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c:2445:5: warning: variable ‘corr_val’ set but not used [-Wunused-but-set-variable]
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Cc: Xinming Hu <huxinming820@gmail.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -98,44 +92,31 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6a10ff0377a24..67e0247ebaa65 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -429,7 +429,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	struct mwifiex_private *priv;
- 	const struct mwifiex_pcie_card_reg *reg;
- 	u32 fw_status;
--	int ret;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index e37300e98517b..b129a10707573 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -2442,7 +2442,7 @@ static void rtw8822c_dpk_rxbb_dc_cal(struct rtw_dev *rtwdev, u8 path)
+ static u8 rtw8822c_dpk_dc_corr_check(struct rtw_dev *rtwdev, u8 path)
+ {
+ 	u16 dc_i, dc_q;
+-	u8 corr_val, corr_idx;
++	u8 corr_idx;
  
- 	card = pci_get_drvdata(pdev);
+ 	rtw_write32(rtwdev, REG_RXSRAM_CTL, 0x000900f0);
+ 	dc_i = (u16)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(27, 16));
+@@ -2455,7 +2455,7 @@ static u8 rtw8822c_dpk_dc_corr_check(struct rtw_dev *rtwdev, u8 path)
  
-@@ -441,7 +440,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	rtw_write32(rtwdev, REG_RXSRAM_CTL, 0x000000f0);
+ 	corr_idx = (u8)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(7, 0));
+-	corr_val = (u8)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(15, 8));
++	rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(15, 8));
  
- 	reg = card->pcie.reg;
- 	if (reg)
--		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
-+		mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
- 	else
- 		fw_status = -1;
- 
-@@ -3139,12 +3138,11 @@ static void mwifiex_cleanup_pcie(struct mwifiex_adapter *adapter)
- 	struct pcie_service_card *card = adapter->card;
- 	struct pci_dev *pdev = card->dev;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	int ret;
- 	u32 fw_status;
- 
- 	cancel_work_sync(&card->work);
- 
--	ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
-+	mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
- 	if (fw_status == FIRMWARE_READY_PCIE) {
- 		mwifiex_dbg(adapter, INFO,
- 			    "Clearing driver ready signature\n");
+ 	if (dc_i > 200 || dc_q > 200 || corr_idx < 40 || corr_idx > 65)
+ 		return 1;
 -- 
 2.25.1
 
