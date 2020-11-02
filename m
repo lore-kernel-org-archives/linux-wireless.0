@@ -5,73 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF30FC00A89
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2012FC00A89
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:29:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8236C22275
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B94E022275
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:29:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="udOd7bGB"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uzU+59hH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728846AbgKBL2y (ORCPT
+        id S1728613AbgKBLY1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:28:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47888 "EHLO
+        Mon, 2 Nov 2020 06:24:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728636AbgKBLY3 (ORCPT
+        with ESMTP id S1728288AbgKBLYY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:29 -0500
+        Mon, 2 Nov 2020 06:24:24 -0500
 Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 136DDC0617A6
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:29 -0800 (PST)
-Received: by mail-wm1-x342.google.com with SMTP id 13so9030876wmf.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:29 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1266FC061A47
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:23 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id c18so9018365wme.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=AFvxbCSBD0dyE27qjUGJ2Xb0Ms2F6Ys3MDSISyE2R+M=;
-        b=udOd7bGBOYKR4UprYlENO30OIAdWtb7NI3dl14b2U5dwS3lMoFi3AylTynoEmHqv7z
-         rG1pcwZcA2GODT7vbsuT6GQ8pbldsq6Jeod8EM2YQfV5uxNSuAArsgJRMP1vm76MzIcx
-         QI+9+mvC7fJZoInVjIf8AGVT0tpYx6YOdDl+EezDJ4VWJ/VUGjP3WIJRNERcZh4C0JzO
-         87/q9MWt02/X9b0Sw1/SQtXKR6aWpxDdZPKLH45i9Qnorx7B4H5dqUFd9GBvrhMz5Fgr
-         ELKdmNunluybHaK6LEIFgCm72LSkMDgX3+gOehmagAtZaHgml1cIAegkCqkA9dKakvGP
-         GeyQ==
+        bh=A1fMIMjw6i89f8UX70P4Kw6NDXaWlqTcl97Lfk1WFz4=;
+        b=uzU+59hH5565Hurqo3QSpw5jMldLf2h0/QVjPsls6qykE/ceDqX8W3w0QjvF+RNNxK
+         ob6ZesURS0nG0LpVVGD+PwwYIhIHQrSUrIpP7lqfbSIo5noKVOS41mw6mSFPjdiP8fKO
+         WSvbAPpu0pV97tymA9dcJBDRm4I0NbViB7JiTYZ6Q8IA+r2vOB66zBRdbnHzsu9QXQ4/
+         x5Zwv0aLPwnsdrvXPv7kRMaRWinwnjWBTOuYWVX1uBCK4WYpR+maFieGrFymLLeQQEnr
+         U120OvXsajcfXIoNbeUAGMe0qbTaJxVJ1L9AFDzjUY6q4SNmSyGkXmHhy8wXc5pKKT5U
+         vGwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=AFvxbCSBD0dyE27qjUGJ2Xb0Ms2F6Ys3MDSISyE2R+M=;
-        b=VX1jG3QMduyfHrLuJKAhLsRCBlAK5fKWEipOvUrrQjisw4Y6nmQXIJjrtNHd+9IBZJ
-         15Biu8TflXqTPp1JcpNiqb223pnYM9XPaLMe/tXjsuXqSTFcRued8I9pez9XM5l4fV7Y
-         vybIZZPgb5L7QF3CtXksYnysgGlz3K6C+ajJ/y4KBN6T1Lr4urJ3XRK04IdCWsht0d7b
-         9yxvbPDGcV1XS5Z2zoMZVbtCDDeRw6HjTwFPLLOK5UyQZMm9Ahg62DzrHbL07BbzpEiw
-         hZX//U36lO74KVvE5jmticQ/m0AB6p259yJACk9nNlGge0EDFPw2Kfkv9RLDAkrkYMpa
-         VQHg==
-X-Gm-Message-State: AOAM530hYrYQNjgsCc+ydr/w5aYizVOwk9jyRjnSP58rkV+dcC9XqNFS
-        7KUGdlcNfN8I53bkopU81Uhu8A==
-X-Google-Smtp-Source: ABdhPJxV5TIbJuJEaGgVUX4DCaO0rJIH/Q2FlVRkiX97D+yCvj5LLTK0kFVE53PSH8kYpjObYrvtsA==
-X-Received: by 2002:a7b:c7c3:: with SMTP id z3mr16926849wmk.43.1604316267805;
-        Mon, 02 Nov 2020 03:24:27 -0800 (PST)
+        bh=A1fMIMjw6i89f8UX70P4Kw6NDXaWlqTcl97Lfk1WFz4=;
+        b=NG4lYWlPobFdPO3XAkapV3qyWFNX7kmO0lj5gm+NvHEp1ySfFsiaZ7K4cAgYCrnt3D
+         lczAd7xdlIzMhq1KozARY9lBcuG8q2IyhbR00DnhwtevEyatOxwNMYeDNusG0NEg2CPr
+         SyS8+p+RT/aru5O8sbXOmES+pg64n0/rJ5E9QvO+ub0ujQjGPG6ZZjI/0fc14LQsEAZJ
+         O58AkgSr4yfUL6LHREezCFWWs80pij32guoFdqPN2FvQ5/SA5tAGPRAk3otBfm372E+n
+         tTx1ae/cUrikaw8Fcj2UFzpQNfo9q+UnEh36DVgmnO39DwzTLsjPqCk93S+j8a858Zfc
+         ITEg==
+X-Gm-Message-State: AOAM530GVEXst8O5mX2c427LKSyXpRhCDugbcx/JK+tBZ81Bn+K7e6Ex
+        6jjkTFxdnwYYPJKnFqGB0cU8F/eewYWXEA==
+X-Google-Smtp-Source: ABdhPJxOMcmp/5oX7Gq5iCjpMjclVgcK49IJ9lE6t5E9al45QFOH+Lc6yhmlA8ZPv4GomW4lGTZDIg==
+X-Received: by 2002:a1c:790b:: with SMTP id l11mr16053038wme.53.1604316261773;
+        Mon, 02 Nov 2020 03:24:21 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.26
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:27 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:21 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 08/41] iwlwifi: mvm: rs: Demote non-conformant function documentation headers
-Date:   Mon,  2 Nov 2020 11:23:37 +0000
-Message-Id: <20201102112410.1049272-9-lee.jones@linaro.org>
+Subject: [PATCH 03/41] rtl8192cu: mac: Fix some missing/ill-documented function parameters
+Date:   Mon,  2 Nov 2020 11:23:32 +0000
+Message-Id: <20201102112410.1049272-4-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -81,96 +79,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Also add documentation for 'mvm'.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:400: warning: cannot understand function prototype: 'const u16 expected_tpt_legacy[IWL_RATE_COUNT] = '
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'mvm' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'tbl' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'scale_index' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'attempts' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'successes' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:684: warning: Function parameter or member 'window' not described in '_rs_collect_tx_data'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2677: warning: duplicate section name 'NOTE'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2682: warning: Function parameter or member 'mvm' not described in 'rs_initialize_lq'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2682: warning: Function parameter or member 'sta' not described in 'rs_initialize_lq'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2682: warning: Function parameter or member 'lq_sta' not described in 'rs_initialize_lq'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:2682: warning: Function parameter or member 'band' not described in 'rs_initialize_lq'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:3761: warning: Function parameter or member 'mvm' not described in 'rs_program_fix_rate'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:3761: warning: Function parameter or member 'lq_sta' not described in 'rs_program_fix_rate'
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c:4213: warning: Function parameter or member 'mvm' not described in 'iwl_mvm_tx_protection'
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:124: warning: Function parameter or member 'hw' not described in 'rtl92c_llt_write'
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:124: warning: Excess function parameter 'io' description in 'rtl92c_llt_write'
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:155: warning: Function parameter or member 'hw' not described in 'rtl92c_init_llt_table'
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c:155: warning: Excess function parameter 'io' description in 'rtl92c_init_llt_table'
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index ed7382e7ea177..91b6541d579f5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -386,7 +386,7 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
- 			   const struct rs_rate *initial_rate);
- static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search);
- 
--/**
-+/*
-  * The following tables contain the expected throughput metrics for all rates
-  *
-  *	1, 2, 5.5, 11, 6, 9, 12, 18, 24, 36, 48, 54, 60 MBits
-@@ -396,7 +396,6 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search);
-  * CCK rates are only valid in legacy table and will only be used in G
-  * (2.4 GHz) band.
-  */
--
- static const u16 expected_tpt_legacy[IWL_RATE_COUNT] = {
- 	7, 13, 35, 58, 40, 57, 72, 98, 121, 154, 177, 186, 0, 0, 0
- };
-@@ -670,7 +669,7 @@ static s32 get_expected_tpt(struct iwl_scale_tbl_info *tbl, int rs_index)
- 	return 0;
- }
- 
--/**
-+/*
-  * rs_collect_tx_data - Update the success/failure sliding window
-  *
-  * We keep a sliding window of the last 62 packets transmitted
-@@ -2667,7 +2666,7 @@ void rs_update_last_rssi(struct iwl_mvm *mvm,
- 	}
- }
- 
--/**
-+/*
-  * rs_initialize_lq - Initialize a station's hardware rate table
-  *
-  * The uCode's station table contains a table of fallback rates
-@@ -3756,7 +3755,7 @@ int rs_pretty_print_rate(char *buf, int bufsz, const u32 rate)
- }
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
--/**
-+/*
-  * Program the device to use fixed rate for frame transmit
-  * This is for debugging/testing only
-  * once the device start use fixed rate, we need to reload the module
-@@ -4211,6 +4210,7 @@ static int rs_drv_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 2890a495a23ec..8d2c6d8d32d93 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -113,7 +113,7 @@ void rtl92c_read_chip_version(struct ieee80211_hw *hw)
  
  /**
-  * iwl_mvm_tx_protection - ask FW to enable RTS/CTS protection
-+ * @mvm: The mvm component
-  * @mvmsta: The station
-  * @enable: Enable Tx protection?
+  * writeLLT - LLT table write access
+- * @io: io callback
++ * @hw: Pointer to the ieee80211_hw structure.
+  * @address: LLT logical address.
+  * @data: LLT data content
+  *
+@@ -145,11 +145,10 @@ bool rtl92c_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 
+ /**
+  * rtl92c_init_LLT_table - Init LLT table
+- * @io: io callback
+- * @boundary:
++ * @hw: Pointer to the ieee80211_hw structure.
++ * @boundary: Page boundary.
+  *
+  * Realtek hardware access function.
+- *
   */
+ bool rtl92c_init_llt_table(struct ieee80211_hw *hw, u32 boundary)
+ {
 -- 
 2.25.1
 
