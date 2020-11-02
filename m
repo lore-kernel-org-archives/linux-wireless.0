@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 465F9C388F2
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07577C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF131207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A40F8207C3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HJXTGyXM"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QfadVdOy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728771AbgKBL0r (ORCPT
+        id S1728799AbgKBLY4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:26:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48078 "EHLO
+        Mon, 2 Nov 2020 06:24:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728817AbgKBLY7 (ORCPT
+        with ESMTP id S1728793AbgKBLYz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:59 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1E3DC061A04
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:58 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id b3so8231136wrx.11
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:58 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:55 -0500
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A5BEC0617A6
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:55 -0800 (PST)
+Received: by mail-wr1-x444.google.com with SMTP id x7so14162237wrl.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=efbZKXhAztTr+3vbDGqT9spp9eWuy2ZoYZmE2LB/QTg=;
-        b=HJXTGyXMt19r1ikj2+zTbCPdaXfc23shxZu/1Ox1YkwM2RWLkvtyRguUmH9IicwOGN
-         1OUih7cZ7KDkf6s94C4Slvq0K9T85t+WZeZ7HXjI/4fWE9OJETg9WnFp7svfmdB6fdWd
-         cHg3uDTE+1JaRthad5XzyKorSGn8czDs4Vt+WHlfX+u6wiXzOxDQAYwp8dVMJtwpKbkV
-         qmDaUdZp2sv+yylhVSe+7i8QpFkD/K6j/W6TdsIfaDxgPd9NCX7IF5EyXaMBJJvd2vfQ
-         xxgmBlYon1+fDBknu7jMEgR4mnHluW3hiDK7EsfqE7PpA+65kMrzSkgtfrYRxGMgkO+m
-         Lgvg==
+        bh=phz21+N6URi4CcT/YO1+niu4iFcUjLLHLqxB18E2o5Y=;
+        b=QfadVdOy9Fl9zbkh80hfIPvPz3gNyuDG3E8PgTyr3iJ6FgsbshhFOmkBOLkPJRM+cS
+         EbKUFWAfKl+jS9COFsJZ8VEzm3Ljt/H3BTbFUiAEX8SpXLdLujSUmWNlOOaR996bjO5X
+         ZpwGzWoAYJQNQF4ErEXvUD0iJGRGMHnvrO7wF6dkvOHyfE7kMjCF4zK+LHNuOkOZxpep
+         pPxsA2NYaA/RjVWsM1+QVNNr25GTO1iv0QHGgOO31mXvatibCudIkTu4BBuclSsU5BKh
+         oncw3u9nBbEhDE2UaEnT5Z4Da0r6mOP0590VFKMAGPFGegyvCA0O5p0uOGggx6X0A8k4
+         BN1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=efbZKXhAztTr+3vbDGqT9spp9eWuy2ZoYZmE2LB/QTg=;
-        b=Xd2qsJ0rJUVeh2x9zGiIUuwbeAqgRFp6yp2uepVJFe0u0t/KIENZucpuF18iOvgkvx
-         dLCVkpVFaa2kGCIA5Ug4FOBCo0NfGxHyWdR9XtsF3PcdYYAJzjdUe5a+phx61PhpcjHQ
-         AYv57ZQKtxBIMaliFrHKRySEuYOL6lL5E7sEc0ksuyjrm38NiVfnd01EvU/q1iiuYLzJ
-         Q+jJZZz8hHtq9DpknFSqRxzt/aAgGRRMd6ib9bUue7bah6YG+/sWHZQSI7OzZXkBnw0/
-         C3qJAxAOTbrrjUlYPMgs7duzEB4sY2WmtQ6ZXTmbHL9ENRQP8Lzcjx1dIQIj5tnx9Rdc
-         4NVA==
-X-Gm-Message-State: AOAM531iDZRZRKYCIowWgMyS4GAueF/tWI9pqjaeGFIFM+dZSiBE4MV3
-        n00paAH9Pz39GTD1SsIoNac/kw==
-X-Google-Smtp-Source: ABdhPJzoHFkR/mFt/vl1mK/9qPAQpnXQw+3L1GCgw/NDoLHm4ShmEPmKR3zhhINrevs5J3q/jHyvUw==
-X-Received: by 2002:adf:fc07:: with SMTP id i7mr14507764wrr.223.1604316297481;
-        Mon, 02 Nov 2020 03:24:57 -0800 (PST)
+        bh=phz21+N6URi4CcT/YO1+niu4iFcUjLLHLqxB18E2o5Y=;
+        b=mYvrr2J1yiY2janNJFslgdPIjqRc3eIuAEosC+g34SWfiRCAyOWOrrp+pctrQREO50
+         09aAZGzs9zJqjj6MSLHre1gREq+3IlNia4rs6SFGC7u7bEqWCKoXExvxc8UskxexKPM2
+         EOiojtczrA6bkN9zLyzz973gU7zl5+h81gbZ1GMM4eHCiT1324oMME12wPnPnWi+095r
+         A/OsgxwLzAtvOI92mdHzWUo/0Zpp3/UdmookeyygacHxyO3iaxYW1PjpHAycJLjZyQi9
+         diH42pnZgQTf8288+OVcipbbUVJm1VU2eqHfhLWV+3SH/L1Ce+2BTwVh2D1yGFC7wuR5
+         Cszw==
+X-Gm-Message-State: AOAM531unNdAOeKOHL30LQNTYr6TrttWO6VlTa/9Pb7RbMiAE1Tbv2v8
+        1M0ftlFKiuRv+sonjdfsSgyf6A==
+X-Google-Smtp-Source: ABdhPJzNF5spMxVcMYFSeCHg8D9zRR3jAaylmqt+JUIJZ1DX9Vnz69yq3266Tb3tLFRcshxVfdp2yg==
+X-Received: by 2002:adf:9361:: with SMTP id 88mr18815974wro.37.1604316293800;
+        Mon, 02 Nov 2020 03:24:53 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.56
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:56 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:53 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
@@ -67,9 +67,9 @@ Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
         Jakub Kicinski <kuba@kernel.org>,
         Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 29/41] rtl8188ee: phy: Remove set but unused variable 'reg_ea4'
-Date:   Mon,  2 Nov 2020 11:23:58 +0000
-Message-Id: <20201102112410.1049272-30-lee.jones@linaro.org>
+Subject: [PATCH 26/41] rtlwifi: phy: Remove set but unused variable 'bbvalue'
+Date:   Mon,  2 Nov 2020 11:23:55 +0000
+Message-Id: <20201102112410.1049272-27-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -82,8 +82,8 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c: In function ‘_rtl88e_phy_path_a_iqk’:
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c:1351:33: warning: variable ‘reg_ea4’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c: In function ‘_rtl8723e_phy_iq_calibrate’:
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c:1150:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
 
 Cc: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
@@ -94,31 +94,25 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index 9be032e8ec95b..12d0b3a87af7c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -1348,7 +1348,7 @@ static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+index fa0eed434d4f6..fe9b407dc2aff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+@@ -1147,10 +1147,8 @@ static void _rtl8723e_phy_iq_calibrate(struct ieee80211_hw *hw,
  
- static u8 _rtl88e_phy_path_a_iqk(struct ieee80211_hw *hw, bool config_pathb)
- {
--	u32 reg_eac, reg_e94, reg_e9c, reg_ea4;
-+	u32 reg_eac, reg_e94, reg_e9c;
- 	u8 result = 0x00;
+ 	const u32 retrycount = 2;
  
- 	rtl_set_bbreg(hw, 0xe30, MASKDWORD, 0x10008c1c);
-@@ -1365,7 +1365,7 @@ static u8 _rtl88e_phy_path_a_iqk(struct ieee80211_hw *hw, bool config_pathb)
- 	reg_eac = rtl_get_bbreg(hw, 0xeac, MASKDWORD);
- 	reg_e94 = rtl_get_bbreg(hw, 0xe94, MASKDWORD);
- 	reg_e9c = rtl_get_bbreg(hw, 0xe9c, MASKDWORD);
--	reg_ea4 = rtl_get_bbreg(hw, 0xea4, MASKDWORD);
-+	rtl_get_bbreg(hw, 0xea4, MASKDWORD);
+-	u32 bbvalue;
+-
+ 	if (t == 0) {
+-		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
++		rtl_get_bbreg(hw, 0x800, MASKDWORD);
  
- 	if (!(reg_eac & BIT(28)) &&
- 	    (((reg_e94 & 0x03FF0000) >> 16) != 0x142) &&
+ 		rtl8723_save_adda_registers(hw, adda_reg,
+ 					    rtlphy->adda_backup, 16);
 -- 
 2.25.1
 
