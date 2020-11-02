@@ -5,60 +5,60 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 262B8C388F2
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45240C388F2
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C143A223B0
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE1C5207C3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:25:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xukb2MhF"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kjIRWtT2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728888AbgKBLZK (ORCPT
+        id S1728925AbgKBLZ3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:25:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48134 "EHLO
+        Mon, 2 Nov 2020 06:25:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728880AbgKBLZJ (ORCPT
+        with ESMTP id S1728908AbgKBLZN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:25:09 -0500
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64395C061A04
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:09 -0800 (PST)
-Received: by mail-wm1-x344.google.com with SMTP id p22so9020321wmg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:09 -0800 (PST)
+        Mon, 2 Nov 2020 06:25:13 -0500
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E969AC061A04
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:12 -0800 (PST)
+Received: by mail-wm1-x343.google.com with SMTP id k18so9124276wmj.5
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UT5EgnUvoHP+GjgilFxQnCqaL6JOwHOcMs3W1ZOmRXU=;
-        b=xukb2MhFxJbVUdsWilattJVsGg0OAs77+oLW3aMTLk/EF/Ai4AANnWiI3wmBS5XwRf
-         zi7tVBPSLiEoKSaopsSuC8MTjW7bGWgXFnsXe5GenkjXYAZ3XF+6Yc/v6MIMR2jYGiEA
-         JccZN775WqcJLqdINDeWs5q/CcQ80igoAj4GphmiroGQwXn4EVHTg2tP0s0nBUTxWM2L
-         Iiy3ylxRXTxxErZbkKpC3QUymQbzduX1rJycnCa03pcZ20vbdAiKvEkmk7c7wQ5Lkf5y
-         vMwRN5JIToSpejVIkfvae9Gc+n2c/GQjELhxciFLObO1W62xiJ9tmDWdsqrJ74MpM93K
-         k/KQ==
+        bh=H6cdhCKSV+e73IF059XTYbnS4xki9YceyWLt1d9tAnQ=;
+        b=kjIRWtT2G1NDh+U38Rv7FfAtYfkysDEGZtHw5TH2vid5+NKIXzmhRCBeUQBm0i6rmD
+         DvEtQF9SB1RCFYbfjkYC6GzPyb5orD2t7povv+ioDwtbaEk6XUMibMktPjJOXDJo6wGf
+         lNJ/KAF89yLrKtfQnIz71cLLcwypx5jB7zAYx3A8P23YT3saMLL7GQLV75BHtiGuoqph
+         xPLBdJVmD+nkUYCDMjRh/sVCz5aTAxm+wpko30RyclSwVR7wwbRRGZ/Il2GF05RE2NaG
+         T45PwQcc9oe0/ekJ26MluU5sESU6motRpIsCfo4vWBNFYlMzWiBPSnverdYvQpbBt1uI
+         bDSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UT5EgnUvoHP+GjgilFxQnCqaL6JOwHOcMs3W1ZOmRXU=;
-        b=IMhQVdqnEzsPUBZ///94Lh25272NvQ9DQ31wFzq2CFoOp5hCnuWRw9rR1509Sfz4kG
-         5jjPQ1vvXxL/bRaXqP8fgn9pzANu2FY6LTIG1h31Zy3QVhfMlGSXroWKfkbijjzH15Bf
-         8ugJZxbr78SBHBf185FQFTiahlisAdciUKXzXUrM1LVXl7BjqDdguL/NPCmqVRzL93Gc
-         ZChQLuXD5hvP3z0yrv8hAUhv1ilmpOX3iItQ5KqbBZnnr93tuM/x+gp79klnPGmdBge7
-         cnmL64g3am2AvwM7d9oIJBvuDfIO0TdNo4ndZjhH2o8cBz2K7Yz8ngLRZVejcuyU2fei
-         3wxw==
-X-Gm-Message-State: AOAM530JKI+vGQeU1NBwKLIGJcfRDUggUlGV+dxcxuVLKgIknWD/18UT
-        IfK3nOjqHYHYOLszH5oI4MrQQl2YuB8r9g==
-X-Google-Smtp-Source: ABdhPJzxaJagDnvgeH2HbXfAEJ2LYyd+wNu8tVtlIN4gwozyl0vvjVt8g0xrZK5de9DGHD5UPb/VJA==
-X-Received: by 2002:a1c:99d3:: with SMTP id b202mr17030497wme.0.1604316308191;
-        Mon, 02 Nov 2020 03:25:08 -0800 (PST)
+        bh=H6cdhCKSV+e73IF059XTYbnS4xki9YceyWLt1d9tAnQ=;
+        b=TGbCiPq5gwed6DXLFtYLnc++vabCwFY6M945z0y9AgdPvpwqVVkS0mT1f9h7lEf/g7
+         nhQIaqieokbCwuaInfti1OzQeuB82XalB937BkbeS7Nx20PN7sVl5GDlpDMI7zwwx66f
+         P1lqZPjWVDnN9NH29pkEaWKNpQIGg29j/B1YAhKIknyl0hoQY+jV76SDndSI05WSb+x1
+         I9eqYFn/I3Y4qtq1W/9PH4pt6Kup4ttM8J2dU24qf3cSUXxYfhjFfEw2rgn0lJ0EcmPA
+         tglW/fAdeYBx/CkV5AR0jAIqfCnAr5h6sycrek/e07YLEA92RYxscopaDWgfDv49CZv/
+         mDJA==
+X-Gm-Message-State: AOAM53122FCI1azmMTQhrUBGLQe0Cru4EqjzDkL2NaZGXtekQWJDdGfl
+        Gi8zz9MnKAts8mdZlkw1a212lA==
+X-Google-Smtp-Source: ABdhPJyIwYcuEegu2lamPvWHAIqF6Vi2NTmBnd9CkNt4PE4Bls9W2ZyKizwMFz2Xed+Kelo4AnAbJg==
+X-Received: by 2002:a1c:103:: with SMTP id 3mr16983122wmb.81.1604316311669;
+        Mon, 02 Nov 2020 03:25:11 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.25.07
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.25.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:25:07 -0800 (PST)
+        Mon, 02 Nov 2020 03:25:11 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
@@ -66,9 +66,9 @@ Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 38/41] realtek: rtw8822c: Remove unused variable 'corr_val'
-Date:   Mon,  2 Nov 2020 11:24:07 +0000
-Message-Id: <20201102112410.1049272-39-lee.jones@linaro.org>
+Subject: [PATCH 41/41] realtek: rtw88: pci: Add prototypes for .probe, .remove and .shutdown
+Date:   Mon,  2 Nov 2020 11:24:10 +0000
+Message-Id: <20201102112410.1049272-42-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -81,8 +81,15 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/realtek/rtw88/rtw8822c.c: In function ‘rtw8822c_dpk_dc_corr_check’:
- drivers/net/wireless/realtek/rtw88/rtw8822c.c:2445:5: warning: variable ‘corr_val’ set but not used [-Wunused-but-set-variable]
+ drivers/net/wireless/realtek/rtw88/pci.c:1488:5: warning: no previous prototype for ‘rtw_pci_probe’ [-Wmissing-prototypes]
+ 1488 | int rtw_pci_probe(struct pci_dev *pdev,
+ | ^~~~~~~~~~~~~
+ drivers/net/wireless/realtek/rtw88/pci.c:1568:6: warning: no previous prototype for ‘rtw_pci_remove’ [-Wmissing-prototypes]
+ 1568 | void rtw_pci_remove(struct pci_dev *pdev)
+ | ^~~~~~~~~~~~~~
+ drivers/net/wireless/realtek/rtw88/pci.c:1590:6: warning: no previous prototype for ‘rtw_pci_shutdown’ [-Wmissing-prototypes]
+ 1590 | void rtw_pci_shutdown(struct pci_dev *pdev)
+ | ^~~~~~~~~~~~~~~~
 
 Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
@@ -92,31 +99,24 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index e37300e98517b..b129a10707573 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -2442,7 +2442,7 @@ static void rtw8822c_dpk_rxbb_dc_cal(struct rtw_dev *rtwdev, u8 path)
- static u8 rtw8822c_dpk_dc_corr_check(struct rtw_dev *rtwdev, u8 path)
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index ca17aa9cf7dc7..7cdbb9533a09a 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -212,6 +212,10 @@ struct rtw_pci {
+ 	void __iomem *mmap;
+ };
+ 
++int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
++void rtw_pci_remove(struct pci_dev *pdev);
++void rtw_pci_shutdown(struct pci_dev *pdev);
++
+ static inline u32 max_num_of_tx_queue(u8 queue)
  {
- 	u16 dc_i, dc_q;
--	u8 corr_val, corr_idx;
-+	u8 corr_idx;
- 
- 	rtw_write32(rtwdev, REG_RXSRAM_CTL, 0x000900f0);
- 	dc_i = (u16)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(27, 16));
-@@ -2455,7 +2455,7 @@ static u8 rtw8822c_dpk_dc_corr_check(struct rtw_dev *rtwdev, u8 path)
- 
- 	rtw_write32(rtwdev, REG_RXSRAM_CTL, 0x000000f0);
- 	corr_idx = (u8)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(7, 0));
--	corr_val = (u8)rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(15, 8));
-+	rtw_read32_mask(rtwdev, REG_STAT_RPT, GENMASK(15, 8));
- 
- 	if (dc_i > 200 || dc_q > 200 || corr_idx < 40 || corr_idx > 65)
- 		return 1;
+ 	u32 max_num;
 -- 
 2.25.1
 
