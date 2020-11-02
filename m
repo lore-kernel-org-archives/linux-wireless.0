@@ -6,98 +6,94 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7ECC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 18:13:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B197C388F9
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 18:17:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8443822226
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 18:13:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8C0020731
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 18:17:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="H8X0c/bg"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="p+Yc6Whu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726367AbgKBSNT (ORCPT
+        id S1726342AbgKBSRa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 13:13:19 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:11033 "EHLO z5.mailgun.us"
+        Mon, 2 Nov 2020 13:17:30 -0500
+Received: from z5.mailgun.us ([104.130.96.5]:61646 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725921AbgKBSNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 13:13:19 -0500
+        id S1726055AbgKBSRW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Nov 2020 13:17:22 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1604340799; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1604341042; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=6Kok7NnywWHLw5utXL9oDnF/16NNLDN2ZxzIH6GNbx0=;
- b=H8X0c/bgWmqGyZjCS77DAs+b4ykdAI0qAE6hK4knlRlMmgonFuEd8SB3U3+0r64QJ0TJIPuX
- Jqy7iHtbzg5h0xuWXAiM1fsovrt3Z/t4ExnOtjqDnxVfGUM2Q6MDh5d2S+Sb5rGk2BWdYKUA
- p+Kal4w29QNpBtLCDPZcnxax4lA=
+ Content-Type: Sender; bh=nS7fTYel1RkJvIVetfpxWCWaUmGRrDbjg87RLUX+kic=;
+ b=p+Yc6WhuzgUdrHe/1JDdZE3pqG9UP2FKRefKajcJ0v8yPOXcsWAiWprRTjfUdKTJnZJSE/zm
+ zwnz51WHkDFrns5XJUgD+1kPKmXJddvfj9LPV/AT1Go7jtLplW0mgQjXNYW0vNl5mlIFoz8I
+ dXq/en0cA/pohdUmDqbs1g2ZnWk=
 X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 5fa04c308646b0f268a8f5d7 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 02 Nov 2020 18:13:04
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5fa04d15978460d05b8ef3c6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 02 Nov 2020 18:16:53
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 259A9C43391; Mon,  2 Nov 2020 18:13:03 +0000 (UTC)
+        id 8A854C433F0; Mon,  2 Nov 2020 18:16:53 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 22BD1C433C6;
-        Mon,  2 Nov 2020 18:12:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 22BD1C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EFC12C433C6;
+        Mon,  2 Nov 2020 18:16:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EFC12C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH\ net] rtw88: fix fw dump support detection
+Subject: Re: rtw88: fix fw_fifo_addr check
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201026212323.3888550-1-arnd@kernel.org>
-References: <20201026212323.3888550-1-arnd@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tzu-En Huang <tehuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Chin-Yen Lee <timlee@realtek.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+In-Reply-To: <20201011155438.15892-1-trix@redhat.com>
+References: <20201011155438.15892-1-trix@redhat.com>
+To:     trix@redhat.com
+Cc:     yhchuang@realtek.com, davem@davemloft.net, kuba@kernel.org,
+        natechancellor@gmail.com, ndesaulniers@google.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
+        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Tom Rix <trix@redhat.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201102181303.259A9C43391@smtp.codeaurora.org>
-Date:   Mon,  2 Nov 2020 18:13:03 +0000 (UTC)
+Message-Id: <20201102181653.8A854C433F0@smtp.codeaurora.org>
+Date:   Mon,  2 Nov 2020 18:16:53 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arnd Bergmann <arnd@kernel.org> wrote:
+trix@redhat.com wrote:
 
-> From: Arnd Bergmann <arnd@arndb.de>
+> From: Tom Rix <trix@redhat.com>
 > 
-> clang points out a useless check that was recently added:
+> The clang build reports this warning
 > 
-> drivers/net/wireless/realtek/rtw88/fw.c:1485:21: warning: address of array 'rtwdev->chip->fw_fifo_addr' will always evaluate to 'true' [-Wpointer-bool-conversion]
+> fw.c:1485:21: warning: address of array 'rtwdev->chip->fw_fifo_addr'
+>   will always evaluate to 'true'
 >         if (!rtwdev->chip->fw_fifo_addr) {
->             ~~~~~~~~~~~~~~~^~~~~~~~~~~~
 > 
-> Apparently this was meant to check the contents of the array
-> rather than the address, so check it accordingly.
+> fw_fifo_addr is an array in rtw_chip_info so it is always
+> nonzero.  A better check is if the first element of the array is
+> nonzero.  In the cases where fw_fifo_addr is initialized by rtw88b
+> and rtw88c, the first array element is 0x780.
 > 
 > Fixes: 0fbc2f0f34cc ("rtw88: add dump firmware fifo support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Tom Rix <trix@redhat.com>
 > Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+> Acked-by: Tzu-En Huang <tehuang@realtek.com>
 
-I'll take Tom's patch as it was first.
+Patch applied to wireless-drivers.git, thanks.
 
-Patch set to Superseded.
+ddcd945e556e rtw88: fix fw_fifo_addr check
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201026212323.3888550-1-arnd@kernel.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/20201011155438.15892-1-trix@redhat.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
