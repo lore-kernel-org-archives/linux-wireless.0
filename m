@@ -7,68 +7,70 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04CE4C00A89
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E77DC00A89
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D16322275
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9B5D22275
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:28:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QStDp87E"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hFXbZ1f+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728740AbgKBL1z (ORCPT
+        id S1728695AbgKBLYj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:27:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47964 "EHLO
+        Mon, 2 Nov 2020 06:24:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728702AbgKBLYm (ORCPT
+        with ESMTP id S1728685AbgKBLYg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:42 -0500
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47B3AC061A48
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:41 -0800 (PST)
-Received: by mail-wr1-x442.google.com with SMTP id a9so14113026wrg.12
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:41 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:36 -0500
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 730D7C061A4F
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:36 -0800 (PST)
+Received: by mail-wm1-x344.google.com with SMTP id p19so1044401wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qpDdLuf0XmFXhoeCc8tXmAL5epac8Q54EhVeHTK2ADw=;
-        b=QStDp87EefLAQ0xGJp3v1XG9HoP6I2H/6oI26lKpv0EUN4GRH2LcnNrukE05yCl0jp
-         WRCbr02WX3ag4/XpO5So+3kxDEXlavNHMcaCVzy1xxT9isEburuXPrJw4fSCbuqJx+m6
-         BFJbVQgtoYKKs8EYPOxauS4uCH6Xwxh3rnHz4XDOkjUWXGl00sxJTQtIrxSBuL/j61zY
-         FmsZlE8JC6H4CSOUfkFpCgNpJ8fQG1rVBiRwGlYlCLiSS2iDMD0vILqn44ZJEF0JcF6Y
-         S8pz+FOjpFn8lVkphoFj1R27oN+YghlqDmQNRq9ewmXDpXogxFWgB/1p3pUKgDvuP0li
-         J8FA==
+        bh=TWZsEGtPpD8oYutyQ+ByJgl7e2tHiSuw7AnOdGhaOYA=;
+        b=hFXbZ1f+fWwg8BDaATDVbFNgYfjTpm2jUunOGVTBBDhXImU7Zwj8JQnvdOC2AUg9ZS
+         YmqUwf0ic58JzBEJ/LFibaPpsMy4yfNMxHbWruFczeqOHf57MVJaZOU7V/l0AKdSXqzk
+         niABLQHDofBK96LSXmBQPJhsJvEtLnPtGPZmtmo3xRMnUZE/A5EcpNeMdI9XO3Y4xrgj
+         jpiWQUO96pIezVsQZ8g2DfBIvw/ow++tyske4avK9i8UUxDnbL85bzJh16ElPjUJbe7W
+         X8UcJRBMNNaxzVO+pCaAC8t02qoPC4EWRGQywewqdNlbO5InWl25p/PxEXYyXH1UJy1L
+         sXFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qpDdLuf0XmFXhoeCc8tXmAL5epac8Q54EhVeHTK2ADw=;
-        b=q/BuM1K4TU38JCCdenLY8sE2xZSvjU1MZvXXSDlyhFWvFKP/bG6jb2y5Z7v6xOTX+F
-         pVwDvBTzLOFVZ6GlPyCHZpOAD2vhPBLl9jxTtCBbcsTjSfogTkNWRZEhNAg4tzoGIgEt
-         UbO+p75BhCZW5yWKfs/SwQVnmcI6/GefXyfj7+AdgMCbjucCArFTGj2jTp4hMFIWwgw/
-         8d2plfK49P/jSDnKOKmDzHVA5oFnNLKcteZh8HxDSVJm/EZEDEcLkJgc5qtRkWSGLWOL
-         hVMgNC1BYBD3KOankYbqWv5OWi3kaBWM3m6DVFeOswWlK8ZrUoo1I7OA0s29AWKHINhl
-         EzCA==
-X-Gm-Message-State: AOAM5323mkSqJrXC2bbQGuQeqRVpiow4K3fwu5yycb1e52AmcOVn5ths
-        GHEsW40dB411X7l9G6GCBleoWQ==
-X-Google-Smtp-Source: ABdhPJw3NvquUovDiM9NpuyGkN81PEgqbBFf/hSnyh+5ZVhWq0aZtZb3MOCJzu17flNBgogtpH4Tzw==
-X-Received: by 2002:adf:e64e:: with SMTP id b14mr19582007wrn.68.1604316279996;
-        Mon, 02 Nov 2020 03:24:39 -0800 (PST)
+        bh=TWZsEGtPpD8oYutyQ+ByJgl7e2tHiSuw7AnOdGhaOYA=;
+        b=UdyP+e0qOpe8bvc31MEmpxhzSgg2dEgdGuBkdFeJ+9TZdUwE+KV714VLeYKy7MajVb
+         hI2ICvhcQw6/+4PMJfp5Ml/fjveImy7obLHIcboKSay5vafdiYmLgjLFZb+wYnt3zSQQ
+         dD4gZqeIQgPTeNN364qcwR5mPHNGiHGCI9uVOqxM0cVF900yBsIAQSEsLSco854I4NRi
+         vNVUGFyzgbISWLW6b6CzA6pYCLa2uN85/J0kZlshfpdxkiNMf7d9D5apKIgCkq+f1hdj
+         Dg2aRt0n4X4OnzsesHaO3ZKZ5kxQldUpzI0ldj41FsWYQnFxjV4rUc94P6q63AHKTU2T
+         Ov2Q==
+X-Gm-Message-State: AOAM531fQEfRu6ArO69XOJBmeisRRcETfNaW+lchXZAb3UnvbamNl1V3
+        Kf6b267jK4j38hrSlvjtfcM/IQ==
+X-Google-Smtp-Source: ABdhPJxnMBOyspeV/rBPZ2r4TYoe+sbZEYC71PJjAKrIj7pjBYiPN/3y1BdtLLn8vX/7pFSEGIz2zA==
+X-Received: by 2002:a1c:790b:: with SMTP id l11mr16054124wme.53.1604316275243;
+        Mon, 02 Nov 2020 03:24:35 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.37
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:39 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:34 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Jouni Malinen <j@w1.fi>,
+        Luis Chamberlain <mcgrof@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
+        Aurelien Alleaume <slts@free.fr>, Valerio Riedel <hvr@gnu.org>,
+        "Luis R. Rodriguez" <mcgrof@ruslug.rutgers.edu>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 17/41] intersil: hostap_hw: Prevent incompatible function type cast
-Date:   Mon,  2 Nov 2020 11:23:46 +0000
-Message-Id: <20201102112410.1049272-18-lee.jones@linaro.org>
+Subject: [PATCH 14/41] prism54: isl_ioctl: Fix one function header and demote another
+Date:   Mon,  2 Nov 2020 11:23:43 +0000
+Message-Id: <20201102112410.1049272-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -81,64 +83,55 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intersil/hostap/hostap_hw.c: In function ‘prism2_init_local_data’:
- drivers/net/wireless/intersil/hostap/hostap_hw.c:3173:48: warning: cast between incompatible function types from ‘void (*)(struct tasklet_struct *)’ to ‘void (*)(long unsigned int)’ [-Wcast-function-type]
- drivers/net/wireless/intersil/hostap/hostap_hw.c:3175:2: note: in expansion of macro ‘HOSTAP_TASKLET_INIT’
+ from drivers/net/wireless/intersil/prism54/isl_ioctl.c:22:
+ inlined from ‘prism54_get_name’ at drivers/net/wireless/intersil/prism54/isl_ioctl.c:283:2:
+ drivers/net/wireless/intersil/prism54/isl_ioctl.c:68: warning: Function parameter or member 'priv' not described in 'prism54_mib_mode_helper'
+ drivers/net/wireless/intersil/prism54/isl_ioctl.c:68: warning: Excess function parameter 'mib' description in 'prism54_mib_mode_helper'
+ drivers/net/wireless/intersil/prism54/isl_ioctl.c:127: warning: Function parameter or member 'priv' not described in 'prism54_mib_init'
 
- NB: Repeats lots of times - snipped for brevity
-
-Cc: Jouni Malinen <j@w1.fi>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Aurelien Alleaume <slts@free.fr>
+Cc: Valerio Riedel <hvr@gnu.org>
+Cc: "Luis R. Rodriguez" <mcgrof@ruslug.rutgers.edu>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../net/wireless/intersil/hostap/hostap_hw.c  | 19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intersil/prism54/isl_ioctl.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 22cfb64526448..c877b677505ed 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -36,6 +36,7 @@
- #include <linux/proc_fs.h>
- #include <linux/seq_file.h>
- #include <linux/if_arp.h>
-+#include <linux/interrupt.h>
- #include <linux/delay.h>
- #include <linux/random.h>
- #include <linux/wait.h>
-@@ -3169,22 +3170,16 @@ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
+diff --git a/drivers/net/wireless/intersil/prism54/isl_ioctl.c b/drivers/net/wireless/intersil/prism54/isl_ioctl.c
+index 2076f449b6e25..5e5ceafe098b9 100644
+--- a/drivers/net/wireless/intersil/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/intersil/prism54/isl_ioctl.c
+@@ -54,7 +54,7 @@ static const unsigned char scan_rate_list[] = { 2, 4, 11, 22,
  
- 	/* Initialize tasklets for handling hardware IRQ related operations
- 	 * outside hw IRQ handler */
--#define HOSTAP_TASKLET_INIT(q, f, d) \
--do { memset((q), 0, sizeof(*(q))); (q)->func = (void(*)(unsigned long))(f); } \
--while (0)
--	HOSTAP_TASKLET_INIT(&local->bap_tasklet, hostap_bap_tasklet,
--			    (unsigned long) local);
+ /**
+  * prism54_mib_mode_helper - MIB change mode helper function
+- * @mib: the &struct islpci_mib object to modify
++ * @priv: the &struct islpci_private object to modify
+  * @iw_mode: new mode (%IW_MODE_*)
+  *
+  *  This is a helper function, hence it does not lock. Make sure
+@@ -114,14 +114,13 @@ prism54_mib_mode_helper(islpci_private *priv, u32 iw_mode)
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * prism54_mib_init - fill MIB cache with defaults
+  *
+  *  this function initializes the struct given as @mib with defaults,
+  *  of which many are retrieved from the global module parameter
+  *  variables.
+  */
 -
--	HOSTAP_TASKLET_INIT(&local->info_tasklet, hostap_info_tasklet,
--			    (unsigned long) local);
-+
-+	tasklet_setup(&local->bap_tasklet, hostap_bap_tasklet);
-+
-+	tasklet_setup(&local->info_tasklet, hostap_info_tasklet);
- 	hostap_info_init(local);
- 
--	HOSTAP_TASKLET_INIT(&local->rx_tasklet,
--			    hostap_rx_tasklet, (unsigned long) local);
-+	tasklet_setup(&local->rx_tasklet, hostap_rx_tasklet);
- 	skb_queue_head_init(&local->rx_list);
- 
--	HOSTAP_TASKLET_INIT(&local->sta_tx_exc_tasklet,
--			    hostap_sta_tx_exc_tasklet, (unsigned long) local);
-+	tasklet_setup(&local->sta_tx_exc_tasklet, hostap_sta_tx_exc_tasklet);
- 	skb_queue_head_init(&local->sta_tx_exc_list);
- 
- 	INIT_LIST_HEAD(&local->cmd_queue);
+ void
+ prism54_mib_init(islpci_private *priv)
+ {
 -- 
 2.25.1
 
