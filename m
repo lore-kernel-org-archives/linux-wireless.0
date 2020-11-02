@@ -7,71 +7,74 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AFC1C2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B15F0C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31EBE207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 535CB207C3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:24:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="i3uJLVTT"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dnwc/0wc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728715AbgKBLYn (ORCPT
+        id S1728732AbgKBLYr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:24:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47948 "EHLO
+        Mon, 2 Nov 2020 06:24:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728701AbgKBLYk (ORCPT
+        with ESMTP id S1728724AbgKBLYp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:24:40 -0500
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0F0EC0617A6
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:38 -0800 (PST)
-Received: by mail-wm1-x342.google.com with SMTP id c18so9019163wme.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:38 -0800 (PST)
+        Mon, 2 Nov 2020 06:24:45 -0500
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642DEC0617A6
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:24:45 -0800 (PST)
+Received: by mail-wr1-x441.google.com with SMTP id w1so14164841wrm.4
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:24:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=LgKtNmQfGnZeeFNwZJm+JSbHcTG8sEx1i9uktjmVfHw=;
-        b=i3uJLVTT+f1uHk778AEbxWbp76ef0Zolzm5KhEUJI9JMCrAutQejRy3I8vLNlEeQMa
-         7QsPuO7mYdtDdQPy5te+frEyNqP4eOg9FSoB1FxNCQwIu/5SMAFrABvUWPXVMPdw+tM6
-         IIByy21e8J0g+HlK1QLEppXXgKNueApiZGeVkQXQ249AvgfuLGTd8wEKwL+ynaX6/Bfl
-         vKaIQQB33RZhn28DxarVzKPBnF7qRhG/6oSaLMeV/bpkUGonKIbcZgJ5SVF2/TM9/lNv
-         ogtDfWzmSUa2V7A9IC4dcbfww2TZ8o7UR8tJhfohL8kuIxfnngeDbCewvWl12nI1MwQN
-         qbcg==
+        bh=D3cuHd2jEUylto64ny3My89MZqKNpm0uIQ6VIWr/6yc=;
+        b=dnwc/0wcVwBYP3pEeQaNCoPL1Qzo0Oep6UPa2V7evv+cCkyMgSryELcMxMSWPupDD5
+         NEGtO0y3TBTdq1EelpQn/cRj+lZXhBudOBeGyVz1Kd3AiETmflhUA1LNhvoIkDbHEpFW
+         G9CZ/o5FGS+gx2UtgtoJWOwtBxJWnqMgmql/aM4SyXhMoTAYua2VA9SI70nkOPSv21DN
+         R6sr6qTihcaw4XxI137BWr+lVQ2HXNITZ/Q/e18vfb8nH8XqdVcq4sQtftbyX6hflRB1
+         iysFNqf5927Q16p321KS1SYsv/QhXotxvqEwbJwBRG+gQxlL7WQAmHrjLajjfwUeTClM
+         mvHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=LgKtNmQfGnZeeFNwZJm+JSbHcTG8sEx1i9uktjmVfHw=;
-        b=qkUvIG+StQK5zwKW7ccZzQm9Wbbj1K/CqxoKzvzej4SGigYBhISS74CQsP7wrAadSj
-         bfzbVIsOXByKqUvAgA9T7axGnyNLhLsgV6H1JwtGPdVna2pXue0RnzMjpZtGIPHCJEBA
-         IMPtZ/j2eKLTFX6hSYgnqGDs8Vcer1t7ldTB0W2Cm+SykhXgw3FiqDAWIHzhkcxszMQC
-         80k79VCDh7PLpxMZPTCjUPRWoTI10Z4QzXMSQfD/FY29a9Tmk5K/AUDA13Up59bC8qEH
-         f7agEW0gQHgx0E/k/cUcqxOGAvUx7bofqE4PXDkOOegyzFR1bbW34faKWU1miHXJoYq/
-         6/bQ==
-X-Gm-Message-State: AOAM53291omUVmScRuy6D+9KYFC308ogE8vF6a9FbLH8WcC1EnM1oTHj
-        HvBzjgWPzv09MlpTa7/2w9jTow==
-X-Google-Smtp-Source: ABdhPJyAOYg9hMZPlI3j1Yh7cVoiGhT7yXwb4qjsxPf/PAekthok34p1zg7w7Ge5Mj8+HqUqIhCyLw==
-X-Received: by 2002:a1c:2c43:: with SMTP id s64mr17006821wms.130.1604316277548;
-        Mon, 02 Nov 2020 03:24:37 -0800 (PST)
+        bh=D3cuHd2jEUylto64ny3My89MZqKNpm0uIQ6VIWr/6yc=;
+        b=oQ9CoGLpofCMzaqcoQLhL92hcJQCQFNQgnqdjAKBxvGotYkrIzB1czOiBV40TsBrqF
+         cBcExRTXo7kCB+w/bwqclcuSbeFlKKtQbL+9vC13Md2IVdKCiVOO+DxiX2fcTf6SJ0f+
+         SKO8FjJ9DWrop2YGD755BdzSOKWdmG3bz8E8buafLi21G0mVuC7p5oqDANThJaxkW9X1
+         9lrzxViXm20WLMf7BE8M30ZkuFIVKMEoImaB+HLj4AT+JPkjjPLyLHd2aBQIjcx2fUxp
+         qZJi8IrHNQKy3NQ8lFBUlybeazFA161VHTI52gDNw7a/1HwtDvWKOb7GtXaXrHcpZ7qg
+         PhGg==
+X-Gm-Message-State: AOAM530I9hzgn39659swjwtA7qMep8HdOmeaVTqLVCOSCpQt+OZ/lJrZ
+        3qDT6HEioem/dhuKcNXMFcmkrA==
+X-Google-Smtp-Source: ABdhPJzDGo9ApX9ptXXbooXzR38IWoiQ+jaCDTlYA2S3+DJNXLpkNLICSrVsVYMycSfTV3hIikIlOw==
+X-Received: by 2002:a5d:4443:: with SMTP id x3mr18862767wrr.190.1604316284171;
+        Mon, 02 Nov 2020 03:24:44 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.36
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:24:36 -0800 (PST)
+        Mon, 02 Nov 2020 03:24:43 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 16/41] iwlwifi: iwl-eeprom-parse: Fix 'struct iwl_eeprom_enhanced_txpwr's header
-Date:   Mon,  2 Nov 2020 11:23:45 +0000
-Message-Id: <20201102112410.1049272-17-lee.jones@linaro.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH 18/41] brcm80211: fweh: Add missing description for 'gfp'
+Date:   Mon,  2 Nov 2020 11:23:47 +0000
+Message-Id: <20201102112410.1049272-19-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
@@ -83,48 +86,37 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c:340: warning: cannot understand function prototype: 'struct iwl_eeprom_enhanced_txpwr '
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c:394: warning: Function parameter or member 'gfp' not described in 'brcmf_fweh_process_event'
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c    | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-index cf7e2a9232e52..f29d5758c8dff 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-@@ -324,15 +324,15 @@ enum iwl_eeprom_enhanced_txpwr_flags {
- };
- 
- /**
-- * iwl_eeprom_enhanced_txpwr structure
-+ * struct iwl_eeprom_enhanced_txpwr
-  * @flags: entry flags
-  * @channel: channel number
-- * @chain_a_max_pwr: chain a max power in 1/2 dBm
-- * @chain_b_max_pwr: chain b max power in 1/2 dBm
-- * @chain_c_max_pwr: chain c max power in 1/2 dBm
-+ * @chain_a_max: chain a max power in 1/2 dBm
-+ * @chain_b_max: chain b max power in 1/2 dBm
-+ * @chain_c_max: chain c max power in 1/2 dBm
-  * @delta_20_in_40: 20-in-40 deltas (hi/lo)
-- * @mimo2_max_pwr: mimo2 max power in 1/2 dBm
-- * @mimo3_max_pwr: mimo3 max power in 1/2 dBm
-+ * @mimo2_max: mimo2 max power in 1/2 dBm
-+ * @mimo3_max: mimo3 max power in 1/2 dBm
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 430d2cca98b33..bc3f4e4edcdf9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -384,6 +384,7 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
+  * @drvr: driver information object.
+  * @event_packet: event packet to process.
+  * @packet_len: length of the packet
++ * @gfp: memory allocation flags.
   *
-  * This structure presents the enhanced regulatory tx power limit layout
-  * in an EEPROM image.
+  * If the packet buffer contains a firmware event message it will
+  * dispatch the event to a registered handler (using worker).
 -- 
 2.25.1
 
