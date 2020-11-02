@@ -7,74 +7,73 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F7BC00A89
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C479C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD56B207C3
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7F30207C3
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Nov 2020 11:26:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JlhFoJuM"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VVEaf7Y3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728619AbgKBL0H (ORCPT
+        id S1728984AbgKBL0R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Nov 2020 06:26:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48132 "EHLO
+        Mon, 2 Nov 2020 06:26:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728868AbgKBLZH (ORCPT
+        with ESMTP id S1728857AbgKBLZC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Nov 2020 06:25:07 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCD6EC061A48
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:05 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id n15so14182322wrq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:05 -0800 (PST)
+        Mon, 2 Nov 2020 06:25:02 -0500
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58AEDC0617A6
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Nov 2020 03:25:02 -0800 (PST)
+Received: by mail-wm1-x343.google.com with SMTP id c16so9131725wmd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2020 03:25:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=CShQQ12PBsg4lhgdWNuYQU+7cmtXNk/NI77thbS/j9M=;
-        b=JlhFoJuMAj9F/e61O3Mhvl/I2ScHj1PNuWyCQK3xSUVNOZxJDsPtA72x9vNeMaNvtV
-         xatTQqTIiNB/CR9h9jS2FMe9ZJflyKbuXb4laQiuFtVx60jyT/Bs30RKUahJeIJyNVFt
-         XrRhLSSEPFI6KVksCWt7K+vt7J5jZTHjffUJoYyYxU0DSfrjgBXpggFwOzwudIq4yK2i
-         +YfH1kV+6gil38pjYtWr4ibLTbFNPVbhAB9B+Gk2dSp0JtueRe1sxE6C2hmrO13Y9OPO
-         ujFzdc0YIP3oJo8Ck3HNP/e6tktwNT8Bn4ZEnRmCghtwB5coRT9Xu8uH15bAEWhHW82s
-         qplQ==
+        bh=xeSA2mlsN3ZwFX+jKncibbMs9rhzwDQUIegRTfjnveQ=;
+        b=VVEaf7Y3SMh5enKI6sSPYS8qBdEmniXBDjhnPr0ooccJuHZYNLZ4XYsVQ29Lz1HWbr
+         mD1A9erhbVayOVS8PFa4vfgnc1g/odoQ/HQfHaCLJfCSwt9uAt+5EaCuw3vHkPQZwGUY
+         PPq6PHFZl3sCfe1oy5Zxm0pdXlUgtk7AHmepYV14X/JQjha4+sHEi9AdQzeDlrGFyrls
+         C5dFcfwXqcHy6fNTYb5iKGcpez5621C10J1ZTHasWWEvWpxP1XSOoL+WaMcNptm8IHkb
+         fpn0n0ewRvXQaEaF/RSbC9bLWYM3+2umG2T54UHfFFGM4naI4aUtfk1KXQhB1Si8Zu/Q
+         /PBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CShQQ12PBsg4lhgdWNuYQU+7cmtXNk/NI77thbS/j9M=;
-        b=W7ZxeHwD0Jm6D25M8L/TCE7KfMJtY+xv1fxvMFwMsceI24wWNWPDRTanC3AYm5qflG
-         qPdv9nxt3Gh/5zhP4J5OU8/cVHnsSd51/cVCyXvKtB5FHlMUy5QRcgBaSZjJOwrBVP32
-         DqSXBk9mMADwP3t+WAaUEM7YTs9DKiWeXo6FksGpkuHm+wC84nfGRzDf+BJPEl94RcGJ
-         Hb5SdSFRc6CRfifu5pD8ckJ7ZgPIl3Y/UzNCxwFKhrXulTTaa1H8haeOO5APe2u2kz9Q
-         b/5s6jWyBLPJNtqlagqChbYFfWnPX7sUK7rQ4NNwoDjbWFyXxIg3WNaKR+DESLf9CPLv
-         UyCQ==
-X-Gm-Message-State: AOAM530O1CQkhjJwlLrGY1YjhJX4atHWaU2FQLRnT/dA8h69OXyz986T
-        Xg2CIY4AMA1OY4M95BSCmx9LYw==
-X-Google-Smtp-Source: ABdhPJxBYj5usmi4qGlUfaqjEb9+wgXLgztUDnuNady/I5Qdqzo4kKXtcfwR2Bj62eeSOzRpXaj8bw==
-X-Received: by 2002:a5d:60c4:: with SMTP id x4mr20763543wrt.175.1604316304609;
-        Mon, 02 Nov 2020 03:25:04 -0800 (PST)
+        bh=xeSA2mlsN3ZwFX+jKncibbMs9rhzwDQUIegRTfjnveQ=;
+        b=he+Vp9xLURopcFE57MWJNgD68NXcLTvWmlcvGwG10uMKPWpFe6re8+ymUKD16c52hF
+         juqhWUd5TwWMh9bDGPVrDx73XdTqP2UUYJWXkMk0rYB+UW54WRLaIm5ohlXvxyJdIfP9
+         aFX8PT8+r0QHahvXYAxuM/miEvDAjq9qfIvQTyQTwyLhfgopWuX226GvF/pjqebGbfud
+         /vkBv/gAXyg/bsaZG1ZCPxWMuwIuwooLyU1ZSTAD0PVEIfv9aU43/EG7DuhWwf36pKzp
+         p0z/I/qRpvwDSp4OwZflAV3GKDwrDRbCNVecK7m+c4ZytL5Udtr63pIsFqpUSRkvxBMz
+         /mlA==
+X-Gm-Message-State: AOAM530v+p+aVqnLdeTtKgXgoCIOFdo69iJpSMeSUWhufa4vYzBl2dSv
+        T7bbJ+H5x902mit6LEm7x2kd4w==
+X-Google-Smtp-Source: ABdhPJzpCZVoorPU3KqL0JE9wAQ9ZCiP3HJw+gpSeWPJvYEzWJc+/8YbC6/BBQkv8KBFvI1nGt8VgQ==
+X-Received: by 2002:a7b:c109:: with SMTP id w9mr11271120wmi.34.1604316301079;
+        Mon, 02 Nov 2020 03:25:01 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.25.03
+        by smtp.gmail.com with ESMTPSA id m14sm21867354wro.43.2020.11.02.03.24.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 03:25:04 -0800 (PST)
+        Mon, 02 Nov 2020 03:25:00 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Luciano Coelho <luciano.coelho@nokia.com>,
-        Juuso Oikarinen <juuso.oikarinen@nokia.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 35/41] wlcore: spi: Demote a non-compliant function header, fix another
-Date:   Mon,  2 Nov 2020 11:24:04 +0000
-Message-Id: <20201102112410.1049272-36-lee.jones@linaro.org>
+Subject: [PATCH 32/41] rtl8723be: trx: Remove set but unused variable 'cck_highpwr'
+Date:   Mon,  2 Nov 2020 11:24:01 +0000
+Message-Id: <20201102112410.1049272-33-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102112410.1049272-1-lee.jones@linaro.org>
 References: <20201102112410.1049272-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -82,44 +81,42 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ti/wlcore/spi.c:403: warning: Function parameter or member 'child' not described in 'wl12xx_spi_set_block_size'
- drivers/net/wireless/ti/wlcore/spi.c:403: warning: Function parameter or member 'blksz' not described in 'wl12xx_spi_set_block_size'
- drivers/net/wireless/ti/wlcore/spi.c:440: warning: Excess function parameter 'res' description in 'wlcore_probe_of'
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c: In function ‘_rtl8723be_query_rxphystatus’:
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c:53:6: warning: variable ‘cck_highpwr’ set but not used [-Wunused-but-set-variable]
 
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ti/wlcore/spi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 18c4d998ce4b9..f26fc150ecd01 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -391,7 +391,7 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
- 	return ret;
- }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+index 559ab78687c37..5a7cd270575a2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+@@ -50,7 +50,6 @@ static void _rtl8723be_query_rxphystatus(struct ieee80211_hw *hw,
+ 	pstatus->rx_mimo_signalquality[1] = -1;
  
--/**
-+/*
-  * wl12xx_spi_set_block_size
-  *
-  * This function is not needed for spi mode, but need to be present.
-@@ -431,7 +431,6 @@ MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
- /**
-  * wlcore_probe_of - DT node parsing.
-  * @spi: SPI slave device parameters.
-- * @res: resource parameters.
-  * @glue: wl12xx SPI bus to slave device glue parameters.
-  * @pdev_data: wlcore device parameters
-  */
+ 	if (is_cck) {
+-		u8 cck_highpwr;
+ 		u8 cck_agc_rpt;
+ 
+ 		cck_agc_rpt = p_phystrpt->cck_agc_rpt_ofdm_cfosho_a;
+@@ -59,8 +58,7 @@ static void _rtl8723be_query_rxphystatus(struct ieee80211_hw *hw,
+ 		/* (2)PWDB, Average PWDB cacluated by
+ 		 * hardware (for rate adaptive)
+ 		 */
+-		cck_highpwr = (u8)rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2,
+-						 BIT(9));
++		rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, BIT(9));
+ 
+ 		lan_idx = ((cck_agc_rpt & 0xE0) >> 5);
+ 		vga_idx = (cck_agc_rpt & 0x1f);
 -- 
 2.25.1
 
