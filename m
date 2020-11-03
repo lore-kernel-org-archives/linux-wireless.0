@@ -2,89 +2,162 @@ Return-Path: <SRS0=0VAH=EJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC93EC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D94C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:13:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 683CF20756
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:08:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3677322243
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:13:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="GJAbjUwK"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uPYKnWTF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728090AbgKCNIE (ORCPT
+        id S1729037AbgKCNNa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Nov 2020 08:08:04 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:47121 "EHLO z5.mailgun.us"
+        Tue, 3 Nov 2020 08:13:30 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:16113 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726388AbgKCNID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Nov 2020 08:08:03 -0500
+        id S1728721AbgKCNN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Nov 2020 08:13:29 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1604408883; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=D1Acza7VdNKIrkiHFmvFOZwVY5ACKrGBmEhFcV0MlxQ=; b=GJAbjUwKgQ9phY7DlE1c4fGWJZbSdxt0LwU11/yr5vPfOErcRFg0UQ38kpemD9MNIFMPLvr+
- A0UEg+fbDyP9QlEps03rNfMJrKiDW64s7PLIpNYTvsg7oZgdoXNbKnOquzaijvnCkawCyRb8
- L6aCWTb5isxhdfb6aqDZX0yrxV0=
-X-Mailgun-Sending-Ip: 104.130.96.5
+ s=smtp; t=1604409209; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=kJE3Itmf+jWbO4yB/RJMz173+NAW4O8iB9/q9jXy720=;
+ b=uPYKnWTFhlzv12JJQnN1gh/RrULPRGAfxB4hKhcEzTN+NDETWoqASrT/Cx+40r83KHtU2ocw
+ DlwuORKg2Uiv9UGNCvTbvt6X6bWtyoEgztFbi7mjuDBsDfbntk7P+HHFrnIfe9+/LPtOWHsY
+ LtPNZ9qI2ckzC4Km7T8fHKeixTg=
+X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5fa156297b1a71d668ef389a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 03 Nov 2020 13:07:53
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5fa15770d608b771031723ba (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 03 Nov 2020 13:13:20
  GMT
-Sender: mkenna=codeaurora.org@mg.codeaurora.org
+Sender: cjhuang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3FD48C433F0; Tue,  3 Nov 2020 13:07:53 +0000 (UTC)
-Received: from ssreeela-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id BA179C43395; Tue,  3 Nov 2020 02:34:48 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: mkenna)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 47F28C433C6;
-        Tue,  3 Nov 2020 13:07:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 47F28C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=mkenna@codeaurora.org
-From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-Cc:     Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH] ath11k: Fix the rx_filter flag setting for peer rssi stats
-Date:   Tue,  3 Nov 2020 18:37:37 +0530
-Message-Id: <1604408857-5912-1-git-send-email-mkenna@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        (Authenticated sender: cjhuang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D4D49C43382;
+        Tue,  3 Nov 2020 02:34:47 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Tue, 03 Nov 2020 10:34:47 +0800
+From:   Carl Huang <cjhuang@codeaurora.org>
+To:     Abhishek Kumar <kuabhs@chromium.org>
+Cc:     briannorris@chromium.org, linux-wireless@vger.kernel.org,
+        dianders@chromium.org, ath10k@lists.infradead.org,
+        johannes@sipsolutions.net
+Subject: Re: [RFC 1/2] nl80211: add common API to configure SAR power
+ limitations.
+In-Reply-To: <20201031024631.1528113-1-kuabhs@chromium.org>
+References: <20201030205639.1452712-1-kuabhs@chromium.org>
+ <20201031024631.1528113-1-kuabhs@chromium.org>
+Message-ID: <e5302eb0b20339d3f6544652e4034993@codeaurora.org>
+X-Sender: cjhuang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set the rx_filter in ath11k_mac_config_mon_status_default(),
-only when the rx_filter value exists in ath11k_debug_rx_filter().
+On 2020-10-31 10:46, Abhishek Kumar wrote:
+> From: kuabhs@chromium.org
+> 
+> There are few more additional comments here.
+>> + * @NL80211_CMD_SET_SAR_SPECS: SAR power limitation configuration is
+>> + *     passed using %NL80211_ATTR_SAR_SPEC.
+>> + *
+> 
+> This command requires NL80211_ATTR_IFINDEX, probably should be better 
+> to add
+> this in the comment ?
+> 
+Per Johannes's comments, this explicit index is not required. Are you 
+fine
+with it?
 
-Without this change, rx_filter gets set to 0 and peer rssi stats
-aren't updating properly from firmware.
+Instead, user-space application records the array index when querying 
+the SAR
+capability. When set, the nested array index will be used to set the 
+power.
+This requires user-space has a strict mapping of index. and 
+NL80211_ATTR_IFINDEX
+is to be removed.
 
-Tested-on: IPQ8074 WLAN.HK.2.1.0.1-01230-QCAHKSWPL_SILICONZ-4
 
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>> +static int
+>> +nl80211_put_sar_specs(struct cfg80211_registered_device *rdev,
+>> +                     struct sk_buff *msg)
+>> +{
+>> +       struct nlattr *sar_capa, *specs, *sub_freq_range;
+>> +       u8  num_freq_ranges;
+>> +       int i;
+>> +
+>> +       if (!rdev->wiphy.sar_capa)
+>> +               return 0;
+>> +
+>> +       num_freq_ranges = rdev->wiphy.sar_capa->num_freq_ranges;
+>> +
+>> +       sar_capa = nla_nest_start(msg, NL80211_ATTR_SAR_SPEC);
+>> +       if (!sar_capa)
+>> +               return -ENOSPC;
+> 
+> I see some places nla_nest_start_noflag being used and here 
+> nla_nest_start.
+> Whats the specific reason to do that ? In the newer Kernel versions, I 
+> believe
+> nla_nest_start is preferred.
+> 
+This will be addressed in next version.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 7f8dd47..c2d013a 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -4094,7 +4094,8 @@ static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
- 
- 	if (enable) {
- 		tlv_filter = ath11k_mac_mon_status_filter_default;
--		tlv_filter.rx_filter = ath11k_debugfs_rx_filter(ar);
-+		if (ath11k_debug_rx_filter(ar))
-+			tlv_filter.rx_filter = ath11k_debug_rx_filter(ar);
- 	}
- 
- 	for (i = 0; i < ab->hw_params.num_rxmda_per_pdev; i++) {
--- 
-2.7.4
+>> +               power = 
+>> nla_get_u8(spec[NL80211_SAR_ATTR_SPECS_POWER]);
+>> +               sar_spec->sub_specs[specs].power = power;
+>> +
+>> +               /* if NL80211_SAR_ATTR_SPECS_FREQ_RANGE_INDEX isn't 
+>> present,
+>> +                * then the power applies to all bands. But it's only 
+>> valid
+>> +                * for the first entry.
+>> +                */
+>> +               if (!spec[NL80211_SAR_ATTR_SPECS_FREQ_RANGE_INDEX]) {
+>> +                       if (specs) {
+>> +                               err = -EINVAL;
+>> +                               goto error;
+>> +                       } else {
+>> +                               
+>> sar_spec->sub_specs[specs].freq_range_index =
+>> +                                       NL80211_SAR_ALL_FREQ_RNAGES;
+>> +                               specs++;
+>> +                               break;
+>> +                       }
+>> +               }
+> 
+> Here I see you are assigning same power to all freq band if for the 
+> first band
+> the freq index is not provided. Is there any specific reason to only
+> check the first
+> here ? Probably this logic should move into specific drivers. Thoughts 
+> ?
+> 
+This logic will be removed per Johannes's comments.
 
+Please read  Johannes's comments. If you agree with him and has no other 
+advices,
+then I will post the second version of it.
+
+
+> -Abhishek
+> 
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
