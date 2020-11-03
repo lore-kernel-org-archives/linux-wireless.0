@@ -2,83 +2,171 @@ Return-Path: <SRS0=0VAH=EJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A5C8C2D0A3
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B01DAC388F7
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52D3721534
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:15:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 695A42080C
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Nov 2020 13:28:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZvDx5FK2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729005AbgKCNPy (ORCPT
+        id S1729172AbgKCN21 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Nov 2020 08:15:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35750 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728679AbgKCNPy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Nov 2020 08:15:54 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F13FC0613D1
-        for <linux-wireless@vger.kernel.org>; Tue,  3 Nov 2020 05:15:54 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kZwAB-000JQW-0T; Tue, 03 Nov 2020 14:15:51 +0100
-Message-ID: <aba43fb268fe29aecf84bf7e68629dc0de28d0ad.camel@sipsolutions.net>
-Subject: Re: [RFC 1/2] nl80211: add common API to configure SAR power
- limitations.
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Carl Huang <cjhuang@codeaurora.org>,
-        Abhishek Kumar <kuabhs@chromium.org>
-Cc:     briannorris@chromium.org, linux-wireless@vger.kernel.org,
-        dianders@chromium.org, ath10k@lists.infradead.org
-Date:   Tue, 03 Nov 2020 14:15:34 +0100
-In-Reply-To: <e5302eb0b20339d3f6544652e4034993@codeaurora.org>
-References: <20201030205639.1452712-1-kuabhs@chromium.org>
-         <20201031024631.1528113-1-kuabhs@chromium.org>
-         <e5302eb0b20339d3f6544652e4034993@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        Tue, 3 Nov 2020 08:28:27 -0500
+Received: from z5.mailgun.us ([104.130.96.5]:41553 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729226AbgKCN20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Nov 2020 08:28:26 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1604410105; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=bvAtK86qzMGJH9G/9rCYFInJ28k7Z3FFPLRcYF1MVg0=; b=ZvDx5FK2WeGr1G3Fu6+8tEBPDBAsARfAdZIUrin2oE5VH9PNwS16TG5il/QODa9vO/1UPBPz
+ 5z0kMwtdG4ZCpcSk0x2vFNdppmUvHfVwCMp/NHb7qkxLBxogwkEcZe1mOwMM2SEbhs8vHI/R
+ 5QganvcvV+HgyFb9Z0UdT7oKLGw=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 5fa15af7978460d05b541872 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 03 Nov 2020 13:28:23
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E365EC4A5E2; Tue,  3 Nov 2020 06:49:11 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 79D45C384E4;
+        Tue,  3 Nov 2020 06:49:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 79D45C384E4
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Govind Singh <govinds@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Devin Bayer <dev@doubly.so>,
+        Thomas Krause <thomaskrause@posteo.de>,
+        ath11k@lists.infradead.org
+Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
+References: <20201102205752.GA34153@bjorn-Precision-5520>
+Date:   Tue, 03 Nov 2020 08:49:06 +0200
+In-Reply-To: <20201102205752.GA34153@bjorn-Precision-5520> (Bjorn Helgaas's
+        message of "Mon, 2 Nov 2020 14:57:52 -0600")
+Message-ID: <87k0v3szod.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-11-03 at 10:34 +0800, Carl Huang wrote:
-> On 2020-10-31 10:46, Abhishek Kumar wrote:
-> > From: kuabhs@chromium.org
-> > 
-> > There are few more additional comments here.
-> > > + * @NL80211_CMD_SET_SAR_SPECS: SAR power limitation configuration is
-> > > + *     passed using %NL80211_ATTR_SAR_SPEC.
-> > > + *
-> > 
-> > This command requires NL80211_ATTR_IFINDEX, probably should be better 
-> > to add
-> > this in the comment ?
-> > 
-> Per Johannes's comments, this explicit index is not required. Are you 
-> fine with it?
-> 
-> Instead, user-space application records the array index when querying 
-> the SAR
-> capability. When set, the nested array index will be used to set the 
-> power.
-> This requires user-space has a strict mapping of index. and 
-> NL80211_ATTR_IFINDEX
-> is to be removed.
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-Wait, what? The IFINDEX is still required, that identifies the interface
-- though it probably shouldn't be required, this should be per wiphy, so
-you could also use ATTR_WIPHY_IDX?
+> [+cc Govind, author of 5697a564d369 ("ath11k: pci: add MSI config
+> initialisation")]
+>
+> On Mon, Nov 02, 2020 at 08:49:51PM +0200, Kalle Valo wrote:
+>> + linux-wireless, linux-pci, devin
+>> 
+>> Thomas Krause <thomaskrause@posteo.de> writes:
+>> 
+>> >> I had the same problem as well back in the days, for me enabling
+>> >> CONFIG_IRQ_REMAP helped. If it helps for you also I wonder if we should
+>> >> mention that in the ath11k warning above :)
+>> >
+>> > CONFIG_IRQ_REMAP did not do the trick. I noticed that the Wi-Fi card
+>> > is behind a PCI bridge which is also disabled, could this be a
+>> > problem?
+>> >
+>> > 00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20) (prog-if 00
+>> > [Normal decode])
+>> > 	Flags: bus master, fast devsel, latency 0, IRQ 123
+>> > 	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
+>> > 	I/O behind bridge: [disabled]
+>> > 	Memory behind bridge: 8c300000-8c3fffff [size=1M]
+>> > 	Prefetchable memory behind bridge: [disabled]
+>> > 	Capabilities: [40] Express Root Port (Slot+), MSI 00
+>> > 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+>> > 	Capabilities: [90] Subsystem: Dell Device 0991
+>> > 	Capabilities: [a0] Power Management version 3
+>> > 	Capabilities: [100] Advanced Error Reporting
+>> > 	Capabilities: [220] Access Control Services
+>> > 	Capabilities: [150] Precision Time Measurement
+>> > 	Capabilities: [200] L1 PM Substates
+>> > 	Capabilities: [a00] Downstream Port Containment
+>> > 	Kernel driver in use: pcieport
+>> 
+>> I don't know enough about PCI to say if the bridge is a problem or not.
+>
+> I don't think the bridge is an issue here.  AFAICT the bridge's I/O
+> and prefetchable memory windows are disabled, but the non-prefetchable
+> window *is* enabled and contains the space consumed by the ath11k
+> device:
+>
+>   00:1c.0 PCI bridge: Intel Corporation Device a0b8 (rev 20)
+> 	Bus: primary=00, secondary=56, subordinate=56, sec-latency=0
+> 	Memory behind bridge: 8c300000-8c3fffff [size=1M]
+>   56:00.0 Network controller: Qualcomm Device 1101 (rev 01)
+>      Region 0: Memory at 8c300000 (64-bit, non-prefetchable) [size=1M]
 
-You're thinking of ... something
-else. NL80211_SAR_ATTR_SPECS_FREQ_RANGE_INDEX perhaps?
+Good to know that the bridge shouldn't be the problem. Do you have any
+ideas how to make more vectors available to ath11k, besides
+CONFIG_IRQ_REMAP? Because QCA6390 works in Windows I doubt this is a
+hardware problem.
 
-johannes
+>> To summarise: Thomas is reporting[1] a problem with ath11k on QCA6390
+>> PCI device where he is not having enough MSI vectors. ath11k needs 32
+>> vectors but pci_alloc_irq_vectors() returns -ENOSPC. PCI support is new
+>> for ath11k and introduced in v5.10-rc1. The irq allocation code is in
+>> drivers/net/wireless/ath/ath11k/pci.c. [2]
+>
+> This code is needlessly complicated.  If you absolutely need
+> msi_config.total_vectors and can't settle for any less, you can do
+> this:
+>
+>   num_vectors = pci_alloc_irq_vectors(ab_pci->pdev,
+>                                       msi_config.total_vectors,
+>                                       msi_config.total_vectors,
+>                                       PCI_IRQ_MSI);
+>
+>   if (num_vectors < 0) {
+>     ath11k_err(ab, "failed to get %d MSI vectors (%d)\n",
+>                msi_config.total_vectors, num_vectors);
+>     return num_vectors;
+>   }
 
+True, this should be cleaned up. But of course this won't solve the
+actual problem.
+
+> But it seems a little greedy if the device can't operate at all unless
+> it gets 32 vectors.  Are you sure that's a hard requirement?  Most
+> devices can work with fewer vectors, even if it reduces performance.
+
+This was my first reaction as well when I saw the code for the first
+time. And the reply I got is that the firmware needs all 32 vectors, it
+won't work with less.
+
+>> I would first try with a full distro kernel config, just in case there's
+>> some another important kernel config missing.
+>> 
+>> [1] http://lists.infradead.org/pipermail/ath11k/2020-October/000466.html
+>
+> Tangent: have you considered getting this list archived on
+> https://lore.kernel.org/lists.html?
+
+Good point, actually I have not. I'll add both ath10k and ath11k lists
+to lore. It's even more important now that lists.infradead.org had a
+hard drive crash and lost years of archives.
+
+Thanks for the help!
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
