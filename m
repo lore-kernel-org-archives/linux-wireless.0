@@ -2,43 +2,43 @@ Return-Path: <SRS0=ovox=EM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 316B1C55178
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C2FC388F9
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4943206F9
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 532FC204FD
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604701271;
-	bh=PWlbZt8wWlmn+LUnXGXuQMunnnfW/Ks/7SA6eyhM52Y=;
+	s=default; t=1604701285;
+	bh=AjIS9Fwp+9zwOieexErSSkVefl0S4aqIyIhbjJBo8ns=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PZ0Qyqq2TKyw3ClfT3vm3ORX6aJlKsTdamTZzjJ5cWArfqz+aFbgII2z3ihSlRa0b
-	 S7CDMZZM8jv82TH+XMJZcK2pR4gEpXbii/+39/eTu1UR/+mxspoA3zIah0f6QSPVUD
-	 mGtvKwhu/ofdZl+XWr1l21M5SX6iREe42FNqZJVM=
+	b=wo88HrdwBiZy8gXVJddnU2C3LWBCPon+raiH5lQhXs4kLXmAQ3Ow9izI0fe70xVaa
+	 /cjvCZaUVbJd0ei3fpcz7YJ+adLXDVvkk64NasmoCiiF1g4lU4C2yFM2hcfwnt2IBL
+	 GSqBpyxik5UHhK+vfcCVxWxk1kYVVP7TegCLv6S0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729035AbgKFWSg (ORCPT
+        id S1729001AbgKFWVM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 17:18:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41844 "EHLO mail.kernel.org"
+        Fri, 6 Nov 2020 17:21:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41964 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729003AbgKFWS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 17:18:29 -0500
+        id S1729023AbgKFWSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:35 -0500
 Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9637021707;
-        Fri,  6 Nov 2020 22:18:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4C48121D7F;
+        Fri,  6 Nov 2020 22:18:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604701109;
-        bh=PWlbZt8wWlmn+LUnXGXuQMunnnfW/Ks/7SA6eyhM52Y=;
+        s=default; t=1604701114;
+        bh=AjIS9Fwp+9zwOieexErSSkVefl0S4aqIyIhbjJBo8ns=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oMzwQM4OVxtFFKwcgJNzxD9lIMwZ8Ldhj6OoNVtOTOlOh07hOQA+sAtQsWuuZsZMl
-         Wm3NC7wnZyJ4/XOyMbyFrK5kwowihD1Dxi7Y2+QvxXFEfzDs/z2M9LCIo5TP+B0Y1v
-         B/nHoqZZhKRPrZkbQ0sSnUs1ZV1HjFJLUxZOnGDQ=
+        b=XbeSOZuoctGdFTTctZYTPX/FZjuaNYEXLdm25I7crH1V5VQZOVT0UApSiH/I5+cwP
+         t7VZxDeNGE7nZoOrCDqGufbZQlQCAgH5NLZroopgIQ8g/RH2lVRa8Mh+NPVk/qh+Eq
+         nczzE6xnkVg8lqpFXIG6tp/IDPcrq7vgbV6Sme/E=
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     netdev@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [RFC net-next 12/28] tehuti: use ndo_siocdevprivate
-Date:   Fri,  6 Nov 2020 23:17:27 +0100
-Message-Id: <20201106221743.3271965-13-arnd@kernel.org>
+Subject: [RFC net-next 14/28] fddi: use ndo_siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:29 +0100
+Message-Id: <20201106221743.3271965-15-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
 References: <20201106221743.3271965-1-arnd@kernel.org>
@@ -63,74 +63,76 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-Tehuti only implements private ioctl commands, and implements
-them by overriding the ifreq layout, which is broken in
-compat mode.
+The skfddi driver has a private ioctl and passes the data correctly
+through ifr_data, but the use of a pointer in s_skfp_ioctl is
+broken in compat mode.
 
-Move it to the ndo_siocdevprivate callback in order to fix this.
+Change the driver to use ndo_siocdevprivate and disallow calling
+it in compat mode until a conversion handler is added.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/ethernet/tehuti/tehuti.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/net/fddi/skfp/skfddi.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/ethernet/tehuti/tehuti.c b/drivers/net/ethernet/tehuti/tehuti.c
-index b8f4f419173f..e25524081a30 100644
---- a/drivers/net/ethernet/tehuti/tehuti.c
-+++ b/drivers/net/ethernet/tehuti/tehuti.c
-@@ -637,7 +637,8 @@ static int bdx_range_check(struct bdx_priv *priv, u32 offset)
- 		-EINVAL : 0;
- }
+diff --git a/drivers/net/fddi/skfp/skfddi.c b/drivers/net/fddi/skfp/skfddi.c
+index 69c29a2ef95d..fe3b1d041142 100644
+--- a/drivers/net/fddi/skfp/skfddi.c
++++ b/drivers/net/fddi/skfp/skfddi.c
+@@ -103,7 +103,8 @@ static struct net_device_stats *skfp_ctl_get_stats(struct net_device *dev);
+ static void skfp_ctl_set_multicast_list(struct net_device *dev);
+ static void skfp_ctl_set_multicast_list_wo_lock(struct net_device *dev);
+ static int skfp_ctl_set_mac_address(struct net_device *dev, void *addr);
+-static int skfp_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
++static int skfp_siocdevprivate(struct net_device *dev, struct ifreq *rq,
++			       void __user *data, int cmd);
+ static netdev_tx_t skfp_send_pkt(struct sk_buff *skb,
+ 				       struct net_device *dev);
+ static void send_queued_packets(struct s_smc *smc);
+@@ -164,7 +165,7 @@ static const struct net_device_ops skfp_netdev_ops = {
+ 	.ndo_get_stats		= skfp_ctl_get_stats,
+ 	.ndo_set_rx_mode	= skfp_ctl_set_multicast_list,
+ 	.ndo_set_mac_address	= skfp_ctl_set_mac_address,
+-	.ndo_do_ioctl		= skfp_ioctl,
++	.ndo_siocdevprivate	= skfp_siocdevprivate,
+ };
  
--static int bdx_ioctl_priv(struct net_device *ndev, struct ifreq *ifr, int cmd)
-+static int bdx_siocdevprivate(struct net_device *ndev, struct ifreq *ifr,
-+			      void __user *udata, int cmd)
+ /*
+@@ -932,9 +933,9 @@ static int skfp_ctl_set_mac_address(struct net_device *dev, void *addr)
+ 
+ 
+ /*
+- * ==============
+- * = skfp_ioctl =
+- * ==============
++ * =======================
++ * = skfp_siocdevprivate =
++ * =======================
+  *   
+  * Overview:
+  *
+@@ -954,16 +955,19 @@ static int skfp_ctl_set_mac_address(struct net_device *dev, void *addr)
+  */
+ 
+ 
+-static int skfp_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
++static int skfp_siocdevprivate(struct net_device *dev, struct ifreq *rq, void __user *data, int cmd)
  {
- 	struct bdx_priv *priv = netdev_priv(ndev);
- 	u32 data[3];
-@@ -647,7 +648,7 @@ static int bdx_ioctl_priv(struct net_device *ndev, struct ifreq *ifr, int cmd)
+ 	struct s_smc *smc = netdev_priv(dev);
+ 	skfddi_priv *lp = &smc->os;
+ 	struct s_skfp_ioctl ioc;
+ 	int status = 0;
  
- 	DBG("jiffies=%ld cmd=%d\n", jiffies, cmd);
- 	if (cmd != SIOCDEVPRIVATE) {
--		error = copy_from_user(data, ifr->ifr_data, sizeof(data));
-+		error = copy_from_user(data, udata, sizeof(data));
- 		if (error) {
- 			pr_err("can't copy from user\n");
- 			RET(-EFAULT);
-@@ -669,7 +670,7 @@ static int bdx_ioctl_priv(struct net_device *ndev, struct ifreq *ifr, int cmd)
- 		data[2] = READ_REG(priv, data[1]);
- 		DBG("read_reg(0x%x)=0x%x (dec %d)\n", data[1], data[2],
- 		    data[2]);
--		error = copy_to_user(ifr->ifr_data, data, sizeof(data));
-+		error = copy_to_user(udata, data, sizeof(data));
- 		if (error)
- 			RET(-EFAULT);
- 		break;
-@@ -688,15 +689,6 @@ static int bdx_ioctl_priv(struct net_device *ndev, struct ifreq *ifr, int cmd)
- 	return 0;
- }
+-	if (copy_from_user(&ioc, rq->ifr_data, sizeof(struct s_skfp_ioctl)))
++	if (copy_from_user(&ioc, data, sizeof(struct s_skfp_ioctl)))
+ 		return -EFAULT;
  
--static int bdx_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
--{
--	ENTER;
--	if (cmd >= SIOCDEVPRIVATE && cmd <= (SIOCDEVPRIVATE + 15))
--		RET(bdx_ioctl_priv(ndev, ifr, cmd));
--	else
--		RET(-EOPNOTSUPP);
--}
--
- /**
-  * __bdx_vlan_rx_vid - private helper for adding/killing VLAN vid
-  * @ndev: network device
-@@ -1860,7 +1852,7 @@ static const struct net_device_ops bdx_netdev_ops = {
- 	.ndo_stop		= bdx_close,
- 	.ndo_start_xmit		= bdx_tx_transmit,
- 	.ndo_validate_addr	= eth_validate_addr,
--	.ndo_do_ioctl		= bdx_ioctl,
-+	.ndo_siocdevprivate	= bdx_siocdevprivate,
- 	.ndo_set_rx_mode	= bdx_setmulti,
- 	.ndo_change_mtu		= bdx_change_mtu,
- 	.ndo_set_mac_address	= bdx_set_mac,
++	if (in_compat_syscall())
++		return -EOPNOTSUPP;
++
+ 	switch (ioc.cmd) {
+ 	case SKFP_GET_STATS:	/* Get the driver statistics */
+ 		ioc.len = sizeof(lp->MacStat);
 -- 
 2.27.0
 
