@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B597AC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C62C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65519206F9
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11859208C7
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604701125;
-	bh=/cpDjwa8dOkb01yFtUHo3+36yqs3G0WmNes6UhKpcxU=;
+	s=default; t=1604701129;
+	bh=quYL6FmY9NRqROBT7gD89RdIR4mWBVj5mvB8k4ghwsg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dva4xnB6a2gnxDEpm9ew5RECjJ2M0e0OuCwpIiEuqqW0LnFG2ltocWoZ8fgQlJb+o
-	 QuIuQ7eYvu3TLho6s3S1bjivUC3BUGEEXxX3NkpJA1L+oVmOZLqDwRfprt88XX2An7
-	 Vzmxshl1UNUyTjCnsFsqrIYv4jW+02dF+UHX+1UU=
+	b=YR0FQVXYoAZEPQ+3558jSfA3DsD2KaoVYf/vhct02K0uMyaqH2XWQiYB2mpHv7Be3
+	 vTKnopusgH6DhcVPr2x+U4Lad9vxjXzvPrG1RHpPcgnK6ryVG4AZ3iiRU5f5OOWlVm
+	 5vF1TcoEeG/b1D6zoFOYEEvFyyqNElkK/1h7ui6k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729061AbgKFWSo (ORCPT
+        id S1729082AbgKFWSr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 17:18:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42002 "EHLO mail.kernel.org"
+        Fri, 6 Nov 2020 17:18:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42220 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729049AbgKFWSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 17:18:38 -0500
+        id S1729049AbgKFWSq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:46 -0500
 Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1DC1421D81;
-        Fri,  6 Nov 2020 22:18:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84A8320B1F;
+        Fri,  6 Nov 2020 22:18:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604701117;
-        bh=/cpDjwa8dOkb01yFtUHo3+36yqs3G0WmNes6UhKpcxU=;
+        s=default; t=1604701125;
+        bh=quYL6FmY9NRqROBT7gD89RdIR4mWBVj5mvB8k4ghwsg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TbTQSTmHZ0f7QKkEEQGaFRuwKQy1MxygJVIz6jojqveklKc4+zOzk9u3OWxiBvSSq
-         4Uudn8oPtMe4nsAthvwJKH6FjYr4nluegVUd/PmHn9cNTSzJqu9jX0yIOAAkKX9hQi
-         r2tYL6RbzFOcphYfGdo5Dxv0xP2zBr/GLGZxgr8w=
+        b=uVkT2rV+ZZT8ggUQJXoUIn5wGJbOSDXoR0riPdF5VpQNgUs0rm8nAK2xhnjcj2+Jh
+         89cGeNC9su/aAcdfEYlzDhyIFeeYoAwgYme3lMgV7MGsw2axEx44564aq2qTQDGbv4
+         tM3+v8w0ekwBHLWs19yiX2m9XdxkpWf7ku35ctsQ=
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     netdev@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [RFC net-next 15/28] net: usb: use ndo_siocdevprivate
-Date:   Fri,  6 Nov 2020 23:17:30 +0100
-Message-Id: <20201106221743.3271965-16-arnd@kernel.org>
+Subject: [RFC net-next 18/28] cxgb3: use ndo_siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:33 +0100
+Message-Id: <20201106221743.3271965-19-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
 References: <20201106221743.3271965-1-arnd@kernel.org>
@@ -63,63 +63,57 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The pegasus and rtl8150 drivers use SIOCDEVPRIVATE ioctls
-to access their MII registers, in place of the normal
-commands. This is broken for all compat ioctls today.
-
-Change to ndo_siocdevprivate to fix it.
+cxgb3 has a private multiplexor that works correctly in compat
+mode, split out the siocdevprivate callback from do_ioctl for
+simplification.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/usb/pegasus.c | 4 ++--
- drivers/net/usb/rtl8150.c | 5 +++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/usb/pegasus.c b/drivers/net/usb/pegasus.c
-index 32e1335c94ad..7cc0727eee1a 100644
---- a/drivers/net/usb/pegasus.c
-+++ b/drivers/net/usb/pegasus.c
-@@ -988,7 +988,7 @@ static const struct ethtool_ops ops = {
- 	.set_link_ksettings = pegasus_set_link_ksettings,
- };
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+index 84ad7261e243..c79a70d370bd 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -2135,13 +2135,18 @@ static int in_range(int val, int lo, int hi)
+ 	return val < 0 || (val <= hi && val >= lo);
+ }
  
--static int pegasus_ioctl(struct net_device *net, struct ifreq *rq, int cmd)
-+static int pegasus_siocdevprivate(struct net_device *net, struct ifreq *rq, void __user *udata, int cmd)
+-static int cxgb_extension_ioctl(struct net_device *dev, void __user *useraddr)
++static int cxgb_siocdevprivate(struct net_device *dev,
++			       struct ifreq *ifreq,
++			       void __user *useraddr,
++			       int cmd)
  {
- 	__u16 *data = (__u16 *) &rq->ifr_ifru;
- 	pegasus_t *pegasus = netdev_priv(net);
-@@ -1246,7 +1246,7 @@ static int pegasus_resume(struct usb_interface *intf)
- static const struct net_device_ops pegasus_netdev_ops = {
- 	.ndo_open =			pegasus_open,
- 	.ndo_stop =			pegasus_close,
--	.ndo_do_ioctl =			pegasus_ioctl,
-+	.ndo_siocdevprivate =		pegasus_siocdevprivate,
- 	.ndo_start_xmit =		pegasus_start_xmit,
- 	.ndo_set_rx_mode =		pegasus_set_multicast,
- 	.ndo_tx_timeout =		pegasus_tx_timeout,
-diff --git a/drivers/net/usb/rtl8150.c b/drivers/net/usb/rtl8150.c
-index bf8a60533f3e..bb37fb24f7d7 100644
---- a/drivers/net/usb/rtl8150.c
-+++ b/drivers/net/usb/rtl8150.c
-@@ -822,7 +822,8 @@ static const struct ethtool_ops ops = {
- 	.get_link_ksettings = rtl8150_get_link_ksettings,
- };
+ 	struct port_info *pi = netdev_priv(dev);
+ 	struct adapter *adapter = pi->adapter;
+-	u32 cmd;
+ 	int ret;
  
--static int rtl8150_ioctl(struct net_device *netdev, struct ifreq *rq, int cmd)
-+static int rtl8150_siocdevprivate(struct net_device *netdev, struct ifreq *rq,
-+				  void __user *udata, int cmd)
- {
- 	rtl8150_t *dev = netdev_priv(netdev);
- 	u16 *data = (u16 *) & rq->ifr_ifru;
-@@ -850,7 +851,7 @@ static int rtl8150_ioctl(struct net_device *netdev, struct ifreq *rq, int cmd)
- static const struct net_device_ops rtl8150_netdev_ops = {
- 	.ndo_open		= rtl8150_open,
- 	.ndo_stop		= rtl8150_close,
--	.ndo_do_ioctl		= rtl8150_ioctl,
-+	.ndo_siocdevprivate	= rtl8150_siocdevprivate,
- 	.ndo_start_xmit		= rtl8150_start_xmit,
- 	.ndo_tx_timeout		= rtl8150_tx_timeout,
- 	.ndo_set_rx_mode	= rtl8150_set_multicast,
++	if (cmd != SIOCCHIOCTL)
++		return -EOPNOTSUPP;
++
+ 	if (copy_from_user(&cmd, useraddr, sizeof(cmd)))
+ 		return -EFAULT;
+ 
+@@ -2546,8 +2551,6 @@ static int cxgb_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
+ 		fallthrough;
+ 	case SIOCGMIIPHY:
+ 		return mdio_mii_ioctl(&pi->phy.mdio, data, cmd);
+-	case SIOCCHIOCTL:
+-		return cxgb_extension_ioctl(dev, req->ifr_data);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -3181,6 +3184,7 @@ static const struct net_device_ops cxgb_netdev_ops = {
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_set_rx_mode	= cxgb_set_rxmode,
+ 	.ndo_do_ioctl		= cxgb_ioctl,
++	.ndo_siocdevprivate	= cxgb_siocdevprivate,
+ 	.ndo_change_mtu		= cxgb_change_mtu,
+ 	.ndo_set_mac_address	= cxgb_set_mac_addr,
+ 	.ndo_fix_features	= cxgb_fix_features,
 -- 
 2.27.0
 
