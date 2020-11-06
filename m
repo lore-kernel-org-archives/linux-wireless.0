@@ -5,40 +5,40 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C313C388F9
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:22:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C17C388F9
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03467206C1
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:22:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDFFD206C1
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:22:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604701322;
-	bh=BR+zYR3Dm83q9tUsfJZzsFi0e5w5L0IGNArcvO9ow8I=;
+	s=default; t=1604701342;
+	bh=bFutEyBiizUw1vyhN3FC1qY9OXA4PL6N3mzvnxKxBMU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IfnNAW8j4rCf+5ImnG72uOW/ok3jjCy4dN9lWSYsKv2kZA4i8+2fBNCZPgk5wpHpY
-	 /ymzjxovpazCc9mNXsGylS9ExXqz3xs9ACzCwaIDsUKoansYkWTh8azSz//YVzkFMg
-	 FiIqzli6EuVvgyCeixb4JM1nCr50iQ+Z+sYYDeTA=
+	b=OA89oSbwqJuyoNA3oqlj2GzjMuK6MIKnFOIREPblbopTV3pAd/90RQAK336mx0+53
+	 4WGNiUg5SPXfZXiHWI9xYoWH8LcWHz8Hj+2KIxEq/Kmj5s36tBvbsf9ZUbVKg5DXR3
+	 MokBPDAChQmkdDKJ6GYzmeNQNz1NvFtt2kV2pWz0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729184AbgKFWWA (ORCPT
+        id S1728871AbgKFWSE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 17:22:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41460 "EHLO mail.kernel.org"
+        Fri, 6 Nov 2020 17:18:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41240 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728828AbgKFWSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 17:18:13 -0500
+        id S1728848AbgKFWSD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:03 -0500
 Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6BE34206F9;
-        Fri,  6 Nov 2020 22:18:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E6F722202;
+        Fri,  6 Nov 2020 22:18:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604701091;
-        bh=BR+zYR3Dm83q9tUsfJZzsFi0e5w5L0IGNArcvO9ow8I=;
+        s=default; t=1604701083;
+        bh=bFutEyBiizUw1vyhN3FC1qY9OXA4PL6N3mzvnxKxBMU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bi+lDzBo1ePiWdn/VM2k639J0e48uV9m25v+HdVm1B5ZrTJOGAAsnmK2eb1wd6bUC
-         UaecT3Awtytx7aWt3xk23Z4rBeuTBeU7JtA2uQvht8OKRuLCMZ5q+WXJZ/bDwUKQmY
-         ShaAoDaSb5UQRzAaWbQ2gN7MuG6UGmQPkHGImBo0=
+        b=RgH5g9UZXENjafYgeXhJ8iB+YNS3QNz4ojsxogvQnqu8e7BppmYHtlr3ungzkG6SB
+         c4iA46D/E2vxsXG+Jt3DnN5FiDcRMcI29BNNrDhg1L1uQBmwcIgRklEayIoVlpbmE9
+         X7noh7Fkg+B40xXdFUXI0fyvzcjl88OoaGItrITM=
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     netdev@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [RFC net-next 06/28] bridge: use ndo_siocdevprivate
-Date:   Fri,  6 Nov 2020 23:17:21 +0100
-Message-Id: <20201106221743.3271965-7-arnd@kernel.org>
+Subject: [RFC net-next 03/28] staging: wlan-ng: use siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:18 +0100
+Message-Id: <20201106221743.3271965-4-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
 References: <20201106221743.3271965-1-arnd@kernel.org>
@@ -63,140 +63,144 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The bridge driver has an old set of ioctls using the SIOCDEVPRIVATE
-namespace that have never worked in compat mode and are explicitly
-forbidden already.
+wlan-ng has two private ioctls that correctly work in compat
+mode. Move these over to the new ndo_siocdevprivate mechanism.
 
-Move them over to ndo_siocdevprivate and fix compat mode for these,
-because we can.
+The p80211netdev_ethtool() function is commented out and
+has no use here, so this can be removed
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- net/bridge/br_device.c  |  1 +
- net/bridge/br_ioctl.c   | 36 ++++++++++++++++++++++++------------
- net/bridge/br_private.h |  2 ++
- 3 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/staging/wlan-ng/p80211netdev.c | 75 ++++----------------------
+ 1 file changed, 11 insertions(+), 64 deletions(-)
 
-diff --git a/net/bridge/br_device.c b/net/bridge/br_device.c
-index 6f742fee874a..c272fa57110d 100644
---- a/net/bridge/br_device.c
-+++ b/net/bridge/br_device.c
-@@ -409,6 +409,7 @@ static const struct net_device_ops br_netdev_ops = {
- 	.ndo_change_rx_flags	 = br_dev_change_rx_flags,
- 	.ndo_change_mtu		 = br_change_mtu,
- 	.ndo_do_ioctl		 = br_dev_ioctl,
-+	.ndo_siocdevprivate	 = br_dev_siocdevprivate,
- #ifdef CONFIG_NET_POLL_CONTROLLER
- 	.ndo_netpoll_setup	 = br_netpoll_setup,
- 	.ndo_netpoll_cleanup	 = br_netpoll_cleanup,
-diff --git a/net/bridge/br_ioctl.c b/net/bridge/br_ioctl.c
-index 2db800fc27ca..7fbfeb735bad 100644
---- a/net/bridge/br_ioctl.c
-+++ b/net/bridge/br_ioctl.c
-@@ -106,15 +106,31 @@ static int add_del_if(struct net_bridge *br, int ifindex, int isadd)
-  * This interface is deprecated because it was too difficult
-  * to do the translation for 32/64bit ioctl compatibility.
-  */
--static int old_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
-+int br_dev_siocdevprivate(struct net_device *dev, struct ifreq *rq, void __user *data, int cmd)
- {
- 	struct net_bridge *br = netdev_priv(dev);
- 	struct net_bridge_port *p = NULL;
- 	unsigned long args[4];
-+	void __user *argp;
- 	int ret = -EOPNOTSUPP;
+diff --git a/drivers/staging/wlan-ng/p80211netdev.c b/drivers/staging/wlan-ng/p80211netdev.c
+index a15abb2c8f54..6e85be994f1a 100644
+--- a/drivers/staging/wlan-ng/p80211netdev.c
++++ b/drivers/staging/wlan-ng/p80211netdev.c
+@@ -98,8 +98,8 @@ static int p80211knetdev_stop(struct net_device *netdev);
+ static netdev_tx_t p80211knetdev_hard_start_xmit(struct sk_buff *skb,
+ 						 struct net_device *netdev);
+ static void p80211knetdev_set_multicast_list(struct net_device *dev);
+-static int p80211knetdev_do_ioctl(struct net_device *dev, struct ifreq *ifr,
+-				  int cmd);
++static int p80211knetdev_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
++					void __user *data, int cmd);
+ static int p80211knetdev_set_mac_address(struct net_device *dev, void *addr);
+ static void p80211knetdev_tx_timeout(struct net_device *netdev, unsigned int txqueue);
+ static int p80211_rx_typedrop(struct wlandevice *wlandev, u16 fc);
+@@ -461,56 +461,8 @@ static void p80211knetdev_set_multicast_list(struct net_device *dev)
+ 		wlandev->set_multicast_list(wlandev, dev);
+ }
  
--	if (copy_from_user(args, rq->ifr_data, sizeof(args)))
--		return -EFAULT;
-+	if (in_compat_syscall()) {
-+		unsigned int cargs[4];
-+		if (copy_from_user(cargs, data, sizeof(cargs)))
-+			return -EFAULT;
-+
-+		args[0] = cargs[0];
-+		args[1] = cargs[1];
-+		args[2] = cargs[2];
-+		args[3] = cargs[3];
-+
-+		argp = compat_ptr(args[1]);
-+	} else {
-+		if (copy_from_user(args, data, sizeof(args)))
-+			return -EFAULT;
-+
-+		argp = (void __user *)args[1];
-+	}
- 
- 	switch (args[0]) {
- 	case BRCTL_ADD_IF:
-@@ -171,7 +187,7 @@ static int old_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 			return -ENOMEM;
- 
- 		get_port_ifindices(br, indices, num);
--		if (copy_to_user((void __user *)args[1], indices, num*sizeof(int)))
-+		if (copy_to_user(argp, indices, num*sizeof(int)))
- 			num =  -EFAULT;
- 		kfree(indices);
- 		return num;
-@@ -232,7 +248,7 @@ static int old_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 
- 		rcu_read_unlock();
- 
--		if (copy_to_user((void __user *)args[1], &p, sizeof(p)))
-+		if (copy_to_user(argp, &p, sizeof(p)))
- 			return -EFAULT;
- 
- 		return 0;
-@@ -282,8 +298,7 @@ static int old_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 	}
- 
- 	case BRCTL_GET_FDB_ENTRIES:
--		return get_fdb_entries(br, (void __user *)args[1],
--				       args[2], args[3]);
-+		return get_fdb_entries(br, argp, args[2], args[3]);
- 	}
- 
- 	if (!ret) {
-@@ -320,7 +335,7 @@ static int old_deviceless(struct net *net, void __user *uarg)
- 
- 		args[2] = get_bridge_ifindices(net, indices, args[2]);
- 
--		ret = copy_to_user((void __user *)args[1], indices, args[2]*sizeof(int))
-+		ret = copy_to_user(uarg, indices, args[2]*sizeof(int))
- 			? -EFAULT : args[2];
- 
- 		kfree(indices);
-@@ -335,7 +350,7 @@ static int old_deviceless(struct net *net, void __user *uarg)
- 		if (!ns_capable(net->user_ns, CAP_NET_ADMIN))
- 			return -EPERM;
- 
--		if (copy_from_user(buf, (void __user *)args[1], IFNAMSIZ))
-+		if (copy_from_user(buf, uarg, IFNAMSIZ))
- 			return -EFAULT;
- 
- 		buf[IFNAMSIZ-1] = 0;
-@@ -383,9 +398,6 @@ int br_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 	struct net_bridge *br = netdev_priv(dev);
- 
- 	switch (cmd) {
--	case SIOCDEVPRIVATE:
--		return old_dev_ioctl(dev, rq, cmd);
+-#ifdef SIOCETHTOOL
 -
- 	case SIOCBRADDIF:
- 	case SIOCBRDELIF:
- 		return add_del_if(br, rq->ifr_ifindex, cmd == SIOCBRADDIF);
-diff --git a/net/bridge/br_private.h b/net/bridge/br_private.h
-index 345118e35c42..a788fcdd2adf 100644
---- a/net/bridge/br_private.h
-+++ b/net/bridge/br_private.h
-@@ -778,6 +778,8 @@ br_port_get_check_rtnl(const struct net_device *dev)
+-static int p80211netdev_ethtool(struct wlandevice *wlandev,
+-				void __user *useraddr)
+-{
+-	u32 ethcmd;
+-	struct ethtool_drvinfo info;
+-	struct ethtool_value edata;
+-
+-	memset(&info, 0, sizeof(info));
+-	memset(&edata, 0, sizeof(edata));
+-
+-	if (copy_from_user(&ethcmd, useraddr, sizeof(ethcmd)))
+-		return -EFAULT;
+-
+-	switch (ethcmd) {
+-	case ETHTOOL_GDRVINFO:
+-		info.cmd = ethcmd;
+-		snprintf(info.driver, sizeof(info.driver), "p80211_%s",
+-			 wlandev->nsdname);
+-		snprintf(info.version, sizeof(info.version), "%s",
+-			 WLAN_RELEASE);
+-
+-		if (copy_to_user(useraddr, &info, sizeof(info)))
+-			return -EFAULT;
+-		return 0;
+-#ifdef ETHTOOL_GLINK
+-	case ETHTOOL_GLINK:
+-		edata.cmd = ethcmd;
+-
+-		if (wlandev->linkstatus &&
+-		    (wlandev->macmode != WLAN_MACMODE_NONE)) {
+-			edata.data = 1;
+-		} else {
+-			edata.data = 0;
+-		}
+-
+-		if (copy_to_user(useraddr, &edata, sizeof(edata)))
+-			return -EFAULT;
+-		return 0;
+-#endif
+-	}
+-
+-	return -EOPNOTSUPP;
+-}
+-
+-#endif
+-
+ /*----------------------------------------------------------------
+- * p80211knetdev_do_ioctl
++ * p80211knetdev_siocdevprivate
+  *
+  * Handle an ioctl call on one of our devices.  Everything Linux
+  * ioctl specific is done here.  Then we pass the contents of the
+@@ -537,8 +489,9 @@ static int p80211netdev_ethtool(struct wlandevice *wlandev,
+  *	locks.
+  *----------------------------------------------------------------
+  */
+-static int p80211knetdev_do_ioctl(struct net_device *dev,
+-				  struct ifreq *ifr, int cmd)
++static int p80211knetdev_siocdevprivate(struct net_device *dev,
++					struct ifreq *ifr,
++					void __user *data, int cmd)
+ {
+ 	int result = 0;
+ 	struct p80211ioctl_req *req = (struct p80211ioctl_req *)ifr;
+@@ -547,13 +500,8 @@ static int p80211knetdev_do_ioctl(struct net_device *dev,
  
- /* br_ioctl.c */
- int br_dev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
-+int br_dev_siocdevprivate(struct net_device *dev, struct ifreq *rq,
-+			  void __user *data, int cmd);
- int br_ioctl_deviceless_stub(struct net *net, unsigned int cmd,
- 			     void __user *arg);
+ 	netdev_dbg(dev, "rx'd ioctl, cmd=%d, len=%d\n", cmd, req->len);
  
+-#ifdef SIOCETHTOOL
+-	if (cmd == SIOCETHTOOL) {
+-		result =
+-		    p80211netdev_ethtool(wlandev, (void __user *)ifr->ifr_data);
+-		goto bail;
+-	}
+-#endif
++	if (in_compat_syscall())
++		return -EOPNOTSUPP;
+ 
+ 	/* Test the magic, assume ifr is good if it's there */
+ 	if (req->magic != P80211_IOCTL_MAGIC) {
+@@ -572,14 +520,13 @@ static int p80211knetdev_do_ioctl(struct net_device *dev,
+ 	/* Allocate a buf of size req->len */
+ 	msgbuf = kmalloc(req->len, GFP_KERNEL);
+ 	if (msgbuf) {
+-		if (copy_from_user(msgbuf, (void __user *)req->data, req->len))
++		if (copy_from_user(msgbuf, data, req->len))
+ 			result = -EFAULT;
+ 		else
+ 			result = p80211req_dorequest(wlandev, msgbuf);
+ 
+ 		if (result == 0) {
+-			if (copy_to_user
+-			    ((void __user *)req->data, msgbuf, req->len)) {
++			if (copy_to_user(data, msgbuf, req->len)) {
+ 				result = -EFAULT;
+ 			}
+ 		}
+@@ -684,7 +631,7 @@ static const struct net_device_ops p80211_netdev_ops = {
+ 	.ndo_stop = p80211knetdev_stop,
+ 	.ndo_start_xmit = p80211knetdev_hard_start_xmit,
+ 	.ndo_set_rx_mode = p80211knetdev_set_multicast_list,
+-	.ndo_do_ioctl = p80211knetdev_do_ioctl,
++	.ndo_siocdevprivate = p80211knetdev_siocdevprivate,
+ 	.ndo_set_mac_address = p80211knetdev_set_mac_address,
+ 	.ndo_tx_timeout = p80211knetdev_tx_timeout,
+ 	.ndo_validate_addr = eth_validate_addr,
 -- 
 2.27.0
 
