@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C29C388F9
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB830C388F9
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED5DF206C1
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BB45206C1
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604701311;
-	bh=ejrB3sfP8Vhn5+VAUXi+L6LpDodKnVmFjv0rU9L8csY=;
+	s=default; t=1604701318;
+	bh=m0RjMsn6WwofvvE4NYY1pS3GxXmUo66/XIWhjld9ez8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LX3i3YInozDUJONJe/E4e4145oPQv1+xuO7Jj6ooEkk7spM2y2Yr5WtPhi3o/KncZ
-	 IidFDHPPvJwyhvoq9tLJaARQFXwBQnjHfN/ICLyN2oOkXI0GQU6IoKZLi06XliLPDd
-	 p9CLUP1BNZ9VTgpk8FQ1mGuQDLBHTauJarPET2RQ=
+	b=W+uq1bLnNQfgcfbhZ98IdL9KnHDoUb6ZzwkfvuiPPSEMFEZbq8bDaqQeJOXH6dC7e
+	 TqCMpDBf/B6rsH1mxAZDtAQmZdub+9WpseFFHprOqBp90U/ySgX07AnsJfv8nEJzzp
+	 caltb/Z5n50XKry9fOi1JpQSmLFywD1Q2GfoDNrU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728939AbgKFWST (ORCPT
+        id S1728908AbgKFWSO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 17:18:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41576 "EHLO mail.kernel.org"
+        Fri, 6 Nov 2020 17:18:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41344 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728887AbgKFWSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 17:18:18 -0500
+        id S1728887AbgKFWSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:07 -0500
 Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 427922087E;
-        Fri,  6 Nov 2020 22:18:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6656E20B1F;
+        Fri,  6 Nov 2020 22:18:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604701097;
-        bh=ejrB3sfP8Vhn5+VAUXi+L6LpDodKnVmFjv0rU9L8csY=;
+        s=default; t=1604701085;
+        bh=m0RjMsn6WwofvvE4NYY1pS3GxXmUo66/XIWhjld9ez8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o/hvgIT92Bk0M83Xab3GbNkl+xpVG4NHaBN01+8U6H+Er1kiG4YsX3i4m4ZP00e2y
-         2mkHLMu1fUhv43aUCI7R9In7ltd2PSh6WT6PJ7Fex8Xg8/YNd0P6InD5wUyOKpnuDY
-         Utxsq02pbsuZJdJjZeYJsUConVTbwpD/SQvJysOI=
+        b=lZjFdbVKp25Qrql+efzzWsBxMC4g7cW6WMF5FzNZXxrLxsGCulsVre9Ry02k9fFSi
+         5z1FSAfrv26byYbPUYzDCxhfGlOr0j/0sN3hH5d48y25AJj96u+XUtOzuoY5WRV71+
+         CX6vrZapw6I+N1D/39DJFi0LvQmJa55SRHnLlDic=
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     netdev@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [RFC net-next 08/28] tulip: use ndo_siocdevprivate
-Date:   Fri,  6 Nov 2020 23:17:23 +0100
-Message-Id: <20201106221743.3271965-9-arnd@kernel.org>
+Subject: [RFC net-next 04/28] hostap: use ndo_siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:19 +0100
+Message-Id: <20201106221743.3271965-5-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
 References: <20201106221743.3271965-1-arnd@kernel.org>
@@ -63,64 +63,119 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The tulip driver has a debugging method over ioctl built-in, but it
-does not actually check the command type, which may end up leading
-to random behavior when trying to run other ioctls on it.
+hostap has a combination of iwpriv ioctls that do not work at
+all, and two SIOCDEVPRIVATE commands that work natively but
+lack a compat conversion handler.
 
-Change the driver to use ndo_siocdevprivate and limit the execution
-further to the first private command code. If anyone still has tools
-to run these debugging commands, they might have to be patched for
-it if they pass different ioctl command.
-
-The function has existed in this form since the driver was merged in
-Linux-1.1.86.
+For the moment, move them over to the new ndo_siocdevprivate
+interface and return an error for compat mode.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/ethernet/dec/tulip/de4x5.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intersil/hostap/hostap.h |  3 +-
+ .../wireless/intersil/hostap/hostap_ioctl.c   | 30 +++++++++++++++----
+ .../wireless/intersil/hostap/hostap_main.c    |  3 ++
+ 3 files changed, 29 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/ethernet/dec/tulip/de4x5.c b/drivers/net/ethernet/dec/tulip/de4x5.c
-index 683e328b5461..59a85f5b35fb 100644
---- a/drivers/net/ethernet/dec/tulip/de4x5.c
-+++ b/drivers/net/ethernet/dec/tulip/de4x5.c
-@@ -902,7 +902,7 @@ static int     de4x5_close(struct net_device *dev);
- static struct  net_device_stats *de4x5_get_stats(struct net_device *dev);
- static void    de4x5_local_stats(struct net_device *dev, char *buf, int pkt_len);
- static void    set_multicast_list(struct net_device *dev);
--static int     de4x5_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
-+static int     de4x5_siocdevprivate(struct net_device *dev, struct ifreq *rq, void __user *data, int cmd);
+diff --git a/drivers/net/wireless/intersil/hostap/hostap.h b/drivers/net/wireless/intersil/hostap/hostap.h
+index c4b81ff7d7e4..0c41efa252f0 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap.h
++++ b/drivers/net/wireless/intersil/hostap/hostap.h
+@@ -93,6 +93,7 @@ extern const struct iw_handler_def hostap_iw_handler_def;
+ extern const struct ethtool_ops prism2_ethtool_ops;
  
- /*
- ** Private functions
-@@ -1084,7 +1084,7 @@ static const struct net_device_ops de4x5_netdev_ops = {
-     .ndo_start_xmit	= de4x5_queue_pkt,
-     .ndo_get_stats	= de4x5_get_stats,
-     .ndo_set_rx_mode	= set_multicast_list,
--    .ndo_do_ioctl	= de4x5_ioctl,
-+    .ndo_siocdevprivate	= de4x5_siocdevprivate,
-     .ndo_set_mac_address= eth_mac_addr,
-     .ndo_validate_addr	= eth_validate_addr,
+ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
+-
++int hostap_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
++		 void __user *data, int cmd);
+ 
+ #endif /* HOSTAP_H */
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+index 514c7b01dbf6..7b6471e44255 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+@@ -3952,7 +3952,8 @@ const struct iw_handler_def hostap_iw_handler_def =
+ 	.get_wireless_stats = hostap_get_wireless_stats,
  };
-@@ -5357,7 +5357,7 @@ de4x5_dbg_rx(struct sk_buff *skb, int len)
- ** this function is only used for my testing.
- */
- static int
--de4x5_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
-+de4x5_siocdevprivate(struct net_device *dev, struct ifreq *rq, void __user *data, int cmd)
- {
-     struct de4x5_private *lp = netdev_priv(dev);
-     struct de4x5_ioctl *ioc = (struct de4x5_ioctl *) &rq->ifr_ifru;
-@@ -5371,6 +5371,9 @@ de4x5_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
-     } tmp;
-     u_long flags = 0;
  
-+    if (cmd != SIOCDEVPRIVATE || in_compat_syscall())
-+	    return -EOPNOTSUPP;
+-
++/* Private ioctls (iwpriv) that have not yet been converted
++ * into new wireless extensions API */
+ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ {
+ 	struct iwreq *wrq = (struct iwreq *) ifr;
+@@ -3964,9 +3965,6 @@ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ 	local = iface->local;
+ 
+ 	switch (cmd) {
+-		/* Private ioctls (iwpriv) that have not yet been converted
+-		 * into new wireless extensions API */
+-
+ 	case PRISM2_IOCTL_INQUIRE:
+ 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
+ 		else ret = prism2_ioctl_priv_inquire(dev, (int *) wrq->u.name);
+@@ -4020,11 +4018,31 @@ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ 					       wrq->u.ap_addr.sa_data);
+ 		break;
+ #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
++	default:
++		ret = -EOPNOTSUPP;
++		break;
++	}
 +
-     switch(ioc->cmd) {
-     case DE4X5_GET_HWADDR:           /* Get the hardware address */
- 	ioc->len = ETH_ALEN;
++	return ret;
++}
+ 
++/* Private ioctls that are not used with iwpriv;
++ * in SIOCDEVPRIVATE range */
++int hostap_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
++			  void __user *data, int cmd)
++{
++	struct iwreq *wrq = (struct iwreq *)ifr;
++	struct hostap_interface *iface;
++	local_info_t *local;
++	int ret = 0;
+ 
+-		/* Private ioctls that are not used with iwpriv;
+-		 * in SIOCDEVPRIVATE range */
++	iface = netdev_priv(dev);
++	local = iface->local;
++
++	if (in_compat_syscall()) /* not implemented yet */
++		return -EOPNOTSUPP;
+ 
++	switch (cmd) {
+ #ifdef PRISM2_DOWNLOAD_SUPPORT
+ 	case PRISM2_IOCTL_DOWNLOAD:
+ 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_main.c b/drivers/net/wireless/intersil/hostap/hostap_main.c
+index de97b3304115..54f67b682b6a 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_main.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_main.c
+@@ -797,6 +797,7 @@ static const struct net_device_ops hostap_netdev_ops = {
+ 	.ndo_open		= prism2_open,
+ 	.ndo_stop		= prism2_close,
+ 	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_siocdevprivate	= hostap_siocdevprivate,
+ 	.ndo_set_mac_address	= prism2_set_mac_address,
+ 	.ndo_set_rx_mode	= hostap_set_multicast_list,
+ 	.ndo_tx_timeout 	= prism2_tx_timeout,
+@@ -809,6 +810,7 @@ static const struct net_device_ops hostap_mgmt_netdev_ops = {
+ 	.ndo_open		= prism2_open,
+ 	.ndo_stop		= prism2_close,
+ 	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_siocdevprivate	= hostap_siocdevprivate,
+ 	.ndo_set_mac_address	= prism2_set_mac_address,
+ 	.ndo_set_rx_mode	= hostap_set_multicast_list,
+ 	.ndo_tx_timeout 	= prism2_tx_timeout,
+@@ -821,6 +823,7 @@ static const struct net_device_ops hostap_master_ops = {
+ 	.ndo_open		= prism2_open,
+ 	.ndo_stop		= prism2_close,
+ 	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_siocdevprivate	= hostap_siocdevprivate,
+ 	.ndo_set_mac_address	= prism2_set_mac_address,
+ 	.ndo_set_rx_mode	= hostap_set_multicast_list,
+ 	.ndo_tx_timeout 	= prism2_tx_timeout,
 -- 
 2.27.0
 
