@@ -2,43 +2,43 @@ Return-Path: <SRS0=ovox=EM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30DA5C388F9
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AED86C388F9
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4BAB206C1
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DB62204FD
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:21:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604701288;
-	bh=eiNHnuy+hNjbjFU7Amv3yBUD8VshOljAcCBAICoPPSs=;
+	s=default; t=1604701291;
+	bh=zfW+TstbaETCjrecVXCK2p+9uJMUmc8aN3NLStSQrjM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nu37j3wDLsspylks4hm5uhRXWl3dov58OsmbZE0+j2CmWUK3kyr5Ybdqa975dP9WX
-	 BHL+SX/yWuLFrU9cIimuYaLSqGyQMPyG4Z6ttFJR2UcZfdIJ4Ke96BFHJ5vmEl8fbo
-	 3t3GeTQjbuMKBvn5zNiijKbxURQhTwsnm/G8c9jQ=
+	b=r0IIiiPMS9iLvp8vpap2X/lVaIZPG8OdulWjjZ5L4L38ACxgBYhsblGiiPL+IWeUi
+	 i4dEWZozeNMtrzfrAdvI1XiO91HIMtYEZzfGgHpPWpDsAz4i/TV1vFHeM+XNXxMt9T
+	 GyMmGBx9tjwDJtkwWX5xz5whHiwhpa6WEkCsSgmg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729021AbgKFWSe (ORCPT
+        id S1728998AbgKFWS2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 17:18:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41902 "EHLO mail.kernel.org"
+        Fri, 6 Nov 2020 17:18:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41792 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728684AbgKFWSd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 17:18:33 -0500
+        id S1728967AbgKFWS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:27 -0500
 Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 72A34206C1;
-        Fri,  6 Nov 2020 22:18:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BEFC121556;
+        Fri,  6 Nov 2020 22:18:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604701111;
-        bh=eiNHnuy+hNjbjFU7Amv3yBUD8VshOljAcCBAICoPPSs=;
+        s=default; t=1604701106;
+        bh=zfW+TstbaETCjrecVXCK2p+9uJMUmc8aN3NLStSQrjM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QM+rUOnImvpXUQa8m9VB331eo9iLMl5iqRtNhQJjHILlDnEv1nX0Fmtaj+kGqYk+1
-         XoiuTrhJCwNJUaprjY8D6HOvRTfhJOzz32m6+ApMK8RF4XsVRMeh9qCykF6VMAy8hT
-         nPAAZ9VJlTyX6MBlOZy0PkW3bhUBZhsmB2XUEeWY=
+        b=0+NDqiGAoaCCJhFts1rR200TkCd/gvtVzXpkBVmN5w7aYl97WcN+0oY3wBoZqBqGW
+         3F0gisLN/XVWNo8Xk4PtuyDrHuXyTQndBIFv0SmwZq2zOKLIPxKyo15BnVOPBRB8Oh
+         Dln9WnKUO8/Ivp5n2dSR3tdfIYmdp0Ds4CprnUqc=
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     netdev@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [RFC net-next 13/28] eql: use ndo_siocdevprivate
-Date:   Fri,  6 Nov 2020 23:17:28 +0100
-Message-Id: <20201106221743.3271965-14-arnd@kernel.org>
+Subject: [RFC net-next 11/28] hamachi: use ndo_siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:26 +0100
+Message-Id: <20201106221743.3271965-12-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
 References: <20201106221743.3271965-1-arnd@kernel.org>
@@ -63,78 +63,110 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The private ioctls in eql pass the arguments correctly through ifr_data,
-but the slaving_request_t and slave_config_t structures are incompatible
-with compat mode and need special conversion code in the driver.
-
-Convert to siocdevprivate for now, and return an error when called
-in compat mode.
+hamachi has one command that overloads the ifreq argument
+and requires a conversion to ndo_siocdevprivate in order to
+make compat mode work, so split it from ndo_ioctl.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/eql.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ drivers/net/ethernet/packetengines/hamachi.c | 63 ++++++++++++--------
+ 1 file changed, 38 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/eql.c b/drivers/net/eql.c
-index 74263f8efe1a..b8707559a0f5 100644
---- a/drivers/net/eql.c
-+++ b/drivers/net/eql.c
-@@ -131,7 +131,8 @@
- 
- static int eql_open(struct net_device *dev);
- static int eql_close(struct net_device *dev);
--static int eql_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
-+static int eql_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
-+			      void __user *data, int cmd);
- static netdev_tx_t eql_slave_xmit(struct sk_buff *skb, struct net_device *dev);
- 
- #define eql_is_slave(dev)	((dev->flags & IFF_SLAVE) == IFF_SLAVE)
-@@ -170,7 +171,7 @@ static const char version[] __initconst =
- static const struct net_device_ops eql_netdev_ops = {
- 	.ndo_open	= eql_open,
- 	.ndo_stop	= eql_close,
--	.ndo_do_ioctl	= eql_ioctl,
-+	.ndo_siocdevprivate = eql_siocdevprivate,
- 	.ndo_start_xmit	= eql_slave_xmit,
+diff --git a/drivers/net/ethernet/packetengines/hamachi.c b/drivers/net/ethernet/packetengines/hamachi.c
+index d058a63602a9..f6980fac8407 100644
+--- a/drivers/net/ethernet/packetengines/hamachi.c
++++ b/drivers/net/ethernet/packetengines/hamachi.c
+@@ -546,7 +546,9 @@ static int read_eeprom(void __iomem *ioaddr, int location);
+ static int mdio_read(struct net_device *dev, int phy_id, int location);
+ static void mdio_write(struct net_device *dev, int phy_id, int location, int value);
+ static int hamachi_open(struct net_device *dev);
+-static int netdev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
++static int hamachi_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
++static int hamachi_siocdevprivate(struct net_device *dev, struct ifreq *rq,
++				  void __user *data, int cmd);
+ static void hamachi_timer(struct timer_list *t);
+ static void hamachi_tx_timeout(struct net_device *dev, unsigned int txqueue);
+ static void hamachi_init_ring(struct net_device *dev);
+@@ -571,7 +573,8 @@ static const struct net_device_ops hamachi_netdev_ops = {
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_set_mac_address 	= eth_mac_addr,
+ 	.ndo_tx_timeout		= hamachi_tx_timeout,
+-	.ndo_do_ioctl		= netdev_ioctl,
++	.ndo_do_ioctl		= hamachi_ioctl,
++	.ndo_siocdevprivate	= hamachi_siocdevprivate,
  };
  
-@@ -268,25 +269,29 @@ static int eql_s_slave_cfg(struct net_device *dev, slave_config_t __user *sc);
- static int eql_g_master_cfg(struct net_device *dev, master_config_t __user *mc);
- static int eql_s_master_cfg(struct net_device *dev, master_config_t __user *mc);
  
--static int eql_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
-+static int eql_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
-+			      void __user *data, int cmd)
- {
- 	if (cmd != EQL_GETMASTRCFG && cmd != EQL_GETSLAVECFG &&
- 	    !capable(CAP_NET_ADMIN))
- 	  	return -EPERM;
+@@ -1867,7 +1870,36 @@ static const struct ethtool_ops ethtool_ops_no_mii = {
+ 	.get_drvinfo = hamachi_get_drvinfo,
+ };
  
-+	if (in_compat_syscall()) /* to be implemented */
+-static int netdev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
++/* private ioctl: set rx,tx intr params */
++static int hamachi_siocdevprivate(struct net_device *dev, struct ifreq *rq,
++				  void __user *data, int cmd)
++{
++	struct hamachi_private *np = netdev_priv(dev);
++	u32 *d = (u32 *)&rq->ifr_ifru;
++
++	if (!netif_running(dev))
++		return -EINVAL;
++
++	if (cmd != SIOCDEVPRIVATE+3)
 +		return -EOPNOTSUPP;
 +
- 	switch (cmd) {
- 		case EQL_ENSLAVE:
--			return eql_enslave(dev, ifr->ifr_data);
-+			return eql_enslave(dev, data);
- 		case EQL_EMANCIPATE:
--			return eql_emancipate(dev, ifr->ifr_data);
-+			return eql_emancipate(dev, data);
- 		case EQL_GETSLAVECFG:
--			return eql_g_slave_cfg(dev, ifr->ifr_data);
-+			return eql_g_slave_cfg(dev, data);
- 		case EQL_SETSLAVECFG:
--			return eql_s_slave_cfg(dev, ifr->ifr_data);
-+			return eql_s_slave_cfg(dev, data);
- 		case EQL_GETMASTRCFG:
--			return eql_g_master_cfg(dev, ifr->ifr_data);
-+			return eql_g_master_cfg(dev, data);
- 		case EQL_SETMASTRCFG:
--			return eql_s_master_cfg(dev, ifr->ifr_data);
-+			return eql_s_master_cfg(dev, data);
- 		default:
- 			return -EOPNOTSUPP;
- 	}
++	/* Should add this check here or an ordinary user can do nasty
++	 * things. -KDU
++	 *
++	 * TODO: Shut down the Rx and Tx engines while doing this.
++	 */
++	if (!capable(CAP_NET_ADMIN))
++		return -EPERM;
++	writel(d[0], np->base + TxIntrCtrl);
++	writel(d[1], np->base + RxIntrCtrl);
++	printk(KERN_NOTICE "%s: tx %08x, rx %08x intr\n", dev->name,
++		(u32) readl(np->base + TxIntrCtrl),
++		(u32) readl(np->base + RxIntrCtrl));
++
++	return 0;
++}
++
++static int hamachi_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
+ {
+ 	struct hamachi_private *np = netdev_priv(dev);
+ 	struct mii_ioctl_data *data = if_mii(rq);
+@@ -1876,28 +1908,9 @@ static int netdev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
+ 	if (!netif_running(dev))
+ 		return -EINVAL;
+ 
+-	if (cmd == (SIOCDEVPRIVATE+3)) { /* set rx,tx intr params */
+-		u32 *d = (u32 *)&rq->ifr_ifru;
+-		/* Should add this check here or an ordinary user can do nasty
+-		 * things. -KDU
+-		 *
+-		 * TODO: Shut down the Rx and Tx engines while doing this.
+-		 */
+-		if (!capable(CAP_NET_ADMIN))
+-			return -EPERM;
+-		writel(d[0], np->base + TxIntrCtrl);
+-		writel(d[1], np->base + RxIntrCtrl);
+-		printk(KERN_NOTICE "%s: tx %08x, rx %08x intr\n", dev->name,
+-		  (u32) readl(np->base + TxIntrCtrl),
+-		  (u32) readl(np->base + RxIntrCtrl));
+-		rc = 0;
+-	}
+-
+-	else {
+-		spin_lock_irq(&np->lock);
+-		rc = generic_mii_ioctl(&np->mii_if, data, cmd, NULL);
+-		spin_unlock_irq(&np->lock);
+-	}
++	spin_lock_irq(&np->lock);
++	rc = generic_mii_ioctl(&np->mii_if, data, cmd, NULL);
++	spin_unlock_irq(&np->lock);
+ 
+ 	return rc;
+ }
 -- 
 2.27.0
 
