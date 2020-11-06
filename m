@@ -2,97 +2,121 @@ Return-Path: <SRS0=ovox=EM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D25AC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 21:53:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F161C55179
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36E432087E
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 21:53:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C43D8206C1
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Nov 2020 22:18:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1604701099;
+	bh=0nZsvJC7bKvsWii/4F8rVLDyxbI5Zs8ZxzeJcfM4j+k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=cNeTAFTKAZaZmKn6nTEzzZ7GAK9n4wfPgWIJfzU3Snnwe1hkYyNHccTxlLMQb0ZlL
+	 0iegzFqJTecBMK8Zv14U54Oys52txeCp2ZZp/v6mCBeznY/Q6w0rDaNBKxoyKa+MDK
+	 fOlPGKMY/hVCR8lAU+kTpHdnHRPHxDEa0PD0OWBc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728592AbgKFVx2 (ORCPT
+        id S1728926AbgKFWSS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Nov 2020 16:53:28 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:59331 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728464AbgKFVx2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Nov 2020 16:53:28 -0500
-Received: from mail-io1-f69.google.com ([209.85.166.69])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1kb9fi-0001wj-GN
-        for linux-wireless@vger.kernel.org; Fri, 06 Nov 2020 21:53:26 +0000
-Received: by mail-io1-f69.google.com with SMTP id c2so2104939ioq.7
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2020 13:53:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vYkKRFNH0Li3fZ5I86MqhtBKEPq0eFBCRC97cNAkMHQ=;
-        b=Au0Y8YvFq4BY6lTXNSqwM+exjBMjcH8ymMBAwiA9N7BsXZCDlZHbsBA+5S2t75ERBK
-         8ysKc1bXJN3aJCd14IoYHBLkrPWCpxPXWTVXcFqad4E9k64NCk+/MJG7oFlvJl2J4MnO
-         9Ke7LTDGBnTPT80A1Px5u+kTtJ77Y7E/iu6JrJ6st+JQjKCI1Hi/6epz5Ju1rKLFJplJ
-         zy1ZV/sueWp4bDIE6s8LYW9mud3fx0SrUsOPiGnyxF4/MepwEE9qXkc8e/ZZBuic1LC4
-         k+v5viMbKvEsbuu/xqdLgyV3lZt9jkK/6D2l50DWBl1TPOBJ+N/S8AK4RXe2wHeTYPKj
-         ukfw==
-X-Gm-Message-State: AOAM530w6364wMHtMZsof5vMuFWoXeF26KxCiu8PQsgmf3PtGepKdizX
-        rG8P82aylWGo6AK2McFuD5bnyZnRKKg4hPJ7jtsDV9bTJ9CtknGhhj52a2EI5JZHpvDpJTh8S3v
-        u8yVd65G/5qhAOMCHpWMEN+Xd+nyEuQlKn8OW9jm6r6a4
-X-Received: by 2002:a6b:8bcf:: with SMTP id n198mr3028498iod.122.1604699605519;
-        Fri, 06 Nov 2020 13:53:25 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwSAOxUarMLL4BEmJ12nIraGCuhMcgS0MiaV08Fy7EOXCinP3RM/D+A0uSgsXM2GbT6IISeCA==
-X-Received: by 2002:a6b:8bcf:: with SMTP id n198mr3028492iod.122.1604699605332;
-        Fri, 06 Nov 2020 13:53:25 -0800 (PST)
-Received: from localhost ([2605:a601:ac0f:820:e814:e33:9bb4:dad3])
-        by smtp.gmail.com with ESMTPSA id l18sm1440854ioc.31.2020.11.06.13.53.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2020 13:53:24 -0800 (PST)
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     wireless-regdb@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless-regdb: update 5.8 GHz regulatory rule for GB
-Date:   Fri,  6 Nov 2020 15:53:24 -0600
-Message-Id: <20201106215324.91265-1-seth.forshee@canonical.com>
+        Fri, 6 Nov 2020 17:18:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41542 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728915AbgKFWSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Nov 2020 17:18:15 -0500
+Received: from localhost.localdomain (HSI-KBW-46-223-126-90.hsi.kabel-badenwuerttemberg.de [46.223.126.90])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 48D73208C7;
+        Fri,  6 Nov 2020 22:18:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604701094;
+        bh=0nZsvJC7bKvsWii/4F8rVLDyxbI5Zs8ZxzeJcfM4j+k=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=WYhuh1WeMtLDKBKefKeaic5NUOJzadJ53FzEB2UQXzCEHinw7qCsI6CYtNMqeEdoy
+         6S+yFjM7lHpx1DLzo4Uj1ON7HLGgFJLCfQxucvGzoWLz9fYorSMk3baiAp5pVpG2hb
+         Zn0EDsMTOs9P9nrFdTdwsyIEN5Us7lupQKr+BlvM=
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     netdev@vger.kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, bridge@lists.linux-foundation.org,
+        linux-hams@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [RFC net-next 07/28] phonet: use siocdevprivate
+Date:   Fri,  6 Nov 2020 23:17:22 +0100
+Message-Id: <20201106221743.3271965-8-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201106221743.3271965-1-arnd@kernel.org>
+References: <20201106221743.3271965-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Based on [1], the 5.8 GHz limit for GB is 200 mW and requires DFS
-and TPC. Update the rule accordingly.
+From: Arnd Bergmann <arnd@arndb.de>
 
-While at it, expand the 5470 - 5725 rule to 5730 as specified in
-the same document to allow channel 144 to be used.
+phonet has a single private ioctl that is broken in compat
+mode on big-endian machines today because the data returned
+from it is never copied back to user space.
 
-[1] https://www.ofcom.org.uk/__data/assets/pdf_file/0028/84970/ir-2030.pdf
+Move it over to the ndo_siocdevprivate callback, which also
+fixes the compat issue.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/usb/cdc-phonet.c | 5 +++--
+ net/phonet/pn_dev.c          | 6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 699bce9fb9d8..39e1928fe384 100644
---- a/db.txt
-+++ b/db.txt
-@@ -593,9 +593,9 @@ country GB: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
- 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
--	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
-+	(5470 - 5730 @ 160), (500 mW), DFS, wmmrule=ETSI
- 	# short range devices (ETSI EN 300 440-1)
--	(5725 - 5875 @ 80), (25 mW)
-+	(5725 - 5875 @ 80), (100 mW), DFS
- 	# 60 GHz band channels 1-6
- 	(57000 - 71000 @ 2160), (40)
+diff --git a/drivers/net/usb/cdc-phonet.c b/drivers/net/usb/cdc-phonet.c
+index dba847f28096..5f6d34acf871 100644
+--- a/drivers/net/usb/cdc-phonet.c
++++ b/drivers/net/usb/cdc-phonet.c
+@@ -253,7 +253,8 @@ static int usbpn_close(struct net_device *dev)
+ 	return usb_set_interface(pnd->usb, num, !pnd->active_setting);
+ }
+ 
+-static int usbpn_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++static int usbpn_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
++				void __user *data, int cmd)
+ {
+ 	struct if_phonet_req *req = (struct if_phonet_req *)ifr;
+ 
+@@ -269,7 +270,7 @@ static const struct net_device_ops usbpn_ops = {
+ 	.ndo_open	= usbpn_open,
+ 	.ndo_stop	= usbpn_close,
+ 	.ndo_start_xmit = usbpn_xmit,
+-	.ndo_do_ioctl	= usbpn_ioctl,
++	.ndo_siocdevprivate = usbpn_siocdevprivate,
+ };
+ 
+ static void usbpn_setup(struct net_device *dev)
+diff --git a/net/phonet/pn_dev.c b/net/phonet/pn_dev.c
+index ac0fae06cc15..876d0ae5f9fd 100644
+--- a/net/phonet/pn_dev.c
++++ b/net/phonet/pn_dev.c
+@@ -233,11 +233,11 @@ static int phonet_device_autoconf(struct net_device *dev)
+ 	struct if_phonet_req req;
+ 	int ret;
+ 
+-	if (!dev->netdev_ops->ndo_do_ioctl)
++	if (!dev->netdev_ops->ndo_siocdevprivate)
+ 		return -EOPNOTSUPP;
+ 
+-	ret = dev->netdev_ops->ndo_do_ioctl(dev, (struct ifreq *)&req,
+-						SIOCPNGAUTOCONF);
++	ret = dev->netdev_ops->ndo_siocdevprivate(dev, (struct ifreq *)&req,
++						  NULL, SIOCPNGAUTOCONF);
+ 	if (ret < 0)
+ 		return ret;
  
 -- 
 2.27.0
