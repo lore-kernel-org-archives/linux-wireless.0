@@ -7,99 +7,90 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE6FC388F7
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 910ACC388F9
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:05:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D46E20704
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:04:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4863320704
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:05:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="JRnPvlRo"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Dl2KDNXc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727817AbgKGIEZ (ORCPT
+        id S1727801AbgKGIFX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Nov 2020 03:04:25 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:40655 "EHLO z5.mailgun.us"
+        Sat, 7 Nov 2020 03:05:23 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:36364 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727242AbgKGIEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Nov 2020 03:04:24 -0500
+        id S1727242AbgKGIFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 7 Nov 2020 03:05:23 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1604736264; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1604736323; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=4bnW9aPUT6dJw+8IsTDjXp4lsbpYRbEg1kaXwCzeWVs=;
- b=JRnPvlRofghk2JucnTs+rZmH8vTD1gWlm57s3KX/sWDbbD/3jJGyr5UPYkwDsxG8gynhc09N
- v/HN5RpQ07SDUg2nqRzRGtEkr6t9RjoZA1kLok0DC7m92dbQk2GnmZ0ENCosgUwUyaW2bpzC
- m+nez/RE8+jnSX+jJS7godwgUqs=
-X-Mailgun-Sending-Ip: 104.130.96.5
+ Content-Type: Sender; bh=WsJZdimQWN0v865WFpJTQseYd+4wkcvZbm2grZML+mw=;
+ b=Dl2KDNXcUSJCQrY0DDU+RObJt7lkSqku9yhKhKNSrU/vTo78V7v9DmeHQCTtWrELrN1IKdn2
+ n+r/NzMNnX3Mj8tGokHG7pbG7Nq00iNkj+i89EU8YYkW0JNp6Jh43jOnwJPGKdiyjsNvKR0p
+ 7XmYChZkIoybOvy4c0o0d+87QYM=
+X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5fa654eb82aad55dcb80b0e6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 07 Nov 2020 08:03:55
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5fa6553ff8c560b580074058 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 07 Nov 2020 08:05:19
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 83BE0C433C9; Sat,  7 Nov 2020 08:03:55 +0000 (UTC)
+        id E454FC433C9; Sat,  7 Nov 2020 08:05:18 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 14E6CC433C8;
-        Sat,  7 Nov 2020 08:03:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 14E6CC433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 77FADC433C6;
+        Sat,  7 Nov 2020 08:05:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 77FADC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: Fix number of rules in filtered ETSI regdomain
+Subject: Re: [PATCH] ath11k: Fix the hal descriptor mask
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201030101940.2387952-1-sven@narfation.org>
-References: <20201030101940.2387952-1-sven@narfation.org>
-To:     Sven Eckelmann <sven@narfation.org>
+In-Reply-To: <1604511921-24840-1-git-send-email-periyasa@codeaurora.org>
+References: <1604511921-24840-1-git-send-email-periyasa@codeaurora.org>
+To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sven Eckelmann <sven@narfation.org>
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201107080355.83BE0C433C9@smtp.codeaurora.org>
-Date:   Sat,  7 Nov 2020 08:03:55 +0000 (UTC)
+Message-Id: <20201107080518.E454FC433C9@smtp.codeaurora.org>
+Date:   Sat,  7 Nov 2020 08:05:18 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sven Eckelmann <sven@narfation.org> wrote:
+Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
 
-> The ath11k code will try to insert wheather rader related limits when the
-> DFS region is set to ETSI. For this reason, it will add two more entries in
-> the array of reg_rules. But the 2.4.0.1 firmware is prefiltering the list
-> of reg rules it returns for 2.4GHz PHYs. They will then not contain the
-> list of 5GHz rules and thus no wheather radar band rules were inserted by
-> this code.
+> Below listed hal descriptor mask are incorrect, so modify it to correct one
+>  - CE destination status description meta info mask is increased from
+>    8 bits to 16 bits from the 0th bit position
+>  - Rx Reo queue duplicate count mask is decreased from 22 bits to 16 bits
+>  - Reo threshold status counter sum mask is increased from 24 bits to 26 bits
 > 
-> But the code didn't fix the n_reg_rules for this regulatory domain and PHY
-> when this happened. This resulted in a rejection by is_valid_rd because it
-> found rules which start and end at 0khz. This resulted in a splat like:
+> No functionality impact, these descriptors are currently not used in any
+> supported platform. But in future if someone referred these descriptor then
+> ended with wrong values.
 > 
->   Invalid regulatory domain detected
->   ------------[ cut here ]------------
->   WARNING: at backports-20200628-4.4.60-9a94b73e75/net/wireless/reg.c:3721
->   [...]
->   ath11k c000000.wifi1: failed to perform regd update : -22
+> Found this during code review.
 > 
-> The number of rules must therefore be saved after they were converted from
-> the ath11k format to the ieee80211_regdomain format and not before.
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
 > 
-> Tested with IPQ8074 WLAN.HK.2.4.0.1.r1-00019-QCAHKSWPL_SILICONZ-1
-> 
-> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-6189be7d145c ath11k: Fix number of rules in filtered ETSI regdomain
+ab041d060ee6 ath11k: Fix the hal descriptor mask
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201030101940.2387952-1-sven@narfation.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/1604511921-24840-1-git-send-email-periyasa@codeaurora.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
