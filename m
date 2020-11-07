@@ -7,283 +7,69 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A20B6C388F7
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FBA0C4741F
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74F2320872
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E234A20704
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728341AbgKGIuT (ORCPT
+        id S1728346AbgKGIuV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Nov 2020 03:50:19 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:58794 "EHLO
+        Sat, 7 Nov 2020 03:50:21 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:58812 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728302AbgKGIuT (ORCPT
+        with ESMTP id S1728337AbgKGIuU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Nov 2020 03:50:19 -0500
+        Sat, 7 Nov 2020 03:50:20 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kbJvL-002on9-Nq; Sat, 07 Nov 2020 10:50:16 +0200
+        id 1kbJvO-002on9-2i; Sat, 07 Nov 2020 10:50:18 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat,  7 Nov 2020 10:50:08 +0200
-Message-Id: <iwlwifi.20201107104557.3642f730333d.I01a98ecde62096d00d171cf34ad775bf80cb0277@changeid>
+Date:   Sat,  7 Nov 2020 10:50:11 +0200
+Message-Id: <iwlwifi.20201107104557.d64de2c17bff.Iedd0d2afa20a2aacba5259a5cae31cb3a119a4eb@changeid>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201107085011.57943-1-luca@coelho.fi>
 References: <20201107085011.57943-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/6] iwlwifi: mvm: properly cancel a session protection for P2P
+Subject: [PATCH 6/6] iwlwifi: mvm: fix kernel panic in case of assert during CSA
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-We need to feed the configuration id to remove  session protection
-properly.
-Remember the conf_id when we add the session protection so that we
-can give it back when we want to remove the session protection.
-While at it, slightly improve the kernel doc for the conf_id
-of the notification.
+During CSA, we briefly nullify the phy context, in __iwl_mvm_unassign_vif_chanctx.
+In case we have a FW assert right after it, it remains NULL though.
+We end up running into endless loop due to mac80211 trying repeatedly to
+move us to ASSOC state, and we keep returning -EINVAL. Later down the road
+we hit a kernel panic.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: fe959c7b2049 ("iwlwifi: mvm: use the new session protection command")
+Detect and avoid this endless loop.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../intel/iwlwifi/fw/api/time-event.h         |  8 +-
- .../wireless/intel/iwlwifi/mvm/time-event.c   | 94 +++++++++++++------
- 2 files changed, 68 insertions(+), 34 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h b/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-index a731f28e101a..53b438d709db 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2018 - 2020 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2018 - 2020 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -421,12 +421,14 @@ struct iwl_hs20_roc_res {
-  *	able to run the GO Negotiation. Will not be fragmented and not
-  *	repetitive. Valid only on the P2P Device MAC. Only the duration will
-  *	be taken into account.
-+ * @SESSION_PROTECT_CONF_MAX_ID: not used
-  */
- enum iwl_mvm_session_prot_conf_id {
- 	SESSION_PROTECT_CONF_ASSOC,
- 	SESSION_PROTECT_CONF_GO_CLIENT_ASSOC,
- 	SESSION_PROTECT_CONF_P2P_DEVICE_DISCOV,
- 	SESSION_PROTECT_CONF_P2P_GO_NEGOTIATION,
-+	SESSION_PROTECT_CONF_MAX_ID,
- }; /* SESSION_PROTECTION_CONF_ID_E_VER_1 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 62e884f3e29e..b627e7da7ac9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3080,7 +3080,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
  
- /**
-@@ -459,7 +461,7 @@ struct iwl_mvm_session_prot_cmd {
-  * @mac_id: the mac id for which the session protection started / ended
-  * @status: 1 means success, 0 means failure
-  * @start: 1 means the session protection started, 0 means it ended
-- * @conf_id: the configuration id of the session that started / eneded
-+ * @conf_id: see &enum iwl_mvm_session_prot_conf_id
-  *
-  * Note that any session protection will always get two notifications: start
-  * and end even the firmware could not schedule it.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index a9ebe69a6670..1db6d8d38822 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -641,11 +641,32 @@ void iwl_mvm_protect_session(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static void iwl_mvm_cancel_session_protection(struct iwl_mvm *mvm,
-+					      struct iwl_mvm_vif *mvmvif)
-+{
-+	struct iwl_mvm_session_prot_cmd cmd = {
-+		.id_and_color =
-+			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
-+							mvmvif->color)),
-+		.action = cpu_to_le32(FW_CTXT_ACTION_REMOVE),
-+		.conf_id = cpu_to_le32(mvmvif->time_event_data.id),
-+	};
-+	int ret;
-+
-+	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(SESSION_PROTECTION_CMD,
-+						   MAC_CONF_GROUP, 0),
-+				   0, sizeof(cmd), &cmd);
-+	if (ret)
-+		IWL_ERR(mvm,
-+			"Couldn't send the SESSION_PROTECTION_CMD: %d\n", ret);
-+}
-+
- static bool __iwl_mvm_remove_time_event(struct iwl_mvm *mvm,
- 					struct iwl_mvm_time_event_data *te_data,
- 					u32 *uid)
- {
- 	u32 id;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(te_data->vif);
+ 	/* this would be a mac80211 bug ... but don't crash */
+ 	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
+-		return -EINVAL;
++		return test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status) ? 0 : -EINVAL;
  
  	/*
- 	 * It is possible that by the time we got to this point the time
-@@ -663,14 +684,29 @@ static bool __iwl_mvm_remove_time_event(struct iwl_mvm *mvm,
- 	iwl_mvm_te_clear_data(mvm, te_data);
- 	spin_unlock_bh(&mvm->time_event_lock);
- 
--	/*
--	 * It is possible that by the time we try to remove it, the time event
--	 * has already ended and removed. In such a case there is no need to
--	 * send a removal command.
-+	/* When session protection is supported, the te_data->id field
-+	 * is reused to save session protection's configuration.
- 	 */
--	if (id == TE_MAX) {
--		IWL_DEBUG_TE(mvm, "TE 0x%x has already ended\n", *uid);
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_SESSION_PROT_CMD)) {
-+		if (mvmvif && id < SESSION_PROTECT_CONF_MAX_ID) {
-+			/* Session protection is still ongoing. Cancel it */
-+			iwl_mvm_cancel_session_protection(mvm, mvmvif);
-+			if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
-+				set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
-+				iwl_mvm_roc_finished(mvm);
-+			}
-+		}
- 		return false;
-+	} else {
-+		/* It is possible that by the time we try to remove it, the
-+		 * time event has already ended and removed. In such a case
-+		 * there is no need to send a removal command.
-+		 */
-+		if (id == TE_MAX) {
-+			IWL_DEBUG_TE(mvm, "TE 0x%x has already ended\n", *uid);
-+			return false;
-+		}
- 	}
- 
- 	return true;
-@@ -771,6 +807,7 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_mvm_session_prot_notif *notif = (void *)pkt->data;
- 	struct ieee80211_vif *vif;
-+	struct iwl_mvm_vif *mvmvif;
- 
- 	rcu_read_lock();
- 	vif = iwl_mvm_rcu_dereference_vif_id(mvm, le32_to_cpu(notif->mac_id),
-@@ -779,9 +816,10 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
- 	if (!vif)
- 		goto out_unlock;
- 
-+	mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
- 	/* The vif is not a P2P_DEVICE, maintain its time_event_data */
- 	if (vif->type != NL80211_IFTYPE_P2P_DEVICE) {
--		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 		struct iwl_mvm_time_event_data *te_data =
- 			&mvmvif->time_event_data;
- 
-@@ -816,10 +854,14 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
- 
- 	if (!le32_to_cpu(notif->status) || !le32_to_cpu(notif->start)) {
- 		/* End TE, notify mac80211 */
-+		mvmvif->time_event_data.id = SESSION_PROTECT_CONF_MAX_ID;
- 		ieee80211_remain_on_channel_expired(mvm->hw);
- 		set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
- 		iwl_mvm_roc_finished(mvm);
- 	} else if (le32_to_cpu(notif->start)) {
-+		if (WARN_ON(mvmvif->time_event_data.id !=
-+				le32_to_cpu(notif->conf_id)))
-+			goto out_unlock;
- 		set_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status);
- 		ieee80211_ready_on_channel(mvm->hw); /* Start TE */
- 	}
-@@ -845,20 +887,24 @@ iwl_mvm_start_p2p_roc_session_protection(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	/* The time_event_data.id field is reused to save session
-+	 * protection's configuration.
-+	 */
- 	switch (type) {
- 	case IEEE80211_ROC_TYPE_NORMAL:
--		cmd.conf_id =
--			cpu_to_le32(SESSION_PROTECT_CONF_P2P_DEVICE_DISCOV);
-+		mvmvif->time_event_data.id =
-+			SESSION_PROTECT_CONF_P2P_DEVICE_DISCOV;
- 		break;
- 	case IEEE80211_ROC_TYPE_MGMT_TX:
--		cmd.conf_id =
--			cpu_to_le32(SESSION_PROTECT_CONF_P2P_GO_NEGOTIATION);
-+		mvmvif->time_event_data.id =
-+			SESSION_PROTECT_CONF_P2P_GO_NEGOTIATION;
- 		break;
- 	default:
- 		WARN_ONCE(1, "Got an invalid ROC type\n");
- 		return -EINVAL;
- 	}
- 
-+	cmd.conf_id = cpu_to_le32(mvmvif->time_event_data.id);
- 	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(SESSION_PROTECTION_CMD,
- 						    MAC_CONF_GROUP, 0),
- 				    0, sizeof(cmd), &cmd);
-@@ -960,25 +1006,6 @@ void iwl_mvm_cleanup_roc_te(struct iwl_mvm *mvm)
- 		__iwl_mvm_remove_time_event(mvm, te_data, &uid);
- }
- 
--static void iwl_mvm_cancel_session_protection(struct iwl_mvm *mvm,
--					      struct iwl_mvm_vif *mvmvif)
--{
--	struct iwl_mvm_session_prot_cmd cmd = {
--		.id_and_color =
--			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
--							mvmvif->color)),
--		.action = cpu_to_le32(FW_CTXT_ACTION_REMOVE),
--	};
--	int ret;
--
--	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(SESSION_PROTECTION_CMD,
--						   MAC_CONF_GROUP, 0),
--				   0, sizeof(cmd), &cmd);
--	if (ret)
--		IWL_ERR(mvm,
--			"Couldn't send the SESSION_PROTECTION_CMD: %d\n", ret);
--}
--
- void iwl_mvm_stop_roc(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif;
-@@ -1129,10 +1156,15 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
- 			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
- 							mvmvif->color)),
- 		.action = cpu_to_le32(FW_CTXT_ACTION_ADD),
--		.conf_id = cpu_to_le32(SESSION_PROTECT_CONF_ASSOC),
- 		.duration_tu = cpu_to_le32(MSEC_TO_TU(duration)),
- 	};
- 
-+	/* The time_event_data.id field is reused to save session
-+	 * protection's configuration.
-+	 */
-+	mvmvif->time_event_data.id = SESSION_PROTECT_CONF_ASSOC;
-+	cmd.conf_id = cpu_to_le32(mvmvif->time_event_data.id);
-+
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	spin_lock_bh(&mvm->time_event_lock);
+ 	 * If we are in a STA removal flow and in DQA mode:
 -- 
 2.28.0
 
