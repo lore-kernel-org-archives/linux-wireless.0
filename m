@@ -2,111 +2,133 @@ Return-Path: <SRS0=yPAo=EN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14E2C55179
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B53AFC388F7
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 11:18:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A44F820872
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:50:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77F6C206CB
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 11:18:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="exuKBVaR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728350AbgKGIuW (ORCPT
+        id S1727866AbgKGLSS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Nov 2020 03:50:22 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:58806 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728324AbgKGIuT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Nov 2020 03:50:19 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1kbJvN-002on9-6P; Sat, 07 Nov 2020 10:50:17 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Sat,  7 Nov 2020 10:50:10 +0200
-Message-Id: <iwlwifi.20201107104557.d83d591c05ba.I42885c9fb500bc08b9a4c07c4ff3d436cc7a3c84@changeid>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201107085011.57943-1-luca@coelho.fi>
-References: <20201107085011.57943-1-luca@coelho.fi>
+        Sat, 7 Nov 2020 06:18:18 -0500
+Received: from z5.mailgun.us ([104.130.96.5]:12212 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726422AbgKGLSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 7 Nov 2020 06:18:17 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1604747897; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=FrKUSxKaLyb3fOP1p83nc7xz/5CYAlq8tbYWJTFpOYM=; b=exuKBVaRcYPMbuyI4TXC41uqh7rqUDZhNKMHtzxZ4pZ9tmLWbr/uY45yo8cfRHEk898LHC9Y
+ qkKA6huWqTuylDGTGzLdvTsUfndJKssoacSVUSPqtHsP1aAjGK0FLSF8P/kFyBYKMnFRi17s
+ jp4E3P5X9CEnjuG9TdskFrf6kc8=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5fa682787d4f16f92fc2edf4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 07 Nov 2020 11:18:16
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3FD93C433F0; Sat,  7 Nov 2020 11:18:16 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8C58FC433C6;
+        Sat,  7 Nov 2020 11:18:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8C58FC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Arnd Bergmann <arnd@kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next 08/11] ath9k: work around false-positive gcc warning
+References: <20201026213040.3889546-1-arnd@kernel.org>
+        <20201026213040.3889546-8-arnd@kernel.org>
+        <87tuu7ohbo.fsf@codeaurora.org>
+        <47b04bd1da38a2356546284eb3576156899965de.camel@sipsolutions.net>
+Date:   Sat, 07 Nov 2020 13:18:10 +0200
+In-Reply-To: <47b04bd1da38a2356546284eb3576156899965de.camel@sipsolutions.net>
+        (Johannes Berg's message of "Mon, 02 Nov 2020 18:59:49 +0100")
+Message-ID: <87tuu1fma5.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 5/6] iwlwifi: pcie: set LTR to avoid completion timeout
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On some platforms, the preset values aren't correct and then we may
-get a completion timeout in the firmware. Change the LTR configuration
-to avoid that. The firmware will do some more complex reinit of this
-later, but for the boot process we use ~250usec.
+> On Mon, 2020-11-02 at 18:26 +0200, Kalle Valo wrote:
+>> Arnd Bergmann <arnd@kernel.org> writes:
+>> 
+>> > From: Arnd Bergmann <arnd@arndb.de>
+>> > 
+>> > gcc-10 shows a false-positive warning with CONFIG_KASAN:
+>> > 
+>> > drivers/net/wireless/ath/ath9k/dynack.c: In function 'ath_dynack_sample_tx_ts':
+>> > include/linux/etherdevice.h:290:14: warning: writing 4 bytes into a region of size 0 [-Wstringop-overflow=]
+>> >   290 |  *(u32 *)dst = *(const u32 *)src;
+>> >       |  ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+>> > 
+>> > Until gcc is fixed, work around this by using memcpy() in place
+>> > of ether_addr_copy(). Hopefully gcc-11 will not have this problem.
+>> > 
+>> > Link: https://godbolt.org/z/sab1MK
+>> > Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97490
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> > ---
+>> >  drivers/net/wireless/ath/ath9k/dynack.c | 6 ++++++
+>> >  1 file changed, 6 insertions(+)
+>> > 
+>> > diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
+>> > index fbeb4a739d32..e4eb96b26ca4 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/dynack.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/dynack.c
+>> > @@ -247,8 +247,14 @@ void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
+>> >  	ridx = ts->ts_rateindex;
+>> >  
+>> >  	da->st_rbf.ts[da->st_rbf.t_rb].tstamp = ts->ts_tstamp;
+>> > +#if defined(CONFIG_KASAN) && (CONFIG_GCC_VERSION >= 100000) && (CONFIG_GCC_VERSION < 110000)
+>> > +	/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97490 */
+>> > +	memcpy(da->st_rbf.addr[da->st_rbf.t_rb].h_dest, hdr->addr1, ETH_ALEN);
+>> > +	memcpy(da->st_rbf.addr[da->st_rbf.t_rb].h_src, hdr->addr2, ETH_ALEN);
+>> > +#else
+>> >  	ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_dest, hdr->addr1);
+>> >  	ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_src, hdr->addr2);
+>> > +#endif
+>> 
+>> Isn't there a better way to handle this? I really would not want
+>> checking for GCC versions become a common approach in drivers.
+>> 
+>> I even think that using memcpy() always is better than the ugly ifdef.
+>
+> If you put memcpy() always somebody will surely go and clean it up to
+> use ether_addr_copy() soon ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  | 10 ++++++++++
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 20 +++++++++++++++++++
- 2 files changed, 30 insertions(+)
+I can always add a comment and hope that the cleanup people read
+comments :) I did that now in the pending branch:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index cb9e8e189a1a..1d48c7d7fffd 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -147,6 +147,16 @@
- #define CSR_MAC_SHADOW_REG_CTL2		(CSR_BASE + 0x0AC)
- #define CSR_MAC_SHADOW_REG_CTL2_RX_WAKE	0xFFFF
- 
-+/* LTR control (since IWL_DEVICE_FAMILY_22000) */
-+#define CSR_LTR_LONG_VAL_AD			(CSR_BASE + 0x0D4)
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ	0x80000000
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE	0x1c000000
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL	0x03ff0000
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_REQ		0x00008000
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_SCALE		0x00001c00
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_VAL		0x000003ff
-+#define CSR_LTR_LONG_VAL_AD_SCALE_USEC		2
-+
- /* GIO Chicken Bits (PCI Express bus link power management) */
- #define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index a0352fa873d9..5512e3c630c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -252,6 +252,26 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 
- 	iwl_set_bit(trans, CSR_CTXT_INFO_BOOT_CTRL,
- 		    CSR_AUTO_FUNC_BOOT_ENA);
-+
-+	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_AX210) {
-+		/*
-+		 * The firmware initializes this again later (to a smaller
-+		 * value), but for the boot process initialize the LTR to
-+		 * ~250 usec.
-+		 */
-+		u32 val = CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ |
-+			  u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+					  CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE) |
-+			  u32_encode_bits(250,
-+					  CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL) |
-+			  CSR_LTR_LONG_VAL_AD_SNOOP_REQ |
-+			  u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+					  CSR_LTR_LONG_VAL_AD_SNOOP_SCALE) |
-+			  u32_encode_bits(250, CSR_LTR_LONG_VAL_AD_SNOOP_VAL);
-+
-+		iwl_write32(trans, CSR_LTR_LONG_VAL_AD, val);
-+	}
-+
- 	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_CPU_INIT_RUN, 1);
- 	else
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=25cfc077bd7a798d1aa527ad2aa9932bb3284376
+
+Does that look ok? I prefer that over the ifdef.
+
 -- 
-2.28.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
