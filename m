@@ -7,87 +7,82 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D159C388F7
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BFCC388F9
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:06:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11FE620704
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:05:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C01C820704
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Nov 2020 08:06:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oXqQ5/cT"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XVfXkOUr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727833AbgKGIFv (ORCPT
+        id S1727810AbgKGIG1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Nov 2020 03:05:51 -0500
+        Sat, 7 Nov 2020 03:06:27 -0500
 Received: from z5.mailgun.us ([104.130.96.5]:30691 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727810AbgKGIFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Nov 2020 03:05:51 -0500
+        id S1725985AbgKGIG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 7 Nov 2020 03:06:27 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1604736351; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1604736386; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=IQ7QMNNa4bBuZMOQ5RVS7YHUpppu5BmLQfn62HDizsE=;
- b=oXqQ5/cT0n3lh1YqJJIqUaNh/nuuz+Cq1nsTfWNOUGlmPuPc2tJNRkSa0M9hTp/7d/tfCiE5
- GPcaz0zXFYGpP6cyD967Aw21ev3bH4mRJ+/NfgSt7DqMPIXy8MdKOQd/cySjIHsaAiQeDEpQ
- C/Mm3/bcfdMGjEYw73CXgPy/Olg=
+ Content-Type: Sender; bh=PdtrQ2HZIjnTZKIvtyhIFZ9AK4/gDNLhceMRQQatfLs=;
+ b=XVfXkOUrLKa/kFM1LScuQdjPUPo8Bb/YMDMVVN4edmhRmJJrycOlYJ/kz4Ey08kJt1a5b7DB
+ aoHhoFguWjFcu4VhbLW5jGUAQ3M8fq20zSP6LWfbYqTs7o/+fdnZHd5eNRBs1qK0G2D1kuEk
+ xVpHx6yegRAWLP/QXv4HO9T93kY=
 X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 5fa6555e0fe4be3f4338217e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 07 Nov 2020 08:05:50
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5fa655827e363609007fce9e (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 07 Nov 2020 08:06:26
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4B6A1C433C9; Sat,  7 Nov 2020 08:05:50 +0000 (UTC)
+        id EDC02C433C6; Sat,  7 Nov 2020 08:06:25 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E6579C433C8;
-        Sat,  7 Nov 2020 08:05:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E6579C433C8
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8F7D7C433C8;
+        Sat,  7 Nov 2020 08:06:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8F7D7C433C8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: fix wmi init configuration
+Subject: Re: [PATCH] ath11k: Add new dfs region name for JP
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1604512020-25197-1-git-send-email-periyasa@codeaurora.org>
-References: <1604512020-25197-1-git-send-email-periyasa@codeaurora.org>
-To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
+In-Reply-To: <1604563475-5782-1-git-send-email-lavaks@codeaurora.org>
+References: <1604563475-5782-1-git-send-email-lavaks@codeaurora.org>
+To:     Lavanya Suresh <lavaks@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+        Lavanya Suresh <lavaks@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201107080550.4B6A1C433C9@smtp.codeaurora.org>
-Date:   Sat,  7 Nov 2020 08:05:50 +0000 (UTC)
+Message-Id: <20201107080625.EDC02C433C6@smtp.codeaurora.org>
+Date:   Sat,  7 Nov 2020 08:06:25 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
+Lavanya Suresh <lavaks@codeaurora.org> wrote:
 
-> Assign the correct hw_op ath11k_init_wmi_config_ipq8074 to
-> the hw IPQ8074. Also update the correct TWT radio count.
-> Incorrect TWT radio count cause TWT feature fails on radio2
-> because physical device count is hardcoded to 2. so set
-> the value dynamically.
+> Japan has new Radar types as per latest regulatory,
+> included under MKK_N in FW. So adding new enum in
+> ath11k to support it.
 > 
-> Found this during code review.
+> Tested-on: IPQ8074 hw2.0 PCI WLAN.HK.2.4.0.1-00041-QCAHKSWPL_SILICONZ-1
 > 
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
-> 
-> Fixes: 2d4bcbed5b7d53e1 ("ath11k: initialize wmi config based on hw_params")
-> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+> Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-36c7c640ffeb ath11k: fix wmi init configuration
+47f1a84e2451 ath11k: Add new dfs region name for JP
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1604512020-25197-1-git-send-email-periyasa@codeaurora.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/1604563475-5782-1-git-send-email-lavaks@codeaurora.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
