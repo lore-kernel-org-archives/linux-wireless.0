@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCD3C56201
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C491C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5404F20702
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E78A4206ED
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:02:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729828AbgKIJAa (ORCPT
+        id S1729765AbgKIJC1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 04:00:30 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60054 "EHLO
+        Mon, 9 Nov 2020 04:02:27 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60587 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729267AbgKIJAT (ORCPT
+        with ESMTP id S1726127AbgKIJC0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Nov 2020 04:00:19 -0500
+        Mon, 9 Nov 2020 04:02:26 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990BmcC021869, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A992LvoC022868, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990BmcC021869
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A992LvoC022868
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 9 Nov 2020 17:00:11 +0800
+        Mon, 9 Nov 2020 17:02:21 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Mon, 9 Nov 2020 17:00:11 +0800
+ 15.1.2044.4; Mon, 9 Nov 2020 17:02:21 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 06/11] rtw88: coex: add separate flag for manual control
-Date:   Mon, 9 Nov 2020 16:59:04 +0800
-Message-ID: <20201109085909.9143-7-pkshih@realtek.com>
+Subject: [PATCH 2/2] rtw88: add CCK_PD debug log
+Date:   Mon, 9 Nov 2020 17:01:23 +0800
+Message-ID: <20201109090123.9254-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20201109085909.9143-1-pkshih@realtek.com>
-References: <20201109085909.9143-1-pkshih@realtek.com>
+In-Reply-To: <20201109090123.9254-1-pkshih@realtek.com>
+References: <20201109090123.9254-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -50,140 +50,135 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-The original stop_dm flag is shared with the wifi and coexistence
-mechanism internal usage, which represent two meanings, and makes
-developers hard to debug.
-Add a new flag manual_control for coexistence mechanism usage only.
+In order to help debugging in field, we add some log messages.
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c  | 18 +++++++++---------
- drivers/net/wireless/realtek/rtw88/debug.c |  4 ++--
- drivers/net/wireless/realtek/rtw88/main.h  |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtw88/phy.c      |  6 ++++++
+ drivers/net/wireless/realtek/rtw88/reg.h      |  2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 12 ++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 12 ++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  8 ++++++++
+ 5 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index af7e692137ba..6de98414e3bf 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -124,7 +124,7 @@ static void rtw_coex_wl_ccklock_action(struct rtw_dev *rtwdev)
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 	u8 para[6] = {0};
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 5cd9cc42648e..d44960cd940c 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -541,6 +541,12 @@ static void rtw_phy_cck_pd(struct rtw_dev *rtwdev)
+ 	else
+ 		dm_info->cck_fa_avg = (dm_info->cck_fa_avg * 3 + cck_fa) >> 2;
  
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "IGI=0x%x, rssi_min=%d, cck_fa=%d\n",
++		dm_info->igi_history[0], dm_info->min_rssi,
++		dm_info->fa_history[0]);
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "cck_fa_avg=%d, cck_pd_default=%d\n",
++		dm_info->cck_fa_avg, dm_info->cck_pd_default);
++
+ 	level = rtw_phy_cck_pd_lv(rtwdev);
  
- 	para[0] = COEX_H2C69_WL_LEAKAP;
-@@ -829,7 +829,7 @@ static void rtw_coex_ignore_wlan_act(struct rtw_dev *rtwdev, bool enable)
+ 	if (level >= CCK_PD_LV_MAX)
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 2a4275f3d851..cf9a3b674d30 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -489,6 +489,8 @@
+ #define REG_2ND_CCA_CTRL	0x0976
+ 
+ #define REG_CCK0_FAREPORT	0xa2c
++#define BIT_CCK0_2RX		BIT(18)
++#define BIT_CCK0_MRC		BIT(22)
+ 
+ #define REG_DIS_DPD		0x0a70
+ #define DIS_DPD_MASK		GENMASK(9, 0)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 1b8447b66cca..9268ea8b6dda 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -1503,10 +1503,22 @@ static void rtw8723d_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
  {
- 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	u8 pd[CCK_PD_LV_MAX] = {3, 7, 13, 13, 13};
++	u8 cck_n_rx;
++
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
++		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
  
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
+ 	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
  		return;
  
- 	rtw_fw_bt_ignore_wlan_action(rtwdev, enable);
-@@ -1987,7 +1987,7 @@ static void rtw_coex_run_coex(struct rtw_dev *rtwdev, u8 reason)
++	cck_n_rx = (rtw_read8_mask(rtwdev, REG_CCK0_FAREPORT, BIT_CCK0_2RX) &&
++		    rtw_read8_mask(rtwdev, REG_CCK0_FAREPORT, BIT_CCK0_MRC)) ? 2 : 1;
++	rtw_dbg(rtwdev, RTW_DBG_PHY,
++		"is_linked=%d, lv=%d, n_rx=%d, cs_ratio=0x%x, pd_th=0x%x, cck_fa_avg=%d\n",
++		rtw_is_assoc(rtwdev), new_lvl, cck_n_rx,
++		dm_info->cck_pd_default + new_lvl * 2,
++		pd[new_lvl], dm_info->cck_fa_avg);
++
+ 	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
  
- 	rtw_coex_monitor_bt_enable(rtwdev);
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	if (coex_stat->wl_under_ips)
-@@ -2154,7 +2154,7 @@ void rtw_coex_ips_notify(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	if (type == COEX_IPS_ENTER) {
-@@ -2180,7 +2180,7 @@ void rtw_coex_lps_notify(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	if (type == COEX_LPS_ENABLE) {
-@@ -2211,7 +2211,7 @@ void rtw_coex_scan_notify(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	coex->freeze = false;
-@@ -2239,7 +2239,7 @@ void rtw_coex_switchband_notify(struct rtw_dev *rtwdev, u8 type)
+ 	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index ef7da2a9a148..fbfd85439d1f 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -1020,6 +1020,7 @@ static void rtw8821c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
  {
- 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	u8 pd[CCK_PD_LV_MAX] = {3, 7, 13, 13, 13};
++	u8 cck_n_rx;
  
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	if (type == COEX_SWITCH_TO_5G)
-@@ -2255,7 +2255,7 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_SCAN |
-@@ -2296,7 +2296,7 @@ void rtw_coex_media_status_notify(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 	u8 para[6] = {0};
- 
--	if (coex->stop_dm)
-+	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
- 	if (type == COEX_MEDIA_CONNECT_5G) {
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 3852c4f0ac0b..5974a8ef8b34 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -775,7 +775,7 @@ static ssize_t rtw_debugfs_set_coex_enable(struct file *filp,
+ 	if (dm_info->min_rssi > 60) {
+ 		new_lvl = 4;
+@@ -1027,9 +1028,20 @@ static void rtw8821c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
+ 		goto set_cck_pd;
  	}
  
- 	mutex_lock(&rtwdev->mutex);
--	coex->stop_dm = enable == 0;
-+	coex->manual_control = enable == 0;
- 	mutex_unlock(&rtwdev->mutex);
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d)\n",
++		dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A], new_lvl);
++
+ 	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
+ 		return;
  
- 	return count;
-@@ -788,7 +788,7 @@ static int rtw_debugfs_get_coex_enable(struct seq_file *m, void *v)
- 	struct rtw_coex *coex = &rtwdev->coex;
++	cck_n_rx = (rtw_read8_mask(rtwdev, REG_CCK0_FAREPORT, BIT_CCK0_2RX) &&
++		    rtw_read8_mask(rtwdev, REG_CCK0_FAREPORT, BIT_CCK0_MRC)) ? 2 : 1;
++	rtw_dbg(rtwdev, RTW_DBG_PHY,
++		"is_linked=%d, lv=%d, n_rx=%d, cs_ratio=0x%x, pd_th=0x%x, cck_fa_avg=%d\n",
++		rtw_is_assoc(rtwdev), new_lvl, cck_n_rx,
++		dm_info->cck_pd_default + new_lvl * 2,
++		pd[new_lvl], dm_info->cck_fa_avg);
++
+ 	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
  
- 	seq_printf(m, "coex mechanism %s\n",
--		   coex->stop_dm ? "disabled" : "enabled");
-+		   coex->manual_control ? "disabled" : "enabled");
- 
- 	return 0;
+ set_cck_pd:
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index b91c0e81a2aa..7dd3ccb73793 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -3454,6 +3454,10 @@ rtw8822c_phy_cck_pd_set_reg(struct rtw_dev *rtwdev,
+ 			 rtw8822c_cck_pd_reg[bw][nrx].reg_cs,
+ 			 rtw8822c_cck_pd_reg[bw][nrx].mask_cs,
+ 			 cs);
++
++	rtw_dbg(rtwdev, RTW_DBG_PHY,
++		"is_linked=%d, bw=%d, nrx=%d, cs_ratio=0x%x, pd_th=0x%x\n",
++		rtw_is_assoc(rtwdev), bw, nrx, cs, pd);
  }
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 8d11d56c83f2..632d14683b61 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1379,6 +1379,7 @@ struct rtw_coex {
- 	bool freeze;
- 	bool freerun;
- 	bool wl_rf_off;
-+	bool manual_control;
  
- 	struct rtw_coex_stat stat;
- 	struct rtw_coex_dm dm;
+ static void rtw8822c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
+@@ -3467,6 +3471,10 @@ static void rtw8822c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
+ 	nrx = (u8)rtw_read32_mask(rtwdev, 0x1a2c, 0x60000);
+ 	bw = (u8)rtw_read32_mask(rtwdev, 0x9b0, 0xc);
+ 
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "lv: (%d) -> (%d) bw=%d nr=%d cck_fa_avg=%d\n",
++		dm_info->cck_pd_lv[bw][nrx], new_lvl, bw, nrx,
++		dm_info->cck_fa_avg);
++
+ 	if (dm_info->cck_pd_lv[bw][nrx] == new_lvl)
+ 		return;
+ 
 -- 
 2.21.0
 
