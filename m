@@ -2,97 +2,125 @@ Return-Path: <SRS0=1s3v=EP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31353C2D0A3
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 05:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA17C2D0A3
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D01DD20897
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 05:43:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="p0QqsG7m"
+	by mail.kernel.org (Postfix) with ESMTP id B8997206ED
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729474AbgKIFnu (ORCPT
+        id S1729746AbgKIJAU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 00:43:50 -0500
-Received: from bilbo.ozlabs.org ([203.11.71.1]:32799 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729192AbgKIFnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Nov 2020 00:43:50 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4CV0Kb0PBRz9sRR;
-        Mon,  9 Nov 2020 16:43:44 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1604900627;
-        bh=bdmK5a+s1ofdbJThE3emUJNk5Im4+gY52NQ5p7IHJVI=;
-        h=Date:From:To:Cc:Subject:From;
-        b=p0QqsG7mMqWogtebyRwoBlkMZDVOYTCDGToE4q5jZ5nrJRU/2d+g5/8f5BzSOdwkj
-         NJT9B8Jn/nuD0CQysKS72yo6OCaAa0KXA9zbBrP4KpSPVb0J6Jpf/8TCq1sAOpYsGv
-         Okk04VCzUiQjCp8LekZZo+EE9lh9CFxZtB1zzOKZ8oq5TrWi76zk7/ongqRJ20I2Ug
-         CUIr0er4u3M76hqtgpx9yXOldfQXISAXH5FptME8wWlV49JF/ztJkfx2rTkNII/rL1
-         DU/CbQiU/bwSFPUuBaMeMo3Y07x4ybYzETQr8F2WCmV4bOn64LWWdFQl0j3TejmXpZ
-         bpUmCVjHbTxpA==
-Date:   Mon, 9 Nov 2020 16:43:42 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc:     Jouni Malinen <jouni@codeaurora.org>,
-        Rohan Dutta <drohan@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: build warning after merge of the mac80211-next tree
-Message-ID: <20201109164342.1ff7d645@canb.auug.org.au>
+        Mon, 9 Nov 2020 04:00:20 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60059 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729614AbgKIJAT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Nov 2020 04:00:19 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990CFf8021895, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990CFf8021895
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 9 Nov 2020 17:00:12 +0800
+Received: from localhost.localdomain (172.21.69.213) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Mon, 9 Nov 2020 17:00:12 +0800
+From:   <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 11/11] rtw88: coex: simplify the setting and condition about WLAN TX limitation
+Date:   Mon, 9 Nov 2020 16:59:09 +0800
+Message-ID: <20201109085909.9143-12-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201109085909.9143-1-pkshih@realtek.com>
+References: <20201109085909.9143-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/4IvFbDjLaS5wDh7Zg6I7zEU";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.213]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/4IvFbDjLaS5wDh7Zg6I7zEU
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Hi all,
+Life time related setting is related to WLAN active port number,
+not its mode. The original setting may cause poor WLAN performance.
 
-After merging the mac80211-next tree, today's linux-next build (htmldocs)
-produced this warning:
+In most case, WLAN TX limitation is helpful for BT in coexistence
+scenario, especially for A2DP quality.
+So this is necessary to fix the setting and constraint it.
 
-Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1014: WA=
-RNING: Unexpected indentation.
-Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1016: WA=
-RNING: Block quote ends without a blank line; unexpected unindent.
-Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1019: WA=
-RNING: Unexpected indentation.
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/coex.c | 24 +++++++----------------
+ 1 file changed, 7 insertions(+), 17 deletions(-)
 
-Introduced by commit
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index ad21fba48808..61e91565cd7d 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -38,7 +38,7 @@ static void rtw_coex_limited_tx(struct rtw_dev *rtwdev,
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+-	bool wifi_under_b_mode = false;
++	u8 num_of_active_port = 1;
+ 
+ 	if (!chip->scbd_support)
+ 		return;
+@@ -70,17 +70,13 @@ static void rtw_coex_limited_tx(struct rtw_dev *rtwdev,
+ 		/* set queue life time to avoid can't reach tx retry limit
+ 		 * if tx is always broken by GNT_BT
+ 		 */
+-		rtw_write8_set(rtwdev, REG_LIFETIME_EN, 0xf);
++		if (num_of_active_port <= 1)
++			rtw_write8_set(rtwdev, REG_LIFETIME_EN, 0xf);
+ 		rtw_write16(rtwdev, REG_RETRY_LIMIT, 0x0808);
+ 
+ 		/* auto rate fallback step within 8 retries */
+-		if (wifi_under_b_mode) {
+-			rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
+-			rtw_write32(rtwdev, REG_DARFRCH, 0x1010101);
+-		} else {
+-			rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
+-			rtw_write32(rtwdev, REG_DARFRCH, 0x4030201);
+-		}
++		rtw_write32(rtwdev, REG_DARFRC, 0x1000000);
++		rtw_write32(rtwdev, REG_DARFRCH, 0x4030201);
+ 	} else {
+ 		rtw_write8_clr(rtwdev, REG_TX_HANG_CTRL, BIT_EN_GNT_BT_AWAKE);
+ 		rtw_write8_clr(rtwdev, REG_LIFETIME_EN, 0xf);
+@@ -101,18 +97,12 @@ static void rtw_coex_limited_wl(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_dm *coex_dm = &coex->dm;
+-	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	bool tx_limit = false;
+ 	bool tx_agg_ctrl = false;
+ 
+-	if (coex->under_5g ||
+-	    coex_dm->bt_status == COEX_BTSTATUS_NCON_IDLE) {
+-		/* no need to limit tx */
+-	} else {
++	if (!coex->under_5g && coex_dm->bt_status != COEX_BTSTATUS_NCON_IDLE) {
+ 		tx_limit = true;
+-		if (coex_stat->bt_hid_exist || coex_stat->bt_hfp_exist ||
+-		    coex_stat->bt_hid_pair_num > 0)
+-			tx_agg_ctrl = true;
++		tx_agg_ctrl = true;
+ 	}
+ 
+ 	rtw_coex_limited_tx(rtwdev, tx_limit, tx_agg_ctrl);
+-- 
+2.21.0
 
-  9f0ffa418483 ("cfg80211: Add support to configure SAE PWE value to driver=
-s")
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/4IvFbDjLaS5wDh7Zg6I7zEU
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl+o1w8ACgkQAVBC80lX
-0GzYEQgAkNqGxCkNfnaKrgJ8OnfYk3GNyUDICG6G84LOZloo8fFez/7lMqAxSHbH
-QSJBQjH1oFwLaeUqIXo7tKa4kDxoN5ETK297OE5E5aSxZh0o9UFIwpcXmmYlMSjR
-h6DNVJjahuPIyYI0GMOjuEwpte/6+Ol7JI9SxV9nt7M/0xx7LxIxWBtdwUYvV+7g
-WmbkGbz5YerIch+N0ZqfDYtjCSMYHwqbP6/YzUZeQxnDJeCoxV85oV5yTRjHKGy2
-Lpg4V7tp5bO01kMABqw+e3MSCrneVwV5B0fY7STxDCmokc74liFi1lLMf6eKvKeZ
-EC0qo4mP0yA6z7qYuyj501xencNDgg==
-=w9IH
------END PGP SIGNATURE-----
-
---Sig_/4IvFbDjLaS5wDh7Zg6I7zEU--
