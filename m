@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6262CC55ABD
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF7EC4741F
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02A31206ED
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C51FA20702
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729774AbgKIJAU (ORCPT
+        id S1729796AbgKIJAV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 04:00:20 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60053 "EHLO
+        Mon, 9 Nov 2020 04:00:21 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60050 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729698AbgKIJAT (ORCPT
+        with ESMTP id S1729637AbgKIJAT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 9 Nov 2020 04:00:19 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990BmbC021869, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990BmZ4021869, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990BmbC021869
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990BmZ4021869
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Mon, 9 Nov 2020 17:00:11 +0800
 Received: from localhost.localdomain (172.21.69.213) by
@@ -34,9 +34,9 @@ Received: from localhost.localdomain (172.21.69.213) by
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 05/11] rtw88: coex: Modify the timing of set_ant_path/set_rf_para
-Date:   Mon, 9 Nov 2020 16:59:03 +0800
-Message-ID: <20201109085909.9143-6-pkshih@realtek.com>
+Subject: [PATCH v3 03/11] rtw88: coex: reduce magic number
+Date:   Mon, 9 Nov 2020 16:59:01 +0800
+Message-ID: <20201109085909.9143-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201109085909.9143-1-pkshih@realtek.com>
 References: <20201109085909.9143-1-pkshih@realtek.com>
@@ -52,375 +52,216 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-To make sure the related ANT/RF_PARA setting will be expected result in COEX.
+Use macro definition to replace magic number.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 91 ++++++++++++++---------
- 1 file changed, 55 insertions(+), 36 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c     | 30 +++++-----
+ drivers/net/wireless/realtek/rtw88/reg.h      |  8 +++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 60 +++++++++++--------
+ 3 files changed, 58 insertions(+), 40 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 4f4477c8262a..af7e692137ba 100644
+index 6dedc38dd5b9..82188dfc90c5 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1165,6 +1165,8 @@ static void rtw_coex_action_coex_all_off(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
+@@ -145,13 +145,13 @@ static void rtw_coex_wl_ccklock_action(struct rtw_dev *rtwdev)
+ 			coex_stat->cnt_wl[COEX_CNT_WL_5MS_NOEXTEND] = 0;
  
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 2;
-@@ -1175,7 +1177,6 @@ static void rtw_coex_action_coex_all_off(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1228,6 +1229,9 @@ static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 2;
-@@ -1238,8 +1242,6 @@ static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1250,6 +1252,9 @@ static void rtw_coex_action_bt_relink(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 1;
-@@ -1260,8 +1265,6 @@ static void rtw_coex_action_bt_relink(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1276,6 +1279,8 @@ static void rtw_coex_action_bt_idle(struct rtw_dev *rtwdev)
- 	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
- 	u8 table_case = 0xff, tdma_case = 0xff;
- 
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (coex_rfe->ant_switch_with_bt &&
- 	    coex_dm->bt_status == COEX_BTSTATUS_NCON_IDLE) {
- 		if (efuse->share_ant &&
-@@ -1324,7 +1329,6 @@ static void rtw_coex_action_bt_idle(struct rtw_dev *rtwdev)
+ 		if (coex_stat->cnt_wl[COEX_CNT_WL_5MS_NOEXTEND] == 7) {
+-			para[1] = 0x1; /* disable 5ms extend */
++			para[1] = PARA1_H2C69_DIS_5MS;
+ 			rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1]);
+ 			coex_stat->wl_slot_extend = false;
+ 			coex_stat->cnt_wl[COEX_CNT_WL_5MS_NOEXTEND] = 0;
  		}
+ 	} else if (!coex_stat->wl_slot_extend && coex_stat->wl_cck_lock) {
+-		para[1] = 0x0; /* enable 5ms extend */
++		para[1] = PARA1_H2C69_EN_5MS;
+ 		rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1]);
+ 		coex_stat->wl_slot_extend = true;
  	}
+@@ -777,14 +777,14 @@ static void rtw_coex_coex_ctrl_owner(struct rtw_dev *rtwdev, bool wifi_control)
  
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
+ static void rtw_coex_set_gnt_bt(struct rtw_dev *rtwdev, u8 state)
+ {
+-	rtw_coex_write_indirect_reg(rtwdev, 0x38, 0xc000, state);
+-	rtw_coex_write_indirect_reg(rtwdev, 0x38, 0x0c00, state);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, 0xc000, state);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, 0x0c00, state);
  }
-@@ -1339,6 +1343,9 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	u32 slot_type = 0;
  
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (coex_stat->wl_linkscan_proc || coex_stat->wl_hi_pri_task1 ||
- 	    coex_stat->wl_hi_pri_task2)
- 		wl_hi_pri = true;
-@@ -1404,8 +1411,6 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
- 	rtw_dbg(rtwdev, RTW_DBG_COEX, "coex: wifi hi(%d), bt page(%d)\n",
- 		wl_hi_pri, coex_stat->bt_page);
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ static void rtw_coex_set_gnt_wl(struct rtw_dev *rtwdev, u8 state)
+ {
+-	rtw_coex_write_indirect_reg(rtwdev, 0x38, 0x3000, state);
+-	rtw_coex_write_indirect_reg(rtwdev, 0x38, 0x0300, state);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, 0x3000, state);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, 0x0300, state);
  }
-@@ -1418,6 +1423,9 @@ static void rtw_coex_action_bt_hfp(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
  
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ static void rtw_coex_set_table(struct rtw_dev *rtwdev, u32 table0, u32 table1)
+@@ -2916,14 +2916,16 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
+ 
+ 	score_board_BW = rtw_coex_read_scbd(rtwdev);
+ 	score_board_WB = coex_stat->score_board;
+-	wl_reg_6c0 = rtw_read32(rtwdev, 0x6c0);
+-	wl_reg_6c4 = rtw_read32(rtwdev, 0x6c4);
+-	wl_reg_6c8 = rtw_read32(rtwdev, 0x6c8);
+-	wl_reg_6cc = rtw_read32(rtwdev, 0x6cc);
+-	wl_reg_778 = rtw_read32(rtwdev, 0x778);
+-	bt_hi_pri = rtw_read32(rtwdev, 0x770);
+-	bt_lo_pri = rtw_read32(rtwdev, 0x774);
+-	rtw_write8(rtwdev, 0x76e, 0xc);
++	wl_reg_6c0 = rtw_read32(rtwdev, REG_BT_COEX_TABLE0);
++	wl_reg_6c4 = rtw_read32(rtwdev, REG_BT_COEX_TABLE1);
++	wl_reg_6c8 = rtw_read32(rtwdev, REG_BT_COEX_BRK_TABLE);
++	wl_reg_6cc = rtw_read32(rtwdev, REG_BT_COEX_TABLE_H);
++	wl_reg_778 = rtw_read8(rtwdev, REG_BT_STAT_CTRL);
 +
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		if (coex_stat->bt_multi_link) {
-@@ -1438,8 +1446,6 @@ static void rtw_coex_action_bt_hfp(struct rtw_dev *rtwdev)
++	bt_hi_pri = rtw_read32(rtwdev, REG_BT_ACT_STATISTICS);
++	bt_lo_pri = rtw_read32(rtwdev, REG_BT_ACT_STATISTICS_1);
++	rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL,
++		   BIT_R_GRANTALL_WLMASK | BIT_STATIS_BT_EN);
+ 	sys_lte = rtw_read8(rtwdev, 0x73);
+ 	lte_coex = rtw_coex_read_indirect_reg(rtwdev, 0x38);
+ 	bt_coex = rtw_coex_read_indirect_reg(rtwdev, 0x54);
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index b3df09ff01b3..2a4275f3d851 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -466,6 +466,11 @@
+ #define REG_BT_COEX_V2		0x0762
+ #define BIT_GNT_BT_POLARITY	BIT(12)
+ #define BIT_LTE_COEX_EN		BIT(7)
++#define REG_BT_COEX_ENH_INTR_CTRL	0x76E
++#define BIT_R_GRANTALL_WLMASK	BIT(3)
++#define BIT_STATIS_BT_EN	BIT(2)
++#define REG_BT_ACT_STATISTICS	0x0770
++#define REG_BT_ACT_STATISTICS_1	0x0774
+ #define REG_BT_STAT_CTRL	0x0778
+ #define REG_BT_TDMA_TIME	0x0790
+ #define BIT_MASK_SAMPLE_RATE	GENMASK(5, 0)
+@@ -619,6 +624,9 @@
+ #define REG_ANAPAR	0x1c30
+ #define BIT_ANAPAR_BTPS	BIT(22)
+ #define REG_RSTB_SEL	0x1c38
++#define BIT_DAC_OFF_ENABLE	BIT(4)
++#define BIT_PI_IGNORE_GNT_BT	BIT(3)
++#define BIT_NOMASK_TXBT_ENABLE	BIT(3)
+ 
+ #define REG_HRCV_MSG	0x1cf
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index db80682b358e..965b77645f2e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -2153,7 +2153,7 @@ static void rtw8822c_coex_cfg_init(struct rtw_dev *rtwdev)
+ 	rtw_write8_clr(rtwdev, REG_DUMMY_PAGE4_V1, BIT_BTCCA_CTRL);
+ 
+ 	/* to avoid RF parameter error */
+-	rtw_write_rf(rtwdev, RF_PATH_B, 0x1, 0xfffff, 0x40000);
++	rtw_write_rf(rtwdev, RF_PATH_B, RF_MODOPT, 0xfffff, 0x40000);
+ }
+ 
+ static void rtw8822c_coex_cfg_gnt_fix(struct rtw_dev *rtwdev)
+@@ -2190,10 +2190,10 @@ static void rtw8822c_coex_cfg_gnt_fix(struct rtw_dev *rtwdev)
+ 	 * disable WL-S1 BB chage RF mode if GNT_BT
+ 	 * since RF TRx mask can do it
+ 	 */
+-	rtw_write8_mask(rtwdev, 0x1c32, BIT(6), 1);
+-	rtw_write8_mask(rtwdev, 0x1c39, BIT(4), 0);
+-	rtw_write8_mask(rtwdev, 0x1c3b, BIT(4), 1);
+-	rtw_write8_mask(rtwdev, 0x4160, BIT(3), 1);
++	rtw_write8_mask(rtwdev, REG_ANAPAR + 2, BIT_ANAPAR_BTPS >> 16, 1);
++	rtw_write8_mask(rtwdev, REG_RSTB_SEL + 1, BIT_DAC_OFF_ENABLE, 0);
++	rtw_write8_mask(rtwdev, REG_RSTB_SEL + 3, BIT_DAC_OFF_ENABLE, 1);
++	rtw_write8_mask(rtwdev, REG_IGN_GNTBT4, BIT_PI_IGNORE_GNT_BT, 1);
+ 
+ 	/* disable WL-S0 BB chage RF mode if wifi is at 5G,
+ 	 * or antenna path is separated
+@@ -2201,26 +2201,32 @@ static void rtw8822c_coex_cfg_gnt_fix(struct rtw_dev *rtwdev)
+ 	if (coex_stat->wl_coex_mode == COEX_WLINK_5G ||
+ 	    coex->under_5g || !efuse->share_ant) {
+ 		if (coex_stat->kt_ver >= 3) {
+-			rtw_write8_mask(rtwdev, 0x1860, BIT(3), 0);
+-			rtw_write8_mask(rtwdev, 0x1ca7, BIT(3), 1);
++			rtw_write8_mask(rtwdev, REG_IGN_GNT_BT1,
++					BIT_PI_IGNORE_GNT_BT, 0);
++			rtw_write8_mask(rtwdev, REG_NOMASK_TXBT,
++					BIT_NOMASK_TXBT_ENABLE, 1);
+ 		} else {
+-			rtw_write8_mask(rtwdev, 0x1860, BIT(3), 1);
++			rtw_write8_mask(rtwdev, REG_IGN_GNT_BT1,
++					BIT_PI_IGNORE_GNT_BT, 1);
  		}
+ 	} else {
+ 		/* shared-antenna */
+-		rtw_write8_mask(rtwdev, 0x1860, BIT(3), 0);
+-		if (coex_stat->kt_ver >= 3)
+-			rtw_write8_mask(rtwdev, 0x1ca7, BIT(3), 0);
++		rtw_write8_mask(rtwdev, REG_IGN_GNT_BT1,
++				BIT_PI_IGNORE_GNT_BT, 0);
++		if (coex_stat->kt_ver >= 3) {
++			rtw_write8_mask(rtwdev, REG_NOMASK_TXBT,
++					BIT_NOMASK_TXBT_ENABLE, 0);
++		}
  	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
  }
-@@ -1453,6 +1459,9 @@ static void rtw_coex_action_bt_hid(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	u32 wl_bw;
  
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ static void rtw8822c_coex_cfg_gnt_debug(struct rtw_dev *rtwdev)
+ {
+-	rtw_write8_mask(rtwdev, 0x66, BIT(4), 0);
+-	rtw_write8_mask(rtwdev, 0x67, BIT(0), 0);
+-	rtw_write8_mask(rtwdev, 0x42, BIT(3), 0);
+-	rtw_write8_mask(rtwdev, 0x65, BIT(7), 0);
+-	rtw_write8_mask(rtwdev, 0x73, BIT(3), 0);
++	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 2, BIT_BTGP_SPI_EN >> 16, 0);
++	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 3, BIT_BTGP_JTAG_EN >> 24, 0);
++	rtw_write8_mask(rtwdev, REG_GPIO_MUXCFG + 2, BIT_FSPI_EN >> 16, 0);
++	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 1, BIT_LED1DIS >> 8, 0);
++	rtw_write8_mask(rtwdev, REG_SYS_SDIO_CTRL + 3, BIT_DBG_GNT_WL_BT >> 24, 0);
+ }
+ 
+ static void rtw8822c_coex_cfg_rfe_type(struct rtw_dev *rtwdev)
+@@ -2241,9 +2247,9 @@ static void rtw8822c_coex_cfg_rfe_type(struct rtw_dev *rtwdev)
+ 		coex_rfe->wlg_at_btg = false;
+ 
+ 	/* disable LTE coex in wifi side */
+-	rtw_coex_write_indirect_reg(rtwdev, 0x38, BIT_LTE_COEX_EN, 0x0);
+-	rtw_coex_write_indirect_reg(rtwdev, 0xa0, MASKLWORD, 0xffff);
+-	rtw_coex_write_indirect_reg(rtwdev, 0xa4, MASKLWORD, 0xffff);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, BIT_LTE_COEX_EN, 0x0);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_WL_TRX_CTRL, MASKLWORD, 0xffff);
++	rtw_coex_write_indirect_reg(rtwdev, LTE_BT_TRX_CTRL, MASKLWORD, 0xffff);
+ }
+ 
+ static void rtw8822c_coex_cfg_wl_tx_power(struct rtw_dev *rtwdev, u8 wl_pwr)
+@@ -2269,15 +2275,17 @@ static void rtw8822c_coex_cfg_wl_rx_gain(struct rtw_dev *rtwdev, bool low_gain)
+ 
+ 	if (coex_dm->cur_wl_rx_low_gain_en) {
+ 		/* set Rx filter corner RCK offset */
+-		rtw_write_rf(rtwdev, RF_PATH_A, 0xde, 0xfffff, 0x22);
+-		rtw_write_rf(rtwdev, RF_PATH_A, 0x1d, 0xfffff, 0x36);
+-		rtw_write_rf(rtwdev, RF_PATH_B, 0xde, 0xfffff, 0x22);
+-		rtw_write_rf(rtwdev, RF_PATH_B, 0x1d, 0xfffff, 0x36);
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_RCKD, RFREG_MASK, 0x22);
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_RCK, RFREG_MASK, 0x36);
++		rtw_write_rf(rtwdev, RF_PATH_B, RF_RCKD, RFREG_MASK, 0x22);
++		rtw_write_rf(rtwdev, RF_PATH_B, RF_RCK, RFREG_MASK, 0x36);
 +
- 	wl_bw = rtwdev->hal.current_band_width;
- 
- 	if (efuse->share_ant) {
-@@ -1509,8 +1518,6 @@ static void rtw_coex_action_bt_hid(struct rtw_dev *rtwdev)
- 		}
+ 	} else {
+ 		/* set Rx filter corner RCK offset */
+-		rtw_write_rf(rtwdev, RF_PATH_A, 0xde, 0xfffff, 0x20);
+-		rtw_write_rf(rtwdev, RF_PATH_A, 0x1d, 0xfffff, 0x0);
+-		rtw_write_rf(rtwdev, RF_PATH_B, 0x1d, 0xfffff, 0x0);
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_RCKD, RFREG_MASK, 0x20);
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_RCK, RFREG_MASK, 0x0);
++		rtw_write_rf(rtwdev, RF_PATH_B, RF_RCKD, RFREG_MASK, 0x20);
++		rtw_write_rf(rtwdev, RF_PATH_B, RF_RCK, RFREG_MASK, 0x0);
  	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
  }
-@@ -1525,6 +1532,9 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	u32 slot_type = 0;
  
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		slot_type = TDMA_4SLOT;
-@@ -1548,8 +1558,6 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
- 			tdma_case = 113;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
- }
-@@ -1563,6 +1571,9 @@ static void rtw_coex_action_bt_a2dpsink(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	bool ap_enable = false;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) { /* Shared-Ant */
- 		if (ap_enable) {
- 			table_case = 2;
-@@ -1584,8 +1595,6 @@ static void rtw_coex_action_bt_a2dpsink(struct rtw_dev *rtwdev)
- 		}
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1598,6 +1607,9 @@ static void rtw_coex_action_bt_pan(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		if (coex_stat->wl_gl_busy && coex_stat->wl_noisy_level == 0)
-@@ -1619,8 +1631,6 @@ static void rtw_coex_action_bt_pan(struct rtw_dev *rtwdev)
- 			tdma_case = 119;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1635,6 +1645,9 @@ static void rtw_coex_action_bt_a2dp_hid(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	u32 slot_type = 0;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		slot_type = TDMA_4SLOT;
-@@ -1661,8 +1674,6 @@ static void rtw_coex_action_bt_a2dp_hid(struct rtw_dev *rtwdev)
- 			tdma_case = 113;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
- }
-@@ -1675,6 +1686,9 @@ static void rtw_coex_action_bt_a2dp_pan(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		if (coex_stat->wl_gl_busy &&
-@@ -1697,8 +1711,6 @@ static void rtw_coex_action_bt_a2dp_pan(struct rtw_dev *rtwdev)
- 			tdma_case = 120;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1711,6 +1723,9 @@ static void rtw_coex_action_bt_pan_hid(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 9;
-@@ -1729,8 +1744,6 @@ static void rtw_coex_action_bt_pan_hid(struct rtw_dev *rtwdev)
- 			tdma_case = 119;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1743,6 +1756,9 @@ static void rtw_coex_action_bt_a2dp_pan_hid(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 10;
-@@ -1761,8 +1777,6 @@ static void rtw_coex_action_bt_a2dp_pan_hid(struct rtw_dev *rtwdev)
- 			tdma_case = 120;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1773,6 +1787,9 @@ static void rtw_coex_action_wl_under5g(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_5G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_FIX2M, false);
- 
- 	if (efuse->share_ant) {
-@@ -1785,8 +1802,6 @@ static void rtw_coex_action_wl_under5g(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_5G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1797,6 +1812,9 @@ static void rtw_coex_action_wl_only(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 2;
-@@ -1807,8 +1825,6 @@ static void rtw_coex_action_wl_only(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1823,6 +1839,9 @@ static void rtw_coex_action_wl_native_lps(struct rtw_dev *rtwdev)
- 	if (coex->under_5g)
- 		return;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 28;
-@@ -1833,8 +1852,6 @@ static void rtw_coex_action_wl_native_lps(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
-@@ -1848,6 +1865,9 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
- 	u8 table_case, tdma_case;
- 	u32 slot_type = 0;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		if (coex_stat->bt_a2dp_exist) {
-@@ -1869,8 +1889,6 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
- 		}
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
- }
-@@ -1881,6 +1899,9 @@ static void rtw_coex_action_wl_not_connected(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 table_case, tdma_case;
- 
-+	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-+	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-+
- 	if (efuse->share_ant) {
- 		/* Shared-Ant */
- 		table_case = 1;
-@@ -1891,8 +1912,6 @@ static void rtw_coex_action_wl_not_connected(struct rtw_dev *rtwdev)
- 		tdma_case = 100;
- 	}
- 
--	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
--	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
- 	rtw_coex_table(rtwdev, table_case);
- 	rtw_coex_tdma(rtwdev, false, tdma_case);
- }
 -- 
 2.21.0
 
