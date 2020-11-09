@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE738C55ABD
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB1FC4741F
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74D4520702
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56777206ED
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Nov 2020 09:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729807AbgKIJAX (ORCPT
+        id S1729788AbgKIJAV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 04:00:23 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60060 "EHLO
+        Mon, 9 Nov 2020 04:00:21 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60057 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728335AbgKIJAU (ORCPT
+        with ESMTP id S1729691AbgKIJAT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Nov 2020 04:00:20 -0500
+        Mon, 9 Nov 2020 04:00:19 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990APX0021865, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0A990CmX4021869, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990APX0021865
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0A990CmX4021869
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 9 Nov 2020 17:00:11 +0800
+        Mon, 9 Nov 2020 17:00:12 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Mon, 9 Nov 2020 17:00:10 +0800
+ 15.1.2044.4; Mon, 9 Nov 2020 17:00:11 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 01/11] rtw88: coex: fixed some wrong register definition and setting
-Date:   Mon, 9 Nov 2020 16:58:59 +0800
-Message-ID: <20201109085909.9143-2-pkshih@realtek.com>
+Subject: [PATCH v3 07/11] rtw88: coex: modified for BT info notify
+Date:   Mon, 9 Nov 2020 16:59:05 +0800
+Message-ID: <20201109085909.9143-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201109085909.9143-1-pkshih@realtek.com>
 References: <20201109085909.9143-1-pkshih@realtek.com>
@@ -52,162 +52,164 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Some register definition and bit definition were incorrect.
-e.g. REG_BT_COEX_V2 should be word alignment to meet the coding style.
-e.g. set REG_BT_TDMA_TIME[5:0]=0x5,
-But the original is to set REG_BT_TDMA_TIME[7:0]=0x5.
-This will cause unexpected hardware behavior.
+Add counter to count BT info C2H command for debug usage.
+It could present the C2H channel situation.
+
+Fix BT IQK state decision condition for counting.
+The original condition is wrong, it would cause coexistence mechanism
+going to the wrong strategy.
+
+New format supports getting TDMA parameter from WL firmware, since
+coexistence needs current TDMA parameter to decide strategy.
+
+Remove unnecessary operations about scoreboard, it is not a must for
+current version.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/reg.h      |  7 ++++---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  4 ++--
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +--
- drivers/net/wireless/realtek/rtw88/rtw8821c.h |  2 --
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  6 +++---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 10 +++++-----
- 6 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c | 43 ++++++++++++-----------
+ drivers/net/wireless/realtek/rtw88/main.h | 10 +++++-
+ 2 files changed, 31 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 86b94c008a27..b3df09ff01b3 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -60,7 +60,7 @@
- #define REG_GPIO_MUXCFG		0x0040
- #define BIT_FSPI_EN		BIT(19)
- #define BIT_EN_SIC		BIT(12)
--#define BIT_BT_AOD_GPIO3	BIT(9)
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 6de98414e3bf..c47771f7020a 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -2335,17 +2335,19 @@ void rtw_coex_bt_info_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_coex_dm *coex_dm = &coex->dm;
+ 	u32 bt_relink_time;
+ 	u8 i, rsp_source = 0, type;
+ 	bool inq_page = false;
+ 
+ 	rsp_source = buf[0] & 0xf;
+ 	if (rsp_source >= COEX_BTINFO_SRC_MAX)
+-		rsp_source = COEX_BTINFO_SRC_WL_FW;
++		return;
++	coex_stat->cnt_bt_info_c2h[rsp_source]++;
+ 
+ 	if (rsp_source == COEX_BTINFO_SRC_BT_IQK) {
+ 		coex_stat->bt_iqk_state = buf[1];
+-		if (coex_stat->bt_iqk_state == 1)
++		if (coex_stat->bt_iqk_state == 0)
+ 			coex_stat->cnt_bt[COEX_CNT_BT_IQK]++;
+ 		else if (coex_stat->bt_iqk_state == 2)
+ 			coex_stat->cnt_bt[COEX_CNT_BT_IQKFAIL]++;
+@@ -2362,6 +2364,17 @@ void rtw_coex_bt_info_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
+ 		return;
+ 	}
+ 
++	if (rsp_source == COEX_BTINFO_SRC_H2C60) {
++		for (i = 1; i <= COEX_WL_TDMA_PARA_LENGTH; i++)
++			coex_dm->fw_tdma_para[i - 1] = buf[i];
++		return;
++	}
 +
- #define BIT_PO_BT_PTA_PINS	BIT(9)
- #define BIT_BT_PTA_EN		BIT(5)
- #define BIT_WLRFE_4_5_EN	BIT(2)
-@@ -463,11 +463,12 @@
- #define REG_BT_COEX_TABLE_H3	0x06CF
- #define REG_BBPSF_CTRL		0x06DC
++	if (rsp_source == COEX_BTINFO_SRC_WL_FW) {
++		rtw_coex_update_bt_link_info(rtwdev);
++		return;
++	}
++
+ 	if (rsp_source == COEX_BTINFO_SRC_BT_RSP ||
+ 	    rsp_source == COEX_BTINFO_SRC_BT_ACT) {
+ 		if (coex_stat->bt_disabled) {
+@@ -2373,19 +2386,16 @@ void rtw_coex_bt_info_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
+ 		}
+ 	}
  
--#define REG_BT_COEX_V2		0x0763
--#define BIT_GNT_BT_POLARITY	BIT(4)
-+#define REG_BT_COEX_V2		0x0762
-+#define BIT_GNT_BT_POLARITY	BIT(12)
- #define BIT_LTE_COEX_EN		BIT(7)
- #define REG_BT_STAT_CTRL	0x0778
- #define REG_BT_TDMA_TIME	0x0790
-+#define BIT_MASK_SAMPLE_RATE	GENMASK(5, 0)
- #define REG_LTR_IDLE_LATENCY	0x0798
- #define REG_LTR_ACTIVE_LATENCY	0x079C
- #define REG_LTR_CTRL_BASIC	0x07A4
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 832dc8e98bee..84d66b5c2733 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -1506,14 +1506,14 @@ static void rtw8723d_coex_cfg_init(struct rtw_dev *rtwdev)
+-	for (i = 0; i < length; i++) {
+-		if (i < COEX_BTINFO_LENGTH_MAX)
+-			coex_stat->bt_info_c2h[rsp_source][i] = buf[i];
+-		else
+-			break;
+-	}
++	if (length != COEX_BTINFO_LENGTH) {
++		rtw_dbg(rtwdev, RTW_DBG_COEX,
++			"[BTCoex], Bt_info length = %d invalid!!\n", length);
  
- 	/* BT report packet sample rate	 */
- 	/* 0x790[5:0]=0x5 */
--	rtw_write8_set(rtwdev, REG_BT_TDMA_TIME, 0x05);
-+	rtw_write8_mask(rtwdev, REG_BT_TDMA_TIME, BIT_MASK_SAMPLE_RATE, 0x5);
+-	if (rsp_source == COEX_BTINFO_SRC_WL_FW) {
+-		rtw_coex_update_bt_link_info(rtwdev);
+-		rtw_coex_run_coex(rtwdev, COEX_RSN_BTINFO);
+ 		return;
+ 	}
  
- 	/* enable BT counter statistics */
- 	rtw_write8(rtwdev, REG_BT_STAT_CTRL, 0x1);
++	for (i = 0; i < COEX_BTINFO_LENGTH; i++)
++		coex_stat->bt_info_c2h[rsp_source][i] = buf[i];
++
+ 	/* get the same info from bt, skip it */
+ 	if (coex_stat->bt_info_c2h[rsp_source][1] == coex_stat->bt_info_lb2 &&
+ 	    coex_stat->bt_info_c2h[rsp_source][2] == coex_stat->bt_info_lb3 &&
+@@ -2446,17 +2456,8 @@ void rtw_coex_bt_info_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
+ 		coex_stat->cnt_bt[COEX_CNT_BT_INQ]++;
  
- 	/* enable PTA (3-wire function form BT side) */
- 	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_PTA_EN);
--	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_AOD_GPIO3);
-+	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_PO_BT_PTA_PINS);
+ 	coex_stat->bt_page = ((coex_stat->bt_info_lb3 & BIT(7)) == BIT(7));
+-	if (coex_stat->bt_page) {
++	if (coex_stat->bt_page)
+ 		coex_stat->cnt_bt[COEX_CNT_BT_PAGE]++;
+-		if (coex_stat->wl_linkscan_proc ||
+-		    coex_stat->wl_hi_pri_task1 ||
+-		    coex_stat->wl_hi_pri_task2 || coex_stat->wl_gl_busy)
+-			rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, true);
+-		else
+-			rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, false);
+-	} else {
+-		rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, false);
+-	}
  
- 	/* enable PTA (tx/rx signal form WiFi side) */
- 	rtw_write8_set(rtwdev, REG_QUEUE_CTRL, BIT_PTA_WL_TX_EN);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index da2e7415be8f..64b14f9ea4a9 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -656,8 +656,7 @@ static void rtw8821c_coex_cfg_init(struct rtw_dev *rtwdev)
- 	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
+ 	/* unit: % (value-100 to translate to unit: dBm in coex info) */
+ 	if (chip->bt_rssi_type == COEX_BTRSSI_RATIO) {
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 632d14683b61..97f75a99d0a4 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1241,6 +1241,8 @@ struct rtw_coex_rfe {
+ 	bool wlg_at_btg;
+ };
  
- 	/* BT report packet sample rate */
--	rtw_write8_mask(rtwdev, REG_BT_TDMA_TIME, SAMPLE_RATE_MASK,
--			SAMPLE_RATE);
-+	rtw_write8_mask(rtwdev, REG_BT_TDMA_TIME, BIT_MASK_SAMPLE_RATE, 0x5);
++#define COEX_WL_TDMA_PARA_LENGTH	5
++
+ struct rtw_coex_dm {
+ 	bool cur_ps_tdma_on;
+ 	bool cur_wl_rx_low_gain_en;
+@@ -1260,6 +1262,7 @@ struct rtw_coex_dm {
+ 	u32 cur_ant_pos_type;
+ 	u32 cur_switch_status;
+ 	u32 setting_tdma;
++	u8 fw_tdma_para[COEX_WL_TDMA_PARA_LENGTH];
+ };
  
- 	/* enable BT counter statistics */
- 	rtw_write8(rtwdev, REG_BT_STAT_CTRL, BT_CNT_ENABLE);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-index bd01e82b6bcd..e11e3fc41c95 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-@@ -231,8 +231,6 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
- #define REG_IQKFAILMSK	0x1bf0
- #define BIT_MASK_R_RFE_SEL_15	GENMASK(31, 28)
- #define BIT_SDIO_INT BIT(18)
--#define SAMPLE_RATE_MASK GENMASK(5, 0)
--#define SAMPLE_RATE	0x5
- #define BT_CNT_ENABLE	0x1
- #define BIT_BCN_QUEUE	BIT(3)
- #define BCN_PRI_EN	0x1
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index ffcb580e8dce..d562f7324e6a 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -1120,21 +1120,21 @@ static void rtw8822b_coex_cfg_init(struct rtw_dev *rtwdev)
+ #define COEX_BTINFO_SRC_WL_FW	0x0
+@@ -1267,7 +1270,8 @@ struct rtw_coex_dm {
+ #define COEX_BTINFO_SRC_BT_ACT	0x2
+ #define COEX_BTINFO_SRC_BT_IQK	0x3
+ #define COEX_BTINFO_SRC_BT_SCBD	0x4
+-#define COEX_BTINFO_SRC_MAX	0x5
++#define COEX_BTINFO_SRC_H2C60	0x5
++#define COEX_BTINFO_SRC_MAX	0x6
  
- 	/* BT report packet sample rate */
- 	/* 0x790[5:0]=0x5 */
--	rtw_write8_set(rtwdev, REG_BT_TDMA_TIME, 0x05);
-+	rtw_write8_mask(rtwdev, REG_BT_TDMA_TIME, BIT_MASK_SAMPLE_RATE, 0x5);
+ #define COEX_INFO_FTP		BIT(7)
+ #define COEX_INFO_A2DP		BIT(6)
+@@ -1278,6 +1282,7 @@ struct rtw_coex_dm {
+ #define COEX_INFO_SCO_ESCO	BIT(1)
+ #define COEX_INFO_CONNECTION	BIT(0)
+ #define COEX_BTINFO_LENGTH_MAX	10
++#define COEX_BTINFO_LENGTH	7
  
- 	/* enable BT counter statistics */
- 	rtw_write8(rtwdev, REG_BT_STAT_CTRL, 0x1);
+ struct rtw_coex_stat {
+ 	bool bt_disabled;
+@@ -1364,6 +1369,9 @@ struct rtw_coex_stat {
+ 	/* counters to record wifi states */
+ 	u32 cnt_wl[COEX_CNT_WL_MAX];
  
- 	/* enable PTA (3-wire function form BT side) */
- 	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_PTA_EN);
--	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_AOD_GPIO3);
-+	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_PO_BT_PTA_PINS);
- 
- 	/* enable PTA (tx/rx signal form WiFi side) */
- 	rtw_write8_set(rtwdev, REG_QUEUE_CTRL, BIT_PTA_WL_TX_EN);
- 	/* wl tx signal to PTA not case EDCCA */
- 	rtw_write8_clr(rtwdev, REG_QUEUE_CTRL, BIT_PTA_EDCCA_EN);
- 	/* GNT_BT=1 while select both */
--	rtw_write8_set(rtwdev, REG_BT_COEX_V2, BIT_GNT_BT_POLARITY);
-+	rtw_write16_set(rtwdev, REG_BT_COEX_V2, BIT_GNT_BT_POLARITY);
- }
- 
- static void rtw8822b_coex_cfg_ant_switch(struct rtw_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index f58722a49ec6..56c403d628fd 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -2132,24 +2132,24 @@ static void rtw8822c_coex_cfg_init(struct rtw_dev *rtwdev)
- 	/* enable TBTT nterrupt */
- 	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
- 
--	/* BT report packet sample rate	 */
-+	/* BT report packet sample rate */
- 	/* 0x790[5:0]=0x5 */
--	rtw_write8_set(rtwdev, REG_BT_TDMA_TIME, 0x05);
-+	rtw_write8_mask(rtwdev, REG_BT_TDMA_TIME, BIT_MASK_SAMPLE_RATE, 0x5);
- 
- 	/* enable BT counter statistics */
- 	rtw_write8(rtwdev, REG_BT_STAT_CTRL, 0x1);
- 
- 	/* enable PTA (3-wire function form BT side) */
- 	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_PTA_EN);
--	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_AOD_GPIO3);
-+	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_PO_BT_PTA_PINS);
- 
- 	/* enable PTA (tx/rx signal form WiFi side) */
- 	rtw_write8_set(rtwdev, REG_QUEUE_CTRL, BIT_PTA_WL_TX_EN);
- 	/* wl tx signal to PTA not case EDCCA */
- 	rtw_write8_clr(rtwdev, REG_QUEUE_CTRL, BIT_PTA_EDCCA_EN);
- 	/* GNT_BT=1 while select both */
--	rtw_write8_set(rtwdev, REG_BT_COEX_V2, BIT_GNT_BT_POLARITY);
--	/* BT_CCA = ~GNT_WL_BB, (not or GNT_BT_BB, LTE_Rx */
-+	rtw_write16_set(rtwdev, REG_BT_COEX_V2, BIT_GNT_BT_POLARITY);
-+	/* BT_CCA = ~GNT_WL_BB, not or GNT_BT_BB, LTE_Rx */
- 	rtw_write8_clr(rtwdev, REG_DUMMY_PAGE4_V1, BIT_BTCCA_CTRL);
- 
- 	/* to avoid RF parameter error */
++	/* counters to record bt c2h data */
++	u32 cnt_bt_info_c2h[COEX_BTINFO_SRC_MAX];
++
+ 	u32 darfrc;
+ 	u32 darfrch;
+ };
 -- 
 2.21.0
 
