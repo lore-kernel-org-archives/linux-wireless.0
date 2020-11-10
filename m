@@ -2,67 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC2FC5517A
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 08:43:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 576AEC388F7
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 08:49:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 797BA206B6
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 08:43:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1431320731
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 08:49:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbgKJInO (ORCPT
+        id S1729518AbgKJItT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 03:43:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34856 "EHLO
+        Tue, 10 Nov 2020 03:49:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726467AbgKJInN (ORCPT
+        with ESMTP id S1728741AbgKJItT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Nov 2020 03:43:13 -0500
+        Tue, 10 Nov 2020 03:49:19 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96BB0C0613CF;
-        Tue, 10 Nov 2020 00:43:13 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00CEFC0613CF
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2020 00:49:18 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1kcPF5-004p3K-PR; Tue, 10 Nov 2020 09:43:07 +0100
-Message-ID: <2aaaefd6cfda1928e5ea397850fa6fca01fb0642.camel@sipsolutions.net>
-Subject: Re: linux-next: build warning after merge of the mac80211-next tree
+        id 1kcPL2-004pBx-6Y; Tue, 10 Nov 2020 09:49:16 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc:     Jouni Malinen <jouni@codeaurora.org>,
-        Rohan Dutta <drohan@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Date:   Tue, 10 Nov 2020 09:43:06 +0100
-In-Reply-To: <20201109164342.1ff7d645@canb.auug.org.au>
-References: <20201109164342.1ff7d645@canb.auug.org.au>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: fix kernel-doc warning in the new SAE attribute
+Date:   Tue, 10 Nov 2020 09:49:11 +0100
+Message-Id: <20201110094911.bb020e863aa0.I960caf90e2a8cc23f6bf9245d77524df6a4d8f37@changeid>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2020-11-09 at 16:43 +1100, Stephen Rothwell wrote:
-> Hi all,
-> 
-> After merging the mac80211-next tree, today's linux-next build (htmldocs)
-> produced this warning:
-> 
-> Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1014: WARNING: Unexpected indentation.
-> Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1016: WARNING: Block quote ends without a blank line; unexpected unindent.
-> Documentation/driver-api/80211/cfg80211:48: include/net/cfg80211.h:1019: WARNING: Unexpected indentation.
-> 
-> Introduced by commit
-> 
->   9f0ffa418483 ("cfg80211: Add support to configure SAE PWE value to drivers")
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks Stephen, fixing it now.
+Format the items as a definition list, to avoid the warning
+from the rst parsing.
 
-johannes
+Fixes: 9f0ffa418483 ("cfg80211: Add support to configure SAE PWE value to drivers")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4ff804a8bc1d..9678d32dae83 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1008,14 +1008,21 @@ struct survey_info {
+  * @sae_pwd: password for SAE authentication (for devices supporting SAE
+  *	offload)
+  * @sae_pwd_len: length of SAE password (for devices supporting SAE offload)
+- * @sae_pwe: The mechanisms allowed for SAE PWE derivation
+- *	NL80211_SAE_PWE_UNSPECIFIED: Not-specified, used to indicate userspace
+- *		did not specify any preference. The driver should follow its
+- *		internal policy in such a scenario.
+- *	NL80211_SAE_PWE_HUNT_AND_PECK: Allow hunting-and-pecking loop only
+- *	NL80211_SAE_PWE_HASH_TO_ELEMENT: Allow hash-to-element only
+- *	NL80211_SAE_PWE_BOTH: Allow either hunting-and-pecking loop
+- *		or hash-to-element
++ * @sae_pwe: The mechanisms allowed for SAE PWE derivation:
++ *
++ *	NL80211_SAE_PWE_UNSPECIFIED
++ *	  Not-specified, used to indicate userspace did not specify any
++ *	  preference. The driver should follow its internal policy in
++ *	  such a scenario.
++ *
++ *	NL80211_SAE_PWE_HUNT_AND_PECK
++ *	  Allow hunting-and-pecking loop only
++ *
++ *	NL80211_SAE_PWE_HASH_TO_ELEMENT
++ *	  Allow hash-to-element only
++ *
++ *	NL80211_SAE_PWE_BOTH
++ *	  Allow either hunting-and-pecking loop or hash-to-element
+  */
+ struct cfg80211_crypto_settings {
+ 	u32 wpa_versions;
+-- 
+2.26.2
 
