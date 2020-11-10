@@ -2,82 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D606C388F7
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 17:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78E5BC4741F
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 17:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07D062076E
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 17:34:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="eBWD1+Ai"
+	by mail.kernel.org (Postfix) with ESMTP id 323472076E
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 17:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729361AbgKJReg (ORCPT
+        id S1730174AbgKJRfh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 12:34:36 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:62315 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726179AbgKJRef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Nov 2020 12:34:35 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605029675; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=S4vIyjJlTrRKjf4Zg9NLssEHh5XPrU4sl8ZkKBXrdG4=; b=eBWD1+AiofKcrHN++ls5KuZegAg/q5vHL5x4lDGGD7IlYtxo10h7FzOmnG6UR9pQONYmp/jM
- +oY6NHhtOI6wb6y3RF8Wh15EciMjeNC58rXt3QY4DGsmmK23mgzb9rxJQmPS22XOz8qKtQHD
- tR9httEnNHyc/Xgn9kmqFudSXOQ=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5faaceff24ba9b3b02ec1b4c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 10 Nov 2020 17:33:51
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B2E60C433C8; Tue, 10 Nov 2020 17:33:51 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 309F5C433C8;
-        Tue, 10 Nov 2020 17:33:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 309F5C433C8
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Abhishek Kumar <kuabhs@chromium.org>
-Cc:     Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: add option for chip-id based BDF selection
-References: <20201020000506.1.Ifbc28707942179f1cefc7491e995814564495270@changeid>
-        <20201106071107.D7CE3C433C6@smtp.codeaurora.org>
-        <CACTWRwtjvQYUvbWHrajNRkK_sDZRv1hr0kp+o1=6504qv64qKQ@mail.gmail.com>
-Date:   Tue, 10 Nov 2020 19:33:46 +0200
-In-Reply-To: <CACTWRwtjvQYUvbWHrajNRkK_sDZRv1hr0kp+o1=6504qv64qKQ@mail.gmail.com>
-        (Abhishek Kumar's message of "Tue, 10 Nov 2020 09:19:20 -0800")
-Message-ID: <87imadce11.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 10 Nov 2020 12:35:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728272AbgKJRfg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Nov 2020 12:35:36 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 759C7C0613CF;
+        Tue, 10 Nov 2020 09:35:36 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1kcXYC-0053JM-1H; Tue, 10 Nov 2020 18:35:24 +0100
+Message-ID: <3b851462d9bfd914aeb9f5b432e4c076f6c330f3.camel@sipsolutions.net>
+Subject: Re: [PATCH] rfkill: Fix use-after-free in rfkill_resume()
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Claire Chang <tientzu@chromium.org>, davem@davemloft.net,
+        kuba@kernel.org, hdegoede@redhat.com, marcel@holtmann.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Tue, 10 Nov 2020 18:35:07 +0100
+In-Reply-To: <20201110084908.219088-1-tientzu@chromium.org> (sfid-20201110_094924_445207_CC99576F)
+References: <20201110084908.219088-1-tientzu@chromium.org>
+         (sfid-20201110_094924_445207_CC99576F)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Abhishek Kumar <kuabhs@chromium.org> writes:
+On Tue, 2020-11-10 at 16:49 +0800, Claire Chang wrote:
+> If a device is getting removed or reprobed during resume, use-after-free
+> might happen. For example, h5_btrtl_resume()[drivers/bluetooth/hci_h5.c]
+> schedules a work queue for device reprobing. During the reprobing, if
+> rfkill_set_block() in rfkill_resume() is called after the corresponding
+> *_unregister() and kfree() are called, there will be an use-after-free
+> in hci_rfkill_set_block()[net/bluetooth/hci_core.c].
 
-> Apologies for the delay, was busy so could not work on V2 . I have
-> started working on V2 patch. Will upload by today/tomorrow.
 
-Thanks, I'll then drop this v1.
+Not sure I understand. So you're saying
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+ * something (h5_btrtl_resume) schedules a worker
+ * said worker run, when it runs, calls rfkill_unregister()
+ * somehow rfkill_resume() still gets called after this
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+But that can't really be right, device_del() removes it from the PM
+lists?
+
+johannes
+
+
