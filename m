@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82121C388F7
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 04:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C77C63697
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 04:07:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 366F22063A
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 04:06:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 115AF2068D
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 04:07:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="k06e5In+"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="LTzsqWhj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732732AbgKJEGF (ORCPT
+        id S1732205AbgKJDxy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 23:06:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54486 "EHLO mail.kernel.org"
+        Mon, 9 Nov 2020 22:53:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54416 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732198AbgKJDxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Nov 2020 22:53:55 -0500
+        id S1732146AbgKJDxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:53:52 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B6DD220781;
-        Tue, 10 Nov 2020 03:53:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AE595207BC;
+        Tue, 10 Nov 2020 03:53:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604980434;
-        bh=1jTr55gaoyGw5R902U7nFxaSS5hrWwmAkLllFm2nUrg=;
+        s=default; t=1604980431;
+        bh=BYzD6UaKc4s5o3gN7OudfqlHsDG5FIyVSpOhmvsP2wk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=k06e5In+H65GYzBB/Ab82m7sxTlGGH1M2dVyz66xqfKi9eg6rq4Ij4bNzUCWJacd9
-         TPIEptrnjTSZf22HkDDryM25Zfmx09xoxU86O5u6ExtxolDEIYb+qYjMWtakH9HKH5
-         /o2uDOx6PmAWvIjhWbGJ5JgcjbbVe2N0OD3iXY4Y=
+        b=LTzsqWhjWqdD9ZE+q8w6vppGfrRguPYvbzp+y87FJ6hmoMgwouEI/Ba1KEgRfvp1/
+         Qb0fA1BDvK+cGNvv0oVhcJli+RfLOJJQtcK7l+jFHdmpMyI8pc2wV41OYAhqEuY7b1
+         IlIbhmEQHHJ4yJD5henQG8ZDKOULmX09Mwj+2a/8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ye Bin <yebin10@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 25/55] cfg80211: regulatory: Fix inconsistent format argument
-Date:   Mon,  9 Nov 2020 22:52:48 -0500
-Message-Id: <20201110035318.423757-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 23/55] cfg80211: initialize wdev data earlier
+Date:   Mon,  9 Nov 2020 22:52:46 -0500
+Message-Id: <20201110035318.423757-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201110035318.423757-1-sashal@kernel.org>
 References: <20201110035318.423757-1-sashal@kernel.org>
@@ -54,36 +53,162 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ye Bin <yebin10@huawei.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit db18d20d1cb0fde16d518fb5ccd38679f174bc04 ]
+[ Upstream commit 9bdaf3b91efd229dd272b228e13df10310c80d19 ]
 
-Fix follow warning:
-[net/wireless/reg.c:3619]: (warning) %d in format string (no. 2)
-requires 'int' but the argument type is 'unsigned int'.
+There's a race condition in the netdev registration in that
+NETDEV_REGISTER actually happens after the netdev is available,
+and so if we initialize things only there, we might get called
+with an uninitialized wdev through nl80211 - not using a wdev
+but using a netdev interface index.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Ye Bin <yebin10@huawei.com>
-Link: https://lore.kernel.org/r/20201009070215.63695-1-yebin10@huawei.com
+I found this while looking into a syzbot report, but it doesn't
+really seem to be related, and unfortunately there's no repro
+for it (yet). I can't (yet) explain how it managed to get into
+cfg80211_release_pmsr() from nl80211_netlink_notify() without
+the wdev having been initialized, as the latter only iterates
+the wdevs that are linked into the rdev, which even without the
+change here happened after init.
+
+However, looking at this, it seems fairly clear that the init
+needs to be done earlier, otherwise we might even re-init on a
+netns move, when data might still be pending.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20201009135821.fdcbba3aad65.Ie9201d91dbcb7da32318812effdc1561aeaf4cdc@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/core.c    | 57 +++++++++++++++++++++++-------------------
+ net/wireless/core.h    |  5 ++--
+ net/wireless/nl80211.c |  3 ++-
+ 3 files changed, 36 insertions(+), 29 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d8a90d3974235..763a45655ac21 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3411,7 +3411,7 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
- 		power_rule = &reg_rule->power_rule;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 354b0ccbdc240..e025493171262 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1248,8 +1248,7 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ }
+ EXPORT_SYMBOL(cfg80211_stop_iface);
  
- 		if (reg_rule->flags & NL80211_RRF_AUTO_BW)
--			snprintf(bw, sizeof(bw), "%d KHz, %d KHz AUTO",
-+			snprintf(bw, sizeof(bw), "%d KHz, %u KHz AUTO",
- 				 freq_range->max_bandwidth_khz,
- 				 reg_get_max_bandwidth(rd, reg_rule));
- 		else
+-void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
+-			struct wireless_dev *wdev)
++void cfg80211_init_wdev(struct wireless_dev *wdev)
+ {
+ 	mutex_init(&wdev->mtx);
+ 	INIT_LIST_HEAD(&wdev->event_list);
+@@ -1260,6 +1259,30 @@ void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
+ 	spin_lock_init(&wdev->pmsr_lock);
+ 	INIT_WORK(&wdev->pmsr_free_wk, cfg80211_pmsr_free_wk);
+ 
++#ifdef CONFIG_CFG80211_WEXT
++	wdev->wext.default_key = -1;
++	wdev->wext.default_mgmt_key = -1;
++	wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
++#endif
++
++	if (wdev->wiphy->flags & WIPHY_FLAG_PS_ON_BY_DEFAULT)
++		wdev->ps = true;
++	else
++		wdev->ps = false;
++	/* allow mac80211 to determine the timeout */
++	wdev->ps_timeout = -1;
++
++	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
++	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
++	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
++		wdev->netdev->priv_flags |= IFF_DONT_BRIDGE;
++
++	INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
++}
++
++void cfg80211_register_wdev(struct cfg80211_registered_device *rdev,
++			    struct wireless_dev *wdev)
++{
+ 	/*
+ 	 * We get here also when the interface changes network namespaces,
+ 	 * as it's registered into the new one, but we don't want it to
+@@ -1293,6 +1316,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	switch (state) {
+ 	case NETDEV_POST_INIT:
+ 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
++		wdev->netdev = dev;
++		/* can only change netns with wiphy */
++		dev->features |= NETIF_F_NETNS_LOCAL;
++
++		cfg80211_init_wdev(wdev);
+ 		break;
+ 	case NETDEV_REGISTER:
+ 		/*
+@@ -1300,35 +1328,12 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 * called within code protected by it when interfaces
+ 		 * are added with nl80211.
+ 		 */
+-		/* can only change netns with wiphy */
+-		dev->features |= NETIF_F_NETNS_LOCAL;
+-
+ 		if (sysfs_create_link(&dev->dev.kobj, &rdev->wiphy.dev.kobj,
+ 				      "phy80211")) {
+ 			pr_err("failed to add phy80211 symlink to netdev!\n");
+ 		}
+-		wdev->netdev = dev;
+-#ifdef CONFIG_CFG80211_WEXT
+-		wdev->wext.default_key = -1;
+-		wdev->wext.default_mgmt_key = -1;
+-		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+-#endif
+-
+-		if (wdev->wiphy->flags & WIPHY_FLAG_PS_ON_BY_DEFAULT)
+-			wdev->ps = true;
+-		else
+-			wdev->ps = false;
+-		/* allow mac80211 to determine the timeout */
+-		wdev->ps_timeout = -1;
+-
+-		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+-		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+-		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+-			dev->priv_flags |= IFF_DONT_BRIDGE;
+-
+-		INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
+ 
+-		cfg80211_init_wdev(rdev, wdev);
++		cfg80211_register_wdev(rdev, wdev);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+ 		cfg80211_leave(rdev, wdev);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 67b0389fca4dc..8cd4a9793298e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -208,8 +208,9 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
+ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 			  struct net *net);
+ 
+-void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
+-			struct wireless_dev *wdev);
++void cfg80211_init_wdev(struct wireless_dev *wdev);
++void cfg80211_register_wdev(struct cfg80211_registered_device *rdev,
++			    struct wireless_dev *wdev);
+ 
+ static inline void wdev_lock(struct wireless_dev *wdev)
+ 	__acquires(wdev)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e14307f2bddcc..8eb43c47e582a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3801,7 +3801,8 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		 * P2P Device and NAN do not have a netdev, so don't go
+ 		 * through the netdev notifier and must be added here
+ 		 */
+-		cfg80211_init_wdev(rdev, wdev);
++		cfg80211_init_wdev(wdev);
++		cfg80211_register_wdev(rdev, wdev);
+ 		break;
+ 	default:
+ 		break;
 -- 
 2.27.0
 
