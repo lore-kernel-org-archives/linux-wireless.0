@@ -2,128 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0484DC4741F
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 01:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E4FC388F7
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 03:56:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B46942065D
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 01:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACD5A204EA
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 03:56:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ETRTiFbJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730045AbgKJBme (ORCPT
+        id S2387714AbgKJD4q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Nov 2020 20:42:34 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:42615 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729452AbgKJBmd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Nov 2020 20:42:33 -0500
-Received: from mail-il1-f198.google.com ([209.85.166.198])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1kcIg3-00011F-5w
-        for linux-wireless@vger.kernel.org; Tue, 10 Nov 2020 01:42:31 +0000
-Received: by mail-il1-f198.google.com with SMTP id q5so8063678ilc.13
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2020 17:42:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=+R8H+LRx4iZIaZ5oZVZMi0sukbFe8SA2wgM0zDYFRc4=;
-        b=JFfgL6bsxzdk8UbVSc1anoxwoteFT43i1FUOjV6s6sCYuIrr6JT0M6zKfbsBzGCKwX
-         9wQwlkRlI/dNSJ27MqA2DS37GO26SMl28EWYM1O67q0xjewU84qQqSNV57woWQW7pwuE
-         FxgjX9seDhjwl2YXKgfuvpsU11G3gnnMmQQtrmacL1tufPCJbdBkaDF0YAL/NI8lf+rD
-         FcsXOHjiAMnwE7X6JQ0sW3iI2nB/T+lkymFAmVF9PjKwQ6TwpOb3nMZiCdbZ/ESm+6fM
-         AqfpNxN6Fa47+8W4gpV6i0RKJb0OSlVMAdVFVA2Te8qjHNJpWNiY2vUDiWqgPQ9YV2eT
-         BeRw==
-X-Gm-Message-State: AOAM533/GpjPwMFLBbkUBhoOEbyyb0ZEdosKSJOI6BTJ/6LQIprBhdKB
-        m5fjUoOkWiOnGgj0/+PUzlkSqQ6T2nPPJhrRsuDjwju9V2gg12Gm57IsGLZ4MTZvLY6WQV55YuA
-        NnYdLh3WXfbisjJeQdwDwRGlcXRgq34QiUHpcUFGN4Iwf
-X-Received: by 2002:a92:aa53:: with SMTP id j80mr6305990ili.88.1604972550213;
-        Mon, 09 Nov 2020 17:42:30 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzmKL1iJDSiWlPOlKcqXKHV9Fm2RXfn/WFAFG8Ry2az/KqFWpyL5jPyNdx8LzOYbHLQudCT5w==
-X-Received: by 2002:a92:aa53:: with SMTP id j80mr6305981ili.88.1604972549997;
-        Mon, 09 Nov 2020 17:42:29 -0800 (PST)
-Received: from localhost ([2605:a601:ac0f:820:89a:1dd3:9ddb:b24d])
-        by smtp.gmail.com with ESMTPSA id d142sm6666293iof.43.2020.11.09.17.42.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2020 17:42:29 -0800 (PST)
-Date:   Mon, 9 Nov 2020 19:42:28 -0600
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     bkil <b.K.il.h.u+tigbuh@gmail.com>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: restore channel 12 & 13 limitation in
- the US
-Message-ID: <20201110014228.GJ6125@ubuntu-x1>
-References: <840438bf70c72d2ab933aee9ae5aa6985b6c1531.1601902881.git.b.K.il.h.u+tigbuh@gmail.com>
+        Mon, 9 Nov 2020 22:56:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58860 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730249AbgKJD4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:56:44 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0182E2063A;
+        Tue, 10 Nov 2020 03:56:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604980603;
+        bh=7y1FuVyjxr2ugCCeDo7vnYcqlQj71agm0WBc/48hLCg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ETRTiFbJPEYgQ7ezUVT9/FJ3lghQXH6t9ADaI7jxmcksizqGBLKGNA42rb+uDP7hq
+         bVNkc+a1qknHRUykbwjhDo9SYKOn2/CDJ/YnLaF4znNIU5WLL1J0z/1jAJsh9TDYbR
+         u7S7TeW0hLo9ZNXqqRNM4c5ZJXYlaGO0xv+Tx6Ug=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+2e293dbd67de2836ba42@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 07/12] mac80211: always wind down STA state
+Date:   Mon,  9 Nov 2020 22:56:28 -0500
+Message-Id: <20201110035633.425030-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201110035633.425030-1-sashal@kernel.org>
+References: <20201110035633.425030-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <840438bf70c72d2ab933aee9ae5aa6985b6c1531.1601902881.git.b.K.il.h.u+tigbuh@gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 05, 2020 at 03:01:22PM +0200, bkil wrote:
-> The precisely allowed transmission power on channel 12 & 13 is not clear.
-> 
-> I did some fact checking and document reviews in the past, but still
-> failed to come up with an exact reference or calculation regarding what TX
-> power should be allowed in general to reduce interference in the
-> neighboring restricted band 2483.5-2500 MHz and whether indoor vs. outdoor
-> and b/g/n modulation would make a difference (probably yes).
-> 
-> Existing documents that discuss this are vague and pretty much out of date:
-> https://en.wikipedia.org/wiki/List_of_WLAN_channels#endnote_B
-> 
-> Following these guidelines, I failed to come up with an approximate
-> formula that would prohibit usage of channel 12 & 13, but still allow
-> usage of channel 11 with full power, hence at least part of the argument
-> for prohibiting channel 12 & 13 needs to be refined.
-> 
-> Until further research, just to stay safe, I propose that we restore the
-> previous limitation of disabling channel 12 & 13 as before. We should
-> work towards finding a safe transmission power to use on both and specify
-> that (like 50mW on channel 13 and 100mW on channel 12?).
-> 
-> I've also started a discussion for investigation on Wikipedia:
-> https://en.wikipedia.org/wiki/Talk:List_of_WLAN_channels#Should_the_2.4GHz_channel_12_and_13_in_the_USA_need_updating?
-> 
-> Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-I tried doing a little research, and it does appear that use of channels
-12 and 13 is more complicated than it might seem on the surface. I
-cannot find any clear guidance on power limits and lack the background
-to determine appropriate limits from the information I did find, so it
-does seem prudent to restore the previous limitation.
+[ Upstream commit dcd479e10a0510522a5d88b29b8f79ea3467d501 ]
 
-Applied, thanks!
+When (for example) an IBSS station is pre-moved to AUTHORIZED
+before it's inserted, and then the insertion fails, we don't
+clean up the fast RX/TX states that might already have been
+created, since we don't go through all the state transitions
+again on the way down.
 
-> ---
->  db.txt | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db.txt b/db.txt
-> index ac32483..68613cf 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -1568,8 +1568,12 @@ country UG: DFS-FCC
->  
->  # https://www.ecfr.gov/cgi-bin/text-idx?SID=eed706a2c49fd9271106c3228b0615f3&mc=true&node=pt47.1.15&rgn=div5
->  # Title 47 Part 15 - Radio Frequency Devices, April 2, 2020
-> +# Channels 12 and 13 are not forbidden, but are not normally used with full
-> +# power in order to avoid any potential interference in the adjacent restricted
-> +# frequency band, 2,483.5–2,500 MHz which is subject to strict emission limits
-> +# set out in 47 CFR § 15.205. TODO: reenable and specify a safe TX power here.
->  country US: DFS-FCC
-> -	(2400 - 2483.5 @ 40), (30)
-> +	(2400 - 2472 @ 40), (30)
->  	# 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
->  	(5150 - 5250 @ 80), (23), AUTO-BW
->  	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+Do that, if it hasn't been done already, when the station is
+freed. I considered only freeing the fast TX/RX state there,
+but we might add more state so it's more robust to wind down
+the state properly.
+
+Note that we warn if the station was ever inserted, it should
+have been properly cleaned up in that case, and the driver
+will probably not like things happening out of order.
+
+Reported-by: syzbot+2e293dbd67de2836ba42@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/r/20201009141710.7223b322a955.I95bd08b9ad0e039c034927cce0b75beea38e059b@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/sta_info.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index fef8d7758dae9..8a9bbcfefbca6 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -243,6 +243,24 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+  */
+ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ {
++	/*
++	 * If we had used sta_info_pre_move_state() then we might not
++	 * have gone through the state transitions down again, so do
++	 * it here now (and warn if it's inserted).
++	 *
++	 * This will clear state such as fast TX/RX that may have been
++	 * allocated during state transitions.
++	 */
++	while (sta->sta_state > IEEE80211_STA_NONE) {
++		int ret;
++
++		WARN_ON_ONCE(test_sta_flag(sta, WLAN_STA_INSERTED));
++
++		ret = sta_info_move_state(sta, sta->sta_state - 1);
++		if (WARN_ONCE(ret, "sta_info_move_state() returned %d\n", ret))
++			break;
++	}
++
+ 	if (sta->rate_ctrl)
+ 		rate_control_free_sta(sta);
+ 
+-- 
+2.27.0
+
