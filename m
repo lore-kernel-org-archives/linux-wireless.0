@@ -2,100 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9752C388F7
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 18:59:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6115C56201
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 19:46:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54DF020780
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 18:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AB4C20639
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 19:46:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="cr4YsBK/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iVYffJCC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729630AbgKJS7h (ORCPT
+        id S1731696AbgKJTqk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 13:59:37 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:46472 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726179AbgKJS7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Nov 2020 13:59:37 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605034776; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=1019T1WbqeaNKvhLZV10I4fMKt64g7PeO8bXUK4CIo4=;
- b=cr4YsBK/B20WHhEX+z+RrjJ4pMmcsiOqMnXpNFUWNzLkJOii3gdUOtiQtu2X99hzCi6qb/T4
- 6G2u/bFslifgnDYEyW0T7zlXxg8tAJVU0ppJlI00KKpvJ9l0zt1q1IxUxlh06/vSoM8ZBs0z
- xA/8n8lr+lBBRBCCnKLXXpZXj3c=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5faae2ff40d44461257a806d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 10 Nov 2020 18:59:11
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C8B03C433C6; Tue, 10 Nov 2020 18:59:11 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 66337C433C8;
-        Tue, 10 Nov 2020 18:59:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 66337C433C8
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 10 Nov 2020 14:46:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53892 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725862AbgKJTqk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Nov 2020 14:46:40 -0500
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 141B3C0613D1;
+        Tue, 10 Nov 2020 11:46:40 -0800 (PST)
+Received: by mail-ej1-x643.google.com with SMTP id za3so19345930ejb.5;
+        Tue, 10 Nov 2020 11:46:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:subject:to:cc:message-id:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=94xWn4igC2rRAAMu2z0THiSQOP5rKPvk0MjxLB0+gEY=;
+        b=iVYffJCCKWKLf191Owwu9ps45oJ7w9Nsd3V1GMUP0v9PMSJuKYCZC08k1fdQhTpfBx
+         ecNx1Vb53dVKtcylVvR26kuqYWfkLW244MXcqcKV6+yOHOBZKL3zJoBUyLShZqfrigN4
+         cV/3xMGsh2Wwno0jGtRaEIQolja5WheurLRzzTn856lrrBkuiYnVQCbeLrMQobxfzaHd
+         LrRvN/KJJsjW1D8ruoxpYri6L3wb4YFqT0ohJnvjXhlaRTv45TujBISx3sb6VI+tEFK/
+         cOEsfBW4bxqsFs6qMuHult0tFx8EAu6JUuroRdZB+gUzYTEBNKKqRXhTecSJmMcy3INT
+         WUlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=94xWn4igC2rRAAMu2z0THiSQOP5rKPvk0MjxLB0+gEY=;
+        b=G1nTqed18XMGU/eKDlJ5M13INbTFXZB7nMtEtdNpM+6v6BoJEBaBKvbxt26W1LDIFQ
+         ToXrbv4fXTM8fudV3yhhkiaPQksSo4sb37QMQBeniwKwaqhsMJ7Yh1ySVY2RGYFbCMBD
+         bLRa5+NmfUMCzNQ6eoHZMiyrfUZ/maMTadAj90TtllvJA2NfuEgm8T22X6jizcEUu9d0
+         3+ZcNi+O4QDGaOMv0StQY82GgJQI8AYtnr6aqi9eHr/09M/VYDm4XZIe/w7LMfp7JxWn
+         8wcWnmgNuIUj8gp3FOKhIJN5r54UinIt2fYBKgb48idcxlcYK7O/ZBw+2zCJ/32ieqJz
+         YscQ==
+X-Gm-Message-State: AOAM532vHLq2I9eUEUOJ4I8eBZOnYNIihUO4QCPu8Bpgs6pvRPpeJrhp
+        O7ELBotVZxRNdBcHE0mH6eFq06fR5nZyXg==
+X-Google-Smtp-Source: ABdhPJyyiDTRA9Xdiopj0gYPnrIo3pXG4hJzhgyBoCLnKnknMPKS8uj57zFbZ3FbPjWaHnal/xUDFQ==
+X-Received: by 2002:a17:906:268c:: with SMTP id t12mr20832985ejc.377.1605037598523;
+        Tue, 10 Nov 2020 11:46:38 -0800 (PST)
+Received: from ?IPv6:2003:ea:8f23:2800:895e:e59d:3602:de4b? (p200300ea8f232800895ee59d3602de4b.dip0.t-ipconnect.de. [2003:ea:8f23:2800:895e:e59d:3602:de4b])
+        by smtp.googlemail.com with ESMTPSA id n22sm11419876edr.11.2020.11.10.11.46.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Nov 2020 11:46:38 -0800 (PST)
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH net-next 0/5] net: switch further drivers to core
+ functionality for handling per-cpu byte/packet counters
+To:     Jakub Kicinski <kuba@kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Sergey Matyukevich <geomatsi@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oliver Neukum <oneukum@suse.com>,
+        Peter Korsgaard <jacmet@sunsite.dk>,
+        Steve Glendinning <steve.glendinning@shawell.net>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-rdma@vger.kernel.org,
+        Linux USB Mailing List <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <5fbe3a1f-6625-eadc-b1c9-f76f78debb94@gmail.com>
+Date:   Tue, 10 Nov 2020 20:46:26 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 01/11] rtw88: coex: fixed some wrong register
- definition
- and setting
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201109085909.9143-2-pkshih@realtek.com>
-References: <20201109085909.9143-2-pkshih@realtek.com>
-To:     <pkshih@realtek.com>
-Cc:     <tony0620emma@gmail.com>, <linux-wireless@vger.kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201110185911.C8B03C433C6@smtp.codeaurora.org>
-Date:   Tue, 10 Nov 2020 18:59:11 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<pkshih@realtek.com> wrote:
+Switch further drivers to core functionality for handling per-cpu
+byte/packet counters.
+All changes are compile-tested only.
 
-> From: Ching-Te Ku <ku920601@realtek.com>
-> 
-> Some register definition and bit definition were incorrect.
-> e.g. REG_BT_COEX_V2 should be word alignment to meet the coding style.
-> e.g. set REG_BT_TDMA_TIME[5:0]=0x5,
-> But the original is to set REG_BT_TDMA_TIME[7:0]=0x5.
-> This will cause unexpected hardware behavior.
-> 
-> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Heiner Kallweit (5):
+  IB/hfi1: switch to core handling of rx/tx byte/packet counters
+  qmi_wwan: switch to core handling of rx/tx byte/packet counters
+  qtnfmac: switch to core handling of rx/tx byte/packet counters
+  usbnet: switch to core handling of rx/tx byte/packet counters
+  net: usb: switch to dev_get_tstats64 and remove usbnet_get_stats64
+    alias
 
-11 patches applied to wireless-drivers-next.git, thanks.
-
-3f3fef5f6a8f rtw88: coex: fixed some wrong register definition and setting
-19ecd61d2c3c rtw88: coex: update coex parameter to improve A2DP quality
-1d82c49764aa rtw88: coex: reduce magic number
-d8350768d629 rtw88: coex: coding style adjustment
-ae8732d7673d rtw88: coex: Modify the timing of set_ant_path/set_rf_para
-32c3a8c7d91f rtw88: coex: add separate flag for manual control
-37a59b940fc6 rtw88: coex: modified for BT info notify
-150ce8e34a45 rtw88: coex: change the parameter for A2DP when WLAN connecting
-ec06c4adac96 rtw88: coex: update WLAN 5G AFH parameter for 8822b
-21020fc80d3b rtw88: coex: add debug message
-1ccaa898868d rtw88: coex: simplify the setting and condition about WLAN TX limitation
+ drivers/infiniband/hw/hfi1/driver.c           |  4 +-
+ drivers/infiniband/hw/hfi1/ipoib.h            | 27 -------
+ drivers/infiniband/hw/hfi1/ipoib_main.c       | 15 +---
+ drivers/infiniband/hw/hfi1/ipoib_tx.c         |  2 +-
+ drivers/net/usb/aqc111.c                      |  2 +-
+ drivers/net/usb/asix_devices.c                |  6 +-
+ drivers/net/usb/ax88172a.c                    |  2 +-
+ drivers/net/usb/ax88179_178a.c                |  2 +-
+ drivers/net/usb/cdc_mbim.c                    |  2 +-
+ drivers/net/usb/cdc_ncm.c                     |  2 +-
+ drivers/net/usb/dm9601.c                      |  2 +-
+ drivers/net/usb/int51x1.c                     |  2 +-
+ drivers/net/usb/mcs7830.c                     |  2 +-
+ drivers/net/usb/qmi_wwan.c                    | 41 +++-------
+ drivers/net/usb/rndis_host.c                  |  2 +-
+ drivers/net/usb/sierra_net.c                  |  2 +-
+ drivers/net/usb/smsc75xx.c                    |  2 +-
+ drivers/net/usb/smsc95xx.c                    |  2 +-
+ drivers/net/usb/sr9700.c                      |  2 +-
+ drivers/net/usb/sr9800.c                      |  2 +-
+ drivers/net/usb/usbnet.c                      | 23 ++----
+ drivers/net/wireless/quantenna/qtnfmac/core.c | 78 ++++---------------
+ drivers/net/wireless/quantenna/qtnfmac/core.h |  4 -
+ .../quantenna/qtnfmac/pcie/pearl_pcie.c       |  4 +-
+ .../quantenna/qtnfmac/pcie/topaz_pcie.c       |  4 +-
+ drivers/net/wireless/rndis_wlan.c             |  2 +-
+ include/linux/usb/usbnet.h                    |  4 -
+ 27 files changed, 59 insertions(+), 183 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201109085909.9143-2-pkshih@realtek.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.29.2
 
