@@ -2,237 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF32C55ABD
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 19:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3159DC56201
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 21:00:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C879206E3
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 19:51:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2288207D3
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Nov 2020 21:00:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YeBxn6BC"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=c0d3.blue header.i=@c0d3.blue header.b="tTN/JXhv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731557AbgKJTvW (ORCPT
+        id S1731696AbgKJVAC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 14:51:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54612 "EHLO
+        Tue, 10 Nov 2020 16:00:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725862AbgKJTvW (ORCPT
+        with ESMTP id S1726737AbgKJVAC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Nov 2020 14:51:22 -0500
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 403FEC0613D1;
-        Tue, 10 Nov 2020 11:51:22 -0800 (PST)
-Received: by mail-ed1-x543.google.com with SMTP id k9so14104996edo.5;
-        Tue, 10 Nov 2020 11:51:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=bOdWylhtQ7csIcx3x7AgcGPRiivjTYceou3ldTAJsAs=;
-        b=YeBxn6BCTsEDT2K3jc2JwEBRjqhWJ4MxrIdcqijDmpwNxmHZjSSoL1c7tNj79zov0u
-         jGcdzUbaafpV+7md60rfV7XhBJ0spqnBGkFLNbS1urJ9tR5zo1lrzsKH3lR32S+6v2ev
-         4aWuKJw5QZP15QpGRBfS0Q2NJtJhg+Hv9dAl0MPJr2BAlO4gqfRv9BlI/oj04n0I51C3
-         gV2CQ8oWuZ/3aRAo/kbS2hRju9wCOxa59FFjJ2cXwvJyKHfTrrKtn+ECQTYbBmk6DYlL
-         TCjnVxgxtu99AAuOb5XdESLmFIYghJawyJhELlyKn+XWUXg8PQgVPF/Lwn9hCTt977GC
-         pHoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=bOdWylhtQ7csIcx3x7AgcGPRiivjTYceou3ldTAJsAs=;
-        b=GdyfFJsoiV/9vuvsYXj8qV+9tzIFlRFzEK4w1yWeypSB/5W1ctIkYgKTKtwRwVspQb
-         JzLKIfsSwqVTan42Uk23gCZ/nyGQbIl033RLVpjC2bTHUMRIEaKu4Dc2zizGfU5YvUSz
-         5hx5e2TvKLHKXiQV2u8m6jnDr+b46HXw09g98Vfv0kLdnpRKZO4FHgH/bxdgAxJrtvnH
-         5IkQJ0iTjSoPB7nJ1oB+nqCFzFVAbJcPVdS1iWPPTrAjN2gV6oCK/PtdXCss3y4GJvg2
-         AIELCfxUlUCvRqePEbbEJPyRtRqza9v81z3TlEdSPtcaIFR03dTpSnFweel8sOGUd6ba
-         kAYQ==
-X-Gm-Message-State: AOAM530OrErErBHpJ1XR1kLNoaVtJDX/x9P7qQDdNuqVCuzDl9Xrh37F
-        9lzVHtemob8f6E8Ak1RGOnutRAfeund+yw==
-X-Google-Smtp-Source: ABdhPJxk7DTsgCEZiCcDHIK6P7rRocDMeZD9EY8ECUBsYZPrhDfIBIbmqWIZBZNqp8eLRr7R6QyMEQ==
-X-Received: by 2002:a05:6402:31b6:: with SMTP id dj22mr23495415edb.348.1605037880671;
-        Tue, 10 Nov 2020 11:51:20 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f23:2800:895e:e59d:3602:de4b? (p200300ea8f232800895ee59d3602de4b.dip0.t-ipconnect.de. [2003:ea:8f23:2800:895e:e59d:3602:de4b])
-        by smtp.googlemail.com with ESMTPSA id a1sm11311622edv.88.2020.11.10.11.51.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2020 11:51:20 -0800 (PST)
-Subject: [PATCH net-next 1/5] IB/hfi1: switch to core handling of rx/tx
- byte/packet counters
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <geomatsi@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oliver Neukum <oneukum@suse.com>,
-        Peter Korsgaard <jacmet@sunsite.dk>,
-        Steve Glendinning <steve.glendinning@shawell.net>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <5fbe3a1f-6625-eadc-b1c9-f76f78debb94@gmail.com>
-Message-ID: <5093239e-2d3b-a716-3039-790abdb7a5ba@gmail.com>
-Date:   Tue, 10 Nov 2020 20:47:34 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.1
+        Tue, 10 Nov 2020 16:00:02 -0500
+X-Greylist: delayed 52750 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 10 Nov 2020 12:59:59 PST
+Received: from mail.aperture-lab.de (mail.aperture-lab.de [IPv6:2a01:4f8:171:314c::100:a1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2538CC0613D1;
+        Tue, 10 Nov 2020 12:59:58 -0800 (PST)
+Date:   Tue, 10 Nov 2020 21:59:50 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=c0d3.blue; s=2018;
+        t=1605041997;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yygze7HI9YJNXxbkMRM/doJInuQMK3mUGoENwg4pCD8=;
+        b=tTN/JXhv5q2ziwyHU7FS5OpwfUH7Xhn4R97x/Y0VUqXCmtbytUU10Bzivi8/1zUO+FY8b/
+        QDGIws2JEXpH7eJRgAlr0zJzb9VxFRI8dhodV/Fecx2uYoVvR5LOvoCW7QBuu886o2ypbT
+        nGb+poX9GI3jmz7icZG8Fbz/a/i6mo7Kso7mmt7LD4OxhFrOJA/osEi3LywDKseEbdxY2T
+        WLkyFGuf7xSdQbMIo1u9Ui2ruWsWVkgX2XolZLGUHbMRhhakH0anSb0x4Am5N79NJ2k+Ik
+        JKKk4YzXyFgsDYOdjXnBEqSAb+fvhMM7wEWtmUhlvm2q3ieceaCfV2RVBKER+w==
+From:   Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To:     linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+        Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: Crash / Null pointer dereference in l2cap_chan_send()
+Message-ID: <20201110205950.GF2423@otheros>
+References: <20201110062039.GC2423@otheros>
 MIME-Version: 1.0
-In-Reply-To: <5fbe3a1f-6625-eadc-b1c9-f76f78debb94@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201110062039.GC2423@otheros>
+Authentication-Results: ORIGINATING;
+        auth=pass smtp.auth=linus.luessing@c0d3.blue smtp.mailfrom=linus.luessing@c0d3.blue
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use netdev->tstats instead of a member of hfi1_ipoib_dev_priv for storing
-a pointer to the per-cpu counters. This allows us to use core
-functionality for statistics handling.
+On Tue, Nov 10, 2020 at 07:20:39AM +0100, Linus Lüssing wrote:
+> [...]
+>
+> The issue was introduced with the following commit:
+> 
+>     f4bfdc5e571e ("iwlwifi: mvm: stop supporting swcrypto and bt_coex_active module parameters")
+>     * first affected tag: v5.8-rc1
+> 
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/infiniband/hw/hfi1/driver.c     |  4 +---
- drivers/infiniband/hw/hfi1/ipoib.h      | 27 -------------------------
- drivers/infiniband/hw/hfi1/ipoib_main.c | 15 +++-----------
- drivers/infiniband/hw/hfi1/ipoib_tx.c   |  2 +-
- 4 files changed, 5 insertions(+), 43 deletions(-)
+PS: As this commit mentioned bt_coex_active, I retried with a
+vanilla 5.9.6 kernel while leaving bt_coex_active at its
+default value. That is leaving it enabled while all previous tests
+I did had it disabled.
 
-diff --git a/drivers/infiniband/hw/hfi1/driver.c b/drivers/infiniband/hw/hfi1/driver.c
-index a40701a6e..0b64aa87a 100644
---- a/drivers/infiniband/hw/hfi1/driver.c
-+++ b/drivers/infiniband/hw/hfi1/driver.c
-@@ -1686,7 +1686,6 @@ static void hfi1_ipoib_ib_rcv(struct hfi1_packet *packet)
- 	u32 extra_bytes;
- 	u32 tlen, qpnum;
- 	bool do_work, do_cnp;
--	struct hfi1_ipoib_dev_priv *priv;
- 
- 	trace_hfi1_rcvhdr(packet);
- 
-@@ -1734,8 +1733,7 @@ static void hfi1_ipoib_ib_rcv(struct hfi1_packet *packet)
- 	if (unlikely(!skb))
- 		goto drop;
- 
--	priv = hfi1_ipoib_priv(netdev);
--	hfi1_ipoib_update_rx_netstats(priv, 1, skb->len);
-+	dev_sw_netstats_rx_add(netdev, skb->len);
- 
- 	skb->dev = netdev;
- 	skb->pkt_type = PACKET_HOST;
-diff --git a/drivers/infiniband/hw/hfi1/ipoib.h b/drivers/infiniband/hw/hfi1/ipoib.h
-index b8c9d0a00..f650cac9d 100644
---- a/drivers/infiniband/hw/hfi1/ipoib.h
-+++ b/drivers/infiniband/hw/hfi1/ipoib.h
-@@ -110,7 +110,6 @@ struct hfi1_ipoib_dev_priv {
- 
- 	const struct net_device_ops *netdev_ops;
- 	struct rvt_qp *qp;
--	struct pcpu_sw_netstats __percpu *netstats;
- };
- 
- /* hfi1 ipoib rdma netdev's private data structure */
-@@ -126,32 +125,6 @@ hfi1_ipoib_priv(const struct net_device *dev)
- 	return &((struct hfi1_ipoib_rdma_netdev *)netdev_priv(dev))->dev_priv;
- }
- 
--static inline void
--hfi1_ipoib_update_rx_netstats(struct hfi1_ipoib_dev_priv *priv,
--			      u64 packets,
--			      u64 bytes)
--{
--	struct pcpu_sw_netstats *netstats = this_cpu_ptr(priv->netstats);
--
--	u64_stats_update_begin(&netstats->syncp);
--	netstats->rx_packets += packets;
--	netstats->rx_bytes += bytes;
--	u64_stats_update_end(&netstats->syncp);
--}
--
--static inline void
--hfi1_ipoib_update_tx_netstats(struct hfi1_ipoib_dev_priv *priv,
--			      u64 packets,
--			      u64 bytes)
--{
--	struct pcpu_sw_netstats *netstats = this_cpu_ptr(priv->netstats);
--
--	u64_stats_update_begin(&netstats->syncp);
--	netstats->tx_packets += packets;
--	netstats->tx_bytes += bytes;
--	u64_stats_update_end(&netstats->syncp);
--}
--
- int hfi1_ipoib_send_dma(struct net_device *dev,
- 			struct sk_buff *skb,
- 			struct ib_ah *address,
-diff --git a/drivers/infiniband/hw/hfi1/ipoib_main.c b/drivers/infiniband/hw/hfi1/ipoib_main.c
-index 9f71b9d70..3242290eb 100644
---- a/drivers/infiniband/hw/hfi1/ipoib_main.c
-+++ b/drivers/infiniband/hw/hfi1/ipoib_main.c
-@@ -21,7 +21,7 @@ static int hfi1_ipoib_dev_init(struct net_device *dev)
- 	struct hfi1_ipoib_dev_priv *priv = hfi1_ipoib_priv(dev);
- 	int ret;
- 
--	priv->netstats = netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
-+	dev->tstats = netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
- 
- 	ret = priv->netdev_ops->ndo_init(dev);
- 	if (ret)
-@@ -93,21 +93,12 @@ static int hfi1_ipoib_dev_stop(struct net_device *dev)
- 	return priv->netdev_ops->ndo_stop(dev);
- }
- 
--static void hfi1_ipoib_dev_get_stats64(struct net_device *dev,
--				       struct rtnl_link_stats64 *storage)
--{
--	struct hfi1_ipoib_dev_priv *priv = hfi1_ipoib_priv(dev);
--
--	netdev_stats_to_stats64(storage, &dev->stats);
--	dev_fetch_sw_netstats(storage, priv->netstats);
--}
--
- static const struct net_device_ops hfi1_ipoib_netdev_ops = {
- 	.ndo_init         = hfi1_ipoib_dev_init,
- 	.ndo_uninit       = hfi1_ipoib_dev_uninit,
- 	.ndo_open         = hfi1_ipoib_dev_open,
- 	.ndo_stop         = hfi1_ipoib_dev_stop,
--	.ndo_get_stats64  = hfi1_ipoib_dev_get_stats64,
-+	.ndo_get_stats64  = dev_get_tstats64,
- };
- 
- static int hfi1_ipoib_send(struct net_device *dev,
-@@ -182,7 +173,7 @@ static void hfi1_ipoib_netdev_dtor(struct net_device *dev)
- 	hfi1_ipoib_txreq_deinit(priv);
- 	hfi1_ipoib_rxq_deinit(priv->netdev);
- 
--	free_percpu(priv->netstats);
-+	free_percpu(dev->tstats);
- }
- 
- static void hfi1_ipoib_free_rdma_netdev(struct net_device *dev)
-diff --git a/drivers/infiniband/hw/hfi1/ipoib_tx.c b/drivers/infiniband/hw/hfi1/ipoib_tx.c
-index 9df292b51..edd4eeac8 100644
---- a/drivers/infiniband/hw/hfi1/ipoib_tx.c
-+++ b/drivers/infiniband/hw/hfi1/ipoib_tx.c
-@@ -121,7 +121,7 @@ static void hfi1_ipoib_free_tx(struct ipoib_txreq *tx, int budget)
- 	struct hfi1_ipoib_dev_priv *priv = tx->priv;
- 
- 	if (likely(!tx->sdma_status)) {
--		hfi1_ipoib_update_tx_netstats(priv, 1, tx->skb->len);
-+		dev_sw_netstats_tx_add(priv->netdev, 1, tx->skb->len);
- 	} else {
- 		++priv->netdev->stats.tx_errors;
- 		dd_dev_warn(priv->dd,
--- 
-2.29.2
+However I still get the Bluetooth A2DP freeze and subsequent
+kernel panics.
+
+Only the warnings in dmesg with
+"iwlmvm doesn't allow to disable BT Coex, check bt_coex_active module parameter"
+seem to have vanished.
 
 
+Also, swcrypto is disabled, as it is by default. So the majority
+of the lines changed shouldn't affect me.
+
+The only thing that should affect and trigger the crashes for me
+seems to be that BT_COEX_NW is now always enabled and that the code
+now ignores what I set for the iwlwifi bt_coex_active module parameter.
+While before I had it always disabled via the iwlwifi module parameter.
