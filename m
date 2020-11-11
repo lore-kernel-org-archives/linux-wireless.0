@@ -2,95 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 999C9C5517A
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 01:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 965FCC388F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38C8D21D91
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 01:24:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="a9NOZOQ7"
+	by mail.kernel.org (Postfix) with ESMTP id 3ED432065E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731805AbgKKBYK (ORCPT
+        id S1732248AbgKKCWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 20:24:10 -0500
-Received: from ozlabs.org ([203.11.71.1]:39737 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727275AbgKKBYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Nov 2020 20:24:10 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4CW6T31dRvz9s1l;
-        Wed, 11 Nov 2020 12:24:05 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1605057847;
-        bh=CGaYzZ3cQ2OPfOkEm+hVSmupJwD0hPIznG98MYGyQGk=;
-        h=Date:From:To:Cc:Subject:From;
-        b=a9NOZOQ7zMaNGvi+mAOuVTxhje5bwE/mPBtAZTPAjGdoVHnn3xist+6h0sSLNm7Z/
-         SNvtxXPO1DijDFI+8qIQJAaoE50EWR4ADIDHrJ8HTH/c42ZiIpX4vOIVCq0NN2Lrhu
-         bc4h4CeJPsT7C0A1zbCvx9MWDremExge6+ZAZHb5UiEIOLuQLqvsURL6W7QEnB5veI
-         E0wmvi0EqeLhxuz/LtYtinPyBKUbatMn/ftXROv3Yplcp3ZxiZ1EljAursdAl8pT5V
-         W0MkSFMQY7VLJhmyOs7dgVsP8QoBBoEsLA8L5eeQiAkpPK1aZBcZ/RRLnMpmc6dqlC
-         Qx9KyuJ1NG0Yg==
-Date:   Wed, 11 Nov 2020 12:24:04 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: build failure after merge of the mac80211-next tree
-Message-ID: <20201111122404.0a302029@canb.auug.org.au>
+        Tue, 10 Nov 2020 21:22:20 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:39292 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732211AbgKKCWU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Nov 2020 21:22:20 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MDlaC027731, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MDlaC027731
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 11 Nov 2020 10:22:13 +0800
+Received: from localhost.localdomain (172.21.69.213) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Wed, 11 Nov 2020 10:22:13 +0800
+From:   <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/11] rtw88: coex: Change antenna setting to enhance free-run performance
+Date:   Wed, 11 Nov 2020 10:21:04 +0800
+Message-ID: <20201111022108.9834-8-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201111022108.9834-1-pkshih@realtek.com>
+References: <20201111022108.9834-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/VB.KfIsMjM.mrn=YQBGypev";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.213]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/VB.KfIsMjM.mrn=YQBGypev
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Hi all,
+While the mechanism goes to 2G_free_run or WL5G_BT2G,
+set BT to hardware PTA mode to get a more efficiently performance.
 
-After merging the mac80211-next tree, today's linux-next build (x86_64
-allmodconfig) failed like this:
+Add a flag to indicate antenna switch is supported or not so
+that the IC serials which has different antenna structure can
+set antenna correctly.
 
-drivers/net/wireless/ath/ath9k/debug.c: In function 'read_file_misc':
-drivers/net/wireless/ath/ath9k/debug.c:741:35: error: 'struct ath9k_vif_ite=
-r_data' has no member named 'nwds'
-  741 |       iter_data.nmeshes, iter_data.nwds);
-      |                                   ^
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/coex.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-Caused by commit
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index aa95d617b86a..8c7216245557 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -1062,6 +1062,7 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
++	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
+ 	struct rtw_coex_dm *coex_dm = &coex->dm;
+ 	u8 ctrl_type = COEX_SWITCH_CTRL_MAX;
+ 	u8 pos_type = COEX_SWITCH_TO_MAX;
+@@ -1157,8 +1158,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX,
+ 			"[BTCoex], %s() - PHASE_5G_RUNTIME\n", __func__);
+ 
+-		/* set GNT_BT to PTA */
+-		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
++		/* set GNT_BT to HW PTA */
++		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
+ 
+ 		/* set GNT_WL to SW high */
+ 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
+@@ -1173,8 +1174,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX,
+ 			"[BTCoex], %s() - PHASE_2G_FREERUN\n", __func__);
+ 
+-		/* set GNT_BT to SW high */
+-		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
++		/* set GNT_BT to HW PTA */
++		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
+ 
+ 		/* Set GNT_WL to SW high */
+ 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
+@@ -1205,7 +1206,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		return;
+ 	}
+ 
+-	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX)
++	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX &&
++	    coex_rfe->ant_switch_exist)
+ 		rtw_coex_set_ant_switch(rtwdev, ctrl_type, pos_type);
+ }
+ 
+-- 
+2.21.0
 
-  f532b9716eeb ("ath9k: remove WDS code")
-
-I have used the mac80211-next tree from next-20201110 for today.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/VB.KfIsMjM.mrn=YQBGypev
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl+rPTQACgkQAVBC80lX
-0GxuIAf9F/CkDwmofVKMVu7066rik0S2XoJvH5LzOwh/j6cUQwUF08dvEDecN+IW
-9lULanSjrRJtOegOQ3Akx4J4jsMJCbCcl6I2pl/WFHvD5WpiAb5xdxaROU/riAhJ
-ZwLlO9q+NDMsuS3rhJPDIzmki7Da0o3AFIiufwx2PDEbCkSZVeaKxCfd3uNmnpGQ
-xgKKofDKPqJFlPpXDGNA9vowd0dNxVIe4lBvCF/95+lNeyS1UnkqvASzW3hI7LOG
-T2F2iZ1Ah/j0DeOQW/7JNM3WdGsPZu3+16l/byFZ0dJJ9F5UpwJ2Wrupgf//ax+z
-fVvMTXyH2tr+ux63bwGE+4MfwHQ4EQ==
-=CBpO
------END PGP SIGNATURE-----
-
---Sig_/VB.KfIsMjM.mrn=YQBGypev--
