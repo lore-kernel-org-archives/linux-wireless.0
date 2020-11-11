@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B337C61DD8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C445AC388F7
 	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B42772065E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D5922065E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732451AbgKKCWV (ORCPT
+        id S1732421AbgKKCWV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 10 Nov 2020 21:22:21 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:39284 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:39280 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731900AbgKKCWU (ORCPT
+        with ESMTP id S1732023AbgKKCWU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 10 Nov 2020 21:22:20 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MEdmC027738, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MCEQ0027711, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MEdmC027738
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MCEQ0027711
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 11 Nov 2020 10:22:14 +0800
+        Wed, 11 Nov 2020 10:22:12 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Wed, 11 Nov 2020 10:22:13 +0800
+ 15.1.2044.4; Wed, 11 Nov 2020 10:22:12 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/11] rtw88: coex: change the decode method from firmware
-Date:   Wed, 11 Nov 2020 10:21:08 +0800
-Message-ID: <20201111022108.9834-12-pkshih@realtek.com>
+Subject: [PATCH 01/11] rtw88: coex: update TDMA settings for different beacon interval
+Date:   Wed, 11 Nov 2020 10:20:58 +0800
+Message-ID: <20201111022108.9834-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201111022108.9834-1-pkshih@realtek.com>
 References: <20201111022108.9834-1-pkshih@realtek.com>
@@ -52,29 +52,100 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Fix sometimes FW information will be parsed as wrong value,
-do a correction of sign bit to show the correct information.
-(Ex, Value should be 20, but it shows 236.)
+Add considering for different WLAN beacon interval in coexistence
+mechanism.
+Because the WLAN beacon period may be not 100 ms, so it's necessary
+to consider any beacon period and set timer according to the interval.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/coex.c     | 24 +++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  7 ++++++
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ 3 files changed, 30 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 95e5ff5abae5..36b446133cd2 100644
+index 61e91565cd7d..141aaa60c805 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -2883,7 +2883,7 @@ void rtw_coex_wl_fwdbginfo_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
- 		if (buf[i] >= val)
- 			coex_stat->wl_fw_dbg_info[i] = buf[i] - val;
- 		else
--			coex_stat->wl_fw_dbg_info[i] = val - buf[i];
-+			coex_stat->wl_fw_dbg_info[i] = 255 - val + buf[i];
+@@ -225,6 +225,7 @@ static void rtw_coex_tdma_timer_base(struct rtw_dev *rtwdev, u8 type)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	u8 para[2] = {0};
++	u16 tbtt_interval = coex_stat->wl_beacon_interval;
  
- 		coex_stat->wl_fw_dbg_info_pre[i] = buf[i];
+ 	if (coex_stat->tdma_timer_base == type)
+ 		return;
+@@ -233,10 +234,29 @@ static void rtw_coex_tdma_timer_base(struct rtw_dev *rtwdev, u8 type)
+ 
+ 	para[0] = COEX_H2C69_TDMA_SLOT;
+ 
+-	if (type == 3) /* 4-slot  */
++	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], tbtt_interval = %d\n",
++		tbtt_interval);
++
++	if (type == 3) {			  /* 4-slot  */
+ 		para[1] = PARA1_H2C69_TDMA_4SLOT; /* 4-slot */
+-	else /* 2-slot  */
++	} else if (tbtt_interval < 80 && tbtt_interval > 0) {
++		para[1] = (100 / tbtt_interval);
++
++		if (100 % tbtt_interval != 0)
++			para[1] = para[1] + 1;
++
++		para[1] = para[1] & 0x3f;
++	} else if (tbtt_interval >= 180) {
++		para[1] = (tbtt_interval / 100);
++
++		if (tbtt_interval % 100 <= 80)
++			para[1] = para[1] - 1;
++
++		para[1] = para[1] & 0x3f;
++		para[1] = para[1] | 0x80;
++	} else {
+ 		para[1] = PARA1_H2C69_TDMA_2SLOT;
++	}
+ 
+ 	rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1]);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index c69397719fdf..1f1b639cd124 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -351,6 +351,8 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	struct rtw_coex *coex = &rtwdev->coex;
++	struct rtw_coex_stat *coex_stat = &coex->stat;
+ 	u32 config = 0;
+ 
+ 	mutex_lock(&rtwdev->mutex);
+@@ -381,6 +383,11 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		config |= PORT_SET_BSSID;
  	}
+ 
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		if (ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_STATION)
++			coex_stat->wl_beacon_interval = conf->beacon_int;
++	}
++
+ 	if (changed & BSS_CHANGED_BEACON)
+ 		rtw_fw_download_rsvd_page(rtwdev);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index a3a687a63734..3941aea51f9c 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1354,6 +1354,7 @@ struct rtw_coex_stat {
+ 	u8 bt_a2dp_bitpool;
+ 	u8 bt_iqk_state;
+ 
++	u16 wl_beacon_interval;
+ 	u8 wl_noisy_level;
+ 	u8 wl_fw_dbg_info[10];
+ 	u8 wl_fw_dbg_info_pre[10];
 -- 
 2.21.0
 
