@@ -2,28 +2,29 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B10C55ABD
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5C7C388F7
 	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9BE12065E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54C632065E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732512AbgKKCWZ (ORCPT
+        id S1732518AbgKKCW0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 21:22:25 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:39290 "EHLO
+        Tue, 10 Nov 2020 21:22:26 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:39281 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732086AbgKKCWV (ORCPT
+        with ESMTP id S1732090AbgKKCWV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 10 Nov 2020 21:22:21 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MCLT0027707, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MCET0027711, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MCLT0027707
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MCET0027711
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Wed, 11 Nov 2020 10:22:12 +0800
 Received: from localhost.localdomain (172.21.69.213) by
@@ -33,10 +34,12 @@ Received: from localhost.localdomain (172.21.69.213) by
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/11] rtw88: coex: fix and update settings to enhance coex performance
-Date:   Wed, 11 Nov 2020 10:20:57 +0800
-Message-ID: <20201111022108.9834-1-pkshih@realtek.com>
+Subject: [PATCH 03/11] rtw88: coex: add write scoreboard action when WLAN in critical procedure
+Date:   Wed, 11 Nov 2020 10:21:00 +0800
+Message-ID: <20201111022108.9834-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201111022108.9834-1-pkshih@realtek.com>
+References: <20201111022108.9834-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -47,31 +50,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-This is second patchset of my total 32 coex patches, in which we fix and
-update coex settings to enhance coex performance in field.
+When WLAN in critical procedure, such as connecting, scan and so on,
+coexistence will notify BT by scoreboard.
+While BT firmware received the scoreboard interrupt, it will adjust
+BT page priority lower to avoid WLAN critical procedure suffering impact.
 
-Ching-Te Ku (11):
-  rtw88: coex: update TDMA settings for different beacon interval
-  rtw88: coex: remove unnecessary feature/function
-  rtw88: coex: add write scoreboard action when WLAN in critical
-    procedure
-  rtw88: coex: Add force flag for coexistence table function
-  rtw88: coex: add the mechanism for RF4CE
-  rtw88: coex: update the TDMA parameter when leave LPS
-  rtw88: coex: Change antenna setting to enhance free-run performance
-  rtw88: coex: fix BT performance drop during initial/power-on step
-  rtw88: coex: remove write scan bit to scoreboard in scan and connect
-    notify
-  rtw88: coex: remove unnecessary WLAN slot extend
-  rtw88: coex: change the decode method from firmware
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/coex.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
- drivers/net/wireless/realtek/rtw88/coex.c     | 197 +++++++++++-------
- drivers/net/wireless/realtek/rtw88/mac80211.c |   7 +
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- 3 files changed, 129 insertions(+), 76 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 3a26453f4316..5f4b13226080 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -461,6 +461,12 @@ static void rtw_coex_update_wl_link_info(struct rtw_dev *rtwdev, u8 reason)
+ 		coex_dm->wl_rssi_state[i] = rssi_state;
+ 	}
+ 
++	if (coex_stat->wl_linkscan_proc || coex_stat->wl_hi_pri_task1 ||
++	    coex_stat->wl_hi_pri_task2 || coex_stat->wl_gl_busy)
++		rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, true);
++	else
++		rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, false);
++
+ 	switch (reason) {
+ 	case COEX_RSN_5GSCANSTART:
+ 	case COEX_RSN_5GSWITCHBAND:
 -- 
 2.21.0
 
