@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 946D1C5517A
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 13:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17273C388F9
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 13:48:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 224B62074B
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 13:48:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94FE72072C
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 13:48:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="u4l7qwlE"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ruotejzx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727168AbgKKNsL (ORCPT
+        id S1727131AbgKKNsK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Nov 2020 08:48:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36130 "EHLO mail.kernel.org"
+        Wed, 11 Nov 2020 08:48:10 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36092 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727103AbgKKNsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Nov 2020 08:48:03 -0500
+        id S1727092AbgKKNr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Nov 2020 08:47:56 -0500
 Received: from lore-desk.redhat.com (unknown [151.66.8.153])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7BFF52072C;
-        Wed, 11 Nov 2020 13:47:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 81C512074B;
+        Wed, 11 Nov 2020 13:47:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605102480;
-        bh=F1hvW7nVgjZsl0yrVsIzWdgMNorKeZqUq5zFj4Fa4bw=;
+        s=default; t=1605102474;
+        bh=0zQTGQRPLmQFHkOPd3l9hRZ6ZhNHB6L6uEWOodNYmoo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=u4l7qwlEQiFkEBHICXzqS+Mv0ESpAa0IY5Db327UkRGWjGQpQdILCP5cQfcKf8+IJ
-         8RxMsKJ6QJNQ/fZXJsUPp8mi73Qz08dlR/uFZoSYoHWY0vYRwCVR0cEvzHrm7/xnh7
-         44Xxo+sXBd1qQtclWZlD9S+AiNFjzjlV/a+ZPB40=
+        b=ruotejzxHjypr+8kZilQTdNTzpehWvpfvTCv9rbc4x+/cdueVpm5yd8CW/1fda3lH
+         dP7Dh+Gqz7vQSLmaba3SExgjK5OdjnoM2n4xEHKLi+9KGqKk/6q992LfFrM7r8Rx1q
+         8yk5eHIwS3Sh8pvaul3n4pawZXurGBY/8JaDq+nU=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, sean.wang@mediatek.com
-Subject: [PATCH v2 09/10] mt76: move mcu queues to mt76_dev q_mcu array
-Date:   Wed, 11 Nov 2020 14:47:31 +0100
-Message-Id: <d7cd2b83aaf7dcaed52caa25450a40fb6410438d.1605102251.git.lorenzo@kernel.org>
+Subject: [PATCH v2 06/10] mt76: rely on mt76_queue in tx_queue_skb signature
+Date:   Wed, 11 Nov 2020 14:47:28 +0100
+Message-Id: <c223eb96512fdf80ac19e128001b339ed764b254.1605102251.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1605102251.git.lorenzo@kernel.org>
 References: <cover.1605102251.git.lorenzo@kernel.org>
@@ -50,685 +50,357 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mcu queue to a dedicated array q_mcu in mt76_dev structure.
-This is a preliminary patch to move data queues in mt76_phy and properly
-support dbdc
+Rely on mt76_queue instead of qid in tx_queue_skb signature.
+This is a preliminary patch to move data queues in mt76_phy and add
+dbdc support to mt7915 driver
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c      |  4 ++
- drivers/net/wireless/mediatek/mt76/mcu.c      |  3 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  8 +--
- .../net/wireless/mediatek/mt76/mt7603/dma.c   | 51 +++++++++----------
- .../net/wireless/mediatek/mt76/mt7603/mac.c   |  1 +
- .../net/wireless/mediatek/mt76/mt7603/mcu.c   |  2 +-
- .../wireless/mediatek/mt76/mt7615/debugfs.c   | 15 +++---
- .../net/wireless/mediatek/mt76/mt7615/dma.c   | 19 +++----
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  1 +
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  8 +--
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
- .../wireless/mediatek/mt76/mt7615/sdio_mcu.c  |  4 +-
- .../wireless/mediatek/mt76/mt7615/sdio_txrx.c |  7 ++-
- .../net/wireless/mediatek/mt76/mt76x02_mcu.c  |  2 +-
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 43 ++++++++--------
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 17 +++----
- .../net/wireless/mediatek/mt76/mt7915/dma.c   | 18 +++----
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  1 +
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 10 ++--
- drivers/net/wireless/mediatek/mt76/sdio.c     | 11 ++--
- 20 files changed, 112 insertions(+), 115 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c      |  5 ++--
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 +-
+ .../wireless/mediatek/mt76/mt7603/beacon.c    | 27 ++++++++++---------
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 11 ++++----
+ drivers/net/wireless/mediatek/mt76/sdio.c     |  5 ++--
+ drivers/net/wireless/mediatek/mt76/testmode.c |  3 ++-
+ drivers/net/wireless/mediatek/mt76/tx.c       | 22 +++++++--------
+ drivers/net/wireless/mediatek/mt76/usb.c      |  7 ++---
+ 8 files changed, 43 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6aa6bac36331..306b2e71f898 100644
+index 31ce7dc7643b..730f01935cfe 100644
 --- a/drivers/net/wireless/mediatek/mt76/dma.c
 +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -660,9 +660,13 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
+@@ -344,11 +344,10 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
+ }
  
- 	mt76_worker_disable(&dev->tx_worker);
- 	netif_napi_del(&dev->tx_napi);
-+
- 	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++)
- 		mt76_dma_tx_cleanup(dev, dev->q_tx[i], true);
+ static int
+-mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
++mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 		      struct sk_buff *skb, struct mt76_wcid *wcid,
+ 		      struct ieee80211_sta *sta)
+ {
+-	struct mt76_queue *q = dev->q_tx[qid];
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -398,7 +397,7 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
  
-+	for (i = 0; i < ARRAY_SIZE(dev->q_mcu); i++)
-+		mt76_dma_tx_cleanup(dev, dev->q_mcu[i], true);
-+
- 	mt76_for_each_q_rx(dev, i) {
- 		netif_napi_del(&dev->napi[i]);
- 		mt76_dma_rx_cleanup(dev, &dev->q_rx[i]);
-diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
-index 1c727afe5e87..d3a5e2c4f12a 100644
---- a/drivers/net/wireless/mediatek/mt76/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mcu.c
-@@ -122,7 +122,8 @@ int mt76_mcu_send_firmware(struct mt76_dev *dev, int cmd, const void *data,
- 		len -= cur_len;
- 
- 		if (dev->queue_ops->tx_cleanup)
--			dev->queue_ops->tx_cleanup(dev, dev->q_tx[MT_TXQ_FWDL],
-+			dev->queue_ops->tx_cleanup(dev,
-+						   dev->q_mcu[MT_MCUQ_FWDL],
- 						   false);
- 	}
- 
+ 	dma_sync_single_for_cpu(dev->dev, t->dma_addr, dev->drv->txwi_size,
+ 				DMA_TO_DEVICE);
+-	ret = dev->drv->tx_prepare_skb(dev, txwi, qid, wcid, sta, &tx_info);
++	ret = dev->drv->tx_prepare_skb(dev, txwi, q->qid, wcid, sta, &tx_info);
+ 	dma_sync_single_for_device(dev->dev, t->dma_addr, dev->drv->txwi_size,
+ 				   DMA_TO_DEVICE);
+ 	if (ret < 0)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 053c8ea6d38f..113740d7dc43 100644
+index 4e691adb2a2b..ac0886a01aed 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -64,15 +64,15 @@ enum mt76_txq_id {
- 	MT_TXQ_BE = IEEE80211_AC_BE,
- 	MT_TXQ_BK = IEEE80211_AC_BK,
- 	MT_TXQ_PSD,
--	MT_TXQ_MCU,
--	MT_TXQ_MCU_WA,
- 	MT_TXQ_BEACON,
- 	MT_TXQ_CAB,
--	MT_TXQ_FWDL,
- 	__MT_TXQ_MAX
- };
+@@ -167,7 +167,7 @@ struct mt76_queue_ops {
+ 		     int idx, int n_desc, int bufsize,
+ 		     u32 ring_base);
  
- enum mt76_mcuq_id {
-+	MT_MCUQ_WM,
-+	MT_MCUQ_WA,
-+	MT_MCUQ_FWDL,
- 	__MT_MCUQ_MAX
- };
+-	int (*tx_queue_skb)(struct mt76_dev *dev, enum mt76_txq_id qid,
++	int (*tx_queue_skb)(struct mt76_dev *dev, struct mt76_queue *q,
+ 			    struct sk_buff *skb, struct mt76_wcid *wcid,
+ 			    struct ieee80211_sta *sta);
  
-@@ -811,7 +811,7 @@ static inline int mt76_init_mcu_queue(struct mt76_dev *dev, int qid, int idx,
- 	if (IS_ERR(q))
- 		return PTR_ERR(q);
- 
--	q->qid = qid;
-+	q->qid = __MT_TXQ_MAX + qid;
- 	dev->q_mcu[qid] = q;
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-index 3d4be1f3abd8..3f479d9d63aa 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-@@ -4,21 +4,6 @@
- #include "mac.h"
- #include "../dma.h"
- 
--static int
--mt7603_init_tx_queue(struct mt7603_dev *dev, int qid, int idx, int n_desc)
--{
--	int err;
--
--	err = mt76_init_tx_queue(&dev->mphy, qid, idx, n_desc,
--				 MT_TX_RING_BASE);
--	if (err < 0)
--		return err;
--
--	mt7603_irq_enable(dev, MT_INT_TX_DONE(idx));
--
--	return 0;
--}
--
- static void
- mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
+index 2d2b429c9ffc..c78321ea0a4f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
+@@ -13,23 +13,25 @@ static void
+ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
  {
-@@ -146,13 +131,15 @@ static int mt7603_poll_tx(struct napi_struct *napi, int budget)
- 	dev = container_of(napi, struct mt7603_dev, mt76.tx_napi);
- 	dev->tx_dma_check = 0;
+ 	struct mt7603_dev *dev = (struct mt7603_dev *)priv;
++	struct mt76_dev *mdev = &dev->mt76;
+ 	struct mt7603_vif *mvif = (struct mt7603_vif *)vif->drv_priv;
+ 	struct sk_buff *skb = NULL;
  
--	for (i = MT_TXQ_MCU; i >= 0; i--)
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+	for (i = MT_TXQ_PSD; i >= 0; i--)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], false);
+-	if (!(dev->mt76.beacon_mask & BIT(mvif->idx)))
++	if (!(mdev->beacon_mask & BIT(mvif->idx)))
+ 		return;
  
- 	if (napi_complete_done(napi, 0))
- 		mt7603_irq_enable(dev, MT_INT_TX_DONE_ALL);
+ 	skb = ieee80211_beacon_get(mt76_hw(dev), vif);
+ 	if (!skb)
+ 		return;
  
--	for (i = MT_TXQ_MCU; i >= 0; i--)
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+	for (i = MT_TXQ_PSD; i >= 0; i--)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], false);
+-	mt76_tx_queue_skb(dev, MT_TXQ_BEACON, skb, &mvif->sta.wcid, NULL);
++	mt76_tx_queue_skb(dev, mdev->q_tx[MT_TXQ_BEACON], skb,
++			  &mvif->sta.wcid, NULL);
  
- 	mt7603_mac_sta_poll(dev);
-@@ -185,32 +172,42 @@ int mt7603_dma_init(struct mt7603_dev *dev)
- 	mt7603_pse_client_reset(dev);
+ 	spin_lock_bh(&dev->ps_lock);
+ 	mt76_wr(dev, MT_DMA_FQCR0, MT_DMA_FQCR0_BUSY |
+ 		FIELD_PREP(MT_DMA_FQCR0_TARGET_WCID, mvif->sta.wcid.idx) |
+ 		FIELD_PREP(MT_DMA_FQCR0_TARGET_QID,
+-			   dev->mt76.q_tx[MT_TXQ_CAB]->hw_idx) |
++			   mdev->q_tx[MT_TXQ_CAB]->hw_idx) |
+ 		FIELD_PREP(MT_DMA_FQCR0_DEST_PORT_ID, 3) |
+ 		FIELD_PREP(MT_DMA_FQCR0_DEST_QUEUE_ID, 8));
  
- 	for (i = 0; i < ARRAY_SIZE(wmm_queue_map); i++) {
--		ret = mt7603_init_tx_queue(dev, i, wmm_queue_map[i],
--					   MT7603_TX_RING_SIZE);
-+		ret = mt76_init_tx_queue(&dev->mphy, i, wmm_queue_map[i],
-+					 MT7603_TX_RING_SIZE, MT_TX_RING_BASE);
- 		if (ret)
- 			return ret;
- 	}
- 
--	ret = mt7603_init_tx_queue(dev, MT_TXQ_PSD,
--				   MT_TX_HW_QUEUE_MGMT, MT7603_PSD_RING_SIZE);
-+	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_PSD, MT_TX_HW_QUEUE_MGMT,
-+				 MT7603_PSD_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
--	ret = mt7603_init_tx_queue(dev, MT_TXQ_MCU,
--				   MT_TX_HW_QUEUE_MCU, MT_MCU_RING_SIZE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM, MT_TX_HW_QUEUE_MCU,
-+				  MT_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
--	ret = mt7603_init_tx_queue(dev, MT_TXQ_BEACON,
--				   MT_TX_HW_QUEUE_BCN, MT_MCU_RING_SIZE);
-+	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_BEACON, MT_TX_HW_QUEUE_BCN,
-+				 MT_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
--	ret = mt7603_init_tx_queue(dev, MT_TXQ_CAB,
--				   MT_TX_HW_QUEUE_BMC, MT_MCU_RING_SIZE);
-+	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_CAB, MT_TX_HW_QUEUE_BMC,
-+				 MT_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
-+	mt7603_irq_enable(dev,
-+			  MT_INT_TX_DONE(IEEE80211_AC_VO) |
-+			  MT_INT_TX_DONE(IEEE80211_AC_VI) |
-+			  MT_INT_TX_DONE(IEEE80211_AC_BE) |
-+			  MT_INT_TX_DONE(IEEE80211_AC_BK) |
-+			  MT_INT_TX_DONE(MT_TX_HW_QUEUE_MGMT) |
-+			  MT_INT_TX_DONE(MT_TX_HW_QUEUE_MCU) |
-+			  MT_INT_TX_DONE(MT_TX_HW_QUEUE_BCN) |
-+			  MT_INT_TX_DONE(MT_TX_HW_QUEUE_BMC));
-+
- 	ret = mt7603_init_rx_queue(dev, &dev->mt76.q_rx[MT_RXQ_MCU], 1,
- 				   MT7603_MCU_RX_RING_SIZE, MT_RX_BUF_SIZE);
- 	if (ret)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index aefa161ecbf8..5288301e7614 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -1434,6 +1434,7 @@ static void mt7603_mac_watchdog_reset(struct mt7603_dev *dev)
- 
- 	mt7603_pse_client_reset(dev);
- 
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], true);
- 	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], true);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-index d275aa6e003c..96b6c8916730 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-@@ -73,7 +73,7 @@ mt7603_mcu_skb_send_msg(struct mt76_dev *mdev, struct sk_buff *skb,
- 	if (wait_seq)
- 		*wait_seq = seq;
- 
--	return mt76_tx_queue_skb_raw(dev, mdev->q_tx[MT_TXQ_MCU], skb, 0);
-+	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[MT_MCUQ_WM], skb, 0);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-index ffe36e5ee98d..c3a52467095d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-@@ -332,21 +332,18 @@ static int
- mt7615_queues_read(struct seq_file *s, void *data)
+@@ -67,6 +69,7 @@ mt7603_add_buffered_bc(void *priv, u8 *mac, struct ieee80211_vif *vif)
+ void mt7603_pre_tbtt_tasklet(struct tasklet_struct *t)
  {
- 	struct mt7615_dev *dev = dev_get_drvdata(s->private);
--	static const struct {
-+	struct {
-+		struct mt76_queue *q;
- 		char *queue;
--		int id;
- 	} queue_map[] = {
--		{ "PDMA0", MT_TXQ_BE },
--		{ "MCUQ", MT_TXQ_MCU },
--		{ "MCUFWQ", MT_TXQ_FWDL },
-+		{ dev->mt76.q_tx[MT_TXQ_BE], "PDMA0" },
-+		{ dev->mt76.q_mcu[MT_MCUQ_WM], "MCUQ" },
-+		{ dev->mt76.q_mcu[MT_MCUQ_FWDL], "MCUFWQ" },
- 	};
- 	int i;
+ 	struct mt7603_dev *dev = from_tasklet(dev, t, mt76.pre_tbtt_tasklet);
++	struct mt76_dev *mdev = &dev->mt76;
+ 	struct mt76_queue *q;
+ 	struct beacon_bc_data data = {};
+ 	struct sk_buff *skb;
+@@ -78,7 +81,7 @@ void mt7603_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 	data.dev = dev;
+ 	__skb_queue_head_init(&data.q);
  
- 	for (i = 0; i < ARRAY_SIZE(queue_map); i++) {
--		struct mt76_queue *q = dev->mt76.q_tx[queue_map[i].id];
--
--		if (!q)
--			continue;
-+		struct mt76_queue *q = queue_map[i].q;
+-	q = dev->mt76.q_tx[MT_TXQ_BEACON];
++	q = mdev->q_tx[MT_TXQ_BEACON];
+ 	spin_lock_bh(&q->lock);
+ 	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
+ 		IEEE80211_IFACE_ITER_RESUME_ALL,
+@@ -89,13 +92,13 @@ void mt7603_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 	/* Flush all previous CAB queue packets */
+ 	mt76_wr(dev, MT_WF_ARB_CAB_FLUSH, GENMASK(30, 16) | BIT(0));
  
- 		seq_printf(s,
- 			   "%s:	queued=%d head=%d tail=%d\n",
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-index ac5c9c951600..39b5af7b94ab 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-@@ -37,9 +37,8 @@ mt7622_init_tx_queues_multi(struct mt7615_dev *dev)
- 	if (ret)
- 		return ret;
+-	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_CAB], false);
++	mt76_queue_tx_cleanup(dev, mdev->q_tx[MT_TXQ_CAB], false);
  
--	return mt76_init_tx_queue(&dev->mphy, MT_TXQ_MCU, MT7622_TXQ_MCU,
--				  MT7615_TX_MCU_RING_SIZE,
--				  MT_TX_RING_BASE);
-+	return mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM, MT7622_TXQ_MCU,
-+				   MT7615_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
- }
- 
- static int
-@@ -47,9 +46,8 @@ mt7615_init_tx_queues(struct mt7615_dev *dev)
- {
- 	int ret, i;
- 
--	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_FWDL, MT7615_TXQ_FWDL,
--				 MT7615_TX_FWDL_RING_SIZE,
--				 MT_TX_RING_BASE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_FWDL, MT7615_TXQ_FWDL,
-+				  MT7615_TX_FWDL_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
-@@ -61,12 +59,11 @@ mt7615_init_tx_queues(struct mt7615_dev *dev)
- 	if (ret)
- 		return ret;
- 
--	for (i = 1; i < MT_TXQ_MCU; i++)
-+	for (i = 1; i <= MT_TXQ_PSD ; i++)
- 		dev->mt76.q_tx[i] = dev->mt76.q_tx[0];
- 
--	return mt76_init_tx_queue(&dev->mphy, MT_TXQ_MCU, MT7615_TXQ_MCU,
--				  MT7615_TX_MCU_RING_SIZE,
--				  MT_TX_RING_BASE);
-+	return mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM, MT7615_TXQ_MCU,
-+				   MT7615_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
- }
- 
- static int mt7615_poll_tx(struct napi_struct *napi, int budget)
-@@ -75,7 +72,7 @@ static int mt7615_poll_tx(struct napi_struct *napi, int budget)
- 
- 	dev = container_of(napi, struct mt7615_dev, mt76.tx_napi);
- 
--	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_MCU], false);
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
- 
- 	if (napi_complete_done(napi, 0))
- 		mt7615_irq_enable(dev, mt7615_tx_mcu_int_mask(dev));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 78fc7b962101..bf25ed6714a2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -2044,6 +2044,7 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
- 		   MT_WPDMA_GLO_CFG_TX_WRITEBACK_DONE);
- 	usleep_range(1000, 2000);
- 
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], true);
- 	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], true);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 4733b3804881..2a03c658427a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -235,11 +235,11 @@ mt7615_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 
- 	mt7615_mcu_fill_msg(dev, skb, cmd, seq);
- 	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state))
--		qid = MT_TXQ_MCU;
-+		qid = MT_MCUQ_WM;
- 	else
--		qid = MT_TXQ_FWDL;
-+		qid = MT_MCUQ_FWDL;
- 
--	return mt76_tx_queue_skb_raw(dev, dev->mt76.q_tx[qid], skb, 0);
-+	return mt76_tx_queue_skb_raw(dev, dev->mt76.q_mcu[qid], skb, 0);
- }
- 
- u32 mt7615_rf_rr(struct mt7615_dev *dev, u32 wf, u32 reg)
-@@ -2464,7 +2464,7 @@ int mt7615_mcu_init(struct mt7615_dev *dev)
- 	if (ret)
- 		return ret;
- 
--	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_FWDL], false);
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
- 	dev_dbg(dev->mt76.dev, "Firmware init done\n");
- 	set_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state);
- 	mt7615_mcu_fw_log_2_host(dev, 0);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 625df4b8e730..99b8abdbb08f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -516,7 +516,7 @@ static inline u8 mt7615_lmac_mapping(struct mt7615_dev *dev, u8 ac)
- 
- static inline u32 mt7615_tx_mcu_int_mask(struct mt7615_dev *dev)
- {
--	return MT_INT_TX_DONE(dev->mt76.q_tx[MT_TXQ_MCU]->hw_idx);
-+	return MT_INT_TX_DONE(dev->mt76.q_mcu[MT_MCUQ_WM]->hw_idx);
- }
- 
- void mt7615_dma_reset(struct mt7615_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-index a6f28b80feba..17fe4187d1de 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-@@ -42,11 +42,11 @@ mt7663s_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 	int ret;
- 
- 	mt7615_mcu_fill_msg(dev, skb, cmd, seq);
--	ret = mt76_tx_queue_skb_raw(dev, mdev->q_tx[MT_TXQ_MCU], skb, 0);
-+	ret = mt76_tx_queue_skb_raw(dev, mdev->q_mcu[MT_MCUQ_WM], skb, 0);
- 	if (ret)
- 		return ret;
- 
--	mt76_queue_kick(dev, mdev->q_tx[MT_TXQ_MCU]);
-+	mt76_queue_kick(dev, mdev->q_mcu[MT_MCUQ_WM]);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-index ab883b4bca45..9cd33dd8b20c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-@@ -217,7 +217,7 @@ static int __mt7663s_xmit_queue(struct mt76_dev *dev, u8 *data, int len)
- static int mt7663s_tx_run_queue(struct mt76_dev *dev, struct mt76_queue *q)
- {
- 	int qid, err, nframes = 0, len = 0, pse_sz = 0, ple_sz = 0;
--	bool mcu = q == dev->q_tx[MT_TXQ_MCU];
-+	bool mcu = q == dev->q_mcu[MT_MCUQ_WM];
- 	struct mt76_sdio *sdio = &dev->sdio;
- 
- 	qid = mcu ? ARRAY_SIZE(sdio->xmit_buf) - 1 : q->qid;
-@@ -286,11 +286,14 @@ void mt7663s_txrx_worker(struct mt76_worker *w)
- 		nframes = 0;
- 
- 		/* tx */
--		for (i = 0; i < MT_TXQ_MCU_WA; i++) {
-+		for (i = 0; i <= MT_TXQ_PSD; i++) {
- 			ret = mt7663s_tx_run_queue(dev, dev->q_tx[i]);
- 			if (ret > 0)
- 				nframes += ret;
- 		}
-+		ret = mt7663s_tx_run_queue(dev, dev->q_mcu[MT_MCUQ_WM]);
-+		if (ret > 0)
-+			nframes += ret;
- 
- 		/* rx */
- 		ret = mt7663s_rx_handler(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-index 3846e5be62c0..4aa5c36afeaf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-@@ -61,7 +61,7 @@ int mt76x02_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
- 		  FIELD_PREP(MT_MCU_MSG_PORT, CPU_TX_PORT) |
- 		  FIELD_PREP(MT_MCU_MSG_LEN, skb->len);
- 
--	ret = mt76_tx_queue_skb_raw(dev, mdev->q_tx[MT_TXQ_MCU], skb, tx_info);
-+	ret = mt76_tx_queue_skb_raw(dev, mdev->q_mcu[MT_MCUQ_WM], skb, tx_info);
- 	if (ret)
+-	mt76_csa_check(&dev->mt76);
+-	if (dev->mt76.csa_complete)
++	mt76_csa_check(mdev);
++	if (mdev->csa_complete)
  		goto out;
  
+-	q = dev->mt76.q_tx[MT_TXQ_CAB];
++	q = mdev->q_tx[MT_TXQ_CAB];
+ 	do {
+ 		nframes = skb_queue_len(&data.q);
+ 		ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
+@@ -120,7 +123,8 @@ void mt7603_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 		struct ieee80211_vif *vif = info->control.vif;
+ 		struct mt7603_vif *mvif = (struct mt7603_vif *)vif->drv_priv;
+ 
+-		mt76_tx_queue_skb(dev, MT_TXQ_CAB, skb, &mvif->sta.wcid, NULL);
++		mt76_tx_queue_skb(dev, mdev->q_tx[MT_TXQ_CAB], skb,
++				  &mvif->sta.wcid, NULL);
+ 	}
+ 	mt76_queue_kick(dev, q);
+ 	spin_unlock_bh(&q->lock);
+@@ -135,9 +139,8 @@ void mt7603_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 		 ((1 << (MT7603_MAX_INTERFACES - 1)) - 1)));
+ 
+ out:
+-	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_BEACON], false);
+-	if (dev->mt76.q_tx[MT_TXQ_BEACON]->queued >
+-	    hweight8(dev->mt76.beacon_mask))
++	mt76_queue_tx_cleanup(dev, mdev->q_tx[MT_TXQ_BEACON], false);
++	if (mdev->q_tx[MT_TXQ_BEACON]->queued > hweight8(mdev->beacon_mask))
+ 		dev->beacon_check++;
+ }
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 609988eeb89d..c6a33c1a1277 100644
+index e610544971a6..8b0e2a4bdf30 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -104,21 +104,6 @@ void mt76x02e_init_beacon_config(struct mt76x02_dev *dev)
- }
- EXPORT_SYMBOL_GPL(mt76x02e_init_beacon_config);
- 
--static int
--mt76x02_init_tx_queue(struct mt76x02_dev *dev, int qid, int idx, int n_desc)
--{
--	int err;
--
--	err = mt76_init_tx_queue(&dev->mphy, qid, idx, n_desc,
--				 MT_TX_RING_BASE);
--	if (err < 0)
--		return err;
--
--	mt76x02_irq_enable(dev, MT_INT_TX_DONE(idx));
--
--	return 0;
--}
--
- static int
- mt76x02_init_rx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
- 		      int idx, int n_desc, int bufsize)
-@@ -164,13 +149,15 @@ static int mt76x02_poll_tx(struct napi_struct *napi, int budget)
- 
- 	mt76x02_mac_poll_tx_status(dev, false);
- 
--	for (i = MT_TXQ_MCU; i >= 0; i--)
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+	for (i = MT_TXQ_PSD; i >= 0; i--)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], false);
- 
- 	if (napi_complete_done(napi, 0))
- 		mt76x02_irq_enable(dev, MT_INT_TX_DONE_ALL);
- 
--	for (i = MT_TXQ_MCU; i >= 0; i--)
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+	for (i = MT_TXQ_PSD; i >= 0; i--)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], false);
- 
- 	mt76_worker_schedule(&dev->mt76.tx_worker);
-@@ -203,22 +190,31 @@ int mt76x02_dma_init(struct mt76x02_dev *dev)
- 	mt76_wr(dev, MT_WPDMA_RST_IDX, ~0);
- 
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
--		ret = mt76x02_init_tx_queue(dev, i, mt76_ac_to_hwq(i),
--					    MT76x02_TX_RING_SIZE);
-+		ret = mt76_init_tx_queue(&dev->mphy, i, mt76_ac_to_hwq(i),
-+					 MT76x02_TX_RING_SIZE,
-+					 MT_TX_RING_BASE);
- 		if (ret)
- 			return ret;
- 	}
- 
--	ret = mt76x02_init_tx_queue(dev, MT_TXQ_PSD,
--				    MT_TX_HW_QUEUE_MGMT, MT76x02_PSD_RING_SIZE);
-+	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_PSD, MT_TX_HW_QUEUE_MGMT,
-+				 MT76x02_PSD_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
--	ret = mt76x02_init_tx_queue(dev, MT_TXQ_MCU,
--				    MT_TX_HW_QUEUE_MCU, MT_MCU_RING_SIZE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM, MT_TX_HW_QUEUE_MCU,
-+				  MT_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
- 
-+	mt76x02_irq_enable(dev,
-+			   MT_INT_TX_DONE(IEEE80211_AC_VO) |
-+			   MT_INT_TX_DONE(IEEE80211_AC_VI) |
-+			   MT_INT_TX_DONE(IEEE80211_AC_BE) |
-+			   MT_INT_TX_DONE(IEEE80211_AC_BK) |
-+			   MT_INT_TX_DONE(MT_TX_HW_QUEUE_MGMT) |
-+			   MT_INT_TX_DONE(MT_TX_HW_QUEUE_MCU));
-+
- 	ret = mt76x02_init_rx_queue(dev, &dev->mt76.q_rx[MT_RXQ_MCU], 1,
- 				    MT_MCU_RING_SIZE, MT_RX_BUF_SIZE);
- 	if (ret)
-@@ -469,6 +465,7 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev *dev)
- 	if (restart)
- 		mt76_mcu_restart(dev);
- 
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], true);
- 	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], true);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 8f2ad32ade18..ac2c5997b22f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -280,22 +280,19 @@ static int
- mt7915_queues_read(struct seq_file *s, void *data)
+@@ -14,7 +14,8 @@
+ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
  {
- 	struct mt7915_dev *dev = dev_get_drvdata(s->private);
--	static const struct {
-+	struct {
-+		struct mt76_queue *q;
- 		char *queue;
--		int id;
- 	} queue_map[] = {
--		{ "WFDMA0", MT_TXQ_BE },
--		{ "MCUWM", MT_TXQ_MCU },
--		{ "MCUWA", MT_TXQ_MCU_WA },
--		{ "MCUFWQ", MT_TXQ_FWDL },
-+		{ dev->mt76.q_tx[MT_TXQ_BE], "WFDMA0" },
-+		{ dev->mt76.q_mcu[MT_MCUQ_WM], "MCUWM" },
-+		{ dev->mt76.q_mcu[MT_MCUQ_WA], "MCUWA" },
-+		{ dev->mt76.q_mcu[MT_MCUQ_FWDL], "MCUFWQ" },
- 	};
+ 	struct mt76x02_dev *dev = from_tasklet(dev, t, mt76.pre_tbtt_tasklet);
+-	struct mt76_queue *q = dev->mt76.q_tx[MT_TXQ_PSD];
++	struct mt76_dev *mdev = &dev->mt76;
++	struct mt76_queue *q = mdev->q_tx[MT_TXQ_PSD];
+ 	struct beacon_bc_data data = {};
+ 	struct sk_buff *skb;
  	int i;
+@@ -35,9 +36,9 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 	mt76_wr(dev, MT_BCN_BYPASS_MASK,
+ 		0xff00 | ~(0xff00 >> dev->beacon_data_count));
  
- 	for (i = 0; i < ARRAY_SIZE(queue_map); i++) {
--		struct mt76_queue *q = dev->mt76.q_tx[queue_map[i].id];
--
--		if (!q)
--			continue;
-+		struct mt76_queue *q = queue_map[i].q;
+-	mt76_csa_check(&dev->mt76);
++	mt76_csa_check(mdev);
  
- 		seq_printf(s,
- 			   "%s:	queued=%d head=%d tail=%d\n",
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-index 479fe828ea9f..4f7c5fd83efb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
-@@ -14,7 +14,7 @@ mt7915_init_tx_queues(struct mt7915_dev *dev, int idx, int n_desc)
+-	if (dev->mt76.csa_complete)
++	if (mdev->csa_complete)
+ 		return;
+ 
+ 	mt76x02_enqueue_buffered_bc(dev, &data, 8);
+@@ -58,8 +59,8 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 		struct ieee80211_vif *vif = info->control.vif;
+ 		struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
+ 
+-		mt76_tx_queue_skb(dev, MT_TXQ_PSD, skb, &mvif->group_wcid,
+-				  NULL);
++		mt76_tx_queue_skb(dev, mdev->q_tx[MT_TXQ_PSD], skb,
++				  &mvif->group_wcid, NULL);
+ 	}
+ 	spin_unlock_bh(&q->lock);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
+index ddd454d628aa..b1bc459a721d 100644
+--- a/drivers/net/wireless/mediatek/mt76/sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/sdio.c
+@@ -239,11 +239,10 @@ static void mt76s_tx_status_data(struct work_struct *work)
+ }
+ 
+ static int
+-mt76s_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
++mt76s_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 		   struct sk_buff *skb, struct mt76_wcid *wcid,
+ 		   struct ieee80211_sta *sta)
+ {
+-	struct mt76_queue *q = dev->q_tx[qid];
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -254,7 +253,7 @@ mt76s_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 		return -ENOSPC;
+ 
+ 	skb->prev = skb->next = NULL;
+-	err = dev->drv->tx_prepare_skb(dev, NULL, qid, wcid, sta, &tx_info);
++	err = dev->drv->tx_prepare_skb(dev, NULL, q->qid, wcid, sta, &tx_info);
  	if (err < 0)
  		return err;
  
--	for (i = 0; i < MT_TXQ_MCU; i++)
-+	for (i = 0; i <= MT_TXQ_PSD; i++)
- 		dev->mt76.q_tx[i] = dev->mt76.q_tx[0];
+diff --git a/drivers/net/wireless/mediatek/mt76/testmode.c b/drivers/net/wireless/mediatek/mt76/testmode.c
+index d1b171697e28..733c396eb3d2 100644
+--- a/drivers/net/wireless/mediatek/mt76/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/testmode.c
+@@ -39,7 +39,8 @@ void mt76_testmode_tx_pending(struct mt76_dev *dev)
+ 	       q->queued < q->ndesc / 2) {
+ 		int ret;
  
- 	return 0;
-@@ -56,8 +56,8 @@ void mt7915_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- static void
- mt7915_tx_cleanup(struct mt7915_dev *dev)
+-		ret = dev->queue_ops->tx_queue_skb(dev, qid, skb_get(skb), wcid, NULL);
++		ret = dev->queue_ops->tx_queue_skb(dev, q, skb_get(skb), wcid,
++						   NULL);
+ 		if (ret < 0)
+ 			break;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 73624700fe44..844d04503102 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -225,23 +225,23 @@ void mt76_tx_complete_skb(struct mt76_dev *dev, u16 wcid_idx, struct sk_buff *sk
+ EXPORT_SYMBOL_GPL(mt76_tx_complete_skb);
+ 
+ static int
+-__mt76_tx_queue_skb(struct mt76_dev *dev, int qid, struct sk_buff *skb,
++__mt76_tx_queue_skb(struct mt76_phy *phy, int qid, struct sk_buff *skb,
+ 		    struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+ 		    bool *stop)
  {
--	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_MCU], false);
--	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_MCU_WA], false);
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WA], false);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct mt76_queue *q;
++	struct mt76_dev *dev = phy->dev;
++	struct mt76_queue *q = dev->q_tx[qid];
+ 	bool non_aql;
+ 	int pending;
+ 	int idx;
+ 
+ 	non_aql = !info->tx_time_est;
+-	idx = dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid, sta);
++	idx = dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
+ 	if (idx < 0 || !sta || !non_aql)
+ 		return idx;
+ 
+ 	wcid = (struct mt76_wcid *)sta->drv_priv;
+-	q = dev->q_tx[qid];
+ 	q->entry[idx].wcid = wcid->idx;
+ 	pending = atomic_inc_return(&wcid->non_aql_packets);
+ 	if (stop && pending >= MT_MAX_NON_AQL_PKT)
+@@ -289,7 +289,7 @@ mt76_tx(struct mt76_phy *phy, struct ieee80211_sta *sta,
+ 	q = dev->q_tx[qid];
+ 
+ 	spin_lock_bh(&q->lock);
+-	__mt76_tx_queue_skb(dev, qid, skb, wcid, sta, NULL);
++	__mt76_tx_queue_skb(phy, qid, skb, wcid, sta, NULL);
+ 	dev->queue_ops->kick(dev, q);
+ 
+ 	if (q->queued > q->ndesc - 8 && !q->stopped) {
+@@ -321,7 +321,7 @@ mt76_txq_dequeue(struct mt76_phy *phy, struct mt76_txq *mtxq)
  }
  
- static int mt7915_poll_tx(struct napi_struct *napi, int budget)
-@@ -243,20 +243,20 @@ int mt7915_dma_init(struct mt7915_dev *dev)
- 		return ret;
+ static void
+-mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
++mt76_queue_ps_skb(struct mt76_phy *phy, struct ieee80211_sta *sta,
+ 		  struct sk_buff *skb, bool last)
+ {
+ 	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
+@@ -333,7 +333,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 			       IEEE80211_TX_CTL_REQ_TX_STATUS;
  
- 	/* command to WM */
--	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_MCU, MT7915_TXQ_MCU_WM,
--				 MT7915_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM, MT7915_TXQ_MCU_WM,
-+				  MT7915_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
+ 	mt76_skb_set_moredata(skb, !last);
+-	__mt76_tx_queue_skb(dev, MT_TXQ_PSD, skb, wcid, sta, NULL);
++	__mt76_tx_queue_skb(phy, MT_TXQ_PSD, skb, wcid, sta, NULL);
+ }
  
- 	/* command to WA */
--	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_MCU_WA, MT7915_TXQ_MCU_WA,
--				 MT7915_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WA, MT7915_TXQ_MCU_WA,
-+				  MT7915_TX_MCU_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
+ void
+@@ -364,14 +364,14 @@ mt76_release_buffered_frames(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
  
- 	/* firmware download */
--	ret = mt76_init_tx_queue(&dev->mphy, MT_TXQ_FWDL, MT7915_TXQ_FWDL,
--				 MT7915_TX_FWDL_RING_SIZE, MT_TX_RING_BASE);
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_FWDL, MT7915_TXQ_FWDL,
-+				  MT7915_TX_FWDL_RING_SIZE, MT_TX_RING_BASE);
- 	if (ret)
- 		return ret;
+ 			nframes--;
+ 			if (last_skb)
+-				mt76_queue_ps_skb(dev, sta, last_skb, false);
++				mt76_queue_ps_skb(phy, sta, last_skb, false);
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 5963455d6023..3c0b72edfb35 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1432,6 +1432,7 @@ mt7915_dma_reset(struct mt7915_dev *dev)
- 		   MT_WFDMA1_GLO_CFG_TX_DMA_EN | MT_WFDMA1_GLO_CFG_RX_DMA_EN);
- 	usleep_range(1000, 2000);
- 
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WA], true);
- 	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[i], true);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 6b41ecdc4b4a..12d683a873a0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -268,18 +268,18 @@ mt7915_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 		seq = ++dev->mt76.mcu.msg_seq & 0xf;
- 
- 	if (cmd == -MCU_CMD_FW_SCATTER) {
--		txq = MT_TXQ_FWDL;
-+		txq = MT_MCUQ_FWDL;
- 		goto exit;
+ 			last_skb = skb;
+ 		} while (nframes);
  	}
  
- 	mcu_txd = (struct mt7915_mcu_txd *)skb_push(skb, sizeof(*mcu_txd));
- 
- 	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state)) {
--		txq = MT_TXQ_MCU_WA;
-+		txq = MT_MCUQ_WA;
- 		qidx = MT_TX_MCU_PORT_RX_Q0;
- 		pkt_fmt = MT_TX_TYPE_CMD;
+ 	if (last_skb) {
+-		mt76_queue_ps_skb(dev, sta, last_skb, true);
++		mt76_queue_ps_skb(phy, sta, last_skb, true);
+ 		dev->queue_ops->kick(dev, hwq);
  	} else {
--		txq = MT_TXQ_MCU;
-+		txq = MT_MCUQ_WM;
- 		qidx = MT_TX_MCU_PORT_RX_Q0;
- 		pkt_fmt = MT_TX_TYPE_CMD;
- 	}
-@@ -326,7 +326,7 @@ mt7915_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 	if (wait_seq)
- 		*wait_seq = seq;
+ 		ieee80211_sta_eosp(sta);
+@@ -410,7 +410,7 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
+ 		ieee80211_get_tx_rates(txq->vif, txq->sta, skb,
+ 				       info->control.rates, 1);
  
--	return mt76_tx_queue_skb_raw(dev, mdev->q_tx[txq], skb, 0);
-+	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[txq], skb, 0);
+-	idx = __mt76_tx_queue_skb(dev, qid, skb, wcid, txq->sta, &stop);
++	idx = __mt76_tx_queue_skb(phy, qid, skb, wcid, txq->sta, &stop);
+ 	if (idx < 0)
+ 		return idx;
+ 
+@@ -434,7 +434,7 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
+ 			ieee80211_get_tx_rates(txq->vif, txq->sta, skb,
+ 					       info->control.rates, 1);
+ 
+-		idx = __mt76_tx_queue_skb(dev, qid, skb, wcid, txq->sta, &stop);
++		idx = __mt76_tx_queue_skb(phy, qid, skb, wcid, txq->sta, &stop);
+ 		if (idx < 0)
+ 			break;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 7396bdae6db0..6b27b01245ed 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -901,11 +901,10 @@ mt76u_tx_setup_buffers(struct mt76_dev *dev, struct sk_buff *skb,
  }
  
- static void
-@@ -2799,7 +2799,7 @@ static int mt7915_load_firmware(struct mt7915_dev *dev)
- 		return -EIO;
- 	}
- 
--	mt76_queue_tx_cleanup(dev, dev->mt76.q_tx[MT_TXQ_FWDL], false);
-+	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
- 
- 	dev_dbg(dev->mt76.dev, "Firmware init done\n");
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
-index fce133736273..7a633f0e9ff6 100644
---- a/drivers/net/wireless/mediatek/mt76/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/sdio.c
-@@ -74,8 +74,8 @@ static int mt76s_alloc_tx(struct mt76_dev *dev)
- 	if (IS_ERR(q))
- 		return PTR_ERR(q);
- 
--	q->qid = MT_TXQ_MCU;
--	dev->q_tx[MT_TXQ_MCU] = q;
-+	q->qid = MT_MCUQ_WM;
-+	dev->q_mcu[MT_MCUQ_WM] = q;
- 
- 	return 0;
- }
-@@ -157,7 +157,7 @@ static void mt76s_net_worker(struct mt76_worker *w)
- 
- static int mt76s_process_tx_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ static int
+-mt76u_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
++mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 		   struct sk_buff *skb, struct mt76_wcid *wcid,
+ 		   struct ieee80211_sta *sta)
  {
--	bool wake, mcu = q == dev->q_tx[MT_TXQ_MCU];
-+	bool wake, mcu = q == dev->q_mcu[MT_MCUQ_WM];
- 	struct mt76_queue_entry entry;
- 	int nframes = 0;
+-	struct mt76_queue *q = dev->q_tx[qid];
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -916,7 +915,7 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 		return -ENOSPC;
  
-@@ -203,8 +203,9 @@ static void mt76s_status_worker(struct mt76_worker *w)
- 	int i, nframes;
+ 	skb->prev = skb->next = NULL;
+-	err = dev->drv->tx_prepare_skb(dev, NULL, qid, wcid, sta, &tx_info);
++	err = dev->drv->tx_prepare_skb(dev, NULL, q->qid, wcid, sta, &tx_info);
+ 	if (err < 0)
+ 		return err;
  
- 	do {
--		nframes = 0;
--		for (i = 0; i < MT_TXQ_MCU_WA; i++)
-+		nframes = mt76s_process_tx_queue(dev, dev->q_mcu[MT_MCUQ_WM]);
+@@ -994,6 +993,8 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
+ 
+ 		spin_lock_init(&q->lock);
+ 		q->hw_idx = mt76u_ac_to_hwq(dev, i);
++		q->qid = i;
 +
-+		for (i = 0; i <= MT_TXQ_PSD; i++)
- 			nframes += mt76s_process_tx_queue(dev, dev->q_tx[i]);
+ 		dev->q_tx[i] = q;
  
- 		if (dev->drv->tx_status_data &&
+ 		q->entry = devm_kcalloc(dev->dev,
 -- 
 2.26.2
 
