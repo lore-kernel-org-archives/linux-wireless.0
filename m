@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 965FCC388F7
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 143DEC5517A
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3ED432065E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A27C12065E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732248AbgKKCWU (ORCPT
+        id S1732415AbgKKCWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 10 Nov 2020 21:22:20 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:39292 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:39288 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732211AbgKKCWU (ORCPT
+        with ESMTP id S1732081AbgKKCWU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 10 Nov 2020 21:22:20 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MDlaC027731, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MEdlC027738, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MDlaC027731
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MEdlC027738
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 11 Nov 2020 10:22:13 +0800
+        Wed, 11 Nov 2020 10:22:14 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -34,9 +34,9 @@ Received: from localhost.localdomain (172.21.69.213) by
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/11] rtw88: coex: Change antenna setting to enhance free-run performance
-Date:   Wed, 11 Nov 2020 10:21:04 +0800
-Message-ID: <20201111022108.9834-8-pkshih@realtek.com>
+Subject: [PATCH 10/11] rtw88: coex: remove unnecessary WLAN slot extend
+Date:   Wed, 11 Nov 2020 10:21:07 +0800
+Message-ID: <20201111022108.9834-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201111022108.9834-1-pkshih@realtek.com>
 References: <20201111022108.9834-1-pkshih@realtek.com>
@@ -52,63 +52,52 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-While the mechanism goes to 2G_free_run or WL5G_BT2G,
-set BT to hardware PTA mode to get a more efficiently performance.
+Remove extend 5 ms related operation at WLAN media status notify.
+The mechanism should be enable only while DUT connect to a AP that it
+doesn't follow our power save control or its rate is decreasing unusually
+sensitive. So we extend a extra slot to save the transmission rate.
 
-Add a flag to indicate antenna switch is supported or not so
-that the IC serials which has different antenna structure can
-set antenna correctly.
+The original logic will always extend WLAN slot.
+It will lead to BT slot always decrease 5 ms.
+
+Remove write scoreboard action at WLAN media status notify.
+It has already done in WLAN info notify.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index aa95d617b86a..8c7216245557 100644
+index aef77c377a5b..95e5ff5abae5 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1062,6 +1062,7 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+@@ -2593,8 +2593,6 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
+ void rtw_coex_media_status_notify(struct rtw_dev *rtwdev, u8 type)
  {
  	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
-+	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
- 	struct rtw_coex_dm *coex_dm = &coex->dm;
- 	u8 ctrl_type = COEX_SWITCH_CTRL_MAX;
- 	u8 pos_type = COEX_SWITCH_TO_MAX;
-@@ -1157,8 +1158,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
- 		rtw_dbg(rtwdev, RTW_DBG_COEX,
- 			"[BTCoex], %s() - PHASE_5G_RUNTIME\n", __func__);
+-	struct rtw_coex_stat *coex_stat = &coex->stat;
+-	u8 para[6] = {0};
  
--		/* set GNT_BT to PTA */
--		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
-+		/* set GNT_BT to HW PTA */
-+		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
- 
- 		/* set GNT_WL to SW high */
- 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
-@@ -1173,8 +1174,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
- 		rtw_dbg(rtwdev, RTW_DBG_COEX,
- 			"[BTCoex], %s() - PHASE_2G_FREERUN\n", __func__);
- 
--		/* set GNT_BT to SW high */
--		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
-+		/* set GNT_BT to HW PTA */
-+		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
- 
- 		/* Set GNT_WL to SW high */
- 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
-@@ -1205,7 +1206,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 	if (coex->manual_control || coex->stop_dm)
  		return;
- 	}
+@@ -2616,15 +2614,8 @@ void rtw_coex_media_status_notify(struct rtw_dev *rtwdev, u8 type)
  
--	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX)
-+	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX &&
-+	    coex_rfe->ant_switch_exist)
- 		rtw_coex_set_ant_switch(rtwdev, ctrl_type, pos_type);
- }
- 
+ 		/* Set CCK Rx high Pri */
+ 		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_RX_CCK, 1);
+-
+-		/* always enable 5ms extend if connect */
+-		para[0] = COEX_H2C69_WL_LEAKAP;
+-		para[1] = PARA1_H2C69_EN_5MS; /* enable 5ms extend */
+-		rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1]);
+-		coex_stat->wl_slot_extend = true;
+ 		rtw_coex_run_coex(rtwdev, COEX_RSN_2GMEDIA);
+ 	} else {
+-		rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE, false);
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], %s(): disconnect!!\n",
+ 			__func__);
+ 		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_RX_CCK, 0);
 -- 
 2.21.0
 
