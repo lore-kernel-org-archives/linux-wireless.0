@@ -2,110 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 073C8C388F9
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 17:48:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AD5C388F9
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 18:34:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8112120678
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 17:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2250207D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 18:34:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="aHB8cfO9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="K2aS83x1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbgKKRsD (ORCPT
+        id S1727430AbgKKSeE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Nov 2020 12:48:03 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:21777 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726973AbgKKRsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Nov 2020 12:48:01 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605116881; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=7g87NZ0M/XFTxCuaZCnkFZZOqSYBdmIg4bjJcPXl19M=; b=aHB8cfO9HkeamlBbTxgj79Z41K+lMcK2z3Cva8JfU2SrIo9cmluZ44hznd1JPFVfrSV1eHET
- VRNC2QoldlsS+GHk/uQ4xtSDRrhHs9FznkYKcYqc/e/cv6pcct1vBKUenCXH7CLm7xzFu3/S
- iJWL/OjFmT4P3nBw7C2LNPRg59o=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5fac1b7f34c4908d19e6864a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 11 Nov 2020 17:12:31
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 12E90C433A1; Wed, 11 Nov 2020 17:12:30 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C6DEEC433C6;
-        Wed, 11 Nov 2020 17:12:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C6DEEC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?utf-8?Q?Bj?= =?utf-8?Q?=C3=B8rn?= Mork <bjorn@mork.no>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <geomatsi@gmail.com>,
-        Oliver Neukum <oneukum@suse.com>,
-        Peter Korsgaard <jacmet@sunsite.dk>,
-        Steve Glendinning <steve.glendinning@shawell.net>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux USB Mailing List <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH net-next 3/5] qtnfmac: switch to core handling of rx/tx byte/packet counters
-References: <5fbe3a1f-6625-eadc-b1c9-f76f78debb94@gmail.com>
-        <4b22c155-6868-793f-ebfe-f797e16b9c40@gmail.com>
-Date:   Wed, 11 Nov 2020 19:12:22 +0200
-In-Reply-To: <4b22c155-6868-793f-ebfe-f797e16b9c40@gmail.com> (Heiner
-        Kallweit's message of "Tue, 10 Nov 2020 20:48:54 +0100")
-Message-ID: <87o8k34y2x.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 11 Nov 2020 13:34:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44206 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726235AbgKKSeD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Nov 2020 13:34:03 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D77C0613D1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2020 10:34:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=mUQJj/5A6aqLOlEFlwB9HFVaFwNXf6zvmBqCM09Y7ww=; b=K2aS83x1+C9oO+MXikl70fw+Jr
+        LzhUBluUBYka1d+1ceHP7Q/HSrE1fEohcKigiNwpU9EJWh/kbaeH2AgM7LzOgfMEn5krw/zRz1/Rt
+        svxOdnNlNlkR6uxDh5e//X/MGdSWvWCz2wU3OGgeRFgHXsz6fQbvAKWth3zkDmEVn1LQ=;
+Received: from p5b206c33.dip0.t-ipconnect.de ([91.32.108.51] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kcuwT-00034H-7F; Wed, 11 Nov 2020 19:34:01 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5.10 3/3] mac80211: minstrel: fix tx status processing corner case
+Date:   Wed, 11 Nov 2020 19:33:59 +0100
+Message-Id: <20201111183359.43528-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201111183359.43528-1-nbd@nbd.name>
+References: <20201111183359.43528-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Heiner Kallweit <hkallweit1@gmail.com> writes:
+Some drivers fill the status rate list without setting the rate index after
+the final rate to -1. minstrel_ht already deals with this, but minstrel
+doesn't, which causes it to get stuck at the lowest rate on these drivers.
 
-> Use netdev->tstats instead of a member of qtnf_vif for storing a pointer
-> to the per-cpu counters. This allows us to use core functionality for
-> statistics handling.
-> The driver sets netdev->needs_free_netdev, therefore freeing the per-cpu
-> counters at the right point in time is a little bit tricky. Best option
-> seems to be to use the ndo_init/ndo_uninit callbacks.
->
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> ---
->  drivers/net/wireless/quantenna/qtnfmac/core.c | 78 ++++---------------
->  drivers/net/wireless/quantenna/qtnfmac/core.h |  4 -
->  .../quantenna/qtnfmac/pcie/pearl_pcie.c       |  4 +-
->  .../quantenna/qtnfmac/pcie/topaz_pcie.c       |  4 +-
->  4 files changed, 20 insertions(+), 70 deletions(-)
+Fix this by checking the count as well.
 
-Jakub, feel free to take this to net-next:
+Cc: stable@vger.kernel.org
+Fixes: cccf129f820e ("mac80211: add the 'minstrel' rate control algorithm")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
-But I can also take this to wireless-drivers-next, whichever you prefer.
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index a8a940e97a9a..b13b1da19386 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -274,7 +274,7 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	success = !!(info->flags & IEEE80211_TX_STAT_ACK);
+ 
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+-		if (ar[i].idx < 0)
++		if (ar[i].idx < 0 || !ar[i].count)
+ 			break;
+ 
+ 		ndx = rix_to_ndx(mi, ar[i].idx);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.28.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
