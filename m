@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C34AC61DD8
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DD0C5517A
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EDF32065E
+	by mail.kernel.org (Postfix) with ESMTP id C211A2065E
 	for <linux-wireless@archiver.kernel.org>; Wed, 11 Nov 2020 02:22:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732528AbgKKCW1 (ORCPT
+        id S1732345AbgKKCWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Nov 2020 21:22:27 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:39283 "EHLO
+        Tue, 10 Nov 2020 21:22:20 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:39282 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731899AbgKKCWU (ORCPT
+        with ESMTP id S1732179AbgKKCWU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 10 Nov 2020 21:22:20 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MDlcC027731, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AB2MDJ10027721, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MDlcC027731
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AB2MDJ10027721
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Wed, 11 Nov 2020 10:22:13 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Wed, 11 Nov 2020 10:22:13 +0800
+ 15.1.2044.4; Wed, 11 Nov 2020 10:22:12 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/11] rtw88: coex: fix BT performance drop during initial/power-on step
-Date:   Wed, 11 Nov 2020 10:21:05 +0800
-Message-ID: <20201111022108.9834-9-pkshih@realtek.com>
+Subject: [PATCH 05/11] rtw88: coex: add the mechanism for RF4CE
+Date:   Wed, 11 Nov 2020 10:21:02 +0800
+Message-ID: <20201111022108.9834-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201111022108.9834-1-pkshih@realtek.com>
 References: <20201111022108.9834-1-pkshih@realtek.com>
@@ -52,61 +52,73 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Force set the coexistence to BT high priority during
-WLAN initial/power-on step. Since the duration the related setting
-may be not ready yet.
-
-The score board is not related to scan when initialing, remove the scan
-parameter.
+Add the related coexistence mechanism about RF4CE and WLAN connected
+flag to decide control packet is whether higher or normal priority.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/coex.c | 33 ++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coTÔÈ b/drivers/net/wireless/realtek/rtw88/coex.c8Ilex.cc7216245557..6ec3f45a64c1 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 961a9dafa969..ca44ŒÍø2b38 100644
+--- a/drivers/net/wireless/realt8Ilc4dc/coe|.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -2369,19 +2369,19 @@ static void __rtw_coex_init_hw_config(struct rtw_dev *rtwdev, bool wifi_only)
- 			__func__);
- 	} else if (wifi_only) {
- 		rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_WONLY);
--		rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_SCAN,
-+		rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF,
- 				    true);
- 		coex->stop_dm = true;
- 	} else {
- 		rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_INIT);
--		rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_SCAN,
-+		rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF,
- 				    true);
- 		coex->stop_dm = false;
- 		coex->freeze = true;
+@@ -1390,6 +1390,31 @@ static void rtw_coex_action_freerun(struct rtw_dev *rtwdev)
+ 	rtw_coex_tdma(rtwdev, false, 100);
+ }
+ 
++static void rtw_coex_action_rf4ce(struct rtw_dev *rtwdev)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 table_case, tdma_case;
++
++	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], %s()\n", __func__);
++
++	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
++	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
++
++	if (efuse->share_ant) {
++		/* Shared-Ant */
++		table_case = 9;
++		tdma_case = 16;
++	} else {
++		/* Non-Shared-Ant */
++		table_case = 100;
++		tdma_case = 100;
++	}
++
++	rtw_coex_table(rtwdev, false, table_case);
++	rtw_coex_tdma(rtwdev, false, tdma_case);
++}
++
+ static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+@@ -2180,6 +2205,7 @@ static void rtw_coex_run_coex(struct rtw_dev *rtwdev, u8 reason)
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_dm *coex_dm = &coex->dm;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
++	bool rf4ce_en = false;
+ 
+ 	lockdep_assert_held(&rtwdev->mutex);
+ 
+@@ -2235,7 +2261,12 @@ static void rtw_coex_run_coex(struct rtw_dev *rtwdev, u8 reason)
+ 	coex_stat->wl_coex_mode = COEX_WLINK_2G1PORT;
+ 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_FIX2M, false);
+ 	if (coex_stat->bt_disabled) {
+-		rtw_coex_action_wl_only(rtwdev);
++		if (coex_stat->wl_connected && rf4ce_en)
++			rtw_coex_action_rf4ce(rtwdev);
++		else if (!coex_stat->wl_connected)
++			rtw_coex_action_wl_not_connected(rtwdev);
++		else
++			rtw_coex_action_wl_only(rtwdev);
+ 		goto exit;
  	}
  
- 	/* PTA parameter */
--	rtw_coex_table(rtwdev, false, 0);
-+	rtw_coex_table(rtwdev, true, 1);
- 	rtw_coex_tdma(rtwdev, true, 0);
- 	rtw_coex_query_bt_info(rtwdev);
- }
-@@ -2389,6 +2389,7 @@ static void __rtw_coex_init_hw_config(struct rtw_dev *rtwdev, bool wifi_only)
- void rtw_coex_power_on_setting(struct rtw_dev *rtwdev)
- {
- 	struct rtw_coex *coex = &rtwdev->coex;
-+	u8 table_case = 1;
- 
- 	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], %s()\n", __func__);
- 
-@@ -2405,6 +2406,7 @@ void rtw_coex_power_on_setting(struct rtw_dev *rtwdev)
- 	/* set antenna path to BT */
- 	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_POWERON);
- 
-+	rtw_coex_table(rtwdev, true, table_case);
- 	/* red x issue */
- 	rtw_write8(rtwdev, 0xff1a, 0x0);
- }
 -- 
 2.21.0
 
