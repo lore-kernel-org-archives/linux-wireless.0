@@ -2,161 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 726ECC61DD8
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 01:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 117E2C56202
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DD2C207F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 01:45:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=technolu-st.20150623.gappssmtp.com header.i=@technolu-st.20150623.gappssmtp.com header.b="bsJw5TnH"
+	by mail.kernel.org (Postfix) with ESMTP id BF9F721534
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728673AbgKLBd5 (ORCPT
+        id S1728752AbgKLFif convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Nov 2020 20:33:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48908 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728209AbgKLBMM (ORCPT
+        Thu, 12 Nov 2020 00:38:35 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:58394 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726003AbgKLCXP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Nov 2020 20:12:12 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4665C061A47
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2020 17:11:27 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id i19so5326458ejx.9
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2020 17:11:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=technolu-st.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=KFCtis8RMvpDH0LV6+B1UizWzLwWkm5y+UkEj7eA6fI=;
-        b=bsJw5TnHrOYGZ6z6koJHWMYr62oFDE2M9tzcNlHR4+NA9bAvX20jEo133dJu6sefRQ
-         SAozTyjA5ERI451RWiW1FfJBBgJJe+Kjybu2DIZfMN6M+6nxjvEr/jlJMivppghkYn7D
-         euGYQaRhOgYqdybdsP673IFrBa4zskDNANg7QboGdMXXlsbfVKPa6+e2rzEW5MT7Zc56
-         oCb3DUC4/owxfv+SFdqEOZhuhRxnWdra258h7HTiyXpzhuuO0xVrAIfcVVWNrLLSJ4Be
-         p+89SPXD81mNtHzdWh/g9Vtar5Va7NM6ziUJHtlxFGn7DUy3x5XOZgtp5JHMAAKqce7N
-         fqxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=KFCtis8RMvpDH0LV6+B1UizWzLwWkm5y+UkEj7eA6fI=;
-        b=o93CPWhR1x4HT/67n6GGDiOVoURrmJuFGhjAhUyC8E7CiDxaxbli9O2u4kAIju9MaA
-         NQ6ip1m3ahgbiCqx8uojhkjI5D/6wmhm8ni/JZ1QO4DhHrs/CzAGAZmTDTljaBGt502R
-         KO+8fH5uCwCgF6cTXZ99LDsWEw/ydvcEu0rDgcA73S/ZWmiuyBKQcTXytCrPD65HKhVI
-         nOJk3mD3gthR5NIEDS/rSUeG0rtSQG2hJ5KtPjxNQEn9EexsC3WfMTlMMmewmwAoF7X6
-         W02F7x/EdXXnsaWEAR+1wMfzyz+Mw5hbVzNgTug6//2tTrMFXg3Hr0/WrAfKJHx1W6Nr
-         tMgg==
-X-Gm-Message-State: AOAM533dFuTTw+JZ4rkUMeLE1tkjO331M8wybmQsV18m7KaXKTiZk420
-        GMAV1lgkyN6Fp9mODwDWMHJVCh1dBC1YFJOMsu2yvg==
-X-Google-Smtp-Source: ABdhPJw8CbrtZOsD2SBgGSK03NgviwnC9hYlEHajxxXUANkdrm61lGkM9yqL3uG0jb6Co03N61vKRB0+1oFIsvgk1nw=
-X-Received: by 2002:a17:906:77c5:: with SMTP id m5mr28216170ejn.424.1605143486536;
- Wed, 11 Nov 2020 17:11:26 -0800 (PST)
+        Wed, 11 Nov 2020 21:23:15 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC2N7GK0009087, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb01.realtek.com.tw[172.21.6.94])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC2N7GK0009087
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 12 Nov 2020 10:23:07 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2044.4; Thu, 12 Nov 2020 10:23:07 +0800
+Received: from RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa]) by
+ RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa%3]) with mapi id
+ 15.01.2044.006; Thu, 12 Nov 2020 10:23:07 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 01/11] rtw88: coex: update TDMA settings for different beacon interval
+Thread-Topic: [PATCH 01/11] rtw88: coex: update TDMA settings for different
+ beacon interval
+Thread-Index: AQHWt9GARAC8xlVteECrQVdFVsADCanCm0QOgAEp/VA=
+Date:   Thu, 12 Nov 2020 02:23:06 +0000
+Message-ID: <9fe8d921ef744cd3bb0f51bdc1f83ad8@realtek.com>
+References: <20201111022108.9834-1-pkshih@realtek.com>
+        <20201111022108.9834-2-pkshih@realtek.com>
+ <875z6ccmwu.fsf@codeaurora.org>
+In-Reply-To: <875z6ccmwu.fsf@codeaurora.org>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.213]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-References: <20201103160838.GA246433@bjorn-Precision-5520> <874km61732.fsf@nanos.tec.linutronix.de>
- <fa26ac8b-ed48-7ea3-c21b-b133532716b8@posteo.de> <87mtzxkus5.fsf@nanos.tec.linutronix.de>
- <87wnz0hr9k.fsf@codeaurora.org> <87ft5hehlb.fsf@codeaurora.org>
- <6b60c8f1-ec37-d601-92c2-97a485b73431@posteo.de> <87v9ec9rk3.fsf@codeaurora.org>
- <87imab4slq.fsf@codeaurora.org> <b2129a70db2b36c5015b4143a839f47dfc3153af.camel@seibold.net>
- <CAHUdJJVp5r55NtE+BNz5XGtnaks6mDKQBFodz63DdULBVhD0Lg@mail.gmail.com> <CAHUdJJXRDKs9NRugUAFgNr51DJ=OcssuiV8ST5CaV1CKiNTFfA@mail.gmail.com>
-In-Reply-To: <CAHUdJJXRDKs9NRugUAFgNr51DJ=OcssuiV8ST5CaV1CKiNTFfA@mail.gmail.com>
-From:   wi nk <wink@technolu.st>
-Date:   Thu, 12 Nov 2020 02:11:15 +0100
-Message-ID: <CAHUdJJUkvcShSXw4mkFUDcEh101xNQbOUc0YEv6-TyLdyTs4Og@mail.gmail.com>
-Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
-To:     Stefani Seibold <stefani@seibold.net>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Thomas Krause <thomaskrause@posteo.de>,
-        Govind Singh <govinds@codeaurora.org>,
-        linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Devin Bayer <dev@doubly.so>, Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        ath11k@lists.infradead.org, David Woodhouse <dwmw@amazon.co.uk>
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Nov 12, 2020 at 2:10 AM wi nk <wink@technolu.st> wrote:
->
-> I've yet to see any instability after 45 minutes of exercising it, I
-> do see a couple of messages that came out of the driver:
->
-> [    8.963389] ath11k_pci 0000:55:00.0: Unknown eventid: 0x16005
-> [   11.342317] ath11k_pci 0000:55:00.0: Unknown eventid: 0x1d00a
->
-> then when it associates:
->
-> [   16.718895] wlp85s0: send auth to ec:08:6b:27:01:ea (try 1/3)
-> [   16.722636] wlp85s0: authenticated
-> [   16.724150] wlp85s0: associate with ec:08:6b:27:01:ea (try 1/3)
-> [   16.726486] wlp85s0: RX AssocResp from ec:08:6b:27:01:ea
-> (capab=0x411 status=0 aid=8)
-> [   16.738443] wlp85s0: associated
-> [   16.764966] IPv6: ADDRCONF(NETDEV_CHANGE): wlp85s0: link becomes ready
->
-> The adapter is achieving around 500 mbps on my gigabit connection, my
-> 2018 mbp sees around 650, so it's doing pretty well so far.
->
-> Stefani - when you applied the patch that Kalle shared, which branch
-> did you apply it to?  I applied it to ath11k-qca6390-bringup and when
-> I revert 7fef431be9c9 there is a small merge conflict I needed to
-> resolve.  I wonder if either the starting branch, or your chosen
-> resolution are related to the instability you see (or I'm just lucky
-> so far! :)).
->
-> On Thu, Nov 12, 2020 at 1:24 AM wi nk <wink@technolu.st> wrote:
-> >
-> > On Wed, Nov 11, 2020 at 11:02 PM Stefani Seibold <stefani@seibold.net> wrote:
-> > >
-> > > On Wed, 2020-11-11 at 21:10 +0200, Kalle Valo wrote:
-> > > >
-> > > > The proof of concept patch for v5.10-rc2 is here:
-> > > >
-> > > > https://patchwork.kernel.org/project/linux-wireless/patch/1605121102-14352-1-git-send-email-kvalo@codeaurora.org/
-> > > >
-> > > > Hopefully it makes it possible to boot the firmware now. But this is
-> > > > a
-> > > > quick hack and most likely buggy, so keep your expectations low :)
-> > > >
-> > > > In case there are these warnings during firmware initialisation:
-> > > >
-> > > > ath11k_pci 0000:05:00.0: qmi failed memory request, err = -110
-> > > > ath11k_pci 0000:05:00.0: qmi failed to respond fw mem req:-110
-> > > >
-> > > > Try reverting this commit:
-> > > >
-> > > > 7fef431be9c9 mm/page_alloc: place pages to tail in
-> > > > __free_pages_core()
-> > > >
-> > > > That's another issue which is debugged here:
-> > > >
-> > > > http://lists.infradead.org/pipermail/ath11k/2020-November/000550.html
-> > > >
-> > >
-> > > Applying the patch and revert patch 7fef431be9c9 worked on the first
-> > > glance.
-> > >
-> > > After a couple of minutes the connection get broken. The kernel log
-> > > shows the following error:
-> > >
-> > > ath11k_pci 0000:55:00.0: wmi command 16387 timeout
-> > > ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
-> > > ath11k_pc
-> > > i 0000:55:00.0: failed to enable PMF QOS: (-11
-> > >
-> > > It is also not possible to unload the ath11k_pci, rmmod will hang.
-> > >
-> > >
-> >
-> > I can confirm the same behavior as Stefani so far.  After applying the
-> > patch, and reverting commit 7fef431be9c9, I am able to connect to a
-> > network.  It hasn't disconnected yet (I'm sending this email via that
-> > connection).  I'll report what I find next.
-> >
-> > Thanks again for the help!
 
-Sigh.... sorry for the top post again.  I'll now get a real email client.
+
+> -----Original Message-----
+> From: kvalo=codeaurora.org@mg.codeaurora.org [mailto:kvalo=codeaurora.org@mg.codeaurora.org] On
+> Behalf Of Kalle Valo
+> Sent: Wednesday, November 11, 2020 4:34 PM
+> To: Pkshih
+> Cc: tony0620emma@gmail.com; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH 01/11] rtw88: coex: update TDMA settings for different beacon interval
+> 
+> <pkshih@realtek.com> writes:
+> 
+> > From: Ching-Te Ku <ku920601@realtek.com>
+> >
+> > Add considering for different WLAN beacon interval in coexistence
+> > mechanism.
+> > Because the WLAN beacon period may be not 100 ms, so it's necessary
+> > to consider any beacon period and set timer according to the interval.
+> >
+> > Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> [...]
+> 
+> > +	} else if (tbtt_interval < 80 && tbtt_interval > 0) {
+> > +		para[1] = (100 / tbtt_interval);
+> > +
+> > +		if (100 % tbtt_interval != 0)
+> > +			para[1] = para[1] + 1;
+> > +
+> > +		para[1] = para[1] & 0x3f;
+> > +	} else if (tbtt_interval >= 180) {
+> > +		para[1] = (tbtt_interval / 100);
+> > +
+> > +		if (tbtt_interval % 100 <= 80)
+> > +			para[1] = para[1] - 1;
+> > +
+> > +		para[1] = para[1] & 0x3f;
+> > +		para[1] = para[1] | 0x80;
+> 
+> Magic numbers 0x3f and 0x80, GENMASK() & FIELD_PREP() is the modern way
+> to handle bitmasks like these. And there's also the operator '|='
+> 
+
+I'll give proper names and use suggested macros it in v2. Thank you.
+
+---
+Ping-Ke
+
+
