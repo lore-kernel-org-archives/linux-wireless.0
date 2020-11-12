@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D434C61DD8
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB9FC63697
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 661CD20825
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 841AF2076E
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729547AbgKLFi5 (ORCPT
+        id S1729537AbgKLFi4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:38:57 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:38672 "EHLO
+        Thu, 12 Nov 2020 00:38:56 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:38678 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728133AbgKLDPh (ORCPT
+        with ESMTP id S1728202AbgKLDPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 11 Nov 2020 22:15:37 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FUYc8025856, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FWorC025883, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FUYc8025856
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FWorC025883
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 12 Nov 2020 11:15:30 +0800
+        Thu, 12 Nov 2020 11:15:32 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 12 Nov 2020 11:15:30 +0800
+ 15.1.2044.4; Thu, 12 Nov 2020 11:15:31 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/11] rtw88: coex: add write scoreboard action when WLAN in critical procedure
-Date:   Thu, 12 Nov 2020 11:14:22 +0800
-Message-ID: <20201112031430.4846-4-pkshih@realtek.com>
+Subject: [PATCH v2 11/11] rtw88: coex: change the decode method from firmware
+Date:   Thu, 12 Nov 2020 11:14:30 +0800
+Message-ID: <20201112031430.4846-12-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201112031430.4846-1-pkshih@realtek.com>
 References: <20201112031430.4846-1-pkshih@realtek.com>
@@ -52,34 +52,29 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-When WLAN in critical procedure, such as connecting, scan and so on,
-coexistence will notify BT by scoreboard.
-While BT firmware received the scoreboard interrupt, it will adjust
-BT page priority lower to avoid WLAN critical procedure suffering impact.
+Fix sometimes FW information will be parsed as wrong value,
+do a correction of sign bit to show the correct information.
+(Ex, Value should be 20, but it shows 236.)
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/realtek/rtw88/coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index f0d300e197b7..cbc0b7417887 100644
+index 322b13c9150e..4bb0d373c862 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -460,6 +460,12 @@ static void rtw_coex_update_wl_link_info(struct rtw_dev *rtwdev, u8 reason)
- 		coex_dm->wl_rssi_state[i] = rssi_state;
- 	}
+@@ -2882,7 +2882,7 @@ void rtw_coex_wl_fwdbginfo_notify(struct rtw_dev *rtwdev, u8 *buf, u8 length)
+ 		if (buf[i] >= val)
+ 			coex_stat->wl_fw_dbg_info[i] = buf[i] - val;
+ 		else
+-			coex_stat->wl_fw_dbg_info[i] = val - buf[i];
++			coex_stat->wl_fw_dbg_info[i] = 255 - val + buf[i];
  
-+	if (coex_stat->wl_linkscan_proc || coex_stat->wl_hi_pri_task1 ||
-+	    coex_stat->wl_hi_pri_task2 || coex_stat->wl_gl_busy)
-+		rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, true);
-+	else
-+		rtw_coex_write_scbd(rtwdev, COEX_SCBD_SCAN, false);
-+
- 	switch (reason) {
- 	case COEX_RSN_5GSCANSTART:
- 	case COEX_RSN_5GSWITCHBAND:
+ 		coex_stat->wl_fw_dbg_info_pre[i] = buf[i];
+ 	}
 -- 
 2.21.0
 
