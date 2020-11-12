@@ -2,110 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 117E2C56202
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C436C56202
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF9F721534
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11FB32076E
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728752AbgKLFif convert rfc822-to-8bit (ORCPT
+        id S1729495AbgKLFio (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:38:35 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:58394 "EHLO
+        Thu, 12 Nov 2020 00:38:44 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:38673 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726003AbgKLCXP (ORCPT
+        with ESMTP id S1728142AbgKLDPg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Nov 2020 21:23:15 -0500
+        Wed, 11 Nov 2020 22:15:36 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC2N7GK0009087, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb01.realtek.com.tw[172.21.6.94])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC2N7GK0009087
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FVTi8025866, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FVTi8025866
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 12 Nov 2020 10:23:07 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+        Thu, 12 Nov 2020 11:15:31 +0800
+Received: from localhost.localdomain (172.21.69.213) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 12 Nov 2020 10:23:07 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa]) by
- RTEXMB04.realtek.com.tw ([fe80::89f7:e6c3:b043:15fa%3]) with mapi id
- 15.01.2044.006; Thu, 12 Nov 2020 10:23:07 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 01/11] rtw88: coex: update TDMA settings for different beacon interval
-Thread-Topic: [PATCH 01/11] rtw88: coex: update TDMA settings for different
- beacon interval
-Thread-Index: AQHWt9GARAC8xlVteECrQVdFVsADCanCm0QOgAEp/VA=
-Date:   Thu, 12 Nov 2020 02:23:06 +0000
-Message-ID: <9fe8d921ef744cd3bb0f51bdc1f83ad8@realtek.com>
-References: <20201111022108.9834-1-pkshih@realtek.com>
-        <20201111022108.9834-2-pkshih@realtek.com>
- <875z6ccmwu.fsf@codeaurora.org>
-In-Reply-To: <875z6ccmwu.fsf@codeaurora.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.213]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ 15.1.2044.4; Thu, 12 Nov 2020 11:15:31 +0800
+From:   <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 06/11] rtw88: coex: update the TDMA parameter when leave LPS
+Date:   Thu, 12 Nov 2020 11:14:25 +0800
+Message-ID: <20201112031430.4846-7-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201112031430.4846-1-pkshih@realtek.com>
+References: <20201112031430.4846-1-pkshih@realtek.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.213]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Ching-Te Ku <ku920601@realtek.com>
 
+The updated parameter and original parameter all means TDMA-OFF.
+The original setting write 0x8 to firmware, but it only works for
+some old IC series.
+To avoid the confusing, update a proper parameter.
 
-> -----Original Message-----
-> From: kvalo=codeaurora.org@mg.codeaurora.org [mailto:kvalo=codeaurora.org@mg.codeaurora.org] On
-> Behalf Of Kalle Valo
-> Sent: Wednesday, November 11, 2020 4:34 PM
-> To: Pkshih
-> Cc: tony0620emma@gmail.com; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 01/11] rtw88: coex: update TDMA settings for different beacon interval
-> 
-> <pkshih@realtek.com> writes:
-> 
-> > From: Ching-Te Ku <ku920601@realtek.com>
-> >
-> > Add considering for different WLAN beacon interval in coexistence
-> > mechanism.
-> > Because the WLAN beacon period may be not 100 ms, so it's necessary
-> > to consider any beacon period and set timer according to the interval.
-> >
-> > Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> [...]
-> 
-> > +	} else if (tbtt_interval < 80 && tbtt_interval > 0) {
-> > +		para[1] = (100 / tbtt_interval);
-> > +
-> > +		if (100 % tbtt_interval != 0)
-> > +			para[1] = para[1] + 1;
-> > +
-> > +		para[1] = para[1] & 0x3f;
-> > +	} else if (tbtt_interval >= 180) {
-> > +		para[1] = (tbtt_interval / 100);
-> > +
-> > +		if (tbtt_interval % 100 <= 80)
-> > +			para[1] = para[1] - 1;
-> > +
-> > +		para[1] = para[1] & 0x3f;
-> > +		para[1] = para[1] | 0x80;
-> 
-> Magic numbers 0x3f and 0x80, GENMASK() & FIELD_PREP() is the modern way
-> to handle bitmasks like these. And there's also the operator '|='
-> 
-
-I'll give proper names and use suggested macros it in v2. Thank you.
-
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-Ping-Ke
+ drivers/net/wireless/realtek/rtw88/coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 9ab31fbcb593..57b7776cf263 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -928,7 +928,7 @@ static void rtw_coex_power_save_state(struct rtw_dev *rtwdev, u8 ps_type,
+ 	case COEX_PS_LPS_OFF:
+ 		coex_stat->wl_force_lps_ctrl = true;
+ 		if (lps_mode)
+-			rtw_fw_coex_tdma_type(rtwdev, 0x8, 0, 0, 0, 0);
++			rtw_fw_coex_tdma_type(rtwdev, 0, 0, 0, 0, 0);
+ 
+ 		rtw_leave_lps(rtwdev);
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX,
+-- 
+2.21.0
 
