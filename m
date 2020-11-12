@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764D9C61DD8
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FECC56202
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14D9322201
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31161221FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wmw4xedQ"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="L6wpur8O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727238AbgKLJ5j (ORCPT
+        id S1727776AbgKLJ5X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 04:57:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43244 "EHLO mail.kernel.org"
+        Thu, 12 Nov 2020 04:57:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43074 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727877AbgKLJ5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Nov 2020 04:57:33 -0500
+        id S1727682AbgKLJ5V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Nov 2020 04:57:21 -0500
 Received: from lore-desk.redhat.com (unknown [151.66.8.153])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 86AF2221FE;
-        Thu, 12 Nov 2020 09:57:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A2E92221FE;
+        Thu, 12 Nov 2020 09:57:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605175051;
-        bh=VOddLAgfY7hek6a1/5mP6naS1U8M+qkuAmgldirMsKw=;
+        s=default; t=1605175040;
+        bh=5JYKwMY5BmcyNHZfuMmRn9Fhj2NNPu7iDNaROQYqlaY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Wmw4xedQMjVmEzcIV8Ph7V7I5lTSWgJ3v8SmqUuinug6ZzaMgyd0HQs5p1g3wjQaQ
-         mxTAYOYamcR3VvB5FaW1HMdVluXgGWhHiMC14osXneJDi/pIK5QWbcXOOUeXK4grNQ
-         xUyRL8LRcS5utjir+k8tn5cRaLOuYICfKjddCNpU=
+        b=L6wpur8OeT1RfZhGR/ZMGeKf8SXaMAVdq3UjHxlihTBp4NnTBwv8r70bAFMLEJto+
+         5GDqo9bkX6C6zU7zNVXkibim9I6JZir+oePTlUfeq+T5vcG8VE7fwNR5h/1DpX1CdO
+         jiRnPcDDmLHC4nCSNwxMy7pu519Nqr7a7KwG1rgw=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, shayne.chen@mediatek.com
-Subject: [PATCH 6/6] mt76: mt7915: get rid of dbdc debugfs knob
-Date:   Thu, 12 Nov 2020 10:57:01 +0100
-Message-Id: <99949b59b6360a1788fd19ab010d45f2fe2faf0c.1605173301.git.lorenzo@kernel.org>
+Subject: [PATCH 1/6] mt76: move band capabilities in mt76_phy
+Date:   Thu, 12 Nov 2020 10:56:56 +0100
+Message-Id: <8148fc69c41b1fddfc61f0b80660c49916b0af73.1605173301.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1605173301.git.lorenzo@kernel.org>
 References: <cover.1605173301.git.lorenzo@kernel.org>
@@ -50,433 +50,286 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mt7915 automatically detects dbdc feature so drop debugfs knob
+This is a preliminary patch to move properly support mt7915 dbdc
 
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   |  27 --
- .../net/wireless/mediatek/mt76/mt7915/init.c  | 324 +++++++++---------
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   2 -
- 3 files changed, 162 insertions(+), 191 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c    |  8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt76.h        |  2 +-
+ .../net/wireless/mediatek/mt76/mt7603/eeprom.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/dma.c  |  2 +-
+ .../net/wireless/mediatek/mt76/mt7615/eeprom.c   | 16 ++++++++--------
+ .../net/wireless/mediatek/mt76/mt76x0/eeprom.c   |  6 +++---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c |  4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c  |  4 ++--
+ .../net/wireless/mediatek/mt76/mt76x02_eeprom.c  |  8 ++++----
+ .../net/wireless/mediatek/mt76/mt7915/eeprom.c   |  8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c |  5 ++---
+ 11 files changed, 32 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 39fa0745b852..7d810fbf2862 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -47,32 +47,6 @@ mt7915_radar_trigger(void *data, u64 val)
- DEFINE_DEBUGFS_ATTRIBUTE(fops_radar_trigger, NULL,
- 			 mt7915_radar_trigger, "%lld\n");
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 0fc090283f80..28c247c0e0cb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -159,9 +159,9 @@ static void mt76_init_stream_cap(struct mt76_phy *phy,
  
--static int
--mt7915_dbdc_set(void *data, u64 val)
--{
--	struct mt7915_dev *dev = data;
--
--	if (val)
--		mt7915_register_ext_phy(dev);
--	else
--		mt7915_unregister_ext_phy(dev);
--
--	return 0;
--}
--
--static int
--mt7915_dbdc_get(void *data, u64 *val)
--{
--	struct mt7915_dev *dev = data;
--
--	*val = !!mt7915_ext_phy(dev);
--
--	return 0;
--}
--
--DEFINE_DEBUGFS_ATTRIBUTE(fops_dbdc, mt7915_dbdc_get,
--			 mt7915_dbdc_set, "%lld\n");
--
- static int
- mt7915_fw_debug_set(void *data, u64 val)
+ void mt76_set_stream_caps(struct mt76_phy *phy, bool vht)
  {
-@@ -380,7 +354,6 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "acq", dir,
- 				    mt7915_queues_acq);
- 	debugfs_create_file("tx_stats", 0400, dir, dev, &fops_tx_stats);
--	debugfs_create_file("dbdc", 0600, dir, dev, &fops_dbdc);
- 	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
- 	debugfs_create_u32("dfs_hw_pattern", 0400, dir, &dev->hw_pattern);
- 	/* test knobs */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 95183dcd405a..ff29a8090739 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -6,6 +6,113 @@
- #include "mac.h"
- #include "eeprom.h"
- 
-+#define CCK_RATE(_idx, _rate) {						\
-+	.bitrate = _rate,						\
-+	.flags = IEEE80211_RATE_SHORT_PREAMBLE,				\
-+	.hw_value = (MT_PHY_TYPE_CCK << 8) | (_idx),			\
-+	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (4 + (_idx)),	\
-+}
-+
-+#define OFDM_RATE(_idx, _rate) {					\
-+	.bitrate = _rate,						\
-+	.hw_value = (MT_PHY_TYPE_OFDM << 8) | (_idx),			\
-+	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | (_idx),		\
-+}
-+
-+static struct ieee80211_rate mt7915_rates[] = {
-+	CCK_RATE(0, 10),
-+	CCK_RATE(1, 20),
-+	CCK_RATE(2, 55),
-+	CCK_RATE(3, 110),
-+	OFDM_RATE(11, 60),
-+	OFDM_RATE(15, 90),
-+	OFDM_RATE(10, 120),
-+	OFDM_RATE(14, 180),
-+	OFDM_RATE(9,  240),
-+	OFDM_RATE(13, 360),
-+	OFDM_RATE(8,  480),
-+	OFDM_RATE(12, 540),
-+};
-+
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_ADHOC)
-+	}, {
-+		.max = 16,
-+		.types = BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+			 BIT(NL80211_IFTYPE_MESH_POINT)
-+#endif
-+	}, {
-+		.max = MT7915_MAX_INTERFACES,
-+		.types = BIT(NL80211_IFTYPE_STATION)
-+	}
-+};
-+
-+static const struct ieee80211_iface_combination if_comb[] = {
-+	{
-+		.limits = if_limits,
-+		.n_limits = ARRAY_SIZE(if_limits),
-+		.max_interfaces = MT7915_MAX_INTERFACES,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+				       BIT(NL80211_CHAN_WIDTH_20) |
-+				       BIT(NL80211_CHAN_WIDTH_40) |
-+				       BIT(NL80211_CHAN_WIDTH_80) |
-+				       BIT(NL80211_CHAN_WIDTH_160) |
-+				       BIT(NL80211_CHAN_WIDTH_80P80),
-+	}
-+};
-+
-+static void
-+mt7915_regd_notifier(struct wiphy *wiphy,
-+		     struct regulatory_request *request)
-+{
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct mt7915_dev *dev = mt7915_hw_dev(hw);
-+	struct mt76_phy *mphy = hw->priv;
-+	struct mt7915_phy *phy = mphy->priv;
-+	struct cfg80211_chan_def *chandef = &mphy->chandef;
-+
-+	dev->mt76.region = request->dfs_region;
-+
-+	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR))
-+		return;
-+
-+	mt7915_dfs_init_radar_detector(phy);
-+}
-+
-+static void
-+mt7915_init_wiphy(struct ieee80211_hw *hw)
-+{
-+	struct mt7915_phy *phy = mt7915_hw_phy(hw);
-+	struct wiphy *wiphy = hw->wiphy;
-+
-+	hw->queues = 4;
-+	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
-+	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
-+
-+	phy->slottime = 9;
-+
-+	hw->sta_data_size = sizeof(struct mt7915_sta);
-+	hw->vif_data_size = sizeof(struct mt7915_vif);
-+
-+	wiphy->iface_combinations = if_comb;
-+	wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+	wiphy->reg_notifier = mt7915_regd_notifier;
-+	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
-+
-+	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
-+	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
-+	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
-+
-+	hw->max_tx_fragments = 4;
-+}
-+
- static void
- mt7915_mac_init_band(struct mt7915_dev *dev, u8 band)
- {
-@@ -109,6 +216,60 @@ static void mt7915_init_txpower(struct mt7915_dev *dev)
- 	mt7915_eeprom_init_sku(dev);
+-	if (phy->dev->cap.has_2ghz)
++	if (phy->cap.has_2ghz)
+ 		mt76_init_stream_cap(phy, &phy->sband_2g.sband, false);
+-	if (phy->dev->cap.has_5ghz)
++	if (phy->cap.has_5ghz)
+ 		mt76_init_stream_cap(phy, &phy->sband_5g.sband, vht);
  }
+ EXPORT_SYMBOL_GPL(mt76_set_stream_caps);
+@@ -461,13 +461,13 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+ 	dev_set_drvdata(dev->dev, dev);
+ 	mt76_phy_init(dev, hw);
  
-+static int mt7915_register_ext_phy(struct mt7915_dev *dev)
-+{
-+	struct mt7915_phy *phy = mt7915_ext_phy(dev);
-+	struct mt76_phy *mphy;
-+	int ret;
-+
-+	if (!dev->dbdc_support)
-+		return 0;
-+
-+	if (phy)
-+		return 0;
-+
-+	mphy = mt76_alloc_phy(&dev->mt76, sizeof(*phy), &mt7915_ops);
-+	if (!mphy)
-+		return -ENOMEM;
-+
-+	phy = mphy->priv;
-+	phy->dev = dev;
-+	phy->mt76 = mphy;
-+	phy->chainmask = dev->chainmask & ~dev->phy.chainmask;
-+	mphy->antenna_mask = BIT(hweight8(phy->chainmask)) - 1;
-+	mt7915_init_wiphy(mphy->hw);
-+
-+	INIT_LIST_HEAD(&phy->stats_list);
-+	INIT_DELAYED_WORK(&phy->mac_work, mt7915_mac_work);
-+
-+	mt7915_eeprom_parse_band_config(phy);
-+	mt7915_set_stream_vht_txbf_caps(phy);
-+	mt7915_set_stream_he_caps(phy);
-+
-+	memcpy(mphy->macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR2,
-+	       ETH_ALEN);
-+	mt76_eeprom_override(mphy);
-+
-+	/* The second interface does not get any packets unless it has a vif */
-+	ieee80211_hw_set(mphy->hw, WANT_MONITOR_VIF);
-+
-+	ret = mt7915_init_tx_queues(phy, MT7915_TXQ_BAND1,
-+				    MT7915_TX_RING_SIZE);
-+	if (ret)
-+		goto error;
-+
-+	ret = mt76_register_phy(mphy, true, mt7915_rates,
-+				ARRAY_SIZE(mt7915_rates));
-+	if (ret)
-+		goto error;
-+
-+	return 0;
-+
-+error:
-+	ieee80211_free_hw(mphy->hw);
-+	return ret;
-+}
-+
- static void mt7915_init_work(struct work_struct *work)
- {
- 	struct mt7915_dev *dev = container_of(work, struct mt7915_dev,
-@@ -166,113 +327,6 @@ static int mt7915_init_hardware(struct mt7915_dev *dev)
- 	return 0;
- }
+-	if (dev->cap.has_2ghz) {
++	if (phy->cap.has_2ghz) {
+ 		ret = mt76_init_sband_2g(dev, rates, n_rates);
+ 		if (ret)
+ 			return ret;
+ 	}
  
--#define CCK_RATE(_idx, _rate) {						\
--	.bitrate = _rate,						\
--	.flags = IEEE80211_RATE_SHORT_PREAMBLE,				\
--	.hw_value = (MT_PHY_TYPE_CCK << 8) | (_idx),			\
--	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (4 + (_idx)),	\
--}
--
--#define OFDM_RATE(_idx, _rate) {					\
--	.bitrate = _rate,						\
--	.hw_value = (MT_PHY_TYPE_OFDM << 8) | (_idx),			\
--	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | (_idx),		\
--}
--
--static struct ieee80211_rate mt7915_rates[] = {
--	CCK_RATE(0, 10),
--	CCK_RATE(1, 20),
--	CCK_RATE(2, 55),
--	CCK_RATE(3, 110),
--	OFDM_RATE(11, 60),
--	OFDM_RATE(15, 90),
--	OFDM_RATE(10, 120),
--	OFDM_RATE(14, 180),
--	OFDM_RATE(9,  240),
--	OFDM_RATE(13, 360),
--	OFDM_RATE(8,  480),
--	OFDM_RATE(12, 540),
--};
--
--static const struct ieee80211_iface_limit if_limits[] = {
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_ADHOC)
--	}, {
--		.max = 16,
--		.types = BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--			 BIT(NL80211_IFTYPE_MESH_POINT)
--#endif
--	}, {
--		.max = MT7915_MAX_INTERFACES,
--		.types = BIT(NL80211_IFTYPE_STATION)
--	}
--};
--
--static const struct ieee80211_iface_combination if_comb[] = {
--	{
--		.limits = if_limits,
--		.n_limits = ARRAY_SIZE(if_limits),
--		.max_interfaces = MT7915_MAX_INTERFACES,
--		.num_different_channels = 1,
--		.beacon_int_infra_match = true,
--		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
--				       BIT(NL80211_CHAN_WIDTH_20) |
--				       BIT(NL80211_CHAN_WIDTH_40) |
--				       BIT(NL80211_CHAN_WIDTH_80) |
--				       BIT(NL80211_CHAN_WIDTH_160) |
--				       BIT(NL80211_CHAN_WIDTH_80P80),
--	}
--};
--
--static void
--mt7915_regd_notifier(struct wiphy *wiphy,
--		     struct regulatory_request *request)
--{
--	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
--	struct mt7915_dev *dev = mt7915_hw_dev(hw);
--	struct mt76_phy *mphy = hw->priv;
--	struct mt7915_phy *phy = mphy->priv;
--	struct cfg80211_chan_def *chandef = &mphy->chandef;
--
--	dev->mt76.region = request->dfs_region;
--
--	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR))
--		return;
--
--	mt7915_dfs_init_radar_detector(phy);
--}
--
--static void
--mt7915_init_wiphy(struct ieee80211_hw *hw)
--{
--	struct mt7915_phy *phy = mt7915_hw_phy(hw);
--	struct wiphy *wiphy = hw->wiphy;
--
--	hw->queues = 4;
--	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
--	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
--
--	phy->slottime = 9;
--
--	hw->sta_data_size = sizeof(struct mt7915_sta);
--	hw->vif_data_size = sizeof(struct mt7915_vif);
--
--	wiphy->iface_combinations = if_comb;
--	wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
--	wiphy->reg_notifier = mt7915_regd_notifier;
--	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
--
--	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
--
--	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
--	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
--	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
--
--	hw->max_tx_fragments = 4;
--}
--
- void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy)
- {
- 	int nss = hweight8(phy->chainmask);
-@@ -546,61 +600,7 @@ void mt7915_set_stream_he_caps(struct mt7915_phy *phy)
+-	if (dev->cap.has_5ghz) {
++	if (phy->cap.has_5ghz) {
+ 		ret = mt76_init_sband_5g(dev, rates + 4, n_rates - 4, vht);
+ 		if (ret)
+ 			return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 17392f250716..3239a99a94d9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -569,6 +569,7 @@ struct mt76_phy {
+ 	struct mt76_channel_state *chan_state;
+ 	ktime_t survey_time;
+ 
++	struct mt76_hw_cap cap;
+ 	struct mt76_sband sband_2g;
+ 	struct mt76_sband sband_5g;
+ 
+@@ -638,7 +639,6 @@ struct mt76_dev {
+ 
+ 	struct debugfs_blob_wrapper eeprom;
+ 	struct debugfs_blob_wrapper otp;
+-	struct mt76_hw_cap cap;
+ 
+ 	struct mt76_rate_power rate_power;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+index 9d5042affcd1..2cd97228e280 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+@@ -171,7 +171,7 @@ int mt7603_eeprom_init(struct mt7603_dev *dev)
+ 	}
+ 
+ 	eeprom = (u8 *)dev->mt76.eeprom.data;
+-	dev->mt76.cap.has_2ghz = true;
++	dev->mphy.cap.has_2ghz = true;
+ 	memcpy(dev->mt76.macaddr, eeprom + MT_EE_MAC_ADDR, ETH_ALEN);
+ 
+ 	/* Check for 1SS devices */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+index d3033ebaade6..25e3069cf2b1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+@@ -183,7 +183,7 @@ int mt7615_dma_init(struct mt7615_dev *dev)
+ 	int ret;
+ 
+ 	/* Increase buffer size to receive large VHT MPDUs */
+-	if (dev->mt76.cap.has_5ghz)
++	if (dev->mphy.cap.has_5ghz)
+ 		rx_buf_size *= 2;
+ 
+ 	mt76_dma_attach(&dev->mt76);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index f4756bb946c3..67f7a1ed9258 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -99,20 +99,20 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
+ 
+ 	if (is_mt7663(&dev->mt76)) {
+ 		/* dual band */
+-		dev->mt76.cap.has_2ghz = true;
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_2ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		return;
+ 	}
+ 
+ 	if (is_mt7622(&dev->mt76)) {
+ 		/* 2GHz only */
+-		dev->mt76.cap.has_2ghz = true;
++		dev->mphy.cap.has_2ghz = true;
+ 		return;
+ 	}
+ 
+ 	if (is_mt7611(&dev->mt76)) {
+ 		/* 5GHz only */
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		return;
+ 	}
+ 
+@@ -120,17 +120,17 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
+ 			eeprom[MT_EE_WIFI_CONF]);
+ 	switch (val) {
+ 	case MT_EE_5GHZ:
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
+ 	case MT_EE_2GHZ:
+-		dev->mt76.cap.has_2ghz = true;
++		dev->mphy.cap.has_2ghz = true;
+ 		break;
+ 	case MT_EE_DBDC:
+ 		dev->dbdc_support = true;
+ 		/* fall through */
+ 	default:
+-		dev->mt76.cap.has_2ghz = true;
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_2ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
  	}
  }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+index 9087607b621e..ebf4c96532d3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+@@ -52,15 +52,15 @@ static void mt76x0_set_chip_cap(struct mt76x02_dev *dev)
  
--int mt7915_register_ext_phy(struct mt7915_dev *dev)
--{
--	struct mt7915_phy *phy = mt7915_ext_phy(dev);
--	struct mt76_phy *mphy;
--	int ret;
--
--	if (!dev->dbdc_support)
--		return 0;
--
--	if (phy)
--		return 0;
--
--	mphy = mt76_alloc_phy(&dev->mt76, sizeof(*phy), &mt7915_ops);
--	if (!mphy)
--		return -ENOMEM;
--
--	phy = mphy->priv;
--	phy->dev = dev;
--	phy->mt76 = mphy;
--	phy->chainmask = dev->chainmask & ~dev->phy.chainmask;
--	mphy->antenna_mask = BIT(hweight8(phy->chainmask)) - 1;
--	mt7915_init_wiphy(mphy->hw);
--
--	INIT_LIST_HEAD(&phy->stats_list);
--	INIT_DELAYED_WORK(&phy->mac_work, mt7915_mac_work);
--
--	mt7915_eeprom_parse_band_config(phy);
--	mt7915_set_stream_vht_txbf_caps(phy);
--	mt7915_set_stream_he_caps(phy);
--
--	memcpy(mphy->macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR2,
--	       ETH_ALEN);
--	mt76_eeprom_override(mphy);
--
--	/* The second interface does not get any packets unless it has a vif */
--	ieee80211_hw_set(mphy->hw, WANT_MONITOR_VIF);
--
--	ret = mt7915_init_tx_queues(phy, MT7915_TXQ_BAND1,
--				    MT7915_TX_RING_SIZE);
--	if (ret)
--		goto error;
--
--	ret = mt76_register_phy(mphy, true, mt7915_rates,
--				ARRAY_SIZE(mt7915_rates));
--	if (ret)
--		goto error;
--
--	return 0;
--
--error:
--	ieee80211_free_hw(mphy->hw);
--	return ret;
--}
--
--void mt7915_unregister_ext_phy(struct mt7915_dev *dev)
-+static void mt7915_unregister_ext_phy(struct mt7915_dev *dev)
+ 	mt76x02_eeprom_parse_hw_cap(dev);
+ 	dev_dbg(dev->mt76.dev, "2GHz %d 5GHz %d\n",
+-		dev->mt76.cap.has_2ghz, dev->mt76.cap.has_5ghz);
++		dev->mphy.cap.has_2ghz, dev->mphy.cap.has_5ghz);
+ 
+ 	if (dev->no_2ghz) {
+-		dev->mt76.cap.has_2ghz = false;
++		dev->mphy.cap.has_2ghz = false;
+ 		dev_dbg(dev->mt76.dev, "mask out 2GHz support\n");
+ 	}
+ 
+ 	if (is_mt7630(dev)) {
+-		dev->mt76.cap.has_5ghz = false;
++		dev->mphy.cap.has_5ghz = false;
+ 		dev_dbg(dev->mt76.dev, "mask out 5GHz support\n");
+ 	}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index d78866bf41ba..0bac39bf3b66 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -245,7 +245,7 @@ int mt76x0_register_device(struct mt76x02_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (dev->mt76.cap.has_5ghz) {
++	if (dev->mphy.cap.has_5ghz) {
+ 		struct ieee80211_supported_band *sband;
+ 
+ 		sband = &dev->mphy.sband_5g.sband;
+@@ -253,7 +253,7 @@ int mt76x0_register_device(struct mt76x02_dev *dev)
+ 		mt76x0_init_txpower(dev, sband);
+ 	}
+ 
+-	if (dev->mt76.cap.has_2ghz)
++	if (dev->mphy.cap.has_2ghz)
+ 		mt76x0_init_txpower(dev, &dev->mphy.sband_2g.sband);
+ 
+ 	mt76x02_init_debugfs(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index 3de33aadf794..e91c314cdfac 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -447,11 +447,11 @@ static void mt76x0_phy_ant_select(struct mt76x02_dev *dev)
+ 		else
+ 			coex3 |= BIT(4);
+ 		coex3 |= BIT(3);
+-		if (dev->mt76.cap.has_2ghz)
++		if (dev->mphy.cap.has_2ghz)
+ 			wlan |= BIT(6);
+ 	} else {
+ 		/* sigle antenna mode */
+-		if (dev->mt76.cap.has_5ghz) {
++		if (dev->mphy.cap.has_5ghz) {
+ 			coex3 |= BIT(3) | BIT(4);
+ 		} else {
+ 			wlan |= BIT(6);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+index c54c50fd639a..0acabba2d1a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+@@ -75,14 +75,14 @@ void mt76x02_eeprom_parse_hw_cap(struct mt76x02_dev *dev)
+ 
+ 	switch (FIELD_GET(MT_EE_NIC_CONF_0_BOARD_TYPE, val)) {
+ 	case BOARD_TYPE_5GHZ:
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
+ 	case BOARD_TYPE_2GHZ:
+-		dev->mt76.cap.has_2ghz = true;
++		dev->mphy.cap.has_2ghz = true;
+ 		break;
+ 	default:
+-		dev->mt76.cap.has_2ghz = true;
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_2ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index 35954a499b33..d65910cc0709 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -52,14 +52,14 @@ static void mt7915_eeprom_parse_hw_cap(struct mt7915_dev *dev)
+ 	val = FIELD_GET(MT_EE_WIFI_CONF_BAND_SEL, val);
+ 	switch (val) {
+ 	case MT_EE_5GHZ:
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
+ 	case MT_EE_2GHZ:
+-		dev->mt76.cap.has_2ghz = true;
++		dev->mphy.cap.has_2ghz = true;
+ 		break;
+ 	default:
+-		dev->mt76.cap.has_2ghz = true;
+-		dev->mt76.cap.has_5ghz = true;
++		dev->mphy.cap.has_2ghz = true;
++		dev->mphy.cap.has_5ghz = true;
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index fe369f85dfeb..53eec43135bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -521,10 +521,9 @@ void mt7915_set_stream_he_caps(struct mt7915_phy *phy)
  {
- 	struct mt7915_phy *phy = mt7915_ext_phy(dev);
- 	struct mt76_phy *mphy = dev->mt76.phy2;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index f29b9c029328..30e53a0f01fb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -276,8 +276,6 @@ u32 mt7915_reg_map(struct mt7915_dev *dev, u32 addr);
+ 	struct ieee80211_sband_iftype_data *data;
+ 	struct ieee80211_supported_band *band;
+-	struct mt76_dev *mdev = &phy->dev->mt76;
+ 	int n;
  
- int mt7915_register_device(struct mt7915_dev *dev);
- void mt7915_unregister_device(struct mt7915_dev *dev);
--int mt7915_register_ext_phy(struct mt7915_dev *dev);
--void mt7915_unregister_ext_phy(struct mt7915_dev *dev);
- int mt7915_eeprom_init(struct mt7915_dev *dev);
- void mt7915_eeprom_parse_band_config(struct mt7915_phy *phy);
- int mt7915_eeprom_get_target_power(struct mt7915_dev *dev,
+-	if (mdev->cap.has_2ghz) {
++	if (phy->mt76->cap.has_2ghz) {
+ 		data = phy->iftype[NL80211_BAND_2GHZ];
+ 		n = mt7915_init_he_caps(phy, NL80211_BAND_2GHZ, data);
+ 
+@@ -533,7 +532,7 @@ void mt7915_set_stream_he_caps(struct mt7915_phy *phy)
+ 		band->n_iftype_data = n;
+ 	}
+ 
+-	if (mdev->cap.has_5ghz) {
++	if (phy->mt76->cap.has_5ghz) {
+ 		data = phy->iftype[NL80211_BAND_5GHZ];
+ 		n = mt7915_init_he_caps(phy, NL80211_BAND_5GHZ, data);
+ 
 -- 
 2.26.2
 
