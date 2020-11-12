@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FECC56202
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37250C55ABD
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31161221FE
+	by mail.kernel.org (Postfix) with ESMTP id D26DA221FE
 	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 09:57:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="L6wpur8O"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="m2q9X49b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727776AbgKLJ5X (ORCPT
+        id S1727877AbgKLJ5k (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 04:57:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43074 "EHLO mail.kernel.org"
+        Thu, 12 Nov 2020 04:57:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43142 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727682AbgKLJ5V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Nov 2020 04:57:21 -0500
+        id S1727822AbgKLJ50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Nov 2020 04:57:26 -0500
 Received: from lore-desk.redhat.com (unknown [151.66.8.153])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A2E92221FE;
-        Thu, 12 Nov 2020 09:57:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3729B22228;
+        Thu, 12 Nov 2020 09:57:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605175040;
-        bh=5JYKwMY5BmcyNHZfuMmRn9Fhj2NNPu7iDNaROQYqlaY=;
+        s=default; t=1605175045;
+        bh=LS443XO9/wWgPBxK424aAHSl4tSvljlYd7NgUnMSGeQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L6wpur8OeT1RfZhGR/ZMGeKf8SXaMAVdq3UjHxlihTBp4NnTBwv8r70bAFMLEJto+
-         5GDqo9bkX6C6zU7zNVXkibim9I6JZir+oePTlUfeq+T5vcG8VE7fwNR5h/1DpX1CdO
-         jiRnPcDDmLHC4nCSNwxMy7pu519Nqr7a7KwG1rgw=
+        b=m2q9X49bd6Vw5RhOTcoDFrKoQKnHvBlDPkcR95ElcxorFP6vvoQp58aeW9jmBgOFL
+         h8zabn6pqcZrVh11FMfADPNH1LANZc5OT1bR8fzCUaeYbmuw+UTxBDTEDRIqqF+Ljq
+         ebo+QOxEdNJcDyk55vO6ml6uaKtdbFzjlchbsFzg=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, shayne.chen@mediatek.com
-Subject: [PATCH 1/6] mt76: move band capabilities in mt76_phy
-Date:   Thu, 12 Nov 2020 10:56:56 +0100
-Message-Id: <8148fc69c41b1fddfc61f0b80660c49916b0af73.1605173301.git.lorenzo@kernel.org>
+Subject: [PATCH 3/6] mt76: move band allocation in mt76_register_phy
+Date:   Thu, 12 Nov 2020 10:56:58 +0100
+Message-Id: <8c2d2d880479c0688cca5724e8652c90a294982a.1605173301.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <cover.1605173301.git.lorenzo@kernel.org>
 References: <cover.1605173301.git.lorenzo@kernel.org>
@@ -50,285 +50,159 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is a preliminary patch to move properly support mt7915 dbdc
+This is a preliminary patch to introduce dbdc support to mt7915 devices
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c    |  8 ++++----
- drivers/net/wireless/mediatek/mt76/mt76.h        |  2 +-
- .../net/wireless/mediatek/mt76/mt7603/eeprom.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7615/dma.c  |  2 +-
- .../net/wireless/mediatek/mt76/mt7615/eeprom.c   | 16 ++++++++--------
- .../net/wireless/mediatek/mt76/mt76x0/eeprom.c   |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c  |  4 ++--
- .../net/wireless/mediatek/mt76/mt76x02_eeprom.c  |  8 ++++----
- .../net/wireless/mediatek/mt76/mt7915/eeprom.c   |  8 ++++----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c |  5 ++---
- 11 files changed, 32 insertions(+), 33 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 56 ++++++++-----------
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  3 +-
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  6 +-
+ .../net/wireless/mediatek/mt76/mt7915/init.c  |  3 +-
+ 4 files changed, 31 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 0fc090283f80..28c247c0e0cb 100644
+index 043f1198ffad..3f4d4b86efd3 100644
 --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
 +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -159,9 +159,9 @@ static void mt76_init_stream_cap(struct mt76_phy *phy,
- 
- void mt76_set_stream_caps(struct mt76_phy *phy, bool vht)
+@@ -332,65 +332,57 @@ mt76_alloc_phy(struct mt76_dev *dev, unsigned int size,
+ 	       const struct ieee80211_ops *ops)
  {
--	if (phy->dev->cap.has_2ghz)
-+	if (phy->cap.has_2ghz)
- 		mt76_init_stream_cap(phy, &phy->sband_2g.sband, false);
--	if (phy->dev->cap.has_5ghz)
-+	if (phy->cap.has_5ghz)
- 		mt76_init_stream_cap(phy, &phy->sband_5g.sband, vht);
- }
- EXPORT_SYMBOL_GPL(mt76_set_stream_caps);
-@@ -461,13 +461,13 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	dev_set_drvdata(dev->dev, dev);
- 	mt76_phy_init(dev, hw);
+ 	struct ieee80211_hw *hw;
++	unsigned int phy_size;
+ 	struct mt76_phy *phy;
+-	unsigned int phy_size, chan_size;
+-	unsigned int size_2g, size_5g;
+-	void *priv;
  
--	if (dev->cap.has_2ghz) {
+ 	phy_size = ALIGN(sizeof(*phy), 8);
+-	chan_size = sizeof(dev->phy.sband_2g.chan[0]);
+-	size_2g = ALIGN(ARRAY_SIZE(mt76_channels_2ghz) * chan_size, 8);
+-	size_5g = ALIGN(ARRAY_SIZE(mt76_channels_5ghz) * chan_size, 8);
+-
+-	size += phy_size + size_2g + size_5g;
+-	hw = ieee80211_alloc_hw(size, ops);
++	hw = ieee80211_alloc_hw(size + phy_size, ops);
+ 	if (!hw)
+ 		return NULL;
+ 
+ 	phy = hw->priv;
+ 	phy->dev = dev;
+ 	phy->hw = hw;
++	phy->priv = hw->priv + phy_size;
+ 
+-	mt76_phy_init(dev, hw);
+-
+-	priv = hw->priv + phy_size;
++	return phy;
++}
++EXPORT_SYMBOL_GPL(mt76_alloc_phy);
+ 
+-	phy->sband_2g = dev->phy.sband_2g;
+-	phy->sband_2g.chan = priv;
+-	priv += size_2g;
++int mt76_register_phy(struct mt76_phy *phy, bool vht,
++		      struct ieee80211_rate *rates, int n_rates)
++{
++	int ret;
+ 
+-	phy->sband_5g = dev->phy.sband_5g;
+-	phy->sband_5g.chan = priv;
+-	priv += size_5g;
++	mt76_phy_init(phy->dev, phy->hw);
+ 
+-	phy->priv = priv;
 +	if (phy->cap.has_2ghz) {
- 		ret = mt76_init_sband_2g(dev, rates, n_rates);
- 		if (ret)
- 			return ret;
- 	}
++		ret = mt76_init_sband_2g(phy, rates, n_rates);
++		if (ret)
++			return ret;
++	}
  
--	if (dev->cap.has_5ghz) {
+-	hw->wiphy->bands[NL80211_BAND_2GHZ] = &phy->sband_2g.sband;
+-	hw->wiphy->bands[NL80211_BAND_5GHZ] = &phy->sband_5g.sband;
 +	if (phy->cap.has_5ghz) {
- 		ret = mt76_init_sband_5g(dev, rates + 4, n_rates - 4, vht);
- 		if (ret)
- 			return ret;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 17392f250716..3239a99a94d9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -569,6 +569,7 @@ struct mt76_phy {
- 	struct mt76_channel_state *chan_state;
- 	ktime_t survey_time;
++		ret = mt76_init_sband_5g(phy, rates + 4, n_rates - 4, vht);
++		if (ret)
++			return ret;
++	}
  
-+	struct mt76_hw_cap cap;
- 	struct mt76_sband sband_2g;
- 	struct mt76_sband sband_5g;
++	wiphy_read_of_freq_limits(phy->hw->wiphy);
+ 	mt76_check_sband(phy, &phy->sband_2g, NL80211_BAND_2GHZ);
+ 	mt76_check_sband(phy, &phy->sband_5g, NL80211_BAND_5GHZ);
  
-@@ -638,7 +639,6 @@ struct mt76_dev {
- 
- 	struct debugfs_blob_wrapper eeprom;
- 	struct debugfs_blob_wrapper otp;
--	struct mt76_hw_cap cap;
- 
- 	struct mt76_rate_power rate_power;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-index 9d5042affcd1..2cd97228e280 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-@@ -171,7 +171,7 @@ int mt7603_eeprom_init(struct mt7603_dev *dev)
- 	}
- 
- 	eeprom = (u8 *)dev->mt76.eeprom.data;
--	dev->mt76.cap.has_2ghz = true;
-+	dev->mphy.cap.has_2ghz = true;
- 	memcpy(dev->mt76.macaddr, eeprom + MT_EE_MAC_ADDR, ETH_ALEN);
- 
- 	/* Check for 1SS devices */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-index d3033ebaade6..25e3069cf2b1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-@@ -183,7 +183,7 @@ int mt7615_dma_init(struct mt7615_dev *dev)
- 	int ret;
- 
- 	/* Increase buffer size to receive large VHT MPDUs */
--	if (dev->mt76.cap.has_5ghz)
-+	if (dev->mphy.cap.has_5ghz)
- 		rx_buf_size *= 2;
- 
- 	mt76_dma_attach(&dev->mt76);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-index f4756bb946c3..67f7a1ed9258 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-@@ -99,20 +99,20 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
- 
- 	if (is_mt7663(&dev->mt76)) {
- 		/* dual band */
--		dev->mt76.cap.has_2ghz = true;
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		return;
- 	}
- 
- 	if (is_mt7622(&dev->mt76)) {
- 		/* 2GHz only */
--		dev->mt76.cap.has_2ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
- 		return;
- 	}
- 
- 	if (is_mt7611(&dev->mt76)) {
- 		/* 5GHz only */
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		return;
- 	}
- 
-@@ -120,17 +120,17 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
- 			eeprom[MT_EE_WIFI_CONF]);
- 	switch (val) {
- 	case MT_EE_5GHZ:
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	case MT_EE_2GHZ:
--		dev->mt76.cap.has_2ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
- 		break;
- 	case MT_EE_DBDC:
- 		dev->dbdc_support = true;
- 		/* fall through */
- 	default:
--		dev->mt76.cap.has_2ghz = true;
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-index 9087607b621e..ebf4c96532d3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-@@ -52,15 +52,15 @@ static void mt76x0_set_chip_cap(struct mt76x02_dev *dev)
- 
- 	mt76x02_eeprom_parse_hw_cap(dev);
- 	dev_dbg(dev->mt76.dev, "2GHz %d 5GHz %d\n",
--		dev->mt76.cap.has_2ghz, dev->mt76.cap.has_5ghz);
-+		dev->mphy.cap.has_2ghz, dev->mphy.cap.has_5ghz);
- 
- 	if (dev->no_2ghz) {
--		dev->mt76.cap.has_2ghz = false;
-+		dev->mphy.cap.has_2ghz = false;
- 		dev_dbg(dev->mt76.dev, "mask out 2GHz support\n");
- 	}
- 
- 	if (is_mt7630(dev)) {
--		dev->mt76.cap.has_5ghz = false;
-+		dev->mphy.cap.has_5ghz = false;
- 		dev_dbg(dev->mt76.dev, "mask out 5GHz support\n");
- 	}
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index d78866bf41ba..0bac39bf3b66 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -245,7 +245,7 @@ int mt76x0_register_device(struct mt76x02_dev *dev)
+-	return phy;
+-}
+-EXPORT_SYMBOL_GPL(mt76_alloc_phy);
+-
+-int
+-mt76_register_phy(struct mt76_phy *phy)
+-{
+-	int ret;
+-
+ 	ret = ieee80211_register_hw(phy->hw);
  	if (ret)
  		return ret;
  
--	if (dev->mt76.cap.has_5ghz) {
-+	if (dev->mphy.cap.has_5ghz) {
- 		struct ieee80211_supported_band *sband;
- 
- 		sband = &dev->mphy.sband_5g.sband;
-@@ -253,7 +253,7 @@ int mt76x0_register_device(struct mt76x02_dev *dev)
- 		mt76x0_init_txpower(dev, sband);
- 	}
- 
--	if (dev->mt76.cap.has_2ghz)
-+	if (dev->mphy.cap.has_2ghz)
- 		mt76x0_init_txpower(dev, &dev->mphy.sband_2g.sband);
- 
- 	mt76x02_init_debugfs(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index 3de33aadf794..e91c314cdfac 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -447,11 +447,11 @@ static void mt76x0_phy_ant_select(struct mt76x02_dev *dev)
- 		else
- 			coex3 |= BIT(4);
- 		coex3 |= BIT(3);
--		if (dev->mt76.cap.has_2ghz)
-+		if (dev->mphy.cap.has_2ghz)
- 			wlan |= BIT(6);
- 	} else {
- 		/* sigle antenna mode */
--		if (dev->mt76.cap.has_5ghz) {
-+		if (dev->mphy.cap.has_5ghz) {
- 			coex3 |= BIT(3) | BIT(4);
- 		} else {
- 			wlan |= BIT(6);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-index c54c50fd639a..0acabba2d1a5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-@@ -75,14 +75,14 @@ void mt76x02_eeprom_parse_hw_cap(struct mt76x02_dev *dev)
- 
- 	switch (FIELD_GET(MT_EE_NIC_CONF_0_BOARD_TYPE, val)) {
- 	case BOARD_TYPE_5GHZ:
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	case BOARD_TYPE_2GHZ:
--		dev->mt76.cap.has_2ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
- 		break;
- 	default:
--		dev->mt76.cap.has_2ghz = true;
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	}
+ 	phy->dev->phy2 = phy;
++
+ 	return 0;
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-index 35954a499b33..d65910cc0709 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-@@ -52,14 +52,14 @@ static void mt7915_eeprom_parse_hw_cap(struct mt7915_dev *dev)
- 	val = FIELD_GET(MT_EE_WIFI_CONF_BAND_SEL, val);
- 	switch (val) {
- 	case MT_EE_5GHZ:
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	case MT_EE_2GHZ:
--		dev->mt76.cap.has_2ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
- 		break;
- 	default:
--		dev->mt76.cap.has_2ghz = true;
--		dev->mt76.cap.has_5ghz = true;
-+		dev->mphy.cap.has_2ghz = true;
-+		dev->mphy.cap.has_5ghz = true;
- 		break;
- 	}
+ EXPORT_SYMBOL_GPL(mt76_register_phy);
+ 
+-void
+-mt76_unregister_phy(struct mt76_phy *phy)
++void mt76_unregister_phy(struct mt76_phy *phy)
+ {
+ 	struct mt76_dev *dev = phy->dev;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 3239a99a94d9..7204106cfe68 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -775,7 +775,8 @@ void mt76_unregister_phy(struct mt76_phy *phy);
+ 
+ struct mt76_phy *mt76_alloc_phy(struct mt76_dev *dev, unsigned int size,
+ 				const struct ieee80211_ops *ops);
+-int mt76_register_phy(struct mt76_phy *phy);
++int mt76_register_phy(struct mt76_phy *phy, bool vht,
++		      struct ieee80211_rate *rates, int n_rates);
+ 
+ struct dentry *mt76_register_debugfs(struct mt76_dev *dev);
+ int mt76_queues_read(struct seq_file *s, void *data);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 4ba52848cc61..4f2ef4982001 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -426,14 +426,14 @@ int mt7615_register_ext_phy(struct mt7615_dev *dev)
+ 	mphy->hw->wiphy->perm_addr[0] ^= BIT(7);
+ 
+ 	/* second phy can only handle 5 GHz */
+-	mphy->sband_2g.sband.n_channels = 0;
+-	mphy->hw->wiphy->bands[NL80211_BAND_2GHZ] = NULL;
++	mphy->cap.has_5ghz = true;
+ 
+ 	/* mt7615 second phy shares the same hw queues with the primary one */
+ 	for (i = 0; i <= MT_TXQ_PSD ; i++)
+ 		mphy->q_tx[i] = dev->mphy.q_tx[i];
+ 
+-	ret = mt76_register_phy(mphy);
++	ret = mt76_register_phy(mphy, true, mt7615_rates,
++				ARRAY_SIZE(mt7615_rates));
+ 	if (ret)
+ 		ieee80211_free_hw(mphy->hw);
  
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index fe369f85dfeb..53eec43135bb 100644
+index 53eec43135bb..10d263f6ce3e 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -521,10 +521,9 @@ void mt7915_set_stream_he_caps(struct mt7915_phy *phy)
- {
- 	struct ieee80211_sband_iftype_data *data;
- 	struct ieee80211_supported_band *band;
--	struct mt76_dev *mdev = &phy->dev->mt76;
- 	int n;
+@@ -620,7 +620,8 @@ int mt7915_register_ext_phy(struct mt7915_dev *dev)
+ 	mphy->hw->wiphy->perm_addr[0] |= 2;
+ 	mphy->hw->wiphy->perm_addr[0] ^= BIT(7);
  
--	if (mdev->cap.has_2ghz) {
-+	if (phy->mt76->cap.has_2ghz) {
- 		data = phy->iftype[NL80211_BAND_2GHZ];
- 		n = mt7915_init_he_caps(phy, NL80211_BAND_2GHZ, data);
- 
-@@ -533,7 +532,7 @@ void mt7915_set_stream_he_caps(struct mt7915_phy *phy)
- 		band->n_iftype_data = n;
- 	}
- 
--	if (mdev->cap.has_5ghz) {
-+	if (phy->mt76->cap.has_5ghz) {
- 		data = phy->iftype[NL80211_BAND_5GHZ];
- 		n = mt7915_init_he_caps(phy, NL80211_BAND_5GHZ, data);
+-	ret = mt76_register_phy(mphy);
++	ret = mt76_register_phy(mphy, true, mt7915_rates,
++				ARRAY_SIZE(mt7915_rates));
+ 	if (ret)
+ 		ieee80211_free_hw(mphy->hw);
  
 -- 
 2.26.2
