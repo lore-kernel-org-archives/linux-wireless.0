@@ -2,41 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DCD3C61DD8
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D01C388F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DB73208FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 277B02076E
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729501AbgKLFip (ORCPT
+        id S1728978AbgKLFit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:38:45 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:38677 "EHLO
+        Thu, 12 Nov 2020 00:38:49 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:38676 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728177AbgKLDPh (ORCPT
+        with ESMTP id S1728169AbgKLDPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 11 Nov 2020 22:15:37 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FU1d8025852, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FVTj8025866, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FU1d8025852
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FVTj8025866
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 12 Nov 2020 11:15:30 +0800
+        Thu, 12 Nov 2020 11:15:31 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 12 Nov 2020 11:15:30 +0800
+ 15.1.2044.4; Thu, 12 Nov 2020 11:15:31 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 00/11] rtw88: coex: fix and update settings to enhance coex performance
-Date:   Thu, 12 Nov 2020 11:14:19 +0800
-Message-ID: <20201112031430.4846-1-pkshih@realtek.com>
+Subject: [PATCH v2 07/11] rtw88: coex: Change antenna setting to enhance free-run performance
+Date:   Thu, 12 Nov 2020 11:14:26 +0800
+Message-ID: <20201112031430.4846-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20201112031430.4846-1-pkshih@realtek.com>
+References: <20201112031430.4846-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -47,38 +50,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-This is second patchset of my total 32 coex patches, in which we fix and
-update coex settings to enhance coex performance in field.
+While the mechanism goes to 2G_free_run or WL5G_BT2G,
+set BT to hardware PTA mode to get a more efficiently performance.
 
-v2:
- - (01/11) "rtw88: coex: update TDMA settings for different beacon interval"
-   give proper names and use suggested macros.
- - (02/11)"rtw88: coex: remove unnecessary feature/function"
-   describe "why" in commit log
+Add a flag to indicate antenna switch is supported or not so
+that the IC serials which has different antenna structure can
+set antenna correctly.
 
-Ching-Te Ku (11):
-  rtw88: coex: update TDMA settings for different beacon interval
-  rtw88: coex: remove unnecessary feature/function
-  rtw88: coex: add write scoreboard action when WLAN in critical
-    procedure
-  rtw88: coex: Add force flag for coexistence table function
-  rtw88: coex: add the mechanism for RF4CE
-  rtw88: coex: update the TDMA parameter when leave LPS
-  rtw88: coex: Change antenna setting to enhance free-run performance
-  rtw88: coex: fix BT performance drop during initial/power-on step
-  rtw88: coex: remove write scan bit to scoreboard in scan and connect
-    notify
-  rtw88: coex: remove unnecessary WLAN slot extend
-  rtw88: coex: change the decode method from firmware
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/coex.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/realtek/rtw88/coex.c     | 200 +++++++++++-------
- drivers/net/wireless/realtek/rtw88/coex.h     |   5 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |   7 +
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- 4 files changed, 135 insertions(+), 78 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 57b7776cf263..d3432e6eb284 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -1061,6 +1061,7 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct rtw_coex_stat *coex_stat = &coex->stat;
++	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
+ 	struct rtw_coex_dm *coex_dm = &coex->dm;
+ 	u8 ctrl_type = COEX_SWITCH_CTRL_MAX;
+ 	u8 pos_type = COEX_SWITCH_TO_MAX;
+@@ -1156,8 +1157,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX,
+ 			"[BTCoex], %s() - PHASE_5G_RUNTIME\n", __func__);
+ 
+-		/* set GNT_BT to PTA */
+-		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
++		/* set GNT_BT to HW PTA */
++		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
+ 
+ 		/* set GNT_WL to SW high */
+ 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
+@@ -1172,8 +1173,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		rtw_dbg(rtwdev, RTW_DBG_COEX,
+ 			"[BTCoex], %s() - PHASE_2G_FREERUN\n", __func__);
+ 
+-		/* set GNT_BT to SW high */
+-		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_SW_HIGH);
++		/* set GNT_BT to HW PTA */
++		rtw_coex_set_gnt_bt(rtwdev, COEX_GNT_SET_HW_PTA);
+ 
+ 		/* Set GNT_WL to SW high */
+ 		rtw_coex_set_gnt_wl(rtwdev, COEX_GNT_SET_SW_HIGH);
+@@ -1204,7 +1205,8 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
+ 		return;
+ 	}
+ 
+-	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX)
++	if (ctrl_type < COEX_SWITCH_CTRL_MAX && pos_type < COEX_SWITCH_TO_MAX &&
++	    coex_rfe->ant_switch_exist)
+ 		rtw_coex_set_ant_switch(rtwdev, ctrl_type, pos_type);
+ }
+ 
 -- 
 2.21.0
 
