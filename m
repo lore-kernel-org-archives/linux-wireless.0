@@ -2,201 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB5FC2D0A3
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 12:49:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09134C388F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 13:49:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B1CA216C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 12:49:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A69A92085B
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 13:49:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eP5DujhV"
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="DFRG3uh9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727869AbgKLMtq (ORCPT
+        id S1728223AbgKLNtz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 07:49:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43590 "EHLO
+        Thu, 12 Nov 2020 08:49:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727035AbgKLMtq (ORCPT
+        with ESMTP id S1727790AbgKLNty (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Nov 2020 07:49:46 -0500
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDA1CC0613D1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2020 04:49:45 -0800 (PST)
-Received: by mail-pl1-x642.google.com with SMTP id s2so2720451plr.9
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2020 04:49:45 -0800 (PST)
+        Thu, 12 Nov 2020 08:49:54 -0500
+Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4200EC0613D1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2020 05:49:54 -0800 (PST)
+Received: by mail-qk1-x742.google.com with SMTP id 11so5228838qkd.5
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2020 05:49:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to;
-        bh=eHqwevucuZkhNUnwj2gKht3QcpiDt9S+7eDuwXCbzhw=;
-        b=eP5DujhVVYIYvWL0AqpNZmnyYebOb2jZa+YxdfsAG2yJCDQqabRHtfZs/P+Qs3b35W
-         EGQWS9TQ3C/b0uMpC47oUkbV8ChvnoBfmRzuxq2uUzfYG3+uGVjA3vNdCQ1QunlQqyyZ
-         lYhXWqROhC7Ny3TEnIJMUwq+oB2aCiL89ymcc=
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Eg/RjAIZKwAbJrMIrbrRdkEGP27Yqte35m8OKOzH3B0=;
+        b=DFRG3uh9srwcvUG7AdAKgEet8jCSEWusYDlt6asbzD4TH5DL8lm0dKKLsXZo8GP/4o
+         wU0LGFXeuWEW69E84n+bIq8bGLGlLjQh3+eGLwy6oP3y3diCtIWd8zpxDSimsbsyr0IM
+         XFAG8hVgEFl05eBB1QyvHVgYsT/oKCkSq+9zLxaFcPaqCws3GrQVhhL9m5rsmKUh2WYH
+         tPkASd42zRcx92wm3BYYOdMpcfieGKGfPss/D0c/wN0Lbx19RlRuYXYzoZBBG/+fXESq
+         Q41k0dGYyCE1NVDPuMUyDA5huljco1w0nO0MH4KnL0AwzlJRzX4Fp969BkIs/2SpZct9
+         WRpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to;
-        bh=eHqwevucuZkhNUnwj2gKht3QcpiDt9S+7eDuwXCbzhw=;
-        b=NrJtF5pqRcXhuu8El2u7xSl0vIqB5P+HPnFxiQ1BHPXDP+xgueZ2o6wOGsCoLAwgD2
-         58Ss0IMq1trdRjeBQ9fWgo2cOSdvGpCxNpwO5CKlnnTjVX+bX7bsiSKNgHA3GG6rtROw
-         DSzI3tnueZTuAmiuQTu+Rg5aLekd9yrBtICrUFipLwIgDC8m9PpPqp3CzmgUME/Wcr/e
-         m3ZHtM1frUGpuV2Qgr+/Yb6xpwhTF40jCXRJspKKvDA0UgLMrMpU0WsPJfhRwPfOa4bY
-         EObsP4TOofHjhdm0euPnFqY+A2Jsv3TUFpOyEyU8vE1GoiQvlt462NlQn3HHscRi+QjZ
-         C12w==
-X-Gm-Message-State: AOAM533qpnZLOTJTs+SzWNAhf18I57y75J7VOexaXdC+EPGhRQrsgiM1
-        4Ca+8NvYFJS0xd4DsjGaC2yp0w==
-X-Google-Smtp-Source: ABdhPJziQWHQkVa6XL3eomQ1vrbf4dsPROk7dXpjRsGeEUV61Ax44cnjOz6DPvp27JWVe+GV4S+atg==
-X-Received: by 2002:a17:902:7488:b029:d7:e80f:2e45 with SMTP id h8-20020a1709027488b02900d7e80f2e45mr2201308pll.72.1605185385309;
-        Thu, 12 Nov 2020 04:49:45 -0800 (PST)
-Received: from [10.230.32.203] ([192.19.148.250])
-        by smtp.gmail.com with ESMTPSA id i29sm5868912pgb.10.2020.11.12.04.49.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Nov 2020 04:49:44 -0800 (PST)
-Subject: Re: [PATCH v2] mac80211: reject/clear user rate mask if not usable
-To:     Wen Gong <wgong@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, kirtika@google.com,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless-owner@vger.kernel.org, ath11k@lists.infradead.org,
-        ath10k@lists.infradead.org
-References: <20170308132022.4216-1-johannes@sipsolutions.net>
- <07179008e9369bc81e152009ca85191d@codeaurora.org>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5decc452-7b2a-db1d-c5eb-04ab6bb61553@broadcom.com>
-Date:   Thu, 12 Nov 2020 13:49:41 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Eg/RjAIZKwAbJrMIrbrRdkEGP27Yqte35m8OKOzH3B0=;
+        b=uhXdOcmNnvFsMbx/TEq1xjcPZpGGqk4n77L+smU9B8TktAHWR31ZPHuy7xMEfIZxBi
+         sDprpSjT7B4/PLqs3LT7YiCVaZSRVgQo3kLtjpXUdpOmZjN74Is9ZYk/kUrHkuAnhIZ4
+         Fu1tZVNi3BW7zCYC4SozJDA+keUgOkf59+g+HbybE6GKQsIFk6WZEdudrlPvBiENO/5P
+         ek6XbezniWiiuwA6BYKWvhIlXj05YuDtIHViOI0Um9IIV1QioC7vaiCp6e3+MchcnHJF
+         JGmCTY5ziSIHXK+SSYPzIaWp37O/lyR0PDGjyKqJ18hUz5uTLsme5jRzExh9FMDNI/s3
+         fOSg==
+X-Gm-Message-State: AOAM532vLs5BsPQeEImj3qwbOruiR0cgdtjU0rWISgoQtAxVfLaQcK8A
+        9XLe3kzPgq9xwpI/5Uq7jucY3Q==
+X-Google-Smtp-Source: ABdhPJyiG+AWMVllInSFkDTazT0TjS77XHNnGJMdZGOKj8oXGaskcS+Y2DphXPV4+iJ0BQ/4jmIc5w==
+X-Received: by 2002:a05:620a:1539:: with SMTP id n25mr15856223qkk.258.1605188993531;
+        Thu, 12 Nov 2020 05:49:53 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
+        by smtp.gmail.com with ESMTPSA id k11sm4930974qtu.45.2020.11.12.05.49.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2020 05:49:52 -0800 (PST)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1kdCz2-003gor-0U; Thu, 12 Nov 2020 09:49:52 -0400
+Date:   Thu, 12 Nov 2020 09:49:52 -0400
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        =?utf-8?B?QmrDuHJu?= Mork <bjorn@mork.no>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Sergey Matyukevich <geomatsi@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oliver Neukum <oneukum@suse.com>,
+        Peter Korsgaard <jacmet@sunsite.dk>,
+        Steve Glendinning <steve.glendinning@shawell.net>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-rdma@vger.kernel.org,
+        Linux USB Mailing List <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH net-next 1/5] IB/hfi1: switch to core handling of rx/tx
+ byte/packet counters
+Message-ID: <20201112134952.GS244516@ziepe.ca>
+References: <5fbe3a1f-6625-eadc-b1c9-f76f78debb94@gmail.com>
+ <5093239e-2d3b-a716-3039-790abdb7a5ba@gmail.com>
+ <20201111090355.63fe3898@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 MIME-Version: 1.0
-In-Reply-To: <07179008e9369bc81e152009ca85191d@codeaurora.org>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b79a0705b3e858f8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201111090355.63fe3898@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000b79a0705b3e858f8
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+On Wed, Nov 11, 2020 at 09:03:55AM -0800, Jakub Kicinski wrote:
+> On Tue, 10 Nov 2020 20:47:34 +0100 Heiner Kallweit wrote:
+> > Use netdev->tstats instead of a member of hfi1_ipoib_dev_priv for storing
+> > a pointer to the per-cpu counters. This allows us to use core
+> > functionality for statistics handling.
+> > 
+> > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> 
+> RDMA folks, ack for merging via net-next?
 
-On 11/12/2020 11:55 AM, Wen Gong wrote:
-> On 2017-03-08 21:20, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
+Yes OK
 
-[...]
+Ack-by: Jason Gunthorpe <jgg@nvidia.com>
 
->> @@ -2685,6 +2686,21 @@ static int ieee80211_set_bitrate_mask(struct
->> wiphy *wiphy,
->>              return ret;
->>      }
->>
->> +    /*
->> +     * If active validate the setting and reject it if it doesn't leave
->> +     * at least one basic rate usable, since we really have to be able
->> +     * to send something, and if we're an AP we have to be able to do
->> +     * so at a basic rate so that all clients can receive it.
->> +     */
->> +    if (rcu_access_pointer(sdata->vif.chanctx_conf) &&
->> +        sdata->vif.bss_conf.chandef.chan) {
->> +        u32 basic_rates = sdata->vif.bss_conf.basic_rates;
->> +        enum nl80211_band band = sdata->vif.bss_conf.chandef.chan->band;
->> +
->> +        if (!(mask->control[band].legacy & basic_rates))
->> +            return -EINVAL;
-> If user want to use “iw wlan0 set bitrates legacy-5 54” to set it to 
-> fixed in 54M and 54M is
-> not basic rate in AP's becaon as example of below, then the iw command 
-> will fail.
-
-Which was the intent of this change, wasn't it? You want to allow anyway 
-or you want a clear error message as to why it fails?
-
-Regards,
-Arend
-
---000000000000b79a0705b3e858f8
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIIQTAYJKoZIhvcNAQcCoIIQPTCCEDkCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2hMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
-CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
-Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
-RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
-bFNpZ24gMiBDQSAtIFNIQTI1NiAtIEczMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-tpZok2X9LAHsYqMNVL+Ly6RDkaKar7GD8rVtb9nw6tzPFnvXGeOEA4X5xh9wjx9sScVpGR5wkTg1
-fgJIXTlrGESmaqXIdPRd9YQ+Yx9xRIIIPu3Jp/bpbiZBKYDJSbr/2Xago7sb9nnfSyjTSnucUcIP
-ZVChn6hKneVGBI2DT9yyyD3PmCEJmEzA8Y96qT83JmVH2GaPSSbCw0C+Zj1s/zqtKUbwE5zh8uuZ
-p4vC019QbaIOb8cGlzgvTqGORwK0gwDYpOO6QQdg5d03WvIHwTunnJdoLrfvqUg2vOlpqJmqR+nH
-9lHS+bEstsVJtZieU1Pa+3LzfA/4cT7XA/pnwwIDAQABo4IBtTCCAbEwDgYDVR0PAQH/BAQDAgEG
-MGoGA1UdJQRjMGEGCCsGAQUFBwMCBggrBgEFBQcDBAYIKwYBBQUHAwkGCisGAQQBgjcUAgIGCisG
-AQQBgjcKAwQGCSsGAQQBgjcVBgYKKwYBBAGCNwoDDAYIKwYBBQUHAwcGCCsGAQUFBwMRMBIGA1Ud
-EwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFGlygmIxZ5VEhXeRgMQENkmdewthMB8GA1UdIwQYMBaA
-FI/wS3+oLkUkrk1Q+mOai97i3Ru8MD4GCCsGAQUFBwEBBDIwMDAuBggrBgEFBQcwAYYiaHR0cDov
-L29jc3AyLmdsb2JhbHNpZ24uY29tL3Jvb3RyMzA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL3Jvb3QtcjMuY3JsMGcGA1UdIARgMF4wCwYJKwYBBAGgMgEoMAwGCisG
-AQQBoDIBKAowQQYJKwYBBAGgMgFfMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNp
-Z24uY29tL3JlcG9zaXRvcnkvMA0GCSqGSIb3DQEBCwUAA4IBAQConc0yzHxn4gtQ16VccKNm4iXv
-6rS2UzBuhxI3XDPiwihW45O9RZXzWNgVcUzz5IKJFL7+pcxHvesGVII+5r++9eqI9XnEKCILjHr2
-DgvjKq5Jmg6bwifybLYbVUoBthnhaFB0WLwSRRhPrt5eGxMw51UmNICi/hSKBKsHhGFSEaJQALZy
-4HL0EWduE6ILYAjX6BSXRDtHFeUPddb46f5Hf5rzITGLsn9BIpoOVrgS878O4JnfUWQi29yBfn75
-HajifFvPC+uqn+rcVnvrpLgsLOYG/64kWX/FRH8+mhVe+mcSX3xsUpcxK9q9vLTVtroU/yJUmEC4
-OcH5dQsbHBqjMIIDXzCCAkegAwIBAgILBAAAAAABIVhTCKIwDQYJKoZIhvcNAQELBQAwTDEgMB4G
-A1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNV
-BAMTCkdsb2JhbFNpZ24wHhcNMDkwMzE4MTAwMDAwWhcNMjkwMzE4MTAwMDAwWjBMMSAwHgYDVQQL
-ExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UEAxMK
-R2xvYmFsU2lnbjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMwldpB5BngiFvXAg7aE
-yiie/QV2EcWtiHL8RgJDx7KKnQRfJMsuS+FggkbhUqsMgUdwbN1k0ev1LKMPgj0MK66X17YUhhB5
-uzsTgHeMCOFJ0mpiLx9e+pZo34knlTifBtc+ycsmWQ1z3rDI6SYOgxXG71uL0gRgykmmKPZpO/bL
-yCiR5Z2KYVc3rHQU3HTgOu5yLy6c+9C7v/U9AOEGM+iCK65TpjoWc4zdQQ4gOsC0p6Hpsk+QLjJg
-6VfLuQSSaGjlOCZgdbKfd/+RFO+uIEn8rUAVSNECMWEZXriX7613t2Saer9fwRPvm2L7DWzgVGkW
-qQPabumDk3F2xmmFghcCAwEAAaNCMEAwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQFMAMBAf8w
-HQYDVR0OBBYEFI/wS3+oLkUkrk1Q+mOai97i3Ru8MA0GCSqGSIb3DQEBCwUAA4IBAQBLQNvAUKr+
-yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
-RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
-Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
-68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
-2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTjCCBDagAwIBAgIMUd5uz4+i70IloyctMA0GCSqGSIb3
-DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
-EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTA0MDc1
-NDIyWhcNMjIwOTA1MDc1NDIyWjCBlTELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
-MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRkwFwYDVQQDExBBcmVu
-ZCBWYW4gU3ByaWVsMSswKQYJKoZIhvcNAQkBFhxhcmVuZC52YW5zcHJpZWxAYnJvYWRjb20uY29t
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqJ64ukMVTPoACllUoR4YapHXMtf3JP4e
-MniQLw3G3qPYDcmuupakle+cqBUzxXOu9odSBxw7Ww4qooIVjDOuA1VxtYzieKLPmZ0sgvy1RhVR
-obr58d7/2azKP6wecAiglkT6jZ0by1TbLhuXNFByGxm7iF1Hh/sF3nWKCHMxBtEFrmaKhM1MwCDS
-j5+GBWrrZ/SNgVS+XqjaQyRg/h3WB95FxduXpYq5p0kWPJZhV4QeyMGSIRzqPwLbKdqIlRhkGxds
-pra5sIx/TR6gNtLG9MpND9zQt5j42hInkP81vqu9DG8lovoPMuR0JVpFRbPjHZ07cLqqbFMVS/8z
-53iSewIDAQABo4IB0zCCAc8wDgYDVR0PAQH/BAQDAgWgMIGeBggrBgEFBQcBAQSBkTCBjjBNBggr
-BgEFBQcwAoZBaHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NwZXJzb25hbHNp
-Z24yc2hhMmczb2NzcC5jcnQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwMi5nbG9iYWxzaWduLmNv
-bS9nc3BlcnNvbmFsc2lnbjJzaGEyZzMwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYB
-BQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAw
-RAYDVR0fBD0wOzA5oDegNYYzaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc3BlcnNvbmFsc2ln
-bjJzaGEyZzMuY3JsMCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYD
-VR0lBAwwCgYIKwYBBQUHAwQwHwYDVR0jBBgwFoAUaXKCYjFnlUSFd5GAxAQ2SZ17C2EwHQYDVR0O
-BBYEFHAaaA+cRo3vYiA6aKVu1bOs4YAYMA0GCSqGSIb3DQEBCwUAA4IBAQCYLdyC8SuyQV6oa5uH
-kGtqz9FCJC/9gSclQLM8dZLHF3FYX8LlcQg/3Ct5I29YLK3T/r35B2zGljtXqVOIeSEz7sDXfGNy
-3dnLIafB1y04e7aR+thVn5Rp1YTF01FUWYbZrixlVuKvjn8vtKC+HhAoDCxvqnqEuA/8Usn7B0/N
-uOA46oQTLe3kjdIgXWJ29JWVqFUavYdcK0+0zyfeMBCTO6heYABeMP3wzYHfcuFDhqldTCpumqhZ
-WwHVQUbAn+xLMIQpycIQFoJIGJX4MeaTSMfLNP2w7nP2uLNgIeleF284vS0XVkBXSCgIGylP4SN+
-HQYrv7fVCbtp+c7nFvP7MYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
-YmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNI
-QTI1NiAtIEczAgxR3m7Pj6LvQiWjJy0wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIE
-IBUVXVGPJLRYxSIkRI2XjwEBkPN7lQEYjQQAMDBP3XqZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0B
-BwEwHAYJKoZIhvcNAQkFMQ8XDTIwMTExMjEyNDk0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgB
-ZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQow
-CwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCbwbAUjyu3kI9xqSdd
-z8ED+Uvd/bMve9jH/9b7is51DxzQ95miX+0R6cminyMg/tRXIhGvXdj2/+bD1uPjkt+E2gh3srul
-f8bB70y7MNWeGlB2Jh/YQuOfDxqA4gvPu8ymtOp+WKNqNI9a++mOvstJSKp5naAP00UnGkvZFVeQ
-hpjo/62GMghPkwOlHRaGzX2l82iADxNJVpOZqJZBOS90qXnPlCXmby8EOVOuiK96VLVHcrWPXZEE
-C3KiRImZBJGaT9+G4GZv5QTnEzyH2IOknTQUKK7CuhhPpCxgrgmh3ODwqGy648uIVVvqB3GgnYpm
-ANyE0vIa378EO4q0+OoG
---000000000000b79a0705b3e858f8--
+Jason
