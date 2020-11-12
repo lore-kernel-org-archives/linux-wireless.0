@@ -2,183 +2,197 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D70C61DD8
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D18C6379D
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFAFA2076E
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:40:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 202D220825
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Nov 2020 05:40:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=technolu-st.20150623.gappssmtp.com header.i=@technolu-st.20150623.gappssmtp.com header.b="OFdfsyF5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729505AbgKLFiq (ORCPT
+        id S1729096AbgKLFik (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:38:46 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:38671 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728168AbgKLDPh (ORCPT
+        Thu, 12 Nov 2020 00:38:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33100 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726459AbgKLCcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Nov 2020 22:15:37 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AC3FUYZ0025856, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AC3FUYZ0025856
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 12 Nov 2020 11:15:30 +0800
-Received: from localhost.localdomain (172.21.69.213) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 12 Nov 2020 11:15:30 +0800
-From:   <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>, <tony0620emma@gmail.com>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 01/11] rtw88: coex: update TDMA settings for different beacon interval
-Date:   Thu, 12 Nov 2020 11:14:20 +0800
-Message-ID: <20201112031430.4846-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20201112031430.4846-1-pkshih@realtek.com>
-References: <20201112031430.4846-1-pkshih@realtek.com>
+        Wed, 11 Nov 2020 21:32:12 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A97C0613D1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2020 18:32:10 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id cw8so5528257ejb.8
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2020 18:32:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=technolu-st.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EUzPg8y73vRxlAHH+zIia8Krjs+sYU9K0sC28KymEQY=;
+        b=OFdfsyF59is2mlKKEZpxTJE38bU0jQpXcEKm0WKQv7bmSSLkS09VKmuD1R/V971ynM
+         S3kh+zrHT/CWrjm0Ok6zUt2BiFhf56JU6hrhTQ9DThImfqMzK6eiDFzLaDgD8+6sDkPs
+         dp64eW4FkOefdJbTYHBpvs2vRDNTyd1nvf5mkoRC5ijYPYziFUC2OemDikc/ZdvLPkSw
+         MMuibtWAT4mKpeYRH4Y4nQNRWs3Rn4HB1RTYO8aeZHMV8IzR0uxD1hM5JoFHIjXqNzeB
+         /licFcwyMdkqPLzMsrIyz5cvfcaMNZ0lebxqAla8KGzlHc545aPNvfysBlVFhPDMKTHP
+         JFFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EUzPg8y73vRxlAHH+zIia8Krjs+sYU9K0sC28KymEQY=;
+        b=efsO0O94BKQVrLup5f/JXdN/lrP9G8LdyCTqiwnrRgFHYru+I4hLkW6hZ9Iis4LcZe
+         6AKMhjoawnIJQlsvit89Fiz6xJWpnD4D08pR2ONk4JFPsLZw5xqhqgVCV8OwCWFzAQ1n
+         cvC3k5bCvzxFJtpf6/F771HYrDt/7Lc5HEd5URpn3nCv8aim92f829tSkckg1ZFeWATT
+         4HNGdA5LvoFF3ojYY12W01ZTkLJK/NBHlglzRClt790FhfHYblfndV6Uz4xPWwkIJtBa
+         Mi1EtbfUAcQ9u0CULCU9E2ZG5rRynSmvLXZokEYqbKMVImocremTmLMKnkFR5VZCzDhN
+         WCpg==
+X-Gm-Message-State: AOAM530DWwp6f+COjx5d/ah16SxxydMweTkCthVWA0pwFEvI9sgRdlPz
+        lVt6T3/224INCDOrwBif2Uo8c17a5MJKbBqT1HZZ0/EM1YJZPskHVmw=
+X-Google-Smtp-Source: ABdhPJwknRlumIb+H14ad0cYTJI1zbP/rZ/TYVSzcwrQHSiyzy4KNPJ/xC5Llo26hk8i+tHzwh7VpyOhT3s2+ovFnvw=
+X-Received: by 2002:a17:906:4c41:: with SMTP id d1mr29697883ejw.485.1605148329262;
+ Wed, 11 Nov 2020 18:32:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+References: <20201103160838.GA246433@bjorn-Precision-5520> <874km61732.fsf@nanos.tec.linutronix.de>
+ <fa26ac8b-ed48-7ea3-c21b-b133532716b8@posteo.de> <87mtzxkus5.fsf@nanos.tec.linutronix.de>
+ <87wnz0hr9k.fsf@codeaurora.org> <87ft5hehlb.fsf@codeaurora.org>
+ <6b60c8f1-ec37-d601-92c2-97a485b73431@posteo.de> <87v9ec9rk3.fsf@codeaurora.org>
+ <87imab4slq.fsf@codeaurora.org> <b2129a70db2b36c5015b4143a839f47dfc3153af.camel@seibold.net>
+ <CAHUdJJVp5r55NtE+BNz5XGtnaks6mDKQBFodz63DdULBVhD0Lg@mail.gmail.com>
+ <CAHUdJJXRDKs9NRugUAFgNr51DJ=OcssuiV8ST5CaV1CKiNTFfA@mail.gmail.com> <CAHUdJJUkvcShSXw4mkFUDcEh101xNQbOUc0YEv6-TyLdyTs4Og@mail.gmail.com>
+In-Reply-To: <CAHUdJJUkvcShSXw4mkFUDcEh101xNQbOUc0YEv6-TyLdyTs4Og@mail.gmail.com>
+From:   wi nk <wink@technolu.st>
+Date:   Thu, 12 Nov 2020 03:31:57 +0100
+Message-ID: <CAHUdJJWsCo6NJ6qr6kj=SASs+jO+fJFc3HhOO=fyek=OxSQa2Q@mail.gmail.com>
+Subject: Re: pci_alloc_irq_vectors fails ENOSPC for XPS 13 9310
+To:     Stefani Seibold <stefani@seibold.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Thomas Krause <thomaskrause@posteo.de>,
+        Govind Singh <govinds@codeaurora.org>,
+        linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Devin Bayer <dev@doubly.so>, Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        ath11k@lists.infradead.org, David Woodhouse <dwmw@amazon.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
+On Thu, Nov 12, 2020 at 2:11 AM wi nk <wink@technolu.st> wrote:
+>
+> On Thu, Nov 12, 2020 at 2:10 AM wi nk <wink@technolu.st> wrote:
+> >
+> > I've yet to see any instability after 45 minutes of exercising it, I
+> > do see a couple of messages that came out of the driver:
+> >
+> > [    8.963389] ath11k_pci 0000:55:00.0: Unknown eventid: 0x16005
+> > [   11.342317] ath11k_pci 0000:55:00.0: Unknown eventid: 0x1d00a
+> >
+> > then when it associates:
+> >
+> > [   16.718895] wlp85s0: send auth to ec:08:6b:27:01:ea (try 1/3)
+> > [   16.722636] wlp85s0: authenticated
+> > [   16.724150] wlp85s0: associate with ec:08:6b:27:01:ea (try 1/3)
+> > [   16.726486] wlp85s0: RX AssocResp from ec:08:6b:27:01:ea
+> > (capab=0x411 status=0 aid=8)
+> > [   16.738443] wlp85s0: associated
+> > [   16.764966] IPv6: ADDRCONF(NETDEV_CHANGE): wlp85s0: link becomes ready
+> >
+> > The adapter is achieving around 500 mbps on my gigabit connection, my
+> > 2018 mbp sees around 650, so it's doing pretty well so far.
+> >
+> > Stefani - when you applied the patch that Kalle shared, which branch
+> > did you apply it to?  I applied it to ath11k-qca6390-bringup and when
+> > I revert 7fef431be9c9 there is a small merge conflict I needed to
+> > resolve.  I wonder if either the starting branch, or your chosen
+> > resolution are related to the instability you see (or I'm just lucky
+> > so far! :)).
+> >
+> > On Thu, Nov 12, 2020 at 1:24 AM wi nk <wink@technolu.st> wrote:
+> > >
+> > > On Wed, Nov 11, 2020 at 11:02 PM Stefani Seibold <stefani@seibold.net> wrote:
+> > > >
+> > > > On Wed, 2020-11-11 at 21:10 +0200, Kalle Valo wrote:
+> > > > >
+> > > > > The proof of concept patch for v5.10-rc2 is here:
+> > > > >
+> > > > > https://patchwork.kernel.org/project/linux-wireless/patch/1605121102-14352-1-git-send-email-kvalo@codeaurora.org/
+> > > > >
+> > > > > Hopefully it makes it possible to boot the firmware now. But this is
+> > > > > a
+> > > > > quick hack and most likely buggy, so keep your expectations low :)
+> > > > >
+> > > > > In case there are these warnings during firmware initialisation:
+> > > > >
+> > > > > ath11k_pci 0000:05:00.0: qmi failed memory request, err = -110
+> > > > > ath11k_pci 0000:05:00.0: qmi failed to respond fw mem req:-110
+> > > > >
+> > > > > Try reverting this commit:
+> > > > >
+> > > > > 7fef431be9c9 mm/page_alloc: place pages to tail in
+> > > > > __free_pages_core()
+> > > > >
+> > > > > That's another issue which is debugged here:
+> > > > >
+> > > > > http://lists.infradead.org/pipermail/ath11k/2020-November/000550.html
+> > > > >
+> > > >
+> > > > Applying the patch and revert patch 7fef431be9c9 worked on the first
+> > > > glance.
+> > > >
+> > > > After a couple of minutes the connection get broken. The kernel log
+> > > > shows the following error:
+> > > >
+> > > > ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+> > > > ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+> > > > ath11k_pc
+> > > > i 0000:55:00.0: failed to enable PMF QOS: (-11
+> > > >
+> > > > It is also not possible to unload the ath11k_pci, rmmod will hang.
+> > > >
+> > > >
+> > >
+> > > I can confirm the same behavior as Stefani so far.  After applying the
+> > > patch, and reverting commit 7fef431be9c9, I am able to connect to a
+> > > network.  It hasn't disconnected yet (I'm sending this email via that
+> > > connection).  I'll report what I find next.
+> > >
+> > > Thanks again for the help!
+>
+> Sigh.... sorry for the top post again.  I'll now get a real email client.
 
-Add considering for different WLAN beacon interval in coexistence
-mechanism.
-Because the WLAN beacon period may be not 100 ms, so it's necessary
-to consider any beacon period and set timer according to the interval.
+So the connection remained super stable for a while, so I decided to
+tempt fate and suspend the laptop to see what would happen :).
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
-v2: give proper name and use suggested macros
----
- drivers/net/wireless/realtek/rtw88/coex.c     | 27 ++++++++++++++++---
- drivers/net/wireless/realtek/rtw88/coex.h     |  5 ++++
- drivers/net/wireless/realtek/rtw88/mac80211.c |  7 +++++
- drivers/net/wireless/realtek/rtw88/main.h     |  1 +
- 4 files changed, 36 insertions(+), 4 deletions(-)
+[ 5994.143715] PM: suspend exit
+[ 5997.260351] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 5997.260353] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 5997.260356] ath11k_pci 0000:55:00.0: failed to enable dynamic bw: -11
+[ 6000.332299] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6000.332303] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6000.332308] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6003.404365] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6003.404368] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6003.404373] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6016.204347] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6016.204351] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6016.204357] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6019.276319] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6019.276323] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6019.276329] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6031.052272] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6031.052275] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6031.052279] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6034.128257] ath11k_pci 0000:55:00.0: wmi command 16387 timeout
+[ 6034.128261] ath11k_pci 0000:55:00.0: failed to send WMI_PDEV_SET_PARAM cmd
+[ 6034.128265] ath11k_pci 0000:55:00.0: failed to enable PMF QOS: (-11
+[ 6039.500241] ath11k_pci 0000:55:00.0: qmi failed set mode request,
+mode: 4, err = -110
+[ 6039.500244] ath11k_pci 0000:55:00.0: qmi failed to send wlan mode off
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 61e91565cd7d..50df2e1b4842 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -225,6 +225,8 @@ static void rtw_coex_tdma_timer_base(struct rtw_dev *rtwdev, u8 type)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	struct rtw_coex_stat *coex_stat = &coex->stat;
- 	u8 para[2] = {0};
-+	u8 times;
-+	u16 tbtt_interval = coex_stat->wl_beacon_interval;
- 
- 	if (coex_stat->tdma_timer_base == type)
- 		return;
-@@ -233,10 +235,27 @@ static void rtw_coex_tdma_timer_base(struct rtw_dev *rtwdev, u8 type)
- 
- 	para[0] = COEX_H2C69_TDMA_SLOT;
- 
--	if (type == 3) /* 4-slot  */
-+	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], tbtt_interval = %d\n",
-+		tbtt_interval);
-+
-+	if (type == TDMA_TIMER_TYPE_4SLOT) {
- 		para[1] = PARA1_H2C69_TDMA_4SLOT; /* 4-slot */
--	else /* 2-slot  */
-+	} else if (tbtt_interval < 80 && tbtt_interval > 0) {
-+		times = 100 / tbtt_interval;
-+		if (100 % tbtt_interval != 0)
-+			times++;
-+
-+		para[1] = FIELD_PREP(PARA1_H2C69_TBTT_TIMES, times);
-+	} else if (tbtt_interval >= 180) {
-+		times = tbtt_interval / 100;
-+		if (tbtt_interval % 100 <= 80)
-+			times--;
-+
-+		para[1] = FIELD_PREP(PARA1_H2C69_TBTT_TIMES, times) |
-+			  FIELD_PREP(PARA1_H2C69_TBTT_DIV100, 1);
-+	} else {
- 		para[1] = PARA1_H2C69_TDMA_2SLOT;
-+	}
- 
- 	rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1]);
- 
-@@ -973,9 +992,9 @@ static void rtw_coex_tdma(struct rtw_dev *rtwdev, bool force, u32 tcase)
- 	bool wl_busy = false;
- 
- 	if (tcase & TDMA_4SLOT)/* 4-slot (50ms) mode */
--		rtw_coex_tdma_timer_base(rtwdev, 3);
-+		rtw_coex_tdma_timer_base(rtwdev, TDMA_TIMER_TYPE_4SLOT);
- 	else
--		rtw_coex_tdma_timer_base(rtwdev, 0);
-+		rtw_coex_tdma_timer_base(rtwdev, TDMA_TIMER_TYPE_2SLOT);
- 
- 	type = (u8)(tcase & 0xff);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wireless/realtek/rtw88/coex.h
-index 9b305fc6c984..73f1bbc68490 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.h
-+++ b/drivers/net/wireless/realtek/rtw88/coex.h
-@@ -21,9 +21,14 @@
- #define COEX_H2C69_TDMA_SLOT	0xb
- #define PARA1_H2C69_TDMA_4SLOT	0xc1
- #define PARA1_H2C69_TDMA_2SLOT	0x1
-+#define PARA1_H2C69_TBTT_TIMES	GENMASK(5, 0)
-+#define PARA1_H2C69_TBTT_DIV100	BIT(7)
- 
- #define TDMA_4SLOT	BIT(8)
- 
-+#define TDMA_TIMER_TYPE_2SLOT 0
-+#define TDMA_TIMER_TYPE_4SLOT 3
-+
- #define COEX_RSSI_STEP		4
- 
- #define COEX_RSSI_HIGH(rssi) \
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index c69397719fdf..1f1b639cd124 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -351,6 +351,8 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct rtw_dev *rtwdev = hw->priv;
- 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	struct rtw_coex *coex = &rtwdev->coex;
-+	struct rtw_coex_stat *coex_stat = &coex->stat;
- 	u32 config = 0;
- 
- 	mutex_lock(&rtwdev->mutex);
-@@ -381,6 +383,11 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		config |= PORT_SET_BSSID;
- 	}
- 
-+	if (changed & BSS_CHANGED_BEACON_INT) {
-+		if (ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_STATION)
-+			coex_stat->wl_beacon_interval = conf->beacon_int;
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON)
- 		rtw_fw_download_rsvd_page(rtwdev);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index a3a687a63734..3941aea51f9c 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1354,6 +1354,7 @@ struct rtw_coex_stat {
- 	u8 bt_a2dp_bitpool;
- 	u8 bt_iqk_state;
- 
-+	u16 wl_beacon_interval;
- 	u8 wl_noisy_level;
- 	u8 wl_fw_dbg_info[10];
- 	u8 wl_fw_dbg_info_pre[10];
--- 
-2.21.0
-
+I was able to remove the ath11k module using rmmod -f , and then
+modprobe ath11k + atk11k_pci and the device was able to reassociate
+and bring the connection back up.
