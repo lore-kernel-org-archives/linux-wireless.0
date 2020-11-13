@@ -2,77 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24FDEC388F7
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 09:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A87C56202
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 09:34:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7DED22240
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 09:23:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BF642145D
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 09:34:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726339AbgKMJXM (ORCPT
+        id S1726274AbgKMJe3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Nov 2020 04:23:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38528 "EHLO
+        Fri, 13 Nov 2020 04:34:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726267AbgKMJXM (ORCPT
+        with ESMTP id S1726149AbgKMJe3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Nov 2020 04:23:12 -0500
+        Fri, 13 Nov 2020 04:34:29 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B890C0613D1;
-        Fri, 13 Nov 2020 01:23:12 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B64FEC0613D1;
+        Fri, 13 Nov 2020 01:34:28 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1kdVIR-006rOM-33; Fri, 13 Nov 2020 10:23:07 +0100
-Message-ID: <820f10c46841ac79c78d5952ebbc816fd710b4fd.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: reject/clear user rate mask if not usable
+        id 1kdVTO-006rg8-UA; Fri, 13 Nov 2020 10:34:27 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org, kirtika@google.com,
-        linux-wireless-owner@vger.kernel.org, ath11k@lists.infradead.org,
-        ath10k@lists.infradead.org
-Date:   Fri, 13 Nov 2020 10:23:05 +0100
-In-Reply-To: <bc1db8cd25acd698ec586ed11c9865ac@codeaurora.org>
-References: <20170308132022.4216-1-johannes@sipsolutions.net>
-         <07179008e9369bc81e152009ca85191d@codeaurora.org>
-         <5decc452-7b2a-db1d-c5eb-04ab6bb61553@broadcom.com>
-         <4b8f37fde23262547edb6ed4635cf89b@codeaurora.org>
-         <cfee0b47ad026c74a105d3adf2923357bbc5e96e.camel@sipsolutions.net>
-         <83dd20def685d303106f285400367b6e@codeaurora.org>
-         <798cea679ae1df5a2ab9b59dd81c8e2b3ca2d6e3.camel@sipsolutions.net>
-         <30e2e578983e4df447e0c26c5bba0aba@codeaurora.org>
-         <0e60e4cdc036a5ef7394848d212a6e3f499c386f.camel@sipsolutions.net>
-         <256c487bb8c8c191a88d806e6125296e@codeaurora.org>
-         <365b1abcfd043a3b0c356ec9f8c7c44acd5a79d2.camel@sipsolutions.net>
-         <6caaa87ba3f37bd424e92d03c2340689@codeaurora.org>
-         <e4bd954afa503835e072ef71aa61c59e04ecbc40.camel@sipsolutions.net>
-         <bc1db8cd25acd698ec586ed11c9865ac@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2020-11-13
+Date:   Fri, 13 Nov 2020 10:34:20 +0100
+Message-Id: <20201113093421.24025-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Hi Jakub,
 
-> > Yes but you have to iterate all the stations and check they belong to
-> > the interface and all that I think?
-> > 
-> Maybe not need.
-> if NL80211_IFTYPE_STATION and NON-WLAN_STA_TDLS_PEER, it has only 1 
-> station for the ieee80211_vif
-> by my understand.
+We have a few fixes, most importantly probably the fix for
+the sleeping-in-atomic syzbot reported half a dozen (or so)
+times.
 
-Well, yes, but there's no counter.
+Please pull and let me know if there's any problem.
 
-So you need to iterate to see if there are any additional TDLS peers (in
-addition to the STA entry for the AP).
-
+Thanks,
 johannes
+
+
+
+The following changes since commit 52755b66ddcef2e897778fac5656df18817b59ab:
+
+  cosa: Add missing kfree in error path of cosa_write (2020-11-11 17:52:01 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2020-11-13
+
+for you to fetch changes up to 7bc40aedf24d31d8bea80e1161e996ef4299fb10:
+
+  mac80211: free sta in sta_info_insert_finish() on errors (2020-11-13 09:48:32 +0100)
+
+----------------------------------------------------------------
+A handful of fixes:
+ * a use-after-free fix in rfkill
+ * a memory leak fix in the mac80211 TX status path
+ * some rate scaling fixes
+ * a fix for the often-reported (by syzbot) sleeping
+   in atomic issue with mac80211's station removal
+
+----------------------------------------------------------------
+Claire Chang (1):
+      rfkill: Fix use-after-free in rfkill_resume()
+
+Felix Fietkau (3):
+      mac80211: fix memory leak on filtered powersave frames
+      mac80211: minstrel: remove deferred sampling code
+      mac80211: minstrel: fix tx status processing corner case
+
+Johannes Berg (1):
+      mac80211: free sta in sta_info_insert_finish() on errors
+
+ net/mac80211/rc80211_minstrel.c | 27 +++++----------------------
+ net/mac80211/rc80211_minstrel.h |  1 -
+ net/mac80211/sta_info.c         | 14 ++++----------
+ net/mac80211/status.c           | 18 ++++++++----------
+ net/rfkill/core.c               |  3 +++
+ 5 files changed, 20 insertions(+), 43 deletions(-)
 
