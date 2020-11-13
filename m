@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF00C55ABD
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 21:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E677C55ABD
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 21:32:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38C052224D
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 21:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B27412224D
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 21:32:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IORm0v87";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="CvVOPJLB"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="R88burXm";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ltK3DnD0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726553AbgKMVcC (ORCPT
+        id S1726379AbgKMVcP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Nov 2020 16:32:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41302 "EHLO
+        Fri, 13 Nov 2020 16:32:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbgKMVbx (ORCPT
+        with ESMTP id S1726249AbgKMVbt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Nov 2020 16:31:53 -0500
+        Fri, 13 Nov 2020 16:31:49 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 145C7C061A47
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2020 13:23:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C3DDC061A4A
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2020 13:23:15 -0800 (PST)
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1605302592;
+        s=2020; t=1605302593;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=tiowGlEOoC0lyB71Q2LCjtIjPwZglkLw/8AF/ek6Ppo=;
-        b=IORm0v87Uy7pDCUjZi51fTTc/4Ii4Tr3MDbggMdbwAZ0QDIHzB5ZxsjzxLquyT0Hp+gMzc
-        4zmvk8+EZXe5CdaahyoCmMKbP6uh2d/l/+Q8MnlPm3oG8ckRAWA2zNqfKu0uNhyfMtfeAj
-        /+XDtDz9/jaxcXIl2MBI83aqxMXbzP+1psOg5tAY6GTsfTYi1fvY24m0zJbMEUUw8Wqob7
-        1pINbuUrfWYt+jUuKHpV5GVm4Vm7ViYKAmdtR/jcELc7czOxz4HYK9ZB7c8m21DPEV8X13
-        HQ1ED8iXWvf065fIKzk1V/ZFNqwdFKnpqgTioo/lvFiKPzf4vfqEDuIoN+MeYg==
+        bh=9RbJeR7xKCajSFXSDs/Xww4s/6y+tzibSrLUTKbsR+8=;
+        b=R88burXmu8ngTXsVVzc/FyG14S0dLuajBhOaeQprRQs8xZDlH0BltnNzV+gDuOu2Cxpa16
+        rFxfBVrEz1w90EadZuChguhQs+qVwcYeO3k83/dzSLgvYqlZiLbCo/VjHWp4o616WpNT48
+        iOBSwNbP/ia8YF2KDQt88qjOv4K/QbaWE17prCsoDqgds/gQSrCcD1/cmFPKJVQY/QB96X
+        +BcrT533ywOM0g/0Fq0J7Sj7yY/tVvEQbLuXo9+2SZGDw5q0kPBuqOdyy4ZR1B/BhPMCUy
+        n8e9zM3uy0CPNvKZ38HGOu5yFJmY1866zf6ximI51rmBKOelguePzKJKiXMOfQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1605302592;
+        s=2020e; t=1605302593;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=tiowGlEOoC0lyB71Q2LCjtIjPwZglkLw/8AF/ek6Ppo=;
-        b=CvVOPJLBASgL4Rz4aj0Db9H4egENS8S4A25I0VGEFokvSYxgmh5SFhtC/GHuQ1TZ0YU8s2
-        642NBQvOuOQM/bAA==
+        bh=9RbJeR7xKCajSFXSDs/Xww4s/6y+tzibSrLUTKbsR+8=;
+        b=ltK3DnD0d59U9wxxqG4sF8bLP9wKaEHvFzPlonEbeMoCURH/9AN1BdmlIoQeyvc6Wz4Uya
+        Mf/sOBIJdSYJloDA==
 To:     linux-wireless@vger.kernel.org
 Cc:     Thomas Gleixner <tglx@linutronix.de>,
         Kalle Valo <kvalo@codeaurora.org>,
         Dan Williams <dcbw@redhat.com>,
         Jes Sorensen <jes.sorensen@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 04/10] orinoco: Annotate ezusb_init()
-Date:   Fri, 13 Nov 2020 22:22:46 +0100
-Message-Id: <20201113212252.2243570-5-bigeasy@linutronix.de>
+Subject: [PATCH 09/10] orinoco: Annotate ezusb_docmd_wait()
+Date:   Fri, 13 Nov 2020 22:22:51 +0100
+Message-Id: <20201113212252.2243570-10-bigeasy@linutronix.de>
 In-Reply-To: <20201113212252.2243570-1-bigeasy@linutronix.de>
 References: <20201113212252.2243570-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
@@ -66,104 +66,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ezusb_init() is always invoked in preemptible context during device
-probe. Only orinoco_up() -> orinoco_reinit_firmware() may invoke the
-function from atomic context but this is never used for the USB
-interface.
+All invocations of ezusb_docmd_wait() happen via ->cmd_wait(). This
+callback is always invoked under the orinoco_lock() which disables BH.
 
-Use ezusb_req_ctx_wait_compl() for the ezusb_write_ltv() and
-ezusb_docmd_wait() invocations from within ezusb_init().
-Preserve the generic versions which have still other user via the
-callback.
+Use ezusb_req_ctx_wait_poll() for ezusb_docmd_wait() because it must not
+sleep.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- .../wireless/intersil/orinoco/orinoco_usb.c   | 35 ++++++++++++++-----
- 1 file changed, 26 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/=
 net/wireless/intersil/orinoco/orinoco_usb.c
-index 66d77af91d22c..3f49e15967a48 100644
+index c8508a3d652b0..4c60b48214637 100644
 --- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
 +++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -994,8 +994,9 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
- 	return retval;
- }
-=20
--static int ezusb_write_ltv(struct hermes *hw, int bap, u16 rid,
--			   u16 length, const void *data)
-+static int __ezusb_write_ltv(struct hermes *hw, int bap, u16 rid,
-+			   u16 length, const void *data,
-+			   ezusb_ctx_wait ezusb_ctx_wait_func)
+@@ -1082,7 +1082,7 @@ static int __ezusb_docmd_wait(struct hermes *hw, u16 =
+cmd, u16 parm0,
+ static int ezusb_docmd_wait(struct hermes *hw, u16 cmd, u16 parm0,
+ 			    struct hermes_response *resp)
  {
- 	struct ezusb_priv *upriv =3D hw->priv;
- 	u16 frame_type;
-@@ -1021,7 +1022,14 @@ static int ezusb_write_ltv(struct hermes *hw, int ba=
-p, u16 rid,
- 		frame_type =3D EZUSB_FRAME_CONTROL;
-=20
- 	return ezusb_access_ltv(upriv, ctx, length, data, frame_type,
--				NULL, 0, NULL, ezusb_req_ctx_wait);
-+				NULL, 0, NULL, ezusb_ctx_wait_func);
-+}
-+
-+static int ezusb_write_ltv(struct hermes *hw, int bap, u16 rid,
-+			   u16 length, const void *data)
-+{
-+	return __ezusb_write_ltv(hw, bap, rid, length, data,
-+				 ezusb_req_ctx_wait);
- }
-=20
- static int ezusb_read_ltv(struct hermes *hw, int bap, u16 rid,
-@@ -1065,8 +1073,9 @@ static int ezusb_doicmd_wait(struct hermes *hw, u16 c=
-md, u16 parm0, u16 parm1,
- 				ezusb_req_ctx_wait);
- }
-=20
--static int ezusb_docmd_wait(struct hermes *hw, u16 cmd, u16 parm0,
--			    struct hermes_response *resp)
-+static int __ezusb_docmd_wait(struct hermes *hw, u16 cmd, u16 parm0,
-+			    struct hermes_response *resp,
-+			    ezusb_ctx_wait ezusb_ctx_wait_func)
- {
- 	struct ezusb_priv *upriv =3D hw->priv;
- 	struct request_context *ctx;
-@@ -1084,7 +1093,13 @@ static int ezusb_docmd_wait(struct hermes *hw, u16 c=
-md, u16 parm0,
-=20
- 	return ezusb_access_ltv(upriv, ctx, sizeof(data), &data,
- 				EZUSB_FRAME_CONTROL, NULL, 0, NULL,
--				ezusb_req_ctx_wait);
-+				ezusb_ctx_wait_func);
-+}
-+
-+static int ezusb_docmd_wait(struct hermes *hw, u16 cmd, u16 parm0,
-+			    struct hermes_response *resp)
-+{
-+	return __ezusb_docmd_wait(hw, cmd, parm0, resp, ezusb_req_ctx_wait);
+-	return __ezusb_docmd_wait(hw, cmd, parm0, resp, ezusb_req_ctx_wait);
++	return __ezusb_docmd_wait(hw, cmd, parm0, resp, ezusb_req_ctx_wait_poll);
  }
 =20
  static int ezusb_bap_pread(struct hermes *hw, int bap,
-@@ -1416,14 +1431,16 @@ static int ezusb_init(struct hermes *hw)
- 	usb_kill_urb(upriv->read_urb);
- 	ezusb_submit_in_urb(upriv);
-=20
--	retval =3D ezusb_write_ltv(hw, 0, EZUSB_RID_INIT1,
--				 HERMES_BYTES_TO_RECLEN(2), "\x10\x00");
-+	retval =3D __ezusb_write_ltv(hw, 0, EZUSB_RID_INIT1,
-+				 HERMES_BYTES_TO_RECLEN(2), "\x10\x00",
-+				 ezusb_req_ctx_wait_compl);
- 	if (retval < 0) {
- 		printk(KERN_ERR PFX "EZUSB_RID_INIT1 error %d\n", retval);
- 		return retval;
- 	}
-=20
--	retval =3D ezusb_docmd_wait(hw, HERMES_CMD_INIT, 0, NULL);
-+	retval =3D __ezusb_docmd_wait(hw, HERMES_CMD_INIT, 0, NULL,
-+				    ezusb_req_ctx_wait_compl);
- 	if (retval < 0) {
- 		printk(KERN_ERR PFX "HERMES_CMD_INIT error %d\n", retval);
- 		return retval;
 --=20
 2.29.2
 
