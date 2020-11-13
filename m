@@ -2,100 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 555ACC55ABD
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 07:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC52C388F7
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 08:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06F8F217A0
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 07:47:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1513217A0
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Nov 2020 08:15:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bEl00iZI"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="El0TrUGL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726291AbgKMHrA (ORCPT
+        id S1726148AbgKMIPL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Nov 2020 02:47:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726112AbgKMHq6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Nov 2020 02:46:58 -0500
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959D4C0613D1;
-        Thu, 12 Nov 2020 23:46:55 -0800 (PST)
-Received: by mail-ej1-x641.google.com with SMTP id oq3so11956319ejb.7;
-        Thu, 12 Nov 2020 23:46:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=zyH6jySFIoq48BBBi1yvzlVxpEUnMEvJ2blkKXb2ejk=;
-        b=bEl00iZItlntDGZuIkXa6sMVaVGUt41Wyi9S0lSGP5FH2Hsq/DrNvWNNU5mATx0B6D
-         jllI7bcT2JyD/IYA47SnFBRXuhLNZ2eu+ouhd+qB+Y2nTq8Kg692pw4IjOyBvBIOMA82
-         TyvofO83VsbKq70O2ifPjICthFbVGJi43792c2CDPqrKL+i3Rk4pbFYlqzoa0YxAZxNt
-         BXD0iRkqfm1tTKUIFfOHgjNu+RKeconXv869ZyuOgMQnWZasCuwzpko76a/o+uZsJHsN
-         LjZ+BH8S5rSf5/tVHHgu6uPbDa3GoUaw7cc9UD6ua+HgJVCHPnvGiGFx71ZzD+LMCxbH
-         c57Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=zyH6jySFIoq48BBBi1yvzlVxpEUnMEvJ2blkKXb2ejk=;
-        b=dB1I4gSUmg/Z9EXCFDR39g3YJhR+wXsESMC5U8q+npaLg7K6tLT5vydDsvd9Xvls6G
-         DtshFt72JSvp669MLc6IHQJuCsOKIH0mcRjROnS9upwoJQyEvzC0YdWPNW9cSTmpfCXi
-         URUpbtog+6wYWK0sKnpqyra2LcUuteBO2xtL+WbuK0R6RwbCivnVkpuK5ZwYbfIZBxxw
-         rIdSrbyOZLRJkImjMMIVEdQRVmLLjShQPM0+Ty3J2lb0FUiLswDyEQA1BFJyyW8KWtvS
-         HJDI3HOrkn31VCN8WwQAhOlXR28BiSs9nwaH7C0nYKjFbUHo49yqS9ZTwEJy6Arf1WQJ
-         oGnQ==
-X-Gm-Message-State: AOAM533GPxInP5vzuOpDW6mUv7VTPS+b1mdCFBZf5T7UMbTGMVN3tZvn
-        xVv8KStqZf8leF9r7T2/Ayo=
-X-Google-Smtp-Source: ABdhPJx007OIBw73gx0ZA0eYIhjdlBIlq90Y2I46cNGiUiZZdvE98WfrkEudmmO7whYgxb9lVudr2w==
-X-Received: by 2002:a17:906:cd0f:: with SMTP id oz15mr793397ejb.228.1605253614306;
-        Thu, 12 Nov 2020 23:46:54 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f23:2800:e113:5d8d:7b96:ca98? (p200300ea8f232800e1135d8d7b96ca98.dip0.t-ipconnect.de. [2003:ea:8f23:2800:e113:5d8d:7b96:ca98])
-        by smtp.googlemail.com with ESMTPSA id s26sm3364319edy.1.2020.11.12.23.46.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Nov 2020 23:46:53 -0800 (PST)
-Subject: Re: [PATCH 1/3] net: mac80211: use core API for updating TX stats
-To:     Jakub Kicinski <kuba@kernel.org>,
-        Lev Stipakov <lstipakov@gmail.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Lev Stipakov <lev@openvpn.net>
-References: <20201112110953.34055-1-lev@openvpn.net>
- <20201112153042.23df4eb3@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Message-ID: <320aa95d-2954-a69a-007b-177b2b5dac46@gmail.com>
-Date:   Fri, 13 Nov 2020 08:14:45 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.3
+        Fri, 13 Nov 2020 03:15:11 -0500
+Received: from z5.mailgun.us ([104.130.96.5]:52858 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725866AbgKMIPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Nov 2020 03:15:11 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1605255311; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=jp453k9H9xxJe/BWQFNg6tLuvLuyorIwuF4UeGvNSB0=;
+ b=El0TrUGLxIdo8c3xthlJ6qzSAbphFyx9njVUaMDz9CMoCDY/pcu5hNM+jw6ZdlG0gChjldLh
+ nMfQIcfJKjKzYw6YNOt8YRL5U4wQJcYk+EKgpH2v7cVPmFWdb9tVf8BEsQHmXA5OO2s81n2w
+ sUkP6KuZjrYvfQghslah6AK44Wo=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5fae407424ba9b3b027afe68 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 13 Nov 2020 08:14:44
+ GMT
+Sender: wgong=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 2F380C433F0; Fri, 13 Nov 2020 08:14:44 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B041DC433C6;
+        Fri, 13 Nov 2020 08:14:43 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <20201112153042.23df4eb3@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Fri, 13 Nov 2020 16:14:43 +0800
+From:   Wen Gong <wgong@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org, kirtika@google.com,
+        linux-wireless-owner@vger.kernel.org, ath11k@lists.infradead.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2] mac80211: reject/clear user rate mask if not usable
+In-Reply-To: <cfee0b47ad026c74a105d3adf2923357bbc5e96e.camel@sipsolutions.net>
+References: <20170308132022.4216-1-johannes@sipsolutions.net>
+ <07179008e9369bc81e152009ca85191d@codeaurora.org>
+ <5decc452-7b2a-db1d-c5eb-04ab6bb61553@broadcom.com>
+ <4b8f37fde23262547edb6ed4635cf89b@codeaurora.org>
+ <cfee0b47ad026c74a105d3adf2923357bbc5e96e.camel@sipsolutions.net>
+Message-ID: <83dd20def685d303106f285400367b6e@codeaurora.org>
+X-Sender: wgong@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 13.11.2020 um 00:30 schrieb Jakub Kicinski:
-> On Thu, 12 Nov 2020 13:09:53 +0200 Lev Stipakov wrote:
->> Commit d3fd65484c781 ("net: core: add dev_sw_netstats_tx_add")
->> has added function "dev_sw_netstats_tx_add()" to update
->> net device per-cpu TX stats.
->>
->> Use this function instead of ieee80211_tx_stats().
->>
->> Signed-off-by: Lev Stipakov <lev@openvpn.net>
+On 2020-11-13 15:38, Johannes Berg wrote:
+> On Fri, 2020-11-13 at 10:08 +0800, Wen Gong wrote:
+>> 
+>> > Which was the intent of this change, wasn't it?
 > 
-> Heiner is actively working on this.
+> Indeed. Permitting this leads to warnings later.
 > 
-> Heiner, would you mind looking at these three patches? If you have
-> these changes queued in your tree I'm happy to wait for them.
+>> We need to set the tx rate to fixed at a single rate, e.g.,
+>> 54M/48M/36M... for a test case.
+>> I do not want a clear error message, I want to the 54M rate pass/set
+>> success to lower wlan driver.
+>> Then lower wlan driver can handle it.
 > 
-This series is a good follow-up to what I did already.
-I'll have a look at it.
+> No, that will not happen. You should configure your test AP to actually
+> support 54M.
+Yes, the AP support 54M, but it is not basic rate, so 
+ieee80211_set_bitrate_mask will reject 54M
+because fail for check (mask->control[band].legacy & basic_rates).
+
+suppor rates of my AP:
+Tag: Supported Rates 6(B), 9, 12(B), 18, 24(B), 36, 48, 54, [Mbit/sec]
+     Tag Number: Supported Rates (1)
+     Tag length: 8
+     Supported Rates: 6(B) (0x8c)
+     Supported Rates: 9 (0x12)
+     Supported Rates: 12(B) (0x98)
+     Supported Rates: 18 (0x24)
+     Supported Rates: 24(B) (0xb0)
+     Supported Rates: 36 (0x48)
+     Supported Rates: 48 (0x60)
+     Supported Rates: 54 (0x6c)
+
+> 
+> johannes
