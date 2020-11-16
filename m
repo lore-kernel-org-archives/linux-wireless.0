@@ -2,75 +2,161 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_DIGITS,
+	FROM_LOCAL_HEX,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57541C83D55
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Nov 2020 12:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E26F9C6379D
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Nov 2020 17:09:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 224C622265
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Nov 2020 12:38:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBF9220E65
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Nov 2020 17:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728688AbgKPLqO (ORCPT
+        id S1732561AbgKPRJX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Nov 2020 06:46:14 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54577 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726487AbgKPLqO (ORCPT
+        Mon, 16 Nov 2020 12:09:23 -0500
+Received: from mail-io1-f70.google.com ([209.85.166.70]:34233 "EHLO
+        mail-io1-f70.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732541AbgKPRJW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Nov 2020 06:46:14 -0500
-X-UUID: ead7216fc39747af89c05bef180c38be-20201116
-X-UUID: ead7216fc39747af89c05bef180c38be-20201116
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 599935917; Mon, 16 Nov 2020 19:46:09 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 16 Nov 2020 19:46:07 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 16 Nov 2020 19:46:07 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH] mt76: mt7915: fix memory leak in mt7915_mcu_get_rx_rate()
-Date:   Mon, 16 Nov 2020 19:45:54 +0800
-Message-ID: <20201116114554.15899-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Mon, 16 Nov 2020 12:09:22 -0500
+Received: by mail-io1-f70.google.com with SMTP id y17so11264649iot.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2020 09:09:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=lBJQbOAh6i2WBvCJMXMiPAb3dDWe0Trv0gZBtEfcpmI=;
+        b=nUdk7xfsDZZrNBVvZ0LXLbDFFeqrEyhgjCy+Uk9bD4+Efmg/VyMErYybeog0NVtu9j
+         /E6NIC9pPsEUI1varFXLseQ1CFbVIfWf+PhF8/ghtV6j9NAvb+081AI7TN+SPtMm3vNE
+         Q93hYoMidnX3boprOzrVitjiHi0wwojQJaVaSMznoSon9NcIjMe8GX+Di0dEk172u3fG
+         rXzq80h0zg574vI0pNIKoFoIR2tuC/az8Mv+nHF1qiSciCGNpHcNASmO8BOzmmPWTqEE
+         XMls38/xwViX5a9MdccohGbQvvGZUVnTSAO11/IULKwh3jrHXYAyCUlshLlLw414/jcw
+         VciQ==
+X-Gm-Message-State: AOAM5335HYi/vw3faNWgapsV5xUIBSfbbzc9yPde98OKQhs4MhEJsray
+        5LThuFvQyZLUxPBlVlS68uC1phCu2/yg877nnr0Ln8sFGpXm
+X-Google-Smtp-Source: ABdhPJzJv3VV2gbL2bJQ1qM0eBoDDYOB4B9keJ+V59mgVpv1v/RM/C/Bn6TWiWfLb0qxYsF7+xIkUn4COXeO21BGDevfeZq+aFws
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 6E7635135E97EA2994EC37618BF1404DFA992401098CD3329F22247E3E1BBC962000:8
-X-MTK:  N
+X-Received: by 2002:a05:6e02:89:: with SMTP id l9mr6882057ilm.193.1605546559221;
+ Mon, 16 Nov 2020 09:09:19 -0800 (PST)
+Date:   Mon, 16 Nov 2020 09:09:19 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000055348705b43c701d@google.com>
+Subject: KASAN: use-after-free Read in ath9k_hif_usb_rx_cb (2)
+From:   syzbot <syzbot+03110230a11411024147@syzkaller.appspotmail.com>
+To:     andreyknvl@google.com, ath9k-devel@qca.qualcomm.com,
+        davem@davemloft.net, kuba@kernel.org, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Free the skb to prevent memory leak.
+Hello,
 
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+syzbot found the following issue on:
+
+HEAD commit:    0fb2c41f Merge 5.10-rc4 into here.
+git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git usb-testing
+console output: https://syzkaller.appspot.com/x/log.txt?x=15746da1500000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=b99cde3c953e8f6e
+dashboard link: https://syzkaller.appspot.com/bug?extid=03110230a11411024147
+compiler:       gcc (GCC) 10.1.0-syz 20200507
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12cc9bba500000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=120b1cc2500000
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+03110230a11411024147@syzkaller.appspotmail.com
+
+==================================================================
+BUG: KASAN: use-after-free in memcpy include/linux/string.h:399 [inline]
+BUG: KASAN: use-after-free in ath9k_hif_usb_rx_stream drivers/net/wireless/ath/ath9k/hif_usb.c:562 [inline]
+BUG: KASAN: use-after-free in ath9k_hif_usb_rx_cb+0x3ab/0x1020 drivers/net/wireless/ath/ath9k/hif_usb.c:680
+Read of size 49146 at addr ffff888113938000 by task swapper/1/0
+
+CPU: 1 PID: 0 Comm: swapper/1 Not tainted 5.10.0-rc4-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Call Trace:
+ <IRQ>
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0x107/0x163 lib/dump_stack.c:118
+ print_address_description.constprop.0.cold+0xae/0x4c8 mm/kasan/report.c:385
+ __kasan_report mm/kasan/report.c:545 [inline]
+ kasan_report.cold+0x1f/0x37 mm/kasan/report.c:562
+ check_memory_region_inline mm/kasan/generic.c:186 [inline]
+ check_memory_region+0x13d/0x180 mm/kasan/generic.c:192
+ memcpy+0x20/0x60 mm/kasan/common.c:105
+ memcpy include/linux/string.h:399 [inline]
+ ath9k_hif_usb_rx_stream drivers/net/wireless/ath/ath9k/hif_usb.c:562 [inline]
+ ath9k_hif_usb_rx_cb+0x3ab/0x1020 drivers/net/wireless/ath/ath9k/hif_usb.c:680
+ __usb_hcd_giveback_urb+0x2b0/0x5c0 drivers/usb/core/hcd.c:1657
+ usb_hcd_giveback_urb+0x367/0x410 drivers/usb/core/hcd.c:1728
+ dummy_timer+0x11f4/0x3280 drivers/usb/gadget/udc/dummy_hcd.c:1969
+ call_timer_fn+0x1a5/0x630 kernel/time/timer.c:1410
+ expire_timers kernel/time/timer.c:1455 [inline]
+ __run_timers.part.0+0x67c/0xa10 kernel/time/timer.c:1747
+ __run_timers kernel/time/timer.c:1728 [inline]
+ run_timer_softirq+0x80/0x120 kernel/time/timer.c:1760
+ __do_softirq+0x1b2/0x945 kernel/softirq.c:298
+ asm_call_irq_on_stack+0xf/0x20
+ </IRQ>
+ __run_on_irqstack arch/x86/include/asm/irq_stack.h:26 [inline]
+ run_on_irqstack_cond arch/x86/include/asm/irq_stack.h:77 [inline]
+ do_softirq_own_stack+0x80/0xa0 arch/x86/kernel/irq_64.c:77
+ invoke_softirq kernel/softirq.c:393 [inline]
+ __irq_exit_rcu kernel/softirq.c:423 [inline]
+ irq_exit_rcu+0x110/0x1a0 kernel/softirq.c:435
+ sysvec_apic_timer_interrupt+0x43/0xa0 arch/x86/kernel/apic/apic.c:1091
+ asm_sysvec_apic_timer_interrupt+0x12/0x20 arch/x86/include/asm/idtentry.h:631
+RIP: 0010:native_save_fl arch/x86/include/asm/irqflags.h:29 [inline]
+RIP: 0010:arch_local_save_flags arch/x86/include/asm/irqflags.h:79 [inline]
+RIP: 0010:arch_irqs_disabled arch/x86/include/asm/irqflags.h:169 [inline]
+RIP: 0010:acpi_safe_halt drivers/acpi/processor_idle.c:112 [inline]
+RIP: 0010:acpi_idle_do_entry+0x1c9/0x250 drivers/acpi/processor_idle.c:517
+Code: 8d d1 a1 fb 84 db 75 ac e8 34 d9 a1 fb e8 df 7f a7 fb e9 0c 00 00 00 e8 25 d9 a1 fb 0f 00 2d 6e 7b 6a 00 e8 19 d9 a1 fb fb f4 <9c> 5b 81 e3 00 02 00 00 fa 31 ff 48 89 de e8 b4 d1 a1 fb 48 85 db
+RSP: 0018:ffffc900000dfd18 EFLAGS: 00000293
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 1ffffffff10796c9
+RDX: ffff888100293280 RSI: ffffffff859d0937 RDI: ffffffff859d0921
+RBP: ffff8881031b7864 R08: 0000000000000001 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000001
+R13: ffff8881031b7800 R14: ffff8881031b7864 R15: ffff888105aee804
+ acpi_idle_enter+0x355/0x4f0 drivers/acpi/processor_idle.c:648
+ cpuidle_enter_state+0x1b1/0xc80 drivers/cpuidle/cpuidle.c:237
+ cpuidle_enter+0x4a/0xa0 drivers/cpuidle/cpuidle.c:351
+ call_cpuidle kernel/sched/idle.c:132 [inline]
+ cpuidle_idle_call kernel/sched/idle.c:213 [inline]
+ do_idle+0x3d5/0x580 kernel/sched/idle.c:273
+ cpu_startup_entry+0x14/0x20 kernel/sched/idle.c:369
+ start_secondary+0x265/0x340 arch/x86/kernel/smpboot.c:266
+ secondary_startup_64_no_verify+0xb0/0xbb
+
+The buggy address belongs to the page:
+page:00000000d417cdb1 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x113938
+head:00000000d417cdb1 order:3 compound_mapcount:0 compound_pincount:0
+flags: 0x200000000010000(head)
+raw: 0200000000010000 dead000000000100 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88811393ff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88811393ff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff888113940000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                   ^
+ ffff888113940080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff888113940100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+
+
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 ++
- 1 file changed, 2 insertions(+)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 3e1f7ee..4776532 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3515,5 +3515,7 @@ int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif *vif,
- 		break;
- 	}
- 
-+	dev_kfree_skb(skb);
-+
- 	return 0;
- }
--- 
-2.17.1
-
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
