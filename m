@@ -2,114 +2,63 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F3EC63697
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 17:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA3AC5519F
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 18:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFF2524654
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 17:34:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E68D62462E
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 18:06:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Iz6hOIvB"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="cpjxBcPj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727277AbgKQReE (ORCPT
+        id S1730568AbgKQSFt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Nov 2020 12:34:04 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:23232 "EHLO z5.mailgun.us"
+        Tue, 17 Nov 2020 13:05:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726530AbgKQReE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Nov 2020 12:34:04 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605634443; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=hbYPURUy4rEsO3NS33AYuYsnQqkoBPXfFip0tDNVbE8=; b=Iz6hOIvBt9xjt8AmyB9OT4KyxwwSFLNeuGq6KhqP7W2gF7NttESD/FFpAEEaxSBFpnVj9LS1
- iJAi6uMevWKA6WUoUT8TxvU2oilCtR8cq57o6WfXjnNfxz2OK0NUGcm2jOfYWdUYAEpVeOWJ
- CtpCAs51p1w77rRSTu3+gga87ZY=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5fb4098a40d44461258d4a5f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 17 Nov 2020 17:34:02
- GMT
-Sender: bbhatt=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8D1EAC433C6; Tue, 17 Nov 2020 17:34:02 +0000 (UTC)
-Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id S1725808AbgKQSFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Nov 2020 13:05:48 -0500
+Received: from kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net (c-67-180-217-166.hsd1.ca.comcast.net [67.180.217.166])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: bbhatt)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B622BC43460;
-        Tue, 17 Nov 2020 17:34:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B622BC43460
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
-From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
-To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc:     manivannan.sadhasivam@linaro.org, linux-arm-msm@vger.kernel.org,
-        hemantk@codeaurora.org, linux-kernel@vger.kernel.org,
-        ath11k@lists.infradead.org, Bhaumik Bhatt <bbhatt@codeaurora.org>
-Subject: [RESEND PATCH] ath11k: use MHI provided APIs to allocate and free MHI controller
-Date:   Tue, 17 Nov 2020 09:33:56 -0800
-Message-Id: <1605634436-36506-1-git-send-email-bbhatt@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        by mail.kernel.org (Postfix) with ESMTPSA id 092332462E;
+        Tue, 17 Nov 2020 18:05:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605636348;
+        bh=7o4mQ4udJ8S+UBM7dBLJ4tJBI9T4gOmBJHCi70XyM8Y=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=cpjxBcPjme+zkBvoBNQpYHlAsu9y3PZAIIVl7WWjNFXC7/oF6Th1mAf6ccLRKeuTF
+         au24Klr7sGloUdIyS+BrWOwkAlNFvNa5/mssHOo94gW+JFJJn+HQM49Lh7BgaNaOfY
+         lr4wfWioAOeEua5ySnHbBSKh7GkY050C7QBaVkFU=
+Date:   Tue, 17 Nov 2020 10:05:47 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Zhang Changzhong <zhangchangzhong@huawei.com>
+Cc:     <amitkarwar@gmail.com>, <siva8118@gmail.com>,
+        <kvalo@codeaurora.org>, <davem@davemloft.net>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH net] rsi_91x: fix error return code in rsi_reset_card()
+Message-ID: <20201117100547.12ed38ee@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+In-Reply-To: <1605582454-39649-1-git-send-email-zhangchangzhong@huawei.com>
+References: <1605582454-39649-1-git-send-email-zhangchangzhong@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use MHI provided APIs to allocate and free MHI controller to
-improve MHI host driver handling. This also fixes a memory leak
-as the MHI controller was allocated but never freed.
+On Tue, 17 Nov 2020 11:07:34 +0800 Zhang Changzhong wrote:
+> Fix to return a negative error code from the error handling
+> case instead of 0, as done elsewhere in this function.
+> 
+> Fixes: 17ff2c794f39 ("rsi: reset device changes for 9116")
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Zhang Changzhong <zhangchangzhong@huawei.com>
 
-Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/net/wireless/ath/ath11k/mhi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index aded9a7..1c9d9dc 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -218,7 +218,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
- 	struct mhi_controller *mhi_ctrl;
- 	int ret;
- 
--	mhi_ctrl = kzalloc(sizeof(*mhi_ctrl), GFP_KERNEL);
-+	mhi_ctrl = mhi_alloc_controller();
- 	if (!mhi_ctrl)
- 		return -ENOMEM;
- 
-@@ -234,7 +234,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
- 	ret = ath11k_mhi_get_msi(ab_pci);
- 	if (ret) {
- 		ath11k_err(ab, "failed to get msi for mhi\n");
--		kfree(mhi_ctrl);
-+		mhi_free_controller(mhi_ctrl);
- 		return ret;
- 	}
- 
-@@ -252,7 +252,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
- 	ret = mhi_register_controller(mhi_ctrl, &ath11k_mhi_config);
- 	if (ret) {
- 		ath11k_err(ab, "failed to register to mhi bus, err = %d\n", ret);
--		kfree(mhi_ctrl);
-+		mhi_free_controller(mhi_ctrl);
- 		return ret;
- 	}
- 
-@@ -265,6 +265,7 @@ void ath11k_mhi_unregister(struct ath11k_pci *ab_pci)
- 
- 	mhi_unregister_controller(mhi_ctrl);
- 	kfree(mhi_ctrl->irq);
-+	mhi_free_controller(mhi_ctrl);
- }
- 
- static char *ath11k_mhi_state_to_str(enum ath11k_mhi_state mhi_state)
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
-
+FWIW please try to tag driver/net/wireless with [PATCH wireless],
+Kalle will be taking those via the wireless drivers tree.
