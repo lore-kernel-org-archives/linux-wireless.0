@@ -2,84 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2DBDC63697
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 16:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8AC2C63697
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 17:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 753D3216C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 16:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C8AA238E6
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Nov 2020 17:18:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="GeEphgA3"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="cTaB+Acp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728322AbgKQQcj (ORCPT
+        id S1727245AbgKQRRr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Nov 2020 11:32:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56620 "EHLO mail.kernel.org"
+        Tue, 17 Nov 2020 12:17:47 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:56457 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727147AbgKQQci (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Nov 2020 11:32:38 -0500
-Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727645AbgKQRRq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Nov 2020 12:17:46 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1605633465; h=Message-ID: References: In-Reply-To: Reply-To:
+ Subject: Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=asJBzxf626itj7z5VEyrbr5Efzoc3mFG5fbDkfP/Rgk=;
+ b=cTaB+AcpM9lgDi6ckkhsFbSspEedIxQfti3tMsQp9G+Z3qxCbSiJu4cTebw8ADZFmg2QH3RN
+ LjWRZx8H4SNA1EWXA1Lo4ZTyasEM7EDW7KfwtUEmeA49MXARcgtoEmTRyyj1D9oXP1hezVeJ
+ JN18pHt8nNudxC0e2lPGoyWsR+I=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 5fb405a6135ce186e96f5f71 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 17 Nov 2020 17:17:26
+ GMT
+Sender: bbhatt=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 92FF6C43462; Tue, 17 Nov 2020 17:17:25 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 29999216C4;
-        Tue, 17 Nov 2020 16:32:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605630758;
-        bh=Kd5lKkKZnjFFB6cI6IhBjr0eoAAp1v+O7BK2W7Ibq34=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GeEphgA3TR0UF5thw9zB2t4V4mT1X/j6kexkFWEekaUy0wgtxSlRc+WjysBtk7d5T
-         vjLx0K/Xci72HM9cYAquXXaI6uAn+l6TdGulIrY7h92myfL7iuWyhULewnD4cuzV0C
-         6Cx9OETFg7xGmlYe9W2PdgHdHCQldlBg0onz1N6o=
-Date:   Tue, 17 Nov 2020 10:32:35 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Joe Perches <joe@perches.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] mwifiex: Fix fall-through warnings for Clang
-Message-ID: <20201117163235.GA23802@embeddedor>
-References: <20201117160958.GA18807@embeddedor>
- <b9989e7d048765111826d1df549a364485ea546f.camel@perches.com>
+        (Authenticated sender: bbhatt)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E689EC433C6;
+        Tue, 17 Nov 2020 17:17:24 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b9989e7d048765111826d1df549a364485ea546f.camel@perches.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 17 Nov 2020 09:17:24 -0800
+From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     manivannan.sadhasivam@linaro.org, linux-arm-msm@vger.kernel.org,
+        hemantk@codeaurora.org, jhugo@codeaurora.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, kvalo=codeaurora.org@codeaurora.org
+Subject: Re: [PATCH] ath11k: use MHI provided APIs to allocate and free MHI
+ controller
+Organization: Qualcomm Innovation Center, Inc.
+Reply-To: bbhatt@codeaurora.org
+Mail-Reply-To: bbhatt@codeaurora.org
+In-Reply-To: <87tutozc7h.fsf@codeaurora.org>
+References: <1605571300-4438-1-git-send-email-bbhatt@codeaurora.org>
+ <87tutozc7h.fsf@codeaurora.org>
+Message-ID: <d06eae092fcb0c3319ab793c8063a12d@codeaurora.org>
+X-Sender: bbhatt@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 08:15:59AM -0800, Joe Perches wrote:
-> On Tue, 2020-11-17 at 10:09 -0600, Gustavo A. R. Silva wrote:
-> > In preparation to enable -Wimplicit-fallthrough for Clang, fix multiple
-> > warnings by explicitly adding multiple break statements instead of
-> > letting the code fall through to the next case.
+On 2020-11-16 11:14 PM, Kalle Valo wrote:
+> Bhaumik Bhatt <bbhatt@codeaurora.org> writes:
 > 
-> Thanks Gustavo.
+>> Use MHI provided APIs to allocate and free MHI controller to
+>> improve MHI host driver handling.
 > 
-> I think this is better style than the gcc allowed
-> undescribed fallthrough to break;
+> How does it improve the handling?
 > 
-> gcc developers disagree though:
+Main reason is we want to ensure the MHI controller is zero-initialized 
+and
+we want to mandate it as it is better to have it under our control in 
+case
+we also want to allocate and track peripheral data/memory related to the 
+MHI
+controller.
+>> This also fixes a memory leak as the MHI controller was allocated but
+>> never freed.
+>> 
+>> Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath11k/mhi.c | 7 ++++---
+>>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=91432
+> For ath11k patches please CC ath11k and linux-wireless lists so that
+> patchwork sees it. So you need to resend this.
+> 
+> Is this a new API? I need to understand if there are any dependencies
+> between mhi and ath trees, or if I can apply this directly to my 
+> ath.git
+> tree.
 
-Yeah; I mention that in this[1] changelog text, together with the
-reasons why we think the Clang approach is safer. which is exactly
-the same information contained in the link[2] included in the changelog
-text for this commit.
+This one should be dependent on the patch [1] which exists on mainline 
+and
+should already part of your tree if you're on any 5.10 RC.
 
---
-Gustavo
+[1] 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/bus/mhi?h=v5.10-rc4&id=f42dfbe8f712127031e7b9bc938a1c33cec2ff57
 
-[1] https://git.kernel.org/linus/4169e889e5889405d54cec27d6e9f7f0ce3c7096
-[2] https://github.com/KSPP/linux/issues/115
+Thanks,
+Bhaumik
+---
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
+Forum,
+a Linux Foundation Collaborative Project
