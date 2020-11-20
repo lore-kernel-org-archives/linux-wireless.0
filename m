@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-22.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DFDC63777
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Nov 2020 18:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62399C64E8A
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Nov 2020 18:38:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1328A24124
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Nov 2020 18:38:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AEFA2242B
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Nov 2020 18:38:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="BQsFoDfP"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeHjZdCS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731030AbgKTSgb (ORCPT
+        id S1731185AbgKTShR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Nov 2020 13:36:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54704 "EHLO mail.kernel.org"
+        Fri, 20 Nov 2020 13:37:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55180 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730741AbgKTSga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Nov 2020 13:36:30 -0500
+        id S1731174AbgKTShN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Nov 2020 13:37:13 -0500
 Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9623B24181;
-        Fri, 20 Nov 2020 18:36:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C417B24124;
+        Fri, 20 Nov 2020 18:37:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605897389;
-        bh=7S93R+eoNCKQZlGjseYylH7acpfwBG3SpW0Kxq4QE48=;
+        s=default; t=1605897432;
+        bh=szf042y2s9sgwSPIKL6lzAqAJLKh9Jw1IOFO3mdaolE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BQsFoDfPt97Hqe4bMx/+nJFBErE3ihpYfstpHH32WMT49PEd4wRxgDpUD34xKhXQE
-         saTC+HYJtwePMgK+VHzkWcy7hHruj3NGoAhcd15x4PD6dQAsW/S8b9Gf6VZD5+3L6V
-         ZCvrFiQE92MpRAglO182rMzltAxj1IX4ZE4MKVpE=
-Date:   Fri, 20 Nov 2020 12:36:35 -0600
+        b=oeHjZdCSofjeMmI9xih31DLKwyANZ7rHAW7CLK9y0d1rivty8MP53oItCKYp9jeKT
+         0wc7gaygePioCZyYuNSoIyLzNQIjOqafmLAQpkJKGo7TtC63gldue3DCaZd1zqXU8I
+         RLyL+t8nu2CeAOw9Wd8jHDtqEsZkLA+arrZWwy+s=
+Date:   Fri, 20 Nov 2020 12:37:18 -0600
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH 091/141] iwlwifi: iwl-drv: Fix fall-through warnings for Clang
-Message-ID: <edd98d194bfc98b4be93a9bdc303630b719c0e66.1605896060.git.gustavoars@kernel.org>
+Subject: [PATCH 099/141] mt76: mt7615: Fix fall-through warnings for Clang
+Message-ID: <5e4366865b6fd0d0dd6b504b66f430b67c315841.1605896060.git.gustavoars@kernel.org>
 References: <cover.1605896059.git.gustavoars@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -69,22 +71,22 @@ implicit fall-through markings.
 Link: https://github.com/KSPP/linux/issues/115
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 9dcd2e990c9c..6a9be73d7661 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1579,7 +1579,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index f4756bb946c3..9a9685e5ab84 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -127,7 +127,7 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
  		break;
- 	default:
- 		WARN(1, "Invalid fw type %d\n", fw->type);
+ 	case MT_EE_DBDC:
+ 		dev->dbdc_support = true;
 -		/* fall through */
 +		fallthrough;
- 	case IWL_FW_MVM:
- 		op = &iwlwifi_opmode_table[MVM_OP_MODE];
- 		break;
+ 	default:
+ 		dev->mt76.cap.has_2ghz = true;
+ 		dev->mt76.cap.has_5ghz = true;
 -- 
 2.27.0
 
