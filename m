@@ -2,119 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD1A3C64E7B
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 18:02:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EE3FC5519F
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 18:07:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEC6E22253
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 18:02:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 228B122202
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 18:07:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZ0ejuk5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728005AbgKUSC2 (ORCPT
+        id S1728010AbgKUSGj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Nov 2020 13:02:28 -0500
-Received: from smtprelay0210.hostedemail.com ([216.40.44.210]:53086 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726556AbgKUSC0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Nov 2020 13:02:26 -0500
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay07.hostedemail.com (Postfix) with ESMTP id AF7D7181D3025;
-        Sat, 21 Nov 2020 18:02:23 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: uncle36_3402e8c27356
-X-Filterd-Recvd-Size: 3937
-Received: from XPS-9350.home (unknown [47.151.128.180])
-        (Authenticated sender: joe@perches.com)
-        by omf04.hostedemail.com (Postfix) with ESMTPA;
-        Sat, 21 Nov 2020 18:02:18 +0000 (UTC)
-Message-ID: <f7643c9cb0a896f3ead65e86084b7c143e21ef43.camel@perches.com>
-Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
-From:   Joe Perches <joe@perches.com>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        trix@redhat.com, clang-built-linux@googlegroups.com
-Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
-        kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devel@acpica.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ibm-acpi-devel@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        ecryptfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
-        keyrings@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, alsa-devel@alsa-project.org,
-        bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
-Date:   Sat, 21 Nov 2020 10:02:17 -0800
-In-Reply-To: <5843ef910b0e86c00d9c0143dec20f93823b016b.camel@HansenPartnership.com>
-References: <20201121165058.1644182-1-trix@redhat.com>
-         <5843ef910b0e86c00d9c0143dec20f93823b016b.camel@HansenPartnership.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+        Sat, 21 Nov 2020 13:06:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47562 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726305AbgKUSGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 21 Nov 2020 13:06:38 -0500
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3BA0422201;
+        Sat, 21 Nov 2020 18:06:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605981997;
+        bh=pRRiUjCIvCXAWQNcMYZqHMIWEh2yfgzcy8eELup0gSo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=NZ0ejuk5Xv9pZVpBhbuGW9tzWoNsMypJ7ObGrE/j6g6en8v9NtxU0fUeBrD2JDTuv
+         m+Kyi/QLoCfCxrqK+hpCE/Uqk+oj4whfKcAsjMluBdYOmQJB3Lt0CPJlfM140yyJcg
+         gfC36WtEGRWL2BXa6CBVyx9z3bxNzvMKPoiQCKa8=
+Date:   Sat, 21 Nov 2020 10:06:36 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Florian Westphal <fw@strlen.de>
+Cc:     Ido Schimmel <idosch@idosch.org>,
+        Aleksandr Nogikh <aleksandrnogikh@gmail.com>,
+        davem@davemloft.net, johannes@sipsolutions.net,
+        edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
+        elver@google.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        willemdebruijn.kernel@gmail.com,
+        Aleksandr Nogikh <nogikh@google.com>,
+        Willem de Bruijn <willemb@google.com>
+Subject: Re: [PATCH v5 2/3] net: add kcov handle to skb extensions
+Message-ID: <20201121100636.26aaaf8a@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20201121165227.GT15137@breakpoint.cc>
+References: <20201029173620.2121359-1-aleksandrnogikh@gmail.com>
+        <20201029173620.2121359-3-aleksandrnogikh@gmail.com>
+        <20201121160941.GA485907@shredder.lan>
+        <20201121165227.GT15137@breakpoint.cc>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2020-11-21 at 09:18 -0800, James Bottomley wrote:
-> On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
-> > A difficult part of automating commits is composing the subsystem
-> > preamble in the commit log.  For the ongoing effort of a fixer
-> > producing one or two fixes a release the use of 'treewide:' does
-> > not seem appropriate.
-> > 
-> > It would be better if the normal prefix was used.  Unfortunately
-> > normal is not consistent across the tree.
-> > 
-> > 	D: Commit subsystem prefix
-> > 
-> > ex/ for FPGA DFL DRIVERS
-> > 
-> > 	D: fpga: dfl:
+On Sat, 21 Nov 2020 17:52:27 +0100 Florian Westphal wrote:
+> Ido Schimmel <idosch@idosch.org> wrote:
+> > Other suggestions?  
 > 
-> I've got to bet this is going to cause more issues than it solves. 
-> SCSI uses scsi: <driver>: for drivers but not every driver has a
-> MAINTAINERS entry.  We use either scsi: or scsi: core: for mid layer
-> things, but we're not consistent.  Block uses blk-<something>: for all
-> of it's stuff but almost no <somtehing>s have a MAINTAINERS entry.  So
-> the next thing you're going to cause is an explosion of suggested
-> MAINTAINERs entries.
+> Aleksandr, why was this made into an skb extension in the first place?
+> 
+> AFAIU this feature is usually always disabled at build time.
+> For debug builds (test farm /debug kernel etc) its always needed.
+> 
+> If thats the case this u64 should be an sk_buff member, not an
+> extension.
 
-As well as some changes require simultaneous changes across
-multiple subsystems.
+Yeah, in hindsight I should have looked at how it's used. Not a great
+fit for extensions. We can go back, but...
 
-> Has anyone actually complained about treewide:?
+In general I'm not very happy at how this is going. First of all just
+setting the handle in a couple of allocs seems to not be enough, skbs
+get cloned, reused etc. There were also build problems caused by this
+patch and Aleksandr & co where nowhere to be found. Now we find out
+this causes leaks, how was that not caught by the syzbot it's supposed
+to serve?!
 
-It depends on what you mean by treewide:
-
-If a treewide: patch is applied by some "higher level" maintainer,
-then generally, no.
-
-If the treewide patch is also cc'd to many individual maintainers,
-then yes, many many times.
-
-Mostly because patches cause what is in their view churn or that
-changes are not specific to their subsystem grounds.
-
-The treewide patch is sometimes dropped, sometimes broken up and
-generally not completely applied.
-
-What would be useful in many cases like this is for a pre and post
-application of the treewide patch to be compiled and the object
-code verified for lack of any logic change.
-
-Unfortunately, gcc does not guarantee deterministic compilation so
-this isn't feasible with at least gcc.  Does clang guarantee this?
-
-I'm not sure it's possible:
-https://blog.llvm.org/2019/11/deterministic-builds-with-clang-and-lld.html
-
-
+So I'm leaning towards reverting the whole thing. You can attach
+kretprobes and record the information you need in BPF maps.
