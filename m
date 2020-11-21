@@ -2,107 +2,128 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB52C63697
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 16:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F4C6C6379F
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 17:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8F5822206
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 16:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07C3C2245F
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Nov 2020 17:10:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727215AbgKUQwg (ORCPT
+        id S1727313AbgKURKT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Nov 2020 11:52:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50132 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726305AbgKUQwg (ORCPT
+        Sat, 21 Nov 2020 12:10:19 -0500
+Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:44438 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726281AbgKURKR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Nov 2020 11:52:36 -0500
-Received: from Chamillionaire.breakpoint.cc (Chamillionaire.breakpoint.cc [IPv6:2a0a:51c0:0:12e:520::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC2D6C0613CF;
-        Sat, 21 Nov 2020 08:52:35 -0800 (PST)
-Received: from fw by Chamillionaire.breakpoint.cc with local (Exim 4.92)
-        (envelope-from <fw@strlen.de>)
-        id 1kgW7f-0006hd-5O; Sat, 21 Nov 2020 17:52:27 +0100
-Date:   Sat, 21 Nov 2020 17:52:27 +0100
-From:   Florian Westphal <fw@strlen.de>
-To:     Ido Schimmel <idosch@idosch.org>
-Cc:     Aleksandr Nogikh <aleksandrnogikh@gmail.com>, fw@strlen.de,
-        davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net,
-        edumazet@google.com, andreyknvl@google.com, dvyukov@google.com,
-        elver@google.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        willemdebruijn.kernel@gmail.com,
-        Aleksandr Nogikh <nogikh@google.com>,
-        Willem de Bruijn <willemb@google.com>
-Subject: Re: [PATCH v5 2/3] net: add kcov handle to skb extensions
-Message-ID: <20201121165227.GT15137@breakpoint.cc>
-References: <20201029173620.2121359-1-aleksandrnogikh@gmail.com>
- <20201029173620.2121359-3-aleksandrnogikh@gmail.com>
- <20201121160941.GA485907@shredder.lan>
+        Sat, 21 Nov 2020 12:10:17 -0500
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay03.hostedemail.com (Postfix) with ESMTP id C09E2837F24A;
+        Sat, 21 Nov 2020 17:10:14 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: crook72_110ffeb27355
+X-Filterd-Recvd-Size: 4090
+Received: from XPS-9350.home (unknown [47.151.128.180])
+        (Authenticated sender: joe@perches.com)
+        by omf05.hostedemail.com (Postfix) with ESMTPA;
+        Sat, 21 Nov 2020 17:10:09 +0000 (UTC)
+Message-ID: <2105f0c05e9eae8bee8e17dcc5314474b3c0bc73.camel@perches.com>
+Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
+From:   Joe Perches <joe@perches.com>
+To:     trix@redhat.com, clang-built-linux@googlegroups.com
+Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
+        kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devel@acpica.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ibm-acpi-devel@lists.sourceforge.net,
+        platform-driver-x86@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        ecryptfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
+        keyrings@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, alsa-devel@alsa-project.org,
+        bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
+Date:   Sat, 21 Nov 2020 09:10:08 -0800
+In-Reply-To: <20201121165058.1644182-1-trix@redhat.com>
+References: <20201121165058.1644182-1-trix@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.38.1-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201121160941.GA485907@shredder.lan>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ido Schimmel <idosch@idosch.org> wrote:
-> On Thu, Oct 29, 2020 at 05:36:19PM +0000, Aleksandr Nogikh wrote:
-> > From: Aleksandr Nogikh <nogikh@google.com>
-> > 
-> > Remote KCOV coverage collection enables coverage-guided fuzzing of the
-> > code that is not reachable during normal system call execution. It is
-> > especially helpful for fuzzing networking subsystems, where it is
-> > common to perform packet handling in separate work queues even for the
-> > packets that originated directly from the user space.
-> > 
-> > Enable coverage-guided frame injection by adding kcov remote handle to
-> > skb extensions. Default initialization in __alloc_skb and
-> > __build_skb_around ensures that no socket buffer that was generated
-> > during a system call will be missed.
-> > 
-> > Code that is of interest and that performs packet processing should be
-> > annotated with kcov_remote_start()/kcov_remote_stop().
-> > 
-> > An alternative approach is to determine kcov_handle solely on the
-> > basis of the device/interface that received the specific socket
-> > buffer. However, in this case it would be impossible to distinguish
-> > between packets that originated during normal background network
-> > processes or were intentionally injected from the user space.
-> > 
-> > Signed-off-by: Aleksandr Nogikh <nogikh@google.com>
-> > Acked-by: Willem de Bruijn <willemb@google.com>
+On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
+> A difficult part of automating commits is composing the subsystem
+> preamble in the commit log.  For the ongoing effort of a fixer producing
+> one or two fixes a release the use of 'treewide:' does not seem appropriate.
 > 
-> [...]
+> It would be better if the normal prefix was used.  Unfortunately normal is
+> not consistent across the tree.
 > 
-> > @@ -249,6 +249,9 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
-> >  
-> >  		fclones->skb2.fclone = SKB_FCLONE_CLONE;
-> >  	}
-> > +
-> > +	skb_set_kcov_handle(skb, kcov_common_handle());
+> So I am looking for comments for adding a new tag to the MAINTAINERS file
 > 
-> Hi,
+> 	D: Commit subsystem prefix
 > 
-> This causes skb extensions to be allocated for the allocated skb, but
-> there are instances that blindly overwrite 'skb->extensions' by invoking
-> skb_copy_header() after __alloc_skb(). For example, skb_copy(),
-> __pskb_copy_fclone() and skb_copy_expand(). This results in the skb
-> extensions being leaked [1].
+> ex/ for FPGA DFL DRIVERS
+> 
+> 	D: fpga: dfl:
 
-[..]
-> Other suggestions?
+I'm all for it.  Good luck with the effort.  It's not completely trivial.
 
-Aleksandr, why was this made into an skb extension in the first place?
+From a decade ago:
 
-AFAIU this feature is usually always disabled at build time.
-For debug builds (test farm /debug kernel etc) its always needed.
+https://lore.kernel.org/lkml/1289919077.28741.50.camel@Joe-Laptop/
 
-If thats the case this u64 should be an sk_buff member, not an
-extension.
+(and that thread started with extra semicolon patches too)
+
+> Continuing with cleaning up clang's -Wextra-semi-stmt
+
+> diff --git a/Makefile b/Makefile
+[]
+> @@ -1567,20 +1567,21 @@ help:
+>  	 echo  ''
+>  	@echo  'Static analysers:'
+>  	@echo  '  checkstack      - Generate a list of stack hogs'
+>  	@echo  '  versioncheck    - Sanity check on version.h usage'
+>  	@echo  '  includecheck    - Check for duplicate included header files'
+>  	@echo  '  export_report   - List the usages of all exported symbols'
+>  	@echo  '  headerdep       - Detect inclusion cycles in headers'
+>  	@echo  '  coccicheck      - Check with Coccinelle'
+>  	@echo  '  clang-analyzer  - Check with clang static analyzer'
+>  	@echo  '  clang-tidy      - Check with clang-tidy'
+> +	@echo  '  clang-tidy-fix  - Check and fix with clang-tidy'
+
+A pity the ordering of the code below isn't the same as the above.
+
+> -PHONY += clang-tidy clang-analyzer
+> +PHONY += clang-tidy-fix clang-tidy clang-analyzer
+[]
+> -clang-tidy clang-analyzer: $(extmod-prefix)compile_commands.json
+> +clang-tidy-fix clang-tidy clang-analyzer: $(extmod-prefix)compile_commands.json
+>  	$(call cmd,clang_tools)
+>  else
+> -clang-tidy clang-analyzer:
+> +clang-tidy-fix clang-tidy clang-analyzer:
+
+[]
+
+> diff --git a/scripts/clang-tools/run-clang-tools.py b/scripts/clang-tools/run-clang-tools.py
+[]
+> @@ -22,43 +22,57 @@ def parse_arguments():
+[]
+>      parser.add_argument("type",
+> -                        choices=["clang-tidy", "clang-analyzer"],
+> +                        choices=["clang-tidy-fix", "clang-tidy", "clang-analyzer"],
+
+etc...
+
