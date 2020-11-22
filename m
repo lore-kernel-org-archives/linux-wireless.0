@@ -2,99 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A638C63798
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Nov 2020 21:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCFEC64E7D
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Nov 2020 22:11:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C893120782
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Nov 2020 21:35:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tf8TRrJP"
+	by mail.kernel.org (Postfix) with ESMTP id 2A02720757
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Nov 2020 22:11:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726302AbgKVVf3 (ORCPT
+        id S1726725AbgKVWLC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 22 Nov 2020 16:35:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59722 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726211AbgKVVf1 (ORCPT
+        Sun, 22 Nov 2020 17:11:02 -0500
+Received: from asavdk4.altibox.net ([109.247.116.15]:51724 "EHLO
+        asavdk4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725782AbgKVWK6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Nov 2020 16:35:27 -0500
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F473C0613CF
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2020 13:35:25 -0800 (PST)
-Received: by mail-wr1-x42f.google.com with SMTP id 23so16665380wrc.8
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2020 13:35:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding;
-        bh=ZZgCNMw6md/0ewSx8q1901FCHTLmznKQ1NqxVvEmywM=;
-        b=Tf8TRrJP3/Zgo+p5lffJNzUGUix1OhY9MJBz8H4/PvoFNPSEcmop0lAuZvcr5kSAkO
-         TMEKuI/Ivc7Rcg0Biu1KlUNeHaAnLD5+mCs/lmqEenC3ARbcZqsC3DoDjYKjoxappCv7
-         0y0hEu85V+Woj0tPpNEqWNG0cU/gJ4YfUnbrXmh7l7qU2Xuj1jALBTOwylks+kXfG3HT
-         ksbkvwkjBRynJY0QyoeVkCte4I4VfntoVxlnJC3c3bTCDkl6SH7BKQCswQIOKu3Tynsu
-         ZaltpdOUvinfW9U2weUMBoFvwnun7+DR2GocDbSVdFbY31/iEZHRcY+70D8B9aLzLglN
-         2ajw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding;
-        bh=ZZgCNMw6md/0ewSx8q1901FCHTLmznKQ1NqxVvEmywM=;
-        b=lDeCbEr8SIa+/ATe/+OanJet537tk5XRNsdVCeH2F/FJaHfSr9DE4fYRj9jCVQBjcC
-         rWOzlhe0wk/9G/vvv8q0j3G7V1x96kudqG3dyYNh/RIaHX8lukmNEQ9NHzxtHMW6aWQF
-         o5O6qNqPcmsdsEMdcfSndlHkmr7XYSERItZXTMY32ETlh8fqB1ua7FuO2W6rJDr0Cr4s
-         wIvhGq3WmzjGSqyZqbKM18Kc8jY9HlZAZITouxJ57Y65jPdRr156JWRAloIcm1lHEbMC
-         3eU0oZAzUSped21zK7HdRhjLw4a8wmUkw1ZBAZTr/Jwu6MySIS8MQOVch3+kgQrkSS9h
-         TWug==
-X-Gm-Message-State: AOAM533r+nsqaC9R5yD9EvZy1JWBEPkg7WTFAyhr4ovCAxjq60fQ46Jm
-        7Y1UCx4qTbaWsDIvk+z2F8r5ZW0MiarFpg==
-X-Google-Smtp-Source: ABdhPJyz5NLw7NlO/qe6JwQKj16WwNoXQ5PX05zVGULfCi6D8jNPV9+jj1lbXtAh9D32WLYofY4zEg==
-X-Received: by 2002:a5d:6411:: with SMTP id z17mr27781207wru.112.1606080923750;
-        Sun, 22 Nov 2020 13:35:23 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f23:2800:2dfa:b12a:a00c:90c6? (p200300ea8f2328002dfab12aa00c90c6.dip0.t-ipconnect.de. [2003:ea:8f23:2800:2dfa:b12a:a00c:90c6])
-        by smtp.googlemail.com with ESMTPSA id e5sm14603931wrs.84.2020.11.22.13.35.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 22 Nov 2020 13:35:23 -0800 (PST)
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: AX210 version 0024 not detected by iwlwifi
-Message-ID: <03e8284e-4ea8-fe3e-8da7-62a778b1a059@gmail.com>
-Date:   Sun, 22 Nov 2020 22:35:18 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+        Sun, 22 Nov 2020 17:10:58 -0500
+Received: from ravnborg.org (unknown [188.228.123.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by asavdk4.altibox.net (Postfix) with ESMTPS id 2C52280567;
+        Sun, 22 Nov 2020 23:10:42 +0100 (CET)
+Date:   Sun, 22 Nov 2020 23:10:40 +0100
+From:   Sam Ravnborg <sam@ravnborg.org>
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Jakub Kicinski <kuba@kernel.org>, alsa-devel@alsa-project.org,
+        linux-atm-general@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        linux-ide@vger.kernel.org, dm-devel@redhat.com,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        GR-everest-linux-l2@marvell.com, wcn36xx@lists.infradead.org,
+        samba-technical@lists.samba.org, linux-i3c@lists.infradead.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        usb-storage@lists.one-eyed-alien.net, drbd-dev@lists.linbit.com,
+        devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org,
+        rds-devel@oss.oracle.com,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com, bridge@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org,
+        linux-stm32@st-md-mailman.stormreply.com, cluster-devel@redhat.com,
+        linux-acpi@vger.kernel.org, coreteam@netfilter.org,
+        intel-wired-lan@lists.osuosl.org, linux-input@vger.kernel.org,
+        Miguel Ojeda <ojeda@kernel.org>,
+        tipc-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        selinux@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-geode@lists.infradead.org,
+        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-gpio@vger.kernel.org, op-tee@lists.trustedfirmware.org,
+        linux-mediatek@lists.infradead.org, xen-devel@lists.xenproject.org,
+        nouveau@lists.freedesktop.org, linux-hams@vger.kernel.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        target-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-hwmon@vger.kernel.org, x86@kernel.org,
+        linux-nfs@vger.kernel.org, GR-Linux-NIC-Dev@marvell.com,
+        linux-mm@kvack.org, netdev@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net, linux-mmc@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-renesas-soc@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-usb@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, patches@opensource.cirrus.com,
+        Joe Perches <joe@perches.com>, linux-integrity@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+Message-ID: <20201122221040.GD566387@ravnborg.org>
+References: <cover.1605896059.git.gustavoars@kernel.org>
+ <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook>
+ <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook>
+ <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+X-CMAE-Score: 0
+X-CMAE-Analysis: v=2.3 cv=VafZwmh9 c=1 sm=1 tr=0
+        a=S6zTFyMACwkrwXSdXUNehg==:117 a=S6zTFyMACwkrwXSdXUNehg==:17
+        a=kj9zAlcOel0A:10 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+        a=7T594MSkF3521FIrX4wA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I have an AX210 card that isn't detected by iwlwifi.
+Hi James.
 
-01:00.0 Network controller: Intel Corporation Device 2725 (rev 1a)
-        Subsystem: Intel Corporation Device 0024
+> > > If none of the 140 patches here fix a real bug, and there is no
+> > > change to machine code then it sounds to me like a W=2 kind of a
+> > > warning.
+> > 
+> > FWIW, this series has found at least one bug so far:
+> > https://lore.kernel.org/lkml/CAFCwf11izHF=g1mGry1fE5kvFFFrxzhPSM6qKAO8gxSp=Kr_CQ@mail.gmail.com/
+> 
+> 
+> Well, it's a problem in an error leg, sure, but it's not a really
+> compelling reason for a 141 patch series, is it?  All that fixing this
+> error will do is get the driver to print "oh dear there's a problem"
+> under four more conditions than it previously did.
 
-Adding following entry seems to be sufficient.
+You are asking the wrong question here.
 
-        {IWL_PCI_DEVICE(0x2725, 0x0020, iwlax210_2ax_cfg_ty_gf_a0)},
-+       {IWL_PCI_DEVICE(0x2725, 0x0024, iwlax210_2ax_cfg_ty_gf_a0)},
-        {IWL_PCI_DEVICE(0x2725, 0x0310, iwlax210_2ax_cfg_ty_gf_a0)},
+Yuo should ask  how many hours could have been saved by all the bugs
+people have been fighting with and then fixed *before* the code
+hit the kernel at all.
 
-[  419.473140] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
-[  419.486984] iwlwifi 0000:01:00.0: api flags index 2 larger than supported by driver
-[  419.487190] iwlwifi 0000:01:00.0: TLV_FW_FSEQ_VERSION: FSEQ Version: 93.8.63.28
-[  419.488828] iwlwifi 0000:01:00.0: loaded firmware version 59.601f3a66.0 ty-a0-gf-a0-59.ucode op_mode iwlmvm
-[  419.533136] iwlwifi 0000:01:00.0: Detected Intel(R) Wi-Fi 6 AX210 160MHz, REV=0x420
+My personal experience is that I, more than once, have had errors
+related to a missing break in my code. So this warnings is IMO a win.
 
-Maybe there are more AX210 subversion id's to be added ..
+And if we are only ~100 patches to have it globally enabled then it is a
+no-brainer in my book.
 
-How about the api flags index warning? I saw it in several posts,
-is there something to be fixed in the driver?
+	Sam
