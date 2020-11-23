@@ -5,44 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E738C71155
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7153BC388F9
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 152AC206F1
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 123492080A
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388580AbgKWNwg (ORCPT
+        id S2388735AbgKWNwq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Nov 2020 08:52:36 -0500
+        Mon, 23 Nov 2020 08:52:46 -0500
 Received: from mga14.intel.com ([192.55.52.115]:1517 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388215AbgKWNwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Nov 2020 08:52:35 -0500
-IronPort-SDR: +Xj8nF9BtGVC9+3Ard/b3tVYom0F4G6bsmvc6q9/BU0aKVW8PUaDg26ppJ8Vs1xb8UMqx7R5WY
- 3TwA97QMFNLA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9813"; a="170981507"
+        id S2388215AbgKWNwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Nov 2020 08:52:45 -0500
+IronPort-SDR: xZrBQt7b0ASNcfjrHLtpX8uHPR4ya2TWYxfK+EQuWxUHA0khSWyR7ZRmOhE776IijHaxklaQxs
+ l8MG6gRrA1YA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9813"; a="170981526"
 X-IronPort-AV: E=Sophos;i="5.78,363,1599548400"; 
-   d="scan'208";a="170981507"
+   d="scan'208";a="170981526"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2020 05:52:35 -0800
-IronPort-SDR: ZpFg2E6bbIJ7ajCW1ggTmbmybcU5Y90nPijeaUgndCqKv/GfTQMadC2w5ZUqCpVxNGSkma4X6f
- ZwdLyiy5q+gg==
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2020 05:52:44 -0800
+IronPort-SDR: msN81Kew0WmDV9OhiACVMXr84Ac9RfCeAfeWBKF2npy9ueNplzmhmjerAbcQOOq8Z3q68kPXm9
+ tG4V4ulhZC9A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,363,1599548400"; 
-   d="scan'208";a="370035655"
+   d="scan'208";a="370035683"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga007.jf.intel.com with ESMTP; 23 Nov 2020 05:52:33 -0800
+  by orsmga007.jf.intel.com with ESMTP; 23 Nov 2020 05:52:42 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [RFC 15/18] net: iosm: uevent support
-Date:   Mon, 23 Nov 2020 19:21:20 +0530
-Message-Id: <20201123135123.48892-16-m.chetan.kumar@intel.com>
+Subject: [RFC 18/18] net: iosm: infrastructure
+Date:   Mon, 23 Nov 2020 19:21:23 +0530
+Message-Id: <20201123135123.48892-19-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20201123135123.48892-1-m.chetan.kumar@intel.com>
 References: <20201123135123.48892-1-m.chetan.kumar@intel.com>
@@ -50,116 +50,141 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Report modem status via uevent.
+1) Kconfig & Makefile changes for IOSM Driver compilation.
+2) Modified driver/net Kconfig & Makefile for driver inclusion.
+3) Modified MAINTAINER file for IOSM Driver addition.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
- drivers/net/wwan/iosm/iosm_ipc_uevent.c | 47 +++++++++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_uevent.h | 41 ++++++++++++++++++++++++++++
- 2 files changed, 88 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_uevent.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_uevent.h
+ MAINTAINERS                    |  7 +++++++
+ drivers/net/Kconfig            |  1 +
+ drivers/net/Makefile           |  1 +
+ drivers/net/wwan/Kconfig       | 13 +++++++++++++
+ drivers/net/wwan/Makefile      |  5 +++++
+ drivers/net/wwan/iosm/Kconfig  | 10 ++++++++++
+ drivers/net/wwan/iosm/Makefile | 27 +++++++++++++++++++++++++++
+ 7 files changed, 64 insertions(+)
+ create mode 100644 drivers/net/wwan/Kconfig
+ create mode 100644 drivers/net/wwan/Makefile
+ create mode 100644 drivers/net/wwan/iosm/Kconfig
+ create mode 100644 drivers/net/wwan/iosm/Makefile
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_uevent.c b/drivers/net/wwan/iosm/iosm_ipc_uevent.c
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a008b70f3c16..cb1fc8fabffd 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9099,6 +9099,13 @@ M:	Mario Limonciello <mario.limonciello@dell.com>
+ S:	Maintained
+ F:	drivers/platform/x86/intel-wmi-thunderbolt.c
+ 
++INTEL WWAN IOSM DRIVER
++M:      M Chetan Kumar <m.chetan.kumar@intel.com>
++M:      Intel Corporation <linuxwwan@intel.com>
++L:      netdev@vger.kernel.org
++S:      Maintained
++F:      drivers/net/wwan/iosm/
++
+ INTEL(R) TRACE HUB
+ M:	Alexander Shishkin <alexander.shishkin@linux.intel.com>
+ S:	Supported
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index c3dbe64e628e..e0f869a2c52f 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -593,4 +593,5 @@ config NET_FAILOVER
+ 	  a VM with direct attached VF by failing over to the paravirtual
+ 	  datapath when the VF is unplugged.
+ 
++source "drivers/net/wwan/Kconfig"
+ endif # NETDEVICES
+diff --git a/drivers/net/Makefile b/drivers/net/Makefile
+index 72e18d505d1a..025fb399d2af 100644
+--- a/drivers/net/Makefile
++++ b/drivers/net/Makefile
+@@ -84,3 +84,4 @@ thunderbolt-net-y += thunderbolt.o
+ obj-$(CONFIG_USB4_NET) += thunderbolt-net.o
+ obj-$(CONFIG_NETDEVSIM) += netdevsim/
+ obj-$(CONFIG_NET_FAILOVER) += net_failover.o
++obj-$(CONFIG_WWAN)+= wwan/
+diff --git a/drivers/net/wwan/Kconfig b/drivers/net/wwan/Kconfig
 new file mode 100644
-index 000000000000..27542ca27613
+index 000000000000..715dfd0598f9
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_uevent.c
-@@ -0,0 +1,47 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (C) 2020 Intel Corporation.
-+ */
++++ b/drivers/net/wwan/Kconfig
+@@ -0,0 +1,13 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Wireless WAN device configuration
++#
 +
-+#include <linux/slab.h>
++menuconfig WWAN
++	bool "Wireless WAN"
++	help
++	  This section contains all Wireless WAN driver configurations.
 +
-+#include "iosm_ipc_sio.h"
-+#include "iosm_ipc_uevent.h"
-+
-+/* Update the uevent in work queue context */
-+static void ipc_uevent_work(struct work_struct *data)
-+{
-+	struct ipc_uevent_info *info;
-+	char *envp[2] = { NULL, NULL };
-+
-+	info = container_of(data, struct ipc_uevent_info, work);
-+
-+	envp[0] = info->uevent;
-+
-+	if (kobject_uevent_env(&info->dev->kobj, KOBJ_CHANGE, envp))
-+		pr_err("uevent %s failed to sent", info->uevent);
-+
-+	kfree(info);
-+}
-+
-+void ipc_uevent_send(struct device *dev, char *uevent)
-+{
-+	struct ipc_uevent_info *info;
-+
-+	if (!uevent || !dev)
-+		return;
-+
-+	info = kzalloc(sizeof(*info), GFP_ATOMIC);
-+	if (!info)
-+		return;
-+
-+	/* Initialize the kernel work queue */
-+	INIT_WORK(&info->work, ipc_uevent_work);
-+
-+	/* Store the device and event information */
-+	info->dev = dev;
-+	snprintf(info->uevent, MAX_UEVENT_LEN, "%s: %s", dev_name(dev), uevent);
-+
-+	/* Schedule uevent in process context using work queue */
-+	schedule_work(&info->work);
-+}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_uevent.h b/drivers/net/wwan/iosm/iosm_ipc_uevent.h
++if WWAN
++source "drivers/net/wwan/iosm/Kconfig"
++endif # WWAN
+diff --git a/drivers/net/wwan/Makefile b/drivers/net/wwan/Makefile
 new file mode 100644
-index 000000000000..422f64411c6e
+index 000000000000..a81ff28e6cd9
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_uevent.h
-@@ -0,0 +1,41 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (C) 2020 Intel Corporation.
-+ */
++++ b/drivers/net/wwan/Makefile
+@@ -0,0 +1,5 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Makefile for the Linux WWAN Device Drivers.
++#
++obj-$(CONFIG_IOSM)+= iosm/
+diff --git a/drivers/net/wwan/iosm/Kconfig b/drivers/net/wwan/iosm/Kconfig
+new file mode 100644
+index 000000000000..fed382fc9cd7
+--- /dev/null
++++ b/drivers/net/wwan/iosm/Kconfig
+@@ -0,0 +1,10 @@
++# SPDX-License-Identifier: (GPL-2.0-only)
++#
++# IOSM Driver configuration
++#
 +
-+#ifndef IOSM_IPC_UEVENT_H
-+#define IOSM_IPC_UEVENT_H
++config IOSM
++	tristate "IOSM Driver"
++	depends on INTEL_IOMMU
++	help
++	  This driver enables Intel M.2 WWAN Device communication.
+diff --git a/drivers/net/wwan/iosm/Makefile b/drivers/net/wwan/iosm/Makefile
+new file mode 100644
+index 000000000000..153ae0360244
+--- /dev/null
++++ b/drivers/net/wwan/iosm/Makefile
+@@ -0,0 +1,27 @@
++# SPDX-License-Identifier: (GPL-2.0-only)
++#
++# Copyright (C) 2020 Intel Corporation.
++#
 +
-+/* Baseband event strings */
-+#define UEVENT_MDM_NOT_READY "MDM_NOT_READY"
-+#define UEVENT_ROM_READY "ROM_READY"
-+#define UEVENT_MDM_READY "MDM_READY"
-+#define UEVENT_CRASH "CRASH"
-+#define UEVENT_CD_READY "CD_READY"
-+#define UEVENT_CD_READY_LINK_DOWN "CD_READY_LINK_DOWN"
-+#define UEVENT_MDM_TIMEOUT "MDM_TIMEOUT"
++iosm-y = \
++	iosm_ipc_task_queue.o	\
++	iosm_ipc_imem.o			\
++	iosm_ipc_imem_ops.o		\
++	iosm_ipc_mmio.o			\
++	iosm_ipc_sio.o			\
++	iosm_ipc_mbim.o			\
++	iosm_ipc_wwan.o			\
++	iosm_ipc_uevent.o		\
++	iosm_ipc_pm.o			\
++	iosm_ipc_pcie.o			\
++	iosm_ipc_irq.o			\
++	iosm_ipc_chnl_cfg.o		\
++	iosm_ipc_protocol.o		\
++	iosm_ipc_protocol_ops.o	\
++	iosm_ipc_mux.o			\
++	iosm_ipc_mux_codec.o
 +
-+/* Maximum length of user events */
-+#define MAX_UEVENT_LEN 64
++obj-$(CONFIG_IOSM) := iosm.o
 +
-+/**
-+ * struct ipc_uevent_info - Uevent information structure.
-+ * @dev:	Pointer to device structure
-+ * @uevent:	Uevent information
-+ * @work:	Uevent work struct
-+ */
-+struct ipc_uevent_info {
-+	struct device *dev;
-+	char uevent[MAX_UEVENT_LEN];
-+	struct work_struct work;
-+};
-+
-+/**
-+ * ipc_uevent_send - Send modem event to user space.
-+ * @dev:	Generic device pointer
-+ * @uevent:	Uevent information
-+ *
-+ */
-+void ipc_uevent_send(struct device *dev, char *uevent);
-+
-+#endif
++# compilation flags
++#ccflags-y += -DDEBUG
 -- 
 2.12.3
 
