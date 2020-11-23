@@ -2,195 +2,163 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4353C8300C
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD54C8300F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 14:06:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8ED8620888
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 13:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F84E2075A
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Nov 2020 14:06:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uc3VE1PZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388710AbgKWNwm (ORCPT
+        id S1730313AbgKWOFp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Nov 2020 08:52:42 -0500
-Received: from mga14.intel.com ([192.55.52.115]:1517 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388215AbgKWNwm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Nov 2020 08:52:42 -0500
-IronPort-SDR: Urxtyn3rJNPsT8r27iuSv74u+nB2FwMIH2gtEw2owWdpIuO7kl44bI6pPw7lszz9aUwcEX14+x
- vpbwbVglfkPg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9813"; a="170981521"
-X-IronPort-AV: E=Sophos;i="5.78,363,1599548400"; 
-   d="scan'208";a="170981521"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2020 05:52:41 -0800
-IronPort-SDR: E/AZctTomfoqxdjiZGko30O/ibjqmO52PghxPifFBfLpXIusUIfz0zXmTmOijUaxxVCidgq/FP
- Ip2gyr7+fJfA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.78,363,1599548400"; 
-   d="scan'208";a="370035672"
-Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga007.jf.intel.com with ESMTP; 23 Nov 2020 05:52:39 -0800
-From:   M Chetan Kumar <m.chetan.kumar@intel.com>
-To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
-        m.chetan.kumar@intel.com
-Subject: [RFC 17/18] net: iosm: readme file
-Date:   Mon, 23 Nov 2020 19:21:22 +0530
-Message-Id: <20201123135123.48892-18-m.chetan.kumar@intel.com>
-X-Mailer: git-send-email 2.12.3
-In-Reply-To: <20201123135123.48892-1-m.chetan.kumar@intel.com>
-References: <20201123135123.48892-1-m.chetan.kumar@intel.com>
+        Mon, 23 Nov 2020 09:05:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42408 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726508AbgKWOFo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Nov 2020 09:05:44 -0500
+Received: from mail-yb1-xb43.google.com (mail-yb1-xb43.google.com [IPv6:2607:f8b0:4864:20::b43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E30C061A4D;
+        Mon, 23 Nov 2020 06:05:44 -0800 (PST)
+Received: by mail-yb1-xb43.google.com with SMTP id 2so15993082ybc.12;
+        Mon, 23 Nov 2020 06:05:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=RhHqKgQbKUW77nc47JuvCnp+w8QNxENxQLSt6AHkTqQ=;
+        b=uc3VE1PZNnY/Z1NgZXLeWe/Nj5hsoBfQkeeHXaE+d0SDr9xNRMPYxU1o6fpuaiqkgi
+         yuFjhawxyOxFbziEfkWs4inb92LCIVTnNTVXAL7657JtY5jUPnHae9XC4JONvfltcDzK
+         9TpDS0ylXwfesoyru6or5tLuj2Wgq4fxc0XGG5evkxw7F5K63x1NbbMukm854FcfQLy0
+         gnTDe+NWIPcxyPxl6ZwlkcZY1OnasK1C98JFaIzSzrlrdcg6icgY2nCNokwGspTvBpMG
+         u0c2fJxhgJsKPBZAzgP85ZG8VhKJUulmNcJ8sZ+phgCZ9U4trQ3IF/NnqsJiuQ1qY+5Q
+         UH8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RhHqKgQbKUW77nc47JuvCnp+w8QNxENxQLSt6AHkTqQ=;
+        b=qfu5ev+a4Mtxb/me5p98S+qpptw/liqOqi/Sn5haXVh4C3iZa/Rr1VO/RdFlRYFmI1
+         s2kn1wvg9ts9EsJlX8g3CJeCSRNYil+yfBHsTdyF3HJfbBmpnlalCpNeq2lfHeR6bkIC
+         eKrnByi3tkSMwXRmTCDJWCc1yW3VnDwUIJOeshN6vpsXBmTvWv5hNWTaYLe/zmGvF4sR
+         UJRQg5pa5sxtsrd+wg7QXtMX9UTOJiqN3Pl9j6wvDxpSpy1iq9oJ7ct126/9lGCJyaQB
+         BqMp0EdLAQ2GVplt03VtpojSiDVmPVA2Hok29c4a+j/zowX4aTcB7WqHooUfgjGoJF5x
+         jtRQ==
+X-Gm-Message-State: AOAM531VlvseIbNS+gH1i5feL/P9VJkSmr3dJPDYO1b4EwQ6YiYGVEFR
+        9sgGinzwDwKiV0L0AJnzQikU/rDGf2kYqM1cPuE=
+X-Google-Smtp-Source: ABdhPJz9DsZ58e7OIIOr/VE9Xtax3PWaLuFuRyVLpjTsCzIYcuPGWJiVUhGusztX9v02ET+47HU3GtURC6oS5LfC9Lw=
+X-Received: by 2002:a5b:40e:: with SMTP id m14mr35121900ybp.33.1606140343388;
+ Mon, 23 Nov 2020 06:05:43 -0800 (PST)
+MIME-Version: 1.0
+References: <cover.1605896059.git.gustavoars@kernel.org> <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook> <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook> <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+ <CANiq72nZrHWTA4_Msg6MP9snTyenC6-eGfD27CyfNSu7QoVZbw@mail.gmail.com> <alpine.LNX.2.23.453.2011230938390.7@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.23.453.2011230938390.7@nippy.intranet>
+From:   Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date:   Mon, 23 Nov 2020 15:05:31 +0100
+Message-ID: <CANiq72=z+tmuey9wj3Kk7wX5s0hTHpsQdLhAqcOVNrHon6xn5Q@mail.gmail.com>
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+To:     Finn Thain <fthain@telegraphics.com.au>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Kees Cook <keescook@chromium.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        alsa-devel@alsa-project.org, amd-gfx@lists.freedesktop.org,
+        bridge@lists.linux-foundation.org, ceph-devel@vger.kernel.org,
+        cluster-devel@redhat.com, coreteam@netfilter.org,
+        devel@driverdev.osuosl.org, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, dri-devel@lists.freedesktop.org,
+        GR-everest-linux-l2@marvell.com, GR-Linux-NIC-Dev@marvell.com,
+        intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
+        keyrings@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-acpi@vger.kernel.org, linux-afs@lists.infradead.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-cifs@vger.kernel.org,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-decnet-user@lists.sourceforge.net,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-fbdev@vger.kernel.org, linux-geode@lists.infradead.org,
+        linux-gpio@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-i3c@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-input <linux-input@vger.kernel.org>,
+        linux-integrity@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        linux-mmc@vger.kernel.org, Linux-MM <linux-mm@kvack.org>,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
+        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
+        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
+        selinux@vger.kernel.org, target-devel@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net,
+        usb-storage@lists.one-eyed-alien.net,
+        virtualization@lists.linux-foundation.org,
+        wcn36xx@lists.infradead.org,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Documents IOSM Driver interface usage.
+On Sun, Nov 22, 2020 at 11:54 PM Finn Thain <fthain@telegraphics.com.au> wrote:
+>
+> We should also take into account optimisim about future improvements in
+> tooling.
 
-Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
----
- drivers/net/wwan/iosm/README | 126 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 126 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/README
+Not sure what you mean here. There is no reliable way to guess what
+the intention was with a missing fallthrough, even if you parsed
+whitespace and indentation.
 
-diff --git a/drivers/net/wwan/iosm/README b/drivers/net/wwan/iosm/README
-new file mode 100644
-index 000000000000..4a489177ad96
---- /dev/null
-+++ b/drivers/net/wwan/iosm/README
-@@ -0,0 +1,126 @@
-+IOSM Driver for PCIe based Intel M.2 Modems
-+================================================
-+The IOSM (IPC over Shared Memory) driver is a PCIe host driver implemented
-+for linux or chrome platform for data exchange over PCIe interface between
-+Host platform & Intel M.2 Modem. The driver exposes interface conforming to the
-+MBIM protocol [1]. Any front end application ( eg: Modem Manager) could easily
-+manage the MBIM interface to enable data communication towards WWAN.
-+
-+Basic usage
-+===========
-+MBIM functions are inactive when unmanaged. The IOSM driver only
-+provides a userspace interface of a character device representing
-+MBIM control channel and does not play any role in managing the
-+functionality. It is the job of a userspace application to enumerate
-+the port appropriately and enable MBIM functionality.
-+
-+Examples of few such userspace application are:
-+ - mbimcli (included with the libmbim [2] library), and
-+ - ModemManager [3]
-+
-+For establishing an MBIM IP session at least these actions are required by the
-+management application:
-+ - open the control channel
-+ - configure network connection settings
-+ - connect to network
-+ - configure IP interface
-+
-+Management application development
-+----------------------------------
-+The driver and userspace interfaces are described below. The MBIM
-+control channel protocol is described in [1].
-+
-+MBIM control channel userspace ABI
-+==================================
-+
-+/dev/wwanctrl character device
-+------------------------------
-+The driver exposes an interface to the MBIM function control channel using char
-+driver as a subdriver. The userspace end of the control channel pipe is a
-+/dev/wwanctrl character device.
-+
-+The /dev/wwanctrl device is created as a subordinate character device under
-+IOSM driver. The character device associated with a specific MBIM function
-+can be looked up using sysfs with matching the above device name.
-+
-+Control channel configuration
-+-----------------------------
-+The wMaxControlMessage field of the MBIM functional descriptor
-+limits the maximum control message size. The management application needs to
-+negotiate the control message size as per the requirements.
-+See also the ioctl documentation below.
-+
-+Fragmentation
-+-------------
-+The userspace application is responsible for all control message
-+fragmentation and defragmentation as per MBIM.
-+
-+/dev/wwanctrl write()
-+---------------------
-+The MBIM control messages from the management application must not
-+exceed the negotiated control message size.
-+
-+/dev/wwanctrl read()
-+--------------------
-+The management application must accept control messages of up the
-+negotiated control message size.
-+
-+/dev/wwanctrl ioctl()
-+--------------------
-+IOCTL_WDM_MAX_COMMAND: Get Maximum Command Size
-+This IOCTL command could be used by applications to fetch the Maximum Command
-+buffer length supported by the driver which is restricted to 4096 bytes.
-+
-+	#include <stdio.h>
-+	#include <fcntl.h>
-+	#include <sys/ioctl.h>
-+	#include <linux/types.h>
-+	int main()
-+	{
-+		__u16 max;
-+		int fd = open("/dev/wwanctrl", O_RDWR);
-+		if (!ioctl(fd, IOCTL_WDM_MAX_COMMAND, &max))
-+			printf("wMaxControlMessage is %d\n", max);
-+	}
-+
-+MBIM data channel userspace ABI
-+===============================
-+
-+wwanY network device
-+--------------------
-+The IOSM driver represents the MBIM data channel as a single
-+network device of the "wwan0" type. This network device is initially
-+mapped to MBIM IP session 0.
-+
-+Multiplexed IP sessions (IPS)
-+-----------------------------
-+IOSM driver allows multiplexing of several IP sessions over the single network
-+device of type wwan0. IOSM driver models such IP sessions as 802.1q VLAN
-+subdevices of the master wwanY device, mapping MBIM IP session M to VLAN ID M
-+for all values of M greater than 0.
-+
-+The userspace management application is responsible for adding new VLAN links
-+prior to establishing MBIM IP sessions where the SessionId is greater than 0.
-+These links can be added by using the normal VLAN kernel interfaces.
-+
-+For example, adding a link for a MBIM IP session with SessionId 5:
-+
-+  ip link add link wwan0 name wwan0.<name> type vlan id 5
-+
-+The driver will automatically map the "wwan0.<name>" network device to MBIM
-+IP session 5.
-+
-+References
-+==========
-+
-+[1] "MBIM (Mobile Broadband Interface Model) Registry"
-+       - http://compliance.usb.org/mbim/
-+
-+[2] libmbim - "a glib-based library for talking to WWAN modems and
-+      devices which speak the Mobile Interface Broadband Model (MBIM)
-+      protocol"
-+      - http://www.freedesktop.org/wiki/Software/libmbim/
-+
-+[3] ModemManager - "a DBus-activated daemon which controls mobile
-+      broadband (2G/3G/4G) devices and connections"
-+      - http://www.freedesktop.org/wiki/Software/ModemManager/
-\ No newline at end of file
--- 
-2.12.3
+> It is if you want to spin it that way.
 
+How is that a "spin"? It is a fact that we won't get *implicit*
+fallthrough mistakes anymore (in particular if we make it a hard
+error).
+
+> But what we inevitably get is changes like this:
+>
+>  case 3:
+>         this();
+> +       break;
+>  case 4:
+>         hmmm();
+>
+> Why? Mainly to silence the compiler. Also because the patch author argued
+> successfully that they had found a theoretical bug, often in mature code.
+
+If someone changes control flow, that is on them. Every kernel
+developer knows what `break` does.
+
+> But is anyone keeping score of the regressions? If unreported bugs count,
+> what about unreported regressions?
+
+Introducing `fallthrough` does not change semantics. If you are really
+keen, you can always compare the objects because the generated code
+shouldn't change.
+
+Cheers,
+Miguel
