@@ -7,78 +7,97 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12358C2D0E4
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Nov 2020 15:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E3F7C63798
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Nov 2020 15:02:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9020A20738
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Nov 2020 15:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC48B20757
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Nov 2020 15:02:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="VPhphNEz"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="UtbDKXm2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388954AbgKXO74 (ORCPT
+        id S2389427AbgKXPCU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Nov 2020 09:59:56 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:20571 "EHLO m42-4.mailgun.net"
+        Tue, 24 Nov 2020 10:02:20 -0500
+Received: from z5.mailgun.us ([104.130.96.5]:11775 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387670AbgKXO74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Nov 2020 09:59:56 -0500
+        id S2388995AbgKXPCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Nov 2020 10:02:19 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606229996; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1606230139; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=hM7l1qlnjr0Wvs6mp6kUpF6Xf99sTwOWW58cRMuXy2Q=;
- b=VPhphNEzlrlK6kXbIgFt0lSrh4rkiCZaEYFg2PnorwOynqfVp6OwFgUsZlPSvC2BMFxV6P3O
- AQc6wetQyetODe5726y72J7SLKvRKuszixgvUa7Q9FWj7XVnDDGXCO2CTwhLzsVRUoVjLx70
- e2TfFf3VbVJyLTYefNznN3TnowQ=
-X-Mailgun-Sending-Ip: 69.72.42.4
+ Content-Type: Sender; bh=GnvwklEVjjriXF1yYIK8EoCGRuCuwkOeNeHMOFGCEts=;
+ b=UtbDKXm2FbQfpjsoN9/esTnVvXu/jvNpK2wrLZOLXjqWtOhBdDBmM8/0XL/JcJfThJHLNH+X
+ evxMymt6avP0za3feTpMZUCa/dMW5jIlMY0aK7kpZ4XO1jg+JhHRh/HEfJ3Dn6Yb2gItufKf
+ qM/u8M+MMEstf9jZodmUZ1d8kxE=
+X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5fbd1fe9b9b39088edfd4365 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 24 Nov 2020 14:59:53
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5fbd2067e9b7088622b10670 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 24 Nov 2020 15:01:59
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1C097C433C6; Tue, 24 Nov 2020 14:59:53 +0000 (UTC)
+        id 74085C433ED; Tue, 24 Nov 2020 15:01:58 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C1FBBC433C6;
-        Tue, 24 Nov 2020 14:59:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C1FBBC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A1206C433C6;
+        Tue, 24 Nov 2020 15:01:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A1206C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: cw1200: replace a set of atomic_add()
+Subject: Re: [PATCH 01/10] orinoco: Move context allocation after processing
+ the
+ skb
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1604991491-27908-1-git-send-email-yejune.deng@gmail.com>
-References: <1604991491-27908-1-git-send-email-yejune.deng@gmail.com>
-To:     Yejune Deng <yejune.deng@gmail.com>
-Cc:     pizza@shaftnet.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yejune.deng@gmail.com
+In-Reply-To: <20201113212252.2243570-2-bigeasy@linutronix.de>
+References: <20201113212252.2243570-2-bigeasy@linutronix.de>
+To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc:     linux-wireless@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Dan Williams <dcbw@redhat.com>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201124145953.1C097C433C6@smtp.codeaurora.org>
-Date:   Tue, 24 Nov 2020 14:59:53 +0000 (UTC)
+Message-Id: <20201124150158.74085C433ED@smtp.codeaurora.org>
+Date:   Tue, 24 Nov 2020 15:01:58 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yejune Deng <yejune.deng@gmail.com> wrote:
+Sebastian Andrzej Siewior <bigeasy@linutronix.de> wrote:
 
-> a set of atomic_inc() looks more readable
+> ezusb_xmit() allocates a context which is leaked if
+> orinoco_process_xmit_skb() returns an error.
 > 
-> Signed-off-by: Yejune Deng <yejune.deng@gmail.com>
+> Move ezusb_alloc_ctx() after the invocation of
+> orinoco_process_xmit_skb() because the context is not needed so early.
+> ezusb_access_ltv() will cleanup the context in case of an error.
+> 
+> Fixes: bac6fafd4d6a0 ("orinoco: refactor xmit path")
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Patch applied to wireless-drivers-next.git, thanks.
+10 patches applied to wireless-drivers-next.git, thanks.
 
-07f995ca1951 cw1200: replace a set of atomic_add()
+a31eb615646a orinoco: Move context allocation after processing the skb
+915fd9db418f orinoco: Prepare stubs for in_interrupt() removal
+29b2fe3f6f20 orinoco: Annotate ezusb_xmit()
+46233f778604 orinoco: Annotate ezusb_init()
+69476b25a4ba orinoco: Annotate firmware loading
+154f2bae9bed orinoco: Annotate ezusb_read_pda()
+39628fe48cb3 orinoco: Annotate ezusb_write_ltv()
+47ab2a951eb9 orinoco: Remove ezusb_doicmd_wait()
+a9a2678abacb orinoco: Annotate ezusb_docmd_wait()
+a3d8a2599d47 orinoco: Annotate ezusb_read_ltv()
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1604991491-27908-1-git-send-email-yejune.deng@gmail.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20201113212252.2243570-2-bigeasy@linutronix.de/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
