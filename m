@@ -2,34 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DADCC63798
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 16:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57995C6379D
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 16:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 450CA21534
+	by mail.kernel.org (Postfix) with ESMTP id 01F6A2083E
 	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 16:45:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="XAc0Ta0O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730656AbgKYQo6 (ORCPT
+        id S1731938AbgKYQpH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 11:44:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32876 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730115AbgKYQo6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Nov 2020 11:44:58 -0500
-Received: from Chamillionaire.breakpoint.cc (Chamillionaire.breakpoint.cc [IPv6:2a0a:51c0:0:12e:520::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58128C0613D4;
-        Wed, 25 Nov 2020 08:44:58 -0800 (PST)
-Received: from fw by Chamillionaire.breakpoint.cc with local (Exim 4.92)
-        (envelope-from <fw@strlen.de>)
-        id 1khxuQ-0001mb-95; Wed, 25 Nov 2020 17:44:46 +0100
-Date:   Wed, 25 Nov 2020 17:44:46 +0100
-From:   Florian Westphal <fw@strlen.de>
+        Wed, 25 Nov 2020 11:45:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56074 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730115AbgKYQpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Nov 2020 11:45:07 -0500
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id ABB382083E;
+        Wed, 25 Nov 2020 16:45:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606322706;
+        bh=kYfNPvb2dwosh8y/MWAsihzlZt0U2BNjpxs+NTn4wDw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=XAc0Ta0OoyIP5Dn+EJFdOWFX/ZjVub2HMoJ9ehwoiFlcJTEy6cwUYZE3Bt/r5b9HY
+         tTfL2x1l/GqjvUidvzbbDQuG1oFDvu5lHY1hE1x0sGWOx01I5wVwyVbeQbM0Pcoj0Z
+         Hiwhy5Km91g6lvwB08OsNMymhBCLk7N/o3WQsee0=
+Date:   Wed, 25 Nov 2020 08:45:04 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
 To:     Marco Elver <elver@google.com>
-Cc:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net,
+Cc:     davem@davemloft.net, johannes@sipsolutions.net,
         akpm@linux-foundation.org, a.nogikh@gmail.com, edumazet@google.com,
         andreyknvl@google.com, dvyukov@google.com,
         linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
@@ -37,28 +44,21 @@ Cc:     davem@davemloft.net, kuba@kernel.org, johannes@sipsolutions.net,
         willemb@google.com
 Subject: Re: [PATCH v6 0/3] net, mac80211, kernel: enable KCOV remote
  coverage collection for 802.11 frame handling
-Message-ID: <20201125164446.GC2730@breakpoint.cc>
+Message-ID: <20201125084504.1030ffe4@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20201125162455.1690502-1-elver@google.com>
 References: <20201125162455.1690502-1-elver@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201125162455.1690502-1-elver@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Marco Elver <elver@google.com> wrote:
-[..]
+On Wed, 25 Nov 2020 17:24:52 +0100 Marco Elver wrote:
+> This patch series enables remote KCOV coverage collection during 802.11
+> frames processing. These changes make it possible to perform
+> coverage-guided fuzzing in search of remotely triggerable bugs.
 
-> v6:
-> * Revert usage of skb extensions due to potential memory leak. Patch 2/3 is now
->   idential to that in v2.
-> * Patches 1/3 and 3/3 are otherwise identical to v5.
+Hi Marco, this stuff is only present in net-next, and were not reverted.
 
-The earlier series was already applied to net-next, so you need to
-rebase on top of net-next and include a revert of the patch that added
-the kcov skb extension.
-
-Also, please indicate the git tree that you want this applied to in the
-subject.
+You need to rebase and replace the existing implementation.
