@@ -2,81 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A872CC64E7A
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 05:40:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B38B7C5519F
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 05:59:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63D89208CA
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 05:40:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4477920B80
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 05:59:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mFZwwVba"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727690AbgKYFk3 (ORCPT
+        id S1726171AbgKYF7S (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 00:40:29 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:45838 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727380AbgKYFkX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Nov 2020 00:40:23 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AP5eHF31026134, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AP5eHF31026134
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 25 Nov 2020 13:40:17 +0800
-Received: from localhost.localdomain (172.21.69.213) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Wed, 25 Nov 2020 13:40:17 +0800
-From:   <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <yhchuang@realtek.com>, <ku920601@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/10] rtw88: coex: run coexistence when WLAN entering/leaving LPS
-Date:   Wed, 25 Nov 2020 13:38:52 +0800
-Message-ID: <20201125053901.29678-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20201125053901.29678-1-pkshih@realtek.com>
-References: <20201125053901.29678-1-pkshih@realtek.com>
+        Wed, 25 Nov 2020 00:59:18 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:46961 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725835AbgKYF7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Nov 2020 00:59:18 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1606283957; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=fH6XRHzas3OBVohyMiwnIkDxrr1F8paJHfjb0IVmSv8=; b=mFZwwVbaAy+9yqmuUBLv7sM9XTJ2Ud90ihtIzTz/BFfGslQXyXKtMJ90zzadzMjdi8abd6Te
+ k6vq4ud4w6hwcaIEB+kBLG5h1EFtQBmdrWsdsoBnA8VCgjlXsLVAOR28C4O7EbJfITubJ0ZY
+ vfiiK7wnVUfOG5dBefk3wXbLtLE=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 5fbdf2b5fa67d9becf8d9977 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Nov 2020 05:59:17
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 5EE1AC43461; Wed, 25 Nov 2020 05:59:16 +0000 (UTC)
+Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B8E09C433C6;
+        Wed, 25 Nov 2020 05:59:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B8E09C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     Rikard Falkeborn <rikard.falkeborn@gmail.com>,
+        Alex Elder <elder@kernel.org>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org, "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH net-next 1/2] soc: qcom: ipa: Constify static qmi structs
+References: <20201122234031.33432-1-rikard.falkeborn@gmail.com>
+        <20201122234031.33432-2-rikard.falkeborn@gmail.com>
+        <20201124144721.3e80698c@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Date:   Wed, 25 Nov 2020 07:59:11 +0200
+In-Reply-To: <20201124144721.3e80698c@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        (Jakub Kicinski's message of "Tue, 24 Nov 2020 14:47:21 -0800")
+Message-ID: <87h7pe9du8.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
+Jakub Kicinski <kuba@kernel.org> writes:
 
-When WLAN entering or leaving, it's necessary to run coexistence mechanism
-to ensure the setting matched current status.
-Without calling rtw_coex_run_coex(), WLAN poor throughput or bad A2DP
-quality may happen.
+> On Mon, 23 Nov 2020 00:40:30 +0100 Rikard Falkeborn wrote:
+>> These are only used as input arguments to qmi_handle_init() which
+>> accepts const pointers to both qmi_ops and qmi_msg_handler. Make them
+>> const to allow the compiler to put them in read-only memory.
+>> 
+>> Signed-off-by: Rikard Falkeborn <rikard.falkeborn@gmail.com>
+>
+> I can take this one if Alex acks it.
+>
+> The other patch is probably best handled by Kalle.
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/coex.c | 2 ++
- 1 file changed, 2 insertions(+)
+Yes, patch 2 is in my queue.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 4bb0d373c862..7b69c7b01e22 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -2476,6 +2476,8 @@ void rtw_coex_lps_notify(struct rtw_dev *rtwdev, u8 type)
- 
- 		if (!coex_stat->wl_force_lps_ctrl)
- 			rtw_coex_query_bt_info(rtwdev);
-+
-+		rtw_coex_run_coex(rtwdev, COEX_RSN_LPS);
- 	}
- }
- 
 -- 
-2.21.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
