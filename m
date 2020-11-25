@@ -2,169 +2,248 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B595FC64E7C
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A281C64E7C
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 12:25:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 482212076B
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F4156206E5
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 12:25:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="R2CjNddS";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="iBGl4Zlv"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="GyrkIL7r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728841AbgKYLlR (ORCPT
+        id S1729279AbgKYMY4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 06:41:17 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:51746 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727114AbgKYLlM (ORCPT
+        Wed, 25 Nov 2020 07:24:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48662 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728548AbgKYMYj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Nov 2020 06:41:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1606304472; x=1637840472;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=A3WG8JeKmtKktM0AXAH4zNnj2CBBDR9gbXQZhS7+CNg=;
-  b=R2CjNddSLrzR6WP/3+qgJu+pVQ06Vq6RTbdLtIX6Vj7qQaFrup3CjP1Y
-   VZXd3fuzxEzEZfo7VsgSS6MEBkwLYimfP8zfumtZ2NoA1umurhn074WtK
-   3Q4IWSnm36zo3jmaKJuaALQRssL6ZgnSpbod2H7YoPELLKSEyNiKbVMKT
-   TWBSST2aPeaFufuayjskBsWjV11Es2yGgANMUX728u7OS7rnXKwpavirL
-   XY5cVuo16Ruz3gxdeQopWAlWAqAJ74fnN3lEfBsACTMit3nK/oZJRseu5
-   f4UKBzmdxPyC/kOsYu7g07ZUozOjQ/ezYBFLS6r8tKn7euZfE/Zwl9usY
-   g==;
-IronPort-SDR: xHMedmEeQymC+J2fQ51CXn4wX0dCgbwYYR58yRYYliFjGmozK38zurd0G6Q/R5fjIIUEs6wdfj
- u8+BiZd8FgC5PYKVbVTy3JhazrinH6YEMXfqI4L9FYyvYxG5sQv7PmnMvCbyCFenElNF/X9fJX
- J8+j/RqhuM0dPfdPzObDAwTpIpw3JxQQYwIgXAP7xhWY+Gcks5rwq68Kf5sB5FaCsyxogYpRw9
- HWDwUT8LwLs+ZP/FCAU8KxUfDwQuHYTG/xDON/dI8sW79o+A0cEuu83SWRizrKL0/U73VludjB
- u3k=
-X-IronPort-AV: E=Sophos;i="5.78,368,1599548400"; 
-   d="scan'208";a="100348214"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Nov 2020 04:41:10 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Wed, 25 Nov 2020 04:41:10 -0700
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Wed, 25 Nov 2020 04:41:10 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jNDhlZkCGg5KRHzvmbn5AmEuT6Ed/S0AFFq107BXmHxGtTiLT5xRGgs8rieOXYC9U6IIbqwmuqeYQq+ejtkxO66qhhSf7r1pjlYN6S1EZDhzcEWnsQNv9y38RGQXfkTNP2SH8SqtOhtHrf3JSfIfXPLFwlJwikCmRSAO3SkOBCw68xyn/vMtS/+VSowJJF8QOEjYjZvoT2Tk1SmOFx72N52KIz6+jB2wQWlgfLZE8SpryqLs5jn9quGBXUyamu4OlEoJq1TxWZWIYN515vlvo69E3CrhyU36S2OBAybEhtwJdkzcQbrSZuqpKEEmZ7xE9t4TvmGQ6Kn4kLyALxF4PQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OZm5g0l1cmqyVi2oTs/++OzID7Ve4Usoydzo6NoBwYY=;
- b=fF1lhYCCvxPUQI57bW7gUD4hMApnx0EQzmkfludTKn1dNAwPly1x67adnHAYsMwC7oyP0Rc3MXAN3dktfE8xblWYEVxwoYFXEOG7vq3k3zvPPnBYVV9PLL4ChG0atlYDDiSdqrBaLB9tYCCG1f1BTCQT/hz33XxgMOiyns62+qmKF/F52gG0CtZclVZk12bLB2Fkp6x1TNDTPLk9zLNaxaDMdc9H2fEHWWO6A+XyAX6R5s6/RQ7XcFiiHNZpymMaKsgMy6jE2OL7ycVvD4cNDSGyBLVLR3G9UMk76LVRvIGWSzd/uNvwFa7oPkOzWP9tos8dvTId94LsDp4irr8Gww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+        Wed, 25 Nov 2020 07:24:39 -0500
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F654C061A56
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2020 04:24:39 -0800 (PST)
+Received: by mail-pg1-x542.google.com with SMTP id s63so2307828pgc.8
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2020 04:24:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OZm5g0l1cmqyVi2oTs/++OzID7Ve4Usoydzo6NoBwYY=;
- b=iBGl4Zlv1iUmQqyHM9k/GMmYcgNflLKl5GPek5FRzJSVHdkSsUhSFR8b9t6OxQKlwuT1kbqR85mUo6PUyVp5fMMY9e6a82dX3S7V9KZPzq+ePop/eaSZzA9lOrhkkc+mMhq08mGe0gBe/fjgPYMjJhT7BkxrjZfdUEZbEYrQfI4=
-Received: from CY4PR11MB1286.namprd11.prod.outlook.com (2603:10b6:903:2e::21)
- by CY4PR11MB1605.namprd11.prod.outlook.com (2603:10b6:910:10::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3589.20; Wed, 25 Nov
- 2020 11:41:08 +0000
-Received: from CY4PR11MB1286.namprd11.prod.outlook.com
- ([fe80::a0d1:a499:1c83:a988]) by CY4PR11MB1286.namprd11.prod.outlook.com
- ([fe80::a0d1:a499:1c83:a988%6]) with mapi id 15.20.3589.022; Wed, 25 Nov 2020
- 11:41:08 +0000
-From:   <Ajay.Kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
-CC:     <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>,
-        <Ajay.Kathat@microchip.com>
-Subject: [PATCH 2/5] wilc1000: free resource in wilc_wlan_txq_add_net_pkt()
- for failure path
-Thread-Topic: [PATCH 2/5] wilc1000: free resource in
- wilc_wlan_txq_add_net_pkt() for failure path
-Thread-Index: AQHWwx/dKVqWhS/yykqTuHgnqFj2eA==
-Date:   Wed, 25 Nov 2020 11:41:08 +0000
-Message-ID: <20201125114059.10006-3-ajay.kathat@microchip.com>
-References: <20201125114059.10006-1-ajay.kathat@microchip.com>
-In-Reply-To: <20201125114059.10006-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.17.1
-authentication-results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=microchip.com;
-x-originating-ip: [171.61.34.149]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e65225dc-574d-4be0-092c-08d891370064
-x-ms-traffictypediagnostic: CY4PR11MB1605:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR11MB1605495DD15584C8DF6FA5A6E3FA0@CY4PR11MB1605.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:883;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: MjAENITLYSCxMZ44ILPzzOHotTfuVL3YIIuRJDBjZtoLQefTYHjKMhIGIMUgxGHYQjiYVZZ78ZQ/oJtoOzI7IMAsK49OKCoKsDVeupFrmmU3V94er/wbtWJ6bM230nfHG+z3UXz0D9I0+F9oa63SL9B7cXDe4HEHI6FOy3gTlnGZQiaTmH9IQu9vh+9/6MOOZsd691LJiqjWQ7fjwpL6Pb9HACfNU3jnRueCRJzRxSXKALvzTCEF5G20u8OJlHntHAeQi/QadG5DQYK+VVze5KPIErXbmcCwlgeX1YgCUPBGtGZ7agU+kqA8ffYwojmug+XwE6BgizP9+zfFjYV4/g==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR11MB1286.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(136003)(39860400002)(396003)(376002)(66446008)(66556008)(107886003)(2616005)(6486002)(4326008)(4744005)(5660300002)(66476007)(36756003)(54906003)(71200400001)(76116006)(8936002)(64756008)(110136005)(2906002)(6506007)(66946007)(86362001)(186003)(91956017)(478600001)(83380400001)(26005)(316002)(8676002)(1076003)(6512007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: a1t/SsJzG8ut4GOvDhUjiPljmhjfumZCSqqXa2zXYwTZEuhIaNGG2TeH4DBbxiB7W9CDus3J8FTLJ88wODPHEH3MfvYNRtwsOzuCIv0FkCQemaq/5fEvuZNFo3c8lDKunAZgOmdlGNpwrtoZCOIr5xXTq064OvV0C1qLPSesSwtSoOhHyR5p98HDXkj2fwbCFRKSgWri1xFJfKMvX1fXWsNtw/3qsqcWLPy0iSMqOluy4VrAmz1DNDDcbm+djk7ZjpRF5TX3fqB2/IAg87GwMs3aBbdSM1p/JUn6NfqMTAKK1yeKLX+8v5eLWhE4BMqkhijgM0dBTnzFkhqZNDzEax66Z15TQASa6z0jJ4Lxjp0OJTAHgoKC1qaHF1DO655TCXd7S8NvoSSGHKA/ePWemlvrS3SHXySM18yIG980hKlEsGomm0DP5p8vWkIG0F8eIcb2uQp6Qt6fMREQuA/H0KPGrfeq5zm2lU/VT5ker3zs39axoymOx7wEXpOOsgc+YuNhMXrk89X/AbwqczpBkjFt/X5WuJ8E0XwmH/bPB+SlmEGHIvZ+kcafWcWt93xpXdhwMkMPWQAgf6LTYnCf0pQC0F+PfZtPCNGePkBLioQAREAVuho9bzbaGlALFaTsVxKej9LhkMGL/t9CUln9rxKO03UEOs33CjhgXa+Tyxu1GyOkr3ZO1+pTPi99lTwZWXphF/LQ4GDKYUgn4exGDR0wSbBeU9SlCX0SUBd4GCdCb8PkZwF2Fhh8p4jwwUKzD2le9xrdVs/zhIgyUr31BtWAVHU4YArfzhNlCT7qOOb2i+jY79R54xpRdCYmycq5Qju8NN+iU1vDZXB/uAne0Iu3WRcFhIb7JnkBMUHMv5LcnBIJQJkElLWHynYELFYfI8yi1vvdXAqI1jHlX7fcSg==
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9IH0l2L/ELs04A0W/6GC4nhC0e+RvRGWJ1bAzD1+dFc=;
+        b=GyrkIL7rJc/Wrkz9wtYqXZYvGBry6qXFkQono0nmrBFDlUCiGmbX9ByD1wUhih87ZW
+         XCd/8etF0h65aGuVNHVvGVnSoIRV2cIFxWeuMsMEKDZ+SIKsK6eM3KIHPaY2Au+pxfCB
+         jFmSmO0a8jtSnIjbAi/709gkMW9hnqxggrhUNIGI/2GrlejcLn7tyz9MFlSEpE31y19Z
+         9ARaZhNBbaKZzII6ioDoEFmbbi01XI+4/fF65wWR3SGfZuCMoV2cgGUJ8Osa8sFeqdbz
+         KLllcyBsC3gtRPDbq4Yc+z3inKaZT7D05cYTb7CBHNDdR/afLH0A7E5JHrBWilMAefn4
+         uS6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9IH0l2L/ELs04A0W/6GC4nhC0e+RvRGWJ1bAzD1+dFc=;
+        b=YpW8wjygkxXKRH3WG5oYagMJzsTEb/JpylXAaC5YTRxeexRdCMU5z8UowTT+xdJCOo
+         bAA1PuUO2T/NXDack9J4YrLsAswhemN2xm/zBpgHD0veoRc4EKrYjn+PfFCjmsqX0WYZ
+         QMNxeuD7UHGctX1dr9gEA6tTpxJ+spsuIE9Mz65p4oE8bd1UI7xvEY0c4EykwIlKrlZ+
+         dLQlf4DNzR9psoZY9Q0k8dFc8L6GHaHT5L4ujgrW2YFurMz9fLfAeDi9/bCbn9gDmakK
+         Ow2hG3MCkv8+kddv0SNrtklwadEG86+liiOovVdxZsYjn8vBI60EiRHX3qrxIX+prKgD
+         SHtg==
+X-Gm-Message-State: AOAM530O6T+q2VJ3V9JZ3Pgfb83eq6VpAqbDLP7QScbWDL9Mc7oiVmnf
+        6B+4jgZYD06A+9HoyY6F/ohlZBvQEPCPwH57u0xjuA==
+X-Google-Smtp-Source: ABdhPJySo35UzNwHodlreVMfJuWPwHO1z+zkcbFfSYU3Avf+sN4n16LJPBb97SBockWyJEKx3Xs8q1wCvzejZmwrmAM=
+X-Received: by 2002:a62:7905:0:b029:197:f300:5a2a with SMTP id
+ u5-20020a6279050000b0290197f3005a2amr2898775pfc.30.1606307078380; Wed, 25 Nov
+ 2020 04:24:38 -0800 (PST)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR11MB1286.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e65225dc-574d-4be0-092c-08d891370064
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Nov 2020 11:41:08.7640
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Qx8GtEVz4NBFWAHP4Qf5IHInG9IhIHiIS5zNCkyeX0ou3GYoYTU3PNakxaajjsdSwlktvYXvIgzsiUHxZ40/9u5FNDgVVGMz6by63GMcWZ0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR11MB1605
+References: <202011201129.B13FDB3C@keescook> <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook> <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+ <ca071decb87cc7e905411423c05a48f9fd2f58d7.camel@perches.com>
+ <0147972a72bc13f3629de8a32dee6f1f308994b5.camel@HansenPartnership.com>
+ <d8d1e9add08cdd4158405e77762d4946037208f8.camel@perches.com>
+ <dbd2cb703ed9eefa7dde9281ea26ab0f7acc8afe.camel@HansenPartnership.com>
+ <20201123130348.GA3119@embeddedor> <8f5611bb015e044fa1c0a48147293923c2d904e4.camel@HansenPartnership.com>
+ <202011241327.BB28F12F6@keescook> <a841536fe65bb33f1c72ce2455a6eb47a0107565.camel@HansenPartnership.com>
+In-Reply-To: <a841536fe65bb33f1c72ce2455a6eb47a0107565.camel@HansenPartnership.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Wed, 25 Nov 2020 04:24:27 -0800
+Message-ID: <CAKwvOdkGBn7nuWTAqrORMeN1G+w3YwBfCqqaRD2nwvoAXKi=Aw@mail.gmail.com>
+Subject: Re: [Intel-wired-lan] [PATCH 000/141] Fix fall-through warnings for Clang
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Joe Perches <joe@perches.com>,
+        Jakub Kicinski <kuba@kernel.org>, alsa-devel@alsa-project.org,
+        linux-atm-general@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-fbdev@vger.kernel.org,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        linux-ide@vger.kernel.org, dm-devel@redhat.com,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        GR-everest-linux-l2@marvell.com, wcn36xx@lists.infradead.org,
+        samba-technical@lists.samba.org, linux-i3c@lists.infradead.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        usb-storage@lists.one-eyed-alien.net, drbd-dev@lists.linbit.com,
+        devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org,
+        rds-devel@oss.oracle.com, linux-scsi@vger.kernel.org,
+        linux-rdma@vger.kernel.org, oss-drivers@netronome.com,
+        bridge@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        linux-stm32@st-md-mailman.stormreply.com, cluster-devel@redhat.com,
+        linux-acpi@vger.kernel.org, coreteam@netfilter.org,
+        intel-wired-lan@lists.osuosl.org, linux-input@vger.kernel.org,
+        Miguel Ojeda <ojeda@kernel.org>,
+        tipc-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        selinux@vger.kernel.org,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        intel-gfx@lists.freedesktop.org, linux-geode@lists.infradead.org,
+        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-gpio@vger.kernel.org, op-tee@lists.trustedfirmware.org,
+        linux-mediatek@lists.infradead.org, xen-devel@lists.xenproject.org,
+        nouveau@lists.freedesktop.org, linux-hams@vger.kernel.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-hwmon@vger.kernel.org,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        linux-nfs@vger.kernel.org, GR-Linux-NIC-Dev@marvell.com,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-decnet-user@lists.sourceforge.net, linux-mmc@vger.kernel.org,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-sctp@vger.kernel.org, linux-usb@vger.kernel.org,
+        netfilter-devel@vger.kernel.org,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>, patches@opensource.cirrus.com,
+        linux-integrity@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+On Tue, Nov 24, 2020 at 11:05 PM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Tue, 2020-11-24 at 13:32 -0800, Kees Cook wrote:
+> > We already enable -Wimplicit-fallthrough globally, so that's not the
+> > discussion. The issue is that Clang is (correctly) even more strict
+> > than GCC for this, so these are the remaining ones to fix for full
+> > Clang coverage too.
+> >
+> > People have spent more time debating this already than it would have
+> > taken to apply the patches. :)
+>
+> You mean we've already spent 90% of the effort to come this far so we
+> might as well go the remaining 10% because then at least we get some
+> return? It's certainly a clinching argument in defence procurement ...
 
-Before returing from wilc_wlan_txq_add_net_pkt() invoke tx_complete_fn()
-callback to free up allocated memory for failure cases.
+So developers and distributions using Clang can't have
+-Wimplicit-fallthrough enabled because GCC is less strict (which has
+been shown in this thread to lead to bugs)?  We'd like to have nice
+things too, you know.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/net/wireless/microchip/wilc1000/wlan.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+I even agree that most of the churn comes from
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
-ireless/microchip/wilc1000/wlan.c
-index 6a82fb2f283e..f0cc2da7c9c7 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -284,13 +284,17 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev,=
- void *priv, u8 *buffer,
-=20
- 	wilc =3D vif->wilc;
-=20
--	if (wilc->quit)
-+	if (wilc->quit) {
-+		tx_complete_fn(priv, 0);
- 		return 0;
-+	}
-=20
- 	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
-=20
--	if (!tqe)
-+	if (!tqe) {
-+		tx_complete_fn(priv, 0);
- 		return 0;
-+	}
- 	tqe->type =3D WILC_NET_PKT;
- 	tqe->buffer =3D buffer;
- 	tqe->buffer_size =3D buffer_size;
---=20
-2.24.0
+case 0:
+  ++x;
+default:
+  break;
+
+which I have a patch for: https://reviews.llvm.org/D91895.  I agree
+that can never lead to bugs.  But that's not the sole case of this
+series, just most of them.
+
+Though, note how the reviewer (C++ spec editor and clang front end
+owner) in https://reviews.llvm.org/D91895 even asks in that review how
+maybe a new flag would be more appropriate for a watered
+down/stylistic variant of the existing behavior.  And if the current
+wording of Documentation/process/deprecated.rst around "fallthrough"
+is a straightforward rule of thumb, I kind of agree with him.
+
+>
+> > This is about robustness and language wrangling. It's a big code-
+> > base, and this is the price of our managing technical debt for
+> > permanent robustness improvements. (The numbers I ran from Gustavo's
+> > earlier patches were that about 10% of the places adjusted were
+> > identified as legitimate bugs being fixed. This final series may be
+> > lower, but there are still bugs being found from it -- we need to
+> > finish this and shut the door on it for good.)
+>
+> I got my six patches by analyzing the lwn.net report of the fixes that
+> was cited which had 21 of which 50% didn't actually change the emitted
+> code, and 25% didn't have a user visible effect.
+>
+> But the broader point I'm making is just because the compiler people
+> come up with a shiny new warning doesn't necessarily mean the problem
+
+That's not what this is though; you're attacking a strawman.  I'd
+encourage you to bring that up when that actually occurs, unlike this
+case since it's actively hindering getting -Wimplicit-fallthrough
+enabled for Clang.  This is not a shiny new warning; it's already on
+for GCC and has existed in both compilers for multiple releases.
+
+And I'll also note that warnings are warnings and not errors because
+they cannot be proven to be bugs in 100% of cases, but they have led
+to bugs in the past.  They require a human to review their intent and
+remove ambiguities.  If 97% of cases would end in a break ("Expert C
+Programming: Deep C Secrets" - Peter van der Linden), then it starts
+to look to me like a language defect; certainly an incorrectly chosen
+default.  But the compiler can't know those 3% were intentional,
+unless you're explicit for those exceptional cases.
+
+> it's detecting is one that causes us actual problems in the code base.
+> I'd really be happier if we had a theory about what classes of CVE or
+> bug we could eliminate before we embrace the next new warning.
+
+We don't generally file CVEs and waiting for them to occur might be
+too reactive, but I agree that pointing to some additional
+documentation in commit messages about how a warning could lead to a
+bug would make it clearer to reviewers why being able to enable it
+treewide, even if there's no bug in their particular subsystem, is in
+the general interest of the commons.
+
+On Mon, Nov 23, 2020 at 7:58 AM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> We're also complaining about the inability to recruit maintainers:
+>
+> https://www.theregister.com/2020/06/30/hard_to_find_linux_maintainers_says_torvalds/
+>
+> And burn out:
+>
+> http://antirez.com/news/129
+>
+> The whole crux of your argument seems to be maintainers' time isn't
+> important so we should accept all trivial patches ... I'm pushing back
+> on that assumption in two places, firstly the valulessness of the time
+> and secondly that all trivial patches are valuable.
+
+It's critical to the longevity of any open source project that there
+are not single points of failure.  If someone is not expendable or
+replaceable (or claims to be) then that's a risk to the project and a
+bottleneck.  Not having a replacement in training or some form of
+redundancy is short sighted.
+
+If trivial patches are adding too much to your workload, consider
+training a co-maintainer or asking for help from one of your reviewers
+whom you trust.  I don't doubt it's hard to find maintainers, but
+existing maintainers should go out of their way to entrust
+co-maintainers especially when they find their workload becomes too
+high.  And reviewing/picking up trivial patches is probably a great
+way to get started.  If we allow too much knowledge of any one
+subsystem to collect with one maintainer, what happens when that
+maintainer leaves the community (which, given a finite lifespan, is an
+inevitability)?
+-- 
+Thanks,
+~Nick Desaulniers
