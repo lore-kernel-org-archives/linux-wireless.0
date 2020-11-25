@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1F9C56202
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C009C63777
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 241E3206D9
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF3722076B
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Nov 2020 11:41:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="hMTGttyu";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="Be+WLXnd"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="sJfaxbzP";
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="sbg+Z1Er"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727780AbgKYLlM (ORCPT
+        id S1728604AbgKYLlP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 06:41:12 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:51746 "EHLO
+        Wed, 25 Nov 2020 06:41:15 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:51750 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726039AbgKYLlL (ORCPT
+        with ESMTP id S1727268AbgKYLlN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Nov 2020 06:41:11 -0500
+        Wed, 25 Nov 2020 06:41:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1606304470; x=1637840470;
+  t=1606304472; x=1637840472;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=qPxkbBU/85AZngGcyzLQrAu7gYT8WS5mnobx/iPf3us=;
-  b=hMTGttyur6/eVuex4Y66JhUE0hCEN+FPLe0Bx8WuVf0bB1C/0wRHUA94
-   j1YuLKXQ+TIN9f3c+Naxs/U1zBVKydgHGHd1DfF0vOBQUJslTdpgf21NA
-   govYzI8O1KsPhM7Yv2JdrC+grDFgr5F0Te1wqVtI+BSgwG9ScLrVG6aWq
-   eSYHGtpQhBK8aHo8ff/pFJ6/KUhkWjgQekpG6kuVBkTXI2aoWtSLxrH6P
-   aNtn0512Mr3mNc/XIGr26DClQEKsU6PwRBP97B+i5wFFiJT2YziDuis0n
-   vYwYxDbQjs1glG2CctTfDFzY8QsukUcbwEEEm4BFgV/1B+glPy4ZBHk0Z
+  bh=x7tGFYol/qoIc/ewgqIxkMSd8CIql7Hx5Pw2Ho2lBJg=;
+  b=sJfaxbzPMVlCqT5IWEqPRXoQviX2k1s2MFzus+GZfUO8KE9abUMl9ODU
+   LMOXflSHv86X9b2eEfSF6xL7IBwyUQuhfNCmTGW+8u1cCKSSwn9pInVgG
+   5ZlwCE39jG5zIbK4LQ6aQOfPRWXaTPpmRzeRH8wWYzVhcLgh/vcmQy90k
+   EM4yNShl3vJCd1r+FcSnNDHDoKi1WxhQoDm+pb0kYuEdkiHBWgsXTKaWh
+   W6v4mwCUKhgzVINN6XpfqJF24U0uihXvkg7tJQ7ZHhno6i2YTTlyErs/7
+   eQAeWz0PBSIAaxIYMU8IAy8WtHonQPMQTvwkumPpSVynqpoJiCjQiNYM6
    g==;
-IronPort-SDR: guo5uVhuClmmHG2EtZvvytyexcD8QVzE3xeejQc3TwcQULI34W7nHyFA5//HC3H2esFG1Q3+lZ
- VPgIYk5bCrTiDxtbbrliI4Gg6DFA8rz6OFAsQek2u5fmJn2rg9a5KHuOa1NimWhDkiMGMF7Hjh
- PSJakw2mKj6icZN/KNungvho7Grz/8DmyiPslG79KQFaq0P0VMTX7NteAP0oFWtlHQwSqp038L
- am22AXPjtkqueft2S4cwZtjWSwNo2vL2J2A12Vx4yA+1clBxVnkuhnbH+tngU+qZ/q7HyG3GBS
- f48=
+IronPort-SDR: 9fsBbIPJogry5buIcycwD+tud0GoRSFSJD4oNpZ2o3Lkq2D6aDzDO+6/3Z4JvWhD9FgGqVzmZu
+ /zaBGp4Y1cxfehAluepKV+/OECGmHkeaSp4pw/XdTPGPwgWnbx93sK31EQhQsKOT8KrjSpaxd5
+ iaNF8uFv1ZdaZ4ArmyYyvf+6nBm+faXL8Ez+5I1t8KfKFURQfmyAemu9sD4IXgjfUqrL4Yrm+T
+ 4sdqbgwf1xNrICTaRT1SWPze3yktE2blNYvnRqRVlYT81sC3nYnFbEpzAqwA6ZozFsb0zwigxQ
+ HAg=
 X-IronPort-AV: E=Sophos;i="5.78,368,1599548400"; 
-   d="scan'208";a="100348213"
+   d="scan'208";a="100348218"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Nov 2020 04:41:10 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Nov 2020 04:41:11 -0700
 Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
  chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Wed, 25 Nov 2020 04:41:10 -0700
+ 15.1.1979.3; Wed, 25 Nov 2020 04:41:11 -0700
 Received: from NAM12-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Wed, 25 Nov 2020 04:41:10 -0700
+ via Frontend Transport; Wed, 25 Nov 2020 04:41:11 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JK1pMQFMIw2DAIBfNLyNswbxDr4PSbfB2Icxe8sgu8oH8Jey/G3Mol0zhmdcMBV7FK2ik8bbFMDL0wcFz6D15beh+0sSMYOLPYbbQLJS/jMaI5R80rsExQGQ27DH5SJDRjtCt+/II68EgClKT5VUUV5oUDxOkuZn3/Sr1vVQYvS8cpo2xGI2/wWh1Qyi+d9sCNYvjKcu8FT0H1lmHLxxWgr9SAwAVj6vPDiH2XBW0Gq2smw2T0h9HvrNBxr5SpmqEHWB0c3W/eg8MsqeGCODr553Gc5Ce2ic+2jqY8Xi9yTwwXjdoqawZKkKNoqVTYE3um5/oOxeX020IUFd9UltEw==
+ b=j+8iyKI0vj/LFpy2UT2pjepMAw3oVsozoZeKFsF170wRKdQ5abGvUMeFrCJMKKNaZZjRYYj5bOdCK7mqIcsL0bIZ1+XS/wcSggJXxihEJNBabtePzKjCQ2UU0ToLwSYM8kC6XZpWAPU474wlWrJFwTbZbEbegjq43FBLue2cNh1+MYSnGa8cOfHksBg0cYHvLnUNnqVbuhPKf39oEnU83Al1pt1QrfDMYcUK/W3vSV8CnaDjiFHybcpRnrn+JVh6Bc51JNJVzzUjjAEuKwcUBxZ9DHMUVD7cIhsluoqfJTea6BiS9eWGg1i04kXEIRok/Q64tbi/fyyQMSuFGkjutQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fyPY2/kVfl6grF9AJ+FWy2876/dkxnkSb8F5XyGJkPE=;
- b=oSbRoDvfxoppmJhDM+cNVyedcPQVO5IMJvcrfVDr6kged5Oafdit4TkBINQZPav0vABGt4ThDo6YQbrywy+MQUhdGubLUzjqAHOGZcEbh8iy2u2M5pXmFX19zWgejkrlIzKwFUUDtx0+JvQqammZVO4dJl59sMjPfh0mxhqq+jSdOczOu9lhE9ikdSetxNSn0fzTtPoz/SYMPCIHygYljFsEEX62eu7cZtcbRPbEtUa9ZTnpd8HepIfmvKYTguTqpzyFAGd18NaW4I9W7A95YCqdLay0ZY/z9FaC3jxgtJkdo08l9kVVHQ9ygEmpkue0IVwFTs5l4luTpLKGIFDGmQ==
+ bh=Jsve2jUlaok+5TdrLzcUATUAv1x/ivXUPR/D1QW2FxQ=;
+ b=YIuS0bQF/wLbw3eqitETLtFzDwfqhrytTrUCC9N+bEGUF7UyatBoALuu2jVRbz7hO8hRXVcQ4Z4e4w9Rv5UFfnji4d5ISRM2Pnrm38YCGyDsUm9xSzsb4uXN10x9wn7/OUn8pP/KiiesclIpwdNiKSD3AAjNd2m8Ib2zcGeuWR34WwInt+bzDLbK9QSlljJnX695mzJGOvXEjnBL+k27CToGZB9YraUK2CNhbKqOiJblWeAf2mmAD/0VNcuDr1+Hn77B4i8aMNEZBldmjbxXKeDWTmOW7QZFGwNm8uOiFiGdFODmFVKa3fy/PFWKru/IwlcgIrMCStL+bEpXmL+MgQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -68,27 +68,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fyPY2/kVfl6grF9AJ+FWy2876/dkxnkSb8F5XyGJkPE=;
- b=Be+WLXndbJ16xKygOpPuRIWI8ENDC3s/whmeLJUZJwP6udMK+btTMhGSI01lwL9/jhiLKPc7B0L6dT9VN/6wsGODauGSpsTE6oQIdpabkzn3t6vhyjpmQjCdkPdbTqEEWklBGhG3NpE79t8OmT7SuIzJuo33TS7CG2ArhgbVuOo=
+ bh=Jsve2jUlaok+5TdrLzcUATUAv1x/ivXUPR/D1QW2FxQ=;
+ b=sbg+Z1ErolYqXJIayAl+emJGXDgLkYNGdqZsHt4fGx6sFvMGBLQK/QmqH3UhKR25v2h4w3Il2eRsoPcFNsrz73R4y8XG7A9yGeMTYf2vxNyev+ag92ALa8C78hTrYD2LCtZjS7oWEJUEgqHhXzrwGZY8OO6KHXmb3QLdZ53SEw4=
 Received: from CY4PR11MB1286.namprd11.prod.outlook.com (2603:10b6:903:2e::21)
  by CY4PR11MB1605.namprd11.prod.outlook.com (2603:10b6:910:10::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3589.20; Wed, 25 Nov
- 2020 11:41:08 +0000
+ 2020 11:41:10 +0000
 Received: from CY4PR11MB1286.namprd11.prod.outlook.com
  ([fe80::a0d1:a499:1c83:a988]) by CY4PR11MB1286.namprd11.prod.outlook.com
  ([fe80::a0d1:a499:1c83:a988%6]) with mapi id 15.20.3589.022; Wed, 25 Nov 2020
- 11:41:08 +0000
+ 11:41:10 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
 CC:     <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 1/5] wilc1000: added 'ndo_set_mac_address' callback support
-Thread-Topic: [PATCH 1/5] wilc1000: added 'ndo_set_mac_address' callback
- support
-Thread-Index: AQHWwx/dBWbbhXDpIE29CGrbpOduxQ==
-Date:   Wed, 25 Nov 2020 11:41:08 +0000
-Message-ID: <20201125114059.10006-2-ajay.kathat@microchip.com>
+Subject: [PATCH 4/5] wilc1000: call complete() for failure in
+ wilc_wlan_txq_add_cfg_pkt()
+Thread-Topic: [PATCH 4/5] wilc1000: call complete() for failure in
+ wilc_wlan_txq_add_cfg_pkt()
+Thread-Index: AQHWwx/eKSDKaY4O/02tWmIDpLW1+A==
+Date:   Wed, 25 Nov 2020 11:41:10 +0000
+Message-ID: <20201125114059.10006-5-ajay.kathat@microchip.com>
 References: <20201125114059.10006-1-ajay.kathat@microchip.com>
 In-Reply-To: <20201125114059.10006-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -101,29 +102,29 @@ authentication-results: vger.kernel.org; dkim=none (message not signed)
  header.from=microchip.com;
 x-originating-ip: [171.61.34.149]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 807d1767-daff-4a5b-7533-08d89136fffe
+x-ms-office365-filtering-correlation-id: 677eb85b-7390-4f0a-3da6-08d89137013b
 x-ms-traffictypediagnostic: CY4PR11MB1605:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR11MB16052884C2468AD9616C0789E3FA0@CY4PR11MB1605.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <CY4PR11MB1605334032542C887B7B8E4BE3FA0@CY4PR11MB1605.namprd11.prod.outlook.com>
 x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:1002;
+x-ms-oob-tlc-oobclassifiers: OLM:843;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 5wqlywXB9+O7MXpCOucljmT2NDrmUwzhXNJDxMiEHE2xT8r/cE+AGuSbWri9VLOxyZKC1TecfxMDipfTq2TLiF0/GFe470DxOqsBGytJ7Ikfu2mjGpyAHGrmFSVKsm499pXePplVQUTznKxHS3pRO9ZunK3GllThjS+D507wu1YeMPyER6ima0rDs3CXcAiECT+slf9uNpO7OFkC52O5mHS6GVJhq+GvdCpFl9O5RDRuRCSyAwokxvYEXEHCSvbh0lZ/9/dO4/tjBtqrRUzfiNevw+61hjlZZ0Ayw60PLzrMseE6IuYjyr3Krrx1oDBI
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR11MB1286.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(136003)(39860400002)(396003)(376002)(66446008)(66556008)(107886003)(2616005)(6486002)(4326008)(5660300002)(66476007)(36756003)(54906003)(71200400001)(76116006)(8936002)(64756008)(110136005)(2906002)(6506007)(66946007)(86362001)(186003)(91956017)(478600001)(83380400001)(26005)(316002)(8676002)(1076003)(6512007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: ORwWEzSkRygUvNFbDuDffBwLaX1xsdjzeTnUKAZ+ki0i9bwldyDQNZX+x7WcFKcnArxmT8CmbIFFcjrKu9+Ab5/3AxueyCAs69VIUtT81r7HcgArIhDb7ro3UKBzoJPGYm+d5vbC0fE7x9PmMf5VQQg8UHlWSY3gPeTUeyqk4MWRv7Ll3IkX4s1WuIn/BZ4Q+7TkMt/LQq+zET+Mt0g5vaej7hh6MhIeKA+MpyDHZydxnHYjzqzUg7xMDsNUf9R/Sp242ChOvMdrCZR722DrRyBpLGFIw+oB0NTkoVick6hV91r5vxAA8NCTrdj4W2mKrFy6BTS5pbAna+yHsI+nJFztE3cMv+SnWFe+Oal0+yFsLHi9dFkZFLoZzEroLg1HFD/EAPjf6FrLZAd2Dg/gMNhI5ZKqJs2GMJDXI5TS/iNjaoXr/IGO6zuW2Ak0ZplIpebtW/AUY6U3Wn+r6fo5sD9409TQUwR4uD2PqwaUBgoviR+RZr4LjG7rJBjvkqjpSwa+wW3mV/aTvPklJ88v8Bu0D1y5Ws3MhU1cdrcjs+gKNT2MNZ+3Tahn/8xAt4UCbo1jfy+PbqYpWvtsJ5xcPod09oiTrrQgcnSq0dAppgypEMallfh6RRGcqfKwBwtmrrl3Zkl61NU83nhOdDxjpuoh3r0Ot+7eajHsD2G64PRNuMU+2eEz1tvSgIHGPb0Y4EtCDVPxbnH1MpdoQ4999NNNYxxgX/ChJPwJOeQtuTaubm6H4XjuwSHGbpkQ5BSO5Bmw6Pcv2ACTZlbegB4KrsuchRWhvMDF0ZGMYt0VBgjX8t7wRCgzWrzgjU5T/LqiBCFlc5VwPVt/dDRiIhKUqJVPvrPY+hu2qPHAi2AwPzZwl+OxROUily036Q7HdvXYVjtbAugqkIAMLOvcoPuKqA==
+x-microsoft-antispam-message-info: abeDY1RIXea5DP2eFbM/5bH1xaad4Q/UJcbs6ov5OxW57fCRrrxenGhxU6oY3RI6bDreR5bTskQRcvtBlUBPSTDIORaT8mapV3m/L8QzJWfTRSzAadrWJ0DI9VQWKaeQGrt/YJM6jlvZbkxG4MqupSF2vh25qhOS2lUHa8yyECnq23vs4uHCvbQRb/vVMpSFG3WcUFz6wV93jWh0+2+C9Y1NNA1rErRyOHY2F+O68X54+mxAaNBcWojAZcjcxCsnUH+pl3SAjqaeO23GM6Ybvuf/5SOiPpqd/q/6N0cDGJLI3d2CXVfK+4syQLv1VKS9
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR11MB1286.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(136003)(39860400002)(396003)(376002)(66446008)(66556008)(107886003)(2616005)(6486002)(4326008)(4744005)(5660300002)(66476007)(36756003)(54906003)(71200400001)(76116006)(8936002)(64756008)(110136005)(2906002)(6506007)(66946007)(86362001)(186003)(91956017)(478600001)(83380400001)(26005)(316002)(8676002)(1076003)(6512007);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: ogun6f1xLkfkny41WkrNJd4lGVf9sdkilqcMQZoXXdKQkmk9hX+UbdxYbFnsG5r16bgRKdQXDYe+eF4A0T8XN6sUuXT81mfis+vxp62zhxESOpTnLlx6fs0/KcaYGZgpRjwfUSqwN9tnTnvI3hod7HC6ROn5U7/w/c0xssdaaRIP+M2p/SIG1put117AVM0lfYQJOajGNP1HTA4ecxrLlb+BejrXE65XJsSi2Vl69EPlC0O1+J0VN5nyFQJYJXR605k0zjqYnq8uGSPBMCyEexaAQnDMLCGiML6PSpHLnTSwYWFnHlSW3Dyn+IdpDy0MFFGIds4FYLoTPQKZy1l8N5WOzyDAtKyGbUWZezwHONjw3u+lpo85ff0rfu5xjPrPoY9r8lXpKQ+IJTpLdTc/U9U0WW7nYxDqPqqy3mfU4+LJ5aM6czcdOYlS6UcmsT5BmiCbOcs2C8ryUKKvVsHpeYuB4BY2h/sicNArLmjtzaWTOnniHk+n5T0o+/Sq3Ce4qrx/OX1wr3jl8O68fwP1aAT2kwFNHBjU06UJanU/K4UxXmKvZqqeNKcsPUvziKdzYVE+KyafWkj+8/3Dy2UNxDiC5JsimYbcl6ieT1M6IxexMVuxtwO5YfUT8PcczxN+la9bO7ICUNflNotzqBzkrMDAKbBJRSqTfFVZWtlNGRu1e2hPbTsl5pzjgVn8+zHp+fJCWvHXr98B2Gqf1Rx9a1z1tmzZTFEzbDbvraJaaUdarkOEWMqxahJC2zDwuLDGQKoOlBi8+GVqspQS//TRW59y8aowmAR3flaACoAU+isbNOVjs+v2IV2HGmYhuhlbPFbfZfcaiCDwih46ygihDyc1UYJr1ZJeATnSVue8K6g9QcZdzJVqCTPFRHXcPWFViuVmtkytfzL8G8XvLU9COg==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR11MB1286.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 807d1767-daff-4a5b-7533-08d89136fffe
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Nov 2020 11:41:08.0743
+X-MS-Exchange-CrossTenant-Network-Message-Id: 677eb85b-7390-4f0a-3da6-08d89137013b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Nov 2020 11:41:10.2173
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: XbVG9J/H79bieyLXA5hZnYWqAmiJmI6/JKEe++YaMFBW7YuNvFO00rhOPxLQVfKan2GCKAvWsUO/Wolt1KOOatzg+i341mI3jcGE5YiIVIg=
+X-MS-Exchange-CrossTenant-userprincipalname: aylal6KWm20VxVQJxiUPGhCl8tYDUb3o2vcWHHOBRckOhu9hT1vac/4JQmWkWDL7dyG+/w4AsaAnA+YSOhQzAx4FahC8JZmFOJEcwVY1PRw=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR11MB1605
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -131,119 +132,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Added support for 'ndo_set_mac_address call' callback to allow change of
-interface MAC address.
+Added complete() call for failure case in wilc_wlan_txq_add_cfg_pkt().
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/microchip/wilc1000/hif.c | 17 +++++++++
- drivers/net/wireless/microchip/wilc1000/hif.h |  1 +
- .../net/wireless/microchip/wilc1000/netdev.c  | 38 +++++++++++++++++++
- 3 files changed, 56 insertions(+)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/hif.c b/drivers/net/wi=
-reless/microchip/wilc1000/hif.c
-index d025a3093015..a133736a7821 100644
---- a/drivers/net/wireless/microchip/wilc1000/hif.c
-+++ b/drivers/net/wireless/microchip/wilc1000/hif.c
-@@ -1276,6 +1276,23 @@ int wilc_get_mac_address(struct wilc_vif *vif, u8 *m=
-ac_addr)
- 	return result;
- }
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
+ireless/microchip/wilc1000/wlan.c
+index 42b5db4e2d81..0ff4de28f622 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.c
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -258,8 +258,10 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *=
+vif, u8 *buffer,
+ 	}
 =20
-+int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
-+{
-+	struct wid wid;
-+	int result;
-+
-+	wid.id =3D WID_MAC_ADDR;
-+	wid.type =3D WID_STR;
-+	wid.size =3D ETH_ALEN;
-+	wid.val =3D mac_addr;
-+
-+	result =3D wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1);
-+	if (result)
-+		netdev_err(vif->ndev, "Failed to get mac address\n");
-+
-+	return result;
-+}
-+
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ies,
- 		      size_t ies_len)
- {
-diff --git a/drivers/net/wireless/microchip/wilc1000/hif.h b/drivers/net/wi=
-reless/microchip/wilc1000/hif.h
-index db9179171f05..58811911213b 100644
---- a/drivers/net/wireless/microchip/wilc1000/hif.h
-+++ b/drivers/net/wireless/microchip/wilc1000/hif.h
-@@ -168,6 +168,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_=
-gtk, u8 gtk_key_len,
- 		    u8 cipher_mode);
- int wilc_set_pmkid_info(struct wilc_vif *vif, struct wilc_pmkid_attr *pmki=
-d);
- int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
-+int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ies,
- 		      size_t ies_len);
- int wilc_disconnect(struct wilc_vif *vif);
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net=
-/wireless/microchip/wilc1000/netdev.c
-index 20615c7ec168..2a1fbbdd6a4b 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -628,6 +628,43 @@ static struct net_device_stats *mac_stats(struct net_d=
-evice *dev)
- 	return &vif->netstats;
- }
-=20
-+static int wilc_set_mac_addr(struct net_device *dev, void *p)
-+{
-+	int result;
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wilc =3D vif->wilc;
-+	struct sockaddr *addr =3D (struct sockaddr *)p;
-+	unsigned char mac_addr[ETH_ALEN];
-+	struct wilc_vif *tmp_vif;
-+	int srcu_idx;
-+
-+	if (!is_valid_ether_addr(addr->sa_data))
-+		return -EINVAL;
-+
-+	srcu_idx =3D srcu_read_lock(&wilc->srcu);
-+	list_for_each_entry_rcu(tmp_vif, &wilc->vif_list, list) {
-+		wilc_get_mac_address(tmp_vif, mac_addr);
-+		if (ether_addr_equal(addr->sa_data, mac_addr)) {
-+			if (vif !=3D tmp_vif) {
-+				srcu_read_unlock(&wilc->srcu, srcu_idx);
-+				return -EINVAL;
-+			}
-+			srcu_read_unlock(&wilc->srcu, srcu_idx);
-+			return 0;
-+		}
+ 	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
+-	if (!tqe)
++	if (!tqe) {
++		complete(&wilc->cfg_event);
+ 		return 0;
 +	}
-+	srcu_read_unlock(&wilc->srcu, srcu_idx);
-+
-+	result =3D wilc_set_mac_address(vif, (u8 *)addr->sa_data);
-+	if (result)
-+		return result;
-+
-+	ether_addr_copy(vif->bssid, addr->sa_data);
-+	ether_addr_copy(vif->ndev->dev_addr, addr->sa_data);
-+
-+	return result;
-+}
-+
- static void wilc_set_multicast_list(struct net_device *dev)
- {
- 	struct netdev_hw_addr *ha;
-@@ -813,6 +850,7 @@ static const struct net_device_ops wilc_netdev_ops =3D =
-{
- 	.ndo_init =3D mac_init_fn,
- 	.ndo_open =3D wilc_mac_open,
- 	.ndo_stop =3D wilc_mac_close,
-+	.ndo_set_mac_address =3D wilc_set_mac_addr,
- 	.ndo_start_xmit =3D wilc_mac_xmit,
- 	.ndo_get_stats =3D mac_stats,
- 	.ndo_set_rx_mode  =3D wilc_set_multicast_list,
+=20
+ 	tqe->type =3D WILC_CFG_PKT;
+ 	tqe->buffer =3D buffer;
 --=20
 2.24.0
