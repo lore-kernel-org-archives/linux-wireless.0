@@ -5,69 +5,74 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C06C56202
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD5DC64E8A
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45AC321D40
+	by mail.kernel.org (Postfix) with ESMTP id D8717206F7
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zuKRkBMw"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IbJpdC6i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390290AbgKZNcN (ORCPT
+        id S2390319AbgKZNcQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57082 "EHLO
+        Thu, 26 Nov 2020 08:32:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390243AbgKZNcL (ORCPT
+        with ESMTP id S2390310AbgKZNcP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:11 -0500
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1124FC0613D4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:09 -0800 (PST)
-Received: by mail-wr1-x444.google.com with SMTP id u12so2184024wrt.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:08 -0800 (PST)
+        Thu, 26 Nov 2020 08:32:15 -0500
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3B8C0613D4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:14 -0800 (PST)
+Received: by mail-wr1-x443.google.com with SMTP id s8so2141353wrw.10
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=NkVHgZnw6Lei6IsVvRK9pUiVE1+hhckfR+9Br4cSPrE=;
-        b=zuKRkBMwy4QWvvpBfeIKLgYNHdWx20GaFtYVQXPS2ejG2VPOKyj03aNPOtjX+Fj0zi
-         txJPDSzeDZUh8AxFzvuhREUkFOifNLME+G4mGIh1qsRZlj5ZKR4ZZ5TKLfU33wAjw49O
-         WHNRmyDRN5QZytnQ0PNHwhnOaSyWjF+hyxH4DGD7epSjYqZRKDYoriPREbd1hMOTSQXz
-         X39+Qobaoshhe8lrepXEoh9tQzPEaKyKazBTzHf8K6VTgHfQDPuKuB6Pt8ZRe8KKms2d
-         tOq/lR/1+QXwebzXTbyIR41NGMNjl1b0m/NmtJh7lY4y8UPHc4VZST5te0Z0b/N2Qk3b
-         ir4A==
+        bh=oATorMQPiNVEoXmBjgNPIPCMhMKpxL92yv6qxOrQmpk=;
+        b=IbJpdC6i4+GdmwJWSs//6cgsZfjzcpBfm/L8Mjzto4Jo9wyyg4hd19km+JlwJHpINW
+         f01TQrqs5iES89DzrbzYY85mFR3nKkhNsHBodFx+Jco8nrRyerd6sov+bZg9r2mlFHug
+         IgAAGffYPn7HOkX8bvXFMUfSg87rfEKX+EcWEpydNBniojEX6wWMgDUdCIDAyu7T1nnK
+         QsuwkRz+MNIThTRt0pTWKgi4WCYrXyr2s/AcXVl1QbpJmqyAjIenuuAEizVVVNY0+WLf
+         +Cf5nadVwB7oYQkGGMCvCmH3pYNMFxbbLrLyxC4qJhpRiRz1UODFcA/iGtN/CwQafyDe
+         PGTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=NkVHgZnw6Lei6IsVvRK9pUiVE1+hhckfR+9Br4cSPrE=;
-        b=grEyaXrBmyrpeC/JHtW9tB/25wrMqxoX6/su8QLTXWFbdc/7yyTfxVT6w/mqpAhPKc
-         PzfyPr0njLXE1AjNl0+1Gl31CqMz42bnKe4dSjzj7pcJoQLIFXVUxQgX6ilOIxoWl4VS
-         FgirynA2GJcVmqqsFU9VhKQOiMpFkdLsgq/ZFurUQlQMRO9hV1tyxqQouMU/ZavEl9Yx
-         5e1IozkO8cyXqzWCy4U1g7Ro/TLBDclB42VvHQz/M7t6NPzxbii66ZrFg5Ro1IKLtThP
-         WmWovamWmatb8qSSgMmtkaeiDhqRaFdYkZApNDXeB8trLQi1FzEvhBCGLrbSWAHHkjsX
-         BWgw==
-X-Gm-Message-State: AOAM531eowb4QjptUG1AHFkFhdOYSNzLHPnMwL/j/SBId+GjGCGOy59v
-        menE+fFpL4/d9ylb6Oo7PjtZ6w==
-X-Google-Smtp-Source: ABdhPJyn9GVZS822IZ4IVqcmFXjk4DgG4O/j+RPa4fPxVi5KBq5hEWqL5eq0BDDYukOyzKbs/qm8dQ==
-X-Received: by 2002:adf:e801:: with SMTP id o1mr3900099wrm.3.1606397527585;
-        Thu, 26 Nov 2020 05:32:07 -0800 (PST)
+        bh=oATorMQPiNVEoXmBjgNPIPCMhMKpxL92yv6qxOrQmpk=;
+        b=eH7LIc1HkZiYo1BqONG+IcDbplp01hX9SURqSBvIyjhZGprxTUKJ3gWTEoOBCVN/g6
+         9PkrnSF6iMeLwSqP3TMuTG+Un2kYENaxRsQPmz9Hd2Kv2OrncAtLIMymNrzkLNxNCZ4S
+         uWApzMIrQAuA4aVHEce8za+cXp6OdK1JWj0xs+w9urmdFs/zNO8yhbNrOxfaZ0FnI1dB
+         8GNY6qtRDi5s48GHmHCddzoOx1cxHZb+4XLQ9uIc/FGYdNjGUJjfOunuUcoyaaOLZqBI
+         gF+1Sl2kgvSr84yv3vwRd+afaxB0xkGOWtq2q5mWvGoIMaj9Iod3Kf0zdsWtBjGpfRgS
+         lXkA==
+X-Gm-Message-State: AOAM531YDOnmGrGLQWMzFIgwrUg7tqaN4ya21PvJem5gT6jj1e5o5RdM
+        mOAVDAg2waaNoFx+CnMX3JanxA==
+X-Google-Smtp-Source: ABdhPJzar5pL8NJXSGoKYV0wnB0lIWqTVB12EIyFUGuvX5/YQrx4//RE3ORazZXu+kfKxp3kELmzfQ==
+X-Received: by 2002:adf:f1cb:: with SMTP id z11mr3926438wro.363.1606397533529;
+        Thu, 26 Nov 2020 05:32:13 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.06
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:32:06 -0800 (PST)
+        Thu, 26 Nov 2020 05:32:12 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 09/17] ath: regd: Provide description for ath_reg_apply_ir_flags's 'reg' param
-Date:   Thu, 26 Nov 2020 13:31:44 +0000
-Message-Id: <20201126133152.3211309-10-lee.jones@linaro.org>
+Subject: [PATCH 14/17] iwlwifi: fw: dbg: Fix misspelling of 'reg_data' in function header
+Date:   Thu, 26 Nov 2020 13:31:49 +0000
+Message-Id: <20201126133152.3211309-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
 References: <20201126133152.3211309-1-lee.jones@linaro.org>
@@ -79,30 +84,37 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/regd.c:378: warning: Function parameter or member 'reg' not described in 'ath_reg_apply_ir_flags'
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c:1932: warning: Function parameter or member 'reg_data' not described in 'iwl_dump_ini_mem'
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c:1932: warning: Excess function parameter 'reg' description in 'iwl_dump_ini_mem'
 
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/regd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index bee9110b91f38..b2400e2417a55 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -360,6 +360,7 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
- /**
-  * ath_reg_apply_ir_flags()
-  * @wiphy: the wiphy to use
-+ * @reg: regulatory structure - used for country selection
-  * @initiator: the regulatory hint initiator
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index ab4a8b942c81d..c0a180b496988 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1923,7 +1923,7 @@ struct iwl_dump_ini_mem_ops {
   *
-  * If no country IE has been received always enable passive scan
+  * @fwrt: fw runtime struct
+  * @list: list to add the dump tlv to
+- * @reg: memory region
++ * @reg_data: memory region
+  * @ops: memory dump operations
+  */
+ static u32 iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt, struct list_head *list,
 -- 
 2.25.1
 
