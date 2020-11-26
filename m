@@ -2,165 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 706E9C64E8A
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D71C56202
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:49:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1965121D40
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 879D82087C
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:49:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kui+NaCL"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HMmpDnBL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390124AbgKZNb6 (ORCPT
+        id S2390608AbgKZNtY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:31:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
+        Thu, 26 Nov 2020 08:49:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390038AbgKZNb5 (ORCPT
+        with ESMTP id S1731417AbgKZNtY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:31:57 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 984F7C0617A7
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:57 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id l1so2153327wrb.9
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FjyZA9I7yFOBEtCbfXIU5SHh6pLoJjT44roAa80KCLE=;
-        b=kui+NaCLN8lc8tkXHcRKVcWIXN1GenHm8MR/KyQxUoqmwBQASP6Wzz4F+S98Gbww6S
-         uMkaVbYtvpQhdcfRATgZj3RtNAV1dF3sN5HKSbW4D6F/DCOQ6f35lr/WVFT1BL3JRiLl
-         TjIqW/pcucuIAO4/d6VaM7dpUfbdGrKOvJfYAVhwKxizQ6P57pWbpGdLcQIf1ZG3V9QB
-         TpbMc5QtXYKmej4JoRVX73e696RaoK0BV+Ne+LBq5koGtg1nsWNHhbOdoiE6aoCc4IjZ
-         iNSQsZD71qbJCXSwno6zDHNoPpP73ZMZa7CxfuTxIYIrtQ1FKq75+uWCl7O0KcpVOZg8
-         JSUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FjyZA9I7yFOBEtCbfXIU5SHh6pLoJjT44roAa80KCLE=;
-        b=PIKn1ELqGgDpgsGhCEuG6SBwem2eGrfZpMbpSflmYPuG6lisPGoljTC21yTxW45jFE
-         V9mtMIF+dvA1MhF7MJXJs10q2ub/Q3uBcq1J1yjI30vxpR8h8Lz8kckzRDyDdqVW52tR
-         r1jmnBZKntiY967DHhI9m+1xziDgEJq1E6FHQsYgK9EDOUn3lzbCGMS6fwR47KW8bP0k
-         fEzJl6njoz1z0aSybpIEy7UFSwu2HOwdN5ZXbespuO9bhumIUPDwH/U8OIXRw5gTOi5Y
-         IUo7wcjJafViT5b6YGf4pPeDNWhJ5E2FDtYfXpATc/6Ujumu081IrdUqpDDkoDq0wxy9
-         XixQ==
-X-Gm-Message-State: AOAM533HVLH41LZYLoQlMqSANUh2SxuSn/M+brcgj0rJ95IT5/JkMtm3
-        38nE6Z55Txqmx2uK3GGlEAFU9g==
-X-Google-Smtp-Source: ABdhPJy+4ikTycM8ES5sSh18sX7zJcCpn462tjHqy3xH4ycrddEim8OyKqRzwP/kujYArGxZN2fefQ==
-X-Received: by 2002:adf:a3ca:: with SMTP id m10mr3936515wrb.228.1606397516281;
-        Thu, 26 Nov 2020 05:31:56 -0800 (PST)
-Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.31.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:31:55 -0800 (PST)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     lee.jones@linaro.org, kvalo@codeaurora.org
-Cc:     linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maya Erez <merez@codeaurora.org>, netdev@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        wil6210@qti.qualcomm.com, Yan-Hsuan Chuang <yhchuang@realtek.com>
-Subject: [PATCH v2 00/17] [Set 4] Rid W=1 warnings in Wireless
-Date:   Thu, 26 Nov 2020 13:31:35 +0000
-Message-Id: <20201126133152.3211309-1-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.25.1
+        Thu, 26 Nov 2020 08:49:24 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D667C0613D4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:49:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=NXCdKIn17deszv6wrpX1f26AnC9C2tl3gjLUzBoGz+A=; b=HMmpDnBLsBnk3sWMHFleaaAAWZ
+        otVKc16kSvXf1iMEF9vbOEKE1nfzWxp0m4ZyZnh7+xeFZfzkhjnK18y4TiH/Q6pGEEYYm7F6tc3an
+        7bxJNJC7g3KsXc+314ywXLtsHka4KhXyhTLxNZBwxij1aswmzslvlbuVb4wka312sRx8=;
+Received: from p5b206c33.dip0.t-ipconnect.de ([91.32.108.51] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kiHeD-00021K-JL; Thu, 26 Nov 2020 14:49:21 +0100
+Subject: Re: [PATCH 5.10] mt76: usb: fix crash on device removal
+To:     stf_xl@wp.pl, linux-wireless@vger.kernel.org
+Cc:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+References: <20201126125520.72912-1-stf_xl@wp.pl>
+From:   Felix Fietkau <nbd@nbd.name>
+Message-ID: <33c3d769-aed9-1ef9-f791-cf3618ea3ad1@nbd.name>
+Date:   Thu, 26 Nov 2020 14:49:20 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201126125520.72912-1-stf_xl@wp.pl>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[Last batch!]
+On 2020-11-26 13:55, stf_xl@wp.pl wrote:
+> From: Stanislaw Gruszka <stf_xl@wp.pl>
+> 
+> Currently 'while (q->queued > 0)' loop was removed from mt76u_stop_tx()
+> code. This causes crash on device removal as we try to cleanup empty
+> queue:
+> 
+> [   96.495571] kernel BUG at include/linux/skbuff.h:2297!
+> [   96.498983] invalid opcode: 0000 [#1] SMP PTI
+> [   96.501162] CPU: 3 PID: 27 Comm: kworker/3:0 Not tainted 5.10.0-rc5+ #11
+> [   96.502754] Hardware name: LENOVO 20DGS08H00/20DGS08H00, BIOS J5ET48WW (1.19 ) 08/27/2015
+> [   96.504378] Workqueue: usb_hub_wq hub_event
+> [   96.505983] RIP: 0010:skb_pull+0x2d/0x30
+> [   96.507576] Code: 00 00 8b 47 70 39 c6 77 1e 29 f0 89 47 70 3b 47 74 72 17 48 8b 87 c8 00 00 00 89 f6 48 01 f0 48 89 87 c8 00 00 00 c3 31 c0 c3 <0f> 0b 90 0f 1f 44 00 00 53 48 89 fb 48 8b bf c8 00 00 00 8b 43 70
+> [   96.509296] RSP: 0018:ffffb11b801639b8 EFLAGS: 00010287
+> [   96.511038] RAX: 000000001c6939ed RBX: ffffb11b801639f8 RCX: 0000000000000000
+> [   96.512964] RDX: ffffb11b801639f8 RSI: 0000000000000018 RDI: ffff90c64e4fb800
+> [   96.514710] RBP: ffff90c654551ee0 R08: ffff90c652bce7a8 R09: ffffb11b80163728
+> [   96.516450] R10: 0000000000000001 R11: 0000000000000001 R12: ffff90c64e4fb800
+> [   96.519749] R13: 0000000000000010 R14: 0000000000000020 R15: ffff90c64e352ce8
+> [   96.523455] FS:  0000000000000000(0000) GS:ffff90c96eec0000(0000) knlGS:0000000000000000
+> [   96.527171] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   96.530900] CR2: 0000242556f18288 CR3: 0000000146a10002 CR4: 00000000003706e0
+> [   96.534678] Call Trace:
+> [   96.538418]  mt76x02u_tx_complete_skb+0x1f/0x50 [mt76x02_usb]
+> [   96.542231]  mt76_queue_tx_complete+0x23/0x50 [mt76]
+> [   96.546028]  mt76u_stop_tx.cold+0x71/0xa2 [mt76_usb]
+> [   96.549797]  mt76x0u_stop+0x2f/0x90 [mt76x0u]
+> [   96.553638]  drv_stop+0x33/0xd0 [mac80211]
+> [   96.557449]  ieee80211_do_stop+0x558/0x860 [mac80211]
+> [   96.561262]  ? dev_deactivate_many+0x298/0x2d0
+> [   96.565101]  ieee80211_stop+0x16/0x20 [mac80211]
+> 
+> Fix that by adding while loop again. We need loop, not just single
+> check, to clean all pending entries.
+> 
+> Additionally move mt76_worker_disable/enable after !mt76_has_tx_pending()
+> as we want to tx_worker to run to process tx queues, while we wait for
+> exactly that.
+> 
+> I was a bit worried about accessing q->queued without lock, but
+> mt76_worker_disable() -> kthread_park() should assure this value will
+> be seen updated on other cpus.
+> 
+> Fixes: fe5b5ab52e9d ("mt76: unify queue tx cleanup code")
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Acked-by: Felix Fietkau <nbd@nbd.name>
 
-This set is part of a larger effort attempting to clean-up W=1
-kernel builds, which are currently overwhelmingly riddled with
-niggly little warnings.
+Thanks,
 
-v2:
- - Unify rtw_pci_(probe,remove,shutdown}() prototypses
-   - Suggested-by: Brian Norris
-
-Lee Jones (17):
-  wil6210: wmi: Correct misnamed function parameter 'ptr_'
-  iwlwifi: mvm: rs: Demote non-conformant function documentation headers
-  ath9k: ar9330_1p1_initvals: Remove unused const variable
-    'ar9331_common_tx_gain_offset1_1'
-  ath9k: ar9340_initvals: Remove unused const variable
-    'ar9340Modes_ub124_tx_gain_table_1p0'
-  ath9k: ar9485_initvals: Remove unused const variable
-    'ar9485_fast_clock_1_1_baseband_postamble'
-  ath9k: ar9003_2p2_initvals: Remove unused const variables
-  iwlwifi: iwl-eeprom-read: Demote one nonconformant function header
-  iwlwifi: iwl-eeprom-parse: Fix 'struct iwl_eeprom_enhanced_txpwr's
-    header
-  ath: regd: Provide description for ath_reg_apply_ir_flags's 'reg'
-    param
-  ath9k: ar5008_phy: Demote half completed function headers
-  ath: dfs_pattern_detector: Fix some function kernel-doc headers
-  ath: dfs_pri_detector: Demote zero/half completed kernel-doc headers
-  iwlwifi: iwl-phy-db: Add missing struct member description for 'trans'
-  iwlwifi: fw: dbg: Fix misspelling of 'reg_data' in function header
-  ath9k: dynack: Demote non-compliant function header
-  iwlwifi: fw: acpi: Demote non-conformant function headers
-  realtek: rtw88: pci: Add prototypes for .probe, .remove and .shutdown
-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |  15 +--
- .../wireless/ath/ath9k/ar9003_2p2_initvals.h  |  14 ---
- .../wireless/ath/ath9k/ar9330_1p1_initvals.h  |   7 --
- .../net/wireless/ath/ath9k/ar9340_initvals.h  | 101 ------------------
- .../net/wireless/ath/ath9k/ar9485_initvals.h  |   7 --
- drivers/net/wireless/ath/ath9k/dynack.c       |   3 +-
- .../net/wireless/ath/dfs_pattern_detector.c   |  14 +--
- drivers/net/wireless/ath/dfs_pri_detector.c   |   9 +-
- drivers/net/wireless/ath/regd.c               |   1 +
- drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  12 +--
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   2 +-
- .../wireless/intel/iwlwifi/iwl-eeprom-parse.c |  12 +--
- .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-phy-db.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  10 +-
- drivers/net/wireless/realtek/rtw88/pci.h      |   8 ++
- .../net/wireless/realtek/rtw88/rtw8723de.c    |   1 +
- .../net/wireless/realtek/rtw88/rtw8723de.h    |   4 -
- .../net/wireless/realtek/rtw88/rtw8821ce.c    |   1 +
- .../net/wireless/realtek/rtw88/rtw8821ce.h    |   4 -
- .../net/wireless/realtek/rtw88/rtw8822be.c    |   1 +
- .../net/wireless/realtek/rtw88/rtw8822be.h    |   4 -
- .../net/wireless/realtek/rtw88/rtw8822ce.c    |   1 +
- .../net/wireless/realtek/rtw88/rtw8822ce.h    |   4 -
- 25 files changed, 50 insertions(+), 191 deletions(-)
-
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Maya Erez <merez@codeaurora.org>
-Cc: netdev@vger.kernel.org
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Cc: wil6210@qti.qualcomm.com
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
--- 
-2.25.1
-
+- Felix
