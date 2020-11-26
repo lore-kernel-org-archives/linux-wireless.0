@@ -7,69 +7,71 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBB0C83012
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF494C56202
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A24F321D46
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E152206F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fqv0JhXG"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="diSVxSAo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390371AbgKZNcd (ORCPT
+        id S2390263AbgKZNcK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57124 "EHLO
+        Thu, 26 Nov 2020 08:32:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390316AbgKZNcQ (ORCPT
+        with ESMTP id S2390188AbgKZNcH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:16 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CADCC061A04
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:16 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id i2so2158991wrs.4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:16 -0800 (PST)
+        Thu, 26 Nov 2020 08:32:07 -0500
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96C1AC061A47
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:07 -0800 (PST)
+Received: by mail-wr1-x442.google.com with SMTP id i2so2158470wrs.4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=056QqikcWr/GU3mDhY6gijUgY/LGF79OsK2zfz8G1FY=;
-        b=fqv0JhXGTBJ6+Rj9ibArRehnnEYTflFsehO23vS9knsxbK7litwIKnbiw7ObbXfS/e
-         f4Ir3thv79U4cTh0HGulqmvMIBVxvuEt9Dop7Zv5ht638Jx8m12KvMVS7h6Z2l+G1GkX
-         cVFxqKHqP1xMiYcLllMxAHpUIX1LY1gs9vLRELHv6ZmUlddNzRO0eVsCq/94H2h995bM
-         5pPjAU9MStt8Om1c3WCFX1ENSOWaXEddv9/QhD39zVhQW2xuwwr737j16SIy/3Drbfhj
-         oJ3+TDuW/eLNsRST+cRAuHC19XSYN6pvdJKzsOCF8y8sShpZ24tO1rVh9ubYqkjQ9S34
-         Eq1g==
+        bh=LgKtNmQfGnZeeFNwZJm+JSbHcTG8sEx1i9uktjmVfHw=;
+        b=diSVxSAoA40tZEtS/HzleEtjZHtOlucT3xtLPjQTgjZqyNCONejvfwzDQ9rykhgSo/
+         EC3mKBZiW8Y5/3yHi2UXTIJGHUlJZWmhmGKEzoFG4WE77PAi2Gt1qssdtssc+4ye7qOY
+         pOOJu38hmlttKJ/wu6A29AeM/dSRlCKiFap/M1FUM0A49ppUqc4MS/6/YZ7Ilmaon+3l
+         ZykubvRyrnyBUVtXVW4XC2vYrPauBp/aPbGRvXo3xT80JNaEwaIuofRvLbFtOJdsF2Gb
+         6oJI+aIb0M4cuqnQcp21K4cd3cKvyCpJ8sim4c2daOi3LjPnapOS7eUQuEB9kOLB6Phn
+         y6zA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=056QqikcWr/GU3mDhY6gijUgY/LGF79OsK2zfz8G1FY=;
-        b=gguF8mSvnkLbAiEIs6bD19E91XAtrL9WVjDbLoiAVn8dyWqJsd5yy25glvbf2irLnJ
-         cBVBFKXhpoiufXhd3Uo9EmyEEKs+CwMt4GupM21pwF0NUDY9a5KLGZse3TDcFzGgVbFD
-         b296yaGorE0CijZXCaJ41ONf4d3DOWXiQ58mf1C2/Z9AAif0JnqZHqsMUZ3D1PvLNNt5
-         /MBxXqn26/ENSjBM6ffNDDKeSPFEuvl4ruZP9XMy2sKWKQYy96NBH/t5Hmm01LJI4u3J
-         Xl5tYslMg93aRsAAAH5GeFJIGLBbPnSG4wOVRPg6fP6z04nl65sLaZ3J7cbtxO4m9yL6
-         0Zgw==
-X-Gm-Message-State: AOAM532GmzfE9f/csGETr6DS9rXVt0T6YMW8mKkmiYIDVAyyz4EhaVDD
-        Z4DoRu9kCcrlIUJn/U3rBipVDQ==
-X-Google-Smtp-Source: ABdhPJzYvUJmMpBs6Uu4aktg9Hmy5bVFWzXjnfem1+AQgkKMzk6zfjUlVS+cAc7faTABkYV01/5rWQ==
-X-Received: by 2002:adf:dc83:: with SMTP id r3mr3769552wrj.223.1606397535117;
-        Thu, 26 Nov 2020 05:32:15 -0800 (PST)
+        bh=LgKtNmQfGnZeeFNwZJm+JSbHcTG8sEx1i9uktjmVfHw=;
+        b=PICmrmkQnebw5KX4eMeSNiUgIdHjNbDUIwsCyMqRJA9c92DRZvw4a9BHcqTMWcrvDa
+         JCF3f0MvdasGLFIr54d8dLsUmXpjeks2+jaNQPsBuJH+2vmnuJX8egwWmenYvYIJD3g5
+         6iY6FFGDBNcCsTtq+sE+ubGOF/GCt8kb1ZzgeoJ0k0COCKFf+VFj+0rssJaoCsbFfhlz
+         4iiSm1UwOd630/WD+zoxVIwiaUiu7/1FOYspO8VDp4hoBZnL/TU51urw8lSB65OjtCfQ
+         turkF+MWu0gttNTpZFg7etK1iEM/aPkswjgpwpKXZkppk1FOaaJ0w+DVFHqqH63CJ1vG
+         ilOw==
+X-Gm-Message-State: AOAM531KzMMUkTNRksxZbiyUUPQpzjnK+FZQcBDZk+tEg9xzAgD63v5x
+        hcURrfK9EVC+brVKizKUoDYvIw==
+X-Google-Smtp-Source: ABdhPJxCIYT+lF7JbaW4XiyGU7BSoo+9JGKkKGnf0fEfWfYR7PXVvWXzcXpp+ZzvHC83M7okR4aAcQ==
+X-Received: by 2002:adf:e4d1:: with SMTP id v17mr3803758wrm.325.1606397526033;
+        Thu, 26 Nov 2020 05:32:06 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.13
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:32:14 -0800 (PST)
+        Thu, 26 Nov 2020 05:32:05 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 15/17] ath9k: dynack: Demote non-compliant function header
-Date:   Thu, 26 Nov 2020 13:31:50 +0000
-Message-Id: <20201126133152.3211309-16-lee.jones@linaro.org>
+Subject: [PATCH 08/17] iwlwifi: iwl-eeprom-parse: Fix 'struct iwl_eeprom_enhanced_txpwr's header
+Date:   Thu, 26 Nov 2020 13:31:43 +0000
+Message-Id: <20201126133152.3211309-9-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
 References: <20201126133152.3211309-1-lee.jones@linaro.org>
@@ -81,36 +83,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/ath9k/dynack.c:52: warning: Function parameter or member 'old' not described in 'ath_dynack_ewma'
- drivers/net/wireless/ath/ath9k/dynack.c:52: warning: Function parameter or member 'new' not described in 'ath_dynack_ewma'
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c:340: warning: cannot understand function prototype: 'struct iwl_eeprom_enhanced_txpwr '
 
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/ath9k/dynack.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c    | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
-index fbeb4a739d321..3219715174a2f 100644
---- a/drivers/net/wireless/ath/ath9k/dynack.c
-+++ b/drivers/net/wireless/ath/ath9k/dynack.c
-@@ -44,9 +44,8 @@ static u32 ath_dynack_get_max_to(struct ath_hw *ah)
- 	return 600;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+index cf7e2a9232e52..f29d5758c8dff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+@@ -324,15 +324,15 @@ enum iwl_eeprom_enhanced_txpwr_flags {
+ };
  
--/**
-+/*
-  * ath_dynack_ewma - EWMA (Exponentially Weighted Moving Average) calculation
-- *
-  */
- static inline int ath_dynack_ewma(int old, int new)
- {
+ /**
+- * iwl_eeprom_enhanced_txpwr structure
++ * struct iwl_eeprom_enhanced_txpwr
+  * @flags: entry flags
+  * @channel: channel number
+- * @chain_a_max_pwr: chain a max power in 1/2 dBm
+- * @chain_b_max_pwr: chain b max power in 1/2 dBm
+- * @chain_c_max_pwr: chain c max power in 1/2 dBm
++ * @chain_a_max: chain a max power in 1/2 dBm
++ * @chain_b_max: chain b max power in 1/2 dBm
++ * @chain_c_max: chain c max power in 1/2 dBm
+  * @delta_20_in_40: 20-in-40 deltas (hi/lo)
+- * @mimo2_max_pwr: mimo2 max power in 1/2 dBm
+- * @mimo3_max_pwr: mimo3 max power in 1/2 dBm
++ * @mimo2_max: mimo2 max power in 1/2 dBm
++ * @mimo3_max: mimo3 max power in 1/2 dBm
+  *
+  * This structure presents the enhanced regulatory tx power limit layout
+  * in an EEPROM image.
 -- 
 2.25.1
 
