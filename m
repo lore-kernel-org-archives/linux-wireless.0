@@ -7,67 +7,71 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C293C83017
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C954CC83010
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21938206F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79CFD221EB
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Q8jkVen1"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YznWFMVF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390273AbgKZNcw (ORCPT
+        id S2390336AbgKZNco (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57096 "EHLO
+        Thu, 26 Nov 2020 08:32:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390282AbgKZNcM (ORCPT
+        with ESMTP id S2390277AbgKZNcN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:12 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2804DC061A4F
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:11 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id u12so2184160wrt.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:11 -0800 (PST)
+        Thu, 26 Nov 2020 08:32:13 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96437C061A47
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:13 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id 1so2422003wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=OcBd80NlVbn3uGSdfGXvocYKOP7aRNETXFKMl2YiPGc=;
-        b=Q8jkVen12XCoRGnL4iPurJx+25LwQnN4rkU8WQh9kxbtbsrgsycqNffe2qOGBYR+7C
-         Svfqh6UT2eGQdJXGyNyslkVr/NuOXoGtaDzSUcNQ3uptyIFnbW+fO3wzISfc1qaQsjJi
-         5vZlttAaVI5n5zE874WJack/ZatNl3cE9nZWW+B4v04noSvn3CuzseQtPkQTXoF5QSS9
-         eVRsopl+s0zomc541bDr63PewFZ8NVmVKt8HuY1l1P5/DW/m1U8JXu/MWptu1wjCpjwR
-         abJII0TpdSoGv/qiXv3CZY+vSNLU8netmmGJxdMR4phDapNWTVDvBCXciVvU75IRIFcM
-         8i8w==
+        bh=O6+Wy4iFDi+o50ayVR/RzqW4RGQ8DgYcSYBAfri+vWM=;
+        b=YznWFMVFnrL3SHRm/qzlOafIUlBxNuihoIkIF7OlhyVT4+9ZeyqW9cBmOoMgt7pLyw
+         T7hKhHI/quPJlot8cNCu+3XvV04sD7ckvL4b5ap7US4iZezEuhlRmDYVJ7SoTvOp5qLO
+         7xEHAZ4XtVDbwKVxICGgNttf3FdsRCRnwDnX9hvuMOXcBxi3c3uBNe/g9coM24UfPtcu
+         K6yMTfbLfoEfj5XCdAEZJUvl9hNlWfTWyTwrBvrdPfpgoDLTKHB2/LFDnyF1GTiTZICM
+         LqzrCSx4XukGOReSH+dhFXc+XF4vYzetV7RVAW1KexiAbrOKDlH6EAHyOsmRvV8BHtsZ
+         cVEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=OcBd80NlVbn3uGSdfGXvocYKOP7aRNETXFKMl2YiPGc=;
-        b=uIdgmwLuR/9y3jwYswri9w7EOq/v5bmm3ibov3VQvGlchTU4IMwp1ddSJjR95Ba0ci
-         PabXDLh74Xz6TFN8ybC4dpTqMEsmnZtRFZcpLg+poxV7M8rvZi1XFP0pXapnfRBPGktf
-         MTB6rNBTwN9wRWW5gVM5OR745nvGXIoriLyX2h+Q5AkuJFhRaqW/WeAE5TOO5zr2lZ1F
-         R97w7zy+qHXda64gD6KRNIbnLp9hf6cMlkt5ZtFGPMU2wtFI7iP1gdbIV56PSzO5BtYI
-         wScZbTLCLWzjGR7Kzpr1OzXLmg4fJtdP7v5njwMvpxZ4fZ5BiCOAdy+JvoKdleBCpLIA
-         d5OQ==
-X-Gm-Message-State: AOAM533xZ24jxq2BlxXEMr6SDLIx0NvWfQYg/Xwr0lKO3Io6gSuahrqw
-        VFCloLH8bh26QAVrf4QERgXeYQ==
-X-Google-Smtp-Source: ABdhPJwzkmAeb05I5tYzBStx7l2lOPLol3d3q+SROPVuSSvfSZQoLVYS2QldMxZ2jqVYNhsvFPWSTw==
-X-Received: by 2002:adf:fc49:: with SMTP id e9mr3872317wrs.31.1606397529940;
-        Thu, 26 Nov 2020 05:32:09 -0800 (PST)
+        bh=O6+Wy4iFDi+o50ayVR/RzqW4RGQ8DgYcSYBAfri+vWM=;
+        b=FkM04KVjskJ94qyl/KvpQy6xHo8fPSgXcZn/VpLLsq8AJekG0OzGn0Ea/yZXMOfXPc
+         YAz0CMtGthy4y+G/jPZvYWAJW5jNOFibsuSFHvzXhyTa20ZguT7vcbwyPdqINYB0YWKX
+         IclIlVjQPH6db0d1Szm5Gbrs0HIL2gNOlRulXywCcNtbErKEmBCECbpSBtFfmSg5KdEi
+         K0e5uQQxJxBaTnaqxIdtLET5voVtzzQs1qqJZjPVz76zlM3msYagZ1M/pE+Z2IBBeplA
+         dQhZTXceKjnwraYVjcaR0jndk9ME0KULpMQSXdO84R/npUx29HLrJXY2zAPxo+xkklXj
+         I+HQ==
+X-Gm-Message-State: AOAM533UQZs/yu94M5bFcheIBiR2e4y1ZtT3ClEQnqXb/g/zZbsbZcPn
+        5coLTkEP0wbr3RyyQ6laSGYnKQ==
+X-Google-Smtp-Source: ABdhPJyuWp5WvGRoZZgxkoG9Oq62kxy/bru//LJwk7blbiQxWqPZlJHwxTOooVtaPi4kfalsFWJUAQ==
+X-Received: by 2002:a1c:ba0b:: with SMTP id k11mr3396548wmf.37.1606397532313;
+        Thu, 26 Nov 2020 05:32:12 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.08
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:32:09 -0800 (PST)
+        Thu, 26 Nov 2020 05:32:11 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 11/17] ath: dfs_pattern_detector: Fix some function kernel-doc headers
-Date:   Thu, 26 Nov 2020 13:31:46 +0000
-Message-Id: <20201126133152.3211309-12-lee.jones@linaro.org>
+Subject: [PATCH 13/17] iwlwifi: iwl-phy-db: Add missing struct member description for 'trans'
+Date:   Thu, 26 Nov 2020 13:31:48 +0000
+Message-Id: <20201126133152.3211309-14-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
 References: <20201126133152.3211309-1-lee.jones@linaro.org>
@@ -79,11 +83,12 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/dfs_pattern_detector.c:34: warning: Function parameter or member 'region' not described in 'radar_types'
- drivers/net/wireless/ath/dfs_pattern_detector.c:141: warning: Function parameter or member 'region' not described in 'get_dfs_domain_radar_types'
- drivers/net/wireless/ath/dfs_pattern_detector.c:239: warning: Function parameter or member 'dpd' not described in 'channel_detector_get'
- drivers/net/wireless/ath/dfs_pattern_detector.c:239: warning: Function parameter or member 'freq' not described in 'channel_detector_get'
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c:97: warning: Function parameter or member 'trans' not described in 'iwl_phy_db'
 
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -91,48 +96,26 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/dfs_pattern_detector.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index 0813473793df1..80390495ea250 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -23,7 +23,7 @@
- 
- /**
-  * struct radar_types - contains array of patterns defined for one DFS domain
-- * @domain: DFS regulatory domain
-+ * @region: regulatory DFS region
-  * @num_radar_types: number of radar types to follow
-  * @radar_types: radar types array
-  */
-@@ -133,8 +133,9 @@ static const struct radar_types *dfs_domains[] = {
- 
- /**
-  * get_dfs_domain_radar_types() - get radar types for a given DFS domain
-- * @param domain DFS domain
-- * @return radar_types ptr on success, NULL if DFS domain is not supported
-+ * @region: regulatory DFS region
-+ *
-+ * Return value: radar_types ptr on success, NULL if DFS domain is not supported
-  */
- static const struct radar_types *
- get_dfs_domain_radar_types(enum nl80211_dfs_regions region)
-@@ -227,9 +228,10 @@ channel_detector_create(struct dfs_pattern_detector *dpd, u16 freq)
- 
- /**
-  * channel_detector_get() - get channel detector for given frequency
-- * @param dpd instance pointer
-- * @param freq frequency in MHz
-- * @return pointer to channel detector on success, NULL otherwise
-+ * @dpd: DPD instance pointer
-+ * @freq: freq frequency in MHz
-+ *
-+ * Return value: pointer to channel detector on success, NULL otherwise
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+index ae83cfdb750e6..c9ce270ceee07 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+@@ -79,11 +79,11 @@ struct iwl_phy_db_entry {
   *
-  * Return existing channel detector for the given frequency or return a
-  * newly create one.
+  * @cfg: phy configuration.
+  * @calib_nch: non channel specific calibration data.
+- * @calib_ch: channel specific calibration data.
+  * @n_group_papd: number of entries in papd channel group.
+  * @calib_ch_group_papd: calibration data related to papd channel group.
+  * @n_group_txp: number of entries in tx power channel group.
+  * @calib_ch_group_txp: calibration data related to tx power chanel group.
++ * @trans: transport layer
+  */
+ struct iwl_phy_db {
+ 	struct iwl_phy_db_entry	cfg;
 -- 
 2.25.1
 
