@@ -2,353 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 256DAC56202
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 02:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 864DAC63798
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 05:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2F3C20B1F
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 02:13:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3541521741
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 05:04:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=purevlc.onmicrosoft.com header.i=@purevlc.onmicrosoft.com header.b="qB0bxE2z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732088AbgKZCMx (ORCPT
+        id S1726877AbgKZFBc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 21:12:53 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60675 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732908AbgKZCM2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Nov 2020 21:12:28 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AQ2CKQa8030316, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AQ2CKQa8030316
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 26 Nov 2020 10:12:20 +0800
-Received: from localhost.localdomain (172.21.69.213) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 26 Nov 2020 10:12:20 +0800
-From:   <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <tony0620emma@gmail.com>, <ku920601@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 02/10] rtw88: coex: add debug message
-Date:   Thu, 26 Nov 2020 10:10:51 +0800
-Message-ID: <20201126021059.11981-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20201126021059.11981-1-pkshih@realtek.com>
-References: <20201126021059.11981-1-pkshih@realtek.com>
+        Thu, 26 Nov 2020 00:01:32 -0500
+Received: from mail-eopbgr110130.outbound.protection.outlook.com ([40.107.11.130]:17565
+        "EHLO GBR01-CWL-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725846AbgKZFBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Nov 2020 00:01:31 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Zg8IlNqjt/qW+NipdHelqjdbWWb3z+H6kbOQuQJFznh1mAUWE/v+VgYWDVnXBLVJXFaPXRN2jwFoDg9R11QJ7yh3g4sV6JW9DwUk3+iwmAW0RcLYi2SlxnN1lhfT+x+M6vkHsDbnXqSrhXgxBC58ru4mq9yKKwQ9umVhHKyh5wZwIWmGunRgOay9Ev1sk1daCgZskU0bZPu/sA0IGMQiFyXOGNB+isq1OhHhS7FzJzyid5oDIyb6gfQh8Q4HFPoH2iZ7qKvxYPyz1ljWv2tZbaK8NUki4IIA8OGh2WGrCClQsofowX0ccII+gAff/gaNXj2oD3YMeuoJDS7eZUi45g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qHYrsIFQP6xLkBg6mg8RoMXOyIYUJyyshQMi5sz0Bb8=;
+ b=gGrNQ1nm/2Hdq9nXFq0lV+fya5oc9VmdGgn2PtJL2yFz5SiilotYxGyHJnrJBC2UC7ihkFKlLVPHxcT22Znkr8HUHZeZRozwMRU3k1UpQwNUxYSIZsvokvYJexK7Li3qc/S3a8xwGTCj6ungUgXrBDwn3QTSNwlei+l4pudmfwz9Nw3+M0jA0BzYC6RiToMdDraSamVQzVgTGsL2jfD3rMIo6QiJnx5dq071C8lBH/P0+MorNFnDLIGAA/7T+63dD4VWc/38QQcAh60xWIYsoukY4SX3vyt1Gj9p3nSmlG0Mg0fKaHO9u4fo0mh/LClP/bsl/m6Joo93fpwQM1XPZw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=purelifi.com; dmarc=pass action=none header.from=purelifi.com;
+ dkim=pass header.d=purelifi.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=purevlc.onmicrosoft.com; s=selector2-purevlc-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qHYrsIFQP6xLkBg6mg8RoMXOyIYUJyyshQMi5sz0Bb8=;
+ b=qB0bxE2zBXn69m0UzGj733pYaVbEcTSEkGfUfJbYcNCEbVF4pL9bO0IVDO5U0WwZcEMYfyaLT1zysG3wIEm1i8wvgKYSX756YBhmxaX1WtneYcMB7yNsa9QzZWg5ZdpglRB04okXSKB/2adWFq8qDq++jm93HaPTdnDaAGYScyk=
+Received: from CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:3a::14)
+ by CWLP265MB0435.GBRP265.PROD.OUTLOOK.COM (2603:10a6:401:18::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3589.20; Thu, 26 Nov
+ 2020 05:01:28 +0000
+Received: from CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f8b6:b3c:d651:2dde]) by CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f8b6:b3c:d651:2dde%7]) with mapi id 15.20.3611.022; Thu, 26 Nov 2020
+ 05:01:28 +0000
+From:   Srinivasan Raju <srini.raju@purelifi.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     Mostafa Afgani <mostafa.afgani@purelifi.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] [v7] wireless: Initial driver submission for pureLiFi STA
+ devices
+Thread-Topic: [PATCH] [v7] wireless: Initial driver submission for pureLiFi
+ STA devices
+Thread-Index: AQHWu/oh8T+esyecpUerAB1FdPgUnqnXaMIAgAKA/Dg=
+Date:   Thu, 26 Nov 2020 05:01:28 +0000
+Message-ID: <CWXP265MB17998453F1460D55FA667E51E0F90@CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM>
+References: <20201116092253.1302196-1-srini.raju@purelifi.com>,<20201124144448.4E95EC43460@smtp.codeaurora.org>
+In-Reply-To: <20201124144448.4E95EC43460@smtp.codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none
+ header.from=purelifi.com;
+x-originating-ip: [106.203.70.227]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 2963f816-652f-4b58-5fe5-08d891c8553f
+x-ms-traffictypediagnostic: CWLP265MB0435:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <CWLP265MB0435CEE6696F848D39FF200FE0F90@CWLP265MB0435.GBRP265.PROD.OUTLOOK.COM>
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: NBJOmsUTv1thfZFUL6qILglOXyFQehkhrhs4gcUwnawbMw77C/egmvZWphDG00URS3NZUzLMEEt5+Gq6YDWSDneGb0q7UI/q7BfUp65muxzg5YKtHxLEgNWimJunJeJbnwkCNB80qX0FJW/Z2SLAQtFWX0yG2tMSZwfUYaYTH98fUBypkxvG659NDCr3g07MbFOnceJJ6fM3kROaJKZmVaDe9s4421tj5VMc0VrtJaZ66ahPzDsuIS5dVvJhoXVmFEDHWECYqHxwGaJEqJplLN6xBdlHkOkwx4HC9Ii3nmVnOVs/TTdeZzOAB4L2uQBZe3X3Id1sllr9nMTA+8iqefpnVQDNfhnY9LyAEsHipmOvlEYDcdtlSwvFkVgykSLAuFbaUvX0oYaMeHWN9IWXfw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(6029001)(4636009)(396003)(366004)(376002)(39830400003)(346002)(136003)(186003)(8936002)(4326008)(71200400001)(83380400001)(26005)(7696005)(76116006)(6916009)(478600001)(33656002)(2906002)(86362001)(9686003)(4744005)(55016002)(966005)(66946007)(52536014)(64756008)(316002)(8676002)(6506007)(66476007)(66446008)(54906003)(5660300002)(66556008)(55236004)(91956017);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: mbqPLqMYYctQ6WYmhBYEWf0qoHtnbjGeeiI7fGaqsxd7GbXcfH3N49b3jj9WgD1+/pQFGc2JmDHhlELLZofeU2BwapjXR9zlXBdbLuw3WugCFkUs0xS9X8DMFCJfhIoqqzlzy6x9aNHFqzLOB+40zsQ3qlukuV/upRTrZir/KW1UFvBI7tR19t/TPjKR/0uZWnVFxzRL0UbGobx4WYa618JBs3Hjeu6f1d2D8ibklqNZCEYKm2aG1T6OLuAXevR10VXhSdmTepWHn2vjElgTV/QMIP1Gxk41G+sH1wILoA5JtTZ91o3MIm19QBUWgzX9lm7LQuwW62epJpxnfH8rIp53I7k9ECv0L+g5OADjQtLCo6vEdGYLyi6xMyn7OZ0sm9WlmLyhbCJFBpaOgw4l3jqaIhUcjnU32aRY+zz07+F5vTbl4kB3cSXb9ia+tz8DtUjztvU454vokUe/CTWutP3j0xv8sKcgjDq9Ca+N/yzKAl6L1vnbU1k9Fsdzx9g+FTh5elavjo81ei2vaW+kX12ojAkFbIQ3RCtup2P1pRX5pRK84nulc4ABs81wX8rrqiuT71aSxXa63g7e3K3ljnhh7Sfx6D5NATuBtYwr0lS8+N85mpMxMsRq1Nok26hV7XqTZxC88ZqqMa/upS9MRrFG3ysW6m0fGAX8+HYAO+TII4Jr1Z0LctL/dw9Ts2k2lChTlRV/lMBDA3h+2UNJboXHvFsoH469KbEff+EzeK01wvcLklr/3qP+EkDKIW757UV3q3ZOkiQmaV0aJnjaxT7/gENy+yRegC+55U0+fo6lwwH5gfn03VJMDa1c3Tn7/G+h54HD2jed2ioT+sAcNsPwoLPyCJ0h6yimD8YIs1ig2KQ1HfyJlFITsfibwz9ky74o2XmacPL/oPERcCX7HA==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+X-OriginatorOrg: purelifi.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2963f816-652f-4b58-5fe5-08d891c8553f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Nov 2020 05:01:28.1722
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5cf4eba2-7b8f-4236-bed4-a2ac41f1a6dc
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: +4HFlZNe34CZH+/6dJguqbbvy4UL7JNoEi8J+AgBqN5//dRPNpDbes9Svn561eeLiN19ZhH98RaFZ5fs2SbJNA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB0435
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
-
-Add message for debugging usage and the program flow is no change.
-Add a variable reserved for WLAN firmware synchronize.
-Add a group of variable to save BT packet counter, it will be
-assigned as mechanism judgment in the future. Now it is just for
-debug usage.
-
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/coex.c  | 131 +++++++++++++++++++--
- drivers/net/wireless/realtek/rtw88/debug.c |  23 ++++
- drivers/net/wireless/realtek/rtw88/debug.h |   1 +
- drivers/net/wireless/realtek/rtw88/main.h  |   5 +
- 4 files changed, 150 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 7b69c7b01e22..33fef8530db7 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -8,6 +8,7 @@
- #include "ps.h"
- #include "debug.h"
- #include "reg.h"
-+#include "phy.h"
- 
- static u8 rtw_coex_next_rssi_state(struct rtw_dev *rtwdev, u8 pre_state,
- 				   u8 rssi, u8 rssi_thresh)
-@@ -349,6 +350,10 @@ static void rtw_coex_check_rfk(struct rtw_dev *rtwdev)
- 			if (!btk && !wlk)
- 				break;
- 
-+			rtw_dbg(rtwdev, RTW_DBG_COEX,
-+				"[BTCoex], (Before Ant Setup) wlk = %d, btk = %d\n",
-+				wlk, btk);
-+
- 			mdelay(COEX_MIN_DELAY);
- 		} while (++cnt < wait_cnt);
- 
-@@ -1054,7 +1059,8 @@ static void rtw_coex_tdma(struct rtw_dev *rtwdev, bool force, u32 tcase)
- 	coex_dm->cur_ps_tdma_on = turn_on;
- 	coex_dm->cur_ps_tdma = type;
- 
--	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], coex tdma type (%d)\n", type);
-+	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], coex tdma type(%s, %d)\n",
-+		turn_on ? "on" : "off", type);
- }
- 
- static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
-@@ -3016,6 +3022,81 @@ static const char *rtw_coex_get_reason_string(u8 reason)
- 	}
- }
- 
-+static u8 rtw_coex_get_table_index(struct rtw_dev *rtwdev, u32 wl_reg_6c0,
-+				   u32 wl_reg_6c4)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u8 ans = 0xFF;
-+	u8 n, i;
-+	u32 load_bt_val;
-+	u32 load_wl_val;
-+	bool share_ant = efuse->share_ant;
-+
-+	if (share_ant)
-+		n = chip->table_sant_num;
-+	else
-+		n = chip->table_nsant_num;
-+
-+	for (i = 0; i < n; i++) {
-+		if (share_ant) {
-+			load_bt_val = chip->table_sant[i].bt;
-+			load_wl_val = chip->table_sant[i].wl;
-+		} else {
-+			load_bt_val = chip->table_nsant[i].bt;
-+			load_wl_val = chip->table_nsant[i].wl;
-+		}
-+
-+		if (wl_reg_6c0 == load_bt_val &&
-+		    wl_reg_6c4 == load_wl_val) {
-+			ans = i;
-+			if (!share_ant)
-+				ans += 100;
-+			break;
-+		}
-+	}
-+
-+	return ans;
-+}
-+
-+static u8 rtw_coex_get_tdma_index(struct rtw_dev *rtwdev, u8 *tdma_para)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u8 ans = 0xFF;
-+	u8 n, i, j;
-+	u8 load_cur_tab_val;
-+	bool valid = false;
-+	bool share_ant = efuse->share_ant;
-+
-+	if (share_ant)
-+		n = chip->tdma_sant_num;
-+	else
-+		n = chip->tdma_nsant_num;
-+
-+	for (i = 0; i < n; i++) {
-+		valid = false;
-+		for (j = 0; j < 5; j++) {
-+			if (share_ant)
-+				load_cur_tab_val = chip->tdma_sant[i].para[j];
-+			else
-+				load_cur_tab_val = chip->tdma_nsant[i].para[j];
-+
-+			if (*(tdma_para + j) != load_cur_tab_val)
-+				break;
-+
-+			if (j == 4)
-+				valid = true;
-+		}
-+		if (valid) {
-+			ans = i;
-+			break;
-+		}
-+	}
-+
-+	return ans;
-+}
-+
- static int rtw_coex_addr_info(struct rtw_dev *rtwdev,
- 			      const struct rtw_reg_domain *reg,
- 			      char addr_info[], int n)
-@@ -3305,6 +3386,13 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 	bt_lo_pri = rtw_read32(rtwdev, REG_BT_ACT_STATISTICS_1);
- 	rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL,
- 		   BIT_R_GRANTALL_WLMASK | BIT_STATIS_BT_EN);
-+
-+	coex_stat->hi_pri_tx = FIELD_GET(MASKLWORD, bt_hi_pri);
-+	coex_stat->hi_pri_rx = FIELD_GET(MASKHWORD, bt_hi_pri);
-+
-+	coex_stat->lo_pri_tx = FIELD_GET(MASKLWORD, bt_lo_pri);
-+	coex_stat->lo_pri_rx = FIELD_GET(MASKHWORD, bt_lo_pri);
-+
- 	sys_lte = rtw_read8(rtwdev, 0x73);
- 	lte_coex = rtw_coex_read_indirect_reg(rtwdev, 0x38);
- 	bt_coex = rtw_coex_read_indirect_reg(rtwdev, 0x54);
-@@ -3356,15 +3444,17 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 		   coex_stat->bt_slave ? "Slave" : "Master",
- 		   coex_stat->cnt_bt[COEX_CNT_BT_ROLESWITCH],
- 		   coex_dm->ignore_wl_act);
--	seq_printf(m, "%-40s = %u.%u/ 0x%x/ %c\n",
--		   "WL FW/ BT FW/ KT",
-+	seq_printf(m, "%-40s = %u.%u/ 0x%x/ 0x%x/ %c\n",
-+		   "WL FW/ BT FW/ BT FW Desired/ KT",
- 		   fw->version, fw->sub_version,
--		   coex_stat->patch_ver, coex_stat->kt_ver + 65);
-+		   coex_stat->patch_ver,
-+		   chip->wl_fw_desired_ver, coex_stat->kt_ver + 65);
- 	seq_printf(m, "%-40s = %u/ %u/ %u/ ch-(%u)\n",
- 		   "AFH Map",
- 		   coex_dm->wl_ch_info[0], coex_dm->wl_ch_info[1],
- 		   coex_dm->wl_ch_info[2], hal->current_channel);
- 
-+	rtw_debugfs_get_simple_phy_info(m);
- 	seq_printf(m, "**********************************************\n");
- 	seq_printf(m, "\t\tBT Status\n");
- 	seq_printf(m, "**********************************************\n");
-@@ -3408,8 +3498,8 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 		   score_board_WB, score_board_BW);
- 	seq_printf(m, "%-40s = %u/%u, %u/%u\n",
- 		   "Hi-Pri TX/RX, Lo-Pri TX/RX",
--		   bt_hi_pri & 0xffff, bt_hi_pri >> 16,
--		   bt_lo_pri & 0xffff, bt_lo_pri >> 16);
-+		   coex_stat->hi_pri_tx, coex_stat->hi_pri_rx,
-+		   coex_stat->lo_pri_tx, coex_stat->lo_pri_rx);
- 	for (i = 0; i < COEX_BTINFO_SRC_BT_IQK; i++)
- 		seq_printf(m, "%-40s = %7ph\n",
- 			   rtw_coex_get_bt_info_src_string(i),
-@@ -3438,9 +3528,11 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 		seq_printf(m, "**********************************************\n");
- 		seq_printf(m, "\t\tMechanism (Under Manual)\n");
- 		seq_printf(m, "**********************************************\n");
--		seq_printf(m, "%-40s = %5ph\n",
-+		seq_printf(m, "%-40s = %5ph (%d)\n",
- 			   "TDMA Now",
--			   coex_dm->fw_tdma_para);
-+			   coex_dm->fw_tdma_para,
-+			   rtw_coex_get_tdma_index(rtwdev,
-+						   &coex_dm->fw_tdma_para[0]));
- 	} else {
- 		seq_printf(m, "**********************************************\n");
- 		seq_printf(m, "\t\tMechanism\n");
-@@ -3454,9 +3546,11 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 		   rtw_coex_get_wl_coex_mode(coex_stat->wl_coex_mode),
- 		   coex->freerun ? "Yes" : "No",
- 		   coex_stat->tdma_timer_base);
--	seq_printf(m, "%-40s = %d/ 0x%08x/ 0x%08x/ 0x%08x\n",
-+	seq_printf(m, "%-40s = %d(%d)/ 0x%08x/ 0x%08x/ 0x%08x\n",
- 		   "Table/ 0x6c0/ 0x6c4/ 0x6c8",
--		   coex_dm->cur_table, wl_reg_6c0, wl_reg_6c4, wl_reg_6c8);
-+		   coex_dm->cur_table,
-+		   rtw_coex_get_table_index(rtwdev, wl_reg_6c0, wl_reg_6c4),
-+		   wl_reg_6c0, wl_reg_6c4, wl_reg_6c8);
- 	seq_printf(m, "%-40s = 0x%08x/ 0x%08x/ %d/ reason (%s)\n",
- 		   "0x778/ 0x6cc/ Run Count/ Reason",
- 		   wl_reg_778, wl_reg_6cc,
-@@ -3520,5 +3614,22 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 		   coex_stat->wl_noisy_level);
- 
- 	rtw_coex_set_coexinfo_hw(rtwdev, m);
-+	seq_printf(m, "%-40s = %d/ %d/ %d/ %d\n",
-+		   "EVM A/ EVM B/ SNR A/ SNR B",
-+		   -dm_info->rx_evm_dbm[RF_PATH_A],
-+		   -dm_info->rx_evm_dbm[RF_PATH_B],
-+		   -dm_info->rx_snr[RF_PATH_A],
-+		   -dm_info->rx_snr[RF_PATH_B]);
-+	seq_printf(m, "%-40s = %d/ %d/ %d/ %d\n",
-+		   "CCK-CCA/CCK-FA/OFDM-CCA/OFDM-FA",
-+		   dm_info->cck_cca_cnt, dm_info->cck_fa_cnt,
-+		   dm_info->ofdm_cca_cnt, dm_info->ofdm_fa_cnt);
-+	seq_printf(m, "%-40s = %d/ %d/ %d/ %d\n", "CRC OK CCK/11g/11n/11ac",
-+		   dm_info->cck_ok_cnt, dm_info->ofdm_ok_cnt,
-+		   dm_info->ht_ok_cnt, dm_info->vht_ok_cnt);
-+	seq_printf(m, "%-40s = %d/ %d/ %d/ %d\n", "CRC Err CCK/11g/11n/11ac",
-+		   dm_info->cck_err_cnt, dm_info->ofdm_err_cnt,
-+		   dm_info->ht_err_cnt, dm_info->vht_err_cnt);
-+
- }
- #endif /* CONFIG_RTW88_DEBUGFS */
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 5974a8ef8b34..3344ac92a094 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -617,6 +617,29 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
- 	return 0;
- }
- 
-+void rtw_debugfs_get_simple_phy_info(struct seq_file *m)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_traffic_stats *stats = &rtwdev->stats;
-+
-+	seq_printf(m, "%-40s = %ddBm/ %d\n", "RSSI/ STA Channel",
-+		   dm_info->rssi[RF_PATH_A] - 100, hal->current_channel);
-+
-+	seq_printf(m, "TP {Tx, Rx} = {%u, %u}Mbps\n",
-+		   stats->tx_throughput, stats->rx_throughput);
-+
-+	seq_puts(m, "[Tx Rate] = ");
-+	rtw_print_rate(m, dm_info->tx_rate);
-+	seq_printf(m, "(0x%x)\n", dm_info->tx_rate);
-+
-+	seq_puts(m, "[Rx Rate] = ");
-+	rtw_print_rate(m, dm_info->curr_rx_rate);
-+	seq_printf(m, "(0x%x)\n", dm_info->curr_rx_rate);
-+}
-+
- static int rtw_debugfs_get_phy_info(struct seq_file *m, void *v)
- {
- 	struct rtw_debugfs_priv *debugfs_priv = m->private;
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
-index a0f36f29b4a6..e16e0da26e77 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.h
-+++ b/drivers/net/wireless/realtek/rtw88/debug.h
-@@ -26,6 +26,7 @@ enum rtw_debug_mask {
- #ifdef CONFIG_RTW88_DEBUGFS
- 
- void rtw_debugfs_init(struct rtw_dev *rtwdev);
-+void rtw_debugfs_get_simple_phy_info(struct seq_file *m);
- 
- #else
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 3941aea51f9c..af5f2024251b 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1198,6 +1198,7 @@ struct rtw_chip_info {
- 	const struct coex_5g_afh_map *afh_5g;
- 	const struct rtw_hw_reg *btg_reg;
- 	const struct rtw_reg_domain *coex_info_hw_regs;
-+	u32 wl_fw_desired_ver;
- };
- 
- enum rtw_coex_bt_state_cnt {
-@@ -1333,6 +1334,10 @@ struct rtw_coex_stat {
- 
- 	u32 bt_supported_version;
- 	u32 bt_supported_feature;
-+	u32 hi_pri_tx;
-+	u32 hi_pri_rx;
-+	u32 lo_pri_tx;
-+	u32 lo_pri_rx;
- 	u32 patch_ver;
- 	u16 bt_reg_vendor_ae;
- 	u16 bt_reg_vendor_ac;
--- 
-2.21.0
-
+=0A=
+=0A=
+> I haven't had a chance to review this yet but we have some documentation =
+for new drivers:=0A=
+=0A=
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches#new_driver=0A=
+=0A=
+> Is the firmware publically available?=0A=
+=0A=
+Thanks Kalle, We will make the firmware available in our website for public=
+ access and share the details.=0A=
+=0A=
+Regards=0A=
+Srini=0A=
+=0A=
