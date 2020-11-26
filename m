@@ -7,72 +7,73 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEF2C64E75
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80254C56202
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 061BD206F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 392DD21D40
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="V+CXrilh"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xBOLAMT2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390147AbgKZNcB (ORCPT
+        id S2390140AbgKZNcC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57010 "EHLO
+        Thu, 26 Nov 2020 08:32:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390139AbgKZNcA (ORCPT
+        with ESMTP id S2390166AbgKZNcB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:00 -0500
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D167AC0613D4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:58 -0800 (PST)
-Received: by mail-wr1-x441.google.com with SMTP id 64so2137642wra.11
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:58 -0800 (PST)
+        Thu, 26 Nov 2020 08:32:01 -0500
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A21FC061A04
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:01 -0800 (PST)
+Received: by mail-wr1-x444.google.com with SMTP id 23so2153487wrc.8
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=rWq4EIZLBdjUFDSSQaVD1PvQUVhVWlX38rMGrIxZmlM=;
-        b=V+CXrilhjwCj4T6b2gK0G4kHB+E9WqcoPWO5sHkAO0mYwGJDTwIKysOOcMPrQ7g4ta
-         cgZqRm+8L40GIBDP4lC95hryiFriui4GgqEk74cX0RearQVcu/fZv0jdkebEovrh3S5w
-         QOW0o82Y4quszQIyb2K9ghJYZIrSe3PXLdd0UL8taINAjjHr3PxIvAtZjMm9fwuvmIwe
-         /pGplvmZGDlkOkwfcbkOgZxiY5LuPGM+0Y7Csf5cfKX1JDQKjhiTmMaZmmETXFKVnT/9
-         L7qYG3+8mCXHRtjWiQzM1HZx/jwM0EtEMLuuWOCVIjV1GpewSlC8w+BMGxy7y1na56NG
-         S+cA==
+        bh=pe1vvImQ7xpypNGQYr/8kYE+GlHAALRJwr38y3BS0kA=;
+        b=xBOLAMT2rxgj5d8ZVuygANtH/u7cqIQ2rtvXsxN80c1/PNXJdJuE9AHeYuk4sIxvv3
+         qTwwKuam/qGYC1DCc6FmQ04FVDKi77XAw+D665o0Gr7JSzyerUsJPUwMUM+vrFEPMPeG
+         Wdr266+x9VNUdOvWvukF8kT/hm3/HkIL1IoirrPMVNeJKDGMU+E3QlsY43rOkgsQs6U9
+         Z3nNnponPf30Euwdd855q9CAUxoieKkGed0HvGZKvDHSytU73fZEnXu3tAfC4jenSXJT
+         LoQVXsKBhb4YIMu9sIIV1/VwJAHxOFcDkBpTLvJXMX70Z0QyJZQMHM3tQwnW5jmv4OwX
+         ES3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=rWq4EIZLBdjUFDSSQaVD1PvQUVhVWlX38rMGrIxZmlM=;
-        b=a259P+cfaC4nG3BGX688Fblox6oloq4q0MTFBB/6CmW/DAUtvwR3MSCEjusFo/HzP/
-         9UPnuPXINth5rz1LXxrmILZwoX7c9Vq88tcKoXb9sSiBJ8rDxKNUikEnJG4MMt/WjAtR
-         OZv2rvBTQxQ5CxZahwhR3M9x0N1zPmCMLm2H0w2yVji1ST83cN/Pw4xhXqT0R8wbsPrG
-         1F8X7bXyJkVjSQ9Rl1ivRR9BaIHkRiARElmBsWCmNsM3MUvX9/w9cWJGmSKLSQrmdep/
-         FQkeo9CYvAp7C+S5IzWG6lKchdzi9nK7giiXRiumb7mo1GSOFA4reHPFo+k5lW8TpsI1
-         eCVw==
-X-Gm-Message-State: AOAM533Qw77o+9ugS+5ABgSKn0wx62NkzAB/05rhI9mqdG4mPvakmVaN
-        Kyv+asR5Sn8SkMstYplUC42Pzw==
-X-Google-Smtp-Source: ABdhPJxVDvRwfMlc/6PaK6IE8voRoyyugVPW9/0sd4X8zJjnzLg8wrJ4D/LuejkqlVFimEpIiqR6Qw==
-X-Received: by 2002:adf:ed11:: with SMTP id a17mr3919828wro.197.1606397517455;
-        Thu, 26 Nov 2020 05:31:57 -0800 (PST)
+        bh=pe1vvImQ7xpypNGQYr/8kYE+GlHAALRJwr38y3BS0kA=;
+        b=ZKCCDWIe10uwa9RfkUFUDWYkHEk6x0WS+M8WPkLzN4A7Oz6z6zjW5oZ6nOvz+2j6Uo
+         0475q31fOlh73/Dl8zcjaP6sh29imVuS9XTmN5rn3mHazBse3Uu49vE+NjL5S1ZynEnO
+         wuI90vEdTW3BfqTTNTxvrSeN5/35tCqDHyDWBdrl2EtsKLrEONeiRRUghVe9f/xPIXeq
+         t+huLcIdV8i6+nfpQ2JN6/rl8RA8K6hc+lGUr9aN1YJLwmq2f0lp2VRzHRNjBCrLPRY9
+         dI7xZS9xmrFT8LbAwkvd0G+xmBWbW0c75ClQrE93Jn+CnhJcnQzXXoTQOjrSq5qwxG3Q
+         7mNQ==
+X-Gm-Message-State: AOAM531cm/vHSY86RzkN18wv86BrCbuV/un+6P96eJ9wRQIuAZF1MtLK
+        TgBUV7fgogN1WvtO0dOexU1lGA==
+X-Google-Smtp-Source: ABdhPJxU0k27+S9FFyEpO4PYw+TEqfEtY7HcfAz7bX3DOUuHdz/ZMMuwnj2b8t9DmNE6pxyhUoIWbA==
+X-Received: by 2002:a5d:474f:: with SMTP id o15mr3963541wrs.100.1606397520142;
+        Thu, 26 Nov 2020 05:32:00 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.31.56
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.31.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:31:56 -0800 (PST)
+        Thu, 26 Nov 2020 05:31:59 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
-Cc:     linux-kernel@vger.kernel.org, Maya Erez <merez@codeaurora.org>,
+Cc:     linux-kernel@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH 01/17] wil6210: wmi: Correct misnamed function parameter 'ptr_'
-Date:   Thu, 26 Nov 2020 13:31:36 +0000
-Message-Id: <20201126133152.3211309-2-lee.jones@linaro.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 03/17] ath9k: ar9330_1p1_initvals: Remove unused const variable 'ar9331_common_tx_gain_offset1_1'
+Date:   Thu, 26 Nov 2020 13:31:38 +0000
+Message-Id: <20201126133152.3211309-4-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
 References: <20201126133152.3211309-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -80,34 +81,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Function parameter or member 'ptr_' not described in 'wmi_buffer_block'
- drivers/net/wireless/ath/wil6210/wmi.c:279: warning: Excess function parameter 'ptr' description in 'wmi_buffer_block'
+ drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h:1013:18: warning: ‘ar9331_common_tx_gain_offset1_1’ defined but not used [-Wunused-const-variable=]
 
-Cc: Maya Erez <merez@codeaurora.org>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: linux-wireless@vger.kernel.org
-Cc: wil6210@qti.qualcomm.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 421aebbb49e54..8699f8279a8be 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -262,7 +262,7 @@ struct fw_map *wil_find_fw_mapping(const char *section)
- /**
-  * Check address validity for WMI buffer; remap if needed
-  * @wil: driver data
-- * @ptr: internal (linker) fw/ucode address
-+ * @ptr_: internal (linker) fw/ucode address
-  * @size: if non zero, validate the block does not
-  *  exceed the device memory (bar)
-  *
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+index 29479afbc4f10..3e783fc13553b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+@@ -1010,11 +1010,4 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a1fc, 0x00000296},
+ };
+ 
+-static const u32 ar9331_common_tx_gain_offset1_1[][1] = {
+-	{0x00000000},
+-	{0x00000003},
+-	{0x00000000},
+-	{0x00000000},
+-};
+-
+ #endif /* INITVALS_9330_1P1_H */
 -- 
 2.25.1
 
