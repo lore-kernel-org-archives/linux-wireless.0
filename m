@@ -7,101 +7,83 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B6DC8300F
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C293C83017
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0652F206F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21938206F7
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IJKrKLXl"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Q8jkVen1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389775AbgKZNc2 (ORCPT
+        id S2390273AbgKZNcw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57132 "EHLO
+        Thu, 26 Nov 2020 08:32:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390345AbgKZNcU (ORCPT
+        with ESMTP id S2390282AbgKZNcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:20 -0500
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67800C0613D4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:19 -0800 (PST)
-Received: by mail-wr1-x443.google.com with SMTP id e7so2160181wrv.6
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:19 -0800 (PST)
+        Thu, 26 Nov 2020 08:32:12 -0500
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2804DC061A4F
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:11 -0800 (PST)
+Received: by mail-wr1-x441.google.com with SMTP id u12so2184160wrt.0
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=WOPpp6HIgOcad1W0yfFfa1/Wy9WX17Rmpe1tMayS4HI=;
-        b=IJKrKLXlEdbjjcRCFvRL1iTnWYhhIqcjEsenkEgZGOdVW7caoAQZPdSzf9q+0TDL1R
-         Rv54vzF/hbcPiBYkShfjFH+xCa/L24Iq5UV3X7aMzmfSmnl2NZ+Hfy0SAlQbpzRDhAVR
-         6TCbs6gTAUplQFlusL7f/X2ITdQ33zUI+qVN5ngvGv6NSNR8vpN1QYy9KV/rufaGf69O
-         331G6hx/qanbzDNjYqHtmsPDTPtzVPSH/Gl/X/Dnw1baucosDCBK3CrHKXzBYnvTkGdA
-         D01pqh/BUgXlQsfdMoyDGnRHPDSJ/tHaysYsqYlxraLeHDEfUF+lTQ+vdkrSfjrc5T2c
-         AP6Q==
+        bh=OcBd80NlVbn3uGSdfGXvocYKOP7aRNETXFKMl2YiPGc=;
+        b=Q8jkVen12XCoRGnL4iPurJx+25LwQnN4rkU8WQh9kxbtbsrgsycqNffe2qOGBYR+7C
+         Svfqh6UT2eGQdJXGyNyslkVr/NuOXoGtaDzSUcNQ3uptyIFnbW+fO3wzISfc1qaQsjJi
+         5vZlttAaVI5n5zE874WJack/ZatNl3cE9nZWW+B4v04noSvn3CuzseQtPkQTXoF5QSS9
+         eVRsopl+s0zomc541bDr63PewFZ8NVmVKt8HuY1l1P5/DW/m1U8JXu/MWptu1wjCpjwR
+         abJII0TpdSoGv/qiXv3CZY+vSNLU8netmmGJxdMR4phDapNWTVDvBCXciVvU75IRIFcM
+         8i8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WOPpp6HIgOcad1W0yfFfa1/Wy9WX17Rmpe1tMayS4HI=;
-        b=XmkrLbzmY1AR3O7vW5X214XXBCat4Xk8Upm1+5hnDujLgS8z+tN+2bgZDhk7d/eqy7
-         0FtWd7icBNQUau07zqH0awZvrKjnjPa1F2Ur1qaCf52T/N8PdS1qhkxwUjtdt3cBGHmt
-         xi5YFCX6hstrxAj8/fugAfkmSe2WvIQF8wlAzJ3aGCrwKLkHpk8shw9vivjH/RPtfz7O
-         STNOMdy4G0qZBHq2WTxRXzcOjeH2AGKpt+85CYg0zzPiBxiK4VT3TMDkiZZEkU/s0L3j
-         hjb6Irz5pqkD2XgjvvLla3Td8B8hWWA5THx9GZUmZDZZiEcZZ6nRLmD4NGMr+7PjdZI/
-         CQVQ==
-X-Gm-Message-State: AOAM5319/LwDhc/oOBdZAXNBLby5P0TWK5mpRjSPJTt+4UuXNefABlbO
-        HZBdQHosE6RaU6COBKWiY9eslA==
-X-Google-Smtp-Source: ABdhPJz5JanrQA5T2e5MhcTaKmi3Rr5awkz/j5dYdTosg06LwfkbLMK27zcgfXcL/8U30DN6fFHbeQ==
-X-Received: by 2002:a5d:4cca:: with SMTP id c10mr3890245wrt.176.1606397538176;
-        Thu, 26 Nov 2020 05:32:18 -0800 (PST)
+        bh=OcBd80NlVbn3uGSdfGXvocYKOP7aRNETXFKMl2YiPGc=;
+        b=uIdgmwLuR/9y3jwYswri9w7EOq/v5bmm3ibov3VQvGlchTU4IMwp1ddSJjR95Ba0ci
+         PabXDLh74Xz6TFN8ybC4dpTqMEsmnZtRFZcpLg+poxV7M8rvZi1XFP0pXapnfRBPGktf
+         MTB6rNBTwN9wRWW5gVM5OR745nvGXIoriLyX2h+Q5AkuJFhRaqW/WeAE5TOO5zr2lZ1F
+         R97w7zy+qHXda64gD6KRNIbnLp9hf6cMlkt5ZtFGPMU2wtFI7iP1gdbIV56PSzO5BtYI
+         wScZbTLCLWzjGR7Kzpr1OzXLmg4fJtdP7v5njwMvpxZ4fZ5BiCOAdy+JvoKdleBCpLIA
+         d5OQ==
+X-Gm-Message-State: AOAM533xZ24jxq2BlxXEMr6SDLIx0NvWfQYg/Xwr0lKO3Io6gSuahrqw
+        VFCloLH8bh26QAVrf4QERgXeYQ==
+X-Google-Smtp-Source: ABdhPJwzkmAeb05I5tYzBStx7l2lOPLol3d3q+SROPVuSSvfSZQoLVYS2QldMxZ2jqVYNhsvFPWSTw==
+X-Received: by 2002:adf:fc49:: with SMTP id e9mr3872317wrs.31.1606397529940;
+        Thu, 26 Nov 2020 05:32:09 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.16
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:32:17 -0800 (PST)
+        Thu, 26 Nov 2020 05:32:09 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 17/17] realtek: rtw88: pci: Add prototypes for .probe, .remove and .shutdown
-Date:   Thu, 26 Nov 2020 13:31:52 +0000
-Message-Id: <20201126133152.3211309-18-lee.jones@linaro.org>
+Subject: [PATCH 11/17] ath: dfs_pattern_detector: Fix some function kernel-doc headers
+Date:   Thu, 26 Nov 2020 13:31:46 +0000
+Message-Id: <20201126133152.3211309-12-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
 References: <20201126133152.3211309-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Also strip out other duplicates from driver specific headers.
-
-Ensure 'main.h' is explicitly included in 'pci.h' since the latter
-uses some defines from the former.  It avoids issues like:
-
- from drivers/net/wireless/realtek/rtw88/rtw8822be.c:5:
- drivers/net/wireless/realtek/rtw88/pci.h:209:28: error: ‘RTK_MAX_TX_QUEUE_NUM’ undeclared here (not in a function); did you mean ‘RTK_MAX_RX_DESC_NUM’?
- 209 | DECLARE_BITMAP(tx_queued, RTK_MAX_TX_QUEUE_NUM);
- | ^~~~~~~~~~~~~~~~~~~~
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/realtek/rtw88/pci.c:1488:5: warning: no previous prototype for ‘rtw_pci_probe’ [-Wmissing-prototypes]
- 1488 | int rtw_pci_probe(struct pci_dev *pdev,
- | ^~~~~~~~~~~~~
- drivers/net/wireless/realtek/rtw88/pci.c:1568:6: warning: no previous prototype for ‘rtw_pci_remove’ [-Wmissing-prototypes]
- 1568 | void rtw_pci_remove(struct pci_dev *pdev)
- | ^~~~~~~~~~~~~~
- drivers/net/wireless/realtek/rtw88/pci.c:1590:6: warning: no previous prototype for ‘rtw_pci_shutdown’ [-Wmissing-prototypes]
- 1590 | void rtw_pci_shutdown(struct pci_dev *pdev)
- | ^~~~~~~~~~~~~~~~
+ drivers/net/wireless/ath/dfs_pattern_detector.c:34: warning: Function parameter or member 'region' not described in 'radar_types'
+ drivers/net/wireless/ath/dfs_pattern_detector.c:141: warning: Function parameter or member 'region' not described in 'get_dfs_domain_radar_types'
+ drivers/net/wireless/ath/dfs_pattern_detector.c:239: warning: Function parameter or member 'dpd' not described in 'channel_detector_get'
+ drivers/net/wireless/ath/dfs_pattern_detector.c:239: warning: Function parameter or member 'freq' not described in 'channel_detector_get'
 
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
@@ -109,151 +91,48 @@ Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/net/wireless/realtek/rtw88/pci.h       | 8 ++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723de.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8723de.h | 4 ----
- drivers/net/wireless/realtek/rtw88/rtw8821ce.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8821ce.h | 4 ----
- drivers/net/wireless/realtek/rtw88/rtw8822be.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8822be.h | 4 ----
- drivers/net/wireless/realtek/rtw88/rtw8822ce.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8822ce.h | 4 ----
- 9 files changed, 12 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index ca17aa9cf7dc7..cda56919a5f0f 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -5,6 +5,8 @@
- #ifndef __RTK_PCI_H_
- #define __RTK_PCI_H_
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 0813473793df1..80390495ea250 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -23,7 +23,7 @@
  
-+#include "main.h"
-+
- #define RTK_DEFAULT_TX_DESC_NUM 128
- #define RTK_BEQ_TX_DESC_NUM	256
+ /**
+  * struct radar_types - contains array of patterns defined for one DFS domain
+- * @domain: DFS regulatory domain
++ * @region: regulatory DFS region
+  * @num_radar_types: number of radar types to follow
+  * @radar_types: radar types array
+  */
+@@ -133,8 +133,9 @@ static const struct radar_types *dfs_domains[] = {
  
-@@ -212,6 +214,12 @@ struct rtw_pci {
- 	void __iomem *mmap;
- };
+ /**
+  * get_dfs_domain_radar_types() - get radar types for a given DFS domain
+- * @param domain DFS domain
+- * @return radar_types ptr on success, NULL if DFS domain is not supported
++ * @region: regulatory DFS region
++ *
++ * Return value: radar_types ptr on success, NULL if DFS domain is not supported
+  */
+ static const struct radar_types *
+ get_dfs_domain_radar_types(enum nl80211_dfs_regions region)
+@@ -227,9 +228,10 @@ channel_detector_create(struct dfs_pattern_detector *dpd, u16 freq)
  
-+const struct dev_pm_ops rtw_pm_ops;
-+
-+int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
-+void rtw_pci_remove(struct pci_dev *pdev);
-+void rtw_pci_shutdown(struct pci_dev *pdev);
-+
- static inline u32 max_num_of_tx_queue(u8 queue)
- {
- 	u32 max_num;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.c b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
-index c81eb4c336425..2dd689441e8dc 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723de.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
-@@ -4,6 +4,7 @@
- 
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include "pci.h"
- #include "rtw8723de.h"
- 
- static const struct pci_device_id rtw_8723de_id_table[] = {
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.h b/drivers/net/wireless/realtek/rtw88/rtw8723de.h
-index ba3842360c20a..2b4894846a07f 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723de.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.h
-@@ -5,10 +5,6 @@
- #ifndef __RTW_8723DE_H_
- #define __RTW_8723DE_H_
- 
--extern const struct dev_pm_ops rtw_pm_ops;
- extern struct rtw_chip_info rtw8723d_hw_spec;
--int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
--void rtw_pci_remove(struct pci_dev *pdev);
--void rtw_pci_shutdown(struct pci_dev *pdev);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
-index 616fdcfd62c98..f34de115e4bc4 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
-@@ -4,6 +4,7 @@
- 
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include "pci.h"
- #include "rtw8821ce.h"
- 
- static const struct pci_device_id rtw_8821ce_id_table[] = {
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821ce.h b/drivers/net/wireless/realtek/rtw88/rtw8821ce.h
-index 8d3eb77a876be..54142acca5344 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821ce.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821ce.h
-@@ -5,10 +5,6 @@
- #ifndef __RTW_8821CE_H_
- #define __RTW_8821CE_H_
- 
--extern const struct dev_pm_ops rtw_pm_ops;
- extern struct rtw_chip_info rtw8821c_hw_spec;
--int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
--void rtw_pci_remove(struct pci_dev *pdev);
--void rtw_pci_shutdown(struct pci_dev *pdev);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822be.c b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
-index 921916ae15cab..62ee7e62cac02 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822be.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
-@@ -4,6 +4,7 @@
- 
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include "pci.h"
- #include "rtw8822be.h"
- 
- static const struct pci_device_id rtw_8822be_id_table[] = {
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822be.h b/drivers/net/wireless/realtek/rtw88/rtw8822be.h
-index d823ca059f5c9..6668460d664da 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822be.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822be.h
-@@ -5,10 +5,6 @@
- #ifndef __RTW_8822BE_H_
- #define __RTW_8822BE_H_
- 
--extern const struct dev_pm_ops rtw_pm_ops;
- extern struct rtw_chip_info rtw8822b_hw_spec;
--int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
--void rtw_pci_remove(struct pci_dev *pdev);
--void rtw_pci_shutdown(struct pci_dev *pdev);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-index 026ac49ce6e3c..3845b1333dc39 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-@@ -4,6 +4,7 @@
- 
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include "pci.h"
- #include "rtw8822ce.h"
- 
- static const struct pci_device_id rtw_8822ce_id_table[] = {
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.h b/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-index c2c0e8675d742..fee32d7a45047 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-@@ -5,10 +5,6 @@
- #ifndef __RTW_8822CE_H_
- #define __RTW_8822CE_H_
- 
--extern const struct dev_pm_ops rtw_pm_ops;
- extern struct rtw_chip_info rtw8822c_hw_spec;
--int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
--void rtw_pci_remove(struct pci_dev *pdev);
--void rtw_pci_shutdown(struct pci_dev *pdev);
- 
- #endif
+ /**
+  * channel_detector_get() - get channel detector for given frequency
+- * @param dpd instance pointer
+- * @param freq frequency in MHz
+- * @return pointer to channel detector on success, NULL otherwise
++ * @dpd: DPD instance pointer
++ * @freq: freq frequency in MHz
++ *
++ * Return value: pointer to channel detector on success, NULL otherwise
+  *
+  * Return existing channel detector for the given frequency or return a
+  * newly create one.
 -- 
 2.25.1
 
