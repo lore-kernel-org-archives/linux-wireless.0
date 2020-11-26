@@ -2,210 +2,165 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C38CC64E7A
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 706E9C64E8A
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68C91206F7
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1965121D40
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 13:33:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Aw2WYKq1"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kui+NaCL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390191AbgKZNcE (ORCPT
+        id S2390124AbgKZNb6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:32:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57042 "EHLO
+        Thu, 26 Nov 2020 08:31:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390181AbgKZNcD (ORCPT
+        with ESMTP id S2390038AbgKZNb5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Nov 2020 08:32:03 -0500
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A55BBC061A04
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:02 -0800 (PST)
-Received: by mail-wm1-x341.google.com with SMTP id x22so2151511wmc.5
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:32:02 -0800 (PST)
+        Thu, 26 Nov 2020 08:31:57 -0500
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 984F7C0617A7
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:57 -0800 (PST)
+Received: by mail-wr1-x441.google.com with SMTP id l1so2153327wrb.9
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2020 05:31:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=L4fJoUFxGOk+wlfr5ygIh+H6VB2oPqLC6DAqdYBw8oE=;
-        b=Aw2WYKq1L/griid++8JF9wR9uLQT6UtxMjUKV9cH/VDrZrkFV8Ja738dkzE3vgDHRR
-         7N+bYJQ0do35QUMtouhdzFDaHlk+UkuTp3kWnJ3vf2UfN1uV/ieLrCxa6fgVzASC9tij
-         Y3i+VFWMTUw+kBS2HUvxKUx8H0ub0PABDw1CWOhBihutsU18bfD4eQ6l+pZJRCYAmcMy
-         H76zBUVnMykjeRjNuVb6MZhKQC92kQVZgErGOEga/sOInBG8+O0tvVuRqypGPRCCEUKn
-         6b9Y6Ql6awQ7JfnvPC0VF0EP9jlvn6E10/0WCyxbyYdCfOvOKSV89ubkxdzbs6OUfxNZ
-         cIRw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FjyZA9I7yFOBEtCbfXIU5SHh6pLoJjT44roAa80KCLE=;
+        b=kui+NaCLN8lc8tkXHcRKVcWIXN1GenHm8MR/KyQxUoqmwBQASP6Wzz4F+S98Gbww6S
+         uMkaVbYtvpQhdcfRATgZj3RtNAV1dF3sN5HKSbW4D6F/DCOQ6f35lr/WVFT1BL3JRiLl
+         TjIqW/pcucuIAO4/d6VaM7dpUfbdGrKOvJfYAVhwKxizQ6P57pWbpGdLcQIf1ZG3V9QB
+         TpbMc5QtXYKmej4JoRVX73e696RaoK0BV+Ne+LBq5koGtg1nsWNHhbOdoiE6aoCc4IjZ
+         iNSQsZD71qbJCXSwno6zDHNoPpP73ZMZa7CxfuTxIYIrtQ1FKq75+uWCl7O0KcpVOZg8
+         JSUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=L4fJoUFxGOk+wlfr5ygIh+H6VB2oPqLC6DAqdYBw8oE=;
-        b=eBxEdsQuwmBB554Q+x6SJseNRX3TWq4hhvWw3+/ofa7HLrkLhKiM5NrkEb3rUYV7at
-         PETP3xv+PjJQJOnxi332tFeUL9FnVnNGD/pBxcwsm7ECAqpMOdCDka6iIue1bV8IqlCl
-         KVha4MkBP+q3TM4u6q1v75kbCG/K7TWlgkZMq/kyKe6DYhQfxgwM5Tt2DutSknJocKsI
-         sC7fSzI3xMVxB1PPuyT1gtQC896KTW2aiZUyP3EnB+jQRzTpBJT3Rd2TQMbIiN1jBvDe
-         VnOriI2l0I87ePY3PgBK8+XA7aUPMO8oUcsY8ugZLPwY+DiC2Et63B/VYtvPQZkrppdB
-         y8/w==
-X-Gm-Message-State: AOAM5307kfcR/NV4zHVeZlFbI/N+2VeVuPoKDZqSMBajrGczl37ctjN0
-        CAAMH0g2or5yylZp6NOddC8Z6Q==
-X-Google-Smtp-Source: ABdhPJy97q3E2AwuqJAG4sXcv+kfnq8gVuIPFYr/QoI5SgFTD5S88BxH+XNiZZqoBdHXgyoC4KLr3g==
-X-Received: by 2002:a1c:2d47:: with SMTP id t68mr3494436wmt.148.1606397521363;
-        Thu, 26 Nov 2020 05:32:01 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FjyZA9I7yFOBEtCbfXIU5SHh6pLoJjT44roAa80KCLE=;
+        b=PIKn1ELqGgDpgsGhCEuG6SBwem2eGrfZpMbpSflmYPuG6lisPGoljTC21yTxW45jFE
+         V9mtMIF+dvA1MhF7MJXJs10q2ub/Q3uBcq1J1yjI30vxpR8h8Lz8kckzRDyDdqVW52tR
+         r1jmnBZKntiY967DHhI9m+1xziDgEJq1E6FHQsYgK9EDOUn3lzbCGMS6fwR47KW8bP0k
+         fEzJl6njoz1z0aSybpIEy7UFSwu2HOwdN5ZXbespuO9bhumIUPDwH/U8OIXRw5gTOi5Y
+         IUo7wcjJafViT5b6YGf4pPeDNWhJ5E2FDtYfXpATc/6Ujumu081IrdUqpDDkoDq0wxy9
+         XixQ==
+X-Gm-Message-State: AOAM533HVLH41LZYLoQlMqSANUh2SxuSn/M+brcgj0rJ95IT5/JkMtm3
+        38nE6Z55Txqmx2uK3GGlEAFU9g==
+X-Google-Smtp-Source: ABdhPJy+4ikTycM8ES5sSh18sX7zJcCpn462tjHqy3xH4ycrddEim8OyKqRzwP/kujYArGxZN2fefQ==
+X-Received: by 2002:adf:a3ca:: with SMTP id m10mr3936515wrb.228.1606397516281;
+        Thu, 26 Nov 2020 05:31:56 -0800 (PST)
 Received: from dell.default ([91.110.221.235])
-        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.32.00
+        by smtp.gmail.com with ESMTPSA id n10sm8701001wrv.77.2020.11.26.05.31.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 05:32:00 -0800 (PST)
+        Thu, 26 Nov 2020 05:31:55 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org, kvalo@codeaurora.org
 Cc:     linux-kernel@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
         "David S. Miller" <davem@davemloft.net>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 04/17] ath9k: ar9340_initvals: Remove unused const variable 'ar9340Modes_ub124_tx_gain_table_1p0'
-Date:   Thu, 26 Nov 2020 13:31:39 +0000
-Message-Id: <20201126133152.3211309-5-lee.jones@linaro.org>
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maya Erez <merez@codeaurora.org>, netdev@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        wil6210@qti.qualcomm.com, Yan-Hsuan Chuang <yhchuang@realtek.com>
+Subject: [PATCH v2 00/17] [Set 4] Rid W=1 warnings in Wireless
+Date:   Thu, 26 Nov 2020 13:31:35 +0000
+Message-Id: <20201126133152.3211309-1-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201126133152.3211309-1-lee.jones@linaro.org>
-References: <20201126133152.3211309-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+[Last batch!]
 
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h:624:18: warning: ‘ar9340Modes_ub124_tx_gain_table_1p0’ defined but not used [-Wunused-const-variable=]
+This set is part of a larger effort attempting to clean-up W=1
+kernel builds, which are currently overwhelmingly riddled with
+niggly little warnings.
 
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
+v2:
+ - Unify rtw_pci_(probe,remove,shutdown}() prototypses
+   - Suggested-by: Brian Norris
+
+Lee Jones (17):
+  wil6210: wmi: Correct misnamed function parameter 'ptr_'
+  iwlwifi: mvm: rs: Demote non-conformant function documentation headers
+  ath9k: ar9330_1p1_initvals: Remove unused const variable
+    'ar9331_common_tx_gain_offset1_1'
+  ath9k: ar9340_initvals: Remove unused const variable
+    'ar9340Modes_ub124_tx_gain_table_1p0'
+  ath9k: ar9485_initvals: Remove unused const variable
+    'ar9485_fast_clock_1_1_baseband_postamble'
+  ath9k: ar9003_2p2_initvals: Remove unused const variables
+  iwlwifi: iwl-eeprom-read: Demote one nonconformant function header
+  iwlwifi: iwl-eeprom-parse: Fix 'struct iwl_eeprom_enhanced_txpwr's
+    header
+  ath: regd: Provide description for ath_reg_apply_ir_flags's 'reg'
+    param
+  ath9k: ar5008_phy: Demote half completed function headers
+  ath: dfs_pattern_detector: Fix some function kernel-doc headers
+  ath: dfs_pri_detector: Demote zero/half completed kernel-doc headers
+  iwlwifi: iwl-phy-db: Add missing struct member description for 'trans'
+  iwlwifi: fw: dbg: Fix misspelling of 'reg_data' in function header
+  ath9k: dynack: Demote non-compliant function header
+  iwlwifi: fw: acpi: Demote non-conformant function headers
+  realtek: rtw88: pci: Add prototypes for .probe, .remove and .shutdown
+
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   |  15 +--
+ .../wireless/ath/ath9k/ar9003_2p2_initvals.h  |  14 ---
+ .../wireless/ath/ath9k/ar9330_1p1_initvals.h  |   7 --
  .../net/wireless/ath/ath9k/ar9340_initvals.h  | 101 ------------------
- 1 file changed, 101 deletions(-)
+ .../net/wireless/ath/ath9k/ar9485_initvals.h  |   7 --
+ drivers/net/wireless/ath/ath9k/dynack.c       |   3 +-
+ .../net/wireless/ath/dfs_pattern_detector.c   |  14 +--
+ drivers/net/wireless/ath/dfs_pri_detector.c   |   9 +-
+ drivers/net/wireless/ath/regd.c               |   1 +
+ drivers/net/wireless/ath/wil6210/wmi.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  12 +--
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   2 +-
+ .../wireless/intel/iwlwifi/iwl-eeprom-parse.c |  12 +--
+ .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |   2 +-
+ .../net/wireless/intel/iwlwifi/iwl-phy-db.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  10 +-
+ drivers/net/wireless/realtek/rtw88/pci.h      |   8 ++
+ .../net/wireless/realtek/rtw88/rtw8723de.c    |   1 +
+ .../net/wireless/realtek/rtw88/rtw8723de.h    |   4 -
+ .../net/wireless/realtek/rtw88/rtw8821ce.c    |   1 +
+ .../net/wireless/realtek/rtw88/rtw8821ce.h    |   4 -
+ .../net/wireless/realtek/rtw88/rtw8822be.c    |   1 +
+ .../net/wireless/realtek/rtw88/rtw8822be.h    |   4 -
+ .../net/wireless/realtek/rtw88/rtw8822ce.c    |   1 +
+ .../net/wireless/realtek/rtw88/rtw8822ce.h    |   4 -
+ 25 files changed, 50 insertions(+), 191 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-index 2eb163fc1c18f..3da4ea564148c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-@@ -621,107 +621,6 @@ static const u32 ar9340Modes_high_ob_db_tx_gain_table_1p0[][5] = {
- 	{0x00016448, 0x8e481666, 0x8e481666, 0x8e481266, 0x8e481266},
- };
- 
--static const u32 ar9340Modes_ub124_tx_gain_table_1p0[][5] = {
--	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
--	{0x00009820, 0x206a022e, 0x206a022e, 0x206a00ae, 0x206a00ae},
--	{0x00009830, 0x0000059c, 0x0000059c, 0x0000059c, 0x0000059c},
--	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec82d2e, 0x7ec82d2e},
--	{0x0000a2dc, 0xfef5d402, 0xfef5d402, 0xfdab5b52, 0xfdab5b52},
--	{0x0000a2e0, 0xfe896600, 0xfe896600, 0xfd339c84, 0xfd339c84},
--	{0x0000a2e4, 0xff01f800, 0xff01f800, 0xfec3e000, 0xfec3e000},
--	{0x0000a2e8, 0xfffe0000, 0xfffe0000, 0xfffc0000, 0xfffc0000},
--	{0x0000a410, 0x000050d8, 0x000050d8, 0x000050d9, 0x000050d9},
--	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
--	{0x0000a504, 0x04002222, 0x04002222, 0x04000002, 0x04000002},
--	{0x0000a508, 0x09002421, 0x09002421, 0x08000004, 0x08000004},
--	{0x0000a50c, 0x0d002621, 0x0d002621, 0x0b000200, 0x0b000200},
--	{0x0000a510, 0x13004620, 0x13004620, 0x0f000202, 0x0f000202},
--	{0x0000a514, 0x19004a20, 0x19004a20, 0x11000400, 0x11000400},
--	{0x0000a518, 0x1d004e20, 0x1d004e20, 0x15000402, 0x15000402},
--	{0x0000a51c, 0x21005420, 0x21005420, 0x19000404, 0x19000404},
--	{0x0000a520, 0x26005e20, 0x26005e20, 0x1b000603, 0x1b000603},
--	{0x0000a524, 0x2b005e40, 0x2b005e40, 0x1f000a02, 0x1f000a02},
--	{0x0000a528, 0x2f005e42, 0x2f005e42, 0x23000a04, 0x23000a04},
--	{0x0000a52c, 0x33005e44, 0x33005e44, 0x26000a20, 0x26000a20},
--	{0x0000a530, 0x38005e65, 0x38005e65, 0x2a000e20, 0x2a000e20},
--	{0x0000a534, 0x3c005e69, 0x3c005e69, 0x2e000e22, 0x2e000e22},
--	{0x0000a538, 0x40005e6b, 0x40005e6b, 0x31000e24, 0x31000e24},
--	{0x0000a53c, 0x44005e6d, 0x44005e6d, 0x34001640, 0x34001640},
--	{0x0000a540, 0x49005e72, 0x49005e72, 0x38001660, 0x38001660},
--	{0x0000a544, 0x4e005eb2, 0x4e005eb2, 0x3b001861, 0x3b001861},
--	{0x0000a548, 0x53005f12, 0x53005f12, 0x3e001a81, 0x3e001a81},
--	{0x0000a54c, 0x59025eb5, 0x59025eb5, 0x42001a83, 0x42001a83},
--	{0x0000a550, 0x5e025f12, 0x5e025f12, 0x44001c84, 0x44001c84},
--	{0x0000a554, 0x61027f12, 0x61027f12, 0x48001ce3, 0x48001ce3},
--	{0x0000a558, 0x6702bf12, 0x6702bf12, 0x4c001ce5, 0x4c001ce5},
--	{0x0000a55c, 0x6b02bf14, 0x6b02bf14, 0x50001ce9, 0x50001ce9},
--	{0x0000a560, 0x6f02bf16, 0x6f02bf16, 0x54001ceb, 0x54001ceb},
--	{0x0000a564, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a568, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a56c, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a570, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a574, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a578, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a57c, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a580, 0x00802220, 0x00802220, 0x00800000, 0x00800000},
--	{0x0000a584, 0x04802222, 0x04802222, 0x04800002, 0x04800002},
--	{0x0000a588, 0x09802421, 0x09802421, 0x08800004, 0x08800004},
--	{0x0000a58c, 0x0d802621, 0x0d802621, 0x0b800200, 0x0b800200},
--	{0x0000a590, 0x13804620, 0x13804620, 0x0f800202, 0x0f800202},
--	{0x0000a594, 0x19804a20, 0x19804a20, 0x11800400, 0x11800400},
--	{0x0000a598, 0x1d804e20, 0x1d804e20, 0x15800402, 0x15800402},
--	{0x0000a59c, 0x21805420, 0x21805420, 0x19800404, 0x19800404},
--	{0x0000a5a0, 0x26805e20, 0x26805e20, 0x1b800603, 0x1b800603},
--	{0x0000a5a4, 0x2b805e40, 0x2b805e40, 0x1f800a02, 0x1f800a02},
--	{0x0000a5a8, 0x2f805e42, 0x2f805e42, 0x23800a04, 0x23800a04},
--	{0x0000a5ac, 0x33805e44, 0x33805e44, 0x26800a20, 0x26800a20},
--	{0x0000a5b0, 0x38805e65, 0x38805e65, 0x2a800e20, 0x2a800e20},
--	{0x0000a5b4, 0x3c805e69, 0x3c805e69, 0x2e800e22, 0x2e800e22},
--	{0x0000a5b8, 0x40805e6b, 0x40805e6b, 0x31800e24, 0x31800e24},
--	{0x0000a5bc, 0x44805e6d, 0x44805e6d, 0x34801640, 0x34801640},
--	{0x0000a5c0, 0x49805e72, 0x49805e72, 0x38801660, 0x38801660},
--	{0x0000a5c4, 0x4e805eb2, 0x4e805eb2, 0x3b801861, 0x3b801861},
--	{0x0000a5c8, 0x53805f12, 0x53805f12, 0x3e801a81, 0x3e801a81},
--	{0x0000a5cc, 0x59825eb2, 0x59825eb2, 0x42801a83, 0x42801a83},
--	{0x0000a5d0, 0x5e825f12, 0x5e825f12, 0x44801c84, 0x44801c84},
--	{0x0000a5d4, 0x61827f12, 0x61827f12, 0x48801ce3, 0x48801ce3},
--	{0x0000a5d8, 0x6782bf12, 0x6782bf12, 0x4c801ce5, 0x4c801ce5},
--	{0x0000a5dc, 0x6b82bf14, 0x6b82bf14, 0x50801ce9, 0x50801ce9},
--	{0x0000a5e0, 0x6f82bf16, 0x6f82bf16, 0x54801ceb, 0x54801ceb},
--	{0x0000a5e4, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5e8, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5ec, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f0, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f4, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f8, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5fc, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x00016044, 0x03b6d2e4, 0x03b6d2e4, 0x03b6d2e4, 0x03b6d2e4},
--	{0x00016048, 0x8e480086, 0x8e480086, 0x8e480086, 0x8e480086},
--	{0x00016444, 0x03b6d2e4, 0x03b6d2e4, 0x03b6d2e4, 0x03b6d2e4},
--	{0x00016448, 0x8e480086, 0x8e480086, 0x8e480086, 0x8e480086},
--	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a610, 0x00804000, 0x00804000, 0x00000000, 0x00000000},
--	{0x0000a614, 0x00804201, 0x00804201, 0x01404000, 0x01404000},
--	{0x0000a618, 0x0280c802, 0x0280c802, 0x01404501, 0x01404501},
--	{0x0000a61c, 0x0280ca03, 0x0280ca03, 0x02008501, 0x02008501},
--	{0x0000a620, 0x04c15104, 0x04c15104, 0x0280ca03, 0x0280ca03},
--	{0x0000a624, 0x04c15305, 0x04c15305, 0x03010c04, 0x03010c04},
--	{0x0000a628, 0x04c15305, 0x04c15305, 0x04014c04, 0x04014c04},
--	{0x0000a62c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a630, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a634, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a638, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a63c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0xfef5d402, 0xfef5d402, 0xfdab5b52, 0xfdab5b52},
--	{0x0000b2e0, 0xfe896600, 0xfe896600, 0xfd339c84, 0xfd339c84},
--	{0x0000b2e4, 0xff01f800, 0xff01f800, 0xfec3e000, 0xfec3e000},
--	{0x0000b2e8, 0xfffe0000, 0xfffe0000, 0xfffc0000, 0xfffc0000},
--};
--
- static const u32 ar9340Modes_low_ob_db_tx_gain_table_1p0[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Maya Erez <merez@codeaurora.org>
+Cc: netdev@vger.kernel.org
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Cc: wil6210@qti.qualcomm.com
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 -- 
 2.25.1
 
