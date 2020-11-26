@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C68D2C64E75
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2386C63798
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 02:12:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7981C20B1F
+	by mail.kernel.org (Postfix) with ESMTP id 4A22B2075A
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Nov 2020 02:12:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733020AbgKZCM2 (ORCPT
+        id S1732947AbgKZCM1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Nov 2020 21:12:28 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60684 "EHLO
+        Wed, 25 Nov 2020 21:12:27 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60672 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732940AbgKZCM1 (ORCPT
+        with ESMTP id S1732902AbgKZCM1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 25 Nov 2020 21:12:27 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AQ2CK2s8030312, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0AQ2CLVz8030333, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AQ2CK2s8030312
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0AQ2CLVz8030333
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 26 Nov 2020 10:12:20 +0800
+        Thu, 26 Nov 2020 10:12:21 +0800
 Received: from localhost.localdomain (172.21.69.213) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2044.4; Thu, 26 Nov 2020 10:12:19 +0800
+ 15.1.2044.4; Thu, 26 Nov 2020 10:12:21 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <tony0620emma@gmail.com>, <ku920601@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 01/10] rtw88: coex: run coexistence when WLAN entering/leaving LPS
-Date:   Thu, 26 Nov 2020 10:10:50 +0800
-Message-ID: <20201126021059.11981-2-pkshih@realtek.com>
+Subject: [PATCH v2 08/10] rtw88: coex: add action for coexistence in hardware initial
+Date:   Thu, 26 Nov 2020 10:10:57 +0800
+Message-ID: <20201126021059.11981-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20201126021059.11981-1-pkshih@realtek.com>
 References: <20201126021059.11981-1-pkshih@realtek.com>
@@ -53,30 +53,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-When WLAN entering or leaving, it's necessary to run coexistence mechanism
-to ensure the setting matched current status.
-Without calling rtw_coex_run_coex(), WLAN poor throughput or bad A2DP
-quality may happen.
+The original setting misses some necessary configuration.
+Make coexistence slot align to beacon and check the connection situation
+to know if we need to extend WLAN slot or not.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/realtek/rtw88/coex.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 4bb0d373c862..7b69c7b01e22 100644
+index eab5529e6764..f1f12ff0797b 100644
 --- a/drivers/net/wireless/realtek/rtw88/coex.c
 +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -2476,6 +2476,8 @@ void rtw_coex_lps_notify(struct rtw_dev *rtwdev, u8 type)
+@@ -2448,11 +2448,19 @@ static void rtw_coex_init_coex_var(struct rtw_dev *rtwdev)
+ static void __rtw_coex_init_hw_config(struct rtw_dev *rtwdev, bool wifi_only)
+ {
+ 	struct rtw_coex *coex = &rtwdev->coex;
++	struct rtw_coex_stat *coex_stat = &coex->stat;
  
- 		if (!coex_stat->wl_force_lps_ctrl)
- 			rtw_coex_query_bt_info(rtwdev);
+ 	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], %s()\n", __func__);
+ 
+ 	rtw_coex_init_coex_var(rtwdev);
 +
-+		rtw_coex_run_coex(rtwdev, COEX_RSN_LPS);
- 	}
++	coex_stat->kt_ver = u8_get_bits(rtw_read8(rtwdev, 0xf1), GENMASK(7, 4));
++
+ 	rtw_coex_monitor_bt_enable(rtwdev);
++	rtw_coex_wl_slot_extend(rtwdev, coex_stat->wl_slot_extend);
++
++	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
++
+ 	rtw_coex_set_rfe_type(rtwdev);
+ 	rtw_coex_set_init(rtwdev);
+ 
+@@ -2515,6 +2523,7 @@ void rtw_coex_power_on_setting(struct rtw_dev *rtwdev)
+ 	rtw_coex_table(rtwdev, true, table_case);
+ 	/* red x issue */
+ 	rtw_write8(rtwdev, 0xff1a, 0x0);
++	rtw_coex_set_gnt_debug(rtwdev);
  }
  
+ void rtw_coex_init_hw_config(struct rtw_dev *rtwdev, bool wifi_only)
 -- 
 2.21.0
 
