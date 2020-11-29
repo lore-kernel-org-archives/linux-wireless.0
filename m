@@ -7,80 +7,67 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 452ECC64E90
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A94DC5519F
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DB2520705
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB07120855
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727973AbgK2NPi (ORCPT
+        id S1727879AbgK2NPc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 08:15:38 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33412 "EHLO
+        Sun, 29 Nov 2020 08:15:32 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33400 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727739AbgK2NPe (ORCPT
+        with ESMTP id S1727739AbgK2NPc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Nov 2020 08:15:34 -0500
+        Sun, 29 Nov 2020 08:15:32 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjMXO-0035gF-Ot; Sun, 29 Nov 2020 15:14:47 +0200
+        id 1kjMXN-0035gF-5A; Sun, 29 Nov 2020 15:14:45 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 15:14:33 +0200
-Message-Id: <iwlwifi.20201129151117.c9a9cbef4a09.Ic7df63c617f79b7e6a95a510c51b3516bba5599f@changeid>
+Date:   Sun, 29 Nov 2020 15:14:31 +0200
+Message-Id: <iwlwifi.20201129151117.69231238667c.I04c6d012d9244a73261685f8fc797a26e5c961d6@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129131442.1857561-1-luca@coelho.fi>
 References: <20201129131442.1857561-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 03/12] iwlwifi: yoyo: align the write pointer to DWs
+Subject: [PATCH 01/12] iwlwifi: remove all queue resources before free
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rotem Saado <rotem.saado@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-from AX210 generation the write pointer is in Bytes.
-to be align with all previous HWs convert it DWs.
+Currently calling iwl_txq_dyn_free only deletes the queue memory/DMA
+but any active timers are not dealt with.
 
-Signed-off-by: Rotem Saado <rotem.saado@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c     | 5 +++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 ++
- 2 files changed, 7 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 579c1929729e..185c1d893b52 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1662,6 +1662,11 @@ iwl_dump_ini_mon_fill_header(struct iwl_fw_runtime *fwrt,
- 
- 	data->write_ptr = iwl_get_mon_reg(fwrt, alloc_id,
- 					  &addrs->write_ptr);
-+	if (fwrt->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
-+		u32 wrt_ptr = le32_to_cpu(data->write_ptr);
-+
-+		data->write_ptr = cpu_to_le32(wrt_ptr >> 2);
-+	}
- 	data->cycle_cnt = iwl_get_mon_reg(fwrt, alloc_id,
- 					  &addrs->cycle_cnt);
- 	data->cur_frag = iwl_get_mon_reg(fwrt, alloc_id,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index d2e69ad53b27..8fd85ebf1b35 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3115,6 +3115,8 @@ iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
- 		fw_mon_data->fw_mon_base_high_ptr =
- 			cpu_to_le32(iwl_read_prph(trans, base_high));
- 		write_ptr_val &= DBGC_CUR_DBGBUF_STATUS_OFFSET_MSK;
-+		/* convert wrtPtr to DWs, to align with all HWs */
-+		write_ptr_val >>= 2;
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+index af0b27a68d84..c107851d345a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+@@ -1311,11 +1311,7 @@ void iwl_txq_dyn_free(struct iwl_trans *trans, int queue)
+ 		return;
  	}
- 	fw_mon_data->fw_mon_wr_ptr = cpu_to_le32(write_ptr_val);
+ 
+-	iwl_txq_gen2_unmap(trans, queue);
+-
+-	iwl_txq_gen2_free_memory(trans, trans->txqs.txq[queue]);
+-
+-	trans->txqs.txq[queue] = NULL;
++	iwl_txq_gen2_free(trans, queue);
+ 
+ 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", queue);
  }
 -- 
 2.29.2
