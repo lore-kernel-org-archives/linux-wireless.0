@@ -7,75 +7,99 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2E4DC3E8C5
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F959C64E7C
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:33:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 790252080C
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:33:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F5912080C
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727893AbgK2Pdf (ORCPT
+        id S1728075AbgK2Pdg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 10:33:35 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33602 "EHLO
+        Sun, 29 Nov 2020 10:33:36 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33606 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726961AbgK2Pdf (ORCPT
+        with ESMTP id S1727716AbgK2Pdg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Nov 2020 10:33:35 -0500
+        Sun, 29 Nov 2020 10:33:36 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjOfI-0035ld-Eb; Sun, 29 Nov 2020 17:31:04 +0200
+        id 1kjOfJ-0035ld-MC; Sun, 29 Nov 2020 17:31:06 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 17:30:52 +0200
-Message-Id: <iwlwifi.20201129172929.b503adccce6a.Ie684e1d3039c111bf2d521bf762aaec3f7a24d2e@changeid>
+Date:   Sun, 29 Nov 2020 17:30:54 +0200
+Message-Id: <iwlwifi.20201129172929.0e2327107c06.I461adb07704e056b054a4a7c29b80c95a9f56637@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129153055.1971298-1-luca@coelho.fi>
 References: <20201129153055.1971298-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/13] ieee80211: update reduced neighbor report TBTT info length
+Subject: [PATCH 12/13] mac80211: disallow band-switch during CSA
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-A new field (20MHz PSD - 1 byte) was added to the RNR TBTT info field.
-Adjust the expected TBTT info length accordingly.
+If the AP advertises a band switch during CSA, we will not have
+the right information to continue working with it, since it will
+likely (have to) change its capabilities and we don't track any
+capability changes at all. Additionally, we store e.g. supported
+rates per band, and that information would become invalid.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Since this is a fringe scenario, just disconnect explicitly.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 9b99a5afe097..37b7dde6173d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -3837,15 +3837,15 @@ static inline bool for_each_element_completed(const struct element *element,
- #define WLAN_RSNX_CAPA_SAE_H2E BIT(5)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6de63ba6b1c8..67829667d394 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1417,6 +1417,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
  
- /*
-- * reduced neighbor report, based on Draft P802.11ax_D5.0,
-- * section 9.4.2.170
-+ * reduced neighbor report, based on Draft P802.11ax_D6.1,
-+ * section 9.4.2.170 and accepted contributions.
-  */
- #define IEEE80211_AP_INFO_TBTT_HDR_TYPE				0x03
- #define IEEE80211_AP_INFO_TBTT_HDR_FILTERED			0x04
- #define IEEE80211_AP_INFO_TBTT_HDR_COLOC			0x08
- #define IEEE80211_AP_INFO_TBTT_HDR_COUNT			0xF0
--#define IEEE80211_TBTT_INFO_OFFSET_BSSID_BSS_PARAM		8
--#define IEEE80211_TBTT_INFO_OFFSET_BSSID_SSSID_BSS_PARAM	12
-+#define IEEE80211_TBTT_INFO_OFFSET_BSSID_BSS_PARAM		9
-+#define IEEE80211_TBTT_INFO_OFFSET_BSSID_SSSID_BSS_PARAM	13
++	if (sdata->vif.bss_conf.chandef.chan->band !=
++	    csa_ie.chandef.chan->band) {
++		sdata_info(sdata,
++			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
++			   ifmgd->associated->bssid,
++			   csa_ie.chandef.chan->center_freq,
++			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
++			   csa_ie.chandef.center_freq2);
++		goto lock_and_drop_connection;
++	}
++
+ 	if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -1429,9 +1440,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
+ 			   csa_ie.chandef.freq1_offset,
+ 			   csa_ie.chandef.center_freq2);
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		return;
++		goto lock_and_drop_connection;
+ 	}
  
- #define IEEE80211_RNR_TBTT_PARAMS_OCT_RECOMMENDED		0x01
- #define IEEE80211_RNR_TBTT_PARAMS_SAME_SSID			0x02
+ 	if (cfg80211_chandef_identical(&csa_ie.chandef,
+@@ -1516,6 +1525,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME((csa_ie.count - 1) *
+ 					 cbss->beacon_interval));
+ 	return;
++ lock_and_drop_connection:
++	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
+  drop_connection:
+ 	/*
+ 	 * This is just so that the disconnect flow will know that
 -- 
 2.29.2
 
