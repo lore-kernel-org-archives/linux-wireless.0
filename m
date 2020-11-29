@@ -7,75 +7,144 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC0CC64E90
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DF9C64E8A
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB01420825
+	by mail.kernel.org (Postfix) with ESMTP id D1CBC2080C
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727973AbgK2Pbt (ORCPT
+        id S1727930AbgK2Pbs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 10:31:49 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33532 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726021AbgK2Pbs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 29 Nov 2020 10:31:48 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33522 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727739AbgK2Pbr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Nov 2020 10:31:47 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjOfF-0035ld-Ae; Sun, 29 Nov 2020 17:31:01 +0200
+        id 1kjOfD-0035ld-UD; Sun, 29 Nov 2020 17:31:00 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 17:30:47 +0200
-Message-Id: <iwlwifi.20201129172929.8228e2be791e.I626c93241fef66bc71aa0cb9719aba1b11232cf1@changeid>
+Date:   Sun, 29 Nov 2020 17:30:45 +0200
+Message-Id: <iwlwifi.20201129172929.fb59be9c6de8.Ife2260887366f585afadd78c983ebea93d2bb54b@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129153055.1971298-1-luca@coelho.fi>
 References: <20201129153055.1971298-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/13] mac80211: Skip entries with SAE H2E only membership selector
+Subject: [PATCH 03/13] mac80211: support MIC error/replay detected counters driver update
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When parsing supported rates IE.
+Support the driver incrementing MIC error and replay detected
+counters when having detected a bad frame, if it drops it directly
+instead of relying on mac80211 to do the checks.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+These are then exposed to userspace, though currently only in some
+cases and in debugfs.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ include/net/mac80211.h | 20 +++++++++++++++++
+ net/mac80211/key.c     | 49 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 69 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b0afb61d9e84..6de63ba6b1c8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3199,8 +3199,8 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
- 			*have_higher_than_11mbit = true;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1328b7166460..2d01280c0564 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5321,6 +5321,26 @@ ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
+ void ieee80211_gtk_rekey_notify(struct ieee80211_vif *vif, const u8 *bssid,
+ 				const u8 *replay_ctr, gfp_t gfp);
  
- 		/*
--		 * Skip HT, VHT and HE BSS membership selectors since they're
--		 * not rates.
-+		 * Skip HT, VHT, HE and SAE H2E only BSS membership selectors
-+		 * since they're not rates.
- 		 *
- 		 * Note: Even though the membership selector and the basic
- 		 *	 rate flag share the same bit, they are not exactly
-@@ -3208,7 +3208,8 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
- 		 */
- 		if (supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HT_PHY) ||
- 		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_VHT_PHY) ||
--		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HE_PHY))
-+		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HE_PHY) ||
-+		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_SAE_H2E))
- 			continue;
- 
- 		for (j = 0; j < sband->n_bitrates; j++) {
++/**
++ * ieee80211_key_mic_failure - increment MIC failure counter for the key
++ *
++ * Note: this is really only safe if no other RX function is called
++ * at the same time.
++ *
++ * @keyconf: the key in question
++ */
++void ieee80211_key_mic_failure(struct ieee80211_key_conf *keyconf);
++
++/**
++ * ieee80211_key_replay - increment replay counter for the key
++ *
++ * Note: this is really only safe if no other RX function is called
++ * at the same time.
++ *
++ * @keyconf: the key in question
++ */
++void ieee80211_key_replay(struct ieee80211_key_conf *keyconf);
++
+ /**
+  * ieee80211_wake_queue - wake specific queue
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 8c5f829ff6d7..a4817aa4b171 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -1300,3 +1300,52 @@ ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
+ 	return &key->conf;
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_gtk_rekey_add);
++
++void ieee80211_key_mic_failure(struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_key *key;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++		key->u.aes_cmac.icverrors++;
++		break;
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++		key->u.aes_gmac.icverrors++;
++		break;
++	default:
++		/* ignore the others for now, we don't keep counters now */
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_key_mic_failure);
++
++void ieee80211_key_replay(struct ieee80211_key_conf *keyconf)
++{
++	struct ieee80211_key *key;
++
++	key = container_of(keyconf, struct ieee80211_key, conf);
++
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		key->u.ccmp.replays++;
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++		key->u.aes_cmac.replays++;
++		break;
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++		key->u.aes_gmac.replays++;
++		break;
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		key->u.gcmp.replays++;
++		break;
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_key_replay);
 -- 
 2.29.2
 
