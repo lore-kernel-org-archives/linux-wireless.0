@@ -7,95 +7,69 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89A78C83012
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCC1C83016
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 517A920829
+	by mail.kernel.org (Postfix) with ESMTP id BF2482080C
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728028AbgK2Pbu (ORCPT
+        id S2387416AbgK2Pb4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 10:31:50 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33540 "EHLO
+        Sun, 29 Nov 2020 10:31:56 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33574 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727739AbgK2Pbt (ORCPT
+        with ESMTP id S2387395AbgK2Pbz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Nov 2020 10:31:49 -0500
+        Sun, 29 Nov 2020 10:31:55 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjOfF-0035ld-Up; Sun, 29 Nov 2020 17:31:02 +0200
+        id 1kjOfJ-0035ld-2G; Sun, 29 Nov 2020 17:31:05 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 17:30:48 +0200
-Message-Id: <iwlwifi.20201129172929.736415a9ca5d.If5b3578ae85e11a707a5da07e66ba85928ba702c@changeid>
+Date:   Sun, 29 Nov 2020 17:30:53 +0200
+Message-Id: <iwlwifi.20201129172929.e1df99693a4c.I494579f28018c2d0b9d4083a664cf872c28405ae@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129153055.1971298-1-luca@coelho.fi>
 References: <20201129153055.1971298-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/13] cfg80211: scan PSC channels in case of scan with wildcard SSID
+Subject: [PATCH 11/13] mac80211: set sdata state once vif is up after restart
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: "Borwankar, Antara" <antara.borwankar@intel.com>
 
-In case of scan request with wildcard SSID, or in case of more
-than one SSID in scan request, need to scan PSC channels even though
-all the co-located APs found during the legacy bands scan indicated
-that all the APs in their ESS are co-located, as we might find different
-networks on the PSC channels.
+On FW recovery mac80211 is supposed to reconfigure the driver.
+In the scanario when vif is of monitor type, after FW assert the vif
+was getting added and channel context was getting created but this
+channel context was not getting assigned to the vif.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+This was fixed by setting the monitor sdata state bit to running once
+the vif is up and running after the virtual monitor is added.
+
+Signed-off-by: Borwankar, Antara <antara.borwankar@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/scan.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ net/mac80211/iface.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 3409f37d838b..5f92d85acf45 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -726,7 +726,7 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
- 	int n_channels, count = 0, err;
- 	struct cfg80211_scan_request *request, *rdev_req = rdev->scan_req;
- 	LIST_HEAD(coloc_ap_list);
--	bool need_scan_psc;
-+	bool need_scan_psc = true;
- 	const struct ieee80211_sband_iftype_data *iftd;
- 
- 	rdev_req->scan_6ghz = true;
-@@ -770,20 +770,18 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
- 		(void *)&request->channels[n_channels];
- 
- 	/*
--	 * PSC channels should not be scanned if all the reported co-located APs
--	 * are indicating that all APs in the same ESS are co-located
-+	 * PSC channels should not be scanned in case of direct scan with 1 SSID
-+	 * and at least one of the reported co-located APs with same SSID
-+	 * indicating that all APs in the same ESS are co-located
- 	 */
--	if (count) {
--		need_scan_psc = false;
--
-+	if (count && request->n_ssids == 1 && request->ssids[0].ssid_len) {
- 		list_for_each_entry(ap, &coloc_ap_list, list) {
--			if (!ap->colocated_ess) {
--				need_scan_psc = true;
-+			if (ap->colocated_ess &&
-+			    cfg80211_find_ssid_match(ap, request)) {
-+				need_scan_psc = false;
- 				break;
- 			}
- 		}
--	} else {
--		need_scan_psc = true;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index f5d4ceb72882..3b9ec4ef81c3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -940,6 +940,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 		return ret;
  	}
  
- 	/*
++	set_bit(SDATA_STATE_RUNNING, &sdata->state);
++
+ 	ret = ieee80211_check_queues(sdata, NL80211_IFTYPE_MONITOR);
+ 	if (ret) {
+ 		kfree(sdata);
 -- 
 2.29.2
 
