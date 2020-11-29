@@ -7,68 +7,73 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A94DC5519F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 771C8C71155
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB07120855
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33083207FF
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 13:15:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727879AbgK2NPc (ORCPT
+        id S1727948AbgK2NPj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 08:15:32 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33400 "EHLO
+        Sun, 29 Nov 2020 08:15:39 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33448 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727739AbgK2NPc (ORCPT
+        with ESMTP id S1727927AbgK2NPi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Nov 2020 08:15:32 -0500
+        Sun, 29 Nov 2020 08:15:38 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjMXN-0035gF-5A; Sun, 29 Nov 2020 15:14:45 +0200
+        id 1kjMXT-0035gF-3X; Sun, 29 Nov 2020 15:14:51 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 15:14:31 +0200
-Message-Id: <iwlwifi.20201129151117.69231238667c.I04c6d012d9244a73261685f8fc797a26e5c961d6@changeid>
+Date:   Sun, 29 Nov 2020 15:14:39 +0200
+Message-Id: <iwlwifi.20201129151117.a651ea399468.Id7a17985f5bf6a03d3850f445ccdc611f97776ce@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129131442.1857561-1-luca@coelho.fi>
 References: <20201129131442.1857561-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/12] iwlwifi: remove all queue resources before free
+Subject: [PATCH 09/12] iwlwifi: mvm: Init error table memory to zero
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Currently calling iwl_txq_dyn_free only deletes the queue memory/DMA
-but any active timers are not dealt with.
+If case we have an error reading FW memory we get garbage (stack old
+data) in the report, so just initialize the table to zero.
 
 Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-index af0b27a68d84..c107851d345a 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-@@ -1311,11 +1311,7 @@ void iwl_txq_dyn_free(struct iwl_trans *trans, int queue)
- 		return;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 3123036978a5..60d972a63577 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -422,7 +422,7 @@ struct iwl_umac_error_event_table {
+ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_trans *trans = mvm->trans;
+-	struct iwl_umac_error_event_table table;
++	struct iwl_umac_error_event_table table = {};
+ 	u32 base = mvm->trans->dbg.umac_error_event_table;
  
--	iwl_txq_gen2_unmap(trans, queue);
--
--	iwl_txq_gen2_free_memory(trans, trans->txqs.txq[queue]);
--
--	trans->txqs.txq[queue] = NULL;
-+	iwl_txq_gen2_free(trans, queue);
+ 	if (!base &&
+@@ -461,7 +461,7 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u8 lmac_num)
+ {
+ 	struct iwl_trans *trans = mvm->trans;
+-	struct iwl_error_event_table table;
++	struct iwl_error_event_table table = {};
+ 	u32 val, base = mvm->trans->dbg.lmac_error_event_table[lmac_num];
  
- 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", queue);
- }
+ 	if (mvm->fwrt.cur_fw_img == IWL_UCODE_INIT) {
 -- 
 2.29.2
 
