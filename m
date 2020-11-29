@@ -7,85 +7,75 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD5EC3E8C5
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC0CC64E90
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 811DA2080C
+	by mail.kernel.org (Postfix) with ESMTP id EB01420825
 	for <linux-wireless@archiver.kernel.org>; Sun, 29 Nov 2020 15:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727676AbgK2Pbq (ORCPT
+        id S1727973AbgK2Pbt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Nov 2020 10:31:46 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33510 "EHLO
+        Sun, 29 Nov 2020 10:31:49 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33532 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726462AbgK2Pbp (ORCPT
+        with ESMTP id S1726021AbgK2Pbs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Nov 2020 10:31:45 -0500
+        Sun, 29 Nov 2020 10:31:48 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kjOfC-0035ld-Ep; Sun, 29 Nov 2020 17:30:59 +0200
+        id 1kjOfF-0035ld-Ae; Sun, 29 Nov 2020 17:31:01 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 29 Nov 2020 17:30:43 +0200
-Message-Id: <iwlwifi.20201129172929.69a7f7753444.I405c4b5245145e24577512c477f19131d4036489@changeid>
+Date:   Sun, 29 Nov 2020 17:30:47 +0200
+Message-Id: <iwlwifi.20201129172929.8228e2be791e.I626c93241fef66bc71aa0cb9719aba1b11232cf1@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201129153055.1971298-1-luca@coelho.fi>
 References: <20201129153055.1971298-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/13] mac80211: he: remove non-bss-conf fields from bss_conf
+Subject: [PATCH 05/13] mac80211: Skip entries with SAE H2E only membership selector
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-ack_enabled and multi_sta_back_32bit are station capabilities
-and should not be in the bss_conf structure.
+When parsing supported rates IE.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/mac80211.h | 2 --
- net/mac80211/mlme.c    | 8 --------
- 2 files changed, 10 deletions(-)
+ net/mac80211/mlme.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 05c7524bab26..1328b7166460 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -635,9 +635,7 @@ struct ieee80211_fils_discovery {
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
- 	u8 htc_trig_based_pkt_ext;
--	bool multi_sta_back_32bit;
- 	bool uora_exists;
--	bool ack_enabled;
- 	u8 uora_ocw_range;
- 	u16 frame_time_rts_th;
- 	bool he_support;
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6adfcb9c06dc..b0afb61d9e84 100644
+index b0afb61d9e84..6de63ba6b1c8 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -3494,14 +3494,6 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 			le32_get_bits(elems->he_operation->he_oper_params,
- 			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
+@@ -3199,8 +3199,8 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+ 			*have_higher_than_11mbit = true;
  
--		bss_conf->multi_sta_back_32bit =
--			sta->sta.he_cap.he_cap_elem.mac_cap_info[2] &
--			IEEE80211_HE_MAC_CAP2_32BIT_BA_BITMAP;
--
--		bss_conf->ack_enabled =
--			sta->sta.he_cap.he_cap_elem.mac_cap_info[2] &
--			IEEE80211_HE_MAC_CAP2_ACK_EN;
--
- 		bss_conf->uora_exists = !!elems->uora_element;
- 		if (elems->uora_element)
- 			bss_conf->uora_ocw_range = elems->uora_element[0];
+ 		/*
+-		 * Skip HT, VHT and HE BSS membership selectors since they're
+-		 * not rates.
++		 * Skip HT, VHT, HE and SAE H2E only BSS membership selectors
++		 * since they're not rates.
+ 		 *
+ 		 * Note: Even though the membership selector and the basic
+ 		 *	 rate flag share the same bit, they are not exactly
+@@ -3208,7 +3208,8 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+ 		 */
+ 		if (supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HT_PHY) ||
+ 		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_VHT_PHY) ||
+-		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HE_PHY))
++		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HE_PHY) ||
++		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_SAE_H2E))
+ 			continue;
+ 
+ 		for (j = 0; j < sband->n_bitrates; j++) {
 -- 
 2.29.2
 
