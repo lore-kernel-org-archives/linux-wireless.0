@@ -7,54 +7,56 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF6EC71156
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Dec 2020 09:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDFBC83011
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Dec 2020 09:42:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B992206C0
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Dec 2020 09:42:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1759120657
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Dec 2020 09:42:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XozkvmYq"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ylnv510t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbgLAJme (ORCPT
+        id S1728318AbgLAJmm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Dec 2020 04:42:34 -0500
-Received: from m42-5.mailgun.net ([69.72.42.5]:16496 "EHLO m42-5.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403788AbgLAJmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Dec 2020 04:42:33 -0500
+        Tue, 1 Dec 2020 04:42:42 -0500
+Received: from a2.mail.mailgun.net ([198.61.254.61]:57507 "EHLO
+        a2.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728301AbgLAJml (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Dec 2020 04:42:41 -0500
+X-Greylist: delayed 348 seconds by postgrey-1.27 at vger.kernel.org; Tue, 01 Dec 2020 04:42:40 EST
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606815726; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1606815739; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=602HHDmxr9CNRookc9zwjbyDEtI4mQ5KbEYSTTdJc6I=; b=XozkvmYqRI41+gjajNRbbL4Kvk0KczTw57vlF1wKZC0ARSAZcop8oY+M/Ijnd9O9+0kwKHEd
- 5pdCSIkgvyu+9J0pn+5sIe4ML/2hSV3DgbVb7yCtsI5IQl8e6QvH0X2+4/HT8k5q1jYgA5wc
- sjY/pWKteZnju11R1VDK25C5I2k=
-X-Mailgun-Sending-Ip: 69.72.42.5
+ bh=vF8VWTbo7+DhmtZhQ/htwI4VDhCc1qaiBNODdZUxA3g=; b=Ylnv510tb3qtSOrhyZ5U9znUpT8zhG97+W3Q0+k6q5XGMAzKJ+pwebNA5aay3zwJwN9V0jSF
+ nUB/ZlMvHyk6ghMf+GAFpNEjtpi/sEUJzLX54PR07Sqm7pzadTuSAEiCfTyGcnk9k8g6buHe
+ CAwx66/jvyZK2m35DUPBo4k1EA0=
+X-Mailgun-Sending-Ip: 198.61.254.61
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
- 5fc60e92e8c9bf49ad39a4df (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Dec 2020 09:36:18
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5fc60e8ee8c9bf49ad39a080 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Dec 2020 09:36:14
  GMT
 Sender: cjhuang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 26041C43461; Tue,  1 Dec 2020 09:36:18 +0000 (UTC)
+        id E1D75C43461; Tue,  1 Dec 2020 09:36:14 +0000 (UTC)
 Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cjhuang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DA43AC433C6;
-        Tue,  1 Dec 2020 09:36:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DA43AC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B00E8C433ED;
+        Tue,  1 Dec 2020 09:36:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B00E8C433ED
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
 From:   Carl Huang <cjhuang@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org, briannorris@chromium.org,
         dianders@chromium.org
-Subject: [PATCH v3 3/3] ath10k: allow dynamic SAR power limits via common API
-Date:   Tue,  1 Dec 2020 04:36:03 -0500
-Message-Id: <20201201093603.4093-4-cjhuang@codeaurora.org>
+Subject: [PATCH v3 1/3] nl80211: add common API to configure SAR power limitations.
+Date:   Tue,  1 Dec 2020 04:36:01 -0500
+Message-Id: <20201201093603.4093-2-cjhuang@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201201093603.4093-1-cjhuang@codeaurora.org>
 References: <20201201093603.4093-1-cjhuang@codeaurora.org>
@@ -62,474 +64,561 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ath10k assigns ath10k_mac_set_sar_specs to ath10k_ops, and
-this function is called when user space application calls
-NL80211_CMD_SET_SAR_SPECS. ath10k also registers SAR type,
-and supported frequency ranges to wiphy so user space can
-query SAR capabilities.
+NL80211_CMD_SET_SAR_SPECS is added to configure SAR from
+user space. NL80211_ATTR_SAR_SPEC is used to pass the SAR
+power specification when used with NL80211_CMD_SET_SAR_SPECS.
 
-This SAR power limitation is compared to regulatory txpower
-and selects the minimal one to set when station is connected.
-Otherwise, it delays until the station is connected. If the
-station is disconnected, it returns to regulatory txpower.
+Wireless driver needs to register SAR type, supported frequency
+ranges to wiphy, so user space can query it. The index in
+frequency range is used to specify which sub band the power
+limitation applies to. The SAR type is for compatibility, so later
+other SAR mechanism can be implemented without breaking the user
+space SAR applications.
 
-This feature is controlled by hw parameter: dynamic_sar_support.
+Normal process is user space quries the SAR capability, and
+gets the index of supported frequency ranges and associates the
+power limitation with this index and sends to kernel.
 
-Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00110-QCARMSWP-1
+Here is an example of message send to kernel:
+8c 00 00 00 08 00 01 00 00 00 00 00 38 00 2b 81
+08 00 01 00 00 00 00 00 2c 00 02 80 14 00 00 80
+08 00 02 00 00 00 00 00 08 00 01 00 38 00 00 00
+14 00 01 80 08 00 02 00 01 00 00 00 08 00 01 00
+48 00 00 00
+
+NL80211_CMD_SET_SAR_SPECS:  0x8c
+NL80211_ATTR_WIPHY:     0x01(phy idx is 0)
+NL80211_ATTR_SAR_SPEC:  0x812b (NLA_NESTED)
+NL80211_SAR_ATTR_TYPE:  0x00 (NL80211_SAR_TYPE_POWER)
+NL80211_SAR_ATTR_SPECS: 0x8002 (NLA_NESTED)
+freq range 0 power: 0x38 in 0.25dbm unit (14dbm)
+freq range 1 power: 0x48 in 0.25dbm unit (18dbm)
 
 Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 ---
 v3:
-- no change
+- check index duplicates. Return error if index duplicates.
 
 v2:
 - rebased on ToT
-- get correct index in ath10k_mac_set_sar_specs
-- fix one output format commented by Abhishek
+- fix spelling errors and some comment styles
+- use switch-case to process sar specs
+- put power_type sar spec to a sub function
+- change power to s32 and index to u32
+- add error check in nl80211_put_sar_specs
+- add a new case in nl80211_send_wiphy to send sar specs
 
- drivers/net/wireless/ath/ath10k/core.c |  16 +++
- drivers/net/wireless/ath/ath10k/core.h |   3 +
- drivers/net/wireless/ath/ath10k/hw.h   |   2 +
- drivers/net/wireless/ath/ath10k/mac.c  | 225 ++++++++++++++++++++++++---------
- 4 files changed, 187 insertions(+), 59 deletions(-)
+ include/net/cfg80211.h       |  51 ++++++++++++
+ include/uapi/linux/nl80211.h | 102 ++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 185 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  12 +++
+ net/wireless/trace.h         |  19 +++++
+ 5 files changed, 369 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 419b06b..8c8996c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -90,6 +90,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = true,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA988X_HW_2_0_VERSION,
-@@ -124,6 +125,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = true,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -159,6 +161,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -189,6 +192,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.tx_stats_over_pktlog = false,
- 		.bmi_large_size_download = true,
- 		.supports_peer_stats_info = true,
-+		.dynamic_sar_support = true,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -223,6 +227,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -257,6 +262,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -291,6 +297,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -329,6 +336,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.fw_diag_ce_download = true,
- 		.tx_stats_over_pktlog = false,
- 		.supports_peer_stats_info = true,
-+		.dynamic_sar_support = true,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -369,6 +377,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -416,6 +425,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -460,6 +470,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -494,6 +505,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -530,6 +542,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = true,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -557,6 +570,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.uart_pin_workaround = true,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -598,6 +612,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = true,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = false,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -625,6 +640,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.hw_filter_reset_required = false,
- 		.fw_diag_ce_download = false,
- 		.tx_stats_over_pktlog = false,
-+		.dynamic_sar_support = true,
- 	},
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 472b72a..4f8265b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1736,6 +1736,54 @@ struct station_info {
+ 	u8 connected_to_as;
  };
  
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index aa713d0..09bae23 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1287,6 +1287,9 @@ struct ath10k {
- 	bool coex_support;
- 	int coex_gpio_pin;
- 
-+	s32 tx_power_2g_limit;
-+	s32 tx_power_5g_limit;
-+
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index c6ded21..6b03c77 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -623,6 +623,8 @@ struct ath10k_hw_params {
- 
- 	/* provides bitrates for sta_statistics using WMI_TLV_PEER_STATS_INFO_EVENTID */
- 	bool supports_peer_stats_info;
-+
-+	bool dynamic_sar_support;
- };
- 
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index dc32c78..d0d71eb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -81,6 +81,17 @@ static struct ieee80211_rate ath10k_rates_rev2[] = {
- 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
- };
- 
-+const static struct cfg80211_sar_freq_ranges ath10k_sar_freq_ranges[] = {
-+	{.start_freq = 2402, .end_freq = 2494 },
-+	{.start_freq = 5170, .end_freq = 5875 },
++/**
++ * struct cfg80211_sar_sub_specs - sub specs limit
++ * @power: power limitation in 0.25dbm
++ * @freq_range_index: index the power limitation applies to
++ */
++struct cfg80211_sar_sub_specs {
++	s32 power;
++	u32 freq_range_index;
 +};
 +
-+const static struct cfg80211_sar_capa ath10k_sar_capa = {
-+	.type = NL80211_SAR_TYPE_POWER,
-+	.num_freq_ranges = (ARRAY_SIZE(ath10k_sar_freq_ranges)),
-+	.freq_ranges = &ath10k_sar_freq_ranges[0],
++/**
++ * struct cfg80211_sar_specs - sar limit specs
++ * @type: it's set with power in 0.25dbm or other types
++ * @num_sub_specs: number of sar sub specs
++ * @sub_specs: memory to hold the sar sub specs
++ */
++struct cfg80211_sar_specs {
++	enum nl80211_sar_type type;
++	u32 num_sub_specs;
++	struct cfg80211_sar_sub_specs sub_specs[];
 +};
 +
- #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
++
++/**
++ * @struct cfg80211_sar_chan_ranges - sar frequency ranges
++ * @start_freq:  start range edge frequency
++ * @end_freq:    end range edge frequency
++ */
++struct cfg80211_sar_freq_ranges {
++	u32 start_freq;
++	u32 end_freq;
++};
++
++/**
++ * struct cfg80211_sar_capa - sar limit capability
++ * @type: it's set via power in 0.25dbm or other types
++ * @num_freq_ranges: number of frequency ranges
++ * @freq_ranges: memory to hold the freq ranges.
++ *
++ * Note: WLAN driver may append new ranges or split an existing
++ * range to small ones and then append them.
++ */
++struct cfg80211_sar_capa {
++	enum nl80211_sar_type type;
++	u32 num_freq_ranges;
++	const struct cfg80211_sar_freq_ranges *freq_ranges;
++};
++
+ #if IS_ENABLED(CONFIG_CFG80211)
+ /**
+  * cfg80211_get_station - retrieve information about a given station
+@@ -4258,6 +4306,7 @@ struct cfg80211_ops {
+ 				  struct cfg80211_tid_config *tid_conf);
+ 	int	(*reset_tid_config)(struct wiphy *wiphy, struct net_device *dev,
+ 				    const u8 *peer, u8 tids);
++	int	(*set_sar_specs)(struct wiphy *wiphy, struct cfg80211_sar_specs *sar);
+ };
  
- #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
-@@ -2880,6 +2891,153 @@ static int ath10k_mac_vif_recalc_txbf(struct ath10k *ar,
- 	return 0;
+ /*
+@@ -5026,6 +5075,8 @@ struct wiphy {
+ 
+ 	u8 max_data_retry_count;
+ 
++	const struct cfg80211_sar_capa *sar_capa;
++
+ 	char priv[] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e1e5b3d..9ad6b13 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1177,6 +1177,10 @@
+  *	includes the contents of the frame. %NL80211_ATTR_ACK flag is included
+  *	if the recipient acknowledged the frame.
+  *
++ * @NL80211_CMD_SET_SAR_SPECS: SAR power limitation configuration is
++ *	passed using %NL80211_ATTR_SAR_SPEC. %NL80211_ATTR_WIPHY is used to
++ *	specify the wiphy index to be applied to.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1407,6 +1411,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_CONTROL_PORT_FRAME_TX_STATUS,
+ 
++	NL80211_CMD_SET_SAR_SPECS,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -2532,6 +2538,10 @@ enum nl80211_commands {
+  *	derivation in WPA3-Personal networks which are using SAE authentication.
+  *	This is a u8 attribute that encapsulates one of the values from
+  *	&enum nl80211_sae_pwe_mechanism.
++ * @NL80211_ATTR_SAR_SPEC: SAR power limitation specification when
++ *	used with %NL80211_CMD_SET_SAR_SPECS. The message contains fields
++ *	of %nl80211_sar_attrs which specifies the sar type and related
++ *	sar specs. Sar specs contains array of %nl80211_sar_specs_attrs.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -3023,6 +3033,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_S1G_CAPABILITY_MASK,
+ 
+ 	NL80211_ATTR_SAE_PWE,
++	NL80211_ATTR_SAR_SPEC,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -7155,4 +7166,95 @@ enum nl80211_sae_pwe_mechanism {
+ 	NL80211_SAE_PWE_HASH_TO_ELEMENT,
+ 	NL80211_SAE_PWE_BOTH,
+ };
++
++/**
++ * enum nl80211_sar_type - type of SAR specs
++ *
++ * @NL80211_SAR_TYPE_POWER: power limitation specified in 0.25dbm unit
++ *
++ */
++enum nl80211_sar_type {
++	NL80211_SAR_TYPE_POWER,
++
++	/* add new type here */
++
++	/* Keep last */
++	NUM_NL80211_SAR_TYPE,
++};
++
++/**
++ * enum nl80211_sar_attrs - Attributes for SAR spec
++ *
++ * @NL80211_SAR_ATTR_TYPE: the SAR type and it's defined in &enum nl80211_sar_type.
++ *
++ * @NL80211_SAR_ATTR_SPECS: Nested array of SAR power
++ *	limit specifications. Each specification contains a set
++ *	of %nl80211_sar_specs_attrs.
++ *
++ *	For SET operation, it contains array of NL80211_SAR_ATTR_SPECS_POWER
++ *	and NL80211_SAR_ATTR_SPECS_RANGE_INDEX.
++ *
++ *	For sar_capa dump, it contains array of NL80211_SAR_ATTR_SPECS_START_FREQ
++ *	and NL80211_SAR_ATTR_SPECS_END_FREQ.
++ *
++ * @__NL80211_SAR_ATTR_LAST: Internal
++ * @NL80211_SAR_ATTR_MAX: highest sar attribute
++ *
++ * These attributes are used with %NL80211_CMD_SET_SAR_SPEC
++ */
++enum nl80211_sar_attrs {
++	__NL80211_SAR_ATTR_INVALID,
++
++	NL80211_SAR_ATTR_TYPE,
++	NL80211_SAR_ATTR_SPECS,
++
++	__NL80211_SAR_ATTR_LAST,
++	NL80211_SAR_ATTR_MAX = __NL80211_SAR_ATTR_LAST - 1,
++};
++
++/**
++ * enum nl80211_sar_specs_attrs - Attributes for SAR power limit specs
++ *
++ * @NL80211_SAR_ATTR_SPECS_POWER: Required (s32)value to specify the actual
++ *	power limit value in units of 0.25 dBm if type is
++ *	NL80211_SAR_TYPE_POWER. (i.e., a value of 44 represents 11 dBm).
++ *	0 means userspace doesn't have SAR limitation on this associated range.
++ *
++ * @NL80211_SAR_ATTR_SPECS_RANGE_INDEX: Required (u32) value to specify the
++ *	index of exported freq range table and the associated power limitation
++ *	is applied to this range.
++ *
++ *	Userspace isn't required to set all the ranges advertised by WLAN driver,
++ *	and userspace can skip some certain ranges. These skipped ranges don't
++ *	have SAR limitations, and they are same as setting the
++ *	%NL80211_SAR_ATTR_SPECS_POWER to any unreasonable high value because any
++ *	value higher than regulatory allowed value just means SAR power limitation
++ *	is removed, but it's required to set at least one range. It's not allowed
++ *	to set duplicated range in one SET operation.
++ *
++ *	Every SET operation overwrites previous SET operation.
++ *
++ * @NL80211_SAR_ATTR_SPECS_START_FREQ: Required (u32) value to specify the start
++ *	frequency of this range edge when registering SAR capability to wiphy. It's
++ *	not a channel center frequency. The unit is kHz.
++ *
++ * @NL80211_SAR_ATTR_SPECS_END_FREQ: Required (u32) value to specify the end frequency
++ *	of this range edge when registering SAR capability to wiphy. It's not a channel
++ *	center frequency. The unit is kHz.
++ *
++ * @__NL80211_SAR_ATTR_SPECS_LAST: Internal
++ * @NL80211_SAR_ATTR_SPECS_MAX: highest sar specs attribute
++ */
++enum nl80211_sar_specs_attrs {
++	__NL80211_SAR_ATTR_SPECS_INVALID,
++
++	NL80211_SAR_ATTR_SPECS_POWER,
++	NL80211_SAR_ATTR_SPECS_RANGE_INDEX,
++	NL80211_SAR_ATTR_SPECS_START_FREQ,
++	NL80211_SAR_ATTR_SPECS_END_FREQ,
++
++	__NL80211_SAR_ATTR_SPECS_LAST,
++	NL80211_SAR_ATTR_SPECS_MAX = __NL80211_SAR_ATTR_SPECS_LAST - 1,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ceea9ee..144a291 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -399,6 +399,18 @@ nl80211_unsol_bcast_probe_resp_policy[NL80211_UNSOL_BCAST_PROBE_RESP_ATTR_MAX +
+ 						       .len = IEEE80211_MAX_DATA_LEN }
+ };
+ 
++static const struct nla_policy
++sar_specs_policy[NL80211_SAR_ATTR_SPECS_MAX + 1] = {
++	[NL80211_SAR_ATTR_SPECS_POWER] = { .type = NLA_S32 },
++	[NL80211_SAR_ATTR_SPECS_RANGE_INDEX] = {.type = NLA_U32 },
++};
++
++static const struct nla_policy
++sar_policy[NL80211_SAR_ATTR_MAX + 1] = {
++	[NL80211_SAR_ATTR_TYPE] = NLA_POLICY_MAX(NLA_U32, NUM_NL80211_SAR_TYPE),
++	[NL80211_SAR_ATTR_SPECS] = NLA_POLICY_NESTED_ARRAY(sar_specs_policy),
++};
++
+ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[0] = { .strict_start_type = NL80211_ATTR_HE_OBSS_PD },
+ 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
+@@ -718,6 +730,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_SAE_PWE] =
+ 		NLA_POLICY_RANGE(NLA_U8, NL80211_SAE_PWE_HUNT_AND_PECK,
+ 				 NL80211_SAE_PWE_BOTH),
++	[NL80211_ATTR_SAR_SPEC] = NLA_POLICY_NESTED(sar_policy),
+ };
+ 
+ /* policy for the key attributes */
+@@ -2095,6 +2108,56 @@ nl80211_put_tid_config_support(struct cfg80211_registered_device *rdev,
+ 	return -ENOBUFS;
  }
  
-+static bool ath10k_mac_is_connected(struct ath10k *ar)
++static int
++nl80211_put_sar_specs(struct cfg80211_registered_device *rdev,
++		      struct sk_buff *msg)
 +{
-+	struct ath10k_vif *arvif;
++	struct nlattr *sar_capa, *specs, *sub_freq_range;
++	u8 num_freq_ranges;
++	int i;
 +
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (arvif->is_up && arvif->vdev_type == WMI_VDEV_TYPE_STA)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static int ath10k_mac_txpower_setup(struct ath10k *ar, int txpower)
-+{
-+	int ret;
-+	u32 param;
-+	int tx_power_2g, tx_power_5g;
-+	bool connected;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	/* ath10k internally uses unit of 0.5 dBm so multiply by 2 */
-+	tx_power_2g = txpower * 2;
-+	tx_power_5g = txpower * 2;
-+
-+	connected = ath10k_mac_is_connected(ar);
-+
-+	if (connected && ar->tx_power_2g_limit)
-+		if (tx_power_2g > ar->tx_power_2g_limit)
-+			tx_power_2g = ar->tx_power_2g_limit;
-+
-+	if (connected && ar->tx_power_5g_limit)
-+		if (tx_power_5g > ar->tx_power_5g_limit)
-+			tx_power_5g = ar->tx_power_5g_limit;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac txpower 2g: %d, 5g: %d\n",
-+		   tx_power_2g, tx_power_5g);
-+
-+	param = ar->wmi.pdev_param->txpower_limit2g;
-+	ret = ath10k_wmi_pdev_set_param(ar, param, tx_power_2g);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set 2g txpower %d: %d\n",
-+			    tx_power_2g, ret);
-+		return ret;
-+	}
-+
-+	param = ar->wmi.pdev_param->txpower_limit5g;
-+	ret = ath10k_wmi_pdev_set_param(ar, param, tx_power_5g);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set 5g txpower %d: %d\n",
-+			    tx_power_5g, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath10k_mac_txpower_recalc(struct ath10k *ar)
-+{
-+	struct ath10k_vif *arvif;
-+	int ret, txpower = -1;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		/* txpower not initialized yet? */
-+		if (arvif->txpower == INT_MIN)
-+			continue;
-+
-+		if (txpower == -1)
-+			txpower = arvif->txpower;
-+		else
-+			txpower = min(txpower, arvif->txpower);
-+	}
-+
-+	if (txpower == -1)
++	if (!rdev->wiphy.sar_capa)
 +		return 0;
 +
-+	ret = ath10k_mac_txpower_setup(ar, txpower);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to setup tx power %d: %d\n",
-+			    txpower, ret);
-+		return ret;
++	num_freq_ranges = rdev->wiphy.sar_capa->num_freq_ranges;
++
++	sar_capa = nla_nest_start(msg, NL80211_ATTR_SAR_SPEC);
++	if (!sar_capa)
++		return -ENOSPC;
++
++	if (nla_put_u32(msg, NL80211_SAR_ATTR_TYPE, rdev->wiphy.sar_capa->type))
++		goto fail;
++
++	specs = nla_nest_start(msg, NL80211_SAR_ATTR_SPECS);
++	if (!specs)
++		goto fail;
++
++	/* report supported freq_ranges */
++	for (i = 0; i < num_freq_ranges; i++) {
++		sub_freq_range = nla_nest_start(msg, i + 1);
++		if (!sub_freq_range)
++			goto fail;
++
++		if (nla_put_u32(msg, NL80211_SAR_ATTR_SPECS_START_FREQ,
++				rdev->wiphy.sar_capa->freq_ranges[i].start_freq))
++			goto fail;
++
++		if (nla_put_u32(msg, NL80211_SAR_ATTR_SPECS_END_FREQ,
++				rdev->wiphy.sar_capa->freq_ranges[i].end_freq))
++			goto fail;
++
++		nla_nest_end(msg, sub_freq_range);
 +	}
++
++	nla_nest_end(msg, specs);
++	nla_nest_end(msg, sar_capa);
++
++	return 0;
++fail:
++	nla_nest_cancel(msg, sar_capa);
++	return -ENOBUFS;
++}
++
+ struct nl80211_dump_wiphy_state {
+ 	s64 filter_wiphy;
+ 	long start;
+@@ -2344,6 +2407,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			CMD(set_multicast_to_unicast, SET_MULTICAST_TO_UNICAST);
+ 			CMD(update_connect_params, UPDATE_CONNECT_PARAMS);
+ 			CMD(update_ft_ies, UPDATE_FT_IES);
++			CMD(set_sar_specs, SET_SAR_SPECS);
+ 		}
+ #undef CMD
+ 
+@@ -2669,6 +2733,11 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 
+ 		if (nl80211_put_tid_config_support(rdev, msg))
+ 			goto nla_put_failure;
++		state->split_start++;
++		break;
++	case 16:
++		if (nl80211_put_sar_specs(rdev, msg))
++			goto nla_put_failure;
+ 
+ 		/* done */
+ 		state->split_start = 0;
+@@ -14693,6 +14762,114 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 	}
+ }
+ 
++static int nl80211_set_sar_sub_specs(struct cfg80211_registered_device *rdev,
++				     struct cfg80211_sar_specs *sar_specs,
++				     struct nlattr *spec[], int index)
++{
++	u32 range_index, i;
++
++	if (!sar_specs || !spec)
++		return -EINVAL;
++
++	if (!spec[NL80211_SAR_ATTR_SPECS_POWER] ||
++	    !spec[NL80211_SAR_ATTR_SPECS_RANGE_INDEX])
++		return -EINVAL;
++
++	range_index = nla_get_u32(spec[NL80211_SAR_ATTR_SPECS_RANGE_INDEX]);
++
++	/* check if range_index exceeds num_freq_ranges */
++	if (range_index >= rdev->wiphy.sar_capa->num_freq_ranges)
++		return -EINVAL;
++
++	/* check if range_index duplicates */
++	for (i = 0; i < index; i++) {
++		if (sar_specs->sub_specs[i].freq_range_index == range_index)
++			return -EINVAL;
++	}
++
++	sar_specs->sub_specs[index].power =
++		nla_get_s32(spec[NL80211_SAR_ATTR_SPECS_POWER]);
++
++	sar_specs->sub_specs[index].freq_range_index = range_index;
 +
 +	return 0;
 +}
 +
-+static int ath10k_mac_set_sar_power(struct ath10k *ar)
++static int nl80211_set_sar_specs(struct sk_buff *skb, struct genl_info *info)
 +{
-+	if (!ar->hw_params.dynamic_sar_support)
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct nlattr *spec[NL80211_SAR_ATTR_SPECS_MAX + 1];
++	struct nlattr *tb[NL80211_SAR_ATTR_MAX + 1];
++	struct cfg80211_sar_specs *sar_spec;
++	enum nl80211_sar_type type;
++	struct nlattr *spec_list;
++	u32 specs;
++	int rem, err;
++
++	if (!rdev->wiphy.sar_capa || !rdev->ops->set_sar_specs)
 +		return -EOPNOTSUPP;
 +
-+	if (!ath10k_mac_is_connected(ar))
-+		return 0;
++	if (!info->attrs[NL80211_ATTR_SAR_SPEC])
++		return -EINVAL;
 +
-+	/* if connected, then arvif->txpower must be valid */
-+	return ath10k_mac_txpower_recalc(ar);
-+}
++	nla_parse_nested(tb, NL80211_SAR_ATTR_MAX, info->attrs[NL80211_ATTR_SAR_SPEC],
++			 sar_policy, NULL);
 +
-+static int ath10k_mac_set_sar_specs(struct ieee80211_hw *hw,
-+				    const struct cfg80211_sar_specs *sar)
-+{
-+	const struct cfg80211_sar_sub_specs *sub_specs;
-+	struct ath10k *ar = hw->priv;
-+	u32 i;
-+	int ret;
++	if (!tb[NL80211_SAR_ATTR_TYPE] || !tb[NL80211_SAR_ATTR_SPECS])
++		return -EINVAL;
 +
-+	mutex_lock(&ar->conf_mutex);
++	type = nla_get_u32(tb[NL80211_SAR_ATTR_TYPE]);
++	if (type != rdev->wiphy.sar_capa->type)
++		return -EINVAL;
 +
-+	if (!ar->hw_params.dynamic_sar_support) {
-+		ret = -EOPNOTSUPP;
-+		goto error;
++	specs = 0;
++	nla_for_each_nested(spec_list, tb[NL80211_SAR_ATTR_SPECS], rem)
++		specs++;
++
++	if (specs > rdev->wiphy.sar_capa->num_freq_ranges)
++		return -EINVAL;
++
++	sar_spec = kzalloc(sizeof(*sar_spec) +
++			   specs * sizeof(struct cfg80211_sar_sub_specs),
++			   GFP_KERNEL);
++	if (!sar_spec)
++		return -ENOMEM;
++
++	sar_spec->type = type;
++	specs = 0;
++	nla_for_each_nested(spec_list, tb[NL80211_SAR_ATTR_SPECS], rem) {
++		nla_parse(spec,
++			  NL80211_SAR_ATTR_SPECS_MAX,
++			  nla_data(spec_list),
++			  nla_len(spec_list),
++			  sar_specs_policy,
++			  NULL);
++
++		switch (type) {
++		case NL80211_SAR_TYPE_POWER:
++			if (nl80211_set_sar_sub_specs(rdev, sar_spec, spec, specs)) {
++				err = -EINVAL;
++				goto error;
++			}
++			break;
++
++		default:
++			err = -EINVAL;
++			goto error;
++		}
++		specs++;
 +	}
 +
-+	if (!sar || sar->type != NL80211_SAR_TYPE_POWER ||
-+	    sar->num_sub_specs == 0 || !sar->sub_specs) {
-+		ret = -EINVAL;
-+		goto error;
-+	}
++	sar_spec->num_sub_specs = specs;
 +
-+	sub_specs = sar->sub_specs;
-+
-+	/* 0dbm is not a practical value for ath10k, so use 0
-+	 * as no SAR limitation on it.
-+	 */
-+	ar->tx_power_2g_limit = 0;
-+	ar->tx_power_5g_limit = 0;
-+
-+	/* note the power is in 0.25dbm unit, while ath10k uses
-+	 * 0.5dbm unit.
-+	 */
-+	for (i = 0; i < sar->num_sub_specs; i++) {
-+		if (sub_specs->freq_range_index == 0)
-+			ar->tx_power_2g_limit = sub_specs->power / 2;
-+		else if (sub_specs->freq_range_index == 1)
-+			ar->tx_power_5g_limit = sub_specs->power / 2;
-+
-+		sub_specs++;
-+	}
-+
-+	ret = ath10k_mac_set_sar_power(ar);
++	rdev->cur_cmd_info = info;
++	err = rdev_set_sar_specs(rdev, sar_spec);
++	rdev->cur_cmd_info = NULL;
 +error:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
++	kfree(sar_spec);
++	return err;
 +}
 +
- /* can be called only in mac80211 callbacks due to `key_count` usage */
- static void ath10k_bss_assoc(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
-@@ -2968,6 +3126,8 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ static const struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -15554,6 +15731,14 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_SAR_SPECS,
++		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
++		.doit = nl80211_set_sar_specs,
++		.flags = GENL_UNS_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WIPHY |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
  
- 	arvif->is_up = true;
- 
-+	ath10k_mac_set_sar_power(ar);
-+
- 	/* Workaround: Some firmware revisions (tested with qca6174
- 	 * WLAN.RM.2.0-00073) have buggy powersave state machine and must be
- 	 * poked with peer param command.
-@@ -3010,6 +3170,8 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
- 
- 	arvif->is_up = false;
- 
-+	ath10k_mac_txpower_recalc(ar);
-+
- 	cancel_delayed_work_sync(&arvif->connection_loss_work);
- }
- 
-@@ -5207,65 +5369,6 @@ static int ath10k_config_ps(struct ath10k *ar)
+ static struct genl_family nl80211_fam __ro_after_init = {
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 950d574..d9931c5 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1356,4 +1356,16 @@ static inline int rdev_reset_tid_config(struct cfg80211_registered_device *rdev,
  	return ret;
  }
  
--static int ath10k_mac_txpower_setup(struct ath10k *ar, int txpower)
--{
--	int ret;
--	u32 param;
--
--	lockdep_assert_held(&ar->conf_mutex);
--
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac txpower %d\n", txpower);
--
--	param = ar->wmi.pdev_param->txpower_limit2g;
--	ret = ath10k_wmi_pdev_set_param(ar, param, txpower * 2);
--	if (ret) {
--		ath10k_warn(ar, "failed to set 2g txpower %d: %d\n",
--			    txpower, ret);
--		return ret;
--	}
--
--	param = ar->wmi.pdev_param->txpower_limit5g;
--	ret = ath10k_wmi_pdev_set_param(ar, param, txpower * 2);
--	if (ret) {
--		ath10k_warn(ar, "failed to set 5g txpower %d: %d\n",
--			    txpower, ret);
--		return ret;
--	}
--
--	return 0;
--}
--
--static int ath10k_mac_txpower_recalc(struct ath10k *ar)
--{
--	struct ath10k_vif *arvif;
--	int ret, txpower = -1;
--
--	lockdep_assert_held(&ar->conf_mutex);
--
--	list_for_each_entry(arvif, &ar->arvifs, list) {
--		/* txpower not initialized yet? */
--		if (arvif->txpower == INT_MIN)
--			continue;
--
--		if (txpower == -1)
--			txpower = arvif->txpower;
--		else
--			txpower = min(txpower, arvif->txpower);
--	}
--
--	if (txpower == -1)
--		return 0;
--
--	ret = ath10k_mac_txpower_setup(ar, txpower);
--	if (ret) {
--		ath10k_warn(ar, "failed to setup tx power %d: %d\n",
--			    txpower, ret);
--		return ret;
--	}
--
--	return 0;
--}
--
- static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct ath10k *ar = hw->priv;
-@@ -9271,6 +9374,7 @@ static const struct ieee80211_ops ath10k_ops = {
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
- #endif
-+	.set_sar_specs			= ath10k_mac_set_sar_specs,
- };
- 
- #define CHAN2G(_channel, _freq, _flags) { \
-@@ -10008,6 +10112,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		goto err_free;
- 	}
- 
-+	if (ar->hw_params.dynamic_sar_support)
-+		ar->hw->wiphy->sar_capa = &ath10k_sar_capa;
++static inline int rdev_set_sar_specs(struct cfg80211_registered_device *rdev,
++				     struct cfg80211_sar_specs *sar)
++{
++	int ret;
 +
- 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
- 		ar->hw->netdev_features = NETIF_F_HW_CSUM;
++	trace_rdev_set_sar_specs(&rdev->wiphy, sar);
++	ret = rdev->ops->set_sar_specs(&rdev->wiphy, sar);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++
++	return ret;
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 6e218a0..116be64 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3547,6 +3547,25 @@ TRACE_EVENT(rdev_reset_tid_config,
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", peer: " MAC_PR_FMT ", tids: 0x%x",
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer), __entry->tids)
+ );
++
++TRACE_EVENT(rdev_set_sar_specs,
++	TP_PROTO(struct wiphy *wiphy, struct cfg80211_sar_specs *sar),
++	TP_ARGS(wiphy, sar),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		__field(u16, type)
++		__field(u16, num)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		__entry->type = sar->type;
++		__entry->num = sar->num_sub_specs;
++
++	),
++	TP_printk(WIPHY_PR_FMT ", Set type:%d, num_specs:%d",
++		  WIPHY_PR_ARG, __entry->type, __entry->num)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
  
+ #undef TRACE_INCLUDE_PATH
 -- 
 2.7.4
 
