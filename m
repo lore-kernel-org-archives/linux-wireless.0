@@ -2,72 +2,73 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B4AC83014
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Dec 2020 12:42:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2ECDC64E90
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Dec 2020 12:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBDB9221FE
+	by mail.kernel.org (Postfix) with ESMTP id 6280F2222A
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Dec 2020 12:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729588AbgLBMmn (ORCPT
+        id S1727521AbgLBMml (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Dec 2020 07:42:43 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:33968 "EHLO
+        Wed, 2 Dec 2020 07:42:41 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:33950 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726736AbgLBMmn (ORCPT
+        with ESMTP id S1726631AbgLBMml (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Dec 2020 07:42:43 -0500
+        Wed, 2 Dec 2020 07:42:41 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kkRSG-0037gb-I2; Wed, 02 Dec 2020 14:41:56 +0200
+        id 1kkRSD-0037gb-Lo; Wed, 02 Dec 2020 14:41:54 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  2 Dec 2020 14:41:51 +0200
-Message-Id: <iwlwifi.20201202143859.a06ba7540449.I7390305d088a49c1043c9b489154fe057989c18f@changeid>
+Date:   Wed,  2 Dec 2020 14:41:48 +0200
+Message-Id: <20201202124151.55050-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201202124151.55050-1-luca@coelho.fi>
-References: <20201202124151.55050-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/3] iwlwifi: pcie: add some missing entries for AX210
+Subject: [PATCH 0/3] iwlwifi: fixes intended for v5.10 2020-12-02
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Some subsytem device IDs were missing from the list, so some AX210
-devices were not recognized.  Add them.
+Hi,
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 5 +++++
- 1 file changed, 5 insertions(+)
+This is the second patchset with fixes for v5.10.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 466a967da39c..7b5ece380fbf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -540,6 +540,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2725, 0x0310, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x0510, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x0A10, iwlax210_2ax_cfg_ty_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0xE020, iwlax210_2ax_cfg_ty_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0xE024, iwlax210_2ax_cfg_ty_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0x4020, iwlax210_2ax_cfg_ty_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0x6020, iwlax210_2ax_cfg_ty_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0x6024, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x00B0, iwlax411_2ax_cfg_sosnj_gf4_a0)},
- 	{IWL_PCI_DEVICE(0x2726, 0x0070, iwlax201_cfg_snj_hr_b0)},
- 	{IWL_PCI_DEVICE(0x2726, 0x0074, iwlax201_cfg_snj_hr_b0)},
+The changes are:
+
+* Add a few PCI IDs for some new devices;
+* Fix 160 vs. non-160 MHz device detection.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot.  And
+since these are fixes for the rc series, please take them directly to
+wireless-drivers.git, as we agreed.
+
+Cheers,
+Luca.
+
+
+Golan Ben Ami (1):
+  iwlwifi: pcie: add some missing entries for AX210
+
+Luca Coelho (2):
+  iwlwifi: pcie: add one missing entry for AX210
+  iwlwifi: pcie: invert values of NO_160 device config entries
+
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 6 ++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
 -- 
 2.29.2
 
