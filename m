@@ -2,116 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BDCC8303B
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57276C4361B
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 14:46:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7559120637
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:39:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D244207C8
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 14:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436716AbgLCNar (ORCPT
+        id S1726385AbgLCOqq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 08:30:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47922 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436671AbgLCNal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 08:30:41 -0500
-From:   Sasha Levin <sashal@kernel.org>
-Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 03/23] iwlwifi: pcie: set LTR to avoid completion timeout
-Date:   Thu,  3 Dec 2020 08:29:15 -0500
-Message-Id: <20201203132935.931362-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201203132935.931362-1-sashal@kernel.org>
-References: <20201203132935.931362-1-sashal@kernel.org>
+        Thu, 3 Dec 2020 09:46:46 -0500
+Received: from mail-m963.mail.126.com ([123.126.96.3]:42048 "EHLO
+        mail-m963.mail.126.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726056AbgLCOqq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Dec 2020 09:46:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=bdpg5
+        ptMCOQSO9IP2u3k3DCfs5LhwbZD+ct4VFOn97k=; b=dubJOdokMSUxby+mOeaqg
+        NZyeDoM4mtsUv/sJBvVN71Nuo5veRHbp7XtRFnnXSZZISIxHYfIR0QA0EWFi/JVQ
+        oKHdO9M6rxPvG7Xm3rSJQfqTcRyRnFc2VakNWB1uFWXcZAk2g3FmslmGyt1bse6R
+        SEU1c8c3mRVy52zJmsHpMc=
+Received: from localhost.localdomain (unknown [140.207.81.18])
+        by smtp8 (Coremail) with SMTP id NORpCgBX1mZ7XchfRfkdOQ--.19890S3;
+        Thu, 03 Dec 2020 11:37:38 +0800 (CST)
+From:   zhouliangya@126.com
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, lzhou <zhouliangya@126.com>
+Subject: [PATCH 1/1] ath10k_pci_wait_for_target_init() should relax cpu for other task instead of calling medelay() so that cpu can run other tasks. Signed-off-by: lzhou <lzhou@sonicwall.com> ---
+Date:   Thu,  3 Dec 2020 11:37:29 +0800
+Message-Id: <20201203033729.382088-2-zhouliangya@126.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201203033729.382088-1-zhouliangya@126.com>
+References: <20201203033729.382088-1-zhouliangya@126.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: NORpCgBX1mZ7XchfRfkdOQ--.19890S3
+X-Coremail-Antispam: 1Uf129KBjvdXoW7GF4kWry8ury3Zw1rKr1kGrg_yoW3XFc_WF
+        4fXFs3urW7uwnxtr42ka1FyFyIk3ZxWF1kAa1IqrWfJw47A398Cr90v3W7uryUGry8AFy3
+        ur9FqF18AwnIgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRitku3UUUUU==
+X-Originating-IP: [140.207.81.18]
+X-CM-SenderInfo: p2kr3z5ldqw5bd6rjloofrz/1tbicgLvsVpEBpvZVwAAsj
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: lzhou <zhouliangya@126.com>
 
-[ Upstream commit edb625208d84aef179e3f16590c1c582fc5fdae6 ]
-
-On some platforms, the preset values aren't correct and then we may
-get a completion timeout in the firmware. Change the LTR configuration
-to avoid that. The firmware will do some more complex reinit of this
-later, but for the boot process we use ~250usec.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20201107104557.d83d591c05ba.I42885c9fb500bc08b9a4c07c4ff3d436cc7a3c84@changeid
-Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  | 10 ++++++++++
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 20 +++++++++++++++++++
- 2 files changed, 30 insertions(+)
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 695bbaa86273d..12ef3a0420515 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -147,6 +147,16 @@
- #define CSR_MAC_SHADOW_REG_CTL2		(CSR_BASE + 0x0AC)
- #define CSR_MAC_SHADOW_REG_CTL2_RX_WAKE	0xFFFF
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 8ab262931dce..2941fbb6a412 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3309,7 +3309,7 @@ int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+ 			ath10k_pci_enable_legacy_irq(ar);
  
-+/* LTR control (since IWL_DEVICE_FAMILY_22000) */
-+#define CSR_LTR_LONG_VAL_AD			(CSR_BASE + 0x0D4)
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ	0x80000000
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE	0x1c000000
-+#define CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL	0x03ff0000
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_REQ		0x00008000
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_SCALE		0x00001c00
-+#define CSR_LTR_LONG_VAL_AD_SNOOP_VAL		0x000003ff
-+#define CSR_LTR_LONG_VAL_AD_SCALE_USEC		2
-+
- /* GIO Chicken Bits (PCI Express bus link power management) */
- #define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+-		mdelay(10);
++		schedule_timeout_interruptible(msecs_to_jiffies(10));
+ 	} while (time_before(jiffies, timeout));
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 74980382e64c8..7a5b024a6d384 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -180,6 +180,26 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 
- 	iwl_set_bit(trans, CSR_CTXT_INFO_BOOT_CTRL,
- 		    CSR_AUTO_FUNC_BOOT_ENA);
-+
-+	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_AX210) {
-+		/*
-+		 * The firmware initializes this again later (to a smaller
-+		 * value), but for the boot process initialize the LTR to
-+		 * ~250 usec.
-+		 */
-+		u32 val = CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ |
-+			  u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+					  CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE) |
-+			  u32_encode_bits(250,
-+					  CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL) |
-+			  CSR_LTR_LONG_VAL_AD_SNOOP_REQ |
-+			  u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+					  CSR_LTR_LONG_VAL_AD_SNOOP_SCALE) |
-+			  u32_encode_bits(250, CSR_LTR_LONG_VAL_AD_SNOOP_VAL);
-+
-+		iwl_write32(trans, CSR_LTR_LONG_VAL_AD, val);
-+	}
-+
- 	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_CPU_INIT_RUN, 1);
- 	else
+ 	ath10k_pci_disable_and_clear_legacy_irq(ar);
 -- 
-2.27.0
+2.17.1
 
