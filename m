@@ -6,31 +6,30 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E12C8301C
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D71C83012
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94E10206D6
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CAAC21941
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730761AbgLCN3V (ORCPT
+        id S2436459AbgLCNaB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 08:29:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46882 "EHLO mail.kernel.org"
+        Thu, 3 Dec 2020 08:30:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728067AbgLCN3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 08:29:21 -0500
+        id S2403749AbgLCN37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Dec 2020 08:29:59 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 03/39] iwlwifi: pcie: limit memory read spin time
-Date:   Thu,  3 Dec 2020 08:27:57 -0500
-Message-Id: <20201203132834.930999-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 08/39] iwlwifi: mvm: fix kernel panic in case of assert during CSA
+Date:   Thu,  3 Dec 2020 08:28:02 -0500
+Message-Id: <20201203132834.930999-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201203132834.930999-1-sashal@kernel.org>
 References: <20201203132834.930999-1-sashal@kernel.org>
@@ -42,92 +41,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 04516706bb99889986ddfa3a769ed50d2dc7ac13 ]
+[ Upstream commit fe56d05ee6c87f6a1a8c7267affd92c9438249cc ]
 
-When we read device memory, we lock a spinlock, write the address we
-want to read from the device and then spin in a loop reading the data
-in 32-bit quantities from another register.
+During CSA, we briefly nullify the phy context, in __iwl_mvm_unassign_vif_chanctx.
+In case we have a FW assert right after it, it remains NULL though.
+We end up running into endless loop due to mac80211 trying repeatedly to
+move us to ASSOC state, and we keep returning -EINVAL. Later down the road
+we hit a kernel panic.
 
-As the description makes clear, this is rather inefficient, incurring
-a PCIe bus transaction for every read. In a typical device today, we
-want to read 786k SMEM if it crashes, leading to 192k register reads.
-Occasionally, we've seen the whole loop take over 20 seconds and then
-triggering the soft lockup detector.
+Detect and avoid this endless loop.
 
-Clearly, it is unreasonable to spin here for such extended periods of
-time.
-
-To fix this, break the loop down into an outer and an inner loop, and
-break out of the inner loop if more than half a second elapsed. To
-avoid too much overhead, check for that only every 128 reads, though
-there's no particular reason for that number. Then, unlock and relock
-to obtain NIC access again, reprogram the start address and continue.
-
-This will keep (interrupt) latencies on the CPU down to a reasonable
-time.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20201022165103.45878a7e49aa.I3b9b9c5a10002915072312ce75b68ed5b3dc6e14@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201107104557.d64de2c17bff.Iedd0d2afa20a2aacba5259a5cae31cb3a119a4eb@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 36 ++++++++++++++-----
- 1 file changed, 27 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e5160d6208688..6393e895f95c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2155,18 +2155,36 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
- 				   void *buf, int dwords)
- {
- 	unsigned long flags;
--	int offs, ret = 0;
-+	int offs = 0;
- 	u32 *vals = buf;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 34362dc0d4612..f2d65e8384105 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3057,7 +3057,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
  
--	if (iwl_trans_grab_nic_access(trans, &flags)) {
--		iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
--		for (offs = 0; offs < dwords; offs++)
--			vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
--		iwl_trans_release_nic_access(trans, &flags);
--	} else {
--		ret = -EBUSY;
-+	while (offs < dwords) {
-+		/* limit the time we spin here under lock to 1/2s */
-+		ktime_t timeout = ktime_add_us(ktime_get(), 500 * USEC_PER_MSEC);
-+
-+		if (iwl_trans_grab_nic_access(trans, &flags)) {
-+			iwl_write32(trans, HBUS_TARG_MEM_RADDR,
-+				    addr + 4 * offs);
-+
-+			while (offs < dwords) {
-+				vals[offs] = iwl_read32(trans,
-+							HBUS_TARG_MEM_RDAT);
-+				offs++;
-+
-+				/* calling ktime_get is expensive so
-+				 * do it once in 128 reads
-+				 */
-+				if (offs % 128 == 0 && ktime_after(ktime_get(),
-+								   timeout))
-+					break;
-+			}
-+			iwl_trans_release_nic_access(trans, &flags);
-+		} else {
-+			return -EBUSY;
-+		}
- 	}
--	return ret;
-+
-+	return 0;
- }
+ 	/* this would be a mac80211 bug ... but don't crash */
+ 	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
+-		return -EINVAL;
++		return test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status) ? 0 : -EINVAL;
  
- static int iwl_trans_pcie_write_mem(struct iwl_trans *trans, u32 addr,
+ 	/*
+ 	 * If we are in a STA removal flow and in DQA mode:
 -- 
 2.27.0
 
