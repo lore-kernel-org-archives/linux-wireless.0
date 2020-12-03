@@ -6,19 +6,19 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12838C64E7A
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1E76C83012
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BABB92173D
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C17B20754
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437036AbgLCNb5 (ORCPT
+        id S2389124AbgLCNcq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 08:31:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49052 "EHLO mail.kernel.org"
+        Thu, 3 Dec 2020 08:32:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47984 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436943AbgLCNbU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 08:31:20 -0500
+        id S2436920AbgLCNbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Dec 2020 08:31:16 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -28,9 +28,9 @@ Cc:     Johannes Berg <johannes.berg@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 1/5] iwlwifi: pcie: limit memory read spin time
-Date:   Thu,  3 Dec 2020 08:30:43 -0500
-Message-Id: <20201203133047.931886-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 1/9] iwlwifi: pcie: limit memory read spin time
+Date:   Thu,  3 Dec 2020 08:30:23 -0500
+Message-Id: <20201203133031.931763-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 X-stable: review
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 27 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e7b873018dca6..e1287c3421165 100644
+index 8a074a516fb26..910edd034fe3a 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1904,18 +1904,36 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
+@@ -1927,18 +1927,36 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
  				   void *buf, int dwords)
  {
  	unsigned long flags;
