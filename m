@@ -2,70 +2,185 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F6CC64E8A
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EBB8C63777
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37622208FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:33:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA30E206A1
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:33:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730277AbgLCLdI (ORCPT
+        id S1728811AbgLCLd7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 06:33:08 -0500
-Received: from mslow2.mail.gandi.net ([217.70.178.242]:59900 "EHLO
-        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbgLCLdI (ORCPT
+        Thu, 3 Dec 2020 06:33:59 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:51046 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726061AbgLCLd6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 06:33:08 -0500
-Received: from relay2-d.mail.gandi.net (unknown [217.70.183.194])
-        by mslow2.mail.gandi.net (Postfix) with ESMTP id 3222C3B16D1
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2020 11:32:26 +0000 (UTC)
-X-Originating-IP: 103.82.80.94
-Received: from localhost (unknown [103.82.80.94])
-        (Authenticated sender: me@yadavpratyush.com)
-        by relay2-d.mail.gandi.net (Postfix) with ESMTPSA id B562C40010;
-        Thu,  3 Dec 2020 11:31:23 +0000 (UTC)
-Date:   Thu, 3 Dec 2020 17:01:20 +0530
-From:   Pratyush Yadav <me@yadavpratyush.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>
-Subject: Realtek RTL8723BE throttling network speed
-Message-ID: <20201203113120.mdbhyiqn5zgf37li@yadavpratyush.com>
+        Thu, 3 Dec 2020 06:33:58 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1606995218; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: Date: Subject: In-Reply-To: References: Cc:
+ To: From: Sender; bh=3lEeiYfIabUWjKykhFZltcpohpjJIHJVg3falMmo2a8=; b=LDhJjt11eV4sG/wbrJKa0i6TKaEupBQahM7YQO2Ujs0FNczDebutXqUmn7zgF1W+XRdL7oeT
+ v3krTAvnsL1E96POlzEk/dv1FyAcuG8yXXOI/wCkxYSXsxuEVNf5bzkR2wBQWw4zPm5sVlkK
+ 9+8YPCk3DdLxj0eSaGMWEVqbbrA=
+X-Mailgun-Sending-Ip: 69.72.43.15
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5fc8ccf789b9bc6268d3bc15 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 03 Dec 2020 11:33:11
+ GMT
+Sender: pillair=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4727AC43462; Thu,  3 Dec 2020 11:33:10 +0000 (UTC)
+Received: from Pillair (unknown [49.205.247.166])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 88C49C433ED;
+        Thu,  3 Dec 2020 11:33:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 88C49C433ED
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pillair@codeaurora.org
+From:   "Rakesh Pillai" <pillair@codeaurora.org>
+To:     "'Doug Anderson'" <dianders@chromium.org>
+Cc:     "'Abhishek Kumar'" <kuabhs@chromium.org>,
+        "'Kalle Valo'" <kvalo@codeaurora.org>,
+        "'LKML'" <linux-kernel@vger.kernel.org>,
+        "'ath10k'" <ath10k@lists.infradead.org>,
+        "'Brian Norris'" <briannorris@chromium.org>,
+        "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+        "'David S. Miller'" <davem@davemloft.net>,
+        "'Jakub Kicinski'" <kuba@kernel.org>,
+        "'netdev'" <netdev@vger.kernel.org>
+References: <20201112200906.991086-1-kuabhs@chromium.org> <20201112200856.v2.1.Ia526132a366886e3b5cf72433d0d58bb7bb1be0f@changeid> <CAD=FV=XKCLgL6Bt+3KfqKByyP5fpwXOh6TNHXAoXkaQJRzjKjQ@mail.gmail.com> <002401d6c242$d78f2140$86ad63c0$@codeaurora.org> <CAD=FV=UnecON-M9eZVQePuNpdygN_E9OtLN495Xe1GL_PA94DQ@mail.gmail.com> <002d01d6c2dd$4386d880$ca948980$@codeaurora.org> <CAD=FV=WQPMnor3oTefDHd6JP6UmpyBo7UsOJ1Sg4Ly1otxr6hw@mail.gmail.com>
+In-Reply-To: <CAD=FV=WQPMnor3oTefDHd6JP6UmpyBo7UsOJ1Sg4Ly1otxr6hw@mail.gmail.com>
+Subject: RE: [PATCH v2 1/1] ath10k: add option for chip-id based BDF selection
+Date:   Thu, 3 Dec 2020 17:03:02 +0530
+Message-ID: <004301d6c968$12ef1b10$38cd5130$@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-GND-Spam-Score: 400
-X-GND-Status: SPAM
+Content-Type: text/plain;
+        charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKxMSkDsdRsNwK99YDuloz1ISNQFAKbjoqbAYQwjuUA6sHy1gG3FmuoAayVhWkBiF+H7qfguODA
+Content-Language: en-us
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
 
-I have the Realtek RTL8723BE wireless network adapter on my laptop:
 
-  $ lspci | grep -i wireless
-  08:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8723BE PCIe Wireless Network Adapter
+> -----Original Message-----
+> From: Doug Anderson <dianders@chromium.org>
+> Sent: Tuesday, December 1, 2020 12:49 AM
+> To: Rakesh Pillai <pillair@codeaurora.org>
+> Cc: Abhishek Kumar <kuabhs@chromium.org>; Kalle Valo
+> <kvalo@codeaurora.org>; LKML <linux-kernel@vger.kernel.org>; ath10k
+> <ath10k@lists.infradead.org>; Brian Norris <briannorris@chromium.org>;
+> linux-wireless <linux-wireless@vger.kernel.org>; David S. Miller
+> <davem@davemloft.net>; Jakub Kicinski <kuba@kernel.org>; netdev
+> <netdev@vger.kernel.org>
+> Subject: Re: [PATCH v2 1/1] ath10k: add option for chip-id based BDF
+> selection
+>=20
+> Hi,
+>=20
+> On Tue, Nov 24, 2020 at 7:44 PM Rakesh Pillai <pillair@codeaurora.org>
+> wrote:
+> >
+> > > > I missed on reviewing this change. Also I agree with Doug that =
+this is not
+> > > the change I was looking for.
+> > > >
+> > > > The argument "with_variant" can be renamed to =
+"with_extra_params".
+> > > There is no need for any new argument to this function.
+> > > > Case 1: with_extra_params=3D0,  ar->id.bdf_ext[0] =3D 0          =
+   ->   The
+> default
+> > > name will be used (bus=3Dsnoc,qmi_board_id=3D0xab)
+> > > > Case 2: with_extra_params=3D1,  ar->id.bdf_ext[0] =3D 0          =
+   ->
+> > > bus=3Dsnoc,qmi_board_id=3D0xab,qmi_chip_id=3D0xcd
+> > > > Case 3: with_extra_params=3D1,  ar->id.bdf_ext[0] =3D "xyz"      =
+->
+> > > bus=3Dsnoc,qmi_board_id=3D0xab,qmi_chip_id=3D0xcd,variant=3Dxyz
+> > > >
+> > > > ar->id.bdf_ext[0] depends on the DT entry for variant field.
+> > >
+> > > I'm confused about your suggestion.  Maybe you can help clarify.  =
+Are
+> > > you suggesting:
+> > >
+> > > a) Only two calls to ath10k_core_create_board_name()
+> > >
+> > > I'm pretty sure this will fail in some cases.  Specifically =
+consider
+> > > the case where the device tree has a "variant" defined but the BRD
+> > > file only has one entry for (board-id) and one for (board-id +
+> > > chip-id) but no entry for (board-id + chip-id + variant).  If you =
+are
+> > > only making two calls then I don't think you'll pick the right =
+one.
+> > >
+> > > Said another way...
+> > >
+> > > If the device tree has a variant:
+> > > 1. We should prefer a BRD entry that has board-id + chip-id + =
+variant
+> > > 2. If #1 isn't there, we should prefer a BRD entry that has =
+board-id + chip-
+> id
+> > > 3. If #1 and #2 aren't there we fall back to a BRD entry that has =
+board-id.
+> > >
+> > > ...without 3 calls to ath10k_core_create_board_name() we can't =
+handle
+> > > all 3 cases.
+> >
+> > This can be handled by two calls to ath10k_core_create_board_name
+> > 1) ath10k_core_create_board_name(ar, boardname, sizeof(boardname),
+> true)   :  As per my suggestions, this can result in two possible =
+board names
+> >     a) If DT have the "variant" node, it outputs the #1 from your =
+suggestion
+> (1. We should prefer a BRD entry that has board-id + chip-id + =
+variant)
+> >     b) If DT does not have the "variant" node, it outputs the #2 =
+from your
+> suggestion (2. If #1 isn't there, we should prefer a BRD entry that =
+has board-
+> id + chip-id)
+> >
+> > 2) ath10k_core_create_board_name(ar, boardname, sizeof(boardname),
+> false)    :  This is the second call to this function and outputs the =
+#3 from your
+> suggestion (3. If #1 and #2 aren't there we fall back to a BRD entry =
+that has
+> board-id)
+>=20
+> What I'm trying to say is this.  Imagine that:
+>=20
+> a) the device tree has the "variant" property.
+>=20
+> b) the BRD file has two entries, one for "board-id" (1) and one for
+> "board-id + chip-id" (2).  It doesn't have one for "board-id + chip-id
+> + variant" (3).
+>=20
+> With your suggestion we'll see the "variant" property in the device
+> tree.  That means we'll search for (1) and (3).  (3) isn't there, so
+> we'll pick (1).  ...but we really should have picked (2), right?
 
-running kernel version "5.9.10-arch1-1".
 
-I am seeing some strange behavior on it for some time now. When I power 
-on my router and connect to it, I get the full download speed for about 
-an hour or so. After that the speed throttles to around 60-70 KB/s. 
-Other devices connected to the router continue work at full speed.
+Do we expect board-2.bin to not be populated with the bdf with variant =
+field (if its necessary ?)
+Seems fine for me, if we have 2 fallback names if that is needed.
 
-If I power cycle the router, it again works at full speed for about an 
-hour or two and then throttles back to around 60-70 KB/s.
+>=20
+> -Doug
 
-Has anybody ever seen any problem like this? Any fixes for this? Or at 
-least any pointers to where I can start looking in the driver source?
-
-Any help would be appreciated because this is quite annoying having to 
-restart the router every hour or so.
-
--- 
-Regards,
-Pratyush Yadav
