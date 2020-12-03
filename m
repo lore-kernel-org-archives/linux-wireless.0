@@ -4,21 +4,21 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A94C83017
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10558C83014
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FD6920449
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB004206CA
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:33:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437074AbgLCNcr (ORCPT
+        id S2389195AbgLCNdi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 08:32:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47918 "EHLO mail.kernel.org"
+        Thu, 3 Dec 2020 08:33:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49052 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436921AbgLCNbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 08:31:16 -0500
+        id S2436845AbgLCNbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Dec 2020 08:31:04 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -27,12 +27,12 @@ Cc:     Sara Sharon <sara.sharon@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 3/9] iwlwifi: mvm: fix kernel panic in case of assert during CSA
-Date:   Thu,  3 Dec 2020 08:30:25 -0500
-Message-Id: <20201203133031.931763-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 03/14] iwlwifi: mvm: fix kernel panic in case of assert during CSA
+Date:   Thu,  3 Dec 2020 08:29:59 -0500
+Message-Id: <20201203133010.931600-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201203133031.931763-1-sashal@kernel.org>
-References: <20201203133031.931763-1-sashal@kernel.org>
+In-Reply-To: <20201203133010.931600-1-sashal@kernel.org>
+References: <20201203133010.931600-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,10 +63,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index ec2ecdd1cc4ec..9aab9a0269548 100644
+index 525b26e0f65ee..2fad20c845b47 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2654,7 +2654,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+@@ -2880,7 +2880,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
  
  	/* this would be a mac80211 bug ... but don't crash */
  	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
