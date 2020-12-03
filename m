@@ -2,106 +2,59 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 943BDC64E8A
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:34:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4470DC64E7A
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:16:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FC87206A1
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 11:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E07F020758
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Dec 2020 13:16:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388226AbgLCLec (ORCPT
+        id S1730526AbgLCNQn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Dec 2020 06:34:32 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:58328 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbgLCLec (ORCPT
+        Thu, 3 Dec 2020 08:16:43 -0500
+Received: from mail-m963.mail.126.com ([123.126.96.3]:57094 "EHLO
+        mail-m963.mail.126.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730538AbgLCNQn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Dec 2020 06:34:32 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3BP1rE043123;
-        Thu, 3 Dec 2020 11:33:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=xdtAb2apWwEWceU3YN9j4QOQVkpNJ3qjdii+mAZ0Md0=;
- b=D919YEG+QI9KU5pEa1nSmrJzg0xfZ2M88Bk44ZfSSnaTHP3xZ/xH8n5eyvyV/y6lbnK7
- VJUPT6tteAV/ll4JRFiFk05gXAvFVaWKpwdQdt3oCM/tQaBEwP8MEvCE5HYq8YyD0+CQ
- NOdkg8ceKou/wx+k+w36JpAYZ60mtl2pHf0uKOrwFOYz1owsoLt6FjUMwCb85XlF0jt2
- ik3J7o3U4n6FHv013Yj4QkD5ovdaFt2eo27OdRDjQWBNi4d32GL/yx6hUfhCq+nmhWub
- dxElwrA8aRL3+wev89T0BdYg6NGJtPpg/hJRXFSAye5kMdtNC9c/kPms293DfcLC3J+j ZA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 353egkwabs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Dec 2020 11:33:46 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3BPRBe066855;
-        Thu, 3 Dec 2020 11:33:46 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 3540g1jt4a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Dec 2020 11:33:46 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3BXiQI001794;
-        Thu, 3 Dec 2020 11:33:45 GMT
-Received: from kadam (/102.36.221.92)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 03:33:44 -0800
-Date:   Thu, 3 Dec 2020 14:33:37 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH net] rtw88: debug: Fix uninitialized memory in debugfs
- code
-Message-ID: <20201203113337.GL2789@kadam>
-References: <X8ilOfVz3pf0T5ec@mwanda>
- <87pn3rgsgi.fsf@codeaurora.org>
+        Thu, 3 Dec 2020 08:16:43 -0500
+X-Greylist: delayed 9098 seconds by postgrey-1.27 at vger.kernel.org; Thu, 03 Dec 2020 08:16:41 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=ExFPH
+        COLd096nai3tHpoE+85NQSm9PMpe0XKckFen/s=; b=b+D3T17+Qe4xOq+Nro12r
+        +jRbsprJBqLQ0BEJp0eFIgpLNK9c52sqOqnnl4sOVXJTOBObtqOAcq/rIvqopfTD
+        xKgBYfO0qkuQ+y55PJ5AJSaojuzYcYQdJvtMJ6M+hoFwZnrfMv2KE5Fp5sWnNLsb
+        ABUi4K2pgQOOypngfsiwvI=
+Received: from localhost.localdomain (unknown [140.207.81.18])
+        by smtp8 (Coremail) with SMTP id NORpCgBX1mZ7XchfRfkdOQ--.19890S2;
+        Thu, 03 Dec 2020 11:37:36 +0800 (CST)
+From:   zhouliangya@126.com
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, lzhou <zhouliangya@126.com>
+Subject: [PATCH 0/1] ath10k_pci_wait_for_target_init() should relax cpu for other task instead of calling medelay() so that cpu can run other tasks. Signed-off-by: lzhou <lzhou@sonicwall.com> ---
+Date:   Thu,  3 Dec 2020 11:37:28 +0800
+Message-Id: <20201203033729.382088-1-zhouliangya@126.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87pn3rgsgi.fsf@codeaurora.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012030070
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012030070
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: NORpCgBX1mZ7XchfRfkdOQ--.19890S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvj4RXjjyUUUUU
+X-Originating-IP: [140.207.81.18]
+X-CM-SenderInfo: p2kr3z5ldqw5bd6rjloofrz/1tbijgHvsVpEBN+8AQAAsp
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 11:16:29AM +0200, Kalle Valo wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
-> 
-> > This code does not ensure that the whole buffer is initialized and none
-> > of the callers check for errors so potentially none of the buffer is
-> > initialized.  Add a memset to eliminate this bug.
-> >
-> > Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> >  drivers/net/wireless/realtek/rtw88/debug.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> 
-> I'll take this to wireless-drivers, this shouldn't go to net.
+From: lzhou <zhouliangya@126.com>
 
-Ugh...  The worst part about that is that I manually added the "net"
-part without thinking thouroughly.  :/  Anyway, I've modified my QC
-scripts now.
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-regards,
-dan carpenter
+-- 
+2.17.1
 
