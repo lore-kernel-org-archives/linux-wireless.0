@@ -4,78 +4,90 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFA9C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 18:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F9AC19425
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 18:37:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C9E222C9F
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 18:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81B0D22AAB
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 18:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729528AbgLDSFq (ORCPT
+        id S1730070AbgLDShK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Dec 2020 13:05:46 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:46310 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726330AbgLDSFq (ORCPT
+        Fri, 4 Dec 2020 13:37:10 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:55699 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728475AbgLDShK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Dec 2020 13:05:46 -0500
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1klFRz-0008KB-JP; Fri, 04 Dec 2020 18:04:59 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: brcmfmac: remove redundant assignment to pointer 'entry'
-Date:   Fri,  4 Dec 2020 18:04:59 +0000
-Message-Id: <20201204180459.1148257-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.29.2
+        Fri, 4 Dec 2020 13:37:10 -0500
+X-UUID: 641b57b8978c4f6c9cee36db41693dfd-20201205
+X-UUID: 641b57b8978c4f6c9cee36db41693dfd-20201205
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 608619604; Sat, 05 Dec 2020 02:36:25 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 5 Dec 2020 02:36:20 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 5 Dec 2020 02:36:21 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/2] mt76: mt7915: add vif check in mt7915_update_vif_beacon()
+Date:   Sat, 5 Dec 2020 02:36:21 +0800
+Message-ID: <6f63bc0fbba35c3005a9d6999104f41174466cb6.1607104742.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+This avoids the WARN_ON(1) calltrace in station mode.
 
-The pointer 'entry' is being initialized with a value that is never read
-and it is being updated later with a new value.  The initialization is
-redundant and can be removed.
+[ 4522.024382]  ieee80211_tx_dequeue+0x1258/0x1298 [mac80211]
+[ 4522.029868]  ieee80211_beacon_get_template+0x10/0x18 [mac80211]
+[ 4522.035780]  mt7915_mcu_add_beacon+0x2c/0x208 [mt7915e]
+[ 4522.040997]  mt7915_mcu_get_rx_rate+0x304/0x878 [mt7915e]
+[ 4522.046394]  ieee80211_delayed_tailroom_dec+0x158/0x180 [mac80211]
+[ 4522.052573]  ieee80211_iterate_interfaces+0x48/0x68 [mac80211]
+[ 4522.058398]  mt7915_mac_reset_work+0x3b4/0x630 [mt7915e]
+[ 4522.063704]  process_one_work+0x1fc/0x390
+[ 4522.067703]  worker_thread+0x48/0x4d0
+[ 4522.071356]  kthread+0x120/0x128
 
-Addresses-Coverity: ("Unused value")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 437e83ea8902..19b0f318f93e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -746,7 +746,7 @@ brcmf_fws_macdesc_lookup(struct brcmf_fws_info *fws, u8 *ea)
- static struct brcmf_fws_mac_descriptor*
- brcmf_fws_macdesc_find(struct brcmf_fws_info *fws, struct brcmf_if *ifp, u8 *da)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index a7fa6fffffff..98f80e77ad7b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1407,7 +1407,13 @@ mt7915_update_vif_beacon(void *priv, u8 *mac, struct ieee80211_vif *vif)
  {
--	struct brcmf_fws_mac_descriptor *entry = &fws->desc.other;
-+	struct brcmf_fws_mac_descriptor *entry;
- 	bool multicast;
+ 	struct ieee80211_hw *hw = priv;
  
- 	multicast = is_multicast_ether_addr(da);
+-	mt7915_mcu_add_beacon(hw, vif, vif->bss_conf.enable_beacon);
++	switch (vif->type) {
++	case NL80211_IFTYPE_MESH_POINT:
++	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_AP:
++		mt7915_mcu_add_beacon(hw, vif, vif->bss_conf.enable_beacon);
++		break;
++	}
+ }
+ 
+ static void
 -- 
-2.29.2
+2.18.0
 
