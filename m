@@ -2,87 +2,133 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB71C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 12:21:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 452B5C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 13:18:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FA2722795
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 12:21:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12ED3207CD
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 13:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729744AbgLDMVG (ORCPT
+        id S1730157AbgLDNSW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Dec 2020 07:21:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45686 "EHLO
+        Fri, 4 Dec 2020 08:18:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727385AbgLDMVE (ORCPT
+        with ESMTP id S1726432AbgLDNSW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Dec 2020 07:21:04 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D764C0613D1;
-        Fri,  4 Dec 2020 04:20:24 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1klA4U-002NvD-KX; Fri, 04 Dec 2020 13:20:22 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2020-12-04
-Date:   Fri,  4 Dec 2020 13:20:16 +0100
-Message-Id: <20201204122017.118099-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Fri, 4 Dec 2020 08:18:22 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00AF4C061A52
+        for <linux-wireless@vger.kernel.org>; Fri,  4 Dec 2020 05:17:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=nxdHDwvnog+6liZ8DSPVmI11iuBYNOqeQIAYQIcuZ3A=; b=SQTenh+NH/H0bk9G3+tZ+PxSaN
+        FCYRi2bjuMzJTeIHavDvMLUPzo+MZS9gnxaqU3ZWAZt3EuATIX8sJ3hd71rc1QVERY3/x6qM/cVue
+        5rJy62AAzhsVbQk8hApzsCn6JrBwjPsuzqocPRLOVJBRy+0UGvw1DbD+wpTjOuZj6wZ8=;
+Received: from p4ff13815.dip0.t-ipconnect.de ([79.241.56.21] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1klAxu-00033k-M0
+        for linux-wireless@vger.kernel.org; Fri, 04 Dec 2020 14:17:38 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH v2 3/3] mt76: attempt to free up more room when filling the tx queue
+Date:   Fri,  4 Dec 2020 14:17:37 +0100
+Message-Id: <20201204131737.41086-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201204131737.41086-1-nbd@nbd.name>
+References: <20201204131737.41086-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Jakub,
+Run dma cleanup immediately if the queue is almost full, instead of waiting
+for the tx interrupt
 
-We've got a few more fixes for the current cycle, everything
-else I have pending right now seems likely to go to 5.11 instead.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c  | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76.h | 1 +
+ drivers/net/wireless/mediatek/mt76/tx.c   | 8 ++++++++
+ 3 files changed, 12 insertions(+)
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit bbe2ba04c5a92a49db8a42c850a5a2f6481e47eb:
-
-  Merge tag 'net-5.10-rc7' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2020-12-03 13:10:11 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2020-12-04
-
-for you to fetch changes up to bdeca45a0cc58f864f1eb2e919304203ff5c5f39:
-
-  mac80211: set SDATA_STATE_RUNNING for monitor interfaces (2020-12-04 12:45:25 +0100)
-
-----------------------------------------------------------------
-Three small fixes:
- * initialize some data to avoid using stack garbage
- * fix 6 GHz channel selection in mac80211
- * correctly restart monitor mode interfaces in mac80211
-
-----------------------------------------------------------------
-Borwankar, Antara (1):
-      mac80211: set SDATA_STATE_RUNNING for monitor interfaces
-
-Sara Sharon (1):
-      cfg80211: initialize rekey_data
-
-Wen Gong (1):
-      mac80211: fix return value of ieee80211_chandef_he_6ghz_oper
-
- net/mac80211/iface.c   | 2 ++
- net/mac80211/util.c    | 2 +-
- net/wireless/nl80211.c | 2 +-
- 3 files changed, 4 insertions(+), 2 deletions(-)
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 6255f4f0a455..73eeb00d5aa6 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -88,6 +88,7 @@ mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q,
+ 	int i;
+ 
+ 	spin_lock_init(&q->lock);
++	spin_lock_init(&q->cleanup_lock);
+ 
+ 	q->regs = dev->mmio.regs + ring_base + idx * MT_RING_SIZE;
+ 	q->ndesc = n_desc;
+@@ -225,6 +226,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, struct mt76_queue *q, bool flush)
+ 	if (!q)
+ 		return;
+ 
++	spin_lock_bh(&q->cleanup_lock);
+ 	if (flush)
+ 		last = -1;
+ 	else
+@@ -243,6 +245,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, struct mt76_queue *q, bool flush)
+ 			last = readl(&q->regs->dma_idx);
+ 
+ 	}
++	spin_unlock_bh(&q->cleanup_lock);
+ 
+ 	if (flush) {
+ 		spin_lock_bh(&q->lock);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index ea80ae188dd6..3e496a188bf0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -126,6 +126,7 @@ struct mt76_queue {
+ 	struct mt76_queue_regs __iomem *regs;
+ 
+ 	spinlock_t lock;
++	spinlock_t cleanup_lock;
+ 	struct mt76_queue_entry *entry;
+ 	struct mt76_desc *desc;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 4026e5f4f3f3..1e20afb70fc1 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -448,6 +448,7 @@ static int
+ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
+ {
+ 	struct mt76_queue *q = phy->q_tx[qid];
++	struct mt76_dev *dev = phy->dev;
+ 	struct ieee80211_txq *txq;
+ 	struct mt76_txq *mtxq;
+ 	struct mt76_wcid *wcid;
+@@ -461,6 +462,13 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
+ 			break;
+ 		}
+ 
++		if (dev->queue_ops->tx_cleanup &&
++		    q->queued + 2 * MT_TXQ_FREE_THR >= q->ndesc) {
++			spin_unlock_bh(&q->lock);
++			dev->queue_ops->tx_cleanup(dev, q, false);
++			spin_lock_bh(&q->lock);
++		}
++
+ 		if (mt76_txq_stopped(q))
+ 			break;
+ 
+-- 
+2.28.0
 
