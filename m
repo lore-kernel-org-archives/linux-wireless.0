@@ -4,35 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A140C1B087
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 09:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0214C4361B
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 09:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4A13227C3
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 09:38:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89984227C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 09:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729564AbgLDJiL (ORCPT
+        id S1729450AbgLDJi3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Dec 2020 04:38:11 -0500
+        Fri, 4 Dec 2020 04:38:29 -0500
 Received: from mailgw02.mediatek.com ([210.61.82.184]:52962 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729445AbgLDJiL (ORCPT
+        with ESMTP id S1725866AbgLDJi3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Dec 2020 04:38:11 -0500
-X-UUID: 67c47fcf2447410b93508b3ddfc15371-20201204
-X-UUID: 67c47fcf2447410b93508b3ddfc15371-20201204
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        Fri, 4 Dec 2020 04:38:29 -0500
+X-UUID: 85d5a77a64f241cc8a1ac777ab95e4a8-20201204
+X-UUID: 85d5a77a64f241cc8a1ac777ab95e4a8-20201204
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1858085027; Fri, 04 Dec 2020 17:37:23 +0800
+        with ESMTP id 1594686488; Fri, 04 Dec 2020 17:37:42 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 4 Dec 2020 17:37:21 +0800
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 4 Dec 2020 17:37:19 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 4 Dec 2020 17:37:19 +0800
+ Transport; Fri, 4 Dec 2020 17:37:17 +0800
 From:   Shayne Chen <shayne.chen@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -41,191 +41,88 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 5/5] mt76: mt7615: move testmode data from dev to phy
-Date:   Fri, 4 Dec 2020 17:36:59 +0800
-Message-ID: <20201204093659.20384-5-shayne.chen@mediatek.com>
+Subject: [PATCH 3/5] mt76: testmode: move mtd part to mt76_dev
+Date:   Fri, 4 Dec 2020 17:36:57 +0800
+Message-ID: <20201204093659.20384-3-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20201204093659.20384-1-shayne.chen@mediatek.com>
 References: <20201204093659.20384-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 97721689F1F41A496701328FEA42E56069F4E91844D857AC66F55DAFAEC4AE8F2000:8
+X-TM-SNTS-SMTP: A00DEBCF65E99FBD6D07904414DF9A35D5ED59FC22E894ED589AD254CB8769712000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move per-chip testmode data to mt7615_phy, to properly support
-reg_backup and rx status of each band in testmode.
+Move testmode mtd variables to mt76_dev, since they are the same on
+each phy.
 
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 18 +++++++--------
- .../wireless/mediatek/mt76/mt7615/mt7615.h    | 22 +++++++++----------
- .../wireless/mediatek/mt76/mt7615/testmode.c  | 21 +++++++++---------
- 3 files changed, 30 insertions(+), 31 deletions(-)
+ drivers/net/wireless/mediatek/mt76/eeprom.c   | 4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 7 ++++---
+ drivers/net/wireless/mediatek/mt76/testmode.c | 6 +++---
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 0f360be0b885..9d8c6f34b3ae 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -186,7 +186,7 @@ mt7615_get_status_freq_info(struct mt7615_dev *dev, struct mt76_phy *mphy,
- 	status->freq = ieee80211_channel_to_frequency(chfreq, status->band);
- }
- 
--static void mt7615_mac_fill_tm_rx(struct mt7615_dev *dev, __le32 *rxv)
-+static void mt7615_mac_fill_tm_rx(struct mt7615_phy *phy, __le32 *rxv)
- {
- #ifdef CONFIG_NL80211_TESTMODE
- 	u32 rxv1 = le32_to_cpu(rxv[0]);
-@@ -210,13 +210,13 @@ static void mt7615_mac_fill_tm_rx(struct mt7615_dev *dev, __le32 *rxv)
- 		foe = (foe * foe_const) >> 15;
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index ffc9d547f4fe..665b54c5c8ae 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -75,8 +75,8 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
  	}
  
--	dev->test.last_freq_offset = foe;
--	dev->test.last_rcpi[0] = FIELD_GET(MT_RXV4_RCPI0, rxv4);
--	dev->test.last_rcpi[1] = FIELD_GET(MT_RXV4_RCPI1, rxv4);
--	dev->test.last_rcpi[2] = FIELD_GET(MT_RXV4_RCPI2, rxv4);
--	dev->test.last_rcpi[3] = FIELD_GET(MT_RXV4_RCPI3, rxv4);
--	dev->test.last_ib_rssi[0] = FIELD_GET(MT_RXV3_IB_RSSI, rxv3);
--	dev->test.last_wb_rssi[0] = FIELD_GET(MT_RXV3_WB_RSSI, rxv3);
-+	phy->test.last_freq_offset = foe;
-+	phy->test.last_rcpi[0] = FIELD_GET(MT_RXV4_RCPI0, rxv4);
-+	phy->test.last_rcpi[1] = FIELD_GET(MT_RXV4_RCPI1, rxv4);
-+	phy->test.last_rcpi[2] = FIELD_GET(MT_RXV4_RCPI2, rxv4);
-+	phy->test.last_rcpi[3] = FIELD_GET(MT_RXV4_RCPI3, rxv4);
-+	phy->test.last_ib_rssi[0] = FIELD_GET(MT_RXV3_IB_RSSI, rxv3);
-+	phy->test.last_wb_rssi[0] = FIELD_GET(MT_RXV3_WB_RSSI, rxv3);
+ #ifdef CONFIG_NL80211_TESTMODE
+-	dev->phy.test.mtd_name = devm_kstrdup(dev->dev, part, GFP_KERNEL);
+-	dev->phy.test.mtd_offset = offset;
++	dev->test_mtd.name = devm_kstrdup(dev->dev, part, GFP_KERNEL);
++	dev->test_mtd.offset = offset;
  #endif
- }
  
-@@ -435,7 +435,7 @@ static int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
- 					     status->chain_signal[i]);
- 		}
+ out_put_node:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 8752890fc61e..367bbc9b40a9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -543,9 +543,6 @@ struct mt76_testmode_data {
+ 	u8 tx_power[4];
+ 	u8 tx_power_control;
  
--		mt7615_mac_fill_tm_rx(dev, rxd);
-+		mt7615_mac_fill_tm_rx(mphy->priv, rxd);
+-	const char *mtd_name;
+-	u32 mtd_offset;
+-
+ 	u32 tx_pending;
+ 	u32 tx_queued;
+ 	u32 tx_done;
+@@ -663,6 +660,10 @@ struct mt76_dev {
  
- 		rxd += 6;
- 		if ((u8 *)rxd - skb->data >= skb->len)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 99b8abdbb08f..50e732bcb0d2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -195,6 +195,17 @@ struct mt7615_phy {
- 	struct timer_list roc_timer;
- 	wait_queue_head_t roc_wait;
- 	bool roc_grant;
-+
-+#ifdef CONFIG_NL80211_TESTMODE
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	const struct mt76_testmode_ops *test_ops;
 +	struct {
-+		u32 *reg_backup;
-+
-+		s16 last_freq_offset;
-+		u8 last_rcpi[4];
-+		s8 last_ib_rssi[4];
-+		s8 last_wb_rssi[4];
-+	} test;
-+#endif
- };
++		const char *name;
++		u32 offset;
++	} test_mtd;
+ #endif
+ 	struct workqueue_struct *wq;
  
- #define mt7615_mcu_add_tx_ba(dev, ...)	(dev)->mcu_ops->add_tx_ba((dev), __VA_ARGS__)
-@@ -281,17 +292,6 @@ struct mt7615_dev {
+diff --git a/drivers/net/wireless/mediatek/mt76/testmode.c b/drivers/net/wireless/mediatek/mt76/testmode.c
+index 184964b9bd42..8b14620e16fc 100644
+--- a/drivers/net/wireless/mediatek/mt76/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/testmode.c
+@@ -482,9 +482,9 @@ int mt76_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *msg,
+ 	if (nla_put_u32(msg, MT76_TM_ATTR_STATE, td->state))
+ 		goto out;
  
- 	u32 muar_mask;
+-	if (td->mtd_name &&
+-	    (nla_put_string(msg, MT76_TM_ATTR_MTD_PART, td->mtd_name) ||
+-	     nla_put_u32(msg, MT76_TM_ATTR_MTD_OFFSET, td->mtd_offset)))
++	if (dev->test_mtd.name &&
++	    (nla_put_string(msg, MT76_TM_ATTR_MTD_PART, dev->test_mtd.name) ||
++	     nla_put_u32(msg, MT76_TM_ATTR_MTD_OFFSET, dev->test_mtd.offset)))
+ 		goto out;
  
--#ifdef CONFIG_NL80211_TESTMODE
--	struct {
--		u32 *reg_backup;
--
--		s16 last_freq_offset;
--		u8 last_rcpi[4];
--		s8 last_ib_rssi[4];
--		s8 last_wb_rssi[4];
--	} test;
--#endif
--
- 	struct {
- 		bool enable;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7615/testmode.c
-index f70367d2d317..b82915445d0d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/testmode.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/testmode.c
-@@ -98,12 +98,12 @@ static void
- mt7615_tm_reg_backup_restore(struct mt7615_phy *phy)
- {
- 	struct mt7615_dev *dev = phy->dev;
--	u32 *b = dev->test.reg_backup;
-+	u32 *b = phy->test.reg_backup;
- 	int n_regs = ARRAY_SIZE(reg_backup_list);
- 	int n_rf_regs = ARRAY_SIZE(rf_backup_list);
- 	int i;
- 
--	if (dev->mphy.test.state == MT76_TM_STATE_OFF) {
-+	if (phy->mt76->test.state == MT76_TM_STATE_OFF) {
- 		for (i = 0; i < n_regs; i++)
- 			mt76_wr(dev, reg_backup_list[i], b[i]);
- 
-@@ -121,7 +121,7 @@ mt7615_tm_reg_backup_restore(struct mt7615_phy *phy)
- 	if (!b)
- 		return;
- 
--	dev->test.reg_backup = b;
-+	phy->test.reg_backup = b;
- 	for (i = 0; i < n_regs; i++)
- 		b[i] = mt76_rr(dev, reg_backup_list[i]);
- 	for (i = 0; i < n_rf_regs; i++)
-@@ -323,7 +323,6 @@ static int
- mt7615_tm_dump_stats(struct mt76_phy *mphy, struct sk_buff *msg)
- {
- 	struct mt7615_phy *phy = mphy->priv;
--	struct mt7615_dev *dev = phy->dev;
- 	void *rx, *rssi;
- 	int i;
- 
-@@ -331,15 +330,15 @@ mt7615_tm_dump_stats(struct mt76_phy *mphy, struct sk_buff *msg)
- 	if (!rx)
- 		return -ENOMEM;
- 
--	if (nla_put_s32(msg, MT76_TM_RX_ATTR_FREQ_OFFSET, dev->test.last_freq_offset))
-+	if (nla_put_s32(msg, MT76_TM_RX_ATTR_FREQ_OFFSET, phy->test.last_freq_offset))
- 		return -ENOMEM;
- 
- 	rssi = nla_nest_start(msg, MT76_TM_RX_ATTR_RCPI);
- 	if (!rssi)
- 		return -ENOMEM;
- 
--	for (i = 0; i < ARRAY_SIZE(dev->test.last_rcpi); i++)
--		if (nla_put_u8(msg, i, dev->test.last_rcpi[i]))
-+	for (i = 0; i < ARRAY_SIZE(phy->test.last_rcpi); i++)
-+		if (nla_put_u8(msg, i, phy->test.last_rcpi[i]))
- 			return -ENOMEM;
- 
- 	nla_nest_end(msg, rssi);
-@@ -348,8 +347,8 @@ mt7615_tm_dump_stats(struct mt76_phy *mphy, struct sk_buff *msg)
- 	if (!rssi)
- 		return -ENOMEM;
- 
--	for (i = 0; i < ARRAY_SIZE(dev->test.last_ib_rssi); i++)
--		if (nla_put_s8(msg, i, dev->test.last_ib_rssi[i]))
-+	for (i = 0; i < ARRAY_SIZE(phy->test.last_ib_rssi); i++)
-+		if (nla_put_s8(msg, i, phy->test.last_ib_rssi[i]))
- 			return -ENOMEM;
- 
- 	nla_nest_end(msg, rssi);
-@@ -358,8 +357,8 @@ mt7615_tm_dump_stats(struct mt76_phy *mphy, struct sk_buff *msg)
- 	if (!rssi)
- 		return -ENOMEM;
- 
--	for (i = 0; i < ARRAY_SIZE(dev->test.last_wb_rssi); i++)
--		if (nla_put_s8(msg, i, dev->test.last_wb_rssi[i]))
-+	for (i = 0; i < ARRAY_SIZE(phy->test.last_wb_rssi); i++)
-+		if (nla_put_s8(msg, i, phy->test.last_wb_rssi[i]))
- 			return -ENOMEM;
- 
- 	nla_nest_end(msg, rssi);
+ 	if (nla_put_u32(msg, MT76_TM_ATTR_TX_COUNT, td->tx_count) ||
 -- 
 2.17.1
 
