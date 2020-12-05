@@ -2,96 +2,204 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BCADC4361A
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 23:38:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDFD4C433FE
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Dec 2020 00:26:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE27F22CA0
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Dec 2020 23:38:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFD5122D6E
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Dec 2020 00:26:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726603AbgLDXhy (ORCPT
+        id S1730647AbgLEA0g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Dec 2020 18:37:54 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:51671 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726111AbgLDXhy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Dec 2020 18:37:54 -0500
-X-UUID: dbcf439a5eb94733840aadda579dcfb0-20201205
-X-UUID: dbcf439a5eb94733840aadda579dcfb0-20201205
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1608178693; Sat, 05 Dec 2020 07:37:21 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 5 Dec 2020 07:37:14 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 5 Dec 2020 07:37:16 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2 1/2] mt76: mt7915: add vif check in mt7915_update_vif_beacon()
-Date:   Sat, 5 Dec 2020 07:37:14 +0800
-Message-ID: <65336148b5d440dceb967a401488b119e14b9c5a.1607124652.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Fri, 4 Dec 2020 19:26:36 -0500
+Received: from mga06.intel.com ([134.134.136.31]:59098 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726264AbgLEA0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Dec 2020 19:26:36 -0500
+IronPort-SDR: g7/126GTIuhAqNGNCbXolFqJ5ZriAEMwixCwDVI63ppzxg0AMwqxRVJJL8F4n/Z9h/GsOQN4/i
+ g9+aR74Z6Mgw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9825"; a="235073765"
+X-IronPort-AV: E=Sophos;i="5.78,394,1599548400"; 
+   d="scan'208";a="235073765"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Dec 2020 16:25:54 -0800
+IronPort-SDR: nOIXf/mPxuW7/SpvqPI6SOhl9mG53BUkaX7hwyY6GrTBSCzrBSSW25PPMs4mtEGqAhlWYhjgAx
+ MJrGL6ITZFQQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.78,394,1599548400"; 
+   d="scan'208";a="374083764"
+Received: from lkp-server02.sh.intel.com (HELO f74a175f0d75) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 04 Dec 2020 16:25:53 -0800
+Received: from kbuild by f74a175f0d75 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1klLOa-0000e2-Ev; Sat, 05 Dec 2020 00:25:52 +0000
+Date:   Sat, 05 Dec 2020 08:24:53 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [mac80211:master] BUILD SUCCESS
+ bdeca45a0cc58f864f1eb2e919304203ff5c5f39
+Message-ID: <5fcad355.S0pmicvAI2md/Soi%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To avoid the warn_on() calltrace in station mode.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git  master
+branch HEAD: bdeca45a0cc58f864f1eb2e919304203ff5c5f39  mac80211: set SDATA_STATE_RUNNING for monitor interfaces
 
-[ 4522.024382]  ieee80211_tx_dequeue+0x1258/0x1298 [mac80211]
-[ 4522.029868]  ieee80211_beacon_get_template+0x10/0x18 [mac80211]
-[ 4522.035780]  mt7915_mcu_add_beacon+0x2c/0x208 [mt7915e]
-[ 4522.040997]  mt7915_mcu_get_rx_rate+0x304/0x878 [mt7915e]
-[ 4522.046394]  ieee80211_delayed_tailroom_dec+0x158/0x180 [mac80211]
-[ 4522.052573]  ieee80211_iterate_interfaces+0x48/0x68 [mac80211]
-[ 4522.058398]  mt7915_mac_reset_work+0x3b4/0x630 [mt7915e]
-[ 4522.063704]  process_one_work+0x1fc/0x390
-[ 4522.067703]  worker_thread+0x48/0x4d0
-[ 4522.071356]  kthread+0x120/0x128
+elapsed time: 726m
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+configs tested: 131
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+powerpc                     tqm8555_defconfig
+s390                                defconfig
+sh                           se7721_defconfig
+m68k                          amiga_defconfig
+sh                          r7785rp_defconfig
+sh                         microdev_defconfig
+m68k                       m5275evb_defconfig
+arm                        shmobile_defconfig
+um                           x86_64_defconfig
+ia64                          tiger_defconfig
+arm                         mv78xx0_defconfig
+ia64                            zx1_defconfig
+nds32                            alldefconfig
+arm                           corgi_defconfig
+arm                           sama5_defconfig
+arm                          ep93xx_defconfig
+arm                           viper_defconfig
+powerpc                      ep88xc_defconfig
+arm                         bcm2835_defconfig
+powerpc                      acadia_defconfig
+arm                         assabet_defconfig
+powerpc                     skiroot_defconfig
+arm                          pcm027_defconfig
+arm                           u8500_defconfig
+powerpc                      ppc6xx_defconfig
+arm                         vf610m4_defconfig
+arc                     haps_hs_smp_defconfig
+arm                       netwinder_defconfig
+arm                          iop32x_defconfig
+ia64                             allyesconfig
+arm                          collie_defconfig
+mips                         cobalt_defconfig
+powerpc                   motionpro_defconfig
+mips                           jazz_defconfig
+powerpc                        cell_defconfig
+ia64                             alldefconfig
+arm                       aspeed_g4_defconfig
+arm                         hackkit_defconfig
+sparc                       sparc64_defconfig
+powerpc                         wii_defconfig
+arm                       versatile_defconfig
+arc                     nsimosci_hs_defconfig
+arm                          pxa3xx_defconfig
+openrisc                         alldefconfig
+powerpc                      mgcoge_defconfig
+arm                         s3c2410_defconfig
+openrisc                    or1ksim_defconfig
+mips                  maltasmvp_eva_defconfig
+arm                        trizeps4_defconfig
+arm                        spear3xx_defconfig
+powerpc                    amigaone_defconfig
+powerpc               mpc834x_itxgp_defconfig
+powerpc                 mpc8272_ads_defconfig
+sh                             espt_defconfig
+arm                        multi_v5_defconfig
+arm                         nhk8815_defconfig
+m68k                            q40_defconfig
+sparc64                             defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+xtensa                           allyesconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20201204
+x86_64               randconfig-a006-20201204
+x86_64               randconfig-a002-20201204
+x86_64               randconfig-a001-20201204
+x86_64               randconfig-a005-20201204
+x86_64               randconfig-a003-20201204
+i386                 randconfig-a005-20201204
+i386                 randconfig-a004-20201204
+i386                 randconfig-a001-20201204
+i386                 randconfig-a002-20201204
+i386                 randconfig-a006-20201204
+i386                 randconfig-a003-20201204
+i386                 randconfig-a014-20201204
+i386                 randconfig-a013-20201204
+i386                 randconfig-a011-20201204
+i386                 randconfig-a015-20201204
+i386                 randconfig-a012-20201204
+i386                 randconfig-a016-20201204
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+x86_64                           allyesconfig
+
+clang tested configs:
+x86_64               randconfig-a016-20201204
+x86_64               randconfig-a012-20201204
+x86_64               randconfig-a014-20201204
+x86_64               randconfig-a013-20201204
+x86_64               randconfig-a015-20201204
+x86_64               randconfig-a011-20201204
+
 ---
-change since v2: add default:
----
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index a7fa6fffffff..7f08c88d3282 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1407,7 +1407,15 @@ mt7915_update_vif_beacon(void *priv, u8 *mac, struct ieee80211_vif *vif)
- {
- 	struct ieee80211_hw *hw = priv;
- 
--	mt7915_mcu_add_beacon(hw, vif, vif->bss_conf.enable_beacon);
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_AP:
-+		mt7915_mcu_add_beacon(hw, vif, vif->bss_conf.enable_beacon);
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- static void
--- 
-2.18.0
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
