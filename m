@@ -7,67 +7,106 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA626C433FE
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4A2C4361B
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F85022E03
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2123922E03
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727714AbgLFLIX (ORCPT
+        id S1727659AbgLFLIV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 06:08:23 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34816 "EHLO
+        Sun, 6 Dec 2020 06:08:21 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34792 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727700AbgLFLIX (ORCPT
+        with ESMTP id S1726604AbgLFLIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 06:08:23 -0500
+        Sun, 6 Dec 2020 06:08:20 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1klrtA-003AAN-5J; Sun, 06 Dec 2020 13:07:36 +0200
+        id 1klrt7-003AAN-Kk; Sun, 06 Dec 2020 13:07:34 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun,  6 Dec 2020 13:07:26 +0200
-Message-Id: <iwlwifi.20201206130357.a738ba358848.I1ddb243053ff763c91b663748b6a593ecc3b5634@changeid>
+Date:   Sun,  6 Dec 2020 13:07:22 +0200
+Message-Id: <iwlwifi.20201206130357.acd85b500d0c.Ic7aee4dbbf4be42287c338c2fa1b111473724116@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201206110729.488452-1-luca@coelho.fi>
 References: <20201206110729.488452-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: dbg-tlv: fix old length in is_trig_data_contained()
+Subject: [PATCH 05/12] iwlwifi: pcie: remove MSIX_HW_INT_CAUSES_REG_IML handling
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's a bug in the lengths - the 'old length' needs to be calculated
-using the 'old' pointer, of course, likely a copy/paste mistake. Fix
-this.
+This is actually wrong, the bit used here by the image loader
+is BIT(1), not BIT(2). The latter will be reused by the new
+reset flow soon.
 
-Reported-by: Daniel Gabay <daniel.gabay@intel.com>
+However, as we never had any complaints about not printing
+the IML status or not handling the IML error interrupt (and
+I suspect the code handling it was incorrectly anyway) just
+remove the code for it.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Fixes: cf29c5b66b9f ("iwlwifi: dbg_ini: implement time point handling")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 11 -----------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  1 -
+ 3 files changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 51ce93d21ffe..8fa1c22fd96d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -808,7 +808,7 @@ static bool is_trig_data_contained(struct iwl_ucode_tlv *new,
- 	struct iwl_fw_ini_trigger_tlv *old_trig = (void *)old->data;
- 	__le32 *new_data = new_trig->data, *old_data = old_trig->data;
- 	u32 new_dwords_num = iwl_tlv_array_len(new, new_trig, data);
--	u32 old_dwords_num = iwl_tlv_array_len(new, new_trig, data);
-+	u32 old_dwords_num = iwl_tlv_array_len(old, old_trig, data);
- 	int i, j;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index cb9e8e189a1a..185d00b16220 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -628,7 +628,7 @@ enum msix_fh_int_causes {
+ enum msix_hw_int_causes {
+ 	MSIX_HW_INT_CAUSES_REG_ALIVE		= BIT(0),
+ 	MSIX_HW_INT_CAUSES_REG_WAKEUP		= BIT(1),
+-	MSIX_HW_INT_CAUSES_REG_IML              = BIT(2),
++	MSIX_HW_INT_CAUSES_REG_IML              = BIT(1),
+ 	MSIX_HW_INT_CAUSES_REG_CT_KILL		= BIT(6),
+ 	MSIX_HW_INT_CAUSES_REG_RF_KILL		= BIT(7),
+ 	MSIX_HW_INT_CAUSES_REG_PERIODIC		= BIT(8),
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index ed200f541bfc..8ad58dced045 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -2283,17 +2283,6 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 		}
+ 	}
  
- 	for (i = 0; i < new_dwords_num; i++) {
+-	if (inta_hw & MSIX_HW_INT_CAUSES_REG_IML) {
+-		/* Reflect IML transfer status */
+-		int res = iwl_read32(trans, CSR_IML_RESP_ADDR);
+-
+-		IWL_DEBUG_ISR(trans, "IML transfer status: %d\n", res);
+-		if (res == IWL_IMAGE_RESP_FAIL) {
+-			isr_stats->sw++;
+-			iwl_pcie_irq_handle_error(trans);
+-		}
+-	}
+-
+ 	/* Chip got too hot and stopped itself */
+ 	if (inta_hw & MSIX_HW_INT_CAUSES_REG_CT_KILL) {
+ 		IWL_ERR(trans, "Microcode CT kill error detected.\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 2ed7de7262df..11c42a0b7a85 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1103,7 +1103,6 @@ static struct iwl_causes_list causes_list[] = {
+ 	{MSIX_FH_INT_CAUSES_FH_ERR,		CSR_MSIX_FH_INT_MASK_AD, 0x5},
+ 	{MSIX_HW_INT_CAUSES_REG_ALIVE,		CSR_MSIX_HW_INT_MASK_AD, 0x10},
+ 	{MSIX_HW_INT_CAUSES_REG_WAKEUP,		CSR_MSIX_HW_INT_MASK_AD, 0x11},
+-	{MSIX_HW_INT_CAUSES_REG_IML,            CSR_MSIX_HW_INT_MASK_AD, 0x12},
+ 	{MSIX_HW_INT_CAUSES_REG_CT_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x16},
+ 	{MSIX_HW_INT_CAUSES_REG_RF_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x17},
+ 	{MSIX_HW_INT_CAUSES_REG_PERIODIC,	CSR_MSIX_HW_INT_MASK_AD, 0x18},
 -- 
 2.29.2
 
