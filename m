@@ -7,102 +7,99 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5308C19437
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2081C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B072E2310E
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B12542310E
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728002AbgLFMzx (ORCPT
+        id S1727991AbgLFMzw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 07:55:53 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34928 "EHLO
+        Sun, 6 Dec 2020 07:55:52 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34938 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727974AbgLFMzo (ORCPT
+        with ESMTP id S1727989AbgLFMzp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 07:55:44 -0500
+        Sun, 6 Dec 2020 07:55:45 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kltZ2-003AHZ-W4; Sun, 06 Dec 2020 14:54:57 +0200
+        id 1kltZ4-003AHZ-Dj; Sun, 06 Dec 2020 14:54:58 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun,  6 Dec 2020 14:54:46 +0200
-Message-Id: <iwlwifi.20201206145305.0c46e5097cc0.I06e75706770c40b9ba1cabd1f8a78ab7a05c5b73@changeid>
+Date:   Sun,  6 Dec 2020 14:54:48 +0200
+Message-Id: <iwlwifi.20201206145305.4387040b99a0.I74bcf19238f75a5960c4098b10e355123d933281@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201206125450.564941-1-luca@coelho.fi>
 References: <20201206125450.564941-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/11] mac80211: use bitfield helpers for BA session action frames
+Subject: [PATCH 09/11] mac80211: Fix calculation of minimal channel width
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-Use the appropriate bitfield helpers for encoding and decoding
-the capability field in the BA session action frames instead of
-open-coding the shifts/masks.
+When calculating the minimal channel width for channel context,
+the current operation Rx channel width of a station was used and not
+the overall channel width capability of the station, i.e., both for
+Tx and Rx.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fix ieee80211_get_sta_bw() to use the maximal channel width the
+station is capable. While at it make the function static.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/agg-rx.c |  8 ++++----
- net/mac80211/agg-tx.c | 12 ++++++------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ net/mac80211/chan.c        | 10 ++++++----
+ net/mac80211/ieee80211_i.h |  1 -
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index cd4cf84a7f99..cce28e3b2232 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -250,10 +250,10 @@ static void ieee80211_send_addba_resp(struct sta_info *sta, u8 *da, u16 tid,
- 	mgmt->u.action.u.addba_resp.action_code = WLAN_ACTION_ADDBA_RESP;
- 	mgmt->u.action.u.addba_resp.dialog_token = dialog_token;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index b6c80a45b9f5..c42574f2d48c 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -191,11 +191,13 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
+ 	return NULL;
+ }
  
--	capab = (u16)(amsdu << 0);	/* bit 0 A-MSDU support */
--	capab |= (u16)(policy << 1);	/* bit 1 aggregation policy */
--	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
--	capab |= (u16)(buf_size << 6);	/* bit 15:6 max size of aggregation */
-+	capab = u16_encode_bits(amsdu, IEEE80211_ADDBA_PARAM_AMSDU_MASK);
-+	capab |= u16_encode_bits(policy, IEEE80211_ADDBA_PARAM_POLICY_MASK);
-+	capab |= u16_encode_bits(tid, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	capab |= u16_encode_bits(buf_size, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
+-enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
++static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta)
+ {
+-	switch (sta->bandwidth) {
++	enum ieee80211_sta_rx_bandwidth width = ieee80211_sta_cap_rx_bw(sta);
++
++	switch (width) {
+ 	case IEEE80211_STA_RX_BW_20:
+-		if (sta->ht_cap.ht_supported)
++		if (sta->sta.ht_cap.ht_supported)
+ 			return NL80211_CHAN_WIDTH_20;
+ 		else
+ 			return NL80211_CHAN_WIDTH_20_NOHT;
+@@ -232,7 +234,7 @@ ieee80211_get_max_required_bw(struct ieee80211_sub_if_data *sdata)
+ 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
+ 			continue;
  
- 	mgmt->u.action.u.addba_resp.capab = cpu_to_le16(capab);
- 	mgmt->u.action.u.addba_resp.timeout = cpu_to_le16(timeout);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index b37c8a983d88..430a58587538 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -95,10 +95,10 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
- 	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+-		max_bw = max(max_bw, ieee80211_get_sta_bw(&sta->sta));
++		max_bw = max(max_bw, ieee80211_get_sta_bw(sta));
+ 	}
+ 	rcu_read_unlock();
  
- 	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
--	capab = (u16)(1 << 0);		/* bit 0 A-MSDU support */
--	capab |= (u16)(1 << 1);		/* bit 1 aggregation policy */
--	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
--	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
-+	capab = IEEE80211_ADDBA_PARAM_AMSDU_MASK;
-+	capab |= IEEE80211_ADDBA_PARAM_POLICY_MASK;
-+	capab |= u16_encode_bits(tid, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	capab |= u16_encode_bits(agg_size, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cb721c7c1cdb..8bf9c0e974d6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2277,7 +2277,6 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
+ int ieee80211_max_num_channels(struct ieee80211_local *local);
+-enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta);
+ void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 				       struct ieee80211_chanctx *ctx);
  
- 	mgmt->u.action.u.addba_req.capab = cpu_to_le16(capab);
- 
-@@ -950,8 +950,8 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 
- 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
- 	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
--	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
--	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
-+	tid = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	buf_size = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
- 	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
- 
- 	txq = sta->sta.txq[tid];
 -- 
 2.29.2
 
