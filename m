@@ -7,139 +7,128 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB9AAC2BB48
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75BF6C4361B
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:24:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60B1D23108
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30B7B2311B
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:24:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726222AbgLFIXE (ORCPT
+        id S1726296AbgLFIXu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 03:23:04 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34674 "EHLO
+        Sun, 6 Dec 2020 03:23:50 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34694 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726080AbgLFIWz (ORCPT
+        with ESMTP id S1726080AbgLFIXu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 03:22:55 -0500
+        Sun, 6 Dec 2020 03:23:50 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=localhost.localdomain)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1klpJ1-003A2r-Ml; Sun, 06 Dec 2020 10:22:08 +0200
+        id 1klpJ4-003A2r-2x; Sun, 06 Dec 2020 10:22:10 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun,  6 Dec 2020 10:21:55 +0200
-Message-Id: <iwlwifi.20201206100942.5a2b79211d61.Id5746874ecfa208b60baa62691b2d9dc5dd4d89c@changeid>
+Date:   Sun,  6 Dec 2020 10:21:58 +0200
+Message-Id: <iwlwifi.20201206100942.1556f9faa431.I9ac366aa97db045be4daa4ba263267a3ac6a6a2f@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201206082159.440198-1-luca@coelho.fi>
 References: <20201206082159.440198-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/12] iwlwifi: validate MPDU length against notification length
+Subject: [PATCH 11/12] iwlwifi: mvm: clear up iwl_mvm_notify_rx_queue() argument type
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The MPDU contained in a notification shouldn't be larger than the
-notification size itself is, validate this.
+The argument type to iwl_mvm_notify_rx_queue() is currently just
+a u8 *, but that's misleading because we actually need the inner
+data to be of type struct iwl_mvm_internal_rxq_notif, because we
+interpret it when we get it back from the device (to check the
+sync bool and possibly the cookie.)
 
-Reported-by: Haggai Abramovsky <haggai.abramovsky@intel.com>
+Therefore, clear up any potential confusion and require that the
+data passed is of type struct iwl_mvm_internal_rxq_notif *.
+
+Also, while at it, rename the "count" to "notif_size" as "count"
+doesn't really clearly say what it's counting.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c   | 10 ++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  6 ++++++
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 13 +++++++------
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-index 9d55ece05020..d06278558b33 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018, 2020 Intel Corporation
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portionhelp of the ieee80211 subsystem header files.
-@@ -786,7 +786,7 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 	struct iwl_rx_phy_res *phy_res;
- 	__le32 rx_pkt_status;
- 	struct iwl_rx_mpdu_res_start *amsdu;
--	u32 len;
-+	u32 len, pkt_len = iwl_rx_packet_len(pkt);
- 	u32 ampdu_status;
- 	u32 rate_n_flags;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 0f1d345dfc36..766aeeaf1fcf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -5101,8 +5101,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 			   mvm->trans->num_rx_queues);
+ 	}
  
-@@ -798,6 +798,12 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 	amsdu = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	header = (struct ieee80211_hdr *)(pkt->data + sizeof(*amsdu));
- 	len = le16_to_cpu(amsdu->byte_count);
-+
-+	if (unlikely(len + sizeof(*amsdu) + sizeof(__le32) > pkt_len)) {
-+		IWL_DEBUG_DROP(priv, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	rx_pkt_status = *(__le32 *)(pkt->data + sizeof(*amsdu) + len);
- 	ampdu_status = iwlagn_translate_rx_status(priv,
- 						  le32_to_cpu(rx_pkt_status));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 2ffe92d79148..af3151553569 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -349,7 +349,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_mpdu_res_start *rx_res;
- 	struct ieee80211_sta *sta = NULL;
- 	struct sk_buff *skb;
--	u32 len;
-+	u32 len, pkt_len = iwl_rx_packet_payload_len(pkt);
- 	u32 rate_n_flags;
- 	u32 rx_pkt_status;
- 	u8 crypt_len = 0;
-@@ -358,6 +358,12 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
- 	len = le16_to_cpu(rx_res->byte_count);
-+
-+	if (unlikely(len + sizeof(*rx_res) + sizeof(__le32) > pkt_len)) {
-+		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	rx_pkt_status = get_unaligned_le32((__le32 *)
- 		(pkt->data + sizeof(*rx_res) + len));
- 
+-	ret = iwl_mvm_notify_rx_queue(mvm, qmask, (u8 *)notif,
+-				      size, !notif->sync);
++	ret = iwl_mvm_notify_rx_queue(mvm, qmask, notif, size, !notif->sync);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Failed to trigger RX queues sync (%d)\n", ret);
+ 		goto out;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 047bd47df32e..7e28a088f3e6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1615,7 +1615,8 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
+ void iwl_mvm_rx_bar_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 				  struct iwl_rx_cmd_buffer *rxb, int queue);
+ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
+-			    const u8 *data, u32 count, bool async);
++			    const struct iwl_mvm_internal_rxq_notif *notif,
++			    u32 notif_size, bool async);
+ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			    struct iwl_rx_cmd_buffer *rxb, int queue);
+ void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 22bd3a84aaac..1d51ec95ec21 100644
+index 1d51ec95ec21..ef5bd58ef742 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1607,6 +1607,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
- 	struct ieee80211_hdr *hdr;
- 	u32 len = le16_to_cpu(desc->mpdu_len);
-+	u32 pkt_len = iwl_rx_packet_payload_len(pkt);
- 	u32 rate_n_flags, gp2_on_air_rise;
- 	u16 phy_info = le16_to_cpu(desc->phy_info);
- 	struct ieee80211_sta *sta = NULL;
-@@ -1653,6 +1654,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			le32_get_bits(phy_data.d1,
- 				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
+@@ -510,26 +510,27 @@ static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
+ }
  
-+	if (len + desc_size > pkt_len) {
-+		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	hdr = (void *)(pkt->data + desc_size);
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
- 	 * ieee80211_hdr pulled.
+ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
+-			    const u8 *data, u32 count, bool async)
++			    const struct iwl_mvm_internal_rxq_notif *notif,
++			    u32 notif_size, bool async)
+ {
+ 	u8 buf[sizeof(struct iwl_rxq_sync_cmd) +
+ 	       sizeof(struct iwl_mvm_rss_sync_notif)];
+ 	struct iwl_rxq_sync_cmd *cmd = (void *)buf;
+-	u32 data_size = sizeof(*cmd) + count;
++	u32 data_size = sizeof(*cmd) + notif_size;
+ 	int ret;
+ 
+ 	/*
+ 	 * size must be a multiple of DWORD
+ 	 * Ensure we don't overflow buf
+ 	 */
+-	if (WARN_ON(count & 3 ||
+-		    count > sizeof(struct iwl_mvm_rss_sync_notif)))
++	if (WARN_ON(notif_size & 3 ||
++		    notif_size > sizeof(struct iwl_mvm_rss_sync_notif)))
+ 		return -EINVAL;
+ 
+ 	cmd->rxq_mask = cpu_to_le32(rxq_mask);
+-	cmd->count =  cpu_to_le32(count);
++	cmd->count =  cpu_to_le32(notif_size);
+ 	cmd->flags = 0;
+-	memcpy(cmd->payload, data, count);
++	memcpy(cmd->payload, notif, notif_size);
+ 
+ 	ret = iwl_mvm_send_cmd_pdu(mvm,
+ 				   WIDE_ID(DATA_PATH_GROUP,
 -- 
 2.29.2
 
