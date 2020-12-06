@@ -2,86 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACFDDC4361B
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 10:23:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39543C4361B
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 706012246B
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 10:23:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1E1122E03
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726602AbgLFKXv (ORCPT
+        id S1727132AbgLFLIS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 05:23:51 -0500
-Received: from mail-m972.mail.163.com ([123.126.97.2]:51136 "EHLO
-        mail-m972.mail.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbgLFKXv (ORCPT
+        Sun, 6 Dec 2020 06:08:18 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34774 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726840AbgLFLIS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 05:23:51 -0500
-X-Greylist: delayed 5651 seconds by postgrey-1.27 at vger.kernel.org; Sun, 06 Dec 2020 05:23:50 EST
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=WHTCy5l5+fYdUerrjp
-        3tMcqmoP1IK9GclDAiIt73lIc=; b=gWjDUGTW9iFpikukNRiWvcwOFE5mmhmBlA
-        T3lh4vQlvBb4wNJcDNquytTyh7NNZglggAtzQR62O2/C3MtxyZfrFivx9BWwEvgM
-        AI7If9haV8rNEYqiyrBP3qYHMpRLiJ73bOJQpmQmtgnnBwc16PNnRvmtAnGRUCpN
-        w4mFF3LYo=
-Received: from localhost.localdomain (unknown [202.112.113.212])
-        by smtp2 (Coremail) with SMTP id GtxpCgCHA8nMmsxfJf2DEA--.20874S4;
-        Sun, 06 Dec 2020 16:48:13 +0800 (CST)
-From:   Xiaohui Zhang <ruc_zhangxiaohui@163.com>
-To:     Xiaohui Zhang <ruc_zhangxiaohui@163.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, davem@davemloft.net,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/1] mwifiex: Fix possible buffer overflows in mwifiex_cmd_802_11_ad_hoc_start
-Date:   Sun,  6 Dec 2020 16:48:01 +0800
-Message-Id: <20201206084801.26479-1-ruc_zhangxiaohui@163.com>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: GtxpCgCHA8nMmsxfJf2DEA--.20874S4
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtF4xZF4rAw4fXF4xJry7ZFb_yoWkZFX_W3
-        4Iva15JrZrtw1IyrsYyw42v3sYkr1rXrWxGa17trWrGFW2vFZrtrnY9rs5Xr12kw1qvr9x
-        Wrs8A3y5ta4FvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUjU3vUUUUUU==
-X-Originating-IP: [202.112.113.212]
-X-CM-SenderInfo: puxfs6pkdqw5xldrx3rl6rljoofrz/1tbipQ3yMFUMa-PfKwAAsf
+        Sun, 6 Dec 2020 06:08:18 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1klrt5-003AAN-IU; Sun, 06 Dec 2020 13:07:31 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Sun,  6 Dec 2020 13:07:19 +0200
+Message-Id: <iwlwifi.20201206130357.08635cbb2720.Id09daabfd331ba9e120abcbbedd2ad6448902ed0@changeid>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201206110729.488452-1-luca@coelho.fi>
+References: <20201206110729.488452-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 02/12] iwlwifi: mvm: fix 22000 series driver NMI
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-mwifiex_cmd_802_11_ad_hoc_start() calls memcpy() without checking
-the destination size may trigger a buffer overflower,
-which a local user could use to cause denial of service
-or the execution of arbitrary code.
-Fix it by putting the length check before calling memcpy().
+For triggering an NMI in the firmware, we should only set BIT(24)
+in the corresponding register, not the entire mask that's usable
+by the driver.
 
-Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
+This currently doesn't matter because the firmware only enables
+BIT(24), but we'll start using BIT(25) for other purposes with an
+upcoming API change.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/join.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index 5934f7147..173ccf79c 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -877,6 +877,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+index 2139f0b8f2bb..b24160fe73d3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+@@ -279,7 +279,7 @@ void iwl_force_nmi(struct iwl_trans *trans)
+ 			       DEVICE_SET_NMI_VAL_DRV);
+ 	else if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
+ 		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
+-				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK);
++				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
+ 	else
+ 		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
+ 				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 6c44a49640be..1a1628550cce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -109,7 +109,7 @@
+ #define DEVICE_SET_NMI_VAL_DRV BIT(7)
+ /* Device NMI register and value for 9000 family and above hw's */
+ #define UREG_NIC_SET_NMI_DRIVER 0x00a05c10
+-#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK 0xff000000
++#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER BIT(24)
  
- 	memset(adhoc_start->ssid, 0, IEEE80211_MAX_SSID_LEN);
- 
-+	if (req_ssid->ssid_len > IEEE80211_MAX_SSID_LEN)
-+		req_ssid->ssid_len = IEEE80211_MAX_SSID_LEN;
- 	memcpy(adhoc_start->ssid, req_ssid->ssid, req_ssid->ssid_len);
- 
- 	mwifiex_dbg(adapter, INFO, "info: ADHOC_S_CMD: SSID = %s\n",
+ /* Shared registers (0x0..0x3ff, via target indirect or periphery */
+ #define SHR_BASE	0x00a10000
 -- 
-2.17.1
+2.29.2
 
