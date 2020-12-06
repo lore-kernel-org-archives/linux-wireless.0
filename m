@@ -7,104 +7,80 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 650A0C4361B
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC623C19425
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16D8D22509
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 11:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C7B2310E
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 12:55:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727151AbgLFLK0 (ORCPT
+        id S1727995AbgLFMzx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 06:10:26 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34854 "EHLO
+        Sun, 6 Dec 2020 07:55:53 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34932 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726746AbgLFLKZ (ORCPT
+        with ESMTP id S1727982AbgLFMzp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 06:10:25 -0500
+        Sun, 6 Dec 2020 07:55:45 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1klrtB-003AAN-Mp; Sun, 06 Dec 2020 13:07:38 +0200
+        id 1kltZ3-003AHZ-P6; Sun, 06 Dec 2020 14:54:58 +0200
 From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
+To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun,  6 Dec 2020 13:07:28 +0200
-Message-Id: <iwlwifi.20201206130357.659be1a58d2e.Ia71e766ead7560262f4bc6ad3da6f1117c498cd6@changeid>
+Date:   Sun,  6 Dec 2020 14:54:47 +0200
+Message-Id: <iwlwifi.20201206145305.9abf9f6b4f88.Icb6e52af586edcc74f1f0360e8f6fc9ef2bfe8f5@changeid>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201206110729.488452-1-luca@coelho.fi>
-References: <20201206110729.488452-1-luca@coelho.fi>
+In-Reply-To: <20201206125450.564941-1-luca@coelho.fi>
+References: <20201206125450.564941-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/12] iwlwifi: pcie: clean up some rx code
+Subject: [PATCH 08/11] mac80211: ignore country element TX power on 6 GHz
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We don't need the sequence/index/cmd_index unless we're doing
-reclaim, they're not even valid in the other cases. Move the
-variables and their assignments into the right if statement
-and combine the two if statements into a single one as well.
+Updates to the 802.11ax draft are coming that deprecate the
+country element in favour of the transmit power envelope
+element, and make the maximum transmit power level field in
+the triplets reserved, so if we parse them we'd use 0 dBm
+transmit power.
+
+Follow suit and completely ignore the element on 6 GHz for
+purposes of determining TX power.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ net/mac80211/mlme.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 5d5513d39809..e82356abd0c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1239,9 +1239,8 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1c9cc65bccba..824dbba62794 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1560,9 +1560,17 @@ ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		chan_increment = 1;
+ 		break;
+ 	case NL80211_BAND_5GHZ:
+-	case NL80211_BAND_6GHZ:
+ 		chan_increment = 4;
+ 		break;
++	case NL80211_BAND_6GHZ:
++		/*
++		 * In the 6 GHz band, the "maximum transmit power level"
++		 * field in the triplets is reserved, and thus will be
++		 * zero and we shouldn't use it to control TX power.
++		 * The actual TX power will be given in the transmit
++		 * power envelope element instead.
++		 */
++		return false;
+ 	}
  
- 	while (offset + sizeof(u32) + sizeof(struct iwl_cmd_header) < max_len) {
- 		struct iwl_rx_packet *pkt;
--		u16 sequence;
- 		bool reclaim;
--		int index, cmd_index, len;
-+		int len;
- 		struct iwl_rx_cmd_buffer rxcb = {
- 			._offset = rxb->offset + offset,
- 			._rx_page_order = trans_pcie->rx_page_order,
-@@ -1307,10 +1306,6 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			}
- 		}
- 
--		sequence = le16_to_cpu(pkt->hdr.sequence);
--		index = SEQ_TO_INDEX(sequence);
--		cmd_index = iwl_txq_get_cmd_index(txq, index);
--
- 		if (rxq->id == trans_pcie->def_rx_queue)
- 			iwl_op_mode_rx(trans->op_mode, &rxq->napi,
- 				       &rxcb);
-@@ -1318,17 +1313,19 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			iwl_op_mode_rx_rss(trans->op_mode, &rxq->napi,
- 					   &rxcb, rxq->id);
- 
--		if (reclaim) {
--			kfree_sensitive(txq->entries[cmd_index].free_buf);
--			txq->entries[cmd_index].free_buf = NULL;
--		}
--
- 		/*
- 		 * After here, we should always check rxcb._page_stolen,
- 		 * if it is true then one of the handlers took the page.
- 		 */
- 
- 		if (reclaim) {
-+			u16 sequence = le16_to_cpu(pkt->hdr.sequence);
-+			int index = SEQ_TO_INDEX(sequence);
-+			int cmd_index = iwl_txq_get_cmd_index(txq, index);
-+
-+			kfree_sensitive(txq->entries[cmd_index].free_buf);
-+			txq->entries[cmd_index].free_buf = NULL;
-+
- 			/* Invoke any callbacks, transfer the buffer to caller,
- 			 * and fire off the (possibly) blocking
- 			 * iwl_trans_send_cmd()
+ 	/* find channel */
 -- 
 2.29.2
 
