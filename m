@@ -7,101 +7,116 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4829DC4167B
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64C15C2BB40
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E708D23108
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 396ED22D2A
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Dec 2020 08:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726173AbgLFIW4 (ORCPT
+        id S1726089AbgLFIWz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 03:22:56 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34644 "EHLO
+        Sun, 6 Dec 2020 03:22:55 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34668 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725772AbgLFIWv (ORCPT
+        with ESMTP id S1726077AbgLFIWy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 03:22:51 -0500
+        Sun, 6 Dec 2020 03:22:54 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=localhost.localdomain)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1klpIx-003A2r-QJ; Sun, 06 Dec 2020 10:22:04 +0200
+        id 1klpJ1-003A2r-0h; Sun, 06 Dec 2020 10:22:07 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun,  6 Dec 2020 10:21:50 +0200
-Message-Id: <iwlwifi.20201206100942.acf9ee6de665.I2da0ada577fc16268125a4a15b5e725c18c643ee@changeid>
+Date:   Sun,  6 Dec 2020 10:21:54 +0200
+Message-Id: <iwlwifi.20201206100942.367e06852726.Ic35b8d1a328903195ec7cb887a9cb198b7d8f856@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201206082159.440198-1-luca@coelho.fi>
 References: <20201206082159.440198-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 03/12] iwlwifi: mvm: remove the read_nvm from iwl_run_unified_mvm_ucode
+Subject: [PATCH 07/12] iwlwifi: mvm: iterate active stations when updating statistics
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Similarly to what I did to iwl_run_init_mvm_ucode, there is no
-need to pass the read_nvm parameter. Either we have an NVM
-and we don't need to read it, or we don't and we need to read it.
+Instead of enumerating all possible stations iterate only active ones.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 36 ++++++++-------------
+ 1 file changed, 13 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index a31a77f828fa..c29e55720179 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -460,7 +460,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 0059c83c2783..2ffe92d79148 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -689,30 +689,20 @@ iwl_mvm_rx_stats_check_trigger(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
+ 	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig, NULL);
  }
  
--static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
-+static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm)
+-static void iwl_mvm_update_avg_energy(struct iwl_mvm *mvm,
+-				      u8 energy[IWL_MVM_STATION_COUNT_MAX])
++static void iwl_mvm_stats_energy_iter(void *_data,
++				      struct ieee80211_sta *sta)
  {
- 	struct iwl_notification_wait init_wait;
- 	struct iwl_nvm_access_complete_cmd nvm_complete = {};
-@@ -517,7 +517,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		iwl_mvm_load_nvm_to_nic(mvm);
+-	int i;
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	u8 *energy = _data;
++	u32 sta_id = mvmsta->sta_id;
+ 
+-	if (WARN_ONCE(mvm->fw->ucode_capa.num_stations >
+-		      IWL_MVM_STATION_COUNT_MAX,
+-		      "Driver and FW station count mismatch %d\n",
+-		      mvm->fw->ucode_capa.num_stations))
++	if (WARN_ONCE(sta_id >= IWL_MVM_STATION_COUNT_MAX, "sta_id %d >= %d",
++		      sta_id, IWL_MVM_STATION_COUNT_MAX))
+ 		return;
+ 
+-	rcu_read_lock();
+-	for (i = 0; i < mvm->fw->ucode_capa.num_stations; i++) {
+-		struct iwl_mvm_sta *sta;
+-
+-		if (!energy[i])
+-			continue;
++	if (energy[sta_id])
++		mvmsta->avg_energy = energy[sta_id];
+ 
+-		sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
+-		if (!sta)
+-			continue;
+-		sta->avg_energy = energy[i];
+-	}
+-	rcu_read_unlock();
+ }
+ 
+ static void
+@@ -793,8 +783,8 @@ iwl_mvm_handle_rx_statistics_tlv(struct iwl_mvm *mvm,
+ 
+ 	for (i = 0; i < ARRAY_SIZE(average_energy); i++)
+ 		average_energy[i] = le32_to_cpu(stats->average_energy[i]);
+-	iwl_mvm_update_avg_energy(mvm, average_energy);
+-
++	ieee80211_iterate_stations_atomic(mvm->hw, iwl_mvm_stats_energy_iter,
++					  average_energy);
+ 	/*
+ 	 * Don't update in case the statistics are not cleared, since
+ 	 * we will end up counting twice the same airtime, once in TCM
+@@ -904,8 +894,8 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 		bytes = (void *)&stats->load_stats.byte_count;
+ 		air_time = (void *)&stats->load_stats.air_time;
  	}
+-
+-	iwl_mvm_update_avg_energy(mvm, energy);
++	ieee80211_iterate_stations_atomic(mvm->hw, iwl_mvm_stats_energy_iter,
++					  energy);
  
--	if (IWL_MVM_PARSE_NVM && read_nvm) {
-+	if (IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
- 		ret = iwl_nvm_init(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
-@@ -542,7 +542,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		return ret;
- 
- 	/* Read the NVM only at driver load time, no need to do this twice */
--	if (!IWL_MVM_PARSE_NVM && read_nvm) {
-+	if (!IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
- 		mvm->nvm_data = iwl_get_nvm(mvm->trans, mvm->fw);
- 		if (IS_ERR(mvm->nvm_data)) {
- 			ret = PTR_ERR(mvm->nvm_data);
-@@ -657,7 +657,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm)
- 	int ret;
- 
- 	if (iwl_mvm_has_unified_ucode(mvm))
--		return iwl_run_unified_mvm_ucode(mvm, true);
-+		return iwl_run_unified_mvm_ucode(mvm);
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1330,7 +1330,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- 	int ret;
- 
- 	if (iwl_mvm_has_unified_ucode(mvm))
--		return iwl_run_unified_mvm_ucode(mvm, false);
-+		return iwl_run_unified_mvm_ucode(mvm);
- 
- 	WARN_ON(!mvm->nvm_data);
- 	ret = iwl_run_init_mvm_ucode(mvm);
+ 	/*
+ 	 * Don't update in case the statistics are not cleared, since
 -- 
 2.29.2
 
