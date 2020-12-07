@@ -2,100 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B0DEC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Dec 2020 03:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F40C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Dec 2020 03:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E5C822CA0
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Dec 2020 03:20:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06F5C221F8
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Dec 2020 03:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbgLGDUU (ORCPT
+        id S1726489AbgLGDfz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 6 Dec 2020 22:20:20 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:59288 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726400AbgLGDUU (ORCPT
+        Sun, 6 Dec 2020 22:35:55 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:25672 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726400AbgLGDfy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Dec 2020 22:20:20 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0B73JBfZ4030816, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0B73JBfZ4030816
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 7 Dec 2020 11:19:11 +0800
-Received: from localhost (172.21.69.213) by RTEXMB04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2044.4; Mon, 7 Dec 2020
- 11:19:11 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
-        <dan.carpenter@oracle.com>
-Subject: [PATCH] rtlwifi: rtl8192de: fix ofdm power compensation
-Date:   Mon, 7 Dec 2020 11:19:03 +0800
-Message-ID: <20201207031903.7599-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXH365.realtek.com.tw (172.21.6.37) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+        Sun, 6 Dec 2020 22:35:54 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1607312134; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=pADto9znzN8yD/HpOV5r1c9eP1YWr0M/dmgfltU1A4s=; b=b59vSFc9Kqn5bBx2ZHwx4n1MOQmUqLW5452t8OUvzaERLP505kZVZcbh38cJjD+pWh+mGOI1
+ EObZdNZ1K6ArSpYyifJXq+X6qLtQVr/d31cdqNdn3EcWXG1BN453pHcfC64NFxZIugyVqeYQ
+ QTpHOzwIaGiLoQtyHVjeshxaZhM=
+X-Mailgun-Sending-Ip: 69.72.43.15
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
+ 5fcda30596285165cdfa44d2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 07 Dec 2020 03:35:33
+ GMT
+Sender: wgong=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A004EC433C6; Mon,  7 Dec 2020 03:35:33 +0000 (UTC)
+Received: from gongwen-ThinkPad-T420.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CA94BC43462;
+        Mon,  7 Dec 2020 03:35:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CA94BC43462
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org, johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
+Subject: [PATCH 1/2] mac80211: save ssid info to ieee80211_bss_conf while assoc
+Date:   Mon,  7 Dec 2020 11:36:34 +0800
+Message-Id: <1607312195-3583-2-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1607312195-3583-1-git-send-email-wgong@codeaurora.org>
+References: <1607312195-3583-1-git-send-email-wgong@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ofdm_index[] is used to indicate how many power compensation is needed to
-current thermal value. For internal PA module or 2.4G band, the min_index
-is different from other cases.
+The ssid info of ieee80211_bss_conf is filled in ieee80211_start_ap()
+for AP mode. For STATION mode, it is empty, save the info from struct
+ieee80211_mgd_assoc_data, the struct ieee80211_mgd_assoc_data will be
+freed after assoc, so the ssid info of ieee80211_mgd_assoc_data can not
+access after assoc, save ssid info to ieee80211_bss_conf, then ssid info
+can be still access after assoc.
 
-This issue originally is reported by Dan. He found the size of ofdm_index[]
-is 2, but access index 'i' may be equal to 2 if 'rf' is 2 in case of
-'is2t'.
-
-In fact, the chunk of code is added to wrong place, so move it back to
-proper place, and then power compensation and buffer overflow are fixed.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ net/mac80211/mlme.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-index b3f25a228532..6cc9c7649eda 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-@@ -986,18 +986,19 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
- 			rtlpriv->dm.cck_index);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ac870309b911..f3b3cba02be2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5364,6 +5364,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_mgd_assoc_data *assoc_data;
+ 	const struct cfg80211_bss_ies *beacon_ies;
+ 	struct ieee80211_supported_band *sband;
++	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+ 	const u8 *ssidie, *ht_ie, *vht_ie;
+ 	int i, err;
+ 	bool override = false;
+@@ -5381,6 +5382,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
  	}
- 	for (i = 0; i < rf; i++) {
--		if (ofdm_index[i] > OFDM_TABLE_SIZE_92D - 1)
-+		if (ofdm_index[i] > OFDM_TABLE_SIZE_92D - 1) {
- 			ofdm_index[i] = OFDM_TABLE_SIZE_92D - 1;
--		else if (ofdm_index[i] < ofdm_min_index)
-+		} else if (internal_pa ||
-+			   rtlhal->current_bandtype == BAND_ON_2_4G) {
-+			if (ofdm_index[i] < ofdm_min_index_internal_pa)
-+				ofdm_index[i] = ofdm_min_index_internal_pa;
-+		} else if (ofdm_index[i] < ofdm_min_index) {
- 			ofdm_index[i] = ofdm_min_index;
-+		}
- 	}
- 	if (rtlhal->current_bandtype == BAND_ON_2_4G) {
- 		if (cck_index > CCK_TABLE_SIZE - 1) {
- 			cck_index = CCK_TABLE_SIZE - 1;
--		} else if (internal_pa ||
--			   rtlhal->current_bandtype == BAND_ON_2_4G) {
--			if (ofdm_index[i] < ofdm_min_index_internal_pa)
--				ofdm_index[i] = ofdm_min_index_internal_pa;
- 		} else if (cck_index < 0) {
- 			cck_index = 0;
- 		}
+ 	memcpy(assoc_data->ssid, ssidie + 2, ssidie[1]);
+ 	assoc_data->ssid_len = ssidie[1];
++	memcpy(bss_conf->ssid, assoc_data->ssid, assoc_data->ssid_len);
++	bss_conf->ssid_len = assoc_data->ssid_len;
+ 	rcu_read_unlock();
+ 
+ 	if (ifmgd->associated) {
 -- 
-2.21.0
+2.23.0
 
