@@ -2,107 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF51C4361B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 00:03:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3181EC4361B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 01:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A55F823A04
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 00:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7C2D235F9
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 01:35:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728512AbgLHADZ (ORCPT
+        id S1726253AbgLHBfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Dec 2020 19:03:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45076 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727062AbgLHADY (ORCPT
+        Mon, 7 Dec 2020 20:35:42 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:33425 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726190AbgLHBfl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Dec 2020 19:03:24 -0500
-Received: from mail-ua1-x942.google.com (mail-ua1-x942.google.com [IPv6:2607:f8b0:4864:20::942])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D33EC061285
-        for <linux-wireless@vger.kernel.org>; Mon,  7 Dec 2020 16:02:36 -0800 (PST)
-Received: by mail-ua1-x942.google.com with SMTP id x13so5092497uar.4
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2020 16:02:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=upb/CqjljGMq0mDhDOTo+ddS28Jk9ogwKt4euX8NQs4=;
-        b=FL1MkXJu3M0BAsQbDDwOhOO07lK8vxkNwD3gVvvAFsHzWvAVD4uVocaZxFmag3g/mB
-         7wb405alpjK9lwL5NGrDPVV8pPeW0G/kivR+vySa+9Yh+v7vqyALp0zMV8t8RdWciWxT
-         Wgy9Q4cy1HuJdqY5aJDn0xcqqodUnwgQ+cBYA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=upb/CqjljGMq0mDhDOTo+ddS28Jk9ogwKt4euX8NQs4=;
-        b=LcMNSc7faNR+/CKpxr/yG5oBWk97DFOhLm+zh3KvfkjMNdOpUKL7t7BYgV/kD5FE1O
-         TKj5f5Z6Shgwjdx76yagjoEII30YhqaQzEi5vcopdl/qvikuxAfncYOOIvWyIVEyuc/Z
-         /lqZxQ8a1eOqD0JMZya6Qs86sHcj9UEgmvT8t91hyaFHEJFFfbF2f2sqVsw+V9MpFuJV
-         894l40tt0HU6dupNIx4cSfDDuLGWLx/W0jh469k02BzE8zM3dCaraCBUc3D6Y4OBUkGx
-         z5yIUebJiR52BKXTnYynW79l5kpooN9cqgYGpOCVCQZhZMmDAFq65Df3IJrnTeRe7AvU
-         zn1g==
-X-Gm-Message-State: AOAM533Tre7pUBt5zTQQ5ol/Nl4bT3TGk/64B2mXI2DyyOOkd3Isox/U
-        KncF3r4QfMGN/rRbokFwzB3uTdKHYKYgVQ==
-X-Google-Smtp-Source: ABdhPJwX2DjC6sQ3AbCH1s7MGuzo8BLwoCw3pj/H+AtpC3qeg7LWrwrpJCGXVE1cKiJnrs4BGHiWHA==
-X-Received: by 2002:a9f:2191:: with SMTP id 17mr13806076uac.83.1607385755296;
-        Mon, 07 Dec 2020 16:02:35 -0800 (PST)
-Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com. [209.85.222.44])
-        by smtp.gmail.com with ESMTPSA id b81sm1894651vka.53.2020.12.07.16.02.34
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Dec 2020 16:02:34 -0800 (PST)
-Received: by mail-ua1-f44.google.com with SMTP id y26so5093315uan.5
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2020 16:02:34 -0800 (PST)
-X-Received: by 2002:ab0:35fa:: with SMTP id w26mr13479881uau.90.1607385753680;
- Mon, 07 Dec 2020 16:02:33 -0800 (PST)
+        Mon, 7 Dec 2020 20:35:41 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0B81YsAO2030599, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb04.realtek.com.tw[172.21.6.97])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0B81YsAO2030599
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 8 Dec 2020 09:34:54 +0800
+Received: from localhost (172.21.69.213) by RTEXMB04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2044.4; Tue, 8 Dec 2020
+ 09:34:53 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <tony0620emma@gmail.com>, <linux-wireless@vger.kernel.org>,
+        <timlee@realtek.com>, <pkshih@realtek.com>
+Subject: [PATCH] rtw88: reduce polling time of IQ calibration
+Date:   Tue, 8 Dec 2020 09:34:44 +0800
+Message-ID: <20201208013444.10881-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-References: <20201207231824.v3.1.Ia6b95087ca566f77423f3802a78b946f7b593ff5@changeid>
-In-Reply-To: <20201207231824.v3.1.Ia6b95087ca566f77423f3802a78b946f7b593ff5@changeid>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Mon, 7 Dec 2020 16:02:20 -0800
-X-Gmail-Original-Message-ID: <CAD=FV=UyCboywA0xG68ZhJB6MZ2ncx478WntD_1iGg=q+G8AmA@mail.gmail.com>
-Message-ID: <CAD=FV=UyCboywA0xG68ZhJB6MZ2ncx478WntD_1iGg=q+G8AmA@mail.gmail.com>
-Subject: Re: [PATCH v3] ath10k: add option for chip-id based BDF selection
-To:     Abhishek Kumar <kuabhs@chromium.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.213]
+X-ClientProxiedBy: RTEXH365.realtek.com.tw (172.21.6.37) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Chin-Yen Lee <timlee@realtek.com>
 
-On Mon, Dec 7, 2020 at 3:23 PM Abhishek Kumar <kuabhs@chromium.org> wrote:
->
-> In some devices difference in chip-id should be enough to pick
-> the right BDF. Add another support for chip-id based BDF selection.
-> With this new option, ath10k supports 2 fallback options.
->
-> The board name with chip-id as option looks as follows
-> board name 'bus=snoc,qmi-board-id=ff,qmi-chip-id=320'
->
-> Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.2.2-00696-QCAHLSWMTPL-1
-> Tested-on: QCA6174 HW3.2 WLAN.RM.4.4.1-00157-QCARMSWPZ-1
-> Signed-off-by: Abhishek Kumar <kuabhs@chromium.org>
-> ---
->
-> Changes in v3:
-> - Resurreted Patch V1 because as per discussion we do need two
-> fallback board names and refactored ath10k_core_create_board_name.
->
->  drivers/net/wireless/ath/ath10k/core.c | 41 +++++++++++++++++++-------
->  1 file changed, 30 insertions(+), 11 deletions(-)
+When 8822CE is associating with AP, driver will poll status bit of
+IQ calibration to confirm the IQ calibration is done, and then move on
+the association process. Current polling time for IQ calibration is 6
+seconds.
 
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
+But occasionally driver fails in polling the status bit because the status
+bit is not set after IQ calibration is done. When it happends, association
+process will be serieously delayed up to 6 seconds. To avoid it, we reduce
+polling time to 300ms, in which the IQ calibration can be done.
+
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2: move define to the beginning of file
+---
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 7dd3ccb73793..dd560c28abb2 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -18,6 +18,8 @@
+ #include "bf.h"
+ #include "efuse.h"
+ 
++#define IQK_DONE_8822C 0xaa
++
+ static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
+ 				     u8 rx_path, bool is_tx2_path);
+ 
+@@ -2110,20 +2112,17 @@ static void rtw8822c_do_iqk(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_iqk_para para = {0};
+ 	u8 iqk_chk;
+-	int counter;
++	int ret;
+ 
+ 	para.clear = 1;
+ 	rtw_fw_do_iqk(rtwdev, &para);
+ 
+-	for (counter = 0; counter < 300; counter++) {
+-		iqk_chk = rtw_read8(rtwdev, REG_RPT_CIP);
+-		if (iqk_chk == 0xaa)
+-			break;
+-		msleep(20);
+-	}
+-	rtw_write8(rtwdev, REG_IQKSTAT, 0x0);
++	ret = read_poll_timeout(rtw_read8, iqk_chk, iqk_chk == IQK_DONE_8822C,
++				20000, 300000, false, rtwdev, REG_RPT_CIP);
++	if (ret)
++		rtw_warn(rtwdev, "failed to poll iqk status bit\n");
+ 
+-	rtw_dbg(rtwdev, RTW_DBG_RFK, "iqk counter=%d\n", counter);
++	rtw_write8(rtwdev, REG_IQKSTAT, 0x0);
+ }
+ 
+ /* for coex */
+-- 
+2.21.0
+
