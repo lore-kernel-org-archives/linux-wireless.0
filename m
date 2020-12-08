@@ -2,136 +2,150 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06867C4361B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 21:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFF10C4167B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 22:55:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0E5523AFE
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 21:01:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5DED23AC9
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 22:55:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729611AbgLHVBJ (ORCPT
+        id S1731555AbgLHWzV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Dec 2020 16:01:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44182 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729552AbgLHVBJ (ORCPT
+        Tue, 8 Dec 2020 17:55:21 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:63135 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731243AbgLHWzU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Dec 2020 16:01:09 -0500
-Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D22F6C0613CF
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Dec 2020 13:00:28 -0800 (PST)
-Received: by mail-ot1-x343.google.com with SMTP id o11so99202ote.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2020 13:00:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JQYt/4VgCiEwd3op5jlCPhHU8pQtIJ/B1ftm9vhFDbM=;
-        b=elBXLPE9EtSolehwqod4JujVxpIlOQ+VeIEW8OSE9jod4LBKN1G7JgblBCuMqt7Z9I
-         J+5q4Ho+3/TnxKhBIQY8EwD0ZAN0G5fghei/Lr9fI40OVHw+jPBMqhdNUcRyokZrO3y0
-         WgzXG3aRwasbIiezVdjhx/D6QCe1aFXa90IBE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JQYt/4VgCiEwd3op5jlCPhHU8pQtIJ/B1ftm9vhFDbM=;
-        b=MgGIjkYz0ymZL/tMc2FvspHEtIm07HKPtPzWN4dimV/mcdlm7vwNTBbYXAcwBaggKU
-         khDK+4T+m9pgvg4SdRcgR+gjpstyqsUpPqmnL3uM0RyeGqBJCbPl8e86GSU4mQbI5e7G
-         0L1kXD1t1cZHVjghoDdRIwnTth3I8N+wQWIEz0soOYWfutYahTX0uVnpmwEHFfsrT5Qy
-         vVbcpQ1pYtWGgVFURBdt7g8epdfX+8/8dOsbf6Y87jRxkYm5pwvm9NUz3Rf5mR8Kd21V
-         9ywASZp6JgQecoHm10CQi21A9koP5DjN9U8wYtUFI7XvXiuKTXddGvDvVkwcRV9G4UUF
-         Koog==
-X-Gm-Message-State: AOAM533syR1FYcODBzZkniDHM2UVcgFUnT9JG7D8p4FkcD5yyVksSCVr
-        qjktiH6UvflGh68fjmXtTWKftMssIUIFbw==
-X-Google-Smtp-Source: ABdhPJwRSWQZ57S+m26BQa2bof68nMQxbJHbHUNFCJiwGatXsOcLz+h+ps6rNbOGeLr/ATvATD+Ccg==
-X-Received: by 2002:a4a:b043:: with SMTP id g3mr17519626oon.69.1607453803806;
-        Tue, 08 Dec 2020 10:56:43 -0800 (PST)
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com. [209.85.167.178])
-        by smtp.gmail.com with ESMTPSA id e24sm947305otq.9.2020.12.08.10.56.42
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Dec 2020 10:56:42 -0800 (PST)
-Received: by mail-oi1-f178.google.com with SMTP id p126so20503021oif.7
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2020 10:56:42 -0800 (PST)
-X-Received: by 2002:aca:c443:: with SMTP id u64mr3807625oif.117.1607453801518;
- Tue, 08 Dec 2020 10:56:41 -0800 (PST)
-MIME-Version: 1.0
-References: <20201208154343.6946-1-ruc_zhangxiaohui@163.com>
-In-Reply-To: <20201208154343.6946-1-ruc_zhangxiaohui@163.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Tue, 8 Dec 2020 10:56:29 -0800
-X-Gmail-Original-Message-ID: <CA+ASDXPiY5AQDu2snHSqBDA0BYi79_hmNAjsKmXm1cFrgoxo4Q@mail.gmail.com>
-Message-ID: <CA+ASDXPiY5AQDu2snHSqBDA0BYi79_hmNAjsKmXm1cFrgoxo4Q@mail.gmail.com>
-Subject: Re: [PATCH 1/1] mwifiex: Fix possible buffer overflows in mwifiex_uap_bss_param_prepare
-To:     Xiaohui Zhang <ruc_zhangxiaohui@163.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 8 Dec 2020 17:55:20 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1607468096; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=dLstmuiftDBm36AO/XybB5auDZnJ5xyen5F7BS3UFxI=; b=wcLAyKZx6M9pDzRCdzSz6zqT4J7ds1BmZrFxo+/7K4zr10cnvzsDDktWx9V3MoT7NYXzawAw
+ R+mG79ak4nZUnn38c4y7MuESrdVrRicCiTJgfjBkNVZvadPdZfw3491qSVnqG+hSkzECmpmH
+ k4Bvpb25OzoR3W3oy2QV9aiZ7eE=
+X-Mailgun-Sending-Ip: 198.61.254.31
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5fd00425a44f9b1da0795117 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 08 Dec 2020 22:54:29
+ GMT
+Sender: msinada=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E7283C433C6; Tue,  8 Dec 2020 22:54:28 +0000 (UTC)
+Received: from msinada-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: msinada)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 30DEFC433ED;
+        Tue,  8 Dec 2020 22:54:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 30DEFC433ED
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=msinada@codeaurora.org
+From:   Muna Sinada <msinada@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Muna Sinada <msinada@codeaurora.org>
+Subject: [PATCH 2/2] mac80211: Handling driver updated MU-EDCA params
+Date:   Tue,  8 Dec 2020 14:54:04 -0800
+Message-Id: <1607468044-31789-2-git-send-email-msinada@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1607468044-31789-1-git-send-email-msinada@codeaurora.org>
+References: <1607468044-31789-1-git-send-email-msinada@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-(FWIW, this author's mail has been routed to my spam mailbox. That's
-partly my fault and/or my "choice" of mail provider, but that's why I
-only see these once Kalle replies to them.)
+Added necessary function to pass through driver updated MU-EDCA
+parameters to user space.
 
-On Tue, Dec 8, 2020 at 8:03 AM Xiaohui Zhang <ruc_zhangxiaohui@163.com> wrote:
->
-> From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
->
-> mwifiex_uap_bss_param_prepare() calls memcpy() without checking
-> the destination size may trigger a buffer overflower,
-> which a local user could use to cause denial of service or the
-> execution of arbitrary code.
-> Fix it by putting the length check before calling memcpy().
->
-> Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> index b48a85d79..937c75e89 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> @@ -502,7 +502,8 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
->                 ssid = (struct host_cmd_tlv_ssid *)tlv;
->                 ssid->header.type = cpu_to_le16(TLV_TYPE_UAP_SSID);
->                 ssid->header.len = cpu_to_le16((u16)bss_cfg->ssid.ssid_len);
-> -               memcpy(ssid->ssid, bss_cfg->ssid.ssid, bss_cfg->ssid.ssid_len);
-> +               memcpy(ssid->ssid, bss_cfg->ssid.ssid,
-> +                      min_t(u32, bss_cfg->ssid.ssid_len, strlen(ssid->ssid)));
+Signed-off-by: Muna Sinada <msinada@codeaurora.org>
+---
+ include/net/mac80211.h | 15 +++++++++++++++
+ net/mac80211/mlme.c    | 12 ++++++++++++
+ net/mac80211/trace.h   | 20 ++++++++++++++++++++
+ 3 files changed, 47 insertions(+)
 
-This strlen() check makes no sense to me. We are *writing* to
-ssid->ssid, so its initial contents are either zero or garbage --
-strlen() will either give a zero or unpredictable value. I'm pretty
-sure that's not what you intend.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 05c7524bab26..eeadddaf1f6a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -6695,4 +6695,19 @@ struct sk_buff *ieee80211_get_fils_discovery_tmpl(struct ieee80211_hw *hw,
+ struct sk_buff *
+ ieee80211_get_unsol_bcast_probe_resp_tmpl(struct ieee80211_hw *hw,
+ 					  struct ieee80211_vif *vif);
++
++/**
++ * ieee80211_update_muedca_params - update MU-EDCA parameters.
++ *
++ * This function is used to pass dynamically updated MU-EDCA parameters
++ * from driver to user space in order for parameters to be updated in beacon.
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @params: updated MU-EDCA parameters
++ * @gfp: allocation flags
++ */
++void ieee80211_update_muedca_params(struct ieee80211_hw *hw,
++				    struct ieee80211_mu_edca_param_set
++				    *params, gfp_t gfp);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6adfcb9c06dc..aba8fecf8284 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5934,3 +5934,15 @@ void ieee80211_cqm_beacon_loss_notify(struct ieee80211_vif *vif, gfp_t gfp)
+ 	cfg80211_cqm_beacon_loss_notify(sdata->dev, gfp);
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_beacon_loss_notify);
++
++void ieee80211_update_muedca_params(struct ieee80211_hw *hw,
++				    struct ieee80211_mu_edca_param_set
++				    *params, gfp_t gfp)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	trace_api_update_muedca_params(local, params);
++
++	cfg80211_update_muedca_params_event(local->hw.wiphy, params, gfp);
++}
++EXPORT_SYMBOL(ieee80211_update_muedca_params);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 89723907a094..4ede71bea435 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -2767,6 +2767,26 @@ TRACE_EVENT(drv_sta_set_4addr,
+ 	)
+ );
+ 
++TRACE_EVENT(api_update_muedca_params,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_mu_edca_param_set *params),
++
++	TP_ARGS(local, params),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " updated MU-EDCA parameters",
++		LOCAL_PR_ARG
++	)
++);
++
+ #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+2.7.4
 
-On the other hand, it's hard to determine what the proper bound here
-*should* be. This 'ssid' struct is really just a pointer into
-mwifiex_cmd_uap_sys_config()'s uap_sys_config (struct
-host_cmd_ds_sys_config), which doesn't have any defined length -- its
-length is only given by way of its surrounding buffers/structs.
-Altogether, the code is hard to reason about.
-
-Anyway, this patch is wrong, so NAK.
-
-Brian
-
->                 cmd_size += sizeof(struct mwifiex_ie_types_header) +
->                             bss_cfg->ssid.ssid_len;
->                 tlv += sizeof(struct mwifiex_ie_types_header) +
-> --
-> 2.17.1
->
