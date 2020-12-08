@@ -2,182 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B453CC1B0D9
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 22:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD17C4361B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 23:11:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8717523A7B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 22:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A200F23B1A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Dec 2020 23:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731553AbgLHWzN (ORCPT
+        id S1731659AbgLHXK5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Dec 2020 17:55:13 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:16831 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731551AbgLHWzM (ORCPT
+        Tue, 8 Dec 2020 18:10:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36268 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731635AbgLHXK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Dec 2020 17:55:12 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607468089; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=M4C8Hv3trDh1UuYvfdljSvHf3EmvTxzIJ9NvbIQLttQ=; b=Pe8uiZKhyvC08oTmbX3jFfFrcepp866RCCVwAZ9f+L2SgVsnC22KLyYeLH2dV4LzWxA+q7YL
- VVvwEoyveKczRV0UxtS6dvzjP8mkrbjq966QQTgJQ46czcMj/vQmduCezqxp9Ff33aEXGH78
- ENmh5pkFQwey8YaPWdJEfUHHVPI=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 5fd0041c2265ffd861ae1682 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 08 Dec 2020 22:54:20
- GMT
-Sender: msinada=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1B4D4C433CA; Tue,  8 Dec 2020 22:54:20 +0000 (UTC)
-Received: from msinada-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: msinada)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3DEB2C433ED;
-        Tue,  8 Dec 2020 22:54:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3DEB2C433ED
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=msinada@codeaurora.org
-From:   Muna Sinada <msinada@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Muna Sinada <msinada@codeaurora.org>
-Subject: [PATCH 1/2] cfg80211: Handling driver updated MU-EDCA params
-Date:   Tue,  8 Dec 2020 14:54:03 -0800
-Message-Id: <1607468044-31789-1-git-send-email-msinada@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 8 Dec 2020 18:10:57 -0500
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC72FC0611CF;
+        Tue,  8 Dec 2020 15:09:15 -0800 (PST)
+Received: by mail-pg1-x52c.google.com with SMTP id e2so5300835pgi.5;
+        Tue, 08 Dec 2020 15:09:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=v2v4ewJaopHSzDI+DwTqOHMuKOxJL31/waRJy0KATXk=;
+        b=N3i3PhIr+jNJYBGrCo2zIv9HEv4hatrFtdys1BL4Ant4wyVpMRiHmWMdJcMd+Sgk5+
+         lYdPi1muwdjfCrMuc999QvZmNvNKCYP7bQsoZoZtglUzmVFcMknaJfiBQFcH6vwH6jil
+         6yG+POfIzZLV+Qzdpby269NEXsXDEAS/h4Kxn6La5Mq15EDgaJn6nGs6sixBjkEN8tou
+         5c4ajVsbL7dR6LGCa0rSZ+1Y5KSIkbP5VUO76KCiLqJY37gKe1ZZkd8+9kXsZX7d6yt5
+         LSN4vcJAQF4wrSGFeirPkzJ9sRGQF6eecTMtmDReD13QSilY1cfwI0MzPj2WTPIpwrSB
+         xegg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=v2v4ewJaopHSzDI+DwTqOHMuKOxJL31/waRJy0KATXk=;
+        b=sG6ye4zFEJ5OBNizu7XLtlOse7/OSE11Tc2EeEUvGI8XKVeEGw5918N4PY3Lm5wzNP
+         CuuYToAzM+khz5cLrCtUeuQYAIXGN8eDxXFYxcXwbT2TRBFMav2TmcAfb+tI+Z9M3K00
+         4U0DEK3f65IriERt2b3qLVJ0WptAzJPvHtjeEWg/wdNhkOchiTFfJ0FBoFt2tvn1j8Rd
+         z13SeaLeHDfe5feeBVBnkr7lOnuq5wnMbtj/2Bi9gxQnfTtkA5lDRQpK+/oDsoXqqVN0
+         q8o6v+lKi1/UGQSe41DlimPokXmXwzfAlrtTocqw8tw3y8xFOv/IZgznlspFwFFWGOu1
+         wzqA==
+X-Gm-Message-State: AOAM533k1uPRAKb94QvKA11ZoeyQGz3Kc4XiybsTHxDD46IPDjCIp0Ws
+        MWPgToiv6Fiv7NZqlTwHxAUCm0hmgiCo/lGJWg==
+X-Google-Smtp-Source: ABdhPJz8g6xTSM7AKTfGX9fbLOhKNrljyr0sBtTMIjTK4Tck1XKVHMaoCQWc8d0ZBhlgcJi4uIAJoUma4tR5Tu5PbiQ=
+X-Received: by 2002:a17:90a:f0c1:: with SMTP id fa1mr41508pjb.148.1607468955364;
+ Tue, 08 Dec 2020 15:09:15 -0800 (PST)
+MIME-Version: 1.0
+References: <CALjTZvZZZVqnoV4YFTDHogVHv77=dKfcSSBGj1zC83zpUid9+g@mail.gmail.com>
+ <20201208080559.6131e8da@kicinski-fedora-pc1c0hjn.DHCP.thefacebook.com>
+In-Reply-To: <20201208080559.6131e8da@kicinski-fedora-pc1c0hjn.DHCP.thefacebook.com>
+From:   Rui Salvaterra <rsalvaterra@gmail.com>
+Date:   Tue, 8 Dec 2020 23:09:04 +0000
+Message-ID: <CALjTZvZzdYSpZtsfV18YGrqrUMc0NcuzPOffLLnBAEpi9+6+fg@mail.gmail.com>
+Subject: Re: [BUG] iwlwifi: card unusable after firmware crash
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     luciano.coelho@intel.com, johannes.berg@intel.com,
+        mordechay.goodstein@intel.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxwifi@intel.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Added necessary functions and attributes to be able to pass driver
-updated MU-EDCA parameters from mac80211 to user space.
+Hi, Jakub,
 
-Signed-off-by: Muna Sinada <msinada@codeaurora.org>
----
- include/net/cfg80211.h       | 12 ++++++++++++
- include/uapi/linux/nl80211.h | 10 ++++++++++
- net/wireless/nl80211.c       | 36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+On Tue, 8 Dec 2020 at 16:06, Jakub Kicinski <kuba@kernel.org> wrote:
+>
+> Just to confirm - is this a regression in 5.10-rc? Does 5.9 work
+> smoothly in the problematic scenario?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab249ca5d5d1..83e6101ad681 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -8038,4 +8038,16 @@ void cfg80211_update_owe_info_event(struct net_device *netdev,
-  */
- void cfg80211_bss_flush(struct wiphy *wiphy);
- 
-+/**
-+ * cfg80211_update_muedca_params_event - Notify the updated MU-EDCA parameters
-+ *	to user space.
-+ *
-+ * @wiphy: the wiphy
-+ * @params: Updated MU-EDCA parameters
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_update_muedca_params_event(struct wiphy *wiphy,
-+					 struct ieee80211_mu_edca_param_set
-+					 *params, gfp_t gfp);
-+
- #endif /* __NET_CFG80211_H */
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 3e0d4a038ab6..0cd2e33f3df8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1178,6 +1178,11 @@
-  *	includes the contents of the frame. %NL80211_ATTR_ACK flag is included
-  *	if the recipient acknowledged the frame.
-  *
-+ * @NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS: Updated MU-EDCA parameters from
-+ *	driver. This event is used to update dynamic MU-EDCA parameters in
-+ *	Beacon frame, coming from driver and now need to be reflected in
-+ *	Beacon frame.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1408,6 +1413,7 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CONTROL_PORT_FRAME_TX_STATUS,
- 
-+	NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS,
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2534,6 +2540,9 @@ enum nl80211_commands {
-  *	This is a u8 attribute that encapsulates one of the values from
-  *	&enum nl80211_sae_pwe_mechanism.
-  *
-+ * @NL80211_ATTR_HE_MUEDCA_PARAMS: MU-EDCA AC parameters for the
-+ *	%NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS command.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3025,6 +3034,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SAE_PWE,
- 
-+	NL80211_ATTR_HE_MUEDCA_PARAMS,
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8811a4b69f21..75493758ec8e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -17806,6 +17806,42 @@ void cfg80211_update_owe_info_event(struct net_device *netdev,
- }
- EXPORT_SYMBOL(cfg80211_update_owe_info_event);
- 
-+void cfg80211_update_muedca_params_event(struct wiphy *wiphy,
-+					 struct ieee80211_mu_edca_param_set
-+					 *params, gfp_t gfp)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
-+		goto nla_put_failure;
-+
-+	if (nla_put(msg, NL80211_ATTR_HE_MUEDCA_PARAMS,
-+		    sizeof(struct ieee80211_mu_edca_param_set),
-+		    (const void *)params))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, gfp);
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_update_muedca_params_event);
-+
- /* initialisation/exit functions */
- 
- int __init nl80211_init(void)
--- 
-2.7.4
+Good question. It's definitely a regression, though I don't remember
+exactly the last working version I had. I *think* 5.9 was working, but
+I can't be sure without testing.
 
+Thanks,
+Rui
