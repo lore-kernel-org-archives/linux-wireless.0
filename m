@@ -7,139 +7,147 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8447FC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:27:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C470C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 516D020793
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:27:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AE9020793
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:28:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388150AbgLIV1Y (ORCPT
+        id S1729617AbgLIV2Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:27:24 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35808 "EHLO
+        Wed, 9 Dec 2020 16:28:24 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35814 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387941AbgLIV1Y (ORCPT
+        with ESMTP id S1727369AbgLIV2M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:27:24 -0500
+        Wed, 9 Dec 2020 16:28:12 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6ph-003Drx-Dj; Wed, 09 Dec 2020 23:17:09 +0200
+        id 1kn6pZ-003Drx-Cr; Wed, 09 Dec 2020 23:17:01 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:24 +0200
-Message-Id: <iwlwifi.20201209231352.7c721ad37014.Id5746874ecfa208b60baa62691b2d9dc5dd4d89c@changeid>
+Date:   Wed,  9 Dec 2020 23:16:14 +0200
+Message-Id: <iwlwifi.20201209231352.4a5665ccd8a6.Iff3879405c15758ba661c430e77dc2160ddada1c@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 20/47] iwlwifi: validate MPDU length against notification length
+Subject: [PATCH v2 10/47] iwlwifi: pcie: remove obsolete pre-release support code
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The MPDU contained in a notification shouldn't be larger than the
-notification size itself is, validate this.
+We no longer need code that was introduced to differentiate
+between two early versions of 8260.
 
-Reported-by: Haggai Abramovsky <haggai.abramovsky@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+We can remove this convoluted way to get the hardware version
+that was needed because of a bug in the register's
+configuration.
+
+Moreover, since we no longer need to access the PRPH
+registers, we no longer need to wake up the device,
+request ownership, etc...
+Remove all that.
+
+This allows us to get the rid of the obsolete comment
+about the AUX bus MISC address space which should have
+been moved when this code was moved away from here.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c   | 10 ++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  6 ++++++
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h  |  4 ----
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c  | 16 ----------------
+ .../net/wireless/intel/iwlwifi/pcie/trans.c    | 18 +-----------------
+ 3 files changed, 1 insertion(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-index 9d55ece05020..d06278558b33 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018, 2020 Intel Corporation
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portionhelp of the ieee80211 subsystem header files.
-@@ -786,7 +786,7 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 	struct iwl_rx_phy_res *phy_res;
- 	__le32 rx_pkt_status;
- 	struct iwl_rx_mpdu_res_start *amsdu;
--	u32 len;
-+	u32 len, pkt_len = iwl_rx_packet_len(pkt);
- 	u32 ampdu_status;
- 	u32 rate_n_flags;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 4417fefe834e..6c44a49640be 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -406,10 +406,6 @@ enum {
+ #define CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM		0xA29890
+ #define CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR	0xA29938
  
-@@ -798,6 +798,12 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 	amsdu = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	header = (struct ieee80211_hdr *)(pkt->data + sizeof(*amsdu));
- 	len = le16_to_cpu(amsdu->byte_count);
-+
-+	if (unlikely(len + sizeof(*amsdu) + sizeof(__le32) > pkt_len)) {
-+		IWL_DEBUG_DROP(priv, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	rx_pkt_status = *(__le32 *)(pkt->data + sizeof(*amsdu) + len);
- 	ampdu_status = iwlagn_translate_rx_status(priv,
- 						  le32_to_cpu(rx_pkt_status));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 2ffe92d79148..af3151553569 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -349,7 +349,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_mpdu_res_start *rx_res;
- 	struct ieee80211_sta *sta = NULL;
- 	struct sk_buff *skb;
--	u32 len;
-+	u32 len, pkt_len = iwl_rx_packet_payload_len(pkt);
- 	u32 rate_n_flags;
- 	u32 rx_pkt_status;
- 	u8 crypt_len = 0;
-@@ -358,6 +358,12 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
- 	len = le16_to_cpu(rx_res->byte_count);
-+
-+	if (unlikely(len + sizeof(*rx_res) + sizeof(__le32) > pkt_len)) {
-+		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	rx_pkt_status = get_unaligned_le32((__le32 *)
- 		(pkt->data + sizeof(*rx_res) + len));
+-enum {
+-	HW_STEP_LOCATION_BITS = 24,
+-};
+-
+ #define PREG_AUX_BUS_WPROT_0		0xA04CC0
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 22bd3a84aaac..1d51ec95ec21 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1607,6 +1607,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
- 	struct ieee80211_hdr *hdr;
- 	u32 len = le16_to_cpu(desc->mpdu_len);
-+	u32 pkt_len = iwl_rx_packet_payload_len(pkt);
- 	u32 rate_n_flags, gp2_on_air_rise;
- 	u16 phy_info = le16_to_cpu(desc->phy_info);
- 	struct ieee80211_sta *sta = NULL;
-@@ -1653,6 +1654,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			le32_get_bits(phy_data.d1,
- 				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
+ /* device family 9000 WPROT register */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 129021f26791..86d2859374c8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1000,7 +1000,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	const struct iwl_cfg *cfg_7265d __maybe_unused = NULL;
+ 	struct iwl_trans *iwl_trans;
+ 	struct iwl_trans_pcie *trans_pcie;
+-	unsigned long flags;
+ 	int i, ret;
+ 	/*
+ 	 * This is needed for backwards compatibility with the old
+@@ -1130,21 +1129,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		trans_pcie->num_rx_bufs = RX_QUEUE_SIZE;
+ 	}
  
-+	if (len + desc_size > pkt_len) {
-+		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
-+		return;
-+	}
-+
- 	hdr = (void *)(pkt->data + desc_size);
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
- 	 * ieee80211_hdr pulled.
+-	if (iwl_trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_8000 &&
+-	    iwl_trans_grab_nic_access(iwl_trans, &flags)) {
+-		u32 hw_step;
+-
+-		hw_step = iwl_read_umac_prph_no_grab(iwl_trans, WFPM_CTRL_REG);
+-		hw_step |= ENABLE_WFPM;
+-		iwl_write_umac_prph_no_grab(iwl_trans, WFPM_CTRL_REG, hw_step);
+-		hw_step = iwl_read_prph_no_grab(iwl_trans, CNVI_AUX_MISC_CHIP);
+-		hw_step = (hw_step >> HW_STEP_LOCATION_BITS) & 0xF;
+-		if (hw_step == 0x3)
+-			iwl_trans->hw_rev = (iwl_trans->hw_rev & 0xFFFFFFF3) |
+-				(SILICON_C_STEP << 2);
+-		iwl_trans_release_nic_access(iwl_trans, &flags);
+-	}
+-
+ 	pci_set_drvdata(pdev, iwl_trans);
+ 	iwl_trans->drv = iwl_drv_start(iwl_trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 32b87d18b766..9551f7a8c4bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3518,26 +3518,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	 * "dash" value). To keep hw_rev backwards compatible - we'll store it
+ 	 * in the old format.
+ 	 */
+-	if (cfg_trans->device_family >= IWL_DEVICE_FAMILY_8000) {
++	if (cfg_trans->device_family >= IWL_DEVICE_FAMILY_8000)
+ 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
+ 				(CSR_HW_REV_STEP(trans->hw_rev << 2) << 2);
+ 
+-		ret = iwl_pcie_prepare_card_hw(trans);
+-		if (ret) {
+-			IWL_WARN(trans, "Exit HW not ready\n");
+-			goto out_no_pci;
+-		}
+-
+-		/*
+-		 * in-order to recognize C step driver should read chip version
+-		 * id located at the AUX bus MISC address space.
+-		 */
+-		ret = iwl_finish_nic_init(trans, cfg_trans);
+-		if (ret)
+-			goto out_no_pci;
+-
+-	}
+-
+ 	IWL_DEBUG_INFO(trans, "HW REV: 0x%0x\n", trans->hw_rev);
+ 
+ 	iwl_pcie_set_interrupt_capa(pdev, trans, cfg_trans);
 -- 
 2.29.2
 
