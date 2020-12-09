@@ -7,99 +7,101 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6315C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:22:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0721C4361B
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADED323BA7
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:22:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 735E723BA7
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387561AbgLIVWk (ORCPT
+        id S1728003AbgLIVXV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:22:40 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35772 "EHLO
+        Wed, 9 Dec 2020 16:23:21 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35778 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1733021AbgLIVWb (ORCPT
+        with ESMTP id S1727208AbgLIVXV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:22:31 -0500
+        Wed, 9 Dec 2020 16:23:21 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6ps-003Drx-Qq; Wed, 09 Dec 2020 23:17:21 +0200
+        id 1kn6pd-003Drx-NH; Wed, 09 Dec 2020 23:17:06 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:40 +0200
-Message-Id: <iwlwifi.20201209231352.a5a8173f16c7.I4fa68bb2b1c7dcc52ddd381c4042722d27c4a34d@changeid>
+Date:   Wed,  9 Dec 2020 23:16:19 +0200
+Message-Id: <iwlwifi.20201209231352.1b764faecfee.I2da0ada577fc16268125a4a15b5e725c18c643ee@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 36/47] iwlwifi: mvm: validate firmware sync response size
+Subject: [PATCH v2 15/47] iwlwifi: mvm: remove the read_nvm from iwl_run_unified_mvm_ucode
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We send some data to the firmware and expect to get it back,
-but we shouldn't really trust the firmware on this. Check the
-size of all the data we send down to avoid using bad or just
-uninitialized data when the firmware doesn't respond right.
+Similarly to what I did to iwl_run_init_mvm_ucode, there is no
+need to pass the read_nvm parameter. Either we have an NVM
+and we don't need to read it, or we don't and we need to read it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index b27aa4760347..e4f73b6cd94c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -747,10 +747,18 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_rxq_sync_notification *notif;
- 	struct iwl_mvm_internal_rxq_notif *internal_notif;
-+	u32 len = iwl_rx_packet_payload_len(pkt);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index a31a77f828fa..c29e55720179 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -460,7 +460,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	return 0;
+ }
  
- 	notif = (void *)pkt->data;
- 	internal_notif = (void *)notif->payload;
+-static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
++static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_notification_wait init_wait;
+ 	struct iwl_nvm_access_complete_cmd nvm_complete = {};
+@@ -517,7 +517,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		iwl_mvm_load_nvm_to_nic(mvm);
+ 	}
  
-+	if (WARN_ONCE(len < sizeof(*notif) + sizeof(*internal_notif),
-+		      "invalid notification size %d (%d)",
-+		      len, (int)(sizeof(*notif) + sizeof(*internal_notif))))
-+		return;
-+	/* remove only the firmware header, we want all of our payload below */
-+	len -= sizeof(*notif);
-+
- 	if (internal_notif->sync &&
- 	    mvm->queue_sync_cookie != internal_notif->cookie) {
- 		WARN_ONCE(1, "Received expired RX queue sync message\n");
-@@ -759,11 +767,22 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
+-	if (IWL_MVM_PARSE_NVM && read_nvm) {
++	if (IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
+ 		ret = iwl_nvm_init(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
+@@ -542,7 +542,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		return ret;
  
- 	switch (internal_notif->type) {
- 	case IWL_MVM_RXQ_EMPTY:
-+		WARN_ONCE(len != sizeof(*internal_notif),
-+			  "invalid empty notification size %d (%d)",
-+			  len, (int)sizeof(*internal_notif));
- 		break;
- 	case IWL_MVM_RXQ_NOTIF_DEL_BA:
-+		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
-+			      "invalid delba notification size %d (%d)",
-+			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
-+			break;
- 		iwl_mvm_del_ba(mvm, queue, (void *)internal_notif->data);
- 		break;
- 	case IWL_MVM_RXQ_NSSN_SYNC:
-+		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
-+			      "invalid nssn sync notification size %d (%d)",
-+			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
-+			break;
- 		iwl_mvm_nssn_sync(mvm, napi, queue,
- 				  (void *)internal_notif->data);
- 		break;
+ 	/* Read the NVM only at driver load time, no need to do this twice */
+-	if (!IWL_MVM_PARSE_NVM && read_nvm) {
++	if (!IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
+ 		mvm->nvm_data = iwl_get_nvm(mvm->trans, mvm->fw);
+ 		if (IS_ERR(mvm->nvm_data)) {
+ 			ret = PTR_ERR(mvm->nvm_data);
+@@ -657,7 +657,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm)
+ 	int ret;
+ 
+ 	if (iwl_mvm_has_unified_ucode(mvm))
+-		return iwl_run_unified_mvm_ucode(mvm, true);
++		return iwl_run_unified_mvm_ucode(mvm);
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -1330,7 +1330,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 	int ret;
+ 
+ 	if (iwl_mvm_has_unified_ucode(mvm))
+-		return iwl_run_unified_mvm_ucode(mvm, false);
++		return iwl_run_unified_mvm_ucode(mvm);
+ 
+ 	WARN_ON(!mvm->nvm_data);
+ 	ret = iwl_run_init_mvm_ucode(mvm);
 -- 
 2.29.2
 
