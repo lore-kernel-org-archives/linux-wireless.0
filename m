@@ -7,99 +7,66 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0317FC4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8496C433FE
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:40:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA2A623C44
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A77623C44
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:40:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388178AbgLIVkM (ORCPT
+        id S2388334AbgLIVkM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 9 Dec 2020 16:40:12 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35958 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:35954 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388024AbgLIVkM (ORCPT
+        with ESMTP id S2388008AbgLIVkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 9 Dec 2020 16:40:12 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pk-003Drx-GW; Wed, 09 Dec 2020 23:17:12 +0200
+        id 1kn6pv-003Drx-OT; Wed, 09 Dec 2020 23:17:24 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:28 +0200
-Message-Id: <iwlwifi.20201209231352.1a0211e66906.I572eb69dc3738319310c9cbe03a36d942f4f68f7@changeid>
+Date:   Wed,  9 Dec 2020 23:16:44 +0200
+Message-Id: <iwlwifi.20201209231352.3bc3449922da.Ib0255deb67b2fc21317e274adcacb545bb1dc669@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 24/47] iwlwifi: mvm: move iwl_mvm_stop_device() out of line
+Subject: [PATCH v2 40/47] iwlwifi: mvm: disconnect if channel switch delay is too long
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This function has grown quite a bit over time, move it
-out of line before we grow it even further.
+If the channel switch delay that we would incur after the channel
+switch actually happens is longer than the quiet time we're willing
+to tolerate, disconnect as well.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 11 +----------
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 14 ++++++++++++++
- 2 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7e28a088f3e6..de43ffff0a5d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1946,16 +1946,7 @@ static inline u32 iwl_mvm_flushable_queues(struct iwl_mvm *mvm)
- 		~BIT(IWL_MVM_DQA_CMD_QUEUE));
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 74631b699856..74e308b57b49 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4545,6 +4545,9 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
  
--static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
--{
--	lockdep_assert_held(&mvm->mutex);
--	iwl_fw_cancel_timestamp(&mvm->fwrt);
--	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
--	iwl_fw_dbg_stop_sync(&mvm->fwrt);
--	iwl_trans_stop_device(mvm->trans);
--	iwl_free_fw_paging(&mvm->fwrt);
--	iwl_fw_dump_conf_clear(&mvm->fwrt);
--}
-+void iwl_mvm_stop_device(struct iwl_mvm *mvm);
- 
- /* Re-configure the SCD for a queue that has already been configured */
- int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 517ca5b8ce66..e54c48af1913 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -874,6 +874,20 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	return NULL;
- }
- 
-+void iwl_mvm_stop_device(struct iwl_mvm *mvm)
-+{
-+	lockdep_assert_held(&mvm->mutex);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++		if (chsw->delay > IWL_MAX_CSA_BLOCK_TX)
++			schedule_delayed_work(&mvmvif->csa_work, 0);
 +
-+	iwl_fw_cancel_timestamp(&mvm->fwrt);
-+
-+	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
-+
-+	iwl_fw_dbg_stop_sync(&mvm->fwrt);
-+	iwl_trans_stop_device(mvm->trans);
-+	iwl_free_fw_paging(&mvm->fwrt);
-+	iwl_fw_dump_conf_clear(&mvm->fwrt);
-+}
-+
- static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
- {
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 		if (chsw->block_tx) {
+ 			/*
+ 			 * In case of undetermined / long time with immediate
 -- 
 2.29.2
 
