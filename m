@@ -7,171 +7,124 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 695C2C4361B
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9CB8C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:25:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 349C220793
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:25:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 964FB20793
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:25:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387934AbgLIVZD (ORCPT
+        id S2388088AbgLIVZu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:25:03 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35790 "EHLO
+        Wed, 9 Dec 2020 16:25:50 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35796 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726501AbgLIVZD (ORCPT
+        with ESMTP id S1729686AbgLIVZt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:25:03 -0500
+        Wed, 9 Dec 2020 16:25:49 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6px-003Drx-9E; Wed, 09 Dec 2020 23:17:25 +0200
+        id 1kn6pt-003Drx-FF; Wed, 09 Dec 2020 23:17:21 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:46 +0200
-Message-Id: <iwlwifi.20201209231352.51cc04cf1e3e.I7bfd6809f8f5feb75f79397646e6656e95688a0e@changeid>
+Date:   Wed,  9 Dec 2020 23:16:41 +0200
+Message-Id: <iwlwifi.20201209231352.b023856bdf39.I4ed0149e0018fe5e1ae3c2a1cbc614954016063f@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 42/47] iwlwifi: tighten RX MPDU bounds checks
+Subject: [PATCH v2 37/47] iwlwifi: mvm: fix a race in CSA that caused assert 0x3420
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Previously, we added checks that the contained MPDU size is long
-enough, but really we should also check that the notification
-itself fits into the data. Add some checks for that.
+When we get a channel switch with a very long quiet period, we schedule
+a work to disconnect after a while. This work runs in background. In the
+meanwhile, we keep getting beacons and sending FW modify command for each.
+This has a potential race, where we modify the CSA after we aborted it.
 
-Also add unlikely() annotations on the previously added checks.
+Protect the flow by setting csa_failed to true in case we abort, and check
+it before sending the modify command.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This required a modification to the way we treat csa_failed in
+iwl_mvm_post_channel_switch:
+1. The variable isn't being reset anymore, so we can still look at it in
+iwl_mvm_channel_switch_rx_beacon. This is fine, since we reset it when
+starting a new CSA.
+2. There is no more early return in case of csa_failed. This is fine,
+since before this patch csa_failed was set only for GO, and for GO the
+function is only resetting the power settings, which we want to restore
+even in case of failure.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c   |  6 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  5 +++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 32 +++++++++++++------
- 3 files changed, 33 insertions(+), 10 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 20 ++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-index d06278558b33..ecbf8d3cddae 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-@@ -794,6 +794,12 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 		IWL_ERR(priv, "MPDU frame without cached PHY data\n");
- 		return;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 44939666cde7..74631b699856 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1300,12 +1300,6 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	if (mvmvif->csa_failed) {
+-		mvmvif->csa_failed = false;
+-		ret = -EIO;
+-		goto out_unlock;
+-	}
+-
+ 	if (vif->type == NL80211_IFTYPE_STATION) {
+ 		struct iwl_mvm_sta *mvmsta;
+ 
+@@ -1337,6 +1331,8 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+ 	ret = iwl_mvm_power_update_ps(mvm);
+ 
+ out_unlock:
++	if (mvmvif->csa_failed)
++		ret = -EIO;
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return ret;
+@@ -1364,9 +1360,10 @@ static void iwl_mvm_abort_channel_switch(struct ieee80211_hw *hw,
+ 					     WIDE_ID(MAC_CONF_GROUP,
+ 						     CHANNEL_SWITCH_TIME_EVENT_CMD),
+ 					     0, sizeof(cmd), &cmd));
++	mvmvif->csa_failed = true;
+ 	mutex_unlock(&mvm->mutex);
+ 
+-	WARN_ON(iwl_mvm_post_channel_switch(hw, vif));
++	iwl_mvm_post_channel_switch(hw, vif);
+ }
+ 
+ static void iwl_mvm_channel_switch_disconnect_wk(struct work_struct *wk)
+@@ -4621,12 +4618,17 @@ static void iwl_mvm_channel_switch_rx_beacon(struct ieee80211_hw *hw,
  	}
-+
-+	if (unlikely(pkt_len < sizeof(*amsdu))) {
-+		IWL_DEBUG_DROP(priv, "Bad REPLY_RX_MPDU_CMD size\n");
-+		return;
-+	}
-+
- 	phy_res = &priv->last_phy_res;
- 	amsdu = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	header = (struct ieee80211_hdr *)(pkt->data + sizeof(*amsdu));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 0d2f7b069a52..79d1778e6bc0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -298,6 +298,11 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	u32 rx_pkt_status;
- 	u8 crypt_len = 0;
+ 	mvmvif->csa_count = chsw->count;
  
-+	if (unlikely(pkt_len < sizeof(*rx_res))) {
-+		IWL_DEBUG_DROP(mvm, "Bad REPLY_RX_MPDU_CMD size\n");
-+		return;
-+	}
-+
- 	phy_info = &mvm->last_phy_info;
- 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index e4f73b6cd94c..8d33739c29ef 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1574,16 +1574,15 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
- 	struct ieee80211_hdr *hdr;
--	u32 len = le16_to_cpu(desc->mpdu_len);
-+	u32 len;
- 	u32 pkt_len = iwl_rx_packet_payload_len(pkt);
- 	u32 rate_n_flags, gp2_on_air_rise;
--	u16 phy_info = le16_to_cpu(desc->phy_info);
-+	u16 phy_info;
- 	struct ieee80211_sta *sta = NULL;
- 	struct sk_buff *skb;
- 	u8 crypt_len = 0, channel, energy_a, energy_b;
- 	size_t desc_size;
- 	struct iwl_mvm_rx_phy_data phy_data = {
--		.d4 = desc->phy_data4,
- 		.info_type = IWL_RX_PHY_INFO_TYPE_NONE,
- 	};
- 	bool csi = false;
-@@ -1591,13 +1590,22 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
- 		return;
+-	IWL_DEBUG_MAC80211(mvm, "Modify CSA on mac %d\n", mvmvif->id);
++	mutex_lock(&mvm->mutex);
++	if (mvmvif->csa_failed)
++		goto out_unlock;
  
-+	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
-+		desc_size = sizeof(*desc);
-+	else
-+		desc_size = IWL_RX_DESC_SIZE_V1;
-+
-+	if (unlikely(pkt_len < desc_size)) {
-+		IWL_DEBUG_DROP(mvm, "Bad REPLY_RX_MPDU_CMD size\n");
-+		return;
-+	}
-+
- 	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
- 		rate_n_flags = le32_to_cpu(desc->v3.rate_n_flags);
- 		channel = desc->v3.channel;
- 		gp2_on_air_rise = le32_to_cpu(desc->v3.gp2_on_air_rise);
- 		energy_a = desc->v3.energy_a;
- 		energy_b = desc->v3.energy_b;
--		desc_size = sizeof(*desc);
++	IWL_DEBUG_MAC80211(mvm, "Modify CSA on mac %d\n", mvmvif->id);
+ 	WARN_ON(iwl_mvm_send_cmd_pdu(mvm,
+ 				     WIDE_ID(MAC_CONF_GROUP,
+ 					     CHANNEL_SWITCH_TIME_EVENT_CMD),
+-				     CMD_ASYNC, sizeof(cmd), &cmd));
++				     0, sizeof(cmd), &cmd));
++out_unlock:
++	mutex_unlock(&mvm->mutex);
+ }
  
- 		phy_data.d0 = desc->v3.phy_data0;
- 		phy_data.d1 = desc->v3.phy_data1;
-@@ -1609,7 +1617,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		gp2_on_air_rise = le32_to_cpu(desc->v1.gp2_on_air_rise);
- 		energy_a = desc->v1.energy_a;
- 		energy_b = desc->v1.energy_b;
--		desc_size = IWL_RX_DESC_SIZE_V1;
- 
- 		phy_data.d0 = desc->v1.phy_data0;
- 		phy_data.d1 = desc->v1.phy_data1;
-@@ -1617,16 +1624,21 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		phy_data.d3 = desc->v1.phy_data3;
- 	}
- 
--	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
--		phy_data.info_type =
--			le32_get_bits(phy_data.d1,
--				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
-+	len = le16_to_cpu(desc->mpdu_len);
- 
--	if (len + desc_size > pkt_len) {
-+	if (unlikely(len + desc_size > pkt_len)) {
- 		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
- 		return;
- 	}
- 
-+	phy_info = le16_to_cpu(desc->phy_info);
-+	phy_data.d4 = desc->phy_data4;
-+
-+	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
-+		phy_data.info_type =
-+			le32_get_bits(phy_data.d1,
-+				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
-+
- 	hdr = (void *)(pkt->data + desc_size);
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
- 	 * ieee80211_hdr pulled.
+ static void iwl_mvm_flush_no_vif(struct iwl_mvm *mvm, u32 queues, bool drop)
 -- 
 2.29.2
 
