@@ -7,128 +7,99 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F85C4361B
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6315C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:22:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6BFC22C7D
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADED323BA7
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387903AbgLIVVl (ORCPT
+        id S2387561AbgLIVWk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:21:41 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35766 "EHLO
+        Wed, 9 Dec 2020 16:22:40 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35772 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1733299AbgLIVVl (ORCPT
+        with ESMTP id S1733021AbgLIVWb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:21:41 -0500
+        Wed, 9 Dec 2020 16:22:31 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pc-003Drx-Cz; Wed, 09 Dec 2020 23:17:04 +0200
+        id 1kn6ps-003Drx-Qq; Wed, 09 Dec 2020 23:17:21 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:17 +0200
-Message-Id: <iwlwifi.20201209231352.a9dba2daca59.I2b18bccf0d409f1517c3e2841b667014f9dafc24@changeid>
+Date:   Wed,  9 Dec 2020 23:16:40 +0200
+Message-Id: <iwlwifi.20201209231352.a5a8173f16c7.I4fa68bb2b1c7dcc52ddd381c4042722d27c4a34d@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 13/47] iwlwifi: enable sending/setting debug host event
+Subject: [PATCH v2 36/47] iwlwifi: mvm: validate firmware sync response size
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is used for BT node and for any user that wants to
-control what events would be send from FW to the driver.
+We send some data to the firmware and expect to get it back,
+but we shouldn't really trust the firmware on this. Check the
+size of all the data we send down to avoid using bad or just
+uninitialized data when the firmware doesn't respond right.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/debug.h | 14 +++++++++
- .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 29 +++++++++++++++++++
- 2 files changed, 43 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-index 94b1a1268476..48d7c8485e3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-@@ -78,6 +78,12 @@ enum iwl_debug_cmds {
- 	 * &struct iwl_dbg_mem_access_rsp
- 	 */
- 	UMAC_RD_WR = 0x1,
-+	/**
-+	 * @HOST_EVENT_CFG:
-+	 * updates the enabled event severities
-+	 * &struct iwl_dbg_host_event_cfg_cmd
-+	 */
-+	HOST_EVENT_CFG = 0x3,
- 	/**
- 	 * @DBGC_SUSPEND_RESUME:
- 	 * DBGC suspend/resume commad. Uses a single dword as data:
-@@ -395,4 +401,12 @@ struct iwl_buf_alloc_cmd {
- 	struct iwl_buf_alloc_frag frags[BUF_ALLOC_MAX_NUM_FRAGS];
- } __packed; /* BUFFER_ALLOCATION_CMD_API_S_VER_2 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index b27aa4760347..e4f73b6cd94c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -747,10 +747,18 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rxq_sync_notification *notif;
+ 	struct iwl_mvm_internal_rxq_notif *internal_notif;
++	u32 len = iwl_rx_packet_payload_len(pkt);
  
-+/**
-+ * struct iwl_dbg_host_event_cfg_cmd
-+ * @enabled_severities: enabled severities
-+ */
-+struct iwl_dbg_host_event_cfg_cmd {
-+	__le32 enabled_severities;
-+} __packed; /* DEBUG_HOST_EVENT_CFG_CMD_API_S_VER_1 */
-+
- #endif /* __iwl_fw_api_debug_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-index 267ad4eddb5c..ce1186068f2d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-@@ -200,6 +200,34 @@ static int iwl_fw_send_timestamp_marker_cmd(struct iwl_fw_runtime *fwrt)
- 	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
- }
+ 	notif = (void *)pkt->data;
+ 	internal_notif = (void *)notif->payload;
  
-+static int iwl_dbgfs_enabled_severities_write(struct iwl_fw_runtime *fwrt,
-+					      char *buf, size_t count)
-+{
-+	struct iwl_dbg_host_event_cfg_cmd event_cfg;
-+	struct iwl_host_cmd hcmd = {
-+		.id = iwl_cmd_id(HOST_EVENT_CFG, DEBUG_GROUP, 0),
-+		.flags = CMD_ASYNC,
-+		.data[0] = &event_cfg,
-+		.len[0] = sizeof(event_cfg),
-+	};
-+	u32 enabled_severities;
-+	int ret = kstrtou32(buf, 10, &enabled_severities);
++	if (WARN_ONCE(len < sizeof(*notif) + sizeof(*internal_notif),
++		      "invalid notification size %d (%d)",
++		      len, (int)(sizeof(*notif) + sizeof(*internal_notif))))
++		return;
++	/* remove only the firmware header, we want all of our payload below */
++	len -= sizeof(*notif);
 +
-+	if (ret < 0)
-+		return ret;
-+
-+	event_cfg.enabled_severities = cpu_to_le32(enabled_severities);
-+
-+	ret = iwl_trans_send_cmd(fwrt->trans, &hcmd);
-+	IWL_INFO(fwrt,
-+		 "sent host event cfg with enabled_severities: %u, ret: %d\n",
-+		 enabled_severities, ret);
-+
-+	return ret ?: count;
-+}
-+
-+FWRT_DEBUGFS_WRITE_FILE_OPS(enabled_severities, 16);
-+
- static void iwl_fw_timestamp_marker_wk(struct work_struct *work)
- {
- 	int ret;
-@@ -431,5 +459,6 @@ void iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
- 	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, 0200);
- 	FWRT_DEBUGFS_ADD_FILE(fw_info, dbgfs_dir, 0200);
- 	FWRT_DEBUGFS_ADD_FILE(send_hcmd, dbgfs_dir, 0200);
-+	FWRT_DEBUGFS_ADD_FILE(enabled_severities, dbgfs_dir, 0200);
- 	FWRT_DEBUGFS_ADD_FILE(fw_dbg_domain, dbgfs_dir, 0400);
- }
+ 	if (internal_notif->sync &&
+ 	    mvm->queue_sync_cookie != internal_notif->cookie) {
+ 		WARN_ONCE(1, "Received expired RX queue sync message\n");
+@@ -759,11 +767,22 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 
+ 	switch (internal_notif->type) {
+ 	case IWL_MVM_RXQ_EMPTY:
++		WARN_ONCE(len != sizeof(*internal_notif),
++			  "invalid empty notification size %d (%d)",
++			  len, (int)sizeof(*internal_notif));
+ 		break;
+ 	case IWL_MVM_RXQ_NOTIF_DEL_BA:
++		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
++			      "invalid delba notification size %d (%d)",
++			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
++			break;
+ 		iwl_mvm_del_ba(mvm, queue, (void *)internal_notif->data);
+ 		break;
+ 	case IWL_MVM_RXQ_NSSN_SYNC:
++		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
++			      "invalid nssn sync notification size %d (%d)",
++			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
++			break;
+ 		iwl_mvm_nssn_sync(mvm, napi, queue,
+ 				  (void *)internal_notif->data);
+ 		break;
 -- 
 2.29.2
 
