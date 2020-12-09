@@ -7,83 +7,129 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9113C4361B
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AFB5C19425
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:35:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C43F23B6B
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:35:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3715523B98
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727369AbgLIVez (ORCPT
+        id S2388221AbgLIVfU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:34:55 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35870 "EHLO
+        Wed, 9 Dec 2020 16:35:20 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35882 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387893AbgLIVeT (ORCPT
+        with ESMTP id S1733021AbgLIVfN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:34:19 -0500
+        Wed, 9 Dec 2020 16:35:13 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pl-003Drx-S8; Wed, 09 Dec 2020 23:17:14 +0200
+        id 1kn6pw-003Drx-Is; Wed, 09 Dec 2020 23:17:25 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:30 +0200
-Message-Id: <iwlwifi.20201209231352.2f982365d085.Id09daabfd331ba9e120abcbbedd2ad6448902ed0@changeid>
+Date:   Wed,  9 Dec 2020 23:16:45 +0200
+Message-Id: <iwlwifi.20201209231352.101ac3058c04.Idd28706b122cdc8103956f8e72bb062fe4adb54e@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 26/47] iwlwifi: mvm: fix 22000 series driver NMI
+Subject: [PATCH v2 41/47] iwlwifi: Add a new card for MA family
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-For triggering an NMI in the firmware, we should only set BIT(24)
-in the corresponding register, not the entire mask that's usable
-by the driver.
+Add a PCI ID for snj with mr in AX family.
 
-This currently doesn't matter because the firmware only enables
-BIT(24), but we'll start using BIT(25) for other purposes with an
-upcoming API change.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 11 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  6 ++++++
+ 3 files changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index 2139f0b8f2bb..b24160fe73d3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -279,7 +279,7 @@ void iwl_force_nmi(struct iwl_trans *trans)
- 			       DEVICE_SET_NMI_VAL_DRV);
- 	else if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
--				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK);
-+				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
- 	else
- 		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
- 				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 6c44a49640be..1a1628550cce 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -109,7 +109,7 @@
- #define DEVICE_SET_NMI_VAL_DRV BIT(7)
- /* Device NMI register and value for 9000 family and above hw's */
- #define UREG_NIC_SET_NMI_DRIVER 0x00a05c10
--#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK 0xff000000
-+#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER BIT(24)
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index d24dcacd1434..7220fc8fd9b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -44,6 +44,7 @@
+ #define IWL_SNJ_A_HR_B_FW_PRE		"iwlwifi-SoSnj-a0-hr-b0-"
+ #define IWL_MA_A_GF_A_FW_PRE		"iwlwifi-ma-a0-gf-a0-"
+ #define IWL_MA_A_MR_A_FW_PRE		"iwlwifi-ma-a0-mr-a0-"
++#define IWL_SNJ_A_MR_A_FW_PRE		"iwlwifi-SoSnj-a0-mr-a0-"
  
- /* Shared registers (0x0..0x3ff, via target indirect or periphery */
- #define SHR_BASE	0x00a10000
+ #define IWL_QU_B_HR_B_MODULE_FIRMWARE(api) \
+ 	IWL_QU_B_HR_B_FW_PRE __stringify(api) ".ucode"
+@@ -79,6 +80,8 @@
+ 	IWL_MA_A_GF_A_FW_PRE __stringify(api) ".ucode"
+ #define IWL_MA_A_MR_A_FW_MODULE_FIRMWARE(api) \
+ 	IWL_MA_A_MR_A_FW_PRE __stringify(api) ".ucode"
++#define IWL_SNJ_A_MR_A_MODULE_FIRMWARE(api) \
++	IWL_SNJ_A_MR_A_FW_PRE __stringify(api) ".ucode"
+ 
+ static const struct iwl_base_params iwl_22000_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+@@ -600,6 +603,13 @@ const struct iwl_cfg iwl_cfg_ma_a0_mr_a0 = {
+ 	.num_rbds = IWL_NUM_RBDS_AX210_HE,
+ };
+ 
++const struct iwl_cfg iwl_cfg_snj_a0_mr_a0 = {
++	.fw_name_pre = IWL_SNJ_A_MR_A_FW_PRE,
++	.uhb_supported = true,
++	IWL_DEVICE_AX210,
++	.num_rbds = IWL_NUM_RBDS_AX210_HE,
++};
++
+ MODULE_FIRMWARE(IWL_QU_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_QNJ_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_QU_C_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+@@ -617,3 +627,4 @@ MODULE_FIRMWARE(IWL_SNJ_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_SNJ_A_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_MA_A_GF_A_FW_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_MA_A_MR_A_FW_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_SNJ_A_MR_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 0217ab058d83..516890727b25 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -418,6 +418,7 @@ struct iwl_cfg {
+ #define IWL_CFG_MAC_TYPE_QU		0x33
+ #define IWL_CFG_MAC_TYPE_QUZ		0x35
+ #define IWL_CFG_MAC_TYPE_QNJ		0x36
++#define IWL_CFG_MAC_TYPE_SNJ		0x42
+ #define IWL_CFG_MAC_TYPE_MA		0x44
+ 
+ #define IWL_CFG_RF_TYPE_TH		0x105
+@@ -599,6 +600,7 @@ extern const struct iwl_cfg iwlax211_cfg_snj_gf_a0;
+ extern const struct iwl_cfg iwlax201_cfg_snj_hr_b0;
+ extern const struct iwl_cfg iwl_cfg_ma_a0_gf_a0;
+ extern const struct iwl_cfg iwl_cfg_ma_a0_mr_a0;
++extern const struct iwl_cfg iwl_cfg_snj_a0_mr_a0;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 31ab00bc7dc4..236bea9663d1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -930,6 +930,12 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 		      IWL_CFG_RF_TYPE_MR, IWL_CFG_ANY,
+ 		      IWL_CFG_ANY, IWL_CFG_ANY,
+ 		      iwl_cfg_ma_a0_mr_a0, iwl_ma_name),
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SNJ, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_MR, IWL_CFG_ANY,
++		      IWL_CFG_ANY, IWL_CFG_ANY,
++		      iwl_cfg_snj_a0_mr_a0, iwl_ma_name),
++
+ 
+ #endif /* CONFIG_IWLMVM */
+ };
 -- 
 2.29.2
 
