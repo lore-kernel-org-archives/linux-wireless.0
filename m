@@ -2,86 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 512F1C2BBCA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86602C2BBCD
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C0B323B77
+	by mail.kernel.org (Postfix) with ESMTP id 620C023B77
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388112AbgLIVST (ORCPT
+        id S1729804AbgLIVRj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:18:19 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35608 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728003AbgLIVRs (ORCPT
+        Wed, 9 Dec 2020 16:17:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43168 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728003AbgLIVRh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:17:48 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1kn6pU-003Drx-7q; Wed, 09 Dec 2020 23:16:56 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:07 +0200
-Message-Id: <iwlwifi.20201209231351.c9a9cbef4a09.Ic7df63c617f79b7e6a95a510c51b3516bba5599f@changeid>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
-References: <20201209211651.968276-1-luca@coelho.fi>
+        Wed, 9 Dec 2020 16:17:37 -0500
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 081D0C0613CF;
+        Wed,  9 Dec 2020 13:16:57 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id s21so1931900pfu.13;
+        Wed, 09 Dec 2020 13:16:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Kde5qioibKFTqTbk8Z1S5mJRQCZZsheqyuONyQlU+mM=;
+        b=NavI8S8HeiEzZ7/x1B3Hvj28veiDLwqcUfiG/BQJ/mnHp7AF5+4fF+8b0Oc60tZXQo
+         XteJGO5fVhfE8TVfZ6EjB+noAShoAflt5JSccAkzPuhhznVp6+7zYz8PpQHjKoPTpa0K
+         2KQ7i3+My0sKbPdJ4s2/oD8CMkOwInpRXdWK7g9dj+HRoU0GInqkJQLoc9xhevkh7yZZ
+         kFAmBAU9o6P04sAz6IQnC75FbF6JF+ln9A6liI2YHdeYwDtrFsKsByOaAwYoYns4Brg8
+         7cY/jZjRbXWbWjKC9cg3i7IYAsbffQVXavNFq/v3GaI3ilf/9/YuqqYyynTecxm6jBST
+         RStA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Kde5qioibKFTqTbk8Z1S5mJRQCZZsheqyuONyQlU+mM=;
+        b=L8E3NmpEJKwYt9FTvlpxowt/kJPV/GKohZD4IRyxBvptf2/EfFGxjEDc8B+Gdq4X5i
+         LHCZZGNoZsI1zIwNZy5fc7AUOYIBhLPr81wOfwsrcYGVqDtIXt0J+pUbxwF5xbSdFrMq
+         42J2Qm/izcIObLmnhFhXp2r0fJwvGl41iGmfuCcgoztNQ0dcTV8n1njexCQ0+RgG4AqZ
+         R3+dzpOrzl7B6PQDRqcGEhVecxtewqzopKv7Lr/IsfhLA3fXsqMxZ0dMnS9maPblwGqC
+         HVx1x61MD7Vu82MuRTOY3NkqGuw4nbeDiGKdwDQPkR7WOW6u/6GsOEP/Wck5d+7U/rlc
+         fmaw==
+X-Gm-Message-State: AOAM530uOBdxYul8g9YpGASfxHQXM+mg8+uuTLF9dyP6Gy1FVMidOM1D
+        O388Y1QwiD8869mAkGgu6HlXUvvtfKuZgS7XjQ==
+X-Google-Smtp-Source: ABdhPJy4pfGvQB2Kq/WKK3w+RgvNCa1tQEKOHNTNej4Ix2zGetKCzZpOGGMwlCc07q4zDTK3QS35eHXJswYLS8y+aVw=
+X-Received: by 2002:a17:90a:f0c1:: with SMTP id fa1mr3867972pjb.148.1607548616356;
+ Wed, 09 Dec 2020 13:16:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 03/47] iwlwifi: yoyo: align the write pointer to DWs
+References: <CALjTZvZZZVqnoV4YFTDHogVHv77=dKfcSSBGj1zC83zpUid9+g@mail.gmail.com>
+ <4eb99a1da6342999c4dca355533a0847d0e942a5.camel@intel.com>
+ <CALjTZvYwccfOVTTGNo1=oLnwXG2b9Vz1nVZuvLKFV94+3fQ6EQ@mail.gmail.com>
+ <20201209091315.2c55e1c6@kicinski-fedora-pc1c0hjn.DHCP.thefacebook.com>
+ <CANUX_P1=yuPkK5BzJ99oniMiCgB0z98yNYUSw4_qk2Vg7ucoRQ@mail.gmail.com>
+ <CALjTZvYZEbgfLEzxQdafJT6CFz76prA4+YM2EGA8k5Dgn3gigw@mail.gmail.com>
+ <CANUX_P1YWSudJfwyuFVg-qdBHwQvQJiZayZBMY8E4it0qwB5Hw@mail.gmail.com> <CANUX_P0sOAdRjOgg=ogAHmQdTXp5UKyW2XQQRComa4Rv3Y-toQ@mail.gmail.com>
+In-Reply-To: <CANUX_P0sOAdRjOgg=ogAHmQdTXp5UKyW2XQQRComa4Rv3Y-toQ@mail.gmail.com>
+From:   Rui Salvaterra <rsalvaterra@gmail.com>
+Date:   Wed, 9 Dec 2020 21:16:45 +0000
+Message-ID: <CALjTZvYfJVjxRO4Avc3rV+W+HO-vBABxwF=UUETzDeNv_QBbhg@mail.gmail.com>
+Subject: Re: [BUG] iwlwifi: card unusable after firmware crash
+To:     Emmanuel Grumbach <egrumbach@gmail.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rotem Saado <rotem.saado@intel.com>
+Hi again, Emmanuel,
 
-from AX210 generation the write pointer is in Bytes.
-to be align with all previous HWs convert it DWs.
+On Wed, 9 Dec 2020 at 21:07, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>
+> Indeed, the bit is reverse logic. So we can put that aside.
+> Frankly, I have no clue. You can try our backport tree to bisect,
+> should be easier..
+> What I see here is that your GP_CTRL value is 080003d8
+>
+> #define CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW          (0x08000000)
+> which means sense since apparently, HW RF-Kill was asserted.
+> #define CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP         (0x00000010)
+> Which means that the device is going to sleep... And that's the problem:
+>
+> iwl_trans_pcie_grab_nic_access:
+>         ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+>                            CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+>                            (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+>                             CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+>         if (unlikely(ret < 0)) {
+>                 u32 cntrl = iwl_read32(trans, CSR_GP_CNTRL);
+>
+>                 WARN_ONCE(1,
+>                           "Timeout waiting for hardware access
+> (CSR_GP_CNTRL 0x%08x)\n",
+>                           cntrl);
+>
+> but I'd expect the splat in your log...
+> Or maybe you can't load the firmware?
 
-Signed-off-by: Rotem Saado <rotem.saado@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c     | 5 +++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 ++
- 2 files changed, 7 insertions(+)
+Well, my kernel doesn't have any modules, it's all built-in. The
+firmware is obviously loading fine, otherwise the card wouldn't work,
+but yeah, that WARN_ONCE hasn't triggered at all.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 579c1929729e..185c1d893b52 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1662,6 +1662,11 @@ iwl_dump_ini_mon_fill_header(struct iwl_fw_runtime *fwrt,
- 
- 	data->write_ptr = iwl_get_mon_reg(fwrt, alloc_id,
- 					  &addrs->write_ptr);
-+	if (fwrt->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
-+		u32 wrt_ptr = le32_to_cpu(data->write_ptr);
-+
-+		data->write_ptr = cpu_to_le32(wrt_ptr >> 2);
-+	}
- 	data->cycle_cnt = iwl_get_mon_reg(fwrt, alloc_id,
- 					  &addrs->cycle_cnt);
- 	data->cur_frag = iwl_get_mon_reg(fwrt, alloc_id,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index d2e69ad53b27..8fd85ebf1b35 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3115,6 +3115,8 @@ iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
- 		fw_mon_data->fw_mon_base_high_ptr =
- 			cpu_to_le32(iwl_read_prph(trans, base_high));
- 		write_ptr_val &= DBGC_CUR_DBGBUF_STATUS_OFFSET_MSK;
-+		/* convert wrtPtr to DWs, to align with all HWs */
-+		write_ptr_val >>= 2;
- 	}
- 	fw_mon_data->fw_mon_wr_ptr = cpu_to_le32(write_ptr_val);
- }
--- 
-2.29.2
+> Can you try this:
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> index 2fffbbc8462f..748300752630 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> @@ -2121,6 +2121,7 @@ static bool
+> iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+>          * track nic_access anyway.
+>          */
+>         __release(&trans_pcie->reg_lock);
+> +       mdelay(1);
+>         return true;
+>  }
+>
+> If that helps, then... I'd have no clue why it helps, but this
+> specific device caused us trouble like bad timing after
+> grab_nic_access..
 
+I'll give it a spin. Nasty hack, but if it works, it works. :)
+
+Thanks,
+Rui
