@@ -7,111 +7,69 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD296C1B0E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7AD3C4167B
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94CE323B98
+	by mail.kernel.org (Postfix) with ESMTP id 71EA423B77
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388164AbgLIVSQ (ORCPT
+        id S2388156AbgLIVSQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 9 Dec 2020 16:18:16 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35644 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:35614 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388121AbgLIVRt (ORCPT
+        with ESMTP id S2388099AbgLIVRt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 9 Dec 2020 16:17:49 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pY-003Drx-MD; Wed, 09 Dec 2020 23:17:01 +0200
+        id 1kn6pU-003Drx-RV; Wed, 09 Dec 2020 23:16:57 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:13 +0200
-Message-Id: <iwlwifi.20201209231352.8e0ffce7f873.Ie526042c4d4b93d9116c90f53180cbadef0b32cb@changeid>
+Date:   Wed,  9 Dec 2020 23:16:08 +0200
+Message-Id: <iwlwifi.20201209231352.a595be52af22.I1843c3c4f9fb32fa8d439052bd0a5ad230f292e2@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 09/47] iwlwifi: mvm: remove the read_nvm from iwl_run_init_mvm_ucode
+Subject: [PATCH v2 04/47] iwlwifi: mvm: fix sar profile printing issue
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Janie Tu <janiex.tu@intel.com>
 
-If we already read the NVM, we don't need to read it again.
-Make sure that this is the case with a WARNING.
+The profile shows an invalid value because the wrong format was used.
+A u8 value should use by %hhu, not %hhd.  Fix thisit by changing it to
+%hhu.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Janie Tu <janiex.tu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 7 ++++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 +-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 6385b9641126..a31a77f828fa 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -647,7 +647,7 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
- 				    cmd_size, &phy_cfg_cmd);
- }
- 
--int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
-+int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm)
- {
- 	struct iwl_notification_wait calib_wait;
- 	static const u16 init_complete[] = {
-@@ -684,7 +684,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 3395c4675988..b33d82e025b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -381,10 +381,10 @@ static ssize_t iwl_dbgfs_sar_geo_profile_read(struct file *file,
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+ 				 "Use geographic profile %d\n", tbl_idx);
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+-				 "2.4GHz:\n\tChain A offset: %hhd dBm\n\tChain B offset: %hhd dBm\n\tmax tx power: %hhd dBm\n",
++				 "2.4GHz:\n\tChain A offset: %hhu dBm\n\tChain B offset: %hhu dBm\n\tmax tx power: %hhu dBm\n",
+ 				 value[1], value[2], value[0]);
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+-				 "5.2GHz:\n\tChain A offset: %hhd dBm\n\tChain B offset: %hhd dBm\n\tmax tx power: %hhd dBm\n",
++				 "5.2GHz:\n\tChain A offset: %hhu dBm\n\tChain B offset: %hhu dBm\n\tmax tx power: %hhu dBm\n",
+ 				 value[4], value[5], value[3]);
  	}
- 
- 	/* Read the NVM only at driver load time, no need to do this twice */
--	if (read_nvm) {
-+	if (!mvm->nvm_data) {
- 		ret = iwl_nvm_init(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
-@@ -1332,7 +1332,8 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- 	if (iwl_mvm_has_unified_ucode(mvm))
- 		return iwl_run_unified_mvm_ucode(mvm, false);
- 
--	ret = iwl_run_init_mvm_ucode(mvm, false);
-+	WARN_ON(!mvm->nvm_data);
-+	ret = iwl_run_init_mvm_ucode(mvm);
- 
- 	if (ret) {
- 		IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", ret);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7159d1da3e77..a27ac3032218 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1481,7 +1481,7 @@ int __iwl_mvm_mac_start(struct iwl_mvm *mvm);
-  * MVM Methods
-  ******************/
- /* uCode */
--int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm);
-+int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm);
- 
- /* Utils */
- int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index f1c5b3a9c26f..da55133f1a2d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -822,7 +822,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		goto out_free;
- 
- 	mutex_lock(&mvm->mutex);
--	err = iwl_run_init_mvm_ucode(mvm, true);
-+	err = iwl_run_init_mvm_ucode(mvm);
- 	if (err && err != -ERFKILL)
- 		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
- 	if (!iwlmvm_mod_params.init_dbg || !err)
+ 	mutex_unlock(&mvm->mutex);
 -- 
 2.29.2
 
