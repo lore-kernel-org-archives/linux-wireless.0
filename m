@@ -2,136 +2,138 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86602C2BBCD
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 236F3C2BBCF
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 620C023B77
+	by mail.kernel.org (Postfix) with ESMTP id E684823B77
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729804AbgLIVRj (ORCPT
+        id S2387654AbgLIVSc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:17:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43168 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728003AbgLIVRh (ORCPT
+        Wed, 9 Dec 2020 16:18:32 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35722 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726877AbgLIVSc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:17:37 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 081D0C0613CF;
-        Wed,  9 Dec 2020 13:16:57 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id s21so1931900pfu.13;
-        Wed, 09 Dec 2020 13:16:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Kde5qioibKFTqTbk8Z1S5mJRQCZZsheqyuONyQlU+mM=;
-        b=NavI8S8HeiEzZ7/x1B3Hvj28veiDLwqcUfiG/BQJ/mnHp7AF5+4fF+8b0Oc60tZXQo
-         XteJGO5fVhfE8TVfZ6EjB+noAShoAflt5JSccAkzPuhhznVp6+7zYz8PpQHjKoPTpa0K
-         2KQ7i3+My0sKbPdJ4s2/oD8CMkOwInpRXdWK7g9dj+HRoU0GInqkJQLoc9xhevkh7yZZ
-         kFAmBAU9o6P04sAz6IQnC75FbF6JF+ln9A6liI2YHdeYwDtrFsKsByOaAwYoYns4Brg8
-         7cY/jZjRbXWbWjKC9cg3i7IYAsbffQVXavNFq/v3GaI3ilf/9/YuqqYyynTecxm6jBST
-         RStA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Kde5qioibKFTqTbk8Z1S5mJRQCZZsheqyuONyQlU+mM=;
-        b=L8E3NmpEJKwYt9FTvlpxowt/kJPV/GKohZD4IRyxBvptf2/EfFGxjEDc8B+Gdq4X5i
-         LHCZZGNoZsI1zIwNZy5fc7AUOYIBhLPr81wOfwsrcYGVqDtIXt0J+pUbxwF5xbSdFrMq
-         42J2Qm/izcIObLmnhFhXp2r0fJwvGl41iGmfuCcgoztNQ0dcTV8n1njexCQ0+RgG4AqZ
-         R3+dzpOrzl7B6PQDRqcGEhVecxtewqzopKv7Lr/IsfhLA3fXsqMxZ0dMnS9maPblwGqC
-         HVx1x61MD7Vu82MuRTOY3NkqGuw4nbeDiGKdwDQPkR7WOW6u/6GsOEP/Wck5d+7U/rlc
-         fmaw==
-X-Gm-Message-State: AOAM530uOBdxYul8g9YpGASfxHQXM+mg8+uuTLF9dyP6Gy1FVMidOM1D
-        O388Y1QwiD8869mAkGgu6HlXUvvtfKuZgS7XjQ==
-X-Google-Smtp-Source: ABdhPJy4pfGvQB2Kq/WKK3w+RgvNCa1tQEKOHNTNej4Ix2zGetKCzZpOGGMwlCc07q4zDTK3QS35eHXJswYLS8y+aVw=
-X-Received: by 2002:a17:90a:f0c1:: with SMTP id fa1mr3867972pjb.148.1607548616356;
- Wed, 09 Dec 2020 13:16:56 -0800 (PST)
+        Wed, 9 Dec 2020 16:18:32 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1kn6py-003Drx-NF; Wed, 09 Dec 2020 23:17:27 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed,  9 Dec 2020 23:16:48 +0200
+Message-Id: <iwlwifi.20201209231352.ee57c3214d05.I810d7de33fb08001ef1a2e24714d5b68932e088e@changeid>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
+References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
-References: <CALjTZvZZZVqnoV4YFTDHogVHv77=dKfcSSBGj1zC83zpUid9+g@mail.gmail.com>
- <4eb99a1da6342999c4dca355533a0847d0e942a5.camel@intel.com>
- <CALjTZvYwccfOVTTGNo1=oLnwXG2b9Vz1nVZuvLKFV94+3fQ6EQ@mail.gmail.com>
- <20201209091315.2c55e1c6@kicinski-fedora-pc1c0hjn.DHCP.thefacebook.com>
- <CANUX_P1=yuPkK5BzJ99oniMiCgB0z98yNYUSw4_qk2Vg7ucoRQ@mail.gmail.com>
- <CALjTZvYZEbgfLEzxQdafJT6CFz76prA4+YM2EGA8k5Dgn3gigw@mail.gmail.com>
- <CANUX_P1YWSudJfwyuFVg-qdBHwQvQJiZayZBMY8E4it0qwB5Hw@mail.gmail.com> <CANUX_P0sOAdRjOgg=ogAHmQdTXp5UKyW2XQQRComa4Rv3Y-toQ@mail.gmail.com>
-In-Reply-To: <CANUX_P0sOAdRjOgg=ogAHmQdTXp5UKyW2XQQRComa4Rv3Y-toQ@mail.gmail.com>
-From:   Rui Salvaterra <rsalvaterra@gmail.com>
-Date:   Wed, 9 Dec 2020 21:16:45 +0000
-Message-ID: <CALjTZvYfJVjxRO4Avc3rV+W+HO-vBABxwF=UUETzDeNv_QBbhg@mail.gmail.com>
-Subject: Re: [BUG] iwlwifi: card unusable after firmware crash
-To:     Emmanuel Grumbach <egrumbach@gmail.com>
-Cc:     Jakub Kicinski <kuba@kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2 44/47] iwlwifi: mvm: add size checks for range response notification
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi again, Emmanuel,
+From: Avraham Stern <avraham.stern@intel.com>
 
-On Wed, 9 Dec 2020 at 21:07, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->
-> Indeed, the bit is reverse logic. So we can put that aside.
-> Frankly, I have no clue. You can try our backport tree to bisect,
-> should be easier..
-> What I see here is that your GP_CTRL value is 080003d8
->
-> #define CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW          (0x08000000)
-> which means sense since apparently, HW RF-Kill was asserted.
-> #define CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP         (0x00000010)
-> Which means that the device is going to sleep... And that's the problem:
->
-> iwl_trans_pcie_grab_nic_access:
->         ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
->                            CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
->                            (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
->                             CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
->         if (unlikely(ret < 0)) {
->                 u32 cntrl = iwl_read32(trans, CSR_GP_CNTRL);
->
->                 WARN_ONCE(1,
->                           "Timeout waiting for hardware access
-> (CSR_GP_CNTRL 0x%08x)\n",
->                           cntrl);
->
-> but I'd expect the splat in your log...
-> Or maybe you can't load the firmware?
+The range response notification has several versions. Check the
+notification size according to the expected notification version.
+Notifications with incorrect size will be ignored.
 
-Well, my kernel doesn't have any modules, it's all built-in. The
-firmware is obviously loading fine, otherwise the card wouldn't work,
-but yeah, that WARN_ONCE hasn't triggered at all.
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../intel/iwlwifi/mvm/ftm-initiator.c         | 44 +++++++++++++++++--
+ 1 file changed, 41 insertions(+), 3 deletions(-)
 
-> Can you try this:
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> index 2fffbbc8462f..748300752630 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> @@ -2121,6 +2121,7 @@ static bool
-> iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
->          * track nic_access anyway.
->          */
->         __release(&trans_pcie->reg_lock);
-> +       mdelay(1);
->         return true;
->  }
->
-> If that helps, then... I'd have no clue why it helps, but this
-> specific device caused us trouble like bad timing after
-> grab_nic_access..
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+index d121f682f875..a4fd0bf9ba19 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+@@ -977,9 +977,44 @@ iwl_mvm_ftm_pasn_update_pn(struct iwl_mvm *mvm,
+ 	}
+ }
+ 
++static u8 iwl_mvm_ftm_get_range_resp_ver(struct iwl_mvm *mvm)
++{
++	if (!fw_has_api(&mvm->fw->ucode_capa,
++			IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ))
++		return 5;
++
++	/* Starting from version 8, the FW advertises the version */
++	if (mvm->cmd_ver.range_resp >= 8)
++		return mvm->cmd_ver.range_resp;
++	else if (fw_has_api(&mvm->fw->ucode_capa,
++			    IWL_UCODE_TLV_API_FTM_RTT_ACCURACY))
++		return 7;
++
++	/* The first version of the new range request API */
++	return 6;
++}
++
++static bool iwl_mvm_ftm_resp_size_validation(u8 ver, unsigned int pkt_len)
++{
++	switch (ver) {
++	case 8:
++		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v8);
++	case 7:
++		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v7);
++	case 6:
++		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v6);
++	case 5:
++		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v5);
++	default:
++		WARN_ONCE(1, "FTM: unsupported range response version %u", ver);
++		return false;
++	}
++}
++
+ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
+ 	struct iwl_tof_range_rsp_ntfy_v5 *fw_resp_v5 = (void *)pkt->data;
+ 	struct iwl_tof_range_rsp_ntfy_v6 *fw_resp_v6 = (void *)pkt->data;
+ 	struct iwl_tof_range_rsp_ntfy_v7 *fw_resp_v7 = (void *)pkt->data;
+@@ -988,6 +1023,7 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	bool new_api = fw_has_api(&mvm->fw->ucode_capa,
+ 				  IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ);
+ 	u8 num_of_aps, last_in_batch;
++	u8 notif_ver = iwl_mvm_ftm_get_range_resp_ver(mvm);
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -995,6 +1031,9 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		return;
+ 	}
+ 
++	if (unlikely(!iwl_mvm_ftm_resp_size_validation(notif_ver, pkt_len)))
++		return;
++
+ 	if (new_api) {
+ 		if (iwl_mvm_ftm_range_resp_valid(mvm, fw_resp_v8->request_id,
+ 						 fw_resp_v8->num_of_aps))
+@@ -1021,11 +1060,10 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		int peer_idx;
+ 
+ 		if (new_api) {
+-			if (mvm->cmd_ver.range_resp == 8) {
++			if (notif_ver == 8) {
+ 				fw_ap = &fw_resp_v8->ap[i];
+ 				iwl_mvm_ftm_pasn_update_pn(mvm, fw_ap);
+-			} else if (fw_has_api(&mvm->fw->ucode_capa,
+-					      IWL_UCODE_TLV_API_FTM_RTT_ACCURACY)) {
++			} else if (notif_ver == 7) {
+ 				fw_ap = (void *)&fw_resp_v7->ap[i];
+ 			} else {
+ 				fw_ap = (void *)&fw_resp_v6->ap[i];
+-- 
+2.29.2
 
-I'll give it a spin. Nasty hack, but if it works, it works. :)
-
-Thanks,
-Rui
