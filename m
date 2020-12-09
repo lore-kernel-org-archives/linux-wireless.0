@@ -7,140 +7,99 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D705C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0317FC4361B
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:40:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B36C23C44
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:39:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA2A623C44
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388277AbgLIVjY (ORCPT
+        id S2388178AbgLIVkM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:39:24 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35946 "EHLO
+        Wed, 9 Dec 2020 16:40:12 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35958 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388151AbgLIVjX (ORCPT
+        with ESMTP id S2388024AbgLIVkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:39:23 -0500
+        Wed, 9 Dec 2020 16:40:12 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pm-003Drx-Gt; Wed, 09 Dec 2020 23:17:14 +0200
+        id 1kn6pk-003Drx-GW; Wed, 09 Dec 2020 23:17:12 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:31 +0200
-Message-Id: <iwlwifi.20201209231352.0a3fa177cd6b.I7c69ff999419368266279ec27dd618eb450908b3@changeid>
+Date:   Wed,  9 Dec 2020 23:16:28 +0200
+Message-Id: <iwlwifi.20201209231352.1a0211e66906.I572eb69dc3738319310c9cbe03a36d942f4f68f7@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 27/47] iwlwifi: mvm: do more useful queue sync accounting
+Subject: [PATCH v2 24/47] iwlwifi: mvm: move iwl_mvm_stop_device() out of line
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We're currently doing accounting on the queue sync with an
-atomic variable that counts down the number of remaining
-notifications that we still need.
-
-As we've been hitting issues in this area, modify this to
-track a bitmap of queues, not just the number of queues,
-and print out the remaining bitmap in the warning.
+This function has grown quite a bit over time, move it
+out of line before we grow it even further.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 11 ++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 10 +++++++---
- 4 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 11 +----------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 14 ++++++++++++++
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 766aeeaf1fcf..be3d4515b772 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -5097,8 +5097,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 
- 	if (notif->sync) {
- 		notif->cookie = mvm->queue_sync_cookie;
--		atomic_set(&mvm->queue_sync_counter,
--			   mvm->trans->num_rx_queues);
-+		mvm->queue_sync_state = (1 << mvm->trans->num_rx_queues) - 1;
- 	}
- 
- 	ret = iwl_mvm_notify_rx_queue(mvm, qmask, notif, size, !notif->sync);
-@@ -5110,14 +5109,16 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 	if (notif->sync) {
- 		lockdep_assert_held(&mvm->mutex);
- 		ret = wait_event_timeout(mvm->rx_sync_waitq,
--					 atomic_read(&mvm->queue_sync_counter) == 0 ||
-+					 READ_ONCE(mvm->queue_sync_state) == 0 ||
- 					 iwl_mvm_is_radio_killed(mvm),
- 					 HZ);
--		WARN_ON_ONCE(!ret && !iwl_mvm_is_radio_killed(mvm));
-+		WARN_ONCE(!ret && !iwl_mvm_is_radio_killed(mvm),
-+			  "queue sync: failed to sync, state is 0x%lx\n",
-+			  mvm->queue_sync_state);
- 	}
- 
- out:
--	atomic_set(&mvm->queue_sync_counter, 0);
-+	mvm->queue_sync_state = 0;
- 	if (notif->sync)
- 		mvm->queue_sync_cookie++;
- }
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index de43ffff0a5d..afa04952107e 100644
+index 7e28a088f3e6..de43ffff0a5d 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -842,7 +842,7 @@ struct iwl_mvm {
- 	unsigned long status;
- 
- 	u32 queue_sync_cookie;
--	atomic_t queue_sync_counter;
-+	unsigned long queue_sync_state;
- 	/*
- 	 * for beacon filtering -
- 	 * currently only one interface can be supported
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index e54c48af1913..2a497fb77e3a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -703,7 +703,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 
- 	init_waitqueue_head(&mvm->rx_sync_waitq);
- 
--	atomic_set(&mvm->queue_sync_counter, 0);
-+	mvm->queue_sync_state = 0;
- 
- 	SET_IEEE80211_DEV(mvm->hw, mvm->trans->dev);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index ef5bd58ef742..d4465164457d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -827,9 +827,13 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		WARN_ONCE(1, "Invalid identifier %d", internal_notif->type);
- 	}
- 
--	if (internal_notif->sync &&
--	    !atomic_dec_return(&mvm->queue_sync_counter))
--		wake_up(&mvm->rx_sync_waitq);
-+	if (internal_notif->sync) {
-+		WARN_ONCE(!test_and_clear_bit(queue, &mvm->queue_sync_state),
-+			  "queue sync: queue %d responded a second time!\n",
-+			  queue);
-+		if (READ_ONCE(mvm->queue_sync_state) == 0)
-+			wake_up(&mvm->rx_sync_waitq);
-+	}
+@@ -1946,16 +1946,7 @@ static inline u32 iwl_mvm_flushable_queues(struct iwl_mvm *mvm)
+ 		~BIT(IWL_MVM_DQA_CMD_QUEUE));
  }
  
- static void iwl_mvm_oldsn_workaround(struct iwl_mvm *mvm,
+-static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+-{
+-	lockdep_assert_held(&mvm->mutex);
+-	iwl_fw_cancel_timestamp(&mvm->fwrt);
+-	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
+-	iwl_fw_dbg_stop_sync(&mvm->fwrt);
+-	iwl_trans_stop_device(mvm->trans);
+-	iwl_free_fw_paging(&mvm->fwrt);
+-	iwl_fw_dump_conf_clear(&mvm->fwrt);
+-}
++void iwl_mvm_stop_device(struct iwl_mvm *mvm);
+ 
+ /* Re-configure the SCD for a queue that has already been configured */
+ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 517ca5b8ce66..e54c48af1913 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -874,6 +874,20 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	return NULL;
+ }
+ 
++void iwl_mvm_stop_device(struct iwl_mvm *mvm)
++{
++	lockdep_assert_held(&mvm->mutex);
++
++	iwl_fw_cancel_timestamp(&mvm->fwrt);
++
++	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
++
++	iwl_fw_dbg_stop_sync(&mvm->fwrt);
++	iwl_trans_stop_device(mvm->trans);
++	iwl_free_fw_paging(&mvm->fwrt);
++	iwl_fw_dump_conf_clear(&mvm->fwrt);
++}
++
+ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
 -- 
 2.29.2
 
