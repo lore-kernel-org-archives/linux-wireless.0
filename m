@@ -7,128 +7,116 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49970C4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BB9C433FE
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:38:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 161DF22C7B
+	by mail.kernel.org (Postfix) with ESMTP id 2CED323B6B
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387963AbgLIVht (ORCPT
+        id S2388169AbgLIVht (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 9 Dec 2020 16:37:49 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35918 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:35922 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388138AbgLIVht (ORCPT
+        with ESMTP id S2388326AbgLIVht (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 9 Dec 2020 16:37:49 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pj-003Drx-OT; Wed, 09 Dec 2020 23:17:12 +0200
+        id 1kn6pg-003Drx-Nz; Wed, 09 Dec 2020 23:17:09 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:27 +0200
-Message-Id: <iwlwifi.20201209231352.d28e14682bdc.I9ac366aa97db045be4daa4ba263267a3ac6a6a2f@changeid>
+Date:   Wed,  9 Dec 2020 23:16:23 +0200
+Message-Id: <iwlwifi.20201209231352.c049de5611b4.Ic35b8d1a328903195ec7cb887a9cb198b7d8f856@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 23/47] iwlwifi: mvm: clear up iwl_mvm_notify_rx_queue() argument type
+Subject: [PATCH v2 19/47] iwlwifi: mvm: iterate active stations when updating statistics
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-The argument type to iwl_mvm_notify_rx_queue() is currently just
-a u8 *, but that's misleading because we actually need the inner
-data to be of type struct iwl_mvm_internal_rxq_notif, because we
-interpret it when we get it back from the device (to check the
-sync bool and possibly the cookie.)
+Instead of enumerating all possible stations iterate only active ones.
 
-Therefore, clear up any potential confusion and require that the
-data passed is of type struct iwl_mvm_internal_rxq_notif *.
-
-Also, while at it, rename the "count" to "notif_size" as "count"
-doesn't really clearly say what it's counting.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 13 +++++++------
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 36 ++++++++-------------
+ 1 file changed, 13 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 0f1d345dfc36..766aeeaf1fcf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -5101,8 +5101,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 			   mvm->trans->num_rx_queues);
- 	}
- 
--	ret = iwl_mvm_notify_rx_queue(mvm, qmask, (u8 *)notif,
--				      size, !notif->sync);
-+	ret = iwl_mvm_notify_rx_queue(mvm, qmask, notif, size, !notif->sync);
- 	if (ret) {
- 		IWL_ERR(mvm, "Failed to trigger RX queues sync (%d)\n", ret);
- 		goto out;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 047bd47df32e..7e28a088f3e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1615,7 +1615,8 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- void iwl_mvm_rx_bar_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 				  struct iwl_rx_cmd_buffer *rxb, int queue);
- int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
--			    const u8 *data, u32 count, bool async);
-+			    const struct iwl_mvm_internal_rxq_notif *notif,
-+			    u32 notif_size, bool async);
- void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			    struct iwl_rx_cmd_buffer *rxb, int queue);
- void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 1d51ec95ec21..ef5bd58ef742 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -510,26 +510,27 @@ static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 0059c83c2783..2ffe92d79148 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -689,30 +689,20 @@ iwl_mvm_rx_stats_check_trigger(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
+ 	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig, NULL);
  }
  
- int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
--			    const u8 *data, u32 count, bool async)
-+			    const struct iwl_mvm_internal_rxq_notif *notif,
-+			    u32 notif_size, bool async)
+-static void iwl_mvm_update_avg_energy(struct iwl_mvm *mvm,
+-				      u8 energy[IWL_MVM_STATION_COUNT_MAX])
++static void iwl_mvm_stats_energy_iter(void *_data,
++				      struct ieee80211_sta *sta)
  {
- 	u8 buf[sizeof(struct iwl_rxq_sync_cmd) +
- 	       sizeof(struct iwl_mvm_rss_sync_notif)];
- 	struct iwl_rxq_sync_cmd *cmd = (void *)buf;
--	u32 data_size = sizeof(*cmd) + count;
-+	u32 data_size = sizeof(*cmd) + notif_size;
- 	int ret;
+-	int i;
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	u8 *energy = _data;
++	u32 sta_id = mvmsta->sta_id;
+ 
+-	if (WARN_ONCE(mvm->fw->ucode_capa.num_stations >
+-		      IWL_MVM_STATION_COUNT_MAX,
+-		      "Driver and FW station count mismatch %d\n",
+-		      mvm->fw->ucode_capa.num_stations))
++	if (WARN_ONCE(sta_id >= IWL_MVM_STATION_COUNT_MAX, "sta_id %d >= %d",
++		      sta_id, IWL_MVM_STATION_COUNT_MAX))
+ 		return;
+ 
+-	rcu_read_lock();
+-	for (i = 0; i < mvm->fw->ucode_capa.num_stations; i++) {
+-		struct iwl_mvm_sta *sta;
+-
+-		if (!energy[i])
+-			continue;
++	if (energy[sta_id])
++		mvmsta->avg_energy = energy[sta_id];
+ 
+-		sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
+-		if (!sta)
+-			continue;
+-		sta->avg_energy = energy[i];
+-	}
+-	rcu_read_unlock();
+ }
+ 
+ static void
+@@ -793,8 +783,8 @@ iwl_mvm_handle_rx_statistics_tlv(struct iwl_mvm *mvm,
+ 
+ 	for (i = 0; i < ARRAY_SIZE(average_energy); i++)
+ 		average_energy[i] = le32_to_cpu(stats->average_energy[i]);
+-	iwl_mvm_update_avg_energy(mvm, average_energy);
+-
++	ieee80211_iterate_stations_atomic(mvm->hw, iwl_mvm_stats_energy_iter,
++					  average_energy);
+ 	/*
+ 	 * Don't update in case the statistics are not cleared, since
+ 	 * we will end up counting twice the same airtime, once in TCM
+@@ -904,8 +894,8 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 		bytes = (void *)&stats->load_stats.byte_count;
+ 		air_time = (void *)&stats->load_stats.air_time;
+ 	}
+-
+-	iwl_mvm_update_avg_energy(mvm, energy);
++	ieee80211_iterate_stations_atomic(mvm->hw, iwl_mvm_stats_energy_iter,
++					  energy);
  
  	/*
- 	 * size must be a multiple of DWORD
- 	 * Ensure we don't overflow buf
- 	 */
--	if (WARN_ON(count & 3 ||
--		    count > sizeof(struct iwl_mvm_rss_sync_notif)))
-+	if (WARN_ON(notif_size & 3 ||
-+		    notif_size > sizeof(struct iwl_mvm_rss_sync_notif)))
- 		return -EINVAL;
- 
- 	cmd->rxq_mask = cpu_to_le32(rxq_mask);
--	cmd->count =  cpu_to_le32(count);
-+	cmd->count =  cpu_to_le32(notif_size);
- 	cmd->flags = 0;
--	memcpy(cmd->payload, data, count);
-+	memcpy(cmd->payload, notif, notif_size);
- 
- 	ret = iwl_mvm_send_cmd_pdu(mvm,
- 				   WIDE_ID(DATA_PATH_GROUP,
+ 	 * Don't update in case the statistics are not cleared, since
 -- 
 2.29.2
 
