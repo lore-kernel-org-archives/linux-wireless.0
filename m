@@ -2,139 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 688C6C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 15:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ECE2C4167B
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 15:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D94C23AAC
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 15:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D51523AAC
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 15:07:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727742AbgLIPG6 (ORCPT
+        id S1728054AbgLIPHN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 10:06:58 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35514 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727313AbgLIPG6 (ORCPT
+        Wed, 9 Dec 2020 10:07:13 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:44896 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727313AbgLIPHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 10:06:58 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1kn11v-003Dg4-KK; Wed, 09 Dec 2020 17:05:24 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 17:05:14 +0200
-Message-Id: <iwlwifi.20201209170243.ade5aa9e44b4.I4b7e72824d06dc0719a40021d933e29edfc14713@changeid>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201209150514.944056-1-luca@coelho.fi>
-References: <20201209150514.944056-1-luca@coelho.fi>
+        Wed, 9 Dec 2020 10:07:13 -0500
+X-Greylist: delayed 340 seconds by postgrey-1.27 at vger.kernel.org; Wed, 09 Dec 2020 10:07:13 EST
+Received: from [192.168.254.6] (unknown [50.46.158.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id E61F313C2B0;
+        Wed,  9 Dec 2020 07:00:52 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E61F313C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1607526053;
+        bh=OR648aOCXhz2Gq/9MQpsWe6Djt9POxXU4ZKniX/RKyw=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=CvkNkQRri8oIpzYBXdMvXR0uG2joRtgx9nJ6EjOoWNKHy0Vky956pLg8X+cMBA5EO
+         SoRpXs29tNK4YO22CPIdJteFUqFHvbB7sevFr+VHBKfhvnd8kVrz/rcYekOmDZ5Xmp
+         3H2lJMpQLBx2P/xoqjM2nwi2B7ofBV6lR/4cmyD8=
+Subject: Re: [PATCH v3] ath10k: add flag to protect napi operation to avoid
+ dead loop hang
+To:     Kalle Valo <kvalo@codeaurora.org>, Wen Gong <wgong@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <1598617348-2325-1-git-send-email-wgong@codeaurora.org>
+ <87d02x1rqb.fsf@codeaurora.org>
+ <010101746bd17881-819242de-7cbb-4df3-93e2-59473d281155-000000@us-west-2.amazonses.com>
+ <87r1nzbadn.fsf@codeaurora.org>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <8a97f5ba-8eba-d61b-4c92-bdfd08d388ee@candelatech.com>
+Date:   Wed, 9 Dec 2020 07:00:52 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/11] iwlwifi: mvm: validate notification size when waiting
+In-Reply-To: <87r1nzbadn.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/9/20 1:24 AM, Kalle Valo wrote:
+> Wen Gong <wgong@codeaurora.org> writes:
+> 
+>> On 2020-09-08 00:22, Kalle Valo wrote:
+>>
+>>> Just like with the recent firmware restart patch, isn't
+>>> ar->napi_enabled
+>>> racy? Wouldn't test_and_set_bit() and test_and_clear_bit() be safer?
+>>>
+>>> Or are we holding a lock? But then that should be documented with
+>>> lockdep_assert_held().
+>>
+>> yes, ath10k_hif_start is only called from ath10k_core_start, it has
+>> "lockdep_assert_held(&ar->conf_mutex)", and ath10k_hif_stop is only
+>> called from ath10k_core_stop, it also has
+>> "lockdep_assert_held(&ar->conf_mutex)". then it will not 2 thread both
+>> enter ath10k_hif_start/ath10k_hif_stop meanwhile.
+> 
+> Ok, but every function depending on a lock being held should still call
+> lockdep_assert_held(), that way we can catch the bug if locking changes
+> later. So it's not enough that ath10k_core_stop() has
+> lockdep_assert_held(), also these napi functions should have it.
+> 
+> I actually decided to switch using ATH10K_FLAG_NAPI_ENABLED with
+> set_bit() & co, simpler locking that way and no lockdep_assert_held()
+> needed anymore. Please check my changes in the pending branch, I have
+> only compile tested them:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=e0a466d296bd862080f7796b41349f9f586272c9
+> 
 
-When waiting for a notification and then processing it,
-we also need to check the size of the data before we use
-it. Most places do that already, but fix the remaining
-ones to do it as well.
+Why do you not need locking?  You can't just check a bit is set and then do work and set
+it later without locking, two concurrent CPU threads can pass the first check and both get into
+the logic below it?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 16 +++++++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 10 ++++++++++
- 2 files changed, 23 insertions(+), 3 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-index 312ae841f112..bad5659840a2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2005-2014 Intel Corporation
-+ * Copyright (C) 2005-2014, 2020 Intel Corporation
-  * Copyright (C) 2016 Intel Deutschland GmbH
-  */
- #include <linux/slab.h>
-@@ -147,13 +147,23 @@ IWL_EXPORT_SYMBOL(iwl_phy_db_free);
- int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
- 			   struct iwl_rx_packet *pkt)
- {
-+	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
- 	struct iwl_calib_res_notif_phy_db *phy_db_notif =
- 			(struct iwl_calib_res_notif_phy_db *)pkt->data;
--	enum iwl_phy_db_section_type type = le16_to_cpu(phy_db_notif->type);
--	u16 size  = le16_to_cpu(phy_db_notif->length);
-+	enum iwl_phy_db_section_type type;
-+	u16 size;
- 	struct iwl_phy_db_entry *entry;
- 	u16 chg_id = 0;
- 
-+	if (pkt_len < sizeof(*phy_db_notif))
-+		return -EINVAL;
-+
-+	type = le16_to_cpu(phy_db_notif->type);
-+	size = le16_to_cpu(phy_db_notif->length);
-+
-+	if (pkt_len < sizeof(*phy_db_notif) + size)
-+		return -EINVAL;
-+
- 	if (!phy_db)
- 		return -EINVAL;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 8f15f68ffc70..0637eb1cff4e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -160,6 +160,7 @@ void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
- static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 			 struct iwl_rx_packet *pkt, void *data)
- {
-+	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
- 	struct iwl_mvm *mvm =
- 		container_of(notif_wait, struct iwl_mvm, notif_wait);
- 	struct iwl_mvm_alive_data *alive_data = data;
-@@ -177,6 +178,9 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 				    UCODE_ALIVE_NTFY, 0) == 5) {
- 		struct iwl_alive_ntf_v5 *palive;
- 
-+		if (pkt_len < sizeof(*palive))
-+			return false;
-+
- 		palive = (void *)pkt->data;
- 		umac = &palive->umac_data;
- 		lmac1 = &palive->lmac_data[0];
-@@ -194,6 +198,9 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 	} else if (iwl_rx_packet_payload_len(pkt) == sizeof(struct iwl_alive_ntf_v4)) {
- 		struct iwl_alive_ntf_v4 *palive;
- 
-+		if (pkt_len < sizeof(*palive))
-+			return false;
-+
- 		palive = (void *)pkt->data;
- 		umac = &palive->umac_data;
- 		lmac1 = &palive->lmac_data[0];
-@@ -203,6 +210,9 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 		   sizeof(struct iwl_alive_ntf_v3)) {
- 		struct iwl_alive_ntf_v3 *palive3;
- 
-+		if (pkt_len < sizeof(*palive3))
-+			return false;
-+
- 		palive3 = (void *)pkt->data;
- 		umac = &palive3->umac_data;
- 		lmac1 = &palive3->lmac_data;
 -- 
-2.29.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
