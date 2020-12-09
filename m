@@ -7,133 +7,85 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 236F3C2BBCF
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 740E0C2BB9A
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E684823B77
+	by mail.kernel.org (Postfix) with ESMTP id 381B623B98
 	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387654AbgLIVSc (ORCPT
+        id S2388121AbgLIVST (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:18:32 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35722 "EHLO
+        Wed, 9 Dec 2020 16:18:19 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35626 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726877AbgLIVSc (ORCPT
+        with ESMTP id S2388112AbgLIVRs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:18:32 -0500
+        Wed, 9 Dec 2020 16:17:48 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6py-003Drx-NF; Wed, 09 Dec 2020 23:17:27 +0200
+        id 1kn6pW-003Drx-Ji; Wed, 09 Dec 2020 23:16:58 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:48 +0200
-Message-Id: <iwlwifi.20201209231352.ee57c3214d05.I810d7de33fb08001ef1a2e24714d5b68932e088e@changeid>
+Date:   Wed,  9 Dec 2020 23:16:10 +0200
+Message-Id: <iwlwifi.20201209231352.81b2acfe292b.I8c7372e6f72279e22966a2d0a9066521f9d2f1a0@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 44/47] iwlwifi: mvm: add size checks for range response notification
+Subject: [PATCH v2 06/47] iwlwifi: d3: do not send the WOWLAN_CONFIGURATION command for netdetect
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-The range response notification has several versions. Check the
-notification size according to the expected notification version.
-Notifications with incorrect size will be ignored.
+This command should be used only when there's a real client station.
+Currently it works, but since soon the driver will stop actually having
+an auxiliary station by default, and this command requires _some_ valid
+station, it needs to be removed from this flow.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 44 +++++++++++++++++--
- 1 file changed, 41 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index d121f682f875..a4fd0bf9ba19 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -977,9 +977,44 @@ iwl_mvm_ftm_pasn_update_pn(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static u8 iwl_mvm_ftm_get_range_resp_ver(struct iwl_mvm *mvm)
-+{
-+	if (!fw_has_api(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ))
-+		return 5;
-+
-+	/* Starting from version 8, the FW advertises the version */
-+	if (mvm->cmd_ver.range_resp >= 8)
-+		return mvm->cmd_ver.range_resp;
-+	else if (fw_has_api(&mvm->fw->ucode_capa,
-+			    IWL_UCODE_TLV_API_FTM_RTT_ACCURACY))
-+		return 7;
-+
-+	/* The first version of the new range request API */
-+	return 6;
-+}
-+
-+static bool iwl_mvm_ftm_resp_size_validation(u8 ver, unsigned int pkt_len)
-+{
-+	switch (ver) {
-+	case 8:
-+		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v8);
-+	case 7:
-+		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v7);
-+	case 6:
-+		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v6);
-+	case 5:
-+		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v5);
-+	default:
-+		WARN_ONCE(1, "FTM: unsupported range response version %u", ver);
-+		return false;
-+	}
-+}
-+
- void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index d21143495e70..09a5c770961d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -955,7 +955,6 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
+ 			 struct cfg80211_sched_scan_request *nd_config,
+ 			 struct ieee80211_vif *vif)
  {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
- 	struct iwl_tof_range_rsp_ntfy_v5 *fw_resp_v5 = (void *)pkt->data;
- 	struct iwl_tof_range_rsp_ntfy_v6 *fw_resp_v6 = (void *)pkt->data;
- 	struct iwl_tof_range_rsp_ntfy_v7 *fw_resp_v7 = (void *)pkt->data;
-@@ -988,6 +1023,7 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 	bool new_api = fw_has_api(&mvm->fw->ucode_capa,
- 				  IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ);
- 	u8 num_of_aps, last_in_batch;
-+	u8 notif_ver = iwl_mvm_ftm_get_range_resp_ver(mvm);
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -995,6 +1031,9 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		return;
+-	struct iwl_wowlan_config_cmd wowlan_config_cmd = {};
+ 	int ret;
+ 	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
+ 					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
+@@ -975,19 +974,6 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
+ 			return ret;
  	}
  
-+	if (unlikely(!iwl_mvm_ftm_resp_size_validation(notif_ver, pkt_len)))
-+		return;
-+
- 	if (new_api) {
- 		if (iwl_mvm_ftm_range_resp_valid(mvm, fw_resp_v8->request_id,
- 						 fw_resp_v8->num_of_aps))
-@@ -1021,11 +1060,10 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		int peer_idx;
- 
- 		if (new_api) {
--			if (mvm->cmd_ver.range_resp == 8) {
-+			if (notif_ver == 8) {
- 				fw_ap = &fw_resp_v8->ap[i];
- 				iwl_mvm_ftm_pasn_update_pn(mvm, fw_ap);
--			} else if (fw_has_api(&mvm->fw->ucode_capa,
--					      IWL_UCODE_TLV_API_FTM_RTT_ACCURACY)) {
-+			} else if (notif_ver == 7) {
- 				fw_ap = (void *)&fw_resp_v7->ap[i];
- 			} else {
- 				fw_ap = (void *)&fw_resp_v6->ap[i];
+-	/* rfkill release can be either for wowlan or netdetect */
+-	if (wowlan->rfkill_release)
+-		wowlan_config_cmd.wakeup_filter |=
+-			cpu_to_le32(IWL_WOWLAN_WAKEUP_RF_KILL_DEASSERT);
+-
+-	wowlan_config_cmd.sta_id = mvm->aux_sta.sta_id;
+-
+-	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
+-				   sizeof(wowlan_config_cmd),
+-				   &wowlan_config_cmd);
+-	if (ret)
+-		return ret;
+-
+ 	ret = iwl_mvm_sched_scan_start(mvm, vif, nd_config, &mvm->nd_ies,
+ 				       IWL_MVM_SCAN_NETDETECT);
+ 	if (ret)
 -- 
 2.29.2
 
