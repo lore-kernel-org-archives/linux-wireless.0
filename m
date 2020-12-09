@@ -7,133 +7,137 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7090FC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:29:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 790E0C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:30:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D569239D1
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:29:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5064C239D1
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:30:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387976AbgLIV3E (ORCPT
+        id S2388157AbgLIV34 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:29:04 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35820 "EHLO
+        Wed, 9 Dec 2020 16:29:56 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35826 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727369AbgLIV3E (ORCPT
+        with ESMTP id S1727369AbgLIV34 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:29:04 -0500
+        Wed, 9 Dec 2020 16:29:56 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pa-003Drx-5j; Wed, 09 Dec 2020 23:17:02 +0200
+        id 1kn6pl-003Drx-4T; Wed, 09 Dec 2020 23:17:13 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:15 +0200
-Message-Id: <iwlwifi.20201209231352.6b4ee30c59e4.I0c30ef78b3bf727fe80b16a19c7588016d6b04bf@changeid>
+Date:   Wed,  9 Dec 2020 23:16:29 +0200
+Message-Id: <iwlwifi.20201209231352.84ae405829d4.I31184f4be31f7c3feb9a29aef3a111e70d15c64a@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 11/47] iwlwifi: copy iwl_he_capa for modifications
+Subject: [PATCH v2 25/47] iwlwifi: pcie: change 12k A-MSDU config to use 16k buffers
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This data is not necessarily the same across devices as we may
-modify it due to the number of antennas and for overrides (though
-in practice overrides are likely to be identical), so modifying
-the global data is wrong.
-
-Make a copy of it in the NVM data and modify it there instead.
+If 12k A-MSDU size is requested, we will actually allocate 16k
+due to page allocation. Thus, change it to actually mean 16k,
+which is useful for certain sniffer use cases.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/iwl-eeprom-parse.h |  6 ++++
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 33 ++++++++++++++++---
- 2 files changed, 34 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c               | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h             | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c        | 2 +-
+ 5 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-index 03a748cc98fa..3a4562b45410 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-@@ -99,6 +99,12 @@ struct iwl_nvm_data {
- 	bool lar_enabled;
- 	bool vht160_supported;
- 	struct ieee80211_supported_band bands[NUM_NL80211_BANDS];
-+
-+	struct {
-+		struct ieee80211_sband_iftype_data low[2];
-+		struct ieee80211_sband_iftype_data high[2];
-+	} iftd;
-+
- 	struct ieee80211_channel channels[];
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+index 5624fe42efd9..d0eb666b2ca1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+@@ -98,6 +98,7 @@ enum iwl_prph_scratch_mtr_format {
+  *	appropriately; use the below values for this.
+  * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_8K: 8kB RB size
+  * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K: 12kB RB size
++ * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_16K: 16kB RB size
+  */
+ enum iwl_prph_scratch_flags {
+ 	IWL_PRPH_SCRATCH_EARLY_DEBUG_EN		= BIT(4),
+@@ -111,6 +112,7 @@ enum iwl_prph_scratch_flags {
+ 	IWL_PRPH_SCRATCH_RB_SIZE_EXT_MASK	= 0xf << 20,
+ 	IWL_PRPH_SCRATCH_RB_SIZE_EXT_8K		= 8 << 20,
+ 	IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K	= 9 << 20,
++	IWL_PRPH_SCRATCH_RB_SIZE_EXT_16K	= 10 << 20,
  };
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 6d19de3058d2..6f3aca19a254 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -580,7 +580,7 @@ static void iwl_init_vht_hw_capab(struct iwl_trans *trans,
- 		cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
- }
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 9dcd2e990c9c..12b5031a793f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1835,7 +1835,7 @@ MODULE_PARM_DESC(11n_disable,
+ module_param_named(amsdu_size, iwlwifi_mod_params.amsdu_size, int, 0444);
+ MODULE_PARM_DESC(amsdu_size,
+ 		 "amsdu size 0: 12K for multi Rx queue devices, 2K for AX210 devices, "
+-		 "4K for other devices 1:4K 2:8K 3:12K 4: 2K (default 0)");
++		 "4K for other devices 1:4K 2:8K 3:12K (16K buffers) 4: 2K (default 0)");
+ module_param_named(fw_restart, iwlwifi_mod_params.fw_restart, bool, 0444);
+ MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)");
  
--static struct ieee80211_sband_iftype_data iwl_he_capa[] = {
-+static const struct ieee80211_sband_iftype_data iwl_he_capa[] = {
- 	{
- 		.types_mask = BIT(NL80211_IFTYPE_STATION),
- 		.he_cap = {
-@@ -748,7 +748,30 @@ static void iwl_init_he_hw_capab(struct iwl_trans *trans,
- 				 struct ieee80211_supported_band *sband,
- 				 u8 tx_chains, u8 rx_chains)
- {
--	sband->iftype_data = iwl_he_capa;
-+	struct ieee80211_sband_iftype_data *iftype_data;
-+
-+	/* should only initialize once */
-+	if (WARN_ON(sband->iftype_data))
-+		return;
-+
-+	BUILD_BUG_ON(sizeof(data->iftd.low) != sizeof(iwl_he_capa));
-+	BUILD_BUG_ON(sizeof(data->iftd.high) != sizeof(iwl_he_capa));
-+
-+	switch (sband->band) {
-+	case NL80211_BAND_2GHZ:
-+		iftype_data = data->iftd.low;
-+		break;
-+	case NL80211_BAND_5GHZ:
-+		iftype_data = data->iftd.high;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return;
-+	}
-+
-+	memcpy(iftype_data, iwl_he_capa, sizeof(iwl_he_capa));
-+
-+	sband->iftype_data = iftype_data;
- 	sband->n_iftype_data = ARRAY_SIZE(iwl_he_capa);
- 
- 	/* If not 2x2, we need to indicate 1x1 in the Midamble RX Max NSTS */
-@@ -756,11 +779,11 @@ static void iwl_init_he_hw_capab(struct iwl_trans *trans,
- 		int i;
- 
- 		for (i = 0; i < sband->n_iftype_data; i++) {
--			iwl_he_capa[i].he_cap.he_cap_elem.phy_cap_info[1] &=
-+			iftype_data[i].he_cap.he_cap_elem.phy_cap_info[1] &=
- 				~IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_TX_MAX_NSTS;
--			iwl_he_capa[i].he_cap.he_cap_elem.phy_cap_info[2] &=
-+			iftype_data[i].he_cap.he_cap_elem.phy_cap_info[2] &=
- 				~IEEE80211_HE_PHY_CAP2_MIDAMBLE_RX_TX_MAX_NSTS;
--			iwl_he_capa[i].he_cap.he_cap_elem.phy_cap_info[7] &=
-+			iftype_data[i].he_cap.he_cap_elem.phy_cap_info[7] &=
- 				~IEEE80211_HE_PHY_CAP7_MAX_NC_MASK;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 8f3774181b97..b84921e1556c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -373,7 +373,7 @@ iwl_trans_get_rb_size_order(enum iwl_amsdu_size rb_size)
+ 	case IWL_AMSDU_8K:
+ 		return get_order(8 * 1024);
+ 	case IWL_AMSDU_12K:
+-		return get_order(12 * 1024);
++		return get_order(16 * 1024);
+ 	default:
+ 		WARN_ON(1);
+ 		return -1;
+@@ -391,7 +391,7 @@ iwl_trans_get_rb_size(enum iwl_amsdu_size rb_size)
+ 	case IWL_AMSDU_8K:
+ 		return 8 * 1024;
+ 	case IWL_AMSDU_12K:
+-		return 12 * 1024;
++		return 16 * 1024;
+ 	default:
+ 		WARN_ON(1);
+ 		return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index a0352fa873d9..166bd87c8d7e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -148,7 +148,7 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	case IWL_AMSDU_12K:
+ 		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_4K;
+ 		/* if firmware supports the ext size, tell it */
+-		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K;
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_EXT_16K;
+ 		break;
  	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index 13fe9c00d7e8..41b439ae6278 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -243,7 +243,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 		rb_size = IWL_CTXT_INFO_RB_SIZE_8K;
+ 		break;
+ 	case IWL_AMSDU_12K:
+-		rb_size = IWL_CTXT_INFO_RB_SIZE_12K;
++		rb_size = IWL_CTXT_INFO_RB_SIZE_16K;
+ 		break;
+ 	default:
+ 		WARN_ON(1);
 -- 
 2.29.2
 
