@@ -7,101 +7,71 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0721C4361B
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7AEC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:24:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 735E723BA7
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:23:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D332D20793
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Dec 2020 21:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728003AbgLIVXV (ORCPT
+        id S2387929AbgLIVYX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:23:21 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:35778 "EHLO
+        Wed, 9 Dec 2020 16:24:23 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:35784 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727208AbgLIVXV (ORCPT
+        with ESMTP id S2387736AbgLIVYK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Dec 2020 16:23:21 -0500
+        Wed, 9 Dec 2020 16:24:10 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1kn6pd-003Drx-NH; Wed, 09 Dec 2020 23:17:06 +0200
+        id 1kn6q0-003Drx-3F; Wed, 09 Dec 2020 23:17:28 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed,  9 Dec 2020 23:16:19 +0200
-Message-Id: <iwlwifi.20201209231352.1b764faecfee.I2da0ada577fc16268125a4a15b5e725c18c643ee@changeid>
+Date:   Wed,  9 Dec 2020 23:16:50 +0200
+Message-Id: <iwlwifi.20201209231352.1b703b6f4c05.I0b5c51aa87e86c964e2eae6d959a96e232840ef5@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209211651.968276-1-luca@coelho.fi>
 References: <20201209211651.968276-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 15/47] iwlwifi: mvm: remove the read_nvm from iwl_run_unified_mvm_ucode
+Subject: [PATCH v2 46/47] iwlwifi: mvm: purge the BSS table upon firmware load
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Similarly to what I did to iwl_run_init_mvm_ucode, there is no
-need to pass the read_nvm parameter. Either we have an NVM
-and we don't need to read it, or we don't and we need to read it.
+When the firmware is loaded, its internal timer (GP2) is
+reset and all the time_sync in the BSS table is now
+unusable. Ask cfg80211 to purge the BSS table.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index a31a77f828fa..c29e55720179 100644
+index 75bd05f0ba44..8f15f68ffc70 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -460,7 +460,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+@@ -402,6 +402,14 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	iwl_fw_set_dbg_rec_on(&mvm->fwrt);
+ #endif
+ 
++	/*
++	 * All the BSSes in the BSS table include the GP2 in the system
++	 * at the beacon Rx time, this is of course no longer relevant
++	 * since we are resetting the firmware.
++	 * Purge all the BSS table.
++	 */
++	cfg80211_bss_flush(mvm->hw->wiphy);
++
  	return 0;
  }
  
--static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
-+static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm)
- {
- 	struct iwl_notification_wait init_wait;
- 	struct iwl_nvm_access_complete_cmd nvm_complete = {};
-@@ -517,7 +517,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		iwl_mvm_load_nvm_to_nic(mvm);
- 	}
- 
--	if (IWL_MVM_PARSE_NVM && read_nvm) {
-+	if (IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
- 		ret = iwl_nvm_init(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
-@@ -542,7 +542,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		return ret;
- 
- 	/* Read the NVM only at driver load time, no need to do this twice */
--	if (!IWL_MVM_PARSE_NVM && read_nvm) {
-+	if (!IWL_MVM_PARSE_NVM && !mvm->nvm_data) {
- 		mvm->nvm_data = iwl_get_nvm(mvm->trans, mvm->fw);
- 		if (IS_ERR(mvm->nvm_data)) {
- 			ret = PTR_ERR(mvm->nvm_data);
-@@ -657,7 +657,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm)
- 	int ret;
- 
- 	if (iwl_mvm_has_unified_ucode(mvm))
--		return iwl_run_unified_mvm_ucode(mvm, true);
-+		return iwl_run_unified_mvm_ucode(mvm);
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1330,7 +1330,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- 	int ret;
- 
- 	if (iwl_mvm_has_unified_ucode(mvm))
--		return iwl_run_unified_mvm_ucode(mvm, false);
-+		return iwl_run_unified_mvm_ucode(mvm);
- 
- 	WARN_ON(!mvm->nvm_data);
- 	ret = iwl_run_init_mvm_ucode(mvm);
 -- 
 2.29.2
 
