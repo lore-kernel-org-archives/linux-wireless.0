@@ -2,123 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F5DC2BB48
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 14:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AB2C2BBD5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 14:06:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A48E123D3C
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 14:06:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADE4F23D24
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 14:06:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389968AbgLJOGM (ORCPT
+        id S2389958AbgLJOGO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Dec 2020 09:06:12 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:14843 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389958AbgLJOGB (ORCPT
+        Thu, 10 Dec 2020 09:06:14 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:28639 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389956AbgLJOGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Dec 2020 09:06:01 -0500
+        Thu, 10 Dec 2020 09:06:00 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607609138; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=ejh2xOp0M8fe2LIvSg5q/SP3nwRAztNNNoSXVcpQ90k=; b=vTfURpnO1/N7g3q1aE/0hPz5K8y0kwv5eUWZoDvEuQgbI/cGnnZhIMW8A4+U1AnFSfXlCW/Y
- dAJem1o4I4NiO23fU4ZC/xP2ke3WjgsIiI+M7jZK5CYQrufje+X5T2RrKIVHkkiaOk1bKblN
- PEycS5pIlJ6YkcuE+X9aM4MOAx0=
-X-Mailgun-Sending-Ip: 69.72.43.15
+ s=smtp; t=1607609137; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=QiSyXneoo/CIXwCPKWQSgNvC6NPWRqvUJmIt/js5FlY=; b=vpEbbabQgyqFsJYu70/lXNkDDdOY1omcTgV7qqkuetE6DSFdpKZpk4I2L2RnEsfRO8KRukPV
+ zAwYj8EHwM+TFoSOcPE2Vh17R/W5H/NfU/lMfyEqMSdrpHL5QxNq1QQPkKnXH05Xht/W26Tf
+ BbmBEJPtRNimxnSAKpKoFuJqSPM=
+X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5fd22b3135a25d1b166d04d1 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 10 Dec 2020 14:05:37
+ smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
+ 5fd22b2953d7c5ba60215e37 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 10 Dec 2020 14:05:29
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1DD33C433CA; Thu, 10 Dec 2020 14:05:37 +0000 (UTC)
+        id 71D86C43462; Thu, 10 Dec 2020 14:05:29 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F3B0DC43461;
-        Thu, 10 Dec 2020 14:05:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F3B0DC43461
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AB152C433CA;
+        Thu, 10 Dec 2020 14:05:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AB152C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] ath11k: Fix incorrect tlvs in scan start command
-Date:   Thu, 10 Dec 2020 16:05:24 +0200
-Message-Id: <1607609124-17250-7-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 0/6] ath11k: QCA6390 stability fixes
+Date:   Thu, 10 Dec 2020 16:05:18 +0200
+Message-Id: <1607609124-17250-1-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1607609124-17250-1-git-send-email-kvalo@codeaurora.org>
-References: <1607609124-17250-1-git-send-email-kvalo@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Few fixes to improve statibility on QCA6390. Please review.
 
-Currently 6G specific tlvs have duplicate entries which is causing
-scan failures. Fix this by removing the duplicate entries of the same
-tlv. This also fixes out-of-bound memory writes caused due to
-adding tlvs when num_hint_bssid and num_hint_s_ssid are ZEROs.
+Kalle
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01386-QCAHKSWPL_SILICONZ-1
+Carl Huang (4):
+  ath11k: put hw to DBS using WMI_PDEV_SET_HW_MODE_CMDID
+  ath11k: pci: fix hot reset stability issues
+  ath11k: pci: fix L1ss clock unstable problem
+  ath11k: pci: disable VDD4BLOW
 
-Fixes: 74601ecfef6e ("ath11k: Add support for 6g scan hint")
-Reported-by: Carl Huang <cjhuang@codeaurora.org>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/wmi.c | 31 -------------------------------
- 1 file changed, 31 deletions(-)
+Kalle Valo (1):
+  ath11k: mhi: print a warning if firmware crashed
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 79b7f991c612..95ebb105dfd7 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2213,37 +2213,6 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 		}
- 	}
- 
--	len = params->num_hint_s_ssid * sizeof(struct hint_short_ssid);
--	tlv = ptr;
--	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
--		      FIELD_PREP(WMI_TLV_LEN, len);
--	ptr += TLV_HDR_SIZE;
--	if (params->num_hint_s_ssid) {
--		s_ssid = ptr;
--		for (i = 0; i < params->num_hint_s_ssid; ++i) {
--			s_ssid->freq_flags = params->hint_s_ssid[i].freq_flags;
--			s_ssid->short_ssid = params->hint_s_ssid[i].short_ssid;
--			s_ssid++;
--		}
--	}
--	ptr += len;
--
--	len = params->num_hint_bssid * sizeof(struct hint_bssid);
--	tlv = ptr;
--	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
--		      FIELD_PREP(WMI_TLV_LEN, len);
--	ptr += TLV_HDR_SIZE;
--	if (params->num_hint_bssid) {
--		hint_bssid = ptr;
--		for (i = 0; i < params->num_hint_bssid; ++i) {
--			hint_bssid->freq_flags =
--				params->hint_bssid[i].freq_flags;
--			ether_addr_copy(&params->hint_bssid[i].bssid.addr[0],
--					&hint_bssid->bssid.addr[0]);
--			hint_bssid++;
--		}
--	}
--
- 	ret = ath11k_wmi_cmd_send(wmi, skb,
- 				  WMI_START_SCAN_CMDID);
- 	if (ret) {
+Pradeep Kumar Chitrapu (1):
+  ath11k: Fix incorrect tlvs in scan start command
+
+ drivers/net/wireless/ath/ath11k/core.c |  12 ++-
+ drivers/net/wireless/ath/ath11k/hw.h   |   6 --
+ drivers/net/wireless/ath/ath11k/mhi.c  |   9 +++
+ drivers/net/wireless/ath/ath11k/pci.c  | 132 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/pci.h  |  24 ++++++
+ drivers/net/wireless/ath/ath11k/wmi.c  |  69 +++++++++--------
+ drivers/net/wireless/ath/ath11k/wmi.h  |   3 +
+ 7 files changed, 206 insertions(+), 49 deletions(-)
+
 -- 
 2.7.4
 
