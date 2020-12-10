@@ -2,85 +2,158 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13824C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E82C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:52:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCB1E22E01
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8120D22AAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:52:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389815AbgLJSs6 (ORCPT
+        id S2393216AbgLJSwl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Dec 2020 13:48:58 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:42896 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390676AbgLJSs4 (ORCPT
+        Thu, 10 Dec 2020 13:52:41 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:53274 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2392891AbgLJSwh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Dec 2020 13:48:56 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607626111; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=iDrjJgc5bHjhL5L1479qBECvOg7GWsPrGjjPwqlFI5o=;
- b=bwXozZ9l7iJffh2h99ZMV4DCvbv8vk4Az4Q1ccX9n/SEXuwtH2w5yweW3Ynpr29SNtuNqQG6
- EmAlximsm2WPwRIoLa9W2bxplIsj8WqXrsF0RTWg2SaR5t8smrANbzrEERh8UWeE9KH2FlBN
- mL6DT32kJxZt9cteTwwrQZIgo5c=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5fd26d7d95aeb115f386cbc5 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 10 Dec 2020 18:48:29
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9B379C43462; Thu, 10 Dec 2020 18:48:28 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E0642C433C6;
-        Thu, 10 Dec 2020 18:48:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E0642C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 10 Dec 2020 13:52:37 -0500
+X-UUID: 8c118315fcc04df98a457613fa715309-20201211
+X-UUID: 8c118315fcc04df98a457613fa715309-20201211
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1625513374; Fri, 11 Dec 2020 02:51:43 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 11 Dec 2020 02:51:40 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 11 Dec 2020 02:51:40 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v3 1/2] mt76: mt7915: reset token when mac_reset happens
+Date:   Fri, 11 Dec 2020 02:51:37 +0800
+Message-ID: <69d62cd40ae52e0ddd5b26ba96bc7480385585a5.1607578601.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wilc1000: changes for SPI communication stall issue found
- with Iperf
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201208103739.28597-1-ajay.kathat@microchip.com>
-References: <20201208103739.28597-1-ajay.kathat@microchip.com>
-To:     <Ajay.Kathat@microchip.com>
-Cc:     <linux-wireless@vger.kernel.org>, <Claudiu.Beznea@microchip.com>,
-        <Sripad.Balwadgi@microchip.com>, <Ajay.Kathat@microchip.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201210184828.9B379C43462@smtp.codeaurora.org>
-Date:   Thu, 10 Dec 2020 18:48:28 +0000 (UTC)
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 225B7377B2753A1E346F1B38FD736EE081DDCEA978D63034C899BE98C32847EA2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<Ajay.Kathat@microchip.com> wrote:
+Reset buffering token in mt7915_mac_reset_work() to avoid possible leakege,
+which leads to Tx stop after mac reset.
 
-> From: Ajay Singh <ajay.kathat@microchip.com>
-> 
-> Added retry mechanism to ensure VMM enable bit is set during the
-> block transfer of data between host and WILC FW.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Tested-by: Bo Jiao <bo.jiao@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+change since v3 - none
+change since v2 - rebase on top of latest codebase
+---
+ .../net/wireless/mediatek/mt76/mt7915/init.c  | 18 +-------------
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 24 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  1 +
+ 3 files changed, 26 insertions(+), 17 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-382726d134e3 wilc1000: changes for SPI communication stall issue found with Iperf
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index ed4635bd151a..255ccd7e3d27 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -672,28 +672,12 @@ int mt7915_register_device(struct mt7915_dev *dev)
+ 
+ void mt7915_unregister_device(struct mt7915_dev *dev)
+ {
+-	struct mt76_txwi_cache *txwi;
+-	int id;
+-
+ 	mt7915_unregister_ext_phy(dev);
+ 	mt76_unregister_device(&dev->mt76);
+ 	mt7915_mcu_exit(dev);
+ 	mt7915_dma_cleanup(dev);
+ 
+-	spin_lock_bh(&dev->token_lock);
+-	idr_for_each_entry(&dev->token, txwi, id) {
+-		mt7915_txp_skb_unmap(&dev->mt76, txwi);
+-		if (txwi->skb) {
+-			struct ieee80211_hw *hw;
+-
+-			hw = mt76_tx_status_get_hw(&dev->mt76, txwi->skb);
+-			ieee80211_free_txskb(hw, txwi->skb);
+-		}
+-		mt76_put_txwi(&dev->mt76, txwi);
+-		dev->token_count--;
+-	}
+-	spin_unlock_bh(&dev->token_lock);
+-	idr_destroy(&dev->token);
++	mt7915_tx_token_put(dev);
+ 
+ 	mt76_free_device(&dev->mt76);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index f504eeb221f9..1b4d65310b88 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1485,6 +1485,27 @@ mt7915_dma_reset(struct mt7915_phy *phy)
+ 		 MT_WFDMA1_GLO_CFG_TX_DMA_EN | MT_WFDMA1_GLO_CFG_RX_DMA_EN);
+ }
+ 
++void mt7915_tx_token_put(struct mt7915_dev *dev)
++{
++	struct mt76_txwi_cache *txwi;
++	int id;
++
++	spin_lock_bh(&dev->token_lock);
++	idr_for_each_entry(&dev->token, txwi, id) {
++		mt7915_txp_skb_unmap(&dev->mt76, txwi);
++		if (txwi->skb) {
++			struct ieee80211_hw *hw;
++
++			hw = mt76_tx_status_get_hw(&dev->mt76, txwi->skb);
++			ieee80211_free_txskb(hw, txwi->skb);
++		}
++		mt76_put_txwi(&dev->mt76, txwi);
++		dev->token_count--;
++	}
++	spin_unlock_bh(&dev->token_lock);
++	idr_destroy(&dev->token);
++}
++
+ /* system error recovery */
+ void mt7915_mac_reset_work(struct work_struct *work)
+ {
+@@ -1525,6 +1546,9 @@ void mt7915_mac_reset_work(struct work_struct *work)
+ 
+ 	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_DMA_STOPPED);
+ 
++	mt7915_tx_token_put(dev);
++	idr_init(&dev->token);
++
+ 	if (mt7915_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
+ 		mt7915_dma_reset(&dev->phy);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 0339abf360d3..94bed8a3a050 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -463,6 +463,7 @@ int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			  struct ieee80211_sta *sta,
+ 			  struct mt76_tx_info *tx_info);
+ void mt7915_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue_entry *e);
++void mt7915_tx_token_put(struct mt7915_dev *dev);
+ int mt7915_init_tx_queues(struct mt7915_phy *phy, int idx, int n_desc);
+ void mt7915_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 			 struct sk_buff *skb);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201208103739.28597-1-ajay.kathat@microchip.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.18.0
 
