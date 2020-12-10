@@ -2,83 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24DD9C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DBDAC4167B
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 19:00:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB58E23118
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 18:55:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 371C823D9A
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Dec 2020 19:00:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390620AbgLJSyt (ORCPT
+        id S2404093AbgLJS70 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Dec 2020 13:54:49 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:22337 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392334AbgLJSuw (ORCPT
+        Thu, 10 Dec 2020 13:59:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46260 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393298AbgLJS6v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Dec 2020 13:50:52 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607626232; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=zOWCArwGZT8tWhKzawFXE2/2SfQMZq6/kYe7gPZhKWk=;
- b=GxUKX81xho62nKa3xVBIVUq4Jn8HFGEdSBY5iVgfj9e2tka1ZBeFvJKs9ynN0i3cW+40fKFg
- DnuLtQ9FgDC7q5BQ0xxcx1Vz6tuNNiCpXp/4nsYMku4Njcznycl5MgsyBc3WVKb2BkN1v5xr
- uRRo+/lbZLdPh3V/AMhNgsLqNFg=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
- 5fd26dda53d7c5ba6054bc6e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 10 Dec 2020 18:50:02
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 10F2FC43464; Thu, 10 Dec 2020 18:50:02 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0DB19C433C6;
-        Thu, 10 Dec 2020 18:49:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0DB19C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 10 Dec 2020 13:58:51 -0500
+Received: from mail-vs1-xe29.google.com (mail-vs1-xe29.google.com [IPv6:2607:f8b0:4864:20::e29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 414EDC0613CF;
+        Thu, 10 Dec 2020 10:58:11 -0800 (PST)
+Received: by mail-vs1-xe29.google.com with SMTP id z16so3433351vsp.5;
+        Thu, 10 Dec 2020 10:58:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=vVsf3l9Q/619RhJuwHHIDbvbBlqa351J5BuLCbbBows=;
+        b=UWmRpJB2WzP666xt7GNev1C208gdqFpOeVwKeLf4MY4P7U2U0jMWCogpUvU1ATgbOh
+         Y+dmGewRCmPrcP4lne+u0e11Z0laig1fl8oCg4O8+FjuEC33lD8SDIhiKwTUyLUtEg3G
+         zsCU0890ObXkxTJPqxpS60/HrWa9rsXR5lDQwrzAsInXc3TapDWNEnv/eTWcot8s3C23
+         vUOWv2p2jCP3S3UqHBK47KvOASjtpu5inNKu+2lHDQo9l0Hca2nBc6qn7wuKYZPkI+6O
+         0z7cy2WDsfjzQM24EJFcvjJFqIjD5Yc5Ri73KX/Rd84B3sDom3Lo31StED1whm/b83tj
+         /rBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vVsf3l9Q/619RhJuwHHIDbvbBlqa351J5BuLCbbBows=;
+        b=BpVy9fedYwBgu2z9c8SeksqbcC5uvOj8mWe8zzXSsMLfNPFrTk6TGNrBw5ivcG9BFg
+         ewSNl4rptXNnbzQViUxLZetAriENvG/STnsXihDvRF+Cb3zAS4zwKIxJibi5ySZErNUi
+         ykxPeJhm6+KayrBOrUfoz7vUyaNtOcfo9Mpos0a3FvMe50JJ8BStVeupMniEf7+4640r
+         CCYb98mT+m4eIlSSVqnEb/I/wdCvurGf+pKCRCmm/fLvNburstjfi1SKNqJjj7HkaGxu
+         zP4jUIAUyGxdrAWkyicLO90cRP9k3FutfCFOlWh9vlgo2CDjPa74RUuO9PHeDLHsYsWl
+         k5Mg==
+X-Gm-Message-State: AOAM532zEzVTZKAkRq+yX14vQ9hLsmppLgoZSOKN3yAi6a86Dj1ji73e
+        T5KuAjmocYVWUg5zY7D1MrYt1f2Mqd8MSt1w/OU=
+X-Google-Smtp-Source: ABdhPJwD5AykQ9B1DeA6aNbrWbZQ+VykZW6wtYNLzMipzJoYIJ8rENCRy5uJEPyWPvrcaaBeV97IiMjh8Pr+WVVTDXo=
+X-Received: by 2002:a67:f519:: with SMTP id u25mr10712808vsn.39.1607626689452;
+ Thu, 10 Dec 2020 10:58:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH wireless -next] cw1200: txrx: convert comma to semicolon
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201209135550.2004-1-zhengyongjun3@huawei.com>
-References: <20201209135550.2004-1-zhengyongjun3@huawei.com>
-To:     Zheng Yongjun <zhengyongjun3@huawei.com>
-Cc:     <pizza@shaftnet.org>, <davem@davemloft.net>, <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Zheng Yongjun <zhengyongjun3@huawei.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20201210185002.10F2FC43464@smtp.codeaurora.org>
-Date:   Thu, 10 Dec 2020 18:50:02 +0000 (UTC)
+References: <CALjTZvZZZVqnoV4YFTDHogVHv77=dKfcSSBGj1zC83zpUid9+g@mail.gmail.com>
+ <4eb99a1da6342999c4dca355533a0847d0e942a5.camel@intel.com>
+ <CALjTZvYwccfOVTTGNo1=oLnwXG2b9Vz1nVZuvLKFV94+3fQ6EQ@mail.gmail.com>
+ <20201209091315.2c55e1c6@kicinski-fedora-pc1c0hjn.DHCP.thefacebook.com>
+ <CANUX_P1=yuPkK5BzJ99oniMiCgB0z98yNYUSw4_qk2Vg7ucoRQ@mail.gmail.com>
+ <CALjTZvYZEbgfLEzxQdafJT6CFz76prA4+YM2EGA8k5Dgn3gigw@mail.gmail.com>
+ <CANUX_P1YWSudJfwyuFVg-qdBHwQvQJiZayZBMY8E4it0qwB5Hw@mail.gmail.com>
+ <CANUX_P0sOAdRjOgg=ogAHmQdTXp5UKyW2XQQRComa4Rv3Y-toQ@mail.gmail.com>
+ <CALjTZvYfJVjxRO4Avc3rV+W+HO-vBABxwF=UUETzDeNv_QBbhg@mail.gmail.com> <CALjTZvZybsB3unK8X0WcA7kLF60=36F2senz6fEoJS6VVx6Hwg@mail.gmail.com>
+In-Reply-To: <CALjTZvZybsB3unK8X0WcA7kLF60=36F2senz6fEoJS6VVx6Hwg@mail.gmail.com>
+From:   Emmanuel Grumbach <egrumbach@gmail.com>
+Date:   Thu, 10 Dec 2020 20:57:58 +0200
+Message-ID: <CANUX_P2YqrpenS0Ey2vgyB98PixP5JAYk96LABGV3jeMvc_MJQ@mail.gmail.com>
+Subject: Re: [BUG] iwlwifi: card unusable after firmware crash
+To:     Rui Salvaterra <rsalvaterra@gmail.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zheng Yongjun <zhengyongjun3@huawei.com> wrote:
+Hi,
 
-> Replace a comma between expression statements by a semicolon.
-> 
-> Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
+> Hi, again,
+>
+> I haven't tested any patch or bisected, but I have another data point.
+> I built and tested Linux 5.8.18, with the same firmware, and it is
+> working correctly. I reduced the test case to just rfkilling the
+> connection, which showed the register dump immediately (before that I
+> was using the airplane toggle on the keyboard, which isn't working
+> correctly, it disables and immediately reenables the radio, for some
+> unfathomable reason).
+> So, now I'm inclined to believe this is some sort of race condition
+> between rfkill and pending transactions.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-c42d492c672a cw1200: txrx: convert comma to semicolon
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201209135550.2004-1-zhengyongjun3@huawei.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Which also means it's not a regression.
+You can add a dump_stack() in the function that dumps the registers to
+get a clue.
