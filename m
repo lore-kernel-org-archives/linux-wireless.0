@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8B3C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE08C4361B
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67ED324058
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F07C24058
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:21:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405573AbgLKRiI (ORCPT
+        id S2395358AbgLKRiL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Dec 2020 12:38:08 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:32449 "EHLO
+        Fri, 11 Dec 2020 12:38:11 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:12699 "EHLO
         so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395394AbgLKRgy (ORCPT
+        with ESMTP id S2395393AbgLKRgy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 11 Dec 2020 12:36:54 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607708196; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1607708195; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=wsJQEL+Bh3rhfdXnlTE72EeLcpAHku7DALDNWYT74Uw=; b=ZsBY3PkqIAwbEkq/KxIcIH2ByVVaQhcMgckd0vMxn0thW804myA29gfXYWbW6bPjCXiVmB8h
- Q1mHaStaBBwv9WhKH0/0rvVj1vki2i0ibM5aRYGR2mEGLJUxc8D9Klvw+UgoeEQ0MwJHXrMN
- rpZ4yi1C1XvYNOMSMZf/cfTqCx0=
+ bh=DsFqG5baMqOC/DxmzdqQidTkdO3n7hX7oiG1bJHN3rc=; b=o3IqgLpyZCoRRcDFxNotCEM9p4tK8WsJ47t88RkCEGwAG4aFyV19r6q55jKtXDCEt28pK9I6
+ SZTjbqY+JMxv5slosOcGpm+s51LNA27t+mpTRFwNFP1AkY9ahOkMzEs0CNjhTMJXU4UUxuL/
+ +Uj3sWeo73VyzgmCuDtDYk8a8gI=
 X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
- 5fd3ae05fa3411972b2dd610 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 17:36:05
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5fd3adfe42c04000269ff216 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 17:35:58
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 164A4C433C6; Fri, 11 Dec 2020 17:36:05 +0000 (UTC)
+        id 2468DC433CA; Fri, 11 Dec 2020 17:35:58 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D507AC43461;
-        Fri, 11 Dec 2020 17:36:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D507AC43461
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA6E6C43461;
+        Fri, 11 Dec 2020 17:35:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AA6E6C43461
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 07/10] ath11k: set credit_update flag for flow controlled ep only
-Date:   Fri, 11 Dec 2020 19:35:47 +0200
-Message-Id: <1607708150-21066-8-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 02/10] ath11k: hif: implement suspend and resume functions
+Date:   Fri, 11 Dec 2020 19:35:42 +0200
+Message-Id: <1607708150-21066-3-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1607708150-21066-1-git-send-email-kvalo@codeaurora.org>
 References: <1607708150-21066-1-git-send-email-kvalo@codeaurora.org>
@@ -62,39 +62,92 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Carl Huang <cjhuang@codeaurora.org>
 
-Firmware will check all the pipes before entering WoW mode during suspend. If
-ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE is set, firmware treats this pipe needed to
-return credit even though it's actually not required. If any pipe needs to
-return credit, the suspend_complete message doesn't send to host but is
-dropped.  So host gets time out and WoW suspend failed.
+For suspend support add suspend and resume to HIF layer. These ops are optional
+and, for example, AHB bus driver does not need to implement these.
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
 Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/htc.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/hif.h | 18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/pci.c | 20 ++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/htc.c b/drivers/net/wireless/ath/ath11k/htc.c
-index 059b48ded5cc..54b1d34724d7 100644
---- a/drivers/net/wireless/ath/ath11k/htc.c
-+++ b/drivers/net/wireless/ath/ath11k/htc.c
-@@ -60,9 +60,11 @@ static void ath11k_htc_prepare_tx_skb(struct ath11k_htc_ep *ep,
- 	memset(hdr, 0, sizeof(*hdr));
- 	hdr->htc_info = FIELD_PREP(HTC_HDR_ENDPOINTID, ep->eid) |
- 			FIELD_PREP(HTC_HDR_PAYLOADLEN,
--				   (skb->len - sizeof(*hdr))) |
--			FIELD_PREP(HTC_HDR_FLAGS,
--				   ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE);
-+				   (skb->len - sizeof(*hdr)));
-+
-+	if (ep->tx_credit_flow_enabled)
-+		hdr->htc_info |= FIELD_PREP(HTC_HDR_FLAGS,
-+					    ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE);
+diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
+index dbe5568916e8..147f1e802ca9 100644
+--- a/drivers/net/wireless/ath/ath11k/hif.h
++++ b/drivers/net/wireless/ath/ath11k/hif.h
+@@ -17,6 +17,8 @@ struct ath11k_hif_ops {
+ 	void (*stop)(struct ath11k_base *sc);
+ 	int (*power_up)(struct ath11k_base *sc);
+ 	void (*power_down)(struct ath11k_base *sc);
++	int (*suspend)(struct ath11k_base *ab);
++	int (*resume)(struct ath11k_base *ab);
+ 	int (*map_service_to_pipe)(struct ath11k_base *sc, u16 service_id,
+ 				   u8 *ul_pipe, u8 *dl_pipe);
+ 	int (*get_user_msi_vector)(struct ath11k_base *ab, char *user_name,
+@@ -56,6 +58,22 @@ static inline void ath11k_hif_power_down(struct ath11k_base *sc)
+ 	sc->hif.ops->power_down(sc);
+ }
  
- 	spin_lock_bh(&ep->htc->tx_lock);
- 	hdr->ctrl_info = FIELD_PREP(HTC_HDR_CONTROLBYTES1, ep->seq_no++);
++static inline int ath11k_hif_suspend(struct ath11k_base *ab)
++{
++	if (ab->hif.ops->suspend)
++		return ab->hif.ops->suspend(ab);
++
++	return 0;
++}
++
++static inline int ath11k_hif_resume(struct ath11k_base *ab)
++{
++	if (ab->hif.ops->resume)
++		return ab->hif.ops->resume(ab);
++
++	return 0;
++}
++
+ static inline u32 ath11k_hif_read32(struct ath11k_base *sc, u32 address)
+ {
+ 	return sc->hif.ops->read32(sc, address);
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 818e37c32a85..770cefd53290 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -913,6 +913,24 @@ static void ath11k_pci_power_down(struct ath11k_base *ab)
+ 	ath11k_pci_sw_reset(ab_pci->ab, false);
+ }
+ 
++static int ath11k_pci_hif_suspend(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ar_pci = ath11k_pci_priv(ab);
++
++	ath11k_mhi_suspend(ar_pci);
++
++	return 0;
++}
++
++static int ath11k_pci_hif_resume(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ar_pci = ath11k_pci_priv(ab);
++
++	ath11k_mhi_resume(ar_pci);
++
++	return 0;
++}
++
+ static void ath11k_pci_kill_tasklets(struct ath11k_base *ab)
+ {
+ 	int i;
+@@ -997,6 +1015,8 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
+ 	.write32 = ath11k_pci_write32,
+ 	.power_down = ath11k_pci_power_down,
+ 	.power_up = ath11k_pci_power_up,
++	.suspend = ath11k_pci_hif_suspend,
++	.resume = ath11k_pci_hif_resume,
+ 	.irq_enable = ath11k_pci_ext_irq_enable,
+ 	.irq_disable = ath11k_pci_ext_irq_disable,
+ 	.get_msi_address =  ath11k_pci_get_msi_address,
 -- 
 2.7.4
 
