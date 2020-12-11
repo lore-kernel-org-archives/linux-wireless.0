@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A05FC4361B
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8B3C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2711A24058
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67ED324058
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Dec 2020 19:20:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405552AbgLKRiC (ORCPT
+        id S2405573AbgLKRiI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Dec 2020 12:38:02 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:11322 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395384AbgLKRgw (ORCPT
+        Fri, 11 Dec 2020 12:38:08 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:32449 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2395394AbgLKRgy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Dec 2020 12:36:52 -0500
+        Fri, 11 Dec 2020 12:36:54 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607708187; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1607708196; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=2Cg4Rqa+UOEIOoK3t14dX/pyi6K6BBAQCym9VkBXtVw=; b=Y7aKJp9ycUdSBdjFdrysb9Hw6zPGb2QKp7LT7WtMnmhG6GPJPc0BI4YFv3zAhyeVIgPJx7Yv
- mew4qL5ikUJy7wweZTTJjHVRbojQNnNgzAfycLGOVDHirKeus3V3ozVamsF/fw5BnwE7LSAd
- n7fvXG3rLZ+BNWMMfKvHMnuDKfg=
-X-Mailgun-Sending-Ip: 69.72.43.15
+ bh=wsJQEL+Bh3rhfdXnlTE72EeLcpAHku7DALDNWYT74Uw=; b=ZsBY3PkqIAwbEkq/KxIcIH2ByVVaQhcMgckd0vMxn0thW804myA29gfXYWbW6bPjCXiVmB8h
+ Q1mHaStaBBwv9WhKH0/0rvVj1vki2i0ibM5aRYGR2mEGLJUxc8D9Klvw+UgoeEQ0MwJHXrMN
+ rpZ4yi1C1XvYNOMSMZf/cfTqCx0=
+X-Mailgun-Sending-Ip: 198.61.254.31
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-east-1.postgun.com with SMTP id
- 5fd3adfd95aeb115f3989a4d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 17:35:57
+ smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
+ 5fd3ae05fa3411972b2dd610 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 17:36:05
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 91528C433ED; Fri, 11 Dec 2020 17:35:56 +0000 (UTC)
+        id 164A4C433C6; Fri, 11 Dec 2020 17:36:05 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37F95C433CA;
-        Fri, 11 Dec 2020 17:35:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 37F95C433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D507AC43461;
+        Fri, 11 Dec 2020 17:36:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D507AC43461
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 01/10] ath11k: mhi: hook suspend and resume
-Date:   Fri, 11 Dec 2020 19:35:41 +0200
-Message-Id: <1607708150-21066-2-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 07/10] ath11k: set credit_update flag for flow controlled ep only
+Date:   Fri, 11 Dec 2020 19:35:47 +0200
+Message-Id: <1607708150-21066-8-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1607708150-21066-1-git-send-email-kvalo@codeaurora.org>
 References: <1607708150-21066-1-git-send-email-kvalo@codeaurora.org>
@@ -62,58 +62,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Carl Huang <cjhuang@codeaurora.org>
 
-MHI suspend and resume isn't hooked in ath11k yet, so hook these
-functions needed for suspend support.
+Firmware will check all the pipes before entering WoW mode during suspend. If
+ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE is set, firmware treats this pipe needed to
+return credit even though it's actually not required. If any pipe needs to
+return credit, the suspend_complete message doesn't send to host but is
+dropped.  So host gets time out and WoW suspend failed.
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
 Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mhi.c | 11 +++++++++++
- drivers/net/wireless/ath/ath11k/mhi.h |  3 +++
- 2 files changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath11k/htc.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index 4cf093718888..72aa39afc04c 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -418,8 +418,10 @@ static int ath11k_mhi_set_state(struct ath11k_pci *ab_pci,
- 		ret = 0;
- 		break;
- 	case ATH11K_MHI_SUSPEND:
-+		ret = mhi_pm_suspend(ab_pci->mhi_ctrl);
- 		break;
- 	case ATH11K_MHI_RESUME:
-+		ret = mhi_pm_resume(ab_pci->mhi_ctrl);
- 		break;
- 	case ATH11K_MHI_TRIGGER_RDDM:
- 		ret = mhi_force_rddm_mode(ab_pci->mhi_ctrl);
-@@ -470,3 +472,12 @@ void ath11k_mhi_stop(struct ath11k_pci *ab_pci)
- 	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_DEINIT);
- }
- 
-+void ath11k_mhi_suspend(struct ath11k_pci *ab_pci)
-+{
-+	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_SUSPEND);
-+}
+diff --git a/drivers/net/wireless/ath/ath11k/htc.c b/drivers/net/wireless/ath/ath11k/htc.c
+index 059b48ded5cc..54b1d34724d7 100644
+--- a/drivers/net/wireless/ath/ath11k/htc.c
++++ b/drivers/net/wireless/ath/ath11k/htc.c
+@@ -60,9 +60,11 @@ static void ath11k_htc_prepare_tx_skb(struct ath11k_htc_ep *ep,
+ 	memset(hdr, 0, sizeof(*hdr));
+ 	hdr->htc_info = FIELD_PREP(HTC_HDR_ENDPOINTID, ep->eid) |
+ 			FIELD_PREP(HTC_HDR_PAYLOADLEN,
+-				   (skb->len - sizeof(*hdr))) |
+-			FIELD_PREP(HTC_HDR_FLAGS,
+-				   ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE);
++				   (skb->len - sizeof(*hdr)));
 +
-+void ath11k_mhi_resume(struct ath11k_pci *ab_pci)
-+{
-+	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_RESUME);
-+}
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.h b/drivers/net/wireless/ath/ath11k/mhi.h
-index a7fd5e201d18..488dada5d31c 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.h
-+++ b/drivers/net/wireless/ath/ath11k/mhi.h
-@@ -36,4 +36,7 @@ void ath11k_mhi_unregister(struct ath11k_pci *ar_pci);
- void ath11k_mhi_set_mhictrl_reset(struct ath11k_base *ab);
- void ath11k_mhi_clear_vector(struct ath11k_base *ab);
++	if (ep->tx_credit_flow_enabled)
++		hdr->htc_info |= FIELD_PREP(HTC_HDR_FLAGS,
++					    ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE);
  
-+void ath11k_mhi_suspend(struct ath11k_pci *ar_pci);
-+void ath11k_mhi_resume(struct ath11k_pci *ar_pci);
-+
- #endif
+ 	spin_lock_bh(&ep->htc->tx_lock);
+ 	hdr->ctrl_info = FIELD_PREP(HTC_HDR_CONTROLBYTES1, ep->seq_no++);
 -- 
 2.7.4
 
