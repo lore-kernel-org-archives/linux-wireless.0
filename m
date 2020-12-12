@@ -6,19 +6,19 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8372CC433FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 16:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9700DC433FE
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 16:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BCF6230FD
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 16:32:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60E7E2222A
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 16:34:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407623AbgLLQ3K (ORCPT
+        id S2439416AbgLLQKH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Dec 2020 11:29:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57714 "EHLO mail.kernel.org"
+        Sat, 12 Dec 2020 11:10:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57720 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2439429AbgLLQKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Dec 2020 11:10:13 -0500
+        id S2439397AbgLLQJ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 Dec 2020 11:09:56 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -26,12 +26,12 @@ Cc:     Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 11/14] iwlwifi: pcie: add one missing entry for AX210
-Date:   Sat, 12 Dec 2020 11:08:28 -0500
-Message-Id: <20201212160831.2335172-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 18/23] iwlwifi: pcie: add one missing entry for AX210
+Date:   Sat, 12 Dec 2020 11:07:59 -0500
+Message-Id: <20201212160804.2334982-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201212160831.2335172-1-sashal@kernel.org>
-References: <20201212160831.2335172-1-sashal@kernel.org>
+In-Reply-To: <20201212160804.2334982-1-sashal@kernel.org>
+References: <20201212160804.2334982-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,10 +56,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index b0b7eca1754ed..f34297fd453c0 100644
+index e02bafb8921f6..0a4c7d1b37f0e 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -968,6 +968,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+@@ -536,6 +536,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
  
  	{IWL_PCI_DEVICE(0x2725, 0x0090, iwlax211_2ax_cfg_so_gf_a0)},
  	{IWL_PCI_DEVICE(0x2725, 0x0020, iwlax210_2ax_cfg_ty_gf_a0)},
