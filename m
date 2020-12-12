@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A28C4361B
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 19:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D054C433FE
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 20:31:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6524E22B49
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 19:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE95122507
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Dec 2020 20:31:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2501923AbgLLTax (ORCPT
+        id S2404443AbgLLUbI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Dec 2020 14:30:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37976 "EHLO mail.kernel.org"
+        Sat, 12 Dec 2020 15:31:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55588 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2501920AbgLLTas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Dec 2020 14:30:48 -0500
+        id S1726572AbgLLUaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 Dec 2020 15:30:55 -0500
 Content-Type: text/plain; charset="utf-8"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1607801408;
-        bh=bEKcDKNnbKQZsqWkcKJXyz2bDG6o4QsNZwfXEEpfdw8=;
+        s=k20201202; t=1607805014;
+        bh=id7snsBAJzpijXDLvnlTS/2oL18B8cE2j11JlhXYRjk=;
         h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=YbzdwH/f1x6rb+DywEUEk9/ugS4ItwLUNa+lJPnkkeKNnbsVcBs/MMFEQN54EW8EN
-         itHrRWR8QtA+gZNW6iKGhgdQbFsU1BH/lgDcoY1Xn80NG3bsOKj/7yI/9v/L6JhNGd
-         zeJ0BOeKqp8H+9SVsjv4xgOS5wKEUglMWv3FzlVRwIRwkpz14lO1ZYZU8TEZzA/zjk
-         MeJIRHDcCAOSwuZMJZv7te0QeweWVY8PUzKhU2kKKDbNflnIERxZ0uM4GtuFViy+NX
-         TnyMUMgLX8btDGB23XafZkAkzgT1kTQQ7u7/TTNtP4J72MdTFOkQ2Xrf6Z+nIY38/T
-         UNgs2w0miqJ5w==
+        b=YAC8tXr5UaOgtUIjsvfbRNtsjl0+2HQidQCTHpXhmifWeeKKx4VOg5GedQmFe1H1N
+         lYFd6lx9Ic9325tck5PepX4/vFovxIHdJSLv2m1l6Cr89YqnqpWf9kWGm1JXUvVKk2
+         whJ4IpuB72p0b/AbfdDFa8xaK2BTSj6uOzQ/R8TAu6xSdy9FeCx//b5nQDAmXGbk2C
+         oDbUQKRjfVUPY8HpUDFt8DRGaj+HHzYLGKBLxJDjjVwl2BIZn7qFAPbUyDttXRFzJL
+         SP8SGQRt6bcuDH9ldM+Vg0UtoSPQcR/40Wk0qxlGrV0mv9kvwPkBckJukhdw0PlFSj
+         1E/eWRY3jUqUw==
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: mac80211-next 2020-12-11
+Subject: Re: pull-request: wireless-drivers-next-2020-12-12
 From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <160780140804.26330.6754652244167866760.git-patchwork-notify@kernel.org>
-Date:   Sat, 12 Dec 2020 19:30:08 +0000
-References: <20201211142552.209018-1-johannes@sipsolutions.net>
-In-Reply-To: <20201211142552.209018-1-johannes@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
+Message-Id: <160780501439.18453.6643968659386890631.git-patchwork-notify@kernel.org>
+Date:   Sat, 12 Dec 2020 20:30:14 +0000
+References: <20201212050839.EF50EC433C6@smtp.codeaurora.org>
+In-Reply-To: <20201212050839.EF50EC433C6@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -48,20 +48,19 @@ Hello:
 
 This pull request was applied to netdev/net-next.git (refs/heads/master):
 
-On Fri, 11 Dec 2020 15:25:51 +0100 you wrote:
-> Hi Dave,
+On Sat, 12 Dec 2020 05:08:39 +0000 (UTC) you wrote:
+> Hi,
 > 
-> Welcome back!
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
 > 
-> I'm a bit late with this, I guess, but I hope you can still
-> pull it into net-next for 5.11. Nothing really stands out,
-> we have some 6 GHz fixes, and various small things all over.
+> Kalle
 > 
 > [...]
 
 Here is the summary with links:
-  - pull-request: mac80211-next 2020-12-11
-    https://git.kernel.org/netdev/net-next/c/00f7763a26cb
+  - pull-request: wireless-drivers-next-2020-12-12
+    https://git.kernel.org/netdev/net-next/c/e5795aacd71b
 
 You are awesome, thank you!
 --
