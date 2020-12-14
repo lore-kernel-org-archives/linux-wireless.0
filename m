@@ -2,107 +2,142 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B67CC4361B
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Dec 2020 14:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AECFEC2BB48
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Dec 2020 17:03:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 111B62054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Dec 2020 14:27:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 583A42250F
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Dec 2020 17:03:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408235AbgLNO1Q (ORCPT
+        id S2395200AbgLNRCo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Dec 2020 09:27:16 -0500
-Received: from 6.mo173.mail-out.ovh.net ([46.105.43.93]:60323 "EHLO
-        6.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731677AbgLNO1P (ORCPT
+        Mon, 14 Dec 2020 12:02:44 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:48827 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2395530AbgLNRC2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Dec 2020 09:27:15 -0500
-X-Greylist: delayed 4201 seconds by postgrey-1.27 at vger.kernel.org; Mon, 14 Dec 2020 09:27:13 EST
-Received: from player693.ha.ovh.net (unknown [10.108.57.139])
-        by mo173.mail-out.ovh.net (Postfix) with ESMTP id 5CDCF154D2F
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2020 11:14:23 +0100 (CET)
-Received: from milecki.pl (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
-        (Authenticated sender: rafal@milecki.pl)
-        by player693.ha.ovh.net (Postfix) with ESMTPSA id A704C191BDB5D;
-        Mon, 14 Dec 2020 10:14:10 +0000 (UTC)
-Authentication-Results: garm.ovh; auth=pass (GARM-99G0039eabc947-e82d-4a22-821d-8b256cb3d330,
-                    9D4513A06938E8562C9FC8D5040FBB067C1A90C8) smtp.auth=rafal@milecki.pl
-X-OVh-ClientIp: 194.187.74.233
-Subject: Re: [PATCH] brcmfmac: support BCM4365E with 43666 ChipCommon chip ID
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        sha-cyfmac-dev-list@infineon.com
-References: <20201210190819.10444-1-zajec5@gmail.com>
- <5c4de2d5-5738-12f2-9f2f-92c2f31376a7@broadcom.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Message-ID: <36fd504e-465b-05b9-2a60-1da0c31dd1fe@milecki.pl>
-Date:   Mon, 14 Dec 2020 11:14:08 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+        Mon, 14 Dec 2020 12:02:28 -0500
+Received: from isengard.fritz.box (unknown [93.209.13.218])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 329D958007E;
+        Mon, 14 Dec 2020 18:01:39 +0100 (CET)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH] rfkill.py: migrate to python3
+Date:   Mon, 14 Dec 2020 18:01:06 +0100
+Message-Id: <20201214170106.31420-1-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-In-Reply-To: <5c4de2d5-5738-12f2-9f2f-92c2f31376a7@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 4250835099627065044
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedujedrudekkedgudegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepuffvfhfhkffffgggjggtgfesthekredttdefjeenucfhrhhomheptfgrfhgrlhcuofhilhgvtghkihcuoehrrghfrghlsehmihhlvggtkhhirdhplheqnecuggftrfgrthhtvghrnhepkeduheejheffudefhffghfegjeejleetkeevueelveegkefhhfffieehleelgfevnecukfhppedtrddtrddtrddtpdduleegrddukeejrdejgedrvdeffeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhhouggvpehsmhhtphdqohhuthdphhgvlhhopehplhgrhigvrheileefrdhhrgdrohhvhhdrnhgvthdpihhnvghtpedtrddtrddtrddtpdhmrghilhhfrhhomheprhgrfhgrlhesmhhilhgvtghkihdrphhlpdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 14.12.2020 10:30, Arend van Spriel wrote:
-> On 10-12-2020 20:08, Rafał Miłecki wrote:
->> From: Rafał Miłecki <rafal@milecki.pl>
->>
->> This adds support for the BCM43666/4 which seems to be using the same
->> firmware as BCM4366 (4366c0). I found it in the Netgear R8000P router.
-> 
-> minor nit below...
-> 
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->> ---
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 1 +
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 1 +
->>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
->>   3 files changed, 3 insertions(+)
-> 
-> [...]
-> 
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> index 45bc502fcb34..ff3721b20a9f 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> @@ -77,6 +77,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
->>       BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
->>       BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
->>       BRCMF_FW_ENTRY(BRCM_CC_43664_CHIP_ID, 0xFFFFFFF0, 4366C),
->> +    BRCMF_FW_ENTRY(BRCM_CC_43666_CHIP_ID, 0x00000010, 4366C),
-> 
-> Our default approach is to enable it for all future revisions as was done for the two entries before this one.
-> 
->>       BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
->>   };
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ rfkill.py | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-Thanks!
+diff --git a/rfkill.py b/rfkill.py
+index 57dcddc..983671f 100755
+--- a/rfkill.py
++++ b/rfkill.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # rfkill control code
+ #
+@@ -21,12 +21,12 @@ import os
+  TYPE_WWAN,
+  TYPE_GPS,
+  TYPE_FM,
+- TYPE_NFC) = range(9)
++ TYPE_NFC) = list(range(9))
+ 
+ (_OP_ADD,
+  _OP_DEL,
+  _OP_CHANGE,
+- _OP_CHANGE_ALL) = range(4)
++ _OP_CHANGE_ALL) = list(range(4))
+ 
+ _type_names = {
+     TYPE_ALL: "all",
+@@ -84,7 +84,7 @@ class RFKill(object):
+     @property
+     def soft_blocked(self):
+         return self.blocked[0]
+-        
++
+     @soft_blocked.setter
+     def soft_blocked(self, block):
+         if block:
+@@ -97,28 +97,28 @@ class RFKill(object):
+         return self.blocked[1]
+ 
+     def block(self):
+-        rfk = open('/dev/rfkill', 'w')
++        rfk = open('/dev/rfkill', 'wb')
+         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 1, 0)
+         rfk.write(s)
+         rfk.close()
+ 
+     def unblock(self):
+-        rfk = open('/dev/rfkill', 'w')
++        rfk = open('/dev/rfkill', 'wb')
+         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 0, 0)
+         rfk.write(s)
+         rfk.close()
+ 
+     @classmethod
+     def block_all(cls, t=TYPE_ALL):
+-        rfk = open('/dev/rfkill', 'w')
+-        print rfk
++        rfk = open('/dev/rfkill', 'wb')
++        print(rfk)
+         s = struct.pack(_event_struct, 0, t, _OP_CHANGE_ALL, 1, 0)
+         rfk.write(s)
+         rfk.close()
+ 
+     @classmethod
+     def unblock_all(cls, t=TYPE_ALL):
+-        rfk = open('/dev/rfkill', 'w')
++        rfk = open('/dev/rfkill', 'wb')
+         s = struct.pack(_event_struct, 0, t, _OP_CHANGE_ALL, 0, 0)
+         rfk.write(s)
+         rfk.close()
+@@ -126,7 +126,7 @@ class RFKill(object):
+     @classmethod
+     def list(cls):
+         res = []
+-        rfk = open('/dev/rfkill', 'r')
++        rfk = open('/dev/rfkill', 'rb')
+         fd = rfk.fileno()
+         flgs = fcntl.fcntl(fd, fcntl.F_GETFL)
+         fcntl.fcntl(fd, fcntl.F_SETFL, flgs | os.O_NONBLOCK)
+@@ -141,10 +141,12 @@ class RFKill(object):
+                 res.append((r, _s, _h))
+             except IOError:
+                 break
++            except TypeError:
++                break
+         return res
+ 
+ if __name__ == "__main__":
+     for r, s, h in RFKill.list():
+-        print "%d: %s: %s" % (r.idx, r.name, r.type_name)
+-        print "\tSoft blocked: %s" % ("yes" if s else "no")
+-        print "\tHard blocked: %s" % ("yes" if h else "no")
++        print("%d: %s: %s" % (r.idx, r.name, r.type_name))
++        print("\tSoft blocked: %s" % ("yes" if s else "no"))
++        print("\tHard blocked: %s" % ("yes" if h else "no"))
+-- 
+2.29.2
 
-
-
- > This electronic communication and the information and any files transmitted with it, or attached to it, are confidential and are intended solely for the use of the individual or entity to whom it is addressed and may contain information that is confidential, legally privileged, protected by privacy laws, or otherwise restricted from disclosure to anyone else. If you are not the intended recipient or the person responsible for delivering the e-mail to the intended recipient, you are hereby 
-notified that any use, copying, distributing, dissemination, forwarding, printing, or copying of this e-mail is strictly prohibited. If you received this e-mail in error, please return the e-mail to the sender, delete it from your computer, and destroy any printed copy of it.
-
-This is probably unintended for public mailing lists :)
