@@ -2,133 +2,116 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E03E4C4361B
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 08:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18795C4361B
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 11:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A97D32228A
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 08:06:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB68A22258
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 11:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgLOIGb (ORCPT
+        id S1728494AbgLOLdC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Dec 2020 03:06:31 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:32314 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbgLOIGb (ORCPT
+        Tue, 15 Dec 2020 06:33:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43184 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726951AbgLOLdC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Dec 2020 03:06:31 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608019573; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=EiS56InFbNrrErINtWma1P8wVuX8T9P+uncV9L2GfGc=; b=jMqjs3BpsEp+pP+QDXEpcFpG7tKKRAB9tlmHCe0xVYnaP6RJmCCDPt6Td1scs8pewFGdQ8D5
- eiCCb0ajvMteiX7CtOlZkqT4GsDGY4W7w4t+RaFPdgRsibOFmZx2JWr3O6sv6r3/5zthp0pz
- +u6maHAz0VJwlzWwBAWzUa1u8sc=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5fd86e53f4cc8c621a064f8f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Dec 2020 08:05:39
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5F77AC433C6; Tue, 15 Dec 2020 08:05:39 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A036EC433ED;
-        Tue, 15 Dec 2020 08:05:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A036EC433ED
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v3] ath10k: add flag to protect napi operation to avoid dead loop hang
-References: <1598617348-2325-1-git-send-email-wgong@codeaurora.org>
-        <87d02x1rqb.fsf@codeaurora.org>
-        <010101746bd17881-819242de-7cbb-4df3-93e2-59473d281155-000000@us-west-2.amazonses.com>
-        <87r1nzbadn.fsf@codeaurora.org>
-        <8a97f5ba-8eba-d61b-4c92-bdfd08d388ee@candelatech.com>
-        <e4b4f4d1fadd4d691729ef422e8732d7@codeaurora.org>
-Date:   Tue, 15 Dec 2020 10:05:35 +0200
-In-Reply-To: <e4b4f4d1fadd4d691729ef422e8732d7@codeaurora.org> (Wen Gong's
-        message of "Thu, 10 Dec 2020 10:29:35 +0800")
-Message-ID: <87tusn1okw.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 15 Dec 2020 06:33:02 -0500
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E466C06179C
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2020 03:32:22 -0800 (PST)
+Received: by mail-wm1-x32a.google.com with SMTP id k10so16569517wmi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2020 03:32:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=L9hmd5NaYgRFLNtIvDxRITmqvSUYC9E6zRaf6aLkJb4=;
+        b=FdU0COatfwVRh/zEb88il8Qi8p6ruwX9ZoZTmexthXDlriWbpaUdaX1mVR4289eRay
+         bTR2LYMaU+Gvi2b8zx4bY2cHKjhriZvIsGqiuY8mw9U1EG2xIYvFWCv0j9s6BLk1TGq8
+         lvNbnSLc44mTOxF1CRL5GuFdT344CLTjFAsQugnJjdWYC6omg44LIHqMw29uuWJBRua0
+         wX+rTzPTTf+xAE1HrouWZw2w7REfUL40dEBXJDh5aBxQk54FOn3k9OSk8OHhY9aUuC16
+         tDR+taNx7OWGAPugz7yoafxSYRkI8nw6Wdy4BlVDjbnKVY3F1Quq01nvPQi4Vk/Aihyn
+         Palw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=L9hmd5NaYgRFLNtIvDxRITmqvSUYC9E6zRaf6aLkJb4=;
+        b=geL/m0346BHughK1gDP6wUZRcCupwE1J5XB/aobhFYKNqE5I53jexHrcvGs4Dekebh
+         QDmillj88jKIIqznWjsLwRON3dEFThoI3W6AR6SoEUPMuFKdU+C6ULD3ObXaSSICzRxq
+         fVRTd4Zp4jVCzAsyVK7cTznYhm0rVU2EfJuvRjzNGX3mcxyvIulYeSffN006w88fNUT4
+         uUKtXpQJGqEiMHR+8Sy3DwH+TcVKihNaS4Le2Oox9gmya/kkfp1nXMxV5J+5Be2S6tjA
+         B3v7FOBFiXQy4Fcx/39hT3WKIfv0iRyZuz+2GcxogeJGWJ97giEKrAQzj1jSaYa1IYDo
+         b8xA==
+X-Gm-Message-State: AOAM531uaw0pshkwci/04qu7/M6ZfGEoEcceMd6QF38GZ40PsFQBm6zv
+        MfyPA0d9/tTpigZ/DcppJ0G/i5zURmU=
+X-Google-Smtp-Source: ABdhPJwc2QbiEHPIgT3tPTsREYG+J4wOtoNjtB3pGElPTMNeYNBxU3ha+I+4pFemv7GZC0TvVs5ixA==
+X-Received: by 2002:a7b:cb93:: with SMTP id m19mr33376559wmi.45.1608031940772;
+        Tue, 15 Dec 2020 03:32:20 -0800 (PST)
+Received: from ?IPv6:2003:ea:8f06:5500:d4d9:f1ee:1b1f:c865? (p200300ea8f065500d4d9f1ee1b1fc865.dip0.t-ipconnect.de. [2003:ea:8f06:5500:d4d9:f1ee:1b1f:c865])
+        by smtp.googlemail.com with ESMTPSA id n14sm36295307wmi.1.2020.12.15.03.32.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Dec 2020 03:32:19 -0800 (PST)
+Subject: Re: AX210 version 0024 not detected by iwlwifi
+To:     "Coelho, Luciano" <luciano.coelho@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <03e8284e-4ea8-fe3e-8da7-62a778b1a059@gmail.com>
+ <ce7fab1d400a04eb31727546b99af0292a0d30f4.camel@intel.com>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <0cbeae30-f330-ad7f-05ef-b8726b54036b@gmail.com>
+Date:   Tue, 15 Dec 2020 12:32:14 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <ce7fab1d400a04eb31727546b99af0292a0d30f4.camel@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@codeaurora.org> writes:
-
-> On 2020-12-09 23:00, Ben Greear wrote:
->> On 12/9/20 1:24 AM, Kalle Valo wrote:
->>> Wen Gong <wgong@codeaurora.org> writes:
->>>
->>>> On 2020-09-08 00:22, Kalle Valo wrote:
->>>>
->>>>> Just like with the recent firmware restart patch, isn't
->>>>> ar->napi_enabled
->>>>> racy? Wouldn't test_and_set_bit() and test_and_clear_bit() be safer?
->>>>>
->>>>> Or are we holding a lock? But then that should be documented with
->>>>> lockdep_assert_held().
->>>>
->>>> yes, ath10k_hif_start is only called from ath10k_core_start, it has
->>>> "lockdep_assert_held(&ar->conf_mutex)", and ath10k_hif_stop is only
->>>> called from ath10k_core_stop, it also has
->>>> "lockdep_assert_held(&ar->conf_mutex)". then it will not 2 thread
->>>> both
->>>> enter ath10k_hif_start/ath10k_hif_stop meanwhile.
->>>
->>> Ok, but every function depending on a lock being held should still
->>> call
->>> lockdep_assert_held(), that way we can catch the bug if locking
->>> changes
->>> later. So it's not enough that ath10k_core_stop() has
->>> lockdep_assert_held(), also these napi functions should have it.
->>>
->>> I actually decided to switch using ATH10K_FLAG_NAPI_ENABLED with
->>> set_bit() & co, simpler locking that way and no lockdep_assert_held()
->>> needed anymore. Please check my changes in the pending branch, I have
->>> only compile tested them:
->>>
->>> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=e0a466d296bd862080f7796b41349f9f586272c9
->>>
+Am 23.11.2020 um 09:17 schrieb Coelho, Luciano:
+> Hi Heiner,
+> 
+> On Sun, 2020-11-22 at 22:35 +0100, Heiner Kallweit wrote:
+>> I have an AX210 card that isn't detected by iwlwifi.
 >>
->> Why do you not need locking?  You can't just check a bit is set and
->> then do work and set
->> it later without locking, two concurrent CPU threads can pass the
->> first check and both get into
->> the logic below it?
+>> 01:00.0 Network controller: Intel Corporation Device 2725 (rev 1a)
+>>         Subsystem: Intel Corporation Device 0024
 >>
-> maybe because which I said before:
->
-> ath10k_hif_start is only called from ath10k_core_start, it has
-> "lockdep_assert_held(&ar->conf_mutex)", and ath10k_hif_stop is only
-> called from ath10k_core_stop, it also has
-> "lockdep_assert_held(&ar->conf_mutex)". then it will not 2 thread both
-> enter ath10k_hif_start/ath10k_hif_stop meanwhile.
+>> Adding following entry seems to be sufficient.
+>>
+>>         {IWL_PCI_DEVICE(0x2725, 0x0020, iwlax210_2ax_cfg_ty_gf_a0)},
+>> +       {IWL_PCI_DEVICE(0x2725, 0x0024, iwlax210_2ax_cfg_ty_gf_a0)},
+>>         {IWL_PCI_DEVICE(0x2725, 0x0310, iwlax210_2ax_cfg_ty_gf_a0)},
+>>
+>> [  419.473140] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
+>> [  419.486984] iwlwifi 0000:01:00.0: api flags index 2 larger than supported by driver
+>> [  419.487190] iwlwifi 0000:01:00.0: TLV_FW_FSEQ_VERSION: FSEQ Version: 93.8.63.28
+>> [  419.488828] iwlwifi 0000:01:00.0: loaded firmware version 59.601f3a66.0 ty-a0-gf-a0-59.ucode op_mode iwlmvm
+>> [  419.533136] iwlwifi 0000:01:00.0: Detected Intel(R) Wi-Fi 6 AX210 160MHz, REV=0x420
+>>
+>> Maybe there are more AX210 subversion id's to be added ..
+>>
+>> How about the api flags index warning? I saw it in several posts,
+>> is there something to be fixed in the driver?
+> 
+> Good catch.  This indeed seems to be missing.  I'll add it and try to
+> send it still for the 5.10-rc series, so it propagates asap.
+> 
+At least on linux-next I still see the api flags index warning.
+Has the issue been addressed?
 
-Yeah, but that was not visible from the code. I now changed the patch in
-pending branch that this is clearly documented with
-lockdep_assert_held() and lockdep will warn if someone breaks the
-locking later on.
-
-If a function relies on a lock being held, lockdep_assert_held() needs
-to be _always_ used to make the locking dependencies clearly visible.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> --
+> Cheers,
+> Luca.
+> 
+Heiner
