@@ -2,94 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23814C4361B
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5948FC4361B
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C48072222B
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:42:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E1422222B
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729005AbgLORlj (ORCPT
+        id S1729596AbgLORbJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Dec 2020 12:41:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43774 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730153AbgLORlg (ORCPT
+        Tue, 15 Dec 2020 12:31:09 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:12901 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgLORbJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Dec 2020 12:41:36 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFFD8C06179C;
-        Tue, 15 Dec 2020 09:40:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:Subject:From:References:Cc:To:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oIC0MdRQMt1oa/a8mDmQrf1Hq+zlAnsG9Tdqvyanr4k=; b=l2rI2/aBl2diPgAOke4UXX/XnZ
-        54O/Vi01oGUaO7a5DLndyx7qnBunKZrSfGjQ1pnbGz+VDeIHErCd4MJlfAfIBvYv7eQ8YSqNAjJXT
-        hXp5xwSODWfS/mi1nulLWX4UarKTDxjmxpbchhYUxvp/1TQ0+eq9i6uXtyIn7XErs0z8=;
-Received: from p4ff13815.dip0.t-ipconnect.de ([79.241.56.21] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kpEJL-0006uH-JY; Tue, 15 Dec 2020 18:40:31 +0100
-To:     Youghandhar Chintala <youghand@codeaurora.org>,
-        johannes@sipsolutions.net
+        Tue, 15 Dec 2020 12:31:09 -0500
+Received: from ironmsg07-lv.qualcomm.com (HELO ironmsg07-lv.qulacomm.com) ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 15 Dec 2020 09:30:29 -0800
+X-QCInternal: smtphost
+Received: from ironmsg02-blr.qualcomm.com ([10.86.208.131])
+  by ironmsg07-lv.qulacomm.com with ESMTP/TLS/AES256-SHA; 15 Dec 2020 09:30:27 -0800
+X-QCInternal: smtphost
+Received: from youghand-linux.qualcomm.com ([10.206.66.115])
+  by ironmsg02-blr.qualcomm.com with ESMTP; 15 Dec 2020 23:00:24 +0530
+Received: by youghand-linux.qualcomm.com (Postfix, from userid 2370257)
+        id C911E20F17; Tue, 15 Dec 2020 23:00:23 +0530 (IST)
+From:   Youghandhar Chintala <youghand@codeaurora.org>
+To:     johannes@sipsolutions.net
 Cc:     davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, kuabhs@chromium.org,
         dianders@chromium.org, briannorris@chromium.org,
-        pillair@codeaurora.org
-References: <20201215172352.5311-1-youghand@codeaurora.org>
-From:   Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH 2/3] mac80211: Add support to trigger sta disconnect on
- hardware restart
-Message-ID: <f2089f3c-db96-87bc-d678-199b440c05be@nbd.name>
-Date:   Tue, 15 Dec 2020 18:40:30 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.0
+        pillair@codeaurora.org,
+        Youghandhar Chintala <youghand@codeaurora.org>
+Subject: [PATCH 1/3] cfg80211: Add wiphy flag to trigger STA disconnect after hardware restart
+Date:   Tue, 15 Dec 2020 23:00:21 +0530
+Message-Id: <20201215173021.5884-1-youghand@codeaurora.org>
+X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
-In-Reply-To: <20201215172352.5311-1-youghand@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Many wifi drivers (e.g. ath10k using qualcomm wifi chipsets)
+support silent target hardware restart/recovery. Out of these
+drivers which support target hw restart, certain chipsets
+have the wifi mac sequence number addition for transmitted
+frames done by the firmware. For such chipsets, a silent
+target hardware restart breaks the continuity of the wifi
+mac sequence number, since the wifi mac sequence number
+restarts from 0 after the restart, which in-turn leads
+to the peer access point dropping all the frames from device
+until it receives the frame with the mac sequence which was
+expected by the AP.
 
-On 2020-12-15 18:23, Youghandhar Chintala wrote:
-> Currently in case of target hardware restart, we just reconfig and
-> re-enable the security keys and enable the network queues to start
-> data traffic back from where it was interrupted.
-> 
-> Many ath10k wifi chipsets have sequence numbers for the data
-> packets assigned by firmware and the mac sequence number will
-> restart from zero after target hardware restart leading to mismatch
-> in the sequence number expected by the remote peer vs the sequence
-> number of the frame sent by the target firmware.
-> 
-> This mismatch in sequence number will cause out-of-order packets
-> on the remote peer and all the frames sent by the device are dropped
-> until we reach the sequence number which was sent before we restarted
-> the target hardware
-> 
-> In order to fix this, we trigger a sta disconnect, for the targets
-> which expose this corresponding wiphy flag, in case of target hw
-> restart. After this there will be a fresh connection and thereby
-> avoiding the dropping of frames by remote peer.
-> 
-> The right fix would be to pull the entire data path into the host
-> which is not feasible or would need lots of complex changes and
-> will still be inefficient.
-How about simply tracking which tids have aggregation enabled and send
-DELBA frames for those after the restart?
-It would mean less disruption for affected stations and less ugly hacks
-in the stack for unreliable hardware.
+Add a wiphy flag for the driver to indicate that it needs a
+trigger for STA disconnect after hardware restart.
 
-- Felix
+Tested on ath10k using WCN3990, QCA6174.
+
+Signed-off-by: Youghandhar Chintala <youghand@codeaurora.org>
+---
+ include/net/cfg80211.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ab249ca..7fba6f6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4311,6 +4311,9 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
+  * @WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK: The device supports bigger kek and kck keys
++ * @WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART: The device needs a trigger to
++ *	disconnect STA after target hardware restart. This flag should be
++ *	exposed by drivers which support target recovery.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
+@@ -4337,6 +4340,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART	= BIT(25),
+ };
+ 
+ /**
+-- 
+2.7.4
+
