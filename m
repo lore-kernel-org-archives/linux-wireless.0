@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2328C2BB48
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C671C4361B
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:27:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 956D222ADC
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE271229C5
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Dec 2020 17:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730744AbgLORYs (ORCPT
+        id S1730020AbgLORWh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Dec 2020 12:24:48 -0500
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:7628 "EHLO
+        Tue, 15 Dec 2020 12:22:37 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:38699 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729872AbgLORYk (ORCPT
+        with ESMTP id S1725850AbgLORW3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Dec 2020 12:24:40 -0500
-Received: from ironmsg07-lv.qualcomm.com (HELO ironmsg07-lv.qulacomm.com) ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 15 Dec 2020 09:24:00 -0800
+        Tue, 15 Dec 2020 12:22:29 -0500
+Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
+  by alexa-out.qualcomm.com with ESMTP; 15 Dec 2020 09:21:44 -0800
 X-QCInternal: smtphost
 Received: from ironmsg02-blr.qualcomm.com ([10.86.208.131])
-  by ironmsg07-lv.qulacomm.com with ESMTP/TLS/AES256-SHA; 15 Dec 2020 09:23:58 -0800
+  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/AES256-SHA; 15 Dec 2020 09:21:41 -0800
 X-QCInternal: smtphost
 Received: from youghand-linux.qualcomm.com ([10.206.66.115])
-  by ironmsg02-blr.qualcomm.com with ESMTP; 15 Dec 2020 22:53:55 +0530
+  by ironmsg02-blr.qualcomm.com with ESMTP; 15 Dec 2020 22:51:36 +0530
 Received: by youghand-linux.qualcomm.com (Postfix, from userid 2370257)
-        id A45F820F17; Tue, 15 Dec 2020 22:53:54 +0530 (IST)
+        id A8DB820F17; Tue, 15 Dec 2020 22:51:35 +0530 (IST)
 From:   Youghandhar Chintala <youghand@codeaurora.org>
 To:     johannes@sipsolutions.net
 Cc:     davem@davemloft.net, kuba@kernel.org,
@@ -39,9 +39,9 @@ Cc:     davem@davemloft.net, kuba@kernel.org,
         dianders@chromium.org, briannorris@chromium.org,
         pillair@codeaurora.org,
         Youghandhar Chintala <youghand@codeaurora.org>
-Subject: [PATCH 2/3] mac80211: Add support to trigger sta disconnect on hardware restart
-Date:   Tue, 15 Dec 2020 22:53:52 +0530
-Message-Id: <20201215172352.5311-1-youghand@codeaurora.org>
+Subject: [PATCH 1/3] cfg80211: Add wiphy flag to trigger STA disconnect after hardware restart
+Date:   Tue, 15 Dec 2020 22:51:33 +0530
+Message-Id: <20201215172133.5111-1-youghand@codeaurora.org>
 X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -49,120 +49,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently in case of target hardware restart, we just reconfig and
-re-enable the security keys and enable the network queues to start
-data traffic back from where it was interrupted.
+Many wifi drivers (e.g. ath10k using qualcomm wifi chipsets)
+support silent target hardware restart/recovery. Out of these
+drivers which support target hw restart, certain chipsets
+have the wifi mac sequence number addition for transmitted
+frames done by the firmware. For such chipsets, a silent
+target hardware restart breaks the continuity of the wifi
+mac sequence number, since the wifi mac sequence number
+restarts from 0 after the restart, which in-turn leads
+to the peer access point dropping all the frames from device
+until it receives the frame with the mac sequence which was
+expected by the AP.
 
-Many ath10k wifi chipsets have sequence numbers for the data
-packets assigned by firmware and the mac sequence number will
-restart from zero after target hardware restart leading to mismatch
-in the sequence number expected by the remote peer vs the sequence
-number of the frame sent by the target firmware.
+Add a wiphy flag for the driver to indicate that it needs a
+trigger for STA disconnect after hardware restart.
 
-This mismatch in sequence number will cause out-of-order packets
-on the remote peer and all the frames sent by the device are dropped
-until we reach the sequence number which was sent before we restarted
-the target hardware
-
-In order to fix this, we trigger a sta disconnect, for the targets
-which expose this corresponding wiphy flag, in case of target hw
-restart. After this there will be a fresh connection and thereby
-avoiding the dropping of frames by remote peer.
-
-The right fix would be to pull the entire data path into the host
-which is not feasible or would need lots of complex changes and
-will still be inefficient.
-
-Tested on ath10k using WCN3990, QCA6174
+Tested on ath10k using WCN3990, QCA6174.
 
 Signed-off-by: Youghandhar Chintala <youghand@codeaurora.org>
 ---
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/mlme.c        |  9 +++++++++
- net/mac80211/util.c        | 22 +++++++++++++++++++---
- 3 files changed, 31 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cde2e3f..8cbeb5f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -748,6 +748,8 @@ struct ieee80211_if_mesh {
-  *	back to wireless media and to the local net stack.
-  * @IEEE80211_SDATA_DISCONNECT_RESUME: Disconnect after resume.
-  * @IEEE80211_SDATA_IN_DRIVER: indicates interface was added to driver
-+ * @IEEE80211_SDATA_DISCONNECT_HW_RESTART: Disconnect after hardware restart
-+ *	recovery
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ab249ca..7fba6f6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4311,6 +4311,9 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
+  * @WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK: The device supports bigger kek and kck keys
++ * @WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART: The device needs a trigger to
++ *	disconnect STA after target hardware restart. This flag should be
++ *	exposed by drivers which support target recovery.
   */
- enum ieee80211_sub_if_data_flags {
- 	IEEE80211_SDATA_ALLMULTI		= BIT(0),
-@@ -755,6 +757,7 @@ enum ieee80211_sub_if_data_flags {
- 	IEEE80211_SDATA_DONT_BRIDGE_PACKETS	= BIT(3),
- 	IEEE80211_SDATA_DISCONNECT_RESUME	= BIT(4),
- 	IEEE80211_SDATA_IN_DRIVER		= BIT(5),
-+	IEEE80211_SDATA_DISCONNECT_HW_RESTART	= BIT(6),
+ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
+@@ -4337,6 +4340,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART	= BIT(25),
  };
  
  /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6adfcb9..e4d0d16 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4769,6 +4769,15 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- 					      true);
- 		sdata_unlock(sdata);
- 		return;
-+	} else if (sdata->flags & IEEE80211_SDATA_DISCONNECT_HW_RESTART) {
-+		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_HW_RESTART;
-+		mlme_dbg(sdata, "driver requested disconnect after hardware restart\n");
-+		ieee80211_sta_connection_lost(sdata,
-+					      ifmgd->associated->bssid,
-+					      WLAN_REASON_UNSPECIFIED,
-+					      true);
-+		sdata_unlock(sdata);
-+		return;
- 	}
- 	sdata_unlock(sdata);
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8c3c01a..98567a3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2567,9 +2567,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
--	/* add back keys */
--	list_for_each_entry(sdata, &local->interfaces, list)
--		ieee80211_reenable_keys(sdata);
-+
-+	if (!(hw->wiphy->flags & WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART)) {
-+		/* add back keys */
-+		list_for_each_entry(sdata, &local->interfaces, list)
-+			ieee80211_reenable_keys(sdata);
-+	}
- 
- 	/* Reconfigure sched scan if it was interrupted by FW restart */
- 	mutex_lock(&local->mtx);
-@@ -2643,6 +2646,19 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 					false);
- 
-+	if ((hw->wiphy->flags & WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART) &&
-+	    !reconfig_due_to_wowlan) {
-+		list_for_each_entry(sdata, &local->interfaces, list) {
-+			if (!ieee80211_sdata_running(sdata))
-+				continue;
-+			if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+				sdata->flags |=
-+					IEEE80211_SDATA_DISCONNECT_HW_RESTART;
-+				ieee80211_sta_restart(sdata);
-+			}
-+		}
-+	}
-+
- 	/*
- 	 * If this is for hw restart things are still running.
- 	 * We may want to change that later, however.
 -- 
 2.7.4
 
