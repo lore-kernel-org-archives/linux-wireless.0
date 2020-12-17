@@ -2,122 +2,196 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87934C2BB48
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Dec 2020 18:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 835CCC352A6
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Dec 2020 18:14:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BF482376F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Dec 2020 18:01:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6387A2388E
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Dec 2020 18:14:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729492AbgLQSAg (ORCPT
+        id S1731126AbgLQSOL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Dec 2020 13:00:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55738 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726773AbgLQSAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Dec 2020 13:00:36 -0500
-Date:   Thu, 17 Dec 2020 18:59:50 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608227995;
-        bh=Te50MoqqRMHM7fjIFunWe/+4qkBpnZytK59H2S49fM4=;
-        h=From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ilLDIMRlgRmsmdMzazd1qa0e6wiD7KS9YgSsra4lPbkQqTB5T1q6VtZjqh0UzggMK
-         8SjyDT7X3Q4XEKFZaEMUN7dMOtOFW/HywRmTivQ4woJmlMJoOqEs5w506PtNEmipmc
-         we4z5VnekH2fXU57QFgcmAOlpYX7byYC2A8iJD3iuj7nDTfrL4xiUzVySvv8AvCsI9
-         2sjciXGzkzdQVkki4/Dgff8PHOba4xVqM9bBHqKzmMxPGmN3zLf3oAMmpRLPJK6dtV
-         tribldj1pGaaKMBCTSItIALNaWLii08g8qRDDJ08dG88pWyDW1nBgS3VaKQbzGGdIo
-         TjvJ3DxcH8wLw==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH] mt76: mt76s: fix NULL pointer dereference in
- mt76s_process_tx_queue
-Message-ID: <20201217175950.GD16606@lore-desk>
-References: <b49c1b4edacd87b2241a9fd0431dd4864c8963f6.1607418933.git.lorenzo@kernel.org>
- <20201217163616.546AFC433CA@smtp.codeaurora.org>
- <20201217171105.GC16606@lore-desk>
- <58f03209-de19-0f35-fed3-d20366f933d2@nbd.name>
- <87r1nos4ym.fsf@codeaurora.org>
+        Thu, 17 Dec 2020 13:14:11 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:46170 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731390AbgLQSOK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Dec 2020 13:14:10 -0500
+X-UUID: affa3d12fd37420fb67881824b30f626-20201218
+X-UUID: affa3d12fd37420fb67881824b30f626-20201218
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 8969485; Fri, 18 Dec 2020 02:13:26 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 18 Dec 2020 02:13:20 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 18 Dec 2020 02:13:21 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <ryder.lee@mediatek.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH -next v3 1/8] mt76: mt7921: add module support
+Date:   Fri, 18 Dec 2020 02:13:14 +0800
+Message-ID: <781bd384227cddeb18cd47dd861c0f5400625f55.1608227863.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1608227863.git.objelf@gmail.com>
+References: <cover.1608227863.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="YToU2i3Vx8H2dn7O"
-Content-Disposition: inline
-In-Reply-To: <87r1nos4ym.fsf@codeaurora.org>
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 66CDB51BBAA2786F22A91D77AA86C1D99EF9FD178393AD1DF7AE9E90FC2C15FE2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Sean Wang <sean.wang@mediatek.com>
 
---YToU2i3Vx8H2dn7O
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Add mt7921 as the pci driver module.
 
-On Dec 17, Kalle Valo wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
->=20
-> > On 2020-12-17 18:11, Lorenzo Bianconi wrote:
-> >>> Lorenzo Bianconi <lorenzo@kernel.org> wrote:
-> >>>=20
-> >>> > Fix a possible NULL pointer dereference in mt76s_process_tx_queue t=
-hat
-> >>> > can occur if status thread runs before allocating tx queues
-> >>> >=20
-> >>> > Fixes: 6a618acb7e62 ("mt76: sdio: convert {status/net}_work to mt76=
-_worker")
-> >>> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> >>>=20
-> >>> Failed to apply to wireless-drivers:
-> >>=20
-> >> Hi Kalle,
-> >>=20
-> >> sorry for the noise. I guess to apply this patch we need to apply even=
- the
-> >> following series:
-> >> https://patchwork.kernel.org/project/linux-wireless/cover/cover.160716=
-4041.git.lorenzo@kernel.org/
-> >>=20
-> >> @Felix: do you think it is ok to apply "remove wake queue tx logic for
-> >> usb/sdio" series to wireless-drivers?
-> >
-> > Yes, that makes sense.
->=20
-> Ok, I assigned the series to me and changed this back to New state.
->=20
-> The commit logs in series don't really answer to "why?", though.
-> Lorenzo, can you reply to those patches and give more info how they
-> help? Or are they just cleanup?
+The purpose of the patch is to check about if the following patches are
+able to compile properly.
 
-It is mostly a cleanup since after commit
-90d494c99a99fa2eb858754345c4a9c851b409a0 ("mt76: improve tx queue stop/wake=
-"),
-we do not need the wake logic anymore in the status path since the queues
-are no longer stopped in the tx path.
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/Kconfig    |  1 +
+ drivers/net/wireless/mediatek/mt76/Makefile   |  1 +
+ .../net/wireless/mediatek/mt76/mt7921/Kconfig | 10 +++
+ .../wireless/mediatek/mt76/mt7921/Makefile    |  5 ++
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   | 63 +++++++++++++++++++
+ 5 files changed, 80 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/pci.c
 
-Regards,
-Lorenzo
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 31015d2a8e7d..5f42ce3267cb 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -29,3 +29,4 @@ source "drivers/net/wireless/mediatek/mt76/mt76x2/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7603/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7615/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7915/Kconfig"
++source "drivers/net/wireless/mediatek/mt76/mt7921/Kconfig"
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index e53584db0756..1d72093b61a3 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -31,3 +31,4 @@ obj-$(CONFIG_MT76x2_COMMON) += mt76x2/
+ obj-$(CONFIG_MT7603E) += mt7603/
+ obj-$(CONFIG_MT7615_COMMON) += mt7615/
+ obj-$(CONFIG_MT7915E) += mt7915/
++obj-$(CONFIG_MT7921E) += mt7921/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/Kconfig b/drivers/net/wireless/mediatek/mt76/mt7921/Kconfig
+new file mode 100644
+index 000000000000..24932d2e8dee
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/Kconfig
+@@ -0,0 +1,10 @@
++# SPDX-License-Identifier: ISC
++config MT7921E
++	tristate "MediaTek MT7921E (PCIe) support"
++	select MT76_CORE
++	depends on MAC80211
++	depends on PCI
++	help
++	  This adds support for MT7921E 802.11ax 2x2:2SS wireless devices.
++
++	  To compile this driver as a module, choose M here.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/Makefile b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+new file mode 100644
+index 000000000000..fa7b42721631
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+@@ -0,0 +1,5 @@
++#SPDX-License-Identifier: ISC
++
++obj-$(CONFIG_MT7921E) += mt7921e.o
++
++mt7921e-y := pci.o
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+new file mode 100644
+index 000000000000..9f003775c4d8
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -0,0 +1,63 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++
++static const struct pci_device_id mt7921_pci_device_table[] = {
++	{ PCI_DEVICE(0x14c3, 0x7961) },
++	{ },
++};
++
++static int mt7921_pci_probe(struct pci_dev *pdev,
++			    const struct pci_device_id *id)
++{
++	int ret;
++
++	ret = pcim_enable_device(pdev);
++	if (ret)
++		return ret;
++
++	ret = pcim_iomap_regions(pdev, BIT(0), pci_name(pdev));
++	if (ret)
++		return ret;
++
++	pci_set_master(pdev);
++
++	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_LEGACY);
++	if (ret < 0)
++		return ret;
++
++	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	if (ret)
++		goto err_free_pci_vec;
++
++	return 0;
++
++err_free_pci_vec:
++	pci_free_irq_vectors(pdev);
++
++	return ret;
++}
++
++static void mt7921_pci_remove(struct pci_dev *pdev)
++{
++	pci_free_irq_vectors(pdev);
++}
++
++struct pci_driver mt7921_pci_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= mt7921_pci_device_table,
++	.probe		= mt7921_pci_probe,
++	.remove		= mt7921_pci_remove,
++};
++
++module_pci_driver(mt7921_pci_driver);
++
++MODULE_DEVICE_TABLE(pci, mt7921_pci_device_table);
++MODULE_AUTHOR("Sean Wang <sean.wang@mediatek.com>");
++MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
++MODULE_LICENSE("Dual BSD/GPL");
+-- 
+2.25.1
 
->=20
-> --=20
-> https://patchwork.kernel.org/project/linux-wireless/list/
->=20
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
-tches
-
---YToU2i3Vx8H2dn7O
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCX9uckwAKCRA6cBh0uS2t
-rFkcAQDHB+L74RRN8L1UOWbM2e0+fr2zDvVAJSKxSb9gWYGznwEA56n/e2RIZuOd
-qNbutjZBQUrJXpwcJm1KPx5uq7Zy+AM=
-=4p3T
------END PGP SIGNATURE-----
-
---YToU2i3Vx8H2dn7O--
