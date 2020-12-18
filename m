@@ -2,88 +2,209 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F6BC3526D
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 17:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3571BC4361B
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1099D23B8A
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 17:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAD9823B01
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731608AbgLRRcw (ORCPT
+        id S1726777AbgLRSsF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Dec 2020 12:32:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59916 "EHLO
+        Fri, 18 Dec 2020 13:48:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730410AbgLRRcw (ORCPT
+        with ESMTP id S1726303AbgLRSsE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:32:52 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8A3AC0617A7;
-        Fri, 18 Dec 2020 09:32:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Fri, 18 Dec 2020 13:48:04 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ABF6C06138C
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2020 10:47:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=1LDFfQBYh7yjr3C0jWACsjitBa3VClxYhSmNicB3yqg=; b=gLBKl7EMKBaxkw/1xVxrjciOQD
-        uxS/T/pelMcAtfsk3lC467nNAOGvfpxFHd/hoMGK534J8zyLjPuZbk43im3aPmSGhQDQ8LFFkIo86
-        BOGZuMbGLUzfE6PIhfirAfA0VxFTGgL4BDl7lsHRUdzK6Kbh/1uhH50e0GPhtYnfHU0z5ph+S2ISm
-        AKfqvv5ZAtHRB3UnBGUPYNYZctAUPfX3pOMGTiPJvUNmLrdYIxqtASQNDixshPjiD6BNaAJvfT1b4
-        SzPtvS20CKm4HdowKFvgmD69g3n3zU5My9I64FahLlSCTVePt3BsBLci/fn81N5A8dni4iACrXyWR
-        vkF3zP2Q==;
-Received: from [2601:1c0:6280:3f0::64ea] (helo=smtpauth.infradead.org)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kqJbq-00083i-SW; Fri, 18 Dec 2020 17:32:07 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH -next] net: wireless/mediatek/mt7915: fix MESH ifdef block
-Date:   Fri, 18 Dec 2020 09:32:02 -0800
-Message-Id: <20201218173202.23159-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.26.2
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=/BXV3JevmxTuubvB32fmYmgpcfRi7E7k7WLfbpz1VYY=; b=InFGQQFARdWepK9m+efwA1zSVD
+        p2VXdFhPW+UneDgWd3g4+ylD1XP/UeK2NMQykUfGaOeD/DSdwrLqQVup8G7tCYghJb1tOpMo7mWPp
+        ruM7Pa79NefS/Vj3091GmD3RmJ2On+jtRcS8E7B+Y3X4Z1gjDtQHZUV/mK1gztX1+0rY=;
+Received: from p4ff13815.dip0.t-ipconnect.de ([79.241.56.21] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kqKme-0000Fr-Jg; Fri, 18 Dec 2020 19:47:20 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     toke@redhat.com
+Subject: [PATCH v2 2/6] net/fq_impl: drop get_default_func, move default flow to fq_tin
+Date:   Fri, 18 Dec 2020 19:47:14 +0100
+Message-Id: <20201218184718.93650-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201218184718.93650-1-nbd@nbd.name>
+References: <20201218184718.93650-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix a build error when CONFIG_MAC80211_MESH is not enabled:
+Simplifies the code and prepares for a rework of scanning for flows on
+overmemory drop.
 
-../drivers/net/wireless/mediatek/mt76/mt7915/init.c:47:2: error: expected expression before '}' token
-  }, {
-  ^
-
-Fixes: af901eb4ab80 ("mt76: mt7915: get rid of dbdc debugfs knob")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Shayne Chen <shayne.chen@mediatek.com>
-Cc: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/fq.h           |  1 +
+ include/net/fq_impl.h      | 11 +++++------
+ net/mac80211/ieee80211_i.h |  1 -
+ net/mac80211/tx.c          | 22 ++++------------------
+ 4 files changed, 10 insertions(+), 25 deletions(-)
 
---- linux-next-20201218.orig/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ linux-next-20201218/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -40,9 +40,9 @@ static const struct ieee80211_iface_limi
- 		.types = BIT(NL80211_IFTYPE_ADHOC)
- 	}, {
- 		.max = 16,
--		.types = BIT(NL80211_IFTYPE_AP) |
-+		.types = BIT(NL80211_IFTYPE_AP)
- #ifdef CONFIG_MAC80211_MESH
--			 BIT(NL80211_IFTYPE_MESH_POINT)
-+			 | BIT(NL80211_IFTYPE_MESH_POINT)
- #endif
- 	}, {
- 		.max = MT7915_MAX_INTERFACES,
+diff --git a/include/net/fq.h b/include/net/fq.h
+index e39f3f8d5f8a..5df100b77099 100644
+--- a/include/net/fq.h
++++ b/include/net/fq.h
+@@ -47,6 +47,7 @@ struct fq_flow {
+ struct fq_tin {
+ 	struct list_head new_flows;
+ 	struct list_head old_flows;
++	struct fq_flow default_flow;
+ 	u32 backlog_bytes;
+ 	u32 backlog_packets;
+ 	u32 overlimit;
+diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
+index 06d2a79233c9..dd374c7f0fe5 100644
+--- a/include/net/fq_impl.h
++++ b/include/net/fq_impl.h
+@@ -151,8 +151,7 @@ static u32 fq_flow_idx(struct fq *fq, struct sk_buff *skb)
+ 
+ static struct fq_flow *fq_flow_classify(struct fq *fq,
+ 					struct fq_tin *tin, u32 idx,
+-					struct sk_buff *skb,
+-					fq_flow_get_default_t get_default_func)
++					struct sk_buff *skb)
+ {
+ 	struct fq_flow *flow;
+ 
+@@ -160,7 +159,7 @@ static struct fq_flow *fq_flow_classify(struct fq *fq,
+ 
+ 	flow = &fq->flows[idx];
+ 	if (flow->tin && flow->tin != tin) {
+-		flow = get_default_func(fq, tin, idx, skb);
++		flow = &tin->default_flow;
+ 		tin->collisions++;
+ 		fq->collisions++;
+ 	}
+@@ -192,15 +191,14 @@ static void fq_recalc_backlog(struct fq *fq,
+ static void fq_tin_enqueue(struct fq *fq,
+ 			   struct fq_tin *tin, u32 idx,
+ 			   struct sk_buff *skb,
+-			   fq_skb_free_t free_func,
+-			   fq_flow_get_default_t get_default_func)
++			   fq_skb_free_t free_func)
+ {
+ 	struct fq_flow *flow;
+ 	bool oom;
+ 
+ 	lockdep_assert_held(&fq->lock);
+ 
+-	flow = fq_flow_classify(fq, tin, idx, skb, get_default_func);
++	flow = fq_flow_classify(fq, tin, idx, skb);
+ 
+ 	flow->tin = tin;
+ 	flow->backlog += skb->len;
+@@ -331,6 +329,7 @@ static void fq_tin_init(struct fq_tin *tin)
+ {
+ 	INIT_LIST_HEAD(&tin->new_flows);
+ 	INIT_LIST_HEAD(&tin->old_flows);
++	fq_flow_init(&tin->default_flow);
+ }
+ 
+ static int fq_init(struct fq *fq, int flows_cnt)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8bf9c0e974d6..c0f6168fdeed 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -848,7 +848,6 @@ enum txq_info_flags {
+  */
+ struct txq_info {
+ 	struct fq_tin tin;
+-	struct fq_flow def_flow;
+ 	struct codel_vars def_cvars;
+ 	struct codel_stats cstats;
+ 	struct sk_buff_head frags;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6422da6690f7..95bafffdb467 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1309,7 +1309,7 @@ static struct sk_buff *codel_dequeue_func(struct codel_vars *cvars,
+ 	fq = &local->fq;
+ 
+ 	if (cvars == &txqi->def_cvars)
+-		flow = &txqi->def_flow;
++		flow = &txqi->tin.default_flow;
+ 	else
+ 		flow = &fq->flows[cvars - local->cvars];
+ 
+@@ -1352,7 +1352,7 @@ static struct sk_buff *fq_tin_dequeue_func(struct fq *fq,
+ 		cparams = &local->cparams;
+ 	}
+ 
+-	if (flow == &txqi->def_flow)
++	if (flow == &tin->default_flow)
+ 		cvars = &txqi->def_cvars;
+ 	else
+ 		cvars = &local->cvars[flow - fq->flows];
+@@ -1379,17 +1379,6 @@ static void fq_skb_free_func(struct fq *fq,
+ 	ieee80211_free_txskb(&local->hw, skb);
+ }
+ 
+-static struct fq_flow *fq_flow_get_default_func(struct fq *fq,
+-						struct fq_tin *tin,
+-						int idx,
+-						struct sk_buff *skb)
+-{
+-	struct txq_info *txqi;
+-
+-	txqi = container_of(tin, struct txq_info, tin);
+-	return &txqi->def_flow;
+-}
+-
+ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+ 				  struct txq_info *txqi,
+ 				  struct sk_buff *skb)
+@@ -1402,8 +1391,7 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+ 
+ 	spin_lock_bh(&fq->lock);
+ 	fq_tin_enqueue(fq, tin, flow_idx, skb,
+-		       fq_skb_free_func,
+-		       fq_flow_get_default_func);
++		       fq_skb_free_func);
+ 	spin_unlock_bh(&fq->lock);
+ }
+ 
+@@ -1446,7 +1434,6 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct txq_info *txqi, int tid)
+ {
+ 	fq_tin_init(&txqi->tin);
+-	fq_flow_init(&txqi->def_flow);
+ 	codel_vars_init(&txqi->def_cvars);
+ 	codel_stats_init(&txqi->cstats);
+ 	__skb_queue_head_init(&txqi->frags);
+@@ -3283,8 +3270,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 
+ 	tin = &txqi->tin;
+-	flow = fq_flow_classify(fq, tin, flow_idx, skb,
+-				fq_flow_get_default_func);
++	flow = fq_flow_classify(fq, tin, flow_idx, skb);
+ 	head = skb_peek_tail(&flow->queue);
+ 	if (!head || skb_is_gso(head))
+ 		goto out;
+-- 
+2.28.0
+
