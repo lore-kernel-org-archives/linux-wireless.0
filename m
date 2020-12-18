@@ -2,111 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F61EC4361B
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8EB5C4361B
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:49:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39E4023B01
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:48:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75EB323AFD
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Dec 2020 18:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726018AbgLRSsd (ORCPT
+        id S1726286AbgLRSty (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Dec 2020 13:48:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43328 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725881AbgLRSsc (ORCPT
+        Fri, 18 Dec 2020 13:49:54 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:51712 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725775AbgLRStx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Dec 2020 13:48:32 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B288CC0611C5
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2020 10:47:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=HbF0Y5fBQuQXRcCZJm9UpSMrQs/l1tNb13+JDexzE9o=; b=AY8hM4LnxJ3C62coiNJheG0fYG
-        J2pWWrKo9stx+NA5+S5szoYMHxsG3pj8nB2Iw59ua5fyBIwn6UlQH7WpZIs2uzQGqH1/W4nSSw/Ci
-        vIpESe6jV8cw8N8UvKDSgKvPSo+7ppRbMB/2sMqtS3zqfEJYX4u9CmhPYNudUlkXXAqw=;
-Received: from p4ff13815.dip0.t-ipconnect.de ([79.241.56.21] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1kqKmf-0000Fr-1b; Fri, 18 Dec 2020 19:47:21 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     toke@redhat.com
-Subject: [PATCH v2 4/6] mac80211: fix encryption key selection for 802.3 xmit
-Date:   Fri, 18 Dec 2020 19:47:16 +0100
-Message-Id: <20201218184718.93650-4-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201218184718.93650-1-nbd@nbd.name>
-References: <20201218184718.93650-1-nbd@nbd.name>
+        Fri, 18 Dec 2020 13:49:53 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1608317373; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=gQDGlisXw6UhojHypCw3s5g8CwUbaOfHuoevugWoQGI=; b=mck3A9opfW/cWHXzFs0tIObdPp0NOTxeMxZl+dCkjTvVGfAcfkDbnn/8tq+a421dtY6ZrGpH
+ LUse3q7Njj+Gb3MCyiAaSbpIoKveTKq1JnnuvbEMrcDAfVqR7spT5GIy1nGKD89uFO57/Rwk
+ Zx8U8cFuZySlbuyepDh+8ntIUiA=
+X-Mailgun-Sending-Ip: 69.72.43.15
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 5fdcf99dbfd08afb0d2fa9b3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 18 Dec 2020 18:49:01
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id AB166C43461; Fri, 18 Dec 2020 18:49:00 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8D806C433C6;
+        Fri, 18 Dec 2020 18:48:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8D806C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     linux-kernel@vger.kernel.org,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -next] net: wireless/mediatek/mt7915: fix MESH ifdef block
+References: <20201218173202.23159-1-rdunlap@infradead.org>
+Date:   Fri, 18 Dec 2020 20:48:55 +0200
+In-Reply-To: <20201218173202.23159-1-rdunlap@infradead.org> (Randy Dunlap's
+        message of "Fri, 18 Dec 2020 09:32:02 -0800")
+Message-ID: <87eejnrluw.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using WEP, the default unicast key needs to be selected, instead of
-the STA PTK.
+Randy Dunlap <rdunlap@infradead.org> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/tx.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+> Fix a build error when CONFIG_MAC80211_MESH is not enabled:
+>
+> ../drivers/net/wireless/mediatek/mt76/mt7915/init.c:47:2: error: expected expression before '}' token
+>   }, {
+>   ^
+>
+> Fixes: af901eb4ab80 ("mt76: mt7915: get rid of dbdc debugfs knob")
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Shayne Chen <shayne.chen@mediatek.com>
+> Cc: Ryder Lee <ryder.lee@mediatek.com>
+> Cc: Lorenzo Bianconi <lorenzo@kernel.org>
+> Cc: Felix Fietkau <nbd@nbd.name>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 022b9b432c00..39c7059c644f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4235,7 +4235,6 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
- 	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
- 	struct ieee80211_key *key;
- 	struct sta_info *sta;
--	bool offload = true;
- 
- 	if (unlikely(skb->len < ETH_HLEN)) {
- 		kfree_skb(skb);
-@@ -4251,18 +4250,22 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
- 
- 	if (unlikely(IS_ERR_OR_NULL(sta) || !sta->uploaded ||
- 	    !test_sta_flag(sta, WLAN_STA_AUTHORIZED) ||
--		sdata->control_port_protocol == ehdr->h_proto))
--		offload = false;
--	else if ((key = rcu_dereference(sta->ptk[sta->ptk_idx])) &&
--		 (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) ||
--		  key->conf.cipher == WLAN_CIPHER_SUITE_TKIP))
--		offload = false;
--
--	if (offload)
--		ieee80211_8023_xmit(sdata, dev, sta, key, skb);
--	else
--		ieee80211_subif_start_xmit(skb, dev);
-+	    sdata->control_port_protocol == ehdr->h_proto))
-+		goto skip_offload;
-+
-+	key = rcu_dereference(sta->ptk[sta->ptk_idx]);
-+	if (!key)
-+		key = rcu_dereference(sdata->default_unicast_key);
-+
-+	if (key && (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) ||
-+		    key->conf.cipher == WLAN_CIPHER_SUITE_TKIP))
-+		goto skip_offload;
-+
-+	ieee80211_8023_xmit(sdata, dev, sta, key, skb);
-+	goto out;
- 
-+skip_offload:
-+	ieee80211_subif_start_xmit(skb, dev);
- out:
- 	rcu_read_unlock();
- 
+Thanks, but why -next? I would rather queue this to wireless-drivers for
+v5.11 as af901eb4ab80 is in Linu's tree now.
+
 -- 
-2.28.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
