@@ -2,100 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06BABC0018C
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Dec 2020 15:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 902C3C4361B
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Dec 2020 16:57:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C22DA239FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Dec 2020 15:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5989B23A00
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Dec 2020 16:57:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbgLSPTe (ORCPT
+        id S1727032AbgLSQzs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Dec 2020 10:19:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33604 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726578AbgLSPTe (ORCPT
+        Sat, 19 Dec 2020 11:55:48 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:45144 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726843AbgLSQzs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Dec 2020 10:19:34 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D2FBC0617B0;
-        Sat, 19 Dec 2020 07:18:53 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1kqe0H-00Bye3-DL; Sat, 19 Dec 2020 16:18:41 +0100
-Message-ID: <9003ea3720a03b4bd1b8abf3d8f645563a58f953.camel@sipsolutions.net>
-Subject: Re: net: tso: add UDP segmentation support: adds regression for
- ax200 upload
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Jakub Kicinski <kuba@kernel.org>,
-        Ben Greear <greearb@candelatech.com>,
+        Sat, 19 Dec 2020 11:55:48 -0500
+Received: from [192.168.254.6] (unknown [50.46.158.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id B576613C2B0;
+        Sat, 19 Dec 2020 08:55:06 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com B576613C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1608396907;
+        bh=N8Teo2Gvj/dcotfU7a3Y6k0H/wTnwCczQpS2oTRP+k4=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=dgkA0UhIe/zektImVhncv+1MCMKZAVORkf0DA/F62xbk2jMreowvM9op8LGPjydav
+         1eIAzHsmHqPiwbLHjLA8V7tZ5sMKGCtPoxXKOCZw5O6SWyfzDWQkHBz5HQxPJkQ84s
+         2asDpS0mToV9TZizT2hdNp/UnQzFN5pTe51j95X0=
+Subject: Re: net: tso: add UDP segmentation support: adds regression for ax200
+ upload
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Jakub Kicinski <kuba@kernel.org>,
         Luca Coelho <luciano.coelho@intel.com>
 Cc:     Eric Dumazet <edumazet@google.com>,
         netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Date:   Sat, 19 Dec 2020 16:18:40 +0100
-In-Reply-To: <20201218121627.603329b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 References: <5664fa0f-aef2-c336-651a-093c9eed23ab@candelatech.com>
-         <765f370d-ce2d-b75a-2dde-87f69ae7c185@candelatech.com>
-         <CANn89iKpa1y2SKJuR9kRi=AZs94sj+-tzRs+2D0vmxh+ahEcGA@mail.gmail.com>
-         <adbee2ec-c6ba-7a17-eb98-1c53365fa911@candelatech.com>
-         <CANn89iJQnSVZFp2XDgREN1QMtU4exOsnJq=5VzJ6tqTCJ7MH-g@mail.gmail.com>
-         <c4bcee7d-b2eb-759c-c659-d65f3e7daec9@candelatech.com>
-         <CANn89i++Kgkj57ms70a5GDOQ-Cpewx3NQkzP3EmZmLYQ4eHzww@mail.gmail.com>
-         <5d89fd24-f00a-7e70-00ce-83529f13b05e@candelatech.com>
-         <20201218121627.603329b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
+ <765f370d-ce2d-b75a-2dde-87f69ae7c185@candelatech.com>
+ <CANn89iKpa1y2SKJuR9kRi=AZs94sj+-tzRs+2D0vmxh+ahEcGA@mail.gmail.com>
+ <adbee2ec-c6ba-7a17-eb98-1c53365fa911@candelatech.com>
+ <CANn89iJQnSVZFp2XDgREN1QMtU4exOsnJq=5VzJ6tqTCJ7MH-g@mail.gmail.com>
+ <c4bcee7d-b2eb-759c-c659-d65f3e7daec9@candelatech.com>
+ <CANn89i++Kgkj57ms70a5GDOQ-Cpewx3NQkzP3EmZmLYQ4eHzww@mail.gmail.com>
+ <5d89fd24-f00a-7e70-00ce-83529f13b05e@candelatech.com>
+ <20201218121627.603329b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <9003ea3720a03b4bd1b8abf3d8f645563a58f953.camel@sipsolutions.net>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <43a5b45c-955a-22d4-2bf9-dbab852dbb5f@candelatech.com>
+Date:   Sat, 19 Dec 2020 08:55:05 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
+In-Reply-To: <9003ea3720a03b4bd1b8abf3d8f645563a58f953.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
 Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2020-12-18 at 12:16 -0800, Jakub Kicinski wrote:
-> On Thu, 17 Dec 2020 12:40:26 -0800 Ben Greear wrote:
-> > On 12/17/20 10:20 AM, Eric Dumazet wrote:
-> > > On Thu, Dec 17, 2020 at 7:13 PM Ben Greear <greearb@candelatech.com> wrote:  
-> > > > It is the iwlwifi/mvm logic that supports ax200.  
-> > > 
-> > > Let me ask again :
-> > > 
-> > > I see two different potential call points :
-> > > 
-> > > drivers/net/wireless/intel/iwlwifi/pcie/tx.c:1529:
-> > > tso_build_hdr(skb, hdr_page->pos, &tso, data_left, !total_len);
-> > > drivers/net/wireless/intel/iwlwifi/queue/tx.c:427:
-> > > tso_build_hdr(skb, hdr_page->pos, &tso, data_left, !total_len);
-> > > 
-> > > To the best of your knowledge, which one would be used in your case ?
-> > > 
-> > > Both are horribly complex, I do not want to spend time studying two
-> > > implementations.  
-> > 
-> > It is the queue/tx.c code that executes on my system, verified with
-> > printk.
+On 12/19/20 7:18 AM, Johannes Berg wrote:
+> On Fri, 2020-12-18 at 12:16 -0800, Jakub Kicinski wrote:
+>> On Thu, 17 Dec 2020 12:40:26 -0800 Ben Greear wrote:
+>>> On 12/17/20 10:20 AM, Eric Dumazet wrote:
+>>>> On Thu, Dec 17, 2020 at 7:13 PM Ben Greear <greearb@candelatech.com> wrote:
+>>>>> It is the iwlwifi/mvm logic that supports ax200.
+>>>>
+>>>> Let me ask again :
+>>>>
+>>>> I see two different potential call points :
+>>>>
+>>>> drivers/net/wireless/intel/iwlwifi/pcie/tx.c:1529:
+>>>> tso_build_hdr(skb, hdr_page->pos, &tso, data_left, !total_len);
+>>>> drivers/net/wireless/intel/iwlwifi/queue/tx.c:427:
+>>>> tso_build_hdr(skb, hdr_page->pos, &tso, data_left, !total_len);
+>>>>
+>>>> To the best of your knowledge, which one would be used in your case ?
+>>>>
+>>>> Both are horribly complex, I do not want to spend time studying two
+>>>> implementations.
+>>>
+>>> It is the queue/tx.c code that executes on my system, verified with
+>>> printk.
+>>
+>> Not sure why Intel's not on CC here.
 > 
-> Not sure why Intel's not on CC here. 
+> Heh :)
+> 
+> Let's also add linux-wireless.
+> 
+>> Luca, is the ax200 TSO performance regression with recent kernel on your
+>> radar?
+> 
+> It wasn't on mine for sure, so far. But it's supposed to be Christmas
+> vacation, so haven't checked our bug tracker etc. I see Emmanuel was at
+> least looking at the bug report, but not sure what else happened yet.
 
-Heh :)
+Not to bitch and moan too much, but even the most basic of testing would
+have shown this, how can testing be so poor on the ax200 driver?
 
-Let's also add linux-wireless.
+It even shows up with the out-of-tree ax200 driver.
 
-> Luca, is the ax200 TSO performance regression with recent kernel on your
-> radar?
+> Off the top of my head, I don't really see the issue. Does anyone have
+> the ability to capture the frames over the air (e.g. with another AX200
+> in monitor mode, load the driver with amsdu_size=3 module parameter to
+> properly capture A-MSDUs)?
 
-It wasn't on mine for sure, so far. But it's supposed to be Christmas
-vacation, so haven't checked our bug tracker etc. I see Emmanuel was at
-least looking at the bug report, but not sure what else happened yet.
+I can do that at some point, and likely it could be reproduced with an /n or /ac
+AP and those are a lot easier to sniff.
 
-Off the top of my head, I don't really see the issue. Does anyone have
-the ability to capture the frames over the air (e.g. with another AX200
-in monitor mode, load the driver with amsdu_size=3 module parameter to
-properly capture A-MSDUs)?
+Thanks,
+Ben
 
-johannes
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
