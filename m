@@ -2,88 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F84C4361B
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 14:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B614C3526D
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 21:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E2C42245C
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 14:36:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24CEF22CA2
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 21:44:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727487AbgLTOg6 (ORCPT
+        id S1728328AbgLTVoQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Dec 2020 09:36:58 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:55015 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726970AbgLTOg6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Dec 2020 09:36:58 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608474996; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=3uHl3ZOY5ex30zjTBUCloPec/y4isCuxKsN50qVLmnc=; b=pvVec2WC1IaRIyrBaXHKJI7/xPs8xAks9WRhSLIcyEA4kKxHzL/ewAQwF5i9fB3RDXMtXawa
- QNPh0C8/4fqMVZ7Hv12ucQDfEqb1tL8z1DrpJ+56RjsG/W1BvPZ/ixXDjIDuDoUoTiwPj3tB
- +bH7YSPtElFUEe+4zF2Cq+uMykE=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5fdf61560564dfefcd6362d9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 20 Dec 2020 14:36:06
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 40290C43461; Sun, 20 Dec 2020 14:36:06 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86513C433CA;
-        Sun, 20 Dec 2020 14:36:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 86513C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Arend van Spriel <aspriel@gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH] MAINTAINERS: switch to different email address
-References: <20201220141807.17278-1-aspriel@gmail.com>
-Date:   Sun, 20 Dec 2020 16:36:01 +0200
-In-Reply-To: <20201220141807.17278-1-aspriel@gmail.com> (Arend van Spriel's
-        message of "Sun, 20 Dec 2020 15:18:07 +0100")
-Message-ID: <87czz4r1da.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Sun, 20 Dec 2020 16:44:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54950 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727446AbgLTVoQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 Dec 2020 16:44:16 -0500
+Date:   Sun, 20 Dec 2020 22:43:33 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1608500615;
+        bh=zRypDAurjZALqdycTeLM6FlnjpYaL3xGyF7Jl1kx6wo=;
+        h=From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VJF6f1B8B2qhaBmMVTYvthwdFabElcMLeF5plZQPkiJCep81WhVNZF82y3T2DxTiB
+         LtL666DiCuXarYr8K/jV0btKq7GIrC5hk5NA+HeRKVvjyDfjqRgZIk6Sg01GBMxPtm
+         AF7DnduLJmI0C8vZL7yHQ1pa2EUks2QlRj3Q1OTR9XBCs3+VvmGCgt5jEzOhgVx7jV
+         rBwGSi/qAPgZpf+ydtMzwsUuA6UIQqNntcLRW+4Bhq1lvXMWtXJz62kL1r7AdLRcOs
+         LIJZXb8718PqTumZO5gzRLuXtoYjqdw8lqlYbMK/c6ASp6NgCgh9JfDuy6iPSpxqk1
+         YRze22M4a03RA==
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Tsuchiya Yuto <kitakar@gmail.com>
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>, verdre@v0yd.nl
+Subject: Re: [PATCH 0/3] mwifiex: disable ps_mode by default for stability
+Message-ID: <20201220214333.rxtkt72niq7adfin@pali>
+References: <20201028142433.18501-1-kitakar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201028142433.18501-1-kitakar@gmail.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend van Spriel <aspriel@gmail.com> writes:
+Hello!
 
-> Switching to private mail account as work email is polluted with a legal
-> disclaimer. Just making it extra clear by changing the email address in
-> the MAINTAINERS file as well.
->
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arend van Spriel <aspriel@gmail.com>
-> ---
-> Hi Kalle,
->
-> Not sure if both s-o-b lines are really necessary, but better be safe
-> then sorry.
+Please CC me in future for mwifiex discussion :-)
 
-I don't see a problem with having two signed offs though I don't think
-it's really needed as you are still just one person, I hope :)
+On Wednesday 28 October 2020 23:24:30 Tsuchiya Yuto wrote:
+> Hello all,
+> 
+> On Microsoft Surface devices (PCIe-88W8897), we are observing stability
+> issues when ps_mode (IEEE power_save) is enabled, then eventually causes
+> firmware crash. Especially on 5GHz APs, the connection is completely
+> unstable and almost unusable.
+> 
+> I think the most desirable change is to fix the ps_mode itself. But is
+> seems to be hard work [1], I'm afraid we have to go this way.
+> 
+> Therefore, the first patch of this series disables the ps_mode by default
+> instead of enabling it on driver init. I'm not sure if explicitly
+> disabling it is really required or not. I don't have access to the details
+> of this chip. Let me know if it's enough to just remove the code that
+> enables ps_mode.
+> 
+> The Second patch adds a new module parameter named "allow_ps_mode". Since
+> other wifi drivers just disable power_save by default by module parameter
+> like this, I also added this.
+> 
+> The third patch adds a message when ps_mode will be changed. Useful when
+> diagnosing connection issues.
 
-I'll queue this for v5.11.
+There are more issues with power save API and implementation in mwifiex.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+See my email for more details:
+https://lore.kernel.org/linux-wireless/20200609111544.v7u5ort3yk4s7coy@pali/T/#u
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+These patches would just break power save API and reporting status to
+userspace even more due to WIPHY_FLAG_PS_ON_BY_DEFAULT and
+CONFIG_CFG80211_DEFAULT_PS options.
+
+I would suggest to first fix issues mentioned in my email and then start
+providing a way how to blacklist or whitelist power save feature
+depending on firmware or card/chip version.
+
+From my experience I know that e.g. 88W8997 cards have lot of bugs in
+their firmware and I'm not aware that bugs are going to be fixed... So
+we really need workarounds, like disabling power save mode to have cards
+usable.
+
+> Thanks,
+> Tsuchiya Yuto
+> 
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=109681
+> 
+> Tsuchiya Yuto (3):
+>   mwifiex: disable ps_mode explicitly by default instead
+>   mwifiex: add allow_ps_mode module parameter
+>   mwifiex: print message when changing ps_mode
+> 
+>  .../net/wireless/marvell/mwifiex/cfg80211.c   | 23 +++++++++++++++++++
+>  .../net/wireless/marvell/mwifiex/sta_cmd.c    | 11 ++++++---
+>  2 files changed, 31 insertions(+), 3 deletions(-)
+> 
+> -- 
+> 2.29.1
+> 
