@@ -2,94 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB68C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 05:58:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 517D9C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 06:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78E71229F0
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 05:58:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 044082071C
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 06:22:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728524AbgLUF6U (ORCPT
+        id S1728372AbgLUGWr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Dec 2020 00:58:20 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:57010 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728517AbgLUF6T (ORCPT
+        Mon, 21 Dec 2020 01:22:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52392 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727891AbgLUGWq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Dec 2020 00:58:19 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608530274; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=sEY+xIJ0XXXuL7Fjm7+Q2MBFKhj3vlIlLwjAvEKA18A=; b=nnzEZQ5VHwCxOpSDGqNtVbbHhCDvxhmBhlV7Gc7QHBall4bxHEwGQcTHTSHsdyLVSak+Vjog
- DojCBcS2p9DOuWk2GVmriS4XidKZrYluA6Y3QxwJbcL9cEw5y8HHwfxLb5hG36qE40L7jGRi
- b6OuTTXDS2EasYjKH+Q8MmR5gr0=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5fe0394475ab652e87bad55f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 21 Dec 2020 05:57:24
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 009E3C433CA; Mon, 21 Dec 2020 05:57:23 +0000 (UTC)
-Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A35E9C433CA;
-        Mon, 21 Dec 2020 05:57:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A35E9C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Srinivasan Raju <srini.raju@purelifi.com>
-Cc:     Mostafa Afgani <mostafa.afgani@purelifi.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list\:NETWORKING DRIVERS \(WIRELESS\)" 
-        <linux-wireless@vger.kernel.org>,
-        "open list\:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] [v11] wireless: Initial driver submission for pureLiFi STA devices
-References: <20200928102008.32568-1-srini.raju@purelifi.com>
-        <20201208115719.349553-1-srini.raju@purelifi.com>
-        <87o8iqq6os.fsf@codeaurora.org>
-        <CWXP265MB17998064FCE8FCE6B313FAD1E0C00@CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM>
-Date:   Mon, 21 Dec 2020 07:57:17 +0200
-In-Reply-To: <CWXP265MB17998064FCE8FCE6B313FAD1E0C00@CWXP265MB1799.GBRP265.PROD.OUTLOOK.COM>
-        (Srinivasan Raju's message of "Mon, 21 Dec 2020 05:52:16 +0000")
-Message-ID: <877dpbd7lu.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 21 Dec 2020 01:22:46 -0500
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2465BC0613D3
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2020 22:22:06 -0800 (PST)
+Received: by mail-lf1-x133.google.com with SMTP id m12so20971639lfo.7
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2020 22:22:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/e3jNsq3iy3v40rws4mJ4ddje4NCepqN/jkGkUQj+WE=;
+        b=IGyJLrwNPs7nGGEVHTQab82fiJjb6Idsp5s6IB1R4RaWfyeKeQXU9t3UEqBpVGkMZD
+         qgXp8QFGBZ3P4HidQCrMOA6IrDOZQiKoA8xy8w43f/dCVFRQoNda8JDbNKiT4OS1zUso
+         dfpbm6nrZJoavjjOduhKN7Cj1BFsZwkoYO53ksa94098xyxknJiiZSaXoskClm0PI5MJ
+         dVlGOVXrB7FYjTROt6AVHUX5JzymRBThW1vAsfMgCeNZiraktIlK55yVSg49HUwOaKzR
+         7SFMGDvetsBuUQS15b0Wn7HnkOsrIGe7fappaBw6Lgpf+mRr0yO43orO0ebtKm5OzlYt
+         hSew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/e3jNsq3iy3v40rws4mJ4ddje4NCepqN/jkGkUQj+WE=;
+        b=gdDBw41bkgTyYZtgZtUJpQiggM4UX0RHqmWjIbHc6WYJjkTo8wnE5Pcma89XizU+w1
+         TmVlIG8rmF+Jkiy4MmUAcK4NhtzKRoZPbH31vNkwLHWTPbO3HwRnMNGM71SGbFV1/JSA
+         CiSFRg6MgtyX50SdFXuAPwhlWDYeQ7NNKbirQOoVYjUjX5iNkTOA12LafvgLmM4OIePs
+         ydVvsXqnwgvU/dUMhyMwgLCK11AmTT8n4L7zeXB9v22WwfChBML1HsJFPY0gNnTT5PbX
+         F0Jv6LxjVHoT7KuzAUnIgyXmkWCeYu2Txtgg8V4wHcgRd02x6F2DDYP4paayGUDh+ytQ
+         7WVA==
+X-Gm-Message-State: AOAM532cDj/JBpmV46Anc0s38lvm1gqHeVInmUK4ScdWkuKMvy6qbwYm
+        GBPlXn3Ui8coDuvqHhqx6mrgU42dbnCI8Opc
+X-Google-Smtp-Source: ABdhPJzUdmxt16lAcpr3XIJgaS3ZNd1qmGeb8QjncFPHRIJmPJNAdv0Y5Q2WBJiq/hVrXME+Ecnimg==
+X-Received: by 2002:a2e:b6d0:: with SMTP id m16mr5896530ljo.133.1608499681510;
+        Sun, 20 Dec 2020 13:28:01 -0800 (PST)
+Received: from 5550.lan (host-91-243-31-214.la.net.ua. [91.243.31.214])
+        by smtp.googlemail.com with ESMTPSA id u6sm1777338lfl.64.2020.12.20.13.28.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Dec 2020 13:28:00 -0800 (PST)
+From:   Illia Volochii <illia.volochii@gmail.com>
+To:     seth.forshee@canonical.com
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Illia Volochii <illia.volochii@gmail.com>
+Subject: [PATCH] wireless-regdb: Update regulatory rules for Ukraine (UA)
+Date:   Sun, 20 Dec 2020 23:27:21 +0200
+Message-Id: <20201220212721.22450-1-illia.volochii@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Srinivasan Raju <srini.raju@purelifi.com> writes:
+This patch is based on the latest Ukrainian norms https://zakon.rada.gov.ua/laws/show/z0201-15#n48.
 
->> I see lots of magic numbers in the driver like 2, 0x33 and 0x34 here.
->> Please convert the magic numbers to proper defines explaining the
->> meaning. And for vendor commands you could even use enum to group
->> them better in .h file somewhere.
->
-> Hi Kalle,
->
-> Thanks for reviewing the driver, We will work on the comments.
+* Extend some frequency ranges.
+* Increase EIRP of frequency ranges.
+* Set wmmrule=ETSI to frequency ranges that are related to EN 301 893.
+* Permit outdoor usage of 2.4 GHz band channels.
+* Prohibit outdoor usage of some 5 GHz band channels.
 
-I haven't had time to do a throrough review yet, but I suggest fixing
-the stuff I commented and submitting v12. I'll then do a new review with
-v12.
+Signed-off-by: Illia Volochii <illia.volochii@gmail.com>
+---
+ db.txt | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
+diff --git a/db.txt b/db.txt
+index c71a03a..86073d2 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1548,21 +1548,20 @@ country TZ:
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 80), (30)
+ 
+-# Source:
+-# #914 / 06 Sep 2007: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
+-# #1174 / 23 Oct 2008: http://www.nkrz.gov.ua/uk/activities/ruling/1225269361
+-# (appendix 8)
+-# Listed 5GHz range is a lowest common denominator for all related
+-# rules in the referenced laws. Such a range is used because of
+-# disputable definitions there.
++# Source: https://zakon.rada.gov.ua/laws/show/z0201-15#n48
++# Although it is allowed to use up to 250 mW for some 5 GHz frequency ranges,
++# all of them are limited to 100 mW for IEEE 802.11n and IEEE 802.11ac.
++# 2.4 GHz band channels can be used outdoors when some requirements are met.
++# 5 GHz band channels must be used only indoors in some cases. They are neither
++# permitted nor denied outdoors in others.
+ country UA: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
+-	(5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
+-	(5250 - 5350 @ 80), (20), DFS, NO-OUTDOOR, AUTO-BW
+-	(5490 - 5670 @ 160), (20), DFS
+-	(5735 - 5835 @ 80), (20)
++	(2400 - 2483.5 @ 40), (100 mW)
++	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
++	(5250 - 5350 @ 80), (100 mW), DFS, NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
++	(5470 - 5725 @ 160), (100 mW), DFS, NO-OUTDOOR, wmmrule=ETSI
++	(5725 - 5850 @ 80), (100 mW), NO-OUTDOOR
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+-	(57000 - 66000 @ 2160), (40)
++	(57000 - 66000 @ 2160), (40 mW), NO-OUTDOOR
+ 
+ country UG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
