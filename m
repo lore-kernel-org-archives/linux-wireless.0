@@ -6,19 +6,19 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDF9C47438
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 03:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E335AC3527A
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 03:38:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D2BE23A5E
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 03:37:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C185E23AC0
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Dec 2020 03:38:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728383AbgLTDgi (ORCPT
+        id S1728293AbgLTDga (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Dec 2020 22:36:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58444 "EHLO mail.kernel.org"
+        Sat, 19 Dec 2020 22:36:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57984 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728328AbgLTDgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Dec 2020 22:36:37 -0500
+        id S1727979AbgLTDg1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Dec 2020 22:36:27 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -27,12 +27,10 @@ Cc:     Sara Sharon <sara.sharon@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 02/10] cfg80211: initialize rekey_data
-Date:   Sat, 19 Dec 2020 22:34:49 -0500
-Message-Id: <20201220033457.2728519-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 1/3] cfg80211: initialize rekey_data
+Date:   Sat, 19 Dec 2020 22:35:24 -0500
+Message-Id: <20201220033526.2728841-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201220033457.2728519-1-sashal@kernel.org>
-References: <20201220033457.2728519-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,10 +55,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dbac5c0995a0f..5bb2316befb98 100644
+index 5bd89f536720d..ab8bca39afa3f 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -12033,7 +12033,7 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
+@@ -10428,7 +10428,7 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
  	struct net_device *dev = info->user_ptr[1];
  	struct wireless_dev *wdev = dev->ieee80211_ptr;
  	struct nlattr *tb[NUM_NL80211_REKEY_DATA];
