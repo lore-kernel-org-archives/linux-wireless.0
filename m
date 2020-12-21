@@ -5,124 +5,106 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 517D9C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 06:22:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A0A9C433E9
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 07:59:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 044082071C
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 06:22:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E39A22CF7
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Dec 2020 07:59:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728372AbgLUGWr (ORCPT
+        id S1727275AbgLUH6q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Dec 2020 01:22:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52392 "EHLO
+        Mon, 21 Dec 2020 02:58:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727891AbgLUGWq (ORCPT
+        with ESMTP id S1727117AbgLUH6q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Dec 2020 01:22:46 -0500
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2465BC0613D3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2020 22:22:06 -0800 (PST)
-Received: by mail-lf1-x133.google.com with SMTP id m12so20971639lfo.7
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2020 22:22:06 -0800 (PST)
+        Mon, 21 Dec 2020 02:58:46 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B67DC0613D3;
+        Sun, 20 Dec 2020 23:58:03 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id w1so7463637pjc.0;
+        Sun, 20 Dec 2020 23:58:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=/e3jNsq3iy3v40rws4mJ4ddje4NCepqN/jkGkUQj+WE=;
-        b=IGyJLrwNPs7nGGEVHTQab82fiJjb6Idsp5s6IB1R4RaWfyeKeQXU9t3UEqBpVGkMZD
-         qgXp8QFGBZ3P4HidQCrMOA6IrDOZQiKoA8xy8w43f/dCVFRQoNda8JDbNKiT4OS1zUso
-         dfpbm6nrZJoavjjOduhKN7Cj1BFsZwkoYO53ksa94098xyxknJiiZSaXoskClm0PI5MJ
-         dVlGOVXrB7FYjTROt6AVHUX5JzymRBThW1vAsfMgCeNZiraktIlK55yVSg49HUwOaKzR
-         7SFMGDvetsBuUQS15b0Wn7HnkOsrIGe7fappaBw6Lgpf+mRr0yO43orO0ebtKm5OzlYt
-         hSew==
+        bh=vuo/TbErUnOTi/BtCcE2qLWY5PtEW/w4cxfuLrmrRGI=;
+        b=KA1e7AOhJeu3VEaVRv+7iGg3OH8WFzJeus82szeqLp9hHrgBIchmk5Nm6caQn8+l9G
+         Kv8GGimfUO4fBjucCrQPQ55pKti32hbBn3rwJycHm50Yp9lB0Exo3VmPkBN3yPg3DrjS
+         5TOyKcQluDnzcpDm/LT74e05ydbq6NEYXdNtWCT3GYZZ+WwPl0b8OLiF85++FbBie503
+         nhdC8lBTRwAxty9dV3nD6VeiBfMJZS9CMdB9ZMi1qLUM3EFw194DWr4NlF7YKerZsFCB
+         LP5JlTxUPiL0F46Dbpn1UMsmL+qLiRjCoEWiOSx03J1d0eS3bRAh7AjhIjrtMAqAJ3Ae
+         2AQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=/e3jNsq3iy3v40rws4mJ4ddje4NCepqN/jkGkUQj+WE=;
-        b=gdDBw41bkgTyYZtgZtUJpQiggM4UX0RHqmWjIbHc6WYJjkTo8wnE5Pcma89XizU+w1
-         TmVlIG8rmF+Jkiy4MmUAcK4NhtzKRoZPbH31vNkwLHWTPbO3HwRnMNGM71SGbFV1/JSA
-         CiSFRg6MgtyX50SdFXuAPwhlWDYeQ7NNKbirQOoVYjUjX5iNkTOA12LafvgLmM4OIePs
-         ydVvsXqnwgvU/dUMhyMwgLCK11AmTT8n4L7zeXB9v22WwfChBML1HsJFPY0gNnTT5PbX
-         F0Jv6LxjVHoT7KuzAUnIgyXmkWCeYu2Txtgg8V4wHcgRd02x6F2DDYP4paayGUDh+ytQ
-         7WVA==
-X-Gm-Message-State: AOAM532cDj/JBpmV46Anc0s38lvm1gqHeVInmUK4ScdWkuKMvy6qbwYm
-        GBPlXn3Ui8coDuvqHhqx6mrgU42dbnCI8Opc
-X-Google-Smtp-Source: ABdhPJzUdmxt16lAcpr3XIJgaS3ZNd1qmGeb8QjncFPHRIJmPJNAdv0Y5Q2WBJiq/hVrXME+Ecnimg==
-X-Received: by 2002:a2e:b6d0:: with SMTP id m16mr5896530ljo.133.1608499681510;
-        Sun, 20 Dec 2020 13:28:01 -0800 (PST)
-Received: from 5550.lan (host-91-243-31-214.la.net.ua. [91.243.31.214])
-        by smtp.googlemail.com with ESMTPSA id u6sm1777338lfl.64.2020.12.20.13.28.00
+        bh=vuo/TbErUnOTi/BtCcE2qLWY5PtEW/w4cxfuLrmrRGI=;
+        b=toEsVI3/V2TCKuFhyeus8+ALNFxpei97X8N7/mVolJ3Kc50k5C9ZPfmevzbZiiAtKQ
+         HIHqKvj0bb25ImqUsBsn9JK9lFV/ep16mq2im6oQJ0XQVuA3zipxnsPMYYVs8VcQvyPm
+         zoHfI63+0cdFO/tDcy4PQOB4sNi2HCZv5ylpehaUP0rBlcx1ye4EZocQsNhNceDzjlRK
+         7iycqe4hfLk0e3zYXr2gguZKZnbNGkGWUCB3EYf86z5pkA9+3mrC3cSngrnyOh06Yem3
+         Pddp2cyEoiNgQYejTc/xgbEdM4tSaS7pd3dFQsUOiKU+dSAMM2g2dZkQcunMJug/YPqP
+         B1xA==
+X-Gm-Message-State: AOAM531a5IM0tHxXer9VlCpVGFXlc1+DfzsCHu0A1ULk0oQjCIZyHplZ
+        eFyjGJw52gZbrWYlY71CCOY=
+X-Google-Smtp-Source: ABdhPJwJP2qXWVmVIYNVyefaLddDcIwYNgdOALxCjBSSMN53Ed/gxMKUE2QVCKA/8wgUwewEa7qIPg==
+X-Received: by 2002:a17:902:8c84:b029:dc:20bc:2812 with SMTP id t4-20020a1709028c84b02900dc20bc2812mr15299578plo.66.1608537482959;
+        Sun, 20 Dec 2020 23:58:02 -0800 (PST)
+Received: from localhost.localdomain ([103.248.31.152])
+        by smtp.googlemail.com with ESMTPSA id 145sm9979738pge.88.2020.12.20.23.57.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Dec 2020 13:28:00 -0800 (PST)
-From:   Illia Volochii <illia.volochii@gmail.com>
-To:     seth.forshee@canonical.com
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Illia Volochii <illia.volochii@gmail.com>
-Subject: [PATCH] wireless-regdb: Update regulatory rules for Ukraine (UA)
-Date:   Sun, 20 Dec 2020 23:27:21 +0200
-Message-Id: <20201220212721.22450-1-illia.volochii@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        Sun, 20 Dec 2020 23:58:02 -0800 (PST)
+From:   Amey Narkhede <ameynarkhede03@gmail.com>
+To:     imitsyanko@quantenna.com, geomatsi@gmail.com
+Cc:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Amey Narkhede <ameynarkhede03@gmail.com>
+Subject: [PATCH] qtnfmac_pcie: Use module_pci_driver
+Date:   Mon, 21 Dec 2020 13:27:35 +0530
+Message-Id: <20201221075735.197255-1-ameynarkhede03@gmail.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch is based on the latest Ukrainian norms https://zakon.rada.gov.ua/laws/show/z0201-15#n48.
+Use module_pci_driver for drivers whose init and exit functions
+only register and unregister, respectively.
 
-* Extend some frequency ranges.
-* Increase EIRP of frequency ranges.
-* Set wmmrule=ETSI to frequency ranges that are related to EN 301 893.
-* Permit outdoor usage of 2.4 GHz band channels.
-* Prohibit outdoor usage of some 5 GHz band channels.
-
-Signed-off-by: Illia Volochii <illia.volochii@gmail.com>
+Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
 ---
- db.txt | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index c71a03a..86073d2 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1548,21 +1548,20 @@ country TZ:
- 	(2402 - 2482 @ 40), (20)
- 	(5735 - 5835 @ 80), (30)
- 
--# Source:
--# #914 / 06 Sep 2007: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
--# #1174 / 23 Oct 2008: http://www.nkrz.gov.ua/uk/activities/ruling/1225269361
--# (appendix 8)
--# Listed 5GHz range is a lowest common denominator for all related
--# rules in the referenced laws. Such a range is used because of
--# disputable definitions there.
-+# Source: https://zakon.rada.gov.ua/laws/show/z0201-15#n48
-+# Although it is allowed to use up to 250 mW for some 5 GHz frequency ranges,
-+# all of them are limited to 100 mW for IEEE 802.11n and IEEE 802.11ac.
-+# 2.4 GHz band channels can be used outdoors when some requirements are met.
-+# 5 GHz band channels must be used only indoors in some cases. They are neither
-+# permitted nor denied outdoors in others.
- country UA: DFS-ETSI
--	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
--	(5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
--	(5250 - 5350 @ 80), (20), DFS, NO-OUTDOOR, AUTO-BW
--	(5490 - 5670 @ 160), (20), DFS
--	(5735 - 5835 @ 80), (20)
-+	(2400 - 2483.5 @ 40), (100 mW)
-+	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+	(5250 - 5350 @ 80), (100 mW), DFS, NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+	(5470 - 5725 @ 160), (100 mW), DFS, NO-OUTDOOR, wmmrule=ETSI
-+	(5725 - 5850 @ 80), (100 mW), NO-OUTDOOR
- 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
--	(57000 - 66000 @ 2160), (40)
-+	(57000 - 66000 @ 2160), (40 mW), NO-OUTDOOR
- 
- country UG: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--- 
-2.25.1
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+index 5337e67092ca..d9d06af9adc6 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+@@ -480,18 +480,7 @@ static struct pci_driver qtnf_pcie_drv_data = {
+ #endif
+ };
 
+-static int __init qtnf_pcie_register(void)
+-{
+-	return pci_register_driver(&qtnf_pcie_drv_data);
+-}
+-
+-static void __exit qtnf_pcie_exit(void)
+-{
+-	pci_unregister_driver(&qtnf_pcie_drv_data);
+-}
+-
+-module_init(qtnf_pcie_register);
+-module_exit(qtnf_pcie_exit);
++module_pci_driver(qtnf_pcie_drv_data)
+
+ MODULE_AUTHOR("Quantenna Communications");
+ MODULE_DESCRIPTION("Quantenna PCIe bus driver for 802.11 wireless LAN.");
+--
+2.29.2
