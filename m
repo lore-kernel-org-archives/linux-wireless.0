@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70496C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Dec 2020 13:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B27C43332
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Dec 2020 13:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D16B229C6
+	by mail.kernel.org (Postfix) with ESMTP id F18AB229C6
 	for <linux-wireless@archiver.kernel.org>; Tue, 22 Dec 2020 13:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727705AbgLVNei (ORCPT
+        id S1727762AbgLVNfB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 08:34:38 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9547 "EHLO
+        Tue, 22 Dec 2020 08:35:01 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:10064 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727288AbgLVNei (ORCPT
+        with ESMTP id S1727755AbgLVNfA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 08:34:38 -0500
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4D0cjN34sbzhvDn;
-        Tue, 22 Dec 2020 21:33:12 +0800 (CST)
+        Tue, 22 Dec 2020 08:35:00 -0500
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4D0cjb0y2szM4JZ;
+        Tue, 22 Dec 2020 21:33:23 +0800 (CST)
 Received: from ubuntu.network (10.175.138.68) by
- DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 22 Dec 2020 21:33:49 +0800
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 22 Dec 2020 21:34:10 +0800
 From:   Zheng Yongjun <zhengyongjun3@huawei.com>
 To:     <davem@davemloft.net>, <kuba@kernel.org>,
         <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
         <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     Zheng Yongjun <zhengyongjun3@huawei.com>
 Subject: [PATCH -next] scsi: megaraid: Remove unnecessary memset
-Date:   Tue, 22 Dec 2020 21:34:24 +0800
-Message-ID: <20201222133424.19969-1-zhengyongjun3@huawei.com>
+Date:   Tue, 22 Dec 2020 21:34:42 +0800
+Message-ID: <20201222133442.20078-1-zhengyongjun3@huawei.com>
 X-Mailer: git-send-email 2.22.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
