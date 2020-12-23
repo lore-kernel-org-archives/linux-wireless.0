@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 952F0C4332D
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:42:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F8DC433E9
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50D752256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:42:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5050A225AA
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731090AbgLWClz (ORCPT
+        id S1730267AbgLWCm2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:41:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52686 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:42:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52610 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729957AbgLWCXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:23:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3D51422D57;
-        Wed, 23 Dec 2020 02:22:38 +0000 (UTC)
+        id S1729938AbgLWCXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:23:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E13FA22525;
+        Wed, 23 Dec 2020 02:22:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690159;
-        bh=EkYHASMxe69mxWaSDobST7ZfA03gtcpPRhoeHRkwEUU=;
+        s=k20201202; t=1608690153;
+        bh=GvdPXwAxjrwZ6pzYg3dzpzNecKbXMvojGuj8CGZjYr4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iC9EXNBgRAInE8EL3QyvuqcpbJbKYl449Z018vXIYpvkUftxuwvv5sMX0K+a/2gkh
-         8EzyOOwmhsZqGviACVDrqqr3eTy45aKeBPOgXLcVlSABa19bxhbeIZ3gm21a3/awAc
-         MqTwaJORAdIIzFBk6/OR2mztuwyP3Cwy64dL1KI0TnKFxoGZxcVSoTx6vUSHpOw+kn
-         u36ru/er9woF01w9N07qgEBFF50FXDjq7bUU2wblM3Ze1cHmjKOG3v0EITvO8qvmwn
-         NJLr+z41MHiHaSn7rsBVAiSOfJvl/9oZhYudb72fSDYGHVyz5rVTi3gTuAO8ifJIZG
-         u46YxWvDNlKSw==
+        b=lhB7ywrj9hVxrFSV5pB8UE8FXIVZZCyyf0FDOgFnFRKkEQL2PV8Iz6Sc6mO+Xjwhg
+         v+vkbklEYLUQec1n+NN0epepRz6WzVMkGcuXKOq7e3VkqqwiC7KccEc2pjOh63iT1Z
+         yZ56gaggVNpxd0ZK6McjdX3dmun8L1eVM5ecmTkFP5h4mzr7pv+r+cLzqdvaZybXPR
+         dRLrSrcvHWrGx8WY6So6nPd9oDy/xF2Pw+eOBm6OjIFW5HWMB61WOg2/HkbheTI5ch
+         t/Fe4uMl6A5BavVlYeuzxPh3KeHLf508a+7ntEWbdofCv4Xre8Y91SjCePWT8Rtyv5
+         O1OrPQTyvZnuA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Avraham Stern <avraham.stern@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 77/87] nl80211: always accept scan request with the duration set
-Date:   Tue, 22 Dec 2020 21:20:53 -0500
-Message-Id: <20201223022103.2792705-77-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 73/87] iwlwifi: trans: consider firmware dead after errors
+Date:   Tue, 22 Dec 2020 21:20:49 -0500
+Message-Id: <20201223022103.2792705-73-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
 References: <20201223022103.2792705-1-sashal@kernel.org>
@@ -53,41 +52,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit c837cbad40d949feaff86734d637c7602ae0b56b ]
+[ Upstream commit 152fdc0f698896708f9d7889a4ba4da6944b74f7 ]
 
-Accept a scan request with the duration set even if the driver
-does not support setting the scan dwell. The duration can be used
-as a hint to the driver, but the driver may use its internal logic
-for setting the scan dwell.
+If we get an error, no longer consider the firmware to be
+in IWL_TRANS_FW_ALIVE state.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201129172929.9491a12f9226.Ia9c5b24fcefc5ce5592537507243391633a27e5f@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.a9d01e79c1c7.Ib2deb076b392fb516a7230bac91d7ab8a9586d86@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fbc8875502c3e..a5383de7a796d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7289,12 +7289,6 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 0b8cf7f3af933..675fffb39b729 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1189,8 +1189,10 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ 		return;
  
- 	if (info->attrs[NL80211_ATTR_MEASUREMENT_DURATION]) {
--		if (!wiphy_ext_feature_isset(wiphy,
--					NL80211_EXT_FEATURE_SET_SCAN_DWELL)) {
--			err = -EOPNOTSUPP;
--			goto out_free;
--		}
--
- 		request->duration =
- 			nla_get_u16(info->attrs[NL80211_ATTR_MEASUREMENT_DURATION]);
- 		request->duration_mandatory =
+ 	/* prevent double restarts due to the same erroneous FW */
+-	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status))
++	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status)) {
+ 		iwl_op_mode_nic_error(trans->op_mode);
++		trans->state = IWL_TRANS_NO_FW;
++	}
+ }
+ 
+ /*****************************************************
 -- 
 2.27.0
 
