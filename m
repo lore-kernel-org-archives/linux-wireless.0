@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F39C43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31210C43219
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EAB22222A
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 197BC206EC
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730923AbgLWCah (ORCPT
+        id S1729761AbgLWCbb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:30:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54254 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:31:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55386 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730533AbgLWCZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:25:34 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 372BD22A99;
-        Wed, 23 Dec 2020 02:25:11 +0000 (UTC)
+        id S1730502AbgLWCZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:25:30 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B6152225AC;
+        Wed, 23 Dec 2020 02:25:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690312;
-        bh=JyI0Ufi6Xl1Nq7z81EtGPLvDvtFIrhitkLJB8aUHd+c=;
+        s=k20201202; t=1608690309;
+        bh=DJnJ6L7zvbWQTi9Wp66yvgBbhZKxZXUlDpt9PsORxHw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QXrqGprdNK5q5ftT/28sQ4TAFaIzZyPSw/F8RKJKXS9CInxxVlizUrM12AYg25XXs
-         hWxzzgBkEm67JwvBGpvSUI7y33JdnBB4D3wDLnJIK0sSTlWY5ubXyczowvL/ey4Dch
-         pzD+wwRHDHgrlgQ9vmf7rONFbrbxsUJXci1y7s9QQmFxa4tyDThM5rzsS67JxGHVV0
-         jhne0D3WQErp3S2jqDK64C2rpjuJaMY4czWE8GHlDj0kTfnoESvq4PtlZ/2n7aBH50
-         9fPIRNhz6jtoltjEipPahOERDLiTpmVlSp2CS3bX7jnxP6ARmHpqCMKMwWyCGlGv7B
-         QLY0NgRLs0syA==
+        b=V/X/fvowbWHMZnhkifOfhgE7sFILsRRxJBuMLXr1MjENWKbHUzb0LAblvcIucgIiT
+         oSAy92Zucuye7m/rxMu5tX58ReiQfcmOFQbRxsoge9Q87XsUUwP7g+l1ZUYLdLIIsK
+         QbDsAkVEfxwFaiGbkG/o4Rv5x+X33vuHR8Vw6y1KUuuH9juCrZ3Pi2p/O6yzcLuIQr
+         n1OhYASDd9P+f31D/ixgm8nD/FCXC6RzlcFP05yWTWIYD3/5g1Aj+bdVSoOG0lvnG3
+         MFhXEx7C+AaE3I2qIXEGnqG/MamKXy2668EHXJ/to/dF5Beb7fR9iRh8LPKfY9DYjj
+         D/siPYBWK55gA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 45/48] mac80211: don't filter out beacons once we start CSA
-Date:   Tue, 22 Dec 2020 21:24:13 -0500
-Message-Id: <20201223022417.2794032-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 43/48] mac80211: disallow band-switch during CSA
+Date:   Tue, 22 Dec 2020 21:24:11 -0500
+Message-Id: <20201223022417.2794032-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
 References: <20201223022417.2794032-1-sashal@kernel.org>
@@ -53,49 +52,69 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 189a164d0fc6c59a22c4486d641d0a0a0d33387a ]
+[ Upstream commit 3660944a37ce73890292571f44f04891834f9044 ]
 
-I hit a bug in which we started a CSA with an action frame,
-but the AP changed its mind and didn't change the beacon.
-The CSA wasn't cancelled and we lost the connection.
+If the AP advertises a band switch during CSA, we will not have
+the right information to continue working with it, since it will
+likely (have to) change its capabilities and we don't track any
+capability changes at all. Additionally, we store e.g. supported
+rates per band, and that information would become invalid.
 
-The beacons were ignored because they never changed: they
-never contained any CSA IE. Because they never changed, the
-CRC of the beacon didn't change either which made us ignore
-the beacons instead of processing them.
+Since this is a fringe scenario, just disconnect explicitly.
 
-Now what happens is:
-1) beacon has CRC X and it is valid. No CSA IE in the beacon
-2) as long as beacon's CRC X, don't process their IEs
-3) rx action frame with CSA
-4) invalidate the beacon's CRC
-5) rx beacon, CRC is still X, but now it is invalid
-6) process the beacon, detect there is no CSA IE
-7) abort CSA
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201206145305.83470b8407e6.I739b907598001362744692744be15335436b8351@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201129172929.0e2327107c06.I461adb07704e056b054a4a7c29b80c95a9f56637@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/mlme.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7b9c02d5590c0..cebaf9a1a9ef4 100644
+index 58b80270e58c2..7b9c02d5590c0 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -1264,6 +1264,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	sdata->csa_chandef = csa_ie.chandef;
- 	sdata->csa_block_tx = csa_ie.mode;
- 	ifmgd->csa_ignored_same_chan = false;
-+	ifmgd->beacon_crc_valid = false;
+@@ -1178,6 +1178,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (res)
+ 		return;
  
- 	if (sdata->csa_block_tx)
- 		ieee80211_stop_vif_queues(local, sdata,
++	if (sdata->vif.bss_conf.chandef.chan->band !=
++	    csa_ie.chandef.chan->band) {
++		sdata_info(sdata,
++			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
++			   ifmgd->associated->bssid,
++			   csa_ie.chandef.chan->center_freq,
++			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
++			   csa_ie.chandef.center_freq2);
++		goto lock_and_drop_connection;
++	}
++
+ 	if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -1186,9 +1197,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			   csa_ie.chandef.chan->center_freq,
+ 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
+ 			   csa_ie.chandef.center_freq2);
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		return;
++		goto lock_and_drop_connection;
+ 	}
+ 
+ 	if (cfg80211_chandef_identical(&csa_ie.chandef,
+@@ -1278,6 +1287,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME((csa_ie.count - 1) *
+ 					 cbss->beacon_interval));
+ 	return;
++ lock_and_drop_connection:
++	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
+  drop_connection:
+ 	/*
+ 	 * This is just so that the disconnect flow will know that
 -- 
 2.27.0
 
