@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F55C4361B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE28C433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2692206EC
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:28:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2586F22273
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:31:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730744AbgLWC0L (ORCPT
+        id S1730826AbgLWCag (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:26:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55386 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:30:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55146 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730722AbgLWC0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:26:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 942CF2256F;
-        Wed, 23 Dec 2020 02:25:47 +0000 (UTC)
+        id S1730532AbgLWCZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:25:34 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8391522285;
+        Wed, 23 Dec 2020 02:25:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690348;
-        bh=CTRk1fiM/gn5A1mN1CjHhnbYJPpvoOA/+UFzINdepwo=;
+        s=k20201202; t=1608690313;
+        bh=E6UgPzpZIrhWjU5j0cOZrnbRIBr4p0c5BkmzbsysHWc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IFrhYJTEHqF2Lg0gcqEA2WYcMuLBXbqzxwfL4BlQDxa3OovqdcaqLJM9CK2J9cZmS
-         BBQXrYkakeQ71tSQe+bGiAcMHPrc27IbjxmEqCzJMFl978Fbt3p/B/KjlhbhVSCgpu
-         FUc85iUK+nPLbsBHOuXWUAujWbKO26J8Uuz1JDMX9ij2D6TaORoizvuhGgrptI71dh
-         /1qn7t5uCLSeAWLF+9BRNlYEm72agwtdgL9x3369+AEBpoUp8F64BxmWBXHGjwFxs6
-         p9pPQ0MHLHQyO4zo1rxRFhE+BIv7XL6pZhAkmGIgoJ53HsVL8M8mI4cAqMjLRUihL6
-         Htbm3DlyiNAEg==
+        b=nJhJGyAMM0Yv/0IdpaNYgdtVu0EjrpVavrODwnne1yA5MNJLCVkm0TcwfqakfBQtf
+         ZCDPQrxLM25E4IaZq8+SMqLFIoJGg2+ebHOdVvxibVTJeeQzchFyFOxTlDUn4XXGYm
+         hL+zqmxUZY/jDmzpxrBp8pz6HBxYlVQNNG4RdbyrNS6JnjJFA/ZhbPfKUBianIUaD7
+         hV7nCMYHkYqngo0vOsizomp5DFCDANkjU2Cv28ELN5JG8KJFSaiTGiKXGFeWDOXUOy
+         vyWFLASG1lz1ZT9YNDRUjjMEx2WrLACVCWMrBtoVYb7MT1VhstZ5TI4uxBn5dQC8w1
+         lZGIHktLnqRWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dmitry Safonov <dima@arista.com>,
-        Yuji Nakao <contact@yujinakao.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 25/38] brcmsmac: ampdu: Check BA window size before checking block ack
-Date:   Tue, 22 Dec 2020 21:25:03 -0500
-Message-Id: <20201223022516.2794471-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 46/48] mac80211: Update rate control on channel change
+Date:   Tue, 22 Dec 2020 21:24:14 -0500
+Message-Id: <20201223022417.2794032-46-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223022516.2794471-1-sashal@kernel.org>
-References: <20201223022516.2794471-1-sashal@kernel.org>
+In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
+References: <20201223022417.2794032-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,112 +53,141 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dmitry Safonov <dima@arista.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 01c195de620bb6c3ecda0dbf295fe685d8232e10 ]
+[ Upstream commit 44b72ca8163b8cf94384a11fdec716f5478411bf ]
 
-bindex can be out of BA window (64):
-  tid 0 seq 2983, start_seq 2915, bindex 68, index 39
-  tid 0 seq 2984, start_seq 2915, bindex 69, index 40
-  tid 0 seq 2985, start_seq 2915, bindex 70, index 41
-  tid 0 seq 2986, start_seq 2915, bindex 71, index 42
-  tid 0 seq 2879, start_seq 2915, bindex 4060, index 63
-  tid 0 seq 2854, start_seq 2915, bindex 4035, index 38
-  tid 0 seq 2795, start_seq 2915, bindex 3976, index 43
-  tid 0 seq 2989, start_seq 2924, bindex 65, index 45
-  tid 0 seq 2992, start_seq 2924, bindex 68, index 48
-  tid 0 seq 2993, start_seq 2924, bindex 69, index 49
-  tid 0 seq 2994, start_seq 2924, bindex 70, index 50
-  tid 0 seq 2997, start_seq 2924, bindex 73, index 53
-  tid 0 seq 2795, start_seq 2941, bindex 3950, index 43
-  tid 0 seq 2921, start_seq 2941, bindex 4076, index 41
-  tid 0 seq 2929, start_seq 2941, bindex 4084, index 49
-  tid 0 seq 3011, start_seq 2946, bindex 65, index 3
-  tid 0 seq 3012, start_seq 2946, bindex 66, index 4
-  tid 0 seq 3013, start_seq 2946, bindex 67, index 5
+A channel change or a channel bandwidth change can impact the
+rate control logic. However, the rate control logic was not updated
+before/after such a change, which might result in unexpected
+behavior.
 
-In result isset() will try to dereference something on the stack,
-causing panics:
-  BUG: unable to handle page fault for address: ffffa742800ed01f
-  #PF: supervisor read access in kernel mode
-  #PF: error_code(0x0000) - not-present page
-  PGD 6a4e9067 P4D 6a4e9067 PUD 6a4ec067 PMD 6a4ed067 PTE 0
-  Oops: 0000 [#1] PREEMPT SMP PTI
-  CPU: 1 PID: 0 Comm: swapper/1 Kdump: loaded Not tainted 5.8.5-arch1-1-kdump #1
-  Hardware name: Apple Inc. MacBookAir3,1/Mac-942452F5819B1C1B, BIOS    MBA31.88Z.0061.B07.1201241641 01/24/12
-  RIP: 0010:brcms_c_ampdu_dotxstatus+0x343/0x9f0 [brcmsmac]
-  Code: 54 24 20 66 81 e2 ff 0f 41 83 e4 07 89 d1 0f b7 d2 66 c1 e9 03 0f b7 c9 4c 8d 5c 0c 48 49 8b 4d 10 48 8b 79 68 41 57 44 89 e1 <41> 0f b6 33 41 d3 e0 48 c7 c1 38 e0 ea c0 48 83 c7 10 44 21 c6 4c
-  RSP: 0018:ffffa742800ecdd0 EFLAGS: 00010207
-  RAX: 0000000000000019 RBX: 000000000000000b RCX: 0000000000000006
-  RDX: 0000000000000ffe RSI: 0000000000000004 RDI: ffff8fc6ad776800
-  RBP: ffff8fc6855acb00 R08: 0000000000000001 R09: 00000000000005d9
-  R10: 00000000fffffffe R11: ffffa742800ed01f R12: 0000000000000006
-  R13: ffff8fc68d75a000 R14: 00000000000005db R15: 0000000000000019
-  FS:  0000000000000000(0000) GS:ffff8fc6aad00000(0000) knlGS:0000000000000000
-  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-  CR2: ffffa742800ed01f CR3: 000000002480a000 CR4: 00000000000406e0
-  Call Trace:
-   <IRQ>
-   brcms_c_dpc+0xb46/0x1020 [brcmsmac]
-   ? wlc_intstatus+0xc8/0x180 [brcmsmac]
-   ? __raise_softirq_irqoff+0x1a/0x80
-   brcms_dpc+0x37/0xd0 [brcmsmac]
-   tasklet_action_common.constprop.0+0x51/0xb0
-   __do_softirq+0xff/0x340
-   ? handle_level_irq+0x1a0/0x1a0
-   asm_call_on_stack+0x12/0x20
-   </IRQ>
-   do_softirq_own_stack+0x5f/0x80
-   irq_exit_rcu+0xcb/0x120
-   common_interrupt+0xd1/0x200
-   asm_common_interrupt+0x1e/0x40
-  RIP: 0010:cpuidle_enter_state+0xb3/0x420
+Fix this by updating the stations rate control logic when the
+corresponding channel context changes.
 
-Check if the block is within BA window and only then check block's
-status. Otherwise as Behan wrote: "When I came back to Dublin I
-was courtmartialed in my absence and sentenced to death in my absence,
-so I said they could shoot me in my absence."
-
-Also reported:
-https://bbs.archlinux.org/viewtopic.php?id=258428
-https://lore.kernel.org/linux-wireless/87tuwgi92n.fsf@yujinakao.com/
-
-Reported-by: Yuji Nakao <contact@yujinakao.com>
-Signed-off-by: Dmitry Safonov <dima@arista.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20201116030635.645811-1-dima@arista.com
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.600d967fe3c9.I48305f25cfcc9c032c77c51396e9e9b882748a86@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ net/mac80211/chan.c | 61 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index fa391e4eb0989..44f65b8bff9e0 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -953,14 +953,19 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		index = TX_SEQ_TO_INDEX(seq);
- 		ack_recd = false;
- 		if (ba_recd) {
-+			int block_acked;
-+
- 			bindex = MODSUB_POW2(seq, start_seq, SEQNUM_MAX);
-+			if (bindex < AMPDU_TX_BA_MAX_WSIZE)
-+				block_acked = isset(bitmap, bindex);
-+			else
-+				block_acked = 0;
- 			brcms_dbg_ht(wlc->hw->d11core,
- 				     "tid %d seq %d, start_seq %d, bindex %d set %d, index %d\n",
- 				     tid, seq, start_seq, bindex,
--				     isset(bitmap, bindex), index);
-+				     block_acked, index);
- 			/* if acked then clear bit and free packet */
--			if ((bindex < AMPDU_TX_BA_MAX_WSIZE)
--			    && isset(bitmap, bindex)) {
-+			if (block_acked) {
- 				ini->txretry[index] = 0;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 48b60b53ff3ff..0d06330aa9321 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -8,6 +8,7 @@
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
++#include "rate.h"
  
- 				/*
+ static int ieee80211_chanctx_num_assigned(struct ieee80211_local *local,
+ 					  struct ieee80211_chanctx *ctx)
+@@ -339,10 +340,42 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
+ 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_MIN_WIDTH);
+ }
+ 
++static void ieee80211_chan_bw_change(struct ieee80211_local *local,
++				     struct ieee80211_chanctx *ctx)
++{
++	struct sta_info *sta;
++	struct ieee80211_supported_band *sband =
++		local->hw.wiphy->bands[ctx->conf.def.chan->band];
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list,
++				list) {
++		enum ieee80211_sta_rx_bandwidth new_sta_bw;
++
++		if (!ieee80211_sdata_running(sta->sdata))
++			continue;
++
++		if (rcu_access_pointer(sta->sdata->vif.chanctx_conf) !=
++		    &ctx->conf)
++			continue;
++
++		new_sta_bw = ieee80211_sta_cur_vht_bw(sta);
++		if (new_sta_bw == sta->sta.bandwidth)
++			continue;
++
++		sta->sta.bandwidth = new_sta_bw;
++		rate_control_rate_update(local, sband, sta,
++					 IEEE80211_RC_BW_CHANGED);
++	}
++	rcu_read_unlock();
++}
++
+ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 				     struct ieee80211_chanctx *ctx,
+ 				     const struct cfg80211_chan_def *chandef)
+ {
++	enum nl80211_chan_width width;
++
+ 	if (cfg80211_chandef_identical(&ctx->conf.def, chandef)) {
+ 		ieee80211_recalc_chanctx_min_def(local, ctx);
+ 		return;
+@@ -350,7 +383,25 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 
+ 	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
+ 
++	width = ctx->conf.def.width;
+ 	ctx->conf.def = *chandef;
++
++	/* expected to handle only 20/40/80/160 channel widths */
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_40:
++	case NL80211_CHAN_WIDTH_80:
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++		break;
++	default:
++		WARN_ON(1);
++	}
++
++	if (chandef->width < width)
++		ieee80211_chan_bw_change(local, ctx);
++
+ 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_WIDTH);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+@@ -358,6 +409,9 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 		local->_oper_chandef = *chandef;
+ 		ieee80211_hw_config(local, 0);
+ 	}
++
++	if (chandef->width > width)
++		ieee80211_chan_bw_change(local, ctx);
+ }
+ 
+ static struct ieee80211_chanctx *
+@@ -1040,8 +1094,14 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(!chandef))
+ 		return -EINVAL;
+ 
++	if (old_ctx->conf.def.width > new_ctx->conf.def.width)
++		ieee80211_chan_bw_change(local, new_ctx);
++
+ 	ieee80211_change_chanctx(local, new_ctx, chandef);
+ 
++	if (old_ctx->conf.def.width < new_ctx->conf.def.width)
++		ieee80211_chan_bw_change(local, new_ctx);
++
+ 	vif_chsw[0].vif = &sdata->vif;
+ 	vif_chsw[0].old_ctx = &old_ctx->conf;
+ 	vif_chsw[0].new_ctx = &new_ctx->conf;
+@@ -1434,6 +1494,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 		ieee80211_recalc_smps_chanctx(local, ctx);
+ 		ieee80211_recalc_radar_chanctx(local, ctx);
+ 		ieee80211_recalc_chanctx_min_def(local, ctx);
++		ieee80211_chan_bw_change(local, ctx);
+ 
+ 		list_for_each_entry_safe(sdata, sdata_tmp, &ctx->reserved_vifs,
+ 					 reserved_chanctx_list) {
 -- 
 2.27.0
 
