@@ -7,41 +7,40 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16FAC4361A
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12080C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B33092256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3E6E2256F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730880AbgLWCoI (ORCPT
+        id S1729802AbgLWCWv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:44:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49658 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:22:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729819AbgLWCWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:22:55 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8522622D73;
-        Wed, 23 Dec 2020 02:22:39 +0000 (UTC)
+        id S1727883AbgLWCWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:22:50 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 19B07229C5;
+        Wed, 23 Dec 2020 02:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690160;
-        bh=/458adE0gXv2aGVuKXeQDvGxAqn2ggSrCHf/FwV4Qy0=;
+        s=k20201202; t=1608690154;
+        bh=jj12FkQoKdOsjodKgFghRoRXbFYraxlQmHt9i8P2mrI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=q2wJOiNO7E8zAmCcZ+jK6uC9aIuyavucronRzCwAHxS0PPWjgNDtFLc+o13h5IZq5
-         1SpJ8I0ZCTWfMqL5btluOVgwtSPzhF1brSGLwQqiR8yxZYE12J/yZhMWOh3Yv1GgqP
-         CInM38Tm4hsVer0fmScMDn/6rRD8SyELfJccuDBS6CGfbo2C0hB06NrM9kieNroz3C
-         5CsD9TgXwsmMss1zffr6xLGdTAgl1UlcK1thEYuXm1u3Xf+1xbOdZwzdlphvPSEzf4
-         D9yVgbcoZjZnVimskAM6scyDLwCAOMQMoL1F+dJZt0Uoi4xEsTiPfS76yY7QSF++d0
-         YO1jQSTQUtHKw==
+        b=kQwO6kSt9kH4OcgIzIUEiV7GjbxK/lD6lUjZEjlAmC5WAJy9YR4oHVhWRXAojy7JW
+         svWjoH5chvSHyXD8RaPQ2Q3GVEB92L9isoEpW31iqAMTbI2qsTq1aDFX/ILEuqFZKd
+         fn6dVqo8huEhl5P/rPgxhefC8YWFy8bv3rWJj14gRUdxA+NA2iaT2Gtsygqo2XmREV
+         QGoUsv0HPsLg70WD4MpnpP2CuSPwUZbJ5KaB8IDAJt2NGn3H9/bGcYHLfZD/zgB8L2
+         zIBV9iXhdecH7HaWLtYZRO2GzEzBjo8autDNgD0Pf6ajZIttqDCKgZjx+wI0HhGOzj
+         MLXSxTTl0axWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 78/87] cfg80211: Save the regulatory domain when setting custom regulatory
-Date:   Tue, 22 Dec 2020 21:20:54 -0500
-Message-Id: <20201223022103.2792705-78-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 74/87] iwlwifi: add an extra firmware state in the transport
+Date:   Tue, 22 Dec 2020 21:20:50 -0500
+Message-Id: <20201223022103.2792705-74-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
 References: <20201223022103.2792705-1-sashal@kernel.org>
@@ -53,48 +52,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit beee246951571cc5452176f3dbfe9aa5a10ba2b9 ]
+[ Upstream commit b2ed841ed070ccbe908016537f429a3a8f0221bf ]
 
-When custom regulatory was set, only the channels setting was updated, but
-the regulatory domain was not saved. Fix it by saving it.
+Start tracking not just if the firmware is dead or alive,
+but also if it's starting.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201129172929.290fa5c5568a.Ic5732aa64de6ee97ae3578bd5779fc723ba489d1@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.33e50d40b688.I8bbd41af7aa5e769273a6fc1c06fbf548dd2eb26@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c7825b951f725..3427e6e4ce41c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2332,6 +2332,7 @@ static void handle_band_custom(struct wiphy *wiphy,
- void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 				   const struct ieee80211_regdomain *regd)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 675fffb39b729..b633555b0f58e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -619,12 +619,14 @@ struct iwl_trans_ops {
+ /**
+  * enum iwl_trans_state - state of the transport layer
+  *
+- * @IWL_TRANS_NO_FW: no fw has sent an alive response
+- * @IWL_TRANS_FW_ALIVE: a fw has sent an alive response
++ * @IWL_TRANS_NO_FW: firmware wasn't started yet, or crashed
++ * @IWL_TRANS_FW_STARTED: FW was started, but not alive yet
++ * @IWL_TRANS_FW_ALIVE: FW has sent an alive response
+  */
+ enum iwl_trans_state {
+-	IWL_TRANS_NO_FW = 0,
+-	IWL_TRANS_FW_ALIVE	= 1,
++	IWL_TRANS_NO_FW,
++	IWL_TRANS_FW_STARTED,
++	IWL_TRANS_FW_ALIVE,
+ };
+ 
+ /**
+@@ -833,12 +835,18 @@ static inline int iwl_trans_start_fw(struct iwl_trans *trans,
+ 				     const struct fw_img *fw,
+ 				     bool run_in_rfkill)
  {
-+	const struct ieee80211_regdomain *new_regd, *tmp;
- 	enum nl80211_band band;
- 	unsigned int bands_set = 0;
- 
-@@ -2351,6 +2352,13 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 	 * on your device's supported bands.
- 	 */
- 	WARN_ON(!bands_set);
-+	new_regd = reg_copy_regd(regd);
-+	if (IS_ERR(new_regd))
-+		return;
++	int ret;
 +
-+	tmp = get_wiphy_regdom(wiphy);
-+	rcu_assign_pointer(wiphy->regd, new_regd);
-+	rcu_free_regdom(tmp);
- }
- EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
+ 	might_sleep();
  
+ 	WARN_ON_ONCE(!trans->rx_mpdu_cmd);
+ 
+ 	clear_bit(STATUS_FW_ERROR, &trans->status);
+-	return trans->ops->start_fw(trans, fw, run_in_rfkill);
++	ret = trans->ops->start_fw(trans, fw, run_in_rfkill);
++	if (ret == 0)
++		trans->state = IWL_TRANS_FW_STARTED;
++
++	return ret;
+ }
+ 
+ static inline void _iwl_trans_stop_device(struct iwl_trans *trans,
 -- 
 2.27.0
 
