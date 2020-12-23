@@ -5,42 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDEC5C4321A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB824C43219
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F600206B6
+	by mail.kernel.org (Postfix) with ESMTP id B8115205CA
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727088AbgLWCxV (ORCPT
+        id S1731092AbgLWCxW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:53:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50010 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:53:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49690 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729256AbgLWCVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1729258AbgLWCVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 22 Dec 2020 21:21:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 27AE22333F;
-        Wed, 23 Dec 2020 02:20:33 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 890F0225AB;
+        Wed, 23 Dec 2020 02:20:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690034;
-        bh=YeXqw5xi1gALHucOZiATwzeu2KtvzLknT2hatzq7bZI=;
+        s=k20201202; t=1608690055;
+        bh=o+1RjxRe1FBsODrZ9EI+1ezlVWFVys7WHHVS8yBV1As=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TkHJZ8gxzlazvdp4BI+7vmN7wjbEsZrDT+bZfoUkPrtQJecMU7Zz9Keirgxul7D6H
-         tROLPPeWCNPZAybz2Xh7JCgiqQdyWRYnHNQnMFN4JqfJONVe/So4BUsZd2vhYlBbAn
-         p8dNybUauqy66yjomOyCIryf3OomNCPGs6WZYIe7bw3B9yKaXXCMBiZRVFfOTaGT+G
-         aIJFWgGIKzSuPwFxtXpL4oiObmJ5mMttERJEWVS1/4bA8fgD8NzU3cb+Qe6L105tCf
-         WL3fFXuqV7uAWAwvLSftq1CrODfoRtLbk7s80tCtcpdB2ZXknmMSwnmueH+QQ8Sb8m
-         0vBzH2hCyldsA==
+        b=hY8qtndb7MhH6d5LB2wv0GkVsVUE8OvAXyK4/z9lL8nbSsz2Tm8OJ345cdlX6Vxq6
+         5ROiJQ+UWZQDcBiWvexL6wUYGFUnGtHOQ1PfPPfhRdks6FJrjrtgpy8Hq9ocXEGi6c
+         rW2GW7yO85JAb2WfL/+WdTo0drTbrhMpGpXpGmfcd9vxWZROeEc3kiUWiMO+wRLJk3
+         pOj90+RIZF8kaeA0QVCHz5O2lMGl8ijsE8cqESbI4uAmAMBRcnHLkwzvPW9J2JxqJC
+         ouHZSnTEFZJTFn2Q+CvM1SqX+2TzH1QadzeUjW0Ra1anCSboWQ/8oYeRF7STBG88vy
+         Bu2uTcpwJBOiA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 109/130] iwlwifi: mvm: fix 22000 series driver NMI
-Date:   Tue, 22 Dec 2020 21:17:52 -0500
-Message-Id: <20201223021813.2791612-109-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 125/130] mac80211: Update rate control on channel change
+Date:   Tue, 22 Dec 2020 21:18:08 -0500
+Message-Id: <20201223021813.2791612-125-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -52,54 +53,141 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 9e8338ad17eb8976edd5d2def516e4b3346a4470 ]
+[ Upstream commit 44b72ca8163b8cf94384a11fdec716f5478411bf ]
 
-For triggering an NMI in the firmware, we should only set BIT(24)
-in the corresponding register, not the entire mask that's usable
-by the driver.
+A channel change or a channel bandwidth change can impact the
+rate control logic. However, the rate control logic was not updated
+before/after such a change, which might result in unexpected
+behavior.
 
-This currently doesn't matter because the firmware only enables
-BIT(24), but we'll start using BIT(25) for other purposes with an
-upcoming API change.
+Fix this by updating the stations rate control logic when the
+corresponding channel context changes.
 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.600d967fe3c9.I48305f25cfcc9c032c77c51396e9e9b882748a86@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201209231352.2f982365d085.Id09daabfd331ba9e120abcbbedd2ad6448902ed0@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/chan.c | 61 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index 1b7414bf7bef2..2144c1f745337 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -309,7 +309,7 @@ void iwl_force_nmi(struct iwl_trans *trans)
- 			       DEVICE_SET_NMI_VAL_DRV);
- 	else if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
--				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK);
-+				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
- 	else
- 		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
- 				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 23c25a7665f27..80b3fca8f2328 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -111,7 +111,7 @@
- #define DEVICE_SET_NMI_VAL_DRV BIT(7)
- /* Device NMI register and value for 9000 family and above hw's */
- #define UREG_NIC_SET_NMI_DRIVER 0x00a05c10
--#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK 0xff000000
-+#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER BIT(24)
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index aae4b36dd78d1..4f0d676e6e2c1 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -9,6 +9,7 @@
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
++#include "rate.h"
  
- /* Shared registers (0x0..0x3ff, via target indirect or periphery */
- #define SHR_BASE	0x00a10000
+ static int ieee80211_chanctx_num_assigned(struct ieee80211_local *local,
+ 					  struct ieee80211_chanctx *ctx)
+@@ -340,10 +341,42 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
+ 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_MIN_WIDTH);
+ }
+ 
++static void ieee80211_chan_bw_change(struct ieee80211_local *local,
++				     struct ieee80211_chanctx *ctx)
++{
++	struct sta_info *sta;
++	struct ieee80211_supported_band *sband =
++		local->hw.wiphy->bands[ctx->conf.def.chan->band];
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list,
++				list) {
++		enum ieee80211_sta_rx_bandwidth new_sta_bw;
++
++		if (!ieee80211_sdata_running(sta->sdata))
++			continue;
++
++		if (rcu_access_pointer(sta->sdata->vif.chanctx_conf) !=
++		    &ctx->conf)
++			continue;
++
++		new_sta_bw = ieee80211_sta_cur_vht_bw(sta);
++		if (new_sta_bw == sta->sta.bandwidth)
++			continue;
++
++		sta->sta.bandwidth = new_sta_bw;
++		rate_control_rate_update(local, sband, sta,
++					 IEEE80211_RC_BW_CHANGED);
++	}
++	rcu_read_unlock();
++}
++
+ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 				     struct ieee80211_chanctx *ctx,
+ 				     const struct cfg80211_chan_def *chandef)
+ {
++	enum nl80211_chan_width width;
++
+ 	if (cfg80211_chandef_identical(&ctx->conf.def, chandef)) {
+ 		ieee80211_recalc_chanctx_min_def(local, ctx);
+ 		return;
+@@ -351,7 +384,25 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 
+ 	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
+ 
++	width = ctx->conf.def.width;
+ 	ctx->conf.def = *chandef;
++
++	/* expected to handle only 20/40/80/160 channel widths */
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++	case NL80211_CHAN_WIDTH_40:
++	case NL80211_CHAN_WIDTH_80:
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++		break;
++	default:
++		WARN_ON(1);
++	}
++
++	if (chandef->width < width)
++		ieee80211_chan_bw_change(local, ctx);
++
+ 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_WIDTH);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+@@ -359,6 +410,9 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 		local->_oper_chandef = *chandef;
+ 		ieee80211_hw_config(local, 0);
+ 	}
++
++	if (chandef->width > width)
++		ieee80211_chan_bw_change(local, ctx);
+ }
+ 
+ static struct ieee80211_chanctx *
+@@ -1041,8 +1095,14 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(!chandef))
+ 		return -EINVAL;
+ 
++	if (old_ctx->conf.def.width > new_ctx->conf.def.width)
++		ieee80211_chan_bw_change(local, new_ctx);
++
+ 	ieee80211_change_chanctx(local, new_ctx, chandef);
+ 
++	if (old_ctx->conf.def.width < new_ctx->conf.def.width)
++		ieee80211_chan_bw_change(local, new_ctx);
++
+ 	vif_chsw[0].vif = &sdata->vif;
+ 	vif_chsw[0].old_ctx = &old_ctx->conf;
+ 	vif_chsw[0].new_ctx = &new_ctx->conf;
+@@ -1433,6 +1493,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 		ieee80211_recalc_smps_chanctx(local, ctx);
+ 		ieee80211_recalc_radar_chanctx(local, ctx);
+ 		ieee80211_recalc_chanctx_min_def(local, ctx);
++		ieee80211_chan_bw_change(local, ctx);
+ 
+ 		list_for_each_entry_safe(sdata, sdata_tmp, &ctx->reserved_vifs,
+ 					 reserved_chanctx_list) {
 -- 
 2.27.0
 
