@@ -2,125 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-24.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35221C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF84C43331
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DFFB20705
+	by mail.kernel.org (Postfix) with ESMTP id 4B2FD20705
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731716AbgLWDEK (ORCPT
+        id S1728818AbgLWDEP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
+        Tue, 22 Dec 2020 22:04:15 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:30481 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731718AbgLWDEK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 22 Dec 2020 22:04:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46424 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728611AbgLWCTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:19:24 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5F47B23340;
-        Wed, 23 Dec 2020 02:18:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689923;
-        bh=g91U7yPyMHEYKX3YE/NWQ4eODxOH5znFdldeJSG4I8w=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dvzoYuIVdo3kh73CFa7LvSHBN0LhCoI1YIqy4mn8BH6XuRc8fbpgjWup2V3dfzbBw
-         Nyjkc//9hN3OuCRGY3qSwU3X0S/LKJXawktEO4i1XQlLRI4t1TZGXaBSQUH0/BLoxh
-         xDlWB6uLitygYPILjD/+LIEvt/fEjdj1mRIGXXdEO+nuGgNrspv9C/a7bmSfp4Jamv
-         UuZgIY+XFUt2HXhHPJ0v+m5ZFOSbHeOl/pZwf9oHtyeYTd66yJlt5xGpa+cruGUc8B
-         GkzIqHGTyEmEjlyLlEPmfTmqn9u8a7OL20z7a+PXp3j3oV4J25i3a9Zj0yes/ODevl
-         gNtHzX6lNc6Cg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marek Vasut <marex@denx.de>, Angus Ainslie <angus@akkea.ca>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Martin Kepplinger <martink@posteo.de>,
-        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 023/130] rsi: Fix TX EAPOL packet handling against iwlwifi AP
-Date:   Tue, 22 Dec 2020 21:16:26 -0500
-Message-Id: <20201223021813.2791612-23-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
-References: <20201223021813.2791612-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1608692626; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=I1QNljUE58AFHH2SABSXPPFW7q2xOYSS3wHHUKO0u2A=; b=AtchYFDU/5d622JraGE4+rAuHSsrOT6esEi3BoN+sCdWneX1Cc8Ev2cAFmNlVqQU4XhWrS9k
+ zs17gUCv1Fi8buXG9NwpKy4Vk/eTpuFJpZY9aNecgVFFkJjk7du0G/l/lfVIsdAq+WE580fJ
+ iz+8SJVplPq3S7TopfmzEiUsT8c=
+X-Mailgun-Sending-Ip: 198.61.254.31
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
+ 5fe2b351cfe5dd67db33bda6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 03:02:41
+ GMT
+Sender: cjhuang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 72BD7C433ED; Wed, 23 Dec 2020 03:02:41 +0000 (UTC)
+Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cjhuang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E9B6C43466;
+        Wed, 23 Dec 2020 03:02:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E9B6C43466
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
+From:   Carl Huang <cjhuang@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] ath11k: do not restore ASPM in case of single MSI vector
+Date:   Tue, 22 Dec 2020 22:02:25 -0500
+Message-Id: <20201223030225.2345-7-cjhuang@codeaurora.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201223030225.2345-1-cjhuang@codeaurora.org>
+References: <20201223030225.2345-1-cjhuang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Marek Vasut <marex@denx.de>
+For single MSI vector, ath11k doesn't restore ASPM as the MHI
+register reading in M2 causes system hung.
 
-[ Upstream commit 65277100caa2f2c62b6f3c4648b90d6f0435f3bc ]
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
-In case RSI9116 SDIO WiFi operates in STA mode against Intel 9260 in AP mode,
-the association fails. The former is using wpa_supplicant during association,
-the later is set up using hostapd:
-
-iwl$ cat hostapd.conf
-interface=wlp1s0
-ssid=test
-country_code=DE
-hw_mode=g
-channel=1
-wpa=2
-wpa_passphrase=test
-wpa_key_mgmt=WPA-PSK
-iwl$ hostapd -d hostapd.conf
-
-rsi$ wpa_supplicant -i wlan0 -c <(wpa_passphrase test test)
-
-The problem is that the TX EAPOL data descriptor RSI_DESC_REQUIRE_CFM_TO_HOST
-flag and extended descriptor EAPOL4_CONFIRM frame type are not set in case the
-AP is iwlwifi, because in that case the TX EAPOL packet is 2 bytes shorter.
-
-The downstream vendor driver has this change in place already [1], however
-there is no explanation for it, neither is there any commit history from which
-such explanation could be obtained.
-
-[1] https://github.com/SiliconLabs/RS911X-nLink-OSD/blob/master/rsi/rsi_91x_hal.c#L238
-
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Angus Ainslie <angus@akkea.ca>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lee Jones <lee.jones@linaro.org>
-Cc: Martin Kepplinger <martink@posteo.de>
-Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
-Cc: Siva Rebbagondla <siva8118@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20201015111616.429220-1-marex@denx.de
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_hal.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/pci.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 6f8d5f9a9f7e6..a07304405b2cc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -248,7 +248,8 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 			rsi_set_len_qno(&data_desc->len_qno,
- 					(skb->len - FRAME_DESC_SZ),
- 					RSI_WIFI_MGMT_Q);
--		if ((skb->len - header_size) == EAPOL4_PACKET_LEN) {
-+		if (((skb->len - header_size) == EAPOL4_PACKET_LEN) ||
-+		    ((skb->len - header_size) == EAPOL4_PACKET_LEN - 2)) {
- 			data_desc->misc_flags |=
- 				RSI_DESC_REQUIRE_CFM_TO_HOST;
- 			xtend_desc->confirm_frame_type = EAPOL4_CONFIRM;
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index a120d7c..8c6147b 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -1119,7 +1119,11 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+ 
+ 	set_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+ 
+-	ath11k_pci_aspm_restore(ab_pci);
++	/* TODO: fo now don't restore ASPM in case of single MSI
++	 * vector as MHI register reading in M2 causes system hang.
++	 */
++	if (ab_pci->vectors_32_capability)
++		ath11k_pci_aspm_restore(ab_pci);
+ 	ab->ce_irq_enabled_flag = true;
+ 
+ 	ath11k_pci_ce_irqs_enable(ab);
 -- 
-2.27.0
+2.7.4
 
