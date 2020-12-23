@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 658F5C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6B2C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B7122312E
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 138D922248
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:27:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730517AbgLWCZb (ORCPT
+        id S1730937AbgLWC0n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:25:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54924 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:26:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57242 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730461AbgLWCZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:25:30 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECA2A22D73;
-        Wed, 23 Dec 2020 02:25:09 +0000 (UTC)
+        id S1729948AbgLWC0m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:26:42 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 310EF23137;
+        Wed, 23 Dec 2020 02:26:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690310;
-        bh=NAXQDPM0ggw6+a4mpqlnVLPsMaR+G36xtopOYlKY85U=;
+        s=k20201202; t=1608690362;
+        bh=nOeGnM47NXqzixNLe4qRw94NmxKNh/WvY0n7mshNCpc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e9rMJjWiAykIX7VHmPcD6VWru3w68AvXz88LBSReBmHu+YBm9zeJvQPxupzxb2MJ+
-         bhK9BjF7+Yh8KkJM/E1Qv2e3Lv8n60OWOZ339badpI17jzUHiwVLKODgs5fbvt/+np
-         Vz4xYs9yFyI4xXtHu7fsq1PQl636KXu+vgTEcXfYmh90vwhcrEAkezNOI+NHMTnu1K
-         LwUC6A2l/ZWqRuTMBK0Gx4epXxTjdidUqqG/tYhp25QouJhsRKnTvlcHNbAqK8zVcJ
-         PIGHgFS47XYLfak7zLmERebQKjDZiSnhj0FhRzHgewY5u9lCeRuGYX+tBUw0uatSdn
-         FUt6ZikNWPGBw==
+        b=cTe+MUsjCdvjW/wLOIkSygxMajmY/DVXU7vomAMWqpzGXMepaxXiL5GBkZ1r67WJB
+         9IUYkhpW16+iC+trYBHeVMBr+oV3otpWnBRJEtc7QTd4SBGTpFY+qIhgfVCAX+g+FA
+         T2UbepnDCHx2ESwpZn9PCc+UECecFDpxNZp4sUOBiVn/hvPWl0aAPK947v/xaKP6E3
+         WJwngpxaZa6eql52OhUiuSBbqvycruTZow+G4zjeeypxT5HhVoF0B1vHD5dWh0iEZX
+         mFD+QzNOsk9ahAFJDrUrOmn0Wk10z4WbTMiDpgof6MWEQys0zYoJq1hQQB1tlq3b28
+         qp+tllqtOBApw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 44/48] mac80211: Fix calculation of minimal channel width
-Date:   Tue, 22 Dec 2020 21:24:12 -0500
-Message-Id: <20201223022417.2794032-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 36/38] mac80211: don't filter out beacons once we start CSA
+Date:   Tue, 22 Dec 2020 21:25:14 -0500
+Message-Id: <20201223022516.2794471-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
-References: <20201223022417.2794032-1-sashal@kernel.org>
+In-Reply-To: <20201223022516.2794471-1-sashal@kernel.org>
+References: <20201223022516.2794471-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,70 +53,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit bbf31e88df2f5da20ce613c340ce508d732046b3 ]
+[ Upstream commit 189a164d0fc6c59a22c4486d641d0a0a0d33387a ]
 
-When calculating the minimal channel width for channel context,
-the current operation Rx channel width of a station was used and not
-the overall channel width capability of the station, i.e., both for
-Tx and Rx.
+I hit a bug in which we started a CSA with an action frame,
+but the AP changed its mind and didn't change the beacon.
+The CSA wasn't cancelled and we lost the connection.
 
-Fix ieee80211_get_sta_bw() to use the maximal channel width the
-station is capable. While at it make the function static.
+The beacons were ignored because they never changed: they
+never contained any CSA IE. Because they never changed, the
+CRC of the beacon didn't change either which made us ignore
+the beacons instead of processing them.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Now what happens is:
+1) beacon has CRC X and it is valid. No CSA IE in the beacon
+2) as long as beacon's CRC X, don't process their IEs
+3) rx action frame with CSA
+4) invalidate the beacon's CRC
+5) rx beacon, CRC is still X, but now it is invalid
+6) process the beacon, detect there is no CSA IE
+7) abort CSA
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201206145305.4387040b99a0.I74bcf19238f75a5960c4098b10e355123d933281@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.83470b8407e6.I739b907598001362744692744be15335436b8351@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/chan.c        | 10 ++++++----
- net/mac80211/ieee80211_i.h |  1 -
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ net/mac80211/mlme.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a0d901d8992ea..48b60b53ff3ff 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -190,11 +190,13 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
- 	return NULL;
- }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6a94b14817471..7b9766998c105 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1296,6 +1296,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	sdata->csa_chandef = csa_ie.chandef;
+ 	sdata->csa_block_tx = csa_ie.mode;
+ 	ifmgd->csa_ignored_same_chan = false;
++	ifmgd->beacon_crc_valid = false;
  
--enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
-+static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta)
- {
--	switch (sta->bandwidth) {
-+	enum ieee80211_sta_rx_bandwidth width = ieee80211_sta_cap_rx_bw(sta);
-+
-+	switch (width) {
- 	case IEEE80211_STA_RX_BW_20:
--		if (sta->ht_cap.ht_supported)
-+		if (sta->sta.ht_cap.ht_supported)
- 			return NL80211_CHAN_WIDTH_20;
- 		else
- 			return NL80211_CHAN_WIDTH_20_NOHT;
-@@ -231,7 +233,7 @@ ieee80211_get_max_required_bw(struct ieee80211_sub_if_data *sdata)
- 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
- 			continue;
- 
--		max_bw = max(max_bw, ieee80211_get_sta_bw(&sta->sta));
-+		max_bw = max(max_bw, ieee80211_get_sta_bw(sta));
- 	}
- 	rcu_read_unlock();
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0b0de3030e0dc..15d9a61d20116 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2102,7 +2102,6 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 				 enum ieee80211_chanctx_mode chanmode,
- 				 u8 radar_detect);
- int ieee80211_max_num_channels(struct ieee80211_local *local);
--enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta);
- void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
- 				       struct ieee80211_chanctx *ctx);
- 
+ 	if (sdata->csa_block_tx)
+ 		ieee80211_stop_vif_queues(local, sdata,
 -- 
 2.27.0
 
