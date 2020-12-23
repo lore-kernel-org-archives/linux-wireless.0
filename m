@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB824C43219
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 221F6C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8115205CA
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE6E1205CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731092AbgLWCxW (ORCPT
+        id S1729235AbgLWCVJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:53:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49690 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:21:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45492 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729258AbgLWCVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:21:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 890F0225AB;
-        Wed, 23 Dec 2020 02:20:54 +0000 (UTC)
+        id S1729220AbgLWCVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:21:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 97D3622248;
+        Wed, 23 Dec 2020 02:20:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690055;
-        bh=o+1RjxRe1FBsODrZ9EI+1ezlVWFVys7WHHVS8yBV1As=;
+        s=k20201202; t=1608690051;
+        bh=YwjFq9eQoOMILFRZBYqTpmj9LvL2hqjEzS9MxOIB9DQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hY8qtndb7MhH6d5LB2wv0GkVsVUE8OvAXyK4/z9lL8nbSsz2Tm8OJ345cdlX6Vxq6
-         5ROiJQ+UWZQDcBiWvexL6wUYGFUnGtHOQ1PfPPfhRdks6FJrjrtgpy8Hq9ocXEGi6c
-         rW2GW7yO85JAb2WfL/+WdTo0drTbrhMpGpXpGmfcd9vxWZROeEc3kiUWiMO+wRLJk3
-         pOj90+RIZF8kaeA0QVCHz5O2lMGl8ijsE8cqESbI4uAmAMBRcnHLkwzvPW9J2JxqJC
-         ouHZSnTEFZJTFn2Q+CvM1SqX+2TzH1QadzeUjW0Ra1anCSboWQ/8oYeRF7STBG88vy
-         Bu2uTcpwJBOiA==
+        b=AuicxnknObDioFiQZkaCG0Vrdr6+rEYwJvrX8NYGAcgrqyy3Wd4ZGimX32INahoTL
+         JZMKtE9xLYTHmFwSsL4b51iG1c1jkJnNhfOSjSdUDjKGbxIr8/SJuXfdJOS3GYl5MS
+         vsIDI0M8dRDI+Qb4ujjsBLNudiDESL0mpx51VheXAAVCU6LtqWzRG8NegeIpqG+Daw
+         NdJzBUff4eOH9U2L+8OOM/k5LZrCQQL8EJS1nrrH8ARG+ZIX8b1U3ODVzFb+S73UDr
+         2yybu3uAktmSBRd7b8WMOOLL0RChc+jK++XYzYB24LNBhQCAkogOUEgTC5ZRHKZi+L
+         czPxAlRGNTfDg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 125/130] mac80211: Update rate control on channel change
-Date:   Tue, 22 Dec 2020 21:18:08 -0500
-Message-Id: <20201223021813.2791612-125-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 122/130] mac80211: ignore country element TX power on 6 GHz
+Date:   Tue, 22 Dec 2020 21:18:05 -0500
+Message-Id: <20201223021813.2791612-122-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -53,141 +52,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 44b72ca8163b8cf94384a11fdec716f5478411bf ]
+[ Upstream commit 2dedfe1dbdf27ac344584ed03c3876c85d2779fb ]
 
-A channel change or a channel bandwidth change can impact the
-rate control logic. However, the rate control logic was not updated
-before/after such a change, which might result in unexpected
-behavior.
+Updates to the 802.11ax draft are coming that deprecate the
+country element in favour of the transmit power envelope
+element, and make the maximum transmit power level field in
+the triplets reserved, so if we parse them we'd use 0 dBm
+transmit power.
 
-Fix this by updating the stations rate control logic when the
-corresponding channel context changes.
+Follow suit and completely ignore the element on 6 GHz for
+purposes of determining TX power.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201206145305.600d967fe3c9.I48305f25cfcc9c032c77c51396e9e9b882748a86@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.9abf9f6b4f88.Icb6e52af586edcc74f1f0360e8f6fc9ef2bfe8f5@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/chan.c | 61 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
+ net/mac80211/mlme.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index aae4b36dd78d1..4f0d676e6e2c1 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -9,6 +9,7 @@
- #include <net/cfg80211.h>
- #include "ieee80211_i.h"
- #include "driver-ops.h"
-+#include "rate.h"
- 
- static int ieee80211_chanctx_num_assigned(struct ieee80211_local *local,
- 					  struct ieee80211_chanctx *ctx)
-@@ -340,10 +341,42 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
- 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_MIN_WIDTH);
- }
- 
-+static void ieee80211_chan_bw_change(struct ieee80211_local *local,
-+				     struct ieee80211_chanctx *ctx)
-+{
-+	struct sta_info *sta;
-+	struct ieee80211_supported_band *sband =
-+		local->hw.wiphy->bands[ctx->conf.def.chan->band];
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list,
-+				list) {
-+		enum ieee80211_sta_rx_bandwidth new_sta_bw;
-+
-+		if (!ieee80211_sdata_running(sta->sdata))
-+			continue;
-+
-+		if (rcu_access_pointer(sta->sdata->vif.chanctx_conf) !=
-+		    &ctx->conf)
-+			continue;
-+
-+		new_sta_bw = ieee80211_sta_cur_vht_bw(sta);
-+		if (new_sta_bw == sta->sta.bandwidth)
-+			continue;
-+
-+		sta->sta.bandwidth = new_sta_bw;
-+		rate_control_rate_update(local, sband, sta,
-+					 IEEE80211_RC_BW_CHANGED);
-+	}
-+	rcu_read_unlock();
-+}
-+
- static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 				     struct ieee80211_chanctx *ctx,
- 				     const struct cfg80211_chan_def *chandef)
- {
-+	enum nl80211_chan_width width;
-+
- 	if (cfg80211_chandef_identical(&ctx->conf.def, chandef)) {
- 		ieee80211_recalc_chanctx_min_def(local, ctx);
- 		return;
-@@ -351,7 +384,25 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 
- 	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
- 
-+	width = ctx->conf.def.width;
- 	ctx->conf.def = *chandef;
-+
-+	/* expected to handle only 20/40/80/160 channel widths */
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_40:
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+
-+	if (chandef->width < width)
-+		ieee80211_chan_bw_change(local, ctx);
-+
- 	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_WIDTH);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
-@@ -359,6 +410,9 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 		local->_oper_chandef = *chandef;
- 		ieee80211_hw_config(local, 0);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 236ddc6b891c2..ba1e5cac32adb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1487,6 +1487,15 @@ ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_BAND_5GHZ:
+ 		chan_increment = 4;
+ 		break;
++	case NL80211_BAND_6GHZ:
++		/*
++		 * In the 6 GHz band, the "maximum transmit power level"
++		 * field in the triplets is reserved, and thus will be
++		 * zero and we shouldn't use it to control TX power.
++		 * The actual TX power will be given in the transmit
++		 * power envelope element instead.
++		 */
++		return false;
  	}
-+
-+	if (chandef->width > width)
-+		ieee80211_chan_bw_change(local, ctx);
- }
  
- static struct ieee80211_chanctx *
-@@ -1041,8 +1095,14 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- 	if (WARN_ON(!chandef))
- 		return -EINVAL;
- 
-+	if (old_ctx->conf.def.width > new_ctx->conf.def.width)
-+		ieee80211_chan_bw_change(local, new_ctx);
-+
- 	ieee80211_change_chanctx(local, new_ctx, chandef);
- 
-+	if (old_ctx->conf.def.width < new_ctx->conf.def.width)
-+		ieee80211_chan_bw_change(local, new_ctx);
-+
- 	vif_chsw[0].vif = &sdata->vif;
- 	vif_chsw[0].old_ctx = &old_ctx->conf;
- 	vif_chsw[0].new_ctx = &new_ctx->conf;
-@@ -1433,6 +1493,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
- 		ieee80211_recalc_smps_chanctx(local, ctx);
- 		ieee80211_recalc_radar_chanctx(local, ctx);
- 		ieee80211_recalc_chanctx_min_def(local, ctx);
-+		ieee80211_chan_bw_change(local, ctx);
- 
- 		list_for_each_entry_safe(sdata, sdata_tmp, &ctx->reserved_vifs,
- 					 reserved_chanctx_list) {
+ 	/* find channel */
 -- 
 2.27.0
 
