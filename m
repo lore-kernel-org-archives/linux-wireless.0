@@ -2,77 +2,149 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D01C4361A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73024C43142
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DF2E20757
+	by mail.kernel.org (Postfix) with ESMTP id 4E1B020705
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731483AbgLWDDq (ORCPT
+        id S1731586AbgLWDDv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 22:03:46 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:21764 "EHLO
+        Tue, 22 Dec 2020 22:03:51 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:57490 "EHLO
         m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728836AbgLWDDo (ORCPT
+        with ESMTP id S1731572AbgLWDDs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 22:03:44 -0500
+        Tue, 22 Dec 2020 22:03:48 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608692604; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=hFxlRqc3Z8RzSFW+LMfGZdI3yBx375LII+pbIEEeRvI=; b=NFevUgkPHl/NRX7kxPRSYnidHVF6JIz3qHUBkvIVUldObkeyW8lyP0uu7Y4m9Y1Eds1PEAh/
- S+9XKO55RL+pKkzsJTd89NdCtIBUj6+FpCwz7TuZQkH/oqIQVfsT8Azf33kyK7EaZLyrdP54
- b2ywIDVQy35cBdws5TEnpNTiwvs=
+ s=smtp; t=1608692603; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=ot/0oZtbqe97y4llOrqDK7mhoYrcCMKkAUi3OEmnWu8=; b=sEhE7EuNsnmBI/NebvU3uQXgTXGUIRtcUWeErjwCgIywqz6WtRspfdmhxZ5ZOAjvvsB/68nY
+ EWrCttvfbEG/Xe6Y9jzUoBR4N4wvUCMtW0UflIY3ihTQaPAo0x/LQKbKYr22eM4+yISeX4mA
+ h+Vkcb2eoUBjtaotUdqxNBmwvCg=
 X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5fe2b34a7036173f4f70901a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 03:02:34
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 5fe2b34db00c0d7ad4a75f98 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 03:02:37
  GMT
 Sender: cjhuang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 86DDAC433ED; Wed, 23 Dec 2020 03:02:33 +0000 (UTC)
+        id 4114FC433C6; Wed, 23 Dec 2020 03:02:36 +0000 (UTC)
 Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cjhuang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7176CC433C6;
-        Wed, 23 Dec 2020 03:02:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7176CC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0FBB0C43461;
+        Wed, 23 Dec 2020 03:02:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0FBB0C43461
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
 From:   Carl Huang <cjhuang@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] ath11k: support one MSI vector
-Date:   Tue, 22 Dec 2020 22:02:19 -0500
-Message-Id: <20201223030225.2345-1-cjhuang@codeaurora.org>
+Subject: [PATCH 2/6] ath11k: add ce and ext irq flag to indicate irq_handler
+Date:   Tue, 22 Dec 2020 22:02:21 -0500
+Message-Id: <20201223030225.2345-3-cjhuang@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201223030225.2345-1-cjhuang@codeaurora.org>
+References: <20201223030225.2345-1-cjhuang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch set is to support one MSI vector for QCA6390.
+This change adds two flags to indicate whether irq handler for CE
+and dp can be called. This is because in one MSI vector case,
+interrupt is not disabled in hif_stop and hif_irq_disable. Otherwise,
+MHI interrupt is disabled too.
 
-Carl Huang (6):
-  ath11k: get msi_data again after request_irq is called
-  ath11k: add ce and ext irq flag to indicate irq_handler
-  ath11k: use ATH11K_PCI_IRQ_DP_OFFSET for dp irqx
-  ath11k: refactor mulitple msi vector implementation
-  ath11k: supports one MSI vector
-  ath11k: do not restore ASPM in case of single MSI vector
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
- drivers/net/wireless/ath/ath11k/core.h |   2 +
- drivers/net/wireless/ath/ath11k/mhi.c  |  13 ++-
- drivers/net/wireless/ath/ath11k/pci.c  | 200 +++++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath11k/pci.h  |   8 ++
- 4 files changed, 189 insertions(+), 34 deletions(-)
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/core.h |  2 ++
+ drivers/net/wireless/ath/ath11k/pci.c  | 13 +++++++++++++
+ 2 files changed, 15 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 799bf3d..3dacca5 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -741,6 +741,8 @@ struct ath11k_base {
+ 
+ 	struct completion htc_suspend;
+ 
++	bool ce_irq_enabled_flag;
++	bool ext_irq_enabled_flag;
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index c1ae1df..deb2d47 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -487,6 +487,8 @@ static void ath11k_pci_ce_irqs_disable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
++	ab->ce_irq_enabled_flag = false;
++
+ 	for (i = 0; i < ab->hw_params.ce_count; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+@@ -521,6 +523,9 @@ static irqreturn_t ath11k_pci_ce_interrupt_handler(int irq, void *arg)
+ {
+ 	struct ath11k_ce_pipe *ce_pipe = arg;
+ 
++	if (!ab->ce_irq_enabled_flag)
++		return IRQ_HANDLED;
++
+ 	ath11k_pci_ce_irq_disable(ce_pipe->ab, ce_pipe->pipe_num);
+ 	tasklet_schedule(&ce_pipe->intr_tq);
+ 
+@@ -539,6 +544,8 @@ static void __ath11k_pci_ext_irq_disable(struct ath11k_base *sc)
+ {
+ 	int i;
+ 
++	ab->ext_irq_enabled_flag = false;
++
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath11k_ext_irq_grp *irq_grp = &sc->ext_irq_grp[i];
+ 
+@@ -561,6 +568,8 @@ static void ath11k_pci_ext_irq_enable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
++	ab->ext_irq_enabled_flag = true;
++
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 
+@@ -613,6 +622,9 @@ static irqreturn_t ath11k_pci_ext_interrupt_handler(int irq, void *arg)
+ {
+ 	struct ath11k_ext_irq_grp *irq_grp = arg;
+ 
++	if (!irq_grp->ab->ext_irq_enabled_flag)
++		return IRQ_HANDLED;
++
+ 	ath11k_dbg(irq_grp->ab, ATH11K_DBG_PCI, "ext irq:%d\n", irq);
+ 
+ 	ath11k_pci_ext_grp_disable(irq_grp);
+@@ -1026,6 +1038,7 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+ 	set_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+ 
+ 	ath11k_pci_aspm_restore(ab_pci);
++	ab->ce_irq_enabled_flag = true;
+ 
+ 	ath11k_pci_ce_irqs_enable(ab);
+ 	ath11k_ce_rx_post_buf(ab);
 -- 
 2.7.4
 
