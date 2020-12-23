@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4E2C432C3
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:23:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A98C432C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3901B2222D
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:23:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8980229CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729980AbgLWCXY (ORCPT
+        id S1730474AbgLWCZW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:23:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52738 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:25:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52758 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729968AbgLWCXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:23:22 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C3138229CA;
-        Wed, 23 Dec 2020 02:22:40 +0000 (UTC)
+        id S1730461AbgLWCZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:25:21 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B9C2C22248;
+        Wed, 23 Dec 2020 02:25:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690161;
-        bh=RsKqvpTWRMGO19pQbyx25KClsdDeOiMRfeaF3Z3H4FQ=;
+        s=k20201202; t=1608690304;
+        bh=dSJT/hf9sQ4STW0fKdZkEoCl8LAygSmBoFKw60XSpeg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zt9yBpwVaWXUPrYT+jd7Tucc3F1RucF/VljzW1e1sCtv4aejKEPIXapncJN/086KE
-         fGOIuZrMiSu0gOhVEEZlBnHoMdgFC4HdAB8yuokWSiNzFj2f7iR7b3BYNr5OD0PuZ7
-         s3HxAHvqloeyjTUgcSCIppD1Rbcew/4Gskd6rTisr975MkI79dkbIWjbGU8P64ZY8r
-         65bUXJv5jXfUnBIFU7b0OoneHDiP1IdYk+/6FwA44t6saabLuMWSmgusUQqP6rZ8xD
-         GqWGovf9WgXCiBo1v1SEwSu0FVkA1P3ruqe3VQnygNUYCmmb5j3FpOR39Qk7DfARbk
-         QCQFTLpejGBrw==
+        b=I8DFRsmFrJ1gUzoiTBLpGHGTfOPN3/9GQmNT2PxCNpPReONaZyPxOBwmPNZ/DFvs7
+         KWeKVnKQM1IqN4Rr/yOp5XJz31M4puSkfQbxVZ1xspfzaFXLdWgtWfYAGiCV/7VM3H
+         cqGpqYc6HR7W4wLA5wcxZHnNEodefVS7ttOONVqNaCDb9zCFXaKTbiy2FbHZklqE0D
+         Zbs3FIKNwiWadx0EdX0crEVwsxrQcHGPBM2jNOAFQzO/hZKGoH3PyHUk1jx+jnCBxk
+         JP26esxUS+GU0T/oTag0oiR5Up618QA2EyGz+HLWoYB0U1JbrmWFDLTsq8Py0q9Uv5
+         /Ibcgm0JaeVGA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 79/87] mac80211: disallow band-switch during CSA
-Date:   Tue, 22 Dec 2020 21:20:55 -0500
-Message-Id: <20201223022103.2792705-79-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 39/48] iwlwifi: trans: consider firmware dead after errors
+Date:   Tue, 22 Dec 2020 21:24:07 -0500
+Message-Id: <20201223022417.2794032-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
-References: <20201223022103.2792705-1-sashal@kernel.org>
+In-Reply-To: <20201223022417.2794032-1-sashal@kernel.org>
+References: <20201223022417.2794032-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,67 +54,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 3660944a37ce73890292571f44f04891834f9044 ]
+[ Upstream commit 152fdc0f698896708f9d7889a4ba4da6944b74f7 ]
 
-If the AP advertises a band switch during CSA, we will not have
-the right information to continue working with it, since it will
-likely (have to) change its capabilities and we don't track any
-capability changes at all. Additionally, we store e.g. supported
-rates per band, and that information would become invalid.
+If we get an error, no longer consider the firmware to be
+in IWL_TRANS_FW_ALIVE state.
 
-Since this is a fringe scenario, just disconnect explicitly.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201129172929.0e2327107c06.I461adb07704e056b054a4a7c29b80c95a9f56637@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.a9d01e79c1c7.Ib2deb076b392fb516a7230bac91d7ab8a9586d86@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c53a332f7d65a..eb711475cb140 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1261,6 +1261,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	if (res)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 0296124a7f9cf..360554727a817 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1238,8 +1238,10 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
  		return;
  
-+	if (sdata->vif.bss_conf.chandef.chan->band !=
-+	    csa_ie.chandef.chan->band) {
-+		sdata_info(sdata,
-+			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
-+			   ifmgd->associated->bssid,
-+			   csa_ie.chandef.chan->center_freq,
-+			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
-+			   csa_ie.chandef.center_freq2);
-+		goto lock_and_drop_connection;
+ 	/* prevent double restarts due to the same erroneous FW */
+-	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status))
++	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status)) {
+ 		iwl_op_mode_nic_error(trans->op_mode);
++		trans->state = IWL_TRANS_NO_FW;
 +	}
-+
- 	if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
-@@ -1269,9 +1280,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			   csa_ie.chandef.chan->center_freq,
- 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
- 			   csa_ie.chandef.center_freq2);
--		ieee80211_queue_work(&local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		return;
-+		goto lock_and_drop_connection;
- 	}
+ }
  
- 	if (cfg80211_chandef_identical(&csa_ie.chandef,
-@@ -1361,6 +1370,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			  TU_TO_EXP_TIME((csa_ie.count - 1) *
- 					 cbss->beacon_interval));
- 	return;
-+ lock_and_drop_connection:
-+	mutex_lock(&local->mtx);
-+	mutex_lock(&local->chanctx_mtx);
-  drop_connection:
- 	/*
- 	 * This is just so that the disconnect flow will know that
+ /*****************************************************
 -- 
 2.27.0
 
