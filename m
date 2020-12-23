@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FFCC4332D
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 784ECC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F8332256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F4322256F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728187AbgLWCXE (ORCPT
+        id S1729860AbgLWCXB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:23:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51318 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:23:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49802 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729870AbgLWCXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:23:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A6BC0225AB;
-        Wed, 23 Dec 2020 02:22:44 +0000 (UTC)
+        id S1729839AbgLWCW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:22:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 101F82313F;
+        Wed, 23 Dec 2020 02:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690165;
-        bh=+q+gSVCRGwd6pCl4K2v/dH+8UUl1ZK+npmBeqtDjgck=;
+        s=k20201202; t=1608690162;
+        bh=d6XhwrcEFVTHkM6rI7NkPi4qFZlLUNkeJ5b1KvMIDso=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B+5LD3Maws5ZC/WBttyYWrHi42HsxEZd3rLspncMASS+U+yJ1jC72TeKqH8nsJYxn
-         hPRAQvXz248a7HVRjfAptYQfAwmCyixXMxn3m6Z7yjfrqwpQv376w7hscon6fJHPJo
-         9qVYVn1VTvtGXLdSMdU+FeT0KBvR2/Hxm2Sn5i/ipbaKwEAV8zo8FuIi1X6PT4zsbq
-         VkTX91q4mW8Dzl7KOEUfDraJbWqwhl6CMCzxgA3iScg991xAVsnhY+6m2E9v8NBqrW
-         iWTGWZ/fZsfcxzrzHzfdAfQTUql9KI+KRit+3pfVeT7bTh3qaGfxHzcICotV2SmX5l
-         inJFzaaNmJluA==
+        b=etO+6Jwe4uwBnyVUBqxK0fU+tzi64dxQ3IChaJI8FbtlabiRsHI9br6Pn9x75bWkz
+         O/S0WBc3K5kEeI/66/9h6Q34vX3mfWoyzz/5+EPfAf4sVKqTVfeSJws94UWji0l8O1
+         gVAkyAMOMe56N2pmovAF8bzFJKqOvpgCexKUyITPq4FXhIk0C3PFJPgjgo/7ceaw6e
+         hNBZj/5VLTrCC689LCmth3LxB6z7CbD4hsledRRRvP56aq2xIX/591ZCjOdBdmht4q
+         81lnGDb6FqBNa6j49iOPOEXsTKKt6SLzb2o1E/MMZIi2dvgD1FqqN4lepYfQY35Fmy
+         auC4Ww9GanjJw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Avraham Stern <avraham.stern@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 82/87] mac80211: Fix calculation of minimal channel width
-Date:   Tue, 22 Dec 2020 21:20:58 -0500
-Message-Id: <20201223022103.2792705-82-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 80/87] mac80211: support Rx timestamp calculation for all preamble types
+Date:   Tue, 22 Dec 2020 21:20:56 -0500
+Message-Id: <20201223022103.2792705-80-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
 References: <20201223022103.2792705-1-sashal@kernel.org>
@@ -53,70 +53,147 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-[ Upstream commit bbf31e88df2f5da20ce613c340ce508d732046b3 ]
+[ Upstream commit da3882331a55ba8c8eda0cfc077ad3b88c257e22 ]
 
-When calculating the minimal channel width for channel context,
-the current operation Rx channel width of a station was used and not
-the overall channel width capability of the station, i.e., both for
-Tx and Rx.
+Add support for calculating the Rx timestamp for HE frames.
+Since now all frame types are supported, allow setting the Rx
+timestamp regardless of the frame type.
 
-Fix ieee80211_get_sta_bw() to use the maximal channel width the
-station is capable. While at it make the function static.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201206145305.4387040b99a0.I74bcf19238f75a5960c4098b10e355123d933281@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.4786559af475.Ia54486bb0a12e5351f9d5c60ef6fcda7c9e7141c@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/chan.c        | 10 ++++++----
- net/mac80211/ieee80211_i.h |  1 -
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ net/mac80211/ieee80211_i.h |  9 ++----
+ net/mac80211/util.c        | 66 +++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 67 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index d9558ffb8acf7..b58813568c9ff 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -190,11 +190,13 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
- 	return NULL;
- }
- 
--enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
-+static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta)
- {
--	switch (sta->bandwidth) {
-+	enum ieee80211_sta_rx_bandwidth width = ieee80211_sta_cap_rx_bw(sta);
-+
-+	switch (width) {
- 	case IEEE80211_STA_RX_BW_20:
--		if (sta->ht_cap.ht_supported)
-+		if (sta->sta.ht_cap.ht_supported)
- 			return NL80211_CHAN_WIDTH_20;
- 		else
- 			return NL80211_CHAN_WIDTH_20_NOHT;
-@@ -231,7 +233,7 @@ ieee80211_get_max_required_bw(struct ieee80211_sub_if_data *sdata)
- 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
- 			continue;
- 
--		max_bw = max(max_bw, ieee80211_get_sta_bw(&sta->sta));
-+		max_bw = max(max_bw, ieee80211_get_sta_bw(sta));
- 	}
- 	rcu_read_unlock();
- 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 43edb903be693..285a541549aaa 100644
+index a879d8071712b..43edb903be693 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2165,7 +2165,6 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 				 enum ieee80211_chanctx_mode chanmode,
- 				 u8 radar_detect);
- int ieee80211_max_num_channels(struct ieee80211_local *local);
--enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta);
- void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
- 				       struct ieee80211_chanctx *ctx);
+@@ -1529,13 +1529,8 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
+ {
+ 	WARN_ON_ONCE(status->flag & RX_FLAG_MACTIME_START &&
+ 		     status->flag & RX_FLAG_MACTIME_END);
+-	if (status->flag & (RX_FLAG_MACTIME_START | RX_FLAG_MACTIME_END))
+-		return true;
+-	/* can't handle non-legacy preamble yet */
+-	if (status->flag & RX_FLAG_MACTIME_PLCP_START &&
+-	    status->encoding == RX_ENC_LEGACY)
+-		return true;
+-	return false;
++	return !!(status->flag & (RX_FLAG_MACTIME_START | RX_FLAG_MACTIME_END |
++				  RX_FLAG_MACTIME_PLCP_START));
+ }
  
+ void ieee80211_vif_inc_num_mcast(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7fa9871b1db9f..0234fae673ec2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2897,6 +2897,7 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 	u64 ts = status->mactime;
+ 	struct rate_info ri;
+ 	u16 rate;
++	u8 n_ltf;
+ 
+ 	if (WARN_ON(!ieee80211_have_rx_timestamp(status)))
+ 		return 0;
+@@ -2907,11 +2908,58 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 
+ 	/* Fill cfg80211 rate info */
+ 	switch (status->encoding) {
++	case RX_ENC_HE:
++		ri.flags |= RATE_INFO_FLAGS_HE_MCS;
++		ri.mcs = status->rate_idx;
++		ri.nss = status->nss;
++		ri.he_ru_alloc = status->he_ru;
++		if (status->enc_flags & RX_ENC_FLAG_SHORT_GI)
++			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++		/*
++		 * See P802.11ax_D6.0, section 27.3.4 for
++		 * VHT PPDU format.
++		 */
++		if (status->flag & RX_FLAG_MACTIME_PLCP_START) {
++			mpdu_offset += 2;
++			ts += 36;
++
++			/*
++			 * TODO:
++			 * For HE MU PPDU, add the HE-SIG-B.
++			 * For HE ER PPDU, add 8us for the HE-SIG-A.
++			 * For HE TB PPDU, add 4us for the HE-STF.
++			 * Add the HE-LTF durations - variable.
++			 */
++		}
++
++		break;
+ 	case RX_ENC_HT:
+ 		ri.mcs = status->rate_idx;
+ 		ri.flags |= RATE_INFO_FLAGS_MCS;
+ 		if (status->enc_flags & RX_ENC_FLAG_SHORT_GI)
+ 			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++		/*
++		 * See P802.11REVmd_D3.0, section 19.3.2 for
++		 * HT PPDU format.
++		 */
++		if (status->flag & RX_FLAG_MACTIME_PLCP_START) {
++			mpdu_offset += 2;
++			if (status->enc_flags & RX_ENC_FLAG_HT_GF)
++				ts += 24;
++			else
++				ts += 32;
++
++			/*
++			 * Add Data HT-LTFs per streams
++			 * TODO: add Extension HT-LTFs, 4us per LTF
++			 */
++			n_ltf = ((ri.mcs >> 3) & 3) + 1;
++			n_ltf = n_ltf == 3 ? 4 : n_ltf;
++			ts += n_ltf * 4;
++		}
++
+ 		break;
+ 	case RX_ENC_VHT:
+ 		ri.flags |= RATE_INFO_FLAGS_VHT_MCS;
+@@ -2919,6 +2967,23 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 		ri.nss = status->nss;
+ 		if (status->enc_flags & RX_ENC_FLAG_SHORT_GI)
+ 			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++		/*
++		 * See P802.11REVmd_D3.0, section 21.3.2 for
++		 * VHT PPDU format.
++		 */
++		if (status->flag & RX_FLAG_MACTIME_PLCP_START) {
++			mpdu_offset += 2;
++			ts += 36;
++
++			/*
++			 * Add VHT-LTFs per streams
++			 */
++			n_ltf = (ri.nss != 1) && (ri.nss % 2) ?
++				ri.nss + 1 : ri.nss;
++			ts += 4 * n_ltf;
++		}
++
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+@@ -2942,7 +3007,6 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 		ri.legacy = DIV_ROUND_UP(bitrate, (1 << shift));
+ 
+ 		if (status->flag & RX_FLAG_MACTIME_PLCP_START) {
+-			/* TODO: handle HT/VHT preambles */
+ 			if (status->band == NL80211_BAND_5GHZ) {
+ 				ts += 20 << shift;
+ 				mpdu_offset += 2;
 -- 
 2.27.0
 
