@@ -2,81 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C31C4332B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A582AC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9BAF2256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:51:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A893205CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731212AbgLWCut (ORCPT
+        id S1729277AbgLWCVQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:50:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45306 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:21:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731205AbgLWCus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:50:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 5A16122A83;
-        Wed, 23 Dec 2020 02:50:07 +0000 (UTC)
+        id S1729251AbgLWCVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:21:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 37393225AA;
+        Wed, 23 Dec 2020 02:20:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608691807;
-        bh=8VFXTEfHDGjNESRmbEEfEo5L/KJO3UHHaAHamquqEoQ=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=rzI03I4pbTjxU0N2WSCSMJpYVJX/MjsP24v1Rz3Hov6OSRHasrvk5xB7lP1XWgcQi
-         o8kwj5M8r9hAG/kpuiL4jPwc6Wd++5rdUO0aQk0cGlNZfsveEir0bpkwvUXIlcie2Q
-         kagTdULleRX29NlCW/8S5RQVUP5NbGKkfGxPnHRnmnzmBZmREcpMruFKQEktPfEJPu
-         DKRZ4X/3KnYRZ8f1WViLhyHY4WMJQlimQr53rBnRGTCRQ6RRBMvoock4DKfJDPO/ce
-         C8xtbkSckGTltbaBcD9dNZg79KnZb67uFb3urDB/eoLe9sEkEXPXCw1r0dwLsBrkud
-         Ed72tqzn1MrvQ==
-Content-Type: text/plain; charset="utf-8"
+        s=k20201202; t=1608690054;
+        bh=B6gMvVcQGWw+yIct8QLLq777HCeZBqK6uUk2SPyejB8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=cLnXRjfN8GmC9w0n2b4XtmcNiRnfOSgesQpq/UPRPAMTaicyd2wwRxxFnbrHuQqI4
+         Fnr3+enAbxKuVjQlEjpOnjwryLFNlKFNzvN/xEsPgNGnNT8qP9XSpa01eUuvHva+dP
+         0urvIgEosJ8ji/EfGtJXla62A97Y1Vqw5zvyadkEx5htoPmV6uVrnEO56Ez6PeX3DB
+         BsNjip2SOuryIHYuvR9AxywXNTQhOUKoVL7O+WlgJMkPhmwEP2xX0jjS0dqnjID4Oc
+         poZHWvAAAdpLi8TSoDwvf8lVMoxTtJGW4K9LJpox8O2vQtzTi+PzIm/S5Jp/GprabG
+         /MWBKhHoCOWWA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 124/130] mac80211: don't filter out beacons once we start CSA
+Date:   Tue, 22 Dec 2020 21:18:07 -0500
+Message-Id: <20201223021813.2791612-124-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
+References: <20201223021813.2791612-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net] MAINTAINERS: remove names from mailing list maintainers
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <160869180729.29227.5706578456404319351.git-patchwork-notify@kernel.org>
-Date:   Wed, 23 Dec 2020 02:50:07 +0000
-References: <20201219185538.750076-1-kuba@kernel.org>
-In-Reply-To: <20201219185538.750076-1-kuba@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     davem@davemloft.net, netdev@vger.kernel.org, pv-drivers@vmware.com,
-        doshir@vmware.com, UNGLinuxDriver@microchip.com,
-        steve.glendinning@shawell.net, woojung.huh@microchip.com,
-        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        drivers@pensando.io, snelson@pensando.io, vladimir.oltean@nxp.com,
-        claudiu.manoil@nxp.com, alexandre.belloni@bootlin.com,
-        bryan.whitehead@microchip.com, o.rempel@pengutronix.de,
-        kernel@pengutronix.de, robin@protonic.nl, hkallweit1@gmail.com,
-        nic_swsd@realtek.com, lars.povlsen@microchip.com,
-        Steen.Hegelund@microchip.com, linux-kernel@vger.kernel.org,
-        corbet@lwn.net
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch was applied to netdev/net.git (refs/heads/master):
+[ Upstream commit 189a164d0fc6c59a22c4486d641d0a0a0d33387a ]
 
-On Sat, 19 Dec 2020 10:55:38 -0800 you wrote:
-> When searching for inactive maintainers it's useful to filter
-> out mailing list addresses. Such "maintainers" will obviously
-> never feature in a "From:" line of an email or a review tag.
-> 
-> Since "L:" entries only provide the address of a mailing list
-> without a fancy name extend this pattern to "M:" entries.
-> 
-> [...]
+I hit a bug in which we started a CSA with an action frame,
+but the AP changed its mind and didn't change the beacon.
+The CSA wasn't cancelled and we lost the connection.
 
-Here is the summary with links:
-  - [net] MAINTAINERS: remove names from mailing list maintainers
-    https://git.kernel.org/netdev/net/c/8b0f64b113d6
+The beacons were ignored because they never changed: they
+never contained any CSA IE. Because they never changed, the
+CRC of the beacon didn't change either which made us ignore
+the beacons instead of processing them.
 
-You are awesome, thank you!
---
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+Now what happens is:
+1) beacon has CRC X and it is valid. No CSA IE in the beacon
+2) as long as beacon's CRC X, don't process their IEs
+3) rx action frame with CSA
+4) invalidate the beacon's CRC
+5) rx beacon, CRC is still X, but now it is invalid
+6) process the beacon, detect there is no CSA IE
+7) abort CSA
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.83470b8407e6.I739b907598001362744692744be15335436b8351@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/mlme.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ba1e5cac32adb..ed12519e3a634 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1415,6 +1415,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	sdata->csa_chandef = csa_ie.chandef;
+ 	sdata->csa_block_tx = csa_ie.mode;
+ 	ifmgd->csa_ignored_same_chan = false;
++	ifmgd->beacon_crc_valid = false;
+ 
+ 	if (sdata->csa_block_tx)
+ 		ieee80211_stop_vif_queues(local, sdata,
+-- 
+2.27.0
 
