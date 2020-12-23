@@ -2,120 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8265C43332
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:11:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D93C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:50:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1B2A207AA
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:11:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B67B223E4
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727976AbgLWCSY (ORCPT
+        id S1727384AbgLWDus (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:18:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45396 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 22:50:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35422 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727898AbgLWCSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:18:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E2A472222A;
-        Wed, 23 Dec 2020 02:17:15 +0000 (UTC)
+        id S1727261AbgLWDus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 22:50:48 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id B9FE7223E8;
+        Wed, 23 Dec 2020 03:50:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689836;
-        bh=55FbdZozjY9wsOB2yAn394jO2YjjJI+sp8UYjuYc7aM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LdHLz//Al/C241hU3rDkSn10rFYH9hiA4pdHL0GR3DtXbLpFxxqVDR4TTLZXubdEC
-         xBA/C2lpN1fJLHh4TACxlrZTCQr4kqKXh/x+/aR0991oPjm5IrCboXGNC4GEOFqJVu
-         cQ/82fCrwDXGR6e4TCu+8s5oV4QayAmLxoEJiAH6HYK+REaju0ZTJsSBbbJqsCczPa
-         +4S2u1M5l5ByVsFxDer8Muug10uE2MvqRUrfoI5/I7+v0fAT4b4GTlfjS8N6sJQ1Ep
-         SFyU5EeHAYS8/GgFq8tMWfs6HImCKR3M6yc2XJuJ1+fleiUNZjg9WMUh8cnE4nNRBd
-         THWO3sbxPfF2w==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 037/217] mac80211: don't overwrite QoS TID of injected frames
-Date:   Tue, 22 Dec 2020 21:13:26 -0500
-Message-Id: <20201223021626.2790791-37-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021626.2790791-1-sashal@kernel.org>
-References: <20201223021626.2790791-1-sashal@kernel.org>
+        s=k20201202; t=1608695407;
+        bh=68YIAocpAegvJarZSQkOD4cnGMaKrBeBemQS7jDpLMI=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=V/bLbmVyULUTh1+0FCW8Uk6LpWbhfUz1jXd8N/SQmktK3SR75DWwekVLpXrTtY0Sk
+         TtxQOQaoOUwCcwjmV8aG9xItJv/ykqdV8G195HZbgsY/KQ6UccA1WT9V0Wy1/+TZMG
+         80K/dUxRG1RbQugUrI6Rlzj+lw2SUR1tZU0ZlGd4KdCXC4KsXUmcoN8skMg7cOY/sm
+         Ik9GGdGs9ItCfq6G2cqhg0W1A/1qL2LEUvWgYoiYftQZabuldByQ7kc35/kk/bogqS
+         STg4F0D2Q+FpHzo+tj821pU7dTn3m3+ZXvHKIJQOiA4wg6lpcs7FaqKX1JRnOSk2KU
+         XYuAAin40VcQA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-drivers-2020-12-22
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <160869540770.24460.3222068973861028264.git-patchwork-notify@kernel.org>
+Date:   Wed, 23 Dec 2020 03:50:07 +0000
+References: <20201222163727.D4336C433C6@smtp.codeaurora.org>
+In-Reply-To: <20201222163727.D4336C433C6@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Hello:
 
-[ Upstream commit 527d675969a1dff17baa270d4447ac1c87058299 ]
+This pull request was applied to netdev/net.git (refs/heads/master):
 
-Currently ieee80211_set_qos_hdr sets the QoS TID of all frames based
-on the value assigned to skb->priority. This means it will also
-overwrite the QoS TID of injected frames. The commit 753ffad3d624
-("mac80211: fix TID field in monitor mode transmit") prevented
-injected frames from being modified because of this by setting
-skb->priority to the TID of the injected frame, which assured the
-QoS TID will not be changed to a different value. Unfortunately,
-this workaround complicates the handling of injected frames because
-we can't set skb->priority without affecting the TID value in the
-QoS field of injected frames.
+On Tue, 22 Dec 2020 16:37:27 +0000 (UTC) you wrote:
+> Hi,
+> 
+> here's a pull request to net tree, more info below. Please let me know if there
+> are any problems.
+> 
+> Kalle
+> 
+> [...]
 
-To avoid this, and to simplify the next patch, detect if a frame is
-injected in ieee80211_set_qos_hdr and if so do not change its QoS
-field.
+Here is the summary with links:
+  - pull-request: wireless-drivers-2020-12-22
+    https://git.kernel.org/netdev/net/c/e77c725a445a
 
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-Link: https://lore.kernel.org/r/20201104061823.197407-4-Mathy.Vanhoef@kuleuven.be
-[fix typos in commit message]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/mac80211/tx.c  | 5 +----
- net/mac80211/wme.c | 8 ++++++++
- 2 files changed, 9 insertions(+), 4 deletions(-)
+You are awesome, thank you!
+--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 56a4d0d20a267..bedb9d85f3d65 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2279,10 +2279,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 						    payload[7]);
- 	}
- 
--	/*
--	 * Initialize skb->priority for QoS frames. This is put in the TID field
--	 * of the frame before passing it to the driver.
--	 */
-+	/* Initialize skb->priority for QoS frames */
- 	if (ieee80211_is_data_qos(hdr->frame_control)) {
- 		u8 *p = ieee80211_get_qos_ctl(hdr);
- 		skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 2fb99325135a0..b74cd9bd5f95e 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -249,6 +249,14 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 	p = ieee80211_get_qos_ctl(hdr);
- 
-+	/* don't overwrite the QoS field of injected frames */
-+	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
-+		/* do take into account Ack policy of injected frames */
-+		if (*p & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
-+			info->flags |= IEEE80211_TX_CTL_NO_ACK;
-+		return;
-+	}
-+
- 	/* set up the first byte */
- 
- 	/*
--- 
-2.27.0
 
