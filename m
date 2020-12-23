@@ -2,91 +2,120 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF84C43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93F1DC433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:05:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B2FD20705
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D7E220789
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:05:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728818AbgLWDEP (ORCPT
+        id S1729172AbgLWDEv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 22:04:15 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:30481 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731718AbgLWDEK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 22:04:10 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608692626; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=I1QNljUE58AFHH2SABSXPPFW7q2xOYSS3wHHUKO0u2A=; b=AtchYFDU/5d622JraGE4+rAuHSsrOT6esEi3BoN+sCdWneX1Cc8Ev2cAFmNlVqQU4XhWrS9k
- zs17gUCv1Fi8buXG9NwpKy4Vk/eTpuFJpZY9aNecgVFFkJjk7du0G/l/lfVIsdAq+WE580fJ
- iz+8SJVplPq3S7TopfmzEiUsT8c=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-west-2.postgun.com with SMTP id
- 5fe2b351cfe5dd67db33bda6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 03:02:41
- GMT
-Sender: cjhuang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 72BD7C433ED; Wed, 23 Dec 2020 03:02:41 +0000 (UTC)
-Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cjhuang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E9B6C43466;
-        Wed, 23 Dec 2020 03:02:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E9B6C43466
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
-From:   Carl Huang <cjhuang@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] ath11k: do not restore ASPM in case of single MSI vector
-Date:   Tue, 22 Dec 2020 22:02:25 -0500
-Message-Id: <20201223030225.2345-7-cjhuang@codeaurora.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201223030225.2345-1-cjhuang@codeaurora.org>
-References: <20201223030225.2345-1-cjhuang@codeaurora.org>
+        Tue, 22 Dec 2020 22:04:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45510 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728543AbgLWCTO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:19:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9217A2312E;
+        Wed, 23 Dec 2020 02:18:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1608689914;
+        bh=RdtcM6zViuzlK2Nkml3KLpxbfyMc0DyP2XN/pSqi9Cw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KRX5gJNg4nHXjBAYzkc7vqiiWRCGI5ztss5klPlveW8mE2UHP7R4iqDnes49BpFqh
+         wvj2Z/ZoOik0laJVP2qsrR7/UnImFnM9MB5lFwCK3w8l5BHDJZTP3qs6TeGLlxHGxd
+         7dRIbqArTZQQ3W3KOJ4bTQPCx3rifAVsjkFhlb/ptF1A8FZOdV+t1uY5HcQSUr9qO9
+         zSMhkeK26aixkRlTDdUYWDhJ1679xcm6/Hn/hgPO2Hl299OrhWvbkrfQWemJcY/hHs
+         WG60upA51w/ofTYauBzOvx5+BkLnfv/M8w5n3vZAhl4ttQph2h6upyL9j/wqrrv9rg
+         Qf7YS3py7h6KA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 015/130] mac80211: don't overwrite QoS TID of injected frames
+Date:   Tue, 22 Dec 2020 21:16:18 -0500
+Message-Id: <20201223021813.2791612-15-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
+References: <20201223021813.2791612-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For single MSI vector, ath11k doesn't restore ASPM as the MHI
-register reading in M2 causes system hung.
+From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+[ Upstream commit 527d675969a1dff17baa270d4447ac1c87058299 ]
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+Currently ieee80211_set_qos_hdr sets the QoS TID of all frames based
+on the value assigned to skb->priority. This means it will also
+overwrite the QoS TID of injected frames. The commit 753ffad3d624
+("mac80211: fix TID field in monitor mode transmit") prevented
+injected frames from being modified because of this by setting
+skb->priority to the TID of the injected frame, which assured the
+QoS TID will not be changed to a different value. Unfortunately,
+this workaround complicates the handling of injected frames because
+we can't set skb->priority without affecting the TID value in the
+QoS field of injected frames.
+
+To avoid this, and to simplify the next patch, detect if a frame is
+injected in ieee80211_set_qos_hdr and if so do not change its QoS
+field.
+
+Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Link: https://lore.kernel.org/r/20201104061823.197407-4-Mathy.Vanhoef@kuleuven.be
+[fix typos in commit message]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ net/mac80211/tx.c  | 5 +----
+ net/mac80211/wme.c | 8 ++++++++
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index a120d7c..8c6147b 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -1119,7 +1119,11 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 30a0c7c6224b3..11085a4b5ee3a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2280,10 +2280,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 						    payload[7]);
+ 	}
  
- 	set_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+-	/*
+-	 * Initialize skb->priority for QoS frames. This is put in the TID field
+-	 * of the frame before passing it to the driver.
+-	 */
++	/* Initialize skb->priority for QoS frames */
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		u8 *p = ieee80211_get_qos_ctl(hdr);
+ 		skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 72920d82928c4..8cd157e67fc77 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -249,6 +249,14 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
  
--	ath11k_pci_aspm_restore(ab_pci);
-+	/* TODO: fo now don't restore ASPM in case of single MSI
-+	 * vector as MHI register reading in M2 causes system hang.
-+	 */
-+	if (ab_pci->vectors_32_capability)
-+		ath11k_pci_aspm_restore(ab_pci);
- 	ab->ce_irq_enabled_flag = true;
+ 	p = ieee80211_get_qos_ctl(hdr);
  
- 	ath11k_pci_ce_irqs_enable(ab);
++	/* don't overwrite the QoS field of injected frames */
++	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
++		/* do take into account Ack policy of injected frames */
++		if (*p & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
++			info->flags |= IEEE80211_TX_CTL_NO_ACK;
++		return;
++	}
++
+ 	/* set up the first byte */
+ 
+ 	/*
 -- 
-2.7.4
+2.27.0
 
