@@ -5,42 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0429C4332B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 582A3C4332E
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7F39205CA
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31C87206B6
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729247AbgLWCxn (ORCPT
+        id S1729830AbgLWCxw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:53:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49956 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:53:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45448 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729230AbgLWCVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:21:13 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DBBBA23137;
-        Wed, 23 Dec 2020 02:20:31 +0000 (UTC)
+        id S1729070AbgLWCVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:21:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D75A022202;
+        Wed, 23 Dec 2020 02:20:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690032;
-        bh=uc2zw3ThyR4wHAex+t9uG3MLBOkmmhPTciDcxbPNCZk=;
+        s=k20201202; t=1608690052;
+        bh=R6D6DinLQkwsTEj+oAoz+BSoIoP0Brp4/RFWhwlJQro=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FJ3GdFQbg8g6mId4DOd+DK0ZPfJyoQetI4cMFv/m51uVVoPENKXHkjBnwDg+nFt5S
-         XsVZRxOf5WFwYBAgl3IZz/gA0TGvG0L88VLdY6uGROqQsd53K/YJkjwf0keWwYEMzI
-         3gouPELEKDVqs8l92gT0WMOtMwuXT9yhIVAtuD0USQTqd/R1+nTCskZtACUauuyQtQ
-         otFWj/UyhQwye/2GS729zfgX8u9XzXuTFhLwzPJURhZqkb7I7WMzNM3S4qH8Xex7pk
-         t8NAU2bNOSzcb2Xp5dBPgcpCW51ea9XVbx21FXA3GZuIuSbzisnFtfKKcJXZgieiHm
-         xS15k5Sl+PqWg==
+        b=GbNgvvI7lR1PLq8lt5aJ7/YuB4McVij1s980pOA8/ml++QBbsRgbSKQbPb3Z91Zeq
+         HSeOZJYF3hK8SLoLgkmDi4edJYaWgDRezP3Sr2a1PxBKA3HMWVJjr9Egl8T5TSFSLC
+         BNfXxNcZ5jfqntGeHxsHiYOm1+lYsEgYvRcUech3NV51bH2PN3rsM3jkvwfRrMBCYq
+         V5Dfwj25VgwE+Dkuorns46ZG61CCXJhmkGNSOZv6HF+pukGwZClXWJxGuGJk/ctnUG
+         ys148z26mVxhBNN2lcdqnROljRB79FQoWn79/GL5joL5oaSvkmHaoVfAa5BcdpF3Uo
+         VJSU8VUY11XqA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 108/130] iwlwifi: pcie: validate RX descriptor length
-Date:   Tue, 22 Dec 2020 21:17:51 -0500
-Message-Id: <20201223021813.2791612-108-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 123/130] mac80211: Fix calculation of minimal channel width
+Date:   Tue, 22 Dec 2020 21:18:06 -0500
+Message-Id: <20201223021813.2791612-123-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -52,49 +53,70 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit df72138de4bc4e85e427aabc60fc51be6cc57fc7 ]
+[ Upstream commit bbf31e88df2f5da20ce613c340ce508d732046b3 ]
 
-Validate the maximum RX descriptor length against the size
-of the buffers we gave the device - if it doesn't fit then
-the hardware messed up.
+When calculating the minimal channel width for channel context,
+the current operation Rx channel width of a station was used and not
+the overall channel width capability of the station, i.e., both for
+Tx and Rx.
 
+Fix ieee80211_get_sta_bw() to use the maximal channel width the
+station is capable. While at it make the function static.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201206145305.4387040b99a0.I74bcf19238f75a5960c4098b10e355123d933281@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201209231352.6378fb435cc0.Ib07485f3dc5999c74b03f21e7a808c50a05e353c@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ net/mac80211/chan.c        | 10 ++++++----
+ net/mac80211/ieee80211_i.h |  1 -
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 64c74acadb998..72ec2ddcaecd4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1292,6 +1292,13 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 9c94baaf693cb..aae4b36dd78d1 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -191,11 +191,13 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
+ 	return NULL;
+ }
  
- 		len = iwl_rx_packet_len(pkt);
- 		len += sizeof(u32); /* account for status word */
+-enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
++static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta)
+ {
+-	switch (sta->bandwidth) {
++	enum ieee80211_sta_rx_bandwidth width = ieee80211_sta_cap_rx_bw(sta);
 +
-+		offset += ALIGN(len, FH_RSCSR_FRAME_ALIGN);
-+
-+		/* check that what the device tells us made sense */
-+		if (offset > max_len)
-+			break;
-+
- 		trace_iwlwifi_dev_rx(trans->dev, trans, pkt, len);
- 		trace_iwlwifi_dev_rx_data(trans->dev, trans, pkt, len);
++	switch (width) {
+ 	case IEEE80211_STA_RX_BW_20:
+-		if (sta->ht_cap.ht_supported)
++		if (sta->sta.ht_cap.ht_supported)
+ 			return NL80211_CHAN_WIDTH_20;
+ 		else
+ 			return NL80211_CHAN_WIDTH_20_NOHT;
+@@ -232,7 +234,7 @@ ieee80211_get_max_required_bw(struct ieee80211_sub_if_data *sdata)
+ 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
+ 			continue;
  
-@@ -1349,7 +1356,6 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 		page_stolen |= rxcb._page_stolen;
- 		if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_22560)
- 			break;
--		offset += ALIGN(len, FH_RSCSR_FRAME_ALIGN);
+-		max_bw = max(max_bw, ieee80211_get_sta_bw(&sta->sta));
++		max_bw = max(max_bw, ieee80211_get_sta_bw(sta));
  	}
+ 	rcu_read_unlock();
  
- 	/* page was stolen from us -- free our reference */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7ad21d041f063..7445c12acf2c4 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2217,7 +2217,6 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
+ int ieee80211_max_num_channels(struct ieee80211_local *local);
+-enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta);
+ void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 				       struct ieee80211_chanctx *ctx);
+ 
 -- 
 2.27.0
 
