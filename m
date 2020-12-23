@@ -7,40 +7,41 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E00C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3F59C43331
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 174F8205CA
+	by mail.kernel.org (Postfix) with ESMTP id 9C3BE206F6
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730921AbgLWC4u (ORCPT
+        id S1729100AbgLWCUs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:56:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45492 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:20:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45394 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729112AbgLWCUv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:20:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AF347225AC;
-        Wed, 23 Dec 2020 02:20:35 +0000 (UTC)
+        id S1729085AbgLWCUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:20:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9962D225AB;
+        Wed, 23 Dec 2020 02:20:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690036;
-        bh=zktbvyeBRJW9xPFIDbQduVFW7ampvIQ6IY6hQF+Inwk=;
+        s=k20201202; t=1608690031;
+        bh=6OcuqB/AKMJ42QJzTYn3irBcM5mpOV53Vwxshp4TmQE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QHnJ6tJdbOICIKOaz4b/P2gQYlRLZVq4TTpKXQQ9gHOn0RqiqhOf/mZQuP8tnsPEH
-         1WlauuFVN+bcU1Z17ktK4hgKGucoXUy5Et7pSZTLTRkXxaLFcIA61IvEX+Q1sOixvF
-         4o7WUBQT1QLsV9gBzbYUDLambI5sgDPZlF2eu2sqTOy4wCZD4PyFiFp7cX4gTSYxpA
-         7D1pvjjXbjFGly26gWeee2bi81XYL0BeQQWPLOhEe+8O853Rc6cC+66H+aRyWqJqAd
-         02XWmHuXdaEeVI8W7lh9z2fJrDMsJd2gaCrJ336pG9lY1OqmXIgCdFyXoNS/3f7zvd
-         uep3Ws/80LGpA==
+        b=LbrxNX/EDZjnlSgryBFun1ZqcMhyq89+YEAWHKCjMmQqmXD8omfSr2m6m7kbdDNBp
+         lQNbIsgLnqODptsZlAs5EUVphkGjA0bkorf5UoFEShYUSA2h4mDa45oFf6vs0zYbmZ
+         GmTJHz8blbz0cKWGUDdvTh+QAx+1ZpKfalmnhPhnRkI06Du6f4AYrZZOK9qgJXOtTo
+         M0fklT4GUODcHLh/NuAZw3fh6vD6AwDjSy6cVowstMkyGnA6GoTVnk/7E+qXWbPW6D
+         xdLHbUPgCD+JeVJUQ5RH2JUlZO/81oHyfBsNFCdsqq7safp/gldeK3LO8xP1o81l6R
+         sJJ6yIC2/o5Kg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Haggai Abramovsky <haggai.abramovsky@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 111/130] iwlwifi: mvm: validate firmware sync response size
-Date:   Tue, 22 Dec 2020 21:17:54 -0500
-Message-Id: <20201223021813.2791612-111-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 107/130] iwlwifi: validate MPDU length against notification length
+Date:   Tue, 22 Dec 2020 21:17:50 -0500
+Message-Id: <20201223021813.2791612-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -54,68 +55,108 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit b570e5b0592a56c5990ae3aa0fdb93dd9b545d43 ]
+[ Upstream commit efc0ec5afb6e1488b3bdc4bbf85533d79d7e5f9f ]
 
-We send some data to the firmware and expect to get it back,
-but we shouldn't really trust the firmware on this. Check the
-size of all the data we send down to avoid using bad or just
-uninitialized data when the firmware doesn't respond right.
+The MPDU contained in a notification shouldn't be larger than the
+notification size itself is, validate this.
 
+Reported-by: Haggai Abramovsky <haggai.abramovsky@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201209231352.a5a8173f16c7.I4fa68bb2b1c7dcc52ddd381c4042722d27c4a34d@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.7c721ad37014.Id5746874ecfa208b60baa62691b2d9dc5dd4d89c@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/dvm/rx.c   | 10 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  8 +++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  6 ++++++
+ 3 files changed, 21 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
+index 673d60784bfad..b930816ca5ca9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018, 2020 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portionhelp of the ieee80211 subsystem header files.
+@@ -786,7 +786,7 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ 	struct iwl_rx_phy_res *phy_res;
+ 	__le32 rx_pkt_status;
+ 	struct iwl_rx_mpdu_res_start *amsdu;
+-	u32 len;
++	u32 len, pkt_len = iwl_rx_packet_len(pkt);
+ 	u32 ampdu_status;
+ 	u32 rate_n_flags;
+ 
+@@ -798,6 +798,12 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ 	amsdu = (struct iwl_rx_mpdu_res_start *)pkt->data;
+ 	header = (struct ieee80211_hdr *)(pkt->data + sizeof(*amsdu));
+ 	len = le16_to_cpu(amsdu->byte_count);
++
++	if (unlikely(len + sizeof(*amsdu) + sizeof(__le32) > pkt_len)) {
++		IWL_DEBUG_DROP(priv, "FW lied about packet len\n");
++		return;
++	}
++
+ 	rx_pkt_status = *(__le32 *)(pkt->data + sizeof(*amsdu) + len);
+ 	ampdu_status = iwlagn_translate_rx_status(priv,
+ 						  le32_to_cpu(rx_pkt_status));
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 77b8def26edb2..47d38df78439b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -349,7 +349,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct iwl_rx_mpdu_res_start *rx_res;
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct sk_buff *skb;
+-	u32 len;
++	u32 len, pkt_len = iwl_rx_packet_payload_len(pkt);
+ 	u32 rate_n_flags;
+ 	u32 rx_pkt_status;
+ 	u8 crypt_len = 0;
+@@ -358,6 +358,12 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
+ 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
+ 	len = le16_to_cpu(rx_res->byte_count);
++
++	if (unlikely(len + sizeof(*rx_res) + sizeof(__le32) > pkt_len)) {
++		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
++		return;
++	}
++
+ 	rx_pkt_status = get_unaligned_le32((__le32 *)
+ 		(pkt->data + sizeof(*rx_res) + len));
+ 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index d0bfcee59a3a7..545a84e08816e 100644
+index a6e2a30eb3109..d0bfcee59a3a7 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -763,10 +763,18 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_rxq_sync_notification *notif;
- 	struct iwl_mvm_internal_rxq_notif *internal_notif;
-+	u32 len = iwl_rx_packet_payload_len(pkt);
+@@ -1553,6 +1553,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
+ 	struct ieee80211_hdr *hdr;
+ 	u32 len = le16_to_cpu(desc->mpdu_len);
++	u32 pkt_len = iwl_rx_packet_payload_len(pkt);
+ 	u32 rate_n_flags, gp2_on_air_rise;
+ 	u16 phy_info = le16_to_cpu(desc->phy_info);
+ 	struct ieee80211_sta *sta = NULL;
+@@ -1599,6 +1600,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			le32_get_bits(phy_data.d1,
+ 				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
  
- 	notif = (void *)pkt->data;
- 	internal_notif = (void *)notif->payload;
- 
-+	if (WARN_ONCE(len < sizeof(*notif) + sizeof(*internal_notif),
-+		      "invalid notification size %d (%d)",
-+		      len, (int)(sizeof(*notif) + sizeof(*internal_notif))))
++	if (len + desc_size > pkt_len) {
++		IWL_DEBUG_DROP(mvm, "FW lied about packet len\n");
 +		return;
-+	/* remove only the firmware header, we want all of our payload below */
-+	len -= sizeof(*notif);
++	}
 +
- 	if (internal_notif->sync &&
- 	    mvm->queue_sync_cookie != internal_notif->cookie) {
- 		WARN_ONCE(1, "Received expired RX queue sync message\n");
-@@ -775,11 +783,22 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 
- 	switch (internal_notif->type) {
- 	case IWL_MVM_RXQ_EMPTY:
-+		WARN_ONCE(len != sizeof(*internal_notif),
-+			  "invalid empty notification size %d (%d)",
-+			  len, (int)sizeof(*internal_notif));
- 		break;
- 	case IWL_MVM_RXQ_NOTIF_DEL_BA:
-+		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
-+			      "invalid delba notification size %d (%d)",
-+			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
-+			break;
- 		iwl_mvm_del_ba(mvm, queue, (void *)internal_notif->data);
- 		break;
- 	case IWL_MVM_RXQ_NSSN_SYNC:
-+		if (WARN_ONCE(len != sizeof(struct iwl_mvm_rss_sync_notif),
-+			      "invalid nssn sync notification size %d (%d)",
-+			      len, (int)sizeof(struct iwl_mvm_rss_sync_notif)))
-+			break;
- 		iwl_mvm_nssn_sync(mvm, napi, queue,
- 				  (void *)internal_notif->data);
- 		break;
+ 	hdr = (void *)(pkt->data + desc_size);
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	 * ieee80211_hdr pulled.
 -- 
 2.27.0
 
