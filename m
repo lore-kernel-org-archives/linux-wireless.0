@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9FE8C4332B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E74BC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:57:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92872206F6
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:56:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43FB3205CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731389AbgLWC4A (ORCPT
+        id S1729125AbgLWCUx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:56:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45508 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:20:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45428 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727144AbgLWCU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:20:58 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C0F42333D;
-        Wed, 23 Dec 2020 02:20:38 +0000 (UTC)
+        id S1729108AbgLWCUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:20:50 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 755A823159;
+        Wed, 23 Dec 2020 02:20:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690039;
-        bh=n2APBAAFlUerQAQIuTD9g+9eWy1+0CiK4weSE1Tlp7c=;
+        s=k20201202; t=1608690035;
+        bh=Mkb77UdVz/5p1f8UEjjbVmNsg1UaKH/m8P8zqp2BlQI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P8SHaDqFAq7K673lmYLeHt+AnGFhPoblMfkeWuGhuWFm6Cmz8aDaijFnXC/j1hHFC
-         8Bdkx5qPnxXBbbbsXDXD8pLNG1FJ8bUOPDZQwo6MU4Gu8bwK8rQPepz2/EE46hJp0k
-         o/ZtktmqHdwg3Rp74pqQcsmH6jBCtE6BCrlq3W8egjiibtGmheJdEze2z6nx+bgkVD
-         nkU6tZg8FPgRMJLI7xJPx/mV2mUz310PL00r1bXTUWzJDjAykL4uenG4Rs5O1+idVt
-         /QfAc9Pia5Cch9kaaD7H2elN2z9Bz9YF/d+xl6xbKjA+c+hBWBek2u1ZPNkKss2WoM
-         T9vwAksN05dIA==
+        b=M0o4CtxZk8oHhMjVoUhdeKLdkBC+jh0rIXIh03INyqGMi6bIQJs2/U00z/42sJRD5
+         8t5F94ovA+M+l5NuweH7VSbh6uZBBr1PFrMqOmiVgG4c6nHrYrD/+Mj78/PC+wr6Cl
+         nt41SNNNdF339Bje60PNWqK7aLbq+YVUNXryPNPGfb7Gxlil49e/SVaJF27P5M/pqL
+         jFAcG/Nc74GEU0Ul+8foRcjP1CohUP+IagGsp7e68LP7Y36hsIw/B3t7XGUtaKvSVL
+         mFZ0t8eiVoEjwDQ8/hNMGWBAdLQXkKtMHwCHChk3ptPPb8QCktlVYWW73pKOadk6zP
+         O9R/Klodu44WA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 113/130] iwlwifi: mvm: disconnect if channel switch delay is too long
-Date:   Tue, 22 Dec 2020 21:17:56 -0500
-Message-Id: <20201223021813.2791612-113-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 110/130] iwlwifi: trans: consider firmware dead after errors
+Date:   Tue, 22 Dec 2020 21:17:53 -0500
+Message-Id: <20201223021813.2791612-110-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -54,35 +54,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 87d9564e14cf5d05e4f1fa4eb7c55d798427f1dd ]
+[ Upstream commit 152fdc0f698896708f9d7889a4ba4da6944b74f7 ]
 
-If the channel switch delay that we would incur after the channel
-switch actually happens is longer than the quiet time we're willing
-to tolerate, disconnect as well.
+If we get an error, no longer consider the firmware to be
+in IWL_TRANS_FW_ALIVE state.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201209231352.3bc3449922da.Ib0255deb67b2fc21317e274adcacb545bb1dc669@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.a9d01e79c1c7.Ib2deb076b392fb516a7230bac91d7ab8a9586d86@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index daae86cd61140..366dc2d756bfb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4523,6 +4523,9 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 1e85d59b91613..b31bb56ca6591 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1230,8 +1230,10 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ 		return;
  
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+		if (chsw->delay > IWL_MAX_CSA_BLOCK_TX)
-+			schedule_delayed_work(&mvmvif->csa_work, 0);
-+
- 		if (chsw->block_tx) {
- 			/*
- 			 * In case of undetermined / long time with immediate
+ 	/* prevent double restarts due to the same erroneous FW */
+-	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status))
++	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status)) {
+ 		iwl_op_mode_nic_error(trans->op_mode);
++		trans->state = IWL_TRANS_NO_FW;
++	}
+ }
+ 
+ static inline void iwl_trans_sync_nmi(struct iwl_trans *trans)
 -- 
 2.27.0
 
