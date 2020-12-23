@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 026AEC432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD36FC4360C
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:27:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0E7C2222D
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:27:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9697122202
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:27:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729470AbgLWC0y (ORCPT
+        id S1728627AbgLWC1J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:26:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57228 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:27:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57178 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730922AbgLWC0l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:26:41 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED33C22248;
-        Wed, 23 Dec 2020 02:25:59 +0000 (UTC)
+        id S1730913AbgLWC0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:26:36 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 205C32332A;
+        Wed, 23 Dec 2020 02:25:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690360;
-        bh=ryRJWofLmghc/1eZGaFkWYYlcQWzVNLksYImCUQLffY=;
+        s=k20201202; t=1608690355;
+        bh=au8gNUmjCcxfgczqLam57knzjW+A5ZRyBxc0fF4OJWE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N2ECdGBtTIDd8McJZY1NdmQJyARsRqJh5s77ccC1ZcE/lSSFf3Fj1oz+dEP3F2zdU
-         k1VThM+Qo+RLTaF36YeiIE2F7OnFVyKqAz5n7GbhqzRJGOY156JwgVOUqvajIXk3s7
-         o2P9Nl2K3LrRYGSv4fN1fw7SDLu1nCqdL0qyWNz/EMvfccE6jBkbniYJMOZ2CjAHiG
-         dJHykOeCWFIITH3ZISRNrZgnGM3/S25fwKHranrtCbo1Z2W4vEVTduHp+o1Kn9ZJjt
-         YgUFP1AFzDB5HxMWkfKIrQnfHUD67qTB7YDCgWZQPnd8AelMJOGHxWoN+CF7lOWAR7
-         ovTTfU8rq7C8g==
+        b=cx4aDXdmTfqnQuiJ0noj6Om1uieTCiiT1Oc9n9eBZGxP41paqJ4YAw2BzqaOCqQkz
+         hYHM3BzdYFoRh9ydTMuXWWJCp/ocPJoJmR2oKrCdAs2aJjv9Jn7/EIVDzbZELLv/nU
+         R7vO6s0ip0x5SHhYemxfAosHaMmKJM3cgHdJf96W6Fw1G8Pxi0v891fY5h6+5l3oUu
+         dxTa5b0iyWK14XGma0RY1gDa5cqlOnWQf+ZrsxX4AkTnlHo4DRqmjEBTL3NT6HYq1W
+         w19xlpaaVDGZsJjQLfQvUY3soubTdL9eLJVFd3XzEcbQ9awb7VR+cedjRKunN+aUQI
+         xxeMpaIOVBi6g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Zhang Xiaohui <ruc_zhangxiaohui@163.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 35/38] mac80211: disallow band-switch during CSA
-Date:   Tue, 22 Dec 2020 21:25:13 -0500
-Message-Id: <20201223022516.2794471-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 31/38] mwifiex: Fix possible buffer overflows in mwifiex_cmd_802_11_ad_hoc_start
+Date:   Tue, 22 Dec 2020 21:25:09 -0500
+Message-Id: <20201223022516.2794471-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022516.2794471-1-sashal@kernel.org>
 References: <20201223022516.2794471-1-sashal@kernel.org>
@@ -52,69 +52,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
 
-[ Upstream commit 3660944a37ce73890292571f44f04891834f9044 ]
+[ Upstream commit 5c455c5ab332773464d02ba17015acdca198f03d ]
 
-If the AP advertises a band switch during CSA, we will not have
-the right information to continue working with it, since it will
-likely (have to) change its capabilities and we don't track any
-capability changes at all. Additionally, we store e.g. supported
-rates per band, and that information would become invalid.
+mwifiex_cmd_802_11_ad_hoc_start() calls memcpy() without checking
+the destination size may trigger a buffer overflower,
+which a local user could use to cause denial of service
+or the execution of arbitrary code.
+Fix it by putting the length check before calling memcpy().
 
-Since this is a fringe scenario, just disconnect explicitly.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201129172929.0e2327107c06.I461adb07704e056b054a4a7c29b80c95a9f56637@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20201206084801.26479-1-ruc_zhangxiaohui@163.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/join.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4ab78bc6c2ca5..6a94b14817471 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1210,6 +1210,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	if (res)
- 		return;
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6378dfd3b4e86..83b7cd5bdf930 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -856,6 +856,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
  
-+	if (sdata->vif.bss_conf.chandef.chan->band !=
-+	    csa_ie.chandef.chan->band) {
-+		sdata_info(sdata,
-+			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
-+			   ifmgd->associated->bssid,
-+			   csa_ie.chandef.chan->center_freq,
-+			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
-+			   csa_ie.chandef.center_freq2);
-+		goto lock_and_drop_connection;
-+	}
-+
- 	if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
-@@ -1218,9 +1229,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			   csa_ie.chandef.chan->center_freq,
- 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
- 			   csa_ie.chandef.center_freq2);
--		ieee80211_queue_work(&local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		return;
-+		goto lock_and_drop_connection;
- 	}
+ 	memset(adhoc_start->ssid, 0, IEEE80211_MAX_SSID_LEN);
  
- 	if (cfg80211_chandef_identical(&csa_ie.chandef,
-@@ -1310,6 +1319,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			  TU_TO_EXP_TIME((csa_ie.count - 1) *
- 					 cbss->beacon_interval));
- 	return;
-+ lock_and_drop_connection:
-+	mutex_lock(&local->mtx);
-+	mutex_lock(&local->chanctx_mtx);
-  drop_connection:
- 	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
- 	mutex_unlock(&local->chanctx_mtx);
++	if (req_ssid->ssid_len > IEEE80211_MAX_SSID_LEN)
++		req_ssid->ssid_len = IEEE80211_MAX_SSID_LEN;
+ 	memcpy(adhoc_start->ssid, req_ssid->ssid, req_ssid->ssid_len);
+ 
+ 	mwifiex_dbg(adapter, INFO, "info: ADHOC_S_CMD: SSID = %s\n",
 -- 
 2.27.0
 
