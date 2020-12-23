@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12080C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE5AC43217
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3E6E2256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9205F2256F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729802AbgLWCWv (ORCPT
+        id S1729935AbgLWCoq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:22:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51348 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:44:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727883AbgLWCWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:22:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 19B07229C5;
-        Wed, 23 Dec 2020 02:22:34 +0000 (UTC)
+        id S1729762AbgLWCWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:22:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AF211221E5;
+        Wed, 23 Dec 2020 02:22:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690154;
-        bh=jj12FkQoKdOsjodKgFghRoRXbFYraxlQmHt9i8P2mrI=;
+        s=k20201202; t=1608690152;
+        bh=hgehVMq8mURlrBR5kRfraFXCWYe/naiOqIOAOfTz+3w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kQwO6kSt9kH4OcgIzIUEiV7GjbxK/lD6lUjZEjlAmC5WAJy9YR4oHVhWRXAojy7JW
-         svWjoH5chvSHyXD8RaPQ2Q3GVEB92L9isoEpW31iqAMTbI2qsTq1aDFX/ILEuqFZKd
-         fn6dVqo8huEhl5P/rPgxhefC8YWFy8bv3rWJj14gRUdxA+NA2iaT2Gtsygqo2XmREV
-         QGoUsv0HPsLg70WD4MpnpP2CuSPwUZbJ5KaB8IDAJt2NGn3H9/bGcYHLfZD/zgB8L2
-         zIBV9iXhdecH7HaWLtYZRO2GzEzBjo8autDNgD0Pf6ajZIttqDCKgZjx+wI0HhGOzj
-         MLXSxTTl0axWA==
+        b=svv25BerBj/pxaENIuRvV5SBwEWWQ1AHdyxMM0Woeb3AQi+9JrzGKxZnp9NdHUlBd
+         Mb6miTG+kUCKFBVFTPPhwGC3JZRL1ORJsg50j8FDYVHTOpdCQSMMliWUDriB7znqfZ
+         ZWap4od1vnGDiWV+j8rOTHkIZ0l4Fb8GiEPTxtc2jfhXKStASkawM9NUTNPM7okyQs
+         Nis/fRYkZE1TbJ9tHwFq+UXM1P32ajX2PT42y0CkIWXrX09jumWK9KQAHd3dMYzH9S
+         1ivy/NxdNrZk6CXNqR02v5IYNTcrlYXF2ejCphnWqYy2flb0Yh/1RiG40B3+bKTuxt
+         LuWOcFOy9keWg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 74/87] iwlwifi: add an extra firmware state in the transport
-Date:   Tue, 22 Dec 2020 21:20:50 -0500
-Message-Id: <20201223022103.2792705-74-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 72/87] iwlwifi: pcie: validate RX descriptor length
+Date:   Tue, 22 Dec 2020 21:20:48 -0500
+Message-Id: <20201223022103.2792705-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
 References: <20201223022103.2792705-1-sashal@kernel.org>
@@ -54,63 +54,47 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit b2ed841ed070ccbe908016537f429a3a8f0221bf ]
+[ Upstream commit df72138de4bc4e85e427aabc60fc51be6cc57fc7 ]
 
-Start tracking not just if the firmware is dead or alive,
-but also if it's starting.
+Validate the maximum RX descriptor length against the size
+of the buffers we gave the device - if it doesn't fit then
+the hardware messed up.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201209231352.33e50d40b688.I8bbd41af7aa5e769273a6fc1c06fbf548dd2eb26@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.6378fb435cc0.Ib07485f3dc5999c74b03f21e7a808c50a05e353c@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 675fffb39b729..b633555b0f58e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -619,12 +619,14 @@ struct iwl_trans_ops {
- /**
-  * enum iwl_trans_state - state of the transport layer
-  *
-- * @IWL_TRANS_NO_FW: no fw has sent an alive response
-- * @IWL_TRANS_FW_ALIVE: a fw has sent an alive response
-+ * @IWL_TRANS_NO_FW: firmware wasn't started yet, or crashed
-+ * @IWL_TRANS_FW_STARTED: FW was started, but not alive yet
-+ * @IWL_TRANS_FW_ALIVE: FW has sent an alive response
-  */
- enum iwl_trans_state {
--	IWL_TRANS_NO_FW = 0,
--	IWL_TRANS_FW_ALIVE	= 1,
-+	IWL_TRANS_NO_FW,
-+	IWL_TRANS_FW_STARTED,
-+	IWL_TRANS_FW_ALIVE,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 80a1a50f5da51..ebdb143b1b5a1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1256,6 +1256,13 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
  
- /**
-@@ -833,12 +835,18 @@ static inline int iwl_trans_start_fw(struct iwl_trans *trans,
- 				     const struct fw_img *fw,
- 				     bool run_in_rfkill)
- {
-+	int ret;
+ 		len = iwl_rx_packet_len(pkt);
+ 		len += sizeof(u32); /* account for status word */
 +
- 	might_sleep();
- 
- 	WARN_ON_ONCE(!trans->rx_mpdu_cmd);
- 
- 	clear_bit(STATUS_FW_ERROR, &trans->status);
--	return trans->ops->start_fw(trans, fw, run_in_rfkill);
-+	ret = trans->ops->start_fw(trans, fw, run_in_rfkill);
-+	if (ret == 0)
-+		trans->state = IWL_TRANS_FW_STARTED;
++		offset += ALIGN(len, FH_RSCSR_FRAME_ALIGN);
 +
-+	return ret;
- }
++		/* check that what the device tells us made sense */
++		if (offset > max_len)
++			break;
++
+ 		trace_iwlwifi_dev_rx(trans->dev, trans, pkt, len);
+ 		trace_iwlwifi_dev_rx_data(trans->dev, trans, pkt, len);
  
- static inline void _iwl_trans_stop_device(struct iwl_trans *trans,
+@@ -1313,7 +1320,6 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		page_stolen |= rxcb._page_stolen;
+ 		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
+ 			break;
+-		offset += ALIGN(len, FH_RSCSR_FRAME_ALIGN);
+ 	}
+ 
+ 	/* page was stolen from us -- free our reference */
 -- 
 2.27.0
 
