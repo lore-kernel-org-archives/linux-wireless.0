@@ -2,219 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B0FEC4332E
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D01C4361A
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E92720789
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DF2E20757
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 03:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731464AbgLWDDN (ORCPT
+        id S1731483AbgLWDDq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 22:03:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45490 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728642AbgLWCT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:19:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6733023355;
-        Wed, 23 Dec 2020 02:18:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689934;
-        bh=PXcne/l7TVO3kUQQkp5wVSMdQSk5DcaNcF+eGg8LyaY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=K4EUv5YA71Zjx9St+45hK9xYC/jHPkP6y0hob/7q9yUjuYXxAblJ6SxoW4wZkvKY1
-         KkXbQJLbWQGNZ6yrvMtLlJVVhK8+F69mB0FQvHii/cXc08lkUOJJw9X+qeI8ck7u2D
-         sfzSPv3udhLdNVA7QZE+prgqCFxok1RfsBKyw5iRQZzTaSW51oTAE8hLDrdYu8CzJt
-         Z9OWpCg2Z33OGW/CUEX5xOdcUUMPL3oSBoFnMV6l+n2gvD/D44puYnODIexr8FzZYL
-         ywpr8gKNcy0KTFYkwIEWJVNhs9ip6af/GZGZG+/BmlMjIe66VqejbiE+viEXQny7EG
-         vReVBWxjfQ0iA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tsuchiya Yuto <kitakar@gmail.com>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 031/130] mwifiex: pcie: skip cancel_work_sync() on reset failure path
-Date:   Tue, 22 Dec 2020 21:16:34 -0500
-Message-Id: <20201223021813.2791612-31-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
-References: <20201223021813.2791612-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        Tue, 22 Dec 2020 22:03:46 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:21764 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728836AbgLWDDo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 22:03:44 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1608692604; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=hFxlRqc3Z8RzSFW+LMfGZdI3yBx375LII+pbIEEeRvI=; b=NFevUgkPHl/NRX7kxPRSYnidHVF6JIz3qHUBkvIVUldObkeyW8lyP0uu7Y4m9Y1Eds1PEAh/
+ S+9XKO55RL+pKkzsJTd89NdCtIBUj6+FpCwz7TuZQkH/oqIQVfsT8Azf33kyK7EaZLyrdP54
+ b2ywIDVQy35cBdws5TEnpNTiwvs=
+X-Mailgun-Sending-Ip: 69.72.43.15
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5fe2b34a7036173f4f70901a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Dec 2020 03:02:34
+ GMT
+Sender: cjhuang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 86DDAC433ED; Wed, 23 Dec 2020 03:02:33 +0000 (UTC)
+Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cjhuang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7176CC433C6;
+        Wed, 23 Dec 2020 03:02:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7176CC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=cjhuang@codeaurora.org
+From:   Carl Huang <cjhuang@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 0/6] ath11k: support one MSI vector
+Date:   Tue, 22 Dec 2020 22:02:19 -0500
+Message-Id: <20201223030225.2345-1-cjhuang@codeaurora.org>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tsuchiya Yuto <kitakar@gmail.com>
+This patch set is to support one MSI vector for QCA6390.
 
-[ Upstream commit 4add4d988f95f47493500a7a19c623827061589b ]
+Carl Huang (6):
+  ath11k: get msi_data again after request_irq is called
+  ath11k: add ce and ext irq flag to indicate irq_handler
+  ath11k: use ATH11K_PCI_IRQ_DP_OFFSET for dp irqx
+  ath11k: refactor mulitple msi vector implementation
+  ath11k: supports one MSI vector
+  ath11k: do not restore ASPM in case of single MSI vector
 
-If a reset is performed, but even the reset fails for some reasons (e.g.,
-on Surface devices, the fw reset requires another quirks),
-cancel_work_sync() hangs in mwifiex_cleanup_pcie().
+ drivers/net/wireless/ath/ath11k/core.h |   2 +
+ drivers/net/wireless/ath/ath11k/mhi.c  |  13 ++-
+ drivers/net/wireless/ath/ath11k/pci.c  | 200 +++++++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath11k/pci.h  |   8 ++
+ 4 files changed, 189 insertions(+), 34 deletions(-)
 
-    # firmware went into a bad state
-    [...]
-    [ 1608.281690] mwifiex_pcie 0000:03:00.0: info: shutdown mwifiex...
-    [ 1608.282724] mwifiex_pcie 0000:03:00.0: rx_pending=0, tx_pending=1,	cmd_pending=0
-    [ 1608.292400] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    [ 1608.292405] mwifiex_pcie 0000:03:00.0: PREP_CMD: card is removed
-    # reset performed after firmware went into a bad state
-    [ 1609.394320] mwifiex_pcie 0000:03:00.0: WLAN FW already running! Skip FW dnld
-    [ 1609.394335] mwifiex_pcie 0000:03:00.0: WLAN FW is active
-    # but even the reset failed
-    [ 1619.499049] mwifiex_pcie 0000:03:00.0: mwifiex_cmd_timeout_func: Timeout cmd id = 0xfa, act = 0xe000
-    [ 1619.499094] mwifiex_pcie 0000:03:00.0: num_data_h2c_failure = 0
-    [ 1619.499103] mwifiex_pcie 0000:03:00.0: num_cmd_h2c_failure = 0
-    [ 1619.499110] mwifiex_pcie 0000:03:00.0: is_cmd_timedout = 1
-    [ 1619.499117] mwifiex_pcie 0000:03:00.0: num_tx_timeout = 0
-    [ 1619.499124] mwifiex_pcie 0000:03:00.0: last_cmd_index = 0
-    [ 1619.499133] mwifiex_pcie 0000:03:00.0: last_cmd_id: fa 00 07 01 07 01 07 01 07 01
-    [ 1619.499140] mwifiex_pcie 0000:03:00.0: last_cmd_act: 00 e0 00 00 00 00 00 00 00 00
-    [ 1619.499147] mwifiex_pcie 0000:03:00.0: last_cmd_resp_index = 3
-    [ 1619.499155] mwifiex_pcie 0000:03:00.0: last_cmd_resp_id: 07 81 07 81 07 81 07 81 07 81
-    [ 1619.499162] mwifiex_pcie 0000:03:00.0: last_event_index = 2
-    [ 1619.499169] mwifiex_pcie 0000:03:00.0: last_event: 58 00 58 00 58 00 58 00 58 00
-    [ 1619.499177] mwifiex_pcie 0000:03:00.0: data_sent=0 cmd_sent=1
-    [ 1619.499185] mwifiex_pcie 0000:03:00.0: ps_mode=0 ps_state=0
-    [ 1619.499215] mwifiex_pcie 0000:03:00.0: info: _mwifiex_fw_dpc: unregister device
-    # mwifiex_pcie_work hang happening
-    [ 1823.233923] INFO: task kworker/3:1:44 blocked for more than 122 seconds.
-    [ 1823.233932]       Tainted: G        WC OE     5.10.0-rc1-1-mainline #1
-    [ 1823.233935] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-    [ 1823.233940] task:kworker/3:1     state:D stack:    0 pid:   44 ppid:     2 flags:0x00004000
-    [ 1823.233960] Workqueue: events mwifiex_pcie_work [mwifiex_pcie]
-    [ 1823.233965] Call Trace:
-    [ 1823.233981]  __schedule+0x292/0x820
-    [ 1823.233990]  schedule+0x45/0xe0
-    [ 1823.233995]  schedule_timeout+0x11c/0x160
-    [ 1823.234003]  wait_for_completion+0x9e/0x100
-    [ 1823.234012]  __flush_work.isra.0+0x156/0x210
-    [ 1823.234018]  ? flush_workqueue_prep_pwqs+0x130/0x130
-    [ 1823.234026]  __cancel_work_timer+0x11e/0x1a0
-    [ 1823.234035]  mwifiex_cleanup_pcie+0x28/0xd0 [mwifiex_pcie]
-    [ 1823.234049]  mwifiex_free_adapter+0x24/0xe0 [mwifiex]
-    [ 1823.234060]  _mwifiex_fw_dpc+0x294/0x560 [mwifiex]
-    [ 1823.234074]  mwifiex_reinit_sw+0x15d/0x300 [mwifiex]
-    [ 1823.234080]  mwifiex_pcie_reset_done+0x50/0x80 [mwifiex_pcie]
-    [ 1823.234087]  pci_try_reset_function+0x5c/0x90
-    [ 1823.234094]  process_one_work+0x1d6/0x3a0
-    [ 1823.234100]  worker_thread+0x4d/0x3d0
-    [ 1823.234107]  ? rescuer_thread+0x410/0x410
-    [ 1823.234112]  kthread+0x142/0x160
-    [ 1823.234117]  ? __kthread_bind_mask+0x60/0x60
-    [ 1823.234124]  ret_from_fork+0x22/0x30
-    [...]
-
-This is a deadlock caused by calling cancel_work_sync() in
-mwifiex_cleanup_pcie():
-
-- Device resets are done via mwifiex_pcie_card_reset()
-- which schedules card->work to call mwifiex_pcie_card_reset_work()
-- which calls pci_try_reset_function().
-- This leads to mwifiex_pcie_reset_done() be called on the same workqueue,
-  which in turn calls
-- mwifiex_reinit_sw() and that calls
-- _mwifiex_fw_dpc().
-
-The problem is now that _mwifiex_fw_dpc() calls mwifiex_free_adapter()
-in case firmware initialization fails. That ends up calling
-mwifiex_cleanup_pcie().
-
-Note that all those calls are still running on the workqueue. So when
-mwifiex_cleanup_pcie() now calls cancel_work_sync(), it's really waiting
-on itself to complete, causing a deadlock.
-
-This commit fixes the deadlock by skipping cancel_work_sync() on a reset
-failure path.
-
-After this commit, when reset fails, the following output is
-expected to be shown:
-
-    kernel: mwifiex_pcie 0000:03:00.0: info: _mwifiex_fw_dpc: unregister device
-    kernel: mwifiex: Failed to bring up adapter: -5
-    kernel: mwifiex_pcie 0000:03:00.0: reinit failed: -5
-
-To reproduce this issue, for example, try putting the root port of wifi
-into D3 (replace "00:1d.3" with your setup).
-
-    # put into D3 (root port)
-    sudo setpci -v -s 00:1d.3 CAP_PM+4.b=0b
-
-Cc: Maximilian Luz <luzmaximilian@gmail.com>
-Signed-off-by: Tsuchiya Yuto <kitakar@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20201028142346.18355-1-kitakar@gmail.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
- 2 files changed, 19 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index fc1706d0647d7..58c9623c3a916 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -377,6 +377,8 @@ static void mwifiex_pcie_reset_prepare(struct pci_dev *pdev)
- 	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
- 	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
- 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
-+
-+	card->pci_reset_ongoing = true;
- }
- 
- /*
-@@ -405,6 +407,8 @@ static void mwifiex_pcie_reset_done(struct pci_dev *pdev)
- 		dev_err(&pdev->dev, "reinit failed: %d\n", ret);
- 	else
- 		mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
-+
-+	card->pci_reset_ongoing = false;
- }
- 
- static const struct pci_error_handlers mwifiex_pcie_err_handler = {
-@@ -2995,7 +2999,19 @@ static void mwifiex_cleanup_pcie(struct mwifiex_adapter *adapter)
- 	int ret;
- 	u32 fw_status;
- 
--	cancel_work_sync(&card->work);
-+	/* Perform the cancel_work_sync() only when we're not resetting
-+	 * the card. It's because that function never returns if we're
-+	 * in reset path. If we're here when resetting the card, it means
-+	 * that we failed to reset the card (reset failure path).
-+	 */
-+	if (!card->pci_reset_ongoing) {
-+		mwifiex_dbg(adapter, MSG, "performing cancel_work_sync()...\n");
-+		cancel_work_sync(&card->work);
-+		mwifiex_dbg(adapter, MSG, "cancel_work_sync() done\n");
-+	} else {
-+		mwifiex_dbg(adapter, MSG,
-+			    "skipped cancel_work_sync() because we're in card reset failure path\n");
-+	}
- 
- 	ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
- 	if (fw_status == FIRMWARE_READY_PCIE) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index f7ce9b6db6b41..72d0c01ff3592 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -391,6 +391,8 @@ struct pcie_service_card {
- 	struct mwifiex_msix_context share_irq_ctx;
- 	struct work_struct work;
- 	unsigned long work_flags;
-+
-+	bool pci_reset_ongoing;
- };
- 
- static inline int
 -- 
-2.27.0
+2.7.4
 
