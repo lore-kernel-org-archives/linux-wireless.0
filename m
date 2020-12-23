@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32AA1C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82165C43381
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:37:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08ECE223E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:37:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52F7F223E4
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:37:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730343AbgLWChL (ORCPT
+        id S1730544AbgLWChM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:37:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50890 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:37:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730205AbgLWCYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1730204AbgLWCYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 22 Dec 2020 21:24:25 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6A71B225AA;
-        Wed, 23 Dec 2020 02:24:06 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E137022A99;
+        Wed, 23 Dec 2020 02:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690247;
-        bh=N1ax7JCrbT8ECzAEjM7JbNqVYqEL8lBu/fjipxZcYPg=;
+        s=k20201202; t=1608690249;
+        bh=bCzcsyMz4N20rG43V7iM8T9PNE9isZ4UIkqwgddlBDM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QXLPi+omka+si35EBdNaeqeOwuyrhCXRFHLJ3tn4m1DWH9r4F1gCYQbQAwBshstpb
-         m6JLOaGw4ETJIAjPYv4JbPMewRfpiJmfPPqDnBTHZLrp03lPNPXXeyZUS7BNPrQ2Yp
-         Ko/7G110u/bX/HzBVgUTEBoBJo1EzdHB68T7rqRcj5R8Be95jR9QxcUzjJfulDmOqV
-         OJU/h7QVNBxWIDBgkjZliM3sJ3zUqcRt93Y7jHFyR7yX+Qmw1TXuUjEwChlHOVo7OX
-         BFoLfNY43KRoglIgDzabevVTqIXRPy+v46SPZe7SGe6fjv3qCkxYT5OfwFzeUX4XMo
-         bo7TI4l0GsxZg==
+        b=pVttgaGNKbEOEu0ISP+bP9UeXFBmSI/Y/j4RdAfJ5tubDSRxRYBDBGRtHO61x1ADu
+         eA3MgGiZyedr7hMgWesoli610Pgta4SlUL9H9kHR2xnzR5Bdh2v+HrwwBLJ+y6dPd3
+         MR5CV6kAU78LGOisaM4sVBRpB6SBCTi7xSx28xtW1yrwOsMM1wX3ThiyFlrAEWFOzQ
+         XFGh5T8CkcI3fFvWVesPNdw6Yb3WhjxhyOD8c5VSgB8v4kbdSAWY8iVObXs3pmkAjo
+         LvWOtEjYkPg/nBiyYWotfseln0ZkTM7JOOnBfjaUkpdRZAHw6qQiWiqxNOrZYmQJ4d
+         d+lbpATIJmJYw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Avraham Stern <avraham.stern@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 59/66] nl80211: always accept scan request with the duration set
-Date:   Tue, 22 Dec 2020 21:22:45 -0500
-Message-Id: <20201223022253.2793452-59-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 61/66] mac80211: disallow band-switch during CSA
+Date:   Tue, 22 Dec 2020 21:22:47 -0500
+Message-Id: <20201223022253.2793452-61-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022253.2793452-1-sashal@kernel.org>
 References: <20201223022253.2793452-1-sashal@kernel.org>
@@ -53,41 +52,69 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit c837cbad40d949feaff86734d637c7602ae0b56b ]
+[ Upstream commit 3660944a37ce73890292571f44f04891834f9044 ]
 
-Accept a scan request with the duration set even if the driver
-does not support setting the scan dwell. The duration can be used
-as a hint to the driver, but the driver may use its internal logic
-for setting the scan dwell.
+If the AP advertises a band switch during CSA, we will not have
+the right information to continue working with it, since it will
+likely (have to) change its capabilities and we don't track any
+capability changes at all. Additionally, we store e.g. supported
+rates per band, and that information would become invalid.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Since this is a fringe scenario, just disconnect explicitly.
+
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201129172929.9491a12f9226.Ia9c5b24fcefc5ce5592537507243391633a27e5f@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201129172929.0e2327107c06.I461adb07704e056b054a4a7c29b80c95a9f56637@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 6 ------
- 1 file changed, 6 deletions(-)
+ net/mac80211/mlme.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6bd4f6c8fc2ef..3b1be955b69e8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6859,12 +6859,6 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ab26b8b954719..c23364948f946 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1176,6 +1176,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (res)
+ 		return;
+ 
++	if (sdata->vif.bss_conf.chandef.chan->band !=
++	    csa_ie.chandef.chan->band) {
++		sdata_info(sdata,
++			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
++			   ifmgd->associated->bssid,
++			   csa_ie.chandef.chan->center_freq,
++			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
++			   csa_ie.chandef.center_freq2);
++		goto lock_and_drop_connection;
++	}
++
+ 	if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -1184,9 +1195,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			   csa_ie.chandef.chan->center_freq,
+ 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
+ 			   csa_ie.chandef.center_freq2);
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		return;
++		goto lock_and_drop_connection;
  	}
  
- 	if (info->attrs[NL80211_ATTR_MEASUREMENT_DURATION]) {
--		if (!wiphy_ext_feature_isset(wiphy,
--					NL80211_EXT_FEATURE_SET_SCAN_DWELL)) {
--			err = -EOPNOTSUPP;
--			goto out_free;
--		}
--
- 		request->duration =
- 			nla_get_u16(info->attrs[NL80211_ATTR_MEASUREMENT_DURATION]);
- 		request->duration_mandatory =
+ 	if (cfg80211_chandef_identical(&csa_ie.chandef,
+@@ -1276,6 +1285,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME((csa_ie.count - 1) *
+ 					 cbss->beacon_interval));
+ 	return;
++ lock_and_drop_connection:
++	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
+  drop_connection:
+ 	/*
+ 	 * This is just so that the disconnect flow will know that
 -- 
 2.27.0
 
