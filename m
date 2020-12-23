@@ -7,40 +7,41 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FAAAC43332
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E16FAC4361A
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD08C2256F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B33092256F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730739AbgLWCno (ORCPT
+        id S1730880AbgLWCoI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:43:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50890 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:44:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729811AbgLWCXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:23:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 65FDE23137;
-        Wed, 23 Dec 2020 02:22:43 +0000 (UTC)
+        id S1729819AbgLWCWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:22:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8522622D73;
+        Wed, 23 Dec 2020 02:22:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690164;
-        bh=1IopgCTr5CLfw4tXu/+atusloBng3yRw1mvj7xroQs8=;
+        s=k20201202; t=1608690160;
+        bh=/458adE0gXv2aGVuKXeQDvGxAqn2ggSrCHf/FwV4Qy0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OIMWCY8egYpgwaJ1Esmqpk9AgbkRyiV7r8pQkNEtY6CsJHe97+6T1l33An8VxeiHc
-         8KJKdvziTG1d2M/12u1ARP4wVS+cpgyYM+XMqQs6MpbSd1KBwZcjn1q/hH7+82qMcG
-         iP5W36zrnGqbApfu96m+W6ci8hhcumO4p7Iuduaw7eltCxmprAqOtOIN6OZG3nYU8t
-         Xgw/Iwaa6qnYBquF6HnkGcv8lXn6sVtEyDxdxdiEtRMGydzn5lzBOu2tAX2Y0vTwoq
-         Sy2TzkhQNPvwI3kBSVyED/gu3TsvqbZXplTEKb4YePFL2y1iRoOOSb06b6egEaHI3E
-         uYPdrHYgPXl2Q==
+        b=q2wJOiNO7E8zAmCcZ+jK6uC9aIuyavucronRzCwAHxS0PPWjgNDtFLc+o13h5IZq5
+         1SpJ8I0ZCTWfMqL5btluOVgwtSPzhF1brSGLwQqiR8yxZYE12J/yZhMWOh3Yv1GgqP
+         CInM38Tm4hsVer0fmScMDn/6rRD8SyELfJccuDBS6CGfbo2C0hB06NrM9kieNroz3C
+         5CsD9TgXwsmMss1zffr6xLGdTAgl1UlcK1thEYuXm1u3Xf+1xbOdZwzdlphvPSEzf4
+         D9yVgbcoZjZnVimskAM6scyDLwCAOMQMoL1F+dJZt0Uoi4xEsTiPfS76yY7QSF++d0
+         YO1jQSTQUtHKw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 81/87] mac80211: use bitfield helpers for BA session action frames
-Date:   Tue, 22 Dec 2020 21:20:57 -0500
-Message-Id: <20201223022103.2792705-81-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 78/87] cfg80211: Save the regulatory domain when setting custom regulatory
+Date:   Tue, 22 Dec 2020 21:20:54 -0500
+Message-Id: <20201223022103.2792705-78-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223022103.2792705-1-sashal@kernel.org>
 References: <20201223022103.2792705-1-sashal@kernel.org>
@@ -52,73 +53,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit db8ebd06ccb87b7bea8e50f3d4ba5dc0142093b8 ]
+[ Upstream commit beee246951571cc5452176f3dbfe9aa5a10ba2b9 ]
 
-Use the appropriate bitfield helpers for encoding and decoding
-the capability field in the BA session action frames instead of
-open-coding the shifts/masks.
+When custom regulatory was set, only the channels setting was updated, but
+the regulatory domain was not saved. Fix it by saving it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20201206145305.0c46e5097cc0.I06e75706770c40b9ba1cabd1f8a78ab7a05c5b73@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20201129172929.290fa5c5568a.Ic5732aa64de6ee97ae3578bd5779fc723ba489d1@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/agg-rx.c |  8 ++++----
- net/mac80211/agg-tx.c | 12 ++++++------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ net/wireless/reg.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 6a4f154c99f6b..dd2e421bda6e5 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -216,10 +216,10 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	mgmt->u.action.u.addba_resp.action_code = WLAN_ACTION_ADDBA_RESP;
- 	mgmt->u.action.u.addba_resp.dialog_token = dialog_token;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c7825b951f725..3427e6e4ce41c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2332,6 +2332,7 @@ static void handle_band_custom(struct wiphy *wiphy,
+ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 				   const struct ieee80211_regdomain *regd)
+ {
++	const struct ieee80211_regdomain *new_regd, *tmp;
+ 	enum nl80211_band band;
+ 	unsigned int bands_set = 0;
  
--	capab = (u16)(amsdu << 0);	/* bit 0 A-MSDU support */
--	capab |= (u16)(policy << 1);	/* bit 1 aggregation policy */
--	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
--	capab |= (u16)(buf_size << 6);	/* bit 15:6 max size of aggregation */
-+	capab = u16_encode_bits(amsdu, IEEE80211_ADDBA_PARAM_AMSDU_MASK);
-+	capab |= u16_encode_bits(policy, IEEE80211_ADDBA_PARAM_POLICY_MASK);
-+	capab |= u16_encode_bits(tid, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	capab |= u16_encode_bits(buf_size, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
+@@ -2351,6 +2352,13 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 	 * on your device's supported bands.
+ 	 */
+ 	WARN_ON(!bands_set);
++	new_regd = reg_copy_regd(regd);
++	if (IS_ERR(new_regd))
++		return;
++
++	tmp = get_wiphy_regdom(wiphy);
++	rcu_assign_pointer(wiphy->regd, new_regd);
++	rcu_free_regdom(tmp);
+ }
+ EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
  
- 	mgmt->u.action.u.addba_resp.capab = cpu_to_le16(capab);
- 	mgmt->u.action.u.addba_resp.timeout = cpu_to_le16(timeout);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 54821fb1a960d..4cb7695a208ac 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -98,10 +98,10 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
- 	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
- 
- 	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
--	capab = (u16)(1 << 0);		/* bit 0 A-MSDU support */
--	capab |= (u16)(1 << 1);		/* bit 1 aggregation policy */
--	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
--	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
-+	capab = IEEE80211_ADDBA_PARAM_AMSDU_MASK;
-+	capab |= IEEE80211_ADDBA_PARAM_POLICY_MASK;
-+	capab |= u16_encode_bits(tid, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	capab |= u16_encode_bits(agg_size, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
- 
- 	mgmt->u.action.u.addba_req.capab = cpu_to_le16(capab);
- 
-@@ -924,8 +924,8 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 
- 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
- 	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
--	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
--	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
-+	tid = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_TID_MASK);
-+	buf_size = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
- 	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
- 
- 	txq = sta->sta.txq[tid];
 -- 
 2.27.0
 
