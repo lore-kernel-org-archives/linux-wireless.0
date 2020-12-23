@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 547C1C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9FE8C4332B
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2380D205CA
+	by mail.kernel.org (Postfix) with ESMTP id 92872206F6
 	for <linux-wireless@archiver.kernel.org>; Wed, 23 Dec 2020 02:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729425AbgLWCze (ORCPT
+        id S1731389AbgLWC4A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:55:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49738 "EHLO mail.kernel.org"
+        Tue, 22 Dec 2020 21:56:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45508 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729157AbgLWCVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:21:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E526022A83;
-        Wed, 23 Dec 2020 02:20:18 +0000 (UTC)
+        id S1727144AbgLWCU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Dec 2020 21:20:58 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C0F42333D;
+        Wed, 23 Dec 2020 02:20:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608690019;
-        bh=QYRAE2X+HHZqjjCwgB3WBYTMKTi+/y4nGivXKqzuziE=;
+        s=k20201202; t=1608690039;
+        bh=n2APBAAFlUerQAQIuTD9g+9eWy1+0CiK4weSE1Tlp7c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QXK0Akfmg084XlbK6qFzXmVqLk/fwiz8K7qAl76mSCR9fOIY+QSg3UV5zWJWXyOmA
-         gbFOAx0I7HxI281mHnG6efsDCBdpKZdcvZT+WcNEXuUZPSQzZ5dnNp2eVOQ8ctf0ea
-         rZmY4nTh7TxjgmtR8yV6I4zHjaKcqoG2kQhGtm+ApWy/sLsmloqDZOpM1z4Zu6+6g3
-         1vvRhbAif1mAJV8Uo1Y1VMuwZGbZb62N3UFRXRuUavX6yPfMEKsrNhkFwQCs4hXIdX
-         HZmSzX+XRxwnPtHaLnkE00+o6hWUmvrqr0hh94hGi+pbYeR7tq2eXxYFakU83q8w3Y
-         ZYcpFfes7Py8Q==
+        b=P8SHaDqFAq7K673lmYLeHt+AnGFhPoblMfkeWuGhuWFm6Cmz8aDaijFnXC/j1hHFC
+         8Bdkx5qPnxXBbbbsXDXD8pLNG1FJ8bUOPDZQwo6MU4Gu8bwK8rQPepz2/EE46hJp0k
+         o/ZtktmqHdwg3Rp74pqQcsmH6jBCtE6BCrlq3W8egjiibtGmheJdEze2z6nx+bgkVD
+         nkU6tZg8FPgRMJLI7xJPx/mV2mUz310PL00r1bXTUWzJDjAykL4uenG4Rs5O1+idVt
+         /QfAc9Pia5Cch9kaaD7H2elN2z9Bz9YF/d+xl6xbKjA+c+hBWBek2u1ZPNkKss2WoM
+         T9vwAksN05dIA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 097/130] rtlwifi: rtl8192de: fix ofdm power compensation
-Date:   Tue, 22 Dec 2020 21:17:40 -0500
-Message-Id: <20201223021813.2791612-97-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 113/130] iwlwifi: mvm: disconnect if channel switch delay is too long
+Date:   Tue, 22 Dec 2020 21:17:56 -0500
+Message-Id: <20201223021813.2791612-113-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
 References: <20201223021813.2791612-1-sashal@kernel.org>
@@ -53,60 +52,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 3f79e541593fecc2a90687eb7162e15a499caa33 ]
+[ Upstream commit 87d9564e14cf5d05e4f1fa4eb7c55d798427f1dd ]
 
-ofdm_index[] is used to indicate how many power compensation is needed to
-current thermal value. For internal PA module or 2.4G band, the min_index
-is different from other cases.
+If the channel switch delay that we would incur after the channel
+switch actually happens is longer than the quiet time we're willing
+to tolerate, disconnect as well.
 
-This issue originally is reported by Dan. He found the size of ofdm_index[]
-is 2, but access index 'i' may be equal to 2 if 'rf' is 2 in case of
-'is2t'.
-
-In fact, the chunk of code is added to wrong place, so move it back to
-proper place, and then power compensation and buffer overflow are fixed.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20201207031903.7599-1-pkshih@realtek.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20201209231352.3bc3449922da.Ib0255deb67b2fc21317e274adcacb545bb1dc669@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-index 71f3b6b5d7bd9..5baa1b127fff0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-@@ -986,18 +986,19 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
- 			 rtlpriv->dm.cck_index);
- 	}
- 	for (i = 0; i < rf; i++) {
--		if (ofdm_index[i] > OFDM_TABLE_SIZE_92D - 1)
-+		if (ofdm_index[i] > OFDM_TABLE_SIZE_92D - 1) {
- 			ofdm_index[i] = OFDM_TABLE_SIZE_92D - 1;
--		else if (ofdm_index[i] < ofdm_min_index)
-+		} else if (internal_pa ||
-+			   rtlhal->current_bandtype == BAND_ON_2_4G) {
-+			if (ofdm_index[i] < ofdm_min_index_internal_pa)
-+				ofdm_index[i] = ofdm_min_index_internal_pa;
-+		} else if (ofdm_index[i] < ofdm_min_index) {
- 			ofdm_index[i] = ofdm_min_index;
-+		}
- 	}
- 	if (rtlhal->current_bandtype == BAND_ON_2_4G) {
- 		if (cck_index > CCK_TABLE_SIZE - 1) {
- 			cck_index = CCK_TABLE_SIZE - 1;
--		} else if (internal_pa ||
--			   rtlhal->current_bandtype == BAND_ON_2_4G) {
--			if (ofdm_index[i] < ofdm_min_index_internal_pa)
--				ofdm_index[i] = ofdm_min_index_internal_pa;
- 		} else if (cck_index < 0) {
- 			cck_index = 0;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index daae86cd61140..366dc2d756bfb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4523,6 +4523,9 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++		if (chsw->delay > IWL_MAX_CSA_BLOCK_TX)
++			schedule_delayed_work(&mvmvif->csa_work, 0);
++
+ 		if (chsw->block_tx) {
+ 			/*
+ 			 * In case of undetermined / long time with immediate
 -- 
 2.27.0
 
