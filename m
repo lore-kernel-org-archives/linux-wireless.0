@@ -2,94 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F8FC04EBC
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D006C4332E
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 808982222A
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:16:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F5CE2222A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:17:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730310AbgL1Wzp (ORCPT
+        id S1730298AbgL1Wzp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 28 Dec 2020 17:55:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58990 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729385AbgL1ULd (ORCPT
+        with ESMTP id S1729302AbgL1ThG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Dec 2020 15:11:33 -0500
-Received: from mout3.freenet.de (mout3.freenet.de [IPv6:2001:748:100:40::2:5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89543C0613D6
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 12:10:37 -0800 (PST)
-Received: from [195.4.92.126] (helo=sub7.freenet.de)
-        by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.92 #3)
-        id 1ktyqe-0001ZB-Vk
-        for linux-wireless@vger.kernel.org; Mon, 28 Dec 2020 21:10:33 +0100
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justmail.de
-        ; s=mjaymdexmjqk; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:References:To:From:Subject:Sender:Reply-To:Cc:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=GuLy18tWOabIhR7MPJhAkQR8E5CQOISTMjeZlojnZyc=; b=lf+tyenPPPCK3bNHvRKoCKK1y0
-        zP7dnVA3gxfGsZF5d6tKWUvsvZjqBiCU7dAGj/NrbAFHEusN9mL9oM1ahBqHDZCz0ZhC+tq3XpGKQ
-        8M0FhNYJyBXFXLYoj09V8PMJ+HEayXCvn+0p1GWFZeFj2X3+Z3oEVmusR4U93SJ0+tZ5DtG0hZLAU
-        qO/8JbpYAV/xmsl4sXAH+msmNk5b7W1jk8AH+TvvDj9OGjMJXTnD0RwjK80EsYzvVeQOy+hW/JGRC
-        weZ1dAasjwT9YXal2biZ/PDoAHfs2wrEoE4BBJJuDzDAuz0HDoO1hq/MeIgWXSzjKpmY7iM260nrj
-        bx3X3tRw==;
-Received: from p200300de57258500505400fffe15ac42.dip0.t-ipconnect.de ([2003:de:5725:8500:5054:ff:fe15:ac42]:34390 helo=mail.maya.org)
-        by sub7.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128) (port 465) (Exim 4.92 #3)
-        id 1ktyqe-0007Fx-U9
-        for linux-wireless@vger.kernel.org; Mon, 28 Dec 2020 21:10:32 +0100
-Received: internal info suppressed
-Subject: Re: RTL8821CE: CTRL-EVENT-BEACON-LOSS and connection loss
-From:   Klaus Mueller <kmueller@justmail.de>
-To:     linux-wireless@vger.kernel.org
-References: <e0de2157-c06e-c327-e969-d32cb21daf40@justmail.de>
-Message-ID: <cf5de66c-de2b-5e55-ed42-476d7e6de50c@justmail.de>
-Date:   Mon, 28 Dec 2020 21:10:31 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        Mon, 28 Dec 2020 14:37:06 -0500
+Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 546F4C0613D6
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 11:36:26 -0800 (PST)
+Received: by mail-vk1-xa33.google.com with SMTP id s13so2511906vkb.11
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 11:36:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=ne+ItwOWVE9qaYXGHf01QVJb+H1Ydh4RijcEekKqQUE=;
+        b=S6Hg0P/tUh3DeE/vI1wd8jsTLLjGvfOVAlhYp1UkDzRppgg3azJf1rN27giL/DAcUc
+         sChUxiHCXNXiJakPFEpkAC7LokBOTezB0coktwZLRiKPRrUGHWrKHgzyacWCkmNkpggI
+         /qjmYoV4EUAZIwWVvb+Qlsg+44yhFjdiB0eyh2bSsU9G6dyKDADtFekiQGRKbcaepj3O
+         SksTnk9NRSXjtBZL5QNkRZb/fj26D3y81FUi6mmaUz4wzezq4poGk9Ko4sqYrsBQS6rt
+         hBEasiBKKTE/yKjDHJzma9xoUv6VHWelh4q+O6S9oXRrsXWtjkLVLMRxshOXgzi8ZGsz
+         3mVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=ne+ItwOWVE9qaYXGHf01QVJb+H1Ydh4RijcEekKqQUE=;
+        b=rbzGzVf6H3EJQx/fmEaYGMBxE5tBSr1HgYtvf3aX5yGmDQwhpjjc5mp4AF59FilUNH
+         t/RFhKlGxw+22YYxdHyWb1ItWITR3Fp4+Wf3mEHznjD0hIJXr3O4U7MpzzKakTFc7ieY
+         /s8qxKRJVLimFQNsP61NVUOR5ZWgejU7ccXRVp2cn1PmDLk6dwlaTkQWgH+lvhwGFJ7P
+         Y9W4dfoLdwZkZX+MS95Hol5JoC2AOtAn0mVV8m1V0fhGYk5O61L+xH96cdtKHwNflxxB
+         4qpCuRgkUJTLJDDvQt8z4t9hrJKZRV4PtedQOuG2GuOJJWOmuBhypRQ7oOL4P01jKu6D
+         QhOw==
+X-Gm-Message-State: AOAM533iznV/Lm6fYfuC7ea46/sf94mRGeeOF3v+puirSgYQvmo7DPE/
+        8IFu5CaPMJ7aOSaPqDTsYdcY3Qrq9exZwZEtIkQ=
+X-Google-Smtp-Source: ABdhPJwjflbU9+u95LbtgxhDnbISubNAVQ8qXtqnzwIBUOpcanWuFR/ezU50uWH7fnL9fLTdQMVmhWl6XysSonoEVnc=
+X-Received: by 2002:ac5:c943:: with SMTP id s3mr30867816vkm.21.1609184185340;
+ Mon, 28 Dec 2020 11:36:25 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <e0de2157-c06e-c327-e969-d32cb21daf40@justmail.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originated-At: 2003:de:5725:8500:5054:ff:fe15:ac42!34390
-X-FNSign: v=2 s=6EB6B2AB03BB580A1D961F6F7F088A74D9EB5D2F6C9EC99A30E82308E266EBD1
+References: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
+In-Reply-To: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
+From:   Emmanuel Grumbach <egrumbach@gmail.com>
+Date:   Mon, 28 Dec 2020 21:36:15 +0200
+Message-ID: <CANUX_P3h-qB11SSOvu7S_eyPKcxx2z1bDweb1Up0WNMk1kqCkg@mail.gmail.com>
+Subject: Re: AP support in iwl4965
+To:     =?UTF-8?Q?Martin=2D=C3=89ric_Racine?= <martin-eric.racine@iki.fi>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+On Mon, Dec 28, 2020 at 6:51 PM Martin-=C3=89ric Racine
+<martin-eric.racine@iki.fi> wrote:
+>
+> (non-subscriber, please CC me in replies)
+> Greetings,
+>
+> I was wondering whether there's any plan to implement AP support in iwl49=
+65?
 
+Well... This device is ... 14 years old or so? So, I guess the answer
+is easy. No.
 
-
-I hoped, that this patch [1] could have fixed the problem - but it
-didn't. After doing a scan, there can be seen this error message in
-wpa_supplicant.log:
-
-
-
-nl80211: send_and_recv->nl_recvmsgs failed: -33
-
-
-
-After that, the CTRL-EVENT-BEACON-LOSS have been coming up again and
-short time later, the connection has been broken (but could be
-reconnected again and disconnected again and so on). Pretty unusable.
-
-
-
-
-
-Thanks
-
-Klaus
-
-
-
-[1] https://marc.info/?l=linux-wireless&m=160914401525592&w=2
+>
+> Given how this is MIMO-capable multi-channel chipset (2.4/5GHz,
+> 2x3:2), being able to use it as an access point with hostapd would be
+> desirable.
+>
+> Cheers!
+> Martin-=C3=89ric
