@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 494A6C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA57C4360C
 	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:29:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33BBA2245C
+	by mail.kernel.org (Postfix) with ESMTP id 84E8122573
 	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:29:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441823AbgL1Q2z (ORCPT
+        id S2441838AbgL1Q27 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Dec 2020 11:28:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52924 "EHLO
+        Mon, 28 Dec 2020 11:28:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2633580AbgL1Q2x (ORCPT
+        with ESMTP id S2441824AbgL1Q2z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Dec 2020 11:28:53 -0500
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A69AC06179E
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:40 -0800 (PST)
-Received: by mail-wr1-x433.google.com with SMTP id a12so11743482wrv.8
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:40 -0800 (PST)
+        Mon, 28 Dec 2020 11:28:55 -0500
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C02B8C0617A1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:43 -0800 (PST)
+Received: by mail-wr1-x42b.google.com with SMTP id d13so11723790wrc.13
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=3RYdIFmmEj5YWYc3o4ND5KeefyrBxeCm6bmJ8jzGapI=;
-        b=sBv7gYlC5bwoIjuph34kxZMbuxPUbZIfw1OmJfrwhOXDfPje0X7xRUHPRJjIvxuiMB
-         xVlg9Afvzp+bZiv/4dc/ZYP7vJGyvYlAaSTbcg7qtyf7eqPJDrzF6vI9nz0twKMbBM/g
-         vO0t6SVPa3PhKn1AZQPHDbva4KJs4FpXKKmG9BeQ7kGEmY7GJ4YsaM03ikiKBmeLKiEz
-         +9jL7eml+wdEQ22QDH2AFb9qhncK+oOJ025/6a9x7fknF0AWSsPyTusylh2gYRcXsqhM
-         Y815//TB/Ns3uj15lFr/C86FzicCdc8ZveLsGCGhNyv7tR2xHX2Ak9e+JHmOzlODYVue
-         wujA==
+        bh=DaRR0s0yK5BJ7snyCgYM3YYfv91qTFP1bIba/mfbIt0=;
+        b=W68ezXvAn1yxyVAM4VLHizolz0Zwdnfq4KSit0A1itMtMF/iQt5vHWpmasiwR8uOY6
+         iANb9sWGbtrbzeK/2coyGmKHcgTznst/IFmzz58rglUrK3yrf/o0Unk1N9xqCNiv5K9G
+         dVoRFsdMxtSBEIj5/lIAqGdf68XwohXZr4GkE03yD0sx3+Hpjl9Mf1+88LmEFof3f9A5
+         Gz0UF/f8vOQTFFO9Hi6Ul2dl5n/YNNa9bB7u66lD2wQ/VEWkiAAqdQpxOE5jPQMiNSDM
+         UfTwZj/9RK4nNR1G8vwEERUulwQ/iXCaVMez0lxLzfkiizSQFW0gdJrSrYnJ/mhZ1RyT
+         3vlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=3RYdIFmmEj5YWYc3o4ND5KeefyrBxeCm6bmJ8jzGapI=;
-        b=OmmPMzam7JY6X4la5vUaxZehk8JRz5bDmnOkvCy6aYfPY1JJqEkrEEWCB9rXYE5ATi
-         jyqGs3/0mvQmJpWhBHkPJHH5ltLJ3uhD1xmYiUlcxrtNE64lv+k7TLWPt7Q4yxY+frfV
-         NV4dypk7kFibknZS7zNYvokaKADnt1Yc20tKGWOyaQGtECIY2Ky7uiPlq7gyT3s3TLnU
-         WxVMMhUWJAeNk+Zk3VuV/dZrq5KVDiSlPdULevjAboxd2hU1BHinPpSrw3s8aenBQHxI
-         L8z7Zc9MB7+VCmrKuyAhTdO2mnnG78ir6XXqCVVI0F5CfvzUQxRa+/uPA68Dbt9hkFse
-         IBYw==
-X-Gm-Message-State: AOAM532koj1oEHGOumxasdsPAzd64gczhu79zlMgX/yUtrAbWsEq5jst
-        /kDBZ+6zi42CznNeCzRfDJoLYQ==
-X-Google-Smtp-Source: ABdhPJzEKfSvAn0mJkWKt0i4wTmIsEAfiJTVP4UZ30DPS45UeJ8LGJt3QSq/zmR9dEv818phzWEMog==
-X-Received: by 2002:adf:d238:: with SMTP id k24mr15458581wrh.414.1609172859208;
-        Mon, 28 Dec 2020 08:27:39 -0800 (PST)
+        bh=DaRR0s0yK5BJ7snyCgYM3YYfv91qTFP1bIba/mfbIt0=;
+        b=KoVtcP9bPRsXfBwQodEXG3y+rIgj5tgIiOeELAIMznTFvORJCeI9FHyiN+zN2Am+lJ
+         NKPxax0cP9ywLhty+Aq1IxopY8UVxnNjfDush5yY1unxXtfxmgFZBQ+wp3wxLtvMEzyK
+         8mo9JGXDAe8QlwE9JV0fZAO6WjleKxgr3jwVHE3trxh/tLb4NibU6/7ygm+eAp/t3FCU
+         A++Ds2SvPoiGCMScGpDKTAN8TJihwxD17itT75n4M6vi4rGeiSI/PkTxH/kfy5e9prWK
+         tSNTaNaa2QmJhaknmnQzsHjIxX1R1jr9n5WDbEcKLpYBDq9g+5jgB7qShb4289D2i4Vf
+         sWTA==
+X-Gm-Message-State: AOAM531DlMA8726U1UmBvlDtvTyvBGc8LYmRrqZEai75TQ02hn3YrWoW
+        jrFBYkD3Y/c+DiAvGbiaCkqmwg==
+X-Google-Smtp-Source: ABdhPJw6O0hyzcV4HP4nSNFNiEFZUrWQz1TIHKXJ+IzbVgMJWa8ne1uINiaBhvEwsqTQBNmz2KqW4g==
+X-Received: by 2002:adf:ab56:: with SMTP id r22mr40739831wrc.351.1609172862552;
+        Mon, 28 Dec 2020 08:27:42 -0800 (PST)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id w21sm19523379wmi.45.2020.12.28.08.27.38
+        by smtp.gmail.com with ESMTPSA id w21sm19523379wmi.45.2020.12.28.08.27.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Dec 2020 08:27:38 -0800 (PST)
+        Mon, 28 Dec 2020 08:27:41 -0800 (PST)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         benl@squareup.com, loic.poulain@linaro.org
-Subject: [PATCH 08/13] wcn36xx: Add set_rekey_data callback
-Date:   Mon, 28 Dec 2020 16:28:34 +0000
-Message-Id: <20201228162839.369156-9-bryan.odonoghue@linaro.org>
+Subject: [PATCH 11/13] wcn36xx: Do not suspend if scan in progress
+Date:   Mon, 28 Dec 2020 16:28:37 +0000
+Message-Id: <20201228162839.369156-12-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
 References: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
@@ -74,73 +74,94 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit adds a callback for Group Temporal Key tracking as provided by
-the standard WiFi ops structure.
-
-We track the key to integrate GTK offloading into the WoWLAN suspend path
-later on. Code comes from the Intel iwlwifi driver with minimal name
-changes.
+If a scan is in progress do not attempt to enter into suspend. Allow the
+scan process to quiesce before proceeding.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    | 19 +++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
- 2 files changed, 25 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/main.c    |  5 +++++
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 13 +++++++++++++
+ drivers/net/wireless/ath/wcn36xx/smd.h     |  2 ++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 +
+ 4 files changed, 21 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index cfa2e2d20a20..b3388e4a76d2 100644
+index b48a3f0dcc0b..feb909192c8e 100644
 --- a/drivers/net/wireless/ath/wcn36xx/main.c
 +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1155,6 +1155,24 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
- 	return 0;
+@@ -1113,6 +1113,11 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac suspend\n");
+ 
++	if (wcn36xx_smd_is_scanning(wcn)) {
++		ret = -EBUSY;
++		goto out;
++	}
++
+ 	mutex_lock(&wcn->conf_mutex);
+ 	vif = wcn36xx_get_first_vif(wcn);
+ 	if (vif) {
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index dd12575f33c3..378282a93aa0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -731,6 +731,7 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode,
+ 		wcn36xx_err("hal_init_scan response failed err=%d\n", ret);
+ 		goto out;
+ 	}
++	wcn->scanning = true;
+ out:
+ 	mutex_unlock(&wcn->hal_mutex);
+ 	return ret;
+@@ -807,6 +808,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ);
+ 
++	wcn->scanning = false;
+ 	msg_body.mode = mode;
+ 	msg_body.oper_channel = WCN36XX_HW_CHANNEL(wcn);
+ 	if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX) {
+@@ -938,6 +940,17 @@ int wcn36xx_smd_stop_hw_scan(struct wcn36xx *wcn)
+ 	return ret;
  }
  
-+void wcn36xx_set_rekey_data(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif,
-+			    struct cfg80211_gtk_rekey_data *data)
++bool wcn36xx_smd_is_scanning(struct wcn36xx *wcn)
 +{
-+	struct wcn36xx *wcn = hw->priv;
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
++	bool scanning;
 +
-+	mutex_lock(&wcn->conf_mutex);
++	mutex_lock(&wcn->hal_mutex);
++	scanning = wcn->scanning;
++	mutex_unlock(&wcn->hal_mutex);
 +
-+	memcpy(vif_priv->rekey_data.kek, data->kek, NL80211_KEK_LEN);
-+	memcpy(vif_priv->rekey_data.kck, data->kck, NL80211_KCK_LEN);
-+	vif_priv->rekey_data.replay_ctr =
-+		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
-+	vif_priv->rekey_data.valid = true;
-+
-+	mutex_unlock(&wcn->conf_mutex);
++	return scanning;
 +}
 +
- #endif
+ static int wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
+ {
+ 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index b225c805107c..3488abb201d0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -159,4 +159,6 @@ int wcn36xx_smd_gtk_offload(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ int wcn36xx_smd_gtk_offload_get_info(struct wcn36xx *wcn,
+ 				     struct ieee80211_vif *vif);
  
- static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
-@@ -1256,6 +1274,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
- #ifdef CONFIG_PM
- 	.suspend		= wcn36xx_suspend,
- 	.resume			= wcn36xx_resume,
-+	.set_rekey_data		= wcn36xx_set_rekey_data,
- #endif
- 	.config			= wcn36xx_config,
- 	.prepare_multicast	= wcn36xx_prepare_multicast,
++bool wcn36xx_smd_is_scanning(struct wcn36xx *wcn);
++
+ #endif	/* _SMD_H_ */
 diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 5a5114660b18..6121d8a5641a 100644
+index 6121d8a5641a..36ea768a5203 100644
 --- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
 +++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -143,6 +143,12 @@ struct wcn36xx_vif {
- 	unsigned long tentative_addrs[BITS_TO_LONGS(WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX)];
- 	int num_target_ipv6_addrs;
- #endif
-+	/* WoWLAN GTK rekey data */
-+	struct {
-+		u8 kck[NL80211_KCK_LEN], kek[NL80211_KEK_LEN];
-+		__le64 replay_ctr;
-+		bool valid;
-+	} rekey_data;
+@@ -249,6 +249,7 @@ struct wcn36xx {
+ 	struct ieee80211_vif	*sw_scan_vif;
+ 	struct mutex		scan_lock;
+ 	bool			scan_aborted;
++	bool			scanning;
  
- 	struct list_head sta_list;
- };
+ 	/* DXE channels */
+ 	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */
 -- 
 2.29.2
 
