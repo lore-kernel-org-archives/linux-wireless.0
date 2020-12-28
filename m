@@ -2,237 +2,298 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FAC4C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:29:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD8EC433E9
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:40:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3798208B6
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:29:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B1422245C
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:40:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2633583AbgL1Q3C (ORCPT
+        id S2633841AbgL1Qkq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Dec 2020 11:29:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52932 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730745AbgL1Q2y (ORCPT
+        Mon, 28 Dec 2020 11:40:46 -0500
+Received: from mail-lf1-f47.google.com ([209.85.167.47]:35506 "EHLO
+        mail-lf1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728670AbgL1M7a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Dec 2020 11:28:54 -0500
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D47C0617A0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:42 -0800 (PST)
-Received: by mail-wr1-x431.google.com with SMTP id c5so11753578wrp.6
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 08:27:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=/3oMZ0XZXTwR2OTVYcKlJpwlfLbWhAGf9POHgc7WDlA=;
-        b=gDY9SHDEwZjqC5Yd9qSLQtJPQfZoC4Dfg1PYZrp9vO7Ru4H2lyZlbeSkIfDarXy6/o
-         PHZj0iSyKYOXRa+0HAuIKFrLubu0fEA+C6OB3hOfX33qLnsMpEYylxlUS6EThMlLALub
-         iA5PLE6qgNwsEsRepf03KcLGzm75TgwLIGr/MGfY9bx9w87l2GUXnSQVTRY0PSv40GkY
-         c42kvOthOu82NX8GmP3hpthn5fLW6nzpNzB8zs/kc12X7RKpjavNP+xOOsVyOfgDNwTa
-         8fcUsgXO1KzJr993fIbtVjlmrakiIwrUNcG0riDzcbQzG+wnJfrXH3q7CLhUjtaEkTH7
-         oRJQ==
+        Mon, 28 Dec 2020 07:59:30 -0500
+Received: by mail-lf1-f47.google.com with SMTP id h22so23754250lfu.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 04:59:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=/3oMZ0XZXTwR2OTVYcKlJpwlfLbWhAGf9POHgc7WDlA=;
-        b=XKVaIwvi9NA+2gBSjesgvEf43wIHpNoh4muHTWd2/vJPCUtM97+e8Mosn0foBdZxkV
-         cchfZeYWgnagEOS8J+4Q7N94jCKAw8wkst5lvcjKyQlRWpXKFVOHqk5z2+KYKHsjBfwS
-         ryXijve48vAGGWcKqFkH1/Z6UBoWZsoql8RTQyx5zPKLDjvfCvfoDk8dmuvkk1dkAwZS
-         ndwxrCganG5KXGeAXPXocIwg5GfmXGOEDIqEr6GIFlQDWDHb/AM2M4Ck0S7LoT+7j37k
-         VLeiZPz9LtLdchMKbpiM3m1zUZGI9m9cbTTFJ6fXqde+R5GezxvbmZdM5FjBL3w+u0vx
-         JD+Q==
-X-Gm-Message-State: AOAM5313kRMis2qQjzikFYKnNJu+o8o2s5MNZQgFskzN2+aNFXpZVau+
-        U7vNowGpb6FyYDmEcx0DpHDigQ==
-X-Google-Smtp-Source: ABdhPJx5MmXQ+qEjz4/+IjVySyJMm5lwSTkHa3may8g7KZQLAHq6Rn04e8PzHJZjAgXKHBWdcpc4VQ==
-X-Received: by 2002:a5d:67c3:: with SMTP id n3mr51447656wrw.297.1609172861427;
-        Mon, 28 Dec 2020 08:27:41 -0800 (PST)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id w21sm19523379wmi.45.2020.12.28.08.27.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Dec 2020 08:27:40 -0800 (PST)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
-        benl@squareup.com, loic.poulain@linaro.org
-Subject: [PATCH 10/13] wcn36xx: Add GTK offload info to WoWLAN resume
-Date:   Mon, 28 Dec 2020 16:28:36 +0000
-Message-Id: <20201228162839.369156-11-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
-References: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=iZ+WbiQCz+3/ZItRJ6GMkcCXgDf03xN79xmUA4ksBr0=;
+        b=Zy3le80Q6bGYI3A3eg9XxEELFJl4R3c/R7yaC5WYWfOZz8xkTp5uIMS8nAYzKQgvFm
+         F2TZmLDcfsjMigi4hVIB/mwsnVxz7eYg7TPqPHFysdgIrv5+222LdUruqxHGy0L0RliJ
+         kW0lwn5EJ7akD6xtymXc1BPFeksPx9QfX0DchRCXCXXwBB7aADvyZEwR7/hRUpMBpvND
+         VizYKYfAMLGnMNpyxX73Vjw0jOkozjRZyMHRI3XiFRro67ogk6wrzjHsnfRHTC5Fu1yf
+         eKOT65fYbVVSxMz2F7vqlwRHRMz/nKWkI3SgjDBeH15BSnC/8Zp9c8FOrqVz73zgONw8
+         JVjQ==
+X-Gm-Message-State: AOAM530Mb2kR8pkokW5vHxQpBszamUl6anNN0Mt5BGUxtKiOzGT64a8W
+        PXvBDCEi7xWEbFJa7wPIMfDAPLcPkqA0IQ==
+X-Google-Smtp-Source: ABdhPJwBos5t7id+7U4kF6i82Ju7xUBxrUNKu0Wy35l/XJrNWuokSQ4yHZKOj8Cs3y7twOVOR9ONSg==
+X-Received: by 2002:ac2:50d0:: with SMTP id h16mr17927464lfm.300.1609160325813;
+        Mon, 28 Dec 2020 04:58:45 -0800 (PST)
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com. [209.85.167.54])
+        by smtp.gmail.com with ESMTPSA id o11sm5330620lfi.267.2020.12.28.04.58.45
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Dec 2020 04:58:45 -0800 (PST)
+Received: by mail-lf1-f54.google.com with SMTP id o13so23714304lfr.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 04:58:45 -0800 (PST)
+X-Received: by 2002:a19:600d:: with SMTP id u13mr17608775lfb.312.1609160325196;
+ Mon, 28 Dec 2020 04:58:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   =?UTF-8?Q?Martin=2D=C3=89ric_Racine?= <martin-eric.racine@iki.fi>
+Date:   Mon, 28 Dec 2020 14:58:34 +0200
+X-Gmail-Original-Message-ID: <CAPZXPQfZPKokKwK4kwXfybBdmRNDnyHmjpk9Nx_OYd3wA9NEUw@mail.gmail.com>
+Message-ID: <CAPZXPQfZPKokKwK4kwXfybBdmRNDnyHmjpk9Nx_OYd3wA9NEUw@mail.gmail.com>
+Subject: rtl8xxxu: untested dongle, test results
+To:     linux-wireless@vger.kernel.org
+Cc:     jes.sorensen@gmail.com
+Content-Type: multipart/mixed; boundary="0000000000009237c005b785d566"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Having enabled GTK rekey in suspend, we need to extract the replay counter
-from the firmware on resume and perform a ieee80211_gtk_rekey_notify() so
-that the STA remains verified from the perspective of the AP.
+--0000000000009237c005b785d566
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/hal.h  |  4 +-
- drivers/net/wireless/ath/wcn36xx/main.c |  5 +-
- drivers/net/wireless/ath/wcn36xx/smd.c  | 72 +++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h  |  3 ++
- 4 files changed, 81 insertions(+), 3 deletions(-)
+(non-subscriber, please CC me in replies)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 1f3c2e840232..455143c4164e 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -4919,7 +4919,7 @@ struct wcn36xx_hal_gtk_offload_rsp_msg {
- struct wcn36xx_hal_gtk_offload_get_info_req_msg {
- 	struct wcn36xx_hal_msg_header header;
- 	u8 bss_index;
--};
-+} __packed;
- 
- struct wcn36xx_hal_gtk_offload_get_info_rsp_msg {
- 	struct wcn36xx_hal_msg_header header;
-@@ -4943,7 +4943,7 @@ struct wcn36xx_hal_gtk_offload_get_info_rsp_msg {
- 	u32 igtk_rekey_count;
- 
- 	u8 bss_index;
--};
-+} __packed;
- 
- struct dhcp_info {
- 	/* Indicates the device mode which indicates about the DHCP activity */
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index aa2a416daa7f..b48a3f0dcc0b 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -173,7 +173,9 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
- #ifdef CONFIG_PM
- 
- static const struct wiphy_wowlan_support wowlan_support = {
--	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_MAGIC_PKT
-+	.flags = WIPHY_WOWLAN_ANY |
-+		 WIPHY_WOWLAN_MAGIC_PKT |
-+		 WIPHY_WOWLAN_SUPPORTS_GTK_REKEY
- };
- 
- #endif
-@@ -1149,6 +1151,7 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
- 			goto out;
- 
- 		wcn36xx_smd_set_power_params(wcn, false);
-+		wcn36xx_smd_gtk_offload_get_info(wcn, vif);
- 		wcn36xx_smd_gtk_offload(wcn, vif, false);
- 		wcn36xx_smd_ipv6_ns_offload(wcn, vif, false);
- 		wcn36xx_smd_arp_offload(wcn, vif, false);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index db7988176526..dd12575f33c3 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2886,6 +2886,77 @@ int wcn36xx_smd_gtk_offload(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	return ret;
- }
- 
-+static int wcn36xx_smd_gtk_offload_get_info_rsp(struct wcn36xx *wcn,
-+						struct ieee80211_vif *vif)
-+{
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_hal_gtk_offload_get_info_rsp_msg *rsp;
-+	__be64 replay_ctr;
-+
-+	if (wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len))
-+		return -EIO;
-+
-+	rsp = (struct wcn36xx_hal_gtk_offload_get_info_rsp_msg *)wcn->hal_buf;
-+
-+	if (rsp->bss_index != vif_priv->bss_index) {
-+		wcn36xx_err("gtk_offload_info invalid response bss index %d\n",
-+			    rsp->bss_index);
-+		return -ENOENT;
-+	}
-+
-+	replay_ctr = cpu_to_be64(le64_to_cpu(rsp->key_replay_counter));
-+	if (vif_priv->rekey_data.replay_ctr != rsp->key_replay_counter) {
-+		vif_priv->rekey_data.replay_ctr = rsp->key_replay_counter;
-+		ieee80211_gtk_rekey_notify(vif, vif->bss_conf.bssid,
-+					   (void *)&replay_ctr, GFP_KERNEL);
-+		 wcn36xx_dbg(WCN36XX_DBG_HAL,
-+			     "GTK replay counter increment %llu\n",
-+			     rsp->key_replay_counter);
-+	}
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL,
-+		    "gtk offload info status %d last_rekey_status %d "
-+		    "replay_counter %llu total_rekey_count %d gtk_rekey_count %d "
-+		    "igtk_rekey_count %d bss_index %d\n",
-+		    rsp->status, rsp->last_rekey_status,
-+		    rsp->key_replay_counter, rsp->total_rekey_count,
-+		    rsp->gtk_rekey_count, rsp->igtk_rekey_count,
-+		    rsp->bss_index);
-+
-+	return 0;
-+}
-+
-+int wcn36xx_smd_gtk_offload_get_info(struct wcn36xx *wcn,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_hal_gtk_offload_get_info_req_msg msg_body;
-+	int ret;
-+
-+	mutex_lock(&wcn->hal_mutex);
-+
-+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_GTK_OFFLOAD_GETINFO_REQ);
-+
-+	msg_body.bss_index = vif_priv->bss_index;
-+
-+	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-+	if (ret) {
-+		wcn36xx_err("Sending gtk_offload_get_info failed\n");
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	if (ret) {
-+		wcn36xx_err("gtk_offload_get_info failed err=%d\n", ret);
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_gtk_offload_get_info_rsp(wcn, vif);
-+out:
-+	mutex_unlock(&wcn->hal_mutex);
-+	return ret;
-+}
-+
- int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 			    void *buf, int len, void *priv, u32 addr)
- {
-@@ -2936,6 +3007,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 	case WCN36XX_HAL_STOP_SCAN_OFFLOAD_RSP:
- 	case WCN36XX_HAL_HOST_OFFLOAD_RSP:
- 	case WCN36XX_HAL_GTK_OFFLOAD_RSP:
-+	case WCN36XX_HAL_GTK_OFFLOAD_GETINFO_RSP:
- 		memcpy(wcn->hal_buf, buf, len);
- 		wcn->hal_rsp_len = len;
- 		complete(&wcn->hal_rsp_compl);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index dd6710672db8..b225c805107c 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -156,4 +156,7 @@ int wcn36xx_smd_ipv6_ns_offload(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- int wcn36xx_smd_gtk_offload(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    bool enable);
- 
-+int wcn36xx_smd_gtk_offload_get_info(struct wcn36xx *wcn,
-+				     struct ieee80211_vif *vif);
-+
- #endif	/* _SMD_H_ */
--- 
-2.29.2
+Kernel: Linux 5.7.10 (Debian)
+Device:  D-Link DWA-131 rev. E1
+https://wikidevi.wi-cat.ru/D-Link_DWA-131_rev_E1
+https://eu.dlink.com/uk/en/products/dwa-131-wireless-n-nano-usb-adapter
 
+Bought this to use as an AP with hostapd, but the AP feature
+apparently isn't supported yet. (it however is supported in the
+manufacturer's own Linux driver)
+
+See enclosed files.
+
+Next, I tested this as a client on another host (also running kernel
+5.7.10) connecting to a BGN access point. This is what I got on the
+client side:
+
+[   87.902641] wlxc4e90a041cb2: authenticate with 24:4b:fe:3d:d0:be
+[   87.969749] wlxc4e90a041cb2: send auth to 24:4b:fe:3d:d0:be (try 1/3)
+[   87.987682] wlxc4e90a041cb2: authenticated
+[   88.045388] wlxc4e90a041cb2: associate with 24:4b:fe:3d:d0:be (try 1/3)
+[   88.093604] wlxc4e90a041cb2: RX AssocResp from 24:4b:fe:3d:d0:be
+(capab=3D0x411 status=3D0 aid=3D4)
+[   88.219990] usb 1-3: rtl8xxxu_bss_info_changed: HT supported
+[   88.282793] wlxc4e90a041cb2: associated
+[   90.439696] IPv6: ADDRCONF(NETDEV_CHANGE): wlxc4e90a041cb2: link
+becomes ready
+
+I hope this helps.
+
+Cheers!
+Martin-=C3=89ric
+
+--0000000000009237c005b785d566
+Content-Type: text/plain; charset="US-ASCII"; name="iw_list_d-link_dwa-131_rev_e1.txt"
+Content-Disposition: attachment; 
+	filename="iw_list_d-link_dwa-131_rev_e1.txt"
+Content-Transfer-Encoding: base64
+Content-ID: <f_kj8kgkzt2>
+X-Attachment-Id: f_kj8kgkzt2
+
+V2lwaHkgcGh5NAoJbWF4ICMgc2NhbiBTU0lEczogNAoJbWF4IHNjYW4gSUVzIGxlbmd0aDogMjI1
+NyBieXRlcwoJbWF4ICMgc2NoZWQgc2NhbiBTU0lEczogMAoJbWF4ICMgbWF0Y2ggc2V0czogMAoJ
+bWF4ICMgc2NhbiBwbGFuczogMQoJbWF4IHNjYW4gcGxhbiBpbnRlcnZhbDogLTEKCW1heCBzY2Fu
+IHBsYW4gaXRlcmF0aW9uczogMAoJUlRTIHRocmVzaG9sZDogMjM0NwoJUmV0cnkgc2hvcnQgbGlt
+aXQ6IDcKCVJldHJ5IGxvbmcgbGltaXQ6IDQKCUNvdmVyYWdlIGNsYXNzOiAwICh1cCB0byAwbSkK
+CVN1cHBvcnRlZCBDaXBoZXJzOgoJCSogV0VQNDAgKDAwLTBmLWFjOjEpCgkJKiBXRVAxMDQgKDAw
+LTBmLWFjOjUpCgkJKiBUS0lQICgwMC0wZi1hYzoyKQoJCSogQ0NNUC0xMjggKDAwLTBmLWFjOjQp
+CgkJKiBDQ01QLTI1NiAoMDAtMGYtYWM6MTApCgkJKiBHQ01QLTEyOCAoMDAtMGYtYWM6OCkKCQkq
+IEdDTVAtMjU2ICgwMC0wZi1hYzo5KQoJQXZhaWxhYmxlIEFudGVubmFzOiBUWCAwIFJYIDAKCVN1
+cHBvcnRlZCBpbnRlcmZhY2UgbW9kZXM6CgkJICogbWFuYWdlZAoJCSAqIG1vbml0b3IKCUJhbmQg
+MToKCQlDYXBhYmlsaXRpZXM6IDB4NmMKCQkJSFQyMAoJCQlTTSBQb3dlciBTYXZlIGRpc2FibGVk
+CgkJCVJYIEhUMjAgU0dJCgkJCVJYIEhUNDAgU0dJCgkJCU5vIFJYIFNUQkMKCQkJTWF4IEFNU0RV
+IGxlbmd0aDogMzgzOSBieXRlcwoJCQlObyBEU1NTL0NDSyBIVDQwCgkJTWF4aW11bSBSWCBBTVBE
+VSBsZW5ndGggNjU1MzUgYnl0ZXMgKGV4cG9uZW50OiAweDAwMykKCQlNaW5pbXVtIFJYIEFNUERV
+IHRpbWUgc3BhY2luZzogMTYgdXNlYyAoMHgwNykKCQlIVCBUWC9SWCBNQ1MgcmF0ZSBpbmRleGVz
+IHN1cHBvcnRlZDogMC0xNSwgMzIKCQlCaXRyYXRlcyAobm9uLUhUKToKCQkJKiAxLjAgTWJwcwoJ
+CQkqIDIuMCBNYnBzCgkJCSogNS41IE1icHMKCQkJKiAxMS4wIE1icHMKCQkJKiA2LjAgTWJwcwoJ
+CQkqIDkuMCBNYnBzCgkJCSogMTIuMCBNYnBzCgkJCSogMTguMCBNYnBzCgkJCSogMjQuMCBNYnBz
+CgkJCSogMzYuMCBNYnBzCgkJCSogNDguMCBNYnBzCgkJCSogNTQuMCBNYnBzCgkJRnJlcXVlbmNp
+ZXM6CgkJCSogMjQxMiBNSHogWzFdICgyMC4wIGRCbSkKCQkJKiAyNDE3IE1IeiBbMl0gKDIwLjAg
+ZEJtKQoJCQkqIDI0MjIgTUh6IFszXSAoMjAuMCBkQm0pCgkJCSogMjQyNyBNSHogWzRdICgyMC4w
+IGRCbSkKCQkJKiAyNDMyIE1IeiBbNV0gKDIwLjAgZEJtKQoJCQkqIDI0MzcgTUh6IFs2XSAoMjAu
+MCBkQm0pCgkJCSogMjQ0MiBNSHogWzddICgyMC4wIGRCbSkKCQkJKiAyNDQ3IE1IeiBbOF0gKDIw
+LjAgZEJtKQoJCQkqIDI0NTIgTUh6IFs5XSAoMjAuMCBkQm0pCgkJCSogMjQ1NyBNSHogWzEwXSAo
+MjAuMCBkQm0pCgkJCSogMjQ2MiBNSHogWzExXSAoMjAuMCBkQm0pCgkJCSogMjQ2NyBNSHogWzEy
+XSAoMjAuMCBkQm0pCgkJCSogMjQ3MiBNSHogWzEzXSAoMjAuMCBkQm0pCgkJCSogMjQ4NCBNSHog
+WzE0XSAoZGlzYWJsZWQpCglTdXBwb3J0ZWQgY29tbWFuZHM6CgkJICogbmV3X2ludGVyZmFjZQoJ
+CSAqIHNldF9pbnRlcmZhY2UKCQkgKiBuZXdfa2V5CgkJICogc3RhcnRfYXAKCQkgKiBuZXdfc3Rh
+dGlvbgoJCSAqIG5ld19tcGF0aAoJCSAqIHNldF9tZXNoX2NvbmZpZwoJCSAqIHNldF9ic3MKCQkg
+KiBhdXRoZW50aWNhdGUKCQkgKiBhc3NvY2lhdGUKCQkgKiBkZWF1dGhlbnRpY2F0ZQoJCSAqIGRp
+c2Fzc29jaWF0ZQoJCSAqIGpvaW5faWJzcwoJCSAqIGpvaW5fbWVzaAoJCSAqIHJlbWFpbl9vbl9j
+aGFubmVsCgkJICogc2V0X3R4X2JpdHJhdGVfbWFzawoJCSAqIGZyYW1lCgkJICogZnJhbWVfd2Fp
+dF9jYW5jZWwKCQkgKiBzZXRfd2lwaHlfbmV0bnMKCQkgKiBzZXRfY2hhbm5lbAoJCSAqIHNldF93
+ZHNfcGVlcgoJCSAqIHByb2JlX2NsaWVudAoJCSAqIHNldF9ub2Fja19tYXAKCQkgKiByZWdpc3Rl
+cl9iZWFjb25zCgkJICogc3RhcnRfcDJwX2RldmljZQoJCSAqIHNldF9tY2FzdF9yYXRlCgkJICog
+Y29ubmVjdAoJCSAqIGRpc2Nvbm5lY3QKCQkgKiBzZXRfcW9zX21hcAoJCSAqIHNldF9tdWx0aWNh
+c3RfdG9fdW5pY2FzdAoJU3VwcG9ydGVkIFRYIGZyYW1lIHR5cGVzOgoJCSAqIElCU1M6IDB4MDAg
+MHgxMCAweDIwIDB4MzAgMHg0MCAweDUwIDB4NjAgMHg3MCAweDgwIDB4OTAgMHhhMCAweGIwIDB4
+YzAgMHhkMCAweGUwIDB4ZjAKCQkgKiBtYW5hZ2VkOiAweDAwIDB4MTAgMHgyMCAweDMwIDB4NDAg
+MHg1MCAweDYwIDB4NzAgMHg4MCAweDkwIDB4YTAgMHhiMCAweGMwIDB4ZDAgMHhlMCAweGYwCgkJ
+ICogQVA6IDB4MDAgMHgxMCAweDIwIDB4MzAgMHg0MCAweDUwIDB4NjAgMHg3MCAweDgwIDB4OTAg
+MHhhMCAweGIwIDB4YzAgMHhkMCAweGUwIDB4ZjAKCQkgKiBBUC9WTEFOOiAweDAwIDB4MTAgMHgy
+MCAweDMwIDB4NDAgMHg1MCAweDYwIDB4NzAgMHg4MCAweDkwIDB4YTAgMHhiMCAweGMwIDB4ZDAg
+MHhlMCAweGYwCgkJICogbWVzaCBwb2ludDogMHgwMCAweDEwIDB4MjAgMHgzMCAweDQwIDB4NTAg
+MHg2MCAweDcwIDB4ODAgMHg5MCAweGEwIDB4YjAgMHhjMCAweGQwIDB4ZTAgMHhmMAoJCSAqIFAy
+UC1jbGllbnQ6IDB4MDAgMHgxMCAweDIwIDB4MzAgMHg0MCAweDUwIDB4NjAgMHg3MCAweDgwIDB4
+OTAgMHhhMCAweGIwIDB4YzAgMHhkMCAweGUwIDB4ZjAKCQkgKiBQMlAtR086IDB4MDAgMHgxMCAw
+eDIwIDB4MzAgMHg0MCAweDUwIDB4NjAgMHg3MCAweDgwIDB4OTAgMHhhMCAweGIwIDB4YzAgMHhk
+MCAweGUwIDB4ZjAKCQkgKiBQMlAtZGV2aWNlOiAweDAwIDB4MTAgMHgyMCAweDMwIDB4NDAgMHg1
+MCAweDYwIDB4NzAgMHg4MCAweDkwIDB4YTAgMHhiMCAweGMwIDB4ZDAgMHhlMCAweGYwCglTdXBw
+b3J0ZWQgUlggZnJhbWUgdHlwZXM6CgkJICogSUJTUzogMHg0MCAweGIwIDB4YzAgMHhkMAoJCSAq
+IG1hbmFnZWQ6IDB4NDAgMHhiMCAweGQwCgkJICogQVA6IDB4MDAgMHgyMCAweDQwIDB4YTAgMHhi
+MCAweGMwIDB4ZDAKCQkgKiBBUC9WTEFOOiAweDAwIDB4MjAgMHg0MCAweGEwIDB4YjAgMHhjMCAw
+eGQwCgkJICogbWVzaCBwb2ludDogMHhiMCAweGMwIDB4ZDAKCQkgKiBQMlAtY2xpZW50OiAweDQw
+IDB4ZDAKCQkgKiBQMlAtR086IDB4MDAgMHgyMCAweDQwIDB4YTAgMHhiMCAweGMwIDB4ZDAKCQkg
+KiBQMlAtZGV2aWNlOiAweDQwIDB4ZDAKCXNvZnR3YXJlIGludGVyZmFjZSBtb2RlcyAoY2FuIGFs
+d2F5cyBiZSBhZGRlZCk6CgkJICogbW9uaXRvcgoJaW50ZXJmYWNlIGNvbWJpbmF0aW9ucyBhcmUg
+bm90IHN1cHBvcnRlZAoJSFQgQ2FwYWJpbGl0eSBvdmVycmlkZXM6CgkJICogTUNTOiBmZiBmZiBm
+ZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgoJCSAqIG1heGltdW0gQS1NU0RVIGxlbmd0aAoJCSAqIHN1
+cHBvcnRlZCBjaGFubmVsIHdpZHRoCgkJICogc2hvcnQgR0kgZm9yIDQwIE1IegoJCSAqIG1heCBB
+LU1QRFUgbGVuZ3RoIGV4cG9uZW50CgkJICogbWluIE1QRFUgc3RhcnQgc3BhY2luZwoJRGV2aWNl
+IHN1cHBvcnRzIFRYIHN0YXR1cyBzb2NrZXQgb3B0aW9uLgoJRGV2aWNlIHN1cHBvcnRzIEhULUlC
+U1MuCglEZXZpY2Ugc3VwcG9ydHMgU0FFIHdpdGggQVVUSEVOVElDQVRFIGNvbW1hbmQKCURldmlj
+ZSBzdXBwb3J0cyBsb3cgcHJpb3JpdHkgc2Nhbi4KCURldmljZSBzdXBwb3J0cyBzY2FuIGZsdXNo
+LgoJRGV2aWNlIHN1cHBvcnRzIEFQIHNjYW4uCglEZXZpY2Ugc3VwcG9ydHMgcGVyLXZpZiBUWCBw
+b3dlciBzZXR0aW5nCglEcml2ZXIgc3VwcG9ydHMgZnVsbCBzdGF0ZSB0cmFuc2l0aW9ucyBmb3Ig
+QVAvR08gY2xpZW50cwoJRHJpdmVyIHN1cHBvcnRzIGEgdXNlcnNwYWNlIE1QTQoJRGV2aWNlIHN1
+cHBvcnRzIGNvbmZpZ3VyaW5nIHZkZXYgTUFDLWFkZHIgb24gY3JlYXRlLgoJU3VwcG9ydGVkIGV4
+dGVuZGVkIGZlYXR1cmVzOgoJCSogWyBSUk0gXTogUlJNCgkJKiBbIEZJTFNfU1RBIF06IFNUQSBG
+SUxTIChGYXN0IEluaXRpYWwgTGluayBTZXR1cCkKCQkqIFsgQ1FNX1JTU0lfTElTVCBdOiBtdWx0
+aXBsZSBDUU1fUlNTSV9USE9MRCByZWNvcmRzCgkJKiBbIENPTlRST0xfUE9SVF9PVkVSX05MODAy
+MTEgXTogY29udHJvbCBwb3J0IG92ZXIgbmw4MDIxMQo=
+--0000000000009237c005b785d566
+Content-Type: text/plain; charset="US-ASCII"; name="dmesg_d-link_dwa-131_rev_e1.txt"
+Content-Disposition: attachment; filename="dmesg_d-link_dwa-131_rev_e1.txt"
+Content-Transfer-Encoding: base64
+Content-ID: <f_kj8kgkz60>
+X-Attachment-Id: f_kj8kgkz60
+
+WzEwMjcwOC44NzE3MDddIHVzYiAyLTEuNTogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmljZSBudW1i
+ZXIgMTQgdXNpbmcgZWhjaS1wY2kKWzEwMjcwOC45ODA3OTZdIHVzYiAyLTEuNTogTmV3IFVTQiBk
+ZXZpY2UgZm91bmQsIGlkVmVuZG9yPTIwMDEsIGlkUHJvZHVjdD0zMzE5LCBiY2REZXZpY2U9IDIu
+MDAKWzEwMjcwOC45ODA3OTldIHVzYiAyLTEuNTogTmV3IFVTQiBkZXZpY2Ugc3RyaW5nczogTWZy
+PTEsIFByb2R1Y3Q9MiwgU2VyaWFsTnVtYmVyPTMKWzEwMjcwOC45ODA4MDBdIHVzYiAyLTEuNTog
+UHJvZHVjdDogV2lyZWxlc3MgTiBOYW5vIFVTQiBBZGFwdGVyClsxMDI3MDguOTgwODAyXSB1c2Ig
+Mi0xLjU6IE1hbnVmYWN0dXJlcjogUmVhbHRlawpbMTAyNzA4Ljk4MDgwM10gdXNiIDItMS41OiBT
+ZXJpYWxOdW1iZXI6IDAwZTA0YzAwMDAwMQpbMTAyNzA5LjAyNzMxNV0gdXNiIDItMS41OiBUaGlz
+IFJlYWx0ZWsgVVNCIFdpRmkgZG9uZ2xlICgweDIwMDE6MHgzMzE5KSBpcyB1bnRlc3RlZCEKWzEw
+MjcwOS4wMjczMTddIHVzYiAyLTEuNTogUGxlYXNlIHJlcG9ydCByZXN1bHRzIHRvIEplcy5Tb3Jl
+bnNlbkBnbWFpbC5jb20KWzEwMjcwOS4yMTA2NjhdIHVzYiAyLTEuNTogVmVuZG9yOiBSZWFsdGVr
+ClsxMDI3MDkuMjEwNjcxXSB1c2IgMi0xLjU6IFByb2R1Y3Q6IFdpcmVsZXNzIE4KWzEwMjcwOS4y
+MTA2NzJdIHVzYiAyLTEuNTogU2VyaWFsOiBubyBVU0IgQWRhcApbMTAyNzA5LjIxMDY3NF0gdXNi
+IDItMS41OiBydGw4MTkyZXVfcGFyc2VfZWZ1c2U6IGR1bXBpbmcgZWZ1c2UgKDB4MjAwIGJ5dGVz
+KToKWzEwMjcwOS4yMTA2NzZdIHVzYiAyLTEuNTogMDA6IDI5IDgxIDAwIDdjIDAxIDQwIDAzIDAw
+ClsxMDI3MDkuMjEwNjc4XSB1c2IgMi0xLjU6IDA4OiA0MCA3NCAwNCA1MCAxNCAwMCAwMCAwMApb
+MTAyNzA5LjIxMDY3OV0gdXNiIDItMS41OiAxMDogMjEgMjEgMjEgMjEgMjEgMjEgMjUgMjUKWzEw
+MjcwOS4yMTA2ODFdIHVzYiAyLTEuNTogMTg6IDI1IDI1IDI1IGVlIDBmIGVmIGZmIGZmClsxMDI3
+MDkuMjEwNjgyXSB1c2IgMi0xLjU6IDIwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5
+LjIxMDY4M10gdXNiIDItMS41OiAyODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4y
+MTA2ODVdIHVzYiAyLTEuNTogMzA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEw
+Njg2XSB1c2IgMi0xLjU6IDM4OiBmZiBmZiAxZSAxZSAxZSAxZSAxZSAxZQpbMTAyNzA5LjIxMDY4
+N10gdXNiIDItMS41OiA0MDogMjQgMjQgMjQgMjQgMjQgZWUgMGYgZWYKWzEwMjcwOS4yMTA2ODld
+IHVzYiAyLTEuNTogNDg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNjkwXSB1
+c2IgMi0xLjU6IDUwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDY5MV0gdXNi
+IDItMS41OiA1ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA2OTNdIHVzYiAy
+LTEuNTogNjA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNjk0XSB1c2IgMi0x
+LjU6IDY4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDY5Nl0gdXNiIDItMS41
+OiA3MDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA2OTddIHVzYiAyLTEuNTog
+Nzg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNjk4XSB1c2IgMi0xLjU6IDgw
+OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDcwMF0gdXNiIDItMS41OiA4ODog
+ZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3MDFdIHVzYiAyLTEuNTogOTA6IGZm
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzAyXSB1c2IgMi0xLjU6IDk4OiBmZiBm
+ZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDcwNF0gdXNiIDItMS41OiBhMDogZmYgZmYg
+ZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3MDVdIHVzYiAyLTEuNTogYTg6IGZmIGZmIGZm
+IGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzA2XSB1c2IgMi0xLjU6IGIwOiBmZiBmZiBmZiBm
+ZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDcwOF0gdXNiIDItMS41OiBiODogMjEgMzYgMjEgMDAg
+MDAgMDAgZmYgZmYKWzEwMjcwOS4yMTA3MDldIHVzYiAyLTEuNTogYzA6IGZmIDAxIDAwIDEwIDAw
+IDAwIDAwIGZmClsxMDI3MDkuMjEwNzEwXSB1c2IgMi0xLjU6IGM4OiAwMCAwMCBmZiBmZiBmZiBm
+ZiBmZiBmZgpbMTAyNzA5LjIxMDcxMl0gdXNiIDItMS41OiBkMDogMDEgMjAgMTkgMzMgZTcgNDcg
+MDIgYzQKWzEwMjcwOS4yMTA3MTNdIHVzYiAyLTEuNTogZDg6IGU5IDBhIDA0IDFjIGIyIDA5IDAz
+IDUyClsxMDI3MDkuMjEwNzE1XSB1c2IgMi0xLjU6IGUwOiA2NSA2MSA2YyA3NCA2NSA2YiAxZCAw
+MwpbMTAyNzA5LjIxMDcxNl0gdXNiIDItMS41OiBlODogNTcgNjkgNzIgNjUgNmMgNjUgNzMgNzMK
+WzEwMjcwOS4yMTA3MTddIHVzYiAyLTEuNTogZjA6IDIwIDRlIDIwIDRlIDYxIDZlIDZmIDIwClsx
+MDI3MDkuMjEwNzE5XSB1c2IgMi0xLjU6IGY4OiA1NSA1MyA0MiAyMCA0MSA2NCA2MSA3MApbMTAy
+NzA5LjIxMDcyMF0gdXNiIDItMS41OiAxMDA6IDc0IDY1IDcyIDAwIGZmIGZmIGZmIGZmClsxMDI3
+MDkuMjEwNzIxXSB1c2IgMi0xLjU6IDEwODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcw
+OS4yMTA3MjNdIHVzYiAyLTEuNTogMTEwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiAwZApbMTAyNzA5
+LjIxMDcyNF0gdXNiIDItMS41OiAxMTg6IDAzIDAwIDA1IDAwIDMwIDAwIDAwIDAwClsxMDI3MDku
+MjEwNzI2XSB1c2IgMi0xLjU6IDEyMDogMDAgOTMgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4y
+MTA3MjddIHVzYiAyLTEuNTogMTI4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIx
+MDcyOF0gdXNiIDItMS41OiAxMzA6IGY2IGE4IDk4IDJkIDAzIDkyIDk4IDAwClsxMDI3MDkuMjEw
+NzMwXSB1c2IgMi0xLjU6IDEzODogZmMgOGMgMDAgMTEgOWIgNDQgMDIgMGEKWzEwMjcwOS4yMTA3
+MzFdIHVzYiAyLTEuNTogMTQwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDcz
+Ml0gdXNiIDItMS41OiAxNDg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzM0
+XSB1c2IgMi0xLjU6IDE1MDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3MzVd
+IHVzYiAyLTEuNTogMTU4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDczNl0g
+dXNiIDItMS41OiAxNjA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzM4XSB1
+c2IgMi0xLjU6IDE2ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3MzldIHVz
+YiAyLTEuNTogMTcwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc0MV0gdXNi
+IDItMS41OiAxNzg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzQyXSB1c2Ig
+Mi0xLjU6IDE4MDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NDNdIHVzYiAy
+LTEuNTogMTg4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc0NV0gdXNiIDIt
+MS41OiAxOTA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzQ2XSB1c2IgMi0x
+LjU6IDE5ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NDddIHVzYiAyLTEu
+NTogMWEwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc0OV0gdXNiIDItMS41
+OiAxYTg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzUwXSB1c2IgMi0xLjU6
+IDFiMDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NTFdIHVzYiAyLTEuNTog
+MWI4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc1M10gdXNiIDItMS41OiAx
+YzA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzU0XSB1c2IgMi0xLjU6IDFj
+ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NTZdIHVzYiAyLTEuNTogMWQw
+OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc1N10gdXNiIDItMS41OiAxZDg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzU4XSB1c2IgMi0xLjU6IDFlMDog
+ZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NjBdIHVzYiAyLTEuNTogMWU4OiBm
+ZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbMTAyNzA5LjIxMDc2MV0gdXNiIDItMS41OiAxZjA6IGZm
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmClsxMDI3MDkuMjEwNzYyXSB1c2IgMi0xLjU6IDFmODogZmYg
+ZmYgZmYgZmYgZmYgZmYgZmYgZmYKWzEwMjcwOS4yMTA3NjZdIHVzYiAyLTEuNTogUlRMODE5MkVV
+IHJldiBCIChTTUlDKSAyVDJSLCBUWCBxdWV1ZXMgMywgV2lGaT0xLCBCVD0wLCBHUFM9MCwgSEkg
+UEE9MApbMTAyNzA5LjIxMDc2N10gdXNiIDItMS41OiBSVEw4MTkyRVUgTUFDOiBjNDplOTowYTow
+NDoxYzpiMgpbMTAyNzA5LjIxMDc2OV0gdXNiIDItMS41OiBydGw4eHh4dTogTG9hZGluZyBmaXJt
+d2FyZSBydGx3aWZpL3J0bDgxOTJldV9uaWMuYmluClsxMDI3MDkuMjI4MTczXSB1c2IgMi0xLjU6
+IGZpcm13YXJlOiBkaXJlY3QtbG9hZGluZyBmaXJtd2FyZSBydGx3aWZpL3J0bDgxOTJldV9uaWMu
+YmluClsxMDI3MDkuMjI4MTc5XSB1c2IgMi0xLjU6IEZpcm13YXJlIHJldmlzaW9uIDE5LjAgKHNp
+Z25hdHVyZSAweDkyZTEpClsxMDI3MTAuMzAzMDIwXSB1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBp
+bnRlcmZhY2UgZHJpdmVyIHJ0bDh4eHh1Cg==
+--0000000000009237c005b785d566
+Content-Type: text/plain; charset="US-ASCII"; name="hwinfo_d-link_dwa-131_rev_e1.txt"
+Content-Disposition: attachment; filename="hwinfo_d-link_dwa-131_rev_e1.txt"
+Content-Transfer-Encoding: base64
+Content-ID: <f_kj8kgkzk1>
+X-Attachment-Id: f_kj8kgkzk1
+
+Mjg6IFVTQiAwMC4wOiAwMjgyIFdMQU4gY29udHJvbGxlcgogIFtDcmVhdGVkIGF0IHVzYi4xMjJd
+CiAgVW5pcXVlIElEOiBCZ2pyLnl2WUJQeUxMcVY1CiAgUGFyZW50IElEOiBGS0dGLjROeF9xb0Rm
+U2Q3CiAgU3lzRlMgSUQ6IC9kZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDoxZC4wL3VzYjIvMi0x
+LzItMS41LzItMS41OjEuMAogIFN5c0ZTIEJ1c0lEOiAyLTEuNToxLjAKICBIYXJkd2FyZSBDbGFz
+czogbmV0d29yawogIE1vZGVsOiAiRC1MaW5rIFdpcmVsZXNzIE4gTmFubyBVU0IgQWRhcHRlciIK
+ICBIb3RwbHVnOiBVU0IKICBWZW5kb3I6IHVzYiAweDIwMDEgIkQtTGluayIKICBEZXZpY2U6IHVz
+YiAweDMzMTkgIldpcmVsZXNzIE4gTmFubyBVU0IgQWRhcHRlciIKICBSZXZpc2lvbjogIjIuMDAi
+CiAgU2VyaWFsIElEOiAiMDBlMDRjMDAwMDAxIgogIERyaXZlcjogInJ0bDh4eHh1IgogIERyaXZl
+ciBNb2R1bGVzOiAicnRsOHh4eHUiCiAgRGV2aWNlIEZpbGU6IHdseGM0ZTkwYTA0MWNiMgogIEZl
+YXR1cmVzOiBXTEFOCiAgU3BlZWQ6IDQ4MCBNYnBzCiAgSFcgQWRkcmVzczogZDY6ODM6OGY6ZDY6
+YmE6ZWQKICBQZXJtYW5lbnQgSFcgQWRkcmVzczogYzQ6ZTk6MGE6MDQ6MWM6YjIKICBMaW5rIGRl
+dGVjdGVkOiBubwogIFdMQU4gY2hhbm5lbHM6IDEgMiAzIDQgNSA2IDcgOCA5IDEwIDExIDEyIDEz
+CiAgV0xBTiBmcmVxdWVuY2llczogMi40MTIgMi40MTcgMi40MjIgMi40MjcgMi40MzIgMi40Mzcg
+Mi40NDIgMi40NDcgMi40NTIgMi40NTcgMi40NjIgMi40NjcgMi40NzIKICBXTEFOIGVuY3J5cHRp
+b24gbW9kZXM6IFdFUDQwIFdFUDEwNCBUS0lQIENDTVAKICBXTEFOIGF1dGhlbnRpY2F0aW9uIG1v
+ZGVzOiBvcGVuIHNoYXJlZGtleSB3cGEtcHNrIHdwYS1lYXAKICBNb2R1bGUgQWxpYXM6ICJ1c2I6
+djIwMDFwMzMxOWQwMjAwZGMwMGRzYzAwZHAwMGljRkZpc2NGRmlwRkZpbjAwIgogIERyaXZlciBJ
+bmZvICMwOgogICAgRHJpdmVyIFN0YXR1czogcnRsOHh4eHUgaXMgYWN0aXZlCiAgICBEcml2ZXIg
+QWN0aXZhdGlvbiBDbWQ6ICJtb2Rwcm9iZSBydGw4eHh4dSIKICBDb25maWcgU3RhdHVzOiBjZmc9
+bmV3LCBhdmFpbD15ZXMsIG5lZWQ9bm8sIGFjdGl2ZT11bmtub3duCiAgQXR0YWNoZWQgdG86ICMy
+OSAoSHViKQoK
+--0000000000009237c005b785d566--
