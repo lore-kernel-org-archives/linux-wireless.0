@@ -2,73 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F90C43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0540C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 18:59:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB0D920659
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 16:48:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 687A8224D2
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 18:59:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728220AbgL1Mxi convert rfc822-to-8bit (ORCPT
+        id S1728069AbgL1S71 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Dec 2020 07:53:38 -0500
-Received: from mail-lf1-f46.google.com ([209.85.167.46]:43926 "EHLO
-        mail-lf1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728205AbgL1Mxh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Dec 2020 07:53:37 -0500
-Received: by mail-lf1-f46.google.com with SMTP id 23so23602282lfg.10
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 04:53:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=vxAlMapaod3+O0NUmclUFGKXI89e2iNbe2epUOzmG28=;
-        b=egDfktNLk1EeXQ9JGyn4XJs9gygb7sPiEYi/ITTyxUZbyCA3+7cQ2KOW5YsOPwbx1D
-         zi5U559jymLmpLGVWlcTNrs7bI8MN1OzlZIMkGEp7ZgXSiA2jI1bjpjpn8EyeTK3R/PJ
-         kpNuQMNLjiJJSKFkG5KFuPUQA3EpVqLMB4Fwz82p0aehoY2Bi+96z009V9sPfRKI375W
-         P9PS5btGnUkewIpz99VKCkkT5WrtpBftIHGMZr6YGoqVytDqq3OWe0waAVAjxPUlifqK
-         LTPE1y2rfpRdXd1ixJ3kJMdWWiRUgQeHd9QAwIQTdFAjiv3dgsLiAxMdcNPqubcQup+Y
-         2jmQ==
-X-Gm-Message-State: AOAM530TiVJHtepG3hrfi7QPQmhpsPbkjcDy0Iw+JrTkfkuwEWs9ZYGI
-        eD1Sle8HQnyBjAE6oDMi/N1NIU4yRqO4HA==
-X-Google-Smtp-Source: ABdhPJx82p5+bO6JVlsBymD7usJrnrhtUW2MHSfrEJ+fGKuavmmYfrhuGNq7WJAQFyzD7t0+oxZftQ==
-X-Received: by 2002:a19:8149:: with SMTP id c70mr18302691lfd.502.1609159975331;
-        Mon, 28 Dec 2020 04:52:55 -0800 (PST)
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com. [209.85.167.50])
-        by smtp.gmail.com with ESMTPSA id m8sm5278239lfg.134.2020.12.28.04.52.55
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Dec 2020 04:52:55 -0800 (PST)
-Received: by mail-lf1-f50.google.com with SMTP id y19so23525492lfa.13
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 04:52:55 -0800 (PST)
-X-Received: by 2002:a19:4107:: with SMTP id o7mr18231670lfa.512.1609159975057;
- Mon, 28 Dec 2020 04:52:55 -0800 (PST)
+        Mon, 28 Dec 2020 13:59:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726643AbgL1S71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Dec 2020 13:59:27 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 84407224D2;
+        Mon, 28 Dec 2020 18:58:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609181926;
+        bh=PsFW1wLrURYDXeuFrLZtdtQy1yKSZIOnpfA+4J7PMs8=;
+        h=Date:From:To:Cc:Subject:From;
+        b=cHsSbuJoUWqpVo3wQjXQErKaK6mgEMXb0uqe3M0tgx6m61z371DNJzuwvCHyoYEVP
+         ZPt1DbdKFrzj5KFUP/jOMboG9h/Vv5UDJmYypM6Lx3CBDUKsNCFoPhp+kZr65JrUU6
+         1vDKnryjb59MOVL2ShbWJ2A8aHyYdch1zNguB0eM1hSYMrtDb1wb+omE4rB2lrM2Bz
+         D1P7n+3MiuRBlIvTLmyh9Wjq+bCcm1hLCLL5ytQNVbhc2kL9XZx1idP8CnLCeYRvxK
+         yGBB95NrmK6tSbwnZFZ8oJrC5RzocUKtIeFQ5uhL9v+uMJxWh+YK+H+UJ+bA9O46x8
+         TE+CsFkZSZeuA==
+Date:   Mon, 28 Dec 2020 10:58:45 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: ath6k del interface locking
+Message-ID: <20201228105845.75cc4a77@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 MIME-Version: 1.0
-From:   =?UTF-8?Q?Martin=2D=C3=89ric_Racine?= <martin-eric.racine@iki.fi>
-Date:   Mon, 28 Dec 2020 14:52:44 +0200
-X-Gmail-Original-Message-ID: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
-Message-ID: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
-Subject: AP support in iwl4965
-To:     linux-wireless@vger.kernel.org
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-(non-subscriber, please CC me in replies)
-Greetings,
+Hi Kalle,
 
-I was wondering whether there's any plan to implement AP support in iwl4965?
+I've been looking at various issues around netdev registration and I
+run across the code in ath6kl_cfg80211_del_iface().
 
-Given how this is MIMO-capable multi-channel chipset (2.4/5GHz,
-2x3:2), being able to use it as an access point with hostapd would be
-desirable.
+AFAIU nl80211 already holds the rtnl lock, because the op has NEED_RTNL:
 
-Cheers!
-Martin-Éric
+	{
+		.cmd = NL80211_CMD_DEL_INTERFACE,
+		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+		.doit = nl80211_del_interface,
+		.flags = GENL_UNS_ADMIN_PERM,
+		.internal_flags = NL80211_FLAG_NEED_WDEV |
+				  NL80211_FLAG_NEED_RTNL,
+	},
+
+So how come ath6kl_cfg80211_del_iface() takes the lock again?
