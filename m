@@ -2,89 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D006C4332E
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FEDAC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Dec 2020 02:15:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F5CE2222A
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Dec 2020 23:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C7FE20789
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Dec 2020 02:15:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730298AbgL1Wzp (ORCPT
+        id S1727121AbgL2COo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Dec 2020 17:55:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53734 "EHLO
+        Mon, 28 Dec 2020 21:14:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729302AbgL1ThG (ORCPT
+        with ESMTP id S1726848AbgL2COg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Dec 2020 14:37:06 -0500
-Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 546F4C0613D6
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 11:36:26 -0800 (PST)
-Received: by mail-vk1-xa33.google.com with SMTP id s13so2511906vkb.11
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 11:36:26 -0800 (PST)
+        Mon, 28 Dec 2020 21:14:36 -0500
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 633C9C061793
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 18:13:56 -0800 (PST)
+Received: by mail-wr1-x42c.google.com with SMTP id 91so12917410wrj.7
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2020 18:13:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=ne+ItwOWVE9qaYXGHf01QVJb+H1Ydh4RijcEekKqQUE=;
-        b=S6Hg0P/tUh3DeE/vI1wd8jsTLLjGvfOVAlhYp1UkDzRppgg3azJf1rN27giL/DAcUc
-         sChUxiHCXNXiJakPFEpkAC7LokBOTezB0coktwZLRiKPRrUGHWrKHgzyacWCkmNkpggI
-         /qjmYoV4EUAZIwWVvb+Qlsg+44yhFjdiB0eyh2bSsU9G6dyKDADtFekiQGRKbcaepj3O
-         SksTnk9NRSXjtBZL5QNkRZb/fj26D3y81FUi6mmaUz4wzezq4poGk9Ko4sqYrsBQS6rt
-         hBEasiBKKTE/yKjDHJzma9xoUv6VHWelh4q+O6S9oXRrsXWtjkLVLMRxshOXgzi8ZGsz
-         3mVg==
+        d=linaro.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=tqOSr1W+rz9VXkwF2yiLYjnBy0UuXLJbQbcPvrRbHZk=;
+        b=suVPYidBAIQfFCBM/VXpbsYxXwjtSSrIe4F71DeCdznntLjQGpohClnuZM+YnvKKIu
+         70NcZ9blluQezurfPARb2cKq6gNo2kzz93zbqQDAPxjml9Ha+imsTYDy8NN6i5hIylIw
+         Cje8774BOSACA8RV1tImuV3GK/R8mEpGLyRe3yLZ+BBl9+EB+hGKbin5MVzGV9+d+mMI
+         lou7o2LcSiUBxksj7HjCinJ3nUNY4qeP/TkZqQuRSsNws+1n6xorN1FFhmKBndqHTKRd
+         rlhbZvERwwUilo6ofNJKRnjEc2EsqZk3Mw+kymF56xtn2FPzR4xzX+RMvU+bENzRLpn5
+         I+5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=ne+ItwOWVE9qaYXGHf01QVJb+H1Ydh4RijcEekKqQUE=;
-        b=rbzGzVf6H3EJQx/fmEaYGMBxE5tBSr1HgYtvf3aX5yGmDQwhpjjc5mp4AF59FilUNH
-         t/RFhKlGxw+22YYxdHyWb1ItWITR3Fp4+Wf3mEHznjD0hIJXr3O4U7MpzzKakTFc7ieY
-         /s8qxKRJVLimFQNsP61NVUOR5ZWgejU7ccXRVp2cn1PmDLk6dwlaTkQWgH+lvhwGFJ7P
-         Y9W4dfoLdwZkZX+MS95Hol5JoC2AOtAn0mVV8m1V0fhGYk5O61L+xH96cdtKHwNflxxB
-         4qpCuRgkUJTLJDDvQt8z4t9hrJKZRV4PtedQOuG2GuOJJWOmuBhypRQ7oOL4P01jKu6D
-         QhOw==
-X-Gm-Message-State: AOAM533iznV/Lm6fYfuC7ea46/sf94mRGeeOF3v+puirSgYQvmo7DPE/
-        8IFu5CaPMJ7aOSaPqDTsYdcY3Qrq9exZwZEtIkQ=
-X-Google-Smtp-Source: ABdhPJwjflbU9+u95LbtgxhDnbISubNAVQ8qXtqnzwIBUOpcanWuFR/ezU50uWH7fnL9fLTdQMVmhWl6XysSonoEVnc=
-X-Received: by 2002:ac5:c943:: with SMTP id s3mr30867816vkm.21.1609184185340;
- Mon, 28 Dec 2020 11:36:25 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tqOSr1W+rz9VXkwF2yiLYjnBy0UuXLJbQbcPvrRbHZk=;
+        b=cx1eADEEith939FEa2JRFL/iMAbnNdlLs4fhCSsJLvRP4b029lt5htaNoMHEle/jSu
+         iaZ8IcGrXzR5uJD43JSWSIQbRm+qXz/J5nd6Sw7SWRJsAJcxoAVm83JfC2UKiCnpAmuL
+         su/nVT0gXgzM8c68a/NyuYXbsVNZ6G8Xg/DBbtLDiHf9Zrre+05rKJBMUhkRXrMS2AKT
+         xc0Melnr7kQWoffrfmMBcenGIKBGlF22OlZgrnQe++fu0P9pW5hjJvsmfo7eLxpFxwbK
+         ShLBzb28Cql/RmDsEJtJ6axPhLbwYecJcIx+sqpsBXjqOcsZYudYbmIo/zcRONChCkRz
+         BnCw==
+X-Gm-Message-State: AOAM533CaI7cuMef+IGyARy+Hrf07U9FUhnwNPFTInzqPM6g2iOB1DNn
+        E37XtIAewXcDHZFM0IFupz8QLg==
+X-Google-Smtp-Source: ABdhPJyB5qUYiJt1NR9q+NIaIJFrCBkivGQv1tSkfK4X6mCc48YLDFmuFiDWx1mnaIxYAZCcGoz+YQ==
+X-Received: by 2002:a5d:6045:: with SMTP id j5mr51639125wrt.223.1609208035163;
+        Mon, 28 Dec 2020 18:13:55 -0800 (PST)
+Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id n14sm1393123wmi.1.2020.12.28.18.13.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Dec 2020 18:13:54 -0800 (PST)
+Subject: Re: [PATCH 06/13] wcn36xx: Add ipv6 namespace offload in suspend
+To:     kernel test robot <lkp@intel.com>, kvalo@codeaurora.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, shawn.guo@linaro.org, benl@squareup.com,
+        loic.poulain@linaro.org
+References: <20201228162839.369156-7-bryan.odonoghue@linaro.org>
+ <202012290547.6ryYf96B-lkp@intel.com>
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Message-ID: <bcf6adbc-e03a-6f02-e55f-6e0b738806fd@linaro.org>
+Date:   Tue, 29 Dec 2020 02:15:04 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.3
 MIME-Version: 1.0
-References: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
-In-Reply-To: <CAPZXPQdpcvjCBqzCGt55Fz0iAx6Dn3MB7hMfzPgoeejK6-AYQg@mail.gmail.com>
-From:   Emmanuel Grumbach <egrumbach@gmail.com>
-Date:   Mon, 28 Dec 2020 21:36:15 +0200
-Message-ID: <CANUX_P3h-qB11SSOvu7S_eyPKcxx2z1bDweb1Up0WNMk1kqCkg@mail.gmail.com>
-Subject: Re: AP support in iwl4965
-To:     =?UTF-8?Q?Martin=2D=C3=89ric_Racine?= <martin-eric.racine@iki.fi>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <202012290547.6ryYf96B-lkp@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Dec 28, 2020 at 6:51 PM Martin-=C3=89ric Racine
-<martin-eric.racine@iki.fi> wrote:
->
-> (non-subscriber, please CC me in replies)
-> Greetings,
->
-> I was wondering whether there's any plan to implement AP support in iwl49=
-65?
+On 28/12/2020 21:49, kernel test robot wrote:
+> [auto build test ERROR on wireless-drivers-next/master]
 
-Well... This device is ... 14 years old or so? So, I guess the answer
-is easy. No.
+hmm
 
->
-> Given how this is MIMO-capable multi-channel chipset (2.4/5GHz,
-> 2x3:2), being able to use it as an access point with hostapd would be
-> desirable.
->
-> Cheers!
-> Martin-=C3=89ric
+works against this
+
+* 77da2c99eca0 - (tag: ath-202012180905, ath.git/master) Add 
+localversion-wireless-testing-ath (11 days ago)
