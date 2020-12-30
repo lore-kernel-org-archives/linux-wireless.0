@@ -7,28 +7,28 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD02C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6FD3C433DB
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 18:07:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0C3E22287
+	by mail.kernel.org (Postfix) with ESMTP id 8A6FF2222A
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 18:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbgL3SHV (ORCPT
+        id S1726619AbgL3SHV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 30 Dec 2020 13:07:21 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54814 "EHLO
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54827 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726317AbgL3SHV (ORCPT
+        with ESMTP id S1726499AbgL3SHV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 30 Dec 2020 13:07:21 -0500
-X-UUID: ae599a5c980d46ca9324ae2d1981dd79-20201231
-X-UUID: ae599a5c980d46ca9324ae2d1981dd79-20201231
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+X-UUID: 63906b67a53e4ed49e026b6bff85fac2-20201231
+X-UUID: 63906b67a53e4ed49e026b6bff85fac2-20201231
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 199292650; Thu, 31 Dec 2020 02:06:33 +0800
+        with ESMTP id 660928448; Thu, 31 Dec 2020 02:06:32 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Thu, 31 Dec 2020 02:06:31 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
@@ -42,14 +42,15 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH -next v4 10/13] mt76: mt7921: introduce 802.11 PS support in sta mode
-Date:   Thu, 31 Dec 2020 02:06:21 +0800
-Message-ID: <ce8af55ea739582eaf8122b170a2faf3211bec9a.1609347310.git.objelf@gmail.com>
+Subject: [PATCH -next v4 05/13] mt76: mt7921: add EEPROM support
+Date:   Thu, 31 Dec 2020 02:06:16 +0800
+Message-ID: <fe493ff425804b1988130395aed9a6bc9534d9f7.1609347310.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <cover.1609347310.git.objelf@gmail.com>
 References: <cover.1609347310.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-SNTS-SMTP: 6C902F7100D4C73B1624105ACB08D836CE309F57DA1C06FDBF7D1C7A1891833C2000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -57,7 +58,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-Enable 802.11 power-save support available in mt7921 firmware
+Add EEPROM support to MT7921 to determine the capability the card has
+such as indentificaiton, MAC address, the band and antenna number the
+card able to support.
 
 Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
@@ -65,93 +68,163 @@ Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
 Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 ++
- .../net/wireless/mediatek/mt76/mt7921/mac.c   |  3 +--
- .../net/wireless/mediatek/mt76/mt7921/main.c  |  3 +++
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 21 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
- 5 files changed, 28 insertions(+), 2 deletions(-)
+ .../wireless/mediatek/mt76/mt7921/Makefile    |   2 +-
+ .../wireless/mediatek/mt76/mt7921/eeprom.c    | 101 ++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7921/eeprom.h    |  27 +++++
+ 3 files changed, 129 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 7ec89bf96c80..f8736ac3c58c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -83,6 +83,8 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
- 	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
-+	ieee80211_hw_set(hw, SUPPORTS_PS);
-+	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/Makefile b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+index 13721f4cdd43..622749311fc6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+@@ -2,4 +2,4 @@
  
- 	hw->max_tx_fragments = 4;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 8a29fd9ad9cd..0d1e8388d69d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -690,8 +690,7 @@ void mt7921_mac_write_txwi(struct mt7921_dev *dev, __le32 *txwi,
- 	txwi[1] = cpu_to_le32(val);
- 	txwi[2] = 0;
+ obj-$(CONFIG_MT7921E) += mt7921e.o
  
--	val = MT_TXD3_SW_POWER_MGMT |
--	      FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
-+	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
- 	if (key)
- 		val |= MT_TXD3_PROTECT_FRAME;
- 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 3d906f7ccee9..ca51d5e41a1b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -559,6 +559,9 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & (BSS_CHANGED_QOS | BSS_CHANGED_BEACON_ENABLED))
- 		mt7921_mcu_set_tx(dev, vif);
- 
-+	if (changed & BSS_CHANGED_PS)
-+		mt7921_mcu_set_vif_ps(dev, vif);
+-mt7921e-y := pci.o mcu.o mac.o dma.o
++mt7921e-y := pci.o mcu.o mac.o dma.o eeprom.o
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+new file mode 100644
+index 000000000000..dddbd3b43aa9
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+@@ -0,0 +1,101 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc. */
 +
- 	mutex_unlock(&dev->mt76.mutex);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 3cd2d29f1e29..edad763cf194 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -2519,3 +2519,24 @@ u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx)
- 
- 	return 0;
- }
++#include "mt7921.h"
++#include "eeprom.h"
 +
-+int mt7921_mcu_set_vif_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif)
++static u32 mt7921_eeprom_read(struct mt7921_dev *dev, u32 offset)
 +{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	struct {
-+		u8 bss_idx;
-+		u8 ps_state; /* 0: device awake
-+			      * 1: static power save
-+			      * 2: dynamic power saving
-+			      */
-+	} req = {
-+		.bss_idx = mvif->idx,
-+		.ps_state = vif->bss_conf.ps ? 2 : 0,
-+	};
++	u8 *data = dev->mt76.eeprom.data;
 +
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return -EOPNOTSUPP;
++	if (data[offset] == 0xff)
++		mt7921_mcu_get_eeprom(dev, offset);
 +
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_PS_PROFILE, &req,
-+				 sizeof(req), false);
++	return data[offset];
 +}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index 114c63cf78f9..b8bd99894f11 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -359,4 +359,5 @@ int mt7921_mcu_sched_scan_enable(struct mt7921_phy *phy,
- int mt7921_mcu_cancel_hw_scan(struct mt7921_phy *phy,
- 			      struct ieee80211_vif *vif);
- u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx);
-+int mt7921_mcu_set_vif_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
- #endif
++
++static int mt7921_eeprom_load(struct mt7921_dev *dev)
++{
++	int ret;
++
++	ret = mt76_eeprom_init(&dev->mt76, MT7921_EEPROM_SIZE);
++	if (ret < 0)
++		return ret;
++
++	memset(dev->mt76.eeprom.data, -1, MT7921_EEPROM_SIZE);
++
++	return 0;
++}
++
++static int mt7921_check_eeprom(struct mt7921_dev *dev)
++{
++	u8 *eeprom = dev->mt76.eeprom.data;
++	u16 val;
++
++	mt7921_eeprom_read(dev, MT_EE_CHIP_ID);
++	val = get_unaligned_le16(eeprom);
++
++	switch (val) {
++	case 0x7961:
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++void mt7921_eeprom_parse_band_config(struct mt7921_phy *phy)
++{
++	struct mt7921_dev *dev = phy->dev;
++	u32 val;
++
++	val = mt7921_eeprom_read(dev, MT_EE_WIFI_CONF);
++	val = FIELD_GET(MT_EE_WIFI_CONF_BAND_SEL, val);
++
++	switch (val) {
++	case MT_EE_5GHZ:
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	case MT_EE_2GHZ:
++		phy->mt76->cap.has_2ghz = true;
++		break;
++	default:
++		phy->mt76->cap.has_2ghz = true;
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	}
++}
++
++static void mt7921_eeprom_parse_hw_cap(struct mt7921_dev *dev)
++{
++	u8 tx_mask, *eeprom = dev->mt76.eeprom.data;
++
++	mt7921_eeprom_parse_band_config(&dev->phy);
++
++	/* read tx mask from eeprom (0: 1Tx, 1: 2Tx) */
++	tx_mask = FIELD_GET(MT_EE_WIFI_CONF_TX_MASK, eeprom[MT_EE_WIFI_CONF]);
++	tx_mask = tx_mask + 1;
++	dev->chainmask = BIT(tx_mask) - 1;
++	dev->mphy.antenna_mask = dev->chainmask;
++	dev->phy.chainmask = dev->mphy.antenna_mask;
++}
++
++int mt7921_eeprom_init(struct mt7921_dev *dev)
++{
++	int ret;
++
++	ret = mt7921_eeprom_load(dev);
++	if (ret < 0)
++		return ret;
++
++	ret = mt7921_check_eeprom(dev);
++	if (ret)
++		return ret;
++
++	mt7921_eeprom_parse_hw_cap(dev);
++	memcpy(dev->mphy.macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR,
++	       ETH_ALEN);
++
++	mt76_eeprom_override(&dev->mphy);
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+new file mode 100644
+index 000000000000..54f30401343c
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: ISC */
++/* Copyright (C) 2020 MediaTek Inc. */
++
++#ifndef __MT7921_EEPROM_H
++#define __MT7921_EEPROM_H
++
++#include "mt7921.h"
++
++enum mt7921_eeprom_field {
++	MT_EE_CHIP_ID =		0x000,
++	MT_EE_VERSION =		0x002,
++	MT_EE_MAC_ADDR =	0x004,
++	MT_EE_WIFI_CONF =	0x07c,
++	__MT_EE_MAX =		0x3bf
++};
++
++#define MT_EE_WIFI_CONF_TX_MASK			BIT(0)
++#define MT_EE_WIFI_CONF_BAND_SEL		GENMASK(3, 2)
++
++enum mt7921_eeprom_band {
++	MT_EE_NA,
++	MT_EE_5GHZ,
++	MT_EE_2GHZ,
++	MT_EE_DUAL_BAND,
++};
++
++#endif
 -- 
 2.25.1
 
