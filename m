@@ -2,146 +2,156 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 737DDC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 15:03:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD02C433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 18:07:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 369B622225
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 15:03:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0C3E22287
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 18:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726356AbgL3PDA (ORCPT
+        id S1726549AbgL3SHV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Dec 2020 10:03:00 -0500
-Received: from mail-eopbgr140077.outbound.protection.outlook.com ([40.107.14.77]:50877
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726336AbgL3PDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Dec 2020 10:03:00 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B7gbi0nguQC+I/Mt5i7DLWHLDAy+L9oUJFAUpc786eOOt8FhuSvCI5W60MCbPoLyX5cabjteoB4o3AQgj9cEsiurRCFbs5t2n8w+mY/gzZH9J7bC192B8O6a9Nsv2pcSwBk4HNjjNbXa/uYmNPKfmZr1Ng/efx8PdexccDT2chu/F681JicVhKCLEZfy8goJjbQKNpNdxzc732DcUTQHdVxdOy6sSahX000XR+ASKSdZeD7FS6xIygLGzEl+2gEvw1D/C0c2ZjYrU7Zqz4Iv1Cm1iaRcopXwzBI4p8fNanlarOFr5IcsDm3wW9qYNwN5393+qyqIxUIVPbaQ+AJv/A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TP3MV3jUssifsedqIz0OrrVi+O1nhGemqybQfGneOLo=;
- b=R5v1K8cdJaiGS5TbiIk1SZ6TOuaL3IDxij7qZMkdYI1Q82JI1HPJWlRSwVhskHzNS7WJ9wRlHh42iMUlVlvxpiaaYBYhHsDQVG/RwOQYm5REeu82lN2O5Fu3TMmC3D8k0ekxQ125SqP1Fl0BBbyjKwqiNBfeA975xZm6gNpTEcgZ2zjDDZ33WYyUVy8Mw41Rqjnd0/OVD0GvjqY55HEPUw/pG0oChCvkBtZNmgT95If8dbu5rJ493G9E+VeHrHoVhut4LSf4ORjjYaTGaKh9iyYDUkB8f0gfQhkBzNzE+w+rO3tNAAHrI3DnCmPyUIfKiFmrstq85Rfk+fggSad53Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
- dkim=pass header.d=celeno.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TP3MV3jUssifsedqIz0OrrVi+O1nhGemqybQfGneOLo=;
- b=RNDMbOLm7jLP4E8fan2VJ2cRIz48mxYl1ri3Drx6I+kYm8GZA7iZ2ZFiAZHdqQzyZX9MtR3eC8gPwXGMQ5SSDjlTGEfZw5ERvFN95IJNSLrrJ4+qnV6roRlCuJGtqWP7gSzbLI0X5Ja64HQ+pLBgufvVjAlVgtiw3MBPZwRLjuY=
-Authentication-Results: lists.infradead.org; dkim=none (message not signed)
- header.d=none;lists.infradead.org; dmarc=none action=none
- header.from=celeno.com;
-Received: from VI1P192MB0479.EURP192.PROD.OUTLOOK.COM (2603:10a6:803:38::31)
- by VE1P192MB0718.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:148::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3721.20; Wed, 30 Dec
- 2020 15:02:11 +0000
-Received: from VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
- ([fe80::5d66:44ad:84ff:3fbf]) by VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
- ([fe80::5d66:44ad:84ff:3fbf%5]) with mapi id 15.20.3700.031; Wed, 30 Dec 2020
- 15:02:11 +0000
-Subject: Re: [PATCH] wireless: fix wrong 160/80+80 MHz setting
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, aviad.brikman@celeno.com,
-        eliav.farber@celeno.com, linux-wireless-owner@vger.kernel.org,
-        ath11k@lists.infradead.org
-References: <20200826143139.25976-1-shay.bar@celeno.com>
- <34893f267fa37b43d21c19d4c08c090e@codeaurora.org>
-From:   Shay Bar <shay.bar@celeno.com>
-Message-ID: <212736b1-43eb-a27d-c83d-68f669c8d9df@celeno.com>
-Date:   Wed, 30 Dec 2020 17:02:06 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
-In-Reply-To: <34893f267fa37b43d21c19d4c08c090e@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [87.70.56.235]
-X-ClientProxiedBy: LNXP265CA0070.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:5d::34) To VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:803:38::31)
+        Wed, 30 Dec 2020 13:07:21 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54814 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726317AbgL3SHV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Dec 2020 13:07:21 -0500
+X-UUID: ae599a5c980d46ca9324ae2d1981dd79-20201231
+X-UUID: ae599a5c980d46ca9324ae2d1981dd79-20201231
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 199292650; Thu, 31 Dec 2020 02:06:33 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 31 Dec 2020 02:06:31 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 31 Dec 2020 02:06:31 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <ryder.lee@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH -next v4 10/13] mt76: mt7921: introduce 802.11 PS support in sta mode
+Date:   Thu, 31 Dec 2020 02:06:21 +0800
+Message-ID: <ce8af55ea739582eaf8122b170a2faf3211bec9a.1609347310.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1609347310.git.objelf@gmail.com>
+References: <cover.1609347310.git.objelf@gmail.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [10.0.0.13] (87.70.56.235) by LNXP265CA0070.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:5d::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3721.20 via Frontend Transport; Wed, 30 Dec 2020 15:02:09 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d0254f23-9ec6-431e-7618-08d8acd3e28b
-X-MS-TrafficTypeDiagnostic: VE1P192MB0718:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <VE1P192MB0718D2DF6DFF7F75AAEB2883E7D70@VE1P192MB0718.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: kW3SUI+EPFtS8F1EAgwpy7LRMmtb2vJNcXSu/P9n9Q2EYgXAVmIsMh/ir8BUqKrtx9jIQPb073q9mBNqEa7wcs2V451fYYQPzKTfoHSfHaJuXweLQWm+cWa2tOs2pP4ynaOyj+T7Gi8Zh8d3aALlAU/OkPtvVAKBDoCMi5QmmhRNrUl/9sKpwQR8x4frJBfHoBBh45q72n9aj7/ZxibmGJxeyDVzbpx1MHBD1Nff7k1UCSNqZOJRHKJ8bHX1sXEXnye4yJifRrEsCCr6Od1bwmvFNiKhoYwiNWJnzOmeeJHnQRHsj6RLMFdollfe4j7iCOfSGxAHqfMhFbPXxXZNJOZOGiSWZmZZjd/Wn356hWeAEqrzXNFhsTIHzgNNfXS7UOL9Xxk/q2ciuWsgFn/hh4CJb5912HYoUMaoA5wwnRoH0e8G4YGj+olZI2BLeIv+m2VJpz6qKsgbStwNx9s9EBEEI1U6MyYk8psoNFQaE2s=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1P192MB0479.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(39840400004)(396003)(346002)(136003)(376002)(8676002)(478600001)(44832011)(66556008)(66476007)(66946007)(4326008)(6666004)(2906002)(956004)(6916009)(4744005)(52116002)(2616005)(31686004)(83380400001)(186003)(26005)(16526019)(53546011)(5660300002)(16576012)(8936002)(316002)(6486002)(86362001)(36756003)(31696002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?NHZseXU2YUZ3QUFwT0hQcHY4cWwzSjJ6OVdmQk5HTmtVaGFvTUZqOGF3OEI3?=
- =?utf-8?B?c1B2citYKzgwVjhYQWZtajZBQVZqRHJYK0gxWVJZdTd3dnNMOGwxcWRMTjh1?=
- =?utf-8?B?YzM2WUREaExVMEhpcVN0ai9hTHFvV0Njc3RSTkQvSlVyZHpWL0dwTWNFbmlS?=
- =?utf-8?B?TEFDa2J6ekVQdHBZRCtaRFh3YTdXdERaV1BsdXgvRnZJeGI1Uk5rdnRFTXJi?=
- =?utf-8?B?THl5ajBzR1laR085NlFFYXZLbmJnMi9YT3ZqcEpOaU1PNm5pZVh6WXpFZDlC?=
- =?utf-8?B?R3hPeXpKN3BsQjlhMmV5SlNNUmxRV0piQ3owMS9Hb3ZNZ0FIc3Vab0lzMGFW?=
- =?utf-8?B?S01uOWdlVElHcHhSTHRvcHFyaTVhc0IraUNjK2hVeFFBTkJpK2dITGhWaEZJ?=
- =?utf-8?B?eWlSYUs1MEU5VU03Nno0dmFQTExyV0ZoNGJMMEN5ajh6c0ZKdDJaRkpXZkIz?=
- =?utf-8?B?VHlSWS9xVGR3T1pYSlhLclFYcWdaUGFsWEJsckJvWFBHTUc5RU15S3lOS1pk?=
- =?utf-8?B?YXhvTTF5eFVSZkwvRERKSXpPa2g4bDI2dVdtTUExbFZEUFJiSzJKVkJMckRa?=
- =?utf-8?B?VWZnNlRMODhSTHl4QTlQSkNtOExqdkJKY09zZHNOb2NzZWxYQlVNM01lOEE2?=
- =?utf-8?B?TVliRmt2eE1kTk1wVkFLWEJPcFJpdElNQU1tRDVyTkRNZTJTS0xJVDZRNkMy?=
- =?utf-8?B?Yks2ekFhaGFKTUtHNTdsSkFoWjlLNThBRHJhcWNJVXpmVzUrQ2R4ZVRIUG1J?=
- =?utf-8?B?OE5ZTlM3UFdqV2kwRzRIRzdHNjE1LzVXVEp1T0hyRGdnWUs5T0lEY2lqQ1hx?=
- =?utf-8?B?V2d1UHpobkphcy9Kdkk3d0JzSi9aeXBVUXltVGcyTnNweVZLWXpaTXhrSG56?=
- =?utf-8?B?OVNza1RtQTROMUdEUlQ2b21WRnBXUHFYZGtLaHJxRHU2bG5DUlJWQU5FanJP?=
- =?utf-8?B?ZGJyUExPRWlsZXluNnRtZGgyb3NSbVNxcWt1Qk1Nb21qOTFvRE14Nk1Zd2JJ?=
- =?utf-8?B?WXkvanEzVk1Dc2RvdUthSGdVZVYvaVhJeHBMUFFsREFzcVlVa0hGTGFXYnVS?=
- =?utf-8?B?aTFKdGtXcVFsd0lrNzZ2dzJxV1AvUElZbXRRcUtXYVBTN3hYdzh2aWo4Tkht?=
- =?utf-8?B?d2JaY0ZnekxKMWRSOEdBWkQySUVOWkptQy9oMCtYcjg5SmVKc1QxMVJpYkJy?=
- =?utf-8?B?VytpSTRlcWp4S2pzMkRLbVpteG5abW5BcEl3cGlnUEdibnFXWFdjWHFKUExC?=
- =?utf-8?B?clk1MTZrNmVEMDNTUFlzRWNybkM3OEV1NkRqQ0RsQjNTdi9Jek9ZYTAxT2lo?=
- =?utf-8?Q?AC77nT50LN2IMrvzL+rm0BzAVxMBsxEbG5?=
-X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-AuthSource: VI1P192MB0479.EURP192.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Dec 2020 15:02:11.0443
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
-X-MS-Exchange-CrossTenant-Network-Message-Id: d0254f23-9ec6-431e-7618-08d8acd3e28b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0XKEpSS1zhEPyCeiZezB/E3IcAWWKDNAYAnKiuPED+k1vuxOYmJHrLpCrzaYv0+M7uVDoIuOPBSW2+I+0uXG7g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0718
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Sean Wang <sean.wang@mediatek.com>
 
-On 30/12/2020 12:57, Wen Gong wrote:
->
-> On 2020-08-26 22:31, Shay Bar wrote:
->> Fix cfg80211_chandef_usable():
->> consider IEEE80211_VHT_CAP_EXT_NSS_BW when verifying 160/80+80 MHz.
->>
-> When station with below 2 bit and connect to a 160MHZ 11ac mode AP, it
-> will try to use 160Mhz width after this patch,
-> but it does not support 160M in fact according spec of IEEE 802.11
-> .... .... .... .... .... .... .... 00.. = Supported Channel Width Set:
-> Neither 160MHz nor 80+80 supported (0x0)
-> 01.. .... .... .... .... .... .... .... = Extended NSS BW Support: 0x1
->
-> refer to spec of IEEE 802.11.
-> Table 9-250—Setting of the Supported Channel Width Set subfield and
-> Extended NSS BW Support subfield at a STA transmitting the VHT
-> Capabilities Information field
-> value of the 160Mhz is 1/2 in the table for upper configure.
-> NOTE 2—1/2× or 3/4× Max VHT NSS support might end up being 0, indicating
-> no support.
->
+Enable 802.11 power-save support available in mt7921 firmware
 
-You mean for AP's with 1 SS for example ?
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 ++
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   |  3 +--
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |  3 +++
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 21 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
+ 5 files changed, 28 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 7ec89bf96c80..f8736ac3c58c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -83,6 +83,8 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
+ 	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
+ 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
++	ieee80211_hw_set(hw, SUPPORTS_PS);
++	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
+ 
+ 	hw->max_tx_fragments = 4;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 8a29fd9ad9cd..0d1e8388d69d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -690,8 +690,7 @@ void mt7921_mac_write_txwi(struct mt7921_dev *dev, __le32 *txwi,
+ 	txwi[1] = cpu_to_le32(val);
+ 	txwi[2] = 0;
+ 
+-	val = MT_TXD3_SW_POWER_MGMT |
+-	      FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
++	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count);
+ 	if (key)
+ 		val |= MT_TXD3_PROTECT_FRAME;
+ 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 3d906f7ccee9..ca51d5e41a1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -559,6 +559,9 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & (BSS_CHANGED_QOS | BSS_CHANGED_BEACON_ENABLED))
+ 		mt7921_mcu_set_tx(dev, vif);
+ 
++	if (changed & BSS_CHANGED_PS)
++		mt7921_mcu_set_vif_ps(dev, vif);
++
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 3cd2d29f1e29..edad763cf194 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -2519,3 +2519,24 @@ u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx)
+ 
+ 	return 0;
+ }
++
++int mt7921_mcu_set_vif_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif)
++{
++	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
++	struct {
++		u8 bss_idx;
++		u8 ps_state; /* 0: device awake
++			      * 1: static power save
++			      * 2: dynamic power saving
++			      */
++	} req = {
++		.bss_idx = mvif->idx,
++		.ps_state = vif->bss_conf.ps ? 2 : 0,
++	};
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_PS_PROFILE, &req,
++				 sizeof(req), false);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 114c63cf78f9..b8bd99894f11 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -359,4 +359,5 @@ int mt7921_mcu_sched_scan_enable(struct mt7921_phy *phy,
+ int mt7921_mcu_cancel_hw_scan(struct mt7921_phy *phy,
+ 			      struct ieee80211_vif *vif);
+ u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx);
++int mt7921_mcu_set_vif_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
+ #endif
+-- 
+2.25.1
 
