@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05356C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F24C433E9
 	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 00:09:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2491207AB
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 00:09:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 230AE207AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 00:09:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726302AbgLaAGM (ORCPT
+        id S1726356AbgLaAGO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Dec 2020 19:06:12 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:47700 "EHLO
+        Wed, 30 Dec 2020 19:06:14 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:47720 "EHLO
         mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726285AbgLaAGM (ORCPT
+        with ESMTP id S1726317AbgLaAGN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Dec 2020 19:06:12 -0500
+        Wed, 30 Dec 2020 19:06:13 -0500
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id C28F413C2B0;
-        Wed, 30 Dec 2020 16:05:31 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C28F413C2B0
+        by mail3.candelatech.com (Postfix) with ESMTP id A66C213C2B7;
+        Wed, 30 Dec 2020 16:05:32 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A66C213C2B7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1609373131;
-        bh=hFkyYEWhA30TPBMGchH4iI/kOk+PGLWX5Kt4pCTCvhA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=InfqUoQByIIFcqHjtXQ/5glhhNnUXgRAQzaX+SToRVdcYBAbb7zPfRbrWCYXX9oCn
-         TnVJefXL1PcklllzIcI550xTsHEqnflPM9QMNbO/2zdB2rlz8oXqgDsqCucCP8yYd9
-         PxqncQVIlvqumdGBr28wZYag65UjynOhB4tfoh4o=
+        s=default; t=1609373132;
+        bh=EgOrrtC4YhHgXlJn+I5ahTyMkr0l9CGLrIB7SLNkqzQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=B/VC07KHWmqJff6i9NnuWYiQm4BYXHbd72hi2fGwHAdHs4YeyXxoup0iARgLa8moD
+         YAqluy0Jn+Qdszn/iXEUuLRWpT+drE89AsVnLSGSj+X2nGAIcvt60Jzb6mYBzvrkVY
+         bgpjCJmR+hUtxna0foYSQXLvlrfeH4rK93pjc80Y=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     luca@coelho.fi, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/6] iwlwifi: Decrease firmware monitor debug area from 4MB to 512k.
-Date:   Wed, 30 Dec 2020 16:05:18 -0800
-Message-Id: <20201231000523.14963-1-greearb@candelatech.com>
+Subject: [PATCH 5/6] iwlwifi: Make warnings unique to aid debugging.
+Date:   Wed, 30 Dec 2020 16:05:22 -0800
+Message-Id: <20201231000523.14963-5-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20201231000523.14963-1-greearb@candelatech.com>
+References: <20201231000523.14963-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -47,52 +49,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-It appears the code can handle down to 2^11, so set max in
-this case to 2^19 to save mem.
+So we can be certain what code is generating kernel error
+messages.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 2fffbbc8462f..18ddaa2c73fc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -223,8 +223,8 @@ static void iwl_pcie_alloc_fw_monitor_block(struct iwl_trans *trans,
- 			continue;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 1386d8397204..44947c6436d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -491,7 +491,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	/* Will also start the device */
+ 	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_REGULAR);
+ 	if (ret) {
+-		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
++		IWL_ERR(mvm, "run-mvm-ucode: Failed to start RT ucode: %d\n", ret);
+ 		goto error;
+ 	}
+ 	iwl_dbg_tlv_time_point(&mvm->fwrt, IWL_FW_INI_TIME_POINT_AFTER_ALIVE,
+@@ -1455,7 +1455,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
  
- 		IWL_INFO(trans,
--			 "Allocated 0x%08x bytes for firmware monitor.\n",
--			 size);
-+			 "Allocated 0x%08x bytes for firmware monitor, max_power: %d  min_power: %d  power: %d.\n",
-+			 size, max_power, min_power, power);
- 		break;
+ 	ret = iwl_mvm_load_rt_fw(mvm);
+ 	if (ret) {
+-		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
++		IWL_ERR(mvm, "mvm-up: Failed to start RT ucode: %d\n", ret);
+ 		if (ret != -ERFKILL)
+ 			iwl_fw_dbg_error_collect(&mvm->fwrt,
+ 						 FW_DBG_TRIGGER_DRIVER);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index baa83a0b8593..f31bdcfdc93e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -355,7 +355,7 @@ static int iwl_pcie_gen2_send_hcmd_sync(struct iwl_trans *trans,
  	}
  
-@@ -244,6 +244,8 @@ static void iwl_pcie_alloc_fw_monitor_block(struct iwl_trans *trans,
- 
- void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- {
-+	pr_err("iwl_pcie_alloc_fw_monitor, monitor size max_power requested: %d\n",
-+	       max_power);
- 	if (!max_power) {
- 		/* default max_power is maximum */
- 		max_power = 26;
-@@ -256,6 +258,13 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- 		 max_power))
- 		return;
- 
-+	/* Try to use less memory, there are other things in the system as well! */
-+	if (max_power > 19) {
-+		pr_err("iwl_pcie_alloc_fw_monitor, decreasing max-power from %d to 19 to save memory.\n",
-+		       max_power);
-+		max_power = 19;
-+	}
-+
- 	if (trans->dbg.fw_mon.size)
- 		return;
- 
+ 	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
+-		IWL_ERR(trans, "FW error in SYNC CMD %s\n", cmd_str);
++		IWL_ERR(trans, "gen2: FW error in SYNC CMD %s\n", cmd_str);
+ 		dump_stack();
+ 		ret = -EIO;
+ 		goto cancel;
 -- 
 2.20.1
 
