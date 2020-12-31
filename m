@@ -2,188 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-22.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C48DC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 10:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43767C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 22:59:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F091A2158C
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 10:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 077A120786
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 22:59:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726308AbgLaKJt (ORCPT
+        id S1726832AbgLaW7E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Dec 2020 05:09:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51486 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726155AbgLaKJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Dec 2020 05:09:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 58F4A207A3;
-        Thu, 31 Dec 2020 10:09:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609409347;
-        bh=d7t6jUuuirI4aZvjNFGRK+ftezBCarKE5fHOLdqpTcI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Q5lnce7m3LK9x6Tbzp3a3PzmmpN9FUxvSNv7PYPQVCUtHqvVkP+GEgxdiNyVE3zWI
-         fRILM57WCz9PBAcabFcvUaWmHul0ksNf+3rmhVd0xFbJkc/pvzXxtJCdkmSOdVCvL7
-         xQUHgCtuA1ew2D/nPk78WOmwez7Se0o+RAZiycdSHTFn47XpolP76ybRjnbV0OWLCd
-         n3uwugb4cGy/Et4JsCmARIP3x3YH8lqDyLbu2wBfY1yAcz4Pm3iNnlFUowFZVtnzPO
-         eDJFzKYYDowvO9P8IGQwtZwaTBAgso3cx4V1Nes/K14FrfvOHZT0Zz2cB2OKbyoGSV
-         yLOd60RWO/9dA==
-Date:   Thu, 31 Dec 2020 11:09:18 +0100
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: Re: [PATCH] mt76: Fix queue ID variable types after mcu queue split
-Message-ID: <20201231100918.GA1819773@computer-5.station>
-References: <20201229211548.1348077-1-natechancellor@gmail.com>
+        Thu, 31 Dec 2020 17:59:04 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:49481 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726661AbgLaW7D (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Dec 2020 17:59:03 -0500
+X-UUID: 7cef5557fbf04a4486440b6da6f4f3cf-20210101
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=6Ps4DdYhOu7Rm6Q7LAu2gQaEfsAp8CgW8IFQSpLNOtU=;
+        b=qIUvAeJJrCqvNtaw51Ul1/H3j8WGm9mwUlJPU9hWAxiJ89SRmhHZ8/rrI0Catmo9SEWi6D6+nHwqDRqAK6MVHqug5GCCFT1kylkNic0wfsrcZCL+aLUCSTNK2z4mdRQQLLhMYgxv5GSYn/xaPOYDNd1ft/OPeP2VjJET2MfPgBo=;
+X-UUID: 7cef5557fbf04a4486440b6da6f4f3cf-20210101
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1605171258; Fri, 01 Jan 2021 06:58:16 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 1 Jan 2021 06:58:14 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 1 Jan 2021 06:58:14 +0800
+Message-ID: <1609455495.20208.8.camel@mtkswgap22>
+Subject: Re: [PATCH -next v4 03/13] mt76: mt7921: add MAC support
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     <sean.wang@mediatek.com>
+CC:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>,
+        <Soul.Huang@mediatek.com>, <YN.Chen@mediatek.com>,
+        <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
+        <posh.sun@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Date:   Fri, 1 Jan 2021 06:58:15 +0800
+In-Reply-To: <3969b56ae9211955428fad2aeba695416362a095.1609347310.git.objelf@gmail.com>
+References: <cover.1609347310.git.objelf@gmail.com>
+         <3969b56ae9211955428fad2aeba695416362a095.1609347310.git.objelf@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="mYCpIKhGyMATD0i+"
-Content-Disposition: inline
-In-Reply-To: <20201229211548.1348077-1-natechancellor@gmail.com>
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+T24gVGh1LCAyMDIwLTEyLTMxIGF0IDAyOjA2ICswODAwLCBzZWFuLndhbmdAbWVkaWF0ZWsuY29t
+IHdyb3RlOg0KPiBGcm9tOiBTZWFuIFdhbmcgPHNlYW4ud2FuZ0BtZWRpYXRlay5jb20+DQo+IA0K
+PiBBZGQgUnggcGFja2V0IGRlc2NyaXB0aW9uIHBhcnNpbmcsIFR4IHBhY2tldCBkZXNjcmlwdGlv
+biBjb21wb3NpdG9uLCBoYW5kbGUNCj4gcGFja2V0IHJlY3ljbGluZyBhbmQgcHJvdmlkZSBNQUMg
+aW5mb3JtYXRpb24gbXQ3NiBjb3JlIG5lZWRzIHRvIHN1cHBvcnQNCj4gbWFjODAyMTEuDQo+IA0K
+PiBDby1kZXZlbG9wZWQtYnk6IExvcmVuem8gQmlhbmNvbmkgPGxvcmVuem9Aa2VybmVsLm9yZz4N
+Cj4gU2lnbmVkLW9mZi1ieTogTG9yZW56byBCaWFuY29uaSA8bG9yZW56b0BrZXJuZWwub3JnPg0K
+PiBDby1kZXZlbG9wZWQtYnk6IFNvdWwgSHVhbmcgPFNvdWwuSHVhbmdAbWVkaWF0ZWsuY29tPg0K
+PiBTaWduZWQtb2ZmLWJ5OiBTb3VsIEh1YW5nIDxTb3VsLkh1YW5nQG1lZGlhdGVrLmNvbT4NCj4g
+U2lnbmVkLW9mZi1ieTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KPiAtLS0N
+Cj4gIC4uLi93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyMS9NYWtlZmlsZSAgICB8ICAgIDIg
+Ky0NCj4gIC4uLi9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjEvbWFjLmMgICB8IDEz
+NjQgKysrKysrKysrKysrKysrKysNCg0KV2h5IG5vdCBwdXQgbWFjLmggaW50byB0aGlzIHBhdGNo
+Pw0KDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDEzNjUgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigt
+KQ0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvbXQ3OTIxL21hYy5jDQoNCj4gK2ludCBtdDc5MjFfdHhfcHJlcGFyZV9za2Ioc3RydWN0IG10
+NzZfZGV2ICptZGV2LCB2b2lkICp0eHdpX3B0ciwNCj4gKwkJCSAgZW51bSBtdDc2X3R4cV9pZCBx
+aWQsIHN0cnVjdCBtdDc2X3djaWQgKndjaWQsDQo+ICsJCQkgIHN0cnVjdCBpZWVlODAyMTFfc3Rh
+ICpzdGEsDQo+ICsJCQkgIHN0cnVjdCBtdDc2X3R4X2luZm8gKnR4X2luZm8pDQo+ICt7DQo+ICsJ
+c3RydWN0IG10NzkyMV9kZXYgKmRldiA9IGNvbnRhaW5lcl9vZihtZGV2LCBzdHJ1Y3QgbXQ3OTIx
+X2RldiwgbXQ3Nik7DQo+ICsJc3RydWN0IGllZWU4MDIxMV90eF9pbmZvICppbmZvID0gSUVFRTgw
+MjExX1NLQl9DQih0eF9pbmZvLT5za2IpOw0KPiArCXN0cnVjdCBpZWVlODAyMTFfa2V5X2NvbmYg
+KmtleSA9IGluZm8tPmNvbnRyb2wuaHdfa2V5Ow0KPiArCXN0cnVjdCBtdDc2X3R4X2NiICpjYiA9
+IG10NzZfdHhfc2tiX2NiKHR4X2luZm8tPnNrYik7DQo+ICsJc3RydWN0IG10NzZfdHh3aV9jYWNo
+ZSAqdDsNCj4gKwlzdHJ1Y3QgbXQ3OTIxX3R4cF9jb21tb24gKnR4cDsNCj4gKwlpbnQgaWQ7DQo+
+ICsJdTggKnR4d2kgPSAodTggKil0eHdpX3B0cjsNCg0KTW9yZW92ZXIsIGhhcmR3YXJlIGNhbm5v
+dCBhZGQgTExDLVNOQVAgd2hlbiBza2ItPmRhdGFfbGVuIGlzIDAsIHdoaWNoDQpjYXVzZXMgVHgg
+c3R1Y2suIFdlIGZvdW5kIHRoaXMgY2FzZSBoYXBwZW5lZCBvbiBtdDc5MTUgKHN0YXRpb24gbW9k
+ZSkNCnF1YWxpdHkgdGVzdCB3aXRoIGZldyBwYWNrZXRzIHdob3NlIHNrYi0+bGVuID0gMTQNCg0K
+U28saHR0cHM6Ly9naXRodWIuY29tL25iZDE2OC93aXJlbGVzcy9jb21taXQvNmI2NjA1ZTQwNjFj
+OTRjOTkwOWZmODJhY2MwZTAyYmZkM2E4ZDQwZQ0KDQpSeWRlcg0K
 
---mYCpIKhGyMATD0i+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-> Clang warns in both mt7615 and mt7915:
->=20
-> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:271:9: warning: implicit
-> conversion from enumeration type 'enum mt76_mcuq_id' to different
-> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
->                 txq =3D MT_MCUQ_FWDL;
->                     ~ ^~~~~~~~~~~~
-> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:278:9: warning: implicit
-> conversion from enumeration type 'enum mt76_mcuq_id' to different
-> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
->                 txq =3D MT_MCUQ_WA;
->                     ~ ^~~~~~~~~~
-> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:282:9: warning: implicit
-> conversion from enumeration type 'enum mt76_mcuq_id' to different
-> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
->                 txq =3D MT_MCUQ_WM;
->                     ~ ^~~~~~~~~~
-> 3 warnings generated.
->=20
-> drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:238:9: warning: implicit
-> conversion from enumeration type 'enum mt76_mcuq_id' to different
-> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
->                 qid =3D MT_MCUQ_WM;
->                     ~ ^~~~~~~~~~
-> drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:240:9: warning: implicit
-> conversion from enumeration type 'enum mt76_mcuq_id' to different
-> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
->                 qid =3D MT_MCUQ_FWDL;
->                     ~ ^~~~~~~~~~~~
-> 2 warnings generated.
->=20
-> Use the proper type for the queue ID variables to fix these warnings.
-> Additionally, rename the txq variable in mt7915_mcu_send_message to be
-> more neutral like mt7615_mcu_send_message.
->=20
-> Fixes: e637763b606b ("mt76: move mcu queues to mt76_dev q_mcu array")
-> Link: https://github.com/ClangBuiltLinux/linux/issues/1229
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-
-Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
-
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7615/mcu.c |  2 +-
->  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 10 +++++-----
->  2 files changed, 6 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7615/mcu.c
-> index a44b7766dec6..c13547841a4e 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-> @@ -231,7 +231,7 @@ mt7615_mcu_send_message(struct mt76_dev *mdev, struct=
- sk_buff *skb,
->  			int cmd, int *seq)
->  {
->  	struct mt7615_dev *dev =3D container_of(mdev, struct mt7615_dev, mt76);
-> -	enum mt76_txq_id qid;
-> +	enum mt76_mcuq_id qid;
-> =20
->  	mt7615_mcu_fill_msg(dev, skb, cmd, seq);
->  	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state))
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7915/mcu.c
-> index 5fdd1a6d32ee..e211a2bd4d3c 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-> @@ -256,7 +256,7 @@ mt7915_mcu_send_message(struct mt76_dev *mdev, struct=
- sk_buff *skb,
->  	struct mt7915_dev *dev =3D container_of(mdev, struct mt7915_dev, mt76);
->  	struct mt7915_mcu_txd *mcu_txd;
->  	u8 seq, pkt_fmt, qidx;
-> -	enum mt76_txq_id txq;
-> +	enum mt76_mcuq_id qid;
->  	__le32 *txd;
->  	u32 val;
-> =20
-> @@ -268,18 +268,18 @@ mt7915_mcu_send_message(struct mt76_dev *mdev, stru=
-ct sk_buff *skb,
->  		seq =3D ++dev->mt76.mcu.msg_seq & 0xf;
-> =20
->  	if (cmd =3D=3D -MCU_CMD_FW_SCATTER) {
-> -		txq =3D MT_MCUQ_FWDL;
-> +		qid =3D MT_MCUQ_FWDL;
->  		goto exit;
->  	}
-> =20
->  	mcu_txd =3D (struct mt7915_mcu_txd *)skb_push(skb, sizeof(*mcu_txd));
-> =20
->  	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state)) {
-> -		txq =3D MT_MCUQ_WA;
-> +		qid =3D MT_MCUQ_WA;
->  		qidx =3D MT_TX_MCU_PORT_RX_Q0;
->  		pkt_fmt =3D MT_TX_TYPE_CMD;
->  	} else {
-> -		txq =3D MT_MCUQ_WM;
-> +		qid =3D MT_MCUQ_WM;
->  		qidx =3D MT_TX_MCU_PORT_RX_Q0;
->  		pkt_fmt =3D MT_TX_TYPE_CMD;
->  	}
-> @@ -326,7 +326,7 @@ mt7915_mcu_send_message(struct mt76_dev *mdev, struct=
- sk_buff *skb,
->  	if (wait_seq)
->  		*wait_seq =3D seq;
-> =20
-> -	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[txq], skb, 0);
-> +	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[qid], skb, 0);
->  }
-> =20
->  static void
->=20
-> base-commit: 5c8fe583cce542aa0b84adc939ce85293de36e5e
-> --=20
-> 2.30.0
->=20
-
---mYCpIKhGyMATD0i+
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCX+2jTAAKCRA6cBh0uS2t
-rAxYAP0f0XgVE5eJY2f4tP7MT5fX7WJ8MmFaiXKtkd+0UVZsLQD+JJVnlAsbv2g0
-9j+j5nl0uK4wtbnOauzQykFDergmVAY=
-=7ZmF
------END PGP SIGNATURE-----
-
---mYCpIKhGyMATD0i+--
