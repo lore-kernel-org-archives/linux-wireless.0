@@ -7,40 +7,38 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22394C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05356C433DB
 	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 00:09:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB838207B2
+	by mail.kernel.org (Postfix) with ESMTP id C2491207AB
 	for <linux-wireless@archiver.kernel.org>; Thu, 31 Dec 2020 00:09:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726352AbgLaAGN (ORCPT
+        id S1726302AbgLaAGM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Dec 2020 19:06:13 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:47710 "EHLO
+        Wed, 30 Dec 2020 19:06:12 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:47700 "EHLO
         mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
         with ESMTP id S1726285AbgLaAGM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 30 Dec 2020 19:06:12 -0500
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 3ECE413C2B4;
-        Wed, 30 Dec 2020 16:05:32 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3ECE413C2B4
+        by mail3.candelatech.com (Postfix) with ESMTP id C28F413C2B0;
+        Wed, 30 Dec 2020 16:05:31 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C28F413C2B0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1609373132;
-        bh=MYYA1lu2bURnsdzJW7BUzNGdF1aE8TOYYJCaWgBJ7dY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nnFhaZsrTckJu3W0gfEqBcvvLDHPixR+8uXwR6PqWJXxpMl+Gd/8nKOujiGQn5vIp
-         CdZjLcjDzS32AQXA+3WNzvayrzTi+vpJlFieVE6rh5cA6nC8HR+cOuoCZCw0MDW3Et
-         6kQtUrQkMwVadz6Mr4IxCWOvjlei8mMjtKArEh2M=
+        s=default; t=1609373131;
+        bh=hFkyYEWhA30TPBMGchH4iI/kOk+PGLWX5Kt4pCTCvhA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=InfqUoQByIIFcqHjtXQ/5glhhNnUXgRAQzaX+SToRVdcYBAbb7zPfRbrWCYXX9oCn
+         TnVJefXL1PcklllzIcI550xTsHEqnflPM9QMNbO/2zdB2rlz8oXqgDsqCucCP8yYd9
+         PxqncQVIlvqumdGBr28wZYag65UjynOhB4tfoh4o=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     luca@coelho.fi, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/6] iwlwifi: Allow per-device fwcfg files.
-Date:   Wed, 30 Dec 2020 16:05:20 -0800
-Message-Id: <20201231000523.14963-3-greearb@candelatech.com>
+Subject: [PATCH 1/6] iwlwifi: Decrease firmware monitor debug area from 4MB to 512k.
+Date:   Wed, 30 Dec 2020 16:05:18 -0800
+Message-Id: <20201231000523.14963-1-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20201231000523.14963-1-greearb@candelatech.com>
-References: <20201231000523.14963-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -49,35 +47,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This allows one to set the NSS and some
-other low-level features for ax200 radios.
+It appears the code can handle down to 2^11, so set max in
+this case to 2^19 to save mem.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.c
-index 223c716d9fce..e2ae509d1650 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.c
-@@ -246,12 +246,16 @@ void iwl_dbg_cfg_load_ini(struct device *dev, struct iwl_dbg_cfg *dbgcfg)
- 	const struct firmware *fw;
- 	char *data, *end, *pos;
- 	int err;
-+	char fname[128];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 2fffbbc8462f..18ddaa2c73fc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -223,8 +223,8 @@ static void iwl_pcie_alloc_fw_monitor_block(struct iwl_trans *trans,
+ 			continue;
  
- 	if (dbgcfg->loaded)
+ 		IWL_INFO(trans,
+-			 "Allocated 0x%08x bytes for firmware monitor.\n",
+-			 size);
++			 "Allocated 0x%08x bytes for firmware monitor, max_power: %d  min_power: %d  power: %d.\n",
++			 size, max_power, min_power, power);
+ 		break;
+ 	}
+ 
+@@ -244,6 +244,8 @@ static void iwl_pcie_alloc_fw_monitor_block(struct iwl_trans *trans,
+ 
+ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
+ {
++	pr_err("iwl_pcie_alloc_fw_monitor, monitor size max_power requested: %d\n",
++	       max_power);
+ 	if (!max_power) {
+ 		/* default max_power is maximum */
+ 		max_power = 26;
+@@ -256,6 +258,13 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
+ 		 max_power))
  		return;
  
--	/* TODO: maybe add a per-device file? */
--	err = firmware_request_nowarn(&fw, "iwl-dbg-cfg.ini", dev);
-+	snprintf(fname, 127, "iwl-dbg-cfg-%s.ini", dev_name(dev));
-+	fname[127] = 0;
++	/* Try to use less memory, there are other things in the system as well! */
++	if (max_power > 19) {
++		pr_err("iwl_pcie_alloc_fw_monitor, decreasing max-power from %d to 19 to save memory.\n",
++		       max_power);
++		max_power = 19;
++	}
 +
-+	/* TODO: maybe add a per-device file?  Yes, did that. --Ben */
-+	err = firmware_request_nowarn(&fw, fname, dev);
- 	if (err)
+ 	if (trans->dbg.fw_mon.size)
  		return;
  
 -- 
