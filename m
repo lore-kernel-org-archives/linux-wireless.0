@@ -2,76 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBE1C433E0
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Jan 2021 08:22:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB16C433DB
+	for <linux-wireless@archiver.kernel.org>; Sun,  3 Jan 2021 11:52:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92CB620829
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Jan 2021 08:22:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A08207FB
+	for <linux-wireless@archiver.kernel.org>; Sun,  3 Jan 2021 11:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726363AbhACIVw (ORCPT
+        id S1726525AbhACLwm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 3 Jan 2021 03:21:52 -0500
-Received: from mout.gmx.net ([212.227.15.18]:40349 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725829AbhACIVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jan 2021 03:21:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1609662012;
-        bh=k5HEp7s8K6E5K8g8odOAEu/I6EoXFn4zzfGpoedVYJ8=;
-        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=h4Y49bokhbV/ekbTHvhpVKnd9MvXBl/RGbMFd3l7dou7lK0fe6Ks1+3pfYeiIrDIb
-         uh/PAWFmxJrAYDuL02RW9j/J6xmNO45UsNqpL/DYBuQ1E5wOaotNbPKroH2OglNT8c
-         TW33RicuRvWU/TxlT8dGgzhJS4IeDCKjWOn/DfPg=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from E480.localdomain ([84.61.118.33]) by mail.gmx.com (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MdefD-1kMdw539xh-00ZcFv; Sun, 03
- Jan 2021 09:20:12 +0100
-Date:   Sun, 3 Jan 2021 09:20:04 +0100
-From:   Zhi Han <z.han@gmx.net>
-To:     tangzhenhao <tzh18@mails.tsinghua.edu.cn>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        amitkarwar@gmail.com
-Subject: Re: [PATCH] drivers/net: fix a null-ptr-deref bug in
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-Message-ID: <20210103081939.GA10783@E480.localdomain>
-References: <20201209132640.36031-1-tzh18@mails.tsinghua.edu.cn>
- <20201217163316.7C64DC433CA@smtp.codeaurora.org>
+        Sun, 3 Jan 2021 06:52:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39970 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726248AbhACLwl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 3 Jan 2021 06:52:41 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5E34C0613D3
+        for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2021 03:51:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Rq3gq4RyV7FSvf2OBOhD4HjvRyFRLwP4U7dMtG2ytI8=; b=gWzGm4l1oX0sZTP0Ixfx+/5RPY
+        nQDA/6NcZ3DzSHmTCIYTz1huP9itQt+yfaz8ePnTDGU487OYO1EedtZEde5aeOFeHE0AixLH+zdYR
+        zONVfMKccPrvj1vkid5EB1FMHuj6inu88XeOphbIDGVh6N0RfUnvhXg4YYTAS8jJVMjk=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kw1vD-0000gv-3s; Sun, 03 Jan 2021 12:51:43 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v2 6/8] mac80211: minstrel_ht: improve sample rate selection
+Date:   Sun,  3 Jan 2021 12:51:38 +0100
+Message-Id: <20210103115140.18614-6-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210103115140.18614-1-nbd@nbd.name>
+References: <20210103115140.18614-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201217163316.7C64DC433CA@smtp.codeaurora.org>
-X-Provags-ID: V03:K1:tS9Gpbzz3FVyqHWyFhfcVmGBBQSfveZbmGYXUF7OEwA2m6kIKot
- +gdDs2qw+OU4VOAIVUllrbwabT8xWeI/UI1aJ5kb1QZhwZ8bEBjV3VlGlpDqFnlqvgIE0mP
- +1+7w4LXhkmVTML+HTkxAFkCmLUBg7dX2E+ouvjMPjXZz/hqbgyPFoyDV4bMgNH/2d3syA4
- rPfzdqQaYGtGHbDeKsGSg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:sANg/PNJHSo=:zF5v0KY961CCt0g7tehGzC
- iW4hXgLa8ANutlJ2R41ydpq2hRsJYHIMW9lSu/WmRQhmqRFwFHD1rXVzDcYgV9lExPeCvyN6c
- Zi8Hhrmh7tAIdgJBmXY3zsuDBSRanmwHFc6cXP35xu3zOea7ZquhQwNiQDXrZEVau0eJUBf6F
- MBNNuq3Fwt7+QxlpjgFdbWgMefMoY0G4QYEA2x3pvWXMO3hlW71mriEvjtHU8Y0lI1fHIvKDH
- hBduBu9/6ttGUU5qgwLBymzP9LZ2+cy1xptIEd90JvR+mef5qiLEMNoUHX57J5uyS2r6CZ0ma
- YQkOK0kM8KfaClmzatoDzN1w8XFYMT7uwj4V6/uAvJQmE0J82vmAGsUNpDzP8ynADwXsSkfBf
- v4BQR0/+MYM5quUJjMD2k9GOdiiKUX30qsGEGfDKTiwkHxPaE54yhX6is6h3LXFL9KYTdaRGT
- WsZfAJVKPPogoA0nn+NeZ8GyQbdrEHgMquHWuP5dC59UYR0pd7hMWrIz93ztly3fO0yyMTXp+
- YExoyt/8Ic985ZkqOAjhiPru+ErNEG5nHyvL3O6wvhtXo/jCZmTA1SL/WAgvticYR+Cjp++Qz
- B/k4Tnnwq0Cov7U4cYdpjJEHLHjcmNlHChijKAKN+WLqrlYgUfH07EMobiEU3TGKni9VXr8YV
- QCIf578xFct8cq13rMMpeQXCysKJluNRQauY8Z1/ONEfxuVnL8CktrAkrlFsI1tTrt5Y4F6k0
- NefAxz51GDtO4CqFKW1/9dY+axWrES0WPr8BcRN5uOq6UpbSgjXtSexCmZ6g+ibzcOggzBPO8
- TGTBLZDheldot3Ib3MhgafIreonVNQddTf8QwP3j7Hv0fFheN45yBtruQg1WzZfvke5j1/OKz
- aZlRcwqWnPIOlw4KCfkQ==
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tangzhenhao <tzh18@mails.tsinghua.edu.cn> wrote:
+Always allow sampling of rates faster than the primary max throughput rate.
+When the second max_tp_rate is higher than the first one, sample attempts were
+previously skipped, potentially causing rate control to get stuck at a slightly
+lower rate
 
-> At line 257 in drivers/net/wireless/marvell/mwifiex/uap_txrx.c, the ret-val of skb_copy should be checked to avoid null-ptr-deref bug.
->
-> Signed-off-by: tangzhenhao <tzh18@mails.tsinghua.edu.cn>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-"\n" should be added at the end of message to avoid corrupting other logs
-and to output timely.
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 5b20e17ec2e6..58f7400b78b2 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1379,13 +1379,13 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	mrs = &mg->rates[sample_idx];
+ 	sample_idx += sample_group * MCS_GROUP_RATES;
+ 
+-	/* Set tp_rate1, tp_rate2 to the highest / second highest max_tp_rate */
++	tp_rate1 = mi->max_tp_rate[0];
++
++	/* Set tp_rate2 to the second highest max_tp_rate */
+ 	if (minstrel_get_duration(mi->max_tp_rate[0]) >
+ 	    minstrel_get_duration(mi->max_tp_rate[1])) {
+-		tp_rate1 = mi->max_tp_rate[1];
+ 		tp_rate2 = mi->max_tp_rate[0];
+ 	} else {
+-		tp_rate1 = mi->max_tp_rate[0];
+ 		tp_rate2 = mi->max_tp_rate[1];
+ 	}
+ 
+-- 
+2.28.0
+
