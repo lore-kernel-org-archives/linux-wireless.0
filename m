@@ -1,38 +1,38 @@
 Return-Path: <linux-wireless-owner@kernel.org>
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C7CC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 04:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB77C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8D97207AE
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Dec 2020 04:45:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85E2821D79
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:23:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbgL3EpR (ORCPT
+        id S1726338AbhADJXE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Dec 2020 23:45:17 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:44554 "EHLO
+        Mon, 4 Jan 2021 04:23:04 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:52386 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726420AbgL3EpR (ORCPT
+        with ESMTP id S1726775AbhADJXE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Dec 2020 23:45:17 -0500
+        Mon, 4 Jan 2021 04:23:04 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 0BU4hhk37028282, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1049LbYG2024474, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 0BU4hhk37028282
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 1049LbYG2024474
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 30 Dec 2020 12:43:43 +0800
+        Mon, 4 Jan 2021 17:21:37 +0800
 Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 30 Dec
- 2020 12:43:42 +0800
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 4 Jan 2021
+ 17:21:36 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 16/18] rtw89: 8852a: add 8852a tables
-Date:   Wed, 30 Dec 2020 12:42:21 +0800
-Message-ID: <20201230044223.14085-17-pkshih@realtek.com>
+Subject: [PATCH V2 16/18] rtw89: 8852a: add 8852a tables
+Date:   Mon, 4 Jan 2021 17:20:34 +0800
+Message-ID: <20210104092036.16089-14-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20201230044223.14085-1-pkshih@realtek.com>
-References: <20201230044223.14085-1-pkshih@realtek.com>
+In-Reply-To: <20210104092036.16089-1-pkshih@realtek.com>
+References: <20210104092036.16089-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -48,23 +48,22 @@ Other tables are TX power by rate, limit and swing tables.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtw89/rtw8852a_table.c   | 24998 ++++++++++++++++
- .../wireless/realtek/rtw89/rtw8852a_table.h   |    26 +
- 2 files changed, 25024 insertions(+)
+ .../wireless/realtek/rtw89/rtw8852a_table.c   | 24997 ++++++++++++++++
+ .../wireless/realtek/rtw89/rtw8852a_table.h   |    28 +
+ 2 files changed, 25025 insertions(+)
  create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852a_table.c
  create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852a_table.h
 
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_table.c b/drivers/net/wireless/realtek/rtw89/rtw8852a_table.c
 new file mode 100644
-index 000000000000..0d26ae37022c
+index 000000000000..dd0e9820ec42
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_table.c
-@@ -0,0 +1,24998 @@
+@@ -0,0 +1,24997 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2019-2020  Realtek Corporation
 + */
 +
-+#include "core.h"
 +#include "phy.h"
 +#include "reg.h"
 +#include "rtw8852a_table.h"
@@ -25060,16 +25059,18 @@ index 000000000000..0d26ae37022c
 +};
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_table.h b/drivers/net/wireless/realtek/rtw89/rtw8852a_table.h
 new file mode 100644
-index 000000000000..b418abb1ee10
+index 000000000000..913796506286
 --- /dev/null
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_table.h
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,28 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2019-2020  Realtek Corporation
 + */
 +
 +#ifndef __RTW89_8852A_TABLE_H__
 +#define __RTW89_8852A_TABLE_H__
++
++#include "core.h"
 +
 +extern const struct rtw89_phy_table rtw89_8852a_phy_bb_table;
 +extern const struct rtw89_phy_table rtw89_8852a_phy_radioa_table;
