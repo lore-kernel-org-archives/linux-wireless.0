@@ -2,151 +2,217 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE45C433E9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 17:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60903C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 18:01:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD90422512
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 17:09:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34D5B20784
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 18:01:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727247AbhADRIu (ORCPT
+        id S1726896AbhADSBH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Jan 2021 12:08:50 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47001 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726300AbhADRIu (ORCPT
+        Mon, 4 Jan 2021 13:01:07 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:57557 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726328AbhADSBH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jan 2021 12:08:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1609780043;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=2de/+aI5hpKlvLFsaL1DCMrkMJh+VBZyPlNqnu8zUTI=;
-        b=RCx57qhmjY3+xNtTjdihKWPaJSLY8/8zgzbrpV5WMCnIL3E4z02Nfj6yJCcdtwy1cvID84
-        vwBiXGdc0DwFEx/JWJYuPZYSCIIcI5yT+jCm8s9I1j3gBdtTInsQ+hmprFvImYOXWMEzOG
-        SlXXjV3NHx+qo5Vys6NWFkY6WGYoCdk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-429-AGzmScoiOH6WoGV6VKqzvQ-1; Mon, 04 Jan 2021 12:07:20 -0500
-X-MC-Unique: AGzmScoiOH6WoGV6VKqzvQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 87FF4100F340;
-        Mon,  4 Jan 2021 17:07:17 +0000 (UTC)
-Received: from x1.localdomain (ovpn-112-167.ams2.redhat.com [10.36.112.167])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 858C86F921;
-        Mon,  4 Jan 2021 17:07:14 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Cezary Rojewski <cezary.rojewski@intel.com>,
-        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
-        Liam Girdwood <liam.r.girdwood@linux.intel.com>,
-        Jie Yang <yang.jie@linux.intel.com>,
-        Mark Brown <broonie@kernel.org>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
-        Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] cfg80211: Fix "suspicious RCU usage in wiphy_apply_custom_regulatory" warning/backtrace
-Date:   Mon,  4 Jan 2021 18:07:13 +0100
-Message-Id: <20210104170713.66956-1-hdegoede@redhat.com>
+        Mon, 4 Jan 2021 13:01:07 -0500
+X-UUID: 299896ebf9574cba84e14e10ff4f1df6-20210105
+X-UUID: 299896ebf9574cba84e14e10ff4f1df6-20210105
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1176697449; Tue, 05 Jan 2021 02:00:22 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 5 Jan 2021 02:00:21 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 5 Jan 2021 02:00:21 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <ryder.lee@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH -next v5 06/15] mt76: mt7921: add EEPROM support
+Date:   Tue, 5 Jan 2021 02:00:10 +0800
+Message-ID: <aaf16a3b4761965753536020a76cb563e1e49d9e.1609781247.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1609781247.git.objelf@gmail.com>
+References: <cover.1609781247.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Commit beee24695157 ("cfg80211: Save the regulatory domain when
-setting custom regulatory") adds a get_wiphy_regdom call to
-wiphy_apply_custom_regulatory. But as the comment above
-wiphy_apply_custom_regulatory says:
-"/* Used by drivers prior to wiphy registration */"
-this function is used by driver's probe function before the wiphy is
-registered and at this point wiphy->regd will typically by NULL and
-calling rcu_dereference_rtnl on a NULL pointer causes the following
-warning/backtrace:
+From: Sean Wang <sean.wang@mediatek.com>
 
-=============================
-WARNING: suspicious RCU usage
-5.11.0-rc1+ #19 Tainted: G        W
------------------------------
-net/wireless/reg.c:144 suspicious rcu_dereference_check() usage!
+Add EEPROM support to MT7921 to determine the capability the card has
+such as indentificaiton, MAC address, the band and antenna number the
+card able to support.
 
-other info that might help us debug this:
-
-rcu_scheduler_active = 2, debug_locks = 1
-2 locks held by kworker/2:0/22:
- #0: ffff9a4bc104df38 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x1ee/0x570
- #1: ffffb6e94010be78 ((work_completion)(&fw_work->work)){+.+.}-{0:0}, at: process_one_work+0x1ee/0x570
-
-stack backtrace:
-CPU: 2 PID: 22 Comm: kworker/2:0 Tainted: G        W         5.11.0-rc1+ #19
-Hardware name: LENOVO 60073/INVALID, BIOS 01WT17WW 08/01/2014
-Workqueue: events request_firmware_work_func
-Call Trace:
- dump_stack+0x8b/0xb0
- get_wiphy_regdom+0x57/0x60 [cfg80211]
- wiphy_apply_custom_regulatory+0xa0/0xf0 [cfg80211]
- brcmf_cfg80211_attach+0xb02/0x1360 [brcmfmac]
- brcmf_attach+0x189/0x460 [brcmfmac]
- brcmf_sdio_firmware_callback+0x78a/0x8f0 [brcmfmac]
- brcmf_fw_request_done+0x67/0xf0 [brcmfmac]
- request_firmware_work_func+0x3d/0x70
- process_one_work+0x26e/0x570
- worker_thread+0x55/0x3c0
- ? process_one_work+0x570/0x570
- kthread+0x137/0x150
- ? __kthread_bind_mask+0x60/0x60
- ret_from_fork+0x22/0x30
-
-Add a check for wiphy->regd being NULL before calling get_wiphy_regdom
-(as is already done in other places) to fix this.
-
-wiphy->regd will likely always be NULL when wiphy_apply_custom_regulatory
-gets called, so arguably the tmp = get_wiphy_regdom() and
-rcu_free_regdom(tmp) calls should simply be dropped, this patch keeps the
-2 calls, to allow drivers to call wiphy_apply_custom_regulatory more then
-once if necessary.
-
-Cc: Ilan Peer <ilan.peer@intel.com>
-Fixes: beee24695157 ("cfg80211: Save the regulatory domain when setting custom regulator")
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- net/wireless/reg.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ .../wireless/mediatek/mt76/mt7921/eeprom.c    | 101 ++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7921/eeprom.h    |  27 +++++
+ 2 files changed, 128 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index bb72447ad960..9254b9cbaa21 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2547,7 +2547,7 @@ static void handle_band_custom(struct wiphy *wiphy,
- void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 				   const struct ieee80211_regdomain *regd)
- {
--	const struct ieee80211_regdomain *new_regd, *tmp;
-+	const struct ieee80211_regdomain *new_regd, *tmp = NULL;
- 	enum nl80211_band band;
- 	unsigned int bands_set = 0;
- 
-@@ -2571,7 +2571,8 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 	if (IS_ERR(new_regd))
- 		return;
- 
--	tmp = get_wiphy_regdom(wiphy);
-+	if (wiphy->regd)
-+		tmp = get_wiphy_regdom(wiphy);
- 	rcu_assign_pointer(wiphy->regd, new_regd);
- 	rcu_free_regdom(tmp);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+new file mode 100644
+index 000000000000..05e32764e17a
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+@@ -0,0 +1,101 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc. */
++
++#include "mt7921.h"
++#include "eeprom.h"
++
++static u32 mt7921_eeprom_read(struct mt7921_dev *dev, u32 offset)
++{
++	u8 *data = dev->mt76.eeprom.data;
++
++	if (data[offset] == 0xff)
++		mt7921_mcu_get_eeprom(dev, offset);
++
++	return data[offset];
++}
++
++static int mt7921_eeprom_load(struct mt7921_dev *dev)
++{
++	int ret;
++
++	ret = mt76_eeprom_init(&dev->mt76, MT7921_EEPROM_SIZE);
++	if (ret < 0)
++		return ret;
++
++	memset(dev->mt76.eeprom.data, -1, MT7921_EEPROM_SIZE);
++
++	return 0;
++}
++
++static int mt7921_check_eeprom(struct mt7921_dev *dev)
++{
++	u8 *eeprom = dev->mt76.eeprom.data;
++	u16 val;
++
++	mt7921_eeprom_read(dev, MT_EE_CHIP_ID);
++	val = get_unaligned_le16(eeprom);
++
++	switch (val) {
++	case 0x7961:
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++void mt7921_eeprom_parse_band_config(struct mt7921_phy *phy)
++{
++	struct mt7921_dev *dev = phy->dev;
++	u32 val;
++
++	val = mt7921_eeprom_read(dev, MT_EE_WIFI_CONF);
++	val = FIELD_GET(MT_EE_WIFI_CONF_BAND_SEL, val);
++
++	switch (val) {
++	case MT_EE_5GHZ:
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	case MT_EE_2GHZ:
++		phy->mt76->cap.has_2ghz = true;
++		break;
++	default:
++		phy->mt76->cap.has_2ghz = true;
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	}
++}
++
++static void mt7921_eeprom_parse_hw_cap(struct mt7921_dev *dev)
++{
++	u8 tx_mask, *eeprom = dev->mt76.eeprom.data;
++
++	mt7921_eeprom_parse_band_config(&dev->phy);
++
++	/* read tx mask from eeprom (0: 1Tx, 1: 2Tx) */
++	tx_mask = FIELD_GET(MT_EE_WIFI_CONF_TX_MASK, eeprom[MT_EE_WIFI_CONF]);
++	tx_mask = tx_mask + 1;
++	dev->chainmask = BIT(tx_mask) - 1;
++	dev->mphy.antenna_mask = dev->chainmask;
++	dev->mphy.chainmask = dev->mphy.antenna_mask;
++}
++
++int mt7921_eeprom_init(struct mt7921_dev *dev)
++{
++	int ret;
++
++	ret = mt7921_eeprom_load(dev);
++	if (ret < 0)
++		return ret;
++
++	ret = mt7921_check_eeprom(dev);
++	if (ret)
++		return ret;
++
++	mt7921_eeprom_parse_hw_cap(dev);
++	memcpy(dev->mphy.macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR,
++	       ETH_ALEN);
++
++	mt76_eeprom_override(&dev->mphy);
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+new file mode 100644
+index 000000000000..54f30401343c
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: ISC */
++/* Copyright (C) 2020 MediaTek Inc. */
++
++#ifndef __MT7921_EEPROM_H
++#define __MT7921_EEPROM_H
++
++#include "mt7921.h"
++
++enum mt7921_eeprom_field {
++	MT_EE_CHIP_ID =		0x000,
++	MT_EE_VERSION =		0x002,
++	MT_EE_MAC_ADDR =	0x004,
++	MT_EE_WIFI_CONF =	0x07c,
++	__MT_EE_MAX =		0x3bf
++};
++
++#define MT_EE_WIFI_CONF_TX_MASK			BIT(0)
++#define MT_EE_WIFI_CONF_BAND_SEL		GENMASK(3, 2)
++
++enum mt7921_eeprom_band {
++	MT_EE_NA,
++	MT_EE_5GHZ,
++	MT_EE_2GHZ,
++	MT_EE_DUAL_BAND,
++};
++
++#endif
 -- 
-2.28.0
+2.25.1
 
