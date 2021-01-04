@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34464C433E6
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE2D6C4332B
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 000D521D7F
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB9E221D7F
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jan 2021 09:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726469AbhADJWG (ORCPT
+        id S1726939AbhADJWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Jan 2021 04:22:06 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:52350 "EHLO
+        Mon, 4 Jan 2021 04:22:20 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:52369 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726189AbhADJWG (ORCPT
+        with ESMTP id S1726917AbhADJWR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jan 2021 04:22:06 -0500
+        Mon, 4 Jan 2021 04:22:17 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1049LLpmC024427, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1049LVkG4024456, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 1049LLpmC024427
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 1049LVkG4024456
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 Jan 2021 17:21:21 +0800
+        Mon, 4 Jan 2021 17:21:31 +0800
 Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 4 Jan 2021
- 17:21:21 +0800
+ 17:21:31 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 05/18] rtw89: add efuse files
-Date:   Mon, 4 Jan 2021 17:20:23 +0800
-Message-ID: <20210104092036.16089-3-pkshih@realtek.com>
+Subject: [PATCH V2 12/18] rtw89: add regulatory support
+Date:   Mon, 4 Jan 2021 17:20:30 +0800
+Message-ID: <20210104092036.16089-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20210104092036.16089-1-pkshih@realtek.com>
 References: <20210104092036.16089-1-pkshih@realtek.com>
@@ -44,243 +44,383 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+X-ClientProxiedBy: RTEXMBS01.realtek.com.tw (172.21.6.94) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Efuse is divided into several parts, in which physical map and PHY cap
-parts are read and parsed by driver.
-
-Storing main data, physical map is translated into logic map, and then use
-chip specific map to explain the logic map. Then, we can have MAC address,
-country code, thermal tracking calibration values, and so on.
-
-PHY cap part is used to store PHY data. We don't need to translate it,
-because it's a direct map, like logic map.
+Interact with regulatory hints by below rules:
+For a non-PGed chip, I assume that it is world-roaming, so accepts every
+notifications except the following condition.
+For a non-PGed chip and the current domain is set by userspace, the
+country ie notification will be disabled. The reason is that the current
+setting might come from the system of a distro, and I assume that they
+do not expect the domain will be changed by connecting to an AP.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/efuse.c | 188 +++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/efuse.h |  13 ++
- 2 files changed, 201 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw89/efuse.c
- create mode 100644 drivers/net/wireless/realtek/rtw89/efuse.h
+ drivers/net/wireless/realtek/rtw89/regd.c | 351 ++++++++++++++++++++++
+ 1 file changed, 351 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/regd.c
 
-diff --git a/drivers/net/wireless/realtek/rtw89/efuse.c b/drivers/net/wireless/realtek/rtw89/efuse.c
+diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
 new file mode 100644
-index 000000000000..3bea7d813985
+index 000000000000..8c8152ae81f0
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw89/efuse.c
-@@ -0,0 +1,188 @@
++++ b/drivers/net/wireless/realtek/rtw89/regd.c
+@@ -0,0 +1,351 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2019-2020  Realtek Corporation
 + */
 +
 +#include "debug.h"
-+#include "efuse.h"
-+#include "reg.h"
 +
-+enum rtw89_efuse_bank {
-+	RTW89_EFUSE_BANK_WIFI,
-+	RTW89_EFUSE_BANK_BT,
++#define COUNTRY_REGD(_alpha2, _txpwr_regd_2g, _txpwr_regd_5g) \
++	{.alpha2 = (_alpha2), \
++	 .txpwr_regd[RTW89_BAND_2G] = (_txpwr_regd_2g), \
++	 .txpwr_regd[RTW89_BAND_5G] = (_txpwr_regd_5g) \
++	}
++
++static const struct rtw89_regulatory rtw89_ww_regd =
++	COUNTRY_REGD("00", RTW89_WW, RTW89_WW);
++
++static const struct rtw89_regulatory rtw89_regd_map[] = {
++	COUNTRY_REGD("AR", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BO", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("BR", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("CL", RTW89_WW, RTW89_CHILE),
++	COUNTRY_REGD("CO", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("CR", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("EC", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SV", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("GT", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("HN", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("MX", RTW89_FCC, RTW89_MEXICO),
++	COUNTRY_REGD("NI", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("PA", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("PY", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("PE", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("US", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("UY", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("VE", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("PR", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("DO", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("AT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CY", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("DK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("EE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("DE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("HU", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IS", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LV", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LU", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MC", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("PL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("PT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ES", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GB", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("HR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("EG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IQ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("JO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LB", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LS", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("OM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("QA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("RO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("RU", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("RS", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ME", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ZA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("UA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("YE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ZW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BD", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("HK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ID", RTW89_ETSI, RTW89_ETSI),
++	COUNTRY_REGD("KR", RTW89_KCC, RTW89_KCC),
++	COUNTRY_REGD("MY", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("PK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("PH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TW", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("TH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("VN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AU", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("NZ", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("PG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CA", RTW89_IC, RTW89_IC),
++	COUNTRY_REGD("JP", RTW89_MKK, RTW89_MKK),
++	COUNTRY_REGD("JM", RTW89_WW, RTW89_FCC),
++	COUNTRY_REGD("AN", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("TT", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("TN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AF", RTW89_ETSI, RTW89_ETSI),
++	COUNTRY_REGD("DZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AS", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("AD", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AQ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AG", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("AM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("AW", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BS", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BB", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BY", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BZ", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BJ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BM", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BV", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("VG", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("BN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("BI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CV", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KY", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("CF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TD", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CX", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("CC", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CD", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("CI", RTW89_ETSI, RTW89_ETSI),
++	COUNTRY_REGD("DJ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("DM", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("GQ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ER", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ET", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FK", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FJ", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("GF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("PF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GD", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("GP", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GU", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("GG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GY", RTW89_FCC, RTW89_NCC),
++	COUNTRY_REGD("HT", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("HM", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("VA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("JE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KI", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LA", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("LY", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MV", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ML", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MH", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("MQ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MU", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("YT", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("FM", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("MD", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MN", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("MS", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NR", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NP", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NC", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("NU", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("NF", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("MP", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("PW", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("RE", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("RW", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("KN", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("LC", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("MF", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SX", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("PM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("VC", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("WS", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ST", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SC", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SL", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SB", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("GS", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SR", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("SJ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("SZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TJ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TK", RTW89_WW, RTW89_ACMA),
++	COUNTRY_REGD("TO", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TC", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("TV", RTW89_ETSI, RTW89_NA),
++	COUNTRY_REGD("UG", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("VI", RTW89_FCC, RTW89_FCC),
++	COUNTRY_REGD("UZ", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("VU", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("WF", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("EH", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("ZM", RTW89_WW, RTW89_ETSI),
++	COUNTRY_REGD("IR", RTW89_WW, RTW89_ETSI),
 +};
 +
-+static int rtw89_switch_efuse_bank(struct rtw89_dev *rtwdev,
-+				   enum rtw89_efuse_bank bank)
++static const struct rtw89_regulatory *rtw89_regd_find_reg_by_name(char *alpha2)
 +{
-+	u8 val;
++	u32 i;
 +
-+	val = rtw89_read32_mask(rtwdev, R_AX_EFUSE_CTRL_1,
-+				B_AX_EF_CELL_SEL_MASK);
-+	if (bank == val)
-+		return 0;
++	for (i = 0; i < ARRAY_SIZE(rtw89_regd_map); i++) {
++		if (!memcmp(rtw89_regd_map[i].alpha2, alpha2, 2))
++			return &rtw89_regd_map[i];
++	}
 +
-+	rtw89_write32_mask(rtwdev, R_AX_EFUSE_CTRL_1, B_AX_EF_CELL_SEL_MASK,
-+			   bank);
-+
-+	val = rtw89_read32_mask(rtwdev, R_AX_EFUSE_CTRL_1,
-+				B_AX_EF_CELL_SEL_MASK);
-+	if (bank == val)
-+		return 0;
-+
-+	return -EBUSY;
++	return &rtw89_ww_regd;
 +}
 +
-+static int rtw89_dump_physical_efuse_map(struct rtw89_dev *rtwdev, u8 *map,
-+					 u32 dump_addr, u32 dump_size)
++static bool rtw89_regd_is_ww(const struct rtw89_regulatory *regd)
 +{
-+	u32 efuse_ctl;
-+	u32 addr;
++	return regd == &rtw89_ww_regd;
++}
++
++int rtw89_regd_init(struct rtw89_dev *rtwdev,
++		    void (*reg_notifier)(struct wiphy *wiphy,
++					 struct regulatory_request *request))
++{
++	const struct rtw89_regulatory *chip_regd;
++	struct wiphy *wiphy = rtwdev->hw->wiphy;
 +	int ret;
 +
-+	rtw89_switch_efuse_bank(rtwdev, RTW89_EFUSE_BANK_WIFI);
++	if (!wiphy)
++		return -EINVAL;
 +
-+	for (addr = dump_addr; addr < dump_addr + dump_size; addr++) {
-+		efuse_ctl = u32_encode_bits(addr, B_AX_EF_ADDR_MASK);
-+		rtw89_write32(rtwdev, R_AX_EFUSE_CTRL, efuse_ctl & ~B_AX_EF_RDY);
++	chip_regd = rtw89_regd_find_reg_by_name(rtwdev->efuse.country_code);
++	if (!rtw89_regd_is_ww(chip_regd)) {
++		rtwdev->regd = chip_regd;
++		/* Ignore country ie if there is a country domain programmed in chip */
++		wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_IGNORE;
++		wiphy->regulatory_flags |= REGULATORY_STRICT_REG;
 +
-+		ret = read_poll_timeout_atomic(rtw89_read32, efuse_ctl,
-+					       efuse_ctl & B_AX_EF_RDY, 1, 1000000,
-+					       true, rtwdev, R_AX_EFUSE_CTRL);
++		ret = regulatory_hint(rtwdev->hw->wiphy, rtwdev->regd->alpha2);
 +		if (ret)
-+			return -EBUSY;
++			rtw89_warn(rtwdev, "failed to hint regulatory:%d\n", ret);
 +
-+		*map++ = (u8)(efuse_ctl & 0xff);
-+	}
++		rtw89_debug(rtwdev, RTW89_DBG_REGD,
++			    "efuse country code %c%c, mapping to 2g txregd %d, 5g txregd %d\n",
++			    rtwdev->efuse.country_code[0], rtwdev->efuse.country_code[1],
++			    rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
++			    rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
 +
-+	return 0;
-+}
-+
-+#define invalid_efuse_header(hdr1, hdr2) \
-+	((hdr1) == 0xff || (hdr2) == 0xff)
-+#define invalid_efuse_content(word_en, i) \
-+	(((word_en) & BIT(i)) != 0x0)
-+#define get_efuse_blk_idx(hdr1, hdr2) \
-+	((((hdr2) & 0xf0) >> 4) | (((hdr1) & 0x0f) << 4))
-+#define block_idx_to_logical_idx(blk_idx, i) \
-+	(((blk_idx) << 3) + ((i) << 1))
-+static int rtw89_dump_logical_efuse_map(struct rtw89_dev *rtwdev, u8 *phy_map,
-+					u8 *log_map)
-+{
-+	u32 physical_size = rtwdev->chip->physical_efuse_size;
-+	u32 logical_size = rtwdev->chip->logical_efuse_size;
-+	u8 sec_ctrl_size = rtwdev->chip->sec_ctrl_efuse_size;
-+	u32 phy_idx = sec_ctrl_size;
-+	u32 log_idx;
-+	u8 hdr1, hdr2;
-+	u8 blk_idx;
-+	u8 word_en;
-+	int i;
-+
-+	while (phy_idx < physical_size - sec_ctrl_size) {
-+		hdr1 = phy_map[phy_idx];
-+		hdr2 = phy_map[phy_idx + 1];
-+		if (invalid_efuse_header(hdr1, hdr2))
-+			break;
-+
-+		blk_idx = get_efuse_blk_idx(hdr1, hdr2);
-+		word_en = hdr2 & 0xf;
-+		phy_idx += 2;
-+
-+		for (i = 0; i < 4; i++) {
-+			if (invalid_efuse_content(word_en, i))
-+				continue;
-+
-+			log_idx = block_idx_to_logical_idx(blk_idx, i);
-+			if (phy_idx + 1 > physical_size - sec_ctrl_size - 1 ||
-+			    log_idx + 1 > logical_size)
-+				return -EINVAL;
-+
-+			log_map[log_idx] = phy_map[phy_idx];
-+			log_map[log_idx + 1] = phy_map[phy_idx + 1];
-+			phy_idx += 2;
-+		}
-+	}
-+	return 0;
-+}
-+
-+int rtw89_parse_efuse_map(struct rtw89_dev *rtwdev)
-+{
-+	u32 phy_size = rtwdev->chip->physical_efuse_size;
-+	u32 log_size = rtwdev->chip->logical_efuse_size;
-+	u8 *phy_map = NULL;
-+	u8 *log_map = NULL;
-+	int ret;
-+
-+	if (rtw89_read16(rtwdev, R_AX_SYS_EEPROM_CTRL) & B_AX_AUTOLOAD_SUS)
-+		rtwdev->efuse.valid = true;
-+	else
-+		rtw89_warn(rtwdev, "failed to check efuse autoload\n");
-+
-+	phy_map = kmalloc(phy_size, GFP_KERNEL);
-+	log_map = kmalloc(log_size, GFP_KERNEL);
-+
-+	if (!phy_map || !log_map) {
-+		ret = -ENOMEM;
-+		goto out_free;
-+	}
-+
-+	ret = rtw89_dump_physical_efuse_map(rtwdev, phy_map, 0, phy_size);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "failed to dump efuse physical map\n");
-+		goto out_free;
-+	}
-+
-+	memset(log_map, 0xff, log_size);
-+	ret = rtw89_dump_logical_efuse_map(rtwdev, phy_map, log_map);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "failed to dump efuse logical map\n");
-+		goto out_free;
-+	}
-+
-+	rtw89_hex_dump(rtwdev, RTW89_DBG_FW, "log_map: ", log_map, log_size);
-+
-+	ret = rtwdev->chip->ops->read_efuse(rtwdev, log_map);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "failed to read efuse map\n");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(log_map);
-+	kfree(phy_map);
-+
-+	return ret;
-+}
-+
-+int rtw89_parse_phycap_map(struct rtw89_dev *rtwdev)
-+{
-+	u32 phycap_addr = rtwdev->chip->phycap_addr;
-+	u32 phycap_size = rtwdev->chip->phycap_size;
-+	u8 *phycap_map = NULL;
-+	int ret = 0;
-+
-+	if (!phycap_size)
 +		return 0;
-+
-+	phycap_map = kmalloc(phycap_size, GFP_KERNEL);
-+	if (!phycap_map)
-+		return -ENOMEM;
-+
-+	ret = rtw89_dump_physical_efuse_map(rtwdev, phycap_map,
-+					    phycap_addr, phycap_size);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "failed to dump phycap map\n");
-+		goto out_free;
 +	}
++	rtw89_debug(rtwdev, RTW89_DBG_REGD,
++		    "worldwide roaming chip, follow the setting of stack(%c%c), mapping to 2g txregd %d, 5g txregd %d\n",
++		     rtwdev->regd->alpha2[0], rtwdev->regd->alpha2[1],
++		     rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
++		     rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
 +
-+	ret = rtwdev->chip->ops->read_phycap(rtwdev, phycap_map);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "failed to read phycap map\n");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(phycap_map);
-+
-+	return ret;
++	return 0;
 +}
-diff --git a/drivers/net/wireless/realtek/rtw89/efuse.h b/drivers/net/wireless/realtek/rtw89/efuse.h
-new file mode 100644
-index 000000000000..622ff95e7476
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw89/efuse.h
-@@ -0,0 +1,13 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-+/* Copyright(c) 2019-2020  Realtek Corporation
-+ */
 +
-+#ifndef __RTW89_EFUSE_H__
-+#define __RTW89_EFUSE_H__
++static void rtw89_regd_notifier_apply(struct rtw89_dev *rtwdev,
++				      struct wiphy *wiphy,
++				      struct regulatory_request *request)
++{
++	rtwdev->regd = rtw89_regd_find_reg_by_name(request->alpha2);
++	/* This notification might be set from the system of distros,
++	 * and it does not expect the regulatory will be modified by
++	 * connecting to an AP (i.e. country ie).
++	 */
++	if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
++	    !rtw89_regd_is_ww(rtwdev->regd))
++		wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_IGNORE;
++	else
++		wiphy->regulatory_flags &= ~REGULATORY_COUNTRY_IE_IGNORE;
++}
 +
-+#include "core.h"
++void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct rtw89_dev *rtwdev = hw->priv;
 +
-+int rtw89_parse_efuse_map(struct rtw89_dev *rtwdev);
-+int rtw89_parse_phycap_map(struct rtw89_dev *rtwdev);
++	mutex_lock(&rtwdev->mutex);
 +
-+#endif
++	if (wiphy->regd) {
++		rtw89_debug(rtwdev, RTW89_DBG_REGD,
++			    "There is a country domain programmed in chip, ignore notifications\n");
++		goto exit;
++	}
++	rtw89_regd_notifier_apply(rtwdev, wiphy, request);
++	rtw89_debug(rtwdev, RTW89_DBG_REGD,
++		    "get alpha2 %c%c from initiator %d, mapping to 2g txregd %d, 5g txregd %d\n",
++		    request->alpha2[0], request->alpha2[1], request->initiator,
++		    rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
++		    rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
++
++	rtw89_chip_set_txpwr(rtwdev);
++
++exit:
++	mutex_unlock(&rtwdev->mutex);
++}
 -- 
 2.21.0
 
