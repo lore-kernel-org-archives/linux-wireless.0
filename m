@@ -2,113 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD83FC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32630C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81B11229C4
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:00:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D24DC22262
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728919AbhAELAC (ORCPT
+        id S1729566AbhAEL0G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 06:00:02 -0500
-Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:48872 "EHLO
-        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727932AbhAELAC (ORCPT
+        Tue, 5 Jan 2021 06:26:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56312 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725710AbhAELZy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jan 2021 06:00:02 -0500
-Received: from bld-lvn-bcawlan-34.lvn.broadcom.net (bld-lvn-bcawlan-34.lvn.broadcom.net [10.75.138.137])
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 69C2524746;
-        Tue,  5 Jan 2021 02:58:59 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 69C2524746
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1609844339;
-        bh=kaWoRXwSZS7YtUvdYTyAm+lWov0aZ1a9nczHmkCofr4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=rrovivRD1Ckbw/e5QSVUVghRwlzQMompibFrJ4BQyeubQifhRs2iOyLGgCEU8u/Uy
-         EGkaMOwNFnwTnIwGUTqW1UoxRrYT+a1F0jcLtf7EvVgKvtvSLMY9eSEcIzJ0kkx2oC
-         h8GLe2O8pB55D2xzzGJcLm5vDYrGkMsYJeMmdTLM=
-Received: from localhost.localdomain (unknown [10.230.40.141])
-        by bld-lvn-bcawlan-34.lvn.broadcom.net (Postfix) with ESMTPSA id 07769187289;
-        Tue,  5 Jan 2021 02:58:57 -0800 (PST)
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-To:     Johannes Berg <jberg@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2] cfg80211: add VHT rate entries for MCS-10 and MCS-11
-Date:   Tue,  5 Jan 2021 11:58:39 +0100
-Message-Id: <20210105105839.3795-1-arend.vanspriel@broadcom.com>
-X-Mailer: git-send-email 2.17.1
+        Tue, 5 Jan 2021 06:25:54 -0500
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A8E5C061795;
+        Tue,  5 Jan 2021 03:25:33 -0800 (PST)
+Received: by mail-lf1-x134.google.com with SMTP id b26so71792356lff.9;
+        Tue, 05 Jan 2021 03:25:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=O/gWy++eAimDPktI4LIXt2raUQtiJ+JTKWeKyj4AzSs=;
+        b=mfAnm64zGHKDb1cgB3lnY7ptnmD33qyt6MzIsGtxGzXWO5QisUMAfnl7tDwumXNJ7x
+         llPFBW9ftyAhNYyW19npGmgMNBYQCaEG8Lq7wY2ib+Ohn4E1t0jn4UNnBPl3DQGlj0T9
+         DiNlUVbpzV0G48nxj03j+uQvFxqjeDlWAjGZg4muUgM1nNeQmWvUNswYbqpouP1Qo9zU
+         foz1tbYLlG+ejU7TyFURU140auYC7CPso7prHbbxUHqy1d66vvb30cA4zvdEoZvuvKxV
+         uqJXpTnVHSOMXvvU9U2yRC0yxj/Q8SzzmqaGvtaICXHv9SdvVLEdG70qDAXnGbEPnqU1
+         5SaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=O/gWy++eAimDPktI4LIXt2raUQtiJ+JTKWeKyj4AzSs=;
+        b=nBMNu5QVwEEtinbmyf/6gQvUaUkFzvK4XvcIqvub4dJr7f9ZrcClfoEMlvUORPHz+/
+         xZLnMJ5o4GikgcpAqMtDYivklZwRX/tQlowyuXm9zqTPpkk9uhKGf9UWltZynoi5Rvv4
+         UrltC/EqoU36XzglC+BIqYomAT/F/17xe3FbheTD0GyYVY3eh/wOgGZp2t3Qw3YAYqUP
+         sdzy/cEIyfqj4f2uiEnpRXnAH6dghBDaIzolFTnoJTcE777gcGZJm7wisnXyqqciRdPW
+         RXNqJgBHFWczQiLZ+XIIDiS0Pm9T9bfmulSSidCTHi5VWd6NI/8U5qW6li8O5tIJ9bFB
+         7YZA==
+X-Gm-Message-State: AOAM532YkQ7K2pM3J3aGSH1yCswsllgfywKEeJlhJdzyTiZ7EC2/68DQ
+        uCjRQrsW70GcIkyhhmvVL+UwtzE7iP6d3fDkHlI=
+X-Google-Smtp-Source: ABdhPJyrPAqvc8pvf+Cg2S2Q2qqmvgstp0uLjXpxdmyPDyd7E8qb7To9ZBwkd+THx5NWkwYaq7ZKmj6suYTOj+Gv49I=
+X-Received: by 2002:a19:8642:: with SMTP id i63mr14476146lfd.179.1609845931597;
+ Tue, 05 Jan 2021 03:25:31 -0800 (PST)
+MIME-Version: 1.0
+References: <20210105104420.6051-1-unixbhaskar@gmail.com>
+In-Reply-To: <20210105104420.6051-1-unixbhaskar@gmail.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Tue, 5 Jan 2021 22:25:20 +1100
+Message-ID: <CAGRGNgX_Lc=OqWNkquSD2YXjPDSmbku3iBGu1atQtgLZsCET1A@mail.gmail.com>
+Subject: Re: [PATCH] drivers: rtlwifi: rtl8821ae: defautly to de-faulty ,last
+ in the series
+To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        zhengbin13@huawei.com, baijiaju1990@gmail.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Observed the warning in cfg80211_calculate_bitrate_vht() using an
-11ac chip reporting MCS-11. Since devices reporting non-standard
-MCS-9 is already supported add similar entries for MCS-10 and MCS-11.
-Actually, the value of MCS-9@20MHz is slightly off so corrected that.
+Hi Bhaskar,
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-V2:
- - correct MCS-9 for 20MHz bandwidth.
----
- net/wireless/util.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+On Tue, Jan 5, 2021 at 9:48 PM Bhaskar Chowdhury <unixbhaskar@gmail.com> wrote:
+>
+> s/defautly/de-faulty/p
+>
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> index 9d6f8dcbf2d6..0e8f7c5fd028 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> @@ -970,7 +970,7 @@ bool rtl8821ae_is_tx_desc_closed(struct ieee80211_hw *hw,
+>
+>         /**
+>          *beacon packet will only use the first
+> -        *descriptor defautly,and the own may not
+> +        *descriptor de-faulty,and the own may not
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b4acc805114b..7e973b7b5e1c 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1235,7 +1235,9 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		   65000000,
- 		   78000000,
- 		/* not in the spec, but some devices use this: */
--		   86500000,
-+		   86700000,
-+		   97500000,
-+		  108300000,
- 		},
- 		{  13500000,
- 		   27000000,
-@@ -1247,6 +1249,8 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		  135000000,
- 		  162000000,
- 		  180000000,
-+		  202500000,
-+		  225000000,
- 		},
- 		{  29300000,
- 		   58500000,
-@@ -1258,6 +1262,8 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		  292500000,
- 		  351000000,
- 		  390000000,
-+		  438800000,
-+		  487500000,
- 		},
- 		{  58500000,
- 		  117000000,
-@@ -1269,12 +1275,14 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		  585000000,
- 		  702000000,
- 		  780000000,
-+		  877500000,
-+		  975000000,
- 		},
- 	};
- 	u32 bitrate;
- 	int idx;
- 
--	if (rate->mcs > 9)
-+	if (rate->mcs > 11)
- 		goto warn;
- 
- 	switch (rate->bw) {
+Same comments here as the previous patches:
+
+"de-faultly" makes less sense than "defaultly". This comment needs to
+be re-written by someone who knows what's going on here.
+
+Thanks,
+
 -- 
-2.17.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
