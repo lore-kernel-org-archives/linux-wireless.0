@@ -2,99 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97AB4C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 10:28:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08675C43381
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 10:30:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61AA7225AC
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 10:28:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5CEE22525
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 10:30:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729086AbhAEK21 (ORCPT
+        id S1729136AbhAEKaZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 05:28:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47384 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728070AbhAEK20 (ORCPT
+        Tue, 5 Jan 2021 05:30:25 -0500
+Received: from relay.smtp-ext.broadcom.com ([192.19.221.30]:44082 "EHLO
+        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728024AbhAEKaZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jan 2021 05:28:26 -0500
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65D9EC061794;
-        Tue,  5 Jan 2021 02:27:46 -0800 (PST)
-Received: by mail-il1-x135.google.com with SMTP id q1so28137193ilt.6;
-        Tue, 05 Jan 2021 02:27:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=06leFnGIwZWTXa+9aYwJRfo3DhaEXdzqEroBMYOjBd0=;
-        b=aV6Ifn8nUdMOFZVbPeCtaLLo1n3NMKzV13YxYcALQ9yNnh63ZGBcz0yrsuMVbqdGN+
-         ESDInYfpGrzjGvaWjmLXxWJicgeb84Etua5GAKGnx6U23u2fhmzOrXO9PpX13dRUD+tV
-         An8sFeiUG4LWRRZR1UkXtFPmKb6oc9G+eq5/aRzhuqJNDzDt3FoZfQgPmkebU5dadCk2
-         X9pCDLP5oYX06OZeTG0uaBjSG/iPaFyxTOAPlbDZZmhja+AM5t4nAxhl0Z/lwqqFOYzG
-         KaUFG/KoUpVZdVcyU+jw2+RrS3MQkwJtsba0VfDrfYoAypeuQufhG9r4Ar/W01gjEO62
-         HHkg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=06leFnGIwZWTXa+9aYwJRfo3DhaEXdzqEroBMYOjBd0=;
-        b=aIx6vGNJoHj/5wK0i8dwbDhlzRb0ebNPuEnGvfd1FX9d1RsM2OgLjl3koI7rnTV7FA
-         vOmLGgZSXKy5rvRi6xsK6K9zVJy85FBi0oSNdWdYHWLFOB5UpSx549ZpoVLxm1xaid1A
-         UuNn19A0omytNvAzlMBdWgRKsm87WG0eWx6Kk3U0BB5OkCwEnpFArZnjIfDBg+fh74Pa
-         ede9RuoeyStisNxLgktNzDFNRh2WMuA5MEDLdJPjOOHPGFtVOhbLc4/qjyc67YGuj+J2
-         Skr8/BBg4mM24nhyCP9TPiu69h6bZv5CTp5NvstdpSUZ+jOdBVS3NHe9qlNlJYMOQwA1
-         xTkg==
-X-Gm-Message-State: AOAM531igK8Mu1b+VnYJm1cQvT+2pU/9ya9NV/dtpFSYhecBUH821ojK
-        BrW1sp4IacsYB40z7hTE70E=
-X-Google-Smtp-Source: ABdhPJwR+m757T7Pq5kNO9i+0WLiQmzubbeAflBMnJdCJtnXAFx/wxlIZe27CtSZ/Vq0JjUvouFIEQ==
-X-Received: by 2002:a92:d44e:: with SMTP id r14mr74244168ilm.83.1609842465881;
-        Tue, 05 Jan 2021 02:27:45 -0800 (PST)
-Received: from localhost.localdomain ([156.146.37.136])
-        by smtp.gmail.com with ESMTPSA id p18sm43514830ile.27.2021.01.05.02.27.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Jan 2021 02:27:45 -0800 (PST)
-From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
-To:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, christophe.jaillet@wanadoo.fr,
-        Larry.Finger@lwfinger.net, baijiaju1990@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Subject: [PATCH] drivers: wireless: rtlwifi: rtl8192ce: Fix construction of word rtl8192ce/trx.c
-Date:   Tue,  5 Jan 2021 15:57:51 +0530
-Message-Id: <20210105102751.21237-1-unixbhaskar@gmail.com>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 5 Jan 2021 05:30:25 -0500
+X-Greylist: delayed 378 seconds by postgrey-1.27 at vger.kernel.org; Tue, 05 Jan 2021 05:30:24 EST
+Received: from bld-lvn-bcawlan-34.lvn.broadcom.net (bld-lvn-bcawlan-34.lvn.broadcom.net [10.75.138.137])
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 747ED2477F;
+        Tue,  5 Jan 2021 02:23:04 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 747ED2477F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1609842184;
+        bh=vuRnp/eCd1YKq4LphdjGZ/Py22dRmY1iJGIZcxdma+8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=pKn6OhvhTx/0DWI+haOAPFi72NKW9vVePYapL3dtA/qtBfILtWxYxdn1kgyHV+OjK
+         gFzoAJ5NlIehu7VlT+cmNx5wbKTamHgaGWEfIHjUhLCsd4AeKORjd4izVEKFK1JvkT
+         Pg01WOhuNL3ZvvJKq9UO/GWplJtdqSHR97UKficI=
+Received: from localhost.localdomain (unknown [10.230.40.141])
+        by bld-lvn-bcawlan-34.lvn.broadcom.net (Postfix) with ESMTPSA id CB001187289;
+        Tue,  5 Jan 2021 02:23:02 -0800 (PST)
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+To:     Johannes Berg <jberg@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] cfg80211: add VHT rate entries for MCS-10 and MCS-11
+Date:   Tue,  5 Jan 2021 11:22:50 +0100
+Message-Id: <20210105102250.3473-1-arend.vanspriel@broadcom.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-s/defautly/de-faulty/p
+Observed the warning in cfg80211_calculate_bitrate_vht() using an
+11ac chip reporting MCS-11. Since devices reporting non-standard
+MCS-9 is already supported add similar entries for MCS-10 and MCS-11.
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/util.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-index 4165175cf5c0..d53397e7eb2e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-@@ -671,7 +671,7 @@ bool rtl92ce_is_tx_desc_closed(struct ieee80211_hw *hw,
- 	u8 own = (u8)rtl92ce_get_desc(hw, entry, true, HW_DESC_OWN);
-
- 	/*beacon packet will only use the first
--	 *descriptor defautly,and the own may not
-+	 *descriptor de-faulty,and the own may not
- 	 *be cleared by the hardware
- 	 */
- 	if (own)
---
-2.26.2
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b4acc805114b..19fd4db6d32f 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1236,6 +1236,8 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 		   78000000,
+ 		/* not in the spec, but some devices use this: */
+ 		   86500000,
++		   97500000,
++		  108300000,
+ 		},
+ 		{  13500000,
+ 		   27000000,
+@@ -1247,6 +1249,8 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 		  135000000,
+ 		  162000000,
+ 		  180000000,
++		  202500000,
++		  225000000,
+ 		},
+ 		{  29300000,
+ 		   58500000,
+@@ -1258,6 +1262,8 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 		  292500000,
+ 		  351000000,
+ 		  390000000,
++		  438800000,
++		  487500000,
+ 		},
+ 		{  58500000,
+ 		  117000000,
+@@ -1269,12 +1275,14 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 		  585000000,
+ 		  702000000,
+ 		  780000000,
++		  877500000,
++		  975000000,
+ 		},
+ 	};
+ 	u32 bitrate;
+ 	int idx;
+ 
+-	if (rate->mcs > 9)
++	if (rate->mcs > 11)
+ 		goto warn;
+ 
+ 	switch (rate->bw) {
+-- 
+2.17.1
 
