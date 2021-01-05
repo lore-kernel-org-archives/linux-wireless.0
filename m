@@ -2,166 +2,141 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86508C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61279C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 466C422581
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C2DB22525
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727505AbhAEIgQ (ORCPT
+        id S1726626AbhAEI4w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 03:36:16 -0500
-Received: from mail-eopbgr80049.outbound.protection.outlook.com ([40.107.8.49]:61901
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726097AbhAEIgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jan 2021 03:36:16 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fkuZuoELwP4es2gvQT7WQcFpqKsRHIXH2Hq4V9FnwG05D1lq1Hg53JLXcbsHKjBmVeNoHwZVlPrRg1YO5BEB5M8Wx93LOKgKNuqjkD/OwSHkTRiAUYGdjaQ4je0klzArmbF+snkf+fCjC52fxo1zVKXmFn4b7MT+eAVcWBTq/Zt9M3QuqBQIZ4UesdT5wjfxaom/L0MUipPXOwbApFw6K9+o1LsRwBBpwM4vMapjbKe9yzojvMag1zkawM5HT9SI3zRzkcGNdfu0YeSTxR6YMqMOYjyaMAxoV+gjcQA2QwXHAQv77yZ9oDXrJfwkH+VpWe+0HuBcmKwfa8r2671ASQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m5GZR6d3CXEEkH9QktyIjhguh1bA4X+YSCSaXZk+WV4=;
- b=INwe8SOOzrFL7dZcbtOCalQXy1y8uWFeWVcXj3fQD2rM6GUdAalOEowMVCQOkvuiOUiOzWzQ8mBaGDkcMorjJBC3D3p9SJ5v/dEnSCnG4AhwemEHQETMydn0HQJkc4dEvbHhbtryvCACeerilqP+PBFCp4S7lJJIm9m+P+TmFJ2CS78O+joLwY5nSQY0FwgkX1L51YYdeUDhpZwq5neLvhDm4xDYQULy78Odam1i4mppZXAx0Yag3ljMgUN5ZqnrMJwIOBhPz9WLhKFPRReDtyxYLzLgtJt9RaOJIHGJbjtw6OE+oio87YAsgFiZmmeushIi/qa4YsVD4aVVoI4apQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
- dkim=pass header.d=celeno.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m5GZR6d3CXEEkH9QktyIjhguh1bA4X+YSCSaXZk+WV4=;
- b=pcbOZb42YOVe4MCieZ9ckQQkMFeiPNM6b2mSdBV0jKQVC5BoT+M9C1AroJfyrXRbe3z5EUZIFl0K0bg1OG6z0A7KuLDmJL3czAU6T9hYFCIsUYyLlUlH9OH7Ph711sMjqvGO1G2hY8aXit+ypxX9NkattDHAMzVLP0RZGY44Fkg=
-Authentication-Results: celeno.com; dkim=none (message not signed)
- header.d=none;celeno.com; dmarc=none action=none header.from=celeno.com;
-Received: from AM0P192MB0468.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:45::15)
- by AM0P192MB0467.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:47::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3721.20; Tue, 5 Jan
- 2021 08:35:27 +0000
-Received: from AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
- ([fe80::f46c:536b:3238:a27f]) by AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
- ([fe80::f46c:536b:3238:a27f%5]) with mapi id 15.20.3721.024; Tue, 5 Jan 2021
- 08:35:27 +0000
-Subject: Re: [PATCH] mac80211: do not allow bigger VHT MPDUs than the hardware
- supports
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net, eliav.farber@celeno.com,
-        aviad.brikman@celeno.com
-References: <20200917125031.45009-1-nbd@nbd.name>
-From:   Shay Bar <shay.bar@celeno.com>
-Message-ID: <6327afad-03d4-f35d-e7ae-17ea2fdf1ff9@celeno.com>
-Date:   Tue, 5 Jan 2021 10:35:23 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
-In-Reply-To: <20200917125031.45009-1-nbd@nbd.name>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [87.70.56.235]
-X-ClientProxiedBy: LO2P265CA0459.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:a2::15) To AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:208:45::15)
+        Tue, 5 Jan 2021 03:56:52 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54459 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725864AbhAEI4w (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Jan 2021 03:56:52 -0500
+X-UUID: b691036bc7cd40ee8d30abd40362fc4f-20210105
+X-UUID: b691036bc7cd40ee8d30abd40362fc4f-20210105
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 688891166; Tue, 05 Jan 2021 16:56:08 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 5 Jan 2021 16:56:07 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 5 Jan 2021 16:56:06 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 6/6] mt76: mt7915: clean hw queue before starting new testmode tx
+Date:   Tue, 5 Jan 2021 16:55:29 +0800
+Message-ID: <20210105085529.14206-6-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210105085529.14206-1-shayne.chen@mediatek.com>
+References: <20210105085529.14206-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [10.0.0.13] (87.70.56.235) by LO2P265CA0459.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:a2::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6 via Frontend Transport; Tue, 5 Jan 2021 08:35:26 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0150e5f8-dc01-46c0-22ae-08d8b154da68
-X-MS-TrafficTypeDiagnostic: AM0P192MB0467:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB046747C993464C83A270DC02E7D10@AM0P192MB0467.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: /M/qQabYLLbAqZFbJX5AblNmwpaQ/5LR6yS9vi/izUShuC9/zk1DAYrhq+BojAMyQxSROgASm3yYv2Lnyqf6FM7IBEwO2ZheepxxDgv/hWXrEJHGfjVm5NRZZWDRLipMLfMagCTr02JOrJGuZoF49IhQ8m7Umq4Z85IuDkbxlVo+wDmF4qpKJ6cXdxyWkRGDafRFs3zvEz7BSdKjfITFy8jFv4jNV64dKRTOBp9YGJjAbCtSp3nXhgBGF0bqsbJ5FjLgfCpJQJv9nL4E4BJvrOXfzClQGuNP+nZrGscgVYh7cricvKW7ncFNFMKBwHbxO912MFqQyH3WX3Md7/JTEq9JGciJ/xBP6B7K+HyUbDrT4KNomzF/EYkQqV65qxFlMx7IKVdCiPjTQgSAtd8HWecSNjRSbOrtbMuwyKGIrE53WHOxzb5ofyXVrJViHt8Z5wXSGCiJmZ9xisRekbZGJkFel0wjY+XG1KUHgU1KQe0ioyKFPFB0k9+N4tpuFD2d
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0P192MB0468.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(346002)(376002)(136003)(366004)(396003)(316002)(478600001)(16526019)(86362001)(4326008)(16576012)(66476007)(956004)(2616005)(53546011)(52116002)(31696002)(44832011)(66556008)(107886003)(6486002)(36756003)(8936002)(26005)(66946007)(2906002)(83380400001)(6666004)(31686004)(186003)(5660300002)(8676002)(135533001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?dFpEVDJFeEVFS2hjRG1qckxCeUVYUE1Pbmk3ZTlnd0RFNk94Q0V0dktIZDZ3?=
- =?utf-8?B?ZGc3Zk1tbU92WC96S3grZVcvZkRhbWk0dXY5NVZJblJsR3lGd25icFFzWGs4?=
- =?utf-8?B?N2FTdjFGSVF2b1RBZ01UWktDZ3ZGbnl1b2FIYk5XMWRhbENFUlRFWVFKbmJ4?=
- =?utf-8?B?ZTRJZkxNNTlGTDNZakRDR0MzanNyalo3QVpNL3I1cC9ZWjZxZC9lby9PUDl3?=
- =?utf-8?B?blpOaUV1NndBYnRJTmJoZFBIVVoyUkJsYjhnc3Jxai9sVTh0QXJWTlZwYW85?=
- =?utf-8?B?ZTVoaW8vWWRHVm5ZWjBjdytBUVlDY3RKQk10UDBCdFZGK0Q5cVJHYnlnOElj?=
- =?utf-8?B?OE91SXVYb2ZpMEt6bmhvbFRvL3RoQm5Lc3pkUzlwZ2dYbWxRWDFVSzhOUHBU?=
- =?utf-8?B?RGFvK25uMTJrbkxTS3hUN2hiL2NZL3QrbzQzZE1NZGJvdkxteThHMVB3dG5h?=
- =?utf-8?B?Y1VLRm5rSVIwNzQwYkdYVGhiNGlkbnJLTU9vdUJ0MHk0UXZzWFVnUWx3akxs?=
- =?utf-8?B?enlBMUo0ajBVdFkvTEEzYWFrZk5MSTY2WElhRlJ6dlBLS1FpN29tM1RoWHI3?=
- =?utf-8?B?UUprZUJYblJUeFlwN0JrNmV1Q0xET3A3dXVvczZsM3ZJelZZbW1JRkF1Vnh4?=
- =?utf-8?B?SFNKRjJrdkFQejZPekVmQnJhNjlUemgwVGQzNzMrNTg3R3E3QzZkaHRXN1Vq?=
- =?utf-8?B?ZklKRjBtdmMxemU4Ym91clgzS0FORjgyS1RabElSSS9lUGdZSWNNaVJFalBK?=
- =?utf-8?B?MHVRTk42anhmaXJsc1BwZFdEUVJhMldGMUZoQ2dDbEx0M3B4c3hKeFk4OHJr?=
- =?utf-8?B?aUZFQkdDQWtrNUpPdWVWWWdOR1h3S3hkUkc0MG9PMlhEN3dvMEliZ0w5YzBv?=
- =?utf-8?B?bFRpak1aa2RYTnJUVUFzQ2pqNnUyeFMzT0VIZjVHUXAxcFdkSW44R1p3MmxY?=
- =?utf-8?B?cU5FZ1ZIN1ZpbnpDVWg4ek5VMVpHNmVRM2ZEN3NPOTRUeHNGZjBSRE41N0o0?=
- =?utf-8?B?K2VJNVI4NGljREovZDdJTVdqQXJHTnprb29qNHZIdTVaYTRadGprZUNJNTll?=
- =?utf-8?B?bUZqdGM4aHlEVjFvN2lsUjlGSWNLYlJuUld3YTFWRmZuWTFZeHF5ZHBSYUhm?=
- =?utf-8?B?UjI4QlA0c01GZ1AyQ3hoZUVzS0p1YXM3ZExoM29kNmg0NDZ1dWlnZ20raS85?=
- =?utf-8?B?VDlCbXd4cml3akVXUjFralZBK1VlNVZXRzRlc1UrNDhxaHZGVTJEeEw5MllX?=
- =?utf-8?B?Z0N3MGFJS0x5bzlmN2FyNlY4aGdDR1ExRm53dkFGaWxpM3N4R3JyMVNGSjlH?=
- =?utf-8?Q?meR/sI2Dr+8rQ=3D?=
-X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-AuthSource: AM0P192MB0468.EURP192.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2021 08:35:27.1552
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0150e5f8-dc01-46c0-22ae-08d8b154da68
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /TWgpU3+m8z4TczoQCh+SzjjcBVY4UNcYcr0somjOFlft71shxIwG5XWoZ7f98Ki2zVVPZ4djYhGHlOc54oU5Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0467
+Content-Type: text/plain
+X-TM-SNTS-SMTP: BC75EFC5F96D58FA74A45154A7EC7F1BB98760C0FD3DBA75C9679D0FDA9072022000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Add a testmode mcu command to clean up hw tx queue before a new
+testmode tx starts.
 
-On 17/09/2020 15:50, Felix Fietkau wrote:
-> Limit maximum VHT MPDU size by local capability
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->   net/mac80211/vht.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-> index 7e601d067d53..fb0e3a657d2d 100644
-> --- a/net/mac80211/vht.c
-> +++ b/net/mac80211/vht.c
-> @@ -168,10 +168,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
->          /* take some capabilities as-is */
->          cap_info = le32_to_cpu(vht_cap_ie->vht_cap_info);
->          vht_cap->cap = cap_info;
-> -       vht_cap->cap &= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
-> -                       IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
-> -                       IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
-> -                       IEEE80211_VHT_CAP_RXLDPC |
-> +       vht_cap->cap &= IEEE80211_VHT_CAP_RXLDPC |
->                          IEEE80211_VHT_CAP_VHT_TXOP_PS |
->                          IEEE80211_VHT_CAP_HTC_VHT |
->                          IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
-> @@ -180,6 +177,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
->                          IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
->                          IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
->
-> +       vht_cap->cap |= min_t(u32, cap_info & IEEE80211_VHT_CAP_MAX_MPDU_MASK,
-> +                             own_cap.cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK);
-> +
->          /* and some based on our own capabilities */
->          switch (own_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
->          case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
->
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7915/testmode.c | 16 ++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/testmode.h |  8 ++++++++
+ 3 files changed, 25 insertions(+)
 
-The vht_cap->cap IEEE80211_VHT_CAP_MAX_MPDU* reflect the associated STA 
-_RX_ capabilities.
-
-Why would you override the original STA _RX_ capabilities (vht_cap->cap) 
-with your own HW _RX_ size limitation ?
-
-e.g. if HW support 11454 in TX and 3895 in RX, due to this change, you 
-limit your TX to your own _RX_ limitation (3895) while STA actually 
-reported 11454 RX.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+index 66d34d78c1d4..163b6f330e67 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+@@ -50,6 +50,7 @@ enum {
+ 	MCU_ATE_SET_TRX = 0x1,
+ 	MCU_ATE_SET_FREQ_OFFSET = 0xa,
+ 	MCU_ATE_SET_SLOT_TIME = 0x13,
++	MCU_ATE_CLEAN_TXQUEUE = 0x1c,
+ };
+ 
+ struct mt7915_mcu_rxd {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+index a8e639ffe6de..6f6e02038c6d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+@@ -132,6 +132,21 @@ mt7915_tm_set_trx(struct mt7915_phy *phy, int type, bool en)
+ 				 sizeof(req), false);
+ }
+ 
++static int
++mt7915_tm_clean_hwq(struct mt7915_phy *phy, u8 wcid)
++{
++	struct mt7915_dev *dev = phy->dev;
++	struct mt7915_tm_cmd req = {
++		.testmode_en = 1,
++		.param_idx = MCU_ATE_CLEAN_TXQUEUE,
++		.param.clean.wcid = wcid,
++		.param.clean.band = phy != &dev->phy,
++	};
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_ATE_CTRL, &req,
++				 sizeof(req), false);
++}
++
+ static int
+ mt7915_tm_set_slot_time(struct mt7915_phy *phy, u8 slot_time, u8 sifs)
+ {
+@@ -408,6 +423,7 @@ mt7915_tm_set_tx_frames(struct mt7915_phy *phy, bool en)
+ 	u32 ipg = td->tx_ipg;
+ 
+ 	mt7915_tm_set_trx(phy, TM_MAC_RX_RXV, false);
++	mt7915_tm_clean_hwq(phy, dev->mt76.global_wcid.idx);
+ 
+ 	if (en) {
+ 		mutex_unlock(&dev->mt76.mutex);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
+index 784d4c948886..da92cad0aa9b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
+@@ -26,6 +26,13 @@ struct mt7915_tm_slot_time {
+ 	u8 _rsv1[5];
+ };
+ 
++struct mt7915_tm_clean_txq {
++	bool sta_pause;
++	u8 wcid;	/* 256 sta */
++	u8 band;
++	u8 rsv;
++};
++
+ struct mt7915_tm_cmd {
+ 	u8 testmode_en;
+ 	u8 param_idx;
+@@ -35,6 +42,7 @@ struct mt7915_tm_cmd {
+ 		struct mt7915_tm_trx trx;
+ 		struct mt7915_tm_freq_offset freq;
+ 		struct mt7915_tm_slot_time slot;
++		struct mt7915_tm_clean_txq clean;
+ 		u8 test[72];
+ 	} param;
+ } __packed;
+-- 
+2.29.2
 
