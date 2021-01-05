@@ -2,112 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C15CCC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91602C433E9
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:31:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E894229C5
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:27:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59BA5229C5
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:31:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729656AbhAEL0v (ORCPT
+        id S1726074AbhAELbq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 06:26:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56466 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728867AbhAEL0u (ORCPT
+        Tue, 5 Jan 2021 06:31:46 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:48053 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725769AbhAELbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jan 2021 06:26:50 -0500
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0756DC061574;
-        Tue,  5 Jan 2021 03:26:10 -0800 (PST)
-Received: by mail-lf1-x129.google.com with SMTP id a12so71783013lfl.6;
-        Tue, 05 Jan 2021 03:26:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bCI7v7ANooZCULC72pLq7a1JFEmBmonJESDym+rY7Z0=;
-        b=kilbFJJ4OYIE0D+BFknpE97whwE5IBKi5Heur10Pn4D1M5BiDNIrIFgPYz7VDUf4ID
-         kT7HHoRZZgnUPi7BLC/uT6AODsEK3XmrxjGQrV+nDI5C6Wnh86Pgjq6mol0a8aB9vT2f
-         ooDNd8VF9JB7S045i7h0y0bqeoLvtlYW8vUU3ePMRT3bY1ZqvZH8RTtPmr/no9dQpgHZ
-         6E2qKw5PMO6JA4w/8BatG9+uccfLnOI76G2mEWpJsN/MsFz65oi96kYS2IQ0wJbRMSkA
-         Z5fD+uizH7ma3e171lZUYNaebVC3Y9mxQcB2ZzHolKVpnRkCio2Jsrb9tmpso4lQCzLj
-         Kr3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bCI7v7ANooZCULC72pLq7a1JFEmBmonJESDym+rY7Z0=;
-        b=c9NXrpPIQC5LCcd4XUho1AIMHtJbg1yPqkJSfKEqFdz4xI111CUVrkzAMPRk2CH6e6
-         1tfau3mUOGebpqA2wqOsjV+g+LYme7cJXRidpuvShei9+rtkILvWrdkjXEerKj6gQdfu
-         3O+xZxlquFiEhnGPdnIoB2bM1f7GTekM7mp5lnMt8r1jBfIJWPH/UNgo2xtRKzYD7XDF
-         2+1YhOtKzjiv7QHO53cmFm92hr5h5jP5Z2XX27TOJ6JNXGNrmwh0m+S1sK509RWCdcvy
-         e00Bib1rWA9BZncamvMj3broMPT+9ih6EInJ1O0JBZchetKh5cKn8SlaTwrP7MNZO/Gs
-         VYvQ==
-X-Gm-Message-State: AOAM530YuVTmM5/Bqq4Qfb6pptwSPezGUTlJF6yPh5mZ6rBavwHQaFDf
-        vq/5kgiW1NcUOT835bJtpP08HTov1f33Y/KQvDM=
-X-Google-Smtp-Source: ABdhPJz1pNvV0c53ivGzp8KpqTt+GxkWyu/+pbUtncis71sW0vKBdzFQgamfwFnjNKbapQcFu9z9QLihgXXP0eYzM5Y=
-X-Received: by 2002:a05:6512:74e:: with SMTP id c14mr37155334lfs.529.1609845968585;
- Tue, 05 Jan 2021 03:26:08 -0800 (PST)
+        Tue, 5 Jan 2021 06:31:46 -0500
+X-UUID: a5ed39f2b3f34cc783d892a047b1ad4f-20210105
+X-UUID: a5ed39f2b3f34cc783d892a047b1ad4f-20210105
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1135770502; Tue, 05 Jan 2021 19:31:00 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 5 Jan 2021 19:30:58 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 5 Jan 2021 19:30:58 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 2/4] mt76: mt7915: rework set state part in testmode
+Date:   Tue, 5 Jan 2021 19:30:43 +0800
+Message-ID: <20210105113045.17815-2-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210105113045.17815-1-shayne.chen@mediatek.com>
+References: <20210105113045.17815-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-References: <20210105104000.14545-1-unixbhaskar@gmail.com>
-In-Reply-To: <20210105104000.14545-1-unixbhaskar@gmail.com>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Tue, 5 Jan 2021 22:25:57 +1100
-Message-ID: <CAGRGNgUsMPyKwv5_qQ14frXKyuudhDWZwZSXLnb8-c6Pk9f6vw@mail.gmail.com>
-Subject: Re: [PATCH] drivers: realtek: rtl8723be: Correct word presentation as
- defautly to de-faulty
-To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        zhengbin13@huawei.com, baijiaju1990@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Bhaskar,
+This is a preliminary patch to simplify setting state in mt7915
+testmode, for adding the new continuous tx state.
 
-On Tue, Jan 5, 2021 at 9:44 PM Bhaskar Chowdhury <unixbhaskar@gmail.com> wrote:
->
-> s/defautly/de-faulty/p
->
-> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-> index 5a7cd270575a..47886a19ed8c 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-> @@ -724,7 +724,7 @@ bool rtl8723be_is_tx_desc_closed(struct ieee80211_hw *hw,
->         u8 own = (u8)rtl8723be_get_desc(hw, entry, true, HW_DESC_OWN);
->
->         /*beacon packet will only use the first
-> -        *descriptor defautly,and the own may not
-> +        *descriptor de-faulty,and the own may not
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt7915/testmode.c  | 22 +++++++++----------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-Same comments here as the previous patches:
-
-"de-faultly" makes less sense than "defaultly". This comment needs to
-be re-written by someone who knows what's going on here.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+index 6f6e02038c6d..e5af42c70e12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+@@ -395,9 +395,8 @@ mt7915_tm_reg_backup_restore(struct mt7915_phy *phy)
+ }
+ 
+ static void
+-mt7915_tm_init(struct mt7915_phy *phy)
++mt7915_tm_init(struct mt7915_phy *phy, bool en)
+ {
+-	bool en = !(phy->mt76->test.state == MT76_TM_STATE_OFF);
+ 	struct mt7915_dev *dev = phy->dev;
+ 
+ 	if (!test_bit(MT76_STATE_RUNNING, &phy->mt76->state))
+@@ -502,16 +501,15 @@ mt7915_tm_set_state(struct mt76_phy *mphy, enum mt76_testmode_state state)
+ 
+ 	mphy->test.state = state;
+ 
+-	if (prev_state == MT76_TM_STATE_TX_FRAMES)
+-		mt7915_tm_set_tx_frames(phy, false);
+-	else if (state == MT76_TM_STATE_TX_FRAMES)
+-		mt7915_tm_set_tx_frames(phy, true);
+-	else if (prev_state == MT76_TM_STATE_RX_FRAMES)
+-		mt7915_tm_set_rx_frames(phy, false);
+-	else if (state == MT76_TM_STATE_RX_FRAMES)
+-		mt7915_tm_set_rx_frames(phy, true);
+-	else if (prev_state == MT76_TM_STATE_OFF || state == MT76_TM_STATE_OFF)
+-		mt7915_tm_init(phy);
++	if (prev_state == MT76_TM_STATE_TX_FRAMES ||
++	    state == MT76_TM_STATE_TX_FRAMES)
++		mt7915_tm_set_tx_frames(phy, state == MT76_TM_STATE_TX_FRAMES);
++	else if (prev_state == MT76_TM_STATE_RX_FRAMES ||
++		 state == MT76_TM_STATE_RX_FRAMES)
++		mt7915_tm_set_rx_frames(phy, state == MT76_TM_STATE_RX_FRAMES);
++	else if (prev_state == MT76_TM_STATE_OFF ||
++		 state == MT76_TM_STATE_OFF)
++		mt7915_tm_init(phy, !(state == MT76_TM_STATE_OFF));
+ 
+ 	if ((state == MT76_TM_STATE_IDLE &&
+ 	     prev_state == MT76_TM_STATE_OFF) ||
 -- 
-Julian Calaby
+2.29.2
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
