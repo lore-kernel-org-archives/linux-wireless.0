@@ -8,69 +8,67 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E546C433E9
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9125C43332
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B8A522262
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AA9F229C7
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 11:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729577AbhAEL0H (ORCPT
+        id S1729633AbhAEL0d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 06:26:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56308 "EHLO
+        Tue, 5 Jan 2021 06:26:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729318AbhAELZy (ORCPT
+        with ESMTP id S1725815AbhAEL0c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jan 2021 06:25:54 -0500
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBE7C0617A0;
-        Tue,  5 Jan 2021 03:24:46 -0800 (PST)
-Received: by mail-lf1-x12b.google.com with SMTP id o19so71804616lfo.1;
-        Tue, 05 Jan 2021 03:24:46 -0800 (PST)
+        Tue, 5 Jan 2021 06:26:32 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED68C061796;
+        Tue,  5 Jan 2021 03:25:51 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id x20so71720298lfe.12;
+        Tue, 05 Jan 2021 03:25:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=d4x4cvcMmgFsYUGoF/1+2lvoQxmLVCLHQ/4xBidGdsM=;
-        b=s8plLUX0b1QAEl7yX2FujREg4nf3efVcgX2KaUa5RfSFArQL2X5xo9M4He1knpXyS3
-         BiwTQdKUaYvGVtem/nVvkQ4eXatNxB7G43aRo6WC2lXa36/zE2UYMpKgDPD9elEgmv+P
-         apwz7dbiRKb6ANajJE8PtBBNRZZeN2ppDea2p2dJwEtZ+ETOA+WAXLBEIkcgG45rk9Nk
-         oIHDCtUWiqkoDuAKcbzxnLLrj01n4a7RyGFo4eGVBLmkzSbEKnHZAU7CTVN77Ss1hldg
-         1mu9zHE3ngL2G4P6D0Pd7Yv4axOsRnLmD7TPN3CmhL8icokJQneHZs8Z/BX3dvCSDZH+
-         scQA==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nREWbUi+bMkL9IZ2W3EDeCQCfPlDw/qtuVovcJ0X+z0=;
+        b=BqhBclnBir0D1pSGWN/4sAR2kjYZ2C2YbuEO23FeeeD8GJegwTwG6OIV6D2D4heseo
+         yk6Z1nJa2PzANspPpM8wsmo7lLUFUDb3sMounKtUxLSjeTzCmiOCuL5iaLYYWHSblaqD
+         FoOGWO9498GaMLfLP+8NQko2tMkIZqcjRkCBMog+lszZhVf+izH93Xc2qVnUg+JKt/Q8
+         JvovMxQDN3PNw51iCXgusdIm85Dcc5MJ3oj136dV04M5phm3DDlacOzbWmp7Ph/t0A8r
+         oK71sU6tZH02C5BQYKIKAnpa4wK3OJpw3w42ZDdHf8M5LiWTZSVuaegnpupCRJbOEkEt
+         MjKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=d4x4cvcMmgFsYUGoF/1+2lvoQxmLVCLHQ/4xBidGdsM=;
-        b=FVaNkaIYSokKAfvd0rNyYbXXLABoN5oyRROXtVsInzJKcZ51MQtcR0GNlI+c1pKbBh
-         3GksdB1okEzEo0wGkxMzZrva01B6lMeKtDUW5Eo6/gTQc0T8ZUs4xYVt/tqJN0d27QQj
-         4wjqqFJhsFKyNe3ARBRF1lo+fSi/X10mN4N2GYj78OE3k5QX2EHusZh/GHbQh1g/yE5h
-         LQxKVaLwTSMZc7Fy4GeeFyQ3jdYcatunjbkDDNMRzUHzwWrI7JqOLeepwb2q1vE1fKWd
-         vyA6sWAYq9oAbFwPh3jnhGdjUa59JlmeCkUnYPyzSPUwKyTHnWkR6IhtqgGDjU0MwSts
-         jskw==
-X-Gm-Message-State: AOAM5334SRK2p4z9Vf81zBHVuPGp8MLcZ0zmFaiRT7ucN+tZ0RyoJEsr
-        N1MYNnvfhLOmxq4Mcp+DfBaZSPEHXS6gDfjZs4Q=
-X-Google-Smtp-Source: ABdhPJzk5ZjwofTobePg/2X4lwegr74UEMdarc1pgxyms8aCO1/VljAkPrb4AMb8BnsxbmrWTdB/9qlmxwaw755Zjpw=
-X-Received: by 2002:a05:651c:1102:: with SMTP id d2mr35861266ljo.398.1609845884842;
- Tue, 05 Jan 2021 03:24:44 -0800 (PST)
+         :message-id:subject:to:cc;
+        bh=nREWbUi+bMkL9IZ2W3EDeCQCfPlDw/qtuVovcJ0X+z0=;
+        b=QP9Z8pWGgcaU1pXWlR9zjMNCSoSE+tOCMduZXZg7js/kSIdm0yhOQriKor57MVwa4r
+         LQuMtSd4YKDisRBDWYaeyn5wFMdDT9ITrTjHBEYEhg35ADI9FQbTKu0Zhvq/3KTBLqhv
+         OBZj7Miavu2DilcXSPD5HyiQgdF/3GOvLvCczCYXbdbY5sh6ZTQl4QrtTX1zQfh4ofWY
+         i8XJK6hkrS0RoQlL7/P89BEHdS6mAsL2f42SZEByEi0PVLFNLBu7hr/LDBsuMIRMmIoa
+         RNON2e6ilIEYRtFQOzp6Bu4zsqFfjWmgrw8nV4AdLNGxdr3+1X/1kK6ii2w/9xPA9U66
+         u38A==
+X-Gm-Message-State: AOAM531pskCQDDLmChB8z6ZftfZm5Rj/0YnrWbTISxu6042l0qYKBT4x
+        hIRR0WZ6j4qioW3JVEKaZvG+sTIzXDe8sOiBr+A=
+X-Google-Smtp-Source: ABdhPJxYUrj2lpQfvkDaNBNvJq3CH36qG7xLrafEGcgCm0fm8THd6IyGlyQuzeCQ6wqhI8Xa/+cnJF31uzCJXSOQvxw=
+X-Received: by 2002:a19:6547:: with SMTP id c7mr32790336lfj.14.1609845950349;
+ Tue, 05 Jan 2021 03:25:50 -0800 (PST)
 MIME-Version: 1.0
-References: <20210105101738.13072-1-unixbhaskar@gmail.com> <CAGRGNgX-JSPW8LSmAUbm=2jkx+K4EYdntCq6P2i8td0TUk7Nww@mail.gmail.com>
- <X/RD/pll4UoRJG0w@Gentoo>
-In-Reply-To: <X/RD/pll4UoRJG0w@Gentoo>
+References: <20210105103525.28159-1-unixbhaskar@gmail.com>
+In-Reply-To: <20210105103525.28159-1-unixbhaskar@gmail.com>
 From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Tue, 5 Jan 2021 22:24:32 +1100
-Message-ID: <CAGRGNgVHcOjt4at+tzgrPxn=04_Y3b16pihDw6xucg4Eh1GFSA@mail.gmail.com>
-Subject: Re: [PATCH] drivers: net: wireless: realtek: Fix the word association
- defautly de-faulty
-To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>,
-        Julian Calaby <julian.calaby@gmail.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+Date:   Tue, 5 Jan 2021 22:25:38 +1100
+Message-ID: <CAGRGNgVVt-nPT0BtE+i2YWczDmmDVujRsbtqrDZta43QYs7o6Q@mail.gmail.com>
+Subject: Re: [PATCH] drivers: rtlwifi: rtl8723ae: Fix word association in trx.c
+To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        zhengbin13@huawei.com, baijiaju1990@gmail.com,
         Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        zhengbin13@huawei.com, baijiaju1990@gmail.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -80,50 +78,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hi Bhaskar,
 
-On Tue, Jan 5, 2021 at 9:48 PM Bhaskar Chowdhury <unixbhaskar@gmail.com> wrote:
+On Tue, Jan 5, 2021 at 9:39 PM Bhaskar Chowdhury <unixbhaskar@gmail.com> wrote:
 >
-> On 21:33 Tue 05 Jan 2021, Julian Calaby wrote:
-> >Hi Bhaskar,
-> >
-> >On Tue, Jan 5, 2021 at 9:19 PM Bhaskar Chowdhury <unixbhaskar@gmail.com> wrote:
-> >>
-> >> s/defautly/de-faulty/p
-> >>
-> >>
-> >> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
-> >> ---
-> >>  drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-> >> index c948dafa0c80..7d02d8abb4eb 100644
-> >> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-> >> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-> >> @@ -814,7 +814,7 @@ bool rtl88ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
-> >>         u8 own = (u8)rtl88ee_get_desc(hw, entry, true, HW_DESC_OWN);
-> >>
-> >>         /*beacon packet will only use the first
-> >> -        *descriptor defautly,and the own may not
-> >> +        *descriptor de-faulty,and the own may not
-> >
-> >Really? "de-faultly" isn't any better than "defaultly" and in fact
-> >it's even worse as it breaks up the word "default".
-> >
-> hey, it was written as "defautly" ...and that was simple spelling mistake ..
-> so,corrected it.
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> index 340b3d68a54e..59e0a04b167d 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> @@ -673,7 +673,7 @@ bool rtl8723e_is_tx_desc_closed(struct ieee80211_hw *hw,
+>
+>         /**
+>          *beacon packet will only use the first
+> -        *descriptor defautly,and the own may not
+> +        *descriptor de-faulty,and the own may not
 
-Er, no, that isn't the correct replacement. They're using "default" as
-a verb and mean "by default".
+Same comments here as the previous patches:
 
-The sentence makes no sense with "de-faulty" there instead.
-
-Ultimately though the entire comment barely makes sense, so the best
-way to fix this spelling mistake is to re-write the entire comment so
-it does. I would have suggested a new wording for it, but I don't know
-enough about what's going on here to parse the rest of it.
-
-So therefore someone who knows what's going on here needs to fix this
-and your change is just making this comment worse.
+"de-faultly" makes less sense than "defaultly". This comment needs to
+be re-written by someone who knows what's going on here.
 
 Thanks,
 
