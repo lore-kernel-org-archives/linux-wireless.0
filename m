@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61279C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 511C7C433E6
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C2DB22525
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20BFC22525
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jan 2021 08:56:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726626AbhAEI4w (ORCPT
+        id S1726664AbhAEI4x (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jan 2021 03:56:52 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54459 "EHLO
+        Tue, 5 Jan 2021 03:56:53 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54468 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725864AbhAEI4w (ORCPT
+        with ESMTP id S1726305AbhAEI4w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 5 Jan 2021 03:56:52 -0500
-X-UUID: b691036bc7cd40ee8d30abd40362fc4f-20210105
-X-UUID: b691036bc7cd40ee8d30abd40362fc4f-20210105
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+X-UUID: 4cf811e26548444c8b57881937041c57-20210105
+X-UUID: 4cf811e26548444c8b57881937041c57-20210105
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 688891166; Tue, 05 Jan 2021 16:56:08 +0800
+        with ESMTP id 816159774; Tue, 05 Jan 2021 16:56:07 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 5 Jan 2021 16:56:07 +0800
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 5 Jan 2021 16:56:06 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
  Transport; Tue, 5 Jan 2021 16:56:06 +0800
@@ -41,102 +41,114 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 6/6] mt76: mt7915: clean hw queue before starting new testmode tx
-Date:   Tue, 5 Jan 2021 16:55:29 +0800
-Message-ID: <20210105085529.14206-6-shayne.chen@mediatek.com>
+Subject: [PATCH 1/6] mt76: testmode: add attributes for ipg related parameters
+Date:   Tue, 5 Jan 2021 16:55:24 +0800
+Message-ID: <20210105085529.14206-1-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20210105085529.14206-1-shayne.chen@mediatek.com>
-References: <20210105085529.14206-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: BC75EFC5F96D58FA74A45154A7EC7F1BB98760C0FD3DBA75C9679D0FDA9072022000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add a testmode mcu command to clean up hw tx queue before a new
-testmode tx starts.
+Add attributes for setting tx inter-packet gap (ipg), duty cycle, and
+transmission time in testmode.
 
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.h  |  1 +
- .../net/wireless/mediatek/mt76/mt7915/testmode.c | 16 ++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7915/testmode.h |  8 ++++++++
- 3 files changed, 25 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  4 ++++
+ drivers/net/wireless/mediatek/mt76/testmode.c | 17 +++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/testmode.h |  8 ++++++++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index 66d34d78c1d4..163b6f330e67 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -50,6 +50,7 @@ enum {
- 	MCU_ATE_SET_TRX = 0x1,
- 	MCU_ATE_SET_FREQ_OFFSET = 0xa,
- 	MCU_ATE_SET_SLOT_TIME = 0x13,
-+	MCU_ATE_CLEAN_TXQUEUE = 0x1c,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 245a7197b017..cbe9689dc2ca 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -541,6 +541,10 @@ struct mt76_testmode_data {
+ 	u8 tx_antenna_mask;
+ 	u8 tx_spe_idx;
+ 
++	u8 tx_duty_cycle;
++	u32 tx_time;
++	u32 tx_ipg;
++
+ 	u32 freq_offset;
+ 
+ 	u8 tx_power[4];
+diff --git a/drivers/net/wireless/mediatek/mt76/testmode.c b/drivers/net/wireless/mediatek/mt76/testmode.c
+index ad8edf137b36..74cadf51df55 100644
+--- a/drivers/net/wireless/mediatek/mt76/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/testmode.c
+@@ -17,6 +17,9 @@ static const struct nla_policy mt76_tm_policy[NUM_MT76_TM_ATTRS] = {
+ 	[MT76_TM_ATTR_TX_SPE_IDX] = { .type = NLA_U8 },
+ 	[MT76_TM_ATTR_TX_POWER_CONTROL] = { .type = NLA_U8 },
+ 	[MT76_TM_ATTR_TX_POWER] = { .type = NLA_NESTED },
++	[MT76_TM_ATTR_TX_DUTY_CYCLE] = { .type = NLA_U8 },
++	[MT76_TM_ATTR_TX_IPG] = { .type = NLA_U32 },
++	[MT76_TM_ATTR_TX_TIME] = { .type = NLA_U32 },
+ 	[MT76_TM_ATTR_FREQ_OFFSET] = { .type = NLA_U32 },
  };
  
- struct mt7915_mcu_rxd {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-index a8e639ffe6de..6f6e02038c6d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-@@ -132,6 +132,21 @@ mt7915_tm_set_trx(struct mt7915_phy *phy, int type, bool en)
- 				 sizeof(req), false);
- }
+@@ -361,10 +364,18 @@ int mt76_testmode_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	    mt76_tm_get_u8(tb[MT76_TM_ATTR_TX_ANTENNA], &td->tx_antenna_mask,
+ 			   1 << (ext_phy * 2), phy->antenna_mask << (ext_phy * 2)) ||
+ 	    mt76_tm_get_u8(tb[MT76_TM_ATTR_TX_SPE_IDX], &td->tx_spe_idx, 0, 27) ||
++	    mt76_tm_get_u8(tb[MT76_TM_ATTR_TX_DUTY_CYCLE],
++			   &td->tx_duty_cycle, 0, 99) ||
+ 	    mt76_tm_get_u8(tb[MT76_TM_ATTR_TX_POWER_CONTROL],
+ 			   &td->tx_power_control, 0, 1))
+ 		goto out;
  
-+static int
-+mt7915_tm_clean_hwq(struct mt7915_phy *phy, u8 wcid)
-+{
-+	struct mt7915_dev *dev = phy->dev;
-+	struct mt7915_tm_cmd req = {
-+		.testmode_en = 1,
-+		.param_idx = MCU_ATE_CLEAN_TXQUEUE,
-+		.param.clean.wcid = wcid,
-+		.param.clean.band = phy != &dev->phy,
-+	};
++	if (tb[MT76_TM_ATTR_TX_IPG])
++		td->tx_ipg = nla_get_u32(tb[MT76_TM_ATTR_TX_IPG]);
 +
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_ATE_CTRL, &req,
-+				 sizeof(req), false);
-+}
++	if (tb[MT76_TM_ATTR_TX_TIME])
++		td->tx_time = nla_get_u32(tb[MT76_TM_ATTR_TX_TIME]);
 +
- static int
- mt7915_tm_set_slot_time(struct mt7915_phy *phy, u8 slot_time, u8 sifs)
- {
-@@ -408,6 +423,7 @@ mt7915_tm_set_tx_frames(struct mt7915_phy *phy, bool en)
- 	u32 ipg = td->tx_ipg;
+ 	if (tb[MT76_TM_ATTR_FREQ_OFFSET])
+ 		td->freq_offset = nla_get_u32(tb[MT76_TM_ATTR_FREQ_OFFSET]);
  
- 	mt7915_tm_set_trx(phy, TM_MAC_RX_RXV, false);
-+	mt7915_tm_clean_hwq(phy, dev->mt76.global_wcid.idx);
+@@ -503,6 +514,12 @@ int mt76_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *msg,
+ 	     nla_put_u8(msg, MT76_TM_ATTR_TX_ANTENNA, td->tx_antenna_mask)) ||
+ 	    (mt76_testmode_param_present(td, MT76_TM_ATTR_TX_SPE_IDX) &&
+ 	     nla_put_u8(msg, MT76_TM_ATTR_TX_SPE_IDX, td->tx_spe_idx)) ||
++	    (mt76_testmode_param_present(td, MT76_TM_ATTR_TX_DUTY_CYCLE) &&
++	     nla_put_u8(msg, MT76_TM_ATTR_TX_DUTY_CYCLE, td->tx_duty_cycle)) ||
++	    (mt76_testmode_param_present(td, MT76_TM_ATTR_TX_IPG) &&
++	     nla_put_u32(msg, MT76_TM_ATTR_TX_IPG, td->tx_ipg)) ||
++	    (mt76_testmode_param_present(td, MT76_TM_ATTR_TX_TIME) &&
++	     nla_put_u32(msg, MT76_TM_ATTR_TX_TIME, td->tx_time)) ||
+ 	    (mt76_testmode_param_present(td, MT76_TM_ATTR_TX_POWER_CONTROL) &&
+ 	     nla_put_u8(msg, MT76_TM_ATTR_TX_POWER_CONTROL, td->tx_power_control)) ||
+ 	    (mt76_testmode_param_present(td, MT76_TM_ATTR_FREQ_OFFSET) &&
+diff --git a/drivers/net/wireless/mediatek/mt76/testmode.h b/drivers/net/wireless/mediatek/mt76/testmode.h
+index f215b377d7fb..cecdf358aa44 100644
+--- a/drivers/net/wireless/mediatek/mt76/testmode.h
++++ b/drivers/net/wireless/mediatek/mt76/testmode.h
+@@ -33,6 +33,10 @@
+  * @MT76_TM_ATTR_TX_POWER_CONTROL: enable tx power control (u8)
+  * @MT76_TM_ATTR_TX_POWER: per-antenna tx power array (nested, u8 attrs)
+  *
++ * @MT76_TM_ATTR_TX_DUTY_CYCLE: packet tx duty cycle (u8)
++ * @MT76_TM_ATTR_TX_IPG: tx inter-packet gap, in unit of us (u32)
++ * @MT76_TM_ATTR_TX_TIME: packet transmission time, in unit of us (u32)
++ *
+  * @MT76_TM_ATTR_FREQ_OFFSET: RF frequency offset (u32)
+  *
+  * @MT76_TM_ATTR_STATS: statistics (nested, see &enum mt76_testmode_stats_attr)
+@@ -61,6 +65,10 @@ enum mt76_testmode_attr {
+ 	MT76_TM_ATTR_TX_POWER_CONTROL,
+ 	MT76_TM_ATTR_TX_POWER,
  
- 	if (en) {
- 		mutex_unlock(&dev->mt76.mutex);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-index 784d4c948886..da92cad0aa9b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-@@ -26,6 +26,13 @@ struct mt7915_tm_slot_time {
- 	u8 _rsv1[5];
- };
- 
-+struct mt7915_tm_clean_txq {
-+	bool sta_pause;
-+	u8 wcid;	/* 256 sta */
-+	u8 band;
-+	u8 rsv;
-+};
++	MT76_TM_ATTR_TX_DUTY_CYCLE,
++	MT76_TM_ATTR_TX_IPG,
++	MT76_TM_ATTR_TX_TIME,
 +
- struct mt7915_tm_cmd {
- 	u8 testmode_en;
- 	u8 param_idx;
-@@ -35,6 +42,7 @@ struct mt7915_tm_cmd {
- 		struct mt7915_tm_trx trx;
- 		struct mt7915_tm_freq_offset freq;
- 		struct mt7915_tm_slot_time slot;
-+		struct mt7915_tm_clean_txq clean;
- 		u8 test[72];
- 	} param;
- } __packed;
+ 	MT76_TM_ATTR_FREQ_OFFSET,
+ 
+ 	MT76_TM_ATTR_STATS,
 -- 
 2.29.2
 
