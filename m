@@ -2,190 +2,387 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C060BC433E6
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FF8C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:06:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8705E233CF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CDD6233CF
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728880AbhAGRGw (ORCPT
+        id S1728934AbhAGRGz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:06:52 -0500
-Received: from mga01.intel.com ([192.55.52.88]:61841 "EHLO mga01.intel.com"
+        Thu, 7 Jan 2021 12:06:55 -0500
+Received: from mga14.intel.com ([192.55.52.115]:53939 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728842AbhAGRGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Jan 2021 12:06:52 -0500
-IronPort-SDR: jVeqe32TX9U85mg82+hw637XhzvFy0aauV7DT9/Y1Zcd5pnv31TQJlPgr5xo5dDWBZwF9X01Q9
- bDOwGEc0tYFA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="196018359"
+        id S1728842AbhAGRGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:06:54 -0500
+IronPort-SDR: vOdRYzxAL4QOO0o28lMW1yCfY880JxjZoPRUyjEvUEBE+TEVRO19mmyuB8UUAqWO0BeXwBqi6U
+ iqOc8JRiYYPA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176680924"
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="196018359"
+   d="scan'208";a="176680924"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:05:38 -0800
-IronPort-SDR: Q6sjR6zbi7ZE3nykXipCOCA/2Q21f7L0NwIM4+Q9u+cLygm3DnB8MZ1IlJaSRZI8xl6yvz8U3Y
- YaXMc4gICX6A==
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:13 -0800
+IronPort-SDR: U3wsYmFmF7SwwPQhTBAAvSLbRtu/YOuALNfKJHo1VKq9yl1igG7pzUQydco05TJ6PqHeTsUMwd
+ teVeRL7Htimw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="422643554"
+   d="scan'208";a="422643855"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:05:35 -0800
+  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:11 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [PATCH 00/18] net: iosm: PCIe Driver for Intel M.2 Modem
-Date:   Thu,  7 Jan 2021 22:35:05 +0530
-Message-Id: <20210107170523.26531-1-m.chetan.kumar@intel.com>
+Subject: [PATCH 08/18] net: iosm: MBIM control device
+Date:   Thu,  7 Jan 2021 22:35:13 +0530
+Message-Id: <20210107170523.26531-9-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
+In-Reply-To: <20210107170523.26531-1-m.chetan.kumar@intel.com>
+References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The IOSM (IPC over Shared Memory) driver is a PCIe host driver implemented
-for linux or chrome platform for data exchange over PCIe interface between
-Host platform & Intel M.2 Modem. The driver exposes interface conforming to the
-MBIM protocol [1]. Any front end application ( eg: Modem Manager) could easily
-manage the MBIM interface to enable data communication towards WWAN.
+Implements a char device for MBIM protocol communication &
+provides a simple IOCTL for max transfer buffer size
+configuration.
 
-Intel M.2 modem uses 2 BAR regions. The first region is dedicated to Doorbell
-register for IRQs and the second region is used as scratchpad area for book
-keeping modem execution stage details along with host system shared memory
-region context details. The upper edge of the driver exposes the control and
-data channels for user space application interaction. At lower edge these data
-and control channels are associated to pipes. The pipes are lowest level
-interfaces used over PCIe as a logical channel for message exchange. A single
-channel maps to UL and DL pipe and are initialized on device open.
-
-On UL path, driver copies application sent data to SKBs associate it with
-transfer descriptor and puts it on to ring buffer for DMA transfer. Once
-information has been updated in shared memory region, host gives a Doorbell
-to modem to perform DMA and modem uses MSI to communicate back to host.
-For receiving data in DL path, SKBs are pre-allocated during pipe open and
-transfer descriptors are given to modem for DMA transfer.
-
-The driver exposes two types of ports, namely "wwanctrl", a char device node
-which is used for MBIM control operation and "INMx",(x = 0,1,2..7) network
-interfaces for IP data communication.
-1) MBIM Control Interface:
-This node exposes an interface between modem and application using char device
-exposed by "IOSM" driver to establish and manage the MBIM data communication
-with PCIe based Intel M.2 Modems.
-
-It also support an IOCTL command, apart from read and write methods. The IOCTL
-command, "IOCTL_WDM_MAX_COMMAND" could be used by applications to fetch the
-Maximum Command buffer length supported by the driver which is restricted to
-4096 bytes.
-
-2) MBIM Data Interface:
-The IOSM driver represents the MBIM data channel as a single root network
-device of the "wwan0" type which is mapped as default IP session 0. Several IP
-sessions(INMx) could be multiplexed over the single data channel using
-sub devices of master wwanY devices. The driver models such IP sessions as
-802.1q VLAN devices which are mapped to a unique VLAN ID.
-
-M Chetan Kumar (18):
-  net: iosm: entry point
-  net: iosm: irq handling
-  net: iosm: mmio scratchpad
-  net: iosm: shared memory IPC interface
-  net: iosm: shared memory I/O operations
-  net: iosm: channel configuration
-  net: iosm: char device for FW flash & coredump
-  net: iosm: MBIM control device
-  net: iosm: bottom half
-  net: iosm: multiplex IP sessions
-  net: iosm: encode or decode datagram
-  net: iosm: power management
-  net: iosm: shared memory protocol
-  net: iosm: protocol operations
-  net: iosm: uevent support
-  net: iosm: net driver
-  net: iosm: readme file
-  net: iosm: infrastructure
-
- MAINTAINERS                                   |    7 +
- drivers/net/Kconfig                           |    1 +
- drivers/net/Makefile                          |    1 +
- drivers/net/wwan/Kconfig                      |   13 +
- drivers/net/wwan/Makefile                     |    5 +
- drivers/net/wwan/iosm/Kconfig                 |   10 +
- drivers/net/wwan/iosm/Makefile                |   27 +
- drivers/net/wwan/iosm/README                  |  126 +++
- drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c     |   86 ++
- drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h     |   55 +
- drivers/net/wwan/iosm/iosm_ipc_imem.c         | 1487 +++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_imem.h         |  601 ++++++++++
- drivers/net/wwan/iosm/iosm_ipc_imem_ops.c     |  768 +++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_imem_ops.h     |  129 +++
- drivers/net/wwan/iosm/iosm_ipc_irq.c          |   89 ++
- drivers/net/wwan/iosm/iosm_ipc_irq.h          |   35 +
- drivers/net/wwan/iosm/iosm_ipc_mbim.c         |  286 +++++
- drivers/net/wwan/iosm/iosm_ipc_mbim.h         |   25 +
- drivers/net/wwan/iosm/iosm_ipc_mmio.c         |  223 ++++
- drivers/net/wwan/iosm/iosm_ipc_mmio.h         |  193 ++++
- drivers/net/wwan/iosm/iosm_ipc_mux.c          |  458 ++++++++
- drivers/net/wwan/iosm/iosm_ipc_mux.h          |  345 ++++++
- drivers/net/wwan/iosm/iosm_ipc_mux_codec.c    |  901 +++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_mux_codec.h    |  194 ++++
- drivers/net/wwan/iosm/iosm_ipc_pcie.c         |  561 ++++++++++
- drivers/net/wwan/iosm/iosm_ipc_pcie.h         |  210 ++++
- drivers/net/wwan/iosm/iosm_ipc_pm.c           |  326 ++++++
- drivers/net/wwan/iosm/iosm_ipc_pm.h           |  228 ++++
- drivers/net/wwan/iosm/iosm_ipc_protocol.c     |  287 +++++
- drivers/net/wwan/iosm/iosm_ipc_protocol.h     |  239 ++++
- drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c |  547 +++++++++
- drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h |  456 ++++++++
- drivers/net/wwan/iosm/iosm_ipc_sio.c          |  266 +++++
- drivers/net/wwan/iosm/iosm_ipc_sio.h          |   78 ++
- drivers/net/wwan/iosm/iosm_ipc_task_queue.c   |  247 ++++
- drivers/net/wwan/iosm/iosm_ipc_task_queue.h   |   46 +
- drivers/net/wwan/iosm/iosm_ipc_uevent.c       |   43 +
- drivers/net/wwan/iosm/iosm_ipc_uevent.h       |   41 +
- drivers/net/wwan/iosm/iosm_ipc_wwan.c         |  649 +++++++++++
- drivers/net/wwan/iosm/iosm_ipc_wwan.h         |   72 ++
- 40 files changed, 10361 insertions(+)
- create mode 100644 drivers/net/wwan/Kconfig
- create mode 100644 drivers/net/wwan/Makefile
- create mode 100644 drivers/net/wwan/iosm/Kconfig
- create mode 100644 drivers/net/wwan/iosm/Makefile
- create mode 100644 drivers/net/wwan/iosm/README
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_irq.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_irq.h
+Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
+---
+ drivers/net/wwan/iosm/iosm_ipc_mbim.c | 286 ++++++++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_mbim.h |  25 +++
+ 2 files changed, 311 insertions(+)
  create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mbim.c
  create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mbim.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mmio.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mmio.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux_codec.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux_codec.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pcie.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pcie.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pm.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pm.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_sio.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_sio.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_uevent.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_uevent.h
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_wwan.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_wwan.h
 
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mbim.c b/drivers/net/wwan/iosm/iosm_ipc_mbim.c
+new file mode 100644
+index 000000000000..885037a5642e
+--- /dev/null
++++ b/drivers/net/wwan/iosm/iosm_ipc_mbim.c
+@@ -0,0 +1,286 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (C) 2020 Intel Corporation.
++ */
++
++#include <linux/poll.h>
++#include <linux/uaccess.h>
++
++#include "iosm_ipc_imem_ops.h"
++#include "iosm_ipc_mbim.h"
++#include "iosm_ipc_sio.h"
++
++#define IOCTL_WDM_MAX_COMMAND _IOR('H', 0xA0, __u16)
++#define WDM_MAX_SIZE 4096
++
++static struct mutex mbim_floc;		/* Mutex Lock for mbim read */
++static struct mutex mbim_floc_wr;	/* Mutex Lock for mbim write */
++
++/* MBIM IOCTL for configuring max MBIM packet size. */
++static long ipc_mbim_fop_unlocked_ioctl(struct file *filp, unsigned int cmd,
++					unsigned long arg)
++{
++	struct iosm_sio *ipc_mbim =
++		container_of(filp->private_data, struct iosm_sio, misc);
++
++	if (cmd != IOCTL_WDM_MAX_COMMAND ||
++	    !access_ok((void __user *)arg, sizeof(ipc_mbim->wmaxcommand)))
++		return -EINVAL;
++
++	if (copy_to_user((void __user *)arg, &ipc_mbim->wmaxcommand,
++			 sizeof(ipc_mbim->wmaxcommand)))
++		return -EFAULT;
++
++	return 0;
++}
++
++/* Open a shared memory device and initialize the head of the rx skbuf list. */
++static int ipc_mbim_fop_open(struct inode *inode, struct file *filp)
++{
++	struct iosm_sio *ipc_mbim =
++		container_of(filp->private_data, struct iosm_sio, misc);
++
++	struct iosm_sio_open_file *mbim_op = kzalloc(sizeof(*mbim_op),
++						      GFP_KERNEL);
++	if (!mbim_op)
++		return -ENOMEM;
++
++	if (test_and_set_bit(IS_OPEN, &ipc_mbim->flag)) {
++		kfree(mbim_op);
++		return -EBUSY;
++	}
++
++	ipc_mbim->channel = imem_sys_mbim_open(ipc_mbim->ipc_imem);
++
++	if (!ipc_mbim->channel) {
++		kfree(mbim_op);
++		return -EIO;
++	}
++
++	mutex_lock(&mbim_floc);
++
++	inode->i_private = mbim_op;
++	ipc_mbim->sio_fop = mbim_op;
++	mbim_op->sio_dev = ipc_mbim;
++
++	mutex_unlock(&mbim_floc);
++	return 0;
++}
++
++/* Close a shared memory control device and free the rx skbuf list. */
++static int ipc_mbim_fop_release(struct inode *inode, struct file *filp)
++{
++	struct iosm_sio_open_file *mbim_op = inode->i_private;
++
++	mutex_lock(&mbim_floc);
++	if (mbim_op->sio_dev) {
++		clear_bit(IS_OPEN, &mbim_op->sio_dev->flag);
++		imem_sys_sio_close(mbim_op->sio_dev);
++		mbim_op->sio_dev->sio_fop = NULL;
++	}
++	kfree(mbim_op);
++	mutex_unlock(&mbim_floc);
++	return 0;
++}
++
++/* Copy the data from skbuff to the user buffer */
++static ssize_t ipc_mbim_fop_read(struct file *filp, char __user *buf,
++				 size_t size, loff_t *l)
++{
++	struct iosm_sio_open_file *mbim_op = filp->f_inode->i_private;
++	struct sk_buff *skb = NULL;
++	struct iosm_sio *ipc_mbim;
++	ssize_t read_byt;
++	int ret_err;
++
++	if (!access_ok(buf, size)) {
++		ret_err = -EINVAL;
++		goto err;
++	}
++
++	mutex_lock(&mbim_floc);
++
++	if (!mbim_op->sio_dev) {
++		ret_err = -EIO;
++		goto err_free_lock;
++	}
++
++	ipc_mbim = mbim_op->sio_dev;
++
++	if (!(filp->f_flags & O_NONBLOCK))
++		set_bit(IS_BLOCKING, &ipc_mbim->flag);
++
++	/* First provide the pending skbuf to the user. */
++	if (ipc_mbim->rx_pending_buf) {
++		skb = ipc_mbim->rx_pending_buf;
++		ipc_mbim->rx_pending_buf = NULL;
++	}
++
++	/* Check rx queue until skb is available */
++	while (!skb && !(skb = skb_dequeue(&ipc_mbim->rx_list))) {
++		if (!test_bit(IS_BLOCKING, &ipc_mbim->flag)) {
++			ret_err = -EAGAIN;
++			goto err_free_lock;
++		}
++
++		/* Suspend the user app and wait a certain time for data
++		 * from CP.
++		 */
++		wait_for_completion_interruptible_timeout
++		(&ipc_mbim->read_sem, msecs_to_jiffies(IPC_READ_TIMEOUT));
++
++		if (test_bit(IS_DEINIT, &ipc_mbim->flag)) {
++			ret_err = -EPERM;
++			goto err_free_lock;
++		}
++	}
++
++	read_byt = imem_sys_sio_read(ipc_mbim, buf, size, skb);
++	mutex_unlock(&mbim_floc);
++	return read_byt;
++
++err_free_lock:
++	mutex_unlock(&mbim_floc);
++err:
++	return ret_err;
++}
++
++/* Route the user data to the shared memory layer. */
++static ssize_t ipc_mbim_fop_write(struct file *filp, const char __user *buf,
++				  size_t size, loff_t *l)
++{
++	struct iosm_sio_open_file *mbim_op = filp->f_inode->i_private;
++	struct iosm_sio *ipc_mbim;
++	bool is_blocking;
++	ssize_t write_byt;
++	int ret_err;
++
++	if (!access_ok(buf, size)) {
++		ret_err = -EINVAL;
++		goto err;
++	}
++
++	mutex_lock(&mbim_floc_wr);
++
++	if (!mbim_op->sio_dev) {
++		ret_err = -EIO;
++		goto err_free_lock;
++	}
++
++	ipc_mbim = mbim_op->sio_dev;
++
++	is_blocking = !(filp->f_flags & O_NONBLOCK);
++
++	if (test_bit(WRITE_IN_USE, &ipc_mbim->flag)) {
++		ret_err = -EAGAIN;
++		goto err_free_lock;
++	}
++	write_byt = imem_sys_sio_write(ipc_mbim, buf, size, is_blocking);
++
++	mutex_unlock(&mbim_floc_wr);
++	return write_byt;
++
++err_free_lock:
++	mutex_unlock(&mbim_floc_wr);
++err:
++	return ret_err;
++}
++
++/* Poll mechanism for applications that use nonblocking IO */
++static __poll_t ipc_mbim_fop_poll(struct file *filp, poll_table *wait)
++{
++	struct iosm_sio *ipc_mbim =
++		container_of(filp->private_data, struct iosm_sio, misc);
++	__poll_t mask = 0;
++
++	/* Just registers wait_queue hook. This doesn't really wait. */
++	poll_wait(filp, &ipc_mbim->poll_inq, wait);
++
++	/* Test the fill level of the skbuf rx queue. */
++	if (!test_bit(WRITE_IN_USE, &ipc_mbim->flag))
++		mask |= EPOLLOUT | EPOLLWRNORM; /* writable */
++
++	if (!skb_queue_empty(&ipc_mbim->rx_list) || ipc_mbim->rx_pending_buf)
++		mask |= EPOLLIN | EPOLLRDNORM; /* readable */
++
++	return mask;
++}
++
++struct iosm_sio *ipc_mbim_init(struct iosm_imem *ipc_imem, const char *name)
++{
++	struct iosm_sio *ipc_mbim = kzalloc(sizeof(*ipc_mbim), GFP_KERNEL);
++
++	static const struct file_operations fops = {
++		.owner = THIS_MODULE,
++		.open = ipc_mbim_fop_open,
++		.release = ipc_mbim_fop_release,
++		.read = ipc_mbim_fop_read,
++		.write = ipc_mbim_fop_write,
++		.poll = ipc_mbim_fop_poll,
++		.unlocked_ioctl = ipc_mbim_fop_unlocked_ioctl,
++	};
++
++	if (!ipc_mbim)
++		return NULL;
++
++	ipc_mbim->dev = ipc_imem->dev;
++	ipc_mbim->pcie = ipc_imem->pcie;
++	ipc_mbim->ipc_imem = ipc_imem;
++
++	ipc_mbim->wmaxcommand = WDM_MAX_SIZE;
++
++	mutex_init(&mbim_floc);
++	mutex_init(&mbim_floc_wr);
++	init_completion(&ipc_mbim->read_sem);
++
++	skb_queue_head_init(&ipc_mbim->rx_list);
++	init_waitqueue_head(&ipc_mbim->poll_inq);
++
++	strncpy(ipc_mbim->devname, name, sizeof(ipc_mbim->devname) - 1);
++	ipc_mbim->devname[IPC_SIO_DEVNAME_LEN - 1] = '\0';
++
++	ipc_mbim->misc.minor = MISC_DYNAMIC_MINOR;
++	ipc_mbim->misc.name = ipc_mbim->devname;
++	ipc_mbim->misc.fops = &fops;
++	ipc_mbim->misc.mode = IPC_CHAR_DEVICE_DEFAULT_MODE;
++
++	if (misc_register(&ipc_mbim->misc)) {
++		kfree(ipc_mbim);
++		return NULL;
++	}
++
++	dev_set_drvdata(ipc_mbim->misc.this_device, ipc_mbim);
++
++	return ipc_mbim;
++}
++
++void ipc_mbim_deinit(struct iosm_sio *ipc_mbim)
++{
++	misc_deregister(&ipc_mbim->misc);
++
++	set_bit(IS_DEINIT, &ipc_mbim->flag);
++	/* Applying memory barrier so that ipc_mbim->flag is updated
++	 * before being read
++	 */
++	smp_mb__after_atomic();
++
++	if (test_bit(IS_BLOCKING, &ipc_mbim->flag)) {
++		complete(&ipc_mbim->read_sem);
++		complete(&ipc_mbim->channel->ul_sem);
++	}
++
++	mutex_lock(&mbim_floc);
++	mutex_lock(&mbim_floc_wr);
++
++	ipc_pcie_kfree_skb(ipc_mbim->pcie, ipc_mbim->rx_pending_buf);
++	ipc_mbim->rx_pending_buf = NULL;
++	skb_queue_purge(&ipc_mbim->rx_list);
++
++	if (ipc_mbim->sio_fop)
++		ipc_mbim->sio_fop->sio_dev = NULL;
++
++	mutex_unlock(&mbim_floc_wr);
++	mutex_unlock(&mbim_floc);
++
++	kfree(ipc_mbim);
++}
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mbim.h b/drivers/net/wwan/iosm/iosm_ipc_mbim.h
+new file mode 100644
+index 000000000000..0ca0be6fd4d8
+--- /dev/null
++++ b/drivers/net/wwan/iosm/iosm_ipc_mbim.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0-only
++ *
++ * Copyright (C) 2020 Intel Corporation.
++ */
++
++#ifndef IOSM_IPC_MBIM_H
++#define IOSM_IPC_MBIM_H
++
++/**
++ * ipc_mbim_init - Initialize and create a character device for MBIM
++ *		   communication.
++ * @ipc_imem:	Pointer to iosm_imem structure
++ * @name:	Pointer to character device name
++ *
++ * Returns: 0 on success
++ */
++struct iosm_sio *ipc_mbim_init(struct iosm_imem *ipc_imem, const char *name);
++
++/**
++ * ipc_mbim_deinit - Frees all the memory allocated for the ipc mbim structure.
++ * @ipc_mbim:	Pointer to the ipc mbim data-struct
++ */
++void ipc_mbim_deinit(struct iosm_sio *ipc_mbim);
++
++#endif
 -- 
 2.12.3
 
