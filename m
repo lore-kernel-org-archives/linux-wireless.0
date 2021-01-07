@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25CCFC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9808C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E15A1233CF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65704233CF
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728728AbhAGRGv (ORCPT
+        id S1728983AbhAGRHI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:06:51 -0500
-Received: from mga11.intel.com ([192.55.52.93]:22136 "EHLO mga11.intel.com"
+        Thu, 7 Jan 2021 12:07:08 -0500
+Received: from mga14.intel.com ([192.55.52.115]:53928 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726319AbhAGRGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Jan 2021 12:06:50 -0500
-IronPort-SDR: 4ehpP3xb3hyqSPf/L9xQ+WTXtyqCNdPXFWy6jhVoLFO4qQmQru/ZNDWAwo1CvLC+KZynbHsIR6
- B2AfIWMEIUTQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="173952008"
+        id S1728705AbhAGRHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:07:08 -0500
+IronPort-SDR: MwPafUVjQevnO+JCNosGsJAyXOCj75jTnowJ6UlPLw+3yP8UyvfPqge79SaH21AP+V/hLSf/RA
+ va+Em+tik89g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176680962"
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="173952008"
+   d="scan'208";a="176680962"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:01 -0800
-IronPort-SDR: MMvr2Jyds40HFW4PyYhiKH620o+viK3J3G6+MF4ogbyD/y+xm8rhKrPfjWhK/prCoa0ZZW3Px4
- Epb35F5pp+0A==
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:20 -0800
+IronPort-SDR: V35eLDitCQPwOcT5gVjZI5eQAySHLL2h7mBIdzp4zeZcnZadR719YXa9vMCFYmqtZOkbbnCAFR
+ NieygZ2SZEoQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="422643769"
+   d="scan'208";a="422643907"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:05:59 -0800
+  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:17 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [PATCH 05/18] net: iosm: shared memory I/O operations
-Date:   Thu,  7 Jan 2021 22:35:10 +0530
-Message-Id: <20210107170523.26531-6-m.chetan.kumar@intel.com>
+Subject: [PATCH 10/18] net: iosm: multiplex IP sessions
+Date:   Thu,  7 Jan 2021 22:35:15 +0530
+Message-Id: <20210107170523.26531-11-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210107170523.26531-1-m.chetan.kumar@intel.com>
 References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
@@ -48,926 +48,830 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-1) Binds logical channel between host-device for communication.
-2) Implements device specific(Char/Net) IO operations.
-3) Inject primary BootLoader FW image to modem.
+Establish IP session between host-device & session management.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
- drivers/net/wwan/iosm/iosm_ipc_imem_ops.c | 768 ++++++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_imem_ops.h | 129 +++++
- 2 files changed, 897 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
+ drivers/net/wwan/iosm/iosm_ipc_mux.c | 458 +++++++++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_mux.h | 345 ++++++++++++++++++++++++++
+ 2 files changed, 803 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux.c b/drivers/net/wwan/iosm/iosm_ipc_mux.c
 new file mode 100644
-index 000000000000..b6da96ca1332
+index 000000000000..fde467a50ab6
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
-@@ -0,0 +1,768 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_mux.c
+@@ -0,0 +1,458 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#include <linux/delay.h>
++#include "iosm_ipc_mux_codec.h"
 +
-+#include "iosm_ipc_chnl_cfg.h"
-+#include "iosm_ipc_imem.h"
-+#include "iosm_ipc_imem_ops.h"
-+#include "iosm_ipc_sio.h"
-+#include "iosm_ipc_task_queue.h"
-+
-+/* Open a packet data online channel between the network layer and CP. */
-+int imem_sys_wwan_open(struct iosm_imem *ipc_imem, int vlan_id)
++/* At the begin of the runtime phase the IP MUX channel shall created. */
++static int mux_channel_create(struct iosm_mux *ipc_mux)
 +{
-+	dev_dbg(ipc_imem->dev, "%s[vlan id:%d]",
-+		ipc_ap_phase_get_string(ipc_imem->phase), vlan_id);
-+
-+	/* The network interface is only supported in the runtime phase. */
-+	if (imem_ap_phase_update(ipc_imem) != IPC_P_RUN) {
-+		dev_err(ipc_imem->dev, "[net:%d]: refused phase %s", vlan_id,
-+			ipc_ap_phase_get_string(ipc_imem->phase));
-+		return -1;
-+	}
-+
-+	/* check for the vlan tag
-+	 * if tag 1 to 8 then create IP MUX channel sessions.
-+	 * if tag 257 to 512 then create dss channel.
-+	 * To start MUX session from 0 as vlan tag would start from 1
-+	 * so map it to if_id = vlan_id - 1
-+	 */
-+	if (vlan_id > 0 && vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux)) {
-+		return ipc_mux_open_session(ipc_imem->mux, vlan_id - 1);
-+	} else if (vlan_id > 256 && vlan_id < 512) {
-+		int ch_id =
-+			imem_channel_alloc(ipc_imem, vlan_id, IPC_CTYPE_WWAN);
-+
-+		if (imem_channel_open(ipc_imem, ch_id, IPC_HP_NET_CHANNEL_INIT))
-+			return ch_id;
-+	}
-+
-+	return -1;
-+}
-+
-+/* Release a net link to CP. */
-+void imem_sys_wwan_close(struct iosm_imem *ipc_imem, int vlan_id,
-+			 int channel_id)
-+{
-+	if (ipc_imem->mux && vlan_id > 0 &&
-+	    vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux))
-+		ipc_mux_close_session(ipc_imem->mux, vlan_id - 1);
-+
-+	else if ((vlan_id > 256 && vlan_id < 512))
-+		imem_channel_close(ipc_imem, channel_id);
-+}
-+
-+/* Tasklet call to do uplink transfer. */
-+static int imem_tq_sio_write(struct iosm_imem *ipc_imem, int arg, void *msg,
-+			     size_t size)
-+{
-+	ipc_imem->ev_sio_write_pending = false;
-+	imem_ul_send(ipc_imem);
-+
-+	return 0;
-+}
-+
-+/* Through tasklet to do sio write. */
-+static bool imem_call_sio_write(struct iosm_imem *ipc_imem)
-+{
-+	if (ipc_imem->ev_sio_write_pending)
-+		return false;
-+
-+	ipc_imem->ev_sio_write_pending = true;
-+
-+	return (!ipc_task_queue_send_task(ipc_imem, imem_tq_sio_write, 0, NULL,
-+					  0, false));
-+}
-+
-+/* Add skb to the ul list */
-+static int imem_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
-+			      int channel_id, struct sk_buff *skb)
-+{
-+	struct ipc_mem_channel *channel;
-+
-+	channel = &ipc_imem->channels[channel_id];
-+
-+	if (channel->state != IMEM_CHANNEL_ACTIVE) {
-+		dev_err(ipc_imem->dev, "invalid state of channel %d",
-+			channel_id);
-+		return -1;
-+	}
-+
-+	if (ipc_pcie_addr_map(ipc_imem->pcie, skb->data, skb->len,
-+			      &IPC_CB(skb)->mapping, DMA_TO_DEVICE)) {
-+		dev_err(ipc_imem->dev, "failed to map skb");
-+		IPC_CB(skb)->direction = DMA_TO_DEVICE;
-+		IPC_CB(skb)->len = skb->len;
-+		IPC_CB(skb)->op_type = UL_DEFAULT;
-+		return -1;
-+	}
-+
-+	/* Add skb to the uplink skbuf accumulator */
-+	skb_queue_tail(&channel->ul_list, skb);
-+	imem_call_sio_write(ipc_imem);
-+
-+	return 0;
-+}
-+
-+/* Function for transfer UL data */
-+int imem_sys_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
-+			   int channel_id, struct sk_buff *skb)
-+{
-+	int ret = -1;
-+
-+	if (!ipc_imem || channel_id < 0)
-+		return -EINVAL;
-+
-+	/* Is CP Running? */
-+	if (ipc_imem->phase != IPC_P_RUN) {
-+		dev_dbg(ipc_imem->dev, "%s[transmit, vlanid:%d]",
-+			ipc_ap_phase_get_string(ipc_imem->phase), vlan_id);
-+		return -EBUSY;
-+	}
-+
-+	if (ipc_imem->channels[channel_id].ctype == IPC_CTYPE_WWAN) {
-+		if (vlan_id > 0 &&
-+		    vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux))
-+			/* Route the UL packet through IP MUX Layer */
-+			ret = ipc_mux_ul_trigger_encode(ipc_imem->mux,
-+							vlan_id - 1, skb);
-+		/* Control channels and Low latency data channel for VoLTE*/
-+		else if (vlan_id > 256 && vlan_id < 512)
-+			ret = imem_wwan_transmit(ipc_imem, vlan_id, channel_id,
-+						 skb);
-+	} else {
-+		dev_err(ipc_imem->dev,
-+			"invalid channel type on channel %d: ctype: %d",
-+			channel_id, ipc_imem->channels[channel_id].ctype);
-+	}
-+
-+	return ret;
-+}
-+
-+void wwan_channel_init(struct iosm_imem *ipc_imem, int total_sessions,
-+		       enum ipc_mux_protocol mux_type)
-+{
-+	struct ipc_chnl_cfg chnl_cfg = { 0 };
-+
-+	ipc_imem->cp_version = ipc_mmio_get_cp_version(ipc_imem->mmio);
-+
-+	/* If modem version is invalid (0xffffffff), do not initialize WWAN. */
-+	if (ipc_imem->cp_version == -1) {
-+		dev_err(ipc_imem->dev, "invalid CP version");
-+		return;
-+	}
-+
-+	while (ipc_imem->nr_of_channels < IPC_MEM_MAX_CHANNELS &&
-+	       !ipc_chnl_cfg_get(&chnl_cfg, ipc_imem->nr_of_channels)) {
-+		imem_channel_init(ipc_imem, IPC_CTYPE_WWAN, chnl_cfg,
-+				  IRQ_MOD_OFF);
-+	}
-+	/* WWAN registration. */
-+	ipc_imem->wwan = ipc_wwan_init(ipc_imem, ipc_imem->dev, total_sessions);
-+	if (!ipc_imem->wwan)
-+		dev_err(ipc_imem->dev,
-+			"failed to register the ipc_wwan interfaces");
-+}
-+
-+/* Copies the data from user space */
-+static struct sk_buff *
-+imem_sio_copy_from_user_to_skb(struct iosm_imem *ipc_imem, int channel_id,
-+			       const unsigned char __user *buf, int size,
-+			       int is_blocking)
-+{
-+	struct sk_buff *skb;
-+	dma_addr_t mapping;
-+
-+	/* Allocate skb memory for the uplink buffer. */
-+	skb = ipc_pcie_alloc_skb(ipc_imem->pcie, size, GFP_KERNEL, &mapping,
-+				 DMA_TO_DEVICE, 0);
-+	if (!skb)
-+		return skb;
-+
-+	if (copy_from_user(skb_put(skb, size), buf, size) != 0) {
-+		dev_err(ipc_imem->dev, "ch[%d]: copy from user failed",
-+			channel_id);
-+		ipc_pcie_kfree_skb(ipc_imem->pcie, skb);
-+		return NULL;
-+	}
-+
-+	IPC_CB(skb)->op_type =
-+		(u8)(is_blocking ? UL_USR_OP_BLOCKED : UL_DEFAULT);
-+
-+	return skb;
-+}
-+
-+static int imem_psi_transfer(struct iosm_imem *ipc_imem,
-+			     struct ipc_mem_channel *channel,
-+			     const unsigned char __user *buf, int count)
-+{
-+	enum ipc_mem_exec_stage exec_stage = IPC_MEM_EXEC_STAGE_INVALID;
-+	int psi_start_timeout = PSI_START_DEFAULT_TIMEOUT;
-+	dma_addr_t mapping = 0;
-+	int status;
-+	void *dest_buf;
-+
-+	imem_hrtimer_stop(&ipc_imem->startup_timer);
-+
-+	/* Allocate the buffer for the PSI image. */
-+	dest_buf = pci_alloc_consistent(ipc_imem->pcie->pci, count, &mapping);
-+	if (!dest_buf) {
-+		dev_err(ipc_imem->dev, "ch[%d] cannot allocate %d bytes",
-+			channel->channel_id, count);
-+		return -1;
-+	}
-+
-+	/* Copy the PSI image from user to kernel space. */
-+	if (copy_from_user(dest_buf, buf, count) != 0) {
-+		dev_err(ipc_imem->dev, "ch[%d] copy from user failed",
-+			channel->channel_id);
-+		goto error;
-+	}
-+
-+	/* Save the PSI information for the CP ROM driver on the doorbell
-+	 * scratchpad.
-+	 */
-+	ipc_mmio_set_psi_addr_and_size(ipc_imem->mmio, mapping, count);
-+
-+	/* Trigger the CP interrupt to process the PSI information. */
-+	ipc_doorbell_fire(ipc_imem->pcie, 0, IPC_MEM_EXEC_STAGE_BOOT);
-+	/* Suspend the flash app and wait for irq. */
-+	status = wait_for_completion_interruptible_timeout
-+			(&channel->ul_sem,
-+			 msecs_to_jiffies(IPC_PSI_TRANSFER_TIMEOUT));
-+
-+	if (status <= 0) {
-+		dev_err(ipc_imem->dev,
-+			"ch[%d] timeout, failed PSI transfer to CP",
-+			channel->channel_id);
-+		ipc_uevent_send(ipc_imem->dev, UEVENT_MDM_TIMEOUT);
-+		goto error;
-+	}
-+
-+	/* CP should have copied the PSI image. */
-+	pci_free_consistent(ipc_imem->pcie->pci, count, dest_buf, mapping);
-+
-+	/* If the PSI download fails, return the CP boot ROM exit code to the
-+	 * flash app received about the doorbell scratchpad.
-+	 */
-+	if (ipc_imem->rom_exit_code != IMEM_ROM_EXIT_OPEN_EXT &&
-+	    ipc_imem->rom_exit_code != IMEM_ROM_EXIT_CERT_EXT)
-+		return (-1) * ((int)ipc_imem->rom_exit_code);
-+
-+	dev_dbg(ipc_imem->dev, "PSI image successfully downloaded");
-+
-+	/* Wait psi_start_timeout milliseconds until the CP PSI image is
-+	 * running and updates the execution_stage field with
-+	 * IPC_MEM_EXEC_STAGE_PSI. Verify the execution stage.
-+	 */
-+	do {
-+		exec_stage = ipc_mmio_get_exec_stage(ipc_imem->mmio);
-+
-+		if (exec_stage == IPC_MEM_EXEC_STAGE_PSI)
-+			break;
-+
-+		msleep(20);
-+		psi_start_timeout -= 20;
-+	} while (psi_start_timeout > 0);
-+
-+	if (exec_stage != IPC_MEM_EXEC_STAGE_PSI)
-+		return -1; /* Unknown status of the CP PSI process. */
-+
-+	/* Enter the PSI phase. */
-+	dev_dbg(ipc_imem->dev, "execution_stage[%X] eq. PSI", exec_stage);
-+
-+	ipc_imem->phase = IPC_P_PSI;
-+
-+	/* Request the RUNNING state from CP and wait until it was reached
-+	 * or timeout.
-+	 */
-+	imem_ipc_init_check(ipc_imem);
-+
-+	/* Suspend the flash app, wait for irq and evaluate the CP IPC state. */
-+	status = wait_for_completion_interruptible_timeout
-+		 (&channel->ul_sem, msecs_to_jiffies(IPC_PSI_TRANSFER_TIMEOUT));
-+	if (status <= 0) {
-+		dev_err(ipc_imem->dev,
-+			"ch[%d] timeout, failed PSI RUNNING state on CP",
-+			channel->channel_id);
-+		ipc_uevent_send(ipc_imem->dev, UEVENT_MDM_TIMEOUT);
-+		return -1;
-+	}
-+
-+	if (ipc_mmio_get_ipc_state(ipc_imem->mmio) !=
-+	    IPC_MEM_DEVICE_IPC_RUNNING) {
-+		dev_err(ipc_imem->dev,
-+			"ch[%d] %s: unexpected CP IPC state %d, not RUNNING",
-+			channel->channel_id,
-+			ipc_ap_phase_get_string(ipc_imem->phase),
-+			ipc_mmio_get_ipc_state(ipc_imem->mmio));
-+
-+		return -1;
-+	}
-+
-+	/* Create the flash channel for the transfer of the images. */
-+	if (!imem_sys_sio_open(ipc_imem)) {
-+		dev_err(ipc_imem->dev, "can't open flash_channel");
-+		return -1;
-+	}
-+
-+	/* Inform the flash app that the PSI was sent and start on CP.
-+	 * The flash app shall wait for the CP status in blocking read
-+	 * entry point.
-+	 */
-+	return count;
-+error:
-+	pci_free_consistent(ipc_imem->pcie->pci, count, dest_buf, mapping);
-+
-+	return -1;
-+}
-+
-+/* Get the write active channel */
-+static struct ipc_mem_channel *
-+imem_sio_write_channel(struct iosm_imem *ipc_imem,
-+		       struct ipc_mem_channel *channel,
-+		       const unsigned char __user *buf, int size)
-+{
-+	enum ipc_phase phase;
-+
-+	if (size <= 0) {
-+		dev_err(ipc_imem->dev, "invalid buff size");
-+		return NULL;
-+	}
-+
-+	/* Update the current operation phase. */
-+	phase = ipc_imem->phase;
-+
-+	/* Select the operation depending on the execution stage. */
-+	switch (phase) {
-+	case IPC_P_RUN:
-+	case IPC_P_PSI:
-+	case IPC_P_EBL:
-+		break;
-+
-+	case IPC_P_ROM:
-+		/* Prepare the PSI image for the CP ROM driver and
-+		 * suspend the flash app.
-+		 */
-+		if (channel->state != IMEM_CHANNEL_RESERVED) {
-+			dev_err(ipc_imem->dev,
-+				"ch[%d]:invalid channel state %d,expected %d",
-+				channel->channel_id, channel->state,
-+				IMEM_CHANNEL_RESERVED);
-+			return NULL;
-+		}
-+		return channel;
-+
-+	default:
-+		/* Ignore uplink actions in all other phases. */
-+		dev_err(ipc_imem->dev, "ch[%d]: confused phase %d",
-+			channel->channel_id, phase);
-+		return NULL;
-+	}
-+
-+	/* Check the full availability of the channel. */
-+	if (channel->state != IMEM_CHANNEL_ACTIVE) {
-+		dev_err(ipc_imem->dev, "ch[%d]: confused channel state %d",
-+			channel->channel_id, channel->state);
-+		return NULL;
-+	}
-+
-+	return channel;
-+}
-+
-+/* Release a sio link to CP. */
-+void imem_sys_sio_close(struct iosm_sio *ipc_sio)
-+{
-+	struct iosm_imem *ipc_imem = ipc_sio->ipc_imem;
-+	struct ipc_mem_channel *channel = ipc_sio->channel;
-+	enum ipc_phase curr_phase;
-+	int boot_check_timeout = 0;
-+	int status = 0;
-+	u32 tail = 0;
-+
-+	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID)
-+		boot_check_timeout = BOOT_CHECK_DEFAULT_TIMEOUT;
-+
-+	curr_phase = ipc_imem->phase;
-+
-+	/* If current phase is IPC_P_OFF or SIO ID is -ve then
-+	 * channel is already freed. Nothing to do.
-+	 */
-+	if (curr_phase == IPC_P_OFF || channel->sio_id < 0) {
-+		dev_err(ipc_imem->dev,
-+			"nothing to do. Current Phase: %s SIO ID: %d",
-+			ipc_ap_phase_get_string(curr_phase), channel->sio_id);
-+		return;
-+	}
-+
-+	if (channel->state == IMEM_CHANNEL_FREE) {
-+		dev_err(ipc_imem->dev, "ch[%d]: invalid channel state %d",
-+			channel->channel_id, channel->state);
-+		return;
-+	}
-+	/* Free only the channel id in the CP power off mode. */
-+	if (channel->state == IMEM_CHANNEL_RESERVED) {
-+		imem_channel_free(channel);
-+		return;
-+	}
-+
-+	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID &&
-+	    ipc_imem->flash_channel_id >= 0) {
-+		int i;
-+		enum ipc_mem_exec_stage exec_stage;
-+
-+		/* Increase the total wait time to boot_check_timeout */
-+		for (i = 0; i < boot_check_timeout; i++) {
-+			/* user space can terminate either the modem is finished
-+			 * with Downloading or finished transferring Coredump.
-+			 */
-+			exec_stage = ipc_mmio_get_exec_stage(ipc_imem->mmio);
-+			if (exec_stage == IPC_MEM_EXEC_STAGE_RUN ||
-+			    exec_stage == IPC_MEM_EXEC_STAGE_PSI)
-+				break;
-+
-+			msleep(20);
-+		}
-+
-+		msleep(100);
-+	}
-+	/* If there are any pending TDs then wait for Timeout/Completion before
-+	 * closing pipe.
-+	 */
-+	if (channel->ul_pipe.old_tail != channel->ul_pipe.old_head) {
-+		ipc_imem->app_notify_ul_pend = 1;
-+
-+		/* Suspend the user app and wait a certain time for processing
-+		 * UL Data.
-+		 */
-+		status = wait_for_completion_interruptible_timeout
-+			 (&ipc_imem->ul_pend_sem,
-+			  msecs_to_jiffies(IPC_PEND_DATA_TIMEOUT));
-+		if (status == 0) {
-+			dev_dbg(ipc_imem->dev,
-+				"Pending data Timeout on UL-Pipe:%d Head:%d Tail:%d",
-+				channel->ul_pipe.pipe_nr,
-+				channel->ul_pipe.old_head,
-+				channel->ul_pipe.old_tail);
-+		}
-+
-+		ipc_imem->app_notify_ul_pend = 0;
-+	}
-+
-+	/* If there are any pending TDs then wait for Timeout/Completion before
-+	 * closing pipe.
-+	 */
-+	ipc_protocol_get_head_tail_index(ipc_imem->ipc_protocol,
-+					 &channel->dl_pipe, NULL, &tail);
-+
-+	if (tail != channel->dl_pipe.old_tail) {
-+		ipc_imem->app_notify_dl_pend = 1;
-+
-+		/* Suspend the user app and wait a certain time for processing
-+		 * DL Data.
-+		 */
-+		status = wait_for_completion_interruptible_timeout
-+			 (&ipc_imem->dl_pend_sem,
-+			  msecs_to_jiffies(IPC_PEND_DATA_TIMEOUT));
-+		if (status == 0) {
-+			dev_dbg(ipc_imem->dev,
-+				"Pending data Timeout on DL-Pipe:%d Head:%d Tail:%d",
-+				channel->dl_pipe.pipe_nr,
-+				channel->dl_pipe.old_head,
-+				channel->dl_pipe.old_tail);
-+		}
-+
-+		ipc_imem->app_notify_dl_pend = 0;
-+	}
-+
-+	/* Due to wait for completion in messages, there is a small window
-+	 * between closing the pipe and updating the channel is closed. In this
-+	 * small window there could be HP update from Host Driver. Hence update
-+	 * the channel state as CLOSING to aviod unnecessary interrupt
-+	 * towards CP.
-+	 */
-+	channel->state = IMEM_CHANNEL_CLOSING;
-+
-+	/* Release the pipe resources */
-+	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID &&
-+	    ipc_imem->flash_channel_id != -1) {
-+		/* don't send close for software download pipes, as
-+		 * the device is already rebooting
-+		 */
-+		imem_pipe_cleanup(ipc_imem, &channel->ul_pipe);
-+		imem_pipe_cleanup(ipc_imem, &channel->dl_pipe);
-+	} else {
-+		imem_pipe_close(ipc_imem, &channel->ul_pipe);
-+		imem_pipe_close(ipc_imem, &channel->dl_pipe);
-+	}
-+
-+	imem_channel_free(channel);
-+
-+	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID)
-+		/* Reset the global flash channel id. */
-+		ipc_imem->flash_channel_id = -1;
-+}
-+
-+/* Open a MBIM link to CP and return the channel */
-+struct ipc_mem_channel *imem_sys_mbim_open(struct iosm_imem *ipc_imem)
-+{
-+	int ch_id;
-+	struct ipc_mem_channel *channel;
-+
-+	/* The MBIM interface is only supported in the runtime phase. */
-+	if (imem_ap_phase_update(ipc_imem) != IPC_P_RUN) {
-+		dev_err(ipc_imem->dev, "MBIM open refused, phase %s",
-+			ipc_ap_phase_get_string(ipc_imem->phase));
-+		return NULL;
-+	}
-+
-+	ch_id = imem_channel_alloc(ipc_imem, IPC_MEM_MBIM_CTRL_CH_ID,
-+				   IPC_CTYPE_MBIM);
-+
-+	if (ch_id < 0) {
-+		dev_err(ipc_imem->dev, "reservation of an MBIM chnl id failed");
-+		return NULL;
-+	}
-+
-+	channel = imem_channel_open(ipc_imem, ch_id, IPC_HP_SIO_OPEN);
-+
-+	if (!channel) {
-+		dev_err(ipc_imem->dev, "MBIM channel id open failed");
-+		return NULL;
-+	}
-+
-+	return channel;
-+}
-+
-+/* Open a SIO link to CP and return the channel id. */
-+struct ipc_mem_channel *imem_sys_sio_open(struct iosm_imem *ipc_imem)
-+{
-+	struct ipc_chnl_cfg chnl_cfg = { 0 };
-+	enum ipc_phase phase;
 +	int channel_id;
-+	struct ipc_mem_channel *channel;
 +
-+	phase = imem_ap_phase_update(ipc_imem);
++	channel_id = imem_channel_alloc(ipc_mux->imem, ipc_mux->instance_id,
++					IPC_CTYPE_WWAN);
 +
-+	/* The control link to CP is only supported in the power off, psi or
-+	 * run phase.
++	if (channel_id < 0) {
++		dev_err(ipc_mux->dev,
++			"allocation of the MUX channel id failed");
++		ipc_mux->state = MUX_S_ERROR;
++		ipc_mux->event = MUX_E_NOT_APPLICABLE;
++		goto no_channel;
++	}
++
++	/* Establish the MUX channel in blocking mode. */
++	ipc_mux->channel = imem_channel_open(ipc_mux->imem, channel_id,
++					     IPC_HP_NET_CHANNEL_INIT);
++
++	if (!ipc_mux->channel) {
++		dev_err(ipc_mux->dev, "imem_channel_open failed");
++		ipc_mux->state = MUX_S_ERROR;
++		ipc_mux->event = MUX_E_NOT_APPLICABLE;
++		return -ENODEV; /* MUX channel is not available. */
++	}
++
++	/* Define the MUX active state properties. */
++	ipc_mux->state = MUX_S_ACTIVE;
++	ipc_mux->event = MUX_E_NO_ORDERS;
++
++no_channel:
++	return channel_id;
++}
++
++/* Reset the session/if id state. */
++static void mux_session_free(struct iosm_mux *ipc_mux, int if_id)
++{
++	struct mux_session *if_entry;
++
++	if_entry = &ipc_mux->session[if_id];
++	/* Reset the session state. */
++	if_entry->wwan = NULL;
++}
++
++/* Create and send the session open command. */
++static struct mux_cmd_open_session_resp *
++mux_session_open_send(struct iosm_mux *ipc_mux, int if_id)
++{
++	struct mux_cmd_open_session_resp *open_session_resp;
++	struct mux_acb *acb = &ipc_mux->acb;
++	union mux_cmd_param param;
++
++	/* open_session commands to one ACB and start transmission. */
++	param.open_session.flow_ctrl = 0;
++	param.open_session.reserved = 0;
++	param.open_session.ipv4v6_hints = 0;
++	param.open_session.reserved2 = 0;
++	param.open_session.dl_head_pad_len = IPC_MEM_DL_ETH_OFFSET;
++
++	/* Finish and transfer ACB. The user thread is suspended.
++	 * It is a blocking function call, until CP responds or timeout.
 +	 */
-+	switch (phase) {
-+	case IPC_P_OFF:
-+	case IPC_P_ROM:
-+		/* Get a channel id as flash id and reserve it. */
-+		channel_id = imem_channel_alloc(ipc_imem, IPC_MEM_FLASH_CH_ID,
-+						IPC_CTYPE_FLASH);
-+		if (channel_id < 0) {
-+			dev_err(ipc_imem->dev,
-+				"reservation of a flash channel id failed");
-+			return NULL;
-+		}
-+
-+		/* Enqueue chip info data to be read */
-+		if (imem_trigger_chip_info(ipc_imem)) {
-+			imem_channel_close(ipc_imem, channel_id);
-+			return NULL;
-+		}
-+
-+		/* Save the flash channel id to execute the ROM interworking. */
-+		ipc_imem->flash_channel_id = channel_id;
-+
-+		channel = &ipc_imem->channels[channel_id];
-+		return channel;
-+
-+	case IPC_P_PSI:
-+	case IPC_P_EBL:
-+		/* The channel id used as flash id shall be already
-+		 * present as reserved.
-+		 */
-+		if (ipc_imem->flash_channel_id < 0) {
-+			dev_err(ipc_imem->dev,
-+				"missing a valid flash channel id");
-+			return NULL;
-+		}
-+		channel_id = ipc_imem->flash_channel_id;
-+
-+		ipc_imem->cp_version = ipc_mmio_get_cp_version(ipc_imem->mmio);
-+		if (ipc_imem->cp_version == -1) {
-+			dev_err(ipc_imem->dev, "invalid CP version");
-+			return NULL;
-+		}
-+
-+		/* PSI may have changed the CP version field, which may
-+		 * result in a different channel configuration.
-+		 * Fetch and update the flash channel config
-+		 */
-+		if (ipc_chnl_cfg_get(&chnl_cfg, ipc_imem->flash_channel_id)) {
-+			dev_err(ipc_imem->dev,
-+				"failed to get flash pipe configuration");
-+			return NULL;
-+		}
-+
-+		ipc_imem_channel_update(ipc_imem, channel_id, chnl_cfg,
-+					IRQ_MOD_OFF);
-+
-+		channel = imem_channel_open(ipc_imem, channel_id,
-+					    IPC_HP_SIO_OPEN);
-+		if (!channel)
-+			return NULL;
-+
-+		return channel;
-+
-+	default:
-+		/* CP is in the wrong state (e.g. CRASH or CD_READY) */
-+		dev_err(ipc_imem->dev, "SIO open refused, phase %d", phase);
++	acb->wanted_response = MUX_CMD_OPEN_SESSION_RESP;
++	if (mux_dl_acb_send_cmds(ipc_mux, MUX_CMD_OPEN_SESSION, if_id, 0,
++				 &param, sizeof(param.open_session), true,
++				 false) ||
++	    acb->got_response != MUX_CMD_OPEN_SESSION_RESP) {
++		dev_err(ipc_mux->dev, "if_id %d: OPEN_SESSION send failed",
++			if_id);
 +		return NULL;
 +	}
-+}
 +
-+ssize_t imem_sys_sio_read(struct iosm_sio *ipc_sio, unsigned char __user *buf,
-+			  size_t size, struct sk_buff *skb)
-+{
-+	unsigned char __user *dest_buf, *dest_end;
-+	size_t dest_len, src_len, copied_b = 0;
-+	unsigned char *src_buf;
-+
-+	/* Prepare the destination space. */
-+	dest_buf = buf;
-+	dest_end = dest_buf + size;
-+
-+	/* Copy the accumulated rx packets. */
-+	while (skb) {
-+		/* Prepare the source elements. */
-+		src_buf = skb->data;
-+		src_len = skb->len;
-+
-+		/* Calculate the current size of the destination buffer. */
-+		dest_len = dest_end - dest_buf;
-+
-+		/* Compute the number of bytes to copy. */
-+		copied_b = (dest_len < src_len) ? dest_len : src_len;
-+
-+		/* Copy the chars into the user space buffer. */
-+		if (copy_to_user((void __user *)dest_buf, src_buf, copied_b) !=
-+		    0) {
-+			dev_err(ipc_sio->dev,
-+				"chid[%d] userspace copy failed n=%zu\n",
-+				ipc_sio->channel->channel_id, copied_b);
-+			ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
-+			return -EFAULT;
-+		}
-+
-+		/* Update the source elements. */
-+		skb->data = src_buf + copied_b;
-+		skb->len = skb->len - copied_b;
-+
-+		/* Update the desctination pointer. */
-+		dest_buf += copied_b;
-+
-+		/* Test the fill level of the user buffer. */
-+		if (dest_buf >= dest_end) {
-+			/* Free the consumed skbuf or save the pending skbuf
-+			 * to consume it in the read call.
-+			 */
-+			if (skb->len == 0)
-+				ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
-+			else
-+				ipc_sio->rx_pending_buf = skb;
-+
-+			/* Return the number of saved chars. */
-+			break;
-+		}
-+
-+		/* Free the consumed skbuf. */
-+		ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
-+
-+		/* Get the next skbuf element. */
-+		skb = skb_dequeue(&ipc_sio->rx_list);
++	open_session_resp = &ipc_mux->acb.got_param.open_session_resp;
++	if (open_session_resp->response != MUX_CMD_RESP_SUCCESS) {
++		dev_err(ipc_mux->dev,
++			"if_id %d,session open failed,response=%d", if_id,
++			(int)open_session_resp->response);
++		return NULL;
 +	}
 +
-+	/* Return the number of saved chars. */
-+	copied_b = dest_buf - buf;
-+	return copied_b;
++	return open_session_resp;
 +}
 +
-+int imem_sys_sio_write(struct iosm_sio *ipc_sio,
-+		       const unsigned char __user *buf, int count,
-+		       bool blocking_write)
++/* Open the first IP session. */
++static bool mux_session_open(struct iosm_mux *ipc_mux,
++			     struct mux_session_open *session_open)
 +{
-+	struct iosm_imem *ipc_imem = ipc_sio->ipc_imem;
-+	struct ipc_mem_channel *channel = ipc_sio->channel;
++	struct mux_cmd_open_session_resp *open_session_resp;
++	int if_id;
++
++	/* Search for a free session interface id. */
++	if_id = session_open->if_id;
++	if (if_id < 0 || if_id >= ipc_mux->nr_sessions) {
++		dev_err(ipc_mux->dev, "invalid interface id=%d", if_id);
++		return false;
++	}
++
++	/* Create and send the session open command.
++	 * It is a blocking function call, until CP responds or timeout.
++	 */
++	open_session_resp = mux_session_open_send(ipc_mux, if_id);
++	if (!open_session_resp) {
++		mux_session_free(ipc_mux, if_id);
++		session_open->if_id = -1;
++		return false;
++	}
++
++	/* Initialize the uplink skb accumulator. */
++	skb_queue_head_init(&ipc_mux->session[if_id].ul_list);
++
++	ipc_mux->session[if_id].dl_head_pad_len = IPC_MEM_DL_ETH_OFFSET;
++	ipc_mux->session[if_id].ul_head_pad_len =
++		open_session_resp->ul_head_pad_len;
++	ipc_mux->session[if_id].wwan = ipc_mux->wwan;
++
++	/* Reset the flow ctrl stats of the session */
++	ipc_mux->session[if_id].flow_ctl_en_cnt = 0;
++	ipc_mux->session[if_id].flow_ctl_dis_cnt = 0;
++	ipc_mux->session[if_id].ul_flow_credits = 0;
++	ipc_mux->session[if_id].net_tx_stop = false;
++	ipc_mux->session[if_id].flow_ctl_mask = 0;
++
++	/* Save and return the assigned if id. */
++	session_open->if_id = if_id;
++
++	return true;
++}
++
++/* Free pending session UL packet. */
++static void mux_session_reset(struct iosm_mux *ipc_mux, int if_id)
++{
++	/* Reset the session/if id state. */
++	mux_session_free(ipc_mux, if_id);
++
++	/* Empty the uplink skb accumulator. */
++	skb_queue_purge(&ipc_mux->session[if_id].ul_list);
++}
++
++static void mux_session_close(struct iosm_mux *ipc_mux,
++			      struct mux_session_close *msg)
++{
++	int if_id;
++
++	/* Copy the session interface id. */
++	if_id = msg->if_id;
++
++	if (if_id < 0 || if_id >= ipc_mux->nr_sessions) {
++		dev_err(ipc_mux->dev, "invalid session id %d", if_id);
++		return;
++	}
++
++	/* Create and send the session close command.
++	 * It is a blocking function call, until CP responds or timeout.
++	 */
++	if (mux_dl_acb_send_cmds(ipc_mux, MUX_CMD_CLOSE_SESSION, if_id, 0, NULL,
++				 0, true, false))
++		dev_err(ipc_mux->dev, "if_id %d: CLOSE_SESSION send failed",
++			if_id);
++
++	/* Reset the flow ctrl stats of the session */
++	ipc_mux->session[if_id].flow_ctl_en_cnt = 0;
++	ipc_mux->session[if_id].flow_ctl_dis_cnt = 0;
++	ipc_mux->session[if_id].flow_ctl_mask = 0;
++
++	mux_session_reset(ipc_mux, if_id);
++}
++
++static void mux_channel_close(struct iosm_mux *ipc_mux,
++			      struct mux_channel_close *channel_close_p)
++{
++	int i;
++
++	/* Free pending session UL packet. */
++	for (i = 0; i < ipc_mux->nr_sessions; i++)
++		if (ipc_mux->session[i].wwan)
++			mux_session_reset(ipc_mux, i);
++
++	imem_channel_close(ipc_mux->imem, ipc_mux->channel_id);
++
++	/* Reset the MUX object. */
++	ipc_mux->state = MUX_S_INACTIVE;
++	ipc_mux->event = MUX_E_INACTIVE;
++}
++
++/* CP has interrupted AP. If AP is in IP MUX mode, execute the pending ops. */
++static int mux_schedule(struct iosm_mux *ipc_mux, union mux_msg *msg)
++{
++	enum mux_event order;
++	bool success;
++
++	if (!ipc_mux->initialized)
++		return -1; /* Shall be used as normal IP channel. */
++
++	order = msg->common.event;
++
++	switch (ipc_mux->state) {
++	case MUX_S_INACTIVE:
++		if (order != MUX_E_MUX_SESSION_OPEN)
++			/* Wait for the request to open a session */
++			return -1;
++
++		if (ipc_mux->event == MUX_E_INACTIVE)
++			/* Establish the MUX channel and the new state. */
++			ipc_mux->channel_id = mux_channel_create(ipc_mux);
++
++		if (ipc_mux->state != MUX_S_ACTIVE)
++			/* Missing the MUX channel. */
++			return -1;
++
++		/* Disable the TD update timer and open the first IP session. */
++		imem_td_update_timer_suspend(ipc_mux->imem, true);
++		ipc_mux->event = MUX_E_MUX_SESSION_OPEN;
++		success = mux_session_open(ipc_mux, &msg->session_open);
++
++		imem_td_update_timer_suspend(ipc_mux->imem, false);
++		return success ? ipc_mux->channel_id : -1;
++
++	case MUX_S_ACTIVE:
++		switch (order) {
++		case MUX_E_MUX_SESSION_OPEN:
++			/* Disable the TD update timer and open a session */
++			imem_td_update_timer_suspend(ipc_mux->imem, true);
++			ipc_mux->event = MUX_E_MUX_SESSION_OPEN;
++			success = mux_session_open(ipc_mux, &msg->session_open);
++			imem_td_update_timer_suspend(ipc_mux->imem, false);
++			return success ? ipc_mux->channel_id : -1;
++
++		case MUX_E_MUX_SESSION_CLOSE:
++			/* Release an IP session. */
++			ipc_mux->event = MUX_E_MUX_SESSION_CLOSE;
++			mux_session_close(ipc_mux, &msg->session_close);
++			return ipc_mux->channel_id;
++
++		case MUX_E_MUX_CHANNEL_CLOSE:
++			/* Close the MUX channel pipes. */
++			ipc_mux->event = MUX_E_MUX_CHANNEL_CLOSE;
++			mux_channel_close(ipc_mux, &msg->channel_close);
++			return ipc_mux->channel_id;
++
++		default:
++			/* Invalid order. */
++			return -1;
++		}
++
++	default:
++		dev_err(ipc_mux->dev,
++			"unexpected MUX transition: state=%d, event=%d",
++			ipc_mux->state, ipc_mux->event);
++		return -1;
++	}
++}
++
++struct iosm_mux *mux_init(struct ipc_mux_config *mux_cfg,
++			  struct iosm_imem *imem)
++{
++	struct iosm_mux *ipc_mux = kzalloc(sizeof(*ipc_mux), GFP_KERNEL);
++	int i, ul_tds, ul_td_size;
++	struct mux_session *session;
++	struct sk_buff_head *free_list;
 +	struct sk_buff *skb;
-+	int ret = -1;
 +
-+	set_bit(WRITE_IN_USE, &ipc_sio->flag);
-+	/* Applying memory barrier so that ipc_sio->flag is updated
-+	 * before being read
-+	 */
-+	smp_mb__after_atomic();
++	if (!ipc_mux)
++		return NULL;
 +
-+	channel = imem_sio_write_channel(ipc_imem, channel, buf, count);
++	ipc_mux->protocol = mux_cfg->protocol;
++	ipc_mux->ul_flow = mux_cfg->ul_flow;
++	ipc_mux->nr_sessions = mux_cfg->nr_sessions;
++	ipc_mux->instance_id = mux_cfg->instance_id;
++	ipc_mux->wwan_q_offset = 0;
 +
-+	if (!channel || ipc_imem->phase == IPC_P_OFF_REQ)
-+		goto err;
++	ipc_mux->pcie = imem->pcie;
++	ipc_mux->imem = imem;
++	ipc_mux->ipc_protocol = imem->ipc_protocol;
++	ipc_mux->dev = imem->dev;
++	ipc_mux->wwan = imem->wwan;
 +
-+	/* In the ROM phase the PSI image is passed to CP about a specific
-+	 * shared memory area and doorbell scratchpad directly.
-+	 */
-+	if (ipc_imem->phase == IPC_P_ROM) {
-+		ret = imem_psi_transfer(ipc_imem, channel, buf, count);
++	ipc_mux->session =
++		kcalloc(ipc_mux->nr_sessions, sizeof(*session), GFP_KERNEL);
 +
-+		/* If the PSI transfer fails then send crash
-+		 * Signature.
-+		 */
-+		if (ret > 0)
-+			imem_msg_send_feature_set(ipc_imem,
-+						  IPC_MEM_INBAND_CRASH_SIG,
-+						  false);
-+		goto err;
++	if (!ipc_mux->session) {
++		kfree(ipc_mux);
++		return NULL;
 +	}
 +
-+	/* Allocate skb memory for the uplink buffer.*/
-+	skb = imem_sio_copy_from_user_to_skb(ipc_imem, channel->channel_id, buf,
-+					     count, blocking_write);
-+	if (!skb)
-+		goto err;
++	/* Get the reference to the id list. */
++	session = ipc_mux->session;
 +
-+	/* Add skb to the uplink skbuf accumulator. */
-+	skb_queue_tail(&channel->ul_list, skb);
++	/* Get the reference to the UL ADB list. */
++	free_list = &ipc_mux->ul_adb.free_list;
 +
-+	/* Inform the IPC tasklet to pass uplink IP packets to CP.
-+	 * Blocking write waits for UL completion notification,
-+	 * non-blocking write simply returns the count.
-+	 */
-+	if (imem_call_sio_write(ipc_imem) && blocking_write) {
-+		/* Suspend the app and wait for UL data completion. */
-+		ret = wait_for_completion_interruptible(&channel->ul_sem);
++	/* Initialize the list with free ADB. */
++	skb_queue_head_init(free_list);
 +
-+		if (ret < 0) {
-+			dev_err(ipc_imem->dev,
-+				"ch[%d] no CP confirmation, status=%d",
-+				channel->channel_id, ret);
-+			goto err;
++	ul_td_size = IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE;
++
++	ul_tds = IPC_MEM_MAX_TDS_MUX_LITE_UL;
++
++	ipc_mux->ul_adb.dest_skb = NULL;
++
++	ipc_mux->initialized = true;
++	ipc_mux->adb_prep_ongoing = false;
++	ipc_mux->size_needed = 0;
++	ipc_mux->ul_data_pend_bytes = 0;
++	ipc_mux->state = MUX_S_INACTIVE;
++	ipc_mux->ev_mux_net_transmit_pending = false;
++	ipc_mux->tx_transaction_id = 0;
++	ipc_mux->rr_next_session = 0;
++	ipc_mux->event = MUX_E_INACTIVE;
++	ipc_mux->channel_id = -1;
++	ipc_mux->channel = NULL;
++
++	/* Allocate the list of UL ADB. */
++	for (i = 0; i < ul_tds; i++) {
++		dma_addr_t mapping;
++
++		skb = ipc_pcie_alloc_skb(ipc_mux->pcie, ul_td_size, GFP_ATOMIC,
++					 &mapping, DMA_TO_DEVICE, 0);
++		if (!skb) {
++			ipc_mux_deinit(ipc_mux);
++			return NULL;
++		}
++		/* Extend the UL ADB list. */
++		skb_queue_tail(free_list, skb);
++	}
++
++	return ipc_mux;
++}
++
++/* Informs the network stack to restart transmission for all opened session if
++ * Flow Control is not ON for that session.
++ */
++static void mux_restart_tx_for_all_sessions(struct iosm_mux *ipc_mux)
++{
++	struct mux_session *session;
++	int idx;
++
++	for (idx = 0; idx < ipc_mux->nr_sessions; idx++) {
++		session = &ipc_mux->session[idx];
++
++		if (!session->wwan)
++			continue;
++
++		/* If flow control of the session is OFF and if there was tx
++		 * stop then restart. Inform the network interface to restart
++		 * sending data.
++		 */
++		if (session->flow_ctl_mask == 0) {
++			session->net_tx_stop = false;
++			mux_netif_tx_flowctrl(session, idx, false);
 +		}
 +	}
-+	ret = count;
-+err:
-+	clear_bit(WRITE_IN_USE, &ipc_sio->flag);
-+	/* Applying memory barrier so that ipc_sio->flag is updated
-+	 * before being read
-+	 */
-+	smp_mb__after_atomic();
-+	return ret;
 +}
 +
-+int imem_sys_sio_receive(struct iosm_sio *ipc_sio, struct sk_buff *skb)
++/* Informs the network stack to stop sending further pkt for all opened
++ * sessions
++ */
++static void mux_stop_netif_for_all_sessions(struct iosm_mux *ipc_mux)
 +{
-+	skb_queue_tail((&ipc_sio->rx_list), skb);
++	struct mux_session *session;
++	int idx;
 +
-+	if (test_bit(IS_BLOCKING, &ipc_sio->flag))
-+		complete(&ipc_sio->read_sem);
-+	else if (!test_bit(IS_BLOCKING, &ipc_sio->flag))
-+		wake_up_interruptible(&ipc_sio->poll_inq);
++	for (idx = 0; idx < ipc_mux->nr_sessions; idx++) {
++		session = &ipc_mux->session[idx];
 +
-+	return 0;
++		if (!session->wwan)
++			continue;
++
++		mux_netif_tx_flowctrl(session, session->if_id, true);
++	}
 +}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
++
++void ipc_mux_check_n_restart_tx(struct iosm_mux *ipc_mux)
++{
++	if (ipc_mux->ul_flow == MUX_UL) {
++		int low_thresh = IPC_MEM_MUX_UL_FLOWCTRL_LOW_B;
++
++		if (ipc_mux->ul_data_pend_bytes < low_thresh)
++			mux_restart_tx_for_all_sessions(ipc_mux);
++	}
++}
++
++int ipc_mux_get_max_sessions(struct iosm_mux *ipc_mux)
++{
++	return ipc_mux ? ipc_mux->nr_sessions : -1;
++}
++
++enum ipc_mux_protocol ipc_mux_get_active_protocol(struct iosm_mux *ipc_mux)
++{
++	return ipc_mux ? ipc_mux->protocol : MUX_UNKNOWN;
++}
++
++int ipc_mux_open_session(struct iosm_mux *ipc_mux, int session_nr)
++{
++	struct mux_session_open *session_open;
++	union mux_msg mux_msg;
++
++	session_open = &mux_msg.session_open;
++	session_open->event = MUX_E_MUX_SESSION_OPEN;
++
++	session_open->if_id = session_nr;
++	ipc_mux->session[session_nr].flags |= IPC_MEM_WWAN_MUX;
++	return mux_schedule(ipc_mux, &mux_msg);
++}
++
++int ipc_mux_close_session(struct iosm_mux *ipc_mux, int session_nr)
++{
++	struct mux_session_close *session_close;
++	union mux_msg mux_msg;
++	int ret_val;
++
++	session_close = &mux_msg.session_close;
++	session_close->event = MUX_E_MUX_SESSION_CLOSE;
++
++	session_close->if_id = session_nr;
++	ret_val = mux_schedule(ipc_mux, &mux_msg);
++	ipc_mux->session[session_nr].flags &= ~IPC_MEM_WWAN_MUX;
++
++	return ret_val;
++}
++
++void ipc_mux_deinit(struct iosm_mux *ipc_mux)
++{
++	struct mux_channel_close *channel_close;
++	struct sk_buff_head *free_list;
++	union mux_msg mux_msg;
++	struct sk_buff *skb;
++
++	if (!ipc_mux->initialized)
++		return;
++	mux_stop_netif_for_all_sessions(ipc_mux);
++
++	channel_close = &mux_msg.channel_close;
++	channel_close->event = MUX_E_MUX_CHANNEL_CLOSE;
++	mux_schedule(ipc_mux, &mux_msg);
++
++	/* Empty the ADB free list. */
++	free_list = &ipc_mux->ul_adb.free_list;
++
++	/* Remove from the head of the downlink queue. */
++	while ((skb = skb_dequeue(free_list)))
++		ipc_pcie_kfree_skb(ipc_mux->pcie, skb);
++
++	if (ipc_mux->channel) {
++		ipc_mux->channel->ul_pipe.is_open = false;
++		ipc_mux->channel->dl_pipe.is_open = false;
++	}
++
++	kfree(ipc_mux->session);
++	kfree(ipc_mux);
++}
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux.h b/drivers/net/wwan/iosm/iosm_ipc_mux.h
 new file mode 100644
-index 000000000000..75af9d838742
+index 000000000000..047a29f7e4fa
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
-@@ -0,0 +1,129 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_mux.h
+@@ -0,0 +1,345 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#ifndef IOSM_IPC_IMEM_OPS_H
-+#define IOSM_IPC_IMEM_OPS_H
++#ifndef IOSM_IPC_MUX_H
++#define IOSM_IPC_MUX_H
 +
-+#include "iosm_ipc_mux_codec.h"
++#include "iosm_ipc_protocol.h"
 +
-+/* Maximum length of the SIO device names */
-+#define IPC_SIO_DEVNAME_LEN 32
++/* Size of the buffer for the IP MUX data buffer. */
++#define IPC_MEM_MAX_DL_MUX_BUF_SIZE (16 * 1024)
++#define IPC_MEM_MAX_UL_ADB_BUF_SIZE IPC_MEM_MAX_DL_MUX_BUF_SIZE
 +
-+/* Maximum wait time for blocking read */
-+#define IPC_READ_TIMEOUT 500
++/* Size of the buffer for the IP MUX Lite data buffer. */
++#define IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE (2 * 1024)
 +
-+/* The delay in ms for defering the unregister */
-+#define SIO_UNREGISTER_DEFER_DELAY_MS 1
++/* TD counts for IP MUX Lite */
++#define IPC_MEM_MAX_TDS_MUX_LITE_UL 800
++#define IPC_MEM_MAX_TDS_MUX_LITE_DL 1200
 +
-+/* Default delay till CP PSI image is running and modem updates the
-+ * execution stage.
-+ * unit : milliseconds
++/* open session request (AP->CP) */
++#define MUX_CMD_OPEN_SESSION 1
++
++/* response to open session request (CP->AP) */
++#define MUX_CMD_OPEN_SESSION_RESP 2
++
++/* close session request (AP->CP) */
++#define MUX_CMD_CLOSE_SESSION 3
++
++/* response to close session request (CP->AP) */
++#define MUX_CMD_CLOSE_SESSION_RESP 4
++
++/* Flow control command with mask of the flow per queue/flow. */
++#define MUX_LITE_CMD_FLOW_CTL 5
++
++/* ACK the flow control command. Shall have the same Transaction ID as the
++ * matching FLOW_CTL command.
 + */
-+#define PSI_START_DEFAULT_TIMEOUT 3000
++#define MUX_LITE_CMD_FLOW_CTL_ACK 6
 +
-+/* Default time out when closing SIO, till the modem is in
-+ * running state.
-+ * unit : milliseconds
-+ */
-+#define BOOT_CHECK_DEFAULT_TIMEOUT 400
++/* Command for report packet indicating link quality metrics. */
++#define MUX_LITE_CMD_LINK_STATUS_REPORT 7
++
++/* Response to a report packet */
++#define MUX_LITE_CMD_LINK_STATUS_REPORT_RESP 8
++
++/* Used to reset a command/response state. */
++#define MUX_CMD_INVALID 255
++
++/* command response : command processed successfully */
++#define MUX_CMD_RESP_SUCCESS 0
++
++/* MUX for vlan devices */
++#define IPC_MEM_WWAN_MUX BIT(0)
++
++/* Initiated actions to change the state of the MUX object. */
++enum mux_event {
++	MUX_E_INACTIVE, /* No initiated actions. */
++	MUX_E_MUX_SESSION_OPEN, /* Create the MUX channel and a session. */
++	MUX_E_MUX_SESSION_CLOSE, /* Release a session. */
++	MUX_E_MUX_CHANNEL_CLOSE, /* Release the MUX channel. */
++	MUX_E_NO_ORDERS, /* No MUX order. */
++	MUX_E_NOT_APPLICABLE, /* Defect IP MUX. */
++};
++
++/* MUX session open command. */
++struct mux_session_open {
++	enum mux_event event;
++	int if_id;
++};
++
++/* MUX session close command. */
++struct mux_session_close {
++	enum mux_event event;
++	int if_id;
++};
++
++/* MUX channel close command. */
++struct mux_channel_close {
++	enum mux_event event;
++};
++
++/* Default message type to find out the right message type. */
++struct mux_common {
++	enum mux_event event;
++};
++
++/* List of ops in MUX mode. */
++union mux_msg {
++	struct mux_session_open session_open;
++	struct mux_session_close session_close;
++	struct mux_channel_close channel_close;
++	struct mux_common common;
++};
++
++/* Parameter definition of the open session command. */
++struct mux_cmd_open_session {
++	u32 flow_ctrl : 1; /* 0: Flow control disabled (flow allowed). */
++	/* 1: Flow control enabled (flow not allowed)*/
++	u32 reserved : 7; /* Reserved. Set to zero. */
++	u32 ipv4v6_hints : 1; /* 0: IPv4/IPv6 hints not supported.*/
++	/* 1: IPv4/IPv6 hints supported*/
++	u32 reserved2 : 23; /* Reserved. Set to zero. */
++	u32 dl_head_pad_len; /* Maximum length supported */
++	/* for DL head padding on a datagram. */
++};
++
++/* Parameter definition of the open session response. */
++struct mux_cmd_open_session_resp {
++	u32 response; /* Response code */
++	u32 flow_ctrl : 1; /* 0: Flow control disabled (flow allowed). */
++	/* 1: Flow control enabled (flow not allowed) */
++	u32 reserved : 7; /* Reserved. Set to zero. */
++	u32 ipv4v6_hints : 1; /* 0: IPv4/IPv6 hints not supported */
++	/* 1: IPv4/IPv6 hints supported */
++	u32 reserved2 : 23; /* Reserved. Set to zero. */
++	u32 ul_head_pad_len; /* Actual length supported for */
++	/* UL head padding on adatagram.*/
++};
++
++/* Parameter definition of the close session response code */
++struct mux_cmd_close_session_resp {
++	u32 response;
++};
++
++/* Parameter definition of the flow control command. */
++struct mux_cmd_flow_ctl {
++	u32 mask; /* indicating the desired flow control */
++	/* state for various flows/queues */
++};
++
++/* Parameter definition of the link status report code*/
++struct mux_cmd_link_status_report {
++	u8 payload;
++};
++
++/* Parameter definition of the link status report response code. */
++struct mux_cmd_link_status_report_resp {
++	u32 response;
++};
 +
 +/**
-+ * imem_sys_sio_open - Open a sio link to CP.
-+ * @ipc_imem:	Imem instance.
++ * union mux_cmd_param - Union-definition of the command parameters.
++ * @open_session:	Inband command for open session
++ * @open_session_resp:	Inband command for open session response
++ * @close_session_resp:	Inband command for close session response
++ * @flow_ctl:		In-band flow control on the opened interfaces
++ * @link_status:	In-band Link Status Report
++ * @link_status_resp:	In-band command for link status report response
++ */
++union mux_cmd_param {
++	struct mux_cmd_open_session open_session;
++	struct mux_cmd_open_session_resp open_session_resp;
++	struct mux_cmd_close_session_resp close_session_resp;
++	struct mux_cmd_flow_ctl flow_ctl;
++	struct mux_cmd_link_status_report link_status;
++	struct mux_cmd_link_status_report_resp link_status_resp;
++};
++
++/* States of the MUX object.. */
++enum mux_state {
++	MUX_S_INACTIVE, /* IP MUX is unused. */
++	MUX_S_ACTIVE, /* IP MUX channel is available. */
++	MUX_S_ERROR, /* Defect IP MUX. */
++};
++
++/* Supported MUX protocols. */
++enum ipc_mux_protocol {
++	MUX_UNKNOWN,
++	MUX_LITE,
++};
++
++/* Supported UL data transfer methods. */
++enum ipc_mux_ul_flow {
++	MUX_UL_UNKNOWN,
++	MUX_UL, /* Normal UL data transfer */
++	MUX_UL_ON_CREDITS, /* UL data transfer will be based on credits */
++};
++
++/* List of the MUX session. */
++struct mux_session {
++	struct iosm_wwan *wwan; /*Network i/f used for communication*/
++	int if_id; /* i/f id for session open message.*/
++	u32 flags;
++	u32 ul_head_pad_len; /* Nr of bytes for UL head padding. */
++	u32 dl_head_pad_len; /* Nr of bytes for DL head padding. */
++	struct sk_buff_head ul_list; /* skb entries for an ADT. */
++	u32 flow_ctl_mask; /* UL flow control */
++	u32 flow_ctl_en_cnt; /* Flow control Enable cmd count */
++	u32 flow_ctl_dis_cnt; /* Flow Control Disable cmd count */
++	int ul_flow_credits; /* UL flow credits */
++	u8 net_tx_stop : 1;
++	u8 flush : 1; /* flush net interface ? */
++};
++
++/* State of a single UL data block. */
++struct mux_adb {
++	struct sk_buff *dest_skb; /* Current UL skb for the data block. */
++	u8 *buf; /* ADB memory. */
++	struct mux_adgh *adgh; /* ADGH pointer */
++	struct sk_buff *qlth_skb; /* QLTH pointer */
++	u32 *next_table_index; /* Pointer to next table index. */
++	struct sk_buff_head free_list; /* List of alloc. ADB for the UL sess.*/
++	int size; /* Size of the ADB memory. */
++	u32 if_cnt; /* Statistic counter */
++	u32 dg_cnt_total;
++	u32 payload_size;
++};
++
++/* Temporary ACB state. */
++struct mux_acb {
++	struct sk_buff *skb; /* Used UL skb. */
++	int if_id; /* Session id. */
++	u32 wanted_response;
++	u32 got_response;
++	u32 cmd;
++	union mux_cmd_param got_param; /* Received command/response parameter */
++};
++
++/**
++ * struct iosm_mux - Structure of the data multiplexing over an IP channel.
++ * @dev:		pointer to device structure
++ * @session:		List of the MUX sessions.
++ * @channel:		Reference to the IP MUX channel
++ * @pcie:		Pointer to iosm_pcie struct
++ * @imem:		Pointer to iosm_imem
++ * @wwan:		Poinetr to iosm_wwan
++ * @ipc_protocol:	Pointer to iosm_protocol
++ * @channel_id:		Channel ID for MUX
++ * @protocol:		Type of the MUX protocol
++ * @ul_flow:		UL Flow type
++ * @nr_sessions:	Number of sessions
++ * @instance_id:	Instance ID
++ * @state:		States of the MUX object
++ * @event:		Initiated actions to change the state of the MUX object
++ * @tx_transaction_id:	Transaction id for the ACB command.
++ * @rr_next_session:	Next session number for round robin.
++ * @ul_adb:		State of the UL ADB/ADGH.
++ * @size_needed:	Variable to store the size needed during ADB preparation
++ * @ul_data_pend_bytes:	Pending UL data to be processed in bytes
++ * @acb:		Temporary ACB state
++ * @wwan_q_offset:	This will hold the offset of the given instance
++ *			Useful while passing or receiving packets from
++ *			wwan/imem layer.
++ * @initialized:	MUX object is initialized
++ * @ev_mux_net_transmit_pending:
++ *			0 means inform the IPC tasklet to pass the
++ *			accumulated uplink ADB to CP.
++ * @adb_prep_ongoing:	Flag for ADB preparation status
++ */
++struct iosm_mux {
++	struct device *dev;
++	struct mux_session *session;
++	struct ipc_mem_channel *channel;
++	struct iosm_pcie *pcie;
++	struct iosm_imem *imem;
++	struct iosm_wwan *wwan;
++	struct iosm_protocol *ipc_protocol;
++	int channel_id;
++	enum ipc_mux_protocol protocol;
++	enum ipc_mux_ul_flow ul_flow;
++	int nr_sessions;
++	int instance_id;
++	enum mux_state state;
++	enum mux_event event;
++	u32 tx_transaction_id;
++	int rr_next_session;
++	struct mux_adb ul_adb;
++	int size_needed;
++	long long ul_data_pend_bytes;
++	struct mux_acb acb;
++	int wwan_q_offset;
++	u8 initialized : 1;
++	u8 ev_mux_net_transmit_pending : 1;
++	u8 adb_prep_ongoing : 1;
++};
++
++/* MUX configuration structure */
++struct ipc_mux_config {
++	enum ipc_mux_protocol protocol;
++	enum ipc_mux_ul_flow ul_flow;
++	int nr_sessions;
++	int instance_id;
++};
++
++/**
++ * mux_init - Allocates and Init MUX instance
++ * @mux_cfg:	Pointer to MUX configuration structure
++ * @ipc_imem:	Pointer to imem data-struct
 + *
-+ * Return: channel instance on success, NULL for failure
++ * Returns: Initialized mux pointer on success else NULL
 + */
-+struct ipc_mem_channel *imem_sys_sio_open(struct iosm_imem *ipc_imem);
++struct iosm_mux *mux_init(struct ipc_mux_config *mux_cfg,
++			  struct iosm_imem *ipc_imem);
 +
 +/**
-+ * imem_sys_mbim_open - Open a mbim link to CP.
-+ * @ipc_imem:	Imem instance.
++ * ipc_mux_deinit - Deallocates MUX instance
++ * @ipc_mux:	Pointer to the MUX instance.
++ */
++void ipc_mux_deinit(struct iosm_mux *ipc_mux);
++
++/**
++ * ipc_mux_check_n_restart_tx - Checks for pending UL date bytes and then
++ *				it restarts the net interface tx queue if
++ *				device has set flow control as off.
++ * @ipc_mux:	Pointer to MUX data-struct
++ */
++void ipc_mux_check_n_restart_tx(struct iosm_mux *ipc_mux);
++
++/**
++ * ipc_mux_get_active_protocol - Returns the active MUX protocol type.
++ * @ipc_mux:	Pointer to MUX data-struct
 + *
-+ * Return: channel instance on success, NULL for failure
++ * Returns: enum of type ipc_mux_protocol
 + */
-+struct ipc_mem_channel *imem_sys_mbim_open(struct iosm_imem *ipc_imem);
++enum ipc_mux_protocol ipc_mux_get_active_protocol(struct iosm_mux *ipc_mux);
 +
 +/**
-+ * imem_sys_sio_close - Release a sio link to CP.
-+ * @ipc_sio:		iosm sio instance.
-+ */
-+void imem_sys_sio_close(struct iosm_sio *ipc_sio);
-+
-+/**
-+ * imem_sys_sio_read - Copy the rx data to the user space buffer and free the
-+ *		       skbuf.
-+ * @ipc_sio:	Pointer to iosm_sio structi.
-+ * @buf:	Pointer to destination buffer.
-+ * @size:	Size of destination buffer.
-+ * @skb:	Pointer to source buffer.
++ * ipc_mux_open_session - Opens a MUX session for IP traffic.
++ * @ipc_mux:	Pointer to MUX data-struct
++ * @session_nr:	Interface ID or session number
 + *
-+ * Return: Number of bytes read, -EFAULT and -EINVAL for failure
++ * Returns: channel id on success, -1 on failure
 + */
-+ssize_t imem_sys_sio_read(struct iosm_sio *ipc_sio, unsigned char __user *buf,
-+			  size_t size, struct sk_buff *skb);
++int ipc_mux_open_session(struct iosm_mux *ipc_mux, int session_nr);
 +
 +/**
-+ * imem_sys_sio_write - Route the uplink buffer to CP.
-+ * @ipc_sio:		iosm_sio instance.
-+ * @buf:		Pointer to source buffer.
-+ * @count:		Number of data bytes to write.
-+ * @blocking_write:	if true wait for UL data completion.
++ * ipc_mux_close_session - Closes a MUX session.
++ * @ipc_mux:	Pointer to MUX data-struct
++ * @session_nr:	Interface ID or session number
 + *
-+ * Return: Number of bytes read, -EINVAL and -1  for failure
++ * Returns: channel id on success, -1 on failure
 + */
-+int imem_sys_sio_write(struct iosm_sio *ipc_sio,
-+		       const unsigned char __user *buf, int count,
-+		       bool blocking_write);
++int ipc_mux_close_session(struct iosm_mux *ipc_mux, int session_nr);
 +
 +/**
-+ * imem_sys_sio_receive - Receive downlink characters from CP, the downlink
-+ *		skbuf is added at the end of the downlink or rx list.
-+ * @ipc_sio:    Pointer to ipc char data-struct
-+ * @skb:        Pointer to sk buffer
++ * ipc_mux_get_max_sessions - Retuns the maximum sessions supported on the
++ *			      provided MUX instance..
++ * @ipc_mux:	Pointer to MUX data-struct
 + *
-+ * Returns: 0 on success, -EINVAL on failure
++ * Returns: Number of sessions supported on Success and -1 on failure
 + */
-+int imem_sys_sio_receive(struct iosm_sio *ipc_sio, struct sk_buff *skb);
-+
-+/**
-+ * imem_sys_wwan_open - Open packet data online channel between network layer
-+ *			and CP.
-+ * @ipc_imem:		Imem instance.
-+ * @vlan_id:		VLAN tag of the VLAN device.
-+ *
-+ * Return: Channel ID on success, -1 on failure
-+ */
-+int imem_sys_wwan_open(struct iosm_imem *ipc_imem, int vlan_id);
-+
-+/**
-+ * imem_sys_wwan_close - Close packet data online channel between network layer
-+ *			 and CP.
-+ * @ipc_imem:		Imem instance.
-+ * @vlan_id:		VLAN tag of the VLAN device.
-+ * @channel_id:		Channel ID to be closed.
-+ */
-+void imem_sys_wwan_close(struct iosm_imem *ipc_imem, int vlan_id,
-+			 int channel_id);
-+
-+/**
-+ * imem_sys_wwan_transmit - Function for transfer UL data
-+ * @ipc_imem:		Imem instance.
-+ * @vlan_id:		VLAN tag of the VLAN device.
-+ * @channel_id:		Channel ID used
-+ * @skb:		Pointer to sk buffer
-+ *
-+ * Return: 0 on success, negative value on failure
-+ */
-+int imem_sys_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
-+			   int channel_id, struct sk_buff *skb);
-+/**
-+ * wwan_channel_init - Initializes WWAN channels and the channel for MUX.
-+ * @ipc_imem:		Pointer to iosm_imem struct.
-+ * @total_sessions:	Total sessions.
-+ * @mux_type:		Type of mux protocol.
-+ */
-+void wwan_channel_init(struct iosm_imem *ipc_imem, int total_sessions,
-+		       enum ipc_mux_protocol mux_type);
++int ipc_mux_get_max_sessions(struct iosm_mux *ipc_mux);
 +#endif
 -- 
 2.12.3
