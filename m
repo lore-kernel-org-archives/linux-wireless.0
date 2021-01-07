@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E17CBC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25CCFC433DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB9FB233CF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E15A1233CF
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbhAGRHB (ORCPT
+        id S1728728AbhAGRGv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:07:01 -0500
-Received: from mga14.intel.com ([192.55.52.115]:53928 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728705AbhAGRGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 7 Jan 2021 12:06:51 -0500
-IronPort-SDR: N5ZaqAO0KcgIzCwGUVMk50oiyipUXEHqxTCEHgXbtxubKGtudx1uVx7MGBLqTF9ZHGB0kreBzp
- kgtmNPoHe4iw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176680913"
+Received: from mga11.intel.com ([192.55.52.93]:22136 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726319AbhAGRGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:06:50 -0500
+IronPort-SDR: 4ehpP3xb3hyqSPf/L9xQ+WTXtyqCNdPXFWy6jhVoLFO4qQmQru/ZNDWAwo1CvLC+KZynbHsIR6
+ B2AfIWMEIUTQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="173952008"
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="176680913"
+   d="scan'208";a="173952008"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:10 -0800
-IronPort-SDR: rt7FEuUbiMWWbDx6uph6jJDO0VmYE6WCa4b5R0J2OGGCrpHPw2MwO01KlUitTh+OmN+w0mfXVi
- AEVSRzXb2pxg==
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:01 -0800
+IronPort-SDR: MMvr2Jyds40HFW4PyYhiKH620o+viK3J3G6+MF4ogbyD/y+xm8rhKrPfjWhK/prCoa0ZZW3Px4
+ Epb35F5pp+0A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="422643835"
+   d="scan'208";a="422643769"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:05 -0800
+  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:05:59 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [PATCH 07/18] net: iosm: char device for FW flash & coredump
-Date:   Thu,  7 Jan 2021 22:35:12 +0530
-Message-Id: <20210107170523.26531-8-m.chetan.kumar@intel.com>
+Subject: [PATCH 05/18] net: iosm: shared memory I/O operations
+Date:   Thu,  7 Jan 2021 22:35:10 +0530
+Message-Id: <20210107170523.26531-6-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210107170523.26531-1-m.chetan.kumar@intel.com>
 References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
@@ -48,372 +48,926 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Implements a char device for flashing Modem FW image while Device
-is in boot rom phase and for collecting traces on modem crash.
+1) Binds logical channel between host-device for communication.
+2) Implements device specific(Char/Net) IO operations.
+3) Inject primary BootLoader FW image to modem.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
- drivers/net/wwan/iosm/iosm_ipc_sio.c | 266 +++++++++++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_sio.h |  78 ++++++++++
- 2 files changed, 344 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_sio.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_sio.h
+ drivers/net/wwan/iosm/iosm_ipc_imem_ops.c | 768 ++++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_imem_ops.h | 129 +++++
+ 2 files changed, 897 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_sio.c b/drivers/net/wwan/iosm/iosm_ipc_sio.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
 new file mode 100644
-index 000000000000..dfa7bff15c51
+index 000000000000..b6da96ca1332
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_sio.c
-@@ -0,0 +1,266 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.c
+@@ -0,0 +1,768 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#include <linux/poll.h>
-+#include <asm/ioctls.h>
++#include <linux/delay.h>
 +
++#include "iosm_ipc_chnl_cfg.h"
++#include "iosm_ipc_imem.h"
++#include "iosm_ipc_imem_ops.h"
 +#include "iosm_ipc_sio.h"
++#include "iosm_ipc_task_queue.h"
 +
-+static struct mutex sio_floc;		/* Mutex Lock for sio read */
-+static struct mutex sio_floc_wr;	/* Mutex Lock for sio write */
-+
-+/* Open a shared memory device and initialize the head of the rx skbuf list. */
-+static int ipc_sio_fop_open(struct inode *inode, struct file *filp)
++/* Open a packet data online channel between the network layer and CP. */
++int imem_sys_wwan_open(struct iosm_imem *ipc_imem, int vlan_id)
 +{
-+	struct iosm_sio *ipc_sio =
-+		container_of(filp->private_data, struct iosm_sio, misc);
++	dev_dbg(ipc_imem->dev, "%s[vlan id:%d]",
++		ipc_ap_phase_get_string(ipc_imem->phase), vlan_id);
 +
-+	struct iosm_sio_open_file *sio_op = kzalloc(sizeof(*sio_op),
-+						    GFP_KERNEL);
-+	if (!sio_op)
-+		return -ENOMEM;
++	/* The network interface is only supported in the runtime phase. */
++	if (imem_ap_phase_update(ipc_imem) != IPC_P_RUN) {
++		dev_err(ipc_imem->dev, "[net:%d]: refused phase %s", vlan_id,
++			ipc_ap_phase_get_string(ipc_imem->phase));
++		return -1;
++	}
 +
-+	if (test_and_set_bit(IS_OPEN, &ipc_sio->flag)) {
-+		kfree(sio_op);
++	/* check for the vlan tag
++	 * if tag 1 to 8 then create IP MUX channel sessions.
++	 * if tag 257 to 512 then create dss channel.
++	 * To start MUX session from 0 as vlan tag would start from 1
++	 * so map it to if_id = vlan_id - 1
++	 */
++	if (vlan_id > 0 && vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux)) {
++		return ipc_mux_open_session(ipc_imem->mux, vlan_id - 1);
++	} else if (vlan_id > 256 && vlan_id < 512) {
++		int ch_id =
++			imem_channel_alloc(ipc_imem, vlan_id, IPC_CTYPE_WWAN);
++
++		if (imem_channel_open(ipc_imem, ch_id, IPC_HP_NET_CHANNEL_INIT))
++			return ch_id;
++	}
++
++	return -1;
++}
++
++/* Release a net link to CP. */
++void imem_sys_wwan_close(struct iosm_imem *ipc_imem, int vlan_id,
++			 int channel_id)
++{
++	if (ipc_imem->mux && vlan_id > 0 &&
++	    vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux))
++		ipc_mux_close_session(ipc_imem->mux, vlan_id - 1);
++
++	else if ((vlan_id > 256 && vlan_id < 512))
++		imem_channel_close(ipc_imem, channel_id);
++}
++
++/* Tasklet call to do uplink transfer. */
++static int imem_tq_sio_write(struct iosm_imem *ipc_imem, int arg, void *msg,
++			     size_t size)
++{
++	ipc_imem->ev_sio_write_pending = false;
++	imem_ul_send(ipc_imem);
++
++	return 0;
++}
++
++/* Through tasklet to do sio write. */
++static bool imem_call_sio_write(struct iosm_imem *ipc_imem)
++{
++	if (ipc_imem->ev_sio_write_pending)
++		return false;
++
++	ipc_imem->ev_sio_write_pending = true;
++
++	return (!ipc_task_queue_send_task(ipc_imem, imem_tq_sio_write, 0, NULL,
++					  0, false));
++}
++
++/* Add skb to the ul list */
++static int imem_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
++			      int channel_id, struct sk_buff *skb)
++{
++	struct ipc_mem_channel *channel;
++
++	channel = &ipc_imem->channels[channel_id];
++
++	if (channel->state != IMEM_CHANNEL_ACTIVE) {
++		dev_err(ipc_imem->dev, "invalid state of channel %d",
++			channel_id);
++		return -1;
++	}
++
++	if (ipc_pcie_addr_map(ipc_imem->pcie, skb->data, skb->len,
++			      &IPC_CB(skb)->mapping, DMA_TO_DEVICE)) {
++		dev_err(ipc_imem->dev, "failed to map skb");
++		IPC_CB(skb)->direction = DMA_TO_DEVICE;
++		IPC_CB(skb)->len = skb->len;
++		IPC_CB(skb)->op_type = UL_DEFAULT;
++		return -1;
++	}
++
++	/* Add skb to the uplink skbuf accumulator */
++	skb_queue_tail(&channel->ul_list, skb);
++	imem_call_sio_write(ipc_imem);
++
++	return 0;
++}
++
++/* Function for transfer UL data */
++int imem_sys_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
++			   int channel_id, struct sk_buff *skb)
++{
++	int ret = -1;
++
++	if (!ipc_imem || channel_id < 0)
++		return -EINVAL;
++
++	/* Is CP Running? */
++	if (ipc_imem->phase != IPC_P_RUN) {
++		dev_dbg(ipc_imem->dev, "%s[transmit, vlanid:%d]",
++			ipc_ap_phase_get_string(ipc_imem->phase), vlan_id);
 +		return -EBUSY;
 +	}
 +
-+	ipc_sio->channel = imem_sys_sio_open(ipc_sio->ipc_imem);
-+
-+	if (!ipc_sio->channel) {
-+		kfree(sio_op);
-+		return -EIO;
++	if (ipc_imem->channels[channel_id].ctype == IPC_CTYPE_WWAN) {
++		if (vlan_id > 0 &&
++		    vlan_id <= ipc_mux_get_max_sessions(ipc_imem->mux))
++			/* Route the UL packet through IP MUX Layer */
++			ret = ipc_mux_ul_trigger_encode(ipc_imem->mux,
++							vlan_id - 1, skb);
++		/* Control channels and Low latency data channel for VoLTE*/
++		else if (vlan_id > 256 && vlan_id < 512)
++			ret = imem_wwan_transmit(ipc_imem, vlan_id, channel_id,
++						 skb);
++	} else {
++		dev_err(ipc_imem->dev,
++			"invalid channel type on channel %d: ctype: %d",
++			channel_id, ipc_imem->channels[channel_id].ctype);
 +	}
 +
-+	mutex_lock(&sio_floc);
-+
-+	inode->i_private = sio_op;
-+	ipc_sio->sio_fop = sio_op;
-+	sio_op->sio_dev = ipc_sio;
-+
-+	mutex_unlock(&sio_floc);
-+	return 0;
++	return ret;
 +}
 +
-+static int ipc_sio_fop_release(struct inode *inode, struct file *filp)
++void wwan_channel_init(struct iosm_imem *ipc_imem, int total_sessions,
++		       enum ipc_mux_protocol mux_type)
 +{
-+	struct iosm_sio_open_file *sio_op = inode->i_private;
++	struct ipc_chnl_cfg chnl_cfg = { 0 };
 +
-+	mutex_lock(&sio_floc);
++	ipc_imem->cp_version = ipc_mmio_get_cp_version(ipc_imem->mmio);
 +
-+	if (sio_op->sio_dev) {
-+		clear_bit(IS_OPEN, &sio_op->sio_dev->flag);
-+		imem_sys_sio_close(sio_op->sio_dev);
-+		sio_op->sio_dev->sio_fop = NULL;
++	/* If modem version is invalid (0xffffffff), do not initialize WWAN. */
++	if (ipc_imem->cp_version == -1) {
++		dev_err(ipc_imem->dev, "invalid CP version");
++		return;
 +	}
 +
-+	kfree(sio_op);
-+
-+	mutex_unlock(&sio_floc);
-+	return 0;
++	while (ipc_imem->nr_of_channels < IPC_MEM_MAX_CHANNELS &&
++	       !ipc_chnl_cfg_get(&chnl_cfg, ipc_imem->nr_of_channels)) {
++		imem_channel_init(ipc_imem, IPC_CTYPE_WWAN, chnl_cfg,
++				  IRQ_MOD_OFF);
++	}
++	/* WWAN registration. */
++	ipc_imem->wwan = ipc_wwan_init(ipc_imem, ipc_imem->dev, total_sessions);
++	if (!ipc_imem->wwan)
++		dev_err(ipc_imem->dev,
++			"failed to register the ipc_wwan interfaces");
 +}
 +
-+/* Copy the data from skbuff to the user buffer */
-+static ssize_t ipc_sio_fop_read(struct file *filp, char __user *buf,
-+				size_t size, loff_t *l)
++/* Copies the data from user space */
++static struct sk_buff *
++imem_sio_copy_from_user_to_skb(struct iosm_imem *ipc_imem, int channel_id,
++			       const unsigned char __user *buf, int size,
++			       int is_blocking)
 +{
-+	struct iosm_sio_open_file *sio_op = filp->f_inode->i_private;
-+	struct sk_buff *skb = NULL;
-+	struct iosm_sio *ipc_sio;
-+	ssize_t read_byt;
-+	int ret_err;
++	struct sk_buff *skb;
++	dma_addr_t mapping;
 +
-+	if (!buf) {
-+		ret_err = -EINVAL;
-+		goto err;
++	/* Allocate skb memory for the uplink buffer. */
++	skb = ipc_pcie_alloc_skb(ipc_imem->pcie, size, GFP_KERNEL, &mapping,
++				 DMA_TO_DEVICE, 0);
++	if (!skb)
++		return skb;
++
++	if (copy_from_user(skb_put(skb, size), buf, size) != 0) {
++		dev_err(ipc_imem->dev, "ch[%d]: copy from user failed",
++			channel_id);
++		ipc_pcie_kfree_skb(ipc_imem->pcie, skb);
++		return NULL;
 +	}
 +
-+	mutex_lock(&sio_floc);
++	IPC_CB(skb)->op_type =
++		(u8)(is_blocking ? UL_USR_OP_BLOCKED : UL_DEFAULT);
 +
-+	if (!sio_op->sio_dev) {
-+		ret_err = -EIO;
-+		goto err_free_lock;
++	return skb;
++}
++
++static int imem_psi_transfer(struct iosm_imem *ipc_imem,
++			     struct ipc_mem_channel *channel,
++			     const unsigned char __user *buf, int count)
++{
++	enum ipc_mem_exec_stage exec_stage = IPC_MEM_EXEC_STAGE_INVALID;
++	int psi_start_timeout = PSI_START_DEFAULT_TIMEOUT;
++	dma_addr_t mapping = 0;
++	int status;
++	void *dest_buf;
++
++	imem_hrtimer_stop(&ipc_imem->startup_timer);
++
++	/* Allocate the buffer for the PSI image. */
++	dest_buf = pci_alloc_consistent(ipc_imem->pcie->pci, count, &mapping);
++	if (!dest_buf) {
++		dev_err(ipc_imem->dev, "ch[%d] cannot allocate %d bytes",
++			channel->channel_id, count);
++		return -1;
 +	}
 +
-+	ipc_sio = sio_op->sio_dev;
-+
-+	if (!(filp->f_flags & O_NONBLOCK))
-+		set_bit(IS_BLOCKING, &ipc_sio->flag);
-+
-+	/* only log in blocking mode to reduce flooding the log */
-+	if (test_bit(IS_BLOCKING, &ipc_sio->flag))
-+		dev_dbg(ipc_sio->dev, "sio read chid[%d] size=%zu",
-+			ipc_sio->channel->channel_id, size);
-+
-+	/* First provide the pending skbuf to the user. */
-+	if (ipc_sio->rx_pending_buf) {
-+		skb = ipc_sio->rx_pending_buf;
-+		ipc_sio->rx_pending_buf = NULL;
++	/* Copy the PSI image from user to kernel space. */
++	if (copy_from_user(dest_buf, buf, count) != 0) {
++		dev_err(ipc_imem->dev, "ch[%d] copy from user failed",
++			channel->channel_id);
++		goto error;
 +	}
 +
-+	/* check skb is available in rx_list or wait for skb in case of
-+	 * blocking read
++	/* Save the PSI information for the CP ROM driver on the doorbell
++	 * scratchpad.
 +	 */
-+	while (!skb && !(skb = skb_dequeue(&ipc_sio->rx_list))) {
-+		if (!test_bit(IS_BLOCKING, &ipc_sio->flag)) {
-+			ret_err = -EAGAIN;
-+			goto err_free_lock;
-+		}
-+		/* Suspend the user app and wait a certain time for data
-+		 * from CP.
-+		 */
-+		wait_for_completion_interruptible_timeout
-+		(&ipc_sio->read_sem, msecs_to_jiffies(IPC_READ_TIMEOUT));
++	ipc_mmio_set_psi_addr_and_size(ipc_imem->mmio, mapping, count);
 +
-+		if (test_bit(IS_DEINIT, &ipc_sio->flag)) {
-+			ret_err = -EPERM;
-+			goto err_free_lock;
-+		}
++	/* Trigger the CP interrupt to process the PSI information. */
++	ipc_doorbell_fire(ipc_imem->pcie, 0, IPC_MEM_EXEC_STAGE_BOOT);
++	/* Suspend the flash app and wait for irq. */
++	status = wait_for_completion_interruptible_timeout
++			(&channel->ul_sem,
++			 msecs_to_jiffies(IPC_PSI_TRANSFER_TIMEOUT));
++
++	if (status <= 0) {
++		dev_err(ipc_imem->dev,
++			"ch[%d] timeout, failed PSI transfer to CP",
++			channel->channel_id);
++		ipc_uevent_send(ipc_imem->dev, UEVENT_MDM_TIMEOUT);
++		goto error;
 +	}
 +
-+	read_byt = imem_sys_sio_read(ipc_sio, buf, size, skb);
-+	mutex_unlock(&sio_floc);
-+	return read_byt;
++	/* CP should have copied the PSI image. */
++	pci_free_consistent(ipc_imem->pcie->pci, count, dest_buf, mapping);
 +
-+err_free_lock:
-+	mutex_unlock(&sio_floc);
-+err:
-+	return ret_err;
++	/* If the PSI download fails, return the CP boot ROM exit code to the
++	 * flash app received about the doorbell scratchpad.
++	 */
++	if (ipc_imem->rom_exit_code != IMEM_ROM_EXIT_OPEN_EXT &&
++	    ipc_imem->rom_exit_code != IMEM_ROM_EXIT_CERT_EXT)
++		return (-1) * ((int)ipc_imem->rom_exit_code);
++
++	dev_dbg(ipc_imem->dev, "PSI image successfully downloaded");
++
++	/* Wait psi_start_timeout milliseconds until the CP PSI image is
++	 * running and updates the execution_stage field with
++	 * IPC_MEM_EXEC_STAGE_PSI. Verify the execution stage.
++	 */
++	do {
++		exec_stage = ipc_mmio_get_exec_stage(ipc_imem->mmio);
++
++		if (exec_stage == IPC_MEM_EXEC_STAGE_PSI)
++			break;
++
++		msleep(20);
++		psi_start_timeout -= 20;
++	} while (psi_start_timeout > 0);
++
++	if (exec_stage != IPC_MEM_EXEC_STAGE_PSI)
++		return -1; /* Unknown status of the CP PSI process. */
++
++	/* Enter the PSI phase. */
++	dev_dbg(ipc_imem->dev, "execution_stage[%X] eq. PSI", exec_stage);
++
++	ipc_imem->phase = IPC_P_PSI;
++
++	/* Request the RUNNING state from CP and wait until it was reached
++	 * or timeout.
++	 */
++	imem_ipc_init_check(ipc_imem);
++
++	/* Suspend the flash app, wait for irq and evaluate the CP IPC state. */
++	status = wait_for_completion_interruptible_timeout
++		 (&channel->ul_sem, msecs_to_jiffies(IPC_PSI_TRANSFER_TIMEOUT));
++	if (status <= 0) {
++		dev_err(ipc_imem->dev,
++			"ch[%d] timeout, failed PSI RUNNING state on CP",
++			channel->channel_id);
++		ipc_uevent_send(ipc_imem->dev, UEVENT_MDM_TIMEOUT);
++		return -1;
++	}
++
++	if (ipc_mmio_get_ipc_state(ipc_imem->mmio) !=
++	    IPC_MEM_DEVICE_IPC_RUNNING) {
++		dev_err(ipc_imem->dev,
++			"ch[%d] %s: unexpected CP IPC state %d, not RUNNING",
++			channel->channel_id,
++			ipc_ap_phase_get_string(ipc_imem->phase),
++			ipc_mmio_get_ipc_state(ipc_imem->mmio));
++
++		return -1;
++	}
++
++	/* Create the flash channel for the transfer of the images. */
++	if (!imem_sys_sio_open(ipc_imem)) {
++		dev_err(ipc_imem->dev, "can't open flash_channel");
++		return -1;
++	}
++
++	/* Inform the flash app that the PSI was sent and start on CP.
++	 * The flash app shall wait for the CP status in blocking read
++	 * entry point.
++	 */
++	return count;
++error:
++	pci_free_consistent(ipc_imem->pcie->pci, count, dest_buf, mapping);
++
++	return -1;
 +}
 +
-+/* Route the user data to the shared memory layer. */
-+static ssize_t ipc_sio_fop_write(struct file *filp, const char __user *buf,
-+				 size_t size, loff_t *l)
++/* Get the write active channel */
++static struct ipc_mem_channel *
++imem_sio_write_channel(struct iosm_imem *ipc_imem,
++		       struct ipc_mem_channel *channel,
++		       const unsigned char __user *buf, int size)
 +{
-+	struct iosm_sio_open_file *sio_op = filp->f_inode->i_private;
-+	struct iosm_sio *ipc_sio;
-+	bool is_blocking;
-+	ssize_t write_byt;
-+	int ret_err;
++	enum ipc_phase phase;
 +
-+	if (!buf) {
-+		ret_err = -EINVAL;
++	if (size <= 0) {
++		dev_err(ipc_imem->dev, "invalid buff size");
++		return NULL;
++	}
++
++	/* Update the current operation phase. */
++	phase = ipc_imem->phase;
++
++	/* Select the operation depending on the execution stage. */
++	switch (phase) {
++	case IPC_P_RUN:
++	case IPC_P_PSI:
++	case IPC_P_EBL:
++		break;
++
++	case IPC_P_ROM:
++		/* Prepare the PSI image for the CP ROM driver and
++		 * suspend the flash app.
++		 */
++		if (channel->state != IMEM_CHANNEL_RESERVED) {
++			dev_err(ipc_imem->dev,
++				"ch[%d]:invalid channel state %d,expected %d",
++				channel->channel_id, channel->state,
++				IMEM_CHANNEL_RESERVED);
++			return NULL;
++		}
++		return channel;
++
++	default:
++		/* Ignore uplink actions in all other phases. */
++		dev_err(ipc_imem->dev, "ch[%d]: confused phase %d",
++			channel->channel_id, phase);
++		return NULL;
++	}
++
++	/* Check the full availability of the channel. */
++	if (channel->state != IMEM_CHANNEL_ACTIVE) {
++		dev_err(ipc_imem->dev, "ch[%d]: confused channel state %d",
++			channel->channel_id, channel->state);
++		return NULL;
++	}
++
++	return channel;
++}
++
++/* Release a sio link to CP. */
++void imem_sys_sio_close(struct iosm_sio *ipc_sio)
++{
++	struct iosm_imem *ipc_imem = ipc_sio->ipc_imem;
++	struct ipc_mem_channel *channel = ipc_sio->channel;
++	enum ipc_phase curr_phase;
++	int boot_check_timeout = 0;
++	int status = 0;
++	u32 tail = 0;
++
++	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID)
++		boot_check_timeout = BOOT_CHECK_DEFAULT_TIMEOUT;
++
++	curr_phase = ipc_imem->phase;
++
++	/* If current phase is IPC_P_OFF or SIO ID is -ve then
++	 * channel is already freed. Nothing to do.
++	 */
++	if (curr_phase == IPC_P_OFF || channel->sio_id < 0) {
++		dev_err(ipc_imem->dev,
++			"nothing to do. Current Phase: %s SIO ID: %d",
++			ipc_ap_phase_get_string(curr_phase), channel->sio_id);
++		return;
++	}
++
++	if (channel->state == IMEM_CHANNEL_FREE) {
++		dev_err(ipc_imem->dev, "ch[%d]: invalid channel state %d",
++			channel->channel_id, channel->state);
++		return;
++	}
++	/* Free only the channel id in the CP power off mode. */
++	if (channel->state == IMEM_CHANNEL_RESERVED) {
++		imem_channel_free(channel);
++		return;
++	}
++
++	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID &&
++	    ipc_imem->flash_channel_id >= 0) {
++		int i;
++		enum ipc_mem_exec_stage exec_stage;
++
++		/* Increase the total wait time to boot_check_timeout */
++		for (i = 0; i < boot_check_timeout; i++) {
++			/* user space can terminate either the modem is finished
++			 * with Downloading or finished transferring Coredump.
++			 */
++			exec_stage = ipc_mmio_get_exec_stage(ipc_imem->mmio);
++			if (exec_stage == IPC_MEM_EXEC_STAGE_RUN ||
++			    exec_stage == IPC_MEM_EXEC_STAGE_PSI)
++				break;
++
++			msleep(20);
++		}
++
++		msleep(100);
++	}
++	/* If there are any pending TDs then wait for Timeout/Completion before
++	 * closing pipe.
++	 */
++	if (channel->ul_pipe.old_tail != channel->ul_pipe.old_head) {
++		ipc_imem->app_notify_ul_pend = 1;
++
++		/* Suspend the user app and wait a certain time for processing
++		 * UL Data.
++		 */
++		status = wait_for_completion_interruptible_timeout
++			 (&ipc_imem->ul_pend_sem,
++			  msecs_to_jiffies(IPC_PEND_DATA_TIMEOUT));
++		if (status == 0) {
++			dev_dbg(ipc_imem->dev,
++				"Pending data Timeout on UL-Pipe:%d Head:%d Tail:%d",
++				channel->ul_pipe.pipe_nr,
++				channel->ul_pipe.old_head,
++				channel->ul_pipe.old_tail);
++		}
++
++		ipc_imem->app_notify_ul_pend = 0;
++	}
++
++	/* If there are any pending TDs then wait for Timeout/Completion before
++	 * closing pipe.
++	 */
++	ipc_protocol_get_head_tail_index(ipc_imem->ipc_protocol,
++					 &channel->dl_pipe, NULL, &tail);
++
++	if (tail != channel->dl_pipe.old_tail) {
++		ipc_imem->app_notify_dl_pend = 1;
++
++		/* Suspend the user app and wait a certain time for processing
++		 * DL Data.
++		 */
++		status = wait_for_completion_interruptible_timeout
++			 (&ipc_imem->dl_pend_sem,
++			  msecs_to_jiffies(IPC_PEND_DATA_TIMEOUT));
++		if (status == 0) {
++			dev_dbg(ipc_imem->dev,
++				"Pending data Timeout on DL-Pipe:%d Head:%d Tail:%d",
++				channel->dl_pipe.pipe_nr,
++				channel->dl_pipe.old_head,
++				channel->dl_pipe.old_tail);
++		}
++
++		ipc_imem->app_notify_dl_pend = 0;
++	}
++
++	/* Due to wait for completion in messages, there is a small window
++	 * between closing the pipe and updating the channel is closed. In this
++	 * small window there could be HP update from Host Driver. Hence update
++	 * the channel state as CLOSING to aviod unnecessary interrupt
++	 * towards CP.
++	 */
++	channel->state = IMEM_CHANNEL_CLOSING;
++
++	/* Release the pipe resources */
++	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID &&
++	    ipc_imem->flash_channel_id != -1) {
++		/* don't send close for software download pipes, as
++		 * the device is already rebooting
++		 */
++		imem_pipe_cleanup(ipc_imem, &channel->ul_pipe);
++		imem_pipe_cleanup(ipc_imem, &channel->dl_pipe);
++	} else {
++		imem_pipe_close(ipc_imem, &channel->ul_pipe);
++		imem_pipe_close(ipc_imem, &channel->dl_pipe);
++	}
++
++	imem_channel_free(channel);
++
++	if (channel->channel_id != IPC_MEM_MBIM_CTRL_CH_ID)
++		/* Reset the global flash channel id. */
++		ipc_imem->flash_channel_id = -1;
++}
++
++/* Open a MBIM link to CP and return the channel */
++struct ipc_mem_channel *imem_sys_mbim_open(struct iosm_imem *ipc_imem)
++{
++	int ch_id;
++	struct ipc_mem_channel *channel;
++
++	/* The MBIM interface is only supported in the runtime phase. */
++	if (imem_ap_phase_update(ipc_imem) != IPC_P_RUN) {
++		dev_err(ipc_imem->dev, "MBIM open refused, phase %s",
++			ipc_ap_phase_get_string(ipc_imem->phase));
++		return NULL;
++	}
++
++	ch_id = imem_channel_alloc(ipc_imem, IPC_MEM_MBIM_CTRL_CH_ID,
++				   IPC_CTYPE_MBIM);
++
++	if (ch_id < 0) {
++		dev_err(ipc_imem->dev, "reservation of an MBIM chnl id failed");
++		return NULL;
++	}
++
++	channel = imem_channel_open(ipc_imem, ch_id, IPC_HP_SIO_OPEN);
++
++	if (!channel) {
++		dev_err(ipc_imem->dev, "MBIM channel id open failed");
++		return NULL;
++	}
++
++	return channel;
++}
++
++/* Open a SIO link to CP and return the channel id. */
++struct ipc_mem_channel *imem_sys_sio_open(struct iosm_imem *ipc_imem)
++{
++	struct ipc_chnl_cfg chnl_cfg = { 0 };
++	enum ipc_phase phase;
++	int channel_id;
++	struct ipc_mem_channel *channel;
++
++	phase = imem_ap_phase_update(ipc_imem);
++
++	/* The control link to CP is only supported in the power off, psi or
++	 * run phase.
++	 */
++	switch (phase) {
++	case IPC_P_OFF:
++	case IPC_P_ROM:
++		/* Get a channel id as flash id and reserve it. */
++		channel_id = imem_channel_alloc(ipc_imem, IPC_MEM_FLASH_CH_ID,
++						IPC_CTYPE_FLASH);
++		if (channel_id < 0) {
++			dev_err(ipc_imem->dev,
++				"reservation of a flash channel id failed");
++			return NULL;
++		}
++
++		/* Enqueue chip info data to be read */
++		if (imem_trigger_chip_info(ipc_imem)) {
++			imem_channel_close(ipc_imem, channel_id);
++			return NULL;
++		}
++
++		/* Save the flash channel id to execute the ROM interworking. */
++		ipc_imem->flash_channel_id = channel_id;
++
++		channel = &ipc_imem->channels[channel_id];
++		return channel;
++
++	case IPC_P_PSI:
++	case IPC_P_EBL:
++		/* The channel id used as flash id shall be already
++		 * present as reserved.
++		 */
++		if (ipc_imem->flash_channel_id < 0) {
++			dev_err(ipc_imem->dev,
++				"missing a valid flash channel id");
++			return NULL;
++		}
++		channel_id = ipc_imem->flash_channel_id;
++
++		ipc_imem->cp_version = ipc_mmio_get_cp_version(ipc_imem->mmio);
++		if (ipc_imem->cp_version == -1) {
++			dev_err(ipc_imem->dev, "invalid CP version");
++			return NULL;
++		}
++
++		/* PSI may have changed the CP version field, which may
++		 * result in a different channel configuration.
++		 * Fetch and update the flash channel config
++		 */
++		if (ipc_chnl_cfg_get(&chnl_cfg, ipc_imem->flash_channel_id)) {
++			dev_err(ipc_imem->dev,
++				"failed to get flash pipe configuration");
++			return NULL;
++		}
++
++		ipc_imem_channel_update(ipc_imem, channel_id, chnl_cfg,
++					IRQ_MOD_OFF);
++
++		channel = imem_channel_open(ipc_imem, channel_id,
++					    IPC_HP_SIO_OPEN);
++		if (!channel)
++			return NULL;
++
++		return channel;
++
++	default:
++		/* CP is in the wrong state (e.g. CRASH or CD_READY) */
++		dev_err(ipc_imem->dev, "SIO open refused, phase %d", phase);
++		return NULL;
++	}
++}
++
++ssize_t imem_sys_sio_read(struct iosm_sio *ipc_sio, unsigned char __user *buf,
++			  size_t size, struct sk_buff *skb)
++{
++	unsigned char __user *dest_buf, *dest_end;
++	size_t dest_len, src_len, copied_b = 0;
++	unsigned char *src_buf;
++
++	/* Prepare the destination space. */
++	dest_buf = buf;
++	dest_end = dest_buf + size;
++
++	/* Copy the accumulated rx packets. */
++	while (skb) {
++		/* Prepare the source elements. */
++		src_buf = skb->data;
++		src_len = skb->len;
++
++		/* Calculate the current size of the destination buffer. */
++		dest_len = dest_end - dest_buf;
++
++		/* Compute the number of bytes to copy. */
++		copied_b = (dest_len < src_len) ? dest_len : src_len;
++
++		/* Copy the chars into the user space buffer. */
++		if (copy_to_user((void __user *)dest_buf, src_buf, copied_b) !=
++		    0) {
++			dev_err(ipc_sio->dev,
++				"chid[%d] userspace copy failed n=%zu\n",
++				ipc_sio->channel->channel_id, copied_b);
++			ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
++			return -EFAULT;
++		}
++
++		/* Update the source elements. */
++		skb->data = src_buf + copied_b;
++		skb->len = skb->len - copied_b;
++
++		/* Update the desctination pointer. */
++		dest_buf += copied_b;
++
++		/* Test the fill level of the user buffer. */
++		if (dest_buf >= dest_end) {
++			/* Free the consumed skbuf or save the pending skbuf
++			 * to consume it in the read call.
++			 */
++			if (skb->len == 0)
++				ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
++			else
++				ipc_sio->rx_pending_buf = skb;
++
++			/* Return the number of saved chars. */
++			break;
++		}
++
++		/* Free the consumed skbuf. */
++		ipc_pcie_kfree_skb(ipc_sio->pcie, skb);
++
++		/* Get the next skbuf element. */
++		skb = skb_dequeue(&ipc_sio->rx_list);
++	}
++
++	/* Return the number of saved chars. */
++	copied_b = dest_buf - buf;
++	return copied_b;
++}
++
++int imem_sys_sio_write(struct iosm_sio *ipc_sio,
++		       const unsigned char __user *buf, int count,
++		       bool blocking_write)
++{
++	struct iosm_imem *ipc_imem = ipc_sio->ipc_imem;
++	struct ipc_mem_channel *channel = ipc_sio->channel;
++	struct sk_buff *skb;
++	int ret = -1;
++
++	set_bit(WRITE_IN_USE, &ipc_sio->flag);
++	/* Applying memory barrier so that ipc_sio->flag is updated
++	 * before being read
++	 */
++	smp_mb__after_atomic();
++
++	channel = imem_sio_write_channel(ipc_imem, channel, buf, count);
++
++	if (!channel || ipc_imem->phase == IPC_P_OFF_REQ)
++		goto err;
++
++	/* In the ROM phase the PSI image is passed to CP about a specific
++	 * shared memory area and doorbell scratchpad directly.
++	 */
++	if (ipc_imem->phase == IPC_P_ROM) {
++		ret = imem_psi_transfer(ipc_imem, channel, buf, count);
++
++		/* If the PSI transfer fails then send crash
++		 * Signature.
++		 */
++		if (ret > 0)
++			imem_msg_send_feature_set(ipc_imem,
++						  IPC_MEM_INBAND_CRASH_SIG,
++						  false);
 +		goto err;
 +	}
 +
-+	mutex_lock(&sio_floc_wr);
-+	if (!sio_op->sio_dev) {
-+		ret_err = -EIO;
-+		goto err_free_lock;
-+	}
++	/* Allocate skb memory for the uplink buffer.*/
++	skb = imem_sio_copy_from_user_to_skb(ipc_imem, channel->channel_id, buf,
++					     count, blocking_write);
++	if (!skb)
++		goto err;
 +
-+	ipc_sio = sio_op->sio_dev;
++	/* Add skb to the uplink skbuf accumulator. */
++	skb_queue_tail(&channel->ul_list, skb);
 +
-+	is_blocking = !(filp->f_flags & O_NONBLOCK);
-+	if (!is_blocking) {
-+		if (test_bit(WRITE_IN_USE, &ipc_sio->flag)) {
-+			ret_err = -EAGAIN;
-+			goto err_free_lock;
++	/* Inform the IPC tasklet to pass uplink IP packets to CP.
++	 * Blocking write waits for UL completion notification,
++	 * non-blocking write simply returns the count.
++	 */
++	if (imem_call_sio_write(ipc_imem) && blocking_write) {
++		/* Suspend the app and wait for UL data completion. */
++		ret = wait_for_completion_interruptible(&channel->ul_sem);
++
++		if (ret < 0) {
++			dev_err(ipc_imem->dev,
++				"ch[%d] no CP confirmation, status=%d",
++				channel->channel_id, ret);
++			goto err;
 +		}
 +	}
-+
-+	write_byt =  imem_sys_sio_write(ipc_sio, buf, size, is_blocking);
-+	mutex_unlock(&sio_floc_wr);
-+	return write_byt;
-+
-+err_free_lock:
-+	mutex_unlock(&sio_floc_wr);
++	ret = count;
 +err:
-+	return ret_err;
++	clear_bit(WRITE_IN_USE, &ipc_sio->flag);
++	/* Applying memory barrier so that ipc_sio->flag is updated
++	 * before being read
++	 */
++	smp_mb__after_atomic();
++	return ret;
 +}
 +
-+/* poll for applications using nonblocking I/O */
-+static __poll_t ipc_sio_fop_poll(struct file *filp, poll_table *wait)
++int imem_sys_sio_receive(struct iosm_sio *ipc_sio, struct sk_buff *skb)
 +{
-+	struct iosm_sio *ipc_sio =
-+		container_of(filp->private_data, struct iosm_sio, misc);
-+	__poll_t mask = 0;
++	skb_queue_tail((&ipc_sio->rx_list), skb);
 +
-+	/* Just registers wait_queue hook. This doesn't really wait. */
-+	poll_wait(filp, &ipc_sio->poll_inq, wait);
++	if (test_bit(IS_BLOCKING, &ipc_sio->flag))
++		complete(&ipc_sio->read_sem);
++	else if (!test_bit(IS_BLOCKING, &ipc_sio->flag))
++		wake_up_interruptible(&ipc_sio->poll_inq);
 +
-+	/* Test the fill level of the skbuf rx queue. */
-+	if (!skb_queue_empty(&ipc_sio->rx_list) || ipc_sio->rx_pending_buf)
-+		mask |= EPOLLIN | EPOLLRDNORM; /* readable */
-+
-+	if (!test_bit(WRITE_IN_USE, &ipc_sio->flag))
-+		mask |= EPOLLOUT | EPOLLWRNORM; /* writable */
-+
-+	return mask;
++	return 0;
 +}
-+
-+struct iosm_sio *ipc_sio_init(struct iosm_imem *ipc_imem, const char *name)
-+{
-+	static const struct file_operations fops = {
-+		.owner = THIS_MODULE,
-+		.open = ipc_sio_fop_open,
-+		.release = ipc_sio_fop_release,
-+		.read = ipc_sio_fop_read,
-+		.write = ipc_sio_fop_write,
-+		.poll = ipc_sio_fop_poll,
-+	};
-+
-+	struct iosm_sio *ipc_sio = kzalloc(sizeof(*ipc_sio), GFP_KERNEL);
-+
-+	if (!ipc_sio)
-+		return NULL;
-+
-+	ipc_sio->dev = ipc_imem->dev;
-+	ipc_sio->pcie = ipc_imem->pcie;
-+	ipc_sio->ipc_imem = ipc_imem;
-+
-+	mutex_init(&sio_floc);
-+	mutex_init(&sio_floc_wr);
-+	init_completion(&ipc_sio->read_sem);
-+
-+	skb_queue_head_init(&ipc_sio->rx_list);
-+	init_waitqueue_head(&ipc_sio->poll_inq);
-+
-+	strncpy(ipc_sio->devname, name, sizeof(ipc_sio->devname) - 1);
-+	ipc_sio->devname[IPC_SIO_DEVNAME_LEN - 1] = '\0';
-+
-+	ipc_sio->misc.minor = MISC_DYNAMIC_MINOR;
-+	ipc_sio->misc.name = ipc_sio->devname;
-+	ipc_sio->misc.fops = &fops;
-+	ipc_sio->misc.mode = IPC_CHAR_DEVICE_DEFAULT_MODE;
-+
-+	if (misc_register(&ipc_sio->misc) != 0) {
-+		kfree(ipc_sio);
-+		return NULL;
-+	}
-+
-+	return ipc_sio;
-+}
-+
-+void ipc_sio_deinit(struct iosm_sio *ipc_sio)
-+{
-+	if (ipc_sio) {
-+		misc_deregister(&ipc_sio->misc);
-+
-+		set_bit(IS_DEINIT, &ipc_sio->flag);
-+		/* Applying memory barrier so that ipc_sio->flag is updated
-+		 * before being read
-+		 */
-+		smp_mb__after_atomic();
-+		if (test_bit(IS_BLOCKING, &ipc_sio->flag)) {
-+			complete(&ipc_sio->read_sem);
-+			complete(&ipc_sio->channel->ul_sem);
-+		}
-+
-+		mutex_lock(&sio_floc);
-+		mutex_lock(&sio_floc_wr);
-+
-+		ipc_pcie_kfree_skb(ipc_sio->pcie, ipc_sio->rx_pending_buf);
-+		skb_queue_purge(&ipc_sio->rx_list);
-+
-+		if (ipc_sio->sio_fop)
-+			ipc_sio->sio_fop->sio_dev = NULL;
-+
-+		mutex_unlock(&sio_floc_wr);
-+		mutex_unlock(&sio_floc);
-+
-+		kfree(ipc_sio);
-+	}
-+}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_sio.h b/drivers/net/wwan/iosm/iosm_ipc_sio.h
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
 new file mode 100644
-index 000000000000..fedc14d5f3c2
+index 000000000000..75af9d838742
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_sio.h
-@@ -0,0 +1,78 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_imem_ops.h
+@@ -0,0 +1,129 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#ifndef IOSM_IPC_SIO_H
-+#define IOSM_IPC_SIO_H
++#ifndef IOSM_IPC_IMEM_OPS_H
++#define IOSM_IPC_IMEM_OPS_H
 +
-+#include <linux/miscdevice.h>
-+#include <linux/skbuff.h>
++#include "iosm_ipc_mux_codec.h"
 +
-+#include "iosm_ipc_imem_ops.h"
++/* Maximum length of the SIO device names */
++#define IPC_SIO_DEVNAME_LEN 32
 +
-+/* IPC char. device default mode. Only privileged user can access. */
-+#define IPC_CHAR_DEVICE_DEFAULT_MODE 0600
++/* Maximum wait time for blocking read */
++#define IPC_READ_TIMEOUT 500
 +
-+#define IS_OPEN 0
-+#define IS_BLOCKING 1
-+#define WRITE_IN_USE 2
-+#define IS_DEINIT 3
++/* The delay in ms for defering the unregister */
++#define SIO_UNREGISTER_DEFER_DELAY_MS 1
 +
-+/**
-+ * struct iosm_sio_open_file - Reference to struct iosm_sio
-+ * @sio_dev:	iosm_sio instance
++/* Default delay till CP PSI image is running and modem updates the
++ * execution stage.
++ * unit : milliseconds
 + */
-+struct iosm_sio_open_file {
-+	struct iosm_sio *sio_dev;
-+};
++#define PSI_START_DEFAULT_TIMEOUT 3000
 +
-+/**
-+ * struct iosm_sio - State of the char driver layer.
-+ * @misc:		OS misc device component
-+ * @sio_fop:		reference to iosm_sio structure
-+ * @ipc_imem:		imem instance
-+ * @dev:		Pointer to device struct
-+ * @pcie:		PCIe component
-+ * @rx_pending_buf:	Storage for skb when its data has not been fully read
-+ * @misc:		OS misc device component
-+ * @devname:		Device name
-+ * @channel:		Channel instance
-+ * @rx_list:		Downlink skbuf list received from CP.
-+ * @read_sem:		Needed for the blocking read or downlink transfer
-+ * @poll_inq:		Read queues to support the poll system call
-+ * @flag:		Flags to monitor state of device
-+ * @wmaxcommand:	Max buffer size
++/* Default time out when closing SIO, till the modem is in
++ * running state.
++ * unit : milliseconds
 + */
-+struct iosm_sio {
-+	struct miscdevice misc;
-+	struct iosm_sio_open_file *sio_fop;
-+	struct iosm_imem *ipc_imem;
-+	struct device *dev;
-+	struct iosm_pcie *pcie;
-+	struct sk_buff *rx_pending_buf;
-+	char devname[IPC_SIO_DEVNAME_LEN];
-+	struct ipc_mem_channel *channel;
-+	struct sk_buff_head rx_list;
-+	struct completion read_sem;
-+	wait_queue_head_t poll_inq;
-+	unsigned long flag;
-+	u16 wmaxcommand;
-+};
++#define BOOT_CHECK_DEFAULT_TIMEOUT 400
 +
 +/**
-+ * ipc_sio_init - Allocate and create a character device.
-+ * @ipc_imem:	Pointer to iosm_imem structure
-+ * @name:	Pointer to character device name
++ * imem_sys_sio_open - Open a sio link to CP.
++ * @ipc_imem:	Imem instance.
 + *
-+ * Returns: Pointer to sio instance on success and NULL on failure
++ * Return: channel instance on success, NULL for failure
 + */
-+struct iosm_sio *ipc_sio_init(struct iosm_imem *ipc_imem, const char *name);
++struct ipc_mem_channel *imem_sys_sio_open(struct iosm_imem *ipc_imem);
 +
 +/**
-+ * ipc_sio_deinit - Dellocate and free resource for a character device.
-+ * @ipc_sio:	Pointer to the ipc sio data-struct
++ * imem_sys_mbim_open - Open a mbim link to CP.
++ * @ipc_imem:	Imem instance.
++ *
++ * Return: channel instance on success, NULL for failure
 + */
-+void ipc_sio_deinit(struct iosm_sio *ipc_sio);
++struct ipc_mem_channel *imem_sys_mbim_open(struct iosm_imem *ipc_imem);
 +
++/**
++ * imem_sys_sio_close - Release a sio link to CP.
++ * @ipc_sio:		iosm sio instance.
++ */
++void imem_sys_sio_close(struct iosm_sio *ipc_sio);
++
++/**
++ * imem_sys_sio_read - Copy the rx data to the user space buffer and free the
++ *		       skbuf.
++ * @ipc_sio:	Pointer to iosm_sio structi.
++ * @buf:	Pointer to destination buffer.
++ * @size:	Size of destination buffer.
++ * @skb:	Pointer to source buffer.
++ *
++ * Return: Number of bytes read, -EFAULT and -EINVAL for failure
++ */
++ssize_t imem_sys_sio_read(struct iosm_sio *ipc_sio, unsigned char __user *buf,
++			  size_t size, struct sk_buff *skb);
++
++/**
++ * imem_sys_sio_write - Route the uplink buffer to CP.
++ * @ipc_sio:		iosm_sio instance.
++ * @buf:		Pointer to source buffer.
++ * @count:		Number of data bytes to write.
++ * @blocking_write:	if true wait for UL data completion.
++ *
++ * Return: Number of bytes read, -EINVAL and -1  for failure
++ */
++int imem_sys_sio_write(struct iosm_sio *ipc_sio,
++		       const unsigned char __user *buf, int count,
++		       bool blocking_write);
++
++/**
++ * imem_sys_sio_receive - Receive downlink characters from CP, the downlink
++ *		skbuf is added at the end of the downlink or rx list.
++ * @ipc_sio:    Pointer to ipc char data-struct
++ * @skb:        Pointer to sk buffer
++ *
++ * Returns: 0 on success, -EINVAL on failure
++ */
++int imem_sys_sio_receive(struct iosm_sio *ipc_sio, struct sk_buff *skb);
++
++/**
++ * imem_sys_wwan_open - Open packet data online channel between network layer
++ *			and CP.
++ * @ipc_imem:		Imem instance.
++ * @vlan_id:		VLAN tag of the VLAN device.
++ *
++ * Return: Channel ID on success, -1 on failure
++ */
++int imem_sys_wwan_open(struct iosm_imem *ipc_imem, int vlan_id);
++
++/**
++ * imem_sys_wwan_close - Close packet data online channel between network layer
++ *			 and CP.
++ * @ipc_imem:		Imem instance.
++ * @vlan_id:		VLAN tag of the VLAN device.
++ * @channel_id:		Channel ID to be closed.
++ */
++void imem_sys_wwan_close(struct iosm_imem *ipc_imem, int vlan_id,
++			 int channel_id);
++
++/**
++ * imem_sys_wwan_transmit - Function for transfer UL data
++ * @ipc_imem:		Imem instance.
++ * @vlan_id:		VLAN tag of the VLAN device.
++ * @channel_id:		Channel ID used
++ * @skb:		Pointer to sk buffer
++ *
++ * Return: 0 on success, negative value on failure
++ */
++int imem_sys_wwan_transmit(struct iosm_imem *ipc_imem, int vlan_id,
++			   int channel_id, struct sk_buff *skb);
++/**
++ * wwan_channel_init - Initializes WWAN channels and the channel for MUX.
++ * @ipc_imem:		Pointer to iosm_imem struct.
++ * @total_sessions:	Total sessions.
++ * @mux_type:		Type of mux protocol.
++ */
++void wwan_channel_init(struct iosm_imem *ipc_imem, int total_sessions,
++		       enum ipc_mux_protocol mux_type);
 +#endif
 -- 
 2.12.3
