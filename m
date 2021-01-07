@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 386E4C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D91C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0372233CE
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 387D4233CE
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729071AbhAGRH2 (ORCPT
+        id S1729097AbhAGRHl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:07:28 -0500
-Received: from mga14.intel.com ([192.55.52.115]:53939 "EHLO mga14.intel.com"
+        Thu, 7 Jan 2021 12:07:41 -0500
+Received: from mga14.intel.com ([192.55.52.115]:53928 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728705AbhAGRH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Jan 2021 12:07:26 -0500
-IronPort-SDR: vyzNuqbP+4jXY/sWhUMyO6MRhobVL4rYdT/mu6P8llr0cDEkBTejZhTzhPZP0ioSZbXiaZn0mb
- ogvjOTdMMgDA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176681030"
+        id S1728862AbhAGRHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:07:40 -0500
+IronPort-SDR: FHSpScGArtX4kQtWBJEqZNIkLBbwaldf+b9ukIpncKT4iY5316REWUDja2a4HM9oYY48Ec3FWR
+ cwYthRr1+gUg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176681048"
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="176681030"
+   d="scan'208";a="176681048"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:33 -0800
-IronPort-SDR: t1Qb3cuwDdofvbLORbPYchoc/AL6LcdeMW1MFt8cowcPhujvO4BNsDAT/23bL+pbfnf1xdJMJA
- eLtDAfiFVK9g==
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:39 -0800
+IronPort-SDR: sP9DGl8Ny7hZYV3A2IGHeD+jJLgBJRnWEep6sll7ksyHaV9x8Enq2HBvGEu/vraaBM+DMWF4XX
+ 3QwRef+AaKLg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="422643998"
+   d="scan'208";a="422644083"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:31 -0800
+  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:37 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [PATCH 14/18] net: iosm: protocol operations
-Date:   Thu,  7 Jan 2021 22:35:19 +0530
-Message-Id: <20210107170523.26531-15-m.chetan.kumar@intel.com>
+Subject: [PATCH 16/18] net: iosm: net driver
+Date:   Thu,  7 Jan 2021 22:35:21 +0530
+Message-Id: <20210107170523.26531-17-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210107170523.26531-1-m.chetan.kumar@intel.com>
 References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
@@ -48,1031 +48,750 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-1) Update UL/DL transfer descriptors in message ring.
-2) Define message set for pipe/sleep protocol.
+1) Create net device for data/IP communication.
+2) Bind VLAN ID to mux IP session.
+3) Implement net device operations.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
- drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c | 547 ++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h | 456 +++++++++++++++++++++
- 2 files changed, 1003 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h
+ drivers/net/wwan/iosm/iosm_ipc_wwan.c | 649 ++++++++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_wwan.h |  72 ++++
+ 2 files changed, 721 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_wwan.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_wwan.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c b/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_wwan.c b/drivers/net/wwan/iosm/iosm_ipc_wwan.c
 new file mode 100644
-index 000000000000..43f6aa4aa40d
+index 000000000000..b4c0e228f7a2
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.c
-@@ -0,0 +1,547 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_wwan.c
+@@ -0,0 +1,649 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#include "iosm_ipc_protocol.h"
-+#include "iosm_ipc_protocol_ops.h"
++#include <linux/if_vlan.h>
 +
-+/* Get the next free message element.*/
-+static union ipc_mem_msg_entry *
-+ipc_protocol_free_msg_get(struct iosm_protocol *ipc_protocol, int *index)
-+{
-+	u32 head = ipc_protocol->p_ap_shm->msg_head;
-+	u32 new_head = (head + 1) % IPC_MEM_MSG_ENTRIES;
-+	union ipc_mem_msg_entry *msg;
++#include "iosm_ipc_chnl_cfg.h"
++#include "iosm_ipc_imem_ops.h"
 +
-+	if (new_head == ipc_protocol->p_ap_shm->msg_tail) {
-+		dev_err(ipc_protocol->dev, "message ring is full");
-+		return NULL;
-+	}
++/* Minimum number of transmit queues per WWAN root device */
++#define WWAN_MIN_TXQ (1)
++/* Minimum number of receive queues per WWAN root device */
++#define WWAN_MAX_RXQ (1)
++/* Default transmit queue for WWAN root device */
++#define WWAN_DEFAULT_TXQ (0)
++/* VLAN tag for WWAN root device */
++#define WWAN_ROOT_VLAN_TAG (0)
 +
-+	/* Get the pointer to the next free message element,
-+	 * reset the fields and mark is as invalid.
-+	 */
-+	msg = &ipc_protocol->p_ap_shm->msg_ring[head];
-+	memset(msg, 0, sizeof(*msg));
++#define IPC_MEM_MIN_MTU_SIZE (68)
++#define IPC_MEM_MAX_MTU_SIZE (1024 * 1024)
 +
-+	/* return index in message ring */
-+	*index = head;
++#define IPC_MEM_VLAN_TO_SESSION (1)
 +
-+	return msg;
-+}
++/* Required alignment for TX in bytes (32 bit/4 bytes)*/
++#define IPC_WWAN_ALIGN (4)
 +
-+/* Updates the message ring Head pointer */
-+void ipc_protocol_msg_hp_update(struct iosm_imem *ipc_imem)
-+{
-+	struct iosm_protocol *ipc_protocol = ipc_imem->ipc_protocol;
-+	u32 head = ipc_protocol->p_ap_shm->msg_head;
-+	u32 new_head = (head + 1) % IPC_MEM_MSG_ENTRIES;
-+
-+	/* Update head pointer and fire doorbell. */
-+	ipc_protocol->p_ap_shm->msg_head = new_head;
-+	ipc_protocol->old_msg_tail = ipc_protocol->p_ap_shm->msg_tail;
-+
-+	ipc_pm_signal_hpda_doorbell(ipc_protocol->pm, IPC_HP_MR, false);
-+}
-+
-+/* Allocate and prepare a OPEN_PIPE message.
-+ * This also allocates the memory for the new TDR structure and
-+ * updates the pipe structure referenced in the preparation arguments.
++/**
++ * struct ipc_vlan_info - This structure includes information about VLAN device.
++ * @vlan_id:	VLAN tag of the VLAN device.
++ * @ch_id:	IPC channel number for which VLAN device is created.
++ * @stats:	Contains statistics of VLAN devices.
 + */
-+static int ipc_protocol_msg_prepipe_open(struct iosm_protocol *ipc_protocol,
-+					 union ipc_msg_prep_args *args)
++struct ipc_vlan_info {
++	int vlan_id;
++	int ch_id;
++	struct net_device_stats stats;
++};
++
++/**
++ * struct iosm_wwan - This structure contains information about WWAN root device
++ *		     and interface to the IPC layer.
++ * @vlan_devs:		Contains information about VLAN devices created under
++ *			WWAN root device.
++ * @netdev:		Pointer to network interface device structure.
++ * @ops_instance:	Instance pointer for Callbacks
++ * @dev:		Pointer device structure
++ * @lock:		Spinlock to be used for atomic operations of the
++ *			root device.
++ * @vlan_devs_nr:	Number of VLAN devices.
++ * @if_mutex:		Mutex used for add and remove vlan-id
++ * @max_devs:		Maximum supported VLAN devs
++ * @max_ip_devs:	Maximum supported IP VLAN devs
++ * @is_registered:	Registration status with netdev
++ */
++struct iosm_wwan {
++	struct ipc_vlan_info *vlan_devs;
++	struct net_device *netdev;
++	void *ops_instance;
++	struct device *dev;
++	spinlock_t lock; /* Used for atomic operations on root device */
++	int vlan_devs_nr;
++	struct mutex if_mutex; /* Mutex used for add and remove vlan-id */
++	int max_devs;
++	int max_ip_devs;
++	u8 is_registered : 1;
++};
++
++/* Get the array index of requested tag. */
++static int ipc_wwan_get_vlan_devs_nr(struct iosm_wwan *ipc_wwan, u16 tag)
 +{
-+	int index;
-+	union ipc_mem_msg_entry *msg =
-+		ipc_protocol_free_msg_get(ipc_protocol, &index);
-+	struct ipc_pipe *pipe = args->pipe_open.pipe;
-+	struct ipc_protocol_td *tdr;
-+	struct sk_buff **skbr;
-+
-+	if (!msg) {
-+		dev_err(ipc_protocol->dev, "failed to get free message");
-+		return -1;
-+	}
-+
-+	/* Allocate the skbuf elements for the skbuf which are on the way.
-+	 * SKB ring is internal memory allocation for driver. No need to
-+	 * re-calculate the start and end addresses.
-+	 */
-+	skbr = kcalloc(pipe->nr_of_entries, sizeof(*skbr), GFP_ATOMIC);
-+	if (!skbr)
-+		return -ENOMEM;
-+
-+	/* Allocate the transfer descriptors for the pipe. */
-+	tdr = pci_alloc_consistent(ipc_protocol->pcie->pci,
-+				   pipe->nr_of_entries * sizeof(*tdr),
-+				   &pipe->phy_tdr_start);
-+	if (!tdr) {
-+		kfree(skbr);
-+		dev_err(ipc_protocol->dev, "tdr alloc error");
-+		return -ENOMEM;
-+	}
-+
-+	pipe->max_nr_of_queued_entries = pipe->nr_of_entries - 1;
-+	pipe->nr_of_queued_entries = 0;
-+	pipe->tdr_start = tdr;
-+	pipe->skbr_start = skbr;
-+	pipe->old_tail = 0;
-+
-+	ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr] = 0;
-+
-+	msg->open_pipe.type_of_message = IPC_MEM_MSG_OPEN_PIPE;
-+	msg->open_pipe.pipe_nr = pipe->pipe_nr;
-+	msg->open_pipe.tdr_addr = pipe->phy_tdr_start;
-+	msg->open_pipe.tdr_entries = pipe->nr_of_entries;
-+	msg->open_pipe.interrupt_moderation = pipe->irq_moderation;
-+	msg->open_pipe.accumulation_backoff = pipe->accumulation_backoff;
-+	msg->open_pipe.reliable = true;
-+	msg->open_pipe.optimized_completion = true;
-+	msg->open_pipe.irq_vector = pipe->irq;
-+
-+	return index;
-+}
-+
-+static int ipc_protocol_msg_prepipe_close(struct iosm_protocol *ipc_protocol,
-+					  union ipc_msg_prep_args *args)
-+{
-+	int index = -1;
-+	union ipc_mem_msg_entry *msg =
-+		ipc_protocol_free_msg_get(ipc_protocol, &index);
-+	struct ipc_pipe *pipe = args->pipe_close.pipe;
-+
-+	if (!msg)
-+		return -1;
-+
-+	msg->close_pipe.type_of_message = IPC_MEM_MSG_CLOSE_PIPE;
-+	msg->close_pipe.pipe_nr = pipe->pipe_nr;
-+
-+	dev_dbg(ipc_protocol->dev, "IPC_MEM_MSG_CLOSE_PIPE(pipe_nr=%d)",
-+		msg->close_pipe.pipe_nr);
-+
-+	return index;
-+}
-+
-+static int ipc_protocol_msg_prep_sleep(struct iosm_protocol *ipc_protocol,
-+				       union ipc_msg_prep_args *args)
-+{
-+	int index = -1;
-+	union ipc_mem_msg_entry *msg =
-+		ipc_protocol_free_msg_get(ipc_protocol, &index);
-+
-+	if (!msg) {
-+		dev_err(ipc_protocol->dev, "failed to get free message");
-+		return -1;
-+	}
-+
-+	/* Prepare and send the host sleep message to CP to enter or exit D3. */
-+	msg->host_sleep.type_of_message = IPC_MEM_MSG_SLEEP;
-+	msg->host_sleep.target = args->sleep.target; /* 0=host, 1=device */
-+
-+	/* state; 0=enter, 1=exit 2=enter w/o protocol */
-+	msg->host_sleep.state = args->sleep.state;
-+
-+	dev_dbg(ipc_protocol->dev, "IPC_MEM_MSG_SLEEP(target=%d; state=%d)",
-+		msg->host_sleep.target, msg->host_sleep.state);
-+
-+	return index;
-+}
-+
-+static int ipc_protocol_msg_prep_feature_set(struct iosm_protocol *ipc_protocol,
-+					     union ipc_msg_prep_args *args)
-+{
-+	int index = -1;
-+	union ipc_mem_msg_entry *msg =
-+		ipc_protocol_free_msg_get(ipc_protocol, &index);
-+
-+	if (!msg) {
-+		dev_err(ipc_protocol->dev, "failed to get free message");
-+		return -1;
-+	}
-+
-+	msg->feature_set.type_of_message = IPC_MEM_MSG_FEATURE_SET;
-+	msg->feature_set.reset_enable = args->feature_set.reset_enable;
-+
-+	dev_dbg(ipc_protocol->dev, "IPC_MEM_MSG_FEATURE_SET(reset_enable=%d)",
-+		msg->feature_set.reset_enable);
-+
-+	return index;
-+}
-+
-+/* Processes the message consumed by CP. */
-+bool ipc_protocol_msg_process(struct iosm_imem *ipc_imem, int irq)
-+{
-+	struct iosm_protocol *ipc_protocol = ipc_imem->ipc_protocol;
-+	struct ipc_rsp **rsp_ring = ipc_protocol->rsp_ring;
-+	bool msg_processed = false;
 +	int i;
 +
-+	if (ipc_protocol->p_ap_shm->msg_tail >= IPC_MEM_MSG_ENTRIES) {
-+		dev_err(ipc_protocol->dev, "msg_tail out of range: %d",
-+			ipc_protocol->p_ap_shm->msg_tail);
-+		return msg_processed;
++	if (ipc_wwan->vlan_devs) {
++		for (i = 0; i < ipc_wwan->vlan_devs_nr; i++)
++			if (ipc_wwan->vlan_devs[i].vlan_id == tag)
++				return i;
 +	}
-+
-+	if (irq != IMEM_IRQ_DONT_CARE &&
-+	    irq != ipc_protocol->p_ap_shm->ci.msg_irq_vector)
-+		return msg_processed;
-+
-+	for (i = ipc_protocol->old_msg_tail;
-+	     i != ipc_protocol->p_ap_shm->msg_tail;
-+	     i = (i + 1) % IPC_MEM_MSG_ENTRIES) {
-+		union ipc_mem_msg_entry *msg =
-+			&ipc_protocol->p_ap_shm->msg_ring[i];
-+
-+		dev_dbg(ipc_protocol->dev, "msg[%d]: type=%u status=%d", i,
-+			msg->common.type_of_message,
-+			msg->common.completion_status);
-+
-+		/* Update response with status and wake up waiting requestor */
-+		if (rsp_ring[i]) {
-+			rsp_ring[i]->status =
-+				(enum ipc_mem_msg_cs)
-+					msg->common.completion_status;
-+			complete(&rsp_ring[i]->completion);
-+			rsp_ring[i] = NULL;
-+		}
-+		msg_processed = true;
-+	}
-+
-+	ipc_protocol->old_msg_tail = i;
-+	return msg_processed;
++	return -EINVAL;
 +}
 +
-+/* Sends data from UL list to CP for the provided pipe by updating the Head
-+ * pointer of given pipe.
-+ */
-+bool ipc_protocol_ul_td_send(struct iosm_protocol *ipc_protocol,
-+			     struct ipc_pipe *pipe,
-+			     struct sk_buff_head *p_ul_list)
++static int ipc_wwan_add_vlan(struct iosm_wwan *ipc_wwan, u16 vid)
 +{
-+	struct ipc_protocol_td *td;
-+	bool hpda_pending = false;
-+	struct sk_buff *skb;
-+	s32 free_elements;
-+	u32 head;
-+	u32 tail;
++	if (vid >= 512 || !ipc_wwan->vlan_devs)
++		return -EINVAL;
 +
-+	if (!ipc_protocol->p_ap_shm) {
-+		dev_err(ipc_protocol->dev, "driver is not initialized");
-+		return false;
++	if (vid == WWAN_ROOT_VLAN_TAG)
++		return 0;
++
++	mutex_lock(&ipc_wwan->if_mutex);
++
++	/* get channel id */
++	ipc_wwan->vlan_devs[ipc_wwan->vlan_devs_nr].ch_id =
++		imem_sys_wwan_open(ipc_wwan->ops_instance, vid);
++
++	if (ipc_wwan->vlan_devs[ipc_wwan->vlan_devs_nr].ch_id < 0) {
++		dev_err(ipc_wwan->dev,
++			"cannot connect wwan0 & id %d to the IPC mem layer",
++			vid);
++		mutex_unlock(&ipc_wwan->if_mutex);
++		return -ENODEV;
 +	}
 +
-+	/* Get head and tail of the td list and calculate
-+	 * the number of free elements.
-+	 */
-+	head = ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr];
-+	tail = pipe->old_tail;
++	/* save vlan id */
++	ipc_wwan->vlan_devs[ipc_wwan->vlan_devs_nr].vlan_id = vid;
 +
-+	while (!skb_queue_empty(p_ul_list)) {
-+		if (head < tail)
-+			free_elements = tail - head - 1;
++	dev_dbg(ipc_wwan->dev, "Channel id %d allocated to vlan id %d",
++		ipc_wwan->vlan_devs[ipc_wwan->vlan_devs_nr].ch_id,
++		ipc_wwan->vlan_devs[ipc_wwan->vlan_devs_nr].vlan_id);
++
++	ipc_wwan->vlan_devs_nr++;
++
++	mutex_unlock(&ipc_wwan->if_mutex);
++
++	return 0;
++}
++
++static int ipc_wwan_remove_vlan(struct iosm_wwan *ipc_wwan, u16 vid)
++{
++	int ch_nr = ipc_wwan_get_vlan_devs_nr(ipc_wwan, vid);
++	int i = 0;
++
++	if (ch_nr < 0) {
++		dev_err(ipc_wwan->dev, "vlan dev not found for vid = %d", vid);
++		return ch_nr;
++	}
++
++	if (ipc_wwan->vlan_devs[ch_nr].ch_id < 0) {
++		dev_err(ipc_wwan->dev, "invalid ch nr %d to kill", ch_nr);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ipc_wwan->if_mutex);
++
++	imem_sys_wwan_close(ipc_wwan->ops_instance, vid,
++			    ipc_wwan->vlan_devs[ch_nr].ch_id);
++
++	ipc_wwan->vlan_devs[ch_nr].ch_id = -1;
++
++	/* re-align the vlan information as we removed one tag */
++	for (i = ch_nr; i < ipc_wwan->vlan_devs_nr; i++)
++		memcpy(&ipc_wwan->vlan_devs[i], &ipc_wwan->vlan_devs[i + 1],
++		       sizeof(struct ipc_vlan_info));
++
++	ipc_wwan->vlan_devs_nr--;
++
++	mutex_unlock(&ipc_wwan->if_mutex);
++
++	return 0;
++}
++
++/* Checks the protocol and discards the Ethernet header or VLAN header
++ * accordingly.
++ */
++static int ipc_wwan_pull_header(struct sk_buff *skb, bool *is_ip)
++{
++	unsigned int header_size;
++	__be16 proto;
++
++	if (skb->protocol == htons(ETH_P_8021Q)) {
++		proto = vlan_eth_hdr(skb)->h_vlan_encapsulated_proto;
++
++		if (skb->len < VLAN_ETH_HLEN)
++			header_size = 0;
 +		else
-+			free_elements =
-+				pipe->nr_of_entries - head + ((s32)tail - 1);
++			header_size = VLAN_ETH_HLEN;
++	} else {
++		proto = eth_hdr(skb)->h_proto;
 +
-+		if (free_elements <= 0) {
-+			dev_dbg(ipc_protocol->dev,
-+				"no free td elements for UL pipe %d",
-+				pipe->pipe_nr);
-+			break;
-+		}
-+
-+		/* Get the td address. */
-+		td = &pipe->tdr_start[head];
-+
-+		/* Take the first element of the uplink list and add it
-+		 * to the td list.
-+		 */
-+		skb = skb_dequeue(p_ul_list);
-+		if (WARN_ON(!skb))
-+			break;
-+
-+		/* Save the reference to the uplink skbuf. */
-+		pipe->skbr_start[head] = skb;
-+
-+		td->buffer.address = IPC_CB(skb)->mapping;
-+		td->scs.size = skb->len;
-+		td->scs.completion_status = 0;
-+		td->next = 0;
-+		td->reserved1 = 0;
-+
-+		pipe->nr_of_queued_entries++;
-+
-+		/* Calculate the new head and save it. */
-+		head++;
-+		if (head >= pipe->nr_of_entries)
-+			head = 0;
-+
-+		ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr] = head;
++		if (skb->len < ETH_HLEN)
++			header_size = 0;
++		else
++			header_size = ETH_HLEN;
 +	}
 +
-+	if (pipe->old_head != head) {
-+		dev_dbg(ipc_protocol->dev, "New UL TDs Pipe:%d", pipe->pipe_nr);
++	/* If a valid pointer */
++	if (header_size > 0 && is_ip) {
++		*is_ip = (proto == htons(ETH_P_IP)) ||
++			 (proto == htons(ETH_P_IPV6));
 +
-+		pipe->old_head = head;
-+		/* Trigger doorbell because of pending UL packets. */
-+		hpda_pending = true;
++		/* Discard the vlan/ethernet header. */
++		if (unlikely(!skb_pull(skb, header_size)))
++			header_size = 0;
 +	}
 +
-+	return hpda_pending;
++	return header_size;
 +}
 +
-+/* Checks for Tail pointer update from CP and returns the data as SKB. */
-+struct sk_buff *ipc_protocol_ul_td_process(struct iosm_protocol *ipc_protocol,
-+					   struct ipc_pipe *pipe)
++/* Get VLAN tag from IPC SESSION ID */
++static inline u16 ipc_wwan_mux_session_to_vlan_tag(int id)
 +{
-+	struct ipc_protocol_td *p_td = &pipe->tdr_start[pipe->old_tail];
-+	struct sk_buff *skb = pipe->skbr_start[pipe->old_tail];
-+
-+	pipe->nr_of_queued_entries--;
-+	pipe->old_tail++;
-+	if (pipe->old_tail >= pipe->nr_of_entries)
-+		pipe->old_tail = 0;
-+
-+	if (!p_td->buffer.address) {
-+		dev_err(ipc_protocol->dev, "Td buffer address is NULL");
-+		return NULL;
-+	}
-+
-+	if (p_td->buffer.address != IPC_CB(skb)->mapping) {
-+		dev_err(ipc_protocol->dev,
-+			"pipe %d: invalid buf_addr or skb_data",
-+			pipe->pipe_nr);
-+		return NULL;
-+	}
-+
-+	return skb;
++	return (u16)(id + IPC_MEM_VLAN_TO_SESSION);
 +}
 +
-+/* Allocates an SKB for CP to send data and updates the Head Pointer
-+ * of the given Pipe#.
-+ */
-+bool ipc_protocol_dl_td_prepare(struct iosm_protocol *ipc_protocol,
-+				struct ipc_pipe *pipe)
++/* Get IPC SESSION ID from VLAN tag */
++static inline int ipc_wwan_vlan_to_mux_session_id(u16 tag)
 +{
-+	struct ipc_protocol_td *td;
-+	dma_addr_t mapping = 0;
-+	u32 head, new_head;
-+	struct sk_buff *skb;
-+	u32 tail;
-+
-+	/* Get head and tail of the td list and calculate
-+	 * the number of free elements.
-+	 */
-+	head = ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr];
-+	tail = ipc_protocol->p_ap_shm->tail_array[pipe->pipe_nr];
-+
-+	new_head = head + 1;
-+	if (new_head >= pipe->nr_of_entries)
-+		new_head = 0;
-+
-+	if (new_head == tail)
-+		return false;
-+
-+	/* Get the td address. */
-+	td = &pipe->tdr_start[head];
-+
-+	/* Allocate the skbuf for the descriptor. */
-+	skb = ipc_pcie_alloc_skb(ipc_protocol->pcie, pipe->buf_size, GFP_ATOMIC,
-+				 &mapping, DMA_FROM_DEVICE,
-+				 IPC_MEM_DL_ETH_OFFSET);
-+	if (!skb)
-+		return false;
-+
-+	td->buffer.address = mapping;
-+	td->scs.size = pipe->buf_size;
-+	td->scs.completion_status = 0;
-+	td->next = 0;
-+	td->reserved1 = 0;
-+
-+	/* store the new head value. */
-+	ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr] = new_head;
-+
-+	/* Save the reference to the skbuf. */
-+	pipe->skbr_start[head] = skb;
-+
-+	pipe->nr_of_queued_entries++;
-+
-+	return true;
++	return tag - IPC_MEM_VLAN_TO_SESSION;
 +}
 +
-+/* Processes DL TD's */
-+struct sk_buff *ipc_protocol_dl_td_process(struct iosm_protocol *ipc_protocol,
-+					   struct ipc_pipe *pipe)
++/* Add new vlan device and open a channel */
++static int ipc_wwan_vlan_rx_add_vid(struct net_device *netdev, __be16 proto,
++				    u16 vid)
 +{
-+	u32 tail = ipc_protocol->p_ap_shm->tail_array[pipe->pipe_nr];
-+	struct ipc_protocol_td *p_td;
-+	struct sk_buff *skb;
++	struct iosm_wwan *ipc_wwan = netdev_priv(netdev);
 +
-+	if (!pipe->tdr_start)
-+		return NULL;
++	if (vid != IPC_WWAN_DSS_ID_4)
++		return ipc_wwan_add_vlan(ipc_wwan, vid);
 +
-+	/* Copy the reference to the downlink buffer. */
-+	p_td = &pipe->tdr_start[pipe->old_tail];
-+	skb = pipe->skbr_start[pipe->old_tail];
++	return 0;
++}
 +
-+	/* Reset the ring elements. */
-+	pipe->skbr_start[pipe->old_tail] = NULL;
++/* Remove vlan device and de-allocate channel */
++static int ipc_wwan_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
++				     u16 vid)
++{
++	struct iosm_wwan *ipc_wwan = netdev_priv(netdev);
 +
-+	pipe->nr_of_queued_entries--;
++	if (vid == WWAN_ROOT_VLAN_TAG)
++		return 0;
 +
-+	pipe->old_tail++;
-+	if (pipe->old_tail >= pipe->nr_of_entries)
-+		pipe->old_tail = 0;
++	return ipc_wwan_remove_vlan(ipc_wwan, vid);
++}
 +
-+	if (!skb) {
-+		dev_err(ipc_protocol->dev, "skb is null");
-+		goto ret;
-+	} else if (!p_td->buffer.address) {
-+		dev_err(ipc_protocol->dev, "td/buffer address is null");
-+		ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+		skb = NULL;
-+		goto ret;
++static int ipc_wwan_open(struct net_device *netdev)
++{
++	/* Octets in one ethernet addr */
++	if (netdev->addr_len < ETH_ALEN) {
++		pr_err("cannot build the Ethernet address for \"%s\"",
++		       netdev->name);
++		return -ENODEV;
 +	}
 +
-+	if (!IPC_CB(skb)) {
-+		dev_err(ipc_protocol->dev, "pipe# %d, tail: %d skb_cb is NULL",
-+			pipe->pipe_nr, tail);
-+		ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+		skb = NULL;
-+		goto ret;
-+	}
++	/* enable tx path, DL data may follow */
++	netif_tx_start_all_queues(netdev);
 +
-+	if (p_td->buffer.address != IPC_CB(skb)->mapping) {
-+		dev_err(ipc_protocol->dev, "invalid buf=%p or skb=%p",
-+			(void *)p_td->buffer.address, skb->data);
-+		ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+		skb = NULL;
-+		goto ret;
-+	} else if (p_td->scs.size > pipe->buf_size) {
-+		dev_err(ipc_protocol->dev, "invalid buffer size %d > %d",
-+			p_td->scs.size, pipe->buf_size);
-+		ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+		skb = NULL;
-+		goto ret;
-+	} else if (p_td->scs.completion_status == IPC_MEM_TD_CS_ABORT) {
-+		/* Discard aborted buffers. */
-+		dev_dbg(ipc_protocol->dev, "discard 'aborted' buffers");
-+		ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+		skb = NULL;
-+		goto ret;
-+	}
-+
-+	/* Set the length field in skbuf. */
-+	skb_put(skb, p_td->scs.size);
-+
-+ret:
-+	return skb;
++	return 0;
 +}
 +
-+void ipc_protocol_get_head_tail_index(struct iosm_protocol *ipc_protocol,
-+				      struct ipc_pipe *pipe, u32 *head,
-+				      u32 *tail)
++static int ipc_wwan_stop(struct net_device *netdev)
 +{
-+	if (head)
-+		*head = ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr];
++	pr_debug("Stop all TX Queues");
 +
-+	if (tail)
-+		*tail = ipc_protocol->p_ap_shm->tail_array[pipe->pipe_nr];
++	netif_tx_stop_all_queues(netdev);
++	return 0;
 +}
 +
-+/* Frees the TDs given to CP.  */
-+void ipc_protocol_pipe_cleanup(struct iosm_protocol *ipc_protocol,
-+			       struct ipc_pipe *pipe)
++int ipc_wwan_receive(struct iosm_wwan *ipc_wwan, struct sk_buff *skb_arg,
++		     bool dss)
 +{
-+	struct sk_buff *skb;
-+	u32 head;
-+	u32 tail;
++	struct sk_buff *skb = skb_arg;
++	struct ethhdr *eth = (struct ethhdr *)skb->data;
++	u16 tag;
 +
-+	/* Get the start and the end of the buffer list. */
-+	head = ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr];
-+	tail = pipe->old_tail;
-+
-+	/* Reset tail and head to 0. */
-+	ipc_protocol->p_ap_shm->tail_array[pipe->pipe_nr] = 0;
-+	ipc_protocol->p_ap_shm->head_array[pipe->pipe_nr] = 0;
-+
-+	/* Free pending uplink and downlink buffers. */
-+	if (pipe->skbr_start) {
-+		while (head != tail) {
-+			/* Get the reference to the skbuf,
-+			 * which is on the way and free it.
-+			 */
-+			skb = pipe->skbr_start[tail];
-+			if (skb)
-+				ipc_pcie_kfree_skb(ipc_protocol->pcie, skb);
-+
-+			tail++;
-+			if (tail >= pipe->nr_of_entries)
-+				tail = 0;
-+		}
-+
-+		kfree(pipe->skbr_start);
-+		pipe->skbr_start = NULL;
-+	}
-+
-+	pipe->old_tail = 0;
-+
-+	/* Free and reset the td and skbuf circular buffers. kfree is save! */
-+	if (pipe->tdr_start) {
-+		pci_free_consistent(ipc_protocol->pcie->pci,
-+				    sizeof(*pipe->tdr_start) *
-+					    pipe->nr_of_entries,
-+				    pipe->tdr_start, pipe->phy_tdr_start);
-+
-+		pipe->tdr_start = NULL;
-+	}
-+}
-+
-+enum ipc_mem_device_ipc_state ipc_protocol_get_ipc_status(struct iosm_protocol
-+							  *ipc_protocol)
-+{
-+	return (enum ipc_mem_device_ipc_state)
-+		ipc_protocol->p_ap_shm->device_info.ipc_status;
-+}
-+
-+enum ipc_mem_exec_stage
-+ipc_protocol_get_ap_exec_stage(struct iosm_protocol *ipc_protocol)
-+{
-+	return ipc_protocol->p_ap_shm->device_info.execution_stage;
-+}
-+
-+int ipc_protocol_msg_prep(struct iosm_imem *ipc_imem,
-+			  enum ipc_msg_prep_type msg_type,
-+			  union ipc_msg_prep_args *args)
-+{
-+	struct iosm_protocol *ipc_protocol = ipc_imem->ipc_protocol;
-+
-+	switch (msg_type) {
-+	case IPC_MSG_PREP_SLEEP:
-+		return ipc_protocol_msg_prep_sleep(ipc_protocol, args);
-+
-+	case IPC_MSG_PREP_PIPE_OPEN:
-+		return ipc_protocol_msg_prepipe_open(ipc_protocol, args);
-+
-+	case IPC_MSG_PREP_PIPE_CLOSE:
-+		return ipc_protocol_msg_prepipe_close(ipc_protocol, args);
-+
-+	case IPC_MSG_PREP_FEATURE_SET:
-+		return ipc_protocol_msg_prep_feature_set(ipc_protocol, args);
-+
-+		/* Unsupported messages in protocol */
-+	case IPC_MSG_PREP_MAP:
-+	case IPC_MSG_PREP_UNMAP:
-+	default:
-+		dev_err(ipc_protocol->dev,
-+			"unsupported message type: %d in protocol", msg_type);
++	if (unlikely(!eth)) {
++		dev_err(ipc_wwan->dev, "ethernet header info error");
++		dev_kfree_skb(skb);
 +		return -1;
 +	}
++
++	ether_addr_copy(eth->h_dest, ipc_wwan->netdev->dev_addr);
++	ether_addr_copy(eth->h_source, ipc_wwan->netdev->dev_addr);
++	eth->h_source[ETH_ALEN - 1] ^= 0x01; /* src is us xor 1 */
++	/* set the ethernet payload type: ipv4 or ipv6 or Dummy type
++	 * for 802.3 frames
++	 */
++	eth->h_proto = htons(ETH_P_802_3);
++	if (!dss) {
++		if ((skb->data[ETH_HLEN] & 0xF0) == 0x40)
++			eth->h_proto = htons(ETH_P_IP);
++		else if ((skb->data[ETH_HLEN] & 0xF0) == 0x60)
++			eth->h_proto = htons(ETH_P_IPV6);
++	}
++
++	skb->dev = ipc_wwan->netdev;
++	skb->protocol = eth_type_trans(skb, ipc_wwan->netdev);
++	skb->ip_summed = CHECKSUM_UNNECESSARY;
++
++	vlan_get_tag(skb, &tag);
++	/* TX stats doesn't include ETH_HLEN.
++	 * eth_type_trans() functions pulls the ethernet header.
++	 * so skb->len does not have ethernet header in it.
++	 */
++	ipc_wwan_update_stats(ipc_wwan, ipc_wwan_vlan_to_mux_session_id(tag),
++			      skb->len, false);
++
++	switch (netif_rx_ni(skb)) {
++	case NET_RX_SUCCESS:
++		break;
++	case NET_RX_DROP:
++		break;
++	default:
++		break;
++	}
++	return 0;
 +}
 +
-+u32
-+ipc_protocol_pm_dev_get_sleep_notification(struct iosm_protocol *ipc_protocol)
++/* Align SKB to 32bit, if not already aligned */
++static struct sk_buff *ipc_wwan_skb_align(struct iosm_wwan *ipc_wwan,
++					  struct sk_buff *skb)
 +{
-+	return ipc_protocol->p_ap_shm->device_info.device_sleep_notification;
++	unsigned int offset = (uintptr_t)skb->data & (IPC_WWAN_ALIGN - 1);
++	struct sk_buff *new_skb;
++
++	if (offset == 0)
++		return skb;
++
++	/* Allocate new skb to copy into */
++	new_skb = dev_alloc_skb(skb->len + (IPC_WWAN_ALIGN - 1));
++	if (unlikely(!new_skb)) {
++		dev_err(ipc_wwan->dev, "failed to reallocate skb");
++		goto out;
++	}
++
++	/* Make sure newly allocated skb is aligned */
++	offset = (uintptr_t)new_skb->data & (IPC_WWAN_ALIGN - 1);
++	if (unlikely(offset != 0))
++		skb_reserve(new_skb, IPC_WWAN_ALIGN - offset);
++
++	/* Copy payload */
++	memcpy(new_skb->data, skb->data, skb->len);
++
++	skb_put(new_skb, skb->len);
++out:
++	return new_skb;
 +}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h b/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h
++
++/* Transmit a packet (called by the kernel) */
++static int ipc_wwan_transmit(struct sk_buff *skb, struct net_device *netdev)
++{
++	struct iosm_wwan *ipc_wwan = netdev_priv(netdev);
++	bool is_ip = false;
++	int ret = -EINVAL;
++	int header_size;
++	int idx = 0;
++	u16 tag = 0;
++
++	vlan_get_tag(skb, &tag);
++
++	/* If the SKB is of WWAN root device then don't send it to device.
++	 * Free the SKB and then return.
++	 */
++	if (unlikely(tag == WWAN_ROOT_VLAN_TAG))
++		goto exit;
++
++	/* Discard the Ethernet header or VLAN Ethernet header depending
++	 * on the protocol.
++	 */
++	header_size = ipc_wwan_pull_header(skb, &is_ip);
++	if (!header_size)
++		goto exit;
++
++	/* Get the channel number corresponding to VLAN ID */
++	idx = ipc_wwan_get_vlan_devs_nr(ipc_wwan, tag);
++	if (unlikely(idx < 0 || idx >= ipc_wwan->max_devs ||
++		     ipc_wwan->vlan_devs[idx].ch_id < 0))
++		goto exit;
++
++	/* VLAN IDs from 1 to 255 are for IP data
++	 * 257 to 512 are for non-IP data
++	 */
++	if ((tag > 0 && tag < 256)) {
++		if (unlikely(!is_ip)) {
++			ret = -EXDEV;
++			goto exit;
++		}
++	} else if (tag > 256 && tag < 512) {
++		if (unlikely(is_ip)) {
++			ret = -EXDEV;
++			goto exit;
++		}
++
++		/* Align the SKB only for control packets if not aligned. */
++		skb = ipc_wwan_skb_align(ipc_wwan, skb);
++		if (!skb)
++			goto exit;
++	} else {
++		/* Unknown VLAN IDs */
++		ret = -EXDEV;
++		goto exit;
++	}
++
++	/* Send the SKB to device for transmission */
++	ret = imem_sys_wwan_transmit(ipc_wwan->ops_instance, tag,
++				     ipc_wwan->vlan_devs[idx].ch_id, skb);
++
++	/* Return code of zero is success */
++	if (ret == 0) {
++		ret = NETDEV_TX_OK;
++	} else if (ret == -2) {
++		/* Return code -2 is to enable re-enqueue of the skb.
++		 * Re-push the stripped header before returning busy.
++		 */
++		if (unlikely(!skb_push(skb, header_size))) {
++			dev_err(ipc_wwan->dev, "unable to push eth hdr");
++			ret = -EIO;
++			goto exit;
++		}
++
++		ret = NETDEV_TX_BUSY;
++	} else {
++		ret = -EIO;
++		goto exit;
++	}
++
++	return ret;
++
++exit:
++	/* Log any skb drop except for WWAN Root device */
++	if (tag != 0)
++		dev_dbg(ipc_wwan->dev, "skb dropped.VLAN ID: %d, ret: %d", tag,
++			ret);
++
++	dev_kfree_skb_any(skb);
++	return ret;
++}
++
++static int ipc_wwan_change_mtu(struct net_device *dev, int new_mtu)
++{
++	struct iosm_wwan *ipc_wwan = netdev_priv(dev);
++	unsigned long flags = 0;
++
++	if (unlikely(new_mtu < IPC_MEM_MIN_MTU_SIZE ||
++		     new_mtu > IPC_MEM_MAX_MTU_SIZE)) {
++		dev_err(ipc_wwan->dev, "mtu %d out of range %d..%d", new_mtu,
++			IPC_MEM_MIN_MTU_SIZE, IPC_MEM_MAX_MTU_SIZE);
++		return -EINVAL;
++	}
++
++	spin_lock_irqsave(&ipc_wwan->lock, flags);
++	dev->mtu = new_mtu;
++	spin_unlock_irqrestore(&ipc_wwan->lock, flags);
++	return 0;
++}
++
++static int ipc_wwan_change_mac_addr(struct net_device *dev, void *sock_addr)
++{
++	struct iosm_wwan *ipc_wwan = netdev_priv(dev);
++	struct sockaddr *addr = sock_addr;
++	unsigned long flags = 0;
++	int result = 0;
++	u8 *sock_data;
++
++	sock_data = (u8 *)addr->sa_data;
++
++	spin_lock_irqsave(&ipc_wwan->lock, flags);
++
++	if (is_zero_ether_addr(sock_data)) {
++		dev->addr_len = 1;
++		memset(dev->dev_addr, 0, 6);
++		goto exit;
++	}
++
++	result = eth_mac_addr(dev, sock_addr);
++exit:
++	spin_unlock_irqrestore(&ipc_wwan->lock, flags);
++	return result;
++}
++
++static int ipc_wwan_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++{
++	if (cmd != SIOCSIFHWADDR ||
++	    !access_ok((void __user *)ifr, sizeof(struct ifreq)) ||
++	    dev->addr_len > sizeof(struct sockaddr))
++		return -EINVAL;
++
++	return ipc_wwan_change_mac_addr(dev, &ifr->ifr_hwaddr);
++}
++
++static struct net_device_stats *ipc_wwan_get_stats(struct net_device *ndev)
++{
++	return &ndev->stats;
++}
++
++/* validate mac address for wwan devices */
++static int ipc_wwan_eth_validate_addr(struct net_device *netdev)
++{
++	return eth_validate_addr(netdev);
++}
++
++/* return valid TX queue for the mapped VLAN device */
++static u16 ipc_wwan_select_queue(struct net_device *netdev, struct sk_buff *skb,
++				 struct net_device *sb_dev)
++{
++	struct iosm_wwan *ipc_wwan = netdev_priv(netdev);
++	u16 txqn = 0xFFFF;
++	u16 tag = 0;
++
++	/* get VLAN tag for the current skb
++	 * if the packet is untagged, return the default queue.
++	 */
++	if (vlan_get_tag(skb, &tag) < 0)
++		return WWAN_DEFAULT_TXQ;
++
++	/* TX Queues are allocated as following:
++	 *
++	 * if vlan ID == 0 is used for VLAN root device i.e. WWAN0.
++	 * Assign default TX Queue which is 0.
++	 *
++	 * if vlan ID >= IMEM_WWAN_CTRL_VLAN_ID_START
++	 * && <= IMEM_WWAN_CTRL_VLAN_ID_END then we use default
++	 * TX Queue which is 0.
++	 *
++	 * if vlan ID >= IMEM_WWAN_DATA_VLAN_ID_START
++	 * && <= Max IP devices then allocate separate
++	 * TX Queue to each VLAN ID.
++	 *
++	 * For any other vlan ID return invalid Tx Queue
++	 */
++	if (tag >= IMEM_WWAN_DATA_VLAN_ID_START && tag <= ipc_wwan->max_ip_devs)
++		txqn = tag;
++	else if ((tag >= IMEM_WWAN_CTRL_VLAN_ID_START &&
++		  tag <= IMEM_WWAN_CTRL_VLAN_ID_END) ||
++		 tag == WWAN_ROOT_VLAN_TAG)
++		txqn = WWAN_DEFAULT_TXQ;
++
++	dev_dbg(ipc_wwan->dev, "VLAN tag = %u, TX Queue selected %u", tag,
++		txqn);
++	return txqn;
++}
++
++static const struct net_device_ops ipc_wwandev_ops = {
++	.ndo_open = ipc_wwan_open,
++	.ndo_stop = ipc_wwan_stop,
++	.ndo_start_xmit = ipc_wwan_transmit,
++	.ndo_change_mtu = ipc_wwan_change_mtu,
++	.ndo_validate_addr = ipc_wwan_eth_validate_addr,
++	.ndo_do_ioctl = ipc_wwan_ioctl,
++	.ndo_get_stats = ipc_wwan_get_stats,
++	.ndo_vlan_rx_add_vid = ipc_wwan_vlan_rx_add_vid,
++	.ndo_vlan_rx_kill_vid = ipc_wwan_vlan_rx_kill_vid,
++	.ndo_set_mac_address = ipc_wwan_change_mac_addr,
++	.ndo_select_queue = ipc_wwan_select_queue,
++};
++
++void ipc_wwan_update_stats(struct iosm_wwan *ipc_wwan, int id, size_t len,
++			   bool tx)
++{
++	struct net_device *iosm_ndev = ipc_wwan->netdev;
++	int idx =
++		ipc_wwan_get_vlan_devs_nr(ipc_wwan,
++					  ipc_wwan_mux_session_to_vlan_tag(id));
++
++	if (unlikely(idx < 0 || idx >= ipc_wwan->max_devs)) {
++		dev_err(ipc_wwan->dev, "invalid VLAN device");
++		return;
++	}
++
++	if (tx) {
++		/* Update vlan device tx statistics */
++		ipc_wwan->vlan_devs[idx].stats.tx_packets++;
++		ipc_wwan->vlan_devs[idx].stats.tx_bytes += len;
++		/* Update root device tx statistics */
++		iosm_ndev->stats.tx_packets++;
++		iosm_ndev->stats.tx_bytes += len;
++	} else {
++		/* Update vlan device rx statistics */
++		ipc_wwan->vlan_devs[idx].stats.rx_packets++;
++		ipc_wwan->vlan_devs[idx].stats.rx_bytes += len;
++		/* Update root device rx statistics */
++		iosm_ndev->stats.rx_packets++;
++		iosm_ndev->stats.rx_bytes += len;
++	}
++}
++
++void ipc_wwan_tx_flowctrl(struct iosm_wwan *ipc_wwan, int id, bool on)
++{
++	u16 vid = ipc_wwan_mux_session_to_vlan_tag(id);
++
++	dev_dbg(ipc_wwan->dev, "MUX session id[%d]: %s", id,
++		on ? "Enable" : "Disable");
++	if (on)
++		netif_stop_subqueue(ipc_wwan->netdev, vid);
++	else
++		netif_wake_subqueue(ipc_wwan->netdev, vid);
++}
++
++static struct device_type wwan_type = { .name = "wwan" };
++
++struct iosm_wwan *ipc_wwan_init(void *ops_instance, struct device *dev,
++				int max_sessions)
++{
++	int max_tx_q = WWAN_MIN_TXQ + max_sessions;
++	struct iosm_wwan *ipc_wwan;
++	struct net_device *netdev = alloc_etherdev_mqs(sizeof(*ipc_wwan),
++						       max_tx_q, WWAN_MAX_RXQ);
++
++	if (!netdev || !ops_instance)
++		return NULL;
++
++	ipc_wwan = netdev_priv(netdev);
++
++	ipc_wwan->dev = dev;
++	ipc_wwan->netdev = netdev;
++	ipc_wwan->is_registered = false;
++
++	ipc_wwan->vlan_devs_nr = 0;
++	ipc_wwan->ops_instance = ops_instance;
++
++	ipc_wwan->max_devs = max_sessions + IPC_MEM_MAX_CHANNELS;
++	ipc_wwan->max_ip_devs = max_sessions;
++
++	ipc_wwan->vlan_devs = kcalloc(ipc_wwan->max_devs,
++				      sizeof(ipc_wwan->vlan_devs[0]),
++				      GFP_KERNEL);
++
++	spin_lock_init(&ipc_wwan->lock);
++	mutex_init(&ipc_wwan->if_mutex);
++
++	/* allocate random ethernet address */
++	eth_random_addr(netdev->dev_addr);
++	netdev->addr_assign_type = NET_ADDR_RANDOM;
++
++	snprintf(netdev->name, IFNAMSIZ, "%s", "wwan0");
++	netdev->netdev_ops = &ipc_wwandev_ops;
++	netdev->flags |= IFF_NOARP;
++	netdev->features |=
++		NETIF_F_HW_VLAN_CTAG_TX | NETIF_F_HW_VLAN_CTAG_FILTER;
++	SET_NETDEV_DEVTYPE(netdev, &wwan_type);
++
++	if (register_netdev(netdev)) {
++		dev_err(ipc_wwan->dev, "register_netdev failed");
++		ipc_wwan_deinit(ipc_wwan);
++		return NULL;
++	}
++
++	ipc_wwan->is_registered = true;
++
++	netif_device_attach(netdev);
++
++	netdev->max_mtu = IPC_MEM_MAX_MTU_SIZE;
++
++	return ipc_wwan;
++}
++
++void ipc_wwan_deinit(struct iosm_wwan *ipc_wwan)
++{
++	if (ipc_wwan->is_registered)
++		unregister_netdev(ipc_wwan->netdev);
++	kfree(ipc_wwan->vlan_devs);
++	free_netdev(ipc_wwan->netdev);
++}
++
++bool ipc_wwan_is_tx_stopped(struct iosm_wwan *ipc_wwan, int id)
++{
++	u16 vid = ipc_wwan_mux_session_to_vlan_tag(id);
++
++	return __netif_subqueue_stopped(ipc_wwan->netdev, vid);
++}
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_wwan.h b/drivers/net/wwan/iosm/iosm_ipc_wwan.h
 new file mode 100644
-index 000000000000..5f0515cb0ce6
+index 000000000000..f30064901aa7
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_protocol_ops.h
-@@ -0,0 +1,456 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_wwan.h
+@@ -0,0 +1,72 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#ifndef IOSM_IPC_PROTOCOL_OPS_H
-+#define IOSM_IPC_PROTOCOL_OPS_H
++#ifndef IOSM_IPC_WWAN_H
++#define IOSM_IPC_WWAN_H
 +
-+#include "iosm_ipc_protocol.h"
-+
-+/**
-+ * enum ipc_mem_td_cs - Completion status of a TD
-+ * @IPC_MEM_TD_CS_INVALID:	      Initial status - td not yet used.
-+ * @IPC_MEM_TD_CS_PARTIAL_TRANSFER:   More data pending -> next TD used for this
-+ * @IPC_MEM_TD_CS_END_TRANSFER:	      IO transfer is complete.
-+ * @IPC_MEM_TD_CS_OVERFLOW:	      IO transfer to small for the buff to write
-+ * @IPC_MEM_TD_CS_ABORT:	      TD marked as abort and shall be discarded
-+ *				      by AP.
-+ * @IPC_MEM_TD_CS_ERROR:	      General error.
-+ */
-+enum ipc_mem_td_cs {
-+	IPC_MEM_TD_CS_INVALID,
-+	IPC_MEM_TD_CS_PARTIAL_TRANSFER,
-+	IPC_MEM_TD_CS_END_TRANSFER,
-+	IPC_MEM_TD_CS_OVERFLOW,
-+	IPC_MEM_TD_CS_ABORT,
-+	IPC_MEM_TD_CS_ERROR,
-+};
++#define IMEM_WWAN_DATA_VLAN_ID_START 1
++#define IMEM_WWAN_CTRL_VLAN_ID_START 257
++#define IMEM_WWAN_CTRL_VLAN_ID_END 512
 +
 +/**
-+ * enum ipc_mem_msg_cs - Completion status of IPC Message
-+ * @IPC_MEM_MSG_CS_INVALID:	Initial status.
-+ * @IPC_MEM_MSG_CS_SUCCESS:	IPC Message completion success.
-+ * @IPC_MEM_MSG_CS_ERROR:	Message send error.
-+ */
-+enum ipc_mem_msg_cs {
-+	IPC_MEM_MSG_CS_INVALID,
-+	IPC_MEM_MSG_CS_SUCCESS,
-+	IPC_MEM_MSG_CS_ERROR,
-+};
-+
-+/**
-+ * struct ipc_msg_prep_args_pipe - struct for pipe args for message preparation
-+ * @pipe:	Pipe to open/close
-+ */
-+struct ipc_msg_prep_args_pipe {
-+	struct ipc_pipe *pipe;
-+};
-+
-+/**
-+ * struct ipc_msg_prep_args_sleep - struct for sleep args for message
-+ *				    preparation
-+ * @target:	0=host, 1=device
-+ * @state:	0=enter sleep, 1=exit sleep
-+ */
-+struct ipc_msg_prep_args_sleep {
-+	unsigned int target;
-+	unsigned int state;
-+};
-+
-+/**
-+ * struct ipc_msg_prep_feature_set - struct for feature set argument for
-+ *				     message preparation
-+ * @reset_enable:	0=out-of-band, 1=in-band-crash notification
-+ */
-+struct ipc_msg_prep_feature_set {
-+	unsigned int reset_enable;
-+};
-+
-+/**
-+ * struct ipc_msg_prep_map - struct for map argument for message preparation
-+ * @region_id:	Region to map
-+ * @addr:	Pcie addr of region to map
-+ * @size:	Size of the region to map
-+ */
-+struct ipc_msg_prep_map {
-+	unsigned int region_id;
-+	unsigned long addr;
-+	size_t size;
-+};
-+
-+/**
-+ * struct ipc_msg_prep_unmap - struct for unmap argument for message preparation
-+ * @region_id:	Region to unmap
-+ */
-+struct ipc_msg_prep_unmap {
-+	unsigned int region_id;
-+};
-+
-+/**
-+ * struct ipc_msg_prep_args - Union to handle different message types
-+ * @pipe_open:		Pipe open message preparation struct
-+ * @pipe_close:		Pipe close message preparation struct
-+ * @sleep:		Sleep message preparation struct
-+ * @feature_set:	Feature set message preparation struct
-+ * @map:		Memory map message preparation struct
-+ * @unmap:		Memory unmap message preparation struct
-+ */
-+union ipc_msg_prep_args {
-+	struct ipc_msg_prep_args_pipe pipe_open;
-+	struct ipc_msg_prep_args_pipe pipe_close;
-+	struct ipc_msg_prep_args_sleep sleep;
-+	struct ipc_msg_prep_feature_set feature_set;
-+	struct ipc_msg_prep_map map;
-+	struct ipc_msg_prep_unmap unmap;
-+};
-+
-+/**
-+ * enum ipc_msg_prep_type - Enum for message prepare actions
-+ * @IPC_MSG_PREP_SLEEP:		Sleep message preparation type
-+ * @IPC_MSG_PREP_PIPE_OPEN:	Pipe open message preparation type
-+ * @IPC_MSG_PREP_PIPE_CLOSE:	Pipe close message preparation type
-+ * @IPC_MSG_PREP_FEATURE_SET:	Feature set message preparation type
-+ * @IPC_MSG_PREP_MAP:		Memory map message preparation type
-+ * @IPC_MSG_PREP_UNMAP:		Memory unmap message preparation type
-+ */
-+enum ipc_msg_prep_type {
-+	IPC_MSG_PREP_SLEEP,
-+	IPC_MSG_PREP_PIPE_OPEN,
-+	IPC_MSG_PREP_PIPE_CLOSE,
-+	IPC_MSG_PREP_FEATURE_SET,
-+	IPC_MSG_PREP_MAP,
-+	IPC_MSG_PREP_UNMAP,
-+};
-+
-+/**
-+ * struct ipc_rsp - Response to sent message
-+ * @completion:	For waking up requestor
-+ * @status:	Completion status
-+ */
-+struct ipc_rsp {
-+	struct completion completion;
-+	enum ipc_mem_msg_cs status;
-+};
-+
-+/**
-+ * enum ipc_mem_msg - Type-definition of the messages.
-+ * @IPC_MEM_MSG_OPEN_PIPE:	AP ->CP: Open a pipe
-+ * @IPC_MEM_MSG_CLOSE_PIPE:	AP ->CP: Close a pipe
-+ * @IPC_MEM_MSG_ABORT_PIPE:	AP ->CP: wait for completion of the
-+ *				running transfer and abort all pending
-+ *				IO-transfers for the pipe
-+ * @IPC_MEM_MSG_SLEEP:		AP ->CP: host enter or exit sleep
-+ * @IPC_MEM_MSG_FEATURE_SET:	AP ->CP: Intel feature configuration
-+ */
-+enum ipc_mem_msg {
-+	IPC_MEM_MSG_OPEN_PIPE = 0x01,
-+	IPC_MEM_MSG_CLOSE_PIPE = 0x02,
-+	IPC_MEM_MSG_ABORT_PIPE = 0x03,
-+	IPC_MEM_MSG_SLEEP = 0x04,
-+	IPC_MEM_MSG_FEATURE_SET = 0xF0,
-+};
-+
-+/**
-+ * struct ipc_mem_msg_open_pipe - Message structure for open pipe
-+ * @tdr_addr:			Tdr address
-+ * @tdr_entries:		Tdr entries
-+ * @pipe_nr:			Pipe number
-+ * @type_of_message:		Message type
-+ * @irq_vector:			MSI vector number
-+ * @optimized_completion:	To optimize completion
-+ * @reliable:			Reliable
-+ * @reserved1:			Reserved
-+ * @interrupt_moderation:	Timer in usec for irq_moderation
-+ * @accumulation_backoff:	Time in usec for data accumalation
-+ * @reserved2:			Reserved
-+ * @completion_status:		Message Completion Status
-+ */
-+struct ipc_mem_msg_open_pipe {
-+	u64 tdr_addr;
-+	u32 tdr_entries : 16;
-+	u32 pipe_nr : 8;
-+	u32 type_of_message : 8;
-+	u32 irq_vector : 5;
-+	u32 optimized_completion : 1;
-+	u32 reliable : 1;
-+	u32 reserved1 : 1;
-+	u32 interrupt_moderation : 24;
-+	u32 accumulation_backoff : 24;
-+	u32 reserved2 : 8;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * struct ipc_mem_msg_close_pipe - Message structure for close pipe
-+ * @reserved1:			Reserved
-+ * @reserved2:			Reserved
-+ * @pipe_nr:			Pipe number
-+ * @type_of_message:		Message type
-+ * @reserved3:			Reserved
-+ * @reserved4:			Reserved
-+ * @completion_status:		Message Completion Status
-+ */
-+struct ipc_mem_msg_close_pipe {
-+	u32 reserved1[2];
-+	u32 reserved2 : 16;
-+	u32 pipe_nr : 8;
-+	u32 type_of_message : 8;
-+	u32 reserved3;
-+	u32 reserved4;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * struct ipc_mem_msg_abort_pipe - Message structure for abort pipe
-+ * @reserved1:			Reserved
-+ * @reserved2:			Reserved
-+ * @pipe_nr:			Pipe number
-+ * @type_of_message:		Message type
-+ * @reserved3:			Reserved
-+ * @reserved4:			Reserved
-+ * @completion_status:		Message Completion Status
-+ */
-+struct ipc_mem_msg_abort_pipe {
-+	u32 reserved1[2];
-+	u32 reserved2 : 16;
-+	u32 pipe_nr : 8;
-+	u32 type_of_message : 8;
-+	u32 reserved3;
-+	u32 reserved4;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * struct ipc_mem_msg_host_sleep - Message structure for sleep message.
-+ * @reserved1:		Reserved
-+ * @target:		0=host, 1=device, host or EP devie
-+ *			is the message target
-+ * @state:		0=enter sleep, 1=exit sleep,
-+ *			2=enter sleep no protocol
-+ * @reserved2:		Reserved
-+ * @type_of_message:	Message type
-+ * @reserved3:		Reserved
-+ * @reserved4:		Reserved
-+ * @completion_status:	Message Completion Status
-+ */
-+struct ipc_mem_msg_host_sleep {
-+	u32 reserved1[2];
-+	u32 target : 8;
-+	u32 state : 8;
-+	u32 reserved2 : 8;
-+	u32 type_of_message : 8;
-+	u32 reserved3;
-+	u32 reserved4;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * struct ipc_mem_msg_feature_set - Message structure for feature_set message
-+ * @reserved1:			Reserved
-+ * @reserved2:			Reserved
-+ * @reset_enable:		0=out-of-band, 1=in-band-crash notification
-+ * @type_of_message:		Message type
-+ * @reserved3:			Reserved
-+ * @reserved4:			Reserved
-+ * @completion_status:		Message Completion Status
-+ */
-+struct ipc_mem_msg_feature_set {
-+	u32 reserved1[2];
-+	u32 reserved2 : 23;
-+	u32 reset_enable : 1;
-+	u32 type_of_message : 8;
-+	u32 reserved3;
-+	u32 reserved4;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * struct ipc_mem_msg_common - Message structure for completion status update.
-+ * @reserved1:			Reserved
-+ * @reserved2:			Reserved
-+ * @type_of_message:		Message type
-+ * @reserved3:			Reserved
-+ * @reserved4:			Reserved
-+ * @completion_status:		Message Completion Status
-+ */
-+struct ipc_mem_msg_common {
-+	u32 reserved1[2];
-+	u32 reserved2 : 24;
-+	u32 type_of_message : 8;
-+	u32 reserved3;
-+	u32 reserved4;
-+	u32 completion_status;
-+};
-+
-+/**
-+ * union ipc_mem_msg_entry - Union with all possible messages.
-+ * @open_pipe:		Open pipe message struct
-+ * @close_pipe:		Close pipe message struct
-+ * @abort_pipe:		Abort pipe message struct
-+ * @host_sleep:		Host sleep message struct
-+ * @feature_set:	Featuer set message struct
-+ * @common:		Used to access msg_type and to set the completion status
-+ */
-+union ipc_mem_msg_entry {
-+	struct ipc_mem_msg_open_pipe open_pipe;
-+	struct ipc_mem_msg_close_pipe close_pipe;
-+	struct ipc_mem_msg_abort_pipe abort_pipe;
-+	struct ipc_mem_msg_host_sleep host_sleep;
-+	struct ipc_mem_msg_feature_set feature_set;
-+	struct ipc_mem_msg_common common;
-+};
-+
-+/* Transfer descriptor definition. */
-+struct ipc_protocol_td {
-+	union {
-+		/*   0 :  63 - 64-bit address of a buffer in host memory. */
-+		dma_addr_t address;
-+		struct {
-+			/*   0 :  31 - 32 bit address */
-+			__le32 address;
-+			/*  32 :  63 - corresponding descriptor */
-+			__le32 desc;
-+		} __packed shm;
-+	} buffer;
-+
-+	struct {
-+	/*	64 :  87 - Size of the buffer.
-+	 *	The host provides the size of the buffer queued.
-+	 *	The EP device reads this value and shall update
-+	 *	it for downlink transfers to indicate the
-+	 *	amount of data written in buffer.
-+	 */
-+		u32 size : 24;
-+	/*	88 :  95 - This field provides the completion status
-+	 *	of the TD. When queuing the TD, the host sets
-+	 *	the status to 0. The EP device updates this
-+	 *	field when completing the TD.
-+	 */
-+		u32 completion_status : 8;
-+	} __packed scs;
-+
-+	/*  96 : 103 - nr of following descriptors */
-+	u32 next : 8;
-+	/* 104 : 127 - reserved */
-+	u32 reserved1 : 24;
-+} __packed;
-+
-+/**
-+ * ipc_protocol_msg_prep - Prepare message based upon message type
-+ * @ipc_imem:	iosm_protocol instance
-+ * @msg_type:	message prepare type
-+ * @args:	message arguments
++ * ipc_wwan_init - Allocate, Init and register WWAN device
++ * @ops_instance:	Instance pointer for callback
++ * @dev:		Pointer to device structure
++ * @max_sessions:	Maximum number of sessions
 + *
-+ * Return: 0 on success, -1 in case of failure
++ * Returns: Pointer to instance on success else NULL
 + */
-+int ipc_protocol_msg_prep(struct iosm_imem *ipc_imem,
-+			  enum ipc_msg_prep_type msg_type,
-+			  union ipc_msg_prep_args *args);
++struct iosm_wwan *ipc_wwan_init(void *ops_instance, struct device *dev,
++				int max_sessions);
 +
 +/**
-+ * ipc_protocol_msg_hp_update - Function for head pointer update
-+ *				of message ring
-+ * @ipc_imem:	iosm_protocol instance
++ * ipc_wwan_deinit - Unregister and free WWAN device, clear pointer
++ * @ipc_wwan:	Pointer to wwan instance data
 + */
-+void ipc_protocol_msg_hp_update(struct iosm_imem *ipc_imem);
++void ipc_wwan_deinit(struct iosm_wwan *ipc_wwan);
 +
 +/**
-+ * ipc_protocol_msg_process - Function for processing responses
-+ *			      to IPC messages
-+ * @ipc_imem:	iosm_protocol instance
-+ * @irq:	IRQ vector
++ * ipc_wwan_receive - Receive a downlink packet from CP.
++ * @ipc_wwan:	Pointer to wwan instance
++ * @skb_arg:	Pointer to struct sk_buff
++ * @dss:	Set to true if vlan id is greater than
++ *		IMEM_WWAN_CTRL_VLAN_ID_START else false
 + *
-+ * Return:	True on success; false if error
++ * Return: 0 on success else -EINVAL or -1
 + */
-+bool ipc_protocol_msg_process(struct iosm_imem *ipc_imem, int irq);
++int ipc_wwan_receive(struct iosm_wwan *ipc_wwan, struct sk_buff *skb_arg,
++		     bool dss);
 +
 +/**
-+ * ipc_protocol_ul_td_send - Function for sending the data to CP
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe instance
-+ * @p_ul_list:		uplink sk_buff list
++ * ipc_wwan_update_stats - Update device statistics
++ * @ipc_wwan:	Pointer to wwan instance
++ * @id:		Ipc mux channel session id
++ * @len:	Number of bytes to update
++ * @tx:		True if statistics needs to be updated for transmit
++ *		else false
 + *
-+ * Return: true in success; false in case of error
 + */
-+bool ipc_protocol_ul_td_send(struct iosm_protocol *ipc_protocol,
-+			     struct ipc_pipe *pipe,
-+			     struct sk_buff_head *p_ul_list);
++void ipc_wwan_update_stats(struct iosm_wwan *ipc_wwan, int id, size_t len,
++			   bool tx);
 +
 +/**
-+ * ipc_protocol_ul_td_process - Function for processing the sent data
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe instance
++ * ipc_wwan_tx_flowctrl - Enable/Disable TX flow control
++ * @ipc_wwan:	Pointer to wwan instance
++ * @id:		Ipc mux channel session id
++ * @on:		if true then flow ctrl would be enabled else disable
 + *
-+ * Return: sk_buff instance
 + */
-+struct sk_buff *ipc_protocol_ul_td_process(struct iosm_protocol *ipc_protocol,
-+					   struct ipc_pipe *pipe);
++void ipc_wwan_tx_flowctrl(struct iosm_wwan *ipc_wwan, int id, bool on);
 +
 +/**
-+ * ipc_protocol_dl_td_prepare - Function for providing DL TDs to CP
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe instance
++ * ipc_wwan_is_tx_stopped - Checks if Tx stopped for a VLAN id.
++ * @ipc_wwan:	Pointer to wwan instance
++ * @id:		Ipc mux channel session id
 + *
-+ * Return: true in success; false in case of error
++ * Return: true if stopped, false otherwise
 + */
-+bool ipc_protocol_dl_td_prepare(struct iosm_protocol *ipc_protocol,
-+				struct ipc_pipe *pipe);
++bool ipc_wwan_is_tx_stopped(struct iosm_wwan *ipc_wwan, int id);
 +
-+/**
-+ * ipc_protocol_dl_td_process - Function for processing the DL data
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe instance
-+ *
-+ * Return: sk_buff instance
-+ */
-+struct sk_buff *ipc_protocol_dl_td_process(struct iosm_protocol *ipc_protocol,
-+					   struct ipc_pipe *pipe);
-+
-+/**
-+ * ipc_protocol_get_head_tail_index - Function for getting Head and Tail
-+ *				      pointer index of given pipe
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe Instance
-+ * @head:		head pointer index of the given pipe
-+ * @tail:		tail pointer index of the given pipe
-+ */
-+void ipc_protocol_get_head_tail_index(struct iosm_protocol *ipc_protocol,
-+				      struct ipc_pipe *pipe, u32 *head,
-+				      u32 *tail);
-+/**
-+ * ipc_protocol_get_ipc_status - Function for getting the IPC Status
-+ * @ipc_protocol:	iosm_protocol instance
-+ *
-+ * Return: Returns IPC State
-+ */
-+enum ipc_mem_device_ipc_state ipc_protocol_get_ipc_status(struct iosm_protocol
-+							  *ipc_protocol);
-+
-+/**
-+ * ipc_protocol_pipe_cleanup - Function to cleanup pipe resources
-+ * @ipc_protocol:	iosm_protocol instance
-+ * @pipe:		Pipe instance
-+ */
-+void ipc_protocol_pipe_cleanup(struct iosm_protocol *ipc_protocol,
-+			       struct ipc_pipe *pipe);
-+
-+/**
-+ * ipc_protocol_get_ap_exec_stage - Function for getting AP Exec Stage
-+ * @ipc_protocol:	pointer to struct iosm protocol
-+ *
-+ * Return: returns BOOT Stages
-+ */
-+enum ipc_mem_exec_stage
-+ipc_protocol_get_ap_exec_stage(struct iosm_protocol *ipc_protocol);
-+
-+/**
-+ * ipc_protocol_pm_dev_get_sleep_notification - Function for getting Dev Sleep
-+ *						notification
-+ * @ipc_protocol:	iosm_protocol instance
-+ *
-+ * Return: Returns dev PM State
-+ */
-+u32 ipc_protocol_pm_dev_get_sleep_notification(struct iosm_protocol
-+					       *ipc_protocol);
 +#endif
 -- 
 2.12.3
