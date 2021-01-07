@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA90C433DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9079C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBD96233CF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:06:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE76A233CF
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Jan 2021 17:07:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728950AbhAGRG6 (ORCPT
+        id S1728817AbhAGRGv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:06:58 -0500
-Received: from mga14.intel.com ([192.55.52.115]:53942 "EHLO mga14.intel.com"
+        Thu, 7 Jan 2021 12:06:51 -0500
+Received: from mga11.intel.com ([192.55.52.93]:22150 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728842AbhAGRG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Jan 2021 12:06:57 -0500
-IronPort-SDR: DnvhWi+X02reVUSzM3wOZLhcsvFxU0UQvmn906HwO41LRJWFXezCCaIW9sP3RexuTeyd77cDt7
- 5rzMMvE9uMdA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="176680942"
+        id S1728669AbhAGRGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:06:50 -0500
+IronPort-SDR: /ULNTXwcafLjLPm3KV3rSykWAU4W1wPkOLCgGIeEvWaccBX1qZRldzt/8cFYm+FSOyaogPzmdj
+ h5aimRAzILJw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9857"; a="173952031"
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="176680942"
+   d="scan'208";a="173952031"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:16 -0800
-IronPort-SDR: RRC1HiPMLzjBEL+F5YAeeyvNo7d36dV3zWfN76XQ4MwUyp4cVX4e0QU9Ali0Qhsr7X4NY9dQvR
- 3YKDfnwpx30w==
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2021 09:06:04 -0800
+IronPort-SDR: ZeeARWeAdvxLqzfdJUEiy43RU1ra+HNWX7kRQOA+6dKBf74Acj89g29ZEs6gucyA5NS1sPKpkV
+ FS3Y2F8xYEzw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,329,1602572400"; 
-   d="scan'208";a="422643882"
+   d="scan'208";a="422643799"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:14 -0800
+  by orsmga001.jf.intel.com with ESMTP; 07 Jan 2021 09:06:02 -0800
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         m.chetan.kumar@intel.com
-Subject: [PATCH 09/18] net: iosm: bottom half
-Date:   Thu,  7 Jan 2021 22:35:14 +0530
-Message-Id: <20210107170523.26531-10-m.chetan.kumar@intel.com>
+Subject: [PATCH 06/18] net: iosm: channel configuration
+Date:   Thu,  7 Jan 2021 22:35:11 +0530
+Message-Id: <20210107170523.26531-7-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210107170523.26531-1-m.chetan.kumar@intel.com>
 References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
@@ -48,320 +48,169 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-1) Bottom half(tasklet) for IRQ and task processing.
-2) Tasks are processed asynchronous and synchronously.
+Defines pipes & channel configurations like channel type,
+pipe mappings, No. of transfer descriptors and transfer
+buffer size etc.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
- drivers/net/wwan/iosm/iosm_ipc_task_queue.c | 247 ++++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_task_queue.h |  46 ++++++
- 2 files changed, 293 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.h
+ drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c | 86 +++++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h | 55 ++++++++++++++++++++
+ 2 files changed, 141 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_task_queue.c b/drivers/net/wwan/iosm/iosm_ipc_task_queue.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c b/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c
 new file mode 100644
-index 000000000000..0820f7fdbd1f
+index 000000000000..d9ac7025ea89
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_task_queue.c
-@@ -0,0 +1,247 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.c
+@@ -0,0 +1,86 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020 Intel Corporation.
 + */
 +
-+#include <linux/slab.h>
++#include "iosm_ipc_chnl_cfg.h"
 +
-+#include "iosm_ipc_task_queue.h"
++/* Max. sizes of a downlink buffers */
++#define IPC_MEM_MAX_DL_FLASH_BUF_SIZE (16 * 1024)
++#define IPC_MEM_MAX_DL_LOOPBACK_SIZE (1 * 1024 * 1024)
++#define IPC_MEM_MAX_DL_AT_BUF_SIZE 2048
++#define IPC_MEM_MAX_DL_RPC_BUF_SIZE (32 * 1024)
++#define IPC_MEM_MAX_DL_MBIM_BUF_SIZE IPC_MEM_MAX_DL_RPC_BUF_SIZE
 +
-+/* Number of available element for the input message queue of the IPC
-+ * ipc_task.
++/* Max. transfer descriptors for a pipe. */
++#define IPC_MEM_MAX_TDS_FLASH_DL 3
++#define IPC_MEM_MAX_TDS_FLASH_UL 6
++#define IPC_MEM_MAX_TDS_AT 4
++#define IPC_MEM_MAX_TDS_RPC 4
++#define IPC_MEM_MAX_TDS_MBIM IPC_MEM_MAX_TDS_RPC
++#define IPC_MEM_MAX_TDS_LOOPBACK 11
++
++/* Accumulation backoff usec */
++#define IRQ_ACC_BACKOFF_OFF 0
++
++/* MUX acc backoff 1ms */
++#define IRQ_ACC_BACKOFF_MUX 1000
++
++/* Modem channel configuration table
++ * Always reserve element zero for flash channel.
 + */
-+#define IPC_THREAD_QUEUE_SIZE 256
-+
-+/**
-+ * struct ipc_task_queue_args - Struct for Task queue elements
-+ * @instance:	Instance pointer for function to be called in tasklet context
-+ * @msg:	Message argument for tasklet function. (optional, can be NULL)
-+ * @completion:	OS object used to wait for the tasklet function to finish for
-+ *		synchronous calls
-+ * @func:	Function to be called in tasklet (tl) context
-+ * @arg:	Generic integer argument for tasklet function (optional)
-+ * @size:	Message size argument for tasklet function (optional)
-+ * @response:	Return code of tasklet function for synchronous calls
-+ * @is_copy:	Is true if msg contains a pointer to a copy of the original msg
-+ *		for async. calls that needs to be freed once the tasklet returns
-+ */
-+struct ipc_task_queue_args {
-+	void *instance;
-+	void *msg;
-+	struct completion *completion;
-+	int (*func)(struct iosm_imem *ipc_imem, int arg, void *msg,
-+		    size_t size);
-+	int arg;
-+	size_t size;
-+	int response;
-+	u8 is_copy : 1;
++static struct ipc_chnl_cfg modem_cfg[] = {
++	/* FLASH Channel */
++	{ IPC_MEM_FLASH_CH_ID, IPC_MEM_PIPE_0, IPC_MEM_PIPE_1,
++	  IPC_MEM_MAX_TDS_FLASH_UL, IPC_MEM_MAX_TDS_FLASH_DL,
++	  IPC_MEM_MAX_DL_FLASH_BUF_SIZE },
++	/* MBIM Channel */
++	{ IPC_MEM_MBIM_CTRL_CH_ID, IPC_MEM_PIPE_12, IPC_MEM_PIPE_13,
++	  IPC_MEM_MAX_TDS_MBIM, IPC_MEM_MAX_TDS_MBIM,
++	  IPC_MEM_MAX_DL_MBIM_BUF_SIZE },
++	/* RPC - 0 */
++	{ IPC_WWAN_DSS_ID_0, IPC_MEM_PIPE_2, IPC_MEM_PIPE_3,
++	  IPC_MEM_MAX_TDS_RPC, IPC_MEM_MAX_TDS_RPC,
++	  IPC_MEM_MAX_DL_RPC_BUF_SIZE },
++	/* IAT0 */
++	{ IPC_WWAN_DSS_ID_1, IPC_MEM_PIPE_4, IPC_MEM_PIPE_5, IPC_MEM_MAX_TDS_AT,
++	  IPC_MEM_MAX_TDS_AT, IPC_MEM_MAX_DL_AT_BUF_SIZE },
++	/* IAT1 */
++	{ IPC_WWAN_DSS_ID_2, IPC_MEM_PIPE_8, IPC_MEM_PIPE_9, IPC_MEM_MAX_TDS_AT,
++	  IPC_MEM_MAX_TDS_AT, IPC_MEM_MAX_DL_AT_BUF_SIZE },
++	/* Loopback */
++	{ IPC_WWAN_DSS_ID_3, IPC_MEM_PIPE_10, IPC_MEM_PIPE_11,
++	  IPC_MEM_MAX_TDS_LOOPBACK, IPC_MEM_MAX_TDS_LOOPBACK,
++	  IPC_MEM_MAX_DL_LOOPBACK_SIZE },
++	/* Trace */
++	{ IPC_WWAN_DSS_ID_4, IPC_MEM_PIPE_6, IPC_MEM_PIPE_7, IPC_MEM_TDS_TRC,
++	  IPC_MEM_TDS_TRC, IPC_MEM_MAX_DL_TRC_BUF_SIZE },
++	/* IP Mux */
++	{ IPC_MEM_MUX_IP_CH_VLAN_ID, IPC_MEM_PIPE_0, IPC_MEM_PIPE_1,
++	  IPC_MEM_MAX_TDS_MUX_LITE_UL, IPC_MEM_MAX_TDS_MUX_LITE_DL,
++	  IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE },
 +};
 +
-+/**
-+ * struct ipc_task_queue - Struct for Task queue
-+ * @dev:	pointer to device structure
-+ * @q_lock:	Protect the message queue of the ipc ipc_task
-+ * @args:	Message queue of the IPC ipc_task
-+ * @q_rpos:	First queue element to process.
-+ * @q_wpos:	First free element of the input queue.
-+ */
-+struct ipc_task_queue {
-+	struct device *dev;
-+	spinlock_t q_lock; /* for atomic operation on queue */
-+	struct ipc_task_queue_args args[IPC_THREAD_QUEUE_SIZE];
-+	unsigned int q_rpos;
-+	unsigned int q_wpos;
-+};
-+
-+/* Actual tasklet function, will be called whenever tasklet is scheduled.
-+ * Calls event handler involves callback for each element in the message queue
-+ */
-+static void ipc_task_queue_handler(unsigned long data)
++int ipc_chnl_cfg_get(struct ipc_chnl_cfg *chnl_cfg, int index)
 +{
-+	struct ipc_task_queue *ipc_task = (struct ipc_task_queue *)data;
-+	unsigned int q_rpos = ipc_task->q_rpos;
++	int array_size = ARRAY_SIZE(modem_cfg);
 +
-+	/* Loop over the input queue contents. */
-+	while (q_rpos != ipc_task->q_wpos) {
-+		/* Get the current first queue element. */
-+		struct ipc_task_queue_args *args = &ipc_task->args[q_rpos];
-+
-+		/* Process the input message. */
-+		if (args->func)
-+			args->response = args->func(args->instance, args->arg,
-+						    args->msg, args->size);
-+
-+		/* Signal completion for synchronous calls */
-+		if (args->completion)
-+			complete(args->completion);
-+
-+		/* Free message if copy was allocated. */
-+		if (args->is_copy)
-+			kfree(args->msg);
-+
-+		/* Set invalid queue element. Technically
-+		 * spin_lock_irqsave is not required here as
-+		 * the array element has been processed already
-+		 * so we can assume that immediately after processing
-+		 * ipc_task element, queue will not rotate again to
-+		 * ipc_task same element within such short time.
-+		 */
-+		args->completion = NULL;
-+		args->func = NULL;
-+		args->msg = NULL;
-+		args->size = 0;
-+		args->is_copy = false;
-+
-+		/* calculate the new read ptr and update the volatile read
-+		 * ptr
-+		 */
-+		q_rpos = (q_rpos + 1) % IPC_THREAD_QUEUE_SIZE;
-+		ipc_task->q_rpos = q_rpos;
-+	}
-+}
-+
-+/* Free memory alloc and trigger completions left in the queue during dealloc */
-+static void ipc_task_queue_cleanup(struct ipc_task_queue *ipc_task)
-+{
-+	unsigned int q_rpos = ipc_task->q_rpos;
-+
-+	while (q_rpos != ipc_task->q_wpos) {
-+		struct ipc_task_queue_args *args = &ipc_task->args[q_rpos];
-+
-+		if (args->completion)
-+			complete(args->completion);
-+
-+		if (args->is_copy)
-+			kfree(args->msg);
-+
-+		q_rpos = (q_rpos + 1) % IPC_THREAD_QUEUE_SIZE;
-+		ipc_task->q_rpos = q_rpos;
-+	}
-+}
-+
-+/* Add a message to the queue and trigger the ipc_task. */
-+static int
-+ipc_task_queue_add_task(struct tasklet_struct *ipc_tasklet,
-+			struct ipc_task_queue *ipc_task,
-+			int arg, void *argmnt,
-+			int (*func)(struct iosm_imem *ipc_imem, int arg,
-+				    void *msg, size_t size),
-+			void *instance, size_t size, bool is_copy, bool wait)
-+{
-+	struct completion completion;
-+	unsigned int pos, nextpos;
-+	unsigned long flags;
-+	int result = -1;
-+
-+	init_completion(&completion);
-+
-+	/* tasklet send may be called from both interrupt or thread
-+	 * context, therefore protect queue operation by spinlock
-+	 */
-+	spin_lock_irqsave(&ipc_task->q_lock, flags);
-+
-+	pos = ipc_task->q_wpos;
-+	nextpos = (pos + 1) % IPC_THREAD_QUEUE_SIZE;
-+
-+	/* Get next queue position. */
-+	if (nextpos != ipc_task->q_rpos) {
-+		/* Get the reference to the queue element and save the passed
-+		 * values.
-+		 */
-+		ipc_task->args[pos].arg = arg;
-+		ipc_task->args[pos].msg = argmnt;
-+		ipc_task->args[pos].func = func;
-+		ipc_task->args[pos].instance = instance;
-+		ipc_task->args[pos].size = size;
-+		ipc_task->args[pos].is_copy = is_copy;
-+		ipc_task->args[pos].completion = wait ? &completion : NULL;
-+		ipc_task->args[pos].response = -1;
-+
-+		/* apply write barrier so that ipc_task->q_rpos elements
-+		 * are updated before ipc_task->q_wpos is being updated.
-+		 */
-+		smp_wmb();
-+
-+		/* Update the status of the free queue space. */
-+		ipc_task->q_wpos = nextpos;
-+		result = 0;
-+	}
-+
-+	spin_unlock_irqrestore(&ipc_task->q_lock, flags);
-+
-+	if (result == 0) {
-+		tasklet_schedule(ipc_tasklet);
-+
-+		if (wait) {
-+			wait_for_completion(&completion);
-+			result = ipc_task->args[pos].response;
-+		}
-+	} else {
-+		dev_err(ipc_task->dev, "queue is full");
-+	}
-+
-+	return result;
-+}
-+
-+int ipc_task_queue_send_task(struct iosm_imem *imem,
-+			     int (*func)(struct iosm_imem *ipc_imem, int arg,
-+					 void *msg, size_t size),
-+			     int arg, void *msg, size_t size, bool wait)
-+{
-+	struct tasklet_struct *ipc_tasklet = imem->ipc_tasklet;
-+	struct ipc_task_queue *ipc_task = imem->ipc_task;
-+	bool is_copy = false;
-+	void *copy = msg;
-+
-+	if (size > 0) {
-+		copy = kmemdup(msg, size, GFP_ATOMIC);
-+		if (!copy)
-+			return -ENOMEM;
-+
-+		is_copy = true;
-+	}
-+
-+	if (ipc_task_queue_add_task(ipc_tasklet, ipc_task, arg, copy, func,
-+				    imem, size, is_copy, wait) < 0) {
-+		dev_err(ipc_task->dev,
-+			"add task failed for %ps %d, %p, %zu, %d", func, arg,
-+			copy, size, is_copy);
-+		if (is_copy)
-+			kfree(copy);
++	if (index >= array_size) {
++		pr_err("index: %d and array_size %d", index, array_size);
 +		return -1;
 +	}
 +
++	if (index == IPC_MEM_MUX_IP_CH_VLAN_ID)
++		chnl_cfg->accumulation_backoff = IRQ_ACC_BACKOFF_MUX;
++	else
++		chnl_cfg->accumulation_backoff = IRQ_ACC_BACKOFF_OFF;
++
++	chnl_cfg->ul_nr_of_entries = modem_cfg[index].ul_nr_of_entries;
++	chnl_cfg->dl_nr_of_entries = modem_cfg[index].dl_nr_of_entries;
++	chnl_cfg->dl_buf_size = modem_cfg[index].dl_buf_size;
++	chnl_cfg->id = modem_cfg[index].id;
++	chnl_cfg->ul_pipe = modem_cfg[index].ul_pipe;
++	chnl_cfg->dl_pipe = modem_cfg[index].dl_pipe;
++
 +	return 0;
 +}
-+
-+struct ipc_task_queue *ipc_task_queue_init(struct tasklet_struct *ipc_tasklet,
-+					   struct device *dev)
-+{
-+	struct ipc_task_queue *ipc_task = kzalloc(sizeof(*ipc_task),
-+						  GFP_KERNEL);
-+
-+	if (!ipc_task)
-+		return NULL;
-+
-+	ipc_task->dev = dev;
-+
-+	/* Initialize the spinlock needed to protect the message queue of the
-+	 * ipc_task
-+	 */
-+	spin_lock_init(&ipc_task->q_lock);
-+
-+	tasklet_init(ipc_tasklet, ipc_task_queue_handler,
-+		     (unsigned long)ipc_task);
-+
-+	return ipc_task;
-+}
-+
-+void ipc_task_queue_deinit(struct ipc_task_queue *ipc_task)
-+{
-+	/* This will free/complete any outstanding messages,
-+	 * without calling the actual handler
-+	 */
-+	ipc_task_queue_cleanup(ipc_task);
-+
-+	kfree(ipc_task);
-+}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_task_queue.h b/drivers/net/wwan/iosm/iosm_ipc_task_queue.h
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h b/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h
 new file mode 100644
-index 000000000000..5591213bcb6d
+index 000000000000..d7bb9db5ec6b
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_task_queue.h
-@@ -0,0 +1,46 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_chnl_cfg.h
+@@ -0,0 +1,55 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
-+ * Copyright (C) 2020 Intel Corporation.
++ * Copyright (C) 2020 Intel Corporation
 + */
 +
-+#ifndef IOSM_IPC_TASK_QUEUE_H
-+#define IOSM_IPC_TASK_QUEUE_H
++#ifndef IOSM_IPC_CHNL_CFG_H
++#define IOSM_IPC_CHNL_CFG_H
 +
-+#include <linux/interrupt.h>
++#include "iosm_ipc_mux.h"
 +
-+#include "iosm_ipc_imem.h"
++/* Number of TDs on the trace channel */
++#define IPC_MEM_TDS_TRC 32
++
++/* Trace channel TD buffer size. */
++#define IPC_MEM_MAX_DL_TRC_BUF_SIZE 8192
++
++/* Type of the WWAN ID */
++enum ipc_wwan_id {
++	IPC_WWAN_DSS_ID_0 = 257,
++	IPC_WWAN_DSS_ID_1,
++	IPC_WWAN_DSS_ID_2,
++	IPC_WWAN_DSS_ID_3,
++	IPC_WWAN_DSS_ID_4,
++};
 +
 +/**
-+ * ipc_task_queue_init - Allocate a tasklet
-+ * @ipc_tasklet:	Pointer to tasklet_struct
-+ * @dev:		Pointer to device structure
++ * struct ipc_chnl_cfg - IPC channel configuration structure
++ * @id:				VLAN ID
++ * @ul_pipe:			Uplink datastream
++ * @dl_pipe:			Downlink datastream
++ * @ul_nr_of_entries:		Number of Transfer descriptor uplink pipe
++ * @dl_nr_of_entries:		Number of Transfer descriptor downlink pipe
++ * @dl_buf_size:		Downlink buffer size
++ * @accumulation_backoff:	Time in usec for data accumalation
++ */
++struct ipc_chnl_cfg {
++	int id;
++	u32 ul_pipe;
++	u32 dl_pipe;
++	u32 ul_nr_of_entries;
++	u32 dl_nr_of_entries;
++	u32 dl_buf_size;
++	u32 accumulation_backoff;
++};
++
++/**
++ * ipc_chnl_cfg_get - Get pipe configuration.
++ * @chnl_cfg:		Array of ipc_chnl_cfg struct
++ * @index:		Channel index (upto MAX_CHANNELS)
 + *
-+ * Returns: Pointer to allocated ipc_task data-struct or NULL on failure.
++ * Return: 0 on success and -1 on failure
 + */
-+struct ipc_task_queue *ipc_task_queue_init(struct tasklet_struct *ipc_tasklet,
-+					   struct device *dev);
-+
-+/**
-+ * ipc_task_queue_deinit - Free a tasklet, invalidating its pointer.
-+ * @ipc_task:	Pointer to ipc_task instance
-+ */
-+void ipc_task_queue_deinit(struct ipc_task_queue *ipc_task);
-+
-+/**
-+ * ipc_task_queue_send_task - Synchronously/Asynchronously call a function in
-+ *			      tasklet context.
-+ * @imem:		Pointer to iosm_imem struct
-+ * @func:		Function to be called in tasklet context
-+ * @arg:		Integer argument for func
-+ * @msg:		Message pointer argument for func
-+ * @size:		Size argument for func
-+ * @wait:		if true wait for result
-+ *
-+ * Returns: Result value returned by func or -1 if func could not be called.
-+ */
-+int ipc_task_queue_send_task(struct iosm_imem *imem,
-+			     int (*func)(struct iosm_imem *ipc_imem, int arg,
-+					 void *msg, size_t size),
-+			     int arg, void *msg, size_t size, bool wait);
++int ipc_chnl_cfg_get(struct ipc_chnl_cfg *chnl_cfg, int index);
 +
 +#endif
 -- 
