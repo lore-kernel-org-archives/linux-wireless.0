@@ -2,168 +2,111 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66514C433E0
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Jan 2021 17:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9388CC433DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:16:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27680239FE
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Jan 2021 17:59:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A631206DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:16:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725966AbhAIR6u (ORCPT
+        id S1726443AbhAJMQQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Jan 2021 12:58:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41958 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725926AbhAIR6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Jan 2021 12:58:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 25E64239FE;
-        Sat,  9 Jan 2021 17:58:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610215089;
-        bh=brtHD0NLnmrz6mWYTIuQ2iCN136lnIO0o8MoWQg3S3s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=UGeY7riIC7pO6FirWENKmsOmPe5ey/DNlevObWEVddwED3oTHdRJhAKUMcr478j6+
-         xMfIzdH+Ozrokn/+MgmrHj1F3Fz8o1th7hDL1jupNBPFgfos/E1hFmN/XVKL/EWnvd
-         ZtewlQif5FcO18+JE6b2m2t8nggRJd7FVLqeryllVu2dfq93OmDc/hpg9+cvuqjA9p
-         yGbzXAMWZQ4ZS2C1Y36JiaqqIHo3IYJ25XaP1ZIm5Jhko3hdpWxRD30dVN+xxqBQ01
-         5Yi1Lc8C5LVWQlhgDurRAndwN+xzPUSA1s9ArQsnHJ9Nz4QCgtOhNbPk7Mbtypk90Z
-         UjKiVETNsFmlQ==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
+        Sun, 10 Jan 2021 07:16:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41002 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726250AbhAJMQP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 10 Jan 2021 07:16:15 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 483FAC0617A2;
+        Sun, 10 Jan 2021 04:15:35 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id t6so8056532plq.1;
+        Sun, 10 Jan 2021 04:15:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=q8foebQUtGdCypSWJHLEUtXdb+11eXd3D5tTzSpdHi4=;
+        b=vNDO9XhNgi/jOXglfVW3ZDrJ5XjA2pAAJAQldBivQ6k/3l0t/ppYVQf1WyZRo7D+Hz
+         yTpy3C5ucWyI0VaCiJ3riJ2WkfebApRChkHJjaRXPdU5ke5SpEbHFCeXKy7HNxgQUShj
+         Nt+veaMh37f22kyJdF49JHLJSIdg/c4QOnhzLsiuIK+51luEOEtYZoJcXLUJE+K2ZsMC
+         o4aeb9hdQB7ROZMI/vD85fp5OQ6nfw8rerbgnKqrEYfxbSiU5CNIUAI75M7vsl9i+EPn
+         EdBeXtGNzID7aurrJFumDCc6Jd5xLhxXA5eVtcsbroX69D8EM3BcricRUP+a7ANu7Tvd
+         X58A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=q8foebQUtGdCypSWJHLEUtXdb+11eXd3D5tTzSpdHi4=;
+        b=Re4ZqaBEE4LIalq82ox0nRIKlgrHj6YPAYynaof5K1p2kR/i3hPbzzFI9immMQU7qV
+         BppnD6Zb88uXooSmHZbi3hoE/5MH4XyX1DxdfghK3k8jF+nnkJST4CcSDTTOgpGieLXi
+         CsH9Gc1wOgxz/b0dZfHGRNVZCCY5t/DIDUKvKXCJrOShTI7KFY6w82aD2M98thHFZD6B
+         C4zXvrsgoMzxFvhkTOfRNlH9QsbwGeLyvMcMrEgyXfJyspDClA85sDW0vS5wIFsXHzIf
+         3EcyjYX6xb7Wd166tMny8K9G/silLES4GEtcDCXJ2rMxmJ/wU3J5/TPflFAcPWE49x9M
+         S6YA==
+X-Gm-Message-State: AOAM533ZjUOrhr8960PsnwnpJL48tdLlcSq5IPUDM5KCy1jNpkz0xr+X
+        HX1BZ5lre2gGClBxyWYM4O8YnhcuURIAq5BP
+X-Google-Smtp-Source: ABdhPJy2YzfzC41j6G3vg4QRgtbHlF/H61TP8HB26CIho8E4kTDY1jTU3xlowlN1CWMlCMlTo96GgQ==
+X-Received: by 2002:a17:902:228:b029:da:6be8:ee22 with SMTP id 37-20020a1709020228b02900da6be8ee22mr12244804plc.44.1610280934403;
+        Sun, 10 Jan 2021 04:15:34 -0800 (PST)
+Received: from localhost.localdomain ([2405:201:600d:a089:381d:ba42:3c3c:81ce])
+        by smtp.googlemail.com with ESMTPSA id y5sm10959791pjt.42.2021.01.10.04.15.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 10 Jan 2021 04:15:33 -0800 (PST)
+From:   Aditya Srivastava <yashsri421@gmail.com>
 To:     linux-wireless@vger.kernel.org
-Cc:     lorenzo.bianconi@redhat.com, johannes@sipsolutions.net,
-        toke@redhat.com
-Subject: [PATCH v2 mac80211-next] mac80211: introduce aql_enable node in debugfs
-Date:   Sat,  9 Jan 2021 18:57:51 +0100
-Message-Id: <e7a934d5d84e4796c4f97ea5de4e66c824296b07.1610214851.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.29.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Cc:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        lukas.bulwahn@gmail.com, yashsri421@gmail.com
+Subject: [PATCH 0/5] rtlwifi: fix bool comparison in expressions
+Date:   Sun, 10 Jan 2021 17:45:20 +0530
+Message-Id: <20210110121525.2407-1-yashsri421@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <3c121981-1468-fc9d-7813-483246066cc4@lwfinger.net>
+References: <3c121981-1468-fc9d-7813-483246066cc4@lwfinger.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce aql_enable node in debugfs in order to enable/disable aql.
-This is useful for debugging purpose.
+This patch series fixes the bool comparison in conditional expressions
+for all the drivers in rtlwifi.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
-Changes since v1:
-- rely on static_key to reduce overhead
----
- net/mac80211/debugfs.c     | 51 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/tx.c          |  5 ++++
- 3 files changed, 58 insertions(+)
+There are certain conditional expressions in rtlwifi drivers, where a
+boolean variable is compared with true/false, in forms such as
+(foo == true) or (false != bar), which does not comply with checkpatch.pl
+(CHECK: BOOL_COMPARISON), according to which boolean variables should be
+themselves used in the condition, rather than comparing with true/false
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 48f144f107d5..c97443f59063 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -284,6 +284,56 @@ static const struct file_operations aql_txq_limit_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t aql_enable_read(struct file *file, char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	char buf[3];
-+	int len;
-+
-+	len = scnprintf(buf, sizeof(buf), "%d\n",
-+			!static_key_false(&aql_disable.key));
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t aql_enable_write(struct file *file, const char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+	bool aql_disabled = static_key_false(&aql_disable.key);
-+	char buf[3];
-+	size_t len;
-+
-+	if (count > sizeof(buf))
-+		return -EINVAL;
-+
-+	if (copy_from_user(buf, user_buf, count))
-+		return -EFAULT;
-+
-+	buf[sizeof(buf) - 1] = '\0';
-+	len = strlen(buf);
-+	if (len > 0 && buf[len - 1] == '\n')
-+		buf[len - 1] = 0;
-+
-+	if (buf[0] == '0' && buf[1] == '\0') {
-+		if (!aql_disabled)
-+			static_branch_inc(&aql_disable);
-+	} else if (buf[0] == '1' && buf[1] == '\0') {
-+		if (aql_disabled)
-+			static_branch_dec(&aql_disable);
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+	return count;
-+}
-+
-+static const struct file_operations aql_enable_ops = {
-+	.write = aql_enable_write,
-+	.read = aql_enable_read,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t force_tx_status_read(struct file *file,
- 				    char __user *user_buf,
- 				    size_t count,
-@@ -572,6 +622,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(power);
- 	DEBUGFS_ADD(hw_conf);
- 	DEBUGFS_ADD_MODE(force_tx_status, 0600);
-+	DEBUGFS_ADD_MODE(aql_enable, 0600);
- 
- 	if (local->ops->wake_tx_queue)
- 		DEBUGFS_ADD_MODE(aqm, 0600);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8bf9c0e974d6..c7685273570f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1143,6 +1143,8 @@ enum mac80211_scan_state {
- 	SCAN_ABORT,
- };
- 
-+DECLARE_STATIC_KEY_FALSE(aql_disable);
-+
- struct ieee80211_local {
- 	/* embed the driver visible part.
- 	 * don't cast (use the static inlines below), but we keep
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6422da6690f7..f00f6e80261b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3823,6 +3823,8 @@ void __ieee80211_schedule_txq(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(__ieee80211_schedule_txq);
- 
-+DEFINE_STATIC_KEY_FALSE(aql_disable);
-+
- bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
- 				 struct ieee80211_txq *txq)
- {
-@@ -3832,6 +3834,9 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
- 	if (!wiphy_ext_feature_isset(local->hw.wiphy, NL80211_EXT_FEATURE_AQL))
- 		return true;
- 
-+	if (static_branch_unlikely(&aql_disable))
-+		return true;
-+
- 	if (!txq->sta)
- 		return true;
- 
+E.g., in drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c,
+"if (mac->act_scanning == true)" can be replaced with
+"if (mac->act_scanning)"
+
+Fix all such expressions with the bool variables appropriately for all
+the drivers in rtlwifi
+
+* The changes made are compile tested.
+* The patches apply perfectly on next-20210108
+
+Aditya Srivastava (5):
+  rtlwifi: rtl_pci: fix bool comparison in expressions
+  rtlwifi: rtl8192c-common: fix bool comparison in expressions
+  rtlwifi: rtl8188ee: fix bool comparison in expressions
+  rtlwifi: rtl8192se: fix bool comparison in expressions
+  rtlwifi: rtl8821ae: fix bool comparison in expressions
+
+ drivers/net/wireless/realtek/rtlwifi/ps.c                 | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c       | 8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c       | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c       | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c      | 8 ++++----
+ 6 files changed, 16 insertions(+), 16 deletions(-)
+
 -- 
-2.29.2
+2.17.1
 
