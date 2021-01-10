@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D57DC4332D
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45953C433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5FBC2082D
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:16:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07881206DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Jan 2021 12:17:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726527AbhAJMQV (ORCPT
+        id S1726682AbhAJMQn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Jan 2021 07:16:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41028 "EHLO
+        Sun, 10 Jan 2021 07:16:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726250AbhAJMQU (ORCPT
+        with ESMTP id S1726250AbhAJMQn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jan 2021 07:16:20 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 111CAC0617A3;
-        Sun, 10 Jan 2021 04:15:40 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id g15so10754642pgu.9;
-        Sun, 10 Jan 2021 04:15:40 -0800 (PST)
+        Sun, 10 Jan 2021 07:16:43 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB6FC0617A5;
+        Sun, 10 Jan 2021 04:15:47 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id p12so6106037pju.5;
+        Sun, 10 Jan 2021 04:15:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=iVUpnewCYxAmE3x0Y0aBU2Pf48lHqJK5gRlrTNmnLnw=;
-        b=X03ytBtG1fgBmWRr0i9Y7/VHATIX3ymIHcmtUaQd+ObNkGfvlFja8/7VbQJbyTilQY
-         QtKur3yHjvsIbQHGF4nhkjnihBRAJ4GhqF97E0Sgmu9II61ESzk7qeWByz6V3t93wDrx
-         zkFvZdJ7vT23Kd1cPu+8Jo9BRI6waHtEAasImMPbChLey44H44LLYJVc3Y/NNPOvSANm
-         eo15lPld4J1WmAJ9n9XADAGgYMM2ixtpy4lZ0GOOMBy7EuIP+sGZ86uUZ0QAEeDwfTok
-         Llz9YXHEmfYmyE5Ai/7v9ZnkfMXEUtMh26AzZWK4Bj55XGUzaKObqfQ3Xls3RZhzZlKJ
-         7skA==
+        bh=pDEEvJ1raRHovODvVibZtDrKwCKJS8ji5cQnuEVu9AU=;
+        b=MBjX5Y9FARb2FMBMlNC5DaPzVJYt9sa0Habl/+AgRVKXnklO3mQ3Kd95BGdG0h4APM
+         Y+YhKW270hNPN+GAlVuc4n7KgSHwgA5WKEjy1BcdubFnuwKO8+dFnzebnz0KwgUB3Rd7
+         EeYcBgAIxt8GKk5zamNAft+QCWbaN83hW0eE/igQZUxbq6tQFRONrDFEhCKJJewbmbWj
+         XHdRg1Fo4UDU9iSoqqfJWkyTgNdgL+lovu2OlyB18snHusjCtYJ3EP7sFoindhpY5Dsv
+         oF1aH8pNj5jyHsnjgV7qj3Gpfa2gmE2lMkQbVgzoCKUPYWb9GuNGamnmhXq7ElclRLK8
+         4SWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=iVUpnewCYxAmE3x0Y0aBU2Pf48lHqJK5gRlrTNmnLnw=;
-        b=cQB2y4K77V9saRdPPgMWKHi8LvIRvWyAsukvaZbmLo2gInylGmzfRyPHiXFKffCYqe
-         rFzy+0KnV+qjFksvQdAO3u5A0HD52QiL83KxnskoebFPA2sAurAQ7ok9yi2qU8wTlfud
-         c8acDVnjRo266rLMyjOPAqMC/8Je+LxEUb/Ix7QaL7xv/FekNWAtUx2ODzDgBZ7CbMdg
-         EYGz+uJQ4kLc8OlTbB9uMy3j7IgNMSS6ywz++l35Y7EXju33L+xMHL/splcV8W0NUNky
-         hyEHW7ORgPUuIgldrFl2RMOJIpW4QSnci/rB0JSFxnjdOzQOQyDGCw85wtuO2EIzRzPK
-         h/vQ==
-X-Gm-Message-State: AOAM533HZ9ZIFJEaNt4n3j+eNDPg8UsH0b7PSu7H+oVbqmFQYhphoBcJ
-        fqDL4wPTz9HQtC9H9Q+wg4bSqM8k9A9+7l3q
-X-Google-Smtp-Source: ABdhPJxUnAbYJooToG2g8hLQx/QHqJiwASfde63P/54nWB7MoIg3hAAwGqKEtMAUKUpHuxpNED4zCQ==
-X-Received: by 2002:a63:545f:: with SMTP id e31mr15536593pgm.327.1610280939279;
-        Sun, 10 Jan 2021 04:15:39 -0800 (PST)
+        bh=pDEEvJ1raRHovODvVibZtDrKwCKJS8ji5cQnuEVu9AU=;
+        b=jNgFCXVojVSY73yoBMfal0GXp05Lw1ETx5leC4hFdlCbu3ckb+/7wzIQ2K2qrHNwaY
+         Xa9NyRq8mQtNbYurc4ZfJGMuYD2qx6DOVl+VJAZzNhTiDFIT8tovKQoAOWeccr8gWTbN
+         xcBU46UIS5PquAwFhTbk/I6ISg163Sm70eA/iBt2+pE9NJupdL9swv4cidCRa2HDrKji
+         0MX9JLE3PoMTPWLxyEQ0NO4AUvDYoqop7JcBcghx0Bp+t6RHtpXGVKbk9s9m6asJ4cNQ
+         WPK+FpsWYjx/XRkI438dnjQax6ddn3fcPW6ZJD0NbQr6Whng9AfNsfHVeLZUr83MwcXp
+         fujw==
+X-Gm-Message-State: AOAM533AWwVBWlxONHh/j1OjvrHh4FVrRclxrhMReOFdZSfQ0VFGJVZ6
+        66XIVEH6+sqP0UW2V45BfvzXds960M1whA==
+X-Google-Smtp-Source: ABdhPJwmOW2gS/r2V+OiuIjnYnknqXowh5GM0aAdpna5+cM/rvaentF8D04RcnV2A9dHu71MAGaQ9Q==
+X-Received: by 2002:a17:90b:1945:: with SMTP id nk5mr12666347pjb.30.1610280947142;
+        Sun, 10 Jan 2021 04:15:47 -0800 (PST)
 Received: from localhost.localdomain ([2405:201:600d:a089:381d:ba42:3c3c:81ce])
-        by smtp.googlemail.com with ESMTPSA id y5sm10959791pjt.42.2021.01.10.04.15.34
+        by smtp.googlemail.com with ESMTPSA id y5sm10959791pjt.42.2021.01.10.04.15.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Jan 2021 04:15:38 -0800 (PST)
+        Sun, 10 Jan 2021 04:15:46 -0800 (PST)
 From:   Aditya Srivastava <yashsri421@gmail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
@@ -64,9 +64,9 @@ Cc:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
         linux-kernel@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         lukas.bulwahn@gmail.com, yashsri421@gmail.com
-Subject: [PATCH 1/5] rtlwifi: rtl_pci: fix bool comparison in expressions
-Date:   Sun, 10 Jan 2021 17:45:21 +0530
-Message-Id: <20210110121525.2407-2-yashsri421@gmail.com>
+Subject: [PATCH 3/5] rtlwifi: rtl8188ee: fix bool comparison in expressions
+Date:   Sun, 10 Jan 2021 17:45:23 +0530
+Message-Id: <20210110121525.2407-4-yashsri421@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210110121525.2407-1-yashsri421@gmail.com>
 References: <3c121981-1468-fc9d-7813-483246066cc4@lwfinger.net>
@@ -75,38 +75,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are certain conditional expressions in rtl_pci, where a boolean
+There are certain conditional expressions in rtl8188ee, where a boolean
 variable is compared with true/false, in forms such as (foo == true) or
 (false != bar), which does not comply with checkpatch.pl (CHECK:
 BOOL_COMPARISON), according to which boolean variables should be
 themselves used in the condition, rather than comparing with true/false
 
-E.g., in drivers/net/wireless/realtek/rtlwifi/ps.c,
-"if (find_p2p_ie == true)" can be replaced with "if (find_p2p_ie)"
+E.g., in drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c,
+"if (mac->act_scanning == true)" can be replaced with
+"if (mac->act_scanning)"
 
 Replace all such expressions with the bool variables appropriately
 
 Signed-off-by: Aditya Srivastava <yashsri421@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/ps.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c | 8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index f99882255d48..629c03271bde 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -798,9 +798,9 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
- 		ie += 3 + noa_len;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+index d10c14c694da..6f61d6a10627 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+@@ -474,11 +474,11 @@ static void rtl88e_dm_dig(struct ieee80211_hw *hw)
+ 	u8 dm_dig_max, dm_dig_min;
+ 	u8 current_igi = dm_dig->cur_igvalue;
  
--	if (find_p2p_ie == true) {
-+	if (find_p2p_ie) {
- 		if ((p2pinfo->p2p_ps_mode > P2P_PS_NONE) &&
--		    (find_p2p_ps_ie == false))
-+		    (!find_p2p_ps_ie))
- 			rtl_p2p_ps_cmd(hw, P2P_PS_DISABLE);
- 	}
- }
+-	if (rtlpriv->dm.dm_initialgain_enable == false)
++	if (!rtlpriv->dm.dm_initialgain_enable)
+ 		return;
+-	if (dm_dig->dig_enable_flag == false)
++	if (!dm_dig->dig_enable_flag)
+ 		return;
+-	if (mac->act_scanning == true)
++	if (mac->act_scanning)
+ 		return;
+ 
+ 	if (mac->link_state >= MAC80211_LINKED)
+@@ -1637,7 +1637,7 @@ static void rtl88e_dm_fast_ant_training(struct ieee80211_hw *hw)
+ 			}
+ 		}
+ 
+-		if (bpkt_filter_match == false) {
++		if (!bpkt_filter_match) {
+ 			rtl_set_bbreg(hw, DM_REG_TXAGC_A_1_MCS32_11N,
+ 				      BIT(16), 0);
+ 			rtl_set_bbreg(hw, DM_REG_IGI_A_11N, BIT(7), 0);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index bd9160b166c5..861cc663ca93 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1269,12 +1269,12 @@ void rtl88ee_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
+-	if (check_bssid == true) {
++	if (check_bssid) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
+ 					      (u8 *)(&reg_rcr));
+ 		_rtl88ee_set_bcn_ctrl_reg(hw, 0, BIT(4));
+-	} else if (check_bssid == false) {
++	} else if (!check_bssid) {
+ 		reg_rcr &= (~(RCR_CBSSID_DATA | RCR_CBSSID_BCN));
+ 		_rtl88ee_set_bcn_ctrl_reg(hw, BIT(4), 0);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw,
 -- 
 2.17.1
 
