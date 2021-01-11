@@ -2,76 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DE31C4332B
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01365C433E6
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:47:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 150C622A83
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E96D224F9
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730039AbhAKLp5 (ORCPT
+        id S1730153AbhAKLrE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Jan 2021 06:45:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58816 "EHLO
+        Mon, 11 Jan 2021 06:47:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729792AbhAKLp5 (ORCPT
+        with ESMTP id S1729779AbhAKLrE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jan 2021 06:45:57 -0500
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAAE7C061786
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2021 03:45:15 -0800 (PST)
-Received: by mail-wm1-x331.google.com with SMTP id c124so13522584wma.5
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2021 03:45:15 -0800 (PST)
+        Mon, 11 Jan 2021 06:47:04 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B64BDC061786
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2021 03:46:23 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id e25so14804029wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2021 03:46:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=kq2BYChqKF8bwxscQEMvKxiK0ZMhVQt2WZ5WnMw9HwA=;
-        b=y/9uYpnr1aCQHPcanbNm2fhtkzOcBntCw5swBbKzXoxM2v6KscE+jvacJimtPJnPPl
-         wjF70X5+lSq4Pe3b/w6LRftokWl2ZzU9in7NXlHoZWVyesnad4/m/CWXwmxpivSK5Trk
-         UMqSFMHqEZNcZNy2C0zEhqVPzozhMNi0QX//0h5JoNQnzn2g3YQTaed96RNwjcuaUO/s
-         pM9mn9AHPtvhjd7zYYF7FP+bOOW4JsRjVPkE9DZC+GQP84JsKpi9b0Vz/+q6DEuXw8+g
-         ig+EbPOX7oDYU64plMFsLQ8Y4uijkeZNLus1zmL2lb7sBT+X8cEivK0OC0M3C5pgvkno
-         4mxw==
+        bh=XSf3cATVnfXU2DHec2iv9P/oWqfxNRXAiyDBkuQGH6g=;
+        b=zr73rtWTUTRpgsggCjbRLLAfX6pwJ2FeDLhUwTquaDJa8Wf2z+u0brqiy+Ciiq5JnH
+         jKkoceI+FsEObixhCogn3p00EIQCrxUHY6bFN9M/rduVrk5VbyLpl9Rtok24a4TB3g8V
+         +m0hBVsWcGQgy0PzNKMW6EZnebzflMiuJ3jQAbZ20btRu06Fn8pJZ2MIfKT4JHW8QssJ
+         NjdT5wMt728QEyjoLYku3E08s3cYlN5SzTeQNL0YV8tXI3DSb1m+WBvvpZaeoX07jHpD
+         1PVj0YIEJi2dBRhwzFJ6nwIaMZnIKa8Tb12TfPZO2CAdAK77q2w/aG85C1BPR649d42R
+         0vvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=kq2BYChqKF8bwxscQEMvKxiK0ZMhVQt2WZ5WnMw9HwA=;
-        b=nbf1ai3PiqQzaW4NVHPBl59+MRuonUZRzAOF7NuVI5OGRtIHk9X2mwg6cc07iuxOkl
-         4vDOautn+d19LsiH8REDpUQrh85Fm2jJNv8LPWgd7Eb5k6FCnIP6/kIyNNgAinOgLKS9
-         uA7TJs/A61Ljce/bbipuozdCdxZctQeDAQPBgS/iqZQmkEbyS4zDNsE4z1daBaKKak6M
-         xvChYzPur1+7JYZr0UN2Pr5y9qeJX1Dvvjk7+x+I2zZ4ANvW9MeGsdJSt0gBZRLxHX3u
-         mLvAp0LRgWD/H0TVJofygUS0XUCiUIcIq+fIkDsCxnI/WnWkZTzLNqsIhXf6Vv2SxtNk
-         mXdQ==
-X-Gm-Message-State: AOAM530Q9YdutqEg+YMPLOH29ARXgD2GCB5LxOVSyTHblj/+8ntVMT06
-        xLsjop/N4kjdcZ+hA1+YN+bgXQ==
-X-Google-Smtp-Source: ABdhPJxAAWCKyaUr9VIf9dK8+BKB5nTufcc4t1jvCp/cua0fuLC74WJ6B/CF2+VaQntuCjn1FE0cJA==
-X-Received: by 2002:a1c:a5d4:: with SMTP id o203mr14339399wme.41.1610365514503;
-        Mon, 11 Jan 2021 03:45:14 -0800 (PST)
+        bh=XSf3cATVnfXU2DHec2iv9P/oWqfxNRXAiyDBkuQGH6g=;
+        b=INMoIBUDCmMuvYm2X3iScqr3h5qHuvCxd57eOBcxdYebd/g0wPCDhmwl6skitK/N4/
+         fkUUYomILtMBYanugQVe2UikEKzhMi7rbusgRwFbTayY0/ss64JSSNgyiK+Tw4OuPIi4
+         uZ3jwJOEObUbaX54z9YbrDfKus5iFq74QQ90goVB73mfvFwhdWXC36Jcsd//dd/M1BEc
+         3m56n8FbD5h9umxej+B0QcCRjbyKJBUdFS7e1IOAs1lW1gZnQV10TSKDhP0tf02I6Jvq
+         uq+emBk/oMvyIEKsSix1b/xjY0oHIm7W2bMDxnGqJOHB4FE3la98RadNe4W1i7iaCFMF
+         I/VQ==
+X-Gm-Message-State: AOAM531GoE++znFQaUDjliZp5CDkbHqHIjxyXe5hBqmTvT7zF/ErFa1m
+        +j8uVaP+/Gla22Hz1wT8a+mk9Q==
+X-Google-Smtp-Source: ABdhPJwPzIdMvHEDHkyaHbdp0KMiNY2Cz9nsTrlZaGHdjXktUUxNQX/MOZol9PHIS6SBRhKddr4cVw==
+X-Received: by 2002:a7b:c45a:: with SMTP id l26mr14318503wmi.91.1610365582544;
+        Mon, 11 Jan 2021 03:46:22 -0800 (PST)
 Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id m18sm23978474wrw.43.2021.01.11.03.45.13
+        by smtp.gmail.com with ESMTPSA id z63sm22392997wme.8.2021.01.11.03.46.21
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Jan 2021 03:45:13 -0800 (PST)
-Subject: Re: [PATCH 11/13] wcn36xx: Do not suspend if scan in progress
+        Mon, 11 Jan 2021 03:46:21 -0800 (PST)
+Subject: Re: [PATCH 10/13] wcn36xx: Add GTK offload info to WoWLAN resume
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         shawn.guo@linaro.org, benl@squareup.com, loic.poulain@linaro.org
 References: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
- <20201228162839.369156-12-bryan.odonoghue@linaro.org>
- <87wnwjk8w7.fsf@codeaurora.org>
+ <20201228162839.369156-11-bryan.odonoghue@linaro.org>
+ <874kjnlnl7.fsf@codeaurora.org>
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Message-ID: <d74c7eaa-3f3e-9eef-8c2a-59f5720c4232@linaro.org>
-Date:   Mon, 11 Jan 2021 11:46:28 +0000
+Message-ID: <88abab57-7ed7-392a-77cc-dc7cb3d6e4d7@linaro.org>
+Date:   Mon, 11 Jan 2021 11:47:36 +0000
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.3
 MIME-Version: 1.0
-In-Reply-To: <87wnwjk8w7.fsf@codeaurora.org>
+In-Reply-To: <874kjnlnl7.fsf@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,34 +79,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/01/2021 11:31, Kalle Valo wrote:
+On 11/01/2021 11:28, Kalle Valo wrote:
 > Bryan O'Donoghue <bryan.odonoghue@linaro.org> writes:
 > 
->> If a scan is in progress do not attempt to enter into suspend. Allow the
->> scan process to quiesce before proceeding.
+>> Having enabled GTK rekey in suspend, we need to extract the replay counter
+>> from the firmware on resume and perform a ieee80211_gtk_rekey_notify() so
+>> that the STA remains verified from the perspective of the AP.
 >>
 >> Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+>> ---
+>>   drivers/net/wireless/ath/wcn36xx/hal.h  |  4 +-
+>>   drivers/net/wireless/ath/wcn36xx/main.c |  5 +-
+>>   drivers/net/wireless/ath/wcn36xx/smd.c  | 72 +++++++++++++++++++++++++
+>>   drivers/net/wireless/ath/wcn36xx/smd.h  |  3 ++
+>>   4 files changed, 81 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+>> index 1f3c2e840232..455143c4164e 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/hal.h
+>> +++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+>> @@ -4919,7 +4919,7 @@ struct wcn36xx_hal_gtk_offload_rsp_msg {
+>>   struct wcn36xx_hal_gtk_offload_get_info_req_msg {
+>>   	struct wcn36xx_hal_msg_header header;
+>>   	u8 bss_index;
+>> -};
+>> +} __packed;
+>>   
+>>   struct wcn36xx_hal_gtk_offload_get_info_rsp_msg {
+>>   	struct wcn36xx_hal_msg_header header;
+>> @@ -4943,7 +4943,7 @@ struct wcn36xx_hal_gtk_offload_get_info_rsp_msg {
+>>   	u32 igtk_rekey_count;
+>>   
+>>   	u8 bss_index;
+>> -};
+>> +} __packed;
 > 
-> Why? I would have considered the opposite and if we go to suspend we
-> cancel the scan. No strong feelings, just don't see the need for scan
-> results during suspend. But of course I might be missing something...
+> Why __packed? Commit log mentions nothing about that.
+> 
 
-We need to be switched to the AP's channel when calling the suspend 
-routine. During a s/w scan we switch off channel to scan for 100s of 
-milliseconds.
+Because the __u8 at the end aligns to 4 bytes.
 
-If the suspend() routine is called while that is true, we suspend on the 
-wrong channel.
-
-So we would need to switch to the right channel explicitly in suspend 
-but, at the moment wcn36xx_config() for switching channels and I thought 
-it best to leave the channel switching logic in the one place.
-
-I'm not opposed in principle to
-
-- Entering suspend
-- Switching to the last known active channel
-- Suspending
-
----
-bod
+I'll add this to the log desc
