@@ -2,66 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48392C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 09:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E66BC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10CCA22B4E
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 09:23:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23FD721D7F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728349AbhAKJXQ (ORCPT
+        id S1728569AbhAKLTW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Jan 2021 04:23:16 -0500
-Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:44607 "EHLO
-        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727690AbhAKJXP (ORCPT
+        Mon, 11 Jan 2021 06:19:22 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:15730 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728383AbhAKLTW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jan 2021 04:23:15 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R931e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=abaci-bugfix@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0ULMRbj6_1610356933;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:abaci-bugfix@linux.alibaba.com fp:SMTPD_---0ULMRbj6_1610356933)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Mon, 11 Jan 2021 17:22:22 +0800
-From:   YANG LI <abaci-bugfix@linux.alibaba.com>
-To:     tony0620emma@gmail.com
-Cc:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        YANG LI <abaci-bugfix@linux.alibaba.com>
-Subject: [PATCH] rtw88: debug: style: Simplify bool comparison
-Date:   Mon, 11 Jan 2021 17:22:12 +0800
-Message-Id: <1610356932-56073-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        Mon, 11 Jan 2021 06:19:22 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1610363938; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=14CcGCmQWwQdrjSsWQxVXjDJIF79FN9Svu6AMUtkuoQ=; b=BQ8SfT3lvScTkF+qawKoLjHApvyDxS7uJc97/SUGZ04iOqDLrBvjiixW4R0IO6e1Mx5zShmN
+ Vc7cbNEEwZWJ4S5v/Ak0IODj0BI+59vxboPsUMExZgVsDqRujFdEIgVAEARsI18hqTSwcin3
+ zp/E3Pdmi/ubBvJ03Vs4fO4BLOw=
+X-Mailgun-Sending-Ip: 198.61.254.31
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
+ 5ffc33fe9dddba11a689b432 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Jan 2021 11:18:22
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id BED6EC43462; Mon, 11 Jan 2021 11:18:22 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E7E4EC433C6;
+        Mon, 11 Jan 2021 11:18:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E7E4EC433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        shawn.guo@linaro.org, benl@squareup.com, loic.poulain@linaro.org
+Subject: Re: [PATCH 03/13] wcn36xx: Add ipv4 ARP offload support in suspend
+References: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
+        <20201228162839.369156-4-bryan.odonoghue@linaro.org>
+Date:   Mon, 11 Jan 2021 13:18:17 +0200
+In-Reply-To: <20201228162839.369156-4-bryan.odonoghue@linaro.org> (Bryan
+        O'Donoghue's message of "Mon, 28 Dec 2020 16:28:29 +0000")
+Message-ID: <87ft37lo1y.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix the following coccicheck warning:
- ./drivers/net/wireless/realtek/rtw88/debug.c:800:17-23: WARNING:
-Comparison of 0/1 to bool variable
+Bryan O'Donoghue <bryan.odonoghue@linaro.org> writes:
 
-Signed-off-by: YANG LI <abaci-bugfix@linux.alibaba.com>
-Reported-by: Abaci Robot<abaci@linux.alibaba.com>
----
- drivers/net/wireless/realtek/rtw88/debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> This commit adds ARP offload support. Firmware is capable of responding to
+> ARP requests for a single ipv4 address only.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 19fc2d8..948cb79 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -800,7 +800,7 @@ static ssize_t rtw_debugfs_set_coex_enable(struct file *filp,
- 	}
- 
- 	mutex_lock(&rtwdev->mutex);
--	coex->manual_control = enable == 0;
-+	coex->manual_control = !enable;
- 	mutex_unlock(&rtwdev->mutex);
- 
- 	return count;
+This is nitpicking, but you don't need to say "This commit..." or "This
+patch...", instead you can simply say: "Add ARP offload support...".
+
 -- 
-1.8.3.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
