@@ -2,62 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6875C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4921C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:39:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98F7B224B8
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:35:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C8D820735
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Jan 2021 11:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729104AbhAKLf5 (ORCPT
+        id S1729674AbhAKLjQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Jan 2021 06:35:57 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:49655 "EHLO
+        Mon, 11 Jan 2021 06:39:16 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:51903 "EHLO
         m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbhAKLf5 (ORCPT
+        with ESMTP id S1728328AbhAKLjQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jan 2021 06:35:57 -0500
+        Mon, 11 Jan 2021 06:39:16 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610364933; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1610365136; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=x07+Lq+l+F1IjdXb5xvPCFybbsvjOFso+jA6YcRC+YI=; b=TW4LRBSr5gy1Bi0rbUYcRpCXHuY7kLLTFsMZSpnkwHcCp2dujXbVH3cXrpsw8QIqUkregRsv
- GUfC1yGWWgLo77YMu3kaYUz0LndpjGiUCuOvL+QWqdFEEVvzDKFwe6D/YJDOfIGeL5V6Jr1a
- fzqaSpXX5tkD4nJvCTtddSY25KE=
+ bh=pQACgeh06jM/Va/IEKYEEoBFT3+M6M/Rt7XK3ZlSC7o=; b=WO2Ehf/5OXgVVHmEjg8Gyxbjt38/XFRSJbLUPLQ39VIu9YNsGF25CXVBcFnCHIIrRY4R+YEd
+ qpMysJ5E/Texy3j2POMoxALpmFRZwS2emLWjyEmK7SOhhAHbjeZb7zkpeE3yOqiIWAtACQDS
+ iWfqgmrcH9YJn/ydX5UArrbG9SE=
 X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 5ffc37e6e53eb5da8c29a59d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Jan 2021 11:35:02
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5ffc38aad84bad35476206c6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Jan 2021 11:38:18
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E629FC43462; Mon, 11 Jan 2021 11:35:01 +0000 (UTC)
+        id 609B6C433CA; Mon, 11 Jan 2021 11:38:18 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EACAAC433CA;
-        Mon, 11 Jan 2021 11:34:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EACAAC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 20886C433ED;
+        Mon, 11 Jan 2021 11:38:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 20886C433ED
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         shawn.guo@linaro.org, benl@squareup.com, loic.poulain@linaro.org
-Subject: Re: [PATCH 11/13] wcn36xx: Do not suspend if scan in progress
+Subject: Re: [PATCH 07/13] wcn36xx: Flag WIPHY_WOWLAN_MAGIC_PKT
 References: <20201228162839.369156-1-bryan.odonoghue@linaro.org>
-        <20201228162839.369156-12-bryan.odonoghue@linaro.org>
-Date:   Mon, 11 Jan 2021 13:34:57 +0200
-In-Reply-To: <20201228162839.369156-12-bryan.odonoghue@linaro.org> (Bryan
-        O'Donoghue's message of "Mon, 28 Dec 2020 16:28:37 +0000")
-Message-ID: <87sg77k8pq.fsf@codeaurora.org>
+        <20201228162839.369156-8-bryan.odonoghue@linaro.org>
+Date:   Mon, 11 Jan 2021 13:38:14 +0200
+In-Reply-To: <20201228162839.369156-8-bryan.odonoghue@linaro.org> (Bryan
+        O'Donoghue's message of "Mon, 28 Dec 2020 16:28:33 +0000")
+Message-ID: <87o8hvk8k9.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -67,26 +67,29 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Bryan O'Donoghue <bryan.odonoghue@linaro.org> writes:
 
-> If a scan is in progress do not attempt to enter into suspend. Allow the
-> scan process to quiesce before proceeding.
+> Set a flag to indicate magic packet wakeup support on wcn36xx.
 >
 > Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c
+> b/drivers/net/wireless/ath/wcn36xx/main.c
+> index 579bb7f4db9c..cfa2e2d20a20 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+> @@ -173,7 +173,7 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
+>  #ifdef CONFIG_PM
+>  
+>  static const struct wiphy_wowlan_support wowlan_support = {
+> -	.flags = WIPHY_WOWLAN_ANY
+> +	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_MAGIC_PKT
+>  };
 
-[...]
-
-> +bool wcn36xx_smd_is_scanning(struct wcn36xx *wcn)
-> +{
-> +	bool scanning;
-> +
-> +	mutex_lock(&wcn->hal_mutex);
-> +	scanning = wcn->scanning;
-> +	mutex_unlock(&wcn->hal_mutex);
-> +
-> +	return scanning;
-> +}
-
-Instead of having a bool you could use SET_BIT() & co, that way you
-don't need this extra function. For example see dev_flags in ath10k.
+Shouldn't this be the last patch so that we don't enable the feature
+until it's fully implemented? This makes a difference when doing a
+bisect, for example.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
