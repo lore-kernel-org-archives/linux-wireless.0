@@ -2,71 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EC8C433E9
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBD70C433E6
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:25:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6539423104
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 734C3230F9
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:25:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731028AbhALNVX (ORCPT
+        id S1731019AbhALNZi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Jan 2021 08:21:23 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:34460 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728281AbhALNVX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jan 2021 08:21:23 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10CDKMWC0013545, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmbs01.realtek.com.tw[172.21.6.94])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10CDKMWC0013545
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 12 Jan 2021 21:20:22 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 12 Jan 2021 21:20:22 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::ecca:80ca:53:e833]) by
- RTEXMBS04.realtek.com.tw ([fe80::ecca:80ca:53:e833%12]) with mapi id
- 15.01.2106.006; Tue, 12 Jan 2021 21:20:22 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "abaci-bugfix@linux.alibaba.com" <abaci-bugfix@linux.alibaba.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8821ae: style: Simplify bool comparison
-Thread-Topic: [PATCH] rtlwifi: rtl8821ae: style: Simplify bool comparison
-Thread-Index: AQHW6L2orBBpKoBBgkeYxkTWwRIaRaojc5qA
-Date:   Tue, 12 Jan 2021 13:20:21 +0000
-Message-ID: <1610457587.2793.2.camel@realtek.com>
-References: <1610440409-73330-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-In-Reply-To: <1610440409-73330-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [125.224.66.71]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A6A38BB325AB144790D7DFD15CA130C6@realtek.com>
-Content-Transfer-Encoding: base64
+        Tue, 12 Jan 2021 08:25:38 -0500
+Received: from mx2.suse.de ([195.135.220.15]:55848 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726774AbhALNZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jan 2021 08:25:37 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id EC221ACAC;
+        Tue, 12 Jan 2021 13:24:55 +0000 (UTC)
+From:   Takashi Iwai <tiwai@suse.de>
+To:     linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 1/2] iwlwifi: dbg: Don't touch the tlv data
+Date:   Tue, 12 Jan 2021 14:24:48 +0100
+Message-Id: <20210112132449.22243-2-tiwai@suse.de>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20210112132449.22243-1-tiwai@suse.de>
+References: <20210112132449.22243-1-tiwai@suse.de>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gVHVlLCAyMDIxLTAxLTEyIGF0IDE2OjMzICswODAwLCBZQU5HIExJIHdyb3RlOg0KPiBGaXgg
-dGhlIGZvbGxvd2luZyBjb2NjaWNoZWNrIHdhcm5pbmc6DQo+IC4vZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGx3aWZpL3J0bDg4MjFhZS9waHkuYzozODUzOjctMTc6DQo+IFdBUk5JTkc6
-IENvbXBhcmlzb24gb2YgMC8xIHRvIGJvb2wgdmFyaWFibGUNCj4gDQo+IFJlcG9ydGVkLWJ5OiBB
-YmFjaSBSb2JvdCA8YWJhY2lAbGludXguYWxpYmFiYS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IFlB
-TkcgTEkgPGFiYWNpLWJ1Z2ZpeEBsaW51eC5hbGliYWJhLmNvbT4NCj4gDQoNCkkgdGhpbmsgeW91
-ciBuYW1lIG9mIFNpZ25lZC1vZmYtYnkgc2hvdWxkIGJlICJZYW5nIExpIi4NCg0KQW5kLCB0aGUg
-c3ViamVjdCBwcmVmaXggInJ0bHdpZmk6ICIgaXMgcHJlZmVycmVkLg0KDQotLS0NClBpbmctS2UN
-Cg==
+The commit ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device
+memory") added a termination of name string just to be sure, and this
+seems causing a regression, a GPF triggered at firmware loading.
+Basically we shouldn't modify the firmware data that may be provided
+as read-only.
+
+This patch drops the code that caused the regression and keep the tlv
+data as is.
+
+Fixes: ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device memory")
+BugLink: https://bugzilla.suse.com/show_bug.cgi?id=1180344
+BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=210733
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+---
+
+As an alternative fix, the debug print could be with the printf length
+specifier to limit the size to IWL_FW_INIT_MAX_NAME, as found in the
+bugzilla entries above, too.  I chose a simpler (partial) revert here
+instead.
+
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index a654147d3cd6..a80a35a7740f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -180,13 +180,6 @@ static int iwl_dbg_tlv_alloc_region(struct iwl_trans *trans,
+ 	if (le32_to_cpu(tlv->length) < sizeof(*reg))
+ 		return -EINVAL;
+ 
+-	/* For safe using a string from FW make sure we have a
+-	 * null terminator
+-	 */
+-	reg->name[IWL_FW_INI_MAX_NAME - 1] = 0;
+-
+-	IWL_DEBUG_FW(trans, "WRT: parsing region: %s\n", reg->name);
+-
+ 	if (id >= IWL_FW_INI_MAX_REGION_ID) {
+ 		IWL_ERR(trans, "WRT: Invalid region id %u\n", id);
+ 		return -EINVAL;
+-- 
+2.26.2
+
