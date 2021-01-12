@@ -2,167 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15841C43331
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EC8C433E9
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:21:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5E4022571
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:20:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6539423104
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 13:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732559AbhALNTS (ORCPT
+        id S1731028AbhALNVX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Jan 2021 08:19:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53820 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388736AbhALM47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jan 2021 07:56:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1112623121;
-        Tue, 12 Jan 2021 12:55:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610456147;
-        bh=kAeYGyxjJHr6PJUf3V2kvHwuqdbVpOB+4IXFVhgsRB0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MS3uXayHXZBhg7uZ8+WCDPmfRLQlNhudg0hoC2RFH1N8J+6jiaDYJR5vw5izJIGt3
-         EA50MqwIet1Rzr8dXSQcAjyAMluZT3wf11jduIBgx7iSZj8NeahmiWpfzOVlcYWJco
-         C60SpJXLeXA80YfX6EukKzzrRLP5iBN33v47fmUF4tLtAaZkcSlZOTmNwWiCKI1Bv0
-         2X6/d+fUAxfDwk610Xsz/ETkc+3E1G/Gz9T59V79XqTrfhMTGfEktAEB+1v5jKyfgU
-         GJHG9l6Zc6e2HYAPaqAsTZjiFN1bUYSzv1qUxmLF7QR3zEemc4+CHzaa8Nv25D458l
-         bSw1tBnAkT+sQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Carl Huang <cjhuang@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 09/51] ath11k: qmi: try to allocate a big block of DMA memory first
-Date:   Tue, 12 Jan 2021 07:54:51 -0500
-Message-Id: <20210112125534.70280-9-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210112125534.70280-1-sashal@kernel.org>
-References: <20210112125534.70280-1-sashal@kernel.org>
+        Tue, 12 Jan 2021 08:21:23 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:34460 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728281AbhALNVX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jan 2021 08:21:23 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10CDKMWC0013545, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmbs01.realtek.com.tw[172.21.6.94])
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10CDKMWC0013545
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 12 Jan 2021 21:20:22 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 12 Jan 2021 21:20:22 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::ecca:80ca:53:e833]) by
+ RTEXMBS04.realtek.com.tw ([fe80::ecca:80ca:53:e833%12]) with mapi id
+ 15.01.2106.006; Tue, 12 Jan 2021 21:20:22 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "abaci-bugfix@linux.alibaba.com" <abaci-bugfix@linux.alibaba.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8821ae: style: Simplify bool comparison
+Thread-Topic: [PATCH] rtlwifi: rtl8821ae: style: Simplify bool comparison
+Thread-Index: AQHW6L2orBBpKoBBgkeYxkTWwRIaRaojc5qA
+Date:   Tue, 12 Jan 2021 13:20:21 +0000
+Message-ID: <1610457587.2793.2.camel@realtek.com>
+References: <1610440409-73330-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+In-Reply-To: <1610440409-73330-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [125.224.66.71]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <A6A38BB325AB144790D7DFD15CA130C6@realtek.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Carl Huang <cjhuang@codeaurora.org>
-
-[ Upstream commit f6f92968e1e5a7a9d211faaebefc26ebe408dad7 ]
-
-Not all firmware versions support allocating DMA memory in smaller blocks so
-first try to allocate big block of DMA memory for QMI. If the allocation fails,
-let firmware request multiple blocks of DMA memory with smaller size.
-
-This also fixes an unnecessary error message seen during ath11k probe on
-QCA6390:
-
-ath11k_pci 0000:06:00.0: Respond mem req failed, result: 1, err: 0
-ath11k_pci 0000:06:00.0: qmi failed to respond fw mem req:-22
-
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
-
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1608127593-15192-1-git-send-email-kvalo@codeaurora.org
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/ath/ath11k/qmi.c | 24 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath11k/qmi.h |  1 +
- 2 files changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index 99a88ca83deaa..2ae7c6bf091e9 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -1654,6 +1654,7 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
- 	struct qmi_wlanfw_respond_mem_resp_msg_v01 resp;
- 	struct qmi_txn txn = {};
- 	int ret = 0, i;
-+	bool delayed;
- 
- 	req = kzalloc(sizeof(*req), GFP_KERNEL);
- 	if (!req)
-@@ -1666,11 +1667,13 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
- 	 * failure to FW and FW will then request mulitple blocks of small
- 	 * chunk size memory.
- 	 */
--	if (!ab->bus_params.fixed_mem_region && ab->qmi.mem_seg_count <= 2) {
-+	if (!ab->bus_params.fixed_mem_region && ab->qmi.target_mem_delayed) {
-+		delayed = true;
- 		ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi delays mem_request %d\n",
- 			   ab->qmi.mem_seg_count);
- 		memset(req, 0, sizeof(*req));
- 	} else {
-+		delayed = false;
- 		req->mem_seg_len = ab->qmi.mem_seg_count;
- 
- 		for (i = 0; i < req->mem_seg_len ; i++) {
-@@ -1702,6 +1705,12 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
- 	}
- 
- 	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
-+		/* the error response is expected when
-+		 * target_mem_delayed is true.
-+		 */
-+		if (delayed && resp.resp.error == 0)
-+			goto out;
-+
- 		ath11k_warn(ab, "Respond mem req failed, result: %d, err: %d\n",
- 			    resp.resp.result, resp.resp.error);
- 		ret = -EINVAL;
-@@ -1736,6 +1745,8 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
- 	int i;
- 	struct target_mem_chunk *chunk;
- 
-+	ab->qmi.target_mem_delayed = false;
-+
- 	for (i = 0; i < ab->qmi.mem_seg_count; i++) {
- 		chunk = &ab->qmi.target_mem[i];
- 		chunk->vaddr = dma_alloc_coherent(ab->dev,
-@@ -1743,6 +1754,15 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
- 						  &chunk->paddr,
- 						  GFP_KERNEL);
- 		if (!chunk->vaddr) {
-+			if (ab->qmi.mem_seg_count <= 2) {
-+				ath11k_dbg(ab, ATH11K_DBG_QMI,
-+					   "qmi dma allocation failed (%d B type %u), will try later with small size\n",
-+					    chunk->size,
-+					    chunk->type);
-+				ath11k_qmi_free_target_mem_chunk(ab);
-+				ab->qmi.target_mem_delayed = true;
-+				return 0;
-+			}
- 			ath11k_err(ab, "failed to alloc memory, size: 0x%x, type: %u\n",
- 				   chunk->size,
- 				   chunk->type);
-@@ -2467,7 +2487,7 @@ static void ath11k_qmi_msg_mem_request_cb(struct qmi_handle *qmi_hdl,
- 				    ret);
- 			return;
- 		}
--	} else if (msg->mem_seg_len > 2) {
-+	} else {
- 		ret = ath11k_qmi_alloc_target_mem_chunk(ab);
- 		if (ret) {
- 			ath11k_warn(ab, "qmi failed to alloc target memory: %d\n",
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index b0a818f0401b9..59f1452b3544c 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -121,6 +121,7 @@ struct ath11k_qmi {
- 	struct target_mem_chunk target_mem[ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01];
- 	u32 mem_seg_count;
- 	u32 target_mem_mode;
-+	bool target_mem_delayed;
- 	u8 cal_done;
- 	struct target_info target;
- 	struct m3_mem_region m3_mem;
--- 
-2.27.0
-
+T24gVHVlLCAyMDIxLTAxLTEyIGF0IDE2OjMzICswODAwLCBZQU5HIExJIHdyb3RlOg0KPiBGaXgg
+dGhlIGZvbGxvd2luZyBjb2NjaWNoZWNrIHdhcm5pbmc6DQo+IC4vZHJpdmVycy9uZXQvd2lyZWxl
+c3MvcmVhbHRlay9ydGx3aWZpL3J0bDg4MjFhZS9waHkuYzozODUzOjctMTc6DQo+IFdBUk5JTkc6
+IENvbXBhcmlzb24gb2YgMC8xIHRvIGJvb2wgdmFyaWFibGUNCj4gDQo+IFJlcG9ydGVkLWJ5OiBB
+YmFjaSBSb2JvdCA8YWJhY2lAbGludXguYWxpYmFiYS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IFlB
+TkcgTEkgPGFiYWNpLWJ1Z2ZpeEBsaW51eC5hbGliYWJhLmNvbT4NCj4gDQoNCkkgdGhpbmsgeW91
+ciBuYW1lIG9mIFNpZ25lZC1vZmYtYnkgc2hvdWxkIGJlICJZYW5nIExpIi4NCg0KQW5kLCB0aGUg
+c3ViamVjdCBwcmVmaXggInJ0bHdpZmk6ICIgaXMgcHJlZmVycmVkLg0KDQotLS0NClBpbmctS2UN
+Cg==
