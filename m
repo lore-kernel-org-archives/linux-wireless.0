@@ -2,110 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11E4C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 12:47:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E02C43332
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 12:59:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A59B72311D
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 12:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32F9E2310F
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Jan 2021 12:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388507AbhALMrB (ORCPT
+        id S2390481AbhALM7h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Jan 2021 07:47:01 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:55343 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388457AbhALMq6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jan 2021 07:46:58 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610455592; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=d9KzsDSUDaQzJ4IsFtpJ8BDiKCJOeDvBmZqSm7dAx6c=; b=md09ZRl6nyikcw5EaduOKXFgXFuDr2iAAWBoUbTmPRlNHy7xBECTbXqxFrK2Fjn8wC1YGdiQ
- y3yRTWbPVcvbx98F2fVILaikoa9mCq/Scf4DmUz0NjjhIlwFea5oB2CkqmwAp75xEu6cZG9L
- Pr2+/iynmpeM4b83dsy7DHdLuBs=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5ffd99f4c88af061075d8f21 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 12 Jan 2021 12:45:40
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3C5C0C433CA; Tue, 12 Jan 2021 12:45:39 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7F157C433C6;
-        Tue, 12 Jan 2021 12:45:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7F157C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Takashi Iwai <tiwai@suse.de>
+        Tue, 12 Jan 2021 07:59:37 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50962 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390434AbhALM7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jan 2021 07:59:36 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 77D12AC8F;
+        Tue, 12 Jan 2021 12:58:54 +0000 (UTC)
+Date:   Tue, 12 Jan 2021 13:58:54 +0100
+Message-ID: <s5h5z42s44x.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Michal Kubecek <mkubecek@suse.cz>, linux-wireless@vger.kernel.org,
         Mordechay Goodstein <mordechay.goodstein@intel.com>,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Arjen de Korte <suse+build@de-korte.org>,
         Luca Coelho <luciano.coelho@intel.com>
 Subject: Re: regression in iwlwifi: page fault in iwl_dbg_tlv_alloc_region() (commit ba8f6f4ae254)
+In-Reply-To: <87v9c2ias2.fsf@codeaurora.org>
 References: <20201228115814.GA5880@lion.mk-sys.cz>
-        <87v9c2qtj9.fsf@tynnyri.adurom.net> <s5ha6tes58m.wl-tiwai@suse.de>
-Date:   Tue, 12 Jan 2021 14:45:33 +0200
-In-Reply-To: <s5ha6tes58m.wl-tiwai@suse.de> (Takashi Iwai's message of "Tue,
-        12 Jan 2021 13:35:05 +0100")
-Message-ID: <87v9c2ias2.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        <87v9c2qtj9.fsf@tynnyri.adurom.net>
+        <s5ha6tes58m.wl-tiwai@suse.de>
+        <87v9c2ias2.fsf@codeaurora.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Takashi Iwai <tiwai@suse.de> writes:
+On Tue, 12 Jan 2021 13:45:33 +0100,
+Kalle Valo wrote:
+> 
+> Takashi Iwai <tiwai@suse.de> writes:
+> 
+> > On Tue, 12 Jan 2021 12:33:14 +0100,
+> > Kalle Valo wrote:
+> >> 
+> >> (adding luca)
+> >> 
+> >> Michal Kubecek <mkubecek@suse.cz> writes:
+> >> 
+> >> > FYI, there is a regression in iwlwifi driver caused by commit
+> >> > ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device memory")
+> >> > reported at
+> >> >
+> >> >   https://bugzilla.kernel.org/show_bug.cgi?id=210733
+> >> >   https://bugzilla.suse.com/show_bug.cgi?id=1180344
+> >> >
+> >> > The problem seems to be an attempt to write terminating null character
+> >> > into a string which may be read only. There is also a proposed fix.
+> >> 
+> >> Can someone submit a proper patch, please? See instructions below how to
+> >> submit.
+> >> 
+> >> And please add Fixes tag to the commit log:
+> >> 
+> >> Fixes: ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device memory")
+> >
+> > OK, I'll do it for my own
+> 
+> Thanks.
+> 
+> > but really I hoped that someone would have reacted on the bugzilla
+> > report before the official patch submission. So far no one from the
+> > upstream devs showed interest in the bug at all, unfortunately.
+> 
+> Bugzilla is problematic as I don't know if anyone tracks it actively, at
+> least I don't have time for that. I recommend reporting all wireless
+> issues to mailing lists to make sure everyone see it.
 
-> On Tue, 12 Jan 2021 12:33:14 +0100,
-> Kalle Valo wrote:
->> 
->> (adding luca)
->> 
->> Michal Kubecek <mkubecek@suse.cz> writes:
->> 
->> > FYI, there is a regression in iwlwifi driver caused by commit
->> > ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device memory")
->> > reported at
->> >
->> >   https://bugzilla.kernel.org/show_bug.cgi?id=210733
->> >   https://bugzilla.suse.com/show_bug.cgi?id=1180344
->> >
->> > The problem seems to be an attempt to write terminating null character
->> > into a string which may be read only. There is also a proposed fix.
->> 
->> Can someone submit a proper patch, please? See instructions below how to
->> submit.
->> 
->> And please add Fixes tag to the commit log:
->> 
->> Fixes: ba8f6f4ae254 ("iwlwifi: dbg: add dumping special device memory")
->
-> OK, I'll do it for my own
+I share your feeling as a subsystem maintainer, but at the same time,
+I see it's a big problem if the whole bugzilla reports are just
+silently ignored.  If it's a void, shouldn't we rather shut it down?
 
-Thanks.
+And, although a mailing list is fine to report via only some texts or
+some patches, it's not suitable to attach large logs or such, which is
+often essential for debugging.  Thanks to lore, the archivability is
+no longer a problem with ML recently, but the lack of data assignment
+is another problem, IMO.
 
-> but really I hoped that someone would have reacted on the bugzilla
-> report before the official patch submission. So far no one from the
-> upstream devs showed interest in the bug at all, unfortunately.
 
-Bugzilla is problematic as I don't know if anyone tracks it actively, at
-least I don't have time for that. I recommend reporting all wireless
-issues to mailing lists to make sure everyone see it.
+thanks,
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Takashi
