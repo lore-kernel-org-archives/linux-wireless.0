@@ -2,82 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D96D4C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 01:45:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65283C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 01:59:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D7362310A
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 01:45:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EA8022C9F
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 01:59:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726108AbhAMBpV (ORCPT
+        id S1727398AbhAMB67 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Jan 2021 20:45:21 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:41787 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbhAMBpJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jan 2021 20:45:09 -0500
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10D1iLX11028607, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10D1iLX11028607
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 13 Jan 2021 09:44:21 +0800
-Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 13 Jan
- 2021 09:44:20 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
-CC:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rtw88: 8723de: adjust the LTR setting
-Date:   Wed, 13 Jan 2021 09:43:42 +0800
-Message-ID: <20210113014342.3615-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
+        Tue, 12 Jan 2021 20:58:59 -0500
+Received: from mga11.intel.com ([192.55.52.93]:59524 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727366AbhAMB67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jan 2021 20:58:59 -0500
+IronPort-SDR: JJJkmFOxAO6VFR3JqMjFKPsBns4dthduZJ4KTPGKMXLwRB8FFQue/3Rp+zUh16OZ6dG7eaNiOF
+ oryYvYo5qgZw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9862"; a="174628358"
+X-IronPort-AV: E=Sophos;i="5.79,343,1602572400"; 
+   d="scan'208";a="174628358"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2021 17:58:17 -0800
+IronPort-SDR: wXy5/s4dFTNXnmTzpL9m3RnBZB8z6liFqxsZDLrRll5/6tUHUhs7Nv8uDD/o4Kz+h4NYLopIjr
+ VbDmFwcX26gA==
+X-IronPort-AV: E=Sophos;i="5.79,343,1602572400"; 
+   d="scan'208";a="381657778"
+Received: from shao2-debian.sh.intel.com (HELO [10.239.13.117]) ([10.239.13.117])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2021 17:58:15 -0800
+Subject: Re: [kbuild-all] Re: [PATCH 06/13] wcn36xx: Add ipv6 namespace
+ offload in suspend
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>,
+        kernel test robot <lkp@intel.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        kbuild-all@lists.01.org, shawn.guo@linaro.org, benl@squareup.com,
+        loic.poulain@linaro.org
+References: <20201228162839.369156-7-bryan.odonoghue@linaro.org>
+ <202012290547.6ryYf96B-lkp@intel.com>
+ <bcf6adbc-e03a-6f02-e55f-6e0b738806fd@linaro.org>
+ <878s8zlnnc.fsf@codeaurora.org>
+ <ae4b3e6f-a08c-e1ba-e5a1-494a7db7e0bd@intel.com>
+ <877doitnd8.fsf@codeaurora.org>
+From:   Rong Chen <rong.a.chen@intel.com>
+Message-ID: <851a3629-8d18-08a7-2926-67dd45cabbed@intel.com>
+Date:   Wed, 13 Jan 2021 09:57:23 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+In-Reply-To: <877doitnd8.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chin-Yen Lee <timlee@realtek.com>
 
-The LTR mechanism enables PCIE Endpoints to report the service latency
-requirements and CPU will enter appropriate sleep state to save power
-based on the LTR value.
 
-8723de provides two registers to config the LTR, and the original setting
-is too short for CPU to ente sleep state. The patch adjust the LTR setting.
+On 1/12/21 7:18 PM, Kalle Valo wrote:
+> "Chen, Rong A" <rong.a.chen@intel.com> writes:
+>
+>> On 1/11/2021 7:27 PM, Kalle Valo wrote:
+>>> Bryan O'Donoghue <bryan.odonoghue@linaro.org> writes:
+>>>
+>>>> On 28/12/2020 21:49, kernel test robot wrote:
+>>>>> [auto build test ERROR on wireless-drivers-next/master]
+>>>> hmm
+>>>>
+>>>> works against this
+>>>>
+>>>> * 77da2c99eca0 - (tag: ath-202012180905, ath.git/master) Add
+>>>> localversion-wireless-testing-ath (11 days ago)
+>>> The bot tested only ath-next from ath.git, not the master branch:
+>> Hi,
+>>
+>> Thanks for the help, we have switched to test on master branch.
+> The bot was correctly testing the ath-next branch, as I use that branch
+> to commit the patches. Can you still change the bot back to use
+> ath-next, just as it did previously?
+>
+> Sorry for the confusion.
+>
 
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Got it, we'll still test ath-next branch.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 9268ea8b6dda..3fdbaf7302c5 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -60,8 +60,8 @@ static const struct rtw_hw_reg rtw8723d_txagc[] = {
- #define WLAN_MAX_AGG_NR		0x0A
- #define WLAN_AMPDU_MAX_TIME	0x1C
- #define WLAN_ANT_SEL		0x82
--#define WLAN_LTR_IDLE_LAT	0x883C883C
--#define WLAN_LTR_ACT_LAT	0x880B880B
-+#define WLAN_LTR_IDLE_LAT	0x90039003
-+#define WLAN_LTR_ACT_LAT	0x883c883c
- #define WLAN_LTR_CTRL1		0xCB004010
- #define WLAN_LTR_CTRL2		0x01233425
- 
--- 
-2.21.0
-
+Best Regards,
+Rong Chen
