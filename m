@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15504C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 09:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD91C433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 09:52:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C48572339D
+	by mail.kernel.org (Postfix) with ESMTP id 496D32339D
 	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jan 2021 09:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727706AbhAMJwi (ORCPT
+        id S1727702AbhAMJwh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jan 2021 04:52:38 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:48402 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727623AbhAMJwh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jan 2021 04:52:37 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:48394 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727304AbhAMJwg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:52:36 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10D9ppMwB016476, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10D9pnF13016468, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10D9ppMwB016476
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10D9pnF13016468
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 13 Jan 2021 17:51:51 +0800
+        Wed, 13 Jan 2021 17:51:49 +0800
 Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 13 Jan
- 2021 17:51:50 +0800
+ 2021 17:51:48 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
-Subject: [PATCH v2 3/7] rtw88: add napi support
-Date:   Wed, 13 Jan 2021 17:50:57 +0800
-Message-ID: <20210113095101.16570-4-pkshih@realtek.com>
+Subject: [PATCH v2 1/7] rtw88: add dynamic rrsr configuration
+Date:   Wed, 13 Jan 2021 17:50:55 +0800
+Message-ID: <20210113095101.16570-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20210113095101.16570-1-pkshih@realtek.com>
 References: <20210113095101.16570-1-pkshih@realtek.com>
@@ -44,7 +44,7 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+X-ClientProxiedBy: RTEXMBS01.realtek.com.tw (172.21.6.94) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -52,245 +52,198 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Po-Hao Huang <phhuang@realtek.com>
 
-Use napi to reduce overhead on rx interrupts.
-
-Driver used to interrupt kernel for every Rx packet, this could
-affect both system and network performance. NAPI is a mechanism that
-uses polling when processing huge amount of traffic, by doing this
-the number of interrupts can be decreased.
-
-Network performance can also benefit from this patch. Since TCP
-connection is bidirectional and acks are required for every several
-packets. These ack packets occupie the PCI bus bandwidth and could
-lead to performance degradation.
-
-When napi is used, GRO receive is enabled by default in the mac80211
-stack. So mac80211 won't pass every RX TCP packets to the kernel TCP
-network stack immediately. Instead an aggregated large length TCP packet
-will be delivered.
-
-This reduces the tx acks sent and gains rx performance. After the patch,
-the Rx throughput increases about 25Mbps in 11ac.
+Register rrsr determines the response rate we send.
+In field tests, using rate higher than current tx rate could lead
+to difficulty for the receiving end to receive management/control
+frames. Calculate current modulation level by tx rate then cross out
+rate higher than those.
 
 Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.h |   1 +
- drivers/net/wireless/realtek/rtw88/pci.c  | 108 +++++++++++++++++++---
- drivers/net/wireless/realtek/rtw88/pci.h  |   5 +
- 3 files changed, 100 insertions(+), 14 deletions(-)
+ drivers/net/wireless/realtek/rtw88/main.c     |  3 +
+ drivers/net/wireless/realtek/rtw88/main.h     |  5 ++
+ drivers/net/wireless/realtek/rtw88/phy.c      | 62 ++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/phy.h      |  3 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |  2 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |  2 -
+ 6 files changed, 74 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index e7c1ae454524..07ea9df48149 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -894,6 +894,7 @@ static u64 rtw_update_rate_mask(struct rtw_dev *rtwdev,
+ 
+ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ {
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	struct ieee80211_sta *sta = si->sta;
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw_hal *hal = &rtwdev->hal;
+@@ -938,6 +939,7 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 		} else {
+ 			wireless_set = WIRELESS_OFDM;
+ 		}
++		dm_info->rrsr_val_init = RRSR_INIT_5G;
+ 	} else if (hal->current_band_type == RTW_BAND_2G) {
+ 		ra_mask |= sta->supp_rates[NL80211_BAND_2GHZ];
+ 		if (sta->vht_cap.vht_supported) {
+@@ -955,6 +957,7 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 		} else {
+ 			wireless_set = WIRELESS_CCK | WIRELESS_OFDM;
+ 		}
++		dm_info->rrsr_val_init = RRSR_INIT_2G;
+ 	} else {
+ 		rtw_err(rtwdev, "Unknown band type\n");
+ 		wireless_set = 0;
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 4b5da1247d66..628a62007629 100644
+index 9a318dfd04f9..4b5da1247d66 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -16,6 +16,7 @@
+@@ -1488,6 +1488,9 @@ struct rtw_iqk_info {
+ 	} result;
+ };
  
- #include "util.h"
++#define RRSR_INIT_2G 0x15f
++#define RRSR_INIT_5G 0x150
++
+ struct rtw_dm_info {
+ 	u32 cck_fa_cnt;
+ 	u32 ofdm_fa_cnt;
+@@ -1518,6 +1521,8 @@ struct rtw_dm_info {
+ 	u8 cck_gi_l_bnd;
  
-+#define RTW_NAPI_WEIGHT_NUM		32
- #define RTW_MAX_MAC_ID_NUM		32
- #define RTW_MAX_SEC_CAM_NUM		32
- #define MAX_PG_CAM_BACKUP_NUM		8
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 676d861aaf99..167bd5d009ee 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -935,16 +935,49 @@ static void rtw_pci_tx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 	ring->r.rp = cur_rp;
+ 	u8 tx_rate;
++	u32 rrsr_val_init;
++	u32 rrsr_mask_min;
+ 	u8 thermal_avg[RTW_RF_PATH_MAX];
+ 	u8 thermal_meter_k;
+ 	s8 delta_power_index[RTW_RF_PATH_MAX];
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index d44960cd940c..e114ddecac09 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -465,6 +465,60 @@ static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
+ 	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
  }
  
--static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-+static void rtw_pci_rx_isr(struct rtw_dev *rtwdev)
++static u32 rtw_phy_get_rrsr_mask(struct rtw_dev *rtwdev, u8 rate_idx)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct napi_struct *napi = &rtwpci->napi;
++	u8 rate_order;
 +
-+	napi_schedule(napi);
-+}
++	rate_order = rate_idx;
 +
-+static int rtw_pci_get_hw_rx_ring_nr(struct rtw_dev *rtwdev,
-+				     struct rtw_pci *rtwpci,
-+				     u32 *rp, u32 *wp)
-+{
-+	struct rtw_pci_rx_ring *ring;
-+	int count = 0;
-+	u32 tmp, cur_wp;
-+
-+	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
-+	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
-+	cur_wp = u32_get_bits(tmp, TRX_BD_HW_IDX_MASK);
-+	if (cur_wp >= ring->r.wp)
-+		count = cur_wp - ring->r.wp;
++	if (rate_idx >= DESC_RATEVHT4SS_MCS0)
++		rate_order -= DESC_RATEVHT4SS_MCS0;
++	else if (rate_idx >= DESC_RATEVHT3SS_MCS0)
++		rate_order -= DESC_RATEVHT3SS_MCS0;
++	else if (rate_idx >= DESC_RATEVHT2SS_MCS0)
++		rate_order -= DESC_RATEVHT2SS_MCS0;
++	else if (rate_idx >= DESC_RATEVHT1SS_MCS0)
++		rate_order -= DESC_RATEVHT1SS_MCS0;
++	else if (rate_idx >= DESC_RATEMCS24)
++		rate_order -= DESC_RATEMCS24;
++	else if (rate_idx >= DESC_RATEMCS16)
++		rate_order -= DESC_RATEMCS16;
++	else if (rate_idx >= DESC_RATEMCS8)
++		rate_order -= DESC_RATEMCS8;
++	else if (rate_idx >= DESC_RATEMCS0)
++		rate_order -= DESC_RATEMCS0;
++	else if (rate_idx >= DESC_RATE6M)
++		rate_order -= DESC_RATE6M;
 +	else
-+		count = ring->r.len - (ring->r.wp - cur_wp);
++		rate_order -= DESC_RATE1M;
 +
-+	if (rp)
-+		*rp = ring->r.rp;
-+	if (wp)
-+		*wp = cur_wp;
++	if (rate_idx >= DESC_RATEMCS0 || rate_order == 0)
++		rate_order++;
 +
-+	return count;
++	return GENMASK(rate_order + RRSR_RATE_ORDER_CCK_LEN - 1, 0);
 +}
 +
-+static u32 rtw_pci_rx_napi(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 			   u8 hw_queue)
++static void rtw_phy_rrsr_mask_min_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw_dev *rtwdev = (struct rtw_dev *)data;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u32 mask = 0;
++
++	mask = rtw_phy_get_rrsr_mask(rtwdev, si->ra_report.desc_rate);
++	if (mask < dm_info->rrsr_mask_min)
++		dm_info->rrsr_mask_min = mask;
++}
++
++static void rtw_phy_rrsr_update(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	dm_info->rrsr_mask_min = RRSR_RATE_ORDER_MAX;
++	rtw_iterate_stas_atomic(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
++	rtw_write32(rtwdev, REG_RRSR, dm_info->rrsr_val_init & dm_info->rrsr_mask_min);
++}
++
+ static void rtw_phy_dpk_track(struct rtw_dev *rtwdev)
  {
  	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct napi_struct *napi = &rtwpci->napi;
- 	struct rtw_pci_rx_ring *ring;
- 	struct rtw_rx_pkt_stat pkt_stat;
- 	struct ieee80211_rx_status rx_status;
- 	struct sk_buff *skb, *new;
--	u32 cur_wp, cur_rp, tmp;
--	u32 count;
-+	u32 cur_wp, cur_rp;
-+	u32 count, rx_done = 0;
- 	u32 pkt_offset;
- 	u32 pkt_desc_sz = chip->rx_pkt_desc_sz;
- 	u32 buf_desc_sz = chip->rx_buf_desc_sz;
-@@ -953,16 +986,8 @@ static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 	dma_addr_t dma;
- 
- 	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
-+	count = rtw_pci_get_hw_rx_ring_nr(rtwdev, rtwpci, &cur_rp, &cur_wp);
- 
--	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
--	cur_wp = tmp >> 16;
--	cur_wp &= TRX_BD_IDX_MASK;
--	if (cur_wp >= ring->r.wp)
--		count = cur_wp - ring->r.wp;
--	else
--		count = ring->r.len - (ring->r.wp - cur_wp);
--
--	cur_rp = ring->r.rp;
- 	while (count--) {
- 		rtw_pci_dma_check(rtwdev, ring, cur_rp);
- 		skb = ring->buf[cur_rp];
-@@ -995,7 +1020,8 @@ static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 
- 			rtw_rx_stats(rtwdev, pkt_stat.vif, new);
- 			memcpy(new->cb, &rx_status, sizeof(rx_status));
--			ieee80211_rx_irqsafe(rtwdev->hw, new);
-+			ieee80211_rx_napi(rtwdev->hw, NULL, new, napi);
-+			rx_done++;
- 		}
- 
- next_rp:
-@@ -1011,6 +1037,8 @@ static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
- 	ring->r.rp = cur_rp;
- 	ring->r.wp = cur_wp;
- 	rtw_write16(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ, ring->r.rp);
-+
-+	return rx_done;
+@@ -561,13 +615,19 @@ static void rtw_phy_pwr_track(struct rtw_dev *rtwdev)
+ 	rtwdev->chip->ops->pwr_track(rtwdev);
  }
  
- static void rtw_pci_irq_recognized(struct rtw_dev *rtwdev,
-@@ -1079,7 +1107,7 @@ static irqreturn_t rtw_pci_interrupt_threadfn(int irq, void *dev)
- 	if (irq_status[3] & IMR_H2CDOK)
- 		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
- 	if (irq_status[0] & IMR_ROK)
--		rtw_pci_rx_isr(rtwdev, rtwpci, RTW_RX_QUEUE_MPDU);
-+		rtw_pci_rx_isr(rtwdev);
- 	if (unlikely(irq_status[0] & IMR_C2HCMD))
- 		rtw_fw_c2h_cmd_isr(rtwdev);
- 
-@@ -1485,6 +1513,55 @@ static void rtw_pci_free_irq(struct rtw_dev *rtwdev, struct pci_dev *pdev)
- 	pci_free_irq_vectors(pdev);
- }
- 
-+static int rtw_pci_napi_poll(struct napi_struct *napi, int budget)
++static void rtw_phy_ra_track(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_pci *rtwpci = container_of(napi, struct rtw_pci, napi);
-+	struct rtw_dev *rtwdev = container_of((void *)rtwpci, struct rtw_dev,
-+					      priv);
-+	int work_done = 0;
-+
-+	while (work_done < budget) {
-+		u32 work_done_once;
-+
-+		work_done_once = rtw_pci_rx_napi(rtwdev, rtwpci,
-+						 RTW_RX_QUEUE_MPDU);
-+		if (work_done_once == 0)
-+			break;
-+		work_done += work_done_once;
-+	}
-+	if (work_done < budget) {
-+		napi_complete_done(napi, work_done);
-+		/* When ISR happens during polling and before napi_complete
-+		 * while no further data is received. Data on the dma_ring will
-+		 * not be processed immediately. Check whether dma ring is
-+		 * empty and perform napi_schedule accordingly.
-+		 */
-+		if (rtw_pci_get_hw_rx_ring_nr(rtwdev, rtwpci, NULL, NULL))
-+			napi_schedule(napi);
-+	}
-+
-+	return work_done;
++	rtw_phy_ra_info_update(rtwdev);
++	rtw_phy_rrsr_update(rtwdev);
 +}
 +
-+static void rtw_pci_napi_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	init_dummy_netdev(&rtwpci->netdev);
-+	netif_napi_add(&rtwpci->netdev, &rtwpci->napi, rtw_pci_napi_poll,
-+		       RTW_NAPI_WEIGHT_NUM);
-+	napi_enable(&rtwpci->napi);
-+}
-+
-+static void rtw_pci_napi_deinit(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	napi_synchronize(&rtwpci->napi);
-+	napi_disable(&rtwpci->napi);
-+	netif_napi_del(&rtwpci->napi);
-+}
-+
- int rtw_pci_probe(struct pci_dev *pdev,
- 		  const struct pci_device_id *id)
+ void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
  {
-@@ -1547,6 +1624,8 @@ int rtw_pci_probe(struct pci_dev *pdev,
- 		goto err_destroy_pci;
- 	}
+ 	/* for further calculation */
+ 	rtw_phy_statistics(rtwdev);
+ 	rtw_phy_dig(rtwdev);
+ 	rtw_phy_cck_pd(rtwdev);
+-	rtw_phy_ra_info_update(rtwdev);
++	rtw_phy_ra_track(rtwdev);
+ 	rtw_phy_dpk_track(rtwdev);
+ 	rtw_phy_pwr_track(rtwdev);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index b924ed07630a..a4fcfb878550 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -185,4 +185,7 @@ enum rtw_phy_cck_pd_lv {
+ #define LSSI_READ_EDGE_MASK	0x80000000
+ #define LSSI_READ_DATA_MASK	0xfffff
  
-+	rtw_pci_napi_init(rtwdev);
++#define RRSR_RATE_ORDER_MAX	0xfffff
++#define RRSR_RATE_ORDER_CCK_LEN	4
 +
- 	return 0;
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index cf9a3b674d30..ea518aa78552 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -306,6 +306,8 @@
+ #define REG_DARFRC		0x0430
+ #define REG_DARFRCH		0x0434
+ #define REG_RARFRCH		0x043C
++#define REG_RRSR		0x0440
++#define BITS_RRSR_RSC		GENMASK(22, 21)
+ #define REG_ARFR0		0x0444
+ #define REG_ARFRH0		0x0448
+ #define REG_ARFR1_V1		0x044C
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index 32b4771e04d0..bb2495b8609e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -164,8 +164,6 @@ const struct rtw_table name ## _tbl = {			\
  
- err_destroy_pci:
-@@ -1579,6 +1658,7 @@ void rtw_pci_remove(struct pci_dev *pdev)
+ #define REG_ANAPARLDO_POW_MAC	0x0029
+ #define BIT_LDOE25_PON		BIT(0)
+-#define REG_RRSR		0x0440
+-#define BITS_RRSR_RSC		(BIT(21) | BIT(22))
  
- 	rtw_unregister_hw(rtwdev, hw);
- 	rtw_pci_disable_interrupt(rtwdev, rtwpci);
-+	rtw_pci_napi_deinit(rtwdev);
- 	rtw_pci_destroy(rtwdev, pdev);
- 	rtw_pci_declaim(rtwdev, pdev);
- 	rtw_pci_free_irq(rtwdev, pdev);
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index 7cdefe229824..6d01bbe38d9e 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -51,6 +51,7 @@
- #define RTK_PCI_RXBD_DESA_MPDUQ	0x338
- 
- #define TRX_BD_IDX_MASK		GENMASK(11, 0)
-+#define TRX_BD_HW_IDX_MASK	GENMASK(27, 16)
- 
- /* BCNQ is specialized for rsvd page, does not need to specify a number */
- #define RTK_PCI_TXBD_NUM_H2CQ	0x1328
-@@ -205,6 +206,10 @@ struct rtw_pci {
- 	u32 irq_mask[4];
- 	bool irq_enabled;
- 
-+	/* napi structure */
-+	struct net_device netdev;
-+	struct napi_struct napi;
-+
- 	u16 rx_tag;
- 	DECLARE_BITMAP(tx_queued, RTK_MAX_TX_QUEUE_NUM);
- 	struct rtw_pci_tx_ring tx_rings[RTK_MAX_TX_QUEUE_NUM];
+ #define REG_TXDFIR0	0x808
+ #define REG_DFIRBW	0x810
 -- 
 2.21.0
 
