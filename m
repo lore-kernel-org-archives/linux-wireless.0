@@ -7,89 +7,82 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A7AC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 17:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCCB5C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 17:31:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51FD723B31
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 17:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DC9823B31
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 17:31:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728022AbhANRa2 (ORCPT
+        id S1727318AbhANRbm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Jan 2021 12:30:28 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:61383 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727460AbhANRa1 (ORCPT
+        Thu, 14 Jan 2021 12:31:42 -0500
+Received: from m43-15.mailgun.net ([69.72.43.15]:55826 "EHLO
+        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726121AbhANRbl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jan 2021 12:30:27 -0500
+        Thu, 14 Jan 2021 12:31:41 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610645407; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1610645481; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=mu6+gHU6ZpdLVNGWbUjplM+nfeRf/YTxi2YfhKXXKcM=;
- b=UF0/qjbYJQV25jueHbaWDVRvI0oRGY2Qp1HfW3J2/9njH3RVjStrJ/eQf8ulAM7Yowz1Pf9S
- lFpgl7faWaqyHR5Ug/4Pg8/pmee5ZZ5z3ih9KOICEZfYfEDjMhc45EZAWxwCyNMxKqO3xvVq
- yqAf0AAhSMhdSyRwbuZvwyezsDY=
-X-Mailgun-Sending-Ip: 198.61.254.31
+ Content-Type: Sender; bh=pAqTPWEy5VXsKvzj0KLIoejiG4s9nm5dt3CkKTycPjo=;
+ b=aqAh2dNT3oRg9UD/dzfQspENKnFPXK/3NEBxo+gix6b2LaTtx2f4MSu/WfqfZd+TwWmEQOin
+ 6XcIsQR4JY5D3vymZiT6+pC7VJjN0ej5kd74Gp+c7z1mEwu9V/80C87oaBNy7Lp6duGpnqL5
+ X2fsyy/qIdBicn7WKb41jBpe7z4=
+X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 60007f9c4dcca12475307c83 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 14 Jan 2021 17:30:04
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 60007fce415a6293c5b62d8c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 14 Jan 2021 17:30:54
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CFB0DC433C6; Thu, 14 Jan 2021 17:30:03 +0000 (UTC)
+        id 09EE1C43463; Thu, 14 Jan 2021 17:30:54 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id ACDADC433CA;
-        Thu, 14 Jan 2021 17:30:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ACDADC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BF717C433CA;
+        Thu, 14 Jan 2021 17:30:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BF717C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH V2] brcmfmac: support BCM4365E with 43666 ChipCommon chip
- ID
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] mt7601u: check the status of device in calibration
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201214101553.32097-1-zajec5@gmail.com>
-References: <20201214101553.32097-1-zajec5@gmail.com>
-To:     =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        sha-cyfmac-dev-list@infineon.com,
-        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+In-Reply-To: <20201217161657.GB12562@E480>
+References: <20201217161657.GB12562@E480>
+To:     Zhi Han <z.han@gmx.net>
+Cc:     linux-wireless@vger.kernel.org, kuba@kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210114173003.CFB0DC433C6@smtp.codeaurora.org>
-Date:   Thu, 14 Jan 2021 17:30:03 +0000 (UTC)
+Message-Id: <20210114173054.09EE1C43463@smtp.codeaurora.org>
+Date:   Thu, 14 Jan 2021 17:30:54 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rafał Miłecki <zajec5@gmail.com> wrote:
+Zhi Han <z.han@gmx.net> wrote:
 
-> From: Rafał Miłecki <rafal@milecki.pl>
+> When the usb device being plugged out, before ieee80211 gets to know the
+> hw being removed, it gets to know that the association status changed,
+> and thus ask for the device to do the calibration. This causes error as
+> the hw is absent.
 > 
-> This adds support for the BCM43666/4 which seems to be using the same
-> firmware as BCM4366 (4366c0). I found it in the Netgear R8000P router.
+> This can be avoid by checking the status of the device before sending
+> the calibration request to the device.
 > 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Zhi Han <z.han@gmx.net>
+> Acked-by: Jakub Kicinski <kuba@kernel.org>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-f4add10399f9 brcmfmac: support BCM4365E with 43666 ChipCommon chip ID
+1dac51269d05 mt7601u: check the status of device in calibration
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201214101553.32097-1-zajec5@gmail.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20201217161657.GB12562@E480/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
