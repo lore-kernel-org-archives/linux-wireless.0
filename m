@@ -2,55 +2,184 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBCAFC43332
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 01:59:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 989BDC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 05:21:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A754723442
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 01:59:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5801A238E9
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 05:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728891AbhANB6q (ORCPT
+        id S1726000AbhANFVc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:58:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54086 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729543AbhAMXkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jan 2021 18:40:05 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BF55823383;
-        Wed, 13 Jan 2021 23:29:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610580593;
-        bh=EQJe8YysK2tcSoGTGUzG3jrrjUDLm0Dv5OUBJ2bLzDs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=GVoQEn2xdJUKGdv+fcd+if0u+jXtTD8ueIY8vDd6pGq0Z7JJbKwh6DUXXTHqoZgeQ
-         gc4DLbnRfIAGRcdQEhMaZ1ie+vc6TxPDQ7Fglntc2CVq8n4CqLPbdYqfoijrL4Zgs3
-         S140DtZv6G82abaRy6XovZBV1psy8bF2RYOyJaqFAtLnDHuTwuqTON0eHdTLDk+CwD
-         WZeS28cGXGSjhYxlSGlZoV9oLQvh3xxw2EUjB3Nc9V31sGFOAb8x7clZ71Yn0WmUZT
-         SjaNK0wcUj4vby2dPvGsHMOtxTKslcj4qa323AFlwQJ7KiMQlJkxcNterMRJZhzLUi
-         bgpStCpfQgXjg==
-Date:   Wed, 13 Jan 2021 15:29:53 -0800
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH] mt7601u: use ieee80211_rx_list to pass frames to the
- network stack as a batch
-Message-ID: <20210113152953.05dd40b4@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <5c72fa2dda45c1ae3f285af80c02f3db23341d85.1610580222.git.lorenzo@kernel.org>
-References: <5c72fa2dda45c1ae3f285af80c02f3db23341d85.1610580222.git.lorenzo@kernel.org>
+        Thu, 14 Jan 2021 00:21:32 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:39561 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725875AbhANFVc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jan 2021 00:21:32 -0500
+X-UUID: 8b64acce4957489f86f379603baa4cc9-20210114
+X-UUID: 8b64acce4957489f86f379603baa4cc9-20210114
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1433457188; Thu, 14 Jan 2021 13:15:34 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 14 Jan 2021 13:15:32 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 14 Jan 2021 13:15:32 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v2 1/2] mt76: mt7915: simplify peer's TxBF capability check
+Date:   Thu, 14 Jan 2021 13:15:30 +0800
+Message-ID: <b72ecf59938ed6adce6b49239e4e9d3658ca49d4.1610594238.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 2510BC6834DDE253C9E3BB23986E2357DD0FE36B45062CFC3C31B538F29CCAB12000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 14 Jan 2021 00:26:26 +0100 Lorenzo Bianconi wrote:
-> Similar to mt76 driver, rely on ieee80211_rx_list in order to
-> improve icache footprint
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+This is a preliminary patch for implicit beamforming support.
 
-Acked-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+changes since v2: get condition directly from statement
+---
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 67 ++++++-------------
+ 1 file changed, 22 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 0baef70fc522..c79f3937f6ae 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -66,9 +66,6 @@ struct mt7915_fw_region {
+ 
+ #define MCU_PATCH_ADDRESS		0x200000
+ 
+-#define MT_STA_BFER			BIT(0)
+-#define MT_STA_BFEE			BIT(1)
+-
+ #define FW_FEATURE_SET_ENCRYPT		BIT(0)
+ #define FW_FEATURE_SET_KEY_IDX		GENMASK(2, 1)
+ #define FW_FEATURE_OVERRIDE_ADDR	BIT(5)
+@@ -1944,20 +1941,26 @@ mt7915_mcu_sta_bfee_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
+ 	}
+ 
+ 	/* reply with identity matrix to avoid 2x2 BF negative gain */
+-	if (nr == 1 && tx_ant == 2)
+-		bfee->fb_identity_matrix = true;
++	bfee->fb_identity_matrix = !!(nr == 1 && tx_ant == 2);
+ }
+ 
+-static u8
+-mt7915_mcu_sta_txbf_type(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+-			 struct ieee80211_sta *sta)
++static int
++mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
++		    struct ieee80211_sta *sta, bool enable)
+ {
+-	u8 type = 0;
++	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
++	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
++	struct mt7915_phy *phy;
++	struct sk_buff *skb;
++	int r, len;
++	bool ebfee = 0, ebf = 0;
+ 
+ 	if (vif->type != NL80211_IFTYPE_STATION &&
+ 	    vif->type != NL80211_IFTYPE_AP)
+ 		return 0;
+ 
++	phy = mvif->band_idx ? mt7915_ext_phy(dev) : &dev->phy;
++
+ 	if (sta->he_cap.has_he) {
+ 		struct ieee80211_he_cap_elem *pe;
+ 		const struct ieee80211_he_cap_elem *ve;
+@@ -1967,15 +1970,12 @@ mt7915_mcu_sta_txbf_type(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 		vc = mt7915_get_he_phy_cap(phy, vif);
+ 		ve = &vc->he_cap_elem;
+ 
+-		if ((HE_PHY(CAP3_SU_BEAMFORMER, pe->phy_cap_info[3]) ||
+-		     HE_PHY(CAP4_MU_BEAMFORMER, pe->phy_cap_info[4])) &&
+-		    HE_PHY(CAP4_SU_BEAMFORMEE, ve->phy_cap_info[4]))
+-			type |= MT_STA_BFEE;
+-
+-		if ((HE_PHY(CAP3_SU_BEAMFORMER, ve->phy_cap_info[3]) ||
+-		     HE_PHY(CAP4_MU_BEAMFORMER, ve->phy_cap_info[4])) &&
+-		    HE_PHY(CAP4_SU_BEAMFORMEE, pe->phy_cap_info[4]))
+-			type |= MT_STA_BFER;
++		ebfee = !!((HE_PHY(CAP3_SU_BEAMFORMER, pe->phy_cap_info[3]) ||
++			    HE_PHY(CAP4_MU_BEAMFORMER, pe->phy_cap_info[4])) &&
++			   HE_PHY(CAP4_SU_BEAMFORMEE, ve->phy_cap_info[4]));
++		ebf = !!((HE_PHY(CAP3_SU_BEAMFORMER, ve->phy_cap_info[3]) ||
++			  HE_PHY(CAP4_MU_BEAMFORMER, ve->phy_cap_info[4])) &&
++			 HE_PHY(CAP4_SU_BEAMFORMEE, pe->phy_cap_info[4]));
+ 	} else if (sta->vht_cap.vht_supported) {
+ 		struct ieee80211_sta_vht_cap *pc;
+ 		struct ieee80211_sta_vht_cap *vc;
+@@ -1988,37 +1988,14 @@ mt7915_mcu_sta_txbf_type(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 		ce = IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
+ 		     IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE;
+ 
+-		if ((pc->cap & cr) && (vc->cap & ce))
+-			type |= MT_STA_BFEE;
+-
+-		if ((vc->cap & cr) && (pc->cap & ce))
+-			type |= MT_STA_BFER;
+-	} else if (sta->ht_cap.ht_supported) {
+-		/* TODO: iBF */
++		ebfee = !!((pc->cap & cr) && (vc->cap & ce));
++		ebf = !!((vc->cap & cr) && (pc->cap & ce));
+ 	}
+ 
+-	return type;
+-}
+-
+-static int
+-mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
+-		    struct ieee80211_sta *sta, bool enable)
+-{
+-	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
+-	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
+-	struct mt7915_phy *phy;
+-	struct sk_buff *skb;
+-	int r, len;
+-	u8 type;
+-
+-	phy = mvif->band_idx ? mt7915_ext_phy(dev) : &dev->phy;
+-
+-	type = mt7915_mcu_sta_txbf_type(phy, vif, sta);
+-
+ 	/* must keep each tag independent */
+ 
+ 	/* starec bf */
+-	if (type & MT_STA_BFER) {
++	if (ebf) {
+ 		len = sizeof(struct sta_req_hdr) + sizeof(struct sta_rec_bf);
+ 
+ 		skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta, len);
+@@ -2034,7 +2011,7 @@ mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	/* starec bfee */
+-	if (type & MT_STA_BFEE) {
++	if (ebfee) {
+ 		len = sizeof(struct sta_req_hdr) + sizeof(struct sta_rec_bfee);
+ 
+ 		skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta, len);
+-- 
+2.18.0
+
