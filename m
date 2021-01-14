@@ -2,246 +2,116 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8F5C4332D
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 08:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84FADC433E6
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 09:25:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB7CB238EA
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 08:07:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4615923A01
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jan 2021 09:25:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728292AbhANIGq (ORCPT
+        id S1728087AbhANJZR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Jan 2021 03:06:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59020 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728130AbhANIGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jan 2021 03:06:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AFD9323A58;
-        Thu, 14 Jan 2021 08:05:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610611500;
-        bh=KzRA72DJ8FelN5FRPnISDXzhJWHYX6V5D7cnrrYqmns=;
-        h=From:To:Cc:Subject:Date:From;
-        b=nOm4NqCaUWLg4HTBDeJeoBxDK1hE6KD6kwIaS5QUdGE5d95M0LOuBe17UH6ZhtxWj
-         2SIokKCq5OrWbc/QTRPFACCsP/28F9IHn5ydVSMGUJC9s2jP+tMN80H9tSZ77bm3FC
-         VuJGlQICCzi4qz/Gjt5ZVImWz1CaQcpPOemSSW2UY1plhyCBX0ffc8ZreB8SYwreWG
-         a2Wjqa/k8fmoxGbUlaKINA7quVFVGZDOIEdybff/MtPHwEQKCte3px4suSSxEJzxPs
-         ZezS17i65C2hxskblSDd8TCCCI/NNP1qdJmjaooHey/QEueJfY+BWtlFyEGbMsiuzC
-         o3DjiUV3zELfQ==
-Received: by mail.kernel.org with local (Exim 4.94)
-        (envelope-from <mchehab@kernel.org>)
-        id 1kzxcn-00EQ6N-K6; Thu, 14 Jan 2021 09:04:57 +0100
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>
-Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Bounine <alex.bou9@gmail.com>,
-        Andy Lutomirski <luto@amacapital.net>,
-        Anton Vorontsov <anton@enomsg.org>,
-        Colin Cross <ccross@android.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        David Airlie <airlied@linux.ie>,
-        Evgeniy Polyakov <zbr@ioremap.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jon Maloy <jmaloy@redhat.com>,
-        Kees Cook <keescook@chromium.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Mark Gross <mgross@linux.intel.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Maxime Ripard <mripard@kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Mike Rapoport <rppt@kernel.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Richard Gong <richard.gong@linux.intel.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Tony Luck <tony.luck@intel.com>,
-        Will Drewry <wad@chromium.org>,
-        Ying Xue <ying.xue@windriver.com>,
-        dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
-        linux-kselftest@vger.kernel.org, linux-mm@kvack.org,
+        Thu, 14 Jan 2021 04:25:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55794 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727174AbhANJZQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jan 2021 04:25:16 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB5DC061786;
+        Thu, 14 Jan 2021 01:24:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=2uqg5pSRojZBo6w/FGO6uS669NIaxCuaEwl+DtcVLgI=; b=MZMILskZu+w7kBlmRGoaNKncmM
+        y1maASYjvLIo6Bp3jZNfXsd7014BWXk649R8jFm5IYA99cb6JJ2OoVsOhPWvEQir5k2uB7MTZMEoj
+        v1DLlNQo2/Bmqe2+jmlHhsK92jcO6zJEukKJ0OrqGZdP4kc9kStxqAAUVfCLjpjV3jtQ=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1kzyrn-0004T9-UU; Thu, 14 Jan 2021 10:24:31 +0100
+Subject: Re: [PATCH] mt76: Fix queue ID variable types after mcu queue split
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net
-Subject: [PATCH v6 00/16] Fix several bad kernel-doc markups
-Date:   Thu, 14 Jan 2021 09:04:36 +0100
-Message-Id: <cover.1610610937.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.29.2
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+References: <20201229211548.1348077-1-natechancellor@gmail.com>
+ <20201231100918.GA1819773@computer-5.station> <87k0sjlwyb.fsf@codeaurora.org>
+From:   Felix Fietkau <nbd@nbd.name>
+Message-ID: <9af48c35-c987-7eb4-e3a1-5e54555f988b@nbd.name>
+Date:   Thu, 14 Jan 2021 10:24:30 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+In-Reply-To: <87k0sjlwyb.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Jon,
+On 2021-01-11 09:06, Kalle Valo wrote:
+> Lorenzo Bianconi <lorenzo@kernel.org> writes:
+> 
+>>> Clang warns in both mt7615 and mt7915:
+>>> 
+>>> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:271:9: warning: implicit
+>>> conversion from enumeration type 'enum mt76_mcuq_id' to different
+>>> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
+>>>                 txq = MT_MCUQ_FWDL;
+>>>                     ~ ^~~~~~~~~~~~
+>>> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:278:9: warning: implicit
+>>> conversion from enumeration type 'enum mt76_mcuq_id' to different
+>>> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
+>>>                 txq = MT_MCUQ_WA;
+>>>                     ~ ^~~~~~~~~~
+>>> drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:282:9: warning: implicit
+>>> conversion from enumeration type 'enum mt76_mcuq_id' to different
+>>> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
+>>>                 txq = MT_MCUQ_WM;
+>>>                     ~ ^~~~~~~~~~
+>>> 3 warnings generated.
+>>> 
+>>> drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:238:9: warning: implicit
+>>> conversion from enumeration type 'enum mt76_mcuq_id' to different
+>>> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
+>>>                 qid = MT_MCUQ_WM;
+>>>                     ~ ^~~~~~~~~~
+>>> drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:240:9: warning: implicit
+>>> conversion from enumeration type 'enum mt76_mcuq_id' to different
+>>> enumeration type 'enum mt76_txq_id' [-Wenum-conversion]
+>>>                 qid = MT_MCUQ_FWDL;
+>>>                     ~ ^~~~~~~~~~~~
+>>> 2 warnings generated.
+>>> 
+>>> Use the proper type for the queue ID variables to fix these warnings.
+>>> Additionally, rename the txq variable in mt7915_mcu_send_message to be
+>>> more neutral like mt7615_mcu_send_message.
+>>> 
+>>> Fixes: e637763b606b ("mt76: move mcu queues to mt76_dev q_mcu array")
+>>> Link: https://github.com/ClangBuiltLinux/linux/issues/1229
+>>> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+>>
+>> Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> 
+> I see that Felix already applied this, but as this is a regression
+> starting from v5.11-rc1 I think it should be applied to
+> wireless-drivers. Felix, can you drop this from your tree so that I
+> could apply it to wireless-drivers?
+Sure, will do.
 
-This series have three parts:
-
-1)  10 remaining fixup patches from the series I sent back on Dec, 1st:
-
-   parport: fix a kernel-doc markup
-   rapidio: fix kernel-doc a markup
-   fs: fix kernel-doc markups
-   pstore/zone: fix a kernel-doc markup
-   firmware: stratix10-svc: fix kernel-doc markups
-   connector: fix a kernel-doc markup
-   lib/crc7: fix a kernel-doc markup
-   memblock: fix kernel-doc markups
-   w1: fix a kernel-doc markup
-   selftests: kselftest_harness.h: partially fix kernel-doc markups
-
-2) The patch adding the new check to ensure that the kernel-doc
-   markup will be used for the right declaration;
-
-3) 5 additional patches, produced against next-20210114 with new
-   problems detected after the original series: 
-
- net: tip: fix a couple kernel-doc markups
- net: cfg80211: fix a kerneldoc markup
- reset: core: fix a kernel-doc markup
- drm: drm_crc: fix a kernel-doc markup
- platform/surface: aggregator: fix a kernel-doc markup
-
-It probably makes sense to merge at least the first 11 patches
-via the doc tree, as they should apply cleanly there, and
-having the last 5 patches merged via each maintainer's tree.
-
--
-
-Kernel-doc has always be limited to a probably bad documented
-rule:
-
-The kernel-doc markups should appear *imediatelly before* the
-function or data structure that it documents.
-
-On other words, if a C file would contain something like this:
-
-	/**
-	 * foo - function foo
-	 * @args: foo args
-	 */
-	static inline void bar(int args);
-
-	/**
-	 * bar - function bar
-	 * @args: foo args
-	 */
-	static inline void foo(void *args);
-
-
-The output (in ReST format) will be:
-
-	.. c:function:: void bar (int args)
-
-	   function foo
-
-	**Parameters**
-
-	``int args``
-	  foo args
-
-
-	.. c:function:: void foo (void *args)
-
-	   function bar
-
-	**Parameters**
-
-	``void *args``
-	  foo args
-
-Which is clearly a wrong result.  Before this changeset, 
-not even a warning is produced on such cases.
-
-As placing such markups just before the documented
-data is a common practice, on most cases this is fine.
-
-However, as patches touch things, identifiers may be
-renamed, and people may forget to update the kernel-doc
-markups to follow such changes.
-
-This has been happening for quite a while, as there are
-lots of files with kernel-doc problems.
-
-This series address those issues and add a file at the
-end that will enforce that the identifier will match the
-kernel-doc markup, avoiding this problem from
-keep happening as time goes by.
-
-This series is based on current upstream tree.
-
-@maintainers: feel free to pick the patches and
-apply them directly on your trees, as all patches on 
-this series are independent from the other ones.
-
---
-
-v6:
-  - rebased on the top of next-20210114 and added a few extra fixes
-
-v5:
-  - The completion.h patch was replaced by another one which drops
-    an obsolete macro;
-  - Some typos got fixed and review tags got added;
-  - Dropped patches that were already merged at linux-next.
-
-v4:
-
-  - Patches got rebased and got some acks.
-
-Mauro Carvalho Chehab (16):
-  parport: fix a kernel-doc markup
-  rapidio: fix kernel-doc a markup
-  fs: fix kernel-doc markups
-  pstore/zone: fix a kernel-doc markup
-  firmware: stratix10-svc: fix kernel-doc markups
-  connector: fix a kernel-doc markup
-  lib/crc7: fix a kernel-doc markup
-  memblock: fix kernel-doc markups
-  w1: fix a kernel-doc markup
-  selftests: kselftest_harness.h: partially fix kernel-doc markups
-  scripts: kernel-doc: validate kernel-doc markup with the actual names
-  net: tip: fix a couple kernel-doc markups
-  net: cfg80211: fix a kerneldoc markup
-  reset: core: fix a kernel-doc markup
-  drm: drm_crc: fix a kernel-doc markup
-  platform/surface: aggregator: fix a kernel-doc markup
-
- drivers/parport/share.c                       |  2 +-
- .../surface/aggregator/ssh_request_layer.c    |  2 +-
- drivers/rapidio/rio.c                         |  2 +-
- drivers/reset/core.c                          |  4 +-
- fs/dcache.c                                   | 73 ++++++++++---------
- fs/inode.c                                    |  4 +-
- fs/pstore/zone.c                              |  2 +-
- fs/seq_file.c                                 |  5 +-
- fs/super.c                                    | 12 +--
- include/drm/drm_crtc.h                        |  2 +-
- include/linux/connector.h                     |  2 +-
- .../firmware/intel/stratix10-svc-client.h     | 10 +--
- include/linux/memblock.h                      |  4 +-
- include/linux/parport.h                       | 31 ++++++++
- include/linux/w1.h                            |  2 +-
- include/net/cfg80211.h                        |  2 +-
- lib/crc7.c                                    |  2 +-
- net/tipc/link.c                               |  2 +-
- net/tipc/node.c                               |  2 +-
- scripts/kernel-doc                            | 62 ++++++++++++----
- tools/testing/selftests/kselftest_harness.h   | 26 ++++---
- 21 files changed, 160 insertions(+), 93 deletions(-)
-
--- 
-2.29.2
-
+- Felix
 
