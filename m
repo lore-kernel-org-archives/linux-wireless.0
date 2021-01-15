@@ -7,79 +7,97 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 833BEC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49977C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C1BC23730
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:32:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13671221F7
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726278AbhAOLcE (ORCPT
+        id S1726324AbhAOLcv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Jan 2021 06:32:04 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:40398 "EHLO
+        Fri, 15 Jan 2021 06:32:51 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:40402 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725910AbhAOLcE (ORCPT
+        with ESMTP id S1725831AbhAOLcv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jan 2021 06:32:04 -0500
+        Fri, 15 Jan 2021 06:32:51 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l0Mvj-003hBK-Fu; Fri, 15 Jan 2021 13:06:11 +0200
+        id 1l0Mvk-003hBK-9S; Fri, 15 Jan 2021 13:06:12 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 15 Jan 2021 13:05:57 +0200
-Message-Id: <iwlwifi.20210115130253.621c948b1fad.I3ee9f4bc4e74a0c9125d42fb7c35cd80df4698a1@changeid>
+Date:   Fri, 15 Jan 2021 13:05:58 +0200
+Message-Id: <iwlwifi.20210115130253.217a9d6a6a12.If964cb582ab0aaa94e81c4ff3b279eaafda0fd3f@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210115110558.1248847-1-luca@coelho.fi>
 References: <20210115110558.1248847-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH for v5.11 11/12] iwlwifi: pcie: use jiffies for memory read spin time limit
+Subject: [PATCH for v5.11 12/12] iwlwifi: pcie: reschedule in long-running memory reads
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's no reason to use ktime_get() since we don't need any better
-precision than jiffies, and since we no longer disable interrupts
-around this code (when grabbing NIC access), jiffies will work fine.
-Use jiffies instead of ktime_get().
+If we spin for a long time in memory reads that (for some reason in
+hardware) take a long time, then we'll eventually get messages such
+as
+
+  watchdog: BUG: soft lockup - CPU#2 stuck for 24s! [kworker/2:2:272]
+
+This is because the reading really does take a very long time, and
+we don't schedule, so we're hogging the CPU with this task, at least
+if CONFIG_PREEMPT is not set, e.g. with CONFIG_PREEMPT_VOLUNTARY=y.
+
+Previously I misinterpreted the situation and thought that this was
+only going to happen if we had interrupts disabled, and then fixed
+this (which is good anyway, however), but that didn't always help;
+looking at it again now I realized that the spin unlock will only
+reschedule if CONFIG_PREEMPT is used.
+
+In order to avoid this issue, change the code to cond_resched() if
+we've been spinning for too long here.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 04516706bb99 ("iwlwifi: pcie: limit memory read spin time")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 285e0d586021..e3760c41b31e 100644
+index e3760c41b31e..ab93a848a466 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2107,7 +2107,7 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
- 
+@@ -2108,6 +2108,7 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
  	while (offs < dwords) {
  		/* limit the time we spin here under lock to 1/2s */
--		ktime_t timeout = ktime_add_us(ktime_get(), 500 * USEC_PER_MSEC);
-+		unsigned long end = jiffies + HZ / 2;
+ 		unsigned long end = jiffies + HZ / 2;
++		bool resched = false;
  
  		if (iwl_trans_grab_nic_access(trans, &flags)) {
  			iwl_write32(trans, HBUS_TARG_MEM_RADDR,
-@@ -2118,11 +2118,7 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
+@@ -2118,10 +2119,15 @@ static int iwl_trans_pcie_read_mem(struct iwl_trans *trans, u32 addr,
  							HBUS_TARG_MEM_RDAT);
  				offs++;
  
--				/* calling ktime_get is expensive so
--				 * do it once in 128 reads
--				 */
--				if (offs % 128 == 0 && ktime_after(ktime_get(),
--								   timeout))
-+				if (time_after(jiffies, end))
+-				if (time_after(jiffies, end))
++				if (time_after(jiffies, end)) {
++					resched = true;
  					break;
++				}
  			}
  			iwl_trans_release_nic_access(trans, &flags);
++
++			if (resched)
++				cond_resched();
+ 		} else {
+ 			return -EBUSY;
+ 		}
 -- 
 2.29.2
 
