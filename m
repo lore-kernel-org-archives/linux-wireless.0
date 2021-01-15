@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12681C4332B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BAF4C433E6
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4E4423128
+	by mail.kernel.org (Postfix) with ESMTP id 72B1A23128
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730619AbhAOMDw (ORCPT
+        id S1730569AbhAOMDp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Jan 2021 07:03:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60762 "EHLO
+        Fri, 15 Jan 2021 07:03:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728953AbhAOMDw (ORCPT
+        with ESMTP id S1728020AbhAOMDo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jan 2021 07:03:52 -0500
+        Fri, 15 Jan 2021 07:03:44 -0500
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA0C9C06179A
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77F86C0613D3
         for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2021 04:02:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -30,20 +30,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=oXMsJeR3v95rSaNfDtJEu7h7Zxxxb6ljA5CBecDyCdI=; b=A5BNAfH4oBi+UVrZnc0i6TdTPF
-        X1xMXBOKaAmKOz+f3iYE43SyXvbFzzC+0WMD79dwtdHgYo7/rCzgyTTZpmKGhESeoQLkYwkKEDuG1
-        hxcDPMR+hIhYUFCK0GlSx+6WARjVibyWLSVa6JHQKoTXAn1bVNosmk/vyESmS0EBYvN8=;
+        bh=l5LEBf9/QPDTcW8NuqvT3iOEvrcuezNN96oSvEZ9MCo=; b=erfVIB5rYVbOi/MVmXZzNtEUTo
+        XrQ8IOPiQZY7B7TotM2kw4dLFEeno0AbiyOVT0yd93fZiUiYXJADE/o92F2UbI8eLaL/hoXLVnp9M
+        HAU4zRg0Bq7Jw+mrrfDwMV0J5lFTfkfCoooqHg/QP4C/E9Z/0lnn/K10Nt6t70rVKIMQ=;
 Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1l0NoU-0006Y0-96; Fri, 15 Jan 2021 13:02:46 +0100
+        id 1l0NoU-0006Y0-TZ; Fri, 15 Jan 2021 13:02:47 +0100
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v3 4/9] mac80211: minstrel_ht: remove old ewma based rate average code
-Date:   Fri, 15 Jan 2021 13:02:37 +0100
-Message-Id: <20210115120242.89616-5-nbd@nbd.name>
+Subject: [PATCH v3 7/9] mac80211: minstrel_ht: fix max probability rate selection
+Date:   Fri, 15 Jan 2021 13:02:40 +0100
+Message-Id: <20210115120242.89616-8-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210115120242.89616-1-nbd@nbd.name>
 References: <20210115120242.89616-1-nbd@nbd.name>
@@ -53,104 +53,130 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The new noise filter has been the default for a while now with no reported
-downside and significant improvement compared to the old code.
+- do not select rates faster than the max throughput rate if probability is lower
+- reset previous rate before sorting again
+
+This ensures that the max prob rate gets set to a more reliable rate
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 31 ++++++++----------------------
- net/mac80211/rc80211_minstrel_ht.h |  1 -
- 2 files changed, 8 insertions(+), 24 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 47 ++++++++++++++++++++++++------
+ 1 file changed, 38 insertions(+), 9 deletions(-)
 
 diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 1fc3e836fe95..9280461ed3cc 100644
+index 58f7400b78b2..d3bead4b5b04 100644
 --- a/net/mac80211/rc80211_minstrel_ht.c
 +++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -769,17 +769,8 @@ minstrel_ht_calc_rate_stats(struct minstrel_priv *mp,
- 	if (unlikely(mrs->attempts > 0)) {
- 		mrs->sample_skipped = 0;
- 		cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
--		if (mp->new_avg) {
--			minstrel_filter_avg_add(&mrs->prob_avg,
--						&mrs->prob_avg_1, cur_prob);
--		} else if (unlikely(!mrs->att_hist)) {
--			mrs->prob_avg = cur_prob;
--		} else {
--			/*update exponential weighted moving avarage */
--			mrs->prob_avg = minstrel_ewma(mrs->prob_avg,
--						      cur_prob,
--						      EWMA_LEVEL);
--		}
-+		minstrel_filter_avg_add(&mrs->prob_avg,
-+					&mrs->prob_avg_1, cur_prob);
- 		mrs->att_hist += mrs->attempts;
- 		mrs->succ_hist += mrs->success;
+@@ -495,12 +495,13 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
+  * Find and set the topmost probability rate per sta and per group
+  */
+ static void
+-minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
++minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
+ {
+ 	struct minstrel_mcs_group_data *mg;
+ 	struct minstrel_rate_stats *mrs;
+ 	int tmp_group, tmp_idx, tmp_tp_avg, tmp_prob;
+-	int max_tp_group, cur_tp_avg, cur_group, cur_idx;
++	int max_tp_group, max_tp_idx, max_tp_prob;
++	int cur_tp_avg, cur_group, cur_idx;
+ 	int max_gpr_group, max_gpr_idx;
+ 	int max_gpr_tp_avg, max_gpr_prob;
+ 
+@@ -509,18 +510,26 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
+ 	mg = &mi->groups[index / MCS_GROUP_RATES];
+ 	mrs = &mg->rates[index % MCS_GROUP_RATES];
+ 
+-	tmp_group = mi->max_prob_rate / MCS_GROUP_RATES;
+-	tmp_idx = mi->max_prob_rate % MCS_GROUP_RATES;
++	tmp_group = *dest / MCS_GROUP_RATES;
++	tmp_idx = *dest % MCS_GROUP_RATES;
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 	tmp_tp_avg = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
+ 
+ 	/* if max_tp_rate[0] is from MCS_GROUP max_prob_rate get selected from
+ 	 * MCS_GROUP as well as CCK_GROUP rates do not allow aggregation */
+ 	max_tp_group = mi->max_tp_rate[0] / MCS_GROUP_RATES;
++	max_tp_idx = mi->max_tp_rate[0] % MCS_GROUP_RATES;
++	max_tp_prob = mi->groups[max_tp_group].rates[max_tp_idx].prob_avg;
++
+ 	if (minstrel_ht_is_legacy_group(index / MCS_GROUP_RATES) &&
+ 	    !minstrel_ht_is_legacy_group(max_tp_group))
+ 		return;
+ 
++	/* skip rates faster than max tp rate with lower prob */
++	if (minstrel_get_duration(mi->max_tp_rate[0]) > minstrel_get_duration(index) &&
++	    mrs->prob_avg < max_tp_prob)
++		return;
++
+ 	max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
+ 	max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
+ 	max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_avg;
+@@ -538,7 +547,7 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
+ 			mg->max_group_prob_rate = index;
  	} else {
-@@ -913,10 +904,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 		if (mrs->prob_avg > tmp_prob)
+-			mi->max_prob_rate = index;
++			*dest = index;
+ 		if (mrs->prob_avg > max_gpr_prob)
+ 			mg->max_group_prob_rate = index;
+ 	}
+@@ -816,7 +825,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	struct minstrel_rate_stats *mrs;
+ 	int group, i, j, cur_prob;
+ 	u16 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
+-	u16 tmp_legacy_tp_rate[MAX_THR_RATES], index;
++	u16 tmp_legacy_tp_rate[MAX_THR_RATES], tmp_max_prob_rate;
++	u16 index;
+ 	bool ht_supported = mi->sta->ht_cap.ht_supported;
+ 
+ 	mi->sample_mode = MINSTREL_SAMPLE_IDLE;
+@@ -863,6 +873,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	else
+ 		index = MINSTREL_OFDM_GROUP * MCS_GROUP_RATES;
+ 
++	tmp_max_prob_rate = index;
+ 	for (j = 0; j < ARRAY_SIZE(tmp_mcs_tp_rate); j++)
+ 		tmp_mcs_tp_rate[j] = index;
+ 
+@@ -903,9 +914,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 			/* Find max throughput rate set within a group */
+ 			minstrel_ht_sort_best_tp_rates(mi, index,
+ 						       tmp_group_tp_rate);
+-
+-			/* Find max probability rate per group and global */
+-			minstrel_ht_set_best_prob_rate(mi, index);
+ 		}
+ 
+ 		memcpy(mg->max_group_tp_rate, tmp_group_tp_rate,
+@@ -917,6 +925,27 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 					 tmp_legacy_tp_rate);
+ 	memcpy(mi->max_tp_rate, tmp_mcs_tp_rate, sizeof(mi->max_tp_rate));
+ 
++	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
++		if (!mi->supported[group])
++			continue;
++
++		mg = &mi->groups[group];
++		mg->max_group_prob_rate = MCS_GROUP_RATES * group;
++
++		for (i = 0; i < MCS_GROUP_RATES; i++) {
++			if (!(mi->supported[group] & BIT(i)))
++				continue;
++
++			index = MCS_GROUP_RATES * group + i;
++
++			/* Find max probability rate per group and global */
++			minstrel_ht_set_best_prob_rate(mi, &tmp_max_prob_rate,
++						       index);
++		}
++	}
++
++	mi->max_prob_rate = tmp_max_prob_rate;
++
  	/* Try to increase robustness of max_prob_rate*/
  	minstrel_ht_prob_rate_reduce_streams(mi);
  
--	/* try to sample all available rates during each interval */
--	mi->sample_count *= 8;
--	if (mp->new_avg)
--		mi->sample_count /= 2;
-+	/* try to sample half of all available rates during each interval */
-+	mi->sample_count *= 4;
- 
- 	if (sample)
- 		minstrel_ht_rate_sample_switch(mp, mi);
-@@ -1040,7 +1029,7 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	struct ieee80211_tx_rate *ar = info->status.rates;
- 	struct minstrel_rate_stats *rate, *rate2, *rate_sample = NULL;
- 	struct minstrel_priv *mp = priv;
--	u32 update_interval = mp->update_interval / 2;
-+	u32 update_interval = mp->update_interval;
- 	bool last, update = false;
- 	bool sample_status = false;
- 	int i;
-@@ -1090,9 +1079,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 	switch (mi->sample_mode) {
- 	case MINSTREL_SAMPLE_IDLE:
--		if (mp->new_avg &&
--		    (mp->hw->max_rates > 1 ||
--		     mi->total_packets_cur < SAMPLE_SWITCH_THR))
-+		if (mp->hw->max_rates > 1 ||
-+		     mi->total_packets_cur < SAMPLE_SWITCH_THR)
- 			update_interval /= 2;
- 		break;
- 
-@@ -1832,8 +1820,7 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
- 		mp->has_mrr = true;
- 
- 	mp->hw = hw;
--	mp->update_interval = HZ / 10;
--	mp->new_avg = true;
-+	mp->update_interval = HZ / 20;
- 
- 	minstrel_ht_init_cck_rates(mp);
- 	for (i = 0; i < ARRAY_SIZE(mp->hw->wiphy->bands); i++)
-@@ -1853,8 +1840,6 @@ static void minstrel_ht_add_debugfs(struct ieee80211_hw *hw, void *priv,
- 			   &mp->fixed_rate_idx);
- 	debugfs_create_u32("sample_switch", S_IRUGO | S_IWUSR, debugfsdir,
- 			   &mp->sample_switch);
--	debugfs_create_bool("new_avg", S_IRUGO | S_IWUSR, debugfsdir,
--			   &mp->new_avg);
- }
- #endif
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 25c3664bddde..7d6d0b720f6d 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -60,7 +60,6 @@
- struct minstrel_priv {
- 	struct ieee80211_hw *hw;
- 	bool has_mrr;
--	bool new_avg;
- 	u32 sample_switch;
- 	unsigned int cw_min;
- 	unsigned int cw_max;
 -- 
 2.28.0
 
