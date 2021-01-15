@@ -2,94 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A770AC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A60C4332D
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8897E23772
+	by mail.kernel.org (Postfix) with ESMTP id C6B432371F
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730528AbhAOMDo (ORCPT
+        id S1730618AbhAOMDu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Jan 2021 07:03:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60724 "EHLO
+        Fri, 15 Jan 2021 07:03:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730480AbhAOMDn (ORCPT
+        with ESMTP id S1726045AbhAOMDt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jan 2021 07:03:43 -0500
+        Fri, 15 Jan 2021 07:03:49 -0500
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8531EC061793
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B14B2C06179B
         for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2021 04:02:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=pP0MquxMR5cAsIhCAYKLP3jzL6TZCHnX7CweazmA/aE=; b=TxEwWvQZiPCmP0YNSwQcp+OKC9
-        i7R1elyoBPw6ee/pnIjFwwVPDjRGEtUzesNEFLsLqD/PQrdoXZEfFk7ULHfK6esM5YhqDUZlZsGdH
-        qsLPT3TZ276nJxGq3gsiJvX4fWBrh2MlUMT/M/RtrXbIHNedH1858vTC6K8pSHRwrLWE=;
+        bh=9k/exsfZa3rvg7x7pBpbm55Uw2AMj4el3amiL1W/WbI=; b=oY+2fKwtdiEEN+2B/NtEviEr2S
+        0rBqdWUCvTbxRZcTjGxOElEg0P+3v/P2avJTdT67iK01mVcXF76pP7ZRkdpkyEnFj3TW23h7Hdoay
+        ak8avXdcN2eSr4OfbQS4PgbWl/wYu1YjsL6ECGgQpiif8I2gAYIUHXePa7qkCkCUr/4s=;
 Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1l0NoT-0006Y0-Ao; Fri, 15 Jan 2021 13:02:45 +0100
+        id 1l0NoV-0006Y0-7G; Fri, 15 Jan 2021 13:02:47 +0100
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v3 0/9] replace minstrel with minstrel_ht
-Date:   Fri, 15 Jan 2021 13:02:33 +0100
-Message-Id: <20210115120242.89616-1-nbd@nbd.name>
+Subject: [PATCH v3 8/9] mac80211: minstrel_ht: increase stats update interval
+Date:   Fri, 15 Jan 2021 13:02:41 +0100
+Message-Id: <20210115120242.89616-9-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210115120242.89616-1-nbd@nbd.name>
+References: <20210115120242.89616-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The legacy minstrel code is essentially unmaintained and receives only very
-little testing. In order to bring the significant algorithm improvements from
-minstrel_ht to legacy clients, this patch adds support for OFDM rates to
-minstrel_ht and removes the fallback to the legacy codepath.
-This also makes it work much better on hardware with rate selection constraints,
-e.g. mt76.
+The shorter interval was leading to too many frames being used for probing
 
-Changes in v3:
-- add cover letter
-- fix uninitialized stack variable
-- add extra patch to fix significant rounding error in tpt calculation
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes in v2:
-- fix using legacy-rates overhead in tpt calculation
-
-
-Felix Fietkau (9):
-  mac80211: minstrel_ht: clean up CCK code
-  mac80211: minstrel_ht: add support for OFDM rates on non-HT clients
-  mac80211: remove legacy minstrel rate control
-  mac80211: minstrel_ht: remove old ewma based rate average code
-  mac80211: minstrel_ht: improve ampdu length estimation
-  mac80211: minstrel_ht: improve sample rate selection
-  mac80211: minstrel_ht: fix max probability rate selection
-  mac80211: minstrel_ht: increase stats update interval
-  mac80211: minstrel_ht: fix rounding error in throughput calculation
-
- net/mac80211/Makefile                      |   2 -
- net/mac80211/rc80211_minstrel.c            | 574 ---------------------
- net/mac80211/rc80211_minstrel.h            | 184 -------
- net/mac80211/rc80211_minstrel_debugfs.c    | 172 ------
- net/mac80211/rc80211_minstrel_ht.c         | 560 +++++++++++++-------
- net/mac80211/rc80211_minstrel_ht.h         |  96 +++-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  57 +-
- 7 files changed, 482 insertions(+), 1163 deletions(-)
- delete mode 100644 net/mac80211/rc80211_minstrel.c
- delete mode 100644 net/mac80211/rc80211_minstrel.h
- delete mode 100644 net/mac80211/rc80211_minstrel_debugfs.c
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index d3bead4b5b04..6496aa39f60b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1865,7 +1865,7 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
+ 		mp->has_mrr = true;
+ 
+ 	mp->hw = hw;
+-	mp->update_interval = HZ / 20;
++	mp->update_interval = HZ / 10;
+ 
+ 	minstrel_ht_init_cck_rates(mp);
+ 	for (i = 0; i < ARRAY_SIZE(mp->hw->wiphy->bands); i++)
 -- 
 2.28.0
 
