@@ -2,85 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E286C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C81C433DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2973123358
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 11:33:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52C6B2371F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Jan 2021 12:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726599AbhAOLdt (ORCPT
+        id S1730548AbhAOMDo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Jan 2021 06:33:49 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:40418 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726019AbhAOLdt (ORCPT
+        Fri, 15 Jan 2021 07:03:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60726 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730505AbhAOMDn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jan 2021 06:33:49 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1l0Mvi-003hBK-Qs; Fri, 15 Jan 2021 13:06:11 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 15 Jan 2021 13:05:56 +0200
-Message-Id: <iwlwifi.20210115130252.97172cbaa67c.I3473233d0ad01a71aa9400832fb2b9f494d88a11@changeid>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210115110558.1248847-1-luca@coelho.fi>
-References: <20210115110558.1248847-1-luca@coelho.fi>
+        Fri, 15 Jan 2021 07:03:43 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93ADBC061795
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2021 04:02:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=c55cmlwXHQPmT6rR9SsdbTZ4aoDHhuAFTbTtkTBkrgs=; b=r5vVRiKZ6j6eW4zAgibAjGbenI
+        TcG7DO9MkYUKx8ivi7+OmXbKSToLDseZHxYAjJqryE81sya+bwVjagkzmeUEqD8/s7Km37y5cImGh
+        2fGntIwK3mhHBdtTK2i0ZvzSiGU39tDexPsZZstZbM7hnZcY0fTHJnxWd+LSKiInrbuo=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l0NoU-0006Y0-Fz; Fri, 15 Jan 2021 13:02:46 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v3 5/9] mac80211: minstrel_ht: improve ampdu length estimation
+Date:   Fri, 15 Jan 2021 13:02:38 +0100
+Message-Id: <20210115120242.89616-6-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210115120242.89616-1-nbd@nbd.name>
+References: <20210115120242.89616-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH for v5.11 10/12] iwlwifi: pcie: fix context info memory leak
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+If the driver does not report A-MPDU length, estimate it based on the rate.
 
-If the image loader allocation fails, we leak all the previously
-allocated memory. Fix this.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 38 +++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 342a53e4488c..5b5134dd49af 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -198,8 +198,10 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 	/* Allocate IML */
- 	iml_img = dma_alloc_coherent(trans->dev, trans->iml_len,
- 				     &trans_pcie->iml_dma_addr, GFP_KERNEL);
--	if (!iml_img)
--		return -ENOMEM;
-+	if (!iml_img) {
-+		ret = -ENOMEM;
-+		goto err_free_ctxt_info;
-+	}
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 9280461ed3cc..5b20e17ec2e6 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -382,13 +382,37 @@ minstrel_get_ratestats(struct minstrel_ht_sta *mi, int index)
+ 	return &mi->groups[index / MCS_GROUP_RATES].rates[index % MCS_GROUP_RATES];
+ }
  
- 	memcpy(iml_img, trans->iml, trans->iml_len);
++static inline int
++minstrel_get_duration(int index)
++{
++	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
++	unsigned int duration = group->duration[index % MCS_GROUP_RATES];
++	return duration << group->shift;
++}
++
+ static unsigned int
+ minstrel_ht_avg_ampdu_len(struct minstrel_ht_sta *mi)
+ {
+-	if (!mi->avg_ampdu_len)
+-		return AVG_AMPDU_SIZE;
++	int duration;
++
++	if (mi->avg_ampdu_len)
++		return MINSTREL_TRUNC(mi->avg_ampdu_len);
++
++	if (minstrel_ht_is_legacy_group(mi->max_tp_rate[0] / MCS_GROUP_RATES))
++		return 1;
++
++	duration = minstrel_get_duration(mi->max_tp_rate[0]);
  
-@@ -237,6 +239,11 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+-	return MINSTREL_TRUNC(mi->avg_ampdu_len);
++	if (duration > 400 * 1000)
++		return 2;
++
++	if (duration > 250 * 1000)
++		return 4;
++
++	if (duration > 150 * 1000)
++		return 8;
++
++	return 16;
+ }
  
- 	return 0;
+ /*
+@@ -588,14 +612,6 @@ minstrel_ht_prob_rate_reduce_streams(struct minstrel_ht_sta *mi)
+ 	}
+ }
  
-+err_free_ctxt_info:
-+	dma_free_coherent(trans->dev, sizeof(*trans_pcie->ctxt_info_gen3),
-+			  trans_pcie->ctxt_info_gen3,
-+			  trans_pcie->ctxt_info_dma_addr);
-+	trans_pcie->ctxt_info_gen3 = NULL;
- err_free_prph_info:
- 	dma_free_coherent(trans->dev,
- 			  sizeof(*prph_info),
+-static inline int
+-minstrel_get_duration(int index)
+-{
+-	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
+-	unsigned int duration = group->duration[index % MCS_GROUP_RATES];
+-	return duration << group->shift;
+-}
+-
+ static bool
+ minstrel_ht_probe_group(struct minstrel_ht_sta *mi, const struct mcs_group *tp_group,
+ 						int tp_idx, const struct mcs_group *group)
 -- 
-2.29.2
+2.28.0
 
