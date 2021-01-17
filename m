@@ -2,81 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D148C433E0
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24586C433DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 17:42:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C81A21D81
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E44E7224DE
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 17:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729218AbhAQOxm (ORCPT
+        id S1729934AbhAQRmE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Jan 2021 09:53:42 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:40766 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729076AbhAQOxa (ORCPT
+        Sun, 17 Jan 2021 12:42:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728394AbhAQRmE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jan 2021 09:53:30 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1l19Q2-003sgA-9I; Sun, 17 Jan 2021 16:52:42 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 17 Jan 2021 16:52:33 +0200
-Message-Id: <iwlwifi.20210117164916.5184dfc2a445.I0631d2e4f6ffb93cf06618edb035c45bd6d1d7b9@changeid>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210117145234.1435324-1-luca@coelho.fi>
-References: <20210117145234.1435324-1-luca@coelho.fi>
+        Sun, 17 Jan 2021 12:42:04 -0500
+X-Greylist: delayed 847 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 17 Jan 2021 09:41:23 PST
+Received: from canardo.mork.no (canardo.mork.no [IPv6:2001:4641::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84464C061573
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2021 09:41:23 -0800 (PST)
+Received: from miraculix.mork.no (fwa136.mork.no [192.168.9.136])
+        (authenticated bits=0)
+        by canardo.mork.no (8.15.2/8.15.2) with ESMTPSA id 10HHQt5j003973
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+        Sun, 17 Jan 2021 18:26:55 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mork.no; s=b;
+        t=1610904416; bh=i47PqHy/XxOXMLZAW0NVDTePUMLKmi1DFXvfHx3nEJw=;
+        h=From:To:Cc:Subject:References:Date:Message-ID:From;
+        b=hCfQDsTjTh9vaPO6u7W3dOPTpWs5uyXaigI8ZrAkZrN6Q590Mt7oxfsZJBv7yLkNq
+         bzASp1mDUJpj7oL34VqgofCFh7m8uOX5Z/ptyiSTSYdaSh+X6RLF0MzgqjqRwdP5+N
+         l/Z9JNPDO1Zk6daq6A/Sxjp30cZ9SBgpzz3uNVs4=
+Received: from bjorn by miraculix.mork.no with local (Exim 4.94)
+        (envelope-from <bjorn@mork.no>)
+        id 1l1BpG-002NpQ-MU; Sun, 17 Jan 2021 18:26:54 +0100
+From:   =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To:     Andrew Lunn <andrew@lunn.ch>
+Cc:     M Chetan Kumar <m.chetan.kumar@intel.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        krishna.c.sudi@intel.com
+Subject: Re: [PATCH 17/18] net: iosm: readme file
+Organization: m
+References: <20210107170523.26531-1-m.chetan.kumar@intel.com>
+        <20210107170523.26531-18-m.chetan.kumar@intel.com>
+        <X/eJ/rl4U6edWr3i@lunn.ch>
+Date:   Sun, 17 Jan 2021 18:26:54 +0100
+In-Reply-To: <X/eJ/rl4U6edWr3i@lunn.ch> (Andrew Lunn's message of "Thu, 7 Jan
+        2021 23:23:58 +0100")
+Message-ID: <87turftqxt.fsf@miraculix.mork.no>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 8/9] iwlwifi: mvm: debugfs: check length precisely in inject_packet
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Virus-Scanned: clamav-milter 0.102.4 at canardo
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sorry about being much too late into this discussion.  I'm not having
+the bandwidth to read netdev anymore, and just stumbled across this now.
 
-When we check the length, we only check that the advertised
-data length fits into the data we have, but currently not
-that it actually matches correctly.
+Andrew Lunn <andrew@lunn.ch> writes:
 
-This should be harmless, but if the first two bytes are zero,
-then the iwl_rx_packet_payload_len() ends up negative, and
-that might later cause issues if unsigned variables are used,
-as this is not something that's normally expected.
+> So, this is what all the Ethernet nonsense is all about. You have a
+> session ID you need to somehow represent to user space. And you
+> decided to use VLANs. But to use VLANs, you need an Ethernet
+> header. So you added a bogus Ethernet header.
 
-Change the validation here to precisely validate the lengths
-match, to avoid such issues.
+Actually, the original reasoning was the other way around.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The bogus ethernet header was added because I had seen the 3G modem
+vendors do that for a few years already, in the modem firmware.  And I
+didn't think enough about it to realize that it was a really bad idea,
+or even that it was something I could change.  Or should change.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 231c3489cc31..3834d7197e11 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1169,9 +1169,9 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
- 	if (ret)
- 		goto out;
- 
--	/* avoid invalid memory access */
-+	/* avoid invalid memory access and malformed packet */
- 	if (bin_len < sizeof(*pkt) ||
--	    bin_len < sizeof(*pkt) + iwl_rx_packet_payload_len(pkt))
-+	    bin_len != sizeof(*pkt) + iwl_rx_packet_payload_len(pkt))
- 		goto out;
- 
- 	local_bh_disable();
--- 
-2.29.2
+I cannot blame the MBIM sesison to VLAN mapping idea on anyone else.  As
+far as I can remember, that was just something that popped up in my head
+while working on the cdc_mbim driver. But it came as a consequence of
+already having the bogus ethernet header.  And I didn't really
+understand that I could define a new wwan subsystem with new device
+types. I thought I had to use whatever was there already.
 
+I was young and stupid. Now I'm not that young anymore ;-)
+
+Never ever imagined that this would be replicated in another driver,
+though.  That doesn't really make much sense.  We have learned by now,
+haven't we?  This subject has been discussed a few times in the past,
+and Johannes summary is my understanding as well:
+"I don't think anyone likes that"
+
+The DSS mapping sucks even more that the IPS mapping, BTW.  I don't
+think there are any real users?  Not that I know of, at least.  DSS is
+much better implmeneted as some per-session character device, as
+requested by numerous people for years.  Sorry for not listening. Looks
+like it is too late now.
+
+> Is any of this VLAN stuff required by MBIM?
+
+No.  It's my fault and mine alone.
+
+> I suggest you throw away the pretence this is an Ethernet device. It
+> is not.
+
+I completely agree.  I wish I had gone for simple raw-ip devices both in
+the qmi_wwan and cdc_mbim.  But qmi_wwan got them later, so there is
+already support for such things in wwan userspace.
+
+
+Bj=C3=B8rn
