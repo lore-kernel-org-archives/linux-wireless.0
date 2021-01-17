@@ -7,91 +7,92 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 999A8C433E9
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F9BC433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C55C21D81
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F3B021D81
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Jan 2021 14:53:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729143AbhAQOxf (ORCPT
+        id S1729160AbhAQOxh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Jan 2021 09:53:35 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:40748 "EHLO
+        Sun, 17 Jan 2021 09:53:37 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:40760 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728994AbhAQOx1 (ORCPT
+        with ESMTP id S1729071AbhAQOx3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jan 2021 09:53:27 -0500
+        Sun, 17 Jan 2021 09:53:29 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l19Pz-003sgA-Te; Sun, 17 Jan 2021 16:52:40 +0200
+        id 1l19Q1-003sgA-Lc; Sun, 17 Jan 2021 16:52:42 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 17 Jan 2021 16:52:30 +0200
-Message-Id: <iwlwifi.20210117164916.d9ded010c4ce.Ie1d5a33d7175c0bcb35c10b5729748646671da31@changeid>
+Date:   Sun, 17 Jan 2021 16:52:32 +0200
+Message-Id: <iwlwifi.20210117164916.1f75d426ebe4.I58f6612f7e168c655bdef206a53e5bc117c84cf5@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210117145234.1435324-1-luca@coelho.fi>
 References: <20210117145234.1435324-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 5/9] iwlwifi: mvm: add explicit check for non-data frames in get Tx rate
+Subject: [PATCH 7/9] iwlwifi: mvm: simplify TX power setting
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Krishnanand Prabhu <krishnanand.prabhu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In roaming flows and during reassociation, its possible that data frames
-such as EAPOLs for 4 way handshake/ 802.1x authentication are initially set
-to higher MCS rate. Though these are pruned down to a lower legacy rate
-before sending to the FW, driver also emits a kernel warning - intended for
-non-data frames. Add checks to avoid such warnings for data frames, while
-also enhancing the debug data printed.
+There's no need to double this code, just put it into the common
+code that's called in all the cases.
 
-Signed-off-by: Krishnanand Prabhu <krishnanand.prabhu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c  | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index c8c07b7fe0ad..b102fe116f04 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -263,17 +263,20 @@ static u32 iwl_mvm_get_tx_ant(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 4e14a97bd168..04fda8250291 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2401,12 +2401,6 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 			IWL_ERR(mvm, "failed to update power mode\n");
+ 	}
  
- static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
- 			       struct ieee80211_tx_info *info,
--			       struct ieee80211_sta *sta)
-+			       struct ieee80211_sta *sta, __le16 fc)
- {
- 	int rate_idx;
- 	u8 rate_plcp;
- 	u32 rate_flags = 0;
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	if (changes & BSS_CHANGED_TXPOWER) {
+-		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
+-				bss_conf->txpower);
+-		iwl_mvm_set_tx_power(mvm, vif, bss_conf->txpower);
+-	}
+-
+ 	if (changes & BSS_CHANGED_CQM) {
+ 		IWL_DEBUG_MAC80211(mvm, "cqm info_changed\n");
+ 		/* reset cqm events tracking */
+@@ -2638,12 +2632,6 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
+ 	    iwl_mvm_mac_ctxt_beacon_changed(mvm, vif))
+ 		IWL_WARN(mvm, "Failed updating beacon data\n");
  
- 	/* HT rate doesn't make sense for a non data frame */
--	WARN_ONCE(info->control.rates[0].flags & IEEE80211_TX_RC_MCS,
--		  "Got an HT rate (flags:0x%x/mcs:%d) for a non data frame\n",
-+	WARN_ONCE(info->control.rates[0].flags & IEEE80211_TX_RC_MCS &&
-+		  !ieee80211_is_data(fc),
-+		  "Got a HT rate (flags:0x%x/mcs:%d/fc:0x%x/state:%d) for a non data frame\n",
- 		  info->control.rates[0].flags,
--		  info->control.rates[0].idx);
-+		  info->control.rates[0].idx,
-+		  le16_to_cpu(fc), mvmsta->sta_state);
+-	if (changes & BSS_CHANGED_TXPOWER) {
+-		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
+-				bss_conf->txpower);
+-		iwl_mvm_set_tx_power(mvm, vif, bss_conf->txpower);
+-	}
+-
+ 	if (changes & BSS_CHANGED_FTM_RESPONDER) {
+ 		int ret = iwl_mvm_ftm_start_responder(mvm, vif);
  
- 	rate_idx = info->control.rates[0].idx;
- 	/* if the rate isn't a well known legacy rate, take the lowest one */
-@@ -305,7 +308,7 @@ static u32 iwl_mvm_get_tx_rate_n_flags(struct iwl_mvm *mvm,
- 				       struct ieee80211_tx_info *info,
- 				       struct ieee80211_sta *sta, __le16 fc)
- {
--	return iwl_mvm_get_tx_rate(mvm, info, sta) |
-+	return iwl_mvm_get_tx_rate(mvm, info, sta, fc) |
- 		iwl_mvm_get_tx_ant(mvm, info, sta, fc);
+@@ -2683,6 +2671,12 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
+ 		WARN_ON_ONCE(1);
+ 	}
+ 
++	if (changes & BSS_CHANGED_TXPOWER) {
++		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d dBm\n",
++				bss_conf->txpower);
++		iwl_mvm_set_tx_power(mvm, vif, bss_conf->txpower);
++	}
++
+ 	mutex_unlock(&mvm->mutex);
  }
  
 -- 
