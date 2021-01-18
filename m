@@ -2,104 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D77FC433E6
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jan 2021 16:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F63C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jan 2021 16:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECDAA22C9E
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jan 2021 16:13:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1E9422228
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jan 2021 16:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406481AbhARQNs (ORCPT
+        id S2406137AbhARQO1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jan 2021 11:13:48 -0500
+        Mon, 18 Jan 2021 11:14:27 -0500
 Received: from m43-15.mailgun.net ([69.72.43.15]:16349 "EHLO
         m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406367AbhARQNg (ORCPT
+        with ESMTP id S2406447AbhARQOW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jan 2021 11:13:36 -0500
+        Mon, 18 Jan 2021 11:14:22 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1610986395; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1610986443; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=QSN4vwmJGElORk0Uljeje4PQPgKgyF8sRWakhbOM3fc=;
- b=fsRBSnSfimk2bz9Gighbw/KFO/sH1yws0dV8pC/Yfx+xHoMUyTjVVOoTxtItN7h053vE2kME
- MpLJmlu7665l139RdVnsaSrH/KuDrRcKxyfCprxr418YHYlZkJt115h2v5LU3rCCr3TSFOHf
- pNKgGHm9WSN90RtFfKwszKcyh0g=
+ Content-Type: Sender; bh=JptED8yK1s6VmsIxjHWFnW5B+xMdYTFUM0naR74bGOI=;
+ b=hoEuHh24zKIMo1wQxDtRZCanRgDHUno5LljGOCuQ+hWKhUb1RAhnWtNTvsUNyXcwNhiodI5e
+ 002h5cpXOxk4wCxd9R5ifdmkGnTuFeVVkyAZmaUhgCUHZu+Iw6cn5nsi5MwbtfJycYaaiHkM
+ RZv6EoF41KQhwFY6Q23maFuHTf4=
 X-Mailgun-Sending-Ip: 69.72.43.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 6005b39902b2f1cb1a26d5f3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Jan 2021 16:13:13
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 6005b3c5859d74370d91d429 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Jan 2021 16:13:57
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0F041C43464; Mon, 18 Jan 2021 16:13:13 +0000 (UTC)
+        id E1C50C433ED; Mon, 18 Jan 2021 16:13:56 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 94F5FC433CA;
-        Mon, 18 Jan 2021 16:13:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 94F5FC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 77C93C433C6;
+        Mon, 18 Jan 2021 16:13:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 77C93C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] ath10k: increase rx buffer size to 2048
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath11k: remove duplicate function declaration
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200205191043.21913-1-linus.luessing@c0d3.blue>
-References: <20200205191043.21913-1-linus.luessing@c0d3.blue>
-To:     =?utf-8?q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>
-Cc:     ath10k@lists.infradead.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Ben Greear <greearb@candelatech.com>,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?utf-8?q?Linus_L?= =?utf-8?q?=C3=BCssing?= 
-        <ll@simonwunderlich.de>
+In-Reply-To: <1608304793-20612-1-git-send-email-periyasa@codeaurora.org>
+References: <1608304793-20612-1-git-send-email-periyasa@codeaurora.org>
+To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210118161313.0F041C43464@smtp.codeaurora.org>
-Date:   Mon, 18 Jan 2021 16:13:13 +0000 (UTC)
+Message-Id: <20210118161356.E1C50C433ED@smtp.codeaurora.org>
+Date:   Mon, 18 Jan 2021 16:13:56 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Linus Lüssing <linus.luessing@c0d3.blue> wrote:
+Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
 
-> Before, only frames with a maximum size of 1528 bytes could be
-> transmitted between two 802.11s nodes.
+> Removed the duplicated peer related function declaration
+> from core.h since those functions are already declared in peer.h
 > 
-> For batman-adv for instance, which adds its own header to each frame,
-> we typically need an MTU of at least 1532 bytes to be able to transmit
-> without fragmentation.
+> Founded in code review.
 > 
-> This patch now increases the maxmimum frame size from 1528 to 1656
-> bytes.
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01492-QCAHKSWPL_SILICONZ-1
 > 
-> Tested with two ath10k devices in 802.11s mode, as well as with
-> batman-adv on top of 802.11s with forwarding disabled.
-> 
-> Fix originally found and developed by Ben Greear.
-> 
-> Link: https://github.com/greearb/ath10k-ct/issues/89
-> Link: https://github.com/greearb/ath10k-ct/commit/9e5ab25027e0971fa24ccf93373324c08c4e992d
-> Cc: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-3e6b9cf534ca ath10k: increase rx buffer size to 2048
+cf8480d338a1 ath11k: remove duplicate function declaration
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20200205191043.21913-1-linus.luessing@c0d3.blue/
+https://patchwork.kernel.org/project/linux-wireless/patch/1608304793-20612-1-git-send-email-periyasa@codeaurora.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
