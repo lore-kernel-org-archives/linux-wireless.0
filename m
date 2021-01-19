@@ -2,144 +2,123 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74013C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD442C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 19:24:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A09022CAD
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A22B23103
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 19:24:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389698AbhASSbx (ORCPT
+        id S1729879AbhASTXn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jan 2021 13:31:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48566 "EHLO
+        Tue, 19 Jan 2021 14:23:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389743AbhASSbi (ORCPT
+        with ESMTP id S2389681AbhASTQO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jan 2021 13:31:38 -0500
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF87BC061573
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 10:30:57 -0800 (PST)
-Received: by mail-ej1-x62a.google.com with SMTP id hs11so27598149ejc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 10:30:57 -0800 (PST)
+        Tue, 19 Jan 2021 14:16:14 -0500
+Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41033C061575
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 11:15:33 -0800 (PST)
+Received: by mail-ot1-x329.google.com with SMTP id o11so20906247ote.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 11:15:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:cc:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=g9SgOlxYVvQ5SykEbLqivdPZ1RRrVaUEDGfu6tDXXes=;
-        b=Azp8/6cplfyE/Ul9u9ni5oDuy7+6hd05JizMm7DgY5rDm/gK2VBNGkiQ32Pe+GPe1n
-         lcNFg0/AGfsnlj/Rk5EgQKn2cx9Mn/9VMCANm5LZlR1eELNLBNXV7cXyYVNUIKBSPeKC
-         frFYH5a8snAI0Jf1yhFBkFRFeiR1ofQkoC2V5slx2j2Lbk7tFgnLcgizxb7xiMUK+81E
-         +PLhC9ea0ZDaoU4UzgEzn0l3Z9V2uNv8cZcmM+AMMsrZNQ0Wr0TWF4hlcRrPv5RAejVt
-         Glio2ZfVxkQrDnSfq8B7eD0dFurqAVj1ny8sCPXGrmbOtlfNYavNx5pHtTH8WGla+J3h
-         TzHg==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5M/xwriCvZ1ehbhOrKqRjMwNoC7bFrlBY9OQlV4JhBQ=;
+        b=VWO3o72xi9hscdAVyxdDSmzYIRxLsgi6uCN7en9qrfVE7711O7MAhTXDHS/7XGm9hh
+         p91gsGfWQTBnBlIWrIJqmzr00hP935pwO4oe/C03aHZJ8kvKLi5B1mqsOQccAf+U7kgI
+         xH3t0UJRWdDdIeUH5fZvbFR/tFgWEBfJGkrPQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=g9SgOlxYVvQ5SykEbLqivdPZ1RRrVaUEDGfu6tDXXes=;
-        b=XwZql5sDGrSTwHaHK5jfP2vYhk5tPhP0+AysEZ7tYYH5wZ08bsESI2YInHgUGm83p1
-         K4yyb7gq+jfV4cPt3vJxb4x5+nTPmcE2g6Rg1ca96Xhsj2VJKu+6qnwlMcGf6d+HvQXZ
-         Y+GWxrprnvHAWfsp+sXgEnnnNKC7tTsjucSPnG8ie3w6Ze/N/UI8YThmGuV9Xnq+4+BC
-         nzAS8VPUslBfmNfG0RXJjStag8B20l/vpLhvXhmiSO/13dk4PWlA++jvQ0kDT1mLbLb8
-         8hiiU9ZCKXIMijjzAi+59P+YwFXQMZp82YApT78/zP1ZG9BZXiiddCXhaqeFycYCVrZM
-         g8GQ==
-X-Gm-Message-State: AOAM530jecyXIvLv08ga1wfVmLBexqXsLvXKGwzCC/+LNCBTPJYKm6on
-        /ueGkQAsRQFmMmnvFY2rKgw=
-X-Google-Smtp-Source: ABdhPJyHZDeewQ5pXc0Gjy9Dfb6mggZQcVEspM4XKAt55fPWiG0zt+wvc2DwnQgVtEkzBvyDyR2vwQ==
-X-Received: by 2002:a17:906:52c1:: with SMTP id w1mr3964792ejn.214.1611081056673;
-        Tue, 19 Jan 2021 10:30:56 -0800 (PST)
-Received: from [10.0.0.15] (80-89-109-210.hdsl.highway.telekom.at. [80.89.109.210])
-        by smtp.gmail.com with ESMTPSA id fi14sm11171048ejb.53.2021.01.19.10.30.54
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5M/xwriCvZ1ehbhOrKqRjMwNoC7bFrlBY9OQlV4JhBQ=;
+        b=HtIPaB1w9DnXB31QqUD/U2zuGvYmqISn0L+Qn3lurMG4/fU2PcNKJ33z/LFUZotnMD
+         IS1vPXZzcJ3mU2nvlox7q/eTyxnHDc4F0XlLYUg+McSDo8vaPbtl88PIUMZw3kCASpKJ
+         iC87IZA0zMuMhvD4Au6t31wADGX+HYhvT8x7Tgdk1SBWqpsBy7/x6BmVQdwM2LKD1Wr6
+         mCq44DoVphMTu3uu7iXNN1JxF/jFKtBtF4nrfI/HyOYRJE0/ZKCBV8T0D/gaz8LQCHdL
+         bg1RdBedcZN95oVeaA5cTBHFggDsgO8KWfvNud3hXjbN2uIsDTsPEdw1d3SwOpm+s4JP
+         88FQ==
+X-Gm-Message-State: AOAM530nRZ8xOOPBIROEY7CBK4VIocbzbQXB4uNVRTW5pSyh7GS9cBrZ
+        pDhZfyj46sSgm+y0WGVQXo6XGwSpscU0ug==
+X-Google-Smtp-Source: ABdhPJzsaN8ktPQo3ER1ttUzP6rQ8zqpLfMQhgZAeBD4rJL00gIW3q5cKfDpgAx35rtu7OBhs4aJSw==
+X-Received: by 2002:a9d:4d95:: with SMTP id u21mr4431767otk.11.1611083732316;
+        Tue, 19 Jan 2021 11:15:32 -0800 (PST)
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com. [209.85.167.175])
+        by smtp.gmail.com with ESMTPSA id y12sm4861210oti.0.2021.01.19.11.15.31
+        for <linux-wireless@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Jan 2021 10:30:55 -0800 (PST)
-From:   Till Kamppeter <till.kamppeter@gmail.com>
-Subject: Google Summer of Code 2020 - Project ideas page for the Linux
- Foundation online
-To:     Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        "Luis R. Rodriguez" <mcgrof@gmail.com>,
-        Jeff Licquia <jeff@licquia.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Open Printing <printing-architecture@lists.linux-foundation.org>,
-        dl9pf@gmx.de, Mats Wichmann <mats@wichmann.us>,
-        Denis Silakov <silakov@ispras.ru>,
-        =?UTF-8?Q?Jan-Simon_M=c3=b6ller?= <jsmoeller@linuxfoundation.org>,
-        Daniel Baluta <daniel.baluta@gmail.com>,
-        Vadim Mutilin <mutilin@ispras.ru>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Ira McDonald <blueroofmusic@gmail.com>,
-        Michael Sweet <msweet@msweet.org>,
-        Tobias Hoffmann <smilingthax@googlemail.com>,
-        Jay Berkenbilt <ejb@ql.org>,
-        Nicholas Mc Guire <der.herr@hofr.at>,
-        Matt Germonprez <germonprez@gmail.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Gary O'Neall <garysourceauditor@gmail.com>,
-        "Bogdan, Dragos" <Dragos.Bogdan@analog.com>,
-        Nicholas Mc Guire <der.herr@hofr.at>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>,
-        Rithvik Patibandla <rithvikp98@gmail.com>,
-        Dheeraj Yadav <dhirajyadav135@gmail.com>,
-        Deepak Patankar <patankardeepak04@gmail.com>
-Cc:     Aveek Basu <basu.aveek@gmail.com>
-Message-ID: <5ea4c46e-bd90-8a94-e2d1-4c908269fac4@gmail.com>
-Date:   Tue, 19 Jan 2021 19:30:53 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        Tue, 19 Jan 2021 11:15:31 -0800 (PST)
+Received: by mail-oi1-f175.google.com with SMTP id f132so22332548oib.12
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 11:15:31 -0800 (PST)
+X-Received: by 2002:aca:df02:: with SMTP id w2mr766754oig.77.1611083731008;
+ Tue, 19 Jan 2021 11:15:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <1610703513-933-1-git-send-email-abaci-bugfix@linux.alibaba.com> <CA+ASDXPCcgfXQNGRQThKHSRcxZ7i6=1GM0+sZL+ZAid8e=+sRQ@mail.gmail.com>
+In-Reply-To: <CA+ASDXPCcgfXQNGRQThKHSRcxZ7i6=1GM0+sZL+ZAid8e=+sRQ@mail.gmail.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Tue, 19 Jan 2021 11:15:19 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXPFGxKBBMU1ZKO6oSTNeSKMeZktfbDWndEqXJ1_6ojTcQ@mail.gmail.com>
+Message-ID: <CA+ASDXPFGxKBBMU1ZKO6oSTNeSKMeZktfbDWndEqXJ1_6ojTcQ@mail.gmail.com>
+Subject: Re: [PATCH] marvell/mwifiex: replace one-element array with
+ flexible-array member.
+To:     Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
+Cc:     amit karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+One more thing, for context:
 
-the Linux Foundation will apply again as mentoring organization in this 
-year's Google Summer of Code.
+On Tue, Jan 19, 2021 at 11:11 AM Brian Norris <briannorris@chromium.org> wrote:
+> On Fri, Jan 15, 2021 at 1:39 AM Jiapeng Zhong
+> <abaci-bugfix@linux.alibaba.com> wrote:
+> >
+> > Fix the follow coccicheck warnings:
+> >
+> > ./drivers/net/wireless/marvell/mwifiex/fw.h: WARNING use flexible-array
+> > member instead(https://www.kernel.org/doc/html/latest/process/
+> > deprecated.html#zero-length-and-one-element-arrays)
+> >
+> > Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> > Signed-off-by: Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
+>
+> Past experience unfortunately requires me to ask: did you test your
+> changes? I understand that's a mostly legit warning, and a good
+> deprecation notice, but that doesn't mean this is the right fix. One
+> probably should instead audit the usage sites to see if they *are*
+> already making proper sizeof (or other) comparisons, and if not, fix
+> those first. And if any sites *are* doing correct sizeof computations
+> using the existing struct layouts, then you are probably breaking
+> them.
+>
+> Or if you have audited the usage of these structs, it's nice to make a
+> small explanation of why this is correct, so I (and other readers)
+> don't have to ask these questions :)
 
-Note that GSoC 2021 will be different, the 3-months student projects 
-will be replaced by part-time projects, 6-weeks full-time-equivalent, to 
-be done in a 10-week time-window. Stipends are appropriately reduced to 
-the half amount, leading to the same per-hour value.
+FYI, there are others who I believe are making similar blind changes
+to this code:
 
-On January 29, 2021 the application period for mentoring organizations 
-for the Google Summer of Code 2021 will start.
+[PATCH 1/1] mwifiex: Fix possible buffer overflows in mwifiex_config_scan
+https://lore.kernel.org/linux-wireless/CA+ASDXPkLg2GGFJTt25YO7wae==YAHftf8JXu520pL_vZaT3ug@mail.gmail.com/
 
-To be successful, we need a rich project idea list so that we will get 
-selected by Google.
+For that particular case (the 'ssid' field in
+mwifiex_ie_types_wildcard_ssid_params), the previous patch-er was
+incorrect, and I believe your change is a better one. But neither of
+you provided useful analysis.
 
-I have set up a page for project ideas for the Linux Foundation's 
-participation in the Google Summer of Code 2021:
-
-https://wiki.linuxfoundation.org/gsoc/google-summer-code-2021
-
-Please add your ideas to the sub-page of your work group. Also remove 
-project ideas which are already done in one of the previous years or not 
-needed any more and make sure that all contact info is up-to-date and 
-all links are working.
-
-If you have problems mail me with your project ideas and other editing 
-wishes.
-
-The ideas list is in the Linux Foundation Wiki. If you want to edit and 
-did not have the edit rights already from previous years, please tell me 
-and I give you edit rights. I need your Linux Foundation user name for 
-that and the e-mail address associated with this account for this.
-
-Please also take into account that the deadline for our application as 
-mentoring organization is Feb 19 and after that Google will evaluate the 
-applications. So have your ideas (at least most of them, ideas can be 
-posted up to the student application deadline) in by then to raise our 
-chances to get accepted.
-
-Please also tell us if you do not want to participate any more with your 
-workgroup, so that we can remove your sub-page.
-
-    Till
+Brian
