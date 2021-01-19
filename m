@@ -2,91 +2,79 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B61C4332B
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5EAAC433E9
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD0842311C
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D5AA23104
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jan 2021 18:28:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729303AbhASQUo (ORCPT
+        id S2390705AbhASQvB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jan 2021 11:20:44 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:25584 "EHLO m42-8.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728261AbhASQU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jan 2021 11:20:27 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611073177; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=iy/S8TWo4V1brHw5rkLeSCIVsbtOU9fUJpOaqjSNd/I=; b=HT1+Ulqe0/EbLVXohEng7PaT/4brS4CqZfqWryqbp3RMfTkeM3kRLPIAxw4QHYqe5QVduI88
- lrr5C0kGbko+fusvBlcq17w1wYgcWGVcjejEMF8BMFeoF5lQkrZ/5mEOmmF5NmBNvh7wAfNq
- Pg5d9tCWWYrOsTj+ErwGeF8n6d0=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 6007067f02b2f1cb1a0ff9dc (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 19 Jan 2021 16:19:11
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D73DCC43463; Tue, 19 Jan 2021 16:19:10 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5CF45C433CA;
-        Tue, 19 Jan 2021 16:19:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5CF45C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Thara Gopinath <thara.gopinath@linaro.org>
-Cc:     rui.zhang@intel.com, daniel.lezcano@linaro.org,
-        davem@davemloft.net, kuba@kernel.org, luciano.coelho@intel.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-pm@vger.kernel.org, amitk@kernel.org,
-        nathan.errera@intel.com
-Subject: Re: [PATCH 1/2] net: wireless: intel: iwlwifi: mvm: tt: Replace thermal_notify_framework
-References: <20210119140541.2453490-1-thara.gopinath@linaro.org>
-        <20210119140541.2453490-2-thara.gopinath@linaro.org>
-Date:   Tue, 19 Jan 2021 18:19:05 +0200
-In-Reply-To: <20210119140541.2453490-2-thara.gopinath@linaro.org> (Thara
-        Gopinath's message of "Tue, 19 Jan 2021 09:05:40 -0500")
-Message-ID: <87pn20garq.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 19 Jan 2021 11:51:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54760 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390349AbhASQu0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jan 2021 11:50:26 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB873C061574
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2021 08:49:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ahmWnZAwkyvoeStbN40m0VVoSNcmj9YGbKfkZkaYnOA=; b=eRxHhKkyXYu7JB+tnNjJvBUAJc
+        BCE3nckjlShpFgC/0HnTd2K4rdXG+FR//WB2emBJHACNPSmTHE/XEHh/QxCsgHWXrrDTvMdcq3mGn
+        P2eFW6kQgjdj0BJ0R8qVclwvj18R4bgHU9tcRIZh/R7UkzP3eMnYKGawShnmhSYyMv74=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l1uCO-0004Hf-CJ
+        for linux-wireless@vger.kernel.org; Tue, 19 Jan 2021 17:49:44 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] mt76: mt7915: fix vif sta index for DBDC
+Date:   Tue, 19 Jan 2021 17:49:42 +0100
+Message-Id: <20210119164943.99223-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210119164943.99223-1-nbd@nbd.name>
+References: <20210119164943.99223-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thara Gopinath <thara.gopinath@linaro.org> writes:
+Since vif indexes are per-phy, we need to factor in the phy index to avoid
+collisions on the WTBL index
 
-> thermal_notify_framework just updates for a single trip point where as
-> thermal_zone_device_update does other bookkeeping like updating the
-> temperature of the thermal zone and setting the next trip point etc.
-> Replace thermal_notify_framework with thermal_zone_device_update as the
-> later is more thorough.
->
-> Signed-off-by: Thara Gopinath <thara.gopinath@linaro.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The title could be just "iwlwifi: mvm: tt: Replace
-thermal_notify_framework".
-
-But via which tree is this going? I assume it's not
-wireless-drivers-next so:
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 8b8d0d2d532b..cbd9892f5bf9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -189,7 +189,8 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
+ 	phy->mt76->vif_mask |= BIT(mvif->idx);
+ 	phy->omac_mask |= BIT_ULL(mvif->omac_idx);
+ 
+-	idx = MT7915_WTBL_RESERVED - mvif->idx;
++	idx = MT7915_WTBL_RESERVED - mvif->idx -
++	      ext_phy * MT7915_MAX_INTERFACES / 2;
+ 
+ 	INIT_LIST_HEAD(&mvif->sta.rc_list);
+ 	INIT_LIST_HEAD(&mvif->sta.stats_list);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.28.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
