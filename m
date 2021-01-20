@@ -2,93 +2,64 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F105C433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 12:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5973EC433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 18:00:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C264623355
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 12:59:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DFF42311C
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 18:00:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388849AbhATM7c (ORCPT
+        id S2391078AbhATSA1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jan 2021 07:59:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51594 "EHLO
+        Wed, 20 Jan 2021 13:00:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731356AbhATMML (ORCPT
+        with ESMTP id S2390641AbhATSAE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jan 2021 07:12:11 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 063DFC061575
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 04:11:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=dR7HHTfMHCKCLhthHVIvW/2u3DBNOi21dKCrKwDa6/U=; b=V8inCJOICuMKOI3//pdurtLSv3
-        VvMw+FvqiYZf/u+LYMt/hpB9RYkjUPjUGVyFrekeQtB2lFUszHamcDGa4OfE/JpTC/c5gcGNeCLw8
-        oe2dVC63IiluMPY+HXQ+10bM2ELsgz/VOHqKlKEjiu/a6/KAJpVJs874ssWCzdwJWj/A=;
-Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1l2CKe-0008Rx-IX
-        for linux-wireless@vger.kernel.org; Wed, 20 Jan 2021 13:11:28 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mt76: mt7915: make vif index per adapter instead of per band
-Date:   Wed, 20 Jan 2021 13:11:23 +0100
-Message-Id: <20210120121124.81306-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
+        Wed, 20 Jan 2021 13:00:04 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD06EC0613D3;
+        Wed, 20 Jan 2021 09:59:23 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1l2HlK-009EYH-5o; Wed, 20 Jan 2021 18:59:22 +0100
+Message-ID: <c066813abc5830eb094ae0c343a71e88b775b441.camel@sipsolutions.net>
+Subject: Re: pull-request: mac80211 2021-01-18.2
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date:   Wed, 20 Jan 2021 18:59:21 +0100
+In-Reply-To: <161101020906.2232.13826999223880000897.git-patchwork-notify@kernel.org> (sfid-20210118_235212_406535_B618B30A)
+References: <20210118204750.7243-1-johannes@sipsolutions.net>
+         <161101020906.2232.13826999223880000897.git-patchwork-notify@kernel.org>
+         (sfid-20210118_235212_406535_B618B30A)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The firmware treats it as global, so we need to avoid collisions here
+Hi Jakub,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> This pull request was applied to netdev/net.git (refs/heads/master):
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index cbd9892f5bf9..a38f52c87977 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -161,7 +161,7 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
- 	    is_zero_ether_addr(vif->addr))
- 		phy->monitor_vif = vif;
- 
--	mvif->idx = ffs(~phy->mt76->vif_mask) - 1;
-+	mvif->idx = ffs(~dev->mphy.vif_mask) - 1;
- 	if (mvif->idx >= MT7915_MAX_INTERFACES) {
- 		ret = -ENOSPC;
- 		goto out;
-@@ -186,7 +186,7 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out;
- 
--	phy->mt76->vif_mask |= BIT(mvif->idx);
-+	dev->mphy.vif_mask |= BIT(mvif->idx);
- 	phy->omac_mask |= BIT_ULL(mvif->omac_idx);
- 
- 	idx = MT7915_WTBL_RESERVED - mvif->idx -
-@@ -242,7 +242,7 @@ static void mt7915_remove_interface(struct ieee80211_hw *hw,
- 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
- 
- 	mutex_lock(&dev->mt76.mutex);
--	phy->mt76->vif_mask &= ~BIT(mvif->idx);
-+	dev->mphy.vif_mask &= ~BIT(mvif->idx);
- 	phy->omac_mask &= ~BIT_ULL(mvif->omac_idx);
- 	mutex_unlock(&dev->mt76.mutex);
- 
--- 
-2.28.0
+Since you pulled this now, question:
+
+I have some pending content for mac80211-next/net-next that either
+conflicts with or requires a fix from here, or such.
+
+Could you pull net into net-next, so I can get it into mac80211-next? Or
+do you prefer another approach here? I could also double-apply the
+single patch, or pull myself but then we'd get a lot of net content into
+net-next only via mac80211-next which seems odd.
+
+Thanks,
+johannes
 
