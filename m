@@ -2,147 +2,233 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB87FC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 11:32:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B65DC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 12:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7280C22AAA
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 11:32:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E1292333C
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 12:59:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728856AbhATLbj (ORCPT
+        id S1733147AbhATM7J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jan 2021 06:31:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34918 "EHLO
+        Wed, 20 Jan 2021 07:59:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388331AbhATKyf (ORCPT
+        with ESMTP id S1731843AbhATMML (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jan 2021 05:54:35 -0500
-Received: from mail-qk1-x731.google.com (mail-qk1-x731.google.com [IPv6:2607:f8b0:4864:20::731])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1AF2C061575
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 02:53:34 -0800 (PST)
-Received: by mail-qk1-x731.google.com with SMTP id d85so710020qkg.5
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 02:53:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=8LWikLvvunCGEEQg/rbWVeuYqmasKn/ETQdSjfwMTvI=;
-        b=MaFslMl5UgXp29IIbMVoFD94NLajzN6WCUI8+T1TAQK90Mxjb+IEcUCIOtebn9zowL
-         h84AxvSjlF+mrKjH8tB6oI+mpNrXuErMRYGiQxHzJfmvRJKuewVWEFC3Vdvsu/B7L6WM
-         KnhLEnhY7bjHSUNvAYLZPbvNMpSydgT7+tiKiwkaOSnAj24WJdZoNkh+BEgx7y1/4wkM
-         lFo6nR2maKMrO+eZCSP4vc0zSf1ijHlAaDNEg1kAoagIVPRm++Z07L9crelLkK/onGmR
-         pG5uaNQHOLp9hA2zMAcxlwEbsLZbB0t2IfmCALfxDTfPopEcidTPeCS9p1HbM0IcCBBh
-         JYiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=8LWikLvvunCGEEQg/rbWVeuYqmasKn/ETQdSjfwMTvI=;
-        b=qThgyRIaapYjlt2gZEms2iSWdjHcMHLskasxb4iTPi8sTv+bYpgszpZgv8Lp13ZCJC
-         UU3pKBkXdAnObP5AePFjo7h3owb6BNwjZNSZyqmdQVCQpIFjisGyw3nSgABhzN9IOyoa
-         9+thqdqhlpI8B9lO2nDIYkzg3bG9Q4b30OUtBqIOKfmZL0Pqm4tUvqxR2hKcz4c2Et/7
-         DlsvY13cNpy9GXrGiw4CmAf0JJXDSc/Y9C9BZNAQzVYSpI/n9jjQAoiuq+LD9uXm5uty
-         mVu7DoWE//fnkfqD77E80Y4dBH/loYQQwbgSm8oKasP4gqd49AGI7tm0+49ZOyihtOIR
-         vb8A==
-X-Gm-Message-State: AOAM533FoJzgsEjWExNGciOBBKNjuGC/G1afMrS1rFGJrT/lIxEJUSiH
-        o8MOL92ICLboQSADPvw/UP8dAQ==
-X-Google-Smtp-Source: ABdhPJxYwqevUcYXkMHO48PbPu6SpJFol4PvEjt2YPC4HRK5MDgfIa5YYNPfHz8tmR9fXeokkJjoTQ==
-X-Received: by 2002:a37:2e87:: with SMTP id u129mr1126123qkh.344.1611140014030;
-        Wed, 20 Jan 2021 02:53:34 -0800 (PST)
-Received: from [192.168.1.93] (pool-71-163-245-5.washdc.fios.verizon.net. [71.163.245.5])
-        by smtp.gmail.com with ESMTPSA id v8sm883164qtq.80.2021.01.20.02.53.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Jan 2021 02:53:33 -0800 (PST)
-Subject: Re: [PATCH 0/2] thermal: Replace thermal_notify_framework with
- thermal_zone_device_update
-To:     "Zhang, Rui" <rui.zhang@intel.com>,
-        "daniel.lezcano@linaro.org" <daniel.lezcano@linaro.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "amitk@kernel.org" <amitk@kernel.org>,
-        "Errera, Nathan" <nathan.errera@intel.com>
-References: <20210119140541.2453490-1-thara.gopinath@linaro.org>
- <fb5571b452f7495eb76396795eeec096@intel.com>
-From:   Thara Gopinath <thara.gopinath@linaro.org>
-Message-ID: <4063d06f-ccae-cad7-e470-60f0526b4f56@linaro.org>
-Date:   Wed, 20 Jan 2021 05:53:32 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Wed, 20 Jan 2021 07:12:11 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DA8AC0613D6
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 04:11:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=fWfTrjDx7nnrxHjaig9y2YnjGwprp0wt/BtnbwpArqg=; b=PXsmRoOxk7L/F0j2m31q63bHNI
+        6qkPsvrZUlKfYYE0qMhB2hMQfcoIkUzT40+zpB5It+/UTZWUHOb1o8DHWE31lAPF+tA5PM6XkiPj9
+        CV8zRixjvI2EglnDUvVCu4YdeRFEQXPrXg+AQnK4fs9SRXvPsqGjFv5bwfLmXQeookKo=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l2CKe-0008Rx-OQ
+        for linux-wireless@vger.kernel.org; Wed, 20 Jan 2021 13:11:28 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mt76: move vif_mask back from mt76_phy to mt76_dev
+Date:   Wed, 20 Jan 2021 13:11:24 +0100
+Message-Id: <20210120121124.81306-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210120121124.81306-1-nbd@nbd.name>
+References: <20210120121124.81306-1-nbd@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <fb5571b452f7495eb76396795eeec096@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Since it is global for all drivers, it belongs to the main device
 
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h         | 4 ++--
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c  | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c  | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c  | 6 +++---
+ 6 files changed, 16 insertions(+), 16 deletions(-)
 
-On 1/19/21 9:56 PM, Zhang, Rui wrote:
-> Hi, Thara,
-> 
-> Thanks for the cleanup. I've proposed similar patches previously.
-> https://patchwork.kernel.org/project/linux-pm/patch/20200430063229.6182-2-rui.zhang@intel.com/
-> https://patchwork.kernel.org/project/linux-pm/patch/20200430063229.6182-3-rui.zhang@intel.com/
-> can you please also address the comments in the previous discussion, like doc cleanup?
-
-Hi Rui,
-
-Thanks for the quick feedback. I am sorry, I was not aware of your 
-earlier series. I will add a patch cleaning up the Documentation and
-send the v2. I have not tested this patch much. But I see from the
-comments on your patches that this has been tested out. So that is good.
-
-> 
-> Thanks,
-> rui
-> 
->> -----Original Message-----
->> From: Thara Gopinath <thara.gopinath@linaro.org>
->> Sent: Tuesday, January 19, 2021 10:06 PM
->> To: Zhang, Rui <rui.zhang@intel.com>; daniel.lezcano@linaro.org;
->> kvalo@codeaurora.org; davem@davemloft.net; kuba@kernel.org; Coelho,
->> Luciano <luciano.coelho@intel.com>
->> Cc: linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
->> netdev@vger.kernel.org; linux-pm@vger.kernel.org; amitk@kernel.org;
->> Errera, Nathan <nathan.errera@intel.com>
->> Subject: [PATCH 0/2] thermal: Replace thermal_notify_framework with
->> thermal_zone_device_update
->> Importance: High
->>
->> thermal_notify_framework just updates for a single trip point where as
->> thermal_zone_device_update does other bookkeeping like updating the
->> temperature of the thermal zone, running through the list of trip points and
->> setting the next trip point etc. Since  the later is a more thorough version of
->> former, replace thermal_notify_framework with
->> thermal_zone_device_update.
->>
->> Thara Gopinath (2):
->>    net: wireless: intel: iwlwifi: mvm: tt: Replace
->>      thermal_notify_framework
->>    drivers: thermal: Remove thermal_notify_framework
->>
->>   drivers/net/wireless/intel/iwlwifi/mvm/tt.c |  4 ++--
->>   drivers/thermal/thermal_core.c              | 18 ------------------
->>   include/linux/thermal.h                     |  4 ----
->>   3 files changed, 2 insertions(+), 24 deletions(-)
->>
->> --
->> 2.25.1
-> 
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 90fbdaec8b89..3e2191efc4f0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -582,8 +582,6 @@ struct mt76_phy {
+ 
+ 	u8 macaddr[ETH_ALEN];
+ 
+-	u32 vif_mask;
+-
+ 	int txpower_cur;
+ 	u8 antenna_mask;
+ 	u16 chainmask;
+@@ -641,6 +639,8 @@ struct mt76_dev {
+ 	u32 wcid_mask[DIV_ROUND_UP(MT76_N_WCIDS, 32)];
+ 	u32 wcid_phy_mask[DIV_ROUND_UP(MT76_N_WCIDS, 32)];
+ 
++	u32 vif_mask;
++
+ 	struct mt76_wcid global_wcid;
+ 	struct mt76_wcid __rcu *wcid[MT76_N_WCIDS];
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index d7e4bb29f5bb..8edea1e7a602 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -44,7 +44,7 @@ mt7603_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+-	mvif->idx = ffs(~dev->mphy.vif_mask) - 1;
++	mvif->idx = ffs(~dev->mt76.vif_mask) - 1;
+ 	if (mvif->idx >= MT7603_MAX_INTERFACES) {
+ 		ret = -ENOSPC;
+ 		goto out;
+@@ -65,7 +65,7 @@ mt7603_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	}
+ 
+ 	idx = MT7603_WTBL_RESERVED - 1 - mvif->idx;
+-	dev->mphy.vif_mask |= BIT(mvif->idx);
++	dev->mt76.vif_mask |= BIT(mvif->idx);
+ 	INIT_LIST_HEAD(&mvif->sta.poll_list);
+ 	mvif->sta.wcid.idx = idx;
+ 	mvif->sta.wcid.hw_key_idx = -1;
+@@ -105,7 +105,7 @@ mt7603_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	spin_unlock_bh(&dev->sta_poll_lock);
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+-	dev->mphy.vif_mask &= ~BIT(mvif->idx);
++	dev->mt76.vif_mask &= ~BIT(mvif->idx);
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 3f6c752957b0..d655604b2993 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -187,7 +187,7 @@ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 	    is_zero_ether_addr(vif->addr))
+ 		phy->monitor_vif = vif;
+ 
+-	mvif->idx = ffs(~dev->mphy.vif_mask) - 1;
++	mvif->idx = ffs(~dev->mt76.vif_mask) - 1;
+ 	if (mvif->idx >= MT7615_MAX_INTERFACES) {
+ 		ret = -ENOSPC;
+ 		goto out;
+@@ -207,7 +207,7 @@ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 	else
+ 		mvif->wmm_idx = mvif->idx % MT7615_MAX_WMM_SETS;
+ 
+-	dev->mphy.vif_mask |= BIT(mvif->idx);
++	dev->mt76.vif_mask |= BIT(mvif->idx);
+ 	dev->omac_mask |= BIT_ULL(mvif->omac_idx);
+ 	phy->omac_mask |= BIT_ULL(mvif->omac_idx);
+ 
+@@ -263,7 +263,7 @@ static void mt7615_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
+ 
+-	dev->mphy.vif_mask &= ~BIT(mvif->idx);
++	dev->mt76.vif_mask &= ~BIT(mvif->idx);
+ 	dev->omac_mask &= ~BIT_ULL(mvif->omac_idx);
+ 	phy->omac_mask &= ~BIT_ULL(mvif->omac_idx);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+index e7e87311d355..e7a46ac97f51 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+@@ -416,7 +416,7 @@ static void mt76x02_reset_state(struct mt76x02_dev *dev)
+ 		memset(msta, 0, sizeof(*msta));
+ 	}
+ 
+-	dev->mphy.vif_mask = 0;
++	dev->mt76.vif_mask = 0;
+ 	dev->mt76.beacon_mask = 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 1852b6c9add6..ab671e21f882 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -304,7 +304,7 @@ mt76x02_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	unsigned int idx = 0;
+ 
+ 	/* Allow to change address in HW if we create first interface. */
+-	if (!dev->mphy.vif_mask &&
++	if (!dev->mt76.vif_mask &&
+ 	    (((vif->addr[0] ^ dev->mphy.macaddr[0]) & ~GENMASK(4, 1)) ||
+ 	     memcmp(vif->addr + 1, dev->mphy.macaddr + 1, ETH_ALEN - 1)))
+ 		mt76x02_mac_setaddr(dev, vif->addr);
+@@ -329,11 +329,11 @@ mt76x02_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 		idx += 8;
+ 
+ 	/* vif is already set or idx is 8 for AP/Mesh/... */
+-	if (dev->mphy.vif_mask & BIT(idx) ||
++	if (dev->mt76.vif_mask & BIT(idx) ||
+ 	    (vif->type != NL80211_IFTYPE_STATION && idx > 7))
+ 		return -EBUSY;
+ 
+-	dev->mphy.vif_mask |= BIT(idx);
++	dev->mt76.vif_mask |= BIT(idx);
+ 
+ 	mt76x02_vif_init(dev, vif, idx);
+ 	return 0;
+@@ -346,7 +346,7 @@ void mt76x02_remove_interface(struct ieee80211_hw *hw,
+ 	struct mt76x02_dev *dev = hw->priv;
+ 	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
+ 
+-	dev->mphy.vif_mask &= ~BIT(mvif->idx);
++	dev->mt76.vif_mask &= ~BIT(mvif->idx);
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_remove_interface);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index a38f52c87977..6666e94aa936 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -161,7 +161,7 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
+ 	    is_zero_ether_addr(vif->addr))
+ 		phy->monitor_vif = vif;
+ 
+-	mvif->idx = ffs(~dev->mphy.vif_mask) - 1;
++	mvif->idx = ffs(~dev->mt76.vif_mask) - 1;
+ 	if (mvif->idx >= MT7915_MAX_INTERFACES) {
+ 		ret = -ENOSPC;
+ 		goto out;
+@@ -186,7 +186,7 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out;
+ 
+-	dev->mphy.vif_mask |= BIT(mvif->idx);
++	dev->mt76.vif_mask |= BIT(mvif->idx);
+ 	phy->omac_mask |= BIT_ULL(mvif->omac_idx);
+ 
+ 	idx = MT7915_WTBL_RESERVED - mvif->idx -
+@@ -242,7 +242,7 @@ static void mt7915_remove_interface(struct ieee80211_hw *hw,
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+-	dev->mphy.vif_mask &= ~BIT(mvif->idx);
++	dev->mt76.vif_mask &= ~BIT(mvif->idx);
+ 	phy->omac_mask &= ~BIT_ULL(mvif->omac_idx);
+ 	mutex_unlock(&dev->mt76.mutex);
+ 
 -- 
-Warm Regards
-Thara
+2.28.0
+
