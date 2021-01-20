@@ -2,90 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBE9BC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 02:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D2EC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 03:14:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8168D2245C
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 02:08:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AE032310B
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 03:14:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726770AbhATCHd (ORCPT
+        id S1731482AbhATDOX convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jan 2021 21:07:33 -0500
-Received: from mout02.posteo.de ([185.67.36.66]:56505 "EHLO mout02.posteo.de"
+        Tue, 19 Jan 2021 22:14:23 -0500
+Received: from mga07.intel.com ([134.134.136.100]:41730 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729334AbhATBdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:33:33 -0500
-Received: from submission (posteo.de [89.146.220.130]) 
-        by mout02.posteo.de (Postfix) with ESMTPS id 8C1782400FB
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 02:32:33 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-        t=1611106353; bh=sDzyWJlRylUb/ez8lYjV3fT/2ny+sS68fSiZevG6CYs=;
-        h=From:To:Subject:Date:From;
-        b=i1C0I0MMz79MluozjPUEoJxhAYtc6nSq67ysKrV4IQAsd0V3ax/iYlFnbirbymGbk
-         3mqcpBGsBAD6mXprlKuAjN/0Nroyy1sRi7TXJ+5Tqoz+WC60nyOD5CMYoJi++s9cnt
-         776CEjlVP0CcI+0oNsmU9saexHs588TuWBugXEkJ5nHyX/VqNSMpvBb1Z/o58mHsxw
-         m/Mc1LzeJOTIWHKxL/PTJTTTQBaJUuGMt/5RtdtjeCWqhT0iJTtZv3mv45LErOP4nF
-         +2ZhVlKn2pOSHRV6YoVImrUh0l+jAW+WWKhMNY9dsGWrZEPv9EPnGghqcAoXDT7CUd
-         Y86spC9X652bQ==
-Received: from customer (localhost [127.0.0.1])
-        by submission (posteo.de) with ESMTPSA id 4DL7LS6jKfz9rxM
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2021 02:32:32 +0100 (CET)
-From:   John Scott <jscott@posteo.net>
-To:     linux-wireless@vger.kernel.org
-Subject: The GNU triplet for the carl9170 firmware toolchain
-Date:   Tue, 19 Jan 2021 20:32:26 -0500
-Message-ID: <45145006.fMDQidcC6G@t450>
+        id S2389369AbhATC50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jan 2021 21:57:26 -0500
+IronPort-SDR: +tqYSUAvJq2j8vQm2vJgum2crtz0M/pklOwucfGKg7ih7nrOs9QRC9/7D7j5h94/cUacFnrgrn
+ hT7FDvFvbzXg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9869"; a="243105324"
+X-IronPort-AV: E=Sophos;i="5.79,359,1602572400"; 
+   d="scan'208";a="243105324"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2021 18:56:44 -0800
+IronPort-SDR: 054cMV2fPfs4AHEfqJpd/TJx0x16OrndzTfihhHekhg2rmlre7gU7G+iSitMyDSqR97RmMfkVl
+ S2Tu2yhsswNQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,359,1602572400"; 
+   d="scan'208";a="402589859"
+Received: from fmsmsx605.amr.corp.intel.com ([10.18.126.85])
+  by fmsmga002.fm.intel.com with ESMTP; 19 Jan 2021 18:56:44 -0800
+Received: from shsmsx602.ccr.corp.intel.com (10.109.6.142) by
+ fmsmsx605.amr.corp.intel.com (10.18.126.85) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Tue, 19 Jan 2021 18:56:43 -0800
+Received: from shsmsx603.ccr.corp.intel.com (10.109.6.143) by
+ SHSMSX602.ccr.corp.intel.com (10.109.6.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 20 Jan 2021 10:56:41 +0800
+Received: from shsmsx603.ccr.corp.intel.com ([10.109.6.143]) by
+ SHSMSX603.ccr.corp.intel.com ([10.109.6.143]) with mapi id 15.01.1713.004;
+ Wed, 20 Jan 2021 10:56:41 +0800
+From:   "Zhang, Rui" <rui.zhang@intel.com>
+To:     Thara Gopinath <thara.gopinath@linaro.org>,
+        "daniel.lezcano@linaro.org" <daniel.lezcano@linaro.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "amitk@kernel.org" <amitk@kernel.org>,
+        "Errera, Nathan" <nathan.errera@intel.com>
+Subject: RE: [PATCH 0/2] thermal: Replace thermal_notify_framework with
+ thermal_zone_device_update
+Thread-Topic: [PATCH 0/2] thermal: Replace thermal_notify_framework with
+ thermal_zone_device_update
+Thread-Index: AQHW7myNyN+HFidWAkieGDM5y8leBqov0QOw
+Date:   Wed, 20 Jan 2021 02:56:41 +0000
+Message-ID: <fb5571b452f7495eb76396795eeec096@intel.com>
+References: <20210119140541.2453490-1-thara.gopinath@linaro.org>
+In-Reply-To: <20210119140541.2453490-1-thara.gopinath@linaro.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+x-originating-ip: [10.239.127.36]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3659199.Icojqenx9y"; micalg="pgp-sha256"; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart3659199.Icojqenx9y
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
-From: John Scott <jscott@posteo.net>
-To: linux-wireless@vger.kernel.org
-Subject: The GNU triplet for the carl9170 firmware toolchain
-Date: Tue, 19 Jan 2021 20:32:26 -0500
-Message-ID: <45145006.fMDQidcC6G@t450>
+Hi, Thara,
 
-Hi,
-
-Having been working on the same for ath9k_htc, I'm looking into making a 
-Debian package for carl9170 so it gets built from source on Debian 
-infrastructure. I'm trying to identify the ideal cross triplet to use for 
-packaging the cross tools.
-
-I see the toolchain Makefile builds Binutils and GCC with --target=sh-elf, but 
-the README also specifies that an SH-2 toolchain is needed. Does sh-elf imply 
-sh1-elf, and would it be preferable (or different) to use sh2-elf instead, or 
-is it an alias for sh2-elf?
-
-Debian already has sh4-* tools, so I'd like the parallelism of sh2-elf, but I 
-wonder if this is a different ABI. config.sub seems equally happy to recognize 
-either sh-elf or sh[1234]-elf.
+Thanks for the cleanup. I've proposed similar patches previously.
+https://patchwork.kernel.org/project/linux-pm/patch/20200430063229.6182-2-rui.zhang@intel.com/
+https://patchwork.kernel.org/project/linux-pm/patch/20200430063229.6182-3-rui.zhang@intel.com/
+can you please also address the comments in the previous discussion, like doc cleanup?
 
 Thanks,
-John
---nextPart3659199.Icojqenx9y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+rui
 
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQT287WtmxUhmhucNnhyvHFIwKstpwUCYAeIKwAKCRByvHFIwKst
-p5BIAQDPsf6Vg8aL/Jrn9E30WPYXxNJSktIwsPNEEBEjVwwM/AEA8IhoFxGe3Z+5
-MwGb3YP74E/6IJGFr7Pnn0qVkB1BkwQ=
-=oZXZ
------END PGP SIGNATURE-----
-
---nextPart3659199.Icojqenx9y--
-
-
+> -----Original Message-----
+> From: Thara Gopinath <thara.gopinath@linaro.org>
+> Sent: Tuesday, January 19, 2021 10:06 PM
+> To: Zhang, Rui <rui.zhang@intel.com>; daniel.lezcano@linaro.org;
+> kvalo@codeaurora.org; davem@davemloft.net; kuba@kernel.org; Coelho,
+> Luciano <luciano.coelho@intel.com>
+> Cc: linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
+> netdev@vger.kernel.org; linux-pm@vger.kernel.org; amitk@kernel.org;
+> Errera, Nathan <nathan.errera@intel.com>
+> Subject: [PATCH 0/2] thermal: Replace thermal_notify_framework with
+> thermal_zone_device_update
+> Importance: High
+> 
+> thermal_notify_framework just updates for a single trip point where as
+> thermal_zone_device_update does other bookkeeping like updating the
+> temperature of the thermal zone, running through the list of trip points and
+> setting the next trip point etc. Since  the later is a more thorough version of
+> former, replace thermal_notify_framework with
+> thermal_zone_device_update.
+> 
+> Thara Gopinath (2):
+>   net: wireless: intel: iwlwifi: mvm: tt: Replace
+>     thermal_notify_framework
+>   drivers: thermal: Remove thermal_notify_framework
+> 
+>  drivers/net/wireless/intel/iwlwifi/mvm/tt.c |  4 ++--
+>  drivers/thermal/thermal_core.c              | 18 ------------------
+>  include/linux/thermal.h                     |  4 ----
+>  3 files changed, 2 insertions(+), 24 deletions(-)
+> 
+> --
+> 2.25.1
 
