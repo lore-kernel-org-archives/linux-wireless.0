@@ -2,186 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5456CC433E9
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C589EC43333
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 20:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 247E82343E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4EFE235F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 20:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388076AbhATTmZ (ORCPT
+        id S2387853AbhATUmE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jan 2021 14:42:25 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:43152 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2392531AbhATTe5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jan 2021 14:34:57 -0500
-X-UUID: d41e1668d947474d997ff8b2e1af3573-20210121
-X-UUID: d41e1668d947474d997ff8b2e1af3573-20210121
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 934772853; Thu, 21 Jan 2021 03:33:56 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 21 Jan 2021 03:33:55 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 21 Jan 2021 03:33:55 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <ryder.lee@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH -next v6 13/15] mt76: mt7921: introduce support for hardware beacon filter
-Date:   Thu, 21 Jan 2021 03:33:49 +0800
-Message-ID: <09e1716c7a1ea891cd7a258c6fd13e3ab74d4750.1611060302.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <cover.1611060302.git.objelf@gmail.com>
-References: <cover.1611060302.git.objelf@gmail.com>
+        Wed, 20 Jan 2021 15:42:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45138 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730157AbhATUik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Jan 2021 15:38:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B15F1233FC;
+        Wed, 20 Jan 2021 20:37:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611175073;
+        bh=PoEuM5RihGLtvLuo+/upWFzSGJuLQE0GJTiZhs/OkXA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=rCT1jSJhdukpLq3EZ/Q0CgA+H4LT8Kzm3VMcYVliKfKDHLddigqQvycfBG4o4OPPk
+         7xrXK6tulPdVWbCclghNnXvG4mlQkyyWAeCU/vTjDMwzY1nRO1XsSKy8LBWAMFWjBz
+         dLc/dmfMkyNEa4wvJwzUj5PpaMbRAmT8vSecjLap+k2o3Ax3uH+Tv+g+MhMZqOc+f6
+         xn/ItXwe092nCtxNghWu1TDC7gyKUcqM1MFbzToI9Wh0CfZBnDsz/xU8Ie+pPlcrRa
+         DctTZW66eAwGtoxakjipb3vWhXu9RwrR7fGx4TmxCaIjDrjQ2eu8BQL036/O0rHn3J
+         u5Bdb7w5GB5fw==
+Date:   Wed, 20 Jan 2021 12:37:52 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2021-01-18.2
+Message-ID: <20210120123752.636659d1@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <c066813abc5830eb094ae0c343a71e88b775b441.camel@sipsolutions.net>
+References: <20210118204750.7243-1-johannes@sipsolutions.net>
+        <161101020906.2232.13826999223880000897.git-patchwork-notify@kernel.org>
+        <c066813abc5830eb094ae0c343a71e88b775b441.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+On Wed, 20 Jan 2021 18:59:21 +0100 Johannes Berg wrote:
+> Hi Jakub,
+> 
+> > This pull request was applied to netdev/net.git (refs/heads/master):  
+> 
+> Since you pulled this now, question:
+> 
+> I have some pending content for mac80211-next/net-next that either
+> conflicts with or requires a fix from here, or such.
+> 
+> Could you pull net into net-next, so I can get it into mac80211-next? Or
+> do you prefer another approach here? I could also double-apply the
+> single patch, or pull myself but then we'd get a lot of net content into
+> net-next only via mac80211-next which seems odd.
 
-Introduce support for hw beacon filter available in the mt7921 firmware.
+Just merged net -> net-next, you can do your thing :)
 
-According to mt7921e firmware, enabling hardware filter would rely on
-mt7921_mcu_uni_bss_bcnft and disabling hardware filter still rely on legacy
-mt7921_mcu_set_bss_pm.
-
-Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
-Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 75 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  1 +
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  4 +
- 3 files changed, 80 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 1e7be1d58850..945d0e44ae71 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -2564,3 +2564,78 @@ int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif)
- 	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
- 				 &ps_req, sizeof(ps_req), true);
- }
-+
-+int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			     bool enable)
-+{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	struct {
-+		struct {
-+			u8 bss_idx;
-+			u8 pad[3];
-+		} __packed hdr;
-+		struct bcnft_tlv {
-+			__le16 tag;
-+			__le16 len;
-+			__le16 bcn_interval;
-+			u8 dtim_period;
-+			u8 pad;
-+		} __packed bcnft;
-+	} __packed bcnft_req = {
-+		.hdr = {
-+			.bss_idx = mvif->idx,
-+		},
-+		.bcnft = {
-+			.tag = cpu_to_le16(UNI_BSS_INFO_BCNFT),
-+			.len = cpu_to_le16(sizeof(struct bcnft_tlv)),
-+			.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
-+			.dtim_period = vif->bss_conf.dtim_period,
-+		},
-+	};
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return 0;
-+
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
-+				 &bcnft_req, sizeof(bcnft_req), true);
-+}
-+
-+int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			  bool enable)
-+{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	struct {
-+		u8 bss_idx;
-+		u8 dtim_period;
-+		__le16 aid;
-+		__le16 bcn_interval;
-+		__le16 atim_window;
-+		u8 uapsd;
-+		u8 bmc_delivered_ac;
-+		u8 bmc_triggered_ac;
-+		u8 pad;
-+	} req = {
-+		.bss_idx = mvif->idx,
-+		.aid = cpu_to_le16(vif->bss_conf.aid),
-+		.dtim_period = vif->bss_conf.dtim_period,
-+		.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
-+	};
-+	struct {
-+		u8 bss_idx;
-+		u8 pad[3];
-+	} req_hdr = {
-+		.bss_idx = mvif->idx,
-+	};
-+	int err;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return 0;
-+
-+	err = mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_ABORT, &req_hdr,
-+				sizeof(req_hdr), false);
-+	if (err < 0 || !enable)
-+		return err;
-+
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_CONNECTED, &req,
-+				 sizeof(req), false);
-+}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index 2103e1d3ac94..de3a9aabec04 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -211,6 +211,7 @@ enum {
- 	UNI_BSS_INFO_QBSS = 15,
- 	UNI_BSS_INFO_UAPSD = 19,
- 	UNI_BSS_INFO_PS = 21,
-+	UNI_BSS_INFO_BCNFT = 22,
- };
- 
- enum {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index 2e617e85670d..d5f443f99ee3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -363,4 +363,8 @@ int mt7921_mcu_cancel_hw_scan(struct mt7921_phy *phy,
- 			      struct ieee80211_vif *vif);
- u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx);
- int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
-+int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			     bool enable);
-+int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			  bool enable);
- #endif
--- 
-2.25.1
-
+Out of curiosity are you going to rebase mac80211-next or send a PR,
+fast forward and then apply the conflicting patches?
