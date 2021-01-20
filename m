@@ -2,37 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 090C7C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FE5C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8A6423432
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:35:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 958B823432
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jan 2021 19:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392572AbhATTfW (ORCPT
+        id S2392590AbhATTfc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jan 2021 14:35:22 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:48759 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2392507AbhATTex (ORCPT
+        Wed, 20 Jan 2021 14:35:32 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:43152 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2392562AbhATTfV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jan 2021 14:34:53 -0500
-X-UUID: 14f9a480498f450ba828d7293d01eda2-20210121
-X-UUID: 14f9a480498f450ba828d7293d01eda2-20210121
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        Wed, 20 Jan 2021 14:35:21 -0500
+X-UUID: cedf6b214cd44e1ba8621e70febb01c5-20210121
+X-UUID: cedf6b214cd44e1ba8621e70febb01c5-20210121
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 69438910; Thu, 21 Jan 2021 03:33:54 +0800
+        with ESMTP id 2063872346; Thu, 21 Jan 2021 03:33:56 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 21 Jan 2021 03:33:53 +0800
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 21 Jan 2021 03:33:54 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 21 Jan 2021 03:33:53 +0800
+ Transport; Thu, 21 Jan 2021 03:33:55 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -40,11 +41,14 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
         <Eric.Liang@mediatek.com>, <ryder.lee@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>, Sean Wang <objelf@gmail.com>
-Subject: [PATCH -next v6 00/15] introduce mt7921e support
-Date:   Thu, 21 Jan 2021 03:33:36 +0800
-Message-ID: <cover.1611060302.git.objelf@gmail.com>
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH -next v6 09/15] mt76: mt7921: add debugfs support
+Date:   Thu, 21 Jan 2021 03:33:45 +0800
+Message-ID: <5ab74e2ea51bad39b0280a46191bd95082ef1e5f.1611060302.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1611060302.git.objelf@gmail.com>
+References: <cover.1611060302.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -52,141 +56,218 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <objelf@gmail.com>
+From: Sean Wang <sean.wang@mediatek.com>
 
-Introduce support for mt7921e 802.11ax (Wi-Fi 6) 2x2:2SS chipset.
+Add debugfs support to dump driver statistics and hardware details.
 
-v2:
-- Mark the patch as -next
-
-v3:
-- Remove sw scan support
-- Get rid of dbdc code
-- Run mt7921_configure_filter hodling mt76 mutex
-- Correct Txp programming in Txd
-- Correct fw log to host command
-- Correct eeprom offset definition
-- Update rate adaption info report
-- Remove unused code and fields in struture
-- Split the previous driver into several patches for easy review
-
-v4:
-- introduce sched scan support
-- introduce 802.11 PS support in sta mode
-- introduce support for hardware beacon filter
-- introduce beacon_loss mcu event
-- introduce PM support
-- refine sta_rec_phy and add sta_rec_ra_info
-- remove incorrect mt7921_mcu_tx_config member
-- fix erroneous endianness conversion in mt7921_tx_complete_skb()
-- fix endianness warning in mt7921_get_wtbl_info()
-- fix endianness warnings in mt7921_mcu_sta_tlv()
-- remove unused code in mt7921_mcu_send_message
-- remove scan with random mac until fw is ready
-- channel domain is added for hw scan
-
-v5:
-- fix implicit conversion from enumeration type
-- remove unused function declaration
-- drop zero-length packet to avoid Tx hang
-- fix MT_CIPHER_BIP_CMAC_128 setkey
-- reset token when mac_reset happens
-- create mac.h when mac support is added
-- reorder the patch of adding module support
-- move mac_work in mt76_core module
-- move chainmask in mt76_phy
-- rebase per moving mac_work in mt76_core module
-- rebase per moving chainmask in mt76_phy
-
-v6:
-- use UNI_BSS_INFO_BCNFT and UNI_BSS_INFO_PS to carry out
-  enabling hardware beacon filter and 802.11 power saving
-  mode according to the MT7921 firmware
-
-Lorenzo Bianconi (2):
-  mt76: move mac_work in mt76_core module
-  mt76: move chainmask in mt76_phy
-
-Sean Wang (13):
-  mt76: mt7921: add MAC support
-  mt76: mt7921: add MCU support
-  mt76: mt7921: add DMA support
-  mt76: mt7921: add EEPROM support
-  mt76: mt7921: add ieee80211_ops
-  mt76: mt7921: introduce mt7921e support
-  mt76: mt7921: add debugfs support
-  mt76: mt7921: add module support
-  mt76: mt7921: introduce schedule scan support
-  mt76: mt7921: introduce 802.11 PS support in sta mode
-  mt76: mt7921: introduce support for hardware beacon filter
-  mt76: mt7921: introduce beacon_loss mcu event
-  mt76: mt7921: introduce PM support
-
- drivers/net/wireless/mediatek/mt76/Kconfig    |    1 +
- drivers/net/wireless/mediatek/mt76/Makefile   |    1 +
- drivers/net/wireless/mediatek/mt76/mt76.h     |    5 +-
- .../net/wireless/mediatek/mt76/mt7603/init.c  |    2 +-
- .../net/wireless/mediatek/mt76/mt7603/mac.c   |   14 +-
- .../net/wireless/mediatek/mt76/mt7603/main.c  |   10 +-
- .../wireless/mediatek/mt76/mt7603/mt7603.h    |    2 -
- .../wireless/mediatek/mt76/mt7615/eeprom.c    |    2 +-
- .../net/wireless/mediatek/mt76/mt7615/init.c  |   16 +-
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |   27 +-
- .../net/wireless/mediatek/mt76/mt7615/main.c  |   15 +-
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |    4 +-
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |    5 -
- .../wireless/mediatek/mt76/mt7615/testmode.c  |    4 +-
- .../net/wireless/mediatek/mt76/mt7615/usb.c   |    2 +-
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   |    4 +-
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   |    4 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |    2 -
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  |   10 +-
- .../net/wireless/mediatek/mt76/mt76x02_phy.c  |    4 +-
- .../net/wireless/mediatek/mt76/mt76x02_util.c |    6 +-
- .../net/wireless/mediatek/mt76/mt76x2/mcu.c   |    2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  |    2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  |    4 +-
- .../wireless/mediatek/mt76/mt76x2/usb_init.c  |    2 +-
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  |    2 +-
- .../wireless/mediatek/mt76/mt7915/eeprom.c    |    2 +-
- .../net/wireless/mediatek/mt76/mt7915/init.c  |   17 +-
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |   31 +-
- .../net/wireless/mediatek/mt76/mt7915/main.c  |   11 +-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   |    8 +-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |    3 -
- .../wireless/mediatek/mt76/mt7915/testmode.c  |    2 +-
- .../net/wireless/mediatek/mt76/mt7921/Kconfig |   10 +
- .../wireless/mediatek/mt76/mt7921/Makefile    |    5 +
- .../wireless/mediatek/mt76/mt7921/debugfs.c   |  178 +
- .../net/wireless/mediatek/mt76/mt7921/dma.c   |  356 ++
- .../wireless/mediatek/mt76/mt7921/eeprom.c    |  101 +
- .../wireless/mediatek/mt76/mt7921/eeprom.h    |   27 +
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  254 ++
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 1393 ++++++++
- .../net/wireless/mediatek/mt76/mt7921/mac.h   |  333 ++
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 1051 ++++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 2983 +++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   | 1176 +++++++
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  379 +++
- .../net/wireless/mediatek/mt76/mt7921/pci.c   |  279 ++
- .../net/wireless/mediatek/mt76/mt7921/regs.h  |  413 +++
- 48 files changed, 9049 insertions(+), 115 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   | 178 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |   2 +-
+ 2 files changed, 179 insertions(+), 1 deletion(-)
  create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/mac.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/main.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/pci.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/regs.h
 
---
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
+new file mode 100644
+index 000000000000..9cdeb14cc933
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
+@@ -0,0 +1,178 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc. */
++
++#include "mt7921.h"
++#include "eeprom.h"
++
++static int
++mt7921_fw_debug_set(void *data, u64 val)
++{
++	struct mt7921_dev *dev = data;
++
++	dev->fw_debug = (u8)val;
++
++	mt7921_mcu_fw_log_2_host(dev, dev->fw_debug);
++
++	return 0;
++}
++
++static int
++mt7921_fw_debug_get(void *data, u64 *val)
++{
++	struct mt7921_dev *dev = data;
++
++	*val = dev->fw_debug;
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(fops_fw_debug, mt7921_fw_debug_get,
++			 mt7921_fw_debug_set, "%lld\n");
++
++static void
++mt7921_ampdu_stat_read_phy(struct mt7921_phy *phy,
++			   struct seq_file *file)
++{
++	struct mt7921_dev *dev = file->private;
++	int bound[15], range[4], i;
++
++	if (!phy)
++		return;
++
++	/* Tx ampdu stat */
++	for (i = 0; i < ARRAY_SIZE(range); i++)
++		range[i] = mt76_rr(dev, MT_MIB_ARNG(0, i));
++
++	for (i = 0; i < ARRAY_SIZE(bound); i++)
++		bound[i] = MT_MIB_ARNCR_RANGE(range[i / 4], i) + 1;
++
++	seq_printf(file, "\nPhy0\n");
++
++	seq_printf(file, "Length: %8d | ", bound[0]);
++	for (i = 0; i < ARRAY_SIZE(bound) - 1; i++)
++		seq_printf(file, "%3d -%3d | ",
++			   bound[i] + 1, bound[i + 1]);
++
++	seq_puts(file, "\nCount:  ");
++	for (i = 0; i < ARRAY_SIZE(bound); i++)
++		seq_printf(file, "%8d | ", dev->mt76.aggr_stats[i]);
++	seq_puts(file, "\n");
++
++	seq_printf(file, "BA miss count: %d\n", phy->mib.ba_miss_cnt);
++}
++
++static int
++mt7921_tx_stats_read(struct seq_file *file, void *data)
++{
++	struct mt7921_dev *dev = file->private;
++	int stat[8], i, n;
++
++	mt7921_ampdu_stat_read_phy(&dev->phy, file);
++
++	/* Tx amsdu info */
++	seq_puts(file, "Tx MSDU stat:\n");
++	for (i = 0, n = 0; i < ARRAY_SIZE(stat); i++) {
++		stat[i] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
++		n += stat[i];
++	}
++
++	for (i = 0; i < ARRAY_SIZE(stat); i++) {
++		seq_printf(file, "AMSDU pack count of %d MSDU in TXD: 0x%x ",
++			   i + 1, stat[i]);
++		if (n != 0)
++			seq_printf(file, "(%d%%)\n", stat[i] * 100 / n);
++		else
++			seq_puts(file, "\n");
++	}
++
++	return 0;
++}
++
++static int
++mt7921_tx_stats_open(struct inode *inode, struct file *f)
++{
++	return single_open(f, mt7921_tx_stats_read, inode->i_private);
++}
++
++static const struct file_operations fops_tx_stats = {
++	.open = mt7921_tx_stats_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
++};
++
++static int
++mt7921_queues_acq(struct seq_file *s, void *data)
++{
++	struct mt7921_dev *dev = dev_get_drvdata(s->private);
++	int i;
++
++	for (i = 0; i < 16; i++) {
++		int j, acs = i / 4, index = i % 4;
++		u32 ctrl, val, qlen = 0;
++
++		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(acs, index));
++		ctrl = BIT(31) | BIT(15) | (acs << 8);
++
++		for (j = 0; j < 32; j++) {
++			if (val & BIT(j))
++				continue;
++
++			mt76_wr(dev, MT_PLE_FL_Q0_CTRL,
++				ctrl | (j + (index << 5)));
++			qlen += mt76_get_field(dev, MT_PLE_FL_Q3_CTRL,
++					       GENMASK(11, 0));
++		}
++		seq_printf(s, "AC%d%d: queued=%d\n", acs, index, qlen);
++	}
++
++	return 0;
++}
++
++static int
++mt7921_queues_read(struct seq_file *s, void *data)
++{
++	struct mt7921_dev *dev = dev_get_drvdata(s->private);
++	struct {
++		struct mt76_queue *q;
++		char *queue;
++	} queue_map[] = {
++		{ dev->mphy.q_tx[MT_TXQ_BE],	 "WFDMA0" },
++		{ dev->mt76.q_mcu[MT_MCUQ_WM],	 "MCUWM"  },
++		{ dev->mt76.q_mcu[MT_MCUQ_FWDL], "MCUFWQ" },
++	};
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(queue_map); i++) {
++		struct mt76_queue *q = queue_map[i].q;
++
++		if (!q)
++			continue;
++
++		seq_printf(s,
++			   "%s:	queued=%d head=%d tail=%d\n",
++			   queue_map[i].queue, q->queued, q->head,
++			   q->tail);
++	}
++
++	return 0;
++}
++
++int mt7921_init_debugfs(struct mt7921_dev *dev)
++{
++	struct dentry *dir;
++
++	dir = mt76_register_debugfs(&dev->mt76);
++	if (!dir)
++		return -ENOMEM;
++
++	debugfs_create_devm_seqfile(dev->mt76.dev, "queues", dir,
++				    mt7921_queues_read);
++	debugfs_create_devm_seqfile(dev->mt76.dev, "acq", dir,
++				    mt7921_queues_acq);
++	debugfs_create_file("tx_stats", 0400, dir, dev, &fops_tx_stats);
++	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 099ebdb23700..2e04a7619b70 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -231,7 +231,7 @@ int mt7921_register_device(struct mt7921_dev *dev)
+ 
+ 	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
+ 
+-	return 0;
++	return mt7921_init_debugfs(dev);
+ }
+ 
+ void mt7921_unregister_device(struct mt7921_dev *dev)
+-- 
 2.25.1
 
