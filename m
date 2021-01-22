@@ -7,70 +7,97 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3648C433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:55:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C50EC433E6
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:55:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 959DE23437
+	by mail.kernel.org (Postfix) with ESMTP id BBDDD2343E
 	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:55:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727683AbhAVMyo (ORCPT
+        id S1727626AbhAVMyi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jan 2021 07:54:44 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:41666 "EHLO
+        Fri, 22 Jan 2021 07:54:38 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:41636 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727470AbhAVMx7 (ORCPT
+        with ESMTP id S1727476AbhAVMyF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jan 2021 07:53:59 -0500
+        Fri, 22 Jan 2021 07:54:05 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l2vvl-003vnH-3k; Fri, 22 Jan 2021 14:52:49 +0200
+        id 1l2vvh-003vnH-A1; Fri, 22 Jan 2021 14:52:45 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 22 Jan 2021 14:52:42 +0200
-Message-Id: <iwlwifi.20210122144849.abe2dedcc3ac.Ia6b03f9eeb617fd819e56dd5376f4bb8edc7b98a@changeid>
+Date:   Fri, 22 Jan 2021 14:52:37 +0200
+Message-Id: <iwlwifi.20210122144849.5dc6dd9b22d5.I2add1b5ad24d0d0a221de79d439c09f88fcaf15d@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210122125242.107146-1-luca@coelho.fi>
 References: <20210122125242.107146-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH for v5.11 7/7] iwlwifi: queue: bail out on invalid freeing
+Subject: [PATCH for v5.11 2/7] iwlwifi: mvm: invalidate IDs of internal stations at mvm start
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-If we find an entry without an SKB, we currently continue, but
-that will just result in an infinite loop since we won't increment
-the read pointer, and will try the same thing over and over again.
-Fix this.
+Having sta_id not set for aux_sta and snif_sta can potentially lead to a
+hard to debug issue in case remove station is called without an add. In
+this case sta_id 0, an unrelated regular station, will be removed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+In fact, we do have a FW assert that occures rarely and from the debug
+data analysis it looks like sta_id 0 is removed by mistake, though it's
+hard to pinpoint the exact flow. The WARN_ON in this patch should help
+to find it.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-index 27eea909e32d..794c6d0836ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-@@ -841,10 +841,8 @@ void iwl_txq_gen2_unmap(struct iwl_trans *trans, int txq_id)
- 			int idx = iwl_txq_get_cmd_index(txq, txq->read_ptr);
- 			struct sk_buff *skb = txq->entries[idx].skb;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 98f62d78cf9c..03b41d911338 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -791,6 +791,10 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	if (!mvm->scan_cmd)
+ 		goto out_free;
  
--			if (WARN_ON_ONCE(!skb))
--				continue;
--
--			iwl_txq_free_tso_page(trans, skb);
-+			if (!WARN_ON_ONCE(!skb))
-+				iwl_txq_free_tso_page(trans, skb);
- 		}
- 		iwl_txq_gen2_free_tfd(trans, txq);
- 		txq->read_ptr = iwl_txq_inc_wrap(trans, txq->read_ptr);
++	/* invalidate ids to prevent accidental removal of sta_id 0 */
++	mvm->aux_sta.sta_id = IWL_MVM_INVALID_STA;
++	mvm->snif_sta.sta_id = IWL_MVM_INVALID_STA;
++
+ 	/* Set EBS as successful as long as not stated otherwise by the FW. */
+ 	mvm->last_ebs_successful = true;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index dc174410bf9c..578c353ae02c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2057,6 +2057,9 @@ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (WARN_ON_ONCE(mvm->snif_sta.sta_id == IWL_MVM_INVALID_STA))
++		return -EINVAL;
++
+ 	iwl_mvm_disable_txq(mvm, NULL, mvm->snif_queue, IWL_MAX_TID_COUNT, 0);
+ 	ret = iwl_mvm_rm_sta_common(mvm, mvm->snif_sta.sta_id);
+ 	if (ret)
+@@ -2071,6 +2074,9 @@ int iwl_mvm_rm_aux_sta(struct iwl_mvm *mvm)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (WARN_ON_ONCE(mvm->aux_sta.sta_id == IWL_MVM_INVALID_STA))
++		return -EINVAL;
++
+ 	iwl_mvm_disable_txq(mvm, NULL, mvm->aux_queue, IWL_MAX_TID_COUNT, 0);
+ 	ret = iwl_mvm_rm_sta_common(mvm, mvm->aux_sta.sta_id);
+ 	if (ret)
 -- 
 2.29.2
 
