@@ -2,219 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1986CC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 406E5C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:22:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEC2D235F7
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:19:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EECB235F7
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727271AbhAVMSh (ORCPT
+        id S1727440AbhAVMWI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jan 2021 07:18:37 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:41694 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727584AbhAVMMD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jan 2021 07:12:03 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20210122121108euoutp0130f02ba7b61790c704e97e1370bdabd9~cjLNaQRTx2914229142euoutp01V
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 12:11:08 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20210122121108euoutp0130f02ba7b61790c704e97e1370bdabd9~cjLNaQRTx2914229142euoutp01V
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1611317468;
-        bh=ybRq2KpLljIs5KURHyM4ORkgC3K3UjPUtTtulXxBGwg=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=hkHAqcbCvQsm2RdwE/IjtXMNLfvKTu5KmHRmElKYdpKh66OlfMWvyFQ70+Yi7FS1q
-         l3rp/Qtd7m1Ev5X1VvjussgYkHL4qX2k0oUzyBFsjbpZeYlxLzy1bAkr7stma3wzU4
-         rGTziOpus1NEj8Jw0/nMp1aWN5sRG0iLslH4r0WU=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20210122121108eucas1p238157893e07432d2a7ece88264cebf92~cjLNSDIWb0469304693eucas1p2C;
-        Fri, 22 Jan 2021 12:11:08 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 32.5C.44805.CD0CA006; Fri, 22
-        Jan 2021 12:11:08 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20210122121108eucas1p2d153ab9c3a95015221b470a66a0c8458~cjLM028Mp0464504645eucas1p2E;
-        Fri, 22 Jan 2021 12:11:08 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20210122121107eusmtrp2506aacfdd2a6c09334b6edbf8c84a3d4~cjLM0Qg9A3059630596eusmtrp2N;
-        Fri, 22 Jan 2021 12:11:07 +0000 (GMT)
-X-AuditID: cbfec7f4-b4fff7000000af05-3e-600ac0dc0745
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id BC.E6.16282.BD0CA006; Fri, 22
-        Jan 2021 12:11:07 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20210122121107eusmtip2e1c673413bb8fb31c448c2303429d330~cjLMZaxxm2180921809eusmtip28;
-        Fri, 22 Jan 2021 12:11:07 +0000 (GMT)
-Subject: Re: [PATCH v2] cfg80211: avoid holding the RTNL when calling the
- driver
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc:     netdev@vger.kernel.org, Oliver Neukum <oneukum@suse.com>,
-        Johannes Berg <johannes.berg@intel.com>
-From:   Marek Szyprowski <m.szyprowski@samsung.com>
-Message-ID: <6569c83a-11b0-7f13-4b4c-c0318780895c@samsung.com>
-Date:   Fri, 22 Jan 2021 13:11:07 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0)
-        Gecko/20100101 Thunderbird/78.6.1
+        Fri, 22 Jan 2021 07:22:08 -0500
+Received: from m42-8.mailgun.net ([69.72.42.8]:38340 "EHLO m42-8.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727040AbhAVMVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Jan 2021 07:21:38 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611318079; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=Df5BKd8ZWR6aY7YbTqjLmKuv/IaZdEPrn9pcsc27/jw=; b=rz3kk7NLjKa8ZhNuYvRBCNXElRCoNCwbRCC9WC62e4629PnX+it4y0xC8MHsHCWnspX6y4Kr
+ b1cynFkZag/V+Rryb540y+xpIgF6uohFrkc8i9iy0FrM6wyjZpb2QHHPAuZ1bPLy12G749vI
+ rRwhqPvZqIvDns9S2OWWn5EIu5g=
+X-Mailgun-Sending-Ip: 69.72.42.8
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 600ac3205677aca7bdf71300 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 22 Jan 2021 12:20:48
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 70496C433C6; Fri, 22 Jan 2021 12:20:48 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA8B7C433ED;
+        Fri, 22 Jan 2021 12:20:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AA8B7C433ED
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Borislav Petkov <bp@alien8.de>
+Cc:     Jiri Slaby <jirislaby@kernel.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: net/wireless/reg.c:144 suspicious rcu_dereference_check() usage!
+References: <20210122101124.GE4867@zn.tnic> <20210122105034.GF4867@zn.tnic>
+Date:   Fri, 22 Jan 2021 14:20:43 +0200
+In-Reply-To: <20210122105034.GF4867@zn.tnic> (Borislav Petkov's message of
+        "Fri, 22 Jan 2021 11:50:34 +0100")
+Message-ID: <87v9bpb1t0.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20210119102145.99917b8fc5d6.Iacd5916c0e01f71342159f6d419e56dc4c3f07a2@changeid>
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFuplleLIzCtJLcpLzFFi42LZduzned07B7gSDE4ulLB4tGIWu8XHDZ9Y
-        LN6suMNucWyBmEXX45VsDqwei/e8ZPLo793G4rF+y1UWj8+b5AJYorhsUlJzMstSi/TtErgy
-        rv64wFSwV6Fi3qkHjA2M96S7GDk5JARMJD5ue8vaxcjFISSwglHi05RFzBDOF0aJvj39bBDO
-        Z0aJnv5GFpiWw1O7oKqWM0p8fHQByvnIKHFt0xZmkCphgSCJmxu3gXWICPhL7DvQwA5iMwuk
-        S9ydNhssziZgKNH1tosNxOYVsJP49P0lmM0ioCrRNeklWI2oQJLE3TuHmSBqBCVOznwCFOfg
-        4BSIlXi13AJipLxE89bZzBC2uMStJ/OZIA49wiHxfL48hO0icffrZqi4sMSr41vYIWwZif87
-        Qeq5gOxmRomH59ayQzg9jBKXm2YwQlRZS9w594sNZDGzgKbE+l36EGFHiaZbG1lBwhICfBI3
-        3gpC3MAnMWnbdGaIMK9ER5sQRLWaxKzj6+DWHrxwiXkCo9IsJI/NQvLNLCTfzELYu4CRZRWj
-        eGppcW56arFRXmq5XnFibnFpXrpecn7uJkZgijn97/iXHYzLX33UO8TIxMF4iFGCg1lJhPeR
-        JUeCEG9KYmVValF+fFFpTmrxIUZpDhYlcd6kLWvihQTSE0tSs1NTC1KLYLJMHJxSDUwCUgpm
-        ky77/P518kKUgdqOVxsTqy/5Lmf2VOtVL7ye59R0bl4cV/zLOwUHdy0TW5bj++ra/NacVQ3N
-        d04k7+R5W2qncnV1cHSXxFRTH20ua++SdZ0bO54cLQ59vyLlVOOKRw9WpS//HRGsFb+8YMaz
-        bZvmODecc+ZakH5zsmPJOcUFr5QXlC5M36vv//SJ9f0G9jP2m8yE3q0Q/S/BKKxqLiJx0iAl
-        51qIv1IJ5w12/YXhzZrGCn+V2E85sQYwfZ7A5LO7f9+9D7Y3P+xYrPDXaeKeCUE87slVqYGt
-        nc0fmZfmO3pnZ+925l6/zzY1YcuK3Ydu3VXdti1600X322fZalb89u+4oHzjWaExY7ISS3FG
-        oqEWc1FxIgDVglzzoAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPIsWRmVeSWpSXmKPExsVy+t/xe7q3D3AlGFydZ2rxaMUsdouPGz6x
-        WLxZcYfd4tgCMYuuxyvZHFg9Fu95yeTR37uNxWP9lqssHp83yQWwROnZFOWXlqQqZOQXl9gq
-        RRtaGOkZWlroGZlY6hkam8daGZkq6dvZpKTmZJalFunbJehlXP1xgalgr0LFvFMPGBsY70l3
-        MXJySAiYSBye2sXcxcjFISSwlFFiet9dVoiEjMTJaQ1QtrDEn2tdbBBF7xkl9rWeB0sICwRJ
-        3Ny4jQXEFhHwlVhw5z07iM0skC7R/v8yM4gtJBAjcWLvNkYQm03AUKLrLcggTg5eATuJT99f
-        gtksAqoSXZNegs0RFUiSODHrEzNEjaDEyZlPgOIcHJwCsRKvlltAjDeTmLf5ITOELS/RvHU2
-        lC0ucevJfKYJjEKzkHTPQtIyC0nLLCQtCxhZVjGKpJYW56bnFhvpFSfmFpfmpesl5+duYgTG
-        1LZjP7fsYFz56qPeIUYmDsZDjBIczEoivI8sORKEeFMSK6tSi/Lji0pzUosPMZoCvTORWUo0
-        OR8Y1Xkl8YZmBqaGJmaWBqaWZsZK4rwmR9bECwmkJ5akZqemFqQWwfQxcXBKNTAJXtJ9tEoo
-        6niNnfOarQ1/l85Lsz43qySN21Tdqqqu4FTEX0HfW1dMT4V95u/eH9h5pmTRtyd77QWP602z
-        slrcp3a9UvU4u5bami3Xu/W95uYv0rXvn1zl94bVcXZ18N2Y8F7Wyn8akrq7zbT2PA1aGDol
-        OtdclW/ZB4fWdQt4ph7yYpNf+vAW85pyv9JQmdQtC1vYL6m+/jI/dm62TOHnR7vYnxjkpwvu
-        4bWz+v9o1fdk7aNLH93gqO6xW2gYfm++svkFbcuCxqla+sWLf6m2cy99+0f63XkWeefIWfOa
-        1T50H5TPYEw4NPmTU+F9I5M3kU8EvGrmWe5kuPHmhdtElgs2Vy83PLtredNy5lwlluKMREMt
-        5qLiRACb6EH7MgMAAA==
-X-CMS-MailID: 20210122121108eucas1p2d153ab9c3a95015221b470a66a0c8458
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20210122121108eucas1p2d153ab9c3a95015221b470a66a0c8458
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20210122121108eucas1p2d153ab9c3a95015221b470a66a0c8458
-References: <20210119102145.99917b8fc5d6.Iacd5916c0e01f71342159f6d419e56dc4c3f07a2@changeid>
-        <CGME20210122121108eucas1p2d153ab9c3a95015221b470a66a0c8458@eucas1p2.samsung.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+Borislav Petkov <bp@alien8.de> writes:
 
-On 19.01.2021 10:21, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+> On Fri, Jan 22, 2021 at 11:11:24AM +0100, Borislav Petkov wrote:
+>> Hi,
+>> 
+>> this triggers is on 5.11-rc3 + tip/x86/urgent (shouldn't matter tho),
+>> 32-bit kernel:
 >
-> Currently, _everything_ in cfg80211 holds the RTNL, and if you
-> have a slow USB device (or a few) you can get some bad lock
-> contention on that.
+> This looks like a multiple wireless drivers issue, this is on another
+> 32-bit machine with ath5k this time:
 >
-> Fix that by re-adding a mutex to each wiphy/rdev as we had at
-> some point, so we have locking for the wireless_dev lists and
-> all the other things in there, and also so that drivers still
-> don't have to worry too much about it (they still won't get
-> parallel calls for a single device).
+> [   23.810222] ath5k 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
+> [   23.847597] ath5k 0000:03:00.0: registered as 'phy0'
+> [   24.504999] ath: EEPROM regdomain: 0x65
+> [   24.516125] ath: EEPROM indicates we should expect a direct regpair map
+> [   24.527286] ath: Country alpha2 being used: 00
+> [   24.535435] ath: Regpair used: 0x65
 >
-> Then, we can restrict the RTNL to a few cases where we add or
-> remove interfaces and really need the added protection. Some
-> of the global list management still also uses the RTNL, since
-> we need to have it anyway for netdev management, but we only
-> hold the RTNL for very short periods of time here.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> [   24.551461] =============================
+> [   24.561941] WARNING: suspicious RCU usage
+> [   24.572030] 5.11.0-rc3+ #1 Not tainted
+> [   24.580276] -----------------------------
+> [   24.590764] net/wireless/reg.c:144 suspicious rcu_dereference_check() usage!
+> [   24.601730] 
 
-This patch landed in today's (20210122) linux-next as commit 
-791daf8fc49a ("cfg80211: avoid holding the RTNL when calling the 
-driver"). Sadly, it causes deadlock with mwifiex driver. I think that 
-lockdep report describes it enough:
+Can you try this commit:
 
-Bluetooth: vendor=0x2df, device=0x912e, class=255, fn=2
-cfg80211: Loading compiled-in X.509 certificates for regulatory database
-cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
-Bluetooth: FW download over, size 800344 bytes
-btmrvl_sdio mmc2:0001:2: sdio device tree data not available
-mwifiex_sdio mmc2:0001:1: WLAN is not the winner! Skip FW dnld
-mwifiex_sdio mmc2:0001:1: WLAN FW is active
-mwifiex_sdio mmc2:0001:1: CMD_RESP: cmd 0x242 error, result=0x2
-mwifiex_sdio mmc2:0001:1: mwifiex_process_cmdresp: cmd 0x242 failed 
-during       initialization
+51d62f2f2c50 cfg80211: Save the regulatory domain with a lock
 
-============================================
-WARNING: possible recursive locking detected
-5.11.0-rc4-00535-g791daf8fc49a #2336 Not tainted
---------------------------------------------
-kworker/2:3/108 is trying to acquire lock:
-c4f62b38 (&rdev->wiphy.mtx){+.+.}-{3:3}, at: _mwifiex_fw_dpc+0x2c0/0x49c 
-[mwifiex]
+https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git/commit/?id=51d62f2f2c50
 
-but task is already holding lock:
-c4f62b38 (&rdev->wiphy.mtx){+.+.}-{3:3}, at: _mwifiex_fw_dpc+0x248/0x49c 
-[mwifiex]
-
-other info that might help us debug this:
-  Possible unsafe locking scenario:
-
-        CPU0
-        ----
-   lock(&rdev->wiphy.mtx);
-   lock(&rdev->wiphy.mtx);
-
-  *** DEADLOCK ***
-
-  May be due to missing lock nesting notation
-
-4 locks held by kworker/2:3/108:
-  #0: c1c066a8 ((wq_completion)events){+.+.}-{0:0}, at: 
-process_one_work+0x24c/0x888
-  #1: deccbf10 ((work_completion)(&fw_work->work)){+.+.}-{0:0}, at: 
-process_one_work+0x24c/0x888
-  #2: c13202dc (rtnl_mutex){+.+.}-{3:3}, at: _mwifiex_fw_dpc+0x23c/0x49c 
-[mwifiex]
-  #3: c4f62b38 (&rdev->wiphy.mtx){+.+.}-{3:3}, at: 
-_mwifiex_fw_dpc+0x248/0x49c [mwifiex]
-
-stack backtrace:
-CPU: 2 PID: 108 Comm: kworker/2:3 Not tainted 
-5.11.0-rc4-00535-g791daf8fc49a #2336
-Hardware name: Samsung Exynos (Flattened Device Tree)
-Workqueue: events request_firmware_work_func
-[<c01116e8>] (unwind_backtrace) from [<c010cf58>] (show_stack+0x10/0x14)
-[<c010cf58>] (show_stack) from [<c0b3ad3c>] (dump_stack+0xa4/0xc4)
-[<c0b3ad3c>] (dump_stack) from [<c0195fd8>] (__lock_acquire+0xc20/0x31cc)
-[<c0195fd8>] (__lock_acquire) from [<c019923c>] (lock_acquire+0x2e4/0x5dc)
-[<c019923c>] (lock_acquire) from [<c0b4217c>] (__mutex_lock+0xa4/0xb60)
-[<c0b4217c>] (__mutex_lock) from [<c0b42c54>] (mutex_lock_nested+0x1c/0x24)
-[<c0b42c54>] (mutex_lock_nested) from [<bf1c87f8>] 
-(_mwifiex_fw_dpc+0x2c0/0x49c [mwifiex])
-[<bf1c87f8>] (_mwifiex_fw_dpc [mwifiex]) from [<c06bfd18>] 
-(request_firmware_work_func+0x58/0x94)
-[<c06bfd18>] (request_firmware_work_func) from [<c0149d48>] 
-(process_one_work+0x30c/0x888)
-[<c0149d48>] (process_one_work) from [<c014a31c>] (worker_thread+0x58/0x594)
-[<c014a31c>] (worker_thread) from [<c0151284>] (kthread+0x154/0x19c)
-[<c0151284>] (kthread) from [<c010011c>] (ret_from_fork+0x14/0x38)
-Exception stack(0xdeccbfb0 to 0xdeccbff8)
-...
-
- > ...
-
-Best regards
 -- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
