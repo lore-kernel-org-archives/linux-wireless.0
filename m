@@ -2,534 +2,154 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1372C433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 546C9C433E6
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:23:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD11623A9A
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:21:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E9C323A9A
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:23:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729037AbhAVPVL (ORCPT
+        id S1728838AbhAVPXN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jan 2021 10:21:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34858 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728605AbhAVPUs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jan 2021 10:20:48 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 381D5C0613D6
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 07:19:52 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1l2yDz-00ABsc-Ts; Fri, 22 Jan 2021 16:19:48 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 1/2] cfg80211: change netdev registration/unregistration semantics
-Date:   Fri, 22 Jan 2021 16:19:42 +0100
-Message-Id: <20210122161942.cf2f4b65e4e9.Ida8234e50da13eb675b557bac52a713ad4eddf71@changeid>
-X-Mailer: git-send-email 2.26.2
+        Fri, 22 Jan 2021 10:23:13 -0500
+Received: from mga11.intel.com ([192.55.52.93]:38090 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729126AbhAVPV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Jan 2021 10:21:59 -0500
+IronPort-SDR: jHKcvVUVmKbOqg2NIY+ENRcIKAKmK5XsF1fFiB3xoVP3tCqfZGqF5wkf2GTWYFagFhTiIpuwwa
+ wY1vDbtJIHzg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9872"; a="175946606"
+X-IronPort-AV: E=Sophos;i="5.79,366,1602572400"; 
+   d="scan'208";a="175946606"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 07:20:02 -0800
+IronPort-SDR: whsO398kFbHnc97DbV7s3ZCOu0G/Q3wKeOTR/i5nUmkhIzZCpBPmYXjfSPC12Oa7ukT49H911j
+ 1NP+Nw9C40Tg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,366,1602572400"; 
+   d="scan'208";a="348295148"
+Received: from mattu-haswell.fi.intel.com (HELO [10.237.72.170]) ([10.237.72.170])
+  by fmsmga007.fm.intel.com with ESMTP; 22 Jan 2021 07:19:59 -0800
+Subject: Re: [PATCH] usb, xhci, rt2800usb: do not perform Soft Retry
+To:     Andreas Hartmann <andihartmann@freenet.de>,
+        Greg KH <greg@kroah.com>, stf_xl@wp.pl
+Cc:     linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Bernhard <bernhard.gebetsberger@gmx.at>
+References: <20210122104342.12451-1-stf_xl@wp.pl> <YAq9bt6q9dfk4F+F@kroah.com>
+ <b0025964-490d-d8a0-f9af-f916d44e4f52@maya.org>
+From:   Mathias Nyman <mathias.nyman@linux.intel.com>
+Autocrypt: addr=mathias.nyman@linux.intel.com; prefer-encrypt=mutual; keydata=
+ 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 fiD/
+Message-ID: <4690235c-9676-7985-12a1-b8bcfd195a43@linux.intel.com>
+Date:   Fri, 22 Jan 2021 17:22:01 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <b0025964-490d-d8a0-f9af-f916d44e4f52@maya.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 22.1.2021 15.17, Andreas Hartmann wrote:
+> 
+> On 22.01.21 at 12:56 Greg KH wrote:
+>> On Fri, Jan 22, 2021 at 11:43:42AM +0100, stf_xl@wp.pl wrote:
+>>> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>>>
+>>> Since f8f80be501aa ("xhci: Use soft retry to recover faster from transaction
+>>> errors") on some systems rt2800usb devices are unable to operate. Looks
+>>> that due to firmware or hardware limitations of those devices, they
+>>> require full recovery from USB Transaction Errors.
+>>>
+>>> To avoid the problem add URB transfer flag, that restore pre f8f80be501aa
+>>> xhci behaviour when the flag is set. For now only add it only to rt2800usb
+>>> driver.
+>>
+>> This feels like a really heavy hammer, to add a xhci flag for a single
+>> broken device.
+>>
+>> Are you sure this is really needed?  What does this device do on other
+>> operating systems, do they have such a quirk for their host controller
+>> driver?
+>>
+>> Or is this due to the specific host controller device hardware?  Should
+>> this be a xhci quirk for a specific pci device instead?
+> 
+> Well, rt2800usb USB implementation does have a lot of potential for
+> optimization since the very beginning (current throughput comparison
+> 2 MiB/s vs 13 MiB/s with the original driver e.g.). That's why I'm
+> using until today a self patched version (it's bound to cfg80211
+> meanwhile) of the original driver (rt5572sta), which doesn't have those
+> problems at all. From my point of view, the goal should be to solve the
+> real reason for the problem. The original driver works much better
+> (leastwise here) and doesn't show this problem at all!
 
-We used to not require anything in terms of registering netdevs
-with cfg80211, using a netdev notifier instead. However, in the
-next patch reducing RTNL locking, this causes big problems, and
-the simplest way is to just require drivers to do things better.
+Ok, so it could be a rt2800 driver issue, or it just hitting some
+unlucky sequence that triggers this.
 
-Change the registration/unregistration semantics to require the
-drivers to call cfg80211_(un)register_netdevice() when this is
-happening due to a cfg80211 request, i.e. add_virtual_intf() or
-del_virtual_intf() (or if it somehow has to happen in any other
-cfg80211 callback).
+>
+> But anyway, there is from my point of view a basic problem with xhci_hcd,
+> which just seems not to be completely backward compatible to existing USB 2
+> drivers (see https://marc.info/?l=linux-usb&m=161130327411612&w=2) if the
+> device is plugged to an USB 3.x interface.
 
-Otherwise, in other contexts, drivers may continue to use the
-normal netdev (un)registration functions as usual.
+This looks like a different issue, lets keep it in its own thread.
 
-Internally, we still use the netdev notifier and track (by the
-new wdev->registered bool) if the wdev had already been added
-to cfg80211 or not.
+The xHCI usb host controller handles both USB 2 and USB 3 speeds.
+If the USB port is connected to a xHC controller then the xhci driver will
+be used. If the port is connected to a EHCI then the ehci driever is used.
+EHCI does not support USB3 speeds.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c    |   4 +-
- drivers/net/wireless/ath/wil6210/netdev.c     |   4 +-
- .../broadcom/brcm80211/brcmfmac/core.c        |   6 +-
- .../net/wireless/marvell/mwifiex/cfg80211.c   |   4 +-
- .../wireless/microchip/wilc1000/cfg80211.c    |   2 +-
- drivers/net/wireless/microchip/wilc1000/mon.c |   4 +-
- .../net/wireless/microchip/wilc1000/netdev.c  |   2 +-
- .../net/wireless/quantenna/qtnfmac/cfg80211.c |   4 +-
- drivers/net/wireless/quantenna/qtnfmac/core.c |   2 +-
- include/net/cfg80211.h                        |  40 ++++--
- net/mac80211/iface.c                          |   9 +-
- net/wireless/core.c                           | 119 +++++++++++-------
- 12 files changed, 123 insertions(+), 77 deletions(-)
+It's very possible that something that worked behind a EHCI host has issues
+when connected to a xHCI host.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 9c83e9a4299b..29527e8dcced 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3648,7 +3648,7 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
- 		kfree(mc_filter);
- 	}
- 
--	unregister_netdevice(vif->ndev);
-+	cfg80211_unregister_netdevice(vif->ndev);
- 
- 	ar->num_vif--;
- }
-@@ -3821,7 +3821,7 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
- 
- 	netdev_set_default_ethtool_ops(ndev, &ath6kl_ethtool_ops);
- 
--	if (register_netdevice(ndev))
-+	if (cfg80211_register_netdevice(ndev))
- 		goto err;
- 
- 	ar->avail_idx_map &= ~BIT(fw_vif_idx);
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 07b4a252a23c..472fe804203d 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -424,7 +424,7 @@ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif)
- 		if (rc)
- 			return rc;
- 	}
--	rc = register_netdevice(ndev);
-+	rc = cfg80211_register_netdevice(ndev);
- 	if (rc < 0) {
- 		dev_err(&ndev->dev, "Failed to register netdev: %d\n", rc);
- 		if (any_active && vif->mid != 0)
-@@ -511,7 +511,7 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
- 	/* during unregister_netdevice cfg80211_leave may perform operations
- 	 * such as stop AP, disconnect, so we only clear the VIF afterwards
- 	 */
--	unregister_netdevice(ndev);
-+	cfg80211_unregister_netdevice(ndev);
- 
- 	if (any_active && vif->mid != 0)
- 		wmi_port_delete(wil, vif->mid);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3dd28f5fef19..6cf308d5934c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -657,7 +657,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
- 
- 	if (rtnl_locked)
--		err = register_netdevice(ndev);
-+		err = cfg80211_register_netdevice(ndev);
- 	else
- 		err = register_netdev(ndev);
- 	if (err != 0) {
-@@ -681,7 +681,7 @@ void brcmf_net_detach(struct net_device *ndev, bool rtnl_locked)
- {
- 	if (ndev->reg_state == NETREG_REGISTERED) {
- 		if (rtnl_locked)
--			unregister_netdevice(ndev);
-+			cfg80211_unregister_netdevice(ndev);
- 		else
- 			unregister_netdev(ndev);
- 	} else {
-@@ -758,7 +758,7 @@ int brcmf_net_mon_attach(struct brcmf_if *ifp)
- 	ndev = ifp->ndev;
- 	ndev->netdev_ops = &brcmf_netdev_ops_mon;
- 
--	err = register_netdevice(ndev);
-+	err = cfg80211_register_netdevice(ndev);
- 	if (err)
- 		bphy_err(drvr, "Failed to register %s device\n", ndev->name);
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index a6b9dc6700b1..15e1cee7f465 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3081,7 +3081,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	mutex_init(&priv->async_mutex);
- 
- 	/* Register network device */
--	if (register_netdevice(dev)) {
-+	if (cfg80211_register_netdevice(dev)) {
- 		mwifiex_dbg(adapter, ERROR, "cannot register network device\n");
- 		ret = -EFAULT;
- 		goto err_reg_netdev;
-@@ -3160,7 +3160,7 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		netif_carrier_off(priv->netdev);
- 
- 	if (wdev->netdev->reg_state == NETREG_REGISTERED)
--		unregister_netdevice(wdev->netdev);
-+		cfg80211_unregister_netdevice(wdev->netdev);
- 
- 	if (priv->dfs_cac_workqueue) {
- 		flush_workqueue(priv->dfs_cac_workqueue);
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index e3dd205cbbe5..96973ec7bd9a 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -1538,7 +1538,7 @@ static int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		wilc_wfi_deinit_mon_interface(wl, true);
- 	vif = netdev_priv(wdev->netdev);
- 	cfg80211_stop_iface(wiphy, wdev, GFP_KERNEL);
--	unregister_netdevice(vif->ndev);
-+	cfg80211_unregister_netdevice(vif->ndev);
- 	vif->monitor_flag = 0;
- 
- 	wilc_set_operation_mode(vif, 0, 0, 0);
-diff --git a/drivers/net/wireless/microchip/wilc1000/mon.c b/drivers/net/wireless/microchip/wilc1000/mon.c
-index b5a1b65c087c..6bd63934c2d8 100644
---- a/drivers/net/wireless/microchip/wilc1000/mon.c
-+++ b/drivers/net/wireless/microchip/wilc1000/mon.c
-@@ -233,7 +233,7 @@ struct net_device *wilc_wfi_init_mon_interface(struct wilc *wl,
- 	wl->monitor_dev->netdev_ops = &wilc_wfi_netdev_ops;
- 	wl->monitor_dev->needs_free_netdev = true;
- 
--	if (register_netdevice(wl->monitor_dev)) {
-+	if (cfg80211_register_netdevice(wl->monitor_dev)) {
- 		netdev_err(real_dev, "register_netdevice failed\n");
- 		free_netdev(wl->monitor_dev);
- 		return NULL;
-@@ -251,7 +251,7 @@ void wilc_wfi_deinit_mon_interface(struct wilc *wl, bool rtnl_locked)
- 		return;
- 
- 	if (rtnl_locked)
--		unregister_netdevice(wl->monitor_dev);
-+		cfg80211_unregister_netdevice(wl->monitor_dev);
- 	else
- 		unregister_netdev(wl->monitor_dev);
- 	wl->monitor_dev = NULL;
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index 2a1fbbdd6a4b..643cbb155439 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -950,7 +950,7 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
- 	vif->priv.dev = ndev;
- 
- 	if (rtnl_locked)
--		ret = register_netdevice(ndev);
-+		ret = cfg80211_register_netdevice(ndev);
- 	else
- 		ret = register_netdev(ndev);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 54cdf3ad09d7..504b4d0b98c4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -180,7 +180,7 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	cancel_work_sync(&vif->high_pri_tx_work);
- 
- 	if (netdev->reg_state == NETREG_REGISTERED)
--		unregister_netdevice(netdev);
-+		cfg80211_unregister_netdevice(netdev);
- 
- 	if (qtnf_cmd_send_del_intf(vif))
- 		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
-@@ -267,7 +267,7 @@ static struct wireless_dev *qtnf_add_virtual_intf(struct wiphy *wiphy,
- 	if (qtnf_hwcap_is_set(&mac->bus->hw_info, QLINK_HW_CAPAB_HW_BRIDGE)) {
- 		ret = qtnf_cmd_netdev_changeupper(vif, vif->netdev->ifindex);
- 		if (ret) {
--			unregister_netdevice(vif->netdev);
-+			cfg80211_unregister_netdevice(vif->netdev);
- 			vif->netdev = NULL;
- 			goto error_del_vif;
- 		}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index ad726bd100ec..18964e2a9f28 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -492,7 +492,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 
- 	SET_NETDEV_DEV(dev, wiphy_dev(wiphy));
- 
--	ret = register_netdevice(dev);
-+	ret = cfg80211_register_netdevice(dev);
- 	if (ret) {
- 		free_netdev(dev);
- 		vif->netdev = NULL;
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 798f8eb15e00..e7703fdbac8d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5228,6 +5228,7 @@ struct cfg80211_cqm_config;
-  *
-  * @wiphy: pointer to hardware description
-  * @iftype: interface type
-+ * @registered: is this wdev already registered with cfg80211
-  * @list: (private) Used to collect the interfaces
-  * @netdev: (private) Used to reference back to the netdev, may be %NULL
-  * @identifier: (private) Identifier used in nl80211 to identify this
-@@ -5311,7 +5312,7 @@ struct wireless_dev {
- 
- 	struct mutex mtx;
- 
--	bool use_4addr, is_running;
-+	bool use_4addr, is_running, registered;
- 
- 	u8 address[ETH_ALEN] __aligned(sizeof(u16));
- 
-@@ -7654,18 +7655,41 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
-  * cfg80211_unregister_wdev - remove the given wdev
-  * @wdev: struct wireless_dev to remove
-  *
-- * Call this function only for wdevs that have no netdev assigned,
-- * e.g. P2P Devices. It removes the device from the list so that
-- * it can no longer be used. It is necessary to call this function
-- * even when cfg80211 requests the removal of the interface by
-- * calling the del_virtual_intf() callback. The function must also
-- * be called when the driver wishes to unregister the wdev, e.g.
-- * when the device is unbound from the driver.
-+ * This function removes the device so it can no longer be used. It is necessary
-+ * to call this function even when cfg80211 requests the removal of the device
-+ * by calling the del_virtual_intf() callback. The function must also be called
-+ * when the driver wishes to unregister the wdev, e.g. when the hardware device
-+ * is unbound from the driver.
-  *
-  * Requires the RTNL to be held.
-  */
- void cfg80211_unregister_wdev(struct wireless_dev *wdev);
- 
-+/**
-+ * cfg80211_register_netdevice - register the given netdev
-+ * @dev: the netdev to register
-+ *
-+ * Note: In contexts coming from cfg80211 callbacks, you must call this rather
-+ * than register_netdevice(), unregister_netdev() is impossible as the RTNL is
-+ * held. Otherwise, both register_netdevice() and register_netdev() are usable
-+ * instead as well.
-+ */
-+int cfg80211_register_netdevice(struct net_device *dev);
-+
-+/**
-+ * cfg80211_unregister_netdevice - unregister the given netdev
-+ * @dev: the netdev to register
-+ *
-+ * Note: In contexts coming from cfg80211 callbacks, you must call this rather
-+ * than unregister_netdevice(), unregister_netdev() is impossible as the RTNL
-+ * is held. Otherwise, both unregister_netdevice() and unregister_netdev() are
-+ * usable instead as well.
-+ */
-+static inline void cfg80211_unregister_netdevice(struct net_device *dev)
-+{
-+	cfg80211_unregister_wdev(dev->ieee80211_ptr);
-+}
-+
- /**
-  * struct cfg80211_ft_event_params - FT Information Elements
-  * @ies: FT IEs
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 1b44690823aa..fcaf4d20cabf 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1976,7 +1976,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		ndev->min_mtu = 256;
- 		ndev->max_mtu = local->hw.max_mtu;
- 
--		ret = register_netdevice(ndev);
-+		ret = cfg80211_register_netdevice(ndev);
- 		if (ret) {
- 			free_netdev(ndev);
- 			return ret;
-@@ -2006,10 +2006,9 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- 
- 	synchronize_rcu();
- 
--	if (sdata->dev) {
--		unregister_netdevice(sdata->dev);
--	} else {
--		cfg80211_unregister_wdev(&sdata->wdev);
-+	cfg80211_unregister_wdev(&sdata->wdev);
-+
-+	if (!sdata->dev) {
- 		ieee80211_teardown_sdata(sdata);
- 		kfree(sdata);
- 	}
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 4b1f35e976e7..9e7d1f9620bd 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1094,7 +1094,8 @@ void cfg80211_cqm_config_free(struct wireless_dev *wdev)
- 	wdev->cqm_config = NULL;
- }
- 
--static void __cfg80211_unregister_wdev(struct wireless_dev *wdev, bool sync)
-+static void _cfg80211_unregister_wdev(struct wireless_dev *wdev,
-+				      bool unregister_netdev)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 
-@@ -1104,9 +1105,16 @@ static void __cfg80211_unregister_wdev(struct wireless_dev *wdev, bool sync)
- 
- 	nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
- 
-+	wdev->registered = false;
-+
-+	if (wdev->netdev) {
-+		sysfs_remove_link(&wdev->netdev->dev.kobj, "phy80211");
-+		if (unregister_netdev)
-+			unregister_netdevice(wdev->netdev);
-+	}
-+
- 	list_del_rcu(&wdev->list);
--	if (sync)
--		synchronize_rcu();
-+	synchronize_net();
- 	rdev->devlist_generation++;
- 
- 	cfg80211_mlme_purge_registrations(wdev);
-@@ -1131,14 +1139,23 @@ static void __cfg80211_unregister_wdev(struct wireless_dev *wdev, bool sync)
- 		flush_work(&wdev->disconnect_wk);
- 
- 	cfg80211_cqm_config_free(wdev);
-+
-+	/*
-+	 * Ensure that all events have been processed and
-+	 * freed.
-+	 */
-+	cfg80211_process_wdev_events(wdev);
-+
-+	if (WARN_ON(wdev->current_bss)) {
-+		cfg80211_unhold_bss(wdev->current_bss);
-+		cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
-+		wdev->current_bss = NULL;
-+	}
- }
- 
- void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- {
--	if (WARN_ON(wdev->netdev))
--		return;
--
--	__cfg80211_unregister_wdev(wdev, true);
-+	_cfg80211_unregister_wdev(wdev, true);
- }
- EXPORT_SYMBOL(cfg80211_unregister_wdev);
- 
-@@ -1290,10 +1307,49 @@ void cfg80211_register_wdev(struct cfg80211_registered_device *rdev,
- 		wdev->identifier = ++rdev->wdev_id;
- 	list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
- 	rdev->devlist_generation++;
-+	wdev->registered = true;
- 
- 	nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
- }
- 
-+int cfg80211_register_netdevice(struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev;
-+	int ret;
-+
-+	ASSERT_RTNL();
-+
-+	if (WARN_ON(!wdev))
-+		return -EINVAL;
-+
-+	rdev = wiphy_to_rdev(wdev->wiphy);
-+
-+	lockdep_assert_held(&rdev->wiphy.mtx);
-+
-+	/* we'll take care of this */
-+	wdev->registered = true;
-+	ret = register_netdevice(dev);
-+	if (ret)
-+		goto out;
-+
-+	if (sysfs_create_link(&dev->dev.kobj, &rdev->wiphy.dev.kobj,
-+			      "phy80211")) {
-+		pr_err("failed to add phy80211 symlink to netdev!\n");
-+		unregister_netdevice(dev);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	cfg80211_register_wdev(rdev, wdev);
-+	ret = 0;
-+out:
-+	if (ret)
-+		wdev->registered = false;
-+	return ret;
-+}
-+EXPORT_SYMBOL(cfg80211_register_netdevice);
-+
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 					 unsigned long state, void *ptr)
- {
-@@ -1319,17 +1375,16 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		cfg80211_init_wdev(wdev);
- 		break;
- 	case NETDEV_REGISTER:
-+		if (!wdev->registered)
-+			cfg80211_register_wdev(rdev, wdev);
-+		break;
-+	case NETDEV_UNREGISTER:
- 		/*
--		 * NB: cannot take rdev->mtx here because this may be
--		 * called within code protected by it when interfaces
--		 * are added with nl80211.
-+		 * It is possible to get NETDEV_UNREGISTER multiple times,
-+		 * so check wdev->registered.
- 		 */
--		if (sysfs_create_link(&dev->dev.kobj, &rdev->wiphy.dev.kobj,
--				      "phy80211")) {
--			pr_err("failed to add phy80211 symlink to netdev!\n");
--		}
--
--		cfg80211_register_wdev(rdev, wdev);
-+		if (wdev->registered)
-+			_cfg80211_unregister_wdev(wdev, false);
- 		break;
- 	case NETDEV_GOING_DOWN:
- 		cfg80211_leave(rdev, wdev);
-@@ -1401,38 +1456,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			wdev->ps = false;
- 		}
- 		break;
--	case NETDEV_UNREGISTER:
--		/*
--		 * It is possible to get NETDEV_UNREGISTER
--		 * multiple times. To detect that, check
--		 * that the interface is still on the list
--		 * of registered interfaces, and only then
--		 * remove and clean it up.
--		 */
--		if (!list_empty(&wdev->list)) {
--			__cfg80211_unregister_wdev(wdev, false);
--			sysfs_remove_link(&dev->dev.kobj, "phy80211");
--		}
--		/*
--		 * synchronise (so that we won't find this netdev
--		 * from other code any more) and then clear the list
--		 * head so that the above code can safely check for
--		 * !list_empty() to avoid double-cleanup.
--		 */
--		synchronize_rcu();
--		INIT_LIST_HEAD(&wdev->list);
--		/*
--		 * Ensure that all events have been processed and
--		 * freed.
--		 */
--		cfg80211_process_wdev_events(wdev);
--
--		if (WARN_ON(wdev->current_bss)) {
--			cfg80211_unhold_bss(wdev->current_bss);
--			cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
--			wdev->current_bss = NULL;
--		}
--		break;
- 	case NETDEV_PRE_UP:
- 		if (!cfg80211_iftype_allowed(wdev->wiphy, wdev->iftype,
- 					     wdev->use_4addr, 0))
--- 
-2.26.2
+-Mathias
 
