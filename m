@@ -2,124 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22596C433E9
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 14:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF13C433DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:06:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6AA623444
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 14:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE5CE23AC1
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 15:06:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728846AbhAVOnn (ORCPT
+        id S1728771AbhAVPFs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jan 2021 09:43:43 -0500
-Received: from mail-io1-f71.google.com ([209.85.166.71]:50462 "EHLO
-        mail-io1-f71.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728810AbhAVOnH (ORCPT
+        Fri, 22 Jan 2021 10:05:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59646 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728356AbhAVPEr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jan 2021 09:43:07 -0500
-Received: by mail-io1-f71.google.com with SMTP id p77so9029731iod.17
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 06:42:52 -0800 (PST)
+        Fri, 22 Jan 2021 10:04:47 -0500
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A0E6C0617A7
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 07:04:05 -0800 (PST)
+Received: by mail-wr1-x429.google.com with SMTP id a1so5388297wrq.6
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 07:04:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=LELvUx+pYWTbfwYeHU46iSK2p88mAn31NLcNatv3O1g=;
+        b=bD8nLp3/2VZ667guywwlsnODSj+AVYFRBhR5xPBkwiEg1LhFj5PidhXYwab9EJwErR
+         pqNopIKT8waKjb+XkVZImu0PHOYCgoIToWsWPUZ3u3DBm+0ucsmWIrHCcGaPUwv1pp1g
+         qE+d5vQtSY/fJZP6ivJ3kQgb6sTOCut4E1NqXsYZd1J688ljexMKdmo7pScbT5YYk1OQ
+         DlwQNUUaCQ8DbyPqUMG8eIiX+9T9gCpneXVJ0bftXQGflDYcyurFg1vfFbSUDzz9T7Dq
+         9D9c0LumJpQEVBxnZFTsNtMMZCyges0uqOTWxzFZSdA4SQLzptwKcqPlh5dOKmIdIq08
+         453A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
-         :from:to;
-        bh=fE5kJzZFX6LHuXma+wdOzaWCPrGgoY6ccmowLSXJbw8=;
-        b=uVJ3jKn1cviJexsB1reDeqzGZcPYNrjVlvLWA51MX0n5OHXs8PmlVTICVop0d2hjv3
-         NTVKXFhpFaUelGMaYY/Usi4rFO6Lq8imiLQaI7m5EvyUooHeIPUAqIHhSRbhSX4hsNee
-         6RRnH2uly5fBzsileANC84zMqOb+zJZ/Hif/ZlCvMxqQtIqtAqt6tnNQSIO5sqXNoLE0
-         V7b6vlgpNd7xk0R1FqI3+6arnb0FecvUs2TA27FDHzpdVsb1tJjImtj9JcdwToWcLxts
-         50Pj1BRwYUlicauql13mVfaAzP9pXE6yqTgLwpn7nl+SXOjSaFv7cj1v90qupLr17srm
-         2Kbg==
-X-Gm-Message-State: AOAM533z8ttX6jFCePcPcMe55ZUOb/HJH0CmBQ4owzIXQJjkEwV6EK4l
-        8ZTQHOj0neS/XzDwwXusCYb1t5rZxJrqV7UXxfJeOwJPb7TS
-X-Google-Smtp-Source: ABdhPJy7sTfsf/GJiCetI3voox1xPReGN1JRyYVuh7bfA3ZkebO6Ez0+j85tSElA8UsaBeIl2Xmle4DRPKaQBnwwcqRpdfQTkxhZ
-MIME-Version: 1.0
-X-Received: by 2002:a5d:944a:: with SMTP id x10mr3644441ior.30.1611326546207;
- Fri, 22 Jan 2021 06:42:26 -0800 (PST)
-Date:   Fri, 22 Jan 2021 06:42:26 -0800
-In-Reply-To: <000000000000f054d005b8f87274@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000676bd105b97e329a@google.com>
-Subject: Re: WARNING in io_disable_sqo_submit
-From:   syzbot <syzbot+2f5d1785dc624932da78@syzkaller.appspotmail.com>
-To:     asml.silence@gmail.com, axboe@kernel.dk, davem@davemloft.net,
-        hdanton@sina.com, io-uring@vger.kernel.org,
-        johannes.berg@intel.com, johannes@sipsolutions.net,
-        kuba@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-        viro@zeniv.linux.org.uk
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=LELvUx+pYWTbfwYeHU46iSK2p88mAn31NLcNatv3O1g=;
+        b=Y18GB8s8aabItF+21ANI37LU2H3idFqpHG16f51ujcvH5KYG+IpH4d2ow/KQVrg8dT
+         LCrnEBmH72LA4k4T4xLAtFDn7rXvI6v7Ps7FXcQV4KF0BoAk7lUoXmEUeqkEuuMBmEmR
+         uFdTI1QHSq2L5WCMI5uOa8dlagGhP04UK5REHsu821c+v4furBmRgov9la7H7n0ePmB+
+         wykL2Ny2FpWfbqxTM2V7MIfoucAmZDLt5RlcOdGBgQiJwxCa65S1MgeJMJfd4DoFaugJ
+         PnWzO/fRY/l56r09KrnRtulEW0HvuBeGD6Tp9dYHB3NjiXtkmxP6bQoOpD5Xj6EhC6Me
+         nr6w==
+X-Gm-Message-State: AOAM531vk920nMONsDY+QAN4k1fZAydGMCY28Zg6hxDqX2tw6ZxSGCHY
+        lkDUQQCgw8A7EiAhbfzAEl6X8g==
+X-Google-Smtp-Source: ABdhPJy1LCN9RztA0+aV/Xnz956mSfJWfgp82pWHgSir4uzZz3sw17ObkZV5mucew9y4RPP0AiN1Bw==
+X-Received: by 2002:adf:df12:: with SMTP id y18mr4958864wrl.141.1611327844156;
+        Fri, 22 Jan 2021 07:04:04 -0800 (PST)
+Received: from localhost.localdomain ([88.122.66.28])
+        by smtp.gmail.com with ESMTPSA id m82sm12074422wmf.29.2021.01.22.07.04.03
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 22 Jan 2021 07:04:03 -0800 (PST)
+From:   Loic Poulain <loic.poulain@linaro.org>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wcn36xx: del BA session on TX stop
+Date:   Fri, 22 Jan 2021 16:11:44 +0100
+Message-Id: <1611328304-1010-1-git-send-email-loic.poulain@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-syzbot has found a reproducer for the following issue on:
+Deleting BA session was not correcly performed, causing communication
+issues with APs that dynamically stop/start new BA sessions.
 
-HEAD commit:    9f29bd8b Merge tag 'fs_for_v5.11-rc5' of git://git.kernel...
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=169f4e9f500000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=39701af622f054a9
-dashboard link: https://syzkaller.appspot.com/bug?extid=2f5d1785dc624932da78
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1156bd20d00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15ce819f500000
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 3 ++-
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++--
+ drivers/net/wireless/ath/wcn36xx/smd.h  | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-The issue was bisected to:
-
-commit dcd479e10a0510522a5d88b29b8f79ea3467d501
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Oct 9 12:17:11 2020 +0000
-
-    mac80211: always wind down STA state
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13b8b83b500000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=1078b83b500000
-console output: https://syzkaller.appspot.com/x/log.txt?x=17b8b83b500000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+2f5d1785dc624932da78@syzkaller.appspotmail.com
-Fixes: dcd479e10a05 ("mac80211: always wind down STA state")
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 8572 at fs/io_uring.c:8917 io_disable_sqo_submit+0x13d/0x180 fs/io_uring.c:8917
-Modules linked in:
-CPU: 1 PID: 8572 Comm: syz-executor518 Not tainted 5.11.0-rc4-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:io_disable_sqo_submit+0x13d/0x180 fs/io_uring.c:8917
-Code: e0 07 83 c0 03 38 d0 7c 04 84 d2 75 2e 83 8b 14 01 00 00 01 4c 89 e7 e8 d1 6d 25 07 5b 5d 41 5c e9 48 22 9b ff e8 43 22 9b ff <0f> 0b e9 00 ff ff ff e8 87 a1 dd ff e9 37 ff ff ff e8 4d a1 dd ff
-RSP: 0018:ffffc90001c17df0 EFLAGS: 00010293
-RAX: 0000000000000000 RBX: ffff88801c409000 RCX: 0000000000000000
-RDX: ffff8880287e8040 RSI: ffffffff81d7aa8d RDI: ffff88801c4090d0
-RBP: ffff8880198a1780 R08: 0000000000000000 R09: 0000000012c8a801
-R10: ffffffff81d7ad45 R11: 0000000000000001 R12: ffff88801c409000
-R13: ffff888012c8a801 R14: ffff88801c409040 R15: ffff88801c4090d0
-FS:  00007f60e950b700(0000) GS:ffff8880b9f00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f60e950adb8 CR3: 0000000015b41000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- io_uring_flush+0x28b/0x3a0 fs/io_uring.c:9134
- filp_close+0xb4/0x170 fs/open.c:1280
- do_dup2+0x294/0x520 fs/file.c:1024
- ksys_dup3+0x22f/0x360 fs/file.c:1136
- __do_sys_dup2 fs/file.c:1162 [inline]
- __se_sys_dup2 fs/file.c:1150 [inline]
- __x64_sys_dup2+0x71/0x3a0 fs/file.c:1150
- do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x447019
-Code: e8 0c e8 ff ff 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 0f 83 db 06 fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f60e950ace8 EFLAGS: 00000246 ORIG_RAX: 0000000000000021
-RAX: ffffffffffffffda RBX: 00000000006dbc38 RCX: 0000000000447019
-RDX: 0000000000447019 RSI: 0000000000000003 RDI: 0000000000000005
-RBP: 00000000006dbc30 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00000000006dbc3c
-R13: 00007ffc5b18d21f R14: 00007f60e950b9c0 R15: 00000000006dbc30
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 5867bd9..afb4877 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -1140,7 +1140,7 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+ 				       session);
+ 		break;
+ 	case IEEE80211_AMPDU_RX_STOP:
+-		wcn36xx_smd_del_ba(wcn, tid, get_sta_index(vif, sta_priv));
++		wcn36xx_smd_del_ba(wcn, tid, 0, get_sta_index(vif, sta_priv));
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+ 		spin_lock_bh(&sta_priv->ampdu_lock);
+@@ -1164,6 +1164,7 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+ 		sta_priv->ampdu_state[tid] = WCN36XX_AMPDU_NONE;
+ 		spin_unlock_bh(&sta_priv->ampdu_lock);
+ 
++		wcn36xx_smd_del_ba(wcn, tid, 1, get_sta_index(vif, sta_priv));
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 5445277..941fed0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2467,7 +2467,7 @@ int wcn36xx_smd_add_ba(struct wcn36xx *wcn, u8 session_id)
+ 	return ret;
+ }
+ 
+-int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index)
++int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 direction, u8 sta_index)
+ {
+ 	struct wcn36xx_hal_del_ba_req_msg msg_body;
+ 	int ret;
+@@ -2477,7 +2477,7 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index)
+ 
+ 	msg_body.sta_index = sta_index;
+ 	msg_body.tid = tid;
+-	msg_body.direction = 0;
++	msg_body.direction = direction;
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+ 
+ 	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index b1d8083..4628605 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -135,7 +135,7 @@ int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
+ 		u8 direction,
+ 		u8 sta_index);
+ int wcn36xx_smd_add_ba(struct wcn36xx *wcn, u8 session_id);
+-int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
++int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 direction, u8 sta_index);
+ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index, u16 tid, u8 session_id);
+ 
+ int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
+-- 
+2.7.4
 
