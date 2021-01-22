@@ -2,190 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E6CC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 11:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42A52C433DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:17:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CA0022CA1
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 11:59:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2C1E23437
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jan 2021 12:17:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727229AbhAVL6k (ORCPT
+        id S1727478AbhAVMR0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jan 2021 06:58:40 -0500
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:43797 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727410AbhAVL5j (ORCPT
+        Fri, 22 Jan 2021 07:17:26 -0500
+Received: from mail-io1-f70.google.com ([209.85.166.70]:40807 "EHLO
+        mail-io1-f70.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726664AbhAVMRC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jan 2021 06:57:39 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 923885C00FF;
-        Fri, 22 Jan 2021 06:56:32 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Fri, 22 Jan 2021 06:56:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm2; bh=s5zUnZIga8YCsxtkCuU8+h7RKOP
-        gKeLXxz7i8hp47Tw=; b=u3sYz1KDMTYFbEyeRuRyc9DDE0BL1+tHrf0hTyHkwbJ
-        OMT0G1tdavoYXzY8XYCMysbO3dU53BTBOHYNjhTKaWZCoKpqBuasX+U/YGGKFS9g
-        10Ezlgzn2mJQUEDkhI7+FUoTGDOa3iFFVzJ9xN9CmiumRfD98qGhI1yMPTb6Tn1D
-        CllR7QQaEslx3m1FXuEiiWagraEFlWgtR7oi/3Fw3ylqemQTjvD5qC2QPg4/a6JM
-        rd7PeXQREkp+u1AOZ7IP9s8/7wVLSPBt0RwW9uVwtA7D6ju9e11/Ux6gd59Nq081
-        AHnAi5FkhG9LwJ06tY3tdzrtXQkdpgAedwmC1xE50Zg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=s5zUnZ
-        Iga8YCsxtkCuU8+h7RKOPgKeLXxz7i8hp47Tw=; b=SGWWzpFwuWLwDF2fV5Q584
-        91wl4EOuI0qwRFdbCyor75KKCQNJASXnsbwJ4lY8mYfDRCCaqIZNz3bLVkIluYLj
-        DMnQTTOlEFPyMtsmVNzOoZuiDV+eLqOYCR5h61yPcpGRx/wRdeFnxl2r4F1HMeMk
-        PDscgV1K+C5hFWuGJBpKNeqxVEHE81ByXGqGC/txw+u54qYmjM2VFxMD2bZZT/Fb
-        GhGS3DaUtLNYdOzxPKJ4Q0RYj0SiU6/f9ZhvmtXWYyKZ9vjF/NYxKD0MR+mlbu79
-        vxGMxay8BBde7kFEye/l5MEPrq8vSC824mcmIdHG0z7lV+zyTRGvFE/uDnZ0eTGw
-        ==
-X-ME-Sender: <xms:cL0KYLr1d9153tsWM9GGNJRTXM0ivbMIufObuwg9H8qsNitgQwH25Q>
-    <xme:cL0KYFrYRi4voIwQlyLXp_tRF91QXGniKikLbmAmsiw-0zwBXC0uiVQLKOJJIohhR
-    LYbiBlhMFuh6Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduledrudeigdefkecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghgucfm
-    jfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepueelledthe
-    ekleethfeludduvdfhffeuvdffudevgeehkeegieffveehgeeftefgnecuffhomhgrihhn
-    pehkvghrnhgvlhdrohhrghenucfkphepkeefrdekiedrjeegrdeigeenucevlhhushhtvg
-    hrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehgrhgvgheskhhrohgrhhdr
-    tghomh
-X-ME-Proxy: <xmx:cL0KYINS49AoHePejXWusJWyOeJyPtMIMLV_2xiXAsWA4mbWnYtwgg>
-    <xmx:cL0KYO4_kxzevlvLKo7tZcjigruNp5HXpG5DerRjlwHjForzBy4Fvw>
-    <xmx:cL0KYK7QzQVwPPkRmDOtHsgZqHHakrNEZ398NZuvCOgGs6-3J9lc3Q>
-    <xmx:cL0KYKEFFYwonaOkGc-JnZRExXIqJ3y8n9dG-s4JOQW1SsIPQVXOXw>
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        by mail.messagingengine.com (Postfix) with ESMTPA id C3CEB24005A;
-        Fri, 22 Jan 2021 06:56:31 -0500 (EST)
-Date:   Fri, 22 Jan 2021 12:56:30 +0100
-From:   Greg KH <greg@kroah.com>
-To:     stf_xl@wp.pl
-Cc:     linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Bernhard <bernhard.gebetsberger@gmx.at>
-Subject: Re: [PATCH] usb, xhci, rt2800usb: do not perform Soft Retry
-Message-ID: <YAq9bt6q9dfk4F+F@kroah.com>
-References: <20210122104342.12451-1-stf_xl@wp.pl>
+        Fri, 22 Jan 2021 07:17:02 -0500
+Received: by mail-io1-f70.google.com with SMTP id l18so8349257iok.7
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2021 04:16:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=8TT39RX0FYSmfRR7lvWKPjQfZTrWM5VQMDI38J31U3o=;
+        b=abl/uqGZaI0ApEZ2PRzwZBHVvhYjK+953hfg4uqZLZO6k95fW2pB1ZogHSqNXfe10m
+         ht6+OukHoS9g0Utpt8g4TfpY7oeeZubgyOdftoX/ORI50zWZFiBuknoUratHM/pRDFHD
+         t/JrcxM3bcUxfYOzHFzO4IJouRzrCrr4NEKf9a0uMfm4I7zLtUtfC/BKo0swazwEAyLa
+         c9kQ6Q4V/bi/j8dRdzmb9uYdiD257vxjgWDqp3sYU6R6UhdFsrMrT9YiEfn3elKgewGc
+         pi1y110qBXpkrSUliKDsxVVy1zSz+QBJSwHWHHC/0F2cDPcyt0QR3QCWgkcNHaI7YCxe
+         q6FA==
+X-Gm-Message-State: AOAM531/BRO2xlb+Y/0Ax8OHXi+SzVzw7FSVH1qPn5xQvdwbhVOVeg1q
+        hVh5qH0qJb8vjhrYsaaZuWtRc8LZ5SFpRDDr0TxnZJfGR5OP
+X-Google-Smtp-Source: ABdhPJywamJZ/g0TFEXqdIsKfSoFNaL2D0YBdvoksVdfsi6faaesaTFLaYak7IvWgRNV2eVm7qBG6JazlN00wnuWqNeEVf9N7yrt
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210122104342.12451-1-stf_xl@wp.pl>
+X-Received: by 2002:a6b:7704:: with SMTP id n4mr3125873iom.159.1611317780507;
+ Fri, 22 Jan 2021 04:16:20 -0800 (PST)
+Date:   Fri, 22 Jan 2021 04:16:20 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000ed6ff305b97c2755@google.com>
+Subject: linux-next test error: WARNING in cfg80211_netdev_notifier_call
+From:   syzbot <syzbot+8b083f465893fa214377@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        sfr@canb.auug.org.au, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 11:43:42AM +0100, stf_xl@wp.pl wrote:
-> From: Stanislaw Gruszka <stf_xl@wp.pl>
-> 
-> Since f8f80be501aa ("xhci: Use soft retry to recover faster from transaction
-> errors") on some systems rt2800usb devices are unable to operate. Looks
-> that due to firmware or hardware limitations of those devices, they
-> require full recovery from USB Transaction Errors.
-> 
-> To avoid the problem add URB transfer flag, that restore pre f8f80be501aa
-> xhci behaviour when the flag is set. For now only add it only to rt2800usb
-> driver.
+Hello,
 
-This feels like a really heavy hammer, to add a xhci flag for a single
-broken device.
+syzbot found the following issue on:
 
-Are you sure this is really needed?  What does this device do on other
-operating systems, do they have such a quirk for their host controller
-driver?
+HEAD commit:    226871e2 Add linux-next specific files for 20210122
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=1076afe7500000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=40930d62519ae2bd
+dashboard link: https://syzkaller.appspot.com/bug?extid=8b083f465893fa214377
+compiler:       gcc (GCC) 10.1.0-syz 20200507
 
-Or is this due to the specific host controller device hardware?  Should
-this be a xhci quirk for a specific pci device instead?
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+8b083f465893fa214377@syzkaller.appspotmail.com
+
+device veth1_macvtap left promiscuous mode
+device veth0_macvtap left promiscuous mode
+device veth1_vlan left promiscuous mode
+device veth0_vlan left promiscuous mode
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 270 at net/wireless/core.c:1455 cfg80211_netdev_notifier_call+0xd48/0x1460 net/wireless/core.c:1455
+Modules linked in:
+CPU: 0 PID: 270 Comm: kworker/u4:7 Not tainted 5.11.0-rc4-next-20210122-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: netns cleanup_net
+RIP: 0010:cfg80211_netdev_notifier_call+0xd48/0x1460 net/wireless/core.c:1455
+Code: ce e4 3c f9 49 8d 7d 68 be ff ff ff ff e8 b0 cd c6 00 31 ff 89 c3 89 c6 e8 35 ec 3c f9 85 db 0f 85 64 f9 ff ff e8 a8 e4 3c f9 <0f> 0b e9 58 f9 ff ff e8 9c e4 3c f9 49 8d 7d 68 be ff ff ff ff e8
+RSP: 0018:ffffc900016af720 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff88801135b800 RSI: ffffffff883638b8 RDI: 0000000000000003
+RBP: ffff888035622000 R08: 0000000000000000 R09: ffffffff88362ccd
+R10: ffffffff883638ab R11: 0000000000000006 R12: 1ffff920002d5ee9
+R13: ffff888144628580 R14: ffff888035630000 R15: 0000000000000002
+FS:  0000000000000000(0000) GS:ffff8880b9f00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000a9b158 CR3: 00000000111dc000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ notifier_call_chain+0xb5/0x200 kernel/notifier.c:83
+ call_netdevice_notifiers_info+0xb5/0x130 net/core/dev.c:2040
+ call_netdevice_notifiers_extack net/core/dev.c:2052 [inline]
+ call_netdevice_notifiers net/core/dev.c:2066 [inline]
+ unregister_netdevice_many+0x943/0x1750 net/core/dev.c:10704
+ default_device_exit_batch+0x2fa/0x3c0 net/core/dev.c:11224
+ ops_exit_list+0x10d/0x160 net/core/net_namespace.c:190
+ cleanup_net+0x4ea/0xb10 net/core/net_namespace.c:604
+ process_one_work+0x98d/0x15f0 kernel/workqueue.c:2275
+ worker_thread+0x64c/0x1120 kernel/workqueue.c:2421
+ kthread+0x3b1/0x4a0 kernel/kthread.c:292
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:296
 
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=202541
-> Fixes: f8f80be501aa ("xhci: Use soft retry to recover faster from transaction errors")
-> Reported-and-tested-by: Bernhard <bernhard.gebetsberger@gmx.at>
-> Bisected-by: Bernhard <bernhard.gebetsberger@gmx.at>
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 3 +++
->  drivers/usb/core/urb.c                         | 2 +-
->  drivers/usb/host/xhci-ring.c                   | 3 ++-
->  include/linux/usb.h                            | 1 +
->  4 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> index e4473a551241..f1d82b3e6bba 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> @@ -214,6 +214,7 @@ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
->  	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
->  			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
->  			     rt2x00usb_register_read_async_cb, rd);
-> +	urb->transfer_flags |= URB_SOFT_RETRY_NOT_OK;
->  	usb_anchor_urb(urb, rt2x00dev->anchor);
->  	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
->  		usb_unanchor_urb(urb);
-> @@ -323,6 +324,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
->  			  usb_sndbulkpipe(usb_dev, entry->queue->usb_endpoint),
->  			  entry->skb->data, length,
->  			  rt2x00usb_interrupt_txdone, entry);
-> +	entry_priv->urb->transfer_flags |= URB_SOFT_RETRY_NOT_OK;
->  
->  	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
->  	if (status) {
-> @@ -409,6 +411,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
->  			  usb_rcvbulkpipe(usb_dev, entry->queue->usb_endpoint),
->  			  entry->skb->data, entry->skb->len,
->  			  rt2x00usb_interrupt_rxdone, entry);
-> +	entry_priv->urb->transfer_flags |= URB_SOFT_RETRY_NOT_OK;
->  
->  	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
->  	if (status) {
-> diff --git a/drivers/usb/core/urb.c b/drivers/usb/core/urb.c
-> index 357b149b20d3..140bac59dc32 100644
-> --- a/drivers/usb/core/urb.c
-> +++ b/drivers/usb/core/urb.c
-> @@ -495,7 +495,7 @@ int usb_submit_urb(struct urb *urb, gfp_t mem_flags)
->  
->  	/* Check against a simple/standard policy */
->  	allowed = (URB_NO_TRANSFER_DMA_MAP | URB_NO_INTERRUPT | URB_DIR_MASK |
-> -			URB_FREE_BUFFER);
-> +		   URB_SOFT_RETRY_NOT_OK | URB_FREE_BUFFER);
->  	switch (xfertype) {
->  	case USB_ENDPOINT_XFER_BULK:
->  	case USB_ENDPOINT_XFER_INT:
-> diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
-> index 5677b81c0915..6712e1a7735c 100644
-> --- a/drivers/usb/host/xhci-ring.c
-> +++ b/drivers/usb/host/xhci-ring.c
-> @@ -2302,7 +2302,8 @@ static int process_bulk_intr_td(struct xhci_hcd *xhci, struct xhci_td *td,
->  		remaining	= 0;
->  		break;
->  	case COMP_USB_TRANSACTION_ERROR:
-> -		if ((ep_ring->err_count++ > MAX_SOFT_RETRY) ||
-> +		if (td->urb->transfer_flags & URB_SOFT_RETRY_NOT_OK ||
-> +		    (ep_ring->err_count++ > MAX_SOFT_RETRY) ||
->  		    le32_to_cpu(slot_ctx->tt_info) & TT_SLOT)
->  			break;
->  		*status = 0;
-> diff --git a/include/linux/usb.h b/include/linux/usb.h
-> index 7d72c4e0713c..dcdac2f03263 100644
-> --- a/include/linux/usb.h
-> +++ b/include/linux/usb.h
-> @@ -1329,6 +1329,7 @@ extern int usb_disabled(void);
->  #define URB_ISO_ASAP		0x0002	/* iso-only; use the first unexpired
->  					 * slot in the schedule */
->  #define URB_NO_TRANSFER_DMA_MAP	0x0004	/* urb->transfer_dma valid on submit */
-> +#define URB_SOFT_RETRY_NOT_OK	0x0008	/* Avoid XHCI Soft Retry */
-
-To match other flags here, how about "URB_NO_SOFT_RETRY"?
-
-thanks,
-
-greg k-h
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
