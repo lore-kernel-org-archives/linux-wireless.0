@@ -5,34 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFABFC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F707C433DB
 	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 08:36:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 942E823A5B
+	by mail.kernel.org (Postfix) with ESMTP id 71A93239D4
 	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 08:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726699AbhAWIgS (ORCPT
+        id S1726720AbhAWIgI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Jan 2021 03:36:18 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:54837 "EHLO
+        Sat, 23 Jan 2021 03:36:08 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:54858 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725766AbhAWIgD (ORCPT
+        with ESMTP id S1726673AbhAWIgC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Jan 2021 03:36:03 -0500
-X-UUID: ce652b1f05174704a4be60faafd27151-20210123
-X-UUID: ce652b1f05174704a4be60faafd27151-20210123
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        Sat, 23 Jan 2021 03:36:02 -0500
+X-UUID: 8bf480e598324b929db43828bf3516b3-20210123
+X-UUID: 8bf480e598324b929db43828bf3516b3-20210123
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1108110024; Sat, 23 Jan 2021 16:35:17 +0800
+        with ESMTP id 233865453; Sat, 23 Jan 2021 16:35:16 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Sat, 23 Jan 2021 16:35:15 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 23 Jan 2021 16:35:16 +0800
+ Transport; Sat, 23 Jan 2021 16:35:15 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -42,15 +42,14 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH -next v7 11/22] mt76: mt7921: introduce support for hardware beacon filter
-Date:   Sat, 23 Jan 2021 16:35:02 +0800
-Message-ID: <501a4e58991eeb7d1cfbd9c9d4758eaf3523466e.1611389300.git.objelf@gmail.com>
+Subject: [PATCH -next v7 04/22] mt76: mt7921: add EEPROM support
+Date:   Sat, 23 Jan 2021 16:34:55 +0800
+Message-ID: <05d2dee7cdd7c0f71724866f5d19fee176fdc5a0.1611389300.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <cover.1611389300.git.objelf@gmail.com>
 References: <cover.1611389300.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 01375A47BFC12CE786A73FCD19F248AA4914751E6EF20B1AB8FCDDF40618D3FF2000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -58,11 +57,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-Introduce support for hw beacon filter available in the mt7921 firmware.
-
-According to mt7921e firmware, enabling hardware filter would rely on
-mt7921_mcu_uni_bss_bcnft and disabling hardware filter still rely on legacy
-mt7921_mcu_set_bss_pm.
+Add EEPROM support to MT7921 to determine the capability the card has
+such as indentificaiton, MAC address, the band and antenna number the
+card able to support.
 
 Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
@@ -70,119 +67,151 @@ Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
 Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 75 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  1 +
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  4 +
- 3 files changed, 80 insertions(+)
+ .../wireless/mediatek/mt76/mt7921/eeprom.c    | 100 ++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7921/eeprom.h    |  27 +++++
+ 2 files changed, 127 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 913b56065de6..768456c7aa7f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -2500,3 +2500,78 @@ int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif)
- 	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
- 				 &ps_req, sizeof(ps_req), true);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+new file mode 100644
+index 000000000000..691d14a1a7bf
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+@@ -0,0 +1,100 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc. */
 +
-+int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			     bool enable)
++#include "mt7921.h"
++#include "eeprom.h"
++
++static u32 mt7921_eeprom_read(struct mt7921_dev *dev, u32 offset)
 +{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	struct {
-+		struct {
-+			u8 bss_idx;
-+			u8 pad[3];
-+		} __packed hdr;
-+		struct bcnft_tlv {
-+			__le16 tag;
-+			__le16 len;
-+			__le16 bcn_interval;
-+			u8 dtim_period;
-+			u8 pad;
-+		} __packed bcnft;
-+	} __packed bcnft_req = {
-+		.hdr = {
-+			.bss_idx = mvif->mt76.idx,
-+		},
-+		.bcnft = {
-+			.tag = cpu_to_le16(UNI_BSS_INFO_BCNFT),
-+			.len = cpu_to_le16(sizeof(struct bcnft_tlv)),
-+			.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
-+			.dtim_period = vif->bss_conf.dtim_period,
-+		},
-+	};
++	u8 *data = dev->mt76.eeprom.data;
 +
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return 0;
++	if (data[offset] == 0xff)
++		mt7921_mcu_get_eeprom(dev, offset);
 +
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
-+				 &bcnft_req, sizeof(bcnft_req), true);
++	return data[offset];
 +}
 +
-+int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			  bool enable)
++static int mt7921_eeprom_load(struct mt7921_dev *dev)
 +{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	struct {
-+		u8 bss_idx;
-+		u8 dtim_period;
-+		__le16 aid;
-+		__le16 bcn_interval;
-+		__le16 atim_window;
-+		u8 uapsd;
-+		u8 bmc_delivered_ac;
-+		u8 bmc_triggered_ac;
-+		u8 pad;
-+	} req = {
-+		.bss_idx = mvif->mt76.idx,
-+		.aid = cpu_to_le16(vif->bss_conf.aid),
-+		.dtim_period = vif->bss_conf.dtim_period,
-+		.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
-+	};
-+	struct {
-+		u8 bss_idx;
-+		u8 pad[3];
-+	} req_hdr = {
-+		.bss_idx = mvif->mt76.idx,
-+	};
-+	int err;
++	int ret;
 +
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return 0;
++	ret = mt76_eeprom_init(&dev->mt76, MT7921_EEPROM_SIZE);
++	if (ret < 0)
++		return ret;
 +
-+	err = mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_ABORT, &req_hdr,
-+				sizeof(req_hdr), false);
-+	if (err < 0 || !enable)
-+		return err;
++	memset(dev->mt76.eeprom.data, -1, MT7921_EEPROM_SIZE);
 +
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_CONNECTED, &req,
-+				 sizeof(req), false);
++	return 0;
 +}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index 2103e1d3ac94..de3a9aabec04 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -211,6 +211,7 @@ enum {
- 	UNI_BSS_INFO_QBSS = 15,
- 	UNI_BSS_INFO_UAPSD = 19,
- 	UNI_BSS_INFO_PS = 21,
-+	UNI_BSS_INFO_BCNFT = 22,
- };
- 
- enum {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index f4435cc1712f..161e328fc4ee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -356,4 +356,8 @@ int mt7921_mcu_cancel_hw_scan(struct mt7921_phy *phy,
- 			      struct ieee80211_vif *vif);
- u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx);
- int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
-+int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			     bool enable);
-+int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
-+			  bool enable);
- #endif
++
++static int mt7921_check_eeprom(struct mt7921_dev *dev)
++{
++	u8 *eeprom = dev->mt76.eeprom.data;
++	u16 val;
++
++	mt7921_eeprom_read(dev, MT_EE_CHIP_ID);
++	val = get_unaligned_le16(eeprom);
++
++	switch (val) {
++	case 0x7961:
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++void mt7921_eeprom_parse_band_config(struct mt7921_phy *phy)
++{
++	struct mt7921_dev *dev = phy->dev;
++	u32 val;
++
++	val = mt7921_eeprom_read(dev, MT_EE_WIFI_CONF);
++	val = FIELD_GET(MT_EE_WIFI_CONF_BAND_SEL, val);
++
++	switch (val) {
++	case MT_EE_5GHZ:
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	case MT_EE_2GHZ:
++		phy->mt76->cap.has_2ghz = true;
++		break;
++	default:
++		phy->mt76->cap.has_2ghz = true;
++		phy->mt76->cap.has_5ghz = true;
++		break;
++	}
++}
++
++static void mt7921_eeprom_parse_hw_cap(struct mt7921_dev *dev)
++{
++	u8 tx_mask;
++
++	mt7921_eeprom_parse_band_config(&dev->phy);
++
++	/* TODO: read NSS with MCU_CMD_NIC_CAPV2 */
++	tx_mask = 2;
++	dev->chainmask = BIT(tx_mask) - 1;
++	dev->mphy.antenna_mask = dev->chainmask;
++	dev->mphy.chainmask = dev->mphy.antenna_mask;
++}
++
++int mt7921_eeprom_init(struct mt7921_dev *dev)
++{
++	int ret;
++
++	ret = mt7921_eeprom_load(dev);
++	if (ret < 0)
++		return ret;
++
++	ret = mt7921_check_eeprom(dev);
++	if (ret)
++		return ret;
++
++	mt7921_eeprom_parse_hw_cap(dev);
++	memcpy(dev->mphy.macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR,
++	       ETH_ALEN);
++
++	mt76_eeprom_override(&dev->mphy);
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+new file mode 100644
+index 000000000000..54f30401343c
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/eeprom.h
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: ISC */
++/* Copyright (C) 2020 MediaTek Inc. */
++
++#ifndef __MT7921_EEPROM_H
++#define __MT7921_EEPROM_H
++
++#include "mt7921.h"
++
++enum mt7921_eeprom_field {
++	MT_EE_CHIP_ID =		0x000,
++	MT_EE_VERSION =		0x002,
++	MT_EE_MAC_ADDR =	0x004,
++	MT_EE_WIFI_CONF =	0x07c,
++	__MT_EE_MAX =		0x3bf
++};
++
++#define MT_EE_WIFI_CONF_TX_MASK			BIT(0)
++#define MT_EE_WIFI_CONF_BAND_SEL		GENMASK(3, 2)
++
++enum mt7921_eeprom_band {
++	MT_EE_NA,
++	MT_EE_5GHZ,
++	MT_EE_2GHZ,
++	MT_EE_DUAL_BAND,
++};
++
++#endif
 -- 
 2.25.1
 
