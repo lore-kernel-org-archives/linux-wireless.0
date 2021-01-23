@@ -2,273 +2,263 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E40EC433E9
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 10:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4084C433DB
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 21:29:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F8EC22B2D
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 10:34:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CF0B22B48
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Jan 2021 21:29:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbhAWKej (ORCPT
+        id S1725943AbhAWV3q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Jan 2021 05:34:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726699AbhAWKeh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Jan 2021 05:34:37 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 73AB622D75;
-        Sat, 23 Jan 2021 10:33:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611398008;
-        bh=J/becRYgKEiLhOoUjEOnn4uemFIGiVHDBoLHKCSFSws=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Vte8Mms8m9HxsK/dDY1NTe3Oz1ylUeZNMNdrWFnO5tzCFm6SkDyo3r8dKDJphOMvG
-         FZu027qurap4PfA/i2Q3kLiWX0yhOop5R0ULdmXPUD574SJG5khfXfEFhoSzTUK0Gh
-         uEen36qVNjUPU7+85CV5F3RIrmwijBNCTGgYHkqdbsZRQnIB4StSVdCJhHUYTP6w93
-         DUWtDkGzTmgJUzX2QJDgQFgxWK+l+XAHo38r5GbNCQembRgV2uE6eHn6eApux6kYFS
-         v4CYbd4RHIBO0Fp66H4RXDSurMnR9qFj+kfee99PRCEJyIa1QcoFBhzDvKxJwnriJ5
-         P7mQKc2bpl3gg==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 5/6] mt76: mt76_connac: move pm data struct in mt76_connac.h
-Date:   Sat, 23 Jan 2021 11:33:03 +0100
-Message-Id: <7c500da6305f25879700e31f56995fb63a9aca81.1611397696.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <cover.1611397696.git.lorenzo@kernel.org>
-References: <cover.1611397696.git.lorenzo@kernel.org>
+        Sat, 23 Jan 2021 16:29:46 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36250 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725922AbhAWV3p (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Jan 2021 16:29:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611437297;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=RR+slcZJIQfXXKpkeDmqoU9L0QjyogxRcflNfjMUohg=;
+        b=IUR9TEs8bjd7XGKiGAkLTn/VQool6NIc2qjr9fvz+lKbgU4RJvAWoDDPIC4DJfGQPCTiIg
+        9sFW5nuFWjJcExZCA7cSPe8XVSf7+Ss9HmSj+DswBng+4dWrS4c2SaK8i7dO+dRCKcofr4
+        +1ekKqpuxt/+R9hw0f2dr81z0TaLel0=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-97-GrtWXSzuMY2A1QAMneWIqg-1; Sat, 23 Jan 2021 16:28:15 -0500
+X-MC-Unique: GrtWXSzuMY2A1QAMneWIqg-1
+Received: by mail-ed1-f71.google.com with SMTP id j12so4994568edq.10
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2021 13:28:15 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RR+slcZJIQfXXKpkeDmqoU9L0QjyogxRcflNfjMUohg=;
+        b=GcL8DQBezqJQBN0rc7n/T4ukBts1VDHVtmnc5v9ScY4Zjo6aclnu/8Z8xeuuN49nJg
+         WZ7OjnC4WzExDktTlK9qV0GdsViWMIh77jg064AxoFfnuyP2vmVJRH1EGf0uZ/7U9Gix
+         gXLiKH2zgemjRZ7yr5b0nSdz+29XjuDJlPJLEPyhvuNrm+sO1h4XIqJXibKXTKjZO/l+
+         WnBSk+t5oewwrQEi9OoyBuUt25AEG2X1+yq5wzqc1MJ65GtXxG2H/pu3fA7kNA31dA9U
+         T/nHDzIGxLQE4whJhQcvnciLGsaGZXGG2ukCNl6GZLYFEwPKu8snup2b6Kyi4KazkQZy
+         p05w==
+X-Gm-Message-State: AOAM533wIrTVhdgiZM8DFi6c+tsW616uehUdXZUOd2mLWizA2cDP45+H
+        b404mIS3RpZOkAY1TzLpbw+5Dzft5stTJnTRrlfodUPDpuRulgPIopjDSBUYZFUkHOS087WvoWD
+        i3WYfXi4xaKvJ2MaFyVKw/aFKV/N6Eqc9fUMdlUp0Am11GLsg3j2BPXJp0qiT4WNFOUqOgnH1ov
+        g+1T0=
+X-Received: by 2002:aa7:cb42:: with SMTP id w2mr2507495edt.21.1611437293184;
+        Sat, 23 Jan 2021 13:28:13 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwwYEly+R5w8HgUxryf0HJBiKAvzJuY0EjMiEUvCCS7+nyqgsZB4APh8K8E9WFsuAXiKBAdVw==
+X-Received: by 2002:aa7:cb42:: with SMTP id w2mr2507482edt.21.1611437292965;
+        Sat, 23 Jan 2021 13:28:12 -0800 (PST)
+Received: from x1.localdomain (2001-1c00-0c1e-bf00-37a3-353b-be90-1238.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:37a3:353b:be90:1238])
+        by smtp.gmail.com with ESMTPSA id r10sm7781677edw.24.2021.01.23.13.28.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 23 Jan 2021 13:28:11 -0800 (PST)
+Subject: Re: [PATCH] cfg80211: Save the regulatory domain with a lock
+To:     Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net,
+        "Peer, Ilan" <ilan.peer@intel.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <iwlwifi.20210105165657.613e9a876829.Ia38d27dbebea28bf9c56d70691d243186ede70e7@changeid>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <d839ab62-e4bc-56f0-d861-f172bf19c4b3@redhat.com>
+Date:   Sat, 23 Jan 2021 22:28:07 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <iwlwifi.20210105165657.613e9a876829.Ia38d27dbebea28bf9c56d70691d243186ede70e7@changeid>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move pm mt7663 data structure in mt76_connac.h introducing
-mt76_connac_pm data struct. This is a preliminary patch to share pm code
-between mt7663 and mt7921
+Hi,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  8 +--
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  4 +-
- .../wireless/mediatek/mt76/mt7615/mt7615.h    | 19 +-----
- .../net/wireless/mediatek/mt76/mt76_connac.h  | 62 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  | 38 +-----------
- 5 files changed, 70 insertions(+), 61 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac.h
+On 1/5/21 3:56 PM, Luca Coelho wrote:
+> From: Ilan Peer <ilan.peer@intel.com>
+> 
+> Saving the regulatory domain while setting custom regulatory domain
+> was done while accessing a RCU protected pointer but without any
+> protection.
+> 
+> Fix this by using RTNL while accessing the pointer.
+> 
+> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+> Reported-by: syzbot+27771d4abcd9b7a1f5d3@syzkaller.appspotmail.com
+> Reported-by: syzbot+db4035751c56c0079282@syzkaller.appspotmail.com
+> Reported-by: Hans de Goede <hdegoede@redhat.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 18b947f3bb9c..904a8348f94b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1875,16 +1875,14 @@ void mt7615_pm_wake_work(struct work_struct *work)
- 
- 	spin_lock_bh(&dev->pm.txq_lock);
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
--		struct mt7615_sta *msta = dev->pm.tx_q[i].msta;
-+		struct mt76_wcid *wcid = dev->pm.tx_q[i].wcid;
- 		struct ieee80211_sta *sta = NULL;
--		struct mt76_wcid *wcid;
- 
- 		if (!dev->pm.tx_q[i].skb)
- 			continue;
- 
--		wcid = msta ? &msta->wcid : &dev->mt76.global_wcid;
--		if (msta && wcid->sta)
--			sta = container_of((void *)msta, struct ieee80211_sta,
-+		if (wcid && wcid->sta)
-+			sta = container_of((void *)wcid, struct ieee80211_sta,
- 					   drv_priv);
- 
- 		mt76_tx(mphy, sta, wcid, dev->pm.tx_q[i].skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index d4a56950d5cd..5a6c96dfbbd7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -31,7 +31,7 @@ static void mt7615_free_pending_tx_skbs(struct mt7615_dev *dev,
- 
- 	spin_lock_bh(&dev->pm.txq_lock);
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
--		if (msta && dev->pm.tx_q[i].msta != msta)
-+		if (msta && dev->pm.tx_q[i].wcid != &msta->wcid)
- 			continue;
- 
- 		dev_kfree_skb(dev->pm.tx_q[i].skb);
-@@ -726,7 +726,7 @@ static void mt7615_tx(struct ieee80211_hw *hw,
- 	spin_lock_bh(&dev->pm.txq_lock);
- 	if (!dev->pm.tx_q[qid].skb) {
- 		ieee80211_stop_queues(hw);
--		dev->pm.tx_q[qid].msta = msta;
-+		dev->pm.tx_q[qid].wcid = wcid;
- 		dev->pm.tx_q[qid].skb = skb;
- 		queue_work(dev->mt76.wq, &dev->pm.wake_work);
- 	} else {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 20fef779ab43..35fa2104a91f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -8,7 +8,7 @@
- #include <linux/interrupt.h>
- #include <linux/ktime.h>
- #include <linux/regmap.h>
--#include "../mt76.h"
-+#include "../mt76_connac.h"
- #include "regs.h"
- 
- #define MT7615_MAX_INTERFACES		16
-@@ -276,22 +276,7 @@ struct mt7615_dev {
- 
- 	u32 muar_mask;
- 
--	struct {
--		bool enable;
--
--		spinlock_t txq_lock;
--		struct {
--			struct mt7615_sta *msta;
--			struct sk_buff *skb;
--		} tx_q[IEEE80211_NUM_ACS];
--
--		struct work_struct wake_work;
--		struct completion wake_cmpl;
--
--		struct delayed_work ps_work;
--		unsigned long last_activity;
--		unsigned long idle_timeout;
--	} pm;
-+	struct mt76_connac_pm pm;
- };
- 
- enum tx_pkt_queue_idx {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-new file mode 100644
-index 000000000000..a20dc558e8f5
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-@@ -0,0 +1,62 @@
-+/* SPDX-License-Identifier: ISC */
-+/* Copyright (C) 2020 MediaTek Inc. */
-+
-+#ifndef __MT76_CONNAC_H
-+#define __MT76_CONNAC_H
-+
-+#include "mt76.h"
-+
-+#define MT76_CONNAC_SCAN_IE_LEN			600
-+#define MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL	10
-+#define MT76_CONNAC_MAX_SCHED_SCAN_SSID		10
-+#define MT76_CONNAC_MAX_SCAN_MATCH		16
-+
-+enum {
-+	CMD_CBW_20MHZ = IEEE80211_STA_RX_BW_20,
-+	CMD_CBW_40MHZ = IEEE80211_STA_RX_BW_40,
-+	CMD_CBW_80MHZ = IEEE80211_STA_RX_BW_80,
-+	CMD_CBW_160MHZ = IEEE80211_STA_RX_BW_160,
-+	CMD_CBW_10MHZ,
-+	CMD_CBW_5MHZ,
-+	CMD_CBW_8080MHZ,
-+
-+	CMD_HE_MCS_BW80 = 0,
-+	CMD_HE_MCS_BW160,
-+	CMD_HE_MCS_BW8080,
-+	CMD_HE_MCS_BW_NUM
-+};
-+
-+enum {
-+	HW_BSSID_0 = 0x0,
-+	HW_BSSID_1,
-+	HW_BSSID_2,
-+	HW_BSSID_3,
-+	HW_BSSID_MAX = HW_BSSID_3,
-+	EXT_BSSID_START = 0x10,
-+	EXT_BSSID_1,
-+	EXT_BSSID_15 = 0x1f,
-+	EXT_BSSID_MAX = EXT_BSSID_15,
-+	REPEATER_BSSID_START = 0x20,
-+	REPEATER_BSSID_MAX = 0x3f,
-+};
-+
-+struct mt76_connac_pm {
-+	bool enable;
-+
-+	spinlock_t txq_lock;
-+	struct {
-+		struct mt76_wcid *wcid;
-+		struct sk_buff *skb;
-+	} tx_q[IEEE80211_NUM_ACS];
-+
-+	struct work_struct wake_work;
-+	struct completion wake_cmpl;
-+
-+	struct delayed_work ps_work;
-+	unsigned long last_activity;
-+	unsigned long idle_timeout;
-+};
-+
-+extern const struct wiphy_wowlan_support mt76_connac_wowlan_support;
-+
-+#endif /* __MT76_CONNAC_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index c8f5565e1f3c..0825ed674d15 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -4,41 +4,7 @@
- #ifndef __MT76_CONNAC_MCU_H
- #define __MT76_CONNAC_MCU_H
- 
--#include "mt76.h"
--
--#define MT76_CONNAC_SCAN_IE_LEN			600
--#define MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL	10
--#define MT76_CONNAC_MAX_SCHED_SCAN_SSID		10
--#define MT76_CONNAC_MAX_SCAN_MATCH		16
--
--enum {
--	CMD_CBW_20MHZ = IEEE80211_STA_RX_BW_20,
--	CMD_CBW_40MHZ = IEEE80211_STA_RX_BW_40,
--	CMD_CBW_80MHZ = IEEE80211_STA_RX_BW_80,
--	CMD_CBW_160MHZ = IEEE80211_STA_RX_BW_160,
--	CMD_CBW_10MHZ,
--	CMD_CBW_5MHZ,
--	CMD_CBW_8080MHZ,
--
--	CMD_HE_MCS_BW80 = 0,
--	CMD_HE_MCS_BW160,
--	CMD_HE_MCS_BW8080,
--	CMD_HE_MCS_BW_NUM
--};
--
--enum {
--	HW_BSSID_0 = 0x0,
--	HW_BSSID_1,
--	HW_BSSID_2,
--	HW_BSSID_3,
--	HW_BSSID_MAX = HW_BSSID_3,
--	EXT_BSSID_START = 0x10,
--	EXT_BSSID_1,
--	EXT_BSSID_15 = 0x1f,
--	EXT_BSSID_MAX = EXT_BSSID_15,
--	REPEATER_BSSID_START = 0x20,
--	REPEATER_BSSID_MAX = 0x3f,
--};
-+#include "mt76_connac.h"
- 
- struct tlv {
- 	__le16 tag;
-@@ -905,8 +871,6 @@ struct mt76_connac_suspend_tlv {
- 	u8 pad[5];
- } __packed;
- 
--extern const struct wiphy_wowlan_support mt76_connac_wowlan_support;
--
- struct sk_buff *
- mt76_connac_mcu_alloc_sta_req(struct mt76_dev *dev, struct mt76_vif *mvif,
- 			      struct mt76_wcid *wcid);
--- 
-2.29.2
+So I'm afraid that I have some bad news about this patch, it fixes
+the RCU warning which I reported:
+
+https://lore.kernel.org/linux-wireless/20210104170713.66956-1-hdegoede@redhat.com/
+
+But it introduces a deadlock. I hit this while testing 5.11-rc4 + this patch
+on top on a device with a RTL8723BS wifi chip. Granted the driver for that
+chipset comes from staging. But I seriously wonder if that is the only driver to
+hit this deadlock:
+
+[   63.231667] rtl8723bs: acquire FW from file:rtlwifi/rtl8723bs_nic.bin
+
+[   65.206585] ============================================
+[   65.206602] WARNING: possible recursive locking detected
+[   65.206620] 5.11.0-rc4+ #210 Tainted: G         C  E    
+[   65.206638] --------------------------------------------
+[   65.206651] NetworkManager/988 is trying to acquire lock:
+[   65.206668] ffffffff8dbc3188 (rtnl_mutex){+.+.}-{3:3}, at: wiphy_apply_custom_regulatory+0x9d/0x2b0 [cfg80211]
+[   65.206867] 
+               but task is already holding lock:
+[   65.206880] ffffffff8dbc3188 (rtnl_mutex){+.+.}-{3:3}, at: rtnetlink_rcv_msg+0x142/0x480
+[   65.206945] 
+               other info that might help us debug this:
+[   65.206960]  Possible unsafe locking scenario:
+
+[   65.206974]        CPU0
+[   65.206986]        ----
+[   65.206997]   lock(rtnl_mutex);
+[   65.207021]   lock(rtnl_mutex);
+[   65.207044] 
+                *** DEADLOCK ***
+
+[   65.207055]  May be due to missing lock nesting notation
+
+[   65.207067] 2 locks held by NetworkManager/988:
+[   65.207085]  #0: ffffffff8dbc3188 (rtnl_mutex){+.+.}-{3:3}, at: rtnetlink_rcv_msg+0x142/0x480
+[   65.207130]  #1: ffff8c27825161f0 (&pdvobj->hw_init_mutex){+.+.}-{3:3}, at: netdev_open+0x39/0x70 [r8723bs]
+[   65.207230] 
+               stack backtrace:
+[   65.207237] CPU: 3 PID: 988 Comm: NetworkManager Tainted: G         C  E     5.11.0-rc4+ #210
+[   65.207247] Hardware name: Jumper EZpad/EZpad, BIOS Jumper12x.WJ2012.bsBKRCP05 04/28/2018
+[   65.207254] Call Trace:
+[   65.207271]  dump_stack+0x8b/0xb0
+[   65.207287]  __lock_acquire.cold+0x159/0x2ab
+[   65.207303]  ? __lock_acquire+0x382/0x1e10
+[   65.207319]  lock_acquire+0x116/0x370
+[   65.207337]  ? wiphy_apply_custom_regulatory+0x9d/0x2b0 [cfg80211]
+[   65.207409]  __mutex_lock+0x7e/0x7a0
+[   65.207425]  ? wiphy_apply_custom_regulatory+0x9d/0x2b0 [cfg80211]
+[   65.207489]  ? wiphy_apply_custom_regulatory+0x9d/0x2b0 [cfg80211]
+[   65.207556]  ? rcu_read_lock_sched_held+0x3f/0x80
+[   65.207571]  ? __kmalloc+0x2de/0x310
+[   65.207592]  wiphy_apply_custom_regulatory+0x9d/0x2b0 [cfg80211]
+[   65.207664]  rtw_regd_init+0x32/0x40 [r8723bs]
+[   65.207755]  rtw_cfg80211_init_wiphy+0x79/0xb0 [r8723bs]
+[   65.207848]  _netdev_open+0x8b/0x1b0 [r8723bs]
+[   65.207939]  netdev_open+0x45/0x70 [r8723bs]
+[   65.208030]  __dev_open+0xd4/0x1a0
+[   65.208047]  __dev_change_flags+0x1cb/0x240
+[   65.208066]  dev_change_flags+0x21/0x60
+[   65.208081]  do_setlink+0x251/0x10b0
+[   65.208096]  ? __snmp6_fill_stats64.constprop.0+0x53/0xe0
+[   65.208113]  ? __lock_acquire+0x382/0x1e10
+[   65.208126]  ? __nla_validate_parse+0x4f/0xb20
+[   65.208150]  __rtnl_newlink+0x60c/0x980
+[   65.208201]  ? lock_acquire+0x116/0x370
+[   65.208226]  ? sock_def_readable+0x5/0x2a0
+[   65.208256]  ? find_held_lock+0x2b/0x80
+[   65.208283]  ? sock_def_readable+0xb0/0x2a0
+[   65.208315]  ? netlink_unicast+0x1f7/0x230
+[   65.208348]  ? trace_event_raw_event_lock_acquire+0x100/0x100
+[   65.208371]  ? __bfs+0xe0/0x210
+[   65.208445]  ? rcu_read_lock_sched_held+0x3f/0x80
+[   65.208457]  ? kmem_cache_alloc_trace+0x292/0x2c0
+[   65.208473]  rtnl_newlink+0x44/0x70
+[   65.208488]  rtnetlink_rcv_msg+0x16e/0x480
+[   65.208502]  ? netlink_deliver_tap+0x95/0x3e0
+[   65.208519]  ? rtnetlink_put_metrics+0x1c0/0x1c0
+[   65.208533]  netlink_rcv_skb+0x50/0xf0
+[   65.208553]  netlink_unicast+0x16d/0x230
+[   65.208569]  netlink_sendmsg+0x23f/0x460
+[   65.208589]  sock_sendmsg+0x5e/0x60
+[   65.208605]  ____sys_sendmsg+0x231/0x270
+[   65.208620]  ? import_iovec+0x17/0x20
+[   65.208633]  ? sendmsg_copy_msghdr+0x5c/0x80
+[   65.208649]  ___sys_sendmsg+0x75/0xb0
+[   65.208670]  ? find_held_lock+0x2b/0x80
+[   65.208683]  ? __fget_files+0xd0/0x1a0
+[   65.208700]  ? __fget_files+0xef/0x1a0
+[   65.208715]  __sys_sendmsg+0x49/0x80
+[   65.208744]  ? syscall_enter_from_user_mode+0x27/0x80
+[   65.208776]  do_syscall_64+0x33/0x40
+[   65.208808]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[   65.208836] RIP: 0033:0x7f846e33b80d
+[   65.208865] Code: 28 89 54 24 1c 48 89 74 24 10 89 7c 24 08 e8 ea ec ff ff 8b 54 24 1c 48 8b 74 24 10 41 89 c0 8b 7c 24 08 b8 2e 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 2f 44 89 c7 48 89 44 24 08 e8 1e ed ff ff 48
+[   65.208890] RSP: 002b:00007ffd17e602d0 EFLAGS: 00000293 ORIG_RAX: 000000000000002e
+[   65.208920] RAX: ffffffffffffffda RBX: 000055fa8da219c0 RCX: 00007f846e33b80d
+[   65.208939] RDX: 0000000000000000 RSI: 00007ffd17e60320 RDI: 000000000000000d
+[   65.208957] RBP: 00007ffd17e60320 R08: 0000000000000000 R09: 0000000000000000
+[   65.208974] R10: 0000000000000000 R11: 0000000000000293 R12: 000055fa8da219c0
+[   65.208992] R13: 00007ffd17e604d8 R14: 00007ffd17e604cc R15: 0000000000000000
+
+Upon a quick check I could not figure out the exact cause of this so
+I'm going to drop the "cfg80211: Save the regulatory domain with a lock"
+patch from my local kernels for now.
+
+Note we really should fix this new deadlock before 5.11 is released. This is
+worse then the RCU warning which this patch fixes.
+
+Regards,
+
+Hans
+
+
+
+
+
+> Fixes: beee24695157 ("cfg80211: Save the regulatory domain when setting custom regulatory")
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+>  net/wireless/reg.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index bb72447ad960..8114bba8556c 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -5,7 +5,7 @@
+>   * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>   * Copyright 2013-2014  Intel Mobile Communications GmbH
+>   * Copyright      2017  Intel Deutschland GmbH
+> - * Copyright (C) 2018 - 2019 Intel Corporation
+> + * Copyright (C) 2018 - 2021 Intel Corporation
+>   *
+>   * Permission to use, copy, modify, and/or distribute this software for any
+>   * purpose with or without fee is hereby granted, provided that the above
+> @@ -139,6 +139,11 @@ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+>  	return rcu_dereference_rtnl(cfg80211_regdomain);
+>  }
+>  
+> +/*
+> + * Returns the regulatory domain associated with the wiphy.
+> + *
+> + * Requires either RTNL or RCU protection
+> + */
+>  const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
+>  {
+>  	return rcu_dereference_rtnl(wiphy->regd);
+> @@ -2571,9 +2576,13 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+>  	if (IS_ERR(new_regd))
+>  		return;
+>  
+> +	rtnl_lock();
+> +
+>  	tmp = get_wiphy_regdom(wiphy);
+>  	rcu_assign_pointer(wiphy->regd, new_regd);
+>  	rcu_free_regdom(tmp);
+> +
+> +	rtnl_unlock();
+>  }
+>  EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
+>  
+> 
 
