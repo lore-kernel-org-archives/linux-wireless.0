@@ -2,130 +2,116 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49DE9C433E0
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 10:56:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A3DDC433DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18829227BF
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 10:56:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F37522CA1
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726657AbhAXK4V (ORCPT
+        id S1726778AbhAXM3A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jan 2021 05:56:21 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30157 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726551AbhAXK4N (ORCPT
+        Sun, 24 Jan 2021 07:29:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49938 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726770AbhAXM26 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jan 2021 05:56:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611485684;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Jg/MMD3ppMA2CP0HbF4fNM0hbiIyr6unKvNIY/Ca9CQ=;
-        b=gLUuA1EWCRKqhYgXLAuMDPbOyoHPqwZxOoSmE7qA89vswt2vhE5VAazfH4yBtGIcpb3GKv
-        ju8xG1dDaRlkzZD+gkh8c/sSlucGdLefIHDk61tpPhGqIjIqAqOZd7p9/4ejyK2kuL8bhd
-        9ajdlBivUOGj0F7OOmssG8lVKIerpyU=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-221-n3XEsPGZPoaYGXVqT9YKRw-1; Sun, 24 Jan 2021 05:54:42 -0500
-X-MC-Unique: n3XEsPGZPoaYGXVqT9YKRw-1
-Received: by mail-ed1-f71.google.com with SMTP id 32so5660191edy.22
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2021 02:54:41 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Jg/MMD3ppMA2CP0HbF4fNM0hbiIyr6unKvNIY/Ca9CQ=;
-        b=IjsbdzSereNOP3x+S6Dgvf5dLCiiypNJUoXpVkbh1D8Aj6Jkxxr+tfaQzViuT4dUFi
-         46Q6vPWGvW78qwcLjBBhwnSaPJntwCK8n7ls6XTG6qEF4AeEGFwzznPo33O2uvH+4zmy
-         5+qK7Gd6e0qjg31BX4FO/bxJgUg/M45gXfrCYzc3IgM6DZKt4jyw0SZpySi1EAWdZjOX
-         BTuXax/OyFjK3rtZXcglgYXgC+Fbi//ivQbG+hZF2nzRdzm7/ZAP28UERsYJVzBDCQFS
-         kWx0Y9lGMi/G0E6wPLA4ZSFOYNRqjRzFH15AQZuxx9WMjFEPlYOx9zdzJ61QiUOaSRwu
-         zbpQ==
-X-Gm-Message-State: AOAM5338AMbSfr3trTf4aPm6ww8CiTYFBB7Rxu6zyGwh54IsBhnZxBqQ
-        Q3+MWDKxW0FBbhePVD7dO2rUMoGL1Gr6FElLgOGDVqgnOkQMLGqOz80kekVuOr5zqF1RauVEcW5
-        krccZ1TSZk3TLK3bQXlDAgwtKNMk=
-X-Received: by 2002:a50:da8b:: with SMTP id q11mr1101121edj.352.1611485680990;
-        Sun, 24 Jan 2021 02:54:40 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJycbey/UfEsjUZwK5k6NM43pHiIsZqqRSRgdZMmaBNuDVE2tKEnXnD+E9KsLLan3Pkf0XmrCA==
-X-Received: by 2002:a50:da8b:: with SMTP id q11mr1101112edj.352.1611485680822;
-        Sun, 24 Jan 2021 02:54:40 -0800 (PST)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-37a3-353b-be90-1238.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:37a3:353b:be90:1238])
-        by smtp.gmail.com with ESMTPSA id e22sm6869120ejd.79.2021.01.24.02.54.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 24 Jan 2021 02:54:40 -0800 (PST)
-Subject: Re: pull-request: mac80211 2021-01-18.2
-To:     "Peer, Ilan" <ilan.peer@intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-References: <20210118204750.7243-1-johannes@sipsolutions.net>
- <77c606d4-a78a-1fa3-5937-b270c3d0bbd3@redhat.com>
- <b83f6cf001c4e3df97eeaed710b34fda0a08265f.camel@sipsolutions.net>
- <BN7PR11MB2610052E380E676ED5CCCC67E9BE9@BN7PR11MB2610.namprd11.prod.outlook.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <348210d8-6940-ca8d-e3b1-f049330a2087@redhat.com>
-Date:   Sun, 24 Jan 2021 11:54:39 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        Sun, 24 Jan 2021 07:28:58 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CE5FC06174A
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2021 04:28:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Rhdyx+++s9e/tLuSCn+4XCNIV51DY4us6cXiMH6QLkI=; b=Bk97AcFB7HEn+gpykFVSEpk+tA
+        HhUu7dlE3f2pJ70guDpAfdepYKyRanblBYndTXjI7+WJBN+p4iioz9/ZchAG4jWrP2qK+/UhUkuvK
+        4Q4ILG6XeXoZvAT3TLMwyhls5Ka6NoY3CV28uSiVtFEoyDXGSTMXp5nZAO8EPcWN4Vi8=;
+Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l3eV4-00074g-Kz; Sun, 24 Jan 2021 13:28:14 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5/6] mac80211: minstrel_ht: show sampling rates in debugfs
+Date:   Sun, 24 Jan 2021 13:28:11 +0100
+Message-Id: <20210124122812.49929-5-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210124122812.49929-1-nbd@nbd.name>
+References: <20210124122812.49929-1-nbd@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <BN7PR11MB2610052E380E676ED5CCCC67E9BE9@BN7PR11MB2610.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+This makes it easier to see what rates are going to be tested next
 
-On 1/24/21 10:12 AM, Peer, Ilan wrote:
->> -----Original Message-----
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Sent: Sunday, January 24, 2021 00:16
->> To: Hans de Goede <hdegoede@redhat.com>; netdev@vger.kernel.org
->> Cc: linux-wireless@vger.kernel.org; Peer, Ilan <ilan.peer@intel.com>;
->> Coelho, Luciano <luciano.coelho@intel.com>
->> Subject: Re: pull-request: mac80211 2021-01-18.2
->>
->> On Sat, 2021-01-23 at 22:31 +0100, Hans de Goede wrote:
->>>
->>> So I'm afraid that I have some bad news about this patch, it fixes the
->>> RCU warning which I reported:
->>>
->>> https://lore.kernel.org/linux-wireless/20210104170713.66956-1-hdegoede
->>> @redhat.com/
->>>
->>> But it introduces a deadlock. See:
->>>
->>> https://lore.kernel.org/linux-wireless/d839ab62-e4bc-56f0-d861-f172bf1
->>> 9c4b3@redhat.com/
->>>
->>> for details. Note we really should fix this new deadlock before 5.11
->>> is released. This is worse then the RCU warning which this patch fixes.
->>
->> Ouch. Thanks for the heads-up. I guess I'll revert both patches for now,
->> unless we can quickly figure out a way to get all these paths in order.
->>
-> 
-> Thanks Hans and Johannes for handling this. I'll try to come up with a solution.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-Great, thank you for looking into this. Let me know if you have a patch
-which you want me to test on a RTL8723BS adapter.
-
-One thing which I forgot to mention earlier, it is not just lockdep complaining
-this appears to be a real deadlock, the wifi no longer functions, where
-as it does function with the patch drops.
-
-Regards,
-
-Hans
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 067d10383fa7..07aa877652a4 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -32,6 +32,18 @@ minstrel_stats_release(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static bool
++minstrel_ht_is_sample_rate(struct minstrel_ht_sta *mi, int idx)
++{
++	int type, i;
++
++	for (type = 0; type < ARRAY_SIZE(mi->sample); type++)
++		for (i = 0; i < MINSTREL_SAMPLE_RATES; i++)
++			if (mi->sample[type].cur_sample_rates[i] == idx)
++				return true;
++	return false;
++}
++
+ static char *
+ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ {
+@@ -84,6 +96,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		*(p++) = (idx == mi->max_tp_rate[2]) ? 'C' : ' ';
+ 		*(p++) = (idx == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
++		*(p++) = minstrel_ht_is_sample_rate(mi, idx) ? 'S' : ' ';
+ 
+ 		if (gflags & IEEE80211_TX_RC_MCS) {
+ 			p += sprintf(p, "  MCS%-2u", (mg->streams - 1) * 8 + j);
+@@ -145,9 +158,9 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p,
+-		     "              best   ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
++		     "              best    ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
+ 	p += sprintf(p,
+-		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
++		     "mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
+ 
+ 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
+ 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
+@@ -228,6 +241,8 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[2]) ? "C" : ""));
+ 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[3]) ? "D" : ""));
+ 		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
++		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
++		p += sprintf(p, "%s", (minstrel_ht_is_sample_rate(mi, idx) ? "S" : ""));
+ 
+ 		if (gflags & IEEE80211_TX_RC_MCS) {
+ 			p += sprintf(p, ",MCS%-2u,", (mg->streams - 1) * 8 + j);
+-- 
+2.28.0
 
