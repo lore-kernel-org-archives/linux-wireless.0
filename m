@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A3DDC433DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE01AC433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F37522CA1
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4FB822CA2
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726778AbhAXM3A (ORCPT
+        id S1726811AbhAXM3E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jan 2021 07:29:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49938 "EHLO
+        Sun, 24 Jan 2021 07:29:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726770AbhAXM26 (ORCPT
+        with ESMTP id S1726530AbhAXM26 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 24 Jan 2021 07:28:58 -0500
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CE5FC06174A
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E09C061574
         for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2021 04:28:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -30,20 +30,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=Rhdyx+++s9e/tLuSCn+4XCNIV51DY4us6cXiMH6QLkI=; b=Bk97AcFB7HEn+gpykFVSEpk+tA
-        HhUu7dlE3f2pJ70guDpAfdepYKyRanblBYndTXjI7+WJBN+p4iioz9/ZchAG4jWrP2qK+/UhUkuvK
-        4Q4ILG6XeXoZvAT3TLMwyhls5Ka6NoY3CV28uSiVtFEoyDXGSTMXp5nZAO8EPcWN4Vi8=;
+        bh=VEQzgM3AI4cc/JK4D7EIuR2iFs3zfdqNXJtHjnCv2g8=; b=DzWCSv2UVwh8brB40wKncrZn+G
+        65+fR62P5n7j/azRCxeBK5OJxlfeTscAtipnp2dOH7haX6tcV7zCu6DbYCmEu5xFpcJ3fjo4kKy17
+        oAuRw8IzKgEPpZKN3ZcT398hNhO18Ukh1ZajlLBF+QQpDt7v6imQuy+wXhQEfyZ4ypXY=;
 Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1l3eV4-00074g-Kz; Sun, 24 Jan 2021 13:28:14 +0100
+        id 1l3eV4-00074g-0d; Sun, 24 Jan 2021 13:28:14 +0100
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5/6] mac80211: minstrel_ht: show sampling rates in debugfs
-Date:   Sun, 24 Jan 2021 13:28:11 +0100
-Message-Id: <20210124122812.49929-5-nbd@nbd.name>
+Subject: [PATCH 2/6] mac80211: minstrel_ht: update total packets counter in tx status path
+Date:   Sun, 24 Jan 2021 13:28:08 +0100
+Message-Id: <20210124122812.49929-2-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210124122812.49929-1-nbd@nbd.name>
 References: <20210124122812.49929-1-nbd@nbd.name>
@@ -53,65 +53,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This makes it easier to see what rates are going to be tested next
+Keep the update in one place and prepare for further rework
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 067d10383fa7..07aa877652a4 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -32,6 +32,18 @@ minstrel_stats_release(struct inode *inode, struct file *file)
- 	return 0;
- }
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a3b86fd300f0..2ef748ca5355 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1093,6 +1093,16 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		info->status.ampdu_len = 1;
+ 	}
  
-+static bool
-+minstrel_ht_is_sample_rate(struct minstrel_ht_sta *mi, int idx)
-+{
-+	int type, i;
++	/* wraparound */
++	if (mi->total_packets >= ~0 - info->status.ampdu_len) {
++		mi->total_packets = 0;
++		mi->sample_packets = 0;
++	}
 +
-+	for (type = 0; type < ARRAY_SIZE(mi->sample); type++)
-+		for (i = 0; i < MINSTREL_SAMPLE_RATES; i++)
-+			if (mi->sample[type].cur_sample_rates[i] == idx)
-+				return true;
-+	return false;
-+}
++	mi->total_packets += info->status.ampdu_len;
++	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
++		mi->sample_packets += info->status.ampdu_len;
 +
- static char *
- minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
-@@ -84,6 +96,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		*(p++) = (idx == mi->max_tp_rate[2]) ? 'C' : ' ';
- 		*(p++) = (idx == mi->max_tp_rate[3]) ? 'D' : ' ';
- 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
-+		*(p++) = minstrel_ht_is_sample_rate(mi, idx) ? 'S' : ' ';
+ 	mi->ampdu_packets++;
+ 	mi->ampdu_len += info->status.ampdu_len;
  
- 		if (gflags & IEEE80211_TX_RC_MCS) {
- 			p += sprintf(p, "  MCS%-2u", (mg->streams - 1) * 8 + j);
-@@ -145,9 +158,9 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+@@ -1104,9 +1114,6 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		mi->sample_count--;
+ 	}
  
- 	p += sprintf(p, "\n");
- 	p += sprintf(p,
--		     "              best   ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
-+		     "              best    ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
- 	p += sprintf(p,
--		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
-+		     "mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
+-	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
+-		mi->sample_packets += info->status.ampdu_len;
+-
+ 	if (mi->sample_mode != MINSTREL_SAMPLE_IDLE)
+ 		rate_sample = minstrel_get_ratestats(mi, mi->sample_rate);
  
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
-@@ -228,6 +241,8 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[2]) ? "C" : ""));
- 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[3]) ? "D" : ""));
- 		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
-+		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
-+		p += sprintf(p, "%s", (minstrel_ht_is_sample_rate(mi, idx) ? "S" : ""));
+@@ -1504,14 +1511,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	else
+ 		sample_idx = minstrel_get_sample_rate(mp, mi);
  
- 		if (gflags & IEEE80211_TX_RC_MCS) {
- 			p += sprintf(p, ",MCS%-2u,", (mg->streams - 1) * 8 + j);
+-	mi->total_packets++;
+-
+-	/* wraparound */
+-	if (mi->total_packets == ~0) {
+-		mi->total_packets = 0;
+-		mi->sample_packets = 0;
+-	}
+-
+ 	if (sample_idx < 0)
+ 		return;
+ 
 -- 
 2.28.0
 
