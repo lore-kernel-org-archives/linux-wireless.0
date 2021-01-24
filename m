@@ -2,466 +2,159 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2269C433E0
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E7DC433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 13:04:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AD0522CA1
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 12:29:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D9C522D0A
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 13:04:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726840AbhAXM35 (ORCPT
+        id S1726614AbhAXNEW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jan 2021 07:29:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726849AbhAXM3t (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jan 2021 07:29:49 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19FFEC0613D6
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2021 04:28:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=st6mhoktKdBTN7G53P2hNJaWeZ1o69Owq4eYKt/lEAc=; b=Hfx4ppDciZuJgwqaDOQsEhVcM+
-        AuE8N6e43AzxnNqbFUENCJIQKLOiHY+XUfTHrn9ze+M8Gz0SbxW7BkcWTMKvAH4n1DsssdjjZEGMF
-        G5ClVH07h3l5F9A4K0hylyiiyEMw+55QEVWNPwGbCdAVaP9AIwZ5s/u/NPahJktNeQVE=;
-Received: from p54ae91f2.dip0.t-ipconnect.de ([84.174.145.242] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1l3eV3-00074g-Ol; Sun, 24 Jan 2021 13:28:13 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH 1/6] mac80211: minstrel_ht: use bitfields to encode rate indexes
-Date:   Sun, 24 Jan 2021 13:28:07 +0100
-Message-Id: <20210124122812.49929-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
+        Sun, 24 Jan 2021 08:04:22 -0500
+Received: from mga18.intel.com ([134.134.136.126]:11844 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726552AbhAXNEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Jan 2021 08:04:20 -0500
+IronPort-SDR: klLPmI9s35C80VMjzBzu0H+2v7ONDOyNFk+UeQg6YbE1GwvVRhSMewBtZmyn5U7gucqUS9BpAJ
+ UmmkACqhG1cw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9873"; a="167293347"
+X-IronPort-AV: E=Sophos;i="5.79,371,1602572400"; 
+   d="scan'208";a="167293347"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2021 05:03:32 -0800
+IronPort-SDR: I6RzbbqxDnYqF9RbfWRzve0x/s2sooN64tj39+OUEm1Y6f1mHwVqPo7bOwCHqFVOzOhmkBOrw8
+ X6uoh0mA24Rg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,371,1602572400"; 
+   d="scan'208";a="408957272"
+Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
+  by FMSMGA003.fm.intel.com with ESMTP; 24 Jan 2021 05:03:30 -0800
+Received: from orsmsx603.amr.corp.intel.com (10.22.229.16) by
+ ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Sun, 24 Jan 2021 05:03:30 -0800
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
+ via Frontend Transport; Sun, 24 Jan 2021 05:03:30 -0800
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.176)
+ by edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.1713.5; Sun, 24 Jan 2021 05:03:30 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nlphE1kR3zjjCWItqrbevz50eFWavFsfWrhY3M5bWn6MtCgoc62N8DqXZinyEnmAVpcCRAoObNlKB3OMbgHhi60mbbGaUPtBVwmuvs5dipsbKuWyX1cGfU8m+wOyRq78k2lOesEBIKXhjbrMZ1yYH2rEQVgLMp1cK3QhGGjwO03BGQS3vdqGcNNZ5OAACHaNx8O6oJynvc20iQZSAXJpwIJ8G7426zq3bR06IiUVlRgV5RWH8x7NRtM2a1wfWQZQHn8+cTisU7toKpIOturbT4WlVSHysYEMNrzg7LnqHpTp+pxcriHDSMuFTtdkawMTet1PeFnV5D/feDufJCg5ug==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ssVWcgDtSDHi0sktOMckuqROMAOSfRFCdAmBl8tTg3Q=;
+ b=dITilvf0MBuR5sovXi6SbPEf+XF1kjg/MUTRRm8MLly5NYCT7ftPM39uUGLdnVlQqJdZmzKFg5rY+fkdp52AN0GF+gFyj0O0mq2wfnSCVKpjGbYs+Yu8H8oWPi2nLdf2aZTOLqcoUB7m4PmfOtQkRdhUAsF/l0uMYIbFCgGCjJvwt0GEi1u6a4Z5tCCfPFKjHAE5EwF1V4TtweDMrLJjvAecAm2Thi5t7b5M0XkZVT/9L+6dfaJZqBT7t3GQgrV6prCk+OZ0QlSVdiaiXjc7IwVkVWddqrupc/eo6Xl+Q6vFCXkUug1rZLAczBoPB6G9Fzaq3L3jnGEWz9fvxkCBPg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ssVWcgDtSDHi0sktOMckuqROMAOSfRFCdAmBl8tTg3Q=;
+ b=YZcuKrE7eDoUk/v2qAalEtEk5x6mdhsFHOlgA/jyEpWH+M/t2mWBEC7Jh9e2ueaks65mxBObpsRoF2cXxBirHFctasIlSke8p4GhmG65FhRHfpSg60CscQxmCD0PIM6wbHrLGh1Mm/ZFr6Qw8l+2rmTw/+PPaNxpQeRim6PSFCE=
+Received: from BYAPR11MB2613.namprd11.prod.outlook.com (2603:10b6:a02:cd::13)
+ by SJ0PR11MB5133.namprd11.prod.outlook.com (2603:10b6:a03:2ac::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Sun, 24 Jan
+ 2021 13:03:28 +0000
+Received: from BYAPR11MB2613.namprd11.prod.outlook.com
+ ([fe80::50c9:21df:2663:6d10]) by BYAPR11MB2613.namprd11.prod.outlook.com
+ ([fe80::50c9:21df:2663:6d10%4]) with mapi id 15.20.3784.016; Sun, 24 Jan 2021
+ 13:03:28 +0000
+From:   "Peer, Ilan" <ilan.peer@intel.com>
+To:     Hans de Goede <hdegoede@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: RE: pull-request: mac80211 2021-01-18.2
+Thread-Topic: pull-request: mac80211 2021-01-18.2
+Thread-Index: AQHW8c8jkBQz+k7MdUGDMkmFqxx046o1xv4AgAC3TTCAABy2gIAAIuEA
+Date:   Sun, 24 Jan 2021 13:03:28 +0000
+Message-ID: <BYAPR11MB2613A16DAF4DAC8A21643E4DE9BE9@BYAPR11MB2613.namprd11.prod.outlook.com>
+References: <20210118204750.7243-1-johannes@sipsolutions.net>
+ <77c606d4-a78a-1fa3-5937-b270c3d0bbd3@redhat.com>
+ <b83f6cf001c4e3df97eeaed710b34fda0a08265f.camel@sipsolutions.net>
+ <BN7PR11MB2610052E380E676ED5CCCC67E9BE9@BN7PR11MB2610.namprd11.prod.outlook.com>
+ <348210d8-6940-ca8d-e3b1-f049330a2087@redhat.com>
+In-Reply-To: <348210d8-6940-ca8d-e3b1-f049330a2087@redhat.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+authentication-results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=intel.com;
+x-originating-ip: [147.236.145.30]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 10e7f17f-d612-4d20-58e4-08d8c0687172
+x-ms-traffictypediagnostic: SJ0PR11MB5133:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SJ0PR11MB5133ABF8F88F06B157EA5B63E9BE9@SJ0PR11MB5133.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: zladO18UJCBfFTFiE7apUIsIBQ5sJtvMa52PDv2YClr+D8kaK59zoe/flOR/WN4JeEx6TT0dMO51j0J45D7KiOo5RbIyAuOUNI6uhRJBmDHgEmlpR/CU1Rm5Ht5+HZ/ta07Gd42+apE+I6euxzPhQeM9LuDoI8KMrOqCBJJBM5EdutpSzG6JVMZxNxYUXZ1OxBvt/4HOuRB7oRq7RSPpMagsrAJiVIPSaomNegJNXX0NLT79JrbtLO6jPi/es7bo7jHXWiYIp8TDZx0kLLuwRR8cQQ8vIY7XLAYk5/xabSR7OovAb2HWLSaHEnxKUtRdCvxqsbz0dEDuXxSIk0kq0pPgxjjSY3Z8pLfpqirHqtsVbGpfr470LZfUCzaxu7vj/sgZyAUHtn39uiKTfkXtgQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR11MB2613.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(396003)(376002)(136003)(346002)(66946007)(64756008)(66556008)(7696005)(66446008)(66476007)(4326008)(110136005)(26005)(8936002)(478600001)(107886003)(2906002)(9686003)(6506007)(76116006)(186003)(71200400001)(8676002)(52536014)(33656002)(55016002)(4744005)(86362001)(83380400001)(316002)(5660300002)(54906003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?N2pYWlVRdHJNbEdwdWdQSU1pWkEwRjQ3ZGt1dDEwVDVKZUhFMTMrVUh3bUVP?=
+ =?utf-8?B?TE45dXM1YXd0NWRrSy9LYkdnNlpPTVBobzEvZEkzbU5HaGoybUl5U2grVXJi?=
+ =?utf-8?B?WWJGcllOR092MjlTQ2ZBc1M4dHVyakFvbXBFZmRLYldiMGJhQ2ZBa2ptbHFj?=
+ =?utf-8?B?NmhnalhwY25jTkpkR0U2Q0ZjZ0cyZjBtQjhsRUg5S1RtOEw4SEFzMnBlZXNV?=
+ =?utf-8?B?OVpPQkluNGdyUFgwREVyM2FnREhFNnJqM3VHSnh3UFdILzJoK2FvQVpVSWJs?=
+ =?utf-8?B?MnNiV0FmWE1FS1BsNTlaUFNzWFlKWGQwTjZwbmlZbnRlVGNUYWpHWXgweFNP?=
+ =?utf-8?B?Z1J0T1hSeXpQMWcyTUt5V1NnWklXdndtUWllZlZlVjB4S0R3cWFlZDQyQStW?=
+ =?utf-8?B?cnJlTVJZaUY5bENUbzBqbnpMMFJNcStaamhneWVVVElGNWVsdnVqa25qWFc3?=
+ =?utf-8?B?cmRRZm9yTWNCWjMxblBjOHgwTkxrZUp0c05FTVhlc1NUN0s4WS9VWkI2R0M1?=
+ =?utf-8?B?US9qMCtVL3I0ZTZJMitSTkNTbDhnVTV3cG54RENrOEV4RTNJRDlxeEpvT3Fk?=
+ =?utf-8?B?OEVMcUtLdVNiQnBUUTVqRllXbkpRbElIUEdqa0xOcGdaQmpYS3BlVFp6SFM5?=
+ =?utf-8?B?YUYrNUlhalN2YWRHRlNhQzZQcXBNTGtLdlk0TURFeG5xV2VLTUpOelZCMEN2?=
+ =?utf-8?B?N21GaWJCR1IyR2hOUnZ1OTV1QklTeEZrMUpDWlZBS3l4YzluTEhoamUzTjJk?=
+ =?utf-8?B?QkxDWUdXZXlzUnd0cG5DQnRtMzFZSTRnZ0JQUTBxV1gwaDBKZDlpU01YK1lw?=
+ =?utf-8?B?QTUwanJYSk9XKzFTWFczQW9pRUl3dzZjNjJXeXhaa0FDajFwMmJVVy8rN0RR?=
+ =?utf-8?B?dkZ3ZmdKeXlnSjZnMGxNMVAzQ0VMMnBKdVY3Q1lRZmNWOTQ3RDEyZEpIWlVI?=
+ =?utf-8?B?Wk44cW1tNGhVKzhRK1ZsazIxajNKUS9wYmZiclFkZnVUeDlvTDhPamJSWDgz?=
+ =?utf-8?B?d1hCeHlVRGdiaElibjRBMmdNTjI3MUJFWitockNFQ0ZMeFd4UXBxQy9JYjli?=
+ =?utf-8?B?SHZZVFVlOFM4VFNvUW5uZkU2SUJIOTAwQmpGbG16RVlYTUNaS1hTSENMSWhh?=
+ =?utf-8?B?SmpBWnczNzhxY3Z5VnlyWkgwWkxJeFA1WmxGbzJQZWV2dlhidlFUaUVEUW00?=
+ =?utf-8?B?TzZ2NDltRC9tbHhXRVUrVGUyM28xSGVCQk9LdUVqdUl1TGdSMTBGVFB4bkRB?=
+ =?utf-8?B?ci9vaG92dFNsSllNQnJPbStVdldUcTBna0RMdzRiRlZCK0hYTzFMTXVpZ2k1?=
+ =?utf-8?Q?KLPYV0a8YZak0=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR11MB2613.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 10e7f17f-d612-4d20-58e4-08d8c0687172
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Jan 2021 13:03:28.3857
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 2FhqeWsS5kAhJ5B5du+P5FYxyxav15VQ9gGQFNFGUZ+hJyfrylpS5vlLz2aXeydcAna6sCWBVyowIivEdBRPxQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5133
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Get rid of a lot of divisions and modulo operations
-Reduces code size and improves performance
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rc80211_minstrel_ht.c         | 123 +++++++++++----------
- net/mac80211/rc80211_minstrel_ht.h         |  13 +++
- net/mac80211/rc80211_minstrel_ht_debugfs.c |   4 +-
- 3 files changed, 78 insertions(+), 62 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index e35948f4e1bf..a3b86fd300f0 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -379,13 +379,13 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- static inline struct minstrel_rate_stats *
- minstrel_get_ratestats(struct minstrel_ht_sta *mi, int index)
- {
--	return &mi->groups[index / MCS_GROUP_RATES].rates[index % MCS_GROUP_RATES];
-+	return &mi->groups[MI_RATE_GROUP(index)].rates[MI_RATE_IDX(index)];
- }
- 
- static inline int minstrel_get_duration(int index)
- {
--	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
--	unsigned int duration = group->duration[index % MCS_GROUP_RATES];
-+	const struct mcs_group *group = &minstrel_mcs_groups[MI_RATE_GROUP(index)];
-+	unsigned int duration = group->duration[MI_RATE_IDX(index)];
- 
- 	return duration << group->shift;
- }
-@@ -398,7 +398,7 @@ minstrel_ht_avg_ampdu_len(struct minstrel_ht_sta *mi)
- 	if (mi->avg_ampdu_len)
- 		return MINSTREL_TRUNC(mi->avg_ampdu_len);
- 
--	if (minstrel_ht_is_legacy_group(mi->max_tp_rate[0] / MCS_GROUP_RATES))
-+	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_tp_rate[0])))
- 		return 1;
- 
- 	duration = minstrel_get_duration(mi->max_tp_rate[0]);
-@@ -465,14 +465,14 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
- 	int tmp_group, tmp_idx, tmp_tp_avg, tmp_prob;
- 	int j = MAX_THR_RATES;
- 
--	cur_group = index / MCS_GROUP_RATES;
--	cur_idx = index  % MCS_GROUP_RATES;
-+	cur_group = MI_RATE_GROUP(index);
-+	cur_idx = MI_RATE_IDX(index);
- 	cur_prob = mi->groups[cur_group].rates[cur_idx].prob_avg;
- 	cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx, cur_prob);
- 
- 	do {
--		tmp_group = tp_list[j - 1] / MCS_GROUP_RATES;
--		tmp_idx = tp_list[j - 1] % MCS_GROUP_RATES;
-+		tmp_group = MI_RATE_GROUP(tp_list[j - 1]);
-+		tmp_idx = MI_RATE_IDX(tp_list[j - 1]);
- 		tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
- 		tmp_tp_avg = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx,
- 						    tmp_prob);
-@@ -504,23 +504,23 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
- 	int max_gpr_group, max_gpr_idx;
- 	int max_gpr_tp_avg, max_gpr_prob;
- 
--	cur_group = index / MCS_GROUP_RATES;
--	cur_idx = index % MCS_GROUP_RATES;
--	mg = &mi->groups[index / MCS_GROUP_RATES];
--	mrs = &mg->rates[index % MCS_GROUP_RATES];
-+	cur_group = MI_RATE_GROUP(index);
-+	cur_idx = MI_RATE_IDX(index);
-+	mg = &mi->groups[cur_group];
-+	mrs = &mg->rates[cur_idx];
- 
--	tmp_group = *dest / MCS_GROUP_RATES;
--	tmp_idx = *dest % MCS_GROUP_RATES;
-+	tmp_group = MI_RATE_GROUP(*dest);
-+	tmp_idx = MI_RATE_IDX(*dest);
- 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
- 	tmp_tp_avg = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
- 
- 	/* if max_tp_rate[0] is from MCS_GROUP max_prob_rate get selected from
- 	 * MCS_GROUP as well as CCK_GROUP rates do not allow aggregation */
--	max_tp_group = mi->max_tp_rate[0] / MCS_GROUP_RATES;
--	max_tp_idx = mi->max_tp_rate[0] % MCS_GROUP_RATES;
-+	max_tp_group = MI_RATE_GROUP(mi->max_tp_rate[0]);
-+	max_tp_idx = MI_RATE_IDX(mi->max_tp_rate[0]);
- 	max_tp_prob = mi->groups[max_tp_group].rates[max_tp_idx].prob_avg;
- 
--	if (minstrel_ht_is_legacy_group(index / MCS_GROUP_RATES) &&
-+	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(index)) &&
- 	    !minstrel_ht_is_legacy_group(max_tp_group))
- 		return;
- 
-@@ -529,8 +529,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
- 	    mrs->prob_avg < max_tp_prob)
- 		return;
- 
--	max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
--	max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-+	max_gpr_group = MI_RATE_GROUP(mg->max_group_prob_rate);
-+	max_gpr_idx = MI_RATE_IDX(mg->max_group_prob_rate);
- 	max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_avg;
- 
- 	if (mrs->prob_avg > MINSTREL_FRAC(75, 100)) {
-@@ -567,13 +567,13 @@ minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
- 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp, tmp_prob;
- 	int i;
- 
--	tmp_group = tmp_legacy_tp_rate[0] / MCS_GROUP_RATES;
--	tmp_idx = tmp_legacy_tp_rate[0] % MCS_GROUP_RATES;
-+	tmp_group = MI_RATE_GROUP(tmp_legacy_tp_rate[0]);
-+	tmp_idx = MI_RATE_IDX(tmp_legacy_tp_rate[0]);
- 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
- 	tmp_cck_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
- 
--	tmp_group = tmp_mcs_tp_rate[0] / MCS_GROUP_RATES;
--	tmp_idx = tmp_mcs_tp_rate[0] % MCS_GROUP_RATES;
-+	tmp_group = MI_RATE_GROUP(tmp_mcs_tp_rate[0]);
-+	tmp_idx = MI_RATE_IDX(tmp_mcs_tp_rate[0]);
- 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
- 	tmp_mcs_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
- 
-@@ -600,14 +600,14 @@ minstrel_ht_prob_rate_reduce_streams(struct minstrel_ht_sta *mi)
- 	if (!mi->sta->ht_cap.ht_supported)
- 		return;
- 
--	tmp_max_streams = minstrel_mcs_groups[mi->max_tp_rate[0] /
--			  MCS_GROUP_RATES].streams;
-+	group = MI_RATE_GROUP(mi->max_tp_rate[0]);
-+	tmp_max_streams = minstrel_mcs_groups[group].streams;
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
- 		mg = &mi->groups[group];
- 		if (!mi->supported[group] || group == MINSTREL_CCK_GROUP)
- 			continue;
- 
--		tmp_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-+		tmp_idx = MI_RATE_IDX(mg->max_group_prob_rate);
- 		tmp_prob = mi->groups[group].rates[tmp_idx].prob_avg;
- 
- 		if (tmp_tp < minstrel_ht_get_tp_avg(mi, group, tmp_idx, tmp_prob) &&
-@@ -644,8 +644,8 @@ minstrel_ht_find_probe_rates(struct minstrel_ht_sta *mi, u16 *rates, int *n_rate
- 	int i, g, max_dur;
- 	int tp_idx;
- 
--	tp_group = &minstrel_mcs_groups[mi->max_tp_rate[0] / MCS_GROUP_RATES];
--	tp_idx = mi->max_tp_rate[0] % MCS_GROUP_RATES;
-+	tp_group = &minstrel_mcs_groups[MI_RATE_GROUP(mi->max_tp_rate[0])];
-+	tp_idx = MI_RATE_IDX(mi->max_tp_rate[0]);
- 
- 	max_dur = minstrel_get_duration(mi->max_tp_rate[0]);
- 	if (faster_rate)
-@@ -670,7 +670,7 @@ minstrel_ht_find_probe_rates(struct minstrel_ht_sta *mi, u16 *rates, int *n_rate
- 			if ((group->duration[i] << group->shift) > max_dur)
- 				continue;
- 
--			idx = g * MCS_GROUP_RATES + i;
-+			idx = MI_RATE(g, i);
- 			if (idx == mi->max_tp_rate[0])
- 				continue;
- 
-@@ -712,10 +712,10 @@ minstrel_ht_rate_sample_switch(struct minstrel_priv *mp,
- 
- 	/* If no suitable rate was found, try to pick the next one in the group */
- 	if (!n_rates) {
--		int g_idx = mi->max_tp_rate[0] / MCS_GROUP_RATES;
-+		int g_idx = MI_RATE_GROUP(mi->max_tp_rate[0]);
- 		u16 supported = mi->supported[g_idx];
- 
--		supported >>= mi->max_tp_rate[0] % MCS_GROUP_RATES;
-+		supported >>= MI_RATE_IDX(mi->max_tp_rate[0]);
- 		for (i = 0; supported; supported >>= 1, i++) {
- 			if (!(supported & 1))
- 				continue;
-@@ -856,22 +856,26 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 
- 	memset(tmp_mcs_tp_rate, 0, sizeof(tmp_mcs_tp_rate));
- 	memset(tmp_legacy_tp_rate, 0, sizeof(tmp_legacy_tp_rate));
-+
- 	if (mi->supported[MINSTREL_CCK_GROUP])
--		for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
--			tmp_legacy_tp_rate[j] = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
-+		group = MINSTREL_CCK_GROUP;
- 	else if (mi->supported[MINSTREL_OFDM_GROUP])
--		for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
--			tmp_legacy_tp_rate[j] = MINSTREL_OFDM_GROUP * MCS_GROUP_RATES;
-+		group = MINSTREL_OFDM_GROUP;
-+
-+	index = MI_RATE(group, 0);
-+	for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
-+		tmp_legacy_tp_rate[j] = index;
- 
- 	if (mi->supported[MINSTREL_VHT_GROUP_0])
--		index = MINSTREL_VHT_GROUP_0 * MCS_GROUP_RATES;
-+		group = MINSTREL_VHT_GROUP_0;
- 	else if (ht_supported)
--		index = MINSTREL_HT_GROUP_0 * MCS_GROUP_RATES;
-+		group = MINSTREL_HT_GROUP_0;
- 	else if (mi->supported[MINSTREL_CCK_GROUP])
--		index = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
-+		group = MINSTREL_CCK_GROUP;
- 	else
--		index = MINSTREL_OFDM_GROUP * MCS_GROUP_RATES;
-+		group = MINSTREL_OFDM_GROUP;
- 
-+	index = MI_RATE(group, 0);
- 	tmp_max_prob_rate = index;
- 	for (j = 0; j < ARRAY_SIZE(tmp_mcs_tp_rate); j++)
- 		tmp_mcs_tp_rate[j] = index;
-@@ -888,7 +892,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 
- 		/* (re)Initialize group rate indexes */
- 		for(j = 0; j < MAX_THR_RATES; j++)
--			tmp_group_tp_rate[j] = MCS_GROUP_RATES * group;
-+			tmp_group_tp_rate[j] = MI_RATE(group, 0);
- 
- 		if (group == MINSTREL_CCK_GROUP && ht_supported)
- 			tp_rate = tmp_legacy_tp_rate;
-@@ -897,7 +901,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 			if (!(mi->supported[group] & BIT(i)))
- 				continue;
- 
--			index = MCS_GROUP_RATES * group + i;
-+			index = MI_RATE(group, i);
- 
- 			mrs = &mg->rates[i];
- 			mrs->retry_updated = false;
-@@ -929,13 +933,13 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 			continue;
- 
- 		mg = &mi->groups[group];
--		mg->max_group_prob_rate = MCS_GROUP_RATES * group;
-+		mg->max_group_prob_rate = MI_RATE(group, 0);
- 
- 		for (i = 0; i < MCS_GROUP_RATES; i++) {
- 			if (!(mi->supported[group] & BIT(i)))
- 				continue;
- 
--			index = MCS_GROUP_RATES * group + i;
-+			index = MI_RATE(group, i);
- 
- 			/* Find max probability rate per group and global */
- 			minstrel_ht_set_best_prob_rate(mi, &tmp_max_prob_rate,
-@@ -1022,7 +1026,7 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- {
- 	int group, orig_group;
- 
--	orig_group = group = *idx / MCS_GROUP_RATES;
-+	orig_group = group = MI_RATE_GROUP(*idx);
- 	while (group > 0) {
- 		group--;
- 
-@@ -1206,7 +1210,7 @@ minstrel_calc_retransmit(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	ctime += (t_slot * cw) >> 1;
- 	cw = min((cw << 1) | 1, mp->cw_max);
- 
--	if (minstrel_ht_is_legacy_group(index / MCS_GROUP_RATES)) {
-+	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(index))) {
- 		overhead = mi->overhead_legacy;
- 		overhead_rtscts = mi->overhead_legacy_rtscts;
- 	} else {
-@@ -1239,7 +1243,7 @@ static void
- minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
-                      struct ieee80211_sta_rates *ratetbl, int offset, int index)
- {
--	int group_idx = index / MCS_GROUP_RATES;
-+	int group_idx = MI_RATE_GROUP(index);
- 	const struct mcs_group *group = &minstrel_mcs_groups[group_idx];
- 	struct minstrel_rate_stats *mrs;
- 	u8 idx;
-@@ -1259,7 +1263,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 		ratetbl->rate[offset].count_rts = mrs->retry_count_rtscts;
- 	}
- 
--	index %= MCS_GROUP_RATES;
-+	index = MI_RATE_IDX(index);
- 	if (group_idx == MINSTREL_CCK_GROUP)
- 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
- 	else if (group_idx == MINSTREL_OFDM_GROUP)
-@@ -1289,17 +1293,17 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- static inline int
- minstrel_ht_get_prob_avg(struct minstrel_ht_sta *mi, int rate)
- {
--	int group = rate / MCS_GROUP_RATES;
--	rate %= MCS_GROUP_RATES;
-+	int group = MI_RATE_GROUP(rate);
-+	rate = MI_RATE_IDX(rate);
- 	return mi->groups[group].rates[rate].prob_avg;
- }
- 
- static int
- minstrel_ht_get_max_amsdu_len(struct minstrel_ht_sta *mi)
- {
--	int group = mi->max_prob_rate / MCS_GROUP_RATES;
-+	int group = MI_RATE_GROUP(mi->max_prob_rate);
- 	const struct mcs_group *g = &minstrel_mcs_groups[group];
--	int rate = mi->max_prob_rate % MCS_GROUP_RATES;
-+	int rate = MI_RATE_IDX(mi->max_prob_rate);
- 	unsigned int duration;
- 
- 	/* Disable A-MSDU if max_prob_rate is bad */
-@@ -1405,7 +1409,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		return -1;
- 
- 	mrs = &mg->rates[sample_idx];
--	sample_idx += sample_group * MCS_GROUP_RATES;
-+	sample_idx += MI_RATE(sample_group, 0);
- 
- 	tp_rate1 = mi->max_tp_rate[0];
- 
-@@ -1455,8 +1459,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	 * if the link is working perfectly.
- 	 */
- 
--	cur_max_tp_streams = minstrel_mcs_groups[tp_rate1 /
--		MCS_GROUP_RATES].streams;
-+	cur_max_tp_streams = minstrel_mcs_groups[MI_RATE_GROUP(tp_rate1)].streams;
- 	if (sample_dur >= minstrel_get_duration(tp_rate2) &&
- 	    (cur_max_tp_streams - 1 <
- 	     minstrel_mcs_groups[sample_group].streams ||
-@@ -1484,7 +1487,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	int sample_idx;
- 
- 	if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
--	    !minstrel_ht_is_legacy_group(mi->max_prob_rate / MCS_GROUP_RATES))
-+	    !minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_prob_rate)))
- 		minstrel_aggr_check(sta, txrc->skb);
- 
- 	info->flags |= mi->tx_flags;
-@@ -1512,8 +1515,8 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	if (sample_idx < 0)
- 		return;
- 
--	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
--	sample_idx %= MCS_GROUP_RATES;
-+	sample_group = &minstrel_mcs_groups[MI_RATE_GROUP(sample_idx)];
-+	sample_idx = MI_RATE_IDX(sample_idx);
- 
- 	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP] &&
- 	    (sample_idx >= 4) != txrc->short_preamble)
-@@ -1529,7 +1532,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		int idx = sample_idx % ARRAY_SIZE(mp->ofdm_rates[0]);
- 		rate->idx = mp->ofdm_rates[mi->band][idx];
- 	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
--		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
-+		ieee80211_rate_set_vht(rate, MI_RATE_IDX(sample_idx),
- 				       sample_group->streams);
- 	} else {
- 		rate->idx = sample_idx + (sample_group->streams - 1) * 8;
-@@ -1898,8 +1901,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
- 	struct minstrel_ht_sta *mi = priv_sta;
- 	int i, j, prob, tp_avg;
- 
--	i = mi->max_tp_rate[0] / MCS_GROUP_RATES;
--	j = mi->max_tp_rate[0] % MCS_GROUP_RATES;
-+	i = MI_RATE_GROUP(mi->max_tp_rate[0]);
-+	j = MI_RATE_IDX(mi->max_tp_rate[0]);
- 	prob = mi->groups[i].rates[j].prob_avg;
- 
- 	/* convert tp_avg from pkt per second in kbps */
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 7d6d0b720f6d..5912f7dc5267 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -6,6 +6,8 @@
- #ifndef __RC_MINSTREL_HT_H
- #define __RC_MINSTREL_HT_H
- 
-+#include <linux/bitfield.h>
-+
- /* number of highest throughput rates to consider*/
- #define MAX_THR_RATES 4
- #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
-@@ -57,6 +59,17 @@
- 
- #define MCS_GROUP_RATES		10
- 
-+#define MI_RATE_IDX_MASK	GENMASK(3, 0)
-+#define MI_RATE_GROUP_MASK	GENMASK(15, 4)
-+
-+#define MI_RATE(_group, _idx)				\
-+	(FIELD_PREP(MI_RATE_GROUP_MASK, _group) |	\
-+	 FIELD_PREP(MI_RATE_IDX_MASK, _idx))
-+
-+#define MI_RATE_IDX(_rate) FIELD_GET(MI_RATE_IDX_MASK, _rate)
-+#define MI_RATE_GROUP(_rate) FIELD_GET(MI_RATE_GROUP_MASK, _rate)
-+
-+
- struct minstrel_priv {
- 	struct ieee80211_hw *hw;
- 	bool has_mrr;
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 3b7af242cde6..067d10383fa7 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -56,7 +56,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 	for (j = 0; j < MCS_GROUP_RATES; j++) {
- 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
--		int idx = i * MCS_GROUP_RATES + j;
-+		int idx = MI_RATE(i, j);
- 		unsigned int duration;
- 
- 		if (!(mi->supported[i] & BIT(j)))
-@@ -201,7 +201,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 	for (j = 0; j < MCS_GROUP_RATES; j++) {
- 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
--		int idx = i * MCS_GROUP_RATES + j;
-+		int idx = MI_RATE(i, j);
- 		unsigned int duration;
- 
- 		if (!(mi->supported[i] & BIT(j)))
--- 
-2.28.0
-
+SGksDQoNCj4gR3JlYXQsIHRoYW5rIHlvdSBmb3IgbG9va2luZyBpbnRvIHRoaXMuIExldCBtZSBr
+bm93IGlmIHlvdSBoYXZlIGEgcGF0Y2ggd2hpY2gNCj4geW91IHdhbnQgbWUgdG8gdGVzdCBvbiBh
+IFJUTDg3MjNCUyBhZGFwdGVyLg0KPiANCj4gT25lIHRoaW5nIHdoaWNoIEkgZm9yZ290IHRvIG1l
+bnRpb24gZWFybGllciwgaXQgaXMgbm90IGp1c3QgbG9ja2RlcCBjb21wbGFpbmluZw0KPiB0aGlz
+IGFwcGVhcnMgdG8gYmUgYSByZWFsIGRlYWRsb2NrLCB0aGUgd2lmaSBubyBsb25nZXIgZnVuY3Rp
+b25zLCB3aGVyZSBhcyBpdA0KPiBkb2VzIGZ1bmN0aW9uIHdpdGggdGhlIHBhdGNoIGRyb3BzLg0K
+PiANCg0KQWdyZWUuDQoNCkpvaGFubmVzLA0KDQpCYXNlZCBvbiB0aGUgbGF0ZXN0IGNoYW5nZXMg
+eW91IGludHJvZHVjZWQgaW4gbWFjODAyMTEtbmV4dCwgdGhlIFJUTkwgbG9jayBpcyBub3QgcmVh
+bGx5IHJlcXVpcmVkIGFuZCBjYW4gYmUgcmVtb3ZlZC4gV291bGQgdGhpcyBiZSBzdWZmaWNpZW50
+LCBvciB3b3VsZCB5b3UgcHJlZmVyIGEgZml4IHJlZ2FyZGxlc3Mgb2YgdGhlc2UgY2hhbmdlcz8N
+Cg0KVGhhbmtzIGluIGFkdmFuY2UsDQoNCklsYW4uDQo=
