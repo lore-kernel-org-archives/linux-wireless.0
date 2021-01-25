@@ -2,94 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B9DBC4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 870E0C10DAA
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 19:13:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35C5220724
+	by mail.kernel.org (Postfix) with ESMTP id 6320820724
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 19:13:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388929AbhAZFy0 (ORCPT
+        id S2388922AbhAZFyQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:54:26 -0500
-Received: from a1.mail.mailgun.net ([198.61.254.60]:63684 "EHLO
-        a1.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729261AbhAYOQE (ORCPT
+        Tue, 26 Jan 2021 00:54:16 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:25655 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728960AbhAYNh2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jan 2021 09:16:04 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611584111; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Fusvwvh4vJulzcV0KcOn09ikDpggnn9YKgAWIvRTEsY=;
- b=EQG7aAbvORoO2e8c61kg7HA4WsKvO+BgVhv9cm2xyDDMAZ/dZu052tQU1eAUYewanMIIXv0Q
- Ie+amajwSdMU4feiC+V0IeSkD2e2QOfm/a9W8RjRFIbAHalc996muYzvuShsCx1nwBR0GIjN
- xt8N7uvMW42gPM/+P2nD8d2A1jc=
-X-Mailgun-Sending-Ip: 198.61.254.60
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 600eceffbdcf4682875ceaa5 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 25 Jan 2021 14:00:31
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D03F5C43461; Mon, 25 Jan 2021 14:00:30 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D48B5C433C6;
-        Mon, 25 Jan 2021 14:00:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D48B5C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Mon, 25 Jan 2021 08:37:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611581762;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ieo53MrhB0DlhB3f9/rLaNtbHFyYe3WXEfXl867bltM=;
+        b=AQ79UbFb9shl3sjjbpV1eUmczeTtaKy6i1uBc1mroKBcuWmLq8/wEIPoWQg9fJ+h+QyoD9
+        34np3W3D9a9j6+PubhS4i2TA3p5MVWh8f3ueekZN/V9vs/ItEHOX1/7SHAnb4k34Ui+BXH
+        M5P0+CNs7jfcx2omkhWb7HmwrwSc568=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-32-CE1idn3eNoWT9Eli2vOB2A-1; Mon, 25 Jan 2021 06:18:44 -0500
+X-MC-Unique: CE1idn3eNoWT9Eli2vOB2A-1
+Received: by mail-ed1-f69.google.com with SMTP id k5so7167134edk.15
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2021 03:18:44 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Ieo53MrhB0DlhB3f9/rLaNtbHFyYe3WXEfXl867bltM=;
+        b=tRYnVBE05oOLzRalr2MER0Dbydugaizl9nNub9hY9nurGi1P6nz+IJCuQuuXkdgqCM
+         2nHrQFCI9mQknCUn90qnfv9PjVJHFKugL+B+zM94dNgXNWCnQkewLuApSHmm40MaK5s7
+         o9pHWAmXvEzh0FdciP8t8rC7feAa8Ls9BALSPMUdm0c6jga8bftuTvVL0/WYYrFCR9LG
+         bQI03ADn5qguVtYwOX149Kp0mWCSHpieNkdNU0VtPVD1Np3IugQiMvLAUzvAAUz/5iCV
+         W7XKfnFEMVAvAuBkYaVkt/nJSQlve3fYo0/fI9A2/xArATBmBd1qOz7e5qAcppZLq//V
+         /ZBA==
+X-Gm-Message-State: AOAM531YwVnfCRXysTxKlcBcHoW12s2ESrrWiZ1+mCGj0SU/lNPe9nAW
+        lkxsBjIhFLebA21Z82GF287r/v/xkSxHM7zyjuQBvYlESy/aQpwvLU8g8Gxr9DJCC11dF+HSGqb
+        kK/otnBJOAvLngdOKOwaszt0m9io=
+X-Received: by 2002:a50:b223:: with SMTP id o32mr5766edd.79.1611573523206;
+        Mon, 25 Jan 2021 03:18:43 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJx8HAVnk/PyijwPWMiW80/gD6wbKT49kWql+0z9pRRz87cGGKxWoTMm1/kZmFGpTjDq0CibAg==
+X-Received: by 2002:a50:b223:: with SMTP id o32mr5755edd.79.1611573523028;
+        Mon, 25 Jan 2021 03:18:43 -0800 (PST)
+Received: from x1.localdomain (2001-1c00-0c1e-bf00-37a3-353b-be90-1238.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:37a3:353b:be90:1238])
+        by smtp.gmail.com with ESMTPSA id b26sm10471159eds.48.2021.01.25.03.18.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Jan 2021 03:18:42 -0800 (PST)
+Subject: Re: pull-request: mac80211 2021-01-18.2
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "Peer, Ilan" <ilan.peer@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+References: <20210118204750.7243-1-johannes@sipsolutions.net>
+ <77c606d4-a78a-1fa3-5937-b270c3d0bbd3@redhat.com>
+ <b83f6cf001c4e3df97eeaed710b34fda0a08265f.camel@sipsolutions.net>
+ <BN7PR11MB2610052E380E676ED5CCCC67E9BE9@BN7PR11MB2610.namprd11.prod.outlook.com>
+ <348210d8-6940-ca8d-e3b1-f049330a2087@redhat.com>
+ <666b3449fe33d34123255cc69da3aa46fc276dcb.camel@sipsolutions.net>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <6c949dbe-5593-2274-7099-c2768b770aad@redhat.com>
+Date:   Mon, 25 Jan 2021 12:18:41 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
+In-Reply-To: <666b3449fe33d34123255cc69da3aa46fc276dcb.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH for v5.11 1/7] iwlwifi: mvm: fix the return type for DSM
- functions 1 and 2
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <iwlwifi.20210122144849.5757092adcd6.Ic24524627b899c9a01af38107a62a626bdf5ae3a@changeid>
-References: <iwlwifi.20210122144849.5757092adcd6.Ic24524627b899c9a01af38107a62a626bdf5ae3a@changeid>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210125140030.D03F5C43461@smtp.codeaurora.org>
-Date:   Mon, 25 Jan 2021 14:00:30 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> wrote:
+Hi,
 
-> From: Matt Chen <matt.chen@intel.com>
+On 1/25/21 10:47 AM, Johannes Berg wrote:
+> Hi,
 > 
-> The return type value of functions 1 and 2 were considered to be an
-> integer inside a buffer, but they can also be only an integer, without
-> the buffer.  Fix the code in iwl_acpi_get_dsm_u8() to handle it as a
-> single integer value, as well as packed inside a buffer.
+> Sorry, apparently we have two threads.
 > 
-> Signed-off-by: Matt Chen <matt.chen@intel.com>
-> Fixes: 9db93491f29e ("iwlwifi: acpi: support device specific method (DSM)")
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> Great, thank you for looking into this. Let me know if you have a patch
+>> which you want me to test on a RTL8723BS adapter.
+> 
+> Could you test this instead?
+> 
+> https://p.sipsolutions.net/235c352b8ae5db88.txt
+> 
+> 
+> I don't have that much sympathy for a staging driver that's clearly
+> doing things differently than it was intended (the documentation states
+> that the function should be called only before wiphy_register(), not
+> during ndo_open). :-)
 
-7 patches applied to wireless-drivers.git, thanks.
+I completely understand and I already was worried that this might be
+a staging-driver issue, which is why I mentioned this was with a
+staging driver in the more detailed bug-report email.
 
-aefbe5c445c7 iwlwifi: mvm: fix the return type for DSM functions 1 and 2
-e223e42aac30 iwlwifi: mvm: invalidate IDs of internal stations at mvm start
-16062c12edb8 iwlwifi: pcie: add rules to match Qu with Hr2
-96d2bfb7948a iwlwifi: mvm: clear IN_D3 after wowlan status cmd
-4886460c4d15 iwlwifi: Fix IWL_SUBDEVICE_NO_160 macro to use the correct bit.
-7a21b1d4a728 iwlwifi: mvm: guard against device removal in reprobe
-0bed6a2a14af iwlwifi: queue: bail out on invalid freeing
+> But OTOH, that fix to the driver is simple and looks correct to me since
+> it only ever has a static regdomain, and the notifier does the work of
+> applying it to the channels as well.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/iwlwifi.20210122144849.5757092adcd6.Ic24524627b899c9a01af38107a62a626bdf5ae3a@changeid/
+So I've given your fix a quick try and it leads to a NULL pointer deref.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+But now that you've given me a lead on how to fix this (network/wifi
+drivers are not really me expertise) I can take a shot at seeing if I
+can fix the NULL pointer deref. I Hope to get back to you on that later
+today.
+
+Regards,
+
+Hans
 
