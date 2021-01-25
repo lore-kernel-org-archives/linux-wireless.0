@@ -2,119 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE90C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:53:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C75AC433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4D0A2223D
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:53:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 632D9229C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388870AbhAZFx1 (ORCPT
+        id S2388091AbhAZFxc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:53:27 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:46005 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727964AbhAYMVE (ORCPT
+        Tue, 26 Jan 2021 00:53:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728192AbhAYMmZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jan 2021 07:21:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611577144;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EkySjmyy5bV42XAMy1/nKNEVTl7EAWsq5w4RqirjjF0=;
-        b=C8jaTRnvXZJP4TefcwGGRdn4UzpDUU9bCQhEDiHT8BIQtX+0jHFCpM8G+oAft4PAhPL+lq
-        sm+SdIMvv9ATR3Zyixcxk/BveiH+D+ZrnEOAobRLGVOEt3fuDYtePPOXt0bgICXdO17nd3
-        4PW41TVTGAiGd8+bAt/48pPXTX0NJBo=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-582-f2fwulGJNayQEJo9XInjRw-1; Mon, 25 Jan 2021 06:56:30 -0500
-X-MC-Unique: f2fwulGJNayQEJo9XInjRw-1
-Received: by mail-ej1-f72.google.com with SMTP id n18so3652709ejc.11
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2021 03:56:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=EkySjmyy5bV42XAMy1/nKNEVTl7EAWsq5w4RqirjjF0=;
-        b=mY/orPQhUJBSoj1r7R4vIv+oK10ihPCFmWHGht04+Md3xfxSbsD6ZSuv1N3fK1Cyex
-         cPKl+K883tYFZ7UeG74tPX+SR0QKvry4Yb7IApN6vn/ELF8Ukg84WLERmHaYHDmWO9g1
-         kX/o8/YuX4NkazK+mu7IgiP/oEFqTRqItwEHDK8kVdHUuaIRgzHUo2q7lWpnhPhH3W20
-         MU+8W0hAaqC8mFFuX0slozJBDd07++mYJCac5DrYsNQYoCGlWwAWPW+Dl14up9zUxnQz
-         Jg5KLSLwfSXF3L024/40JhZlsFykLRzuhEQIfpVOEMHCOT4BkBop6OyDHO/F6bWfffTp
-         cdRg==
-X-Gm-Message-State: AOAM532IHFxlHj7+fu4ap3TsURlF6xanQzu5Ho6W2OxQjf68kV7sHGww
-        /QbyhAKrDlG+BLRFB29NcFygLiyWuZXzLsAMV0prFvvsyWlcpBAbDSumBuZUmdUtTiScIoK0OMa
-        aL9kA42+qs5UEvZPUD6097CD1z3Q=
-X-Received: by 2002:a17:906:28d6:: with SMTP id p22mr115658ejd.365.1611575789409;
-        Mon, 25 Jan 2021 03:56:29 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJw32TbIOVmFixRg2hrecc/z8+5ezjOWo20hjLhh8ao7DjXSozSpHP9cH+EHiw7dhQqtyMRb2A==
-X-Received: by 2002:a17:906:28d6:: with SMTP id p22mr115654ejd.365.1611575789279;
-        Mon, 25 Jan 2021 03:56:29 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
-        by smtp.gmail.com with ESMTPSA id ce7sm8177313ejb.100.2021.01.25.03.56.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Jan 2021 03:56:28 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 643D518033D; Mon, 25 Jan 2021 12:56:27 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: Re: [PATCH 4/6] mac80211: minstrel_ht: significantly redesign the
- rate probing strategy
-In-Reply-To: <20210124122812.49929-4-nbd@nbd.name>
-References: <20210124122812.49929-1-nbd@nbd.name>
- <20210124122812.49929-4-nbd@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Mon, 25 Jan 2021 12:56:27 +0100
-Message-ID: <87o8hdmdqs.fsf@toke.dk>
+        Mon, 25 Jan 2021 07:42:25 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 921D2C0611C3;
+        Mon, 25 Jan 2021 04:40:22 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1l41AK-00BPsj-3w; Mon, 25 Jan 2021 13:40:20 +0100
+Message-ID: <671b0c37867803d7229ef0c4a33baf2c7778df08.camel@sipsolutions.net>
+Subject: Re: pull-request: mac80211 2021-01-18.2
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Hans de Goede <hdegoede@redhat.com>,
+        "Peer, Ilan" <ilan.peer@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Date:   Mon, 25 Jan 2021 13:40:19 +0100
+In-Reply-To: <6c949dbe-5593-2274-7099-c2768b770aad@redhat.com>
+References: <20210118204750.7243-1-johannes@sipsolutions.net>
+         <77c606d4-a78a-1fa3-5937-b270c3d0bbd3@redhat.com>
+         <b83f6cf001c4e3df97eeaed710b34fda0a08265f.camel@sipsolutions.net>
+         <BN7PR11MB2610052E380E676ED5CCCC67E9BE9@BN7PR11MB2610.namprd11.prod.outlook.com>
+         <348210d8-6940-ca8d-e3b1-f049330a2087@redhat.com>
+         <666b3449fe33d34123255cc69da3aa46fc276dcb.camel@sipsolutions.net>
+         <6c949dbe-5593-2274-7099-c2768b770aad@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Hi,
 
-> The biggest flaw in current minstrel_ht is the fact that it needs way too
-> many probing packets to be able to quickly find the best rate.
-> Depending on the wifi hardware and operating mode, this can significantly
-> reduce throughput when not operating at the highest available data rate.
->
-> In order to be able to significantly reduce the amount of rate sampling,
-> we need a much smarter selection of probing rates.
->
-> The new approach introduced by this patch maintains a limited set of
-> available rates to be tested during a statistics window.
->
-> They are split into distinct categories:
-> - MINSTREL_SAMPLE_TYPE_INC - incremental rate upgrade:
->   Pick the next rate group and find the first rate that is faster than
->   the current max. throughput rate
-> - MINSTREL_SAMPLE_TYPE_JUMP - random testing of higher rates:
->   Pick a random rate from the next group that is faster than the current
->   max throughput rate. This allows faster adaptation when the link changes
->   significantly
-> - MINSTREL_SAMPLE_TYPE_SLOW - test a rate between max_prob, max_tp2 and
->   max_tp in order to reduce the gap between them
->
-> In order to prioritize sampling, every 6 attempts are split into 3x INC,
-> 2x JUMP, 1x SLOW.
->
-> Available rates are checked and refilled on every stats window update.
+> > I don't have that much sympathy for a staging driver that's clearly
+> > doing things differently than it was intended (the documentation states
+> > that the function should be called only before wiphy_register(), not
+> > during ndo_open). :-)
+> 
+> I completely understand and I already was worried that this might be
+> a staging-driver issue, which is why I mentioned this was with a
+> staging driver in the more detailed bug-report email.
 
-Very cool!
+I guess I missed that, but no worries.
 
-> With this approach, we finally get a very small delta in throughput when
-> comparing setting the optimal data rate as a fixed rate vs normal rate
-> control operation.
+> > But OTOH, that fix to the driver is simple and looks correct to me since
+> > it only ever has a static regdomain, and the notifier does the work of
+> > applying it to the channels as well.
+> 
+> So I've given your fix a quick try and it leads to a NULL pointer deref.
 
-Can you quantify this "very small delta"? Would love to see some
-benchmark data :)
+Ouch. Oh. I see, that driver is *really* stupid, trying to get to the
+wiphy from the adapter, but going through the wdev instead ... ouch.
 
--Toke
+Wow are these pointers a mess in that driver ... Something like this,
+perhaps?
+
+https://p.sipsolutions.net/4400d9a3b7b800bb.txt
+
+johannes
 
