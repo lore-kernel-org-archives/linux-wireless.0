@@ -2,202 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,BIGNUM_EMAILS,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC58BC433E0
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 19:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A939C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jan 2021 09:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1814222BB
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jan 2021 19:14:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26E8E207B6
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jan 2021 09:18:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726567AbhAXTOn (ORCPT
+        id S1726189AbhAYJQs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jan 2021 14:14:43 -0500
-Received: from mga04.intel.com ([192.55.52.120]:25459 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725948AbhAXTOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jan 2021 14:14:43 -0500
-IronPort-SDR: CyPCE2laP7Y6+uDgb3Wbq8V/aGNOPcrdcbDQ+UXJ1MMrfHuaEcRLy0VnxI+DRWuV2QtC+/xwHG
- QeP2S8n+WSWA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9874"; a="177058691"
-X-IronPort-AV: E=Sophos;i="5.79,371,1602572400"; 
-   d="scan'208";a="177058691"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2021 11:13:46 -0800
-IronPort-SDR: 9PdGMWqGExI6ILZaYr806KIX32MVsRKgt50cDQSgW/MGerQwZliGl7KFXtfu7elIffIlAVk6xF
- 45Bfu5wflChg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,371,1602572400"; 
-   d="scan'208";a="352708939"
-Received: from lkp-server01.sh.intel.com (HELO 27c4e0a4b6d9) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 24 Jan 2021 11:13:45 -0800
-Received: from kbuild by 27c4e0a4b6d9 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1l3kpU-0000Qk-EU; Sun, 24 Jan 2021 19:13:44 +0000
-Date:   Mon, 25 Jan 2021 03:12:56 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
+        Mon, 25 Jan 2021 04:16:48 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56940 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726110AbhAYJQQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jan 2021 04:16:16 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10P90ciQ003663;
+        Mon, 25 Jan 2021 09:08:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=s4UQoUYdGXbOqePnHvQDScCm3fndqxB1l13jBqgkpu4=;
+ b=zl8Kf6HspIPqDJK/bZvwJrYvH7M1RFiWKE5kDTRYyyoBdg52pzwuG2vlxiZVl5pZW+UA
+ 2XpGcdo7Fe58LZMG7On9tEYsv9M3bGPWYml6PhxABgWBTCnuAcIrs9bQwwTKp0/zhflE
+ 00oIpku14zrD6imp3mdJRes3Mf2LVTgg83tvZY4pDGmZYohK6BaCj0vj9JcX8YMo3FJa
+ RPIgX5oiYBlIOpEK3CM7jnVF2BpHcjbCS1Yw531Kw/Y3wOnkbBs81sTXcPo7KGE0oNS2
+ tPWQDwfZUxDpSqmno+BRsyLgmI6ddMzQfFjs5ahKVcHPWKyKSVFcERGDRX2Onf1QWg4Q Vw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 368brkc6g0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 25 Jan 2021 09:08:07 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10P910E2156233;
+        Mon, 25 Jan 2021 09:08:01 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 368wckadmg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 25 Jan 2021 09:08:01 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 10P980jX002301;
+        Mon, 25 Jan 2021 09:08:00 GMT
+Received: from mwanda (/102.36.221.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 25 Jan 2021 01:07:59 -0800
+Date:   Mon, 25 Jan 2021 12:07:54 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     johannes.berg@intel.com
 Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD SUCCESS
- 27bc93583e3518ef11f15e443bc4b7b3e736a320
-Message-ID: <600dc6b8.htL9gXOlDv1PbF70%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+Subject: [bug report] cfg80211: avoid holding the RTNL when calling the driver
+Message-ID: <YA6KarkWBBT78rgd@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9874 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=982 bulkscore=0 malwarescore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101250054
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9874 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
+ phishscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=923
+ lowpriorityscore=0 spamscore=0 mlxscore=0 suspectscore=0 malwarescore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101250054
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-branch HEAD: 27bc93583e3518ef11f15e443bc4b7b3e736a320  cfg80211: avoid holding the RTNL when calling the driver
+Hello Johannes Berg,
 
-elapsed time: 738m
+This is a semi-automatic email about new static checker warnings.
 
-configs tested: 132
-configs skipped: 3
+The patch 791daf8fc49a: "cfg80211: avoid holding the RTNL when 
+calling the driver" from Jan 19, 2021, leads to the following Smatch 
+complaint:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+    net/wireless/nl80211.c:3242 nl80211_set_wiphy()
+    error: we previously assumed 'rdev' could be null (see line 3222)
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm                        mvebu_v5_defconfig
-mips                    maltaup_xpa_defconfig
-powerpc                      ppc40x_defconfig
-sh                              ul2_defconfig
-mips                       lemote2f_defconfig
-sh                          rsk7264_defconfig
-powerpc                 linkstation_defconfig
-arm                      pxa255-idp_defconfig
-arm                     am200epdkit_defconfig
-mips                      pistachio_defconfig
-xtensa                  cadence_csp_defconfig
-arm                            lart_defconfig
-mips                        omega2p_defconfig
-powerpc                    gamecube_defconfig
-sh                            migor_defconfig
-powerpc                      ppc44x_defconfig
-mips                         tb0219_defconfig
-powerpc                      pcm030_defconfig
-powerpc                       ebony_defconfig
-sh                             espt_defconfig
-sparc64                             defconfig
-arc                              allyesconfig
-powerpc                  mpc885_ads_defconfig
-s390                          debug_defconfig
-arm                          iop32x_defconfig
-arm                          tango4_defconfig
-mips                        nlm_xlr_defconfig
-sh                         apsh4a3a_defconfig
-powerpc                      cm5200_defconfig
-sparc                       sparc32_defconfig
-powerpc                mpc7448_hpc2_defconfig
-arm                    vt8500_v6_v7_defconfig
-sh                                  defconfig
-sh                           se7712_defconfig
-arm                        neponset_defconfig
-mips                        workpad_defconfig
-powerpc                      walnut_defconfig
-arm                           sama5_defconfig
-mips                          ath79_defconfig
-mips                         db1xxx_defconfig
-arm                             mxs_defconfig
-powerpc                  storcenter_defconfig
-arm                          lpd270_defconfig
-nios2                            alldefconfig
-arm                          pcm027_defconfig
-mips                       capcella_defconfig
-mips                          ath25_defconfig
-sh                   rts7751r2dplus_defconfig
-arm                          simpad_defconfig
-arm                         shannon_defconfig
-powerpc                        fsp2_defconfig
-arm                         s5pv210_defconfig
-arc                           tb10x_defconfig
-powerpc                 mpc834x_mds_defconfig
-powerpc                   lite5200b_defconfig
-arm                           stm32_defconfig
-arm                        realview_defconfig
-powerpc                     sbc8548_defconfig
-alpha                               defconfig
-arc                 nsimosci_hs_smp_defconfig
-arm                        vexpress_defconfig
-arm                        oxnas_v6_defconfig
-mips                           ci20_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                               tinyconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a001-20210124
-i386                 randconfig-a002-20210124
-i386                 randconfig-a003-20210124
-x86_64               randconfig-a012-20210124
-x86_64               randconfig-a016-20210124
-x86_64               randconfig-a015-20210124
-x86_64               randconfig-a011-20210124
-x86_64               randconfig-a013-20210124
-x86_64               randconfig-a014-20210124
-i386                 randconfig-a013-20210124
-i386                 randconfig-a012-20210124
-i386                 randconfig-a014-20210124
-i386                 randconfig-a016-20210124
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+net/wireless/nl80211.c
+  3221	
+  3222		if (rdev)
+                    ^^^^
+The patch adds a NULL dereference
 
-clang tested configs:
-x86_64               randconfig-a003-20210124
-x86_64               randconfig-a002-20210124
-x86_64               randconfig-a001-20210124
-x86_64               randconfig-a005-20210124
-x86_64               randconfig-a006-20210124
-x86_64               randconfig-a004-20210124
+  3223			mutex_lock(&rdev->wiphy.mtx);
+  3224		rtnl_unlock();
+  3225	
+  3226		/*
+  3227		 * end workaround code, by now the rdev is available
+  3228		 * and locked, and wdev may or may not be NULL.
+  3229		 */
+  3230	
+  3231		if (info->attrs[NL80211_ATTR_WIPHY_NAME])
+  3232			result = cfg80211_dev_rename(
+  3233				rdev, nla_data(info->attrs[NL80211_ATTR_WIPHY_NAME]));
+  3234	
+  3235		if (result)
+  3236			goto out;
+  3237	
+  3238		if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
+  3239			struct ieee80211_txq_params txq_params;
+  3240			struct nlattr *tb[NL80211_TXQ_ATTR_MAX + 1];
+  3241	
+  3242			if (!rdev->ops->set_txq_params) {
+                             ^^^^^^
+But it's not checked here.
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+  3243				result = -EOPNOTSUPP;
+  3244				goto out;
+
+regards,
+dan carpenter
