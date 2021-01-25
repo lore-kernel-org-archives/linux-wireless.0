@@ -2,84 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D985CC4332E
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7BDC43332
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADD06207B1
+	by mail.kernel.org (Postfix) with ESMTP id F02AA207B1
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 05:55:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388972AbhAZFzk (ORCPT
+        id S2388824AbhAZFzq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:55:40 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:43919 "EHLO m42-8.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729626AbhAYOnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jan 2021 09:43:13 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611585754; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=QQM/nt2FFonPCqifNIq2JACCDZxSRJDHrOOwPcz1i0Q=;
- b=wUL/Vm5vXfvDSNQ9vNcrEkzwHmkkiukMyzX+q/dJAVHw6ULZ+84f9SrOTpxl2Q5M4O/A7rYL
- F/xY8gH3GspH4pdYr9IPrIsSR0P+PhkByDoMkQQP99rGR3x0t7eCMyrmHY8dUy/h4Ss3TIGj
- 92eSr+cfhrTDnH8qIrBr78ftvOg=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 600ed8b75677aca7bddb40b4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 25 Jan 2021 14:41:59
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B9301C433ED; Mon, 25 Jan 2021 14:41:59 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 460CAC433CA;
-        Mon, 25 Jan 2021 14:41:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 460CAC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 26 Jan 2021 00:55:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58976 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729985AbhAYPfk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jan 2021 10:35:40 -0500
+Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C52E0C0611C1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2021 07:25:43 -0800 (PST)
+Received: by mail-io1-xd2c.google.com with SMTP id d81so27223690iof.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2021 07:25:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=r+wfrvqtOpxPoqdtWvG82QG2jp5MbSFV+Tu1UFjBSDM=;
+        b=RHRTj5fcCfCRzDmSKGv539mFjvdCDijLz7Y7rUyEaCS8oZmksrBSiET40Da/3LgEXV
+         NSai00HiTAUDGIs87nf5c+y17/XxDBS05Ea9CzTD1ZNjFes0ydKJhAY4N76dClZK+88r
+         +G0NSYUSEw1lsKE9xvurkLIhBMvpKW+MoRCz7hkWVvyQ+2A/HGSyZ/iu0nGYk6LuKF2/
+         8XIAK+BEfTOysDXHKU3IGtvhV758xkpP09ze0UpokIB3K8l+IK4E6U00DEUjWhs7GVLN
+         AMoc9f68SEJu3lbZiUVFSh5FXsquFUIoSBc1D5bi0Hs0rZZ1XovKB7gHn1TTjFqg/G5e
+         xKfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=r+wfrvqtOpxPoqdtWvG82QG2jp5MbSFV+Tu1UFjBSDM=;
+        b=Y6tI/AglvwKk6UrF5Uc/FKOgIr2LAcMJziRzNxqlSPPJs16OmX/tpfcv2zZZmfj4+l
+         KDIRRO90kHCYUDacfhDRSkRMSPx6z0kR0uNDFb6nCUgGTsbaw82qAEugKXeLlIeKi4EO
+         E3yKHNU5DAmax/fZVqLqvDEnPH+WtyvrHrJmnfp+EVB/mJ/MaOjhgnyywoSIRM2J+1/m
+         8pbzXW+qRUW+kooqtML3XsE+MTlF/COHWCRQXzsXqz8z16o1ZomobSWzes+AHVVUGZDv
+         sYRYgwU5HrekpKXxR5W9ER+dBoolAlGclqq5QuLBL4/SQTmsKoM6ZCQaH2SNe2pjz4Q4
+         Mfng==
+X-Gm-Message-State: AOAM533ADoao4NdV4Y8vSTf268q30nYaMsyDqUOUiSQuTU1HBR8598+V
+        jSeDqLIyhJ6f9N6o036aDBNnB+5Ip93sv+q6ru8jzQ==
+X-Google-Smtp-Source: ABdhPJzFnvqEgbnL8Mg0JMnCYP+Zt8gPrVuABjrRQKuC6ErxkE2h7yfn+nhzAFr67AT2WR37Ln9FaaQ0bj+iTj4+tMM=
+X-Received: by 2002:a05:6e02:1d0e:: with SMTP id i14mr754933ila.69.1611588342867;
+ Mon, 25 Jan 2021 07:25:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] mt7601u: use ieee80211_rx_list to pass frames to the
- network
- stack as a batch
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <5c72fa2dda45c1ae3f285af80c02f3db23341d85.1610580222.git.lorenzo@kernel.org>
-References: <5c72fa2dda45c1ae3f285af80c02f3db23341d85.1610580222.git.lorenzo@kernel.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        kuba@kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210125144159.B9301C433ED@smtp.codeaurora.org>
-Date:   Mon, 25 Jan 2021 14:41:59 +0000 (UTC)
+References: <20210125150949.619309-1-eric.dumazet@gmail.com> <97cf98b0-d464-1901-f01f-ac5dd362561d@candelatech.com>
+In-Reply-To: <97cf98b0-d464-1901-f01f-ac5dd362561d@candelatech.com>
+From:   Eric Dumazet <edumazet@google.com>
+Date:   Mon, 25 Jan 2021 16:25:31 +0100
+Message-ID: <CANn89iLn5HVzuCJvCeZaV3e6CNJyzsM7GO38kWEtvm0i2s5UTg@mail.gmail.com>
+Subject: Re: [PATCH net] iwlwifi: provide gso_type to GSO packets
+To:     Ben Greear <greearb@candelatech.com>
+Cc:     Eric Dumazet <eric.dumazet@gmail.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo@kernel.org> wrote:
+On Mon, Jan 25, 2021 at 4:15 PM Ben Greear <greearb@candelatech.com> wrote:
+>
+> On 1/25/21 7:09 AM, Eric Dumazet wrote:
+> > From: Eric Dumazet <edumazet@google.com>
+> >
+> > net/core/tso.c got recent support for USO, and this broke iwlfifi
+> > because the driver implemented a limited form of GSO.
+> >
+> > Providing ->gso_type allows for skb_is_gso_tcp() to provide
+> > a correct result.
+> >
+> > Fixes: 3d5b459ba0e3 ("net: tso: add UDP segmentation support")
+> > Signed-off-by: Eric Dumazet <edumazet@google.com>
+> > Reported-by: Ben Greear <greearb@candelatech.com>
+> > Bisected-by: Ben Greear <greearb@candelatech.com>
+>
+> I appreciate the credit, but the bisect and some other initial bug hunting was
+> done by people on this thread:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=209913
+>
 
-> Similar to mt76 driver, rely on ieee80211_rx_list in order to
-> improve icache footprint
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> Acked-by: Jakub Kicinski <kuba@kernel.org>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-2a9269b1cdc3 mt7601u: use ieee80211_rx_list to pass frames to the network stack as a batch
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/5c72fa2dda45c1ae3f285af80c02f3db23341d85.1610580222.git.lorenzo@kernel.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Well, I do not think bugzilla can display full names/emails ?
