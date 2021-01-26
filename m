@@ -2,110 +2,134 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D3CC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:08:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66DA6C433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:09:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6252207A2
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:08:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 293FF207A3
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S313788AbhAZWqB (ORCPT
+        id S313752AbhAZWpH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 17:46:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46802 "EHLO
+        Tue, 26 Jan 2021 17:45:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392362AbhAZS7A (ORCPT
+        with ESMTP id S1729293AbhAZRQr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 13:59:00 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A29EEC06178B
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 10:58:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=edX+M8/W3hxSQgANZOSz1K7PwQ3V5B7Mpzz7uUVgGJY=; b=qQ7puUex5EQFavo0JdlMgzpqqP
-        L6I/k2D2WHyCIOCvZRTxC0RlRuieo5HdO7Zzik8lrm+F2KM3V3N6U0Lixl240/51ZRiG7QKSmKQTT
-        9HVtZZ/he2WvV52FU35F/7/aHOuqn0tPUC1DWgIpYLK3NPJjROgPeZqqnVAWg/KfPOZQ=;
-Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1l4TXU-0003cb-8y; Tue, 26 Jan 2021 19:58:08 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH v2 2/6] mac80211: minstrel_ht: update total packets counter in tx status path
-Date:   Tue, 26 Jan 2021 19:58:02 +0100
-Message-Id: <20210126185806.61770-2-nbd@nbd.name>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20210126185806.61770-1-nbd@nbd.name>
-References: <20210126185806.61770-1-nbd@nbd.name>
+        Tue, 26 Jan 2021 12:16:47 -0500
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70A88C061352;
+        Tue, 26 Jan 2021 09:16:07 -0800 (PST)
+Received: by mail-ej1-x635.google.com with SMTP id ox12so24101109ejb.2;
+        Tue, 26 Jan 2021 09:16:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lr7TRr5ybLv57MYeVSWFh/csc4/2QYh3XPd9jhyIC78=;
+        b=PtJzM0hZaAS6/hkwv1qr+GiEDC6Y5XkpDO4px6qOx6rszb7u/qbkOpDrwHPrvq1ITI
+         YHRSk3i1lldKme3bpCaLN0xadQ05qZtwk/y5aeyDMLBN/cLeJ9fWszwe4IUMj26p0m1c
+         ym16VW5+6GTgSGiuJoFgmRsyJYamkUljbsI1qKIZOueETECXMX0mhOA4AZ1dUFs5/0kU
+         OWhcsdK6j5FODhq5AqFyV9/Dd3exGOGmXJS3YFUbebFccu5kGKGWgZDj9+ywl6ilcGCh
+         cOfzeZakQAeSpdMhjJs6Oef2Af5sKma0HqEYPPv2y0T6/ntq6QL++Ux4whLBMfrWzYCH
+         z3ow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=lr7TRr5ybLv57MYeVSWFh/csc4/2QYh3XPd9jhyIC78=;
+        b=fPfVUOTmkKa1U4w4VKDTrhTaGqOFIVDJYo/fV3CXT/wgP08Se55wPM+eq0P2tlVp39
+         BGM/Otf9ZnpL1hHH+JeWbjnNnUOAKNTsBHRy70P6KI4j1IKrhFvm3IJXgHzFTQ0Fs2Bo
+         XPlhnaD0nVGx1mOZgG1sNm33UEfs7DCyvbugiyTNADlQHOC5KPxwOLjIb05jy7rFeSV4
+         7jgzNQ9AlM9w8U9G8JCFSjm1Ec9wGoth0/WrOVBE8ytPCFIM/6ggvKLTjgLAwTMDYgn5
+         fR5M+zhjeYwFKpAB9QQS8z2ydfCwhUJqaFoE/RYc1eXF7xrCxXMyekRVrlB54hZ8Orbb
+         jh4Q==
+X-Gm-Message-State: AOAM532y8JgJofKBN5w/PyG8LcZX2i9JdYdvyWddlUy3gBVccgvy4Bzz
+        jyLwice7rz4G+2qBvgdr0UZ9v1BRx2843g==
+X-Google-Smtp-Source: ABdhPJxata7MyXo38nLL9zYdQ4yXF/1FOfOE1JuQrL1YF5XKVkuT2U68o8fAY+4InoDVKOkRwuitDQ==
+X-Received: by 2002:a17:906:ce49:: with SMTP id se9mr4136989ejb.341.1611681366244;
+        Tue, 26 Jan 2021 09:16:06 -0800 (PST)
+Received: from stitch.. ([2a01:4262:1ab:c:f1a3:95f9:9758:8995])
+        by smtp.gmail.com with ESMTPSA id p26sm12970046edq.94.2021.01.26.09.16.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Jan 2021 09:16:05 -0800 (PST)
+Sender: Emil Renner Berthing <emil.renner.berthing@gmail.com>
+From:   Emil Renner Berthing <kernel@esmil.dk>
+To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Emil Renner Berthing <kernel@esmil.dk>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Allen Pais <allen.lkml@gmail.com>,
+        Romain Perier <romain.perier@gmail.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: use tasklet_setup to initialize rx_work_tasklet
+Date:   Tue, 26 Jan 2021 18:15:50 +0100
+Message-Id: <20210126171550.3066-1-kernel@esmil.dk>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Keep the update in one place and prepare for further rework
+In commit d3ccc14dfe95 most of the tasklets in this driver was
+updated to the new API. However for the rx_work_tasklet only the
+type of the callback was changed from
+  void _rtl_rx_work(unsigned long data)
+to
+  void _rtl_rx_work(struct tasklet_struct *t).
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The initialization of rx_work_tasklet was still open-coded and the
+function pointer just cast into the old type, and hence nothing sets
+rx_work_tasklet.use_callback = true and the callback was still called as
+
+  t->func(t->data);
+
+with uninitialized/zero t->data.
+
+Commit 6b8c7574a5f8 changed the casting of _rtl_rx_work a bit and
+initialized t->data to a pointer to the tasklet cast to an unsigned
+long.
+
+This way calling t->func(t->data) might actually work through all the
+casting, but it still doesn't update the code to use the new tasklet
+API.
+
+Let's use the new tasklet_setup to initialize rx_work_tasklet properly
+and set rx_work_tasklet.use_callback = true so that the callback is
+called as
+
+  t->callback(t);
+
+without all the casting.
+
+Fixes: 6b8c7574a5f8 ("rtlwifi: fix build warning")
+Fixes: d3ccc14dfe95 ("rtlwifi/rtw88: convert tasklets to use new tasklet_setup() API")
+Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 8974c3510489..7846782840a9 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1092,6 +1092,16 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		info->status.ampdu_len = 1;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index d62b87f010c9..6c5e242b1bc5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -310,8 +310,7 @@ static int _rtl_usb_init_rx(struct ieee80211_hw *hw)
+ 	init_usb_anchor(&rtlusb->rx_cleanup_urbs);
  
-+	/* wraparound */
-+	if (mi->total_packets >= ~0 - info->status.ampdu_len) {
-+		mi->total_packets = 0;
-+		mi->sample_packets = 0;
-+	}
-+
-+	mi->total_packets += info->status.ampdu_len;
-+	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
-+		mi->sample_packets += info->status.ampdu_len;
-+
- 	mi->ampdu_packets++;
- 	mi->ampdu_len += info->status.ampdu_len;
+ 	skb_queue_head_init(&rtlusb->rx_queue);
+-	rtlusb->rx_work_tasklet.func = (void(*))_rtl_rx_work;
+-	rtlusb->rx_work_tasklet.data = (unsigned long)&rtlusb->rx_work_tasklet;
++	tasklet_setup(&rtlusb->rx_work_tasklet, _rtl_rx_work);
  
-@@ -1103,9 +1113,6 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		mi->sample_count--;
- 	}
- 
--	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
--		mi->sample_packets += info->status.ampdu_len;
--
- 	if (mi->sample_mode != MINSTREL_SAMPLE_IDLE)
- 		rate_sample = minstrel_get_ratestats(mi, mi->sample_rate);
- 
-@@ -1503,14 +1510,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	else
- 		sample_idx = minstrel_get_sample_rate(mp, mi);
- 
--	mi->total_packets++;
--
--	/* wraparound */
--	if (mi->total_packets == ~0) {
--		mi->total_packets = 0;
--		mi->sample_packets = 0;
--	}
--
- 	if (sample_idx < 0)
- 		return;
- 
+ 	return 0;
+ }
 -- 
-2.28.0
+2.30.0
 
