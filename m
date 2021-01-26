@@ -2,61 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95690C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 19:17:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C31DC433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 22:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71E9A20724
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 19:17:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B6C6205CA
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 22:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388669AbhAZFwS (ORCPT
+        id S1729809AbhAZWpT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:52:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39748 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726814AbhAYJpv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jan 2021 04:45:51 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8198C061354
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2021 01:44:23 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1l3yPn-00BMyh-1x; Mon, 25 Jan 2021 10:44:07 +0100
-Message-ID: <768b8297801ed3987d97efd6d55ed6a9ad1c7598.camel@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: Save the regulatory domain with a lock
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Hans de Goede <hdegoede@redhat.com>, Luca Coelho <luca@coelho.fi>,
-        "Peer, Ilan" <ilan.peer@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 25 Jan 2021 10:43:50 +0100
-In-Reply-To: <d839ab62-e4bc-56f0-d861-f172bf19c4b3@redhat.com>
-References: <iwlwifi.20210105165657.613e9a876829.Ia38d27dbebea28bf9c56d70691d243186ede70e7@changeid>
-         <d839ab62-e4bc-56f0-d861-f172bf19c4b3@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
+        Tue, 26 Jan 2021 17:45:19 -0500
+Received: from m42-8.mailgun.net ([69.72.42.8]:55962 "EHLO m42-8.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727884AbhAZRc1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jan 2021 12:32:27 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1611682320; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=qd8eFHF9sahtxnasGHzr+j1A6XXP+KsTxTl3+ooZsMk=; b=X3v6G6UF03L6JIowRGDv0NX/pMMRE1/5q6PM2+ASd7HM8JITzjW4T1UTxO2rCbBeLtD+2cV2
+ C0007m0JB95j4FuhATAMvhqBU2iLLQZ6yYxsnqmOC3VWUFtBAaXKMmKL/dY6QySMKlbaygK6
+ aT40hpTwhRPm4+6QpRbwoXU+WA0=
+X-Mailgun-Sending-Ip: 69.72.42.8
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 601051e7ad4c9e395bde4e30 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 Jan 2021 17:31:19
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 129AFC43461; Tue, 26 Jan 2021 17:31:19 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CCD7AC433CA;
+        Tue, 26 Jan 2021 17:31:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CCD7AC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Aloka Dixit <alokad@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Lavanya Suresh <lavaks@codeaurora.org>,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH V6] ath11k: add multiple bssid support
+References: <20210120003221.21984-1-alokad@codeaurora.org>
+Date:   Tue, 26 Jan 2021 19:31:14 +0200
+In-Reply-To: <20210120003221.21984-1-alokad@codeaurora.org> (Aloka Dixit's
+        message of "Tue, 19 Jan 2021 16:32:21 -0800")
+Message-ID: <874kj3bo65.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Hans,
+Aloka Dixit <alokad@codeaurora.org> writes:
 
-> So I'm afraid that I have some bad news about this patch, it fixes
-> the RCU warning which I reported:
+> From: John Crispin <john@phrozen.org>
+>
+> Add the required wmi support and make use of it in the beacon template
+> code. We need to split the beacon code up into 2 code paths so that
+> we can also send EMA templates.
+>
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01492-QCAHKSWPL_SILICONZ-1
+>
+> Signed-off-by: John Crispin <john@phrozen.org>
+> Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+> Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
 
-Uh. Just spoke with Ilan and we realized this was the staging driver,
-doing things the wrong way.
+Please CC ath11k list with ath11k patches.
 
-Could you test this?
+> base-commit: be8cd9b8f5ed435c27530430aa1b1da30f9825d5
+> prerequisite-patch-id: 1c9127eb0d6efce75a0aa085527bf81ced427387
+> prerequisite-patch-id: 41af1c46bdedfa8768dd4205bb0647101de27dea
+> prerequisite-patch-id: f197607d75899cbecffd775e1ca243aa2fe082d0
+> prerequisite-patch-id: 55dad75c4f560213110f57f1abf24d9b7301a1b2
 
-https://p.sipsolutions.net/235c352b8ae5db88.txt
+This fails to compile for me, what are these prerequisite patches?
 
-johannes
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
