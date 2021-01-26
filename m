@@ -2,65 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD8BC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D0DC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D492311D
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:07:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E06A20637
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392325AbhAZMGT (ORCPT
+        id S2404982AbhAZMLP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:06:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32780 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392346AbhAZLW6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 06:22:58 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 913ACC061797;
-        Tue, 26 Jan 2021 03:21:17 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1l4MPK-00Bsxn-Ff; Tue, 26 Jan 2021 12:21:14 +0100
-Message-ID: <e0eac0c0576c260ccdd849996805562167fcc009.camel@sipsolutions.net>
-Subject: Re: [PATCH] staging: rtl8723bs: fix wireless regulatory API misuse
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, ilan.peer@intel.com,
-        Hans de Goede <hdegoede@redhat.com>
-Date:   Tue, 26 Jan 2021 12:21:13 +0100
-In-Reply-To: <YA/7BL3eblv1glZr@kroah.com>
-References: <20210126115409.d5fd6f8fe042.Ib5823a6feb2e2aa01ca1a565d2505367f38ad246@changeid>
-         <YA/7BL3eblv1glZr@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
+        Tue, 26 Jan 2021 07:11:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38906 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404062AbhAZLOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jan 2021 06:14:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 27DAD23108;
+        Tue, 26 Jan 2021 11:14:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611659647;
+        bh=ZcIldbls1k+3Cum94TvuyMTcJRknOrkNe2eLWhGJ03k=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QLBp/Ido6ZvX882ck39JcQE8B7XHDBl3UF78Zu4U2Mno9tpPalXOQKUruGAwDKcNE
+         KZPoJ3qRcbU3/JhK4jGfDRq4o2VHLK40QweO3wTtuuJ2qzBcUW59TlPRrq4WVwQ9xY
+         +0XWVW0qOQMjugWvphG2S5IpEsDKeVwOAhRu7C8g/6cW1t6NtbxNjp+u6z2zLQCqMc
+         wXZ5s9Tms/zyDyD0IswPAuAhzwMwKW/Uqd5+eW3NOzj7XkQ5iDI1paJFHjq4WVZ1mU
+         Hx+hbrguXU5ZLXKLlm2Ba+v4q10+MzXiXHP6EgRaV8W3mRdWZ/cMlfk869Zr+94eg9
+         kiFgWaU1uWUBw==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com
+Subject: [PATCH v3 0/6] mt76: introduce mt76_connac common module
+Date:   Tue, 26 Jan 2021 12:13:50 +0100
+Message-Id: <cover.1611659413.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2021-01-26 at 12:20 +0100, Greg Kroah-Hartman wrote:
-> 
-> > Greg, can you take this for 5.11 please? Or if you prefer, since the
-> > patch that exposed this and broke the driver went through my tree, I
-> > can take it as well.
-> 
-> Please feel free to take it through yours, as I don't think I'll have
-> any more staging patches for 5.11-final (or none have been sent to me
-> yet), so this might be the fastest way in:
-> 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Introduce mt76_connac common module for code sharing between mt7615
+and mt7921 drivers.
 
-OK, will do, thanks!
+Changes since v2:
+- fix typo in mt7615_mcu_wtbl_sta_add()
 
-johannes
+Changes since v1:
+- rename mt76_vif struct of mt7615_vif in mt76
+
+Lorenzo Bianconi (6):
+  mt76: introduce mt76_vif data structure
+  mt76: mt76_connac: create mcu library
+  mt76: mt76_connac: move hw_scan and sched_scan routine in
+    mt76_connac_mcu module
+  mt76: mt76_connac: move WoW and suspend code in mt76_connac_mcu module
+  mt76: mt76_connac: move pm data struct in mt76_connac.h
+  mt76: mt76_connac: move pm utility routines in mt76_connac_lib module
+
+ drivers/net/wireless/mediatek/mt76/Kconfig    |    4 +
+ drivers/net/wireless/mediatek/mt76/Makefile   |    3 +
+ drivers/net/wireless/mediatek/mt76/mt76.h     |    8 +
+ .../net/wireless/mediatek/mt76/mt7615/Kconfig |    2 +-
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |   15 +-
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   |   91 +-
+ .../net/wireless/mediatek/mt76/mt7615/main.c  |  159 +-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 1624 ++---------------
+ .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  682 +------
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |   97 +-
+ .../net/wireless/mediatek/mt76/mt7615/pci.c   |    9 +-
+ .../wireless/mediatek/mt76/mt7615/pci_mac.c   |    2 +-
+ .../net/wireless/mediatek/mt76/mt7615/sdio.c  |    5 +-
+ .../net/wireless/mediatek/mt76/mt7615/usb.c   |    4 +-
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |   91 +
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  |  119 ++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 1490 +++++++++++++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  954 ++++++++++
+ 18 files changed, 2930 insertions(+), 2429 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+
+-- 
+2.29.2
 
