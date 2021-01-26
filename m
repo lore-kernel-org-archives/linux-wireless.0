@@ -2,94 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C60CCC433E6
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 13:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44521C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 15:45:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E08B23109
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 13:06:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB0B92083E
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 15:45:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391192AbhAZNGb (ORCPT
+        id S2391255AbhAZPp2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 08:06:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55312 "EHLO
+        Tue, 26 Jan 2021 10:45:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390642AbhAZNGU (ORCPT
+        with ESMTP id S2391958AbhAZPpL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 08:06:20 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92C91C0611C2;
-        Tue, 26 Jan 2021 05:05:38 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1l4O2K-00Bud6-Bx; Tue, 26 Jan 2021 14:05:36 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2021-01-26
-Date:   Tue, 26 Jan 2021 14:05:28 +0100
-Message-Id: <20210126130529.75225-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Tue, 26 Jan 2021 10:45:11 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8986C061A29
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 07:44:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=XAOl6Gr+MjIDiMkLNr0RdlUD3qcUIb5ZRjkvkP9PH5I=; b=gK3Cb5Xu0e7hnoonpVYvyGNMSr
+        5B9FnRbus3Jg5Mq/FTwug+VURfxO7hQNIjzur63pRrbWC0bFlVjD9XSBc4YMIkkcthNX9Mq+W2Rbt
+        MbFI8/eo2hXogX51ZBfl3pctgPhzDKtWzgZCx/BqYCjEbSm/TGKcFZl+06LwIUosrBVM=;
+Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l4QVo-0007Dc-Vg; Tue, 26 Jan 2021 16:44:13 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH] mac80211: minstrel_ht: fix regression in the max_prob_rate fix
+Date:   Tue, 26 Jan 2021 16:44:09 +0100
+Message-Id: <20210126154409.6755-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Jakub,
+Since mi->max_prob_rate is overwritten after the loop that calls
+minstrel_ht_set_best_prob_rate, the new best rate needs to be written to *dest
 
-We have a few fixes - note one is for a staging driver, but acked by
-Greg and fixing the driver for a change that came through my tree.
+Fixes: a7fca4e4037f ("mac80211: minstrel_ht: fix max probability rate selection")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 1c45ba93d34cd6af75228f34d0675200c81738b5:
-
-  net: dsa: microchip: Adjust reset release timing to match reference reset circuit (2021-01-20 20:52:28 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2021-01-26
-
-for you to fetch changes up to 81f153faacd04c049e5482d6ff33daddc30ed44e:
-
-  staging: rtl8723bs: fix wireless regulatory API misuse (2021-01-26 12:21:42 +0100)
-
-----------------------------------------------------------------
-A couple of fixes:
- * fix 160 MHz channel switch in mac80211
- * fix a staging driver to not deadlock due to some
-   recent cfg80211 changes
- * fix NULL-ptr deref if cfg80211 returns -EINPROGRESS
-   to wext (syzbot)
- * pause TX in mac80211 in type change to prevent crashes
-   (syzbot)
-
-----------------------------------------------------------------
-Johannes Berg (3):
-      wext: fix NULL-ptr-dereference with cfg80211's lack of commit()
-      mac80211: pause TX while changing interface type
-      staging: rtl8723bs: fix wireless regulatory API misuse
-
-Shay Bar (1):
-      mac80211: 160MHz with extended NSS BW in CSA
-
- drivers/staging/rtl8723bs/include/rtw_wifi_regd.h |  6 +++---
- drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c |  6 +++---
- drivers/staging/rtl8723bs/os_dep/wifi_regd.c      | 10 +++-------
- net/mac80211/ieee80211_i.h                        |  1 +
- net/mac80211/iface.c                              |  6 ++++++
- net/mac80211/spectmgmt.c                          | 10 +++++++---
- net/wireless/wext-core.c                          |  5 +++--
- 7 files changed, 26 insertions(+), 18 deletions(-)
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 8e9e30c468a6..d48798fa15cb 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -545,7 +545,7 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
+ 		cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx,
+ 						    mrs->prob_avg);
+ 		if (cur_tp_avg > tmp_tp_avg)
+-			mi->max_prob_rate = index;
++			*dest = index;
+ 
+ 		max_gpr_tp_avg = minstrel_ht_get_tp_avg(mi, max_gpr_group,
+ 							max_gpr_idx,
+-- 
+2.28.0
 
