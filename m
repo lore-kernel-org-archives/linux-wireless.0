@@ -7,333 +7,466 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB51C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54571C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:07:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0566C207A3
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:06:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 010E3207A3
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 13:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S313806AbhAZWq3 (ORCPT
+        id S313796AbhAZWqN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 17:46:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46816 "EHLO
+        Tue, 26 Jan 2021 17:46:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395050AbhAZS7U (ORCPT
+        with ESMTP id S2395043AbhAZS7D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 13:59:20 -0500
+        Tue, 26 Jan 2021 13:59:03 -0500
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0071C061797
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9E94C061794
         for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 10:58:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=yZN8lCZAbytUCWRt916RYYGgm3+2cRwiPUKKDYIJMuw=; b=B9cokHpBPVoFDxSRobUBnWekJ0
-        y1knyxyxj9ytis10QRrjeTK+TswKm/4pMOCTQKysZCwf8bc54tmK+zgbJfGxjZBZ8Hfg2IQMT+4EL
-        5+zw9Q1/Fq7QhkiTc1cvYi5YauHPJNIfLUSNTib9g1lg1Ez6GdQE1kL8ZVUHZwpCgRM4=;
+        bh=0cOrM8llVmwunEZdSp78B7BFxEYegyk7QngSvKGqTSs=; b=bQTyJ3+Az/P5hLauinc2Ggq4ac
+        kntb44q6gYe8RO8RHz2GRcd8sbS5OJkKnMmu5lrbRtx+DNDtSqEnh186b2WS0QQtHmDPlNAFxOA3b
+        UsYkIdqNPIt9YAB+WagqICQZFjNx/RDD7HZv8ZOM3kX1hO7KbQcbev1hSDtpI2M87dJo=;
 Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1l4TXV-0003cb-Dt; Tue, 26 Jan 2021 19:58:09 +0100
+        id 1l4TXT-0003cb-W8; Tue, 26 Jan 2021 19:58:08 +0100
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH v2 6/6] mac80211: minstrel_ht: remove sample rate switching code for constrained devices
-Date:   Tue, 26 Jan 2021 19:58:06 +0100
-Message-Id: <20210126185806.61770-6-nbd@nbd.name>
+Subject: [PATCH v2 1/6] mac80211: minstrel_ht: use bitfields to encode rate indexes
+Date:   Tue, 26 Jan 2021 19:58:01 +0100
+Message-Id: <20210126185806.61770-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20210126185806.61770-1-nbd@nbd.name>
-References: <20210126185806.61770-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This was added to mitigate the effects of too much sampling on devices that
-use a static global fallback table instead of configurable multi-rate retry.
-Now that the sampling algorithm is improved, this code path no longer performs
-any better than the standard probing on affected devices.
+Get rid of a lot of divisions and modulo operations
+Reduces code size and improves performance
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 95 ++----------------------------
- net/mac80211/rc80211_minstrel_ht.h | 17 +-----
- 2 files changed, 9 insertions(+), 103 deletions(-)
+v2: fix uninitialized variable warning
+
+ net/mac80211/rc80211_minstrel_ht.c         | 126 +++++++++++----------
+ net/mac80211/rc80211_minstrel_ht.h         |  13 +++
+ net/mac80211/rc80211_minstrel_ht_debugfs.c |   4 +-
+ 3 files changed, 79 insertions(+), 64 deletions(-)
 
 diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index e29d96474efa..2f44f4919789 100644
+index bfa550068de4..8974c3510489 100644
 --- a/net/mac80211/rc80211_minstrel_ht.c
 +++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -648,27 +648,6 @@ __minstrel_ht_get_sample_rate(struct minstrel_ht_sta *mi,
- 	return 0;
+@@ -379,13 +379,13 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ static inline struct minstrel_rate_stats *
+ minstrel_get_ratestats(struct minstrel_ht_sta *mi, int index)
+ {
+-	return &mi->groups[index / MCS_GROUP_RATES].rates[index % MCS_GROUP_RATES];
++	return &mi->groups[MI_RATE_GROUP(index)].rates[MI_RATE_IDX(index)];
  }
  
--static void
--minstrel_ht_rate_sample_switch(struct minstrel_priv *mp,
--			       struct minstrel_ht_sta *mi)
--{
--	u16 rate;
--
--	/*
--	 * Use rate switching instead of probing packets for devices with
--	 * little control over retry fallback behavior
--	 */
--	if (mp->hw->max_rates > 1)
--		return;
--
--	rate = __minstrel_ht_get_sample_rate(mi, MINSTREL_SAMPLE_TYPE_INC);
--	if (!rate)
--		return;
--
--	mi->sample_rate = rate;
--	mi->sample_mode = MINSTREL_SAMPLE_ACTIVE;
--}
--
- static inline int
- minstrel_ewma(int old, int new, int weight)
+ static inline int minstrel_get_duration(int index)
  {
-@@ -1012,8 +991,7 @@ minstrel_ht_refill_sample_rates(struct minstrel_ht_sta *mi)
-  *    higher throughput rates, even if the probablity is a bit lower
-  */
- static void
--minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
--			 bool sample)
-+minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- {
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mrs;
-@@ -1023,18 +1001,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	u16 index;
- 	bool ht_supported = mi->sta->ht_cap.ht_supported;
+-	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
+-	unsigned int duration = group->duration[index % MCS_GROUP_RATES];
++	const struct mcs_group *group = &minstrel_mcs_groups[MI_RATE_GROUP(index)];
++	unsigned int duration = group->duration[MI_RATE_IDX(index)];
  
--	mi->sample_mode = MINSTREL_SAMPLE_IDLE;
--
--	if (sample) {
--		mi->total_packets_cur = mi->total_packets -
--					mi->total_packets_last;
--		mi->total_packets_last = mi->total_packets;
--	}
--	if (!mp->sample_switch)
--		sample = false;
--	if (mi->total_packets_cur < SAMPLE_SWITCH_THR && mp->sample_switch != 1)
--	    sample = false;
--
- 	if (mi->ampdu_packets > 0) {
- 		if (!ieee80211_hw_check(mp->hw, TX_STATUS_NO_AMPDU_LEN))
- 			mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -1148,16 +1114,12 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	minstrel_ht_prob_rate_reduce_streams(mi);
- 	minstrel_ht_refill_sample_rates(mi);
+ 	return duration << group->shift;
+ }
+@@ -398,7 +398,7 @@ minstrel_ht_avg_ampdu_len(struct minstrel_ht_sta *mi)
+ 	if (mi->avg_ampdu_len)
+ 		return MINSTREL_TRUNC(mi->avg_ampdu_len);
  
--	if (sample)
--		minstrel_ht_rate_sample_switch(mp, mi);
--
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/* use fixed index if set */
- 	if (mp->fixed_rate_idx != -1) {
- 		for (i = 0; i < 4; i++)
- 			mi->max_tp_rate[i] = mp->fixed_rate_idx;
- 		mi->max_prob_rate = mp->fixed_rate_idx;
--		mi->sample_mode = MINSTREL_SAMPLE_IDLE;
- 	}
- #endif
+-	if (minstrel_ht_is_legacy_group(mi->max_tp_rate[0] / MCS_GROUP_RATES))
++	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_tp_rate[0])))
+ 		return 1;
  
-@@ -1247,11 +1209,10 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	struct ieee80211_tx_info *info = st->info;
- 	struct minstrel_ht_sta *mi = priv_sta;
- 	struct ieee80211_tx_rate *ar = info->status.rates;
--	struct minstrel_rate_stats *rate, *rate2, *rate_sample = NULL;
-+	struct minstrel_rate_stats *rate, *rate2;
- 	struct minstrel_priv *mp = priv;
- 	u32 update_interval = mp->update_interval;
- 	bool last, update = false;
--	bool sample_status = false;
+ 	duration = minstrel_get_duration(mi->max_tp_rate[0]);
+@@ -465,14 +465,14 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
+ 	int tmp_group, tmp_idx, tmp_tp_avg, tmp_prob;
+ 	int j = MAX_THR_RATES;
+ 
+-	cur_group = index / MCS_GROUP_RATES;
+-	cur_idx = index  % MCS_GROUP_RATES;
++	cur_group = MI_RATE_GROUP(index);
++	cur_idx = MI_RATE_IDX(index);
+ 	cur_prob = mi->groups[cur_group].rates[cur_idx].prob_avg;
+ 	cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx, cur_prob);
+ 
+ 	do {
+-		tmp_group = tp_list[j - 1] / MCS_GROUP_RATES;
+-		tmp_idx = tp_list[j - 1] % MCS_GROUP_RATES;
++		tmp_group = MI_RATE_GROUP(tp_list[j - 1]);
++		tmp_idx = MI_RATE_IDX(tp_list[j - 1]);
+ 		tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 		tmp_tp_avg = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx,
+ 						    tmp_prob);
+@@ -504,23 +504,23 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
+ 	int max_gpr_group, max_gpr_idx;
+ 	int max_gpr_tp_avg, max_gpr_prob;
+ 
+-	cur_group = index / MCS_GROUP_RATES;
+-	cur_idx = index % MCS_GROUP_RATES;
+-	mg = &mi->groups[index / MCS_GROUP_RATES];
+-	mrs = &mg->rates[index % MCS_GROUP_RATES];
++	cur_group = MI_RATE_GROUP(index);
++	cur_idx = MI_RATE_IDX(index);
++	mg = &mi->groups[cur_group];
++	mrs = &mg->rates[cur_idx];
+ 
+-	tmp_group = *dest / MCS_GROUP_RATES;
+-	tmp_idx = *dest % MCS_GROUP_RATES;
++	tmp_group = MI_RATE_GROUP(*dest);
++	tmp_idx = MI_RATE_IDX(*dest);
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 	tmp_tp_avg = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
+ 
+ 	/* if max_tp_rate[0] is from MCS_GROUP max_prob_rate get selected from
+ 	 * MCS_GROUP as well as CCK_GROUP rates do not allow aggregation */
+-	max_tp_group = mi->max_tp_rate[0] / MCS_GROUP_RATES;
+-	max_tp_idx = mi->max_tp_rate[0] % MCS_GROUP_RATES;
++	max_tp_group = MI_RATE_GROUP(mi->max_tp_rate[0]);
++	max_tp_idx = MI_RATE_IDX(mi->max_tp_rate[0]);
+ 	max_tp_prob = mi->groups[max_tp_group].rates[max_tp_idx].prob_avg;
+ 
+-	if (minstrel_ht_is_legacy_group(index / MCS_GROUP_RATES) &&
++	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(index)) &&
+ 	    !minstrel_ht_is_legacy_group(max_tp_group))
+ 		return;
+ 
+@@ -529,8 +529,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 *dest, u16 index)
+ 	    mrs->prob_avg < max_tp_prob)
+ 		return;
+ 
+-	max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
+-	max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
++	max_gpr_group = MI_RATE_GROUP(mg->max_group_prob_rate);
++	max_gpr_idx = MI_RATE_IDX(mg->max_group_prob_rate);
+ 	max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_avg;
+ 
+ 	if (mrs->prob_avg > MINSTREL_FRAC(75, 100)) {
+@@ -567,13 +567,13 @@ minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
+ 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp, tmp_prob;
  	int i;
  
- 	/* This packet was aggregated but doesn't carry status info */
-@@ -1278,49 +1239,18 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	mi->ampdu_packets++;
- 	mi->ampdu_len += info->status.ampdu_len;
+-	tmp_group = tmp_legacy_tp_rate[0] / MCS_GROUP_RATES;
+-	tmp_idx = tmp_legacy_tp_rate[0] % MCS_GROUP_RATES;
++	tmp_group = MI_RATE_GROUP(tmp_legacy_tp_rate[0]);
++	tmp_idx = MI_RATE_IDX(tmp_legacy_tp_rate[0]);
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 	tmp_cck_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
  
--	if (mi->sample_mode != MINSTREL_SAMPLE_IDLE)
--		rate_sample = minstrel_get_ratestats(mi, mi->sample_rate);
--
- 	last = !minstrel_ht_txstat_valid(mp, mi, &ar[0]);
- 	for (i = 0; !last; i++) {
- 		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
- 		       !minstrel_ht_txstat_valid(mp, mi, &ar[i + 1]);
+-	tmp_group = tmp_mcs_tp_rate[0] / MCS_GROUP_RATES;
+-	tmp_idx = tmp_mcs_tp_rate[0] % MCS_GROUP_RATES;
++	tmp_group = MI_RATE_GROUP(tmp_mcs_tp_rate[0]);
++	tmp_idx = MI_RATE_IDX(tmp_mcs_tp_rate[0]);
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 	tmp_mcs_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
  
- 		rate = minstrel_ht_get_stats(mp, mi, &ar[i]);
--		if (rate == rate_sample)
--			sample_status = true;
--
- 		if (last)
- 			rate->success += info->status.ampdu_ack_len;
+@@ -600,14 +600,14 @@ minstrel_ht_prob_rate_reduce_streams(struct minstrel_ht_sta *mi)
+ 	if (!mi->sta->ht_cap.ht_supported)
+ 		return;
  
- 		rate->attempts += ar[i].count * info->status.ampdu_len;
- 	}
+-	tmp_max_streams = minstrel_mcs_groups[mi->max_tp_rate[0] /
+-			  MCS_GROUP_RATES].streams;
++	group = MI_RATE_GROUP(mi->max_tp_rate[0]);
++	tmp_max_streams = minstrel_mcs_groups[group].streams;
+ 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
+ 		mg = &mi->groups[group];
+ 		if (!mi->supported[group] || group == MINSTREL_CCK_GROUP)
+ 			continue;
  
--	switch (mi->sample_mode) {
--	case MINSTREL_SAMPLE_IDLE:
--		if (mp->hw->max_rates > 1 ||
--		     mi->total_packets_cur < SAMPLE_SWITCH_THR)
--			update_interval /= 2;
--		break;
--
--	case MINSTREL_SAMPLE_ACTIVE:
--		if (!sample_status)
--			break;
--
--		mi->sample_mode = MINSTREL_SAMPLE_PENDING;
--		update = true;
--		break;
--
--	case MINSTREL_SAMPLE_PENDING:
--		if (sample_status)
--			break;
--
--		update = true;
--		minstrel_ht_update_stats(mp, mi, false);
--		break;
--	}
--
--
- 	if (mp->hw->max_rates > 1) {
- 		/*
- 		 * check for sudden death of spatial multiplexing,
-@@ -1343,7 +1273,7 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+-		tmp_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
++		tmp_idx = MI_RATE_IDX(mg->max_group_prob_rate);
+ 		tmp_prob = mi->groups[group].rates[tmp_idx].prob_avg;
  
- 	if (time_after(jiffies, mi->last_stats_update + update_interval)) {
- 		update = true;
--		minstrel_ht_update_stats(mp, mi, true);
-+		minstrel_ht_update_stats(mp, mi);
- 	}
+ 		if (tmp_tp < minstrel_ht_get_tp_avg(mi, group, tmp_idx, tmp_prob) &&
+@@ -644,8 +644,8 @@ minstrel_ht_find_probe_rates(struct minstrel_ht_sta *mi, u16 *rates, int *n_rate
+ 	int i, g, max_dur;
+ 	int tp_idx;
  
- 	if (update)
-@@ -1522,18 +1452,14 @@ static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+-	tp_group = &minstrel_mcs_groups[mi->max_tp_rate[0] / MCS_GROUP_RATES];
+-	tp_idx = mi->max_tp_rate[0] % MCS_GROUP_RATES;
++	tp_group = &minstrel_mcs_groups[MI_RATE_GROUP(mi->max_tp_rate[0])];
++	tp_idx = MI_RATE_IDX(mi->max_tp_rate[0]);
+ 
+ 	max_dur = minstrel_get_duration(mi->max_tp_rate[0]);
+ 	if (faster_rate)
+@@ -670,7 +670,7 @@ minstrel_ht_find_probe_rates(struct minstrel_ht_sta *mi, u16 *rates, int *n_rate
+ 			if ((group->duration[i] << group->shift) > max_dur)
+ 				continue;
+ 
+-			idx = g * MCS_GROUP_RATES + i;
++			idx = MI_RATE(g, i);
+ 			if (idx == mi->max_tp_rate[0])
+ 				continue;
+ 
+@@ -712,10 +712,10 @@ minstrel_ht_rate_sample_switch(struct minstrel_priv *mp,
+ 
+ 	/* If no suitable rate was found, try to pick the next one in the group */
+ 	if (!n_rates) {
+-		int g_idx = mi->max_tp_rate[0] / MCS_GROUP_RATES;
++		int g_idx = MI_RATE_GROUP(mi->max_tp_rate[0]);
+ 		u16 supported = mi->supported[g_idx];
+ 
+-		supported >>= mi->max_tp_rate[0] % MCS_GROUP_RATES;
++		supported >>= MI_RATE_IDX(mi->max_tp_rate[0]);
+ 		for (i = 0; supported; supported >>= 1, i++) {
+ 			if (!(supported & 1))
+ 				continue;
+@@ -854,24 +854,27 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	mi->sample_slow = 0;
+ 	mi->sample_count = 0;
+ 
+-	memset(tmp_mcs_tp_rate, 0, sizeof(tmp_mcs_tp_rate));
+-	memset(tmp_legacy_tp_rate, 0, sizeof(tmp_legacy_tp_rate));
+ 	if (mi->supported[MINSTREL_CCK_GROUP])
+-		for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
+-			tmp_legacy_tp_rate[j] = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
++		group = MINSTREL_CCK_GROUP;
+ 	else if (mi->supported[MINSTREL_OFDM_GROUP])
+-		for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
+-			tmp_legacy_tp_rate[j] = MINSTREL_OFDM_GROUP * MCS_GROUP_RATES;
++		group = MINSTREL_OFDM_GROUP;
++	else
++		group = 0;
++
++	index = MI_RATE(group, 0);
++	for (j = 0; j < ARRAY_SIZE(tmp_legacy_tp_rate); j++)
++		tmp_legacy_tp_rate[j] = index;
+ 
+ 	if (mi->supported[MINSTREL_VHT_GROUP_0])
+-		index = MINSTREL_VHT_GROUP_0 * MCS_GROUP_RATES;
++		group = MINSTREL_VHT_GROUP_0;
+ 	else if (ht_supported)
+-		index = MINSTREL_HT_GROUP_0 * MCS_GROUP_RATES;
++		group = MINSTREL_HT_GROUP_0;
+ 	else if (mi->supported[MINSTREL_CCK_GROUP])
+-		index = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
++		group = MINSTREL_CCK_GROUP;
+ 	else
+-		index = MINSTREL_OFDM_GROUP * MCS_GROUP_RATES;
++		group = MINSTREL_OFDM_GROUP;
+ 
++	index = MI_RATE(group, 0);
+ 	tmp_max_prob_rate = index;
+ 	for (j = 0; j < ARRAY_SIZE(tmp_mcs_tp_rate); j++)
+ 		tmp_mcs_tp_rate[j] = index;
+@@ -888,7 +891,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 
+ 		/* (re)Initialize group rate indexes */
+ 		for(j = 0; j < MAX_THR_RATES; j++)
+-			tmp_group_tp_rate[j] = MCS_GROUP_RATES * group;
++			tmp_group_tp_rate[j] = MI_RATE(group, 0);
+ 
+ 		if (group == MINSTREL_CCK_GROUP && ht_supported)
+ 			tp_rate = tmp_legacy_tp_rate;
+@@ -897,7 +900,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 			if (!(mi->supported[group] & BIT(i)))
+ 				continue;
+ 
+-			index = MCS_GROUP_RATES * group + i;
++			index = MI_RATE(group, i);
+ 
+ 			mrs = &mg->rates[i];
+ 			mrs->retry_updated = false;
+@@ -929,13 +932,13 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 			continue;
+ 
+ 		mg = &mi->groups[group];
+-		mg->max_group_prob_rate = MCS_GROUP_RATES * group;
++		mg->max_group_prob_rate = MI_RATE(group, 0);
+ 
+ 		for (i = 0; i < MCS_GROUP_RATES; i++) {
+ 			if (!(mi->supported[group] & BIT(i)))
+ 				continue;
+ 
+-			index = MCS_GROUP_RATES * group + i;
++			index = MI_RATE(group, i);
+ 
+ 			/* Find max probability rate per group and global */
+ 			minstrel_ht_set_best_prob_rate(mi, &tmp_max_prob_rate,
+@@ -1022,7 +1025,7 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
  {
- 	struct ieee80211_sta_rates *rates;
--	u16 first_rate = mi->max_tp_rate[0];
- 	int i = 0;
+ 	int group, orig_group;
  
--	if (mi->sample_mode == MINSTREL_SAMPLE_ACTIVE)
--		first_rate = mi->sample_rate;
--
- 	rates = kzalloc(sizeof(*rates), GFP_ATOMIC);
- 	if (!rates)
- 		return;
+-	orig_group = group = *idx / MCS_GROUP_RATES;
++	orig_group = group = MI_RATE_GROUP(*idx);
+ 	while (group > 0) {
+ 		group--;
  
- 	/* Start with max_tp_rate[0] */
--	minstrel_ht_set_rate(mp, mi, rates, i++, first_rate);
-+	minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[0]);
+@@ -1206,7 +1209,7 @@ minstrel_calc_retransmit(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	ctime += (t_slot * cw) >> 1;
+ 	cw = min((cw << 1) | 1, mp->cw_max);
  
- 	if (mp->hw->max_rates >= 3) {
- 		/* At least 3 tx rates supported, use max_tp_rate[1] next */
-@@ -1592,11 +1518,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
- 		return;
+-	if (minstrel_ht_is_legacy_group(index / MCS_GROUP_RATES)) {
++	if (minstrel_ht_is_legacy_group(MI_RATE_GROUP(index))) {
+ 		overhead = mi->overhead_legacy;
+ 		overhead_rtscts = mi->overhead_legacy_rtscts;
+ 	} else {
+@@ -1239,7 +1242,7 @@ static void
+ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+                      struct ieee80211_sta_rates *ratetbl, int offset, int index)
+ {
+-	int group_idx = index / MCS_GROUP_RATES;
++	int group_idx = MI_RATE_GROUP(index);
+ 	const struct mcs_group *group = &minstrel_mcs_groups[group_idx];
+ 	struct minstrel_rate_stats *mrs;
+ 	u8 idx;
+@@ -1259,7 +1262,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 		ratetbl->rate[offset].count_rts = mrs->retry_count_rtscts;
+ 	}
  
--	if (mp->hw->max_rates == 1 && mp->sample_switch &&
--	    (mi->total_packets_cur >= SAMPLE_SWITCH_THR ||
--	     mp->sample_switch == 1))
--		return;
--
- 	if (time_is_before_jiffies(mi->sample_time))
- 		return;
- 
-@@ -1810,7 +1731,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	minstrel_ht_update_ofdm(mp, mi, sband, sta);
- 
- 	/* create an initial rate table with the lowest supported rates */
--	minstrel_ht_update_stats(mp, mi, true);
-+	minstrel_ht_update_stats(mp, mi);
- 	minstrel_ht_update_rates(mp, mi);
+-	index %= MCS_GROUP_RATES;
++	index = MI_RATE_IDX(index);
+ 	if (group_idx == MINSTREL_CCK_GROUP)
+ 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
+ 	else if (group_idx == MINSTREL_OFDM_GROUP)
+@@ -1289,17 +1292,17 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ static inline int
+ minstrel_ht_get_prob_avg(struct minstrel_ht_sta *mi, int rate)
+ {
+-	int group = rate / MCS_GROUP_RATES;
+-	rate %= MCS_GROUP_RATES;
++	int group = MI_RATE_GROUP(rate);
++	rate = MI_RATE_IDX(rate);
+ 	return mi->groups[group].rates[rate].prob_avg;
  }
  
-@@ -1926,8 +1847,6 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
- 	if (!mp)
- 		return NULL;
+ static int
+ minstrel_ht_get_max_amsdu_len(struct minstrel_ht_sta *mi)
+ {
+-	int group = mi->max_prob_rate / MCS_GROUP_RATES;
++	int group = MI_RATE_GROUP(mi->max_prob_rate);
+ 	const struct mcs_group *g = &minstrel_mcs_groups[group];
+-	int rate = mi->max_prob_rate % MCS_GROUP_RATES;
++	int rate = MI_RATE_IDX(mi->max_prob_rate);
+ 	unsigned int duration;
  
--	mp->sample_switch = -1;
--
- 	/* contention window settings
- 	 * Just an approximation. Using the per-queue values would complicate
- 	 * the calculations and is probably unnecessary */
-@@ -1947,7 +1866,7 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
- 		mp->has_mrr = true;
+ 	/* Disable A-MSDU if max_prob_rate is bad */
+@@ -1405,7 +1408,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		return -1;
  
- 	mp->hw = hw;
--	mp->update_interval = HZ / 10;
-+	mp->update_interval = HZ / 20;
+ 	mrs = &mg->rates[sample_idx];
+-	sample_idx += sample_group * MCS_GROUP_RATES;
++	sample_idx += MI_RATE(sample_group, 0);
  
- 	minstrel_ht_init_cck_rates(mp);
- 	for (i = 0; i < ARRAY_SIZE(mp->hw->wiphy->bands); i++)
-@@ -1965,8 +1884,6 @@ static void minstrel_ht_add_debugfs(struct ieee80211_hw *hw, void *priv,
- 	mp->fixed_rate_idx = (u32) -1;
- 	debugfs_create_u32("fixed_rate_idx", S_IRUGO | S_IWUGO, debugfsdir,
- 			   &mp->fixed_rate_idx);
--	debugfs_create_u32("sample_switch", S_IRUGO | S_IWUSR, debugfsdir,
--			   &mp->sample_switch);
- }
- #endif
+ 	tp_rate1 = mi->max_tp_rate[0];
  
+@@ -1455,8 +1458,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	 * if the link is working perfectly.
+ 	 */
+ 
+-	cur_max_tp_streams = minstrel_mcs_groups[tp_rate1 /
+-		MCS_GROUP_RATES].streams;
++	cur_max_tp_streams = minstrel_mcs_groups[MI_RATE_GROUP(tp_rate1)].streams;
+ 	if (sample_dur >= minstrel_get_duration(tp_rate2) &&
+ 	    (cur_max_tp_streams - 1 <
+ 	     minstrel_mcs_groups[sample_group].streams ||
+@@ -1484,7 +1486,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	int sample_idx;
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-	    !minstrel_ht_is_legacy_group(mi->max_prob_rate / MCS_GROUP_RATES))
++	    !minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_prob_rate)))
+ 		minstrel_aggr_check(sta, txrc->skb);
+ 
+ 	info->flags |= mi->tx_flags;
+@@ -1512,8 +1514,8 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	if (sample_idx < 0)
+ 		return;
+ 
+-	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
+-	sample_idx %= MCS_GROUP_RATES;
++	sample_group = &minstrel_mcs_groups[MI_RATE_GROUP(sample_idx)];
++	sample_idx = MI_RATE_IDX(sample_idx);
+ 
+ 	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP] &&
+ 	    (sample_idx >= 4) != txrc->short_preamble)
+@@ -1529,7 +1531,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		int idx = sample_idx % ARRAY_SIZE(mp->ofdm_rates[0]);
+ 		rate->idx = mp->ofdm_rates[mi->band][idx];
+ 	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
+-		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
++		ieee80211_rate_set_vht(rate, MI_RATE_IDX(sample_idx),
+ 				       sample_group->streams);
+ 	} else {
+ 		rate->idx = sample_idx + (sample_group->streams - 1) * 8;
+@@ -1898,8 +1900,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 	struct minstrel_ht_sta *mi = priv_sta;
+ 	int i, j, prob, tp_avg;
+ 
+-	i = mi->max_tp_rate[0] / MCS_GROUP_RATES;
+-	j = mi->max_tp_rate[0] % MCS_GROUP_RATES;
++	i = MI_RATE_GROUP(mi->max_tp_rate[0]);
++	j = MI_RATE_IDX(mi->max_tp_rate[0]);
+ 	prob = mi->groups[i].rates[j].prob_avg;
+ 
+ 	/* convert tp_avg from pkt per second in kbps */
 diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 0d8c15f83f5d..06e7126727ad 100644
+index 7d6d0b720f6d..5912f7dc5267 100644
 --- a/net/mac80211/rc80211_minstrel_ht.h
 +++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -75,7 +75,6 @@
+@@ -6,6 +6,8 @@
+ #ifndef __RC_MINSTREL_HT_H
+ #define __RC_MINSTREL_HT_H
+ 
++#include <linux/bitfield.h>
++
+ /* number of highest throughput rates to consider*/
+ #define MAX_THR_RATES 4
+ #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
+@@ -57,6 +59,17 @@
+ 
+ #define MCS_GROUP_RATES		10
+ 
++#define MI_RATE_IDX_MASK	GENMASK(3, 0)
++#define MI_RATE_GROUP_MASK	GENMASK(15, 4)
++
++#define MI_RATE(_group, _idx)				\
++	(FIELD_PREP(MI_RATE_GROUP_MASK, _group) |	\
++	 FIELD_PREP(MI_RATE_IDX_MASK, _idx))
++
++#define MI_RATE_IDX(_rate) FIELD_GET(MI_RATE_IDX_MASK, _rate)
++#define MI_RATE_GROUP(_rate) FIELD_GET(MI_RATE_GROUP_MASK, _rate)
++
++
  struct minstrel_priv {
  	struct ieee80211_hw *hw;
  	bool has_mrr;
--	u32 sample_switch;
- 	unsigned int cw_min;
- 	unsigned int cw_max;
- 	unsigned int max_retry;
-@@ -147,12 +146,6 @@ struct minstrel_mcs_group_data {
- 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
- };
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 3b7af242cde6..067d10383fa7 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -56,7 +56,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
  
--enum minstrel_sample_mode {
--	MINSTREL_SAMPLE_IDLE,
--	MINSTREL_SAMPLE_ACTIVE,
--	MINSTREL_SAMPLE_PENDING,
--};
--
- struct minstrel_sample_category {
- 	u8 sample_group;
- 	u16 sample_rates[MINSTREL_SAMPLE_RATES];
-@@ -182,23 +175,19 @@ struct minstrel_ht_sta {
- 	unsigned int overhead_legacy;
- 	unsigned int overhead_legacy_rtscts;
+ 	for (j = 0; j < MCS_GROUP_RATES; j++) {
+ 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
+-		int idx = i * MCS_GROUP_RATES + j;
++		int idx = MI_RATE(i, j);
+ 		unsigned int duration;
  
--	unsigned int total_packets_last;
--	unsigned int total_packets_cur;
- 	unsigned int total_packets;
- 	unsigned int sample_packets;
+ 		if (!(mi->supported[i] & BIT(j)))
+@@ -201,7 +201,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
  
- 	/* tx flags to add for frames for this sta */
- 	u32 tx_flags;
+ 	for (j = 0; j < MCS_GROUP_RATES; j++) {
+ 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
+-		int idx = i * MCS_GROUP_RATES + j;
++		int idx = MI_RATE(i, j);
+ 		unsigned int duration;
  
--	unsigned long sample_time;
--	struct minstrel_sample_category sample[__MINSTREL_SAMPLE_TYPE_MAX];
-+	u8 band;
- 
- 	u8 sample_seq;
--
--	enum minstrel_sample_mode sample_mode;
- 	u16 sample_rate;
- 
--	u8 band;
-+	unsigned long sample_time;
-+	struct minstrel_sample_category sample[__MINSTREL_SAMPLE_TYPE_MAX];
- 
- 	/* Bitfield of supported MCS rates of all groups */
- 	u16 supported[MINSTREL_GROUPS_NB];
+ 		if (!(mi->supported[i] & BIT(j)))
 -- 
 2.28.0
 
