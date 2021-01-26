@@ -2,97 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8ECBC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 22:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1889AC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 22:48:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 965AD2065E
+	by mail.kernel.org (Postfix) with ESMTP id E16AF2065E
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 22:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729834AbhAZWpY (ORCPT
+        id S1729889AbhAZWpv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 17:45:24 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:54401 "EHLO m42-8.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393643AbhAZR4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 12:56:16 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611683726; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=YcFGRK80viLYSMj8aiSnVDbBzfSTf8W9ZBT7ENKIOns=;
- b=JW5YwnU3O/8Uf0xDav89aRrnKlCPDmRSf6gy2voCLjyung2A0tTCFiZYqjf9QNkXRD7ROT37
- cyRjymeL6BRf2mu/wMRRGzoKpk+pZs777zwlpx+1uKLlS+OdaGAk+GnA3anvjmjf1dXCz7+S
- WabirJx4uOHLxEk1Q/ooe77YhyU=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 601057715677aca7bd5fa311 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 Jan 2021 17:54:57
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 19518C43462; Tue, 26 Jan 2021 17:54:57 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 17D71C433CA;
-        Tue, 26 Jan 2021 17:54:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 17D71C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 26 Jan 2021 17:45:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46808 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392680AbhAZS7A (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jan 2021 13:59:00 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2A7DC06178C
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 10:58:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=BKHsgdfC9xJRT2Zc169eBLstSXJ+aQ4LY8SnDtVBMAM=; b=Q0+U3Se3It3RZptxHua61MDmSt
+        Kyuq985uVaIe3VJlzBFBNGtHnq4og538cSAbxG7umC296qpubFaZ7fzpeDMRLUwGcj8UvKOW+anD6
+        10x+s41Zn9ZTG9K+jPIPRDr3Ch+tIvkeQFKqVMo8TxwBfpR0dffCZAVmRTdyTF78o22Q=;
+Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l4TXU-0003cb-Te; Tue, 26 Jan 2021 19:58:09 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH v2 5/6] mac80211: minstrel_ht: show sampling rates in debugfs
+Date:   Tue, 26 Jan 2021 19:58:05 +0100
+Message-Id: <20210126185806.61770-5-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210126185806.61770-1-nbd@nbd.name>
+References: <20210126185806.61770-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 3/3] ath10k: allow dynamic SAR power limits via common
- API
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20201203103728.3034-4-cjhuang@codeaurora.org>
-References: <20201203103728.3034-4-cjhuang@codeaurora.org>
-To:     Carl Huang <cjhuang@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        briannorris@chromium.org, dianders@chromium.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210126175457.19518C43462@smtp.codeaurora.org>
-Date:   Tue, 26 Jan 2021 17:54:57 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Carl Huang <cjhuang@codeaurora.org> wrote:
+This makes it easier to see what rates are going to be tested next
 
-> ath10k assigns ath10k_mac_set_sar_specs to ath10k_ops, and
-> this function is called when user space application calls
-> NL80211_CMD_SET_SAR_SPECS. ath10k also registers SAR type,
-> and supported frequency ranges to wiphy so user space can
-> query SAR capabilities.
-> 
-> This SAR power limitation is compared to regulatory txpower
-> and selects the minimal one to set when station is connected.
-> Otherwise, it delays until the station is connected. If the
-> station is disconnected, it returns to regulatory txpower.
-> 
-> This feature is controlled by hw parameter: dynamic_sar_support.
-> 
-> Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00110-QCARMSWP-1
-> 
-> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> Reviewed-by: Abhishek Kumar <kuabhs@chromium.org>
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+v2: fix duplicated line
 
-In the pending branch I changed the error handling in
-ath10k_mac_set_sar_specs() to follow the ath10k style.
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 067d10383fa7..25b8a67a63a4 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -32,6 +32,18 @@ minstrel_stats_release(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static bool
++minstrel_ht_is_sample_rate(struct minstrel_ht_sta *mi, int idx)
++{
++	int type, i;
++
++	for (type = 0; type < ARRAY_SIZE(mi->sample); type++)
++		for (i = 0; i < MINSTREL_SAMPLE_RATES; i++)
++			if (mi->sample[type].cur_sample_rates[i] == idx)
++				return true;
++	return false;
++}
++
+ static char *
+ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ {
+@@ -84,6 +96,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		*(p++) = (idx == mi->max_tp_rate[2]) ? 'C' : ' ';
+ 		*(p++) = (idx == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
++		*(p++) = minstrel_ht_is_sample_rate(mi, idx) ? 'S' : ' ';
+ 
+ 		if (gflags & IEEE80211_TX_RC_MCS) {
+ 			p += sprintf(p, "  MCS%-2u", (mg->streams - 1) * 8 + j);
+@@ -145,9 +158,9 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p,
+-		     "              best   ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
++		     "              best    ____________rate__________    ____statistics___    _____last____    ______sum-of________\n");
+ 	p += sprintf(p,
+-		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
++		     "mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]\n");
+ 
+ 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
+ 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
+@@ -228,6 +241,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[2]) ? "C" : ""));
+ 		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[3]) ? "D" : ""));
+ 		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
++		p += sprintf(p, "%s", (minstrel_ht_is_sample_rate(mi, idx) ? "S" : ""));
+ 
+ 		if (gflags & IEEE80211_TX_RC_MCS) {
+ 			p += sprintf(p, ",MCS%-2u,", (mg->streams - 1) * 8 + j);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20201203103728.3034-4-cjhuang@codeaurora.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.28.0
 
