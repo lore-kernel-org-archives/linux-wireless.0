@@ -2,73 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2278C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 11:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD8BC433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A03D23104
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 11:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80D492311D
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jan 2021 12:07:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392290AbhAZLV3 (ORCPT
+        id S2392325AbhAZMGT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Jan 2021 06:21:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392194AbhAZLVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jan 2021 06:21:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7039022795;
-        Tue, 26 Jan 2021 11:20:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1611660038;
-        bh=cxRRKLvkAzn2aBTFkAN9CJZ7uMjLsyIWHcwe3vNgWns=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mboS0X9Ca6iVq9Fp7TWZryUk0WK0mCud4u2Gn2bvqyR8Tg60493cnPLHqJT/TsstQ
-         HZyG+oSPHSEEjGphSBg+68LZYU3EAVpHn9G0VK3ysj0M5aTo0FwwohhObGsu9dziND
-         Vh0cTQuEWEIoc1sgAGgYrvOXRqnBzT0RahtGfg1E=
-Date:   Tue, 26 Jan 2021 12:20:36 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
+        Tue, 26 Jan 2021 07:06:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32780 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392346AbhAZLW6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jan 2021 06:22:58 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 913ACC061797;
+        Tue, 26 Jan 2021 03:21:17 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1l4MPK-00Bsxn-Ff; Tue, 26 Jan 2021 12:21:14 +0100
+Message-ID: <e0eac0c0576c260ccdd849996805562167fcc009.camel@sipsolutions.net>
+Subject: Re: [PATCH] staging: rtl8723bs: fix wireless regulatory API misuse
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, ilan.peer@intel.com,
-        Johannes Berg <johannes.berg@intel.com>,
         Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] staging: rtl8723bs: fix wireless regulatory API misuse
-Message-ID: <YA/7BL3eblv1glZr@kroah.com>
+Date:   Tue, 26 Jan 2021 12:21:13 +0100
+In-Reply-To: <YA/7BL3eblv1glZr@kroah.com>
 References: <20210126115409.d5fd6f8fe042.Ib5823a6feb2e2aa01ca1a565d2505367f38ad246@changeid>
+         <YA/7BL3eblv1glZr@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210126115409.d5fd6f8fe042.Ib5823a6feb2e2aa01ca1a565d2505367f38ad246@changeid>
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jan 26, 2021 at 11:54:09AM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2021-01-26 at 12:20 +0100, Greg Kroah-Hartman wrote:
 > 
-> This code ends up calling wiphy_apply_custom_regulatory(), for which
-> we document that it should be called before wiphy_register(). This
-> driver doesn't do that, but calls it from ndo_open() with the RTNL
-> held, which caused deadlocks.
+> > Greg, can you take this for 5.11 please? Or if you prefer, since the
+> > patch that exposed this and broke the driver went through my tree, I
+> > can take it as well.
 > 
-> Since the driver just registers static regdomain data and then the
-> notifier applies the channel changes if any, there's no reason for
-> it to call this in ndo_open(), move it earlier to fix the deadlock.
+> Please feel free to take it through yours, as I don't think I'll have
+> any more staging patches for 5.11-final (or none have been sent to me
+> yet), so this might be the fastest way in:
 > 
-> Reported-and-tested-by: Hans de Goede <hdegoede@redhat.com>
-> Fixes: 51d62f2f2c50 ("cfg80211: Save the regulatory domain with a lock")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Greg, can you take this for 5.11 please? Or if you prefer, since the
-> patch that exposed this and broke the driver went through my tree, I
-> can take it as well.
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Please feel free to take it through yours, as I don't think I'll have
-any more staging patches for 5.11-final (or none have been sent to me
-yet), so this might be the fastest way in:
+OK, will do, thanks!
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+johannes
+
