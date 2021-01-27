@@ -2,98 +2,338 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 704A5C433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 05:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D3EC433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38EE92070A
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 05:58:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A7F5205CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231506AbhA0F5o (ORCPT
+        id S231161AbhA0GTt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jan 2021 00:57:44 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:23285 "EHLO m42-8.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232225AbhA0FMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jan 2021 00:12:38 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611724326; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=PZnOYF05HkispD0eSYFORy9Ic1cH/Mgkcr30MzSPrFs=; b=pOuSrRl+UXn/WU41SzvaNYBLfyUfb5YfU2hdDFCGRhEw8z00ddNt2p+pr5nd1fMRAuceeo/2
- RcxJUGRgoHqPzAKgHvPrTljDFod+axbsAAzptJF8mTgzJR+4aFG/SkLx6+akM1QitiJkduDS
- C9xfBGZTY0z1hLnhSTsd/nofXLY=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 6010f602d75e1218e30cde0d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 27 Jan 2021 05:11:30
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 46036C43469; Wed, 27 Jan 2021 05:11:29 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F314BC433CA;
-        Wed, 27 Jan 2021 05:11:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F314BC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Dave Airlie <airlied@redhat.com>,
-        Gerd Hoffmann <kraxel@redhat.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, linux-s390@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] Fix "ordering" comment typos
-References: <20210126195042.2909405-1-helgaas@kernel.org>
-Date:   Wed, 27 Jan 2021 07:11:22 +0200
-In-Reply-To: <20210126195042.2909405-1-helgaas@kernel.org> (Bjorn Helgaas's
-        message of "Tue, 26 Jan 2021 13:50:42 -0600")
-Message-ID: <87zh0v9d6t.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 27 Jan 2021 01:19:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47418 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232462AbhA0F6q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Jan 2021 00:58:46 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E1DC061786
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 21:57:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=yZN8lCZAbytUCWRt916RYYGgm3+2cRwiPUKKDYIJMuw=; b=IypZtVJbHagkfQx3Ujxm9Hpxy0
+        e0Z9RV4N2H2eBBJXZUUh3mzO2Oa5o6VlbNY2ZKqDLOk+8bUVM58t3kBZ8Ed3VT2njQbreu948R59t
+        xCT2Od0ctwGyWaur8HdL+buf6ykd2DfiNEgYGGLmV15P1cI+WhXRdiwZPQyd+H7jz34Q=;
+Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l4dph-00083z-TB; Wed, 27 Jan 2021 06:57:37 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH RESEND v2 6/6] mac80211: minstrel_ht: remove sample rate switching code for constrained devices
+Date:   Wed, 27 Jan 2021 06:57:35 +0100
+Message-Id: <20210127055735.78599-6-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210127055735.78599-1-nbd@nbd.name>
+References: <20210127055735.78599-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+This was added to mitigate the effects of too much sampling on devices that
+use a static global fallback table instead of configurable multi-rate retry.
+Now that the sampling algorithm is improved, this code path no longer performs
+any better than the standard probing on affected devices.
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> Fix comment typos in "ordering".
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/s390/include/asm/facility.h             | 2 +-
->  drivers/gpu/drm/qxl/qxl_drv.c                | 2 +-
->  drivers/net/wireless/intel/iwlwifi/fw/file.h | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
->
->
-> Unless somebody objects, I'll just merge these typo fixes via the PCI tree.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 95 ++----------------------------
+ net/mac80211/rc80211_minstrel_ht.h | 17 +-----
+ 2 files changed, 9 insertions(+), 103 deletions(-)
 
-Please do.
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index e29d96474efa..2f44f4919789 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -648,27 +648,6 @@ __minstrel_ht_get_sample_rate(struct minstrel_ht_sta *mi,
+ 	return 0;
+ }
+ 
+-static void
+-minstrel_ht_rate_sample_switch(struct minstrel_priv *mp,
+-			       struct minstrel_ht_sta *mi)
+-{
+-	u16 rate;
+-
+-	/*
+-	 * Use rate switching instead of probing packets for devices with
+-	 * little control over retry fallback behavior
+-	 */
+-	if (mp->hw->max_rates > 1)
+-		return;
+-
+-	rate = __minstrel_ht_get_sample_rate(mi, MINSTREL_SAMPLE_TYPE_INC);
+-	if (!rate)
+-		return;
+-
+-	mi->sample_rate = rate;
+-	mi->sample_mode = MINSTREL_SAMPLE_ACTIVE;
+-}
+-
+ static inline int
+ minstrel_ewma(int old, int new, int weight)
+ {
+@@ -1012,8 +991,7 @@ minstrel_ht_refill_sample_rates(struct minstrel_ht_sta *mi)
+  *    higher throughput rates, even if the probablity is a bit lower
+  */
+ static void
+-minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+-			 bool sample)
++minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ {
+ 	struct minstrel_mcs_group_data *mg;
+ 	struct minstrel_rate_stats *mrs;
+@@ -1023,18 +1001,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	u16 index;
+ 	bool ht_supported = mi->sta->ht_cap.ht_supported;
+ 
+-	mi->sample_mode = MINSTREL_SAMPLE_IDLE;
+-
+-	if (sample) {
+-		mi->total_packets_cur = mi->total_packets -
+-					mi->total_packets_last;
+-		mi->total_packets_last = mi->total_packets;
+-	}
+-	if (!mp->sample_switch)
+-		sample = false;
+-	if (mi->total_packets_cur < SAMPLE_SWITCH_THR && mp->sample_switch != 1)
+-	    sample = false;
+-
+ 	if (mi->ampdu_packets > 0) {
+ 		if (!ieee80211_hw_check(mp->hw, TX_STATUS_NO_AMPDU_LEN))
+ 			mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
+@@ -1148,16 +1114,12 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	minstrel_ht_prob_rate_reduce_streams(mi);
+ 	minstrel_ht_refill_sample_rates(mi);
+ 
+-	if (sample)
+-		minstrel_ht_rate_sample_switch(mp, mi);
+-
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* use fixed index if set */
+ 	if (mp->fixed_rate_idx != -1) {
+ 		for (i = 0; i < 4; i++)
+ 			mi->max_tp_rate[i] = mp->fixed_rate_idx;
+ 		mi->max_prob_rate = mp->fixed_rate_idx;
+-		mi->sample_mode = MINSTREL_SAMPLE_IDLE;
+ 	}
+ #endif
+ 
+@@ -1247,11 +1209,10 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ieee80211_tx_info *info = st->info;
+ 	struct minstrel_ht_sta *mi = priv_sta;
+ 	struct ieee80211_tx_rate *ar = info->status.rates;
+-	struct minstrel_rate_stats *rate, *rate2, *rate_sample = NULL;
++	struct minstrel_rate_stats *rate, *rate2;
+ 	struct minstrel_priv *mp = priv;
+ 	u32 update_interval = mp->update_interval;
+ 	bool last, update = false;
+-	bool sample_status = false;
+ 	int i;
+ 
+ 	/* This packet was aggregated but doesn't carry status info */
+@@ -1278,49 +1239,18 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	mi->ampdu_packets++;
+ 	mi->ampdu_len += info->status.ampdu_len;
+ 
+-	if (mi->sample_mode != MINSTREL_SAMPLE_IDLE)
+-		rate_sample = minstrel_get_ratestats(mi, mi->sample_rate);
+-
+ 	last = !minstrel_ht_txstat_valid(mp, mi, &ar[0]);
+ 	for (i = 0; !last; i++) {
+ 		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
+ 		       !minstrel_ht_txstat_valid(mp, mi, &ar[i + 1]);
+ 
+ 		rate = minstrel_ht_get_stats(mp, mi, &ar[i]);
+-		if (rate == rate_sample)
+-			sample_status = true;
+-
+ 		if (last)
+ 			rate->success += info->status.ampdu_ack_len;
+ 
+ 		rate->attempts += ar[i].count * info->status.ampdu_len;
+ 	}
+ 
+-	switch (mi->sample_mode) {
+-	case MINSTREL_SAMPLE_IDLE:
+-		if (mp->hw->max_rates > 1 ||
+-		     mi->total_packets_cur < SAMPLE_SWITCH_THR)
+-			update_interval /= 2;
+-		break;
+-
+-	case MINSTREL_SAMPLE_ACTIVE:
+-		if (!sample_status)
+-			break;
+-
+-		mi->sample_mode = MINSTREL_SAMPLE_PENDING;
+-		update = true;
+-		break;
+-
+-	case MINSTREL_SAMPLE_PENDING:
+-		if (sample_status)
+-			break;
+-
+-		update = true;
+-		minstrel_ht_update_stats(mp, mi, false);
+-		break;
+-	}
+-
+-
+ 	if (mp->hw->max_rates > 1) {
+ 		/*
+ 		 * check for sudden death of spatial multiplexing,
+@@ -1343,7 +1273,7 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 	if (time_after(jiffies, mi->last_stats_update + update_interval)) {
+ 		update = true;
+-		minstrel_ht_update_stats(mp, mi, true);
++		minstrel_ht_update_stats(mp, mi);
+ 	}
+ 
+ 	if (update)
+@@ -1522,18 +1452,14 @@ static void
+ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ {
+ 	struct ieee80211_sta_rates *rates;
+-	u16 first_rate = mi->max_tp_rate[0];
+ 	int i = 0;
+ 
+-	if (mi->sample_mode == MINSTREL_SAMPLE_ACTIVE)
+-		first_rate = mi->sample_rate;
+-
+ 	rates = kzalloc(sizeof(*rates), GFP_ATOMIC);
+ 	if (!rates)
+ 		return;
+ 
+ 	/* Start with max_tp_rate[0] */
+-	minstrel_ht_set_rate(mp, mi, rates, i++, first_rate);
++	minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[0]);
+ 
+ 	if (mp->hw->max_rates >= 3) {
+ 		/* At least 3 tx rates supported, use max_tp_rate[1] next */
+@@ -1592,11 +1518,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
+ 		return;
+ 
+-	if (mp->hw->max_rates == 1 && mp->sample_switch &&
+-	    (mi->total_packets_cur >= SAMPLE_SWITCH_THR ||
+-	     mp->sample_switch == 1))
+-		return;
+-
+ 	if (time_is_before_jiffies(mi->sample_time))
+ 		return;
+ 
+@@ -1810,7 +1731,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	minstrel_ht_update_ofdm(mp, mi, sband, sta);
+ 
+ 	/* create an initial rate table with the lowest supported rates */
+-	minstrel_ht_update_stats(mp, mi, true);
++	minstrel_ht_update_stats(mp, mi);
+ 	minstrel_ht_update_rates(mp, mi);
+ }
+ 
+@@ -1926,8 +1847,6 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
+ 	if (!mp)
+ 		return NULL;
+ 
+-	mp->sample_switch = -1;
+-
+ 	/* contention window settings
+ 	 * Just an approximation. Using the per-queue values would complicate
+ 	 * the calculations and is probably unnecessary */
+@@ -1947,7 +1866,7 @@ minstrel_ht_alloc(struct ieee80211_hw *hw)
+ 		mp->has_mrr = true;
+ 
+ 	mp->hw = hw;
+-	mp->update_interval = HZ / 10;
++	mp->update_interval = HZ / 20;
+ 
+ 	minstrel_ht_init_cck_rates(mp);
+ 	for (i = 0; i < ARRAY_SIZE(mp->hw->wiphy->bands); i++)
+@@ -1965,8 +1884,6 @@ static void minstrel_ht_add_debugfs(struct ieee80211_hw *hw, void *priv,
+ 	mp->fixed_rate_idx = (u32) -1;
+ 	debugfs_create_u32("fixed_rate_idx", S_IRUGO | S_IWUGO, debugfsdir,
+ 			   &mp->fixed_rate_idx);
+-	debugfs_create_u32("sample_switch", S_IRUGO | S_IWUSR, debugfsdir,
+-			   &mp->sample_switch);
+ }
+ #endif
+ 
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index 0d8c15f83f5d..06e7126727ad 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -75,7 +75,6 @@
+ struct minstrel_priv {
+ 	struct ieee80211_hw *hw;
+ 	bool has_mrr;
+-	u32 sample_switch;
+ 	unsigned int cw_min;
+ 	unsigned int cw_max;
+ 	unsigned int max_retry;
+@@ -147,12 +146,6 @@ struct minstrel_mcs_group_data {
+ 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
+ };
+ 
+-enum minstrel_sample_mode {
+-	MINSTREL_SAMPLE_IDLE,
+-	MINSTREL_SAMPLE_ACTIVE,
+-	MINSTREL_SAMPLE_PENDING,
+-};
+-
+ struct minstrel_sample_category {
+ 	u8 sample_group;
+ 	u16 sample_rates[MINSTREL_SAMPLE_RATES];
+@@ -182,23 +175,19 @@ struct minstrel_ht_sta {
+ 	unsigned int overhead_legacy;
+ 	unsigned int overhead_legacy_rtscts;
+ 
+-	unsigned int total_packets_last;
+-	unsigned int total_packets_cur;
+ 	unsigned int total_packets;
+ 	unsigned int sample_packets;
+ 
+ 	/* tx flags to add for frames for this sta */
+ 	u32 tx_flags;
+ 
+-	unsigned long sample_time;
+-	struct minstrel_sample_category sample[__MINSTREL_SAMPLE_TYPE_MAX];
++	u8 band;
+ 
+ 	u8 sample_seq;
+-
+-	enum minstrel_sample_mode sample_mode;
+ 	u16 sample_rate;
+ 
+-	u8 band;
++	unsigned long sample_time;
++	struct minstrel_sample_category sample[__MINSTREL_SAMPLE_TYPE_MAX];
+ 
+ 	/* Bitfield of supported MCS rates of all groups */
+ 	u16 supported[MINSTREL_GROUPS_NB];
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.28.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
