@@ -2,157 +2,186 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A94EC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 18:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CECC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 19:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47DCC64D9A
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 18:15:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8166064D9E
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 19:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232970AbhA0SP3 (ORCPT
+        id S1344497AbhA0Tjx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jan 2021 13:15:29 -0500
-Received: from m42-8.mailgun.net ([69.72.42.8]:52334 "EHLO m42-8.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232758AbhA0SPP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jan 2021 13:15:15 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611771289; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=WhuOmKVFHa3k/WZWZ6j7B7SJho9Di137vDufHGsKghk=; b=RnmWeLwwAa77sErbNOd14Did60WSKTRG43/LI5q8GoOE5j4xl/afmoipiyuCnzA/RmGvOCfe
- WJ2jrrEzzFtZrDPlGlB4/xGFY3bA9oki6uW0rXf2Aw2a+GFyL8MHXw7lokXAJyk+dj1qPtwK
- 3RXBgkqA7lyeuDxrmND6kLinfLw=
-X-Mailgun-Sending-Ip: 69.72.42.8
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 6011ad7a6287154b875f6789 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 27 Jan 2021 18:14:18
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CCD4EC43461; Wed, 27 Jan 2021 18:14:17 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 08DB2C433CA;
-        Wed, 27 Jan 2021 18:14:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 08DB2C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-Subject: Re: [PATCHv2 2/2] ath11k: Add ap power save support
-References: <1598257589-19091-1-git-send-email-vnaralas@codeaurora.org>
-        <1598257589-19091-2-git-send-email-vnaralas@codeaurora.org>
-        <87h7n28di7.fsf@codeaurora.org>
-Date:   Wed, 27 Jan 2021 20:14:13 +0200
-In-Reply-To: <87h7n28di7.fsf@codeaurora.org> (Kalle Valo's message of "Wed, 27
-        Jan 2021 20:02:08 +0200")
-Message-ID: <87czxq8cy2.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 27 Jan 2021 14:39:53 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:49647 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1344503AbhA0TfH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Jan 2021 14:35:07 -0500
+X-UUID: ffd36c541b734c8aa4156db11ed54da4-20210128
+X-UUID: ffd36c541b734c8aa4156db11ed54da4-20210128
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1491946201; Thu, 28 Jan 2021 03:34:01 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 28 Jan 2021 03:34:00 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 28 Jan 2021 03:34:00 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Ryder.Lee@mediatek.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH -next v8 10/20] mt76: mt7921: introduce support for hardware beacon filter
+Date:   Thu, 28 Jan 2021 03:33:47 +0800
+Message-ID: <db161c50e465e3c6de1085e6e06e0f99772efb8a.1611774181.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1611774181.git.objelf@gmail.com>
+References: <cover.1611774181.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Sean Wang <sean.wang@mediatek.com>
 
-> Venkateswara Naralasetty <vnaralas@codeaurora.org> writes:
->
->> AP power save where AP goes to power save mode when no stations associate
->> to it and come out of power save when any station associate to AP.
->>
->> This AP power save capability can be used to save power with the drawback
->> of reduced range or delayed discovery of the AP
->>
->> This patch also porvides user configuration to enable/disable
->> this feature using vendor command. This feature is disabled by default.
->>
->> Tested-on: IPQ8074 WLAN.HK.2.1.0.1-01228-QCAHKSWPL_SILICONZ-1
->>
->> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
->
-> [...]
->
->> +static int ath11k_vendor_set_wifi_config(struct wiphy *wihpy,
->
-> s/wihpy/wiphy/
->
->> +					 struct wireless_dev *wdev,
->> +					 const void *data,
->> +					 int data_len)
->> +{
->> +	struct ieee80211_vif *vif;
->> +	struct ath11k_vif *arvif;
->> +	struct ath11k *ar;
->> +	struct nlattr *tb[QCA_WLAN_VENDOR_ATTR_CONFIG_MAX + 1];
->> +	int ret = 0;
->> +
->> +	if (!wdev)
->> +		return -EINVAL;
->> +
->> +	vif = wdev_to_ieee80211_vif(wdev);
->> +	if (!vif)
->> +		return -EINVAL;
->> +
->> +	arvif = (struct ath11k_vif *)vif->drv_priv;
->> +	if (!arvif)
->> +		return -EINVAL;
->> +
->> +	ar = arvif->ar;
->> +
->> +	mutex_lock(&ar->conf_mutex);
->> +
->> +	ret = nla_parse(tb, QCA_WLAN_VENDOR_ATTR_CONFIG_MAX, data, data_len,
->> +			ath11k_vendor_set_wifi_config_policy, NULL);
->> +	if (ret) {
->> +		ath11k_warn(ar->ab, "invalid set wifi config policy attribute\n");
->> +		goto exit;
->> +	}
->> +
->> +	ar->ap_ps_enabled = nla_get_flag(tb[QCA_WLAN_VENDOR_ATTR_CONFIG_GTX]);
->> +	ret = ath11k_mac_ap_ps_recalc(ar);
->> +	if (ret) {
->> +		ath11k_warn(ar->ab, "failed to send ap ps ret %d\n", ret);
->> +		goto exit;
->> +	}
->> +
->> +exit:
->> +	mutex_unlock(&ar->conf_mutex);
->> +	return ret;
->> +}
->
-> Something which I find awkward here is that this is per pdev (=all
-> vdevs), even though the vendor command is per vif. So if you change the
-> config on one vif, all other vifs will change as well. And there's no
-> way to check if the state from user space as there's only a set command
-> and no equivalent get command.
+Introduce support for hw beacon filter available in the mt7921 firmware.
 
-Actually the problem comes here:
+According to mt7921e firmware, enabling hardware filter would rely on
+mt7921_mcu_uni_bss_bcnft and disabling hardware filter still rely on legacy
+mt7921_mcu_set_bss_pm.
 
-+static struct wiphy_vendor_command ath11k_vendor_commands[] = {
-+	{
-+		.info.vendor_id = QCA_NL80211_VENDOR_ID,
-+		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_SET_WIFI_CONFIGURATION,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			WIPHY_VENDOR_CMD_NEED_RUNNING,
-+		.doit = ath11k_vendor_set_wifi_config,
-+		.policy = ath11k_vendor_set_wifi_config_policy,
-+		.maxattr = QCA_WLAN_VENDOR_ATTR_CONFIG_MAX
-+	}
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 75 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  1 +
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  4 +
+ 3 files changed, 80 insertions(+)
 
-If it's per pdev you shouldn't set WIPHY_VENDOR_CMD_NEED_WDEV.
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 913b56065de6..768456c7aa7f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -2500,3 +2500,78 @@ int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif)
+ 	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
+ 				 &ps_req, sizeof(ps_req), true);
+ }
++
++int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
++			     bool enable)
++{
++	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
++	struct {
++		struct {
++			u8 bss_idx;
++			u8 pad[3];
++		} __packed hdr;
++		struct bcnft_tlv {
++			__le16 tag;
++			__le16 len;
++			__le16 bcn_interval;
++			u8 dtim_period;
++			u8 pad;
++		} __packed bcnft;
++	} __packed bcnft_req = {
++		.hdr = {
++			.bss_idx = mvif->mt76.idx,
++		},
++		.bcnft = {
++			.tag = cpu_to_le16(UNI_BSS_INFO_BCNFT),
++			.len = cpu_to_le16(sizeof(struct bcnft_tlv)),
++			.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
++			.dtim_period = vif->bss_conf.dtim_period,
++		},
++	};
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return 0;
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
++				 &bcnft_req, sizeof(bcnft_req), true);
++}
++
++int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
++			  bool enable)
++{
++	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
++	struct {
++		u8 bss_idx;
++		u8 dtim_period;
++		__le16 aid;
++		__le16 bcn_interval;
++		__le16 atim_window;
++		u8 uapsd;
++		u8 bmc_delivered_ac;
++		u8 bmc_triggered_ac;
++		u8 pad;
++	} req = {
++		.bss_idx = mvif->mt76.idx,
++		.aid = cpu_to_le16(vif->bss_conf.aid),
++		.dtim_period = vif->bss_conf.dtim_period,
++		.bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int),
++	};
++	struct {
++		u8 bss_idx;
++		u8 pad[3];
++	} req_hdr = {
++		.bss_idx = mvif->mt76.idx,
++	};
++	int err;
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return 0;
++
++	err = mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_ABORT, &req_hdr,
++				sizeof(req_hdr), false);
++	if (err < 0 || !enable)
++		return err;
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_CONNECTED, &req,
++				 sizeof(req), false);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+index 2103e1d3ac94..de3a9aabec04 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+@@ -211,6 +211,7 @@ enum {
+ 	UNI_BSS_INFO_QBSS = 15,
+ 	UNI_BSS_INFO_UAPSD = 19,
+ 	UNI_BSS_INFO_PS = 21,
++	UNI_BSS_INFO_BCNFT = 22,
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index f4435cc1712f..161e328fc4ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -356,4 +356,8 @@ int mt7921_mcu_cancel_hw_scan(struct mt7921_phy *phy,
+ 			      struct ieee80211_vif *vif);
+ u32 mt7921_get_wtbl_info(struct mt7921_dev *dev, u16 wlan_idx);
+ int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
++int mt7921_mcu_uni_bss_bcnft(struct mt7921_dev *dev, struct ieee80211_vif *vif,
++			     bool enable);
++int mt7921_mcu_set_bss_pm(struct mt7921_dev *dev, struct ieee80211_vif *vif,
++			  bool enable);
+ #endif
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
