@@ -2,83 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF74FC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B95C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F89A205CA
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E70F205CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jan 2021 06:20:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229494AbhA0GUb (ORCPT
+        id S231288AbhA0GUv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jan 2021 01:20:31 -0500
-Received: from a1.mail.mailgun.net ([198.61.254.60]:39651 "EHLO
-        a1.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234139AbhA0GCH (ORCPT
+        Wed, 27 Jan 2021 01:20:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48420 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232846AbhA0GDX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jan 2021 01:02:07 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1611727308; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=JWLG6Rphb9+uzvNZcMkmCf+YFo+QY9TQQvdY7YL8mys=;
- b=MUSDGjrphw3yUclijDrZSV8FM9Zxa9qmPM9ONwAKR2oySAVYqpqpJMUGsolvV4sjq02dzbHm
- ED8lqJZXYlTw6IS5jGuZb2+09mGjSdLXqhXyma1jfcSwzhAiMhePa7Xp1i9yws6zDiB7nIbG
- 2RH1p9OfTFH1+MZig4P16o2JFLE=
-X-Mailgun-Sending-Ip: 198.61.254.60
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 601101852c36b2106d9123e0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 27 Jan 2021 06:00:37
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5ABC8C43462; Wed, 27 Jan 2021 06:00:36 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D8DFEC433CA;
-        Wed, 27 Jan 2021 06:00:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D8DFEC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 27 Jan 2021 01:03:23 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5980FC0613ED
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2021 22:02:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=M/lGEXeRX94IlylSgvYqAduXyuhDR2CNPAlu4Y3bTng=; b=JcA67nVHQ2KMoVAjGwyVxp3OtB
+        XO2MstpGJ8Z1lNXFvja8PHoMtxFoHi3yym7CoWVwbkFvUVuxaps0D5ed/dKWd6cy9Kvwlf1ZNS8Pd
+        5o+e5Xn60AJ/WO3xy+/3itKDSwsZxPZkCXQ/A4xUSAGQ9himbhw/AlISGtecVNpkQKes=;
+Received: from p54ae953c.dip0.t-ipconnect.de ([84.174.149.60] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1l4duc-0008NI-0X; Wed, 27 Jan 2021 07:02:42 +0100
 Subject: Re: [PATCH wireless-drivers] mt76: dma: fix a possible memory leak in
  mt76_add_fragment()
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <4f9dd73407da88b2a552517ce8db242d86bf4d5c.1611616130.git.lorenzo@kernel.org>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        linux-wireless@vger.kernel.org
+Cc:     lorenzo.bianconi@redhat.com
 References: <4f9dd73407da88b2a552517ce8db242d86bf4d5c.1611616130.git.lorenzo@kernel.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name,
-        lorenzo.bianconi@redhat.com
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210127060036.5ABC8C43462@smtp.codeaurora.org>
-Date:   Wed, 27 Jan 2021 06:00:36 +0000 (UTC)
+From:   Felix Fietkau <nbd@nbd.name>
+Message-ID: <9ff610a9-78f1-0ffc-5728-d89b4e604ced@nbd.name>
+Date:   Wed, 27 Jan 2021 07:02:41 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.1
+MIME-Version: 1.0
+In-Reply-To: <4f9dd73407da88b2a552517ce8db242d86bf4d5c.1611616130.git.lorenzo@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo@kernel.org> wrote:
-
+On 2021-01-26 12:02, Lorenzo Bianconi wrote:
 > Fix a memory leak in mt76_add_fragment routine returning the buffer
 > to the page_frag_cache when we receive a new fragment and the
 > skb_shared_info frag array is full.
 > 
 > Fixes: b102f0c522cf6 ("mt76: fix array overflow on receiving too many fragments for a packet")
 > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Acked-by: Felix Fietkau <nbd@nbd.name>
 
-I assigned this to me on patchwork and queued for v5.11. Felix, can you ack?
+Thanks,
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/4f9dd73407da88b2a552517ce8db242d86bf4d5c.1611616130.git.lorenzo@kernel.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+- Felix
