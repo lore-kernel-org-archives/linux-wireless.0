@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0BA9C433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Jan 2021 17:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B4CC433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Jan 2021 17:38:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9CF964E15
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Jan 2021 17:37:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0387E64D9A
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Jan 2021 17:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233131AbhA1RhM (ORCPT
+        id S232982AbhA1RhX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Jan 2021 12:37:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54932 "EHLO
+        Thu, 28 Jan 2021 12:37:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233163AbhA1RgS (ORCPT
+        with ESMTP id S233172AbhA1RgU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Jan 2021 12:36:18 -0500
+        Thu, 28 Jan 2021 12:36:20 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4EC3C06178B
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2021 09:35:37 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A08E3C061794
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2021 09:35:38 -0800 (PST)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1l5BCh-00CwTh-9p; Thu, 28 Jan 2021 18:35:35 +0100
+        id 1l5BCi-00CwTh-PC; Thu, 28 Jan 2021 18:35:36 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+ed107c5fa3e21cdcd86e@syzkaller.appspotmail.com
-Subject: [PATCH 1/4] nl80211: call cfg80211_dev_rename() under RTNL
-Date:   Thu, 28 Jan 2021 18:35:25 +0100
-Message-Id: <20210128183454.16a4ea036740.I2beeb391dc322d6f1df3ee2612e714e0a7817397@changeid>
+        syzbot+4305e814f9b267131776@syzkaller.appspotmail.com
+Subject: [PATCH 4/4] cfg80211: call cfg80211_destroy_ifaces() with wiphy lock held
+Date:   Thu, 28 Jan 2021 18:35:28 +0100
+Message-Id: <20210128183454.d31df9cbd7ce.I1beb07c9492f0ade900e864a098c57041e7a7ebf@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210128173528.76393-1-johannes@sipsolutions.net>
 References: <20210128173528.76393-1-johannes@sipsolutions.net>
@@ -46,36 +46,40 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This is required, and we have an assertion, move the RTNL
-unlock down to cover cfg80211_dev_rename().
+This is needed since it calls into the driver, which must have the
+same context as if we got to destroy an interface through nl80211.
+Fix this, and add a direct lockdep assertion so we don't see it
+pop up only when the driver calls back to cfg80211.
 
 Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
-Reported-by: syzbot+ed107c5fa3e21cdcd86e@syzkaller.appspotmail.com
+Reported-by: syzbot+4305e814f9b267131776@syzkaller.appspotmail.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e5e9d889f00f..3b45a9593e71 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3220,7 +3220,6 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		wdev = netdev->ieee80211_ptr;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 200cd9f5fd5f..18f9a5c214b5 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -334,6 +334,7 @@ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev)
+ 	struct wireless_dev *wdev, *tmp;
  
- 	wiphy_lock(&rdev->wiphy);
--	rtnl_unlock();
+ 	ASSERT_RTNL();
++	lockdep_assert_wiphy(&rdev->wiphy);
  
- 	/*
- 	 * end workaround code, by now the rdev is available
-@@ -3230,6 +3229,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_WIPHY_NAME])
- 		result = cfg80211_dev_rename(
- 			rdev, nla_data(info->attrs[NL80211_ATTR_WIPHY_NAME]));
-+	rtnl_unlock();
+ 	list_for_each_entry_safe(wdev, tmp, &rdev->wiphy.wdev_list, list) {
+ 		if (wdev->nl_owner_dead)
+@@ -349,7 +350,9 @@ static void cfg80211_destroy_iface_wk(struct work_struct *work)
+ 			    destroy_work);
  
- 	if (result)
- 		goto out;
+ 	rtnl_lock();
++	wiphy_lock(&rdev->wiphy);
+ 	cfg80211_destroy_ifaces(rdev);
++	wiphy_unlock(&rdev->wiphy);
+ 	rtnl_unlock();
+ }
+ 
 -- 
 2.26.2
 
