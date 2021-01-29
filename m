@@ -2,79 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EAFBC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 22:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F543C433DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 23:40:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE77460C3D
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 22:31:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5800564DEB
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 23:40:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233356AbhA2Wbr (ORCPT
+        id S231138AbhA2XkF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Jan 2021 17:31:47 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:55240 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231335AbhA2Wbn (ORCPT
+        Fri, 29 Jan 2021 18:40:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46062 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229683AbhA2XkD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jan 2021 17:31:43 -0500
-Received: from [192.168.254.6] (unknown [50.34.179.205])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id A187F13C2B0
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2021 14:31:01 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A187F13C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1611959461;
-        bh=G+8mWSEunJqWDP7Wyx3OIl4P1sVPD4ZwwEFNZoJb74U=;
-        h=To:From:Subject:Date:From;
-        b=AW9biwE8G5edbbSCz9I0j7G/XYK6BJqoGvxdBv9HBLBfrJBgEYQ9qHdoeuqqn5IXG
-         ovL/ZvalBx63LmE4Xos8Sg9/SIVbcCmgOglQJ7KPgvQBzbYNk/3SkBfksoJNWJRWFy
-         jWe2NxQFH5J3t5bwHYE4tALfU36P5jNBEE1LAmGw=
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: ax210: Why no 6E channels valid in regdom?
-Organization: Candela Technologies
-Message-ID: <3b3b53f6-a974-601f-f136-d685c4841647@candelatech.com>
-Date:   Fri, 29 Jan 2021 14:31:01 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        Fri, 29 Jan 2021 18:40:03 -0500
+Received: from mail-oi1-x235.google.com (mail-oi1-x235.google.com [IPv6:2607:f8b0:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3632C061573
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2021 15:39:23 -0800 (PST)
+Received: by mail-oi1-x235.google.com with SMTP id a77so11801367oii.4
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2021 15:39:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JV19cANjpLfdHa/gkRlYR/E8vwFJkEmktdsDw/as+Tg=;
+        b=YS2z2+yzCDkAuo5BmnLTCUCCTaHSBrIJhkBw2ayMty3OYBUSDXpsJW2xgIAk14w8DZ
+         7XvkVv+N6ZsE7FDhDNvHB1KMYBeeIUF4gtJ9M78ZqpgaC+H/ux9ZwXOKgn5WSybmZ1IP
+         DSjlbCrtBqi90ylIwWFCKllNuOx2mwgu764dw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JV19cANjpLfdHa/gkRlYR/E8vwFJkEmktdsDw/as+Tg=;
+        b=Z4zbJfFcU6OUh55sVcERmDW534VigX14nMeVIsAMYKYj9ZMnIJRUbRrN4tnOw3dJpZ
+         C0jj7llchAG42WJxS0cJVYaXL8W+rdEupBjtwweLbT1SLbE15qaechvoiMD6D2/Adbgg
+         ImueM8wmTbLddJFlF0wuZfxJtjaIDf8Lo3Oapai0l5Em2hiMAHmXlcEuirkUTX+yJ4pp
+         vn8OpW/NIb6VyzHwcvsbcPTqeEFF52tuEtJ/CUsFdOiJoTwZ1wZvEv+XvJogvU/WY1au
+         DEEvTmqyY+v7TVT8nTNyDrVfStt2EbGmHkkar2FMrmJsQq49prjqqtjAlZKzWeWXKP7R
+         aq+Q==
+X-Gm-Message-State: AOAM53077cDKEqOC0teNixdgH973VngioMas+6Ilr9cuYD4CqQqz8T8X
+        A10G4ByNuWTn99m4zNJ/Q7ksz+LrnVixBw==
+X-Google-Smtp-Source: ABdhPJxlk6/do6R2F8M0spaW3mqUWg4qIQNB6yDRGkdhCu+c8sZhoYYBvX/2OBKoYBWjbr7/aTSCtw==
+X-Received: by 2002:aca:4c03:: with SMTP id z3mr4067148oia.21.1611963562173;
+        Fri, 29 Jan 2021 15:39:22 -0800 (PST)
+Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com. [209.85.161.46])
+        by smtp.gmail.com with ESMTPSA id z10sm2757196oid.51.2021.01.29.15.39.20
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Jan 2021 15:39:20 -0800 (PST)
+Received: by mail-oo1-f46.google.com with SMTP id n19so2739651ooj.11
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2021 15:39:20 -0800 (PST)
+X-Received: by 2002:a4a:a289:: with SMTP id h9mr4694397ool.56.1611963559740;
+ Fri, 29 Jan 2021 15:39:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-MW
-Content-Transfer-Encoding: 7bit
+References: <20210115092405.8081-1-pkshih@realtek.com> <20210115092405.8081-4-pkshih@realtek.com>
+ <CA+ASDXPtwyZMByRDaAQv9b-DEBeRgPxpDz4+mCP-zi6P_-zr7w@mail.gmail.com> <d84e1a2c0d8e481588eec7248abf5c1a@realtek.com>
+In-Reply-To: <d84e1a2c0d8e481588eec7248abf5c1a@realtek.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Fri, 29 Jan 2021 15:39:08 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXM7e4eSiJNoVMES7=mZ3M-NGpVZ9jLbjNm4yqMSYH4r+Q@mail.gmail.com>
+Message-ID: <CA+ASDXM7e4eSiJNoVMES7=mZ3M-NGpVZ9jLbjNm4yqMSYH4r+Q@mail.gmail.com>
+Subject: Re: [PATCH v4 3/8] rtw88: add napi support
+To:     Pkshih <pkshih@realtek.com>
+Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Bernie Huang <phhuang@realtek.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I cannot figure out why my ax210 won't show any 6E channels.  It worked for a bit a few days
-ago, but now it does not..and not sure why.  Looks like it uses some internal regdom.
+On Thu, Jan 28, 2021 at 1:45 AM Pkshih <pkshih@realtek.com> wrote:
+> > -----Original Message-----
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > On Fri, Jan 15, 2021 at 1:26 AM Ping-Ke Shih <pkshih@realtek.com> wrote:
+> > > +static u32 rtw_pci_rx_napi(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
+> > >                            u8 hw_queue)
+> > ...
+> >
+> > Are you sure you don't want any locking in rtw_pci_rx_napi()?
+> > Previously, you held irq_lock for the entirety of rtw_pci_rx_isr(),
+> > but now all the RX work is being deferred to a NAPI context, without
+> > any additional lock. IIUC, that means you can be both handling RX and
+> > other ISR operations at the same time. Is that intentional?
+> >
+>
+> irq_lock is used to protect TX ring->queue. The TX skb(s) are queued into the
+> queue, and unlink the skb until TX_OK_ISR is received. So, RX doesn't need to
+> hold this lock.
 
-Any idea from these logs what is going on?
+I could be misunderstanding your locking model, but IIUC, you're left
+with zero locking between NAPI RX and all other operations (H2C, link
+up/down -- including DMA free, etc.). irq_lock used to protect you
+from that.
 
-  kernel: iwlwifi 0000:0f:00.0: In iwl-mvm-init-mcc, nvm-type: 1  NVM_EXT: 1
-  kernel: iwlwifi 0000:0f:00.0: init-fw-regd: r: 0000000000000000
-  kernel: iwlwifi 0000:0f:00.0: Getting regdomain data for ZZ from FW
-  kernel: iwlwifi 0000:0f:00.0: send MCC update to FW with 'ZZ' src = 16
-  kernel: iwlwifi 0000:0f:00.0: MCC response status: 0x1. new MCC: 0x3030 ('00') n_chans: 110
-  kernel: iwlwifi 0000:0f:00.0: MCC update response version: 6
-  kernel: iwlwifi 0000:0f:00.0: setting alpha2 from FW to 00 (0x30, 0x30) src=7
-  kernel: iwlwifi 0000:0f:00.0: Get current regdom: 000000001caad6b5  mcc-supported: 1
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 2484.000 MHz as custom regd has no rule that fits it
-....
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5955.000 MHz as custom regd has no rule that fits it
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5975.000 MHz as custom regd has no rule that fits it
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5995.000 MHz as custom regd has no rule that fits it
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6015.000 MHz as custom regd has no rule that fits it
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6035.000 MHz as custom regd has no rule that fits it
-  kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6055.000 MHz as custom regd has no rule that fits it
+If I'm right, maybe it needs a rename and/or some additional comments.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Brian
