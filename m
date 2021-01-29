@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF67C433E9
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 02:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC642C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 02:23:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5154D64DDE
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 02:23:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89CC864DDE
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Jan 2021 02:23:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231738AbhA2CXa (ORCPT
+        id S231713AbhA2CXf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Jan 2021 21:23:30 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:42738 "EHLO
+        Thu, 28 Jan 2021 21:23:35 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:42833 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231651AbhA2CXR (ORCPT
+        with ESMTP id S231700AbhA2CXW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Jan 2021 21:23:17 -0500
+        Thu, 28 Jan 2021 21:23:22 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10T2MQ4L0015207, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 10T2Mci26015386, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10T2MQ4L0015207
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 10T2Mci26015386
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 29 Jan 2021 10:22:26 +0800
+        Fri, 29 Jan 2021 10:22:38 +0800
 Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 29 Jan
- 2021 10:22:25 +0800
+ 2021 10:22:37 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 07/18] rtw89: add MAC files
-Date:   Fri, 29 Jan 2021 10:21:06 +0800
-Message-ID: <20210129022117.28463-8-pkshih@realtek.com>
+Subject: [PATCH v3 11/18] rtw89: define register names
+Date:   Fri, 29 Jan 2021 10:21:10 +0800
+Message-ID: <20210129022117.28463-12-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20210129022117.28463-1-pkshih@realtek.com>
 References: <20210129022117.28463-1-pkshih@realtek.com>
@@ -44,4083 +44,1885 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [172.21.69.213]
-X-ClientProxiedBy: RTEXMBS01.realtek.com.tw (172.21.6.94) To
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Provide interfaces to access MAC function blocks including power-on/off
-configuration.
+There are three register domains -- MAC, PHY and RF whose ranges are
+0x0000~0xFFFF, 0x10000~0x1FFFF and 0x00~0xFF respectively.
 
-MAC initialization does power-on, and then enable HCI to download firmware.
-The BB, RF, DMAC and CMAC function blocks are enabled, and then configure
-TXRX settings that contains DMAC, CMAC, interrupt mask, and RPQ parameters.
-DMAC is short for data MAC, including data link engine (DLE), HCI function
-control (HFC), MPDU processor, security engine and so on. CMAC is short for
-control MAC, including scheduler, address CAM, RX filter, CCA control,
-TMAC, RMAC, protocol component and so on.
-
-The full MAC initialization is done for normal use case when user does
-network interface up. When device is probing, driver does partial
-initialization to do power-on and download firmware, because we need to
-read hardware capabilities from efuse and firmware.
-
-MAC supports five ports, so we can have five VIFs at most. To control MAC
-port, we control a set of registers, and the most important one among them
-is port_cfg register named R_AX_PORT_CFG_P0. We can turn on/off the port
-function and configure network type (STA or AP mode) by this register.
-The address and BSSID corresponding to this port are given by address
-and BSSID CAM that is set by firmware via H2C command.
-
-Since BT coexistence code needs to access coex registers, some help
-functions are provided to make WiFi-only case work.
-
-To access MAC registers, normally we use rtw89_writeXX/rtw89_readYY, but
-we use rtw89_mac_txpwr_write32_ZZ to access TX power register with proper
-address range checking.
+Since we access PHY register via a set of PHY access interfaces which do
+0x10000 offset by themselves, so PHY registers are listed in range of
+0x0000~0xFFFF.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c | 3259 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/mac.h |  763 +++++
- 2 files changed, 4022 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw89/mac.c
- create mode 100644 drivers/net/wireless/realtek/rtw89/mac.h
+ drivers/net/wireless/realtek/rtw89/reg.h | 1855 ++++++++++++++++++++++
+ 1 file changed, 1855 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/reg.h
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
 new file mode 100644
-index 000000000000..d187b3efb5ca
+index 000000000000..612a1287152c
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -0,0 +1,3259 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2019-2020  Realtek Corporation
-+ */
-+
-+#include "cam.h"
-+#include "fw.h"
-+#include "mac.h"
-+#include "pci.h"
-+#include "reg.h"
-+
-+int rtw89_mac_check_mac_en(struct rtw89_dev *rtwdev, u8 mac_idx,
-+			   enum rtw89_mac_hwmod_sel sel)
-+{
-+	u32 val, r_val;
-+
-+	if (sel == RTW89_DMAC_SEL) {
-+		r_val = rtw89_read32(rtwdev, R_AX_DMAC_FUNC_EN);
-+		val = (B_AX_MAC_FUNC_EN | B_AX_DMAC_FUNC_EN);
-+	} else if (sel == RTW89_CMAC_SEL && mac_idx == 0) {
-+		r_val = rtw89_read32(rtwdev, R_AX_CMAC_FUNC_EN);
-+		val = B_AX_CMAC_EN;
-+	} else if (sel == RTW89_CMAC_SEL && mac_idx == 1) {
-+		r_val = rtw89_read32(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND);
-+		val = B_AX_CMAC1_FEN;
-+	} else {
-+		return -EINVAL;
-+	}
-+	if (r_val == RTW89_R32_EA || r_val == RTW89_R32_DEAD ||
-+	    (val & r_val) != val)
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_write_lte(struct rtw89_dev *rtwdev, const u32 offset, u32 val)
-+{
-+	u8 lte_ctrl;
-+	int ret;
-+
-+	ret = read_poll_timeout(rtw89_read8, lte_ctrl, (lte_ctrl & BIT(5)) != 0,
-+				50, 50000, false, rtwdev, R_AX_LTE_CTRL + 3);
-+	if (ret)
-+		rtw89_err(rtwdev, "[ERR]lte not ready(W)\n");
-+
-+	rtw89_write32(rtwdev, R_AX_LTE_WDATA, val);
-+	rtw89_write32(rtwdev, R_AX_LTE_CTRL, 0xC00F0000 | offset);
-+
-+	return ret;
-+}
-+
-+int rtw89_mac_read_lte(struct rtw89_dev *rtwdev, const u32 offset, u32 *val)
-+{
-+	u8 lte_ctrl;
-+	int ret;
-+
-+	ret = read_poll_timeout(rtw89_read8, lte_ctrl, (lte_ctrl & BIT(5)) != 0,
-+				50, 50000, false, rtwdev, R_AX_LTE_CTRL + 3);
-+	if (ret)
-+		rtw89_err(rtwdev, "[ERR]lte not ready(W)\n");
-+
-+	rtw89_write32(rtwdev, R_AX_LTE_CTRL, 0x800F0000 | offset);
-+	*val = rtw89_read32(rtwdev, R_AX_LTE_RDATA);
-+
-+	return ret;
-+}
-+
-+u32 rtw89_mac_get_err_status(struct rtw89_dev *rtwdev)
-+{
-+	u32 err;
-+	int ret;
-+
-+	ret = read_poll_timeout(rtw89_read32, err, (err != 0), 1000, 100000,
-+				false, rtwdev, R_AX_HALT_C2H_CTRL);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "Polling FW err status fail\n");
-+		return ret;
-+	}
-+
-+	err = rtw89_read32(rtwdev, R_AX_HALT_C2H);
-+	rtw89_write32(rtwdev, R_AX_HALT_C2H_CTRL, 0);
-+
-+	return err;
-+}
-+EXPORT_SYMBOL(rtw89_mac_get_err_status);
-+
-+int rtw89_mac_set_err_status(struct rtw89_dev *rtwdev, u32 err)
-+{
-+	u32 halt;
-+	int ret = 0;
-+
-+	if (err > MAC_AX_SET_ERR_MAX) {
-+		rtw89_err(rtwdev, "Bad set-err-status value 0x%08x\n", err);
-+		return -EINVAL;
-+	}
-+
-+	ret = read_poll_timeout(rtw89_read32, halt, (halt == 0x0), 1000,
-+				100000, false, rtwdev, R_AX_HALT_H2C_CTRL);
-+	if (ret) {
-+		rtw89_err(rtwdev, "FW doesn't receive previous msg\n");
-+		return -EFAULT;
-+	}
-+
-+	rtw89_write32(rtwdev, R_AX_HALT_H2C, err);
-+	rtw89_write32(rtwdev, R_AX_HALT_H2C_CTRL, B_AX_HALT_H2C_TRIGGER);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(rtw89_mac_set_err_status);
-+
-+struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie = {
-+	2, 40, 0, 0, 1, 0, 0, 0
-+};
-+
-+struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie_wd128 = {
-+	2, 40, 0, 0, 1, 0, 0, 0
-+};
-+
-+struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie_stf = {
-+	1, 40, 64, 64, 1, 0, 1, 1
-+};
-+
-+static int hfc_reset_param(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_param_ini param_ini = {NULL};
-+	u8 qta_mode = rtwdev->mac.dle_info.qta_mode;
-+
-+	switch (rtwdev->hci.type) {
-+	case RTW89_HCI_TYPE_PCIE:
-+		param_ini = rtwdev->chip->hfc_param_ini[qta_mode];
-+		param->en = 0;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	if (param_ini.pub_cfg)
-+		param->pub_cfg = param_ini.pub_cfg;
-+
-+	if (param_ini.prec_cfg) {
-+		param->prec_cfg = param_ini.prec_cfg;
-+		rtwdev->hal.sw_amsdu_max_size =
-+				param->prec_cfg->wp_ch07_prec * HFC_PAGE_UNIT;
-+	}
-+
-+	if (param_ini.ch_cfg)
-+		param->ch_cfg = param_ini.ch_cfg;
-+
-+	memset(&param->ch_info, 0, sizeof(param->ch_info));
-+	memset(&param->pub_info, 0, sizeof(param->pub_info));
-+	param->mode = param_ini.mode;
-+
-+	return 0;
-+}
-+
-+static int hfc_ch_cfg_chk(struct rtw89_dev *rtwdev, u8 ch)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_ch_cfg *ch_cfg = param->ch_cfg;
-+	struct rtw89_hfc_pub_cfg *pub_cfg = param->pub_cfg;
-+	struct rtw89_hfc_prec_cfg *prec_cfg = param->prec_cfg;
-+
-+	if (ch >= RTW89_DMA_CH_NUM)
-+		return -EINVAL;
-+
-+	if ((ch_cfg[ch].min && ch_cfg[ch].min < prec_cfg->ch011_prec) ||
-+	    ch_cfg[ch].max > pub_cfg->pub_max)
-+		return -EINVAL;
-+	if (ch_cfg[ch].grp >= grp_num)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int hfc_pub_info_chk(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_pub_cfg *cfg = param->pub_cfg;
-+	struct rtw89_hfc_pub_info *info = &param->pub_info;
-+
-+	if (info->g0_used + info->g1_used + info->pub_aval != cfg->pub_max) {
-+		if (rtwdev->chip->chip_id == RTL8852A)
-+			return 0;
-+		else
-+			return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+static int hfc_pub_cfg_chk(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_pub_cfg *pub_cfg = param->pub_cfg;
-+
-+	if (pub_cfg->grp0 + pub_cfg->grp1 != pub_cfg->pub_max)
-+		return 0;
-+
-+	return 0;
-+}
-+
-+static int hfc_ch_ctrl(struct rtw89_dev *rtwdev, u8 ch)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_ch_cfg *cfg = param->ch_cfg;
-+	int ret = 0;
-+	u32 val = 0;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	ret = hfc_ch_cfg_chk(rtwdev, ch);
-+	if (ret)
-+		return ret;
-+
-+	if (ch > RTW89_DMA_B1HI)
-+		return -EINVAL;
-+
-+	val = u32_encode_bits(cfg[ch].min, B_AX_MIN_PG_MASK) |
-+	      u32_encode_bits(cfg[ch].max, B_AX_MAX_PG_MASK) |
-+	      (cfg[ch].grp ? B_AX_GRP : 0);
-+	rtw89_write32(rtwdev, R_AX_ACH0_PAGE_CTRL + ch * 4, val);
-+
-+	return 0;
-+}
-+
-+static int hfc_upd_ch_info(struct rtw89_dev *rtwdev, u8 ch)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_ch_info *info = param->ch_info;
-+	struct rtw89_hfc_ch_cfg *cfg = param->ch_cfg;
-+	u32 val;
-+	u32 ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	if (ch > RTW89_DMA_H2C)
-+		return -EINVAL;
-+
-+	val = rtw89_read32(rtwdev, R_AX_ACH0_PAGE_INFO + ch * 4);
-+	info[ch].aval = u32_get_bits(val, B_AX_AVAL_PG_MASK);
-+	if (ch < RTW89_DMA_H2C)
-+		info[ch].used = u32_get_bits(val, B_AX_USE_PG_MASK);
-+	else
-+		info[ch].used = cfg[ch].min - info[ch].aval;
-+
-+	return 0;
-+}
-+
-+static int hfc_pub_ctrl(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_pub_cfg *cfg = rtwdev->mac.hfc_param.pub_cfg;
-+	u32 val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	ret = hfc_pub_cfg_chk(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	val = u32_encode_bits(cfg->grp0, B_AX_PUBPG_G0_MASK) |
-+	      u32_encode_bits(cfg->grp1, B_AX_PUBPG_G1_MASK);
-+	rtw89_write32(rtwdev, R_AX_PUB_PAGE_CTRL1, val);
-+
-+	val = u32_encode_bits(cfg->wp_thrd, B_AX_WP_THRD_MASK);
-+	rtw89_write32(rtwdev, R_AX_WP_PAGE_CTRL2, val);
-+
-+	return 0;
-+}
-+
-+static int hfc_upd_mix_info(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_pub_cfg *pub_cfg = param->pub_cfg;
-+	struct rtw89_hfc_prec_cfg *prec_cfg = param->prec_cfg;
-+	struct rtw89_hfc_pub_info *info = &param->pub_info;
-+	u32 val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO1);
-+	info->g0_used = u32_get_bits(val, B_AX_G0_USE_PG_MASK);
-+	info->g1_used = u32_get_bits(val, B_AX_G1_USE_PG_MASK);
-+	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO3);
-+	info->g0_aval = u32_get_bits(val, B_AX_G0_AVAL_PG_MASK);
-+	info->g1_aval = u32_get_bits(val, B_AX_G1_AVAL_PG_MASK);
-+	info->pub_aval =
-+		u32_get_bits(rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO2),
-+			     B_AX_PUB_AVAL_PG_MASK);
-+	info->wp_aval =
-+		u32_get_bits(rtw89_read32(rtwdev, R_AX_WP_PAGE_INFO1),
-+			     B_AX_WP_AVAL_PG_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL);
-+	param->en = val & B_AX_HCI_FC_EN ? 1 : 0;
-+	param->h2c_en = val & B_AX_HCI_FC_CH12_EN ? 1 : 0;
-+	param->mode = u32_get_bits(val, B_AX_HCI_FC_MODE_MASK);
-+	prec_cfg->ch011_full_cond =
-+		u32_get_bits(val, B_AX_HCI_FC_WD_FULL_COND_MASK);
-+	prec_cfg->h2c_full_cond =
-+		u32_get_bits(val, B_AX_HCI_FC_CH12_FULL_COND_MASK);
-+	prec_cfg->wp_ch07_full_cond =
-+		u32_get_bits(val, B_AX_HCI_FC_WP_CH07_FULL_COND_MASK);
-+	prec_cfg->wp_ch811_full_cond =
-+		u32_get_bits(val, B_AX_HCI_FC_WP_CH811_FULL_COND_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_CH_PAGE_CTRL);
-+	prec_cfg->ch011_prec = u32_get_bits(val, B_AX_PREC_PAGE_CH011_MASK);
-+	prec_cfg->h2c_prec = u32_get_bits(val, B_AX_PREC_PAGE_CH12_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_CTRL2);
-+	pub_cfg->pub_max = u32_get_bits(val, B_AX_PUBPG_ALL_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_WP_PAGE_CTRL1);
-+	prec_cfg->wp_ch07_prec = u32_get_bits(val, B_AX_PREC_PAGE_WP_CH07_MASK);
-+	prec_cfg->wp_ch811_prec = u32_get_bits(val, B_AX_PREC_PAGE_WP_CH811_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_WP_PAGE_CTRL2);
-+	pub_cfg->wp_thrd = u32_get_bits(val, B_AX_WP_THRD_MASK);
-+
-+	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_CTRL1);
-+	pub_cfg->grp0 = u32_get_bits(val, B_AX_PUBPG_G0_MASK);
-+	pub_cfg->grp1 = u32_get_bits(val, B_AX_PUBPG_G1_MASK);
-+
-+	ret = hfc_pub_info_chk(rtwdev);
-+	if (param->en && ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static void hfc_h2c_cfg(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_prec_cfg *prec_cfg = param->prec_cfg;
-+	u32 val;
-+
-+	val = u32_encode_bits(prec_cfg->h2c_prec, B_AX_PREC_PAGE_CH12_MASK);
-+	rtw89_write32(rtwdev, R_AX_CH_PAGE_CTRL, val);
-+
-+	rtw89_write32_mask(rtwdev, R_AX_HCI_FC_CTRL,
-+			   B_AX_HCI_FC_CH12_FULL_COND_MASK,
-+			   prec_cfg->h2c_full_cond);
-+}
-+
-+static void hfc_mix_cfg(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	struct rtw89_hfc_pub_cfg *pub_cfg = param->pub_cfg;
-+	struct rtw89_hfc_prec_cfg *prec_cfg = param->prec_cfg;
-+	u32 val;
-+
-+	val = u32_encode_bits(prec_cfg->ch011_prec, B_AX_PREC_PAGE_CH011_MASK) |
-+	      u32_encode_bits(prec_cfg->h2c_prec, B_AX_PREC_PAGE_CH12_MASK);
-+	rtw89_write32(rtwdev, R_AX_CH_PAGE_CTRL, val);
-+
-+	val = u32_encode_bits(pub_cfg->pub_max, B_AX_PUBPG_ALL_MASK);
-+	rtw89_write32(rtwdev, R_AX_PUB_PAGE_CTRL2, val);
-+
-+	val = u32_encode_bits(prec_cfg->wp_ch07_prec,
-+			      B_AX_PREC_PAGE_WP_CH07_MASK) |
-+	      u32_encode_bits(prec_cfg->wp_ch811_prec,
-+			      B_AX_PREC_PAGE_WP_CH811_MASK);
-+	rtw89_write32(rtwdev, R_AX_WP_PAGE_CTRL1, val);
-+
-+	val = u32_replace_bits(rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL),
-+			       param->mode, B_AX_HCI_FC_MODE_MASK);
-+	val = u32_replace_bits(val, prec_cfg->ch011_full_cond,
-+			       B_AX_HCI_FC_WD_FULL_COND_MASK);
-+	val = u32_replace_bits(val, prec_cfg->h2c_full_cond,
-+			       B_AX_HCI_FC_CH12_FULL_COND_MASK);
-+	val = u32_replace_bits(val, prec_cfg->wp_ch07_full_cond,
-+			       B_AX_HCI_FC_WP_CH07_FULL_COND_MASK);
-+	val = u32_replace_bits(val, prec_cfg->wp_ch811_full_cond,
-+			       B_AX_HCI_FC_WP_CH811_FULL_COND_MASK);
-+	rtw89_write32(rtwdev, R_AX_HCI_FC_CTRL, val);
-+}
-+
-+static void hfc_func_en(struct rtw89_dev *rtwdev, bool en, bool h2c_en)
-+{
-+	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
-+	u32 val;
-+
-+	val = rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL);
-+	param->en = en;
-+	param->h2c_en = h2c_en;
-+	val = en ? (val | B_AX_HCI_FC_EN) : (val & ~B_AX_HCI_FC_EN);
-+	val = h2c_en ? (val | B_AX_HCI_FC_CH12_EN) :
-+			 (val & ~B_AX_HCI_FC_CH12_EN);
-+	rtw89_write32(rtwdev, R_AX_HCI_FC_CTRL, val);
-+}
-+
-+static int hfc_init(struct rtw89_dev *rtwdev, bool reset, bool en, bool h2c_en)
-+{
-+	u8 ch;
-+	u32 ret = 0;
-+
-+	if (reset)
-+		ret = hfc_reset_param(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	hfc_func_en(rtwdev, false, false);
-+
-+	if (!en && h2c_en) {
-+		hfc_h2c_cfg(rtwdev);
-+		hfc_func_en(rtwdev, en, h2c_en);
-+		return ret;
-+	}
-+
-+	for (ch = RTW89_DMA_ACH0; ch < RTW89_DMA_H2C; ch++) {
-+		ret = hfc_ch_ctrl(rtwdev, ch);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	ret = hfc_pub_ctrl(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	hfc_mix_cfg(rtwdev);
-+	if (en || h2c_en) {
-+		hfc_func_en(rtwdev, en, h2c_en);
-+		udelay(10);
-+	}
-+	for (ch = RTW89_DMA_ACH0; ch < RTW89_DMA_H2C; ch++) {
-+		ret = hfc_upd_ch_info(rtwdev, ch);
-+		if (ret)
-+			return ret;
-+	}
-+	ret = hfc_upd_mix_info(rtwdev);
-+
-+	return ret;
-+}
-+
-+#define PWR_POLL_CNT	2000
-+static int pwr_cmd_poll(struct rtw89_dev *rtwdev,
-+			const struct rtw89_pwr_cfg *cfg)
-+{
-+	u8 val = 0;
-+	int ret;
-+	u32 addr = cfg->base == PWR_INTF_MSK_SDIO ?
-+		   cfg->addr | SDIO_LOCAL_BASE_ADDR : cfg->addr;
-+
-+	ret = read_poll_timeout(rtw89_read8, val, !((val ^ cfg->val) & cfg->msk),
-+				1000, 1000 * PWR_POLL_CNT, false, rtwdev, addr);
-+
-+	if (!ret)
-+		return 0;
-+
-+	rtw89_warn(rtwdev, "[ERR] Polling timeout\n");
-+	rtw89_warn(rtwdev, "[ERR] addr: %X, %X\n", addr, cfg->addr);
-+	rtw89_warn(rtwdev, "[ERR] val: %X, %X\n", val, cfg->val);
-+
-+	return -EBUSY;
-+}
-+
-+static int rtw89_mac_sub_pwr_seq(struct rtw89_dev *rtwdev, u8 cut_msk,
-+				 u8 intf_msk, const struct rtw89_pwr_cfg *cfg)
-+{
-+	const struct rtw89_pwr_cfg *cur_cfg;
-+	u32 addr;
-+	u8 val;
-+
-+	for (cur_cfg = cfg; cur_cfg->cmd != PWR_CMD_END; cur_cfg++) {
-+		if (!(cur_cfg->intf_msk & intf_msk) ||
-+		    !(cur_cfg->cut_msk & cut_msk))
-+			continue;
-+
-+		switch (cur_cfg->cmd) {
-+		case PWR_CMD_WRITE:
-+			addr = cur_cfg->addr;
-+
-+			if (cur_cfg->base == PWR_BASE_SDIO)
-+				addr |= SDIO_LOCAL_BASE_ADDR;
-+
-+			val = rtw89_read8(rtwdev, addr);
-+			val &= ~(cur_cfg->msk);
-+			val |= (cur_cfg->val & cur_cfg->msk);
-+
-+			rtw89_write8(rtwdev, addr, val);
-+			break;
-+		case PWR_CMD_POLL:
-+			if (pwr_cmd_poll(rtwdev, cur_cfg))
-+				return -EBUSY;
-+			break;
-+		case PWR_CMD_DELAY:
-+			if (cur_cfg->val == PWR_DELAY_US)
-+				udelay(cur_cfg->addr);
-+			else
-+				fsleep(cur_cfg->addr * 1000);
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_pwr_seq(struct rtw89_dev *rtwdev,
-+			     const struct rtw89_pwr_cfg **cfg_seq)
-+{
-+	u32 idx = 0;
-+	const struct rtw89_pwr_cfg *cfg;
-+	int ret;
-+
-+	do {
-+		cfg = cfg_seq[idx];
-+		if (!cfg)
-+			break;
-+
-+		ret = rtw89_mac_sub_pwr_seq(rtwdev, BIT(rtwdev->hal.cut_version),
-+					    PWR_INTF_MSK_PCIE, cfg);
-+		if (ret)
-+			return -EBUSY;
-+
-+		idx++;
-+	} while (1);
-+
-+	return 0;
-+}
-+
-+static struct rtw89_pwr_cfg rtw89_pwron_8852a[] = {
-+	{0x1086,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), 0},
-+	{0x1086,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_POLL, BIT(1), BIT(1)},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(7), 0},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0006,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_POLL, BIT(1), BIT(1)},
-+	{0x0006,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_POLL, BIT(0), 0},
-+	{0x0088,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0083,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(6), 0},
-+	{0x0080,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0x0024,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(4) | BIT(3) | BIT(2) | BIT(1) | BIT(0), 0},
-+	{0x02A0,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(1), BIT(1)},
-+	{0x0071,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_PCIE,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(4), 0},
-+	{0x0010,
-+	 PWR_CUT_MSK_A,
-+	 PWR_INTF_MSK_PCIE,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x02A0,
-+	 PWR_CUT_MSK_A,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(7) | BIT(6), 0},
-+	{0xFFFF,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 0,
-+	 PWR_CMD_END, 0, 0},
-+};
-+
-+static struct rtw89_pwr_cfg rtw89_pwroff_8852a[] = {
-+	{0x02F0,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, 0xFF, 0},
-+	{0x02F1,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0006,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0002,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0082,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(1), BIT(1)},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_POLL, BIT(1), 0},
-+	{0x0091,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_PCIE,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_PCIE,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x0005,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_USB | PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(4) | BIT(3), BIT(3)},
-+	{0x0007,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_USB,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(4), 0},
-+	{0x0007,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(6) | BIT(4), 0},
-+	{0x1086,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x1086,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_SDIO,
-+	 PWR_BASE_MAC,
-+	 PWR_CMD_POLL, BIT(1), 0},
-+	{0xFFFF,
-+	 PWR_CUT_MSK_ALL,
-+	 PWR_INTF_MSK_ALL,
-+	 0,
-+	 PWR_CMD_END, 0, 0},
-+};
-+
-+static const struct rtw89_pwr_cfg *pwr_on_seq_8852a[] = {
-+	rtw89_pwron_8852a, NULL
-+};
-+
-+static const struct rtw89_pwr_cfg *pwr_off_seq_8852a[] = {
-+	rtw89_pwroff_8852a, NULL
-+};
-+
-+static void rtw89_mac_send_rpwm(struct rtw89_dev *rtwdev,
-+				enum rtw89_rpwm_req_pwr_state req_pwr_state)
-+{
-+	u8 *rpwm_seq_num = &rtwdev->mac.rpwm_seq_num;
-+	u16 next_rpwm_value = 0;
-+	u16 current_rpwm_value = 0;
-+
-+	if (*rpwm_seq_num == RPWM_SEQ_NUM_MAX)
-+		*rpwm_seq_num = 0;
-+	else
-+		*rpwm_seq_num += 1;
-+
-+	next_rpwm_value = FIELD_PREP(PS_RPWM_STATE, req_pwr_state) |
-+		FIELD_PREP(PS_RPWM_SEQ_NUM, *rpwm_seq_num);
-+
-+	if (req_pwr_state == RTW89_MAC_RPWM_REQ_PWR_STATE_ACTIVE ||
-+	    req_pwr_state == RTW89_MAC_RPWM_REQ_PWR_STATE_BAND0_RFON ||
-+	    req_pwr_state == RTW89_MAC_RPWM_REQ_PWR_STATE_BAND1_RFON ||
-+	    req_pwr_state == RTW89_MAC_RPWM_REQ_PWR_STATE_BAND0_RFOFF ||
-+	    req_pwr_state == RTW89_MAC_RPWM_REQ_PWR_STATE_BAND1_RFOFF)
-+		next_rpwm_value |= PS_RPWM_ACK;
-+
-+	current_rpwm_value = rtw89_read16(rtwdev, R_AX_RPWM);
-+
-+	if (0 == (current_rpwm_value & PS_RPWM_TOGGLE))
-+		next_rpwm_value |= PS_RPWM_TOGGLE;
-+
-+	rtw89_write16(rtwdev, R_AX_PCIE_HRPWM, next_rpwm_value);
-+}
-+
-+static int rtw89_mac_power_switch(struct rtw89_dev *rtwdev, bool on)
-+{
-+#define PWR_ACT 1
-+	const struct rtw89_pwr_cfg **cfg_seq;
-+	int ret;
-+	u8 val;
-+
-+	if (on)
-+		cfg_seq = pwr_on_seq_8852a;
-+	else
-+		cfg_seq = pwr_off_seq_8852a;
-+
-+	if ((rtw89_read8(rtwdev, R_AX_WCPU_FW_CTRL) & 0xE0) == 0xE0)
-+		rtw89_mac_send_rpwm(rtwdev, RTW89_MAC_RPWM_REQ_PWR_STATE_ACTIVE);
-+
-+	val = rtw89_read8(rtwdev, 0x3F1) & 0x3;
-+	if (on && val == PWR_ACT) {
-+		rtw89_err(rtwdev, "MAC has already powered on\n");
-+		return -EBUSY;
-+	}
-+
-+	ret = rtw89_mac_pwr_seq(rtwdev, cfg_seq);
-+	if (ret)
-+		return ret;
-+
-+	if (on) {
-+		set_bit(RTW89_FLAG_POWERON, rtwdev->flags);
-+		rtw89_write8(rtwdev, R_AX_SCOREBOARD + 3, MAC_AX_NOTIFY_TP_MAJOR);
-+	} else {
-+		clear_bit(RTW89_FLAG_POWERON, rtwdev->flags);
-+		clear_bit(RTW89_FLAG_FW_RDY, rtwdev->flags);
-+		rtw89_write8(rtwdev, R_AX_SCOREBOARD + 3, MAC_AX_NOTIFY_PWR_MAJOR);
-+	}
-+
-+	return 0;
-+#undef PWR_ACT
-+}
-+
-+int rtw89_mac_pwr_on(struct rtw89_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = rtw89_mac_power_switch(rtwdev, true);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "power on fail\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void rtw89_mac_pwr_off(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_mac_power_switch(rtwdev, false);
-+}
-+
-+static int cmac_func_en(struct rtw89_dev *rtwdev, u8 mac_idx, bool en)
-+{
-+	u32 func_en = 0;
-+	u32 ck_en = 0;
-+	u32 c1pc_en = 0;
-+	u32 addrl_func_en[] = {R_AX_CMAC_FUNC_EN, R_AX_CMAC_FUNC_EN_C1};
-+	u32 addrl_ck_en[] = {R_AX_CK_EN, R_AX_CK_EN_C1};
-+
-+	func_en = B_AX_CMAC_EN | B_AX_CMAC_TXEN | B_AX_CMAC_RXEN |
-+			B_AX_PHYINTF_EN | B_AX_CMAC_DMA_EN | B_AX_PTCLTOP_EN |
-+			B_AX_SCHEDULER_EN | B_AX_TMAC_EN | B_AX_RMAC_EN;
-+	ck_en = B_AX_CMAC_CKEN | B_AX_PHYINTF_CKEN | B_AX_CMAC_DMA_CKEN |
-+		      B_AX_PTCLTOP_CKEN | B_AX_SCHEDULER_CKEN | B_AX_TMAC_CKEN |
-+		      B_AX_RMAC_CKEN;
-+	c1pc_en = B_AX_R_SYM_WLCMAC1_PC_EN |
-+			B_AX_R_SYM_WLCMAC1_P1_PC_EN |
-+			B_AX_R_SYM_WLCMAC1_P2_PC_EN |
-+			B_AX_R_SYM_WLCMAC1_P3_PC_EN |
-+			B_AX_R_SYM_WLCMAC1_P4_PC_EN;
-+
-+	if (en) {
-+		if (mac_idx == RTW89_MAC_1) {
-+			rtw89_write32_set(rtwdev, R_AX_AFE_CTRL1, c1pc_en);
-+			rtw89_write32_clr(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND,
-+					  B_AX_R_SYM_ISO_CMAC12PP);
-+			rtw89_write32_set(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND,
-+					  B_AX_CMAC1_FEN);
-+		}
-+		rtw89_write32_set(rtwdev, addrl_ck_en[mac_idx], ck_en);
-+		rtw89_write32_set(rtwdev, addrl_func_en[mac_idx], func_en);
-+	} else {
-+		rtw89_write32_clr(rtwdev, addrl_func_en[mac_idx], func_en);
-+		rtw89_write32_clr(rtwdev, addrl_ck_en[mac_idx], ck_en);
-+		if (mac_idx == RTW89_MAC_1) {
-+			rtw89_write32_clr(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND,
-+					  B_AX_CMAC1_FEN);
-+			rtw89_write32_set(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND,
-+					  B_AX_R_SYM_ISO_CMAC12PP);
-+			rtw89_write32_clr(rtwdev, R_AX_AFE_CTRL1, c1pc_en);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int dmac_func_en(struct rtw89_dev *rtwdev)
-+{
-+	u32 val32;
-+	u32 ret = 0;
-+
-+	val32 = (B_AX_MAC_FUNC_EN | B_AX_DMAC_FUNC_EN | B_AX_MAC_SEC_EN |
-+		 B_AX_DISPATCHER_EN | B_AX_DLE_CPUIO_EN | B_AX_PKT_IN_EN |
-+		 B_AX_DMAC_TBL_EN | B_AX_PKT_BUF_EN | B_AX_STA_SCH_EN |
-+		 B_AX_TXPKT_CTRL_EN | B_AX_WD_RLS_EN | B_AX_MPDU_PROC_EN);
-+	rtw89_write32(rtwdev, R_AX_DMAC_FUNC_EN, val32);
-+
-+	val32 = (B_AX_MAC_SEC_CLK_EN | B_AX_DISPATCHER_CLK_EN |
-+		 B_AX_DLE_CPUIO_CLK_EN | B_AX_PKT_IN_CLK_EN |
-+		 B_AX_STA_SCH_CLK_EN | B_AX_TXPKT_CTRL_CLK_EN |
-+		 B_AX_WD_RLS_CLK_EN);
-+	rtw89_write32(rtwdev, R_AX_DMAC_CLK_EN, val32);
-+
-+	return ret;
-+}
-+
-+static int chip_func_en(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_write32_set(rtwdev, R_AX_SPSLDO_ON_CTRL0, B_AX_OCP_L1_MASK);
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_sys_init(struct rtw89_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = dmac_func_en(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = cmac_func_en(rtwdev, 0, true);
-+	if (ret)
-+		return ret;
-+
-+	ret = chip_func_en(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	return ret;
-+}
-+
-+/* PCIE 64 */
-+struct rtw89_dle_size wde_size0 = {
-+	RTW89_WDE_PG_64, 4095, 1,
-+};
-+
-+/* SDIO, PCIE STF, USB */
-+struct rtw89_dle_size wde_size1 = {
-+	RTW89_WDE_PG_64, 768, 0,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_dle_size wde_size2 = {
-+	RTW89_WDE_PG_128, 2016, 32,
-+};
-+
-+/* PCIE SU TP */
-+struct rtw89_dle_size wde_size3 = {
-+	RTW89_WDE_PG_64, 496, 3600,
-+};
-+
-+/* DLFW */
-+struct rtw89_dle_size wde_size4 = {
-+	RTW89_WDE_PG_64, 0, 4096,
-+};
-+
-+/* PCIE BCN TEST */
-+struct rtw89_dle_size wde_size5 = {
-+	RTW89_WDE_PG_64, 3904, 64,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_dle_size wde_size6 = {
-+	RTW89_WDE_PG_64, 1024, 0,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_dle_size wde_size7 = {
-+	RTW89_WDE_PG_128, 960, 0,
-+};
-+
-+/* PCIE STF, USB */
-+struct rtw89_dle_size wde_size8 = {
-+	RTW89_WDE_PG_64, 256, 0,
-+};
-+
-+/* DLFW */
-+struct rtw89_dle_size wde_size9 = {
-+	RTW89_WDE_PG_64, 0, 1024,
-+};
-+
-+/* LA-PCIE */
-+struct rtw89_dle_size wde_size10 = {
-+	RTW89_WDE_PG_64, 1408, 0,
-+};
-+
-+/* PCIE */
-+struct rtw89_dle_size ple_size0 = {
-+	RTW89_PLE_PG_128, 1520, 16,
-+};
-+
-+/* PCIE STF */
-+struct rtw89_dle_size ple_size2 = {
-+	RTW89_PLE_PG_128, 3200, 0,
-+};
-+
-+/* PCIE SU TP */
-+struct rtw89_dle_size ple_size3 = {
-+	RTW89_PLE_PG_128, 330, 1206,
-+};
-+
-+/* DLFW */
-+struct rtw89_dle_size ple_size4 = {
-+	RTW89_PLE_PG_128, 64, 1472,
-+};
-+
-+/* PCIE BCN TEST */
-+struct rtw89_dle_size ple_size5 = {
-+	RTW89_PLE_PG_128, 1520, 80,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_dle_size ple_size6 = {
-+	RTW89_PLE_PG_128, 1008, 16,
-+};
-+
-+/* PCIE STF, USB */
-+struct rtw89_dle_size ple_size7 = {
-+	RTW89_PLE_PG_128, 1408, 0,
-+};
-+
-+/* DLFW */
-+struct rtw89_dle_size ple_size8 = {
-+	RTW89_PLE_PG_128, 64, 960,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_dle_size ple_size9 = {
-+	RTW89_PLE_PG_128, 576, 0,
-+};
-+
-+/* LA-PCIE */
-+struct rtw89_dle_size ple_size10 = {
-+	RTW89_PLE_PG_128, 832, 0,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_wde_quota wde_qt0 = {
-+	3792, 196, 0, 107,
-+};
-+
-+/* SDIO, PCIE STF, USB */
-+struct rtw89_wde_quota wde_qt1 = {
-+	512, 196, 0, 60,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_wde_quota wde_qt2 = {
-+	1896, 98, 0, 22,
-+};
-+
-+/* PCIE SU TP */
-+struct rtw89_wde_quota wde_qt3 = {
-+	256, 196, 0, 44,
-+};
-+
-+/* DLFW */
-+struct rtw89_wde_quota wde_qt4 = {
-+	0, 0, 0, 0,
-+};
-+
-+/* PCIE BCN TEST */
-+struct rtw89_wde_quota wde_qt5 = {
-+	3666, 196, 0, 44,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_wde_quota wde_qt6 = {
-+	968, 48, 0, 8,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_wde_quota wde_qt7 = {
-+	896, 56, 0, 8,
-+};
-+
-+/* PCIE STF, USB */
-+struct rtw89_wde_quota wde_qt8 = {
-+	236, 16, 0, 4,
-+};
-+
-+/* LA-PCIE */
-+struct rtw89_wde_quota wde_qt9 = {
-+	1392, 8, 0, 8,
-+};
-+
-+/* PCIE DBCC */
-+struct rtw89_ple_quota ple_qt0 = {
-+	264, 66, 16, 20, 26, 13, 356, 89, 32, 40, 8,
-+};
-+
-+/* PCIE DBCC */
-+struct rtw89_ple_quota ple_qt1 = {
-+	264, 66, 32, 20, 64, 13, 946, 679, 64, 128, 320,
-+};
-+
-+/* PCIE SCC */
-+struct rtw89_ple_quota ple_qt4 = {
-+	264, 0, 16, 20, 26, 13, 356, 0, 32, 40, 8,
-+};
-+
-+/* PCIE SCC */
-+struct rtw89_ple_quota ple_qt5 = {
-+	264, 0, 32, 20, 64, 13, 1101, 0, 64, 128, 120,
-+};
-+
-+/* PCIE STF SCC */
-+struct rtw89_ple_quota ple_qt8 = {
-+	1536, 0, 16, 20, 13, 13, 356, 0, 32, 40, 8,
-+};
-+
-+/* PCIE STF SCC */
-+struct rtw89_ple_quota ple_qt9 = {
-+	2702, 0, 32, 20, 64, 13, 1522, 0, 64, 128, 320,
-+};
-+
-+/* PCIE STF DBCC */
-+struct rtw89_ple_quota ple_qt10 = {
-+	2272, 0, 16, 20, 26, 13, 356, 89, 32, 40, 8
-+};
-+
-+/* PCIE STF DBCC */
-+struct rtw89_ple_quota ple_qt11 = {
-+	2600, 0, 32, 20, 64, 13, 684, 417, 64, 128, 320
-+};
-+
-+/* PCIE SU TP */
-+struct rtw89_ple_quota ple_qt12 = {
-+	50, 50, 16, 20, 26, 26, 25, 25, 32, 40, 20
-+};
-+
-+/* DLFW */
-+struct rtw89_ple_quota ple_qt13 = {
-+	0, 0, 16, 48, 0, 0, 0, 0, 0, 0, 0
-+};
-+
-+/* PCIE BCN TEST */
-+struct rtw89_ple_quota ple_qt14 = {
-+	588, 147, 16, 20, 26, 26, 356, 89, 32, 40, 80,
-+};
-+
-+/* PCIE BCN TEST */
-+struct rtw89_ple_quota ple_qt15 = {
-+	688, 247, 116, 20, 64, 126, 456, 189, 64, 128, 80,
-+};
-+
-+/* USB DBCC */
-+struct rtw89_ple_quota ple_qt16 = {
-+	2048, 0, 16, 48, 26, 26, 360, 90, 32, 40, 1,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_ple_quota ple_qt18 = {
-+	66, 0, 16, 20, 13, 13, 178, 0, 32, 14, 8,
-+};
-+
-+/* PCIE 64 */
-+struct rtw89_ple_quota ple_qt19 = {
-+	66, 0, 32, 20, 661, 13, 826, 0, 680, 14, 64,
-+};
-+
-+/* PCIE STF */
-+struct rtw89_ple_quota ple_qt20 = {
-+	962, 0, 16, 20, 80, 13, 178, 0, 32, 14, 8,
-+};
-+
-+/* PCIE STF */
-+struct rtw89_ple_quota ple_qt21 = {
-+	1047, 0, 32, 20, 165, 13, 263, 0, 117, 14, 64,
-+};
-+
-+/* PCIE 128 */
-+struct rtw89_ple_quota ple_qt22 = {
-+	269, 0, 18, 20, 15, 28, 180, 0, 34, 14, 8,
-+};
-+
-+/* LA-PCIE MIN*/
-+struct rtw89_ple_quota ple_qt23 = {
-+	156, 39, 16, 20, 26, 26, 356, 89, 32, 40, 1,
-+};
-+
-+/* LA-PCIE MAX*/
-+struct rtw89_ple_quota ple_qt24 = {
-+	187, 70, 47, 20, 64, 57, 387, 120, 64, 128, 1,
-+};
-+
-+static struct rtw89_dle_mem *get_dle_mem_cfg(struct rtw89_dev *rtwdev,
-+					     enum rtw89_qta_mode mode)
-+{
-+	struct rtw89_mac_info *mac = &rtwdev->mac;
-+	struct rtw89_dle_mem *cfg;
-+
-+	cfg = &rtwdev->chip->dle_mem[mode];
-+	if (!cfg)
-+		return NULL;
-+
-+	if (cfg->mode != mode) {
-+		rtw89_warn(rtwdev, "qta mode unmatch!\n");
-+		return NULL;
-+	}
-+
-+	mac->dle_info.wde_pg_size = cfg->wde_size->pge_size;
-+	mac->dle_info.ple_pg_size = cfg->ple_size->pge_size;
-+	mac->dle_info.qta_mode = mode;
-+	mac->dle_info.c0_rx_qta = cfg->ple_min_qt->cma0_dma;
-+	mac->dle_info.c1_rx_qta = cfg->ple_min_qt->cma1_dma;
-+
-+	return cfg;
-+}
-+
-+static inline u32 dle_used_size(struct rtw89_dle_size *wde,
-+				struct rtw89_dle_size *ple)
-+{
-+	return wde->pge_size * (wde->lnk_pge_num + wde->unlnk_pge_num) +
-+	       ple->pge_size * (ple->lnk_pge_num + ple->unlnk_pge_num);
-+}
-+
-+static void dle_func_en(struct rtw89_dev *rtwdev, bool enable)
-+{
-+	if (enable)
-+		rtw89_write32_set(rtwdev, R_AX_DMAC_FUNC_EN,
-+				  B_AX_DLE_WDE_EN | B_AX_DLE_PLE_EN);
-+	else
-+		rtw89_write32_clr(rtwdev, R_AX_DMAC_FUNC_EN,
-+				  B_AX_DLE_WDE_EN | B_AX_DLE_PLE_EN);
-+}
-+
-+static void dle_clk_en(struct rtw89_dev *rtwdev, bool enable)
-+{
-+	if (enable)
-+		rtw89_write32_set(rtwdev, R_AX_DMAC_CLK_EN,
-+				  B_AX_DLE_WDE_CLK_EN | B_AX_DLE_PLE_CLK_EN);
-+	else
-+		rtw89_write32_clr(rtwdev, R_AX_DMAC_CLK_EN,
-+				  B_AX_DLE_WDE_CLK_EN | B_AX_DLE_PLE_CLK_EN);
-+}
-+
-+static int dle_mix_cfg(struct rtw89_dev *rtwdev, struct rtw89_dle_mem *cfg)
-+{
-+	struct rtw89_dle_size *size_cfg;
-+	u32 val;
-+	u8 bound = 0;
-+
-+	val = rtw89_read32(rtwdev, R_AX_WDE_PKTBUF_CFG);
-+	size_cfg = cfg->wde_size;
-+
-+	switch (size_cfg->pge_size) {
-+	default:
-+	case RTW89_WDE_PG_64:
-+		val = u32_replace_bits(val, S_AX_WDE_PAGE_SEL_64,
-+				       B_AX_WDE_PAGE_SEL_MASK);
-+		break;
-+	case RTW89_WDE_PG_128:
-+		val = u32_replace_bits(val, S_AX_WDE_PAGE_SEL_128,
-+				       B_AX_WDE_PAGE_SEL_MASK);
-+		break;
-+	case RTW89_WDE_PG_256:
-+		rtw89_err(rtwdev, "[ERR]WDE DLE doesn't support 256 byte!\n");
-+		return -EINVAL;
-+	}
-+
-+	val = u32_replace_bits(val, bound, B_AX_WDE_START_BOUND_MASK);
-+	val = u32_replace_bits(val, size_cfg->lnk_pge_num,
-+			       B_AX_WDE_FREE_PAGE_NUM_MASK);
-+	rtw89_write32(rtwdev, R_AX_WDE_PKTBUF_CFG, val);
-+
-+	val = rtw89_read32(rtwdev, R_AX_PLE_PKTBUF_CFG);
-+	bound = (size_cfg->lnk_pge_num + size_cfg->unlnk_pge_num)
-+				* size_cfg->pge_size / DLE_BOUND_UNIT;
-+	size_cfg = cfg->ple_size;
-+
-+	switch (size_cfg->pge_size) {
-+	default:
-+	case RTW89_PLE_PG_64:
-+		rtw89_err(rtwdev, "[ERR]PLE DLE doesn't support 64 byte!\n");
-+		return -EINVAL;
-+	case RTW89_PLE_PG_128:
-+		val = u32_replace_bits(val, S_AX_PLE_PAGE_SEL_128,
-+				       B_AX_PLE_PAGE_SEL_MASK);
-+		break;
-+	case RTW89_PLE_PG_256:
-+		val = u32_replace_bits(val, S_AX_PLE_PAGE_SEL_256,
-+				       B_AX_PLE_PAGE_SEL_MASK);
-+		break;
-+	}
-+
-+	val = u32_replace_bits(val, bound, B_AX_PLE_START_BOUND_MASK);
-+	val = u32_replace_bits(val, size_cfg->lnk_pge_num,
-+			       B_AX_PLE_FREE_PAGE_NUM_MASK);
-+	rtw89_write32(rtwdev, R_AX_PLE_PKTBUF_CFG, val);
-+
-+	return 0;
-+}
-+
-+#define SET_QUOTA(_x, _module, _idx)					\
-+	do {								\
-+		val = (min_cfg->_x &					\
-+		       B_AX_ ## _module ## _MIN_SIZE_MASK) |		\
-+		      ((max_cfg->_x << 16) &				\
-+		       B_AX_ ## _module ## _MAX_SIZE_MASK);		\
-+		rtw89_write32(rtwdev,					\
-+			      R_AX_ ## _module ## _QTA ## _idx ## _CFG,	\
-+			      val);					\
-+	} while (0)
-+
-+static void wde_quota_cfg(struct rtw89_dev *rtwdev,
-+			  struct rtw89_wde_quota *min_cfg,
-+			  struct rtw89_wde_quota *max_cfg)
-+{
-+	u32 val;
-+
-+	SET_QUOTA(hif, WDE, 0);
-+	SET_QUOTA(wcpu, WDE, 1);
-+	SET_QUOTA(pkt_in, WDE, 3);
-+	SET_QUOTA(cpu_io, WDE, 4);
-+}
-+
-+static void ple_quota_cfg(struct rtw89_dev *rtwdev,
-+			  struct rtw89_ple_quota *min_cfg,
-+			  struct rtw89_ple_quota *max_cfg)
-+{
-+	u32 val;
-+
-+	SET_QUOTA(cma0_tx, PLE, 0);
-+	SET_QUOTA(cma1_tx, PLE, 1);
-+	SET_QUOTA(c2h, PLE, 2);
-+	SET_QUOTA(h2c, PLE, 3);
-+	SET_QUOTA(wcpu, PLE, 4);
-+	SET_QUOTA(mpdu_proc, PLE, 5);
-+	SET_QUOTA(cma0_dma, PLE, 6);
-+	SET_QUOTA(cma1_dma, PLE, 7);
-+	SET_QUOTA(bb_rpt, PLE, 8);
-+	SET_QUOTA(wd_rel, PLE, 9);
-+	SET_QUOTA(cpu_io, PLE, 10);
-+}
-+
-+#undef SET_QUOTA
-+
-+static void dle_quota_cfg(struct rtw89_dev *rtwdev, struct rtw89_dle_mem *cfg)
-+{
-+	wde_quota_cfg(rtwdev, cfg->wde_min_qt, cfg->wde_max_qt);
-+	ple_quota_cfg(rtwdev, cfg->ple_min_qt, cfg->ple_max_qt);
-+}
-+
-+static u32 dle_rsvd_size(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode)
-+{
-+	if (mode != RTW89_QTA_LAMODE)
-+		return 0;
-+
-+	return rtwdev->chip->dle_lamode_size;
-+}
-+
-+static int dle_init(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode,
-+		    enum rtw89_qta_mode ext_mode)
-+{
-+	struct rtw89_dle_mem *cfg, *ext_cfg;
-+	int ret = 0;
-+	u32 ini;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	cfg = get_dle_mem_cfg(rtwdev, mode);
-+	if (!cfg) {
-+		rtw89_err(rtwdev, "[ERR]get_dle_mem_cfg\n");
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (mode == RTW89_QTA_DLFW) {
-+		ext_cfg = get_dle_mem_cfg(rtwdev, ext_mode);
-+		if (!ext_cfg) {
-+			rtw89_err(rtwdev, "[ERR]get_dle_ext_mem_cfg %d\n",
-+				  ext_mode);
-+			ret = -EINVAL;
-+			goto error;
-+		}
-+		cfg->wde_min_qt->wcpu = ext_cfg->wde_min_qt->wcpu;
-+	}
-+
-+	if (dle_used_size(cfg->wde_size, cfg->ple_size) !=
-+	    (rtwdev->chip->fifo_size - dle_rsvd_size(rtwdev, mode))) {
-+		rtw89_err(rtwdev, "[ERR]wd/dle mem cfg\n");
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	dle_func_en(rtwdev, false);
-+	dle_clk_en(rtwdev, true);
-+
-+	ret = dle_mix_cfg(rtwdev, cfg);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR] dle mix cfg\n");
-+		goto error;
-+	}
-+	dle_quota_cfg(rtwdev, cfg);
-+
-+	dle_func_en(rtwdev, true);
-+
-+	ret = read_poll_timeout(rtw89_read32, ini,
-+				(ini & WDE_MGN_INI_RDY) == WDE_MGN_INI_RDY, 1,
-+				2000, false, rtwdev, R_AX_WDE_INI_STATUS);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]WDE cfg ready\n");
-+		return ret;
-+	}
-+
-+	ret = read_poll_timeout(rtw89_read32, ini,
-+				(ini & WDE_MGN_INI_RDY) == WDE_MGN_INI_RDY, 1,
-+				2000, false, rtwdev, R_AX_PLE_INI_STATUS);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]PLE cfg ready\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+error:
-+	dle_func_en(rtwdev, false);
-+	rtw89_err(rtwdev, "[ERR]trxcfg wde 0x8900 = %x\n",
-+		  rtw89_read32(rtwdev, R_AX_WDE_INI_STATUS));
-+	rtw89_err(rtwdev, "[ERR]trxcfg ple 0x8D00 = %x\n",
-+		  rtw89_read32(rtwdev, R_AX_PLE_INI_STATUS));
-+
-+	return ret;
-+}
-+
-+static bool dle_is_txq_empty(struct rtw89_dev *rtwdev)
-+{
-+	u32 msk32;
-+	u32 val32;
-+
-+	msk32 = B_AX_WDE_EMPTY_QUE_CMAC0_ALL_AC | B_AX_WDE_EMPTY_QUE_CMAC0_MBH |
-+		B_AX_WDE_EMPTY_QUE_CMAC1_MBH | B_AX_WDE_EMPTY_QUE_CMAC0_WMM0 |
-+		B_AX_WDE_EMPTY_QUE_CMAC0_WMM1 | B_AX_WDE_EMPTY_QUE_OTHERS |
-+		B_AX_PLE_EMPTY_QUE_DMAC_MPDU_TX | B_AX_PLE_EMPTY_QTA_DMAC_H2C |
-+		B_AX_PLE_EMPTY_QUE_DMAC_SEC_TX | B_AX_WDE_EMPTY_QUE_DMAC_PKTIN |
-+		B_AX_WDE_EMPTY_QTA_DMAC_HIF | B_AX_WDE_EMPTY_QTA_DMAC_WLAN_CPU |
-+		B_AX_WDE_EMPTY_QTA_DMAC_PKTIN | B_AX_WDE_EMPTY_QTA_DMAC_CPUIO |
-+		B_AX_PLE_EMPTY_QTA_DMAC_B0_TXPL |
-+		B_AX_PLE_EMPTY_QTA_DMAC_B1_TXPL |
-+		B_AX_PLE_EMPTY_QTA_DMAC_MPDU_TX |
-+		B_AX_PLE_EMPTY_QTA_DMAC_CPUIO |
-+		B_AX_WDE_EMPTY_QTA_DMAC_DATA_CPU |
-+		B_AX_PLE_EMPTY_QTA_DMAC_WLAN_CPU;
-+	val32 = rtw89_read32(rtwdev, R_AX_DLE_EMPTY0);
-+
-+	if ((val32 & msk32) == msk32)
-+		return true;
-+
-+	return false;
-+}
-+
-+static int sta_sch_init(struct rtw89_dev *rtwdev)
-+{
-+	u32 p_val;
-+	u8 val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	val = rtw89_read8(rtwdev, R_AX_SS_CTRL);
-+	val |= B_AX_SS_EN;
-+	rtw89_write8(rtwdev, R_AX_SS_CTRL, val);
-+
-+	ret = read_poll_timeout(rtw89_read32, p_val, p_val & B_AX_SS_INIT_DONE_1,
-+				1, TRXCFG_WAIT_CNT, false, rtwdev, R_AX_SS_CTRL);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]STA scheduler init\n");
-+		return ret;
-+	}
-+
-+	rtw89_write32_set(rtwdev, R_AX_SS_CTRL, B_AX_SS_WARM_INIT_FLG);
-+
-+	return 0;
-+}
-+
-+static int mpdu_proc_init(struct rtw89_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	rtw89_write32(rtwdev, R_AX_ACTION_FWD0, TRXCFG_MPDU_PROC_ACT_FRWD);
-+	rtw89_write32(rtwdev, R_AX_TF_FWD, TRXCFG_MPDU_PROC_TF_FRWD);
-+	rtw89_write32_set(rtwdev, R_AX_MPDU_PROC,
-+			  B_AX_APPEND_FCS | B_AX_A_ICV_ERR);
-+	rtw89_write32(rtwdev, R_AX_CUT_AMSDU_CTRL, TRXCFG_MPDU_PROC_CUT_CTRL);
-+
-+	return 0;
-+}
-+
-+static int sec_eng_init(struct rtw89_dev *rtwdev)
-+{
-+	u32 val = 0;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	val = rtw89_read32(rtwdev, R_AX_SEC_ENG_CTRL);
-+	/* init clock */
-+	val |= (B_AX_CLK_EN_CGCMP | B_AX_CLK_EN_WAPI | B_AX_CLK_EN_WEP_TKIP);
-+	/* init TX encryption */
-+	val |= (B_AX_SEC_TX_ENC | B_AX_SEC_RX_DEC);
-+	val |= (B_AX_MC_DEC | B_AX_BC_DEC);
-+	val |= (B_AX_BMC_MGNT_DEC | B_AX_UC_MGNT_DEC);
-+	val &= ~B_AX_TX_PARTIAL_MODE;
-+	rtw89_write32(rtwdev, R_AX_SEC_ENG_CTRL, val);
-+
-+	/* init MIC ICV append */
-+	val = rtw89_read32(rtwdev, R_AX_SEC_MPDU_PROC);
-+	val |= (B_AX_APPEND_ICV | B_AX_APPEND_MIC);
-+
-+	/* option init */
-+	rtw89_write32(rtwdev, R_AX_SEC_MPDU_PROC, val);
-+
-+	return 0;
-+}
-+
-+static int dmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	int ret;
-+
-+	ret = dle_init(rtwdev, rtwdev->mac.qta_mode, RTW89_QTA_INVALID);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]DLE init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = hfc_init(rtwdev, true, true, true);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]HCI FC init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = sta_sch_init(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]STA SCH init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = mpdu_proc_init(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]MPDU Proc init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = sec_eng_init(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]Security Engine init %d\n", ret);
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+static int addr_cam_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 val, reg;
-+	u16 p_val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_ADDR_CAM_CTRL, mac_idx);
-+
-+	val = rtw89_read32(rtwdev, reg);
-+	val |= u32_encode_bits(0x7f, B_AX_ADDR_CAM_RANGE_MASK) |
-+	       B_AX_ADDR_CAM_CLR | B_AX_ADDR_CAM_EN;
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	ret = read_poll_timeout(rtw89_read16, p_val, !(p_val & B_AX_ADDR_CAM_CLR),
-+				1, TRXCFG_WAIT_CNT, false, rtwdev, B_AX_ADDR_CAM_CLR);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]ADDR_CAM reset\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int scheduler_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 ret;
-+	u32 reg;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_PREBKF_CFG_0, mac_idx);
-+	rtw89_write32_mask(rtwdev, reg, B_AX_PREBKF_TIME_MASK, SCH_PREBKF_24US);
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_typ_fltr_opt(struct rtw89_dev *rtwdev,
-+				  enum rtw89_machdr_frame_type type,
-+				  enum rtw89_mac_fwd_target fwd_target,
-+				  u8 mac_idx)
-+{
-+	u32 reg;
-+	u32 val;
-+
-+	switch (fwd_target) {
-+	case RTW89_FWD_DONT_CARE:
-+		val = RX_FLTR_FRAME_DROP;
-+		break;
-+	case RTW89_FWD_TO_HOST:
-+		val = RX_FLTR_FRAME_TO_HOST;
-+		break;
-+	case RTW89_FWD_TO_WLAN_CPU:
-+		val = RX_FLTR_FRAME_TO_WLCPU;
-+		break;
-+	default:
-+		rtw89_err(rtwdev, "[ERR]set rx filter fwd target err\n");
-+		return -EINVAL;
-+	}
-+
-+	switch (type) {
-+	case RTW89_MGNT:
-+		reg = rtw89_mac_reg_by_idx(R_AX_MGNT_FLTR, mac_idx);
-+		break;
-+	case RTW89_CTRL:
-+		reg = rtw89_mac_reg_by_idx(R_AX_CTRL_FLTR, mac_idx);
-+		break;
-+	case RTW89_DATA:
-+		reg = rtw89_mac_reg_by_idx(R_AX_DATA_FLTR, mac_idx);
-+		break;
-+	default:
-+		rtw89_err(rtwdev, "[ERR]set rx filter type err\n");
-+		return -EINVAL;
-+	}
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+static int rx_fltr_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	int ret, i;
-+	u32 mac_ftlr, plcp_ftlr;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	for (i = RTW89_MGNT; i <= RTW89_DATA; i++) {
-+		ret = rtw89_mac_typ_fltr_opt(rtwdev, i, RTW89_FWD_TO_HOST,
-+					     mac_idx);
-+		if (ret)
-+			return ret;
-+	}
-+	mac_ftlr = B_AX_A_A1_MATCH | B_AX_A_BC | B_AX_A_MC |
-+		   B_AX_A_UC_CAM_MATCH | B_AX_A_BC_CAM_MATCH |
-+		   B_AX_A_MC_LIST_CAM_MATCH |
-+		   u32_encode_bits(3, B_AX_UID_FILTER_MASK) |
-+		   B_AX_A_BCN_CHK_EN;
-+	plcp_ftlr = B_AX_CCK_CRC_CHK | B_AX_CCK_SIG_CHK |
-+		    B_AX_LSIG_PARITY_CHK | B_AX_SIGA_CRC_CHK |
-+		    B_AX_VHT_SU_SIGB_CRC_CHK | B_AX_VHT_MU_SIGB_CRC_CHK |
-+		    B_AX_HE_SIGB_CRC_CHK;
-+	rtwdev->hal.rx_fltr = mac_ftlr;
-+	rtw89_write32(rtwdev, rtw89_mac_reg_by_idx(R_AX_RX_FLTR_OPT, mac_idx),
-+		      mac_ftlr);
-+	rtw89_write16(rtwdev, rtw89_mac_reg_by_idx(R_AX_PLCP_HDR_FLTR, mac_idx),
-+		      plcp_ftlr);
-+
-+	return 0;
-+}
-+
-+static int cca_ctrl_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 val, reg;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_CCA_CONTROL, mac_idx);
-+	val = rtw89_read32(rtwdev, reg);
-+	val |= (B_AX_TB_CHK_TX_NAV | B_AX_TB_CHK_BASIC_NAV |
-+			B_AX_TB_CHK_BTCCA | B_AX_TB_CHK_EDCCA |
-+			B_AX_TB_CHK_CCA_S80 | B_AX_TB_CHK_CCA_S40 |
-+			B_AX_TB_CHK_CCA_S20 | B_AX_TB_CHK_CCA_P20 |
-+			B_AX_SIFS_CHK_BTCCA | B_AX_SIFS_CHK_EDCCA |
-+			B_AX_SIFS_CHK_CCA_P20 |
-+			B_AX_CTN_CHK_TXNAV | B_AX_CTN_CHK_INTRA_NAV |
-+			B_AX_CTN_CHK_BASIC_NAV | B_AX_CTN_CHK_BTCCA |
-+			B_AX_CTN_CHK_EDCCA | B_AX_CTN_CHK_CCA_S80 |
-+			B_AX_CTN_CHK_CCA_S40 | B_AX_CTN_CHK_CCA_S20 |
-+			B_AX_CTN_CHK_CCA_P20);
-+	val &= ~(B_AX_SIFS_CHK_CCA_S80 | B_AX_SIFS_CHK_CCA_S40 | B_AX_SIFS_CHK_CCA_S20);
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_RSP_CHK_SIG, mac_idx);
-+	val = rtw89_read32(rtwdev, reg);
-+	val |= (B_AX_RSP_CHK_TX_NAV | B_AX_RSP_CHK_INTRA_NAV |
-+			B_AX_RSP_CHK_BASIC_NAV | B_AX_RSP_CHK_SEC_CCA_80 |
-+			B_AX_RSP_CHK_SEC_CCA_40 | B_AX_RSP_CHK_SEC_CCA_20 |
-+			B_AX_RSP_CHK_BTCCA | B_AX_RSP_CHK_EDCCA |
-+			B_AX_RSP_CHK_CCA);
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+static int spatial_reuse_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 reg;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+	reg = rtw89_mac_reg_by_idx(R_AX_RX_SR_CTRL, mac_idx);
-+	rtw89_write8_clr(rtwdev, reg, B_AX_SR_EN);
-+
-+	return 0;
-+}
-+
-+static int tmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 reg;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_MAC_LOOPBACK, mac_idx);
-+	rtw89_write32_clr(rtwdev, reg, B_AX_MACLBK_EN);
-+
-+	return 0;
-+}
-+
-+static int rmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+#define TRXCFG_RMAC_CCA_TO	32
-+#define TRXCFG_RMAC_DATA_TO	15
-+#define RX_MAX_LEN_UNIT 512
-+#define PLD_RLS_MAX_PG 127
-+	int ret;
-+	u32 reg, rx_max_len, rx_qta;
-+	u16 val;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_RESPBA_CAM_CTRL, mac_idx);
-+	rtw89_write8_set(rtwdev, reg, B_AX_SSN_SEL);
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_DLK_PROTECT_CTL, mac_idx);
-+	val = rtw89_read16(rtwdev, reg);
-+	val = u16_replace_bits(val, TRXCFG_RMAC_DATA_TO,
-+			       B_AX_RX_DLK_DATA_TIME_MASK);
-+	val = u16_replace_bits(val, TRXCFG_RMAC_CCA_TO,
-+			       B_AX_RX_DLK_CCA_TIME_MASK);
-+	rtw89_write16(rtwdev, reg, val);
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_RCR, mac_idx);
-+	rtw89_write8_mask(rtwdev, reg, B_AX_CH_EN_MASK, 0x1);
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_RX_FLTR_OPT, mac_idx);
-+	if (mac_idx == RTW89_MAC_0)
-+		rx_qta = rtwdev->mac.dle_info.c0_rx_qta;
-+	else
-+		rx_qta = rtwdev->mac.dle_info.c1_rx_qta;
-+	rx_qta = rx_qta > PLD_RLS_MAX_PG ? PLD_RLS_MAX_PG : rx_qta;
-+	rx_max_len = (rx_qta - 1) * rtwdev->mac.dle_info.ple_pg_size /
-+		     RX_MAX_LEN_UNIT;
-+	rx_max_len = rx_max_len > B_AX_RX_MPDU_MAX_LEN_SIZE ?
-+		     B_AX_RX_MPDU_MAX_LEN_SIZE : rx_max_len;
-+	rtw89_write32_mask(rtwdev, reg, B_AX_RX_MPDU_MAX_LEN_MASK, rx_max_len);
-+
-+	if (rtwdev->chip->chip_id == RTL8852A &&
-+	    rtwdev->hal.cut_version == CHIP_CUT_B) {
-+		rtw89_write16_mask(rtwdev,
-+				   rtw89_mac_reg_by_idx(R_AX_DLK_PROTECT_CTL, mac_idx),
-+				   B_AX_RX_DLK_CCA_TIME_MASK, 0);
-+		rtw89_write16_set(rtwdev, rtw89_mac_reg_by_idx(R_AX_RCR, mac_idx),
-+				  BIT(12));
-+	}
-+
-+	return ret;
-+}
-+
-+static int cmac_com_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 val, reg;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_TX_SUB_CARRIER_VALUE, mac_idx);
-+	val = rtw89_read32(rtwdev, reg);
-+	val = u32_replace_bits(val, 0, B_AX_TXSC_20M_MASK);
-+	val = u32_replace_bits(val, 0, B_AX_TXSC_40M_MASK);
-+	val = u32_replace_bits(val, 0, B_AX_TXSC_80M_MASK);
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+static bool is_qta_dbcc(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode)
-+{
-+	struct rtw89_dle_mem *cfg;
-+
-+	cfg = get_dle_mem_cfg(rtwdev, mode);
-+	if (!cfg) {
-+		rtw89_err(rtwdev, "[ERR]get_dle_mem_cfg\n");
-+		return false;
-+	}
-+
-+	return (cfg->ple_min_qt->cma1_dma && cfg->ple_max_qt->cma1_dma);
-+}
-+
-+static bool is_qta_poh(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode)
-+{
-+	return !(mode == RTW89_QTA_SCC_STF || mode == RTW89_QTA_DBCC_STF);
-+}
-+
-+static int ptcl_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	u32 val, reg;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	if (rtwdev->hci.type != RTW89_HCI_TYPE_PCIE)
-+		goto end;
-+
-+	if (is_qta_poh(rtwdev, rtwdev->mac.qta_mode)) {
-+		reg = rtw89_mac_reg_by_idx(R_AX_SIFS_SETTING, mac_idx);
-+		val = rtw89_read32(rtwdev, reg);
-+		val = u32_replace_bits(val, S_AX_CTS2S_TH_1K,
-+				       B_AX_HW_CTS2SELF_PKT_LEN_TH_MASK);
-+		val |= B_AX_HW_CTS2SELF_EN;
-+		rtw89_write32(rtwdev, reg, val);
-+
-+		reg = rtw89_mac_reg_by_idx(R_AX_PTCL_FSM_MON, mac_idx);
-+		val = rtw89_read32(rtwdev, reg);
-+		val = u32_replace_bits(val, S_AX_PTCL_TO_2MS, B_AX_PTCL_TX_ARB_TO_THR_MASK);
-+		val &= ~B_AX_PTCL_TX_ARB_TO_MODE;
-+		rtw89_write32(rtwdev, reg, val);
-+	}
-+
-+end:
-+	reg = rtw89_mac_reg_by_idx(R_AX_SIFS_SETTING, mac_idx);
-+	val = rtw89_read32(rtwdev, reg);
-+	val = u32_replace_bits(val, S_AX_CTS2S_TH_SEC_256B, B_AX_HW_CTS2SELF_PKT_LEN_TH_TWW_MASK);
-+	val |= B_AX_HW_CTS2SELF_EN;
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+static int cmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	int ret;
-+
-+	ret = scheduler_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d SCH init %d\n", mac_idx, ret);
-+		return ret;
-+	}
-+
-+	ret = addr_cam_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d ADDR_CAM reset %d\n", mac_idx,
-+			  ret);
-+		return ret;
-+	}
-+
-+	ret = rx_fltr_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d RX filter init %d\n", mac_idx,
-+			  ret);
-+		return ret;
-+	}
-+
-+	ret = cca_ctrl_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d CCA CTRL init %d\n", mac_idx,
-+			  ret);
-+		return ret;
-+	}
-+
-+	ret = spatial_reuse_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d Spatial Reuse init %d\n",
-+			  mac_idx, ret);
-+		return ret;
-+	}
-+
-+	ret = tmac_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d TMAC init %d\n", mac_idx, ret);
-+		return ret;
-+	}
-+
-+	ret = rmac_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d RMAC init %d\n", mac_idx, ret);
-+		return ret;
-+	}
-+
-+	ret = cmac_com_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d Com init %d\n", mac_idx, ret);
-+		return ret;
-+	}
-+
-+	ret = ptcl_init(rtwdev, mac_idx);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d PTCL init %d\n", mac_idx, ret);
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+static int hw_sch_tx_en_h2c(struct rtw89_dev *rtwdev, u8 band,
-+			    u16 tx_en_u16, u16 mask_u16)
-+{
-+#define TXEN_H2CREG_SIZE 2
-+	u32 ret;
-+	u32 content[TXEN_H2CREG_SIZE] = {0};
-+	struct rtw89_mac_c2h_info info = {0};
-+	struct rtw89_h2creg_sch_tx_en *h2creg =
-+		(struct rtw89_h2creg_sch_tx_en *)content;
-+
-+	/* set tx en */
-+	h2creg->func = RTW89_FWCMD_H2CREG_FUNC_SCH_TX_PAUSE;
-+	h2creg->tx_en = tx_en_u16;
-+	h2creg->mask = mask_u16;
-+	h2creg->band = band;
-+
-+	ret = rtw89_fw_write_h2c_reg(rtwdev, content, TXEN_H2CREG_SIZE);
-+	if (ret)
-+		return ret;
-+
-+	ret = rtw89_fw_read_c2h_reg(rtwdev, &info);
-+	if (ret)
-+		return ret;
-+
-+	if (info.id != RTW89_FWCMD_C2HREG_FUNC_TX_PAUSE_RPT)
-+		return -EINVAL;
-+
-+	if (rtw89_read8(rtwdev, R_AX_HD0ISR))
-+		rtw89_write8(rtwdev, R_AX_HD0ISR, 1);
-+
-+	return 0;
-+}
-+
-+static int set_hw_sch_tx_en(struct rtw89_dev *rtwdev, u8 mac_idx, u16 tx_en,
-+			    u16 tx_en_mask)
-+{
-+	u32 reg = rtw89_mac_reg_by_idx(R_AX_CTN_TXEN, mac_idx);
-+	u16 val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	if (test_bit(RTW89_FLAG_FW_RDY, rtwdev->flags))
-+		return hw_sch_tx_en_h2c(rtwdev, mac_idx, tx_en, tx_en_mask);
-+
-+	val = rtw89_read16(rtwdev, reg);
-+	val = (val & ~tx_en_mask) | (tx_en & tx_en_mask);
-+	rtw89_write16(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_stop_sch_tx(struct rtw89_dev *rtwdev, u8 mac_idx,
-+			  u16 *tx_en, enum rtw89_sch_tx_sel sel)
-+{
-+	int ret;
-+
-+	*tx_en =  rtw89_read16(rtwdev,
-+			       rtw89_mac_reg_by_idx(R_AX_CTN_TXEN, mac_idx));
-+
-+	switch (sel) {
-+	case RTW89_SCH_TX_SEL_ALL:
-+		ret = set_hw_sch_tx_en(rtwdev, mac_idx, 0, 0xffff);
-+		if (ret)
-+			return ret;
-+		break;
-+	case RTW89_SCH_TX_SEL_HIQ:
-+		ret = set_hw_sch_tx_en(rtwdev, mac_idx, 0, B_AX_CTN_TXEN_HGQ);
-+		if (ret)
-+			return ret;
-+		break;
-+	case RTW89_SCH_TX_SEL_MG0:
-+		ret = set_hw_sch_tx_en(rtwdev, mac_idx, 0, B_AX_CTN_TXEN_MGQ);
-+		if (ret)
-+			return ret;
-+		break;
-+	case RTW89_SCH_TX_SEL_MACID:
-+		ret = set_hw_sch_tx_en(rtwdev, mac_idx, 0, 0xffff);
-+		if (ret)
-+			return ret;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_resume_sch_tx(struct rtw89_dev *rtwdev, u8 mac_idx, u16 tx_en)
-+{
-+	int ret;
-+
-+	ret = set_hw_sch_tx_en(rtwdev, mac_idx, tx_en, 0xffff);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static u16 rtw89_mac_dle_buf_req(struct rtw89_dev *rtwdev, u16 buf_len,
-+				 bool wd)
-+{
-+	u32 val, reg;
-+	int ret;
-+
-+	reg = wd ? R_AX_WD_BUF_REQ : R_AX_PL_BUF_REQ;
-+	val = buf_len;
-+	val |= B_AX_BUF_REQ_EXEC;
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	reg = wd ? R_AX_WD_BUF_STATUS : R_AX_PL_BUF_STATUS;
-+
-+	ret = read_poll_timeout(rtw89_read32, val, val & B_AX_BUF_STAT_DONE,
-+				1, 2000, false, rtwdev, reg);
-+	if (ret)
-+		return 0xffff;
-+
-+	return FIELD_GET(B_AX_BUF_STAT_PKTID_MASK, val);
-+}
-+
-+static int rtw89_mac_set_cpuio(struct rtw89_dev *rtwdev,
-+			       struct rtw89_cpuio_ctrl *ctrl_para,
-+			       bool wd)
-+{
-+	u32 val, cmd_type, reg;
-+	int ret;
-+
-+	cmd_type = ctrl_para->cmd_type;
-+
-+	reg = wd ? R_AX_WD_CPUQ_OP_2 : R_AX_PL_CPUQ_OP_2;
-+	val = 0;
-+	val = u32_replace_bits(val, ctrl_para->start_pktid,
-+			       B_AX_CPUQ_OP_STRT_PKTID_MASK);
-+	val = u32_replace_bits(val, ctrl_para->end_pktid,
-+			       B_AX_CPUQ_OP_END_PKTID_MASK);
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	reg = wd ? R_AX_WD_CPUQ_OP_1 : R_AX_PL_CPUQ_OP_1;
-+	val = 0;
-+	val = u32_replace_bits(val, ctrl_para->src_pid,
-+			       B_AX_CPUQ_OP_SRC_PID_MASK);
-+	val = u32_replace_bits(val, ctrl_para->src_qid,
-+			       B_AX_CPUQ_OP_SRC_QID_MASK);
-+	val = u32_replace_bits(val, ctrl_para->dst_pid,
-+			       B_AX_CPUQ_OP_DST_PID_MASK);
-+	val = u32_replace_bits(val, ctrl_para->dst_qid,
-+			       B_AX_CPUQ_OP_DST_QID_MASK);
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	reg = wd ? R_AX_WD_CPUQ_OP_0 : R_AX_PL_CPUQ_OP_0;
-+	val = 0;
-+	val = u32_replace_bits(val, cmd_type,
-+			       B_AX_CPUQ_OP_CMD_TYPE_MASK);
-+	val = u32_replace_bits(val, ctrl_para->macid,
-+			       B_AX_CPUQ_OP_MACID_MASK);
-+	val = u32_replace_bits(val, ctrl_para->pkt_num,
-+			       B_AX_CPUQ_OP_PKTNUM_MASK);
-+	val |= B_AX_CPUQ_OP_EXEC;
-+	rtw89_write32(rtwdev, reg, val);
-+
-+	reg = wd ? R_AX_WD_CPUQ_OP_STATUS : R_AX_PL_CPUQ_OP_STATUS;
-+
-+	ret = read_poll_timeout(rtw89_read32, val, val & B_AX_CPUQ_OP_STAT_DONE,
-+				1, 2000, false, rtwdev, reg);
-+	if (ret)
-+		return ret;
-+
-+	if (cmd_type == CPUIO_OP_CMD_GET_1ST_PID ||
-+	    cmd_type == CPUIO_OP_CMD_GET_NEXT_PID)
-+		ctrl_para->pktid = FIELD_GET(B_AX_CPUQ_OP_PKTID_MASK, val);
-+
-+	return 0;
-+}
-+
-+static int dle_quota_change(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode)
-+{
-+	struct rtw89_dle_mem *cfg;
-+	struct rtw89_cpuio_ctrl ctrl_para = {0};
-+	u16 pkt_id;
-+	int ret;
-+
-+	cfg = get_dle_mem_cfg(rtwdev, mode);
-+	if (!cfg) {
-+		rtw89_err(rtwdev, "[ERR]wd/dle mem cfg\n");
-+		return -EINVAL;
-+	}
-+
-+	if (dle_used_size(cfg->wde_size, cfg->ple_size) !=
-+	    (rtwdev->chip->fifo_size - dle_rsvd_size(rtwdev, mode))) {
-+		rtw89_err(rtwdev, "[ERR]wd/dle mem cfg\n");
-+		return -EINVAL;
-+	}
-+
-+	dle_quota_cfg(rtwdev, cfg);
-+
-+	pkt_id = rtw89_mac_dle_buf_req(rtwdev, 0x20, true);
-+	if (pkt_id == 0xffff) {
-+		rtw89_err(rtwdev, "[ERR]WDE DLE buf req\n");
-+		return -ENOMEM;
-+	}
-+
-+	ctrl_para.cmd_type = CPUIO_OP_CMD_ENQ_TO_HEAD;
-+	ctrl_para.start_pktid = pkt_id;
-+	ctrl_para.end_pktid = pkt_id;
-+	ctrl_para.pkt_num = 0;
-+	ctrl_para.dst_pid = WDE_DLE_PORT_ID_WDRLS;
-+	ctrl_para.dst_qid = WDE_DLE_QUEID_NO_REPORT;
-+	ret = rtw89_mac_set_cpuio(rtwdev, &ctrl_para, true);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]WDE DLE enqueue to head\n");
-+		return -EFAULT;
-+	}
-+
-+	pkt_id = rtw89_mac_dle_buf_req(rtwdev, 0x20, false);
-+	if (pkt_id == 0xffff) {
-+		rtw89_err(rtwdev, "[ERR]PLE DLE buf req\n");
-+		return -ENOMEM;
-+	}
-+
-+	ctrl_para.cmd_type = CPUIO_OP_CMD_ENQ_TO_HEAD;
-+	ctrl_para.start_pktid = pkt_id;
-+	ctrl_para.end_pktid = pkt_id;
-+	ctrl_para.pkt_num = 0;
-+	ctrl_para.dst_pid = PLE_DLE_PORT_ID_PLRLS;
-+	ctrl_para.dst_qid = PLE_DLE_QUEID_NO_REPORT;
-+	ret = rtw89_mac_set_cpuio(rtwdev, &ctrl_para, false);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]PLE DLE enqueue to head\n");
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+static int band_idle_ck_b(struct rtw89_dev *rtwdev, u8 mac_idx)
-+{
-+	int ret;
-+	u32 reg;
-+	u8 val;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_PTCL_TX_CTN_SEL, mac_idx);
-+
-+	ret = read_poll_timeout(rtw89_read8, val,
-+				(val & B_AX_PTCL_TX_ON_STAT) == 0,
-+				SW_CVR_DUR_US,
-+				SW_CVR_DUR_US * PTCL_IDLE_POLL_CNT,
-+				false, rtwdev, reg);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int band1_enable(struct rtw89_dev *rtwdev)
-+{
-+	int ret, i;
-+	u32 sleep_bak[4] = {0};
-+	u32 pause_bak[4] = {0};
-+	u16 tx_en;
-+
-+	ret = rtw89_mac_stop_sch_tx(rtwdev, 0, &tx_en, RTW89_SCH_TX_SEL_ALL);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]stop sch tx %d\n", ret);
-+		return ret;
-+	}
-+
-+	for (i = 0; i < 4; i++) {
-+		sleep_bak[i] = rtw89_read32(rtwdev, R_AX_MACID_SLEEP_0 + i * 4);
-+		pause_bak[i] = rtw89_read32(rtwdev, R_AX_SS_MACID_PAUSE_0 + i * 4);
-+		rtw89_write32(rtwdev, R_AX_MACID_SLEEP_0 + i * 4, U32_MAX);
-+		rtw89_write32(rtwdev, R_AX_SS_MACID_PAUSE_0 + i * 4, U32_MAX);
-+	}
-+
-+	ret = band_idle_ck_b(rtwdev, 0);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]tx idle poll %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = dle_quota_change(rtwdev, rtwdev->mac.qta_mode);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]DLE quota change %d\n", ret);
-+		return ret;
-+	}
-+
-+	for (i = 0; i < 4; i++) {
-+		rtw89_write32(rtwdev, R_AX_MACID_SLEEP_0 + i * 4, sleep_bak[i]);
-+		rtw89_write32(rtwdev, R_AX_SS_MACID_PAUSE_0 + i * 4, pause_bak[i]);
-+	}
-+
-+	ret = rtw89_mac_resume_sch_tx(rtwdev, 0, tx_en);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC1 resume sch tx %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = cmac_func_en(rtwdev, 1, true);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC1 func en %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = cmac_init(rtwdev, 1);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC1 init %d\n", ret);
-+		return ret;
-+	}
-+
-+	rtw89_write32_set(rtwdev, R_AX_SYS_ISO_CTRL_EXTEND,
-+			  B_AX_R_SYM_FEN_WLPHYFUN_1 | B_AX_R_SYM_FEN_WLPHYGLB_1);
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_enable_imr(struct rtw89_dev *rtwdev, u8 mac_idx,
-+				enum rtw89_mac_hwmod_sel sel)
-+{
-+	u32 reg, val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, sel);
-+	if (ret) {
-+		rtw89_err(rtwdev, "MAC%d mac_idx%d is not ready\n",
-+			  sel, mac_idx);
-+		return ret;
-+	}
-+
-+	if (sel == RTW89_DMAC_SEL) {
-+		rtw89_write32_clr(rtwdev, R_AX_TXPKTCTL_ERR_IMR_ISR,
-+				  B_AX_TXPKTCTL_USRCTL_RLSBMPLEN_ERR_INT_EN |
-+				  B_AX_TXPKTCTL_USRCTL_RDNRLSCMD_ERR_INT_EN |
-+				  B_AX_TXPKTCTL_CMDPSR_FRZTO_ERR_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_TXPKTCTL_ERR_IMR_ISR_B1,
-+				  B_AX_TXPKTCTL_USRCTL_RLSBMPLEN_ERR_INT_EN |
-+				  B_AX_TXPKTCTL_USRCTL_RDNRLSCMD_ERR_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_HOST_DISPATCHER_ERR_IMR,
-+				  B_AX_HDT_PKT_FAIL_DBG_INT_EN |
-+				  B_AX_HDT_OFFSET_UNMATCH_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_CPU_DISPATCHER_ERR_IMR,
-+				  B_AX_CPU_SHIFT_EN_ERR_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_PLE_ERR_IMR,
-+				  B_AX_PLE_GETNPG_STRPG_ERR_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_WDRLS_ERR_IMR,
-+				  B_AX_WDRLS_PLEBREQ_TO_ERR_INT_EN);
-+		rtw89_write32_set(rtwdev, R_AX_HD0IMR, B_AX_WDT_PTFM_INT_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_TXPKTCTL_ERR_IMR_ISR,
-+				  B_AX_TXPKTCTL_USRCTL_NOINIT_ERR_INT_EN);
-+	} else if (sel == RTW89_CMAC_SEL) {
-+		reg = rtw89_mac_reg_by_idx(R_AX_SCHEDULE_ERR_IMR, mac_idx);
-+		rtw89_write32_clr(rtwdev, reg,
-+				  B_AX_SORT_NON_IDLE_ERR_INT_EN);
-+
-+		reg = rtw89_mac_reg_by_idx(R_AX_DLE_CTRL, mac_idx);
-+		rtw89_write32_clr(rtwdev, reg,
-+				  B_AX_NO_RESERVE_PAGE_ERR_IMR |
-+				  B_AX_RXDATA_FSM_HANG_ERROR_IMR);
-+
-+		reg = rtw89_mac_reg_by_idx(R_AX_PTCL_IMR0, mac_idx);
-+		val = B_AX_F2PCMD_USER_ALLC_ERR_INT_EN |
-+		      B_AX_TX_RECORD_PKTID_ERR_INT_EN |
-+		      B_AX_FSM_TIMEOUT_ERR_INT_EN;
-+		rtw89_write32(rtwdev, reg, val);
-+
-+		reg = rtw89_mac_reg_by_idx(R_AX_PHYINFO_ERR_IMR, mac_idx);
-+		rtw89_write16_set(rtwdev, reg,
-+				  B_AXC_PHY_TXON_TIMEOUT_INT_EN |
-+				  B_AX_CCK_CCA_TIMEOUT_INT_EN |
-+				  B_AX_OFDM_CCA_TIMEOUT_INT_EN |
-+				  B_AX_DATA_ON_TIMEOUT_INT_EN |
-+				  B_AX_STS_ON_TIMEOUT_INT_EN |
-+				  B_AX_CSI_ON_TIMEOUT_INT_EN);
-+
-+		reg = rtw89_mac_reg_by_idx(R_AX_RMAC_ERR_ISR, mac_idx);
-+		val = rtw89_read32(rtwdev, reg);
-+		val |= (B_AX_RMAC_RX_CSI_TIMEOUT_INT_EN |
-+			B_AX_RMAC_RX_TIMEOUT_INT_EN |
-+			B_AX_RMAC_CSI_TIMEOUT_INT_EN);
-+		val &= ~(B_AX_RMAC_CCA_TO_IDLE_TIMEOUT_INT_EN |
-+			 B_AX_RMAC_DATA_ON_TO_IDLE_TIMEOUT_INT_EN |
-+			 B_AX_RMAC_CCA_TIMEOUT_INT_EN |
-+			 B_AX_RMAC_DATA_ON_TIMEOUT_INT_EN);
-+		rtw89_write32(rtwdev, reg, val);
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_dbcc_enable(struct rtw89_dev *rtwdev, bool enable)
-+{
-+	int ret = 0;
-+
-+	if (enable) {
-+		ret = band1_enable(rtwdev);
-+		if (ret) {
-+			rtw89_err(rtwdev, "[ERR] band1_enable %d\n", ret);
-+			return ret;
-+		}
-+
-+		ret = rtw89_mac_enable_imr(rtwdev, RTW89_MAC_1, RTW89_CMAC_SEL);
-+		if (ret) {
-+			rtw89_err(rtwdev, "[ERR] enable CMAC1 IMR %d\n", ret);
-+			return ret;
-+		}
-+	} else {
-+		rtw89_err(rtwdev, "[ERR] disable dbcc is not implemented not\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int set_host_rpr(struct rtw89_dev *rtwdev)
-+{
-+	if (rtwdev->hci.type == RTW89_HCI_TYPE_PCIE &&
-+	    is_qta_poh(rtwdev, rtwdev->mac.qta_mode)) {
-+		rtw89_write32_mask(rtwdev, R_AX_WDRLS_CFG,
-+				   B_AX_WDRLS_MODE_MASK, RTW89_RPR_MODE_POH);
-+		rtw89_write32_set(rtwdev, R_AX_RLSRPT0_CFG0,
-+				  B_AX_RLSRPT0_FLTR_MAP_MASK);
-+	} else {
-+		rtw89_write32_mask(rtwdev, R_AX_WDRLS_CFG,
-+				   B_AX_WDRLS_MODE_MASK, RTW89_RPR_MODE_STF);
-+		rtw89_write32_clr(rtwdev, R_AX_RLSRPT0_CFG0,
-+				  B_AX_RLSRPT0_FLTR_MAP_MASK);
-+	}
-+
-+	rtw89_write32_mask(rtwdev, R_AX_RLSRPT0_CFG1, B_AX_RLSRPT0_AGGNUM_MASK, 121);
-+	rtw89_write32_mask(rtwdev, R_AX_RLSRPT0_CFG1, B_AX_RLSRPT0_TO_MASK, 255);
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_trx_init(struct rtw89_dev *rtwdev)
-+{
-+	enum rtw89_qta_mode qta_mode = rtwdev->mac.qta_mode;
-+	int ret;
-+
-+	ret = dmac_init(rtwdev, 0);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]DMAC init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = cmac_init(rtwdev, 0);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]CMAC%d init %d\n", 0, ret);
-+		return ret;
-+	}
-+
-+	if (is_qta_dbcc(rtwdev, qta_mode)) {
-+		ret = rtw89_mac_dbcc_enable(rtwdev, true);
-+		if (ret) {
-+			rtw89_err(rtwdev, "[ERR]dbcc_enable init %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
-+	ret = rtw89_mac_enable_imr(rtwdev, RTW89_MAC_0, RTW89_DMAC_SEL);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR] enable DMAC IMR %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = rtw89_mac_enable_imr(rtwdev, RTW89_MAC_0, RTW89_CMAC_SEL);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR] to enable CMAC0 IMR %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = set_host_rpr(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR] set host rpr %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rtw89_mac_disable_cpu(struct rtw89_dev *rtwdev)
-+{
-+	clear_bit(RTW89_FLAG_FW_RDY, rtwdev->flags);
-+
-+	rtw89_write32_clr(rtwdev, R_AX_PLATFORM_ENABLE, B_AX_WCPU_EN);
-+	rtw89_write32_clr(rtwdev, R_AX_SYS_CLK_CTRL, B_AX_CPU_CLK_EN);
-+}
-+
-+static int rtw89_mac_enable_cpu(struct rtw89_dev *rtwdev, u8 boot_reason,
-+				bool dlfw)
-+{
-+	u32 val;
-+	int ret;
-+
-+	if (rtw89_read32(rtwdev, R_AX_PLATFORM_ENABLE) & B_AX_WCPU_EN)
-+		return -EFAULT;
-+
-+	rtw89_write32(rtwdev, R_AX_HALT_H2C_CTRL, 0);
-+	rtw89_write32(rtwdev, R_AX_HALT_C2H_CTRL, 0);
-+
-+	rtw89_write32_set(rtwdev, R_AX_SYS_CLK_CTRL, B_AX_CPU_CLK_EN);
-+
-+	val = rtw89_read32(rtwdev, R_AX_WCPU_FW_CTRL);
-+	val &= ~(B_AX_WCPU_FWDL_EN | B_AX_H2C_PATH_RDY | B_AX_FWDL_PATH_RDY);
-+	val = u32_replace_bits(val, RTW89_FWDL_INITIAL_STATE,
-+			       B_AX_WCPU_FWDL_STS_MASK);
-+
-+	if (dlfw)
-+		val |= B_AX_WCPU_FWDL_EN;
-+
-+	rtw89_write32(rtwdev, R_AX_WCPU_FW_CTRL, val);
-+	rtw89_write16_mask(rtwdev, R_AX_BOOT_REASON, B_AX_BOOT_REASON_MASK,
-+			   boot_reason);
-+	rtw89_write32_set(rtwdev, R_AX_PLATFORM_ENABLE, B_AX_WCPU_EN);
-+
-+	if (!dlfw) {
-+		mdelay(5);
-+
-+		ret = rtw89_fw_check_rdy(rtwdev);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_fw_dl_pre_init(struct rtw89_dev *rtwdev)
-+{
-+	u32 val;
-+	int ret;
-+
-+	val = B_AX_MAC_FUNC_EN | B_AX_DMAC_FUNC_EN | B_AX_DISPATCHER_EN |
-+	      B_AX_PKT_BUF_EN;
-+	rtw89_write32(rtwdev, R_AX_DMAC_FUNC_EN, val);
-+
-+	val = B_AX_DISPATCHER_CLK_EN;
-+	rtw89_write32(rtwdev, R_AX_DMAC_CLK_EN, val);
-+
-+	ret = dle_init(rtwdev, RTW89_QTA_DLFW, rtwdev->mac.qta_mode);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]DLE pre init %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = hfc_init(rtwdev, true, false, true);
-+	if (ret) {
-+		rtw89_err(rtwdev, "[ERR]HCI FC pre init %d\n", ret);
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+static void rtw89_mac_hci_func_en(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_write32_set(rtwdev, R_AX_HCI_FUNC_EN,
-+			  B_AX_HCI_TXDMA_EN | B_AX_HCI_RXDMA_EN);
-+}
-+
-+void rtw89_mac_enable_bb_rf(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_write8_set(rtwdev, R_AX_SYS_FUNC_EN,
-+			 B_AX_FEN_BBRSTB | B_AX_FEN_BB_GLB_RSTN);
-+	rtw89_write32_set(rtwdev, R_AX_WLRF_CTRL,
-+			  B_AX_WLRF1_CTRL_7 | B_AX_WLRF1_CTRL_1 |
-+			  B_AX_WLRF_CTRL_7 | B_AX_WLRF_CTRL_1);
-+	rtw89_write8_set(rtwdev, R_AX_PHYREG_SET, PHYREG_SET_ALL_CYCLE);
-+}
-+
-+void rtw89_mac_disable_bb_rf(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_write8_clr(rtwdev, R_AX_SYS_FUNC_EN,
-+			 B_AX_FEN_BBRSTB | B_AX_FEN_BB_GLB_RSTN);
-+	rtw89_write32_clr(rtwdev, R_AX_WLRF_CTRL,
-+			  B_AX_WLRF1_CTRL_7 | B_AX_WLRF1_CTRL_1 |
-+			  B_AX_WLRF_CTRL_7 | B_AX_WLRF_CTRL_1);
-+	rtw89_write8_clr(rtwdev, R_AX_PHYREG_SET, PHYREG_SET_ALL_CYCLE);
-+}
-+
-+int rtw89_mac_partial_init(struct rtw89_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = rtw89_mac_power_switch(rtwdev, true);
-+	if (ret) {
-+		rtw89_mac_power_switch(rtwdev, false);
-+		ret = rtw89_mac_power_switch(rtwdev, true);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	rtw89_mac_hci_func_en(rtwdev);
-+
-+	if (rtwdev->hci.ops->mac_pre_init) {
-+		ret = rtwdev->hci.ops->mac_pre_init(rtwdev);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	ret = rtw89_mac_fw_dl_pre_init(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	rtw89_mac_disable_cpu(rtwdev);
-+	ret = rtw89_mac_enable_cpu(rtwdev, 0, true);
-+	if (ret)
-+		return ret;
-+
-+	ret = rtw89_wait_firmware_completion(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "failed to wait firmware completion\n");
-+		return ret;
-+	}
-+
-+	ret = rtw89_fw_download(rtwdev, &rtwdev->fw);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_init(struct rtw89_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = rtw89_mac_partial_init(rtwdev);
-+	if (ret)
-+		goto fail;
-+
-+	rtw89_mac_enable_bb_rf(rtwdev);
-+	if (ret)
-+		goto fail;
-+
-+	ret = rtw89_mac_sys_init(rtwdev);
-+	if (ret)
-+		goto fail;
-+
-+	ret = rtw89_mac_trx_init(rtwdev);
-+	if (ret)
-+		goto fail;
-+
-+	if (rtwdev->hci.ops->mac_post_init) {
-+		ret = rtwdev->hci.ops->mac_post_init(rtwdev);
-+		if (ret)
-+			goto fail;
-+	}
-+
-+	return ret;
-+fail:
-+	rtw89_mac_power_switch(rtwdev, false);
-+
-+	return ret;
-+}
-+
-+static void rtw89_mac_dmac_tbl_init(struct rtw89_dev *rtwdev, u8 macid)
-+{
-+	u8 i;
-+
-+	for (i = 0; i < 4; i++) {
-+		rtw89_write32(rtwdev, R_AX_FILTER_MODEL_ADDR,
-+			      DMAC_TBL_BASE_ADDR + (macid << 4) + (i << 2));
-+		rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY, 0);
-+	}
-+}
-+
-+static void rtw89_mac_cmac_tbl_init(struct rtw89_dev *rtwdev, u8 macid)
-+{
-+	rtw89_write32(rtwdev, R_AX_FILTER_MODEL_ADDR,
-+		      CMAC_TBL_BASE_ADDR + macid * CCTL_INFO_SIZE);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY, 0x4);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 4, 0x400A0004);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 8, 0);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 12, 0);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 16, 0);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 20, 0xE43000B);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 24, 0);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY + 28, 0xB8109);
-+}
-+
-+static int rtw89_set_macid_pause(struct rtw89_dev *rtwdev, u8 macid, bool pause)
-+{
-+	u8 sh =  FIELD_GET(GENMASK(4, 0), macid);
-+	u8 grp = macid >> 5;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, RTW89_MAC_0, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	rtw89_fw_h2c_macid_pause(rtwdev, sh, grp, pause);
-+
-+	return 0;
-+}
-+
-+static const struct rtw89_port_reg rtw_port_base = {
-+	.port_cfg = R_AX_PORT_CFG_P0,
-+	.tbtt_prohib = R_AX_TBTT_PROHIB_P0,
-+	.bcn_area = R_AX_BCN_AREA_P0,
-+	.bcn_early = R_AX_BCNERLYINT_CFG_P0,
-+	.tbtt_early = R_AX_TBTTERLYINT_CFG_P0,
-+	.tbtt_agg = R_AX_TBTT_AGG_P0,
-+	.bcn_space = R_AX_BCN_SPACE_CFG_P0,
-+	.bcn_forcetx = R_AX_BCN_FORCETX_P0,
-+	.bcn_err_cnt = R_AX_BCN_ERR_CNT_P0,
-+	.bcn_err_flag = R_AX_BCN_ERR_FLAG_P0,
-+	.dtim_ctrl = R_AX_DTIM_CTRL_P0,
-+	.tbtt_shift = R_AX_TBTT_SHIFT_P0,
-+	.bcn_cnt_tmr = R_AX_BCN_CNT_TMR_P0,
-+	.tsftr_l = R_AX_TSFTR_LOW_P0,
-+	.tsftr_h = R_AX_TSFTR_HIGH_P0
-+};
-+
-+#define BCN_INTERVAL 100
-+#define BCN_ERLY_DEF 160
-+#define BCN_SETUP_DEF 2
-+#define BCN_HOLD_DEF 200
-+#define BCN_MASK_DEF 0
-+#define TBTT_ERLY_DEF 5
-+#define BCN_SET_UNIT 32
-+#define BCN_ERLY_SET_DLY (10 * 2)
-+
-+static void rtw89_mac_port_cfg_func_sw(struct rtw89_dev *rtwdev,
-+				       struct rtw89_vif *rtwvif)
-+{
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	if (!rtw89_read32_port_mask(rtwdev, rtwvif, p->port_cfg, B_AX_PORT_FUNC_EN))
-+		return;
-+
-+	rtw89_write32_port_clr(rtwdev, rtwvif, p->tbtt_prohib, B_AX_TBTT_SETUP_MASK);
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->tbtt_prohib, B_AX_TBTT_HOLD_MASK, 1);
-+	rtw89_write16_port_clr(rtwdev, rtwvif, p->tbtt_early, B_AX_TBTTERLY_MASK);
-+	rtw89_write16_port_clr(rtwdev, rtwvif, p->bcn_early, B_AX_BCNERLY_MASK);
-+
-+	msleep(vif->bss_conf.beacon_int + 1);
-+
-+	rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, B_AX_PORT_FUNC_EN |
-+							    B_AX_BRK_SETUP);
-+	rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_TSFTR_RST);
-+	rtw89_write32_port(rtwdev, rtwvif, p->bcn_cnt_tmr, 0);
-+}
-+
-+static void rtw89_mac_port_cfg_tx_rpt(struct rtw89_dev *rtwdev,
-+				      struct rtw89_vif *rtwvif, bool en)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_TXBCN_RPT_EN);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, B_AX_TXBCN_RPT_EN);
-+}
-+
-+static void rtw89_mac_port_cfg_rx_rpt(struct rtw89_dev *rtwdev,
-+				      struct rtw89_vif *rtwvif, bool en)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_RXBCN_RPT_EN);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, B_AX_RXBCN_RPT_EN);
-+}
-+
-+static void rtw89_mac_port_cfg_net_type(struct rtw89_dev *rtwdev,
-+					struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->port_cfg, B_AX_NET_TYPE_MASK,
-+				rtwvif->net_type);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_prct(struct rtw89_dev *rtwdev,
-+					struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+	bool en = rtwvif->net_type != RTW89_NET_TYPE_NO_LINK;
-+	u32 bits = B_AX_TBTT_PROHIB_EN | B_AX_BRK_SETUP;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, bits);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, bits);
-+}
-+
-+static void rtw89_mac_port_cfg_rx_sw(struct rtw89_dev *rtwdev,
-+				     struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+	bool en = rtwvif->net_type == RTW89_NET_TYPE_INFRA ||
-+		  rtwvif->net_type == RTW89_NET_TYPE_AD_HOC;
-+	u32 bit = B_AX_RX_BSSID_FIT_EN;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, bit);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, bit);
-+}
-+
-+static void rtw89_mac_port_cfg_rx_sync(struct rtw89_dev *rtwdev,
-+				       struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+	bool en = rtwvif->net_type == RTW89_NET_TYPE_INFRA ||
-+		  rtwvif->net_type == RTW89_NET_TYPE_AD_HOC;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_TSF_UDT_EN);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, B_AX_TSF_UDT_EN);
-+}
-+
-+static void rtw89_mac_port_cfg_tx_sw(struct rtw89_dev *rtwdev,
-+				     struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+	bool en = rtwvif->net_type == RTW89_NET_TYPE_AP_MODE ||
-+		  rtwvif->net_type == RTW89_NET_TYPE_AD_HOC;
-+
-+	if (en)
-+		rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_BCNTX_EN);
-+	else
-+		rtw89_write32_port_clr(rtwdev, rtwvif, p->port_cfg, B_AX_BCNTX_EN);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_intv(struct rtw89_dev *rtwdev,
-+					struct rtw89_vif *rtwvif)
-+{
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+	u16 bcn_int = vif->bss_conf.beacon_int ? vif->bss_conf.beacon_int : BCN_INTERVAL;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->bcn_space, B_AX_BCN_SPACE_MASK,
-+				bcn_int);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_setup_time(struct rtw89_dev *rtwdev,
-+					      struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->tbtt_prohib,
-+				B_AX_TBTT_SETUP_MASK, BCN_SETUP_DEF);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_hold_time(struct rtw89_dev *rtwdev,
-+					     struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->tbtt_prohib,
-+				B_AX_TBTT_HOLD_MASK, BCN_HOLD_DEF);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_mask_area(struct rtw89_dev *rtwdev,
-+					     struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->bcn_area,
-+				B_AX_BCN_MSK_AREA_MASK, BCN_MASK_DEF);
-+}
-+
-+static void rtw89_mac_port_cfg_tbtt_early(struct rtw89_dev *rtwdev,
-+					  struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write16_port_mask(rtwdev, rtwvif, p->tbtt_early,
-+				B_AX_TBTTERLY_MASK, TBTT_ERLY_DEF);
-+}
-+
-+static void rtw89_mac_port_cfg_bss_color(struct rtw89_dev *rtwdev,
-+					 struct rtw89_vif *rtwvif)
-+{
-+	static const u32 masks[RTW89_PORT_NUM] = {
-+		B_AX_BSS_COLOB_AX_PORT_0_MASK, B_AX_BSS_COLOB_AX_PORT_1_MASK,
-+		B_AX_BSS_COLOB_AX_PORT_2_MASK, B_AX_BSS_COLOB_AX_PORT_3_MASK,
-+		B_AX_BSS_COLOB_AX_PORT_4_MASK,
-+	};
-+	u8 port = rtwvif->port;
-+	u32 reg_base;
-+	u32 reg;
-+	u8 bss_color = 0;
-+
-+	reg_base = port >= 4 ? R_AX_PTCL_BSS_COLOR_1 : R_AX_PTCL_BSS_COLOR_0;
-+	reg = rtw89_mac_reg_by_idx(reg_base, rtwvif->mac_idx);
-+	rtw89_write32_mask(rtwdev, reg, masks[port], bss_color);
-+}
-+
-+static void rtw89_mac_port_cfg_mbssid(struct rtw89_dev *rtwdev,
-+				      struct rtw89_vif *rtwvif)
-+{
-+	u8 port = rtwvif->port;
-+	u32 reg;
-+
-+	if (rtwvif->net_type == RTW89_NET_TYPE_AP_MODE)
-+		return;
-+
-+	if (port == 0) {
-+		reg = rtw89_mac_reg_by_idx(R_AX_MBSSID_CTRL, rtwvif->mac_idx);
-+		rtw89_write32_clr(rtwdev, reg, B_AX_P0MB_ALL_MASK);
-+	}
-+}
-+
-+static void rtw89_mac_port_cfg_hiq_drop(struct rtw89_dev *rtwdev,
-+					struct rtw89_vif *rtwvif)
-+{
-+	u8 port = rtwvif->port;
-+	u32 reg;
-+	u32 val;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_MBSSID_DROP_0, rtwvif->mac_idx);
-+	val = rtw89_read32(rtwdev, reg);
-+	val &= ~FIELD_PREP(B_AX_PORT_DROP_4_0_MSK, BIT(port));
-+	if (port == 0)
-+		val &= ~BIT(0);
-+	rtw89_write32(rtwdev, reg, val);
-+}
-+
-+static void rtw89_mac_port_cfg_func_en(struct rtw89_dev *rtwdev,
-+				       struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_set(rtwdev, rtwvif, p->port_cfg, B_AX_PORT_FUNC_EN);
-+}
-+
-+static void rtw89_mac_port_cfg_bcn_early(struct rtw89_dev *rtwdev,
-+					 struct rtw89_vif *rtwvif)
-+{
-+	const struct rtw89_port_reg *p = &rtw_port_base;
-+
-+	rtw89_write32_port_mask(rtwdev, rtwvif, p->bcn_early, B_AX_BCNERLY_MASK,
-+				BCN_ERLY_DEF);
-+}
-+
-+int rtw89_mac_port_update(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
-+{
-+	u8 port = rtwvif->port;
-+
-+	if (port >= RTW89_PORT_NUM)
-+		return -EINVAL;
-+
-+	rtw89_mac_port_cfg_func_sw(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_tx_rpt(rtwdev, rtwvif, false);
-+	rtw89_mac_port_cfg_rx_rpt(rtwdev, rtwvif, false);
-+	rtw89_mac_port_cfg_net_type(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bcn_prct(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_rx_sw(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_rx_sync(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_tx_sw(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bcn_intv(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bcn_setup_time(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bcn_hold_time(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bcn_mask_area(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_tbtt_early(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_bss_color(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_mbssid(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_hiq_drop(rtwdev, rtwvif);
-+	rtw89_mac_port_cfg_func_en(rtwdev, rtwvif);
-+	fsleep(BCN_ERLY_SET_DLY);
-+	rtw89_mac_port_cfg_bcn_early(rtwdev, rtwvif);
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_add_vif(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
-+{
-+	int ret;
-+
-+	rtwvif->mac_id = rtw89_core_acquire_bit_map(rtwdev->mac_id_map,
-+						    RTW89_MAX_MAC_ID_NUM);
-+	if (rtwvif->mac_id == RTW89_MAX_MAC_ID_NUM)
-+		return -ENOSPC;
-+
-+	ret = rtw89_mac_port_update(rtwdev, rtwvif);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	rtw89_mac_dmac_tbl_init(rtwdev, rtwvif->mac_id);
-+	rtw89_mac_cmac_tbl_init(rtwdev, rtwvif->mac_id);
-+
-+	ret = rtw89_set_macid_pause(rtwdev, rtwvif->mac_id, false);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	ret = rtw89_fw_h2c_vif_maintain(rtwdev, rtwvif, RTW89_VIF_CREATE);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	ret = rtw89_cam_init(rtwdev, rtwvif);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	ret = rtw89_fw_h2c_cam(rtwdev, rtwvif);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	ret = rtw89_fw_h2c_default_cmac_tbl(rtwdev, rtwvif->mac_id);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	return 0;
-+
-+release_mac_id:
-+	rtw89_core_release_bit_map(rtwdev->mac_id_map, rtwvif->mac_id);
-+
-+	return ret;
-+}
-+
-+int rtw89_mac_remove_vif(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
-+{
-+	int ret = 0;
-+
-+	ret = rtw89_fw_h2c_vif_maintain(rtwdev, rtwvif, RTW89_VIF_REMOVE);
-+	if (ret)
-+		goto release_mac_id;
-+
-+	rtw89_cam_deinit(rtwdev, rtwvif);
-+
-+	ret = rtw89_fw_h2c_cam(rtwdev, rtwvif);
-+	if (ret)
-+		goto release_mac_id;
-+
-+release_mac_id:
-+	rtw89_core_release_bit_map(rtwdev->mac_id_map, rtwvif->mac_id);
-+
-+	return ret;
-+}
-+
-+static void
-+rtw89_mac_c2h_rec_ack(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
-+{
-+	rtw89_debug(rtwdev, RTW89_DBG_FW,
-+		    "C2H rev ack recv, cat: %d, class: %d, func: %d, seq : %d\n",
-+		    RTW89_GET_MAC_C2H_REV_ACK_CAT(c2h->data),
-+		    RTW89_GET_MAC_C2H_REV_ACK_CLASS(c2h->data),
-+		    RTW89_GET_MAC_C2H_REV_ACK_FUNC(c2h->data),
-+		    RTW89_GET_MAC_C2H_REV_ACK_H2C_SEQ(c2h->data));
-+}
-+
-+static void
-+rtw89_mac_c2h_done_ack(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
-+{
-+	rtw89_debug(rtwdev, RTW89_DBG_FW,
-+		    "C2H done ack recv, cat: %d, class: %d, func: %d, ret: %d, seq : %d\n",
-+		    RTW89_GET_MAC_C2H_DONE_ACK_CAT(c2h->data),
-+		    RTW89_GET_MAC_C2H_DONE_ACK_CLASS(c2h->data),
-+		    RTW89_GET_MAC_C2H_DONE_ACK_FUNC(c2h->data),
-+		    RTW89_GET_MAC_C2H_DONE_ACK_H2C_RETURN(c2h->data),
-+		    RTW89_GET_MAC_C2H_DONE_ACK_H2C_SEQ(c2h->data));
-+}
-+
-+static void
-+rtw89_mac_c2h_log(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
-+{
-+}
-+
-+static void (*rtw89_mac_c2h_ofld_handler[])(struct rtw89_dev *rtwdev,
-+					    struct sk_buff *c2h, u32 len) = {
-+	[RTW89_MAC_C2H_FUNC_EFUSE_DUMP] = NULL,
-+	[RTW89_MAC_C2H_FUNC_READ_RSP] = NULL,
-+	[RTW89_MAC_C2H_FUNC_PKT_OFLD_RSP] = NULL,
-+	[RTW89_MAC_C2H_FUNC_BCN_RESEND] = NULL,
-+};
-+
-+static void (*rtw89_mac_c2h_info_handler[])(struct rtw89_dev *rtwdev,
-+					    struct sk_buff *c2h, u32 len) = {
-+	[RTW89_MAC_C2H_FUNC_REC_ACK] = rtw89_mac_c2h_rec_ack,
-+	[RTW89_MAC_C2H_FUNC_DONE_ACK] = rtw89_mac_c2h_done_ack,
-+	[RTW89_MAC_C2H_FUNC_C2H_LOG] = rtw89_mac_c2h_log,
-+};
-+
-+void rtw89_mac_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
-+			  u32 len, u8 class, u8 func)
-+{
-+	void (*handler)(struct rtw89_dev *rtwdev,
-+			struct sk_buff *c2h, u32 len) = NULL;
-+
-+	switch (class) {
-+	case RTW89_MAC_C2H_CLASS_INFO:
-+		if (func < RTW89_MAC_C2H_FUNC_INFO_MAX)
-+			handler = rtw89_mac_c2h_info_handler[func];
-+		break;
-+	case RTW89_MAC_C2H_CLASS_OFLD:
-+		if (func < RTW89_MAC_C2H_FUNC_OFLD_MAX)
-+			handler = rtw89_mac_c2h_ofld_handler[func];
-+		break;
-+	default:
-+		rtw89_info(rtwdev, "c2h class %d not support\n", class);
-+		return;
-+	}
-+	if (!handler) {
-+		rtw89_info(rtwdev, "c2h class %d func %d not support\n", class,
-+			   func);
-+		return;
-+	}
-+	handler(rtwdev, skb, len);
-+}
-+
-+bool rtw89_mac_get_txpwr_cr(struct rtw89_dev *rtwdev,
-+			    enum rtw89_phy_idx phy_idx,
-+			    u32 reg_base, u32 *cr, u32 mask, u32 val)
-+{
-+	struct rtw89_dle_mem *dle_mem = rtwdev->chip->dle_mem;
-+	enum rtw89_qta_mode mode = dle_mem->mode;
-+	u32 addr = rtw89_mac_reg_by_idx(reg_base, phy_idx);
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_TXPWR,
-+		    "[TXPWR] set addr=0x%08x(phy%d) mask=0x%08x val=0x%08x\n",
-+		    addr, phy_idx, mask, val);
-+
-+	if (addr < R_AX_PWR_RATE_CTRL || addr > CMAC1_END_ADDR) {
-+		rtw89_err(rtwdev, "[TXPWR] addr=0x%x exceed txpwr cr\n",
-+			  addr);
-+		goto error;
-+	}
-+
-+	if (addr >= CMAC1_START_ADDR && addr <= CMAC1_END_ADDR)
-+		if (mode == RTW89_QTA_SCC || mode == RTW89_QTA_SCC_STF) {
-+			rtw89_err(rtwdev,
-+				  "[TXPWR] addr=0x%x but hw not enable\n",
-+				  addr);
-+			goto error;
-+		}
-+
-+	*cr = addr;
-+	return true;
-+
-+error:
-+	rtw89_err(rtwdev, "[TXPWR] check txpwr cr 0x%x(phy%d) fail\n",
-+		  addr, phy_idx);
-+
-+	return false;
-+}
-+
-+int rtw89_mac_cfg_ppdu_status(struct rtw89_dev *rtwdev, u8 mac_idx, bool enable)
-+{
-+	u32 reg = rtw89_mac_reg_by_idx(R_AX_PPDU_STAT, mac_idx);
-+	int ret = 0;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, mac_idx, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	if (!enable) {
-+		rtw89_write32_clr(rtwdev, reg, B_AX_PPDU_STAT_RPT_EN);
-+		return ret;
-+	}
-+
-+	rtw89_write32(rtwdev, reg, B_AX_PPDU_STAT_RPT_EN |
-+				   B_AX_APP_MAC_INFO_RPT |
-+				   B_AX_APP_RX_CNT_RPT | B_AX_APP_PLCP_HDR_RPT |
-+				   B_AX_PPDU_STAT_RPT_CRC32);
-+	rtw89_write32_mask(rtwdev, R_AX_HW_RPT_FWD, B_AX_FWD_PPDU_STAT_MASK,
-+			   RTW89_PRPT_DEST_HOST);
-+
-+	return ret;
-+}
-+
-+void rtw89_mac_flush_txq(struct rtw89_dev *rtwdev, u32 queues, bool drop)
-+{
-+	bool empty;
-+	int ret;
-+
-+	ret = read_poll_timeout(dle_is_txq_empty, empty, empty,
-+				10000, 100000, false, rtwdev);
-+	if (ret)
-+		rtw89_info(rtwdev, "timed out to flush queues\n");
-+}
-+
-+int rtw89_mac_coex_init(struct rtw89_dev *rtwdev, const struct rtw89_mac_ax_coex *coex)
-+{
-+	u8 val;
-+	u16 val16;
-+	u32 val32;
-+	int ret;
-+
-+	val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG);
-+	rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG, val | B_AX_ENBT);
-+
-+	val = rtw89_read8(rtwdev, R_AX_BTC_FUNC_EN);
-+	rtw89_write8(rtwdev, R_AX_BTC_FUNC_EN, val | B_AX_PTA_WL_TX_EN);
-+
-+	val = rtw89_read8(rtwdev, R_AX_BT_COEX_CFG_2 + 1);
-+	rtw89_write8(rtwdev, R_AX_BT_COEX_CFG_2 + 1, val | BIT(0));
-+
-+	val = rtw89_read8(rtwdev, R_AX_CSR_MODE);
-+	rtw89_write8(rtwdev, R_AX_CSR_MODE, val | B_AX_STATIS_BT_EN | B_AX_WL_ACT_MSK);
-+
-+	val = rtw89_read8(rtwdev, R_AX_CSR_MODE + 2);
-+	rtw89_write8(rtwdev, R_AX_CSR_MODE + 2, val | BIT(0));
-+
-+	val = rtw89_read8(rtwdev, R_AX_TRXPTCL_RESP_0 + 3);
-+	rtw89_write8(rtwdev, R_AX_TRXPTCL_RESP_0 + 3, val & ~BIT(1));
-+
-+	val16 = rtw89_read16(rtwdev, R_AX_CCA_CFG_0);
-+	val16 = (val16 | B_AX_BTCCA_EN) & ~B_AX_BTCCA_BRK_TXOP_EN;
-+	rtw89_write16(rtwdev, R_AX_CCA_CFG_0, val16);
-+
-+	ret = rtw89_mac_read_lte(rtwdev, R_AX_LTE_SW_CFG_2, &val32);
-+	if (ret) {
-+		rtw89_err(rtwdev, "Read R_AX_LTE_SW_CFG_2 fail!\n");
-+		return ret;
-+	}
-+	val32 = val32 & B_AX_WL_RX_CTRL;
-+	ret = rtw89_mac_write_lte(rtwdev, R_AX_LTE_SW_CFG_2, val32);
-+	if (ret) {
-+		rtw89_err(rtwdev, "Write R_AX_LTE_SW_CFG_2 fail!\n");
-+		return ret;
-+	}
-+
-+	switch (coex->pta_mode) {
-+	case RTW89_MAC_AX_COEX_RTK_MODE:
-+		val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG);
-+		val &= ~B_AX_BTMODE_MASK;
-+		val |= FIELD_PREP(B_AX_BTMODE_MASK, MAC_AX_BT_MODE_0_3);
-+		rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG, val);
-+
-+		val = rtw89_read8(rtwdev, R_AX_TDMA_MODE);
-+		rtw89_write8(rtwdev, R_AX_TDMA_MODE, val | B_AX_RTK_BT_ENABLE);
-+
-+		val = rtw89_read8(rtwdev, R_AX_BT_COEX_CFG_5);
-+		val &= ~B_AX_BT_RPT_SAMPLE_RATE_MASK;
-+		val |= FIELD_PREP(B_AX_BT_RPT_SAMPLE_RATE_MASK, MAC_AX_RTK_RATE);
-+		rtw89_write8(rtwdev, R_AX_BT_COEX_CFG_5, val);
-+		break;
-+	case RTW89_MAC_AX_COEX_CSR_MODE:
-+		val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG);
-+		val &= ~B_AX_BTMODE_MASK;
-+		val |= FIELD_PREP(B_AX_BTMODE_MASK, MAC_AX_BT_MODE_2);
-+		rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG, val);
-+
-+		val16 = rtw89_read16(rtwdev, R_AX_CSR_MODE);
-+		val16 &= ~B_AX_BT_PRI_DETECT_TO_MASK;
-+		val16 |= FIELD_PREP(B_AX_BT_PRI_DETECT_TO_MASK, MAC_AX_CSR_PRI_TO);
-+		val16 &= ~B_AX_BT_TRX_INIT_DETECT_MASK;
-+		val16 |= FIELD_PREP(B_AX_BT_TRX_INIT_DETECT_MASK, MAC_AX_CSR_TRX_TO);
-+		val16 &= ~B_AX_BT_STAT_DELAY_MASK;
-+		val16 |= FIELD_PREP(B_AX_BT_STAT_DELAY_MASK, MAC_AX_CSR_DELAY);
-+		val16 |= B_AX_ENHANCED_BT;
-+		rtw89_write16(rtwdev, R_AX_CSR_MODE, val16);
-+
-+		rtw89_write8(rtwdev, R_AX_BT_COEX_CFG_2, MAC_AX_CSR_RATE);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	switch (coex->direction) {
-+	case RTW89_MAC_AX_COEX_INNER:
-+		val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG + 1);
-+		val = (val & ~BIT(2)) | BIT(1);
-+		rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG + 1, val);
-+		break;
-+	case RTW89_MAC_AX_COEX_OUTPUT:
-+		val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG + 1);
-+		val = val | BIT(1) | BIT(0);
-+		rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG + 1, val);
-+		break;
-+	case RTW89_MAC_AX_COEX_INPUT:
-+		val = rtw89_read8(rtwdev, R_AX_GPIO_MUXCFG + 1);
-+		val = val & ~(BIT(2) | BIT(1));
-+		rtw89_write8(rtwdev, R_AX_GPIO_MUXCFG + 1, val);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_cfg_gnt(struct rtw89_dev *rtwdev,
-+		      const struct rtw89_mac_ax_coex_gnt *gnt_cfg)
-+{
-+	u32 val, ret;
-+
-+	ret = rtw89_mac_read_lte(rtwdev, R_AX_LTE_SW_CFG_1, &val);
-+	if (ret) {
-+		rtw89_err(rtwdev, "Read LTE fail!\n");
-+		return ret;
-+	}
-+	val = (gnt_cfg->band[0].gnt_bt ?
-+	       B_AX_GNT_BT_RFC_S0_SW_VAL | B_AX_GNT_BT_BB_S0_SW_VAL : 0) |
-+	      (gnt_cfg->band[0].gnt_bt_sw_en ?
-+	       B_AX_GNT_BT_RFC_S0_SW_CTRL | B_AX_GNT_BT_BB_S0_SW_CTRL : 0) |
-+	      (gnt_cfg->band[0].gnt_wl ?
-+	       B_AX_GNT_WL_RFC_S0_SW_VAL | B_AX_GNT_WL_BB_S0_SW_VAL : 0) |
-+	      (gnt_cfg->band[0].gnt_wl_sw_en ?
-+	       B_AX_GNT_WL_RFC_S0_SW_CTRL | B_AX_GNT_WL_BB_S0_SW_CTRL : 0) |
-+	      (gnt_cfg->band[1].gnt_bt ?
-+	       B_AX_GNT_BT_RFC_S1_SW_VAL | B_AX_GNT_BT_BB_S1_SW_VAL : 0) |
-+	      (gnt_cfg->band[1].gnt_bt_sw_en ?
-+	       B_AX_GNT_BT_RFC_S1_SW_CTRL | B_AX_GNT_BT_BB_S1_SW_CTRL : 0) |
-+	      (gnt_cfg->band[1].gnt_wl ?
-+	       B_AX_GNT_WL_RFC_S1_SW_VAL | B_AX_GNT_WL_BB_S1_SW_VAL : 0) |
-+	      (gnt_cfg->band[1].gnt_wl_sw_en ?
-+	       B_AX_GNT_WL_RFC_S1_SW_CTRL | B_AX_GNT_WL_BB_S1_SW_CTRL : 0);
-+	ret = rtw89_mac_write_lte(rtwdev, R_AX_LTE_SW_CFG_1, val);
-+	if (ret) {
-+		rtw89_err(rtwdev, "Write LTE fail!\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw89_mac_cfg_plt(struct rtw89_dev *rtwdev, struct rtw89_mac_ax_plt *plt)
-+{
-+	u32 reg;
-+	u8 val;
-+	int ret;
-+
-+	ret = rtw89_mac_check_mac_en(rtwdev, plt->band, RTW89_CMAC_SEL);
-+	if (ret)
-+		return ret;
-+
-+	reg = rtw89_mac_reg_by_idx(R_AX_BT_PLT, plt->band);
-+	val = (plt->tx & RTW89_MAC_AX_PLT_LTE_RX ? B_AX_TX_PLT_GNT_LTE_RX : 0) |
-+	      (plt->tx & RTW89_MAC_AX_PLT_GNT_BT_TX ? B_AX_TX_PLT_GNT_BT_TX : 0) |
-+	      (plt->tx & RTW89_MAC_AX_PLT_GNT_BT_RX ? B_AX_TX_PLT_GNT_BT_RX : 0) |
-+	      (plt->tx & RTW89_MAC_AX_PLT_GNT_WL ? B_AX_TX_PLT_GNT_WL : 0) |
-+	      (plt->rx & RTW89_MAC_AX_PLT_LTE_RX ? B_AX_RX_PLT_GNT_LTE_RX : 0) |
-+	      (plt->rx & RTW89_MAC_AX_PLT_GNT_BT_TX ? B_AX_RX_PLT_GNT_BT_TX : 0) |
-+	      (plt->rx & RTW89_MAC_AX_PLT_GNT_BT_RX ? B_AX_RX_PLT_GNT_BT_RX : 0) |
-+	      (plt->rx & RTW89_MAC_AX_PLT_GNT_WL ? B_AX_RX_PLT_GNT_WL : 0);
-+	rtw89_write8(rtwdev, reg, val);
-+
-+	return 0;
-+}
-+
-+void rtw89_mac_cfg_sb(struct rtw89_dev *rtwdev, u32 val)
-+{
-+	u32 fw_sb;
-+
-+	fw_sb = rtw89_read32(rtwdev, R_AX_SCOREBOARD);
-+	fw_sb = FIELD_GET(B_MAC_AX_SB_FW_MASK, fw_sb);
-+	fw_sb = fw_sb & ~B_MAC_AX_BTGS1_NOTIFY;
-+	if (!test_bit(RTW89_FLAG_POWERON, rtwdev->flags))
-+		fw_sb = fw_sb | MAC_AX_NOTIFY_PWR_MAJOR;
-+	else
-+		fw_sb = fw_sb | MAC_AX_NOTIFY_TP_MAJOR;
-+	val = FIELD_GET(B_MAC_AX_SB_DRV_MASK, val);
-+	val = B_AX_TOGGLE |
-+	      FIELD_PREP(B_MAC_AX_SB_DRV_MASK, val) |
-+	      FIELD_PREP(B_MAC_AX_SB_FW_MASK, fw_sb);
-+	rtw89_write32(rtwdev, R_AX_SCOREBOARD, val);
-+}
-+
-+int rtw89_mac_cfg_ctrl_path(struct rtw89_dev *rtwdev, bool wl)
-+{
-+	u8 val = rtw89_read8(rtwdev, R_AX_SYS_SDIO_CTRL + 3);
-+
-+	val = wl ? val | BIT(2) : val & ~BIT(2);
-+	rtw89_write8(rtwdev, R_AX_SYS_SDIO_CTRL + 3, val);
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-new file mode 100644
-index 000000000000..903f209eb6d1
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -0,0 +1,763 @@
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -0,0 +1,1855 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2019-2020  Realtek Corporation
 + */
 +
-+#ifndef __RTW89_MAC_H__
-+#define __RTW89_MAC_H__
-+
-+#include "core.h"
-+
-+#define MAC_MEM_DUMP_PAGE_SIZE 0x40000
-+#define ADDR_CAM_ENT_SIZE  0x40
-+#define BSSID_CAM_ENT_SIZE 0x08
-+#define HFC_PAGE_UNIT 64
-+
-+enum rtw89_mac_hwmod_sel {
-+	RTW89_DMAC_SEL = 0,
-+	RTW89_CMAC_SEL = 1,
-+
-+	RTW89_MAC_INVALID,
-+};
-+
-+enum rtw89_mac_fwd_target {
-+	RTW89_FWD_DONT_CARE    = 0,
-+	RTW89_FWD_TO_HOST      = 1,
-+	RTW89_FWD_TO_WLAN_CPU  = 2
-+};
-+
-+enum rtw89_mac_wd_dma_intvl {
-+	RTW89_MAC_WD_DMA_INTVL_0S,
-+	RTW89_MAC_WD_DMA_INTVL_256NS,
-+	RTW89_MAC_WD_DMA_INTVL_512NS,
-+	RTW89_MAC_WD_DMA_INTVL_768NS,
-+	RTW89_MAC_WD_DMA_INTVL_1US,
-+	RTW89_MAC_WD_DMA_INTVL_1_5US,
-+	RTW89_MAC_WD_DMA_INTVL_2US,
-+	RTW89_MAC_WD_DMA_INTVL_4US,
-+	RTW89_MAC_WD_DMA_INTVL_8US,
-+	RTW89_MAC_WD_DMA_INTVL_16US,
-+	RTW89_MAC_WD_DMA_INTVL_DEF = 0xFE
-+};
-+
-+enum rtw89_mac_multi_tag_num {
-+	RTW89_MAC_TAG_NUM_1,
-+	RTW89_MAC_TAG_NUM_2,
-+	RTW89_MAC_TAG_NUM_3,
-+	RTW89_MAC_TAG_NUM_4,
-+	RTW89_MAC_TAG_NUM_5,
-+	RTW89_MAC_TAG_NUM_6,
-+	RTW89_MAC_TAG_NUM_7,
-+	RTW89_MAC_TAG_NUM_8,
-+	RTW89_MAC_TAG_NUM_DEF = 0xFE
-+};
-+
-+enum rtw89_mac_lbc_tmr {
-+	RTW89_MAC_LBC_TMR_8US = 0,
-+	RTW89_MAC_LBC_TMR_16US,
-+	RTW89_MAC_LBC_TMR_32US,
-+	RTW89_MAC_LBC_TMR_64US,
-+	RTW89_MAC_LBC_TMR_128US,
-+	RTW89_MAC_LBC_TMR_256US,
-+	RTW89_MAC_LBC_TMR_512US,
-+	RTW89_MAC_LBC_TMR_1MS,
-+	RTW89_MAC_LBC_TMR_2MS,
-+	RTW89_MAC_LBC_TMR_4MS,
-+	RTW89_MAC_LBC_TMR_8MS,
-+	RTW89_MAC_LBC_TMR_DEF = 0xFE
-+};
-+
-+enum rtw89_mac_cpuio_op_cmd_type {
-+	CPUIO_OP_CMD_GET_1ST_PID = 0,
-+	CPUIO_OP_CMD_GET_NEXT_PID = 1,
-+	CPUIO_OP_CMD_ENQ_TO_TAIL = 4,
-+	CPUIO_OP_CMD_ENQ_TO_HEAD = 5,
-+	CPUIO_OP_CMD_DEQ = 8,
-+	CPUIO_OP_CMD_DEQ_ENQ_ALL = 9,
-+	CPUIO_OP_CMD_DEQ_ENQ_TO_TAIL = 12
-+};
-+
-+enum rtw89_mac_wde_dle_port_id {
-+	WDE_DLE_PORT_ID_DISPATCH = 0,
-+	WDE_DLE_PORT_ID_PKTIN = 1,
-+	WDE_DLE_PORT_ID_CMAC0 = 3,
-+	WDE_DLE_PORT_ID_CMAC1 = 4,
-+	WDE_DLE_PORT_ID_CPU_IO = 6,
-+	WDE_DLE_PORT_ID_WDRLS = 7,
-+	WDE_DLE_PORT_ID_END = 8
-+};
-+
-+enum rtw89_mac_wde_dle_queid_wdrls {
-+	WDE_DLE_QUEID_TXOK = 0,
-+	WDE_DLE_QUEID_DROP_RETRY_LIMIT = 1,
-+	WDE_DLE_QUEID_DROP_LIFETIME_TO = 2,
-+	WDE_DLE_QUEID_DROP_MACID_DROP = 3,
-+	WDE_DLE_QUEID_NO_REPORT = 4
-+};
-+
-+enum rtw89_mac_ple_dle_port_id {
-+	PLE_DLE_PORT_ID_DISPATCH = 0,
-+	PLE_DLE_PORT_ID_MPDU = 1,
-+	PLE_DLE_PORT_ID_SEC = 2,
-+	PLE_DLE_PORT_ID_CMAC0 = 3,
-+	PLE_DLE_PORT_ID_CMAC1 = 4,
-+	PLE_DLE_PORT_ID_WDRLS = 5,
-+	PLE_DLE_PORT_ID_CPU_IO = 6,
-+	PLE_DLE_PORT_ID_PLRLS = 7,
-+	PLE_DLE_PORT_ID_END = 8
-+};
-+
-+enum rtw89_mac_ple_dle_queid_plrls {
-+	PLE_DLE_QUEID_NO_REPORT = 0x0
-+};
-+
-+enum rtw89_machdr_frame_type {
-+	RTW89_MGNT = 0,
-+	RTW89_CTRL = 1,
-+	RTW89_DATA = 2,
-+};
-+
-+enum rtw89_mac_dle_dfi_type {
-+	DLE_DFI_TYPE_FREEPG	= 0,
-+	DLE_DFI_TYPE_QUOTA	= 1,
-+	DLE_DFI_TYPE_PAGELLT	= 2,
-+	DLE_DFI_TYPE_PKTINFO	= 3,
-+	DLE_DFI_TYPE_PREPKTLLT	= 4,
-+	DLE_DFI_TYPE_NXTPKTLLT	= 5,
-+	DLE_DFI_TYPE_QLNKTBL	= 6,
-+	DLE_DFI_TYPE_QEMPTY	= 7,
-+};
-+
-+enum rtw89_mac_dle_wde_quota_id {
-+	WDE_QTAID_HOST_IF = 0,
-+	WDE_QTAID_WLAN_CPU = 1,
-+	WDE_QTAID_DATA_CPU = 2,
-+	WDE_QTAID_PKTIN = 3,
-+	WDE_QTAID_CPUIO = 4,
-+};
-+
-+enum rtw89_mac_dle_ple_quota_id {
-+	PLE_QTAID_B0_TXPL = 0,
-+	PLE_QTAID_B1_TXPL = 1,
-+	PLE_QTAID_C2H = 2,
-+	PLE_QTAID_H2C = 3,
-+	PLE_QTAID_WLAN_CPU = 4,
-+	PLE_QTAID_MPDU = 5,
-+	PLE_QTAID_CMAC0_RX = 6,
-+	PLE_QTAID_CMAC1_RX = 7,
-+	PLE_QTAID_CMAC1_BBRPT = 8,
-+	PLE_QTAID_WDRLS = 9,
-+	PLE_QTAID_CPUIO = 10,
-+};
-+
-+enum rtw89_mac_dbg_port_sel {
-+	/* CMAC 0 related */
-+	RTW89_DBG_PORT_SEL_PTCL_C0 = 0,
-+	RTW89_DBG_PORT_SEL_SCH_C0,
-+	RTW89_DBG_PORT_SEL_TMAC_C0,
-+	RTW89_DBG_PORT_SEL_RMAC_C0,
-+	RTW89_DBG_PORT_SEL_RMACST_C0,
-+	RTW89_DBG_PORT_SEL_RMAC_PLCP_C0,
-+	RTW89_DBG_PORT_SEL_TRXPTCL_C0,
-+	RTW89_DBG_PORT_SEL_TX_INFOL_C0,
-+	RTW89_DBG_PORT_SEL_TX_INFOH_C0,
-+	RTW89_DBG_PORT_SEL_TXTF_INFOL_C0,
-+	RTW89_DBG_PORT_SEL_TXTF_INFOH_C0,
-+	/* CMAC 1 related */
-+	RTW89_DBG_PORT_SEL_PTCL_C1,
-+	RTW89_DBG_PORT_SEL_SCH_C1,
-+	RTW89_DBG_PORT_SEL_TMAC_C1,
-+	RTW89_DBG_PORT_SEL_RMAC_C1,
-+	RTW89_DBG_PORT_SEL_RMACST_C1,
-+	RTW89_DBG_PORT_SEL_RMAC_PLCP_C1,
-+	RTW89_DBG_PORT_SEL_TRXPTCL_C1,
-+	RTW89_DBG_PORT_SEL_TX_INFOL_C1,
-+	RTW89_DBG_PORT_SEL_TX_INFOH_C1,
-+	RTW89_DBG_PORT_SEL_TXTF_INFOL_C1,
-+	RTW89_DBG_PORT_SEL_TXTF_INFOH_C1,
-+	/* DLE related */
-+	RTW89_DBG_PORT_SEL_WDE_BUFMGN_FREEPG,
-+	RTW89_DBG_PORT_SEL_WDE_BUFMGN_QUOTA,
-+	RTW89_DBG_PORT_SEL_WDE_BUFMGN_PAGELLT,
-+	RTW89_DBG_PORT_SEL_WDE_BUFMGN_PKTINFO,
-+	RTW89_DBG_PORT_SEL_WDE_QUEMGN_PREPKT,
-+	RTW89_DBG_PORT_SEL_WDE_QUEMGN_NXTPKT,
-+	RTW89_DBG_PORT_SEL_WDE_QUEMGN_QLNKTBL,
-+	RTW89_DBG_PORT_SEL_WDE_QUEMGN_QEMPTY,
-+	RTW89_DBG_PORT_SEL_PLE_BUFMGN_FREEPG,
-+	RTW89_DBG_PORT_SEL_PLE_BUFMGN_QUOTA,
-+	RTW89_DBG_PORT_SEL_PLE_BUFMGN_PAGELLT,
-+	RTW89_DBG_PORT_SEL_PLE_BUFMGN_PKTINFO,
-+	RTW89_DBG_PORT_SEL_PLE_QUEMGN_PREPKT,
-+	RTW89_DBG_PORT_SEL_PLE_QUEMGN_NXTPKT,
-+	RTW89_DBG_PORT_SEL_PLE_QUEMGN_QLNKTBL,
-+	RTW89_DBG_PORT_SEL_PLE_QUEMGN_QEMPTY,
-+	RTW89_DBG_PORT_SEL_PKTINFO,
-+	/* PCIE related */
-+	RTW89_DBG_PORT_SEL_PCIE_TXDMA,
-+	RTW89_DBG_PORT_SEL_PCIE_RXDMA,
-+	RTW89_DBG_PORT_SEL_PCIE_CVT,
-+	RTW89_DBG_PORT_SEL_PCIE_CXPL,
-+	RTW89_DBG_PORT_SEL_PCIE_IO,
-+	RTW89_DBG_PORT_SEL_PCIE_MISC,
-+	RTW89_DBG_PORT_SEL_PCIE_MISC2,
-+
-+	/* keep last */
-+	RTW89_DBG_PORT_SEL_LAST,
-+	RTW89_DBG_PORT_SEL_MAX = RTW89_DBG_PORT_SEL_LAST,
-+	RTW89_DBG_PORT_SEL_INVALID = RTW89_DBG_PORT_SEL_LAST,
-+};
-+
-+/* SRAM mem dump */
-+#define R_AX_INDIR_ACCESS_ENTRY 0x40000
-+
-+#define	STA_SCHED_BASE_ADDR		0x18808000
-+#define	RXPLD_FLTR_CAM_BASE_ADDR	0x18813000
-+#define	SECURITY_CAM_BASE_ADDR		0x18814000
-+#define	WOW_CAM_BASE_ADDR		0x18815000
-+#define	CMAC_TBL_BASE_ADDR		0x18840000
-+#define	ADDR_CAM_BASE_ADDR		0x18850000
-+#define	BSSID_CAM_BASE_ADDR		0x18853000
-+#define	BA_CAM_BASE_ADDR		0x18854000
-+#define	BCN_IE_CAM0_BASE_ADDR		0x18855000
-+#define	SHARED_BUF_BASE_ADDR		0x18700000
-+#define	DMAC_TBL_BASE_ADDR		0x18800000
-+#define	SHCUT_MACHDR_BASE_ADDR		0x18800800
-+#define	BCN_IE_CAM1_BASE_ADDR		0x188A0000
-+
-+#define CCTL_INFO_SIZE		32
-+
-+enum rtw89_mac_mem_sel {
-+	RTW89_MAC_MEM_SHARED_BUF,
-+	RTW89_MAC_MEM_DMAC_TBL,
-+	RTW89_MAC_MEM_SHCUT_MACHDR,
-+	RTW89_MAC_MEM_STA_SCHED,
-+	RTW89_MAC_MEM_RXPLD_FLTR_CAM,
-+	RTW89_MAC_MEM_SECURITY_CAM,
-+	RTW89_MAC_MEM_WOW_CAM,
-+	RTW89_MAC_MEM_CMAC_TBL,
-+	RTW89_MAC_MEM_ADDR_CAM,
-+	RTW89_MAC_MEM_BA_CAM,
-+	RTW89_MAC_MEM_BCN_IE_CAM0,
-+	RTW89_MAC_MEM_BCN_IE_CAM1,
-+
-+	/* keep last */
-+	RTW89_MAC_MEM_LAST,
-+	RTW89_MAC_MEM_MAX = RTW89_MAC_MEM_LAST,
-+	RTW89_MAC_MEM_INVALID = RTW89_MAC_MEM_LAST,
-+};
-+
-+enum rtw89_rpwm_req_pwr_state {
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_ACTIVE = 0,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_BAND0_RFON = 1,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_BAND1_RFON = 2,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_BAND0_RFOFF = 3,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_BAND1_RFOFF = 4,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_CLK_GATED = 5,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_PWR_GATED = 6,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_HIOE_PWR_GATED = 7,
-+	RTW89_MAC_RPWM_REQ_PWR_STATE_MAX,
-+};
-+
-+struct rtw89_pwr_cfg {
-+	u16 addr;
-+	u8 cut_msk;
-+	u8 intf_msk;
-+	u8 base:4;
-+	u8 cmd:4;
-+	u8 msk;
-+	u8 val;
-+};
-+
-+enum rtw89_mac_c2h_ofld_func {
-+	RTW89_MAC_C2H_FUNC_EFUSE_DUMP,
-+	RTW89_MAC_C2H_FUNC_READ_RSP,
-+	RTW89_MAC_C2H_FUNC_PKT_OFLD_RSP,
-+	RTW89_MAC_C2H_FUNC_BCN_RESEND,
-+	RTW89_MAC_C2H_FUNC_OFLD_MAX,
-+};
-+
-+enum rtw89_mac_c2h_info_func {
-+	RTW89_MAC_C2H_FUNC_REC_ACK,
-+	RTW89_MAC_C2H_FUNC_DONE_ACK,
-+	RTW89_MAC_C2H_FUNC_C2H_LOG,
-+	RTW89_MAC_C2H_FUNC_INFO_MAX,
-+};
-+
-+enum rtw89_mac_c2h_class {
-+	RTW89_MAC_C2H_CLASS_INFO,
-+	RTW89_MAC_C2H_CLASS_OFLD,
-+	RTW89_MAC_C2H_CLASS_MAX,
-+};
-+
-+struct rtw89_mac_ax_coex {
-+#define RTW89_MAC_AX_COEX_RTK_MODE 0
-+#define RTW89_MAC_AX_COEX_CSR_MODE 1
-+	u8 pta_mode;
-+#define RTW89_MAC_AX_COEX_INNER 0
-+#define RTW89_MAC_AX_COEX_OUTPUT 1
-+#define RTW89_MAC_AX_COEX_INPUT 2
-+	u8 direction;
-+};
-+
-+struct rtw89_mac_ax_plt {
-+#define RTW89_MAC_AX_PLT_LTE_RX BIT(0)
-+#define RTW89_MAC_AX_PLT_GNT_BT_TX BIT(1)
-+#define RTW89_MAC_AX_PLT_GNT_BT_RX BIT(2)
-+#define RTW89_MAC_AX_PLT_GNT_WL BIT(3)
-+	u8 band;
-+	u8 tx;
-+	u8 rx;
-+};
-+
-+#define RTW89_R32_EA		0xEAEAEAEA
-+#define RTW89_R32_DEAD		0xDEADBEEF
-+
-+#define PTCL_IDLE_POLL_CNT	10000
-+#define SW_CVR_DUR_US	8
-+#define SW_CVR_CNT	8
-+
-+#define DLE_BOUND_UNIT (8 * 1024)
-+#define DLE_WAIT_CNT 2000
-+#define TRXCFG_WAIT_CNT	2000
-+
-+#define RTW89_WDE_PG_64		64
-+#define RTW89_WDE_PG_128	128
-+#define RTW89_WDE_PG_256	256
-+
-+#define S_AX_WDE_PAGE_SEL_64	0
-+#define S_AX_WDE_PAGE_SEL_128	1
-+#define S_AX_WDE_PAGE_SEL_256	2
-+
-+#define RTW89_PLE_PG_64		64
-+#define RTW89_PLE_PG_128	128
-+#define RTW89_PLE_PG_256	256
-+
-+#define S_AX_PLE_PAGE_SEL_64	0
-+#define S_AX_PLE_PAGE_SEL_128	1
-+#define S_AX_PLE_PAGE_SEL_256	2
-+
-+#define SDIO_LOCAL_BASE_ADDR    0x80000000
-+
-+#define	PWR_CMD_WRITE		0
-+#define	PWR_CMD_POLL		1
-+#define	PWR_CMD_DELAY		2
-+#define	PWR_CMD_END		3
-+
-+#define	PWR_INTF_MSK_SDIO	BIT(0)
-+#define	PWR_INTF_MSK_USB	BIT(1)
-+#define	PWR_INTF_MSK_PCIE	BIT(2)
-+#define	PWR_INTF_MSK_ALL	0x7
-+
-+#define PWR_BASE_MAC		0
-+#define PWR_BASE_USB		1
-+#define PWR_BASE_PCIE		2
-+#define PWR_BASE_SDIO		3
-+
-+#define	PWR_CUT_MSK_A		BIT(0)
-+#define	PWR_CUT_MSK_B		BIT(1)
-+#define	PWR_CUT_MSK_C		BIT(2)
-+#define	PWR_CUT_MSK_D		BIT(3)
-+#define	PWR_CUT_MSK_E		BIT(4)
-+#define	PWR_CUT_MSK_F		BIT(5)
-+#define	PWR_CUT_MSK_G		BIT(6)
-+#define	PWR_CUT_MSK_TEST	BIT(7)
-+#define	PWR_CUT_MSK_ALL		0xFF
-+
-+#define	PWR_DELAY_US		0
-+#define	PWR_DELAY_MS		1
-+
-+/* STA scheduler */
-+#define SS_MACID_SH		8
-+#define SS_TX_LEN_MSK		0x1FFFFF
-+#define SS_CTRL1_R_TX_LEN	5
-+#define SS_CTRL1_R_NEXT_LINK	20
-+#define SS_LINK_SIZE		256
-+
-+/* MAC debug port */
-+#define TMAC_DBG_SEL_C0 0xA5
-+#define RMAC_DBG_SEL_C0 0xA6
-+#define TRXPTCL_DBG_SEL_C0 0xA7
-+#define TMAC_DBG_SEL_C1 0xB5
-+#define RMAC_DBG_SEL_C1 0xB6
-+#define TRXPTCL_DBG_SEL_C1 0xB7
-+#define PCIE_TXDMA_DBG_SEL 0x30
-+#define PCIE_RXDMA_DBG_SEL 0x31
-+#define PCIE_CVT_DBG_SEL 0x32
-+#define PCIE_CXPL_DBG_SEL 0x33
-+#define PCIE_IO_DBG_SEL 0x37
-+#define PCIE_MISC_DBG_SEL 0x38
-+#define PCIE_MISC2_DBG_SEL 0x00
-+#define MAC_DBG_SEL 1
-+#define RMAC_CMAC_DBG_SEL 1
-+
-+/* TRXPTCL dbg port sel */
-+#define TRXPTRL_DBG_SEL_TMAC 0
-+#define TRXPTRL_DBG_SEL_RMAC 1
-+
-+struct rtw89_cpuio_ctrl {
-+	u16 pkt_num;
-+	u16 start_pktid;
-+	u16 end_pktid;
-+	u8 cmd_type;
-+	u8 macid;
-+	u8 src_pid;
-+	u8 src_qid;
-+	u8 dst_pid;
-+	u8 dst_qid;
-+	u16 pktid;
-+};
-+
-+struct rtw89_mac_dbg_port_info {
-+	u32 sel_addr;
-+	u8 sel_byte;
-+	u32 sel_msk;
-+	u32 srt;
-+	u32 end;
-+	u32 rd_addr;
-+	u8 rd_byte;
-+	u32 rd_msk;
-+};
-+
-+/* Define DBG and recovery enum */
-+enum mac_ax_err_info {
-+	/* Get error info */
-+
-+	/* L0 */
-+	MAC_AX_ERR_L0_ERR_CMAC0 = 0x0001,
-+	MAC_AX_ERR_L0_ERR_CMAC1 = 0x0002,
-+	MAC_AX_ERR_L0_RESET_DONE = 0x0003,
-+	MAC_AX_ERR_L0_PROMOTE_TO_L1 = 0x0010,
-+
-+	/* L1 */
-+	MAC_AX_ERR_L1_ERR_DMAC = 0x1000,
-+	MAC_AX_ERR_L1_RESET_DISABLE_DMAC_DONE = 0x1001,
-+	MAC_AX_ERR_L1_RESET_RECOVERY_DONE = 0x1002,
-+	MAC_AX_ERR_L1_PROMOTE_TO_L2 = 0x1010,
-+
-+	/* L2 */
-+	/* address hole (master) */
-+	MAC_AX_ERR_L2_ERR_AH_DMA = 0x2000,
-+	MAC_AX_ERR_L2_ERR_AH_HCI = 0x2010,
-+	MAC_AX_ERR_L2_ERR_AH_RLX4081 = 0x2020,
-+	MAC_AX_ERR_L2_ERR_AH_IDDMA = 0x2030,
-+	MAC_AX_ERR_L2_ERR_AH_HIOE = 0x2040,
-+	MAC_AX_ERR_L2_ERR_AH_IPSEC = 0x2050,
-+	MAC_AX_ERR_L2_ERR_AH_RX4281 = 0x2060,
-+	MAC_AX_ERR_L2_ERR_AH_OTHERS = 0x2070,
-+
-+	/* AHB bridge timeout (master) */
-+	MAC_AX_ERR_L2_ERR_AHB_TO_DMA = 0x2100,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_HCI = 0x2110,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_RLX4081 = 0x2120,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_IDDMA = 0x2130,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_HIOE = 0x2140,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_IPSEC = 0x2150,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_RX4281 = 0x2160,
-+	MAC_AX_ERR_L2_ERR_AHB_TO_OTHERS = 0x2170,
-+
-+	/* APB_SA bridge timeout (master + slave) */
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_WVA = 0x2200,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_UART = 0x2201,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_CPULOCAL = 0x2202,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_AXIDMA = 0x2203,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_HIOE = 0x2204,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_IDDMA = 0x2205,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_IPSEC = 0x2206,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_WON = 0x2207,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_WDMAC = 0x2208,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_WCMAC = 0x2209,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_DMA_OTHERS = 0x220A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_WVA = 0x2210,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_UART = 0x2211,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_CPULOCAL = 0x2212,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_AXIDMA = 0x2213,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_HIOE = 0x2214,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_IDDMA = 0x2215,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_IPSEC = 0x2216,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_WDMAC = 0x2218,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_WCMAC = 0x2219,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HCI_OTHERS = 0x221A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_WVA = 0x2220,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_UART = 0x2221,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_CPULOCAL = 0x2222,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_AXIDMA = 0x2223,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_HIOE = 0x2224,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_IDDMA = 0x2225,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_IPSEC = 0x2226,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_WON = 0x2227,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_WDMAC = 0x2228,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_WCMAC = 0x2229,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RLX4081_OTHERS = 0x222A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_WVA = 0x2230,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_UART = 0x2231,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_CPULOCAL = 0x2232,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_AXIDMA = 0x2233,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_HIOE = 0x2234,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_IDDMA = 0x2235,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_IPSEC = 0x2236,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_WON = 0x2237,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_WDMAC = 0x2238,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_WCMAC = 0x2239,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IDDMA_OTHERS = 0x223A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_WVA = 0x2240,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_UART = 0x2241,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_CPULOCAL = 0x2242,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_AXIDMA = 0x2243,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_HIOE = 0x2244,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_IDDMA = 0x2245,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_IPSEC = 0x2246,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_WON = 0x2247,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_WDMAC = 0x2248,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_WCMAC = 0x2249,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_HIOE_OTHERS = 0x224A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_WVA = 0x2250,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_UART = 0x2251,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_CPULOCAL = 0x2252,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_AXIDMA = 0x2253,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_HIOE = 0x2254,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_IDDMA = 0x2255,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_IPSEC = 0x2256,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_WON = 0x2257,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_WDMAC = 0x2258,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_WCMAC = 0x2259,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_IPSEC_OTHERS = 0x225A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_WVA = 0x2260,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_UART = 0x2261,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_CPULOCAL = 0x2262,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_AXIDMA = 0x2263,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_HIOE = 0x2264,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_IDDMA = 0x2265,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_IPSEC = 0x2266,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_WON = 0x2267,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_WDMAC = 0x2268,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_WCMAC = 0x2269,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_RX4281_OTHERS = 0x226A,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_WVA = 0x2270,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_UART = 0x2271,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_CPULOCAL = 0x2272,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_AXIDMA = 0x2273,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_HIOE = 0x2274,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_IDDMA = 0x2275,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_IPSEC = 0x2276,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_WON = 0x2277,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_WDMAC = 0x2278,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_WCMAC = 0x2279,
-+	MAC_AX_ERR_L2_ERR_APB_SA_TO_OTHERS_OTHERS = 0x227A,
-+
-+	/* APB_BBRF bridge timeout (master) */
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_DMA = 0x2300,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_HCI = 0x2310,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_RLX4081 = 0x2320,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_IDDMA = 0x2330,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_HIOE = 0x2340,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_IPSEC = 0x2350,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_RX4281 = 0x2360,
-+	MAC_AX_ERR_L2_ERR_APB_BBRF_TO_OTHERS = 0x2370,
-+	MAC_AX_ERR_L2_RESET_DONE = 0x2400,
-+	MAC_AX_GET_ERR_MAX,
-+
-+	/* set error info */
-+	MAC_AX_ERR_L1_DISABLE_EN = 0x0001,
-+	MAC_AX_ERR_L1_RCVY_EN = 0x0002,
-+	MAC_AX_ERR_L0_CFG_NOTIFY = 0x0010,
-+	MAC_AX_ERR_L0_CFG_DIS_NOTIFY = 0x0011,
-+	MAC_AX_ERR_L0_CFG_HANDSHAKE = 0x0012,
-+	MAC_AX_ERR_L0_RCVY_EN = 0x0013,
-+	MAC_AX_SET_ERR_MAX,
-+};
-+
-+extern struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie;
-+extern struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie_wd128;
-+extern struct rtw89_hfc_prec_cfg rtw_hfc_preccfg_pcie_stf;
-+extern struct rtw89_dle_size wde_size0;
-+extern struct rtw89_dle_size wde_size1;
-+extern struct rtw89_dle_size wde_size2;
-+extern struct rtw89_dle_size wde_size3;
-+extern struct rtw89_dle_size wde_size4;
-+extern struct rtw89_dle_size wde_size5;
-+extern struct rtw89_dle_size wde_size6;
-+extern struct rtw89_dle_size wde_size7;
-+extern struct rtw89_dle_size wde_size8;
-+extern struct rtw89_dle_size wde_size9;
-+extern struct rtw89_dle_size wde_size10;
-+extern struct rtw89_dle_size ple_size0;
-+extern struct rtw89_dle_size ple_size2;
-+extern struct rtw89_dle_size ple_size3;
-+extern struct rtw89_dle_size ple_size4;
-+extern struct rtw89_dle_size ple_size5;
-+extern struct rtw89_dle_size ple_size6;
-+extern struct rtw89_dle_size ple_size7;
-+extern struct rtw89_dle_size ple_size8;
-+extern struct rtw89_dle_size ple_size9;
-+extern struct rtw89_dle_size ple_size10;
-+extern struct rtw89_wde_quota wde_qt0;
-+extern struct rtw89_wde_quota wde_qt1;
-+extern struct rtw89_wde_quota wde_qt2;
-+extern struct rtw89_wde_quota wde_qt3;
-+extern struct rtw89_wde_quota wde_qt4;
-+extern struct rtw89_wde_quota wde_qt5;
-+extern struct rtw89_wde_quota wde_qt6;
-+extern struct rtw89_wde_quota wde_qt7;
-+extern struct rtw89_wde_quota wde_qt8;
-+extern struct rtw89_wde_quota wde_qt9;
-+extern struct rtw89_ple_quota ple_qt0;
-+extern struct rtw89_ple_quota ple_qt1;
-+extern struct rtw89_ple_quota ple_qt4;
-+extern struct rtw89_ple_quota ple_qt5;
-+extern struct rtw89_ple_quota ple_qt8;
-+extern struct rtw89_ple_quota ple_qt9;
-+extern struct rtw89_ple_quota ple_qt10;
-+extern struct rtw89_ple_quota ple_qt11;
-+extern struct rtw89_ple_quota ple_qt12;
-+extern struct rtw89_ple_quota ple_qt13;
-+extern struct rtw89_ple_quota ple_qt14;
-+extern struct rtw89_ple_quota ple_qt15;
-+extern struct rtw89_ple_quota ple_qt16;
-+extern struct rtw89_ple_quota ple_qt18;
-+extern struct rtw89_ple_quota ple_qt19;
-+extern struct rtw89_ple_quota ple_qt20;
-+extern struct rtw89_ple_quota ple_qt21;
-+extern struct rtw89_ple_quota ple_qt22;
-+extern struct rtw89_ple_quota ple_qt23;
-+extern struct rtw89_ple_quota ple_qt24;
-+
-+static inline u32 rtw89_mac_reg_by_idx(u32 reg_base, u8 band)
-+{
-+	return band == 0 ? reg_base : (reg_base + 0x2000);
-+}
-+
-+static inline u32 rtw89_mac_reg_by_port(u32 base, u8 port, u8 mac_idx)
-+{
-+	return rtw89_mac_reg_by_idx(base + port * 0x40, mac_idx);
-+}
-+
-+static inline u32
-+rtw89_read32_port_mask(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+		       u32 base, u32 mask)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	return rtw89_read32_mask(rtwdev, reg, mask);
-+}
-+
-+static inline void
-+rtw89_write32_port(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif, u32 base,
-+		   u32 data)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write32(rtwdev, reg, data);
-+}
-+
-+static inline void
-+rtw89_write32_port_mask(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+			u32 base, u32 mask, u32 data)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write32_mask(rtwdev, reg, mask, data);
-+}
-+
-+static inline void
-+rtw89_write16_port_mask(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+			u32 base, u32 mask, u16 data)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write16_mask(rtwdev, reg, mask, data);
-+}
-+
-+static inline void
-+rtw89_write32_port_clr(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+		       u32 base, u32 bit)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write32_clr(rtwdev, reg, bit);
-+}
-+
-+static inline void
-+rtw89_write16_port_clr(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+		       u32 base, u16 bit)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write16_clr(rtwdev, reg, bit);
-+}
-+
-+static inline void
-+rtw89_write32_port_set(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
-+		       u32 base, u32 bit)
-+{
-+	u32 reg;
-+
-+	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
-+	rtw89_write32_set(rtwdev, reg, bit);
-+}
-+
-+int rtw89_mac_pwr_on(struct rtw89_dev *rtwdev);
-+void rtw89_mac_pwr_off(struct rtw89_dev *rtwdev);
-+int rtw89_mac_partial_init(struct rtw89_dev *rtwdev);
-+int rtw89_mac_init(struct rtw89_dev *rtwdev);
-+int rtw89_mac_check_mac_en(struct rtw89_dev *rtwdev, u8 band,
-+			   enum rtw89_mac_hwmod_sel sel);
-+int rtw89_mac_write_lte(struct rtw89_dev *rtwdev, const u32 offset, u32 val);
-+int rtw89_mac_read_lte(struct rtw89_dev *rtwdev, const u32 offset, u32 *val);
-+int rtw89_mac_add_vif(struct rtw89_dev *rtwdev, struct rtw89_vif *vif);
-+int rtw89_mac_port_update(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif);
-+int rtw89_mac_remove_vif(struct rtw89_dev *rtwdev, struct rtw89_vif *vif);
-+void rtw89_mac_enable_bb_rf(struct rtw89_dev *rtwdev);
-+void rtw89_mac_disable_bb_rf(struct rtw89_dev *rtwdev);
-+u32 rtw89_mac_get_err_status(struct rtw89_dev *rtwdev);
-+int rtw89_mac_set_err_status(struct rtw89_dev *rtwdev, u32 err);
-+void rtw89_mac_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
-+			  u32 len, u8 class, u8 func);
-+int rtw89_mac_stop_sch_tx(struct rtw89_dev *rtwdev, u8 mac_idx,
-+			  u16 *tx_en, enum rtw89_sch_tx_sel sel);
-+int rtw89_mac_resume_sch_tx(struct rtw89_dev *rtwdev, u8 mac_idx, u16 tx_en);
-+int rtw89_mac_cfg_ppdu_status(struct rtw89_dev *rtwdev, u8 mac_ids, bool enable);
-+void rtw89_mac_flush_txq(struct rtw89_dev *rtwdev, u32 queues, bool drop);
-+int rtw89_mac_coex_init(struct rtw89_dev *rtwdev, const struct rtw89_mac_ax_coex *coex);
-+int rtw89_mac_cfg_gnt(struct rtw89_dev *rtwdev,
-+		      const struct rtw89_mac_ax_coex_gnt *gnt_cfg);
-+int rtw89_mac_cfg_plt(struct rtw89_dev *rtwdev, struct rtw89_mac_ax_plt *plt);
-+void rtw89_mac_cfg_sb(struct rtw89_dev *rtwdev, u32 val);
-+int rtw89_mac_cfg_ctrl_path(struct rtw89_dev *rtwdev, bool wl);
-+bool rtw89_mac_get_txpwr_cr(struct rtw89_dev *rtwdev,
-+			    enum rtw89_phy_idx phy_idx,
-+			    u32 reg_base, u32 *cr, u32 mask, u32 val);
-+
-+static inline int rtw89_mac_txpwr_write32(struct rtw89_dev *rtwdev,
-+					  enum rtw89_phy_idx phy_idx,
-+					  u32 reg_base, u32 val)
-+{
-+	u32 cr;
-+
-+	if (!rtw89_mac_get_txpwr_cr(rtwdev, phy_idx, reg_base, &cr,
-+				    MASKDWORD, val))
-+		return -EINVAL;
-+
-+	rtw89_write32(rtwdev, cr, val);
-+	return 0;
-+}
-+
-+static inline int rtw89_mac_txpwr_write32_mask(struct rtw89_dev *rtwdev,
-+					       enum rtw89_phy_idx phy_idx,
-+					       u32 reg_base, u32 mask, u32 val)
-+{
-+	u32 cr;
-+
-+	if (!rtw89_mac_get_txpwr_cr(rtwdev, phy_idx, reg_base, &cr, mask, val))
-+		return -EINVAL;
-+
-+	rtw89_write32_mask(rtwdev, cr, mask, val);
-+	return 0;
-+}
-+
++#ifndef __RTW89_REG_H__
++#define __RTW89_REG_H__
++
++#define R_AX_SYS_EEPROM_CTRL 0x000A
++#define B_AX_AUTOLOAD_SUS BIT(5)
++
++#define R_AX_SYS_FUNC_EN 0x0002
++#define B_AX_FEN_BB_GLB_RSTN BIT(1)
++#define B_AX_FEN_BBRSTB BIT(0)
++
++#define R_AX_SYS_CLK_CTRL 0x0008
++#define B_AX_CPU_CLK_EN BIT(14)
++
++#define R_AX_EFUSE_CTRL_1 0x0038
++#define B_AX_EF_PGPD_MASK GENMASK(30, 28)
++#define B_AX_EF_RDT BIT(27)
++#define B_AX_EF_VDDQST_MASK GENMASK(26, 24)
++#define B_AX_EF_PGTS_MASK GENMASK(23, 20)
++#define B_AX_EF_PD_DIS BIT(11)
++#define B_AX_EF_POR BIT(10)
++#define B_AX_EF_CELL_SEL_MASK GENMASK(9, 8)
++
++#define R_AX_SPSLDO_ON_CTRL0 0x0200
++#define B_AX_OCP_L1_MASK GENMASK(15, 13)
++
++#define R_AX_EFUSE_CTRL 0x0030
++#define B_AX_EF_MODE_SEL_MASK GENMASK(31, 30)
++#define B_AX_EF_RDY BIT(29)
++#define B_AX_EF_COMP_RESULT BIT(28)
++#define B_AX_EF_ADDR_MASK GENMASK(26, 16)
++#define B_AX_EF_DATA_MASK GENMASK(15, 0)
++
++#define R_AX_GPIO_MUXCFG 0x0040
++#define B_AX_BOOT_MODE BIT(19)
++#define B_AX_WL_EECS_EXT_32K_SEL BIT(18)
++#define B_AX_WL_SEC_BONDING_OPT_STS BIT(17)
++#define B_AX_SECSIC_SEL BIT(16)
++#define B_AX_ENHTP BIT(14)
++#define B_AX_BT_AOD_GPIO3 BIT(13)
++#define B_AX_ENSIC BIT(12)
++#define B_AX_SIC_SWRST BIT(11)
++#define B_AX_PO_WIFI_PTA_PINS BIT(10)
++#define B_AX_PO_BT_PTA_PINS BIT(9)
++#define B_AX_ENUARTTX BIT(8)
++#define B_AX_BTMODE_MASK GENMASK(7, 6)
++#define MAC_AX_BT_MODE_0_3 0
++#define MAC_AX_BT_MODE_2 2
++#define B_AX_ENBT BIT(5)
++#define B_AX_EROM_EN BIT(4)
++#define B_AX_ENUARTRX BIT(2)
++#define B_AX_GPIOSEL_MASK GENMASK(1, 0)
++
++#define R_AX_DBG_CTRL 0x0058
++#define B_AX_DBG_SEL1_4BIT GENMASK(31, 30)
++#define B_AX_DBG_SEL1_16BIT BIT(27)
++#define B_AX_DBG_SEL1 GENMASK(23, 16)
++#define B_AX_DBG_SEL0_4BIT GENMASK(15, 14)
++#define B_AX_DBG_SEL0_16BIT BIT(11)
++#define B_AX_DBG_SEL0 GENMASK(7, 0)
++
++#define R_AX_SYS_SDIO_CTRL 0x0070
++#define B_AX_PCIE_DIS_L2_CTRL_LDO_HCI BIT(15)
++#define B_AX_PCIE_DIS_WLSUS_AFT_PDN BIT(14)
++#define B_AX_PCIE_AUXCLK_GATE BIT(11)
++
++#define R_AX_PLATFORM_ENABLE 0x0088
++#define B_AX_WCPU_EN BIT(1)
++
++#define R_AX_SCOREBOARD  0x00AC
++#define B_AX_TOGGLE BIT(31)
++#define B_MAC_AX_SB_FW_MASK GENMASK(30, 24)
++#define B_MAC_AX_SB_DRV_MASK GENMASK(23, 0)
++#define B_MAC_AX_BTGS1_NOTIFY BIT(0)
++#define MAC_AX_NOTIFY_TP_MAJOR 0x81
++#define MAC_AX_NOTIFY_PWR_MAJOR 0x80
++
++#define R_AX_DBG_PORT_SEL 0x00C0
++#define B_AX_DEBUG_ST_MSK GENMASK(31, 0)
++
++#define R_AX_SYS_CFG1 0x00F0
++#define B_AX_CHIP_VER_MSK GENMASK(15, 12)
++
++#define R_AX_SYS_STATUS1 0x00F4
++#define B_AX_SEL_0XC0 GENMASK(17, 16)
++
++#define R_AX_HALT_H2C_CTRL 0x0160
++#define R_AX_HALT_H2C 0x0168
++#define B_AX_HALT_H2C_TRIGGER BIT(0)
++#define R_AX_HALT_C2H_CTRL 0x0164
++#define R_AX_HALT_C2H 0x016C
++
++#define R_AX_WCPU_FW_CTRL 0x01E0
++#define B_AX_WCPU_FWDL_STS_MASK GENMASK(7, 5)
++#define B_AX_FWDL_PATH_RDY BIT(2)
++#define B_AX_H2C_PATH_RDY BIT(1)
++#define B_AX_WCPU_FWDL_EN BIT(0)
++
++#define R_AX_RPWM 0x01E4
++#define R_AX_PCIE_HRPWM 0x10C0
++#define PS_RPWM_TOGGLE BIT(15)
++#define PS_RPWM_ACK BIT(14)
++#define PS_RPWM_SEQ_NUM GENMASK(13, 12)
++#define PS_RPWM_STATE 0x7
++#define RPWM_SEQ_NUM_MAX 3
++
++#define R_AX_BOOT_REASON 0x01E6
++#define B_AX_BOOT_REASON_MASK GENMASK(2, 0)
++
++#define R_AX_XTAL_ON_CTRL0 0x0280
++#define B_AX_XTAL_SC_LPS BIT(31)
++#define B_AX_XTAL_SC_XO_MSK GENMASK(23, 17)
++#define B_AX_XTAL_SC_XI_MSK GENMASK(16, 10)
++#define B_AX_XTAL_SC_MSK GENMASK(6, 0)
++
++#define R_AX_GPIO0_7_FUNC_SEL 0x02D0
++
++#define R_AX_WLRF_CTRL 0x02F0
++#define B_AX_WLRF1_CTRL_7 BIT(15)
++#define B_AX_WLRF1_CTRL_1 BIT(9)
++#define B_AX_WLRF_CTRL_7 BIT(7)
++#define B_AX_WLRF_CTRL_1 BIT(1)
++
++#define R_AX_FILTER_MODEL_ADDR 0x0C04
++
++#define R_AX_PCIE_INIT_CFG2 0x1004
++#define B_AX_WD_ITVL_IDLE GENMASK(27, 24)
++#define B_AX_WD_ITVL_ACT GENMASK(19, 16)
++
++#define R_AX_PCIE_PS_CTRL 0x1008
++#define B_AX_L1OFF_PWR_OFF_EN BIT(5)
++
++#define R_AX_MDIO_WDATA 0x10A4
++#define R_AX_MDIO_RDATA 0x10A6
++
++#define R_AX_PCIE_DBG_CTRL 0x11C0
++#define B_AX_DBG_SEL GENMASK(23, 16)
++#define B_AX_LOOPBACK_DBG_SEL GENMASK(15, 13)
++#define B_AX_PCIE_DBG_SEL BIT(12)
++#define B_AX_MRD_TIMEOUT_EN BIT(10)
++#define B_AX_ASFF_FULL_NO_STK BIT(1)
++#define B_AX_EN_STUCK_DBG BIT(0)
++
++#define R_AX_LBC_WATCHDOG 0x11D8
++#define B_AX_LBC_TIMER GENMASK(7, 4)
++#define B_AX_LBC_FLAG BIT(1)
++#define B_AX_LBC_EN BIT(0)
++
++#define R_AX_PCIE_EXP_CTRL 0x13F0
++#define B_AX_MAX_TAG_NUM GENMASK(18, 16)
++#define B_AX_SIC_EN_FORCE_CLKREQ BIT(4)
++
++#define R_AX_PHYREG_SET 0x8040
++#define PHYREG_SET_ALL_CYCLE 0x8
++
++#define R_AX_HD0IMR 0x8110
++#define B_AX_WDT_PTFM_INT_EN BIT(5)
++#define B_AX_CPWM_INT_EN BIT(2)
++#define B_AX_GT3_INT_EN BIT(1)
++#define B_AX_C2H_INT_EN BIT(0)
++#define R_AX_HD0ISR 0x8114
++#define B_AX_C2H_INT BIT(0)
++
++#define R_AX_H2CREG_DATA0 0x8140
++#define R_AX_H2CREG_DATA1 0x8144
++#define R_AX_H2CREG_DATA2 0x8148
++#define R_AX_H2CREG_DATA3 0x814C
++#define R_AX_C2HREG_DATA0 0x8150
++#define R_AX_C2HREG_DATA1 0x8154
++#define R_AX_C2HREG_DATA2 0x8158
++#define R_AX_C2HREG_DATA3 0x815C
++#define R_AX_H2CREG_CTRL 0x8160
++#define B_AX_H2CREG_TRIGGER BIT(0)
++#define R_AX_C2HREG_CTRL 0x8164
++#define B_AX_C2HREG_TRIGGER BIT(0)
++
++#define R_AX_HCI_FUNC_EN 0x8380
++#define B_AX_HCI_RXDMA_EN BIT(1)
++#define B_AX_HCI_TXDMA_EN BIT(0)
++
++#define R_AX_BOOT_DBG 0x83F0
++
++#define R_AX_DMAC_FUNC_EN 0x8400
++#define B_AX_MAC_FUNC_EN BIT(30)
++#define B_AX_DMAC_FUNC_EN BIT(29)
++#define B_AX_MPDU_PROC_EN BIT(28)
++#define B_AX_WD_RLS_EN BIT(27)
++#define B_AX_DLE_WDE_EN BIT(26)
++#define B_AX_TXPKT_CTRL_EN BIT(25)
++#define B_AX_STA_SCH_EN BIT(24)
++#define B_AX_DLE_PLE_EN BIT(23)
++#define B_AX_PKT_BUF_EN BIT(22)
++#define B_AX_DMAC_TBL_EN BIT(21)
++#define B_AX_PKT_IN_EN BIT(20)
++#define B_AX_DLE_CPUIO_EN BIT(19)
++#define B_AX_DISPATCHER_EN BIT(18)
++#define B_AX_MAC_SEC_EN BIT(16)
++
++#define R_AX_DMAC_CLK_EN 0x8404
++#define B_AX_WD_RLS_CLK_EN BIT(27)
++#define B_AX_DLE_WDE_CLK_EN BIT(26)
++#define B_AX_TXPKT_CTRL_CLK_EN BIT(25)
++#define B_AX_STA_SCH_CLK_EN BIT(24)
++#define B_AX_DLE_PLE_CLK_EN BIT(23)
++#define B_AX_PKT_IN_CLK_EN BIT(20)
++#define B_AX_DLE_CPUIO_CLK_EN BIT(19)
++#define B_AX_DISPATCHER_CLK_EN BIT(18)
++#define B_AX_MAC_SEC_CLK_EN BIT(16)
++
++#define PCI_LTR_IDLE_TIMER_1US 0
++#define PCI_LTR_IDLE_TIMER_10US 1
++#define PCI_LTR_IDLE_TIMER_100US 2
++#define PCI_LTR_IDLE_TIMER_200US 3
++#define PCI_LTR_IDLE_TIMER_400US 4
++#define PCI_LTR_IDLE_TIMER_800US 5
++#define PCI_LTR_IDLE_TIMER_1_6MS 6
++#define PCI_LTR_IDLE_TIMER_3_2MS 7
++#define PCI_LTR_IDLE_TIMER_R_ERR 0xFD
++#define PCI_LTR_IDLE_TIMER_DEF 0xFE
++#define PCI_LTR_IDLE_TIMER_IGNORE 0xFF
++
++#define PCI_LTR_SPC_10US 0
++#define PCI_LTR_SPC_100US 1
++#define PCI_LTR_SPC_500US 2
++#define PCI_LTR_SPC_1MS 3
++#define PCI_LTR_SPC_R_ERR 0xFD
++#define PCI_LTR_SPC_DEF 0xFE
++#define PCI_LTR_SPC_IGNORE 0xFF
++
++#define R_AX_LTR_CTRL_0 0x8410
++#define B_AX_LTR_SPACE_IDX_MASK GENMASK(13, 12)
++#define B_AX_LTR_IDLE_TIMER_IDX_MASK GENMASK(10, 8)
++#define B_AX_APP_LTR_ACT BIT(5)
++#define B_AX_APP_LTR_IDLE BIT(4)
++#define B_AX_LTR_EN BIT(1)
++#define B_AX_LTR_HW_EN BIT(0)
++
++#define R_AX_LTR_CTRL_1 0x8414
++#define B_AX_LTR_RX0_TH_MASK GENMASK(27, 16)
++#define B_AX_LTR_RX1_TH_MASK GENMASK(11, 0)
++
++#define R_AX_LTR_IDLE_LATENCY 0x8418
++
++#define R_AX_LTR_ACTIVE_LATENCY 0x841C
++
++#define R_AX_DLE_EMPTY0 0x8430
++#define B_AX_PLE_EMPTY_QTA_DMAC_CPUIO BIT(26)
++#define B_AX_PLE_EMPTY_QTA_DMAC_MPDU_TX BIT(25)
++#define B_AX_PLE_EMPTY_QTA_DMAC_WLAN_CPU BIT(24)
++#define B_AX_PLE_EMPTY_QTA_DMAC_H2C BIT(23)
++#define B_AX_PLE_EMPTY_QTA_DMAC_B1_TXPL BIT(22)
++#define B_AX_PLE_EMPTY_QTA_DMAC_B0_TXPL BIT(21)
++#define B_AX_WDE_EMPTY_QTA_DMAC_CPUIO BIT(20)
++#define B_AX_WDE_EMPTY_QTA_DMAC_PKTIN BIT(19)
++#define B_AX_WDE_EMPTY_QTA_DMAC_DATA_CPU BIT(18)
++#define B_AX_WDE_EMPTY_QTA_DMAC_WLAN_CPU BIT(17)
++#define B_AX_WDE_EMPTY_QTA_DMAC_HIF BIT(16)
++#define B_AX_WDE_EMPTY_QUE_DMAC_PKTIN BIT(10)
++#define B_AX_PLE_EMPTY_QUE_DMAC_SEC_TX BIT(9)
++#define B_AX_PLE_EMPTY_QUE_DMAC_MPDU_TX BIT(8)
++#define B_AX_WDE_EMPTY_QUE_OTHERS BIT(7)
++#define B_AX_WDE_EMPTY_QUE_CMAC0_WMM1 BIT(4)
++#define B_AX_WDE_EMPTY_QUE_CMAC0_WMM0 BIT(3)
++#define B_AX_WDE_EMPTY_QUE_CMAC1_MBH BIT(2)
++#define B_AX_WDE_EMPTY_QUE_CMAC0_MBH BIT(1)
++#define B_AX_WDE_EMPTY_QUE_CMAC0_ALL_AC BIT(0)
++
++#define R_AX_DMAC_ERR_ISR 0x8524
++
++#define R_AX_DISPATCHER_GLOBAL_SETTING_0 0x8800
++#define B_AX_PL_PAGE_128B_SEL BIT(9)
++#define B_AX_WD_PAGE_64B_SEL BIT(8)
++#define R_AX_OTHER_DISPATCHER_ERR_ISR 0x8804
++#define R_AX_HOST_DISPATCHER_ERR_ISR 0x8808
++#define R_AX_CPU_DISPATCHER_ERR_ISR 0x880C
++#define R_AX_TX_ADDRESS_INFO_MODE_SETTING 0x8810
++#define B_AX_HOST_ADDR_INFO_8B_SEL BIT(0)
++
++#define R_AX_HOST_DISPATCHER_ERR_IMR 0x8850
++#define B_AX_HDT_OFFSET_UNMATCH_INT_EN BIT(7)
++#define B_AX_HDT_PKT_FAIL_DBG_INT_EN BIT(2)
++
++#define R_AX_CPU_DISPATCHER_ERR_IMR 0x8854
++#define B_AX_CPU_SHIFT_EN_ERR_INT_EN BIT(25)
++
++#define R_AX_HCI_FC_CTRL 0x8A00
++#define B_AX_HCI_FC_CH12_FULL_COND_MASK GENMASK(11, 10)
++#define B_AX_HCI_FC_WP_CH811_FULL_COND_MASK GENMASK(9, 8)
++#define B_AX_HCI_FC_WP_CH07_FULL_COND_MASK GENMASK(7, 6)
++#define B_AX_HCI_FC_WD_FULL_COND_MASK GENMASK(5, 4)
++#define B_AX_HCI_FC_CH12_EN BIT(3)
++#define B_AX_HCI_FC_MODE_MASK GENMASK(2, 1)
++#define B_AX_HCI_FC_EN BIT(0)
++
++#define R_AX_CH_PAGE_CTRL 0x8A04
++#define B_AX_PREC_PAGE_CH12_MASK GENMASK(23, 16)
++#define B_AX_PREC_PAGE_CH011_MASK GENMASK(7, 0)
++
++#define B_AX_MAX_PG_MASK GENMASK(27, 16)
++#define B_AX_MIN_PG_MASK GENMASK(11, 0)
++#define B_AX_GRP BIT(31)
++#define R_AX_ACH0_PAGE_CTRL 0x8A10
++#define R_AX_ACH1_PAGE_CTRL 0x8A14
++#define R_AX_ACH2_PAGE_CTRL 0x8A18
++#define R_AX_ACH3_PAGE_CTRL 0x8A1C
++#define R_AX_ACH4_PAGE_CTRL 0x8A20
++#define R_AX_ACH5_PAGE_CTRL 0x8A24
++#define R_AX_ACH6_PAGE_CTRL 0x8A28
++#define R_AX_ACH7_PAGE_CTRL 0x8A2C
++#define R_AX_CH8_PAGE_CTRL 0x8A30
++#define R_AX_CH9_PAGE_CTRL 0x8A34
++#define R_AX_CH10_PAGE_CTRL 0x8A38
++#define R_AX_CH11_PAGE_CTRL 0x8A3C
++
++#define B_AX_AVAL_PG_MASK GENMASK(27, 16)
++#define B_AX_USE_PG_MASK GENMASK(11, 0)
++#define R_AX_ACH0_PAGE_INFO 0x8A50
++#define R_AX_ACH1_PAGE_INFO 0x8A54
++#define R_AX_ACH2_PAGE_INFO 0x8A58
++#define R_AX_ACH3_PAGE_INFO 0x8A5C
++#define R_AX_ACH4_PAGE_INFO 0x8A60
++#define R_AX_ACH5_PAGE_INFO 0x8A64
++#define R_AX_ACH6_PAGE_INFO 0x8A68
++#define R_AX_ACH7_PAGE_INFO 0x8A6C
++#define R_AX_CH8_PAGE_INFO 0x8A70
++#define R_AX_CH9_PAGE_INFO 0x8A74
++#define R_AX_CH10_PAGE_INFO 0x8A78
++#define R_AX_CH11_PAGE_INFO 0x8A7C
++#define R_AX_CH12_PAGE_INFO 0x8A80
++
++#define R_AX_PUB_PAGE_INFO3 0x8A8C
++#define B_AX_G1_AVAL_PG_MASK GENMASK(28, 16)
++#define B_AX_G0_AVAL_PG_MASK GENMASK(12, 0)
++
++#define R_AX_PUB_PAGE_CTRL1 0x8A90
++#define B_AX_PUBPG_G1_MASK GENMASK(28, 16)
++#define B_AX_PUBPG_G0_MASK GENMASK(12, 0)
++
++#define R_AX_PUB_PAGE_CTRL2 0x8A94
++#define B_AX_PUBPG_ALL_MASK GENMASK(12, 0)
++
++#define R_AX_PUB_PAGE_INFO1 0x8A98
++#define B_AX_G1_USE_PG_MASK GENMASK(28, 16)
++#define B_AX_G0_USE_PG_MASK GENMASK(12, 0)
++
++#define R_AX_PUB_PAGE_INFO2 0x8A9C
++#define B_AX_PUB_AVAL_PG_MASK GENMASK(12, 0)
++
++#define R_AX_WP_PAGE_CTRL1 0x8AA0
++#define B_AX_PREC_PAGE_WP_CH811_MASK GENMASK(24, 16)
++#define B_AX_PREC_PAGE_WP_CH07_MASK GENMASK(8, 0)
++
++#define R_AX_WP_PAGE_CTRL2 0x8AA4
++#define B_AX_WP_THRD_MASK GENMASK(12, 0)
++
++#define R_AX_WP_PAGE_INFO1 0x8AA8
++#define B_AX_WP_AVAL_PG_MASK GENMASK(28, 16)
++
++#define R_AX_WDE_PKTBUF_CFG 0x8C08
++#define B_AX_WDE_START_BOUND_MASK GENMASK(13, 8)
++#define B_AX_WDE_PAGE_SEL_MASK 0x3
++#define B_AX_WDE_FREE_PAGE_NUM_MASK GENMASK(28, 16)
++#define R_AX_WDE_ERR_ISR 0x8C3C
++
++#define B_AX_WDE_MAX_SIZE_MASK GENMASK(27, 16)
++#define B_AX_WDE_MIN_SIZE_MASK GENMASK(11, 0)
++#define R_AX_WDE_QTA0_CFG 0x8C40
++#define R_AX_WDE_QTA1_CFG 0x8C44
++#define R_AX_WDE_QTA2_CFG 0x8C48
++#define R_AX_WDE_QTA3_CFG 0x8C4C
++#define R_AX_WDE_QTA4_CFG 0x8C50
++
++#define B_AX_DLE_PUB_PGNUM GENMASK(12, 0)
++#define B_AX_DLE_FREE_HEADPG GENMASK(11, 0)
++#define B_AX_DLE_FREE_TAILPG GENMASK(27, 16)
++#define B_AX_DLE_USE_PGNUM GENMASK(27, 16)
++#define B_AX_DLE_RSV_PGNUM GENMASK(11, 0)
++
++#define R_AX_WDE_INI_STATUS 0x8D00
++#define B_AX_WDE_Q_MGN_INI_RDY BIT(1)
++#define B_AX_WDE_BUF_MGN_INI_RDY BIT(0)
++#define WDE_MGN_INI_RDY (B_AX_WDE_Q_MGN_INI_RDY | B_AX_WDE_BUF_MGN_INI_RDY)
++#define R_AX_WDE_DBG_FUN_INTF_CTL 0x8D10
++#define B_AX_WDE_DFI_ACTIVE BIT(31)
++#define B_AX_WDE_DFI_TRGSEL GENMASK(19, 16)
++#define B_AX_WDE_DFI_ADDR GENMASK(15, 0)
++#define R_AX_WDE_DBG_FUN_INTF_DATA 0x8D14
++#define B_AX_WDE_DFI_DATA_MSK GENMASK(31, 0)
++
++#define R_AX_PLE_PKTBUF_CFG 0x9008
++#define B_AX_PLE_START_BOUND_MASK GENMASK(13, 8)
++#define B_AX_PLE_PAGE_SEL_MASK 0x3
++#define B_AX_PLE_FREE_PAGE_NUM_MASK GENMASK(28, 16)
++
++#define R_AX_PLE_ERR_IMR 0x9038
++#define B_AX_PLE_GETNPG_STRPG_ERR_INT_EN BIT(5)
++
++#define R_AX_PLE_ERR_FLAG_ISR 0x903C
++#define B_AX_PLE_MAX_SIZE_MASK GENMASK(27, 16)
++#define B_AX_PLE_MIN_SIZE_MASK GENMASK(11, 0)
++#define R_AX_PLE_QTA0_CFG 0x9040
++#define R_AX_PLE_QTA1_CFG 0x9044
++#define R_AX_PLE_QTA2_CFG 0x9048
++#define R_AX_PLE_QTA3_CFG 0x904C
++#define R_AX_PLE_QTA4_CFG 0x9050
++#define R_AX_PLE_QTA5_CFG 0x9054
++#define R_AX_PLE_QTA6_CFG 0x9058
++#define R_AX_PLE_QTA7_CFG 0x905C
++#define R_AX_PLE_QTA8_CFG 0x9060
++#define R_AX_PLE_QTA9_CFG 0x9064
++#define R_AX_PLE_QTA10_CFG 0x9068
++
++#define R_AX_PLE_INI_STATUS 0x9100
++#define B_AX_PLE_Q_MGN_INI_RDY BIT(1)
++#define B_AX_PLE_BUF_MGN_INI_RDY BIT(0)
++#define PLE_MGN_INI_RDY (B_AX_PLE_Q_MGN_INI_RDY | B_AX_PLE_BUF_MGN_INI_RDY)
++#define R_AX_PLE_DBG_FUN_INTF_CTL 0x9110
++#define B_AX_PLE_DFI_ACTIVE BIT(31)
++#define B_AX_PLE_DFI_TRGSEL GENMASK(19, 16)
++#define B_AX_PLE_DFI_ADDR GENMASK(15, 0)
++#define R_AX_PLE_DBG_FUN_INTF_DATA 0x9114
++#define B_AX_PLE_DFI_DATA_MSK GENMASK(31, 0)
++
++#define R_AX_WDRLS_CFG 0x9408
++#define B_AX_RLSRPT_BUFREQ_TO_MASK GENMASK(15, 8)
++#define B_AX_WDRLS_MODE_MASK GENMASK(1, 0)
++
++#define R_AX_RLSRPT0_CFG0 0x9410
++#define B_AX_RLSRPT0_FLTR_MAP_MASK GENMASK(27, 24)
++#define B_AX_RLSRPT0_PKTTYPE_MASK GENMASK(19, 16)
++#define B_AX_RLSRPT0_PID_MASK GENMASK(10, 8)
++#define B_AX_RLSRPT0_QID_MASK GENMASK(5, 0)
++
++#define R_AX_RLSRPT0_CFG1 0x9414
++#define B_AX_RLSRPT0_TO_MASK GENMASK(23, 16)
++#define B_AX_RLSRPT0_AGGNUM_MASK GENMASK(7, 0)
++
++#define R_AX_WDRLS_ERR_IMR 0x9430
++#define B_AX_WDRLS_RPT1_FRZTO_ERR_INT_EN BIT(13)
++#define B_AX_WDRLS_RPT1_AGGNUM0_ERR_INT_EN BIT(12)
++#define B_AX_WDRLS_RPT0_FRZTO_ERR_INT_EN BIT(9)
++#define B_AX_WDRLS_RPT0_AGGNUM0_ERR_INT_EN BIT(8)
++#define B_AX_WDRLS_PLEBREQ_PKTID_ISNULL_ERR_INT_EN BIT(5)
++#define B_AX_WDRLS_PLEBREQ_TO_ERR_INT_EN BIT(4)
++#define B_AX_WDRLS_CTL_FRZTO_ERR_INT_EN BIT(2)
++#define B_AX_WDRLS_CTL_PLPKTID_ISNULL_ERR_INT_EN BIT(1)
++#define B_AX_WDRLS_CTL_WDPKTID_ISNULL_ERR_INT_EN BIT(0)
++#define R_AX_WDRLS_ERR_ISR 0x9434
++
++#define R_AX_BBRPT_COM_ERR_IMR_ISR 0x960C
++#define R_AX_BBRPT_CHINFO_ERR_IMR_ISR 0x962C
++#define R_AX_BBRPT_DFS_ERR_IMR_ISR 0x963C
++#define R_AX_LA_ERRFLAG 0x966C
++
++#define R_AX_WD_BUF_REQ 0x9800
++#define R_AX_PL_BUF_REQ 0x9820
++#define B_AX_BUF_REQ_EXEC BIT(31)
++#define B_AX_BUF_REQ_QUOTA_ID_MASK GENMASK(23, 16)
++#define B_AX_BUF_REQ_LEN_MASK GENMASK(15, 0)
++
++#define R_AX_WD_BUF_STATUS 0x9804
++#define R_AX_PL_BUF_STATUS 0x9804
++#define B_AX_BUF_STAT_DONE BIT(31)
++#define B_AX_BUF_STAT_PKTID_MASK GENMASK(11, 0)
++
++#define R_AX_WD_CPUQ_OP_0 0x9810
++#define R_AX_PL_CPUQ_OP_0 0x9830
++#define B_AX_CPUQ_OP_EXEC BIT(31)
++#define B_AX_CPUQ_OP_CMD_TYPE_MASK GENMASK(27, 24)
++#define B_AX_CPUQ_OP_MACID_MASK GENMASK(23, 16)
++#define B_AX_CPUQ_OP_PKTNUM_MASK GENMASK(7, 0)
++
++#define R_AX_WD_CPUQ_OP_1 0x9814
++#define R_AX_PL_CPUQ_OP_1 0x9834
++#define B_AX_CPUQ_OP_SRC_PID_MASK GENMASK(24, 22)
++#define B_AX_CPUQ_OP_SRC_QID_MASK GENMASK(21, 16)
++#define B_AX_CPUQ_OP_DST_PID_MASK GENMASK(8, 6)
++#define B_AX_CPUQ_OP_DST_QID_MASK GENMASK(5, 0)
++
++#define R_AX_WD_CPUQ_OP_2 0x9818
++#define R_AX_PL_CPUQ_OP_2 0x9838
++#define B_AX_CPUQ_OP_STRT_PKTID_MASK GENMASK(27, 15)
++#define B_AX_CPUQ_OP_END_PKTID_MASK GENMASK(11, 0)
++
++#define R_AX_WD_CPUQ_OP_STATUS 0x981C
++#define R_AX_PL_CPUQ_OP_STATUS 0x983C
++#define B_AX_CPUQ_OP_STAT_DONE BIT(31)
++#define B_AX_CPUQ_OP_PKTID_MASK GENMASK(11, 0)
++#define R_AX_CPUIO_ERR_ISR 0x9844
++
++#define R_AX_SEC_ERR_IMR_ISR 0x991C
++
++#define R_AX_PKTIN_SETTING 0x9A00
++#define B_AX_WD_ADDR_INFO_LENGTH BIT(1)
++#define R_AX_PKTIN_ERR_ISR 0x9A24
++
++#define R_AX_MPDU_TX_ERR_ISR 0x9BF0
++
++#define R_AX_MPDU_PROC 0x9C00
++#define B_AX_A_ICV_ERR BIT(1)
++#define B_AX_APPEND_FCS BIT(0)
++
++#define R_AX_ACTION_FWD0 0x9C04
++#define TRXCFG_MPDU_PROC_ACT_FRWD 0x02A95A95
++
++#define R_AX_TF_FWD 0x9C14
++#define TRXCFG_MPDU_PROC_TF_FRWD 0x0000AA55
++
++#define R_AX_HW_RPT_FWD 0x9C18
++#define B_AX_FWD_PPDU_STAT_MASK GENMASK(1, 0)
++#define RTW89_PRPT_DEST_HOST 1
++#define RTW89_PRPT_DEST_WLCPU 2
++
++#define R_AX_CUT_AMSDU_CTRL 0x9C40
++#define TRXCFG_MPDU_PROC_CUT_CTRL	0x010E05F0
++
++#define R_AX_MPDU_RX_ERR_ISR 0x9CF0
++
++#define R_AX_SEC_ENG_CTRL 0x9D00
++#define B_AX_TX_PARTIAL_MODE BIT(11)
++#define B_AX_CLK_EN_CGCMP BIT(10)
++#define B_AX_CLK_EN_WAPI BIT(9)
++#define B_AX_CLK_EN_WEP_TKIP BIT(8)
++#define B_AX_BMC_MGNT_DEC BIT(5)
++#define B_AX_UC_MGNT_DEC BIT(4)
++#define B_AX_MC_DEC BIT(3)
++#define B_AX_BC_DEC BIT(2)
++#define B_AX_SEC_RX_DEC BIT(1)
++#define B_AX_SEC_TX_ENC BIT(0)
++
++#define R_AX_SEC_MPDU_PROC 0x9D04
++#define B_AX_APPEND_ICV BIT(1)
++#define B_AX_APPEND_MIC BIT(0)
++
++#define R_AX_SS_CTRL 0x9E10
++#define B_AX_SS_INIT_DONE_1 BIT(31)
++#define B_AX_SS_WARM_INIT_FLG BIT(29)
++#define B_AX_SS_EN BIT(0)
++
++#define R_AX_SS_MACID_PAUSE_0 0x9EB0
++#define B_AX_SS_MACID31_0_PAUSE_SH 0
++#define B_AX_SS_MACID31_0_PAUSE_MSK 0xffffffffL
++
++#define R_AX_SS_MACID_PAUSE_1 0x9EB4
++#define B_AX_SS_MACID63_32_PAUSE_SH 0
++#define B_AX_SS_MACID63_32_PAUSE_MSK 0xffffffffL
++
++#define R_AX_SS_MACID_PAUSE_2 0x9EB8
++#define B_AX_SS_MACID95_64_PAUSE_SH 0
++#define B_AX_SS_MACID95_64_PAUSE_MSK 0xffffffffL
++
++#define R_AX_SS_MACID_PAUSE_3 0x9EBC
++#define B_AX_SS_MACID127_96_PAUSE_SH 0
++#define B_AX_SS_MACID127_96_PAUSE_MSK 0xffffffffL
++
++#define R_AX_STA_SCHEDULER_ERR_ISR 0x9EF4
++
++#define R_AX_TXPKTCTL_ERR_IMR_ISR 0x9F1C
++#define R_AX_TXPKTCTL_ERR_IMR_ISR_B1 0x9F2C
++#define B_AX_TXPKTCTL_CMDPSR_FRZTO_ERR_INT_EN BIT(9)
++#define B_AX_TXPKTCTL_USRCTL_RLSBMPLEN_ERR_INT_EN BIT(3)
++#define B_AX_TXPKTCTL_USRCTL_RDNRLSCMD_ERR_INT_EN BIT(2)
++#define B_AX_TXPKTCTL_USRCTL_NOINIT_ERR_INT_EN BIT(1)
++
++#define R_AX_DBG_FUN_INTF_CTL 0x9F30
++#define B_AX_DFI_ACTIVE BIT(31)
++#define B_AX_DFI_TRGSEL GENMASK(19, 16)
++#define B_AX_DFI_ADDR GENMASK(15, 0)
++#define R_AX_DBG_FUN_INTF_DATA 0x9F34
++#define B_AX_DFI_DATA_MSK GENMASK(31, 0)
++
++#define R_AX_AFE_CTRL1 0x0024
++
++#define B_AX_R_SYM_WLCMAC1_P4_PC_EN BIT(4)
++#define B_AX_R_SYM_WLCMAC1_P3_PC_EN BIT(3)
++#define B_AX_R_SYM_WLCMAC1_P2_PC_EN BIT(2)
++#define B_AX_R_SYM_WLCMAC1_P1_PC_EN BIT(1)
++#define B_AX_R_SYM_WLCMAC1_PC_EN BIT(0)
++
++#define R_AX_SYS_ISO_CTRL_EXTEND 0x0080
++#define B_AX_CMAC1_FEN BIT(30)
++#define B_AX_R_SYM_FEN_WLPHYGLB_1 BIT(17)
++#define B_AX_R_SYM_FEN_WLPHYFUN_1 BIT(16)
++#define B_AX_R_SYM_ISO_CMAC12PP BIT(5)
++
++#define R_AX_CMAC_FUNC_EN 0xC000
++#define R_AX_CMAC_FUNC_EN_C1 0xE000
++#define B_AX_CMAC_CRPRT BIT(31)
++#define B_AX_CMAC_EN BIT(30)
++#define B_AX_CMAC_TXEN BIT(29)
++#define B_AX_CMAC_RXEN BIT(28)
++#define B_AX_FORCE_CMACREG_GCKEN BIT(15)
++#define B_AX_PHYINTF_EN BIT(5)
++#define B_AX_CMAC_DMA_EN BIT(4)
++#define B_AX_PTCLTOP_EN BIT(3)
++#define B_AX_SCHEDULER_EN BIT(2)
++#define B_AX_TMAC_EN BIT(1)
++#define B_AX_RMAC_EN BIT(0)
++
++#define R_AX_CK_EN 0xC004
++#define R_AX_CK_EN_C1 0xE004
++#define B_AX_CMAC_CKEN BIT(30)
++#define B_AX_PHYINTF_CKEN BIT(5)
++#define B_AX_CMAC_DMA_CKEN BIT(4)
++#define B_AX_PTCLTOP_CKEN BIT(3)
++#define B_AX_SCHEDULER_CKEN BIT(2)
++#define B_AX_TMAC_CKEN BIT(1)
++#define B_AX_RMAC_CKEN BIT(0)
++
++#define R_AX_WMAC_RFMOD 0xC010
++#define R_AX_WMAC_RFMOD_C1 0xE010
++#define B_AX_WMAC_RFMOD_MASK 0x3
++
++#define R_AX_TX_SUB_CARRIER_VALUE 0xC088
++#define R_AX_TX_SUB_CARRIER_VALUE_C1 0xE088
++#define B_AX_TXSC_80M_MASK GENMASK(11, 8)
++#define B_AX_TXSC_40M_MASK GENMASK(7, 4)
++#define B_AX_TXSC_20M_MASK GENMASK(3, 0)
++
++#define R_AX_CMAC_ERR_ISR 0xC164
++#define R_AX_CMAC_ERR_ISR_C1 0xE164
++
++#define R_AX_MACID_SLEEP_0 0xC2C0
++#define R_AX_MACID_SLEEP_0_C1 0xE2C0
++#define B_AX_MACID31_0_SLEEP_SH 0
++#define B_AX_MACID31_0_SLEEP_MSK 0xffffffffL
++
++#define R_AX_MACID_SLEEP_1 0xC2C4
++#define R_AX_MACID_SLEEP_1_C1 0xE2C4
++#define B_AX_MACID63_32_SLEEP_SH 0
++#define B_AX_MACID63_32_SLEEP_MSK 0xffffffffL
++
++#define R_AX_MACID_SLEEP_2 0xC2C8
++#define R_AX_MACID_SLEEP_2_C1 0xE2C8
++#define B_AX_MACID95_64_SLEEP_SH 0
++#define B_AX_MACID95_64_SLEEP_MSK 0xffffffffL
++
++#define R_AX_MACID_SLEEP_3 0xC2CC
++#define R_AX_MACID_SLEEP_3_C1 0xE2CC
++#define B_AX_MACID127_96_SLEEP_SH 0
++#define B_AX_MACID127_96_SLEEP_MSK 0xffffffffL
++
++#define R_AX_EDCA_BE_PARAM_0 0xC300
++#define B_AX_BE_0_TXOPLMT_MSK GENMASK(26, 16)
++#define B_AX_BE_0_CWMAX_MSK GENMASK(15, 12)
++#define B_AX_BE_0_CWMIN_MSK GENMASK(11, 8)
++#define B_AX_BE_0_AIFS_MSK GENMASK(7, 0)
++#define R_AX_EDCA_BK_PARAM_0 0xC304
++#define R_AX_EDCA_VI_PARAM_0 0xC308
++#define R_AX_EDCA_VO_PARAM_0 0xC30C
++
++#define SCH_PREBKF_24US 0x18
++#define R_AX_PREBKF_CFG_0 0xC338
++#define R_AX_PREBKF_CFG_0_C1 0xE338
++#define B_AX_PREBKF_TIME_MASK GENMASK(7, 0)
++
++#define R_AX_CCA_CFG_0 0xC340
++#define R_AX_CCA_CFG_0_C1 0xE340
++#define B_AX_BTCCA_BRK_TXOP_EN BIT(9)
++#define B_AX_BTCCA_EN BIT(5)
++#define B_AX_EDCCA_EN BIT(4)
++#define B_AX_SEC80_EN BIT(3)
++#define B_AX_SEC40_EN BIT(2)
++#define B_AX_SEC20_EN BIT(1)
++#define B_AX_CCA_EN BIT(0)
++
++#define R_AX_CTN_TXEN 0xC348
++#define R_AX_CTN_TXEN_C1 0xE348
++#define B_AX_CTN_TXEN_TWT_1 BIT(15)
++#define B_AX_CTN_TXEN_TWT_0 BIT(14)
++#define B_AX_CTN_TXEN_ULQ BIT(13)
++#define B_AX_CTN_TXEN_BCNQ BIT(12)
++#define B_AX_CTN_TXEN_HGQ BIT(11)
++#define B_AX_CTN_TXEN_CPUMGQ BIT(10)
++#define B_AX_CTN_TXEN_MGQ1 BIT(9)
++#define B_AX_CTN_TXEN_MGQ BIT(8)
++#define B_AX_CTN_TXEN_VO_1 BIT(7)
++#define B_AX_CTN_TXEN_VI_1 BIT(6)
++#define B_AX_CTN_TXEN_BK_1 BIT(5)
++#define B_AX_CTN_TXEN_BE_1 BIT(4)
++#define B_AX_CTN_TXEN_VO_0 BIT(3)
++#define B_AX_CTN_TXEN_VI_0 BIT(2)
++#define B_AX_CTN_TXEN_BK_0 BIT(1)
++#define B_AX_CTN_TXEN_BE_0 BIT(0)
++
++#define R_AX_CCA_CONTROL 0xC390
++#define R_AX_CCA_CONTROL_C1 0xE390
++#define B_AX_TB_CHK_TX_NAV BIT(31)
++#define B_AX_TB_CHK_BASIC_NAV BIT(30)
++#define B_AX_TB_CHK_BTCCA BIT(29)
++#define B_AX_TB_CHK_EDCCA BIT(28)
++#define B_AX_TB_CHK_CCA_S80 BIT(27)
++#define B_AX_TB_CHK_CCA_S40 BIT(26)
++#define B_AX_TB_CHK_CCA_S20 BIT(25)
++#define B_AX_TB_CHK_CCA_P20 BIT(24)
++#define B_AX_SIFS_CHK_BTCCA BIT(21)
++#define B_AX_SIFS_CHK_EDCCA BIT(20)
++#define B_AX_SIFS_CHK_CCA_S80 BIT(19)
++#define B_AX_SIFS_CHK_CCA_S40 BIT(18)
++#define B_AX_SIFS_CHK_CCA_S20 BIT(17)
++#define B_AX_SIFS_CHK_CCA_P20 BIT(16)
++#define B_AX_CTN_CHK_TXNAV BIT(8)
++#define B_AX_CTN_CHK_INTRA_NAV BIT(7)
++#define B_AX_CTN_CHK_BASIC_NAV BIT(6)
++#define B_AX_CTN_CHK_BTCCA BIT(5)
++#define B_AX_CTN_CHK_EDCCA BIT(4)
++#define B_AX_CTN_CHK_CCA_S80 BIT(3)
++#define B_AX_CTN_CHK_CCA_S40 BIT(2)
++#define B_AX_CTN_CHK_CCA_S20 BIT(1)
++#define B_AX_CTN_CHK_CCA_P20 BIT(0)
++
++#define R_AX_SCHEDULE_ERR_IMR 0xC3E8
++#define R_AX_SCHEDULE_ERR_IMR_C1 0xE3E8
++#define B_AX_SORT_NON_IDLE_ERR_INT_EN BIT(1)
++#define B_AX_FSM_TIMEOUT_ERR_INT_EN BIT(0)
++
++#define R_AX_SCHEDULE_ERR_ISR 0xC3EC
++#define R_AX_SCHEDULE_ERR_ISR_C1 0xE3EC
++
++#define R_AX_SCH_DBG_SEL 0xC3F4
++#define R_AX_SCH_DBG_SEL_C1 0xE3F4
++#define B_AX_SCH_DBG_EN BIT(16)
++#define B_AX_SCH_CFG_CMD_SEL GENMASK(15, 8)
++#define B_AX_SCH_DBG_SEL_MSK GENMASK(7, 0)
++
++#define R_AX_SCH_DBG 0xC3F8
++#define R_AX_SCH_DBG_C1 0xE3F8
++#define B_AX_SCHEDULER_DBG_MSK GENMASK(31, 0)
++
++#define R_AX_PORT_CFG_P0 0xC400
++#define R_AX_PORT_CFG_P1 0xC440
++#define R_AX_PORT_CFG_P2 0xC480
++#define R_AX_PORT_CFG_P3 0xC4C0
++#define R_AX_PORT_CFG_P4 0xC500
++#define B_AX_BRK_SETUP BIT(16)
++#define B_AX_TBTT_UPD_SHIFT_SEL BIT(15)
++#define B_AX_BCN_DROP_ALLOW BIT(14)
++#define B_AX_TBTT_PROHIB_EN BIT(13)
++#define B_AX_BCNTX_EN BIT(12)
++#define B_AX_NET_TYPE_MASK GENMASK(11, 10)
++#define B_AX_BCN_FORCETX_EN BIT(9)
++#define B_AX_TXBCN_BTCCA_EN BIT(8)
++#define B_AX_BCNERR_CNT_EN BIT(7)
++#define B_AX_BCN_AGRES BIT(6)
++#define B_AX_TSFTR_RST BIT(5)
++#define B_AX_RX_BSSID_FIT_EN BIT(4)
++#define B_AX_TSF_UDT_EN BIT(3)
++#define B_AX_PORT_FUNC_EN BIT(2)
++#define B_AX_TXBCN_RPT_EN BIT(1)
++#define B_AX_RXBCN_RPT_EN BIT(0)
++
++#define R_AX_TBTT_PROHIB_P0 0xC404
++#define R_AX_TBTT_PROHIB_P1 0xC448
++#define R_AX_TBTT_PROHIB_P2 0xC484
++#define R_AX_TBTT_PROHIB_P3 0xC4C4
++#define R_AX_TBTT_PROHIB_P4 0xC504
++#define B_AX_TBTT_HOLD_MASK GENMASK(27, 16)
++#define B_AX_TBTT_SETUP_MASK GENMASK(7, 0)
++
++#define R_AX_BCN_AREA_P0 0xC408
++#define R_AX_BCN_AREA_P1 0xC448
++#define R_AX_BCN_AREA_P2 0xC488
++#define R_AX_BCN_AREA_P3 0xC4C8
++#define R_AX_BCN_AREA_P4 0xC508
++#define B_AX_BCN_MSK_AREA_MASK GENMASK(27, 16)
++#define B_AX_BCN_CTN_AREA_MASK GENMASK(11, 0)
++
++#define R_AX_BCNERLYINT_CFG_P0 0xC40C
++#define R_AX_BCNERLYINT_CFG_P1 0xC44C
++#define R_AX_BCNERLYINT_CFG_P2 0xC48C
++#define R_AX_BCNERLYINT_CFG_P3 0xC4CC
++#define R_AX_BCNERLYINT_CFG_P4 0xC45C
++#define B_AX_BCNERLY_MASK GENMASK(11, 0)
++
++#define R_AX_TBTTERLYINT_CFG_P0 0xC40E
++#define R_AX_TBTTERLYINT_CFG_P1 0xC44E
++#define R_AX_TBTTERLYINT_CFG_P2 0xC48E
++#define R_AX_TBTTERLYINT_CFG_P3 0xC4CE
++#define R_AX_TBTTERLYINT_CFG_P4 0xC50E
++#define B_AX_TBTTERLY_MASK GENMASK(11, 0)
++
++#define R_AX_TBTT_AGG_P0 0xC412
++#define R_AX_TBTT_AGG_P1 0xC452
++#define R_AX_TBTT_AGG_P2 0xC492
++#define R_AX_TBTT_AGG_P3 0xC4D2
++#define R_AX_TBTT_AGG_P4 0xC512
++#define B_AX_TBTT_AGG_NUM_MASK GENMASK(15, 8)
++
++#define R_AX_BCN_SPACE_CFG_P0 0xC414
++#define R_AX_BCN_SPACE_CFG_P1 0xC454
++#define R_AX_BCN_SPACE_CFG_P2 0xC494
++#define R_AX_BCN_SPACE_CFG_P3 0xC4D4
++#define R_AX_BCN_SPACE_CFG_P4 0xC514
++#define B_AX_SUB_BCN_SPACE_MASK GENMASK(23, 16)
++#define B_AX_BCN_SPACE_MASK GENMASK(15, 0)
++
++#define R_AX_BCN_FORCETX_P0 0xC418
++#define R_AX_BCN_FORCETX_P1 0xC458
++#define R_AX_BCN_FORCETX_P2 0xC498
++#define R_AX_BCN_FORCETX_P3 0xC4D8
++#define R_AX_BCN_FORCETX_P4 0xC518
++#define B_AX_FORCE_BCN_CURRCNT_MASK GENMASK(23, 16)
++#define B_AX_FORCE_BCN_NUM_MASK GENMASK(15, 0)
++#define B_AX_BCN_MAX_ERR_MASK GENMASK(7, 0)
++
++#define R_AX_BCN_ERR_CNT_P0 0xC420
++#define R_AX_BCN_ERR_CNT_P1 0xC460
++#define R_AX_BCN_ERR_CNT_P2 0xC4A0
++#define R_AX_BCN_ERR_CNT_P3 0xC4E0
++#define R_AX_BCN_ERR_CNT_P4 0xC520
++#define B_AX_BCN_ERR_CNT_SUM_MASK GENMASK(31, 24)
++#define B_AX_BCN_ERR_CNT_NAV_MASK GENMASK(23, 16)
++#define B_AX_BCN_ERR_CNT_EDCCA_MASK GENMASK(15, 0)
++#define B_AX_BCN_ERR_CNT_CCA_MASK GENMASK(7, 0)
++
++#define R_AX_BCN_ERR_FLAG_P0 0xC424
++#define R_AX_BCN_ERR_FLAG_P1 0xC464
++#define R_AX_BCN_ERR_FLAG_P2 0xC4A4
++#define R_AX_BCN_ERR_FLAG_P3 0xC4E4
++#define R_AX_BCN_ERR_FLAG_P4 0xC524
++#define B_AX_BCN_ERR_FLAG_OTHERS BIT(6)
++#define B_AX_BCN_ERR_FLAG_MAC BIT(5)
++#define B_AX_BCN_ERR_FLAG_TXON BIT(4)
++#define B_AX_BCN_ERR_FLAG_SRCHEND BIT(3)
++#define B_AX_BCN_ERR_FLAG_INVALID BIT(2)
++#define B_AX_BCN_ERR_FLAG_CMP BIT(1)
++#define B_AX_BCN_ERR_FLAG_LOCK BIT(0)
++
++#define R_AX_DTIM_CTRL_P0 0xC426
++#define R_AX_DTIM_CTRL_P1 0xC466
++#define R_AX_DTIM_CTRL_P2 0xC4A6
++#define R_AX_DTIM_CTRL_P3 0xC4E6
++#define R_AX_DTIM_CTRL_P4 0xC526
++#define B_AX_DTIM_NUM_MASK GENMASK(15, 0)
++#define B_AX_DTIM_CURRCNT_MASK GENMASK(7, 0)
++
++#define R_AX_TBTT_SHIFT_P0 0xC428
++#define R_AX_TBTT_SHIFT_P1 0xC468
++#define R_AX_TBTT_SHIFT_P2 0xC4A8
++#define R_AX_TBTT_SHIFT_P3 0xC4E8
++#define R_AX_TBTT_SHIFT_P4 0xC528
++#define B_AX_TBTT_SHIFT_OFST_MASK GENMASK(11, 0)
++
++#define R_AX_BCN_CNT_TMR_P0 0xC434
++#define R_AX_BCN_CNT_TMR_P1 0xC474
++#define R_AX_BCN_CNT_TMR_P2 0xC4B4
++#define R_AX_BCN_CNT_TMR_P3 0xC4F4
++#define R_AX_BCN_CNT_TMR_P4 0xC534
++#define B_AX_BCN_CNT_TMR_MASK 0xffffffffL
++
++#define R_AX_TSFTR_LOW_P0 0xC438
++#define R_AX_TSFTR_LOW_P1 0xC478
++#define R_AX_TSFTR_LOW_P2 0xC4B8
++#define R_AX_TSFTR_LOW_P3 0xC4F8
++#define R_AX_TSFTR_LOW_P4 0xC538
++#define B_AX_TSFTR_LOW_MASK 0xffffffffL
++
++#define R_AX_TSFTR_HIGH_P0 0xC43C
++#define R_AX_TSFTR_HIGH_P1 0xC47C
++#define R_AX_TSFTR_HIGH_P2 0xC4BC
++#define R_AX_TSFTR_HIGH_P3 0xC4FC
++#define R_AX_TSFTR_HIGH_P4 0xC53C
++#define B_AX_TSFTR_HIGH_MASK 0xffffffffL
++
++#define R_AX_MBSSID_CTRL 0xC568
++#define R_AX_MBSSID_CTRL_C1 0xE568
++#define B_AX_P0MB_ALL_MASK GENMASK(23, 1)
++#define B_AX_P0MB_NUM_MASK GENMASK(23, 16)
++#define B_AX_P0MB15_EN BIT(15)
++#define B_AX_P0MB14_EN BIT(14)
++#define B_AX_P0MB13_EN BIT(13)
++#define B_AX_P0MB12_EN BIT(12)
++#define B_AX_P0MB11_EN BIT(11)
++#define B_AX_P0MB10_EN BIT(10)
++#define B_AX_P0MB9_EN BIT(9)
++#define B_AX_P0MB8_EN BIT(8)
++#define B_AX_P0MB7_EN BIT(7)
++#define B_AX_P0MB6_EN BIT(6)
++#define B_AX_P0MB5_EN BIT(5)
++#define B_AX_P0MB4_EN BIT(4)
++#define B_AX_P0MB3_EN BIT(3)
++#define B_AX_P0MB2_EN BIT(2)
++#define B_AX_P0MB1_EN BIT(1)
++
++#define S_AX_CTS2S_TH_SEC_256B 1
++#define R_AX_SIFS_SETTING 0xC624
++#define R_AX_SIFS_SETTING_C1 0xE624
++#define B_AX_HW_CTS2SELF_PKT_LEN_TH_MASK GENMASK(31, 24)
++#define B_AX_HW_CTS2SELF_PKT_LEN_TH_TWW_MASK GENMASK(23, 18)
++#define B_AX_HW_CTS2SELF_EN BIT(16)
++#define B_AX_SPEC_SIFS_OFDM_PTCL_SH 8
++#define B_AX_SPEC_SIFS_OFDM_PTCL_MASK GENMASK(15, 8)
++#define B_AX_SPEC_SIFS_CCK_PTCL_MASK GENMASK(7, 0)
++#define S_AX_CTS2S_TH_1K 4
++
++#define R_AX_TXRATE_CHK 0xC628
++#define R_AX_TXRATE_CHK_C1 0xE628
++#define B_AX_DEFT_RATE_MASK GENMASK(15, 7)
++#define B_AX_BAND_MODE BIT(4)
++#define B_AX_MAX_TXNSS_MSK GENMASK(3, 2)
++#define B_AX_RTS_LIMIT_IN_OFDM6 BIT(1)
++#define B_AX_CHECK_CCK_EN BIT(0)
++
++#define R_AX_MBSSID_DROP_0 0xC63C
++#define R_AX_MBSSID_DROP_0_C1 0xE63C
++#define B_AX_GI_LTF_FB_SEL BIT(30)
++#define B_AX_RATE_SEL_MASK GENMASK(29, 24)
++#define B_AX_PORT_DROP_4_0_MSK GENMASK(20, 16)
++#define B_AX_MBSSID_DROP_15_0_MSK GENMASK(15, 0)
++
++#define R_AX_BT_PLT 0xC67C
++#define R_AX_BT_PLT_C1 0xE67C
++#define B_AX_BT_PLT_PKT_CNT_MASK GENMASK(31, 16)
++#define B_AX_BT_PLT_RST BIT(8)
++#define B_AX_RX_PLT_GNT_LTE_RX BIT(7)
++#define B_AX_RX_PLT_GNT_BT_RX BIT(6)
++#define B_AX_RX_PLT_GNT_BT_TX BIT(5)
++#define B_AX_RX_PLT_GNT_WL BIT(4)
++#define B_AX_TX_PLT_GNT_LTE_RX BIT(3)
++#define B_AX_TX_PLT_GNT_BT_RX BIT(2)
++#define B_AX_TX_PLT_GNT_BT_TX BIT(1)
++#define B_AX_TX_PLT_GNT_WL BIT(0)
++
++#define R_AX_PTCL_BSS_COLOR_0 0xC6A0
++#define R_AX_PTCL_BSS_COLOR_0_C1 0xE6A0
++#define B_AX_BSS_COLOB_AX_PORT_3_MASK GENMASK(30, 24)
++#define B_AX_BSS_COLOB_AX_PORT_2_MASK GENMASK(22, 16)
++#define B_AX_BSS_COLOB_AX_PORT_1_MASK GENMASK(14, 8)
++#define B_AX_BSS_COLOB_AX_PORT_0_MASK GENMASK(6, 0)
++
++#define R_AX_PTCL_BSS_COLOR_1 0xC6A4
++#define R_AX_PTCL_BSS_COLOR_1_C1 0xE6A4
++#define B_AX_BSS_COLOB_AX_PORT_4_MASK GENMASK(6, 0)
++
++#define R_AX_PTCL_IMR0 0xC6C0
++#define R_AX_PTCL_IMR0_C1 0xE6C0
++#define B_AX_F2PCMD_USER_ALLC_ERR_INT_EN BIT(28)
++#define B_AX_TX_RECORD_PKTID_ERR_INT_EN BIT(23)
++
++#define R_AX_PTCL_ISR0 0xC6C4
++#define R_AX_PTCL_ISR0_C1 0xE6C4
++
++#define S_AX_PTCL_TO_2MS 0x3F
++#define R_AX_PTCL_FSM_MON 0xC6E8
++#define R_AX_PTCL_FSM_MON_C1 0xE6E8
++#define B_AX_PTCL_TX_ARB_TO_MODE BIT(6)
++#define B_AX_PTCL_TX_ARB_TO_THR_MASK GENMASK(5, 0)
++
++#define R_AX_PTCL_TX_CTN_SEL 0xC6EC
++#define R_AX_PTCL_TX_CTN_SEL_C1 0xE6EC
++#define B_AX_PTCL_TX_ON_STAT BIT(7)
++
++#define R_AX_PTCL_DBG_INFO 0xC6F0
++#define R_AX_PTCL_DBG_INFO_C1 0xE6F0
++#define B_AX_PTCL_DBG_INFO_MSK GENMASK(31, 0)
++#define R_AX_PTCL_DBG 0xC6F4
++#define R_AX_PTCL_DBG_C1 0xE6F4
++#define B_AX_PTCL_DBG_EN BIT(8)
++#define B_AX_PTCL_DBG_SEL GENMASK(7, 0)
++
++#define R_AX_DLE_CTRL 0xC800
++#define R_AX_DLE_CTRL_C1 0xE800
++#define B_AX_NO_RESERVE_PAGE_ERR_IMR BIT(23)
++#define B_AX_RXDATA_FSM_HANG_ERROR_IMR BIT(15)
++
++#define R_AX_TCR1 0xCA04
++#define R_AX_TCR1_C1 0xEA04
++#define B_AX_TXDFIFO_THRESHOLD GENMASK(31, 28)
++#define B_AX_TCR_CCK_LOCK_CLK BIT(27)
++#define B_AX_TCR_FORCE_READ_TXDFIFO BIT(26)
++#define B_AX_TCR_USTIME GENMASK(23, 16)
++#define B_AX_TCR_SMOOTH_VAL BIT(15)
++#define B_AX_TCR_SMOOTH_CTRL BIT(14)
++#define B_AX_CS_REQ_VAL BIT(13)
++#define B_AX_CS_REQ_SEL BIT(12)
++#define B_AX_TCR_ZLD_USTIME_AFTERPHYTXON GENMASK(11, 8)
++#define B_AX_TCR_TXTIMEOUT GENMASK(7, 0)
++
++#define R_AX_MACTX_DBG_SEL_CNT 0xCA20
++#define R_AX_MACTX_DBG_SEL_CNT_C1 0xEA20
++#define B_AX_MACTX_MPDU_CNT GENMASK(31, 24)
++#define B_AX_MACTX_DMA_CNT GENMASK(23, 16)
++#define B_AX_LENGTH_ERR_FLAG_U3 BIT(11)
++#define B_AX_LENGTH_ERR_FLAG_U2 BIT(10)
++#define B_AX_LENGTH_ERR_FLAG_U1 BIT(9)
++#define B_AX_LENGTH_ERR_FLAG_U0 BIT(8)
++#define B_AX_DBGSEL_MACTX GENMASK(5, 0)
++
++#define R_AX_WMAC_TX_CTRL_DEBUG 0xCAE4
++#define R_AX_WMAC_TX_CTRL_DEBUG_C1 0xEAE4
++#define B_AX_TX_CTRL_DEBUG_SEL GENMASK(3, 0)
++
++#define R_AX_WMAC_TX_INFO0_DEBUG 0xCAE8
++#define R_AX_WMAC_TX_INFO0_DEBUG_C1 0xEAE8
++#define B_AX_TX_CTRL_INFO_P0_MSK GENMASK(31, 0)
++
++#define R_AX_WMAC_TX_INFO1_DEBUG 0xCAEC
++#define R_AX_WMAC_TX_INFO1_DEBUG_C1 0xEAEC
++#define B_AX_TX_CTRL_INFO_P1_MSK GENMASK(31, 0)
++
++#define R_AX_RSP_CHK_SIG 0xCC00
++#define R_AX_RSP_CHK_SIG_C1 0xEC00
++#define B_AX_RSP_CHK_TX_NAV BIT(27)
++#define B_AX_RSP_CHK_INTRA_NAV BIT(26)
++#define B_AX_RSP_CHK_BASIC_NAV BIT(25)
++#define B_AX_RSP_CHK_SEC_CCA_80 BIT(24)
++#define B_AX_RSP_CHK_SEC_CCA_40 BIT(23)
++#define B_AX_RSP_CHK_SEC_CCA_20 BIT(22)
++#define B_AX_RSP_CHK_BTCCA BIT(21)
++#define B_AX_RSP_CHK_EDCCA BIT(20)
++#define B_AX_RSP_CHK_CCA BIT(19)
++
++#define R_AX_TRXPTCL_RESP_0 0xCC04
++#define R_AX_TRXPTCL_RESP_0_C1 0xEC04
++#define B_AX_WMAC_RESP_STBC_EN BIT(31)
++#define B_AX_WMAC_RXFTM_TXACK_SC BIT(30)
++#define B_AX_WMAC_RXFTM_TXACKBWEQ BIT(29)
++#define B_AX_WMAC_DIS_RESP_CTSINCCA BIT(24)
++#define B_AX_WMAC_DIS_RESP_ACKINCCA BIT(23)
++#define B_AX_WMAC_LDPC_EN BIT(22)
++#define B_AX_WMAC_SGIEN BIT(21)
++#define B_AX_WMAC_SPLCPEN BIT(20)
++#define B_AX_WMAC_BESP_CHNBUSY_MASK GENMASK(19, 18)
++#define B_AX_WMAC_BESP_EABLY_TXBA BIT(17)
++#define B_AX_WMAC_EN_TXACKBA_INTXOP BIT(16)
++#define B_AX_WMAC_SPEC_SIFS_OFDM_MASK GENMASK(15, 8)
++#define B_AX_WMAC_SPEC_SIFS_CCK_MASK GENMASK(7, 0)
++
++#define R_AX_MAC_LOOPBACK 0xCC20
++#define R_AX_MAC_LOOPBACK_C1 0xEC20
++#define B_AX_MACLBK_EN BIT(0)
++
++#define R_AX_WMAC_TX_TF_INFO_0 0xCCD0
++#define R_AX_WMAC_TX_TF_INFO_0_C1 0xECD0
++#define B_AX_WMAC_TX_TF_INFO_SEL GENMASK(2, 0)
++
++#define R_AX_WMAC_TX_TF_INFO_1 0xCCD4
++#define R_AX_WMAC_TX_TF_INFO_1_C1 0xECD4
++#define B_AX_WMAC_TX_TF_INFO_P0 GENMASK(31, 0)
++
++#define R_AX_WMAC_TX_TF_INFO_2 0xCCD8
++#define R_AX_WMAC_TX_TF_INFO_2_C1 0xECD8
++#define B_AX_WMAC_TX_TF_INFO_P1 GENMASK(31, 0)
++
++#define R_AX_TMAC_ERR_IMR_ISR 0xCCEC
++#define R_AX_TMAC_ERR_IMR_ISR_C1 0xECEC
++
++#define R_AX_DBGSEL_TRXPTCL 0xCCF4
++#define R_AX_DBGSEL_TRXPTCL_C1 0xECF4
++#define B_AX_DBGSEL_TRXPTCL_MSK GENMASK(5, 0)
++
++#define R_AX_PHYINFO_ERR_IMR 0xCCFE
++#define R_AX_PHYINFO_ERR_IMR_C1 0xECFE
++#define B_AX_CSI_ON_TIMEOUT_INT_EN BIT(5)
++#define B_AX_STS_ON_TIMEOUT_INT_EN BIT(4)
++#define B_AX_DATA_ON_TIMEOUT_INT_EN BIT(3)
++#define B_AX_OFDM_CCA_TIMEOUT_INT_EN BIT(2)
++#define B_AX_CCK_CCA_TIMEOUT_INT_EN BIT(1)
++#define B_AXC_PHY_TXON_TIMEOUT_INT_EN BIT(0)
++
++#define R_AX_PHYINFO_ERR_ISR 0xCCFF
++#define R_AX_PHYINFO_ERR_ISR_C1 0xECFF
++
++#define R_AX_RCR 0xCE00
++#define R_AX_RCR_C1 0xEE00
++#define B_AX_STOP_RX_IN BIT(11)
++#define B_AX_DRV_INFO_SIZE_MASK GENMASK(10, 8)
++#define B_AX_CH_EN_MASK GENMASK(3, 0)
++
++#define R_AX_DLK_PROTECT_CTL 0xCE02
++#define R_AX_DLK_PROTECT_CTL_C1 0xEE02
++#define B_AX_RX_DLK_CCA_TIME_MASK GENMASK(15, 8)
++#define B_AX_RX_DLK_DATA_TIME_MASK GENMASK(7, 4)
++
++#define R_AX_PLCP_HDR_FLTR 0xCE04
++#define R_AX_PLCP_HDR_FLTR_C1 0xEE04
++#define B_AX_DIS_CHK_MIN_LEN BIT(8)
++#define B_AX_HE_SIGB_CRC_CHK BIT(6)
++#define B_AX_VHT_MU_SIGB_CRC_CHK BIT(5)
++#define B_AX_VHT_SU_SIGB_CRC_CHK BIT(4)
++#define B_AX_SIGA_CRC_CHK BIT(3)
++#define B_AX_LSIG_PARITY_CHK BIT(2)
++#define B_AX_CCK_SIG_CHK BIT(1)
++#define B_AX_CCK_CRC_CHK BIT(0)
++
++#define R_AX_RX_FLTR_OPT 0xCE20
++#define R_AX_RX_FLTR_OPT_C1 0xEE20
++#define B_AX_UID_FILTER_MASK GENMASK(31, 24)
++#define B_AX_UNSPT_FILTER_SH 22
++#define B_AX_UNSPT_FILTER_MASK GENMASK(23, 22)
++#define B_AX_RX_MPDU_MAX_LEN_MASK GENMASK(21, 16)
++#define B_AX_RX_MPDU_MAX_LEN_SIZE 0x3f
++#define B_AX_A_FTM_REQ BIT(14)
++#define B_AX_A_ERR_PKT BIT(13)
++#define B_AX_A_UNSUP_PKT BIT(12)
++#define B_AX_A_CRC32_ERR BIT(11)
++#define B_AX_A_PWR_MGNT BIT(10)
++#define B_AX_A_BCN_CHK_RULE_MASK GENMASK(9, 8)
++#define B_AX_A_BCN_CHK_EN BIT(7)
++#define B_AX_A_MC_LIST_CAM_MATCH BIT(6)
++#define B_AX_A_BC_CAM_MATCH BIT(5)
++#define B_AX_A_UC_CAM_MATCH BIT(4)
++#define B_AX_A_MC BIT(3)
++#define B_AX_A_BC BIT(2)
++#define B_AX_A_A1_MATCH BIT(1)
++#define B_AX_SNIFFER_MODE BIT(0)
++
++#define R_AX_CTRL_FLTR 0xCE24
++#define R_AX_CTRL_FLTR_C1 0xEE24
++#define R_AX_MGNT_FLTR 0xCE28
++#define R_AX_MGNT_FLTR_C1 0xEE28
++#define R_AX_DATA_FLTR 0xCE2C
++#define R_AX_DATA_FLTR_C1 0xEE2C
++#define RX_FLTR_FRAME_DROP	0x00000000
++#define RX_FLTR_FRAME_TO_HOST	0x55555555
++#define RX_FLTR_FRAME_TO_WLCPU	0xAAAAAAAA
++
++#define R_AX_ADDR_CAM_CTRL 0xCE34
++#define R_AX_ADDR_CAM_CTRL_C1 0xEE34
++#define B_AX_ADDR_CAM_RANGE_MASK GENMASK(23, 16)
++#define B_AX_ADDR_CAM_CMPLIMT_MASK GENMASK(15, 12)
++#define B_AX_ADDR_CAM_CLR BIT(8)
++#define B_AX_ADDR_CAM_A2_B0_CHK BIT(2)
++#define B_AX_ADDR_CAM_SRCH_PERPKT BIT(1)
++#define B_AX_ADDR_CAM_EN BIT(0)
++
++#define R_AX_RESPBA_CAM_CTRL 0xCE3C
++#define R_AX_RESPBA_CAM_CTRL_C1 0xEE3C
++#define B_AX_SSN_SEL BIT(2)
++
++#define R_AX_PPDU_STAT 0xCE40
++#define R_AX_PPDU_STAT_C1 0xEE40
++#define B_AX_PPDU_STAT_RPT_TRIG BIT(8)
++#define B_AX_PPDU_STAT_RPT_CRC32 BIT(5)
++#define B_AX_PPDU_STAT_RPT_A1M BIT(4)
++#define B_AX_APP_PLCP_HDR_RPT BIT(3)
++#define B_AX_APP_RX_CNT_RPT BIT(2)
++#define B_AX_APP_MAC_INFO_RPT BIT(1)
++#define B_AX_PPDU_STAT_RPT_EN BIT(0)
++
++#define R_AX_RX_SR_CTRL 0xCE4A
++#define R_AX_RX_SR_CTRL_C1 0xEE4A
++#define B_AX_SR_EN BIT(0)
++
++#define R_AX_RX_STATE_MONITOR 0xCEF0
++#define R_AX_RX_STATE_MONITOR_C1 0xEEF0
++#define R_AX_RX_STATE_MONITOR_MSK GENMASK(31, 0)
++#define B_AX_STATE_CUR GENMASK(31, 16)
++#define B_AX_STATE_NXT GENMASK(13, 8)
++#define B_AX_STATE_UPD BIT(7)
++#define B_AX_STATE_SEL GENMASK(4, 0)
++
++#define R_AX_RMAC_ERR_ISR 0xCEF4
++#define R_AX_RMAC_ERR_ISR_C1 0xEEF4
++#define B_AX_RXERR_INTPS_EN BIT(31)
++#define B_AX_RMAC_RX_CSI_TIMEOUT_INT_EN BIT(19)
++#define B_AX_RMAC_RX_TIMEOUT_INT_EN BIT(18)
++#define B_AX_RMAC_CSI_TIMEOUT_INT_EN (17)
++#define B_AX_RMAC_DATA_ON_TIMEOUT_INT_EN BIT(16)
++#define B_AX_RMAC_CCA_TIMEOUT_INT_EN BIT(15)
++#define B_AX_RMAC_DMA_TIMEOUT_INT_EN BIT(14)
++#define B_AX_RMAC_DATA_ON_TO_IDLE_TIMEOUT_INT_EN BIT(13)
++#define B_AX_RMAC_CCA_TO_IDLE_TIMEOUT_INT_EN BIT(12)
++#define B_AX_RMAC_RX_CSI_TIMEOUT_FLAG BIT(7)
++#define B_AX_RMAC_RX_TIMEOUT_FLAG BIT(6)
++#define B_AX_BMAC_CSI_TIMEOUT_FLAG BIT(5)
++#define B_AX_BMAC_DATA_ON_TIMEOUT_FLAG BIT(4)
++#define B_AX_BMAC_CCA_TIMEOUT_FLAG BIT(3)
++#define B_AX_BMAC_DMA_TIMEOUT_FLAG BIT(2)
++#define B_AX_BMAC_DATA_ON_TO_IDLE_TIMEOUT_FLAG BIT(1)
++#define B_AX_BMAC_CCA_TO_IDLE_TIMEOUT_FLAG BIT(0)
++
++#define R_AX_RMAC_PLCP_MON 0xCEF8
++#define R_AX_RMAC_PLCP_MON_C1 0xEEF8
++#define R_AX_RMAC_PLCP_MON_MSK GENMASK(31, 0)
++#define B_AX_PCLP_MON_SEL GENMASK(31, 28)
++#define B_AX_PCLP_MON_CONT GENMASK(27, 0)
++
++#define R_AX_RX_DEBUG_SELECT 0xCEFC
++#define R_AX_RX_DEBUG_SELECT_C1 0xEEFC
++#define B_AX_DEBUG_SEL GENMASK(7, 0)
++
++#define R_AX_PWR_RATE_CTRL 0xD200
++#define R_AX_PWR_RATE_CTRL_C1 0xF200
++
++#define R_AX_PWR_RATE_OFST_CTRL 0xD204
++#define R_AX_PWR_COEXT_CTRL 0xD220
++
++#define R_AX_PWR_UL_CTRL2 0xD248
++#define B_AX_PWR_UL_CTRL2_MSK 0x07700007
++
++#define R_AX_PWR_BY_RATE 0xD2C0
++#define R_AX_PWR_LMT 0xD2EC
++#define R_AX_PWR_RU_LMT 0xD33C
++
++#define R_AX_TXPWR_ISR 0xD9E4
++#define R_AX_TXPWR_ISR_C1 0xF9E4
++
++#define R_AX_BTC_FUNC_EN 0xDA20
++#define R_AX_BTC_FUNC_EN_C1 0xFA20
++#define B_AX_PTA_EDCCA_EN BIT(1)
++#define B_AX_PTA_WL_TX_EN BIT(0)
++
++#define R_BTC_BREAK_TABLE 0xDA2C
++#define BTC_BREAK_PARAM 0xf0ffffff
++
++#define R_BTC_BT_COEX_MSK_TABLE 0xDA30
++#define B_BTC_PRI_MASK_TX_RESP_V1 BIT(3)
++
++#define R_AX_BT_COEX_CFG_2 0xDA34
++#define R_AX_BT_COEX_CFG_2_C1 0xFA34
++#define B_AX_GNT_BT_POLARITY BIT(12)
++#define B_AX_GNT_BT_BYPASS_PRIORITY BIT(8)
++#define B_AX_TIMER_MASK GENMASK(7, 0)
++#define MAC_AX_CSR_RATE 80
++
++#define R_AX_CSR_MODE 0xDA40
++#define R_AX_CSR_MODE_C1 0xFA40
++#define B_AX_BT_CNT_REST BIT(16)
++#define B_AX_BT_STAT_DELAY_MASK GENMASK(15, 12)
++#define MAC_AX_CSR_DELAY 0
++#define B_AX_BT_TRX_INIT_DETECT_MASK GENMASK(11, 8)
++#define MAC_AX_CSR_TRX_TO 4
++#define B_AX_BT_PRI_DETECT_TO_MASK GENMASK(7, 4)
++#define MAC_AX_CSR_PRI_TO 5
++#define B_AX_WL_ACT_MSK BIT(3)
++#define B_AX_STATIS_BT_EN BIT(2)
++#define B_AX_WL_ACT_MASK_ENABLE BIT(1)
++#define B_AX_ENHANCED_BT BIT(0)
++
++#define R_AX_TDMA_MODE 0xDA4C
++#define R_AX_TDMA_MODE_C1 0xFA4C
++#define B_AX_R_BT_CMD_RPT_MASK GENMASK(31, 16)
++#define B_AX_R_RPT_FROM_BT_MASK GENMASK(15, 8)
++#define B_AX_BT_HID_ISR_SET_MASK GENMASK(7, 6)
++#define B_AX_TDMA_BT_START_NOTIFY BIT(5)
++#define B_AX_ENABLE_TDMA_FW_MODE BIT(4)
++#define B_AX_ENABLE_PTA_TDMA_MODE BIT(3)
++#define B_AX_ENABLE_COEXIST_TAB_IN_TDMA BIT(2)
++#define B_AX_GPIO2_GPIO3_EXANGE_OR_NO_BT_CCA BIT(1)
++#define B_AX_RTK_BT_ENABLE BIT(0)
++
++#define R_AX_BT_COEX_CFG_5 0xDA6C
++#define R_AX_BT_COEX_CFG_5_C1 0xFA6C
++#define B_AX_BT_TIME_MASK GENMASK(31, 6)
++#define B_AX_BT_RPT_SAMPLE_RATE_MASK GENMASK(5, 0)
++#define MAC_AX_RTK_RATE 5
++
++#define R_AX_LTE_CTRL 0xDAF0
++#define R_AX_LTE_WDATA 0xDAF4
++#define R_AX_LTE_RDATA 0xDAF8
++
++#define CMAC1_START_ADDR 0xE000
++#define CMAC1_END_ADDR 0xFFFF
++
++#define R_AX_LTE_SW_CFG_1 0x0038
++#define R_AX_LTE_SW_CFG_1_C1 0x2038
++#define B_AX_GNT_BT_RFC_S1_SW_VAL BIT(31)
++#define B_AX_GNT_BT_RFC_S1_SW_CTRL BIT(30)
++#define B_AX_GNT_WL_RFC_S1_SW_VAL BIT(29)
++#define B_AX_GNT_WL_RFC_S1_SW_CTRL BIT(28)
++#define B_AX_GNT_BT_BB_S1_SW_VAL BIT(27)
++#define B_AX_GNT_BT_BB_S1_SW_CTRL BIT(26)
++#define B_AX_GNT_WL_BB_S1_SW_VAL BIT(25)
++#define B_AX_GNT_WL_BB_S1_SW_CTRL BIT(24)
++#define B_AX_BT_SW_CTRL_WL_PRIORITY BIT(19)
++#define B_AX_WL_SW_CTRL_WL_PRIORITY BIT(18)
++#define B_AX_LTE_PATTERN_2_EN BIT(17)
++#define B_AX_LTE_PATTERN_1_EN BIT(16)
++#define B_AX_GNT_BT_RFC_S0_SW_VAL BIT(15)
++#define B_AX_GNT_BT_RFC_S0_SW_CTRL BIT(14)
++#define B_AX_GNT_WL_RFC_S0_SW_VAL BIT(13)
++#define B_AX_GNT_WL_RFC_S0_SW_CTRL BIT(12)
++#define B_AX_GNT_BT_BB_S0_SW_VAL BIT(11)
++#define B_AX_GNT_BT_BB_S0_SW_CTRL BIT(10)
++#define B_AX_GNT_WL_BB_S0_SW_VAL BIT(9)
++#define B_AX_GNT_WL_BB_S0_SW_CTRL BIT(8)
++#define B_AX_LTECOEX_FUN_EN BIT(7)
++#define B_AX_LTECOEX_3WIRE_CTRL_MUX BIT(6)
++#define B_AX_LTECOEX_OP_MODE_SEL_MASK GENMASK(5, 4)
++#define B_AX_LTECOEX_UART_MUX BIT(3)
++#define B_AX_LTECOEX_UART_MODE_SEL_MASK GENMASK(3, 0)
++
++#define R_AX_LTE_SW_CFG_2 0x003C
++#define R_AX_LTE_SW_CFG_2_C1 0x203C
++#define B_AX_WL_RX_CTRL BIT(8)
++#define B_AX_GNT_WL_RX_SW_VAL BIT(7)
++#define B_AX_GNT_WL_RX_SW_CTRL BIT(6)
++#define B_AX_GNT_WL_TX_SW_VAL BIT(5)
++#define B_AX_GNT_WL_TX_SW_CTRL BIT(4)
++#define B_AX_GNT_BT_RX_SW_VAL BIT(3)
++#define B_AX_GNT_BT_RX_SW_CTRL BIT(2)
++#define B_AX_GNT_BT_TX_SW_VAL BIT(1)
++#define B_AX_GNT_BT_TX_SW_CTRL BIT(0)
++
++#define RR_MOD 0x00
++#define RR_MOD_IQK GENMASK(19, 4)
++#define RR_MOD_DPK GENMASK(19, 5)
++#define RR_MOD_MASK GENMASK(19, 16)
++#define RR_MOD_V_DOWN 0x0
++#define RR_MOD_V_STANDBY 0x1
++#define RR_MOD_V_TX 0x2
++#define RR_MOD_V_RX 0x3
++#define RR_MOD_V_TXIQK 0x4
++#define RR_MOD_V_DPK 0x5
++#define RR_MOD_V_RXK1 0x6
++#define RR_MOD_V_RXK2 0x7
++#define RR_MOD_M_RXG GENMASK(13, 4)
++#define RR_MOD_M_RXBB GENMASK(9, 5)
++#define RR_MODOPT 0x01
++#define RR_MODOPT_M_TXPWR GENMASK(5, 0)
++#define RR_WLSEL 0x02
++#define RR_WLSEL_AG GENMASK(18, 16)
++#define RR_RSV1 0x05
++#define RR_RSV1_RST BIT(0)
++#define RR_DTXLOK 0x08
++#define RR_RSV2 0x09
++#define RR_CFGCH 0x18
++#define RR_BTC 0x1a
++#define RR_BTC_TXBB GENMASK(14, 12)
++#define RR_BTC_RXBB GENMASK(11, 10)
++#define RR_RCKC 0x1b
++#define RR_RCKC_CA GENMASK(14, 10)
++#define RR_RCKS 0x1c
++#define RR_RCKO 0x1d
++#define RR_RCKO_OFF GENMASK(13, 9)
++#define RR_RXKPLL 0x1e
++#define RR_RXKPLL_OFF GENMASK(5, 0)
++#define RR_RXKPLL_POW BIT(19)
++#define RR_RSV4 0x1f
++#define RR_RXK 0x20
++#define RR_RXK_PLLEN BIT(5)
++#define RR_RXK_SEL5G BIT(7)
++#define RR_RXK_SEL2G BIT(8)
++#define RR_LUTWA 0x33
++#define RR_LUTWA_MASK GENMASK(9, 0)
++#define RR_LUTWD1 0x3e
++#define RR_LUTWD0 0x3f
++#define RR_TM 0x42
++#define RR_TM_TRI BIT(19)
++#define RR_TM_VAL GENMASK(6, 1)
++#define RR_TM2 0x43
++#define RR_TM2_OFF GENMASK(19, 16)
++#define RR_TXG1 0x51
++#define RR_TXG1_ATT2 BIT(19)
++#define RR_TXG1_ATT1 BIT(11)
++#define RR_TXG2 0x52
++#define RR_TXG2_ATT0 BIT(11)
++#define RR_BSPAD 0x54
++#define RR_TXGA 0x55
++#define RR_TXGA_LOK_EN BIT(0)
++#define RR_TXGA_TRK_EN BIT(7)
++#define RR_GAINTX 0x56
++#define RR_GAINTX_ALL GENMASK(15, 0)
++#define RR_GAINTX_PAD GENMASK(9, 5)
++#define RR_GAINTX_BB GENMASK(4, 0)
++#define RR_TXMO 0x58
++#define RR_TXMO_COI GENMASK(19, 15)
++#define RR_TXMO_COQ GENMASK(14, 10)
++#define RR_TXMO_FII GENMASK(9, 6)
++#define RR_TXMO_FIQ GENMASK(5, 2)
++#define RR_TXA 0x5d
++#define RR_TXA_TRK GENMASK(19, 14)
++#define RR_TXRSV 0x5c
++#define RR_TXRSV_GAPK BIT(19)
++#define RR_BIAS 0x5e
++#define RR_BIAS_GAPK BIT(19)
++#define RR_BIASA 0x60
++#define RR_BIASA_TXG GENMASK(15, 12)
++#define RR_BIASA_TXA GENMASK(19, 16)
++#define RR_BIASA_A GENMASK(2, 0)
++#define RR_BIASA2 0x63
++#define RR_BIASA2_LB GENMASK(4, 2)
++#define RR_TXATANK 0x64
++#define RR_TXATANK_LBSW GENMASK(16, 15)
++#define RR_TRXIQ 0x66
++#define RR_RSV6 0x6d
++#define RR_TXPOW 0x7f
++#define RR_TXPOW_TXG BIT(1)
++#define RR_TXPOW_TXA BIT(8)
++#define RR_RXPOW 0x80
++#define RR_RXPOW_IQK GENMASK(17, 16)
++#define RR_RXBB 0x83
++#define RR_RXBB_C2G GENMASK(16, 10)
++#define RR_RXBB_C1G GENMASK(9, 8)
++#define RR_RXBB_ATTR GENMASK(7, 4)
++#define RR_RXBB_ATTC GENMASK(2, 0)
++#define RR_RXA 0x8a
++#define RR_RXA_DPK GENMASK(9, 8)
++#define RR_RXA2 0x8c
++#define RR_RXA2_C2 GENMASK(9, 3)
++#define RR_RXA2_C1 GENMASK(12, 10)
++#define RR_RXIQGEN 0x8d
++#define RR_RXIQGEN_ATTL GENMASK(12, 8)
++#define RR_RXIQGEN_ATTH GENMASK(14, 13)
++#define RR_RXBB2 0x8f
++#define RR_RXBB2_DAC_EN BIT(13)
++#define RR_DCK 0x92
++#define RR_DCK_FINE BIT(1)
++#define RR_DCK_LV BIT(0)
++#define RR_DCK1 0x93
++#define RR_DCK1_SEL BIT(3)
++#define RR_DCK2 0x94
++#define RR_DCK2_CYCLE GENMASK(7, 2)
++#define RR_MIXER 0x9f
++#define RR_MIXER_GN GENMASK(4, 3)
++#define RR_XTALX2 0xb8
++#define RR_MALSEL 0xbe
++#define RR_RCKD 0xde
++#define RR_RCKD_POW GENMASK(19, 13)
++#define RR_RCKD_BW BIT(2)
++#define RR_TXADBG 0xde
++#define RR_LUTDBG 0xdf
++#define RR_LUTDBG_LOK BIT(2)
++#define RR_LUTWE2 0xee
++#define RR_LUTWE 0xef
++#define RR_LUTWE_LOK BIT(2)
++#define RR_RFC 0xf0
++#define RR_RFC_CKEN BIT(1)
++
++#define R_UPD_P0 0x0000
++#define R_RSTB_WATCH_DOG 0x000C
++#define B_P0_RSTB_WATCH_DOG BIT(0)
++#define B_P1_RSTB_WATCH_DOG BIT(1)
++#define B_UPD_P0_EN BIT(30)
++#define R_ANAPAR_PW15 0x030C
++#define B_ANAPAR_PW15 GENMASK(31, 24)
++#define B_ANAPAR_PW15_H GENMASK(27, 24)
++#define R_ANAPAR 0x032C
++#define B_ANAPAR_15 GENMASK(31, 16)
++#define B_ANAPAR_ADCCLK BIT(30)
++#define B_ANAPAR_FLTRST BIT(22)
++#define B_ANAPAR_CRXBB GENMASK(18, 16)
++#define B_ANAPAR_14 GENMASK(15, 0)
++#define R_UPD_CLK_ADC 0x0700
++#define B_UPD_CLK_ADC_ON BIT(24)
++#define B_UPD_CLK_ADC_VAL GENMASK(26, 25)
++#define R_RSTB_ASYNC 0x0704
++#define B_RSTB_ASYNC_ALL BIT(1)
++#define R_PMAC_GNT 0x0980
++#define B_PMAC_GNT_P1 GENMASK(20, 17)
++#define B_PMAC_GNT_P2 GENMASK(29, 16)
++#define R_CCX 0x0C00
++#define B_CCX_EDCCA_OPT_MSK GENMASK(6, 4)
++#define B_MEASUREMENT_TRIG_MSK BIT(2)
++#define B_CCX_TRIG_OPT_MSK BIT(1)
++#define B_CCX_EN_MSK BIT(0)
++#define R_IFS_COUNTER 0x0C28
++#define B_IFS_CLM_PERIOD_MSK GENMASK(31, 16)
++#define B_IFS_CLM_COUNTER_UNIT_MSK GENMASK(15, 14)
++#define B_IFS_COUNTER_CLR_MSK BIT(13)
++#define B_IFS_COLLECT_EN BIT(12)
++#define R_IFS_T1 0x0C2C
++#define B_IFS_T1_TH_HIGH_MSK GENMASK(31, 16)
++#define B_IFS_T1_EN_MSK BIT(15)
++#define B_IFS_T1_TH_LOW_MSK GENMASK(14, 0)
++#define R_IFS_T2 0x0C30
++#define B_IFS_T2_TH_HIGH_MSK GENMASK(31, 16)
++#define B_IFS_T2_EN_MSK BIT(15)
++#define B_IFS_T2_TH_LOW_MSK GENMASK(14, 0)
++#define R_IFS_T3 0x0C34
++#define B_IFS_T3_TH_HIGH_MSK GENMASK(31, 16)
++#define B_IFS_T3_EN_MSK BIT(15)
++#define B_IFS_T3_TH_LOW_MSK GENMASK(14, 0)
++#define R_IFS_T4 0x0C38
++#define B_IFS_T4_TH_HIGH_MSK GENMASK(31, 16)
++#define B_IFS_T4_EN_MSK BIT(15)
++#define B_IFS_T4_TH_LOW_MSK GENMASK(14, 0)
++#define R_IOQ_IQK_DPK 0x0C60
++#define B_IOQ_IQK_DPK_EN BIT(1)
++#define R_P0_EN_SOUND_WO_NDP 0x0D7C
++#define B_P0_EN_SOUND_WO_NDP BIT(1)
++#define R_SPOOF_ASYNC_RST 0x0D84
++#define B_SPOOF_ASYNC_RST BIT(15)
++#define R_BRK_ASYNC_RST_EN_1 0x0DC0
++#define R_BRK_ASYNC_RST_EN_2 0x0DC4
++#define R_BRK_ASYNC_RST_EN_3 0x0DC8
++#define R_TXAGC_TP 0x1C04
++#define B_TXAGC_TP GENMASK(2, 0)
++#define R_TXAGC_BB 0x1C60
++#define R_P0_RXCK 0x12A0
++#define B_P0_RXCK_VAL GENMASK(18, 16)
++#define B_P0_RXCK_ON BIT(19)
++#define B_P0_RXCK_BW3 BIT(30)
++#define R_P0_NRBW 0x12B8
++#define B_P0_NRBW_DBG BIT(30)
++#define R_S0_RXDC 0x12D4
++#define B_S0_RXDC_I GENMASK(25, 16)
++#define B_S0_RXDC_Q GENMASK(31, 26)
++#define R_S0_RXDC2 0x12D8
++#define B_S0_RXDC2_SEL GENMASK(9, 8)
++#define B_S0_RXDC2_AVG GENMASK(7, 6)
++#define B_S0_RXDC2_MEN GENMASK(5, 4)
++#define B_S0_RXDC2_Q2 GENMASK(3, 0)
++#define R_CFO_COMP_SEG0_L 0x1384
++#define R_CFO_COMP_SEG0_H 0x1388
++#define R_CFO_COMP_SEG0_CTRL 0x138C
++#define R_DBG32_D 0x1730
++#define R_IFS_CLM_TX_CNT 0x1ACC
++#define B_IFS_CLM_EDCCA_EXCLUDE_CCA_FA_MSK GENMASK(31, 16)
++#define B_IFS_CLM_TX_CNT_MSK GENMASK(15, 0)
++#define R_IFS_CLM_CCA 0x1AD0
++#define B_IFS_CLM_OFDMCCA_EXCLUDE_FA_MSK GENMASK(31, 16)
++#define B_IFS_CLM_CCKCCA_EXCLUDE_FA_MSK GENMASK(15, 0)
++#define R_IFS_CLM_FA 0x1AD4
++#define B_IFS_CLM_OFDM_FA_MSK GENMASK(31, 16)
++#define B_IFS_CLM_CCK_FA_MSK GENMASK(15, 0)
++#define R_IFS_HIS 0x1AD8
++#define B_IFS_T4_HIS_MSK GENMASK(31, 24)
++#define B_IFS_T3_HIS_MSK GENMASK(23, 16)
++#define B_IFS_T2_HIS_MSK GENMASK(15, 8)
++#define B_IFS_T1_HIS_MSK GENMASK(7, 0)
++#define R_IFS_AVG_L 0x1ADC
++#define B_IFS_T2_AVG_MSK GENMASK(31, 16)
++#define B_IFS_T1_AVG_MSK GENMASK(15, 0)
++#define R_IFS_AVG_H 0x1AE0
++#define B_IFS_T4_AVG_MSK GENMASK(31, 16)
++#define B_IFS_T3_AVG_MSK GENMASK(15, 0)
++#define R_IFS_CCA_L 0x1AE4
++#define B_IFS_T2_CCA_MSK GENMASK(31, 16)
++#define B_IFS_T1_CCA_MSK GENMASK(15, 0)
++#define R_IFS_CCA_H 0x1AE8
++#define B_IFS_T4_CCA_MSK GENMASK(31, 16)
++#define B_IFS_T3_CCA_MSK GENMASK(15, 0)
++#define R_IFSCNT 0x1AEC
++#define B_IFSCNT_DONE_MSK BIT(16)
++#define B_IFSCNT_TOTAL_CNT_MSK GENMASK(15, 0)
++#define R_S0_ADDCK 0x1E00
++#define B_S0_ADDCK_I GENMASK(9, 0)
++#define B_S0_ADDCK_Q GENMASK(19, 10)
++#define R_ADC_FIFO 0x20fc
++#define B_ADC_FIFO_RST GENMASK(31, 24)
++#define R_TXFIR0 0x2300
++#define B_TXFIR_C01 GENMASK(23, 0)
++#define R_TXFIR2 0x2304
++#define B_TXFIR_C23 GENMASK(23, 0)
++#define R_TXFIR4 0x2308
++#define B_TXFIR_C45 GENMASK(23, 0)
++#define R_TXFIR6 0x230c
++#define B_TXFIR_C67 GENMASK(23, 0)
++#define R_TXFIR8 0x2310
++#define B_TXFIR_C89 GENMASK(23, 0)
++#define R_TXFIRA 0x2314
++#define B_TXFIR_CAB GENMASK(23, 0)
++#define R_TXFIRC 0x2318
++#define B_TXFIR_CCD GENMASK(23, 0)
++#define R_TXFIRE 0x231c
++#define B_TXFIR_CEF GENMASK(23, 0)
++#define R_RXCCA 0x2344
++#define B_RXCCA_DIS BIT(31)
++#define R_RXSC 0x237C
++#define B_RXSC_EN BIT(0)
++#define R_RXSCOBC 0x23B0
++#define B_RXSCOBC_TH GENMASK(18, 0)
++#define R_RXSCOCCK 0x23B4
++#define B_RXSCOCCK_TH GENMASK(18, 0)
++#define R_P1_EN_SOUND_WO_NDP 0x2D7C
++#define B_P1_EN_SOUND_WO_NDP BIT(1)
++#define R_P1_DBGMOD 0x32B8
++#define B_P1_DBGMOD_ON BIT(30)
++#define R_S1_RXDC 0x32D4
++#define B_S1_RXDC_I GENMASK(25, 16)
++#define B_S1_RXDC_Q GENMASK(31, 26)
++#define R_S1_RXDC2 0x32D8
++#define B_S1_RXDC2_EN GENMASK(5, 4)
++#define B_S1_RXDC2_SEL GENMASK(9, 8)
++#define B_S1_RXDC2_Q2 GENMASK(3, 0)
++#define R_S1_ADDCK 0x3E00
++#define B_S1_ADDCK_I GENMASK(9, 0)
++#define B_S1_ADDCK_Q GENMASK(19, 10)
++#define R_SEG0CSI 0x42AC
++#define B_SEG0CSI_IDX GENMASK(10, 0)
++#define R_SEG0CSI_EN 0x42C4
++#define B_SEG0CSI_EN BIT(23)
++#define R_BSS_CLR_MAP 0x43ac
++#define B_BSS_CLR_MAP_VLD0 BIT(28)
++#define B_BSS_CLR_MAP_TGT GENMASK(27, 22)
++#define B_BSS_CLR_MAP_STAID GENMASK(21, 11)
++#define R_BANDEDGE 0x4498
++#define B_BANDEDGE_EN BIT(30)
++#define R_PATH0_IB_PKPW 0x4628
++#define B_PATH0_IB_PKPW_MSK GENMASK(11, 6)
++#define R_PATH0_LNA_ERR1 0x462C
++#define B_PATH0_LNA_ERR_G1_A_MSK GENMASK(29, 24)
++#define B_PATH0_LNA_ERR_G0_G_MSK GENMASK(17, 12)
++#define B_PATH0_LNA_ERR_G0_A_MSK GENMASK(11, 6)
++#define R_PATH0_LNA_ERR2 0x4630
++#define B_PATH0_LNA_ERR_G2_G_MSK GENMASK(23, 18)
++#define B_PATH0_LNA_ERR_G2_A_MSK GENMASK(17, 12)
++#define B_PATH0_LNA_ERR_G1_G_MSK GENMASK(5, 0)
++#define R_PATH0_LNA_ERR3 0x4634
++#define B_PATH0_LNA_ERR_G4_G_MSK GENMASK(29, 24)
++#define B_PATH0_LNA_ERR_G4_A_MSK GENMASK(23, 18)
++#define B_PATH0_LNA_ERR_G3_G_MSK GENMASK(11, 6)
++#define B_PATH0_LNA_ERR_G3_A_MSK GENMASK(5, 0)
++#define R_PATH0_LNA_ERR4 0x4638
++#define B_PATH0_LNA_ERR_G6_A_MSK GENMASK(29, 24)
++#define B_PATH0_LNA_ERR_G5_G_MSK GENMASK(17, 12)
++#define B_PATH0_LNA_ERR_G5_A_MSK GENMASK(11, 6)
++#define R_PATH0_LNA_ERR5 0x463C
++#define B_PATH0_LNA_ERR_G6_G_MSK GENMASK(5, 0)
++#define R_PATH0_TIA_ERR_G0 0x4640
++#define B_PATH0_TIA_ERR_G0_G_MSK GENMASK(23, 18)
++#define B_PATH0_TIA_ERR_G0_A_MSK GENMASK(17, 12)
++#define R_PATH0_TIA_ERR_G1 0x4644
++#define B_PATH0_TIA_ERR_G1_SEL GENMASK(31, 30)
++#define B_PATH0_TIA_ERR_G1_G_MSK GENMASK(11, 6)
++#define B_PATH0_TIA_ERR_G1_A_MSK GENMASK(5, 0)
++#define R_PATH0_IB_PBK 0x4650
++#define B_PATH0_IB_PBK_MSK GENMASK(14, 10)
++#define R_PATH0_RXB_INIT 0x4658
++#define B_PATH0_RXB_INIT_IDX_MSK GENMASK(9, 5)
++#define R_PATH0_LNA_INIT 0x4668
++#define B_PATH0_LNA_INIT_IDX_MSK GENMASK(26, 24)
++#define R_PATH0_BTG 0x466C
++#define B_PATH0_BTG_SHEN GENMASK(18, 17)
++#define R_PATH0_TIA_INIT 0x4674
++#define B_PATH0_TIA_INIT_IDX_MSK BIT(17)
++#define R_PATH0_P20_FOLLOW_BY_PAGCUGC 0x46A0
++#define B_PATH0_P20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
++#define R_PATH0_S20_FOLLOW_BY_PAGCUGC 0x46A4
++#define B_PATH0_S20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
++#define R_P0_NBIIDX 0x469C
++#define B_P0_NBIIDX_VAL GENMASK(11, 0)
++#define B_P0_NBIIDX_NOTCH_EN BIT(12)
++#define R_P1_MODE 0x4718
++#define B_P1_MODE_SEL GENMASK(31, 30)
++#define R_PATH1_LNA_INIT 0x473C
++#define B_PATH1_LNA_INIT_IDX_MSK GENMASK(26, 24)
++#define R_PATH1_TIA_INIT 0x4748
++#define B_PATH1_TIA_INIT_IDX_MSK BIT(17)
++#define R_PATH1_BTG 0x4740
++#define B_PATH1_BTG_SHEN GENMASK(18, 17)
++#define R_PATH1_RXB_INIT 0x472C
++#define B_PATH1_RXB_INIT_IDX_MSK GENMASK(9, 5)
++#define R_PATH1_P20_FOLLOW_BY_PAGCUGC 0x4774
++#define B_PATH1_P20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
++#define R_PATH1_S20_FOLLOW_BY_PAGCUGC 0x4778
++#define B_PATH1_S20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
++#define R_P1_NBIIDX 0x4770
++#define B_P1_NBIIDX_VAL GENMASK(11, 0)
++#define B_P1_NBIIDX_NOTCH_EN BIT(12)
++#define R_SEG0R_PD 0x481C
++#define B_SEG0R_PD_SPATIAL_REUSE_EN_MSK BIT(29)
++#define B_SEG0R_PD_LOWER_BOUND_MSK GENMASK(10, 6)
++#define R_2P4G_BAND 0x4970
++#define B_2P4G_BAND_SEL BIT(1)
++#define R_FC0_BW 0x4974
++#define B_FC0_BW_INV GENMASK(6, 0)
++#define B_FC0_BW_SET GENMASK(31, 30)
++#define R_CHBW_MOD 0x4978
++#define B_CHBW_MOD_PRICH GENMASK(11, 8)
++#define B_CHBW_MOD_SBW GENMASK(13, 12)
++#define R_CFO_COMP_SEG1_L 0x5384
++#define R_CFO_COMP_SEG1_H 0x5388
++#define R_CFO_COMP_SEG1_CTRL 0x538C
++#define B_CFO_COMP_VALID_BIT BIT(29)
++#define B_CFO_COMP_WEIGHT_MSK GENMASK(27, 24)
++#define B_CFO_COMP_VAL_MSK GENMASK(11, 0)
++#define R_P0_TMETER 0x5810
++#define B_P0_TMETER GENMASK(15, 10)
++#define B_P0_TMETER_DIS BIT(16)
++#define B_P0_TMETER_TRK BIT(24)
++#define R_P0_TSSI_TRK 0x5818
++#define B_P0_TSSI_TRK_EN BIT(30)
++#define R_P0_RFCTM 0x5864
++#define B_P0_RFCTM_VAL GENMASK(25, 20)
++#define R_P0_RFCTM_RDY BIT(26)
++#define R_P0_TXDPD 0x58D4
++#define B_P0_TXDPD GENMASK(31, 28)
++#define R_P0_TXPW_RSTB 0x58DC
++#define B_P0_TXPW_RSTB_MANON BIT(30)
++#define R_P0_TSSI_BASE 0x5C00
++#define R_S0_DACKI 0x5E00
++#define B_S0_DACKI_AR GENMASK(31, 28)
++#define B_S0_DACKI_EN BIT(3)
++#define R_S0_DACKI2 0x5E30
++#define B_S0_DACKI2_K GENMASK(21, 12)
++#define R_S0_DACKI7 0x5E44
++#define B_S0_DACKI7_K GENMASK(15, 8)
++#define R_S0_DACKI8 0x5E48
++#define B_S0_DACKI8_K GENMASK(15, 8)
++#define R_S0_DACKQ 0x5E50
++#define B_S0_DACKQ_AR GENMASK(31, 28)
++#define B_S0_DACKQ_EN BIT(3)
++#define R_S0_DACKQ2 0x5E80
++#define B_S0_DACKQ2_K GENMASK(21, 12)
++#define R_S0_DACKQ7 0x5E94
++#define B_S0_DACKQ7_K GENMASK(15, 8)
++#define R_S0_DACKQ8 0x5E98
++#define B_S0_DACKQ8_K GENMASK(15, 8)
++#define R_P1_TMETER 0x7810
++#define B_P1_TMETER GENMASK(15, 10)
++#define B_P1_TMETER_DIS BIT(16)
++#define B_P1_TMETER_TRK BIT(24)
++#define R_P1_TSSI_TRK 0x7818
++#define B_P1_TSSI_TRK_EN BIT(30)
++#define R_P1_RFCTM 0x7864
++#define R_P1_RFCTM_RDY BIT(26)
++#define B_P1_RFCTM_VAL GENMASK(25, 20)
++#define R_P1_TXPW_RSTB 0x78DC
++#define B_P1_TXPW_RSTB_MANON BIT(30)
++#define R_TSSI_THOF 0x7C00
++#define R_S1_DACKI 0x7E00
++#define B_S1_DACKI_AR GENMASK(31, 28)
++#define B_S1_DACKI_EN BIT(3)
++#define R_S1_DACKI2 0x7E30
++#define B_S1_DACKI2_K GENMASK(21, 12)
++#define R_S1_DACKI7 0x7E44
++#define B_S1_DACKI_K GENMASK(15, 8)
++#define R_S1_DACKI8 0x7E48
++#define B_S1_DACKI8_K GENMASK(15, 8)
++#define R_S1_DACKQ 0x7E50
++#define B_S1_DACKQ_AR GENMASK(31, 28)
++#define B_S1_DACKQ_EN BIT(3)
++#define R_S1_DACKQ2 0x7E80
++#define B_S1_DACKQ2_K GENMASK(21, 12)
++#define R_S1_DACKQ7 0x7E94
++#define B_S1_DACKQ7_K GENMASK(15, 8)
++#define R_S1_DACKQ8 0x7E98
++#define B_S1_DACKQ8_K GENMASK(15, 8)
++#define R_NCTL_CFG 0x8000
++#define B_NCTL_CFG_SPAGE GENMASK(2, 1)
++#define R_NCTL_RPT 0x8008
++#define B_NCTL_RPT_FLG BIT(26)
++#define R_NCTL_N1 0x8010
++#define B_NCTL_N1_CIP GENMASK(7, 0)
++#define R_NCTL_N2 0x8014
++#define R_IQK_COM 0x8018
++#define R_IQK_DIF 0x801C
++#define B_IQK_DIF_TRX GENMASK(1, 0)
++#define R_IQK_DIF1 0x8020
++#define B_IQK_DIF1_TXPI GENMASK(19, 0)
++#define R_IQK_DIF2 0x8024
++#define B_IQK_DIF2_RXPI GENMASK(19, 0)
++#define R_IQK_DIF4 0x802C
++#define B_IQK_DIF4_TXT GENMASK(11, 0)
++#define B_IQK_DIF4_RXT GENMASK(27, 16)
++#define R_IQK_CFG 0x8034
++#define B_IQK_CFG_SET GENMASK(5, 4)
++#define R_TPG_MOD 0x806C
++#define B_TPG_MOD_F GENMASK(2, 1)
++#define R_MDPK_SYNC 0x8070
++#define B_MDPK_SYNC_SEL BIT(31)
++#define B_MDPK_SYNC_MAN GENMASK(31, 28)
++#define R_MDPK_RX_DCK 0x8074
++#define R_NCTL_RW 0x8080
++#define R_KIP_SYSCFG 0x8088
++#define R_KIP_CLK 0x808C
++#define R_LDL_NORM 0x80A0
++#define B_LDL_NORM_PN GENMASK(12, 8)
++#define B_LDL_NORM_OP GENMASK(1, 0)
++#define R_DPK_CTL 0x80B0
++#define B_DPK_CTL_EN BIT(28)
++#define R_DPK_CFG 0x80B8
++#define B_DPK_CFG_IDX GENMASK(14, 12)
++#define R_DPK_CFG2 0x80BC
++#define B_DPK_CFG2_ST BIT(14)
++#define R_DPK_CFG3 0x80C0
++#define R_KPATH_CFG 0x80D0
++#define R_KIP_RPT1 0x80D4
++#define B_KIP_RPT1_SEL GENMASK(21, 16)
++#define R_SRAM_IQRX 0x80D8
++#define R_GAPK 0x80E0
++#define B_GAPK_ADR BIT(0)
++#define R_SRAM_IQRX2 0x80E8
++#define R_DPK_TRK 0x80f0
++#define B_DPK_TRK_DIS BIT(31)
++#define R_RPT_COM 0x80FC
++#define B_PRT_COM_SYNERR BIT(30)
++#define B_PRT_COM_DCI GENMASK(27, 16)
++#define B_PRT_COM_CORV GENMASK(15, 8)
++#define B_PRT_COM_DCQ GENMASK(11, 0)
++#define B_PRT_COM_GL GENMASK(7, 4)
++#define B_PRT_COM_CORI GENMASK(7, 0)
++#define R_COEF_SEL 0x8104
++#define B_COEF_SEL_IQC BIT(0)
++#define B_COEF_SEL_MDPD BIT(8)
++#define R_CFIR_SYS 0x8120
++#define R_IQK_RES 0x8124
++#define B_IQK_RES_TXCFIR GENMASK(11, 8)
++#define B_IQK_RES_RXCFIR GENMASK(3, 0)
++#define R_TXIQC 0x8138
++#define R_RXIQC 0x813c
++#define B_RXIQC_BYPASS BIT(0)
++#define B_RXIQC_BYPASS2 BIT(2)
++#define B_RXIQC_NEWP GENMASK(19, 8)
++#define B_RXIQC_NEWX GENMASK(31, 20)
++#define R_KIP 0x8140
++#define B_KIP_DBCC BIT(0)
++#define B_KIP_RFGAIN BIT(8)
++#define R_RFGAIN 0x8144
++#define B_RFGAIN_PAD GENMASK(4, 0)
++#define B_RFGAIN_TXBB GENMASK(12, 8)
++#define R_RFGAIN_BND 0x8148
++#define B_RFGAIN_BND GENMASK(4, 0)
++#define R_CFIR_MAP 0x8150
++#define R_CFIR_LUT 0x8154
++#define B_CFIR_LUT_SEL BIT(8)
++#define B_CFIR_LUT_G3 BIT(3)
++#define B_CFIR_LUT_G2 BIT(2)
++#define B_CFIR_LUT_GP GENMASK(1, 0)
++#define R_DPD_V1 0x81a0
++#define R_DPD_CH0 0x81AC
++#define R_DPD_BND 0x81B4
++#define R_DPD_CH0A 0x81BC
++#define R_TXAGC_RFK 0x81C4
++#define B_TXAGC_RFK_CH0 GENMASK(5, 0)
++#define R_KIP_IQP 0x81CC
++#define B_KIP_IQP_IQSW GENMASK(5, 0)
++#define R_KIP_RPT 0x81D4
++#define B_KIP_RPT_SEL GENMASK(21, 16)
++#define R_W_COEF 0x81D8
++#define R_LOAD_COEF 0x81DC
++#define B_LOAD_COEF_MDPD BIT(16)
++#define B_LOAD_COEF_CFIR GENMASK(1, 0)
++#define B_LOAD_COEF_AUTO BIT(0)
++#define R_RPT_PER 0x81FC
++#define R_RXCFIR_P0C0 0x8D40
++#define R_RXCFIR_P0C1 0x8D84
++#define R_RXCFIR_P0C2 0x8DC8
++#define R_RXCFIR_P0C3 0x8E0C
++#define R_TXCFIR_P0C0 0x8F50
++#define R_TXCFIR_P0C1 0x8F84
++#define R_TXCFIR_P0C2 0x8FB8
++#define R_TXCFIR_P0C3 0x8FEC
++#define R_RXCFIR_P1C0 0x9140
++#define R_RXCFIR_P1C1 0x9184
++#define R_RXCFIR_P1C2 0x91C8
++#define R_RXCFIR_P1C3 0x920C
++#define R_TXCFIR_P1C0 0x9350
++#define R_TXCFIR_P1C1 0x9384
++#define R_TXCFIR_P1C2 0x93B8
++#define R_TXCFIR_P1C3 0x93EC
++#define R_IQKINF 0x9FE0
++#define B_IQKINF_VER GENMASK(31, 24)
++#define B_IQKINF_FAIL_RXGRP GENMASK(23, 16)
++#define B_IQKINF_FAIL_TXGRP GENMASK(15, 8)
++#define B_IQKINF_FAIL GENMASK(3, 0)
++#define B_IQKINF_F_RX BIT(3)
++#define B_IQKINF_FTX BIT(2)
++#define B_IQKINF_FFIN BIT(1)
++#define B_IQKINF_FCOR BIT(0)
++#define R_IQKCH 0x9FE4
++#define B_IQKCH_CH GENMASK(15, 8)
++#define B_IQKCH_BW GENMASK(7, 4)
++#define B_IQKCH_BAND GENMASK(3, 0)
++#define R_IQKINF2 0x9FE8
++#define B_IQKINF2_FCNT GENMASK(23, 16)
++#define B_IQKINF2_KCNT GENMASK(15, 8)
++#define B_IQKINF2_NCTLV GENMAKS(7, 0)
 +#endif
 -- 
 2.21.0
