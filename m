@@ -7,94 +7,101 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3005CC433DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E05CC433DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:27:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E82F064D9E
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:27:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4053B64D9E
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229973AbhAaUYo (ORCPT
+        id S231403AbhAaU10 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 31 Jan 2021 15:24:44 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:43164 "EHLO
+        Sun, 31 Jan 2021 15:27:26 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:43182 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231982AbhAaUKr (ORCPT
+        with ESMTP id S232116AbhAaUYL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Jan 2021 15:10:47 -0500
+        Sun, 31 Jan 2021 15:24:11 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l6HMZ-0041H2-Mf; Sun, 31 Jan 2021 20:22:20 +0200
+        id 1l6HMW-0041H2-2J; Sun, 31 Jan 2021 20:22:16 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 31 Jan 2021 20:22:07 +0200
-Message-Id: <iwlwifi.20210131201908.c9d35b7d8748.I4e4cf61d8fa6ff91d9b0cab2b1ec9ede4be346f5@changeid>
+Date:   Sun, 31 Jan 2021 20:22:02 +0200
+Message-Id: <iwlwifi.20210131201907.fa62d6770dd1.I5b2ea2e5316ebed94ed77ff0a31d78a9672e4016@changeid>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210131182212.929755-1-luca@coelho.fi>
 References: <20210131182212.929755-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/12] iwlwifi: mvm: implement approved list for the PPAG feature
+Subject: [PATCH 02/12] iwlwifi: mvm: add triggers for MLME events
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-We should only allow PPAG to be enabled by OEMs that are in the
-approved list.  In order to do this, we need to compare the system
-vendor string retrieved from SMBIOS to a list maintained in the
-driver.  If the vendor string is not in the list, we don't allow PPAG
-to be used.
+For debug we add auth/assoc failed event and disconnect event.
 
-For now the list is empty, but entries will be added to it
-individually, in subsequent patches.
-
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 33 +++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 9f8751ceb45b..e29f2d310fb6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -6,6 +6,7 @@
-  */
- #include <net/mac80211.h>
- #include <linux/netdevice.h>
-+#include <linux/dmi.h>
- 
- #include "iwl-trans.h"
- #include "iwl-op-mode.h"
-@@ -1043,6 +1044,9 @@ int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
- 	return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index a529404d416c..ec43601d410a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4988,6 +4988,34 @@ static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
+ 	mutex_unlock(&mvm->mutex);
  }
  
-+static const struct dmi_system_id dmi_ppag_approved_list[] = {
-+};
-+
- static int iwl_mvm_ppag_init(struct iwl_mvm *mvm)
- {
- 	int ret;
-@@ -1054,6 +1058,15 @@ static int iwl_mvm_ppag_init(struct iwl_mvm *mvm)
- 				ret);
- 		return 0;
- 	}
-+
-+	if (!dmi_check_system(dmi_ppag_approved_list)) {
-+		IWL_DEBUG_RADIO(mvm,
-+				"System vendor '%s' is not in the approved list, disabling PPAG.\n",
-+				dmi_get_system_info(DMI_SYS_VENDOR));
-+		mvm->fwrt.ppag_table.v1.enabled = cpu_to_le32(0);
-+		return 0;
++static void iwl_mvm_event_mlme_callback_ini(struct iwl_mvm *mvm,
++					    struct ieee80211_vif *vif,
++					    const  struct ieee80211_mlme_event *mlme)
++{
++	if (mlme->data == ASSOC_EVENT && (mlme->status == MLME_DENIED ||
++					  mlme->status == MLME_TIMEOUT)) {
++		iwl_dbg_tlv_time_point(&mvm->fwrt,
++				       IWL_FW_INI_TIME_POINT_ASSOC_FAILED,
++				       NULL);
++		return;
 +	}
 +
- 	return iwl_mvm_ppag_send_cmd(mvm);
- }
++	if (mlme->data == AUTH_EVENT && (mlme->status == MLME_DENIED ||
++					 mlme->status == MLME_TIMEOUT)) {
++		iwl_dbg_tlv_time_point(&mvm->fwrt,
++				       IWL_FW_INI_TIME_POINT_EAPOL_FAILED,
++				       NULL);
++		return;
++	}
++
++	if (mlme->data == DEAUTH_RX_EVENT || mlme->data == DEAUTH_TX_EVENT) {
++		iwl_dbg_tlv_time_point(&mvm->fwrt,
++				       IWL_FW_INI_TIME_POINT_DEASSOC,
++				       NULL);
++		return;
++	}
++}
++
+ static void iwl_mvm_event_mlme_callback(struct iwl_mvm *mvm,
+ 					struct ieee80211_vif *vif,
+ 					const struct ieee80211_event *event)
+@@ -5002,6 +5030,11 @@ static void iwl_mvm_event_mlme_callback(struct iwl_mvm *mvm,
+ 	struct iwl_fw_dbg_trigger_tlv *trig;
+ 	struct iwl_fw_dbg_trigger_mlme *trig_mlme;
  
++	if (iwl_trans_dbg_ini_valid(mvm->trans)) {
++		iwl_mvm_event_mlme_callback_ini(mvm, vif, &event->u.mlme);
++		return;
++	}
++
+ 	trig = iwl_fw_dbg_trigger_on(&mvm->fwrt, ieee80211_vif_to_wdev(vif),
+ 				     FW_DBG_TRIGGER_MLME);
+ 	if (!trig)
 -- 
 2.29.2
 
