@@ -2,71 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF182C433E0
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFA3C433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:26:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FBA160233
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:11:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 844DD64E11
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:26:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231946AbhAaULN (ORCPT
+        id S231261AbhAaUYt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 31 Jan 2021 15:11:13 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:43162 "EHLO
+        Sun, 31 Jan 2021 15:24:49 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:43182 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230248AbhAaUJF (ORCPT
+        with ESMTP id S232081AbhAaUVg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Jan 2021 15:09:05 -0500
+        Sun, 31 Jan 2021 15:21:36 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l6HMa-0041H2-EO; Sun, 31 Jan 2021 20:22:20 +0200
+        id 1l6HMU-0041H2-DT; Sun, 31 Jan 2021 20:22:15 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 31 Jan 2021 20:22:08 +0200
-Message-Id: <iwlwifi.20210131201908.41e9812977b9.If19d9a47d0070465a4c1349fcb123db32aee85f7@changeid>
+Date:   Sun, 31 Jan 2021 20:22:00 +0200
+Message-Id: <20210131182212.929755-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210131182212.929755-1-luca@coelho.fi>
-References: <20210131182212.929755-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/12] iwlwifi: mvm: add HP to the PPAG approved list
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.12 2021-01-31 part 2
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-HP is now part of the OEMs in the approved list for the PPAG feature.
-Add it.
+Hi,
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Here's the fourth set of patches intended for v5.12.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e29f2d310fb6..8564f6e40c41 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1045,6 +1045,11 @@ int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
- }
- 
- static const struct dmi_system_id dmi_ppag_approved_list[] = {
-+	{ .ident = "HP",
-+	  .matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "HP"),
-+		},
-+	},
- };
- 
- static int iwl_mvm_ppag_init(struct iwl_mvm *mvm)
+The changes are:
+
+* Per Platform Antenna Gain (PPAG) fixes and improvements;
+* Bump FW API support again;
+* Improvements in the debug framework;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Luca Coelho (7):
+  iwlwifi: mvm: set enabled in the PPAG command properly
+  iwlwifi: mvm: implement approved list for the PPAG feature
+  iwlwifi: mvm: add HP to the PPAG approved list
+  iwlwifi: mvm: add Samsung to the PPAG approved list
+  iwlwifi: mvm: add Microsoft to the PPAG approved list
+  iwlwifi: mvm: add Asus to the PPAG approved list
+  iwlwifi: bump FW API to 61 for AX devices
+
+Mordechay Goodstein (5):
+  iwlwifi: mvm: add IML/ROM information for other HW families
+  iwlwifi: mvm: add triggers for MLME events
+  iwlwifi: fwrt: add suspend/resume time point
+  iwlwifi: mvm: add tx fail time point
+  iwlwifi: mvm: add debugfs entry to trigger a dump as any time-point
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/init.c  |  2 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  3 --
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 19 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 35 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 33 +++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 26 ++++++++++++--
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    | 24 ++++++++++---
+ 9 files changed, 133 insertions(+), 12 deletions(-)
+
 -- 
 2.29.2
 
