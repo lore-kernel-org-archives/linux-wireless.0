@@ -1,77 +1,114 @@
 Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.8 required=3.0 tests=BAYES_05,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,PI_HELLO,SPF_HELO_NONE,
-	SPF_PASS,TVD_SPACE_RATIO autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCA5C433DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20DEEC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 05:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D02C64E11
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 Jan 2021 20:47:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB24764E2A
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 05:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231202AbhAaUrc (ORCPT
+        id S229633AbhBAFfU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 31 Jan 2021 15:47:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55420 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbhAaUr3 (ORCPT
+        Mon, 1 Feb 2021 00:35:20 -0500
+Received: from mail-io1-f70.google.com ([209.85.166.70]:44167 "EHLO
+        mail-io1-f70.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231474AbhBAF1E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Jan 2021 15:47:29 -0500
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1D86C061573
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2021 12:46:48 -0800 (PST)
-Received: by mail-ed1-x532.google.com with SMTP id s3so2873643edi.7
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2021 12:46:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:message-id:subject:reply-to:to:date:user-agent:mime-version
-         :content-transfer-encoding;
-        bh=dvq1MPvNC+UUn6WXzOeHefYShSdkA00farn93A4MAZU=;
-        b=KCNL0/SsLW2hye1zRhxJ5HnGgiX6MIPn2zWBNm0WpAMTCj5zvEdMkANINpgMUIqKHG
-         uTfW7711dLGzxKtOG+D4gI5nsFWWOgBh+F7Zx+mTaAU9G6FDwoo4uB5yg9PMCNhaB1li
-         jEjjFaIHprot692sTBlUtbGgCV36HX6vLYhLgi3VEHj19eI4YwxvdBMWCXMfjLVktXhn
-         lyDLkuvv8aE5a3B44e4HXeuOaSnfNWTSLOtnwylYF0AocKEP/Zevj8GNCU40jT0v5Shv
-         LCN4xgxRde6OFw7fiXW0giBvwZyJ1in7jCjHEIobG/kZI3TMLrvE8KObG5DaZoOFD7zI
-         iNhQ==
+        Mon, 1 Feb 2021 00:27:04 -0500
+Received: by mail-io1-f70.google.com with SMTP id e12so10972395ioh.11
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2021 21:26:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:message-id:subject:reply-to:to:date
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=dvq1MPvNC+UUn6WXzOeHefYShSdkA00farn93A4MAZU=;
-        b=Eg2deP2eEkX1sHi44WM594uqa9s09+gUYR686xF4XwgImWyaWnNxdbJtAZbDDzut/F
-         1LRfgCKCYY/eirpziDm7LxCDY96PYctJrE3SyOjA5orLyzNTiRmyDqcEHSwgvGzmpcvX
-         1qTokXngYSXqITQH/R/sbOCJEge6Mqzi99mqRWdWPz0zhZwQWTBefNPv5TZ8hG/VYm4t
-         3DvXhzfhbRm8AK4C9ZeQMfMhxsacJ4/U7nYSRrRwrbP+WqbuhInMq6SUmvEV41M7VCcv
-         a6PjNvsEdmpD+mg2kqoPH30Ng+2u8kim25f1OWEMffWeyRgrqZNJToAEDBm1mSAGrHcp
-         ZVPA==
-X-Gm-Message-State: AOAM530W0l1/bKj+hcEzgtbMRoC2d32pnka2uYpvntpRMQAiMxB9JsHN
-        W7fTB2HhL499PQKk9HpzhyTELtvWAys=
-X-Google-Smtp-Source: ABdhPJzmElqZb4Gn4e+L7HKvqozI6wfyq1Ve6W6oZ9UP4ngTfM1mXM1RB0sMJOsXnWQZVP9R29AEYg==
-X-Received: by 2002:a05:6402:4312:: with SMTP id m18mr15748176edc.99.1612126007298;
-        Sun, 31 Jan 2021 12:46:47 -0800 (PST)
-Received: from [192.168.100.54] (mm-58-44-120-178.brest.dynamic.pppoe.byfly.by. [178.120.44.58])
-        by smtp.gmail.com with ESMTPSA id u16sm6948609ejn.117.2021.01.31.12.46.45
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 31 Jan 2021 12:46:46 -0800 (PST)
-From:   Artur Sinila <logarithmus.dev@gmail.com>
-X-Google-Original-From: Artur Sinila <opensource@logarithmus.dev>
-Message-ID: <b7200bf4d9c10c1968ac87e9fb84e9cd97ebcac5.camel@logarithmus.dev>
-Subject: Hello there
-Reply-To: opensource@logarithmus.dev
-To:     linux-wireless@vger.kernel.org
-Date:   Sun, 31 Jan 2021 23:46:44 +0300
-Content-Type: text/plain
-User-Agent: Evolution 3.38.0 
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=mOuteIF8UAPooau0D/cZWl4oFDJw4SLqefC73M8pDiU=;
+        b=pVgQd+I5Ppiae9O1rKCl6OKyeLbMojQR1Qn2ZKkfgdtBwD5D0X3tq+Cz1Pa4tqkz8F
+         v73sySwBnJFqL4eVzvYvNP+i3qFVl86s9X+d8luFSm+XAyz7IGCmiqmPfvn8aGW3yvl0
+         UzFdPNyXZVqwiM9oMABXmI7BCalSDXWaqn8qRTn7YafE+9VzuYb3loQ0G1AuGn4Gcs5O
+         UR7Lf++wx6jLzwFRXWdIBv1b1TM80sQiSN9gNUac7nLemhFpT0tNzQ+UkTDpGEgnAUFn
+         b4its+Uup3X9ZfmSHViEl1BSMm6p0SLazlKjCCGPZ67Aw+fFjsHj1X031XUWfxuWRcKC
+         Y33A==
+X-Gm-Message-State: AOAM530jjeS+0jNWPtBL7BSHIfGQyHyARNhVCykm51KquA03Tpd0vT+z
+        Pu5UiO5RGdqYlkC8FaSfujSaI7vTbYo9dxwv5KvAdcQgwHd8
+X-Google-Smtp-Source: ABdhPJwk6jyJ1h9tBbtnwk+FTCU6d5MxIKAPn2mwnsIFBSnobEXOxL0CfEPiBRKPR7+Ql7b/WSh0ZSF81ahIGyPXN+HSSjs5FhII
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:1564:: with SMTP id k4mr11437262ilu.282.1612157183044;
+ Sun, 31 Jan 2021 21:26:23 -0800 (PST)
+Date:   Sun, 31 Jan 2021 21:26:23 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000037b29b05ba3f9859@google.com>
+Subject: WARNING in sta_info_insert_check
+From:   syzbot <syzbot+8dcc087eb24227ded47e@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello there!
+Hello,
 
+syzbot found the following issue on:
+
+HEAD commit:    bec4c296 Merge tag 'ecryptfs-5.11-rc6-setxattr-fix' of git..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11991778d00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f75d66d6d359ef2f
+dashboard link: https://syzkaller.appspot.com/bug?extid=8dcc087eb24227ded47e
+userspace arch: arm64
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+8dcc087eb24227ded47e@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 118 at net/mac80211/sta_info.c:547 sta_info_insert_check+0x48/0xc4 net/mac80211/sta_info.c:547
+Modules linked in:
+CPU: 0 PID: 118 Comm: kworker/u4:3 Not tainted 5.11.0-rc5-syzkaller-00239-gbec4c2968fce #0
+Hardware name: linux,dummy-virt (DT)
+Workqueue: phy6 ieee80211_iface_work
+pstate: 40400009 (nZcv daif +PAN -UAO -TCO BTYPE=--)
+pc : sta_info_insert_check+0x48/0xc4 net/mac80211/sta_info.c:547
+lr : sta_info_insert_rcu+0x34/0x90 net/mac80211/sta_info.c:725
+sp : ffff800013f3bbf0
+x29: ffff800013f3bbf0 x28: ffff8000132e4538 
+x27: f6ff00002070c998 x26: dead000000000100 
+x25: dead000000000122 x24: f6ff00002070d340 
+x23: f6ff00002070d280 x22: faff000020710800 
+x21: faff000020710df0 x20: f6ff00002070c940 
+x19: f7ff000020784000 x18: 0000000000000000 
+x17: 0000000000000000 x16: 0000000000000000 
+x15: 0000ad1062c19046 x14: f7ff000020796098 
+x13: 000000000000044b x12: f6ff00002070c940 
+x11: 000000000000000c x10: 0000000000000000 
+x9 : faff000020713b90 x8 : 0000000000000fff 
+x7 : 0000000000000000 x6 : f6ff00002070c940 
+x5 : 0000000000000fff x4 : 0000000000000000 
+x3 : 0000000000000100 x2 : 00000000ffeeffff 
+x1 : 00000000ffffffff x0 : 00000000ffeefdf7 
+Call trace:
+ sta_info_insert_check+0x48/0xc4 net/mac80211/sta_info.c:547
+ sta_info_insert_rcu+0x34/0x90 net/mac80211/sta_info.c:725
+ ieee80211_ibss_finish_sta+0x84/0x140 net/mac80211/ibss.c:592
+ ieee80211_ibss_work+0xe4/0x560 net/mac80211/ibss.c:1700
+ ieee80211_iface_work+0x2b8/0x33c net/mac80211/iface.c:1445
+ process_one_work+0x1d8/0x360 kernel/workqueue.c:2275
+ worker_thread+0x74/0x440 kernel/workqueue.c:2421
+ kthread+0x178/0x180 kernel/kthread.c:292
+ ret_from_fork+0x10/0x30 arch/arm64/kernel/entry.S:958
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
