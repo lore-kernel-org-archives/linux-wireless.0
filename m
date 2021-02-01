@@ -2,117 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A5BC433DB
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 18:24:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF4AC433E6
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 18:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4FA764EAB
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 18:24:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B05264E2C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Feb 2021 18:28:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232322AbhBASYR (ORCPT
+        id S231359AbhBAS2h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Feb 2021 13:24:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50532 "EHLO
+        Mon, 1 Feb 2021 13:28:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232507AbhBASVx (ORCPT
+        with ESMTP id S232589AbhBAS1i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Feb 2021 13:21:53 -0500
+        Mon, 1 Feb 2021 13:27:38 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F99C061573
-        for <linux-wireless@vger.kernel.org>; Mon,  1 Feb 2021 10:20:59 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38469C06174A
+        for <linux-wireless@vger.kernel.org>; Mon,  1 Feb 2021 10:26:58 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1l6dom-00EWp2-B9; Mon, 01 Feb 2021 19:20:56 +0100
+        id 1l6duY-00EWve-Dv; Mon, 01 Feb 2021 19:26:54 +0100
+Message-ID: <3b081883581161ba3c3dc91956790799e0694c1e.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/1] staging: rtl8723bs: Move wiphy setup to after
+ reading the regulatory settings from the chip
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+2ae0ca9d7737ad1a62b7@syzkaller.appspotmail.com
-Subject: [PATCH v2] cfg80211: fix netdev registration deadlock
-Date:   Mon,  1 Feb 2021 19:20:50 +0100
-Message-Id: <20210201192048.ed8bad436737.I7cae042c44b15f80919a285799a15df467e9d42d@changeid>
-X-Mailer: git-send-email 2.26.2
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc:     Ross Schmidt <ross.schm.dev@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date:   Mon, 01 Feb 2021 19:26:39 +0100
+In-Reply-To: <YBggSQVXlmEhs1v2@kroah.com> (sfid-20210201_164004_722660_B860788A)
+References: <20210201152956.370186-1-hdegoede@redhat.com>
+         <20210201152956.370186-2-hdegoede@redhat.com> <YBggSQVXlmEhs1v2@kroah.com>
+         (sfid-20210201_164004_722660_B860788A)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2021-02-01 at 16:37 +0100, Greg Kroah-Hartman wrote:
+> On Mon, Feb 01, 2021 at 04:29:56PM +0100, Hans de Goede wrote:
+> > Commit 81f153faacd0 ("staging: rtl8723bs: fix wireless regulatory API
+> > misuse") moved the wiphy_apply_custom_regulatory() call to earlier in the
+> > driver's init-sequence, so that it gets called before wiphy_register().
+> > 
+> > But at this point in time the eFuses which code the regulatory-settings
+> > for the chip have not been read by the driver yet, causing
+> > _rtw_reg_apply_flags() to set the IEEE80211_CHAN_DISABLED flag on *all*
+> > channels.
+> > 
+> > On the device where I initially tested the fix, a Jumper EZpad 7 tablet,
+> > this does not cause any problems because shortly after init the
+> > rtw_reg_notifier() gets called fixing things up. I guess this happens
+> > into response to receiving a (broadcast) packet with regulatory info
+> > from the access-point ?
+> > 
+> > But on another device with a RTL8723BS wifi chip, an Acer Switch 10E
+> > (SW3-016), the rtw_reg_notifier() never gets called. I assume that some
+> > fuse has been set on this device to ignore regulatory info received from
+> > access-points.
+> > 
+> > This means that on the Acer the driver is stuck in a state with all
+> > channels disabled, leading to non working Wifi.
+> > 
+> > We cannot move the wiphy_apply_custom_regulatory() call back, because
+> > that call must be made before the wiphy_register() call.
+> > 
+> > Instead move the entire rtw_wdev_alloc() call to after the Efuses have
+> > been read, fixing all channels being disabled in the initial channel-map.
+> > 
+> > Fixes: 81f153faacd0 ("staging: rtl8723bs: fix wireless regulatory API misuse")
+> > Cc: Johannes Berg <johannes.berg@intel.com>
+> > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> > ---
+> >  drivers/staging/rtl8723bs/os_dep/sdio_intf.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> As the problem-fix came from Johannes's tree, I have no problem with
+> this fix going in through that as well:
+> 
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-If register_netdevice() fails after having called cfg80211's
-netdev notifier (cfg80211_netdev_notifier_call) it will call
-the notifier again with UNREGISTER. This would then lock the
-wiphy mutex because we're marked as registered, which causes
-a deadlock.
+So we'll have problem-fix-fix ;-)
 
-Fix this by separately keeping track of whether or not we're
-in the middle of registering to also skip the notifier call
-on this unregister.
+Sounds good to me, I'll pick it up.
 
-Reported-by: syzbot+2ae0ca9d7737ad1a62b7@syzkaller.appspotmail.com
-Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 4 +++-
- net/wireless/core.c    | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Thanks!
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4741d71ead21..4cdd75449d73 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5299,6 +5299,8 @@ static inline void wiphy_unlock(struct wiphy *wiphy)
-  * @wiphy: pointer to hardware description
-  * @iftype: interface type
-  * @registered: is this wdev already registered with cfg80211
-+ * @registering: indicates we're doing registration under wiphy lock
-+ *	for the notifier
-  * @list: (private) Used to collect the interfaces
-  * @netdev: (private) Used to reference back to the netdev, may be %NULL
-  * @identifier: (private) Identifier used in nl80211 to identify this
-@@ -5382,7 +5384,7 @@ struct wireless_dev {
- 
- 	struct mutex mtx;
- 
--	bool use_4addr, is_running, registered;
-+	bool use_4addr, is_running, registered, registering;
- 
- 	u8 address[ETH_ALEN] __aligned(sizeof(u16));
- 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 18f9a5c214b5..a2785379df6e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1346,6 +1346,7 @@ int cfg80211_register_netdevice(struct net_device *dev)
- 
- 	/* we'll take care of this */
- 	wdev->registered = true;
-+	wdev->registering = true;
- 	ret = register_netdevice(dev);
- 	if (ret)
- 		goto out;
-@@ -1361,6 +1362,7 @@ int cfg80211_register_netdevice(struct net_device *dev)
- 	cfg80211_register_wdev(rdev, wdev);
- 	ret = 0;
- out:
-+	wdev->registering = false;
- 	if (ret)
- 		wdev->registered = false;
- 	return ret;
-@@ -1403,7 +1405,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		 * It is possible to get NETDEV_UNREGISTER multiple times,
- 		 * so check wdev->registered.
- 		 */
--		if (wdev->registered) {
-+		if (wdev->registered && !wdev->registering) {
- 			wiphy_lock(&rdev->wiphy);
- 			_cfg80211_unregister_wdev(wdev, false);
- 			wiphy_unlock(&rdev->wiphy);
--- 
-2.26.2
+johannes
 
