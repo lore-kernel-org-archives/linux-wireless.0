@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29D1C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 261A7C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A1C664E9C
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D30EE64E9C
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235565AbhBBPwv (ORCPT
+        id S235830AbhBBPwx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:52:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37236 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:52:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39460 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235084AbhBBPMr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:12:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8B1FD64F84;
-        Tue,  2 Feb 2021 15:07:04 +0000 (UTC)
+        id S235019AbhBBPM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:12:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CAFDC64F87;
+        Tue,  2 Feb 2021 15:07:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278425;
-        bh=CTrKFKFw9wzgKDGrZqscRZtG58ni4CENVIvrkbvqplU=;
+        s=k20201202; t=1612278421;
+        bh=FCPfVnRG2CO+xF685n4LNuumA9F5bRF7rvJBReS7buY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MgO/Sd3SyaZcIM8g3mMifszoy4nnRNWo7IfLdFtCr+X4RVm3E2BMrXaWFstVsLEXn
-         CVLEJP7WFHF5AuR+kSA1kcaKOwCdaShxXpBxmCpXBbszvKt8MR7MRxZwLze6NX7qLW
-         rYUKn+0nNTx5oqAZ/kOe2ZyiDt2L3j80NqPYQfMSdgv1HJEUkHljKiQgaCYEb0OtSW
-         ruqwDBStEbR+RxhLI2LNKPrGNt6SorBqrugmFUYECs9YyV9VONW/diWHE5NVpFMBQX
-         A+7lWiA0OIy6cAtUgJzKsLP0MFcU2OJ0a6rQtANco8zvk4jK64ibF4he2ksWBNbZD1
-         je6TR/3OLTrUw==
+        b=uOK3CcDA42LBBmhoTX36Zn6rPC6gfYnMJztPb8izS2WEfsrW1pQxSMnh/B7cZVq9o
+         7TQppx9g4G+z5PzDk+gtFFY5qrjW4hMwWjbyrrG6xQ5GblAc3vbBPPBRm1sxt+aT0N
+         GfLcxngYRx9Iz8tfS3maakj2HA4vT4CKxfmcFt/T0Ud5NTGSuGg3Dx2Tct1Qbx1eyC
+         bASWeVug4WUmSaKn5E0p+uES3/UhBcSflLr1tyt/TByyfs40PYUzGc593MXCGGKaqC
+         8KAnfMWZqNWOXRkzwMeb3sdymVkr34ie6FgdR+QP0MJl6u8WfbS1CrlICMUh01Kysj
+         /cnHLmtR+f8LA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 11/17] iwlwifi: pcie: fix context info memory leak
-Date:   Tue,  2 Feb 2021 10:06:45 -0500
-Message-Id: <20210202150651.1864426-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 08/17] iwlwifi: mvm: skip power command when unbinding vif during CSA
+Date:   Tue,  2 Feb 2021 10:06:42 -0500
+Message-Id: <20210202150651.1864426-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
 References: <20210202150651.1864426-1-sashal@kernel.org>
@@ -53,51 +53,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 2d6bc752cc2806366d9a4fd577b3f6c1f7a7e04e ]
+[ Upstream commit bf544e9aa570034e094a8a40d5f9e1e2c4916d18 ]
 
-If the image loader allocation fails, we leak all the previously
-allocated memory. Fix this.
+In the new CSA flow, we remain associated during CSA, but
+still do a unbind-bind to the vif. However, sending the power
+command right after when vif is unbound but still associated
+causes FW to assert (0x3400) since it cannot tell the LMAC id.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Just skip this command, we will send it again in a bit, when
+assigning the new context.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.97172cbaa67c.I3473233d0ad01a71aa9400832fb2b9f494d88a11@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210115130252.64a2254ac5c3.Iaa3a9050bf3d7c9cd5beaf561e932e6defc12ec3@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 7a5b024a6d384..eab159205e48b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -164,8 +164,10 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 	/* Allocate IML */
- 	iml_img = dma_alloc_coherent(trans->dev, trans->iml_len,
- 				     &trans_pcie->iml_dma_addr, GFP_KERNEL);
--	if (!iml_img)
--		return -ENOMEM;
-+	if (!iml_img) {
-+		ret = -ENOMEM;
-+		goto err_free_ctxt_info;
-+	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index daae86cd61140..fc6430edd1107 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4169,6 +4169,9 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
  
- 	memcpy(iml_img, trans->iml, trans->iml_len);
- 
-@@ -207,6 +209,11 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 
- 	return 0;
- 
-+err_free_ctxt_info:
-+	dma_free_coherent(trans->dev, sizeof(*trans_pcie->ctxt_info_gen3),
-+			  trans_pcie->ctxt_info_gen3,
-+			  trans_pcie->ctxt_info_dma_addr);
-+	trans_pcie->ctxt_info_gen3 = NULL;
- err_free_prph_info:
- 	dma_free_coherent(trans->dev,
- 			  sizeof(*prph_info),
+ out:
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD) &&
++	    switching_chanctx)
++		return;
+ 	mvmvif->phy_ctxt = NULL;
+ 	iwl_mvm_power_update_mac(mvm);
+ }
 -- 
 2.27.0
 
