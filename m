@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 406F5C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:55:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67264C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:00:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E598D64F65
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:55:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20D3F64E2B
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:00:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235098AbhBBPya (ORCPT
+        id S235952AbhBBQAk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:54:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39462 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 11:00:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38256 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235020AbhBBPM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:12:27 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 49D1364F7F;
-        Tue,  2 Feb 2021 15:07:03 +0000 (UTC)
+        id S235200AbhBBPMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:12:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 07AB064F7D;
+        Tue,  2 Feb 2021 15:06:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278424;
-        bh=pCi6n5RSNqD/7PrBfPCOSZ+VOvIunpRneJf6SismKHc=;
+        s=k20201202; t=1612278415;
+        bh=QzJeBS0buSUYwMAuGzi1I4Qv2WP5kLvvJR19riZnNOQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I6HNE9Q2mStwByp7TTBLAimMkoCYTc1RwnoOF4C+BfE/vPrf0nOoZGY5YnlCpeWhc
-         tZOHAL4hMqYsmoj3E/qFqLN0xrknhamXKuM9e17ZMuDuGTux2Ko6oiDsKvZkfzMoXr
-         xG/CNPn7I598sDH3mn8H8vx+1ccyZV3uKbjT66zhZqa2lT5hZpooIsDsoTdmZM/eZl
-         cXksNyx2pr3TqGKD5HZij3lG7AnQgqQeyS2rdeo9kUTmKNLeBjm//ufmtKyXAjS19K
-         urZxPOaHJ5Oro56fRDwhtvMCNqqwb8lU2CblRhXMNnjY04y5keSQAS77qX6pNrVMfi
-         2nIey4YcE9X9A==
+        b=ONrmQutLajUyO7onyFaQ7p+3nAxS9Rero5yGTGFwgM+VgqRdSiT7qaVTZW2umfZ09
+         DSqNVk0QO3r5QFku+hdq+ELlfJAbsE1KFDOiAzQMe7MlPH7Gv6wfGsz7U3uWKs0nUn
+         YKWJWHlb0xTGocpvs+af8JdgfelfaQvkxNqmnnhLDTAeZXHC/gDOykylKH4rLgjXdR
+         ETHr1Gte/DjP+3VG10zJKxjMSXi8b22dcv+UgAIpx5zbnU1uWorM0Mli8IyGu3FIB/
+         Kl2iBAD2Fq0Y7mxxtXViBlYpadvq2RlsDYJ82rbSqEhqm/JGPa07LePSa5LVABBJtF
+         20InjMxE/nKlQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Shay Bar <shay.bar@celeno.com>,
+        Aviad Brikman <aviad.brikman@celeno.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 10/17] iwlwifi: pcie: add a NULL check in iwl_pcie_txq_unmap
-Date:   Tue,  2 Feb 2021 10:06:44 -0500
-Message-Id: <20210202150651.1864426-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 03/17] mac80211: 160MHz with extended NSS BW in CSA
+Date:   Tue,  2 Feb 2021 10:06:37 -0500
+Message-Id: <20210202150651.1864426-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
 References: <20210202150651.1864426-1-sashal@kernel.org>
@@ -53,38 +53,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shay Bar <shay.bar@celeno.com>
 
-[ Upstream commit 98c7d21f957b10d9c07a3a60a3a5a8f326a197e5 ]
+[ Upstream commit dcf3c8fb32ddbfa3b8227db38aa6746405bd4527 ]
 
-I hit a NULL pointer exception in this function when the
-init flow went really bad.
+Upon receiving CSA with 160MHz extended NSS BW from associated AP,
+STA should set the HT operation_mode based on new_center_freq_seg1
+because it is later used as ccfs2 in ieee80211_chandef_vht_oper().
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.2e8da9f2c132.I0234d4b8ddaf70aaa5028a20c863255e05bc1f84@changeid
+Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
+Signed-off-by: Shay Bar <shay.bar@celeno.com>
+Link: https://lore.kernel.org/r/20201222064714.24888-1-shay.bar@celeno.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ net/mac80211/spectmgmt.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index d3b58334e13ea..e7dcf8bc99b7c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -657,6 +657,11 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index 5fe2b645912f6..132f8423addaa 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -132,16 +132,20 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 	}
  
-+	if (!txq) {
-+		IWL_ERR(trans, "Trying to free a queue that wasn't allocated?\n");
-+		return;
-+	}
-+
- 	spin_lock_bh(&txq->lock);
- 	while (txq->write_ptr != txq->read_ptr) {
- 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
+ 	if (wide_bw_chansw_ie) {
++		u8 new_seg1 = wide_bw_chansw_ie->new_center_freq_seg1;
+ 		struct ieee80211_vht_operation vht_oper = {
+ 			.chan_width =
+ 				wide_bw_chansw_ie->new_channel_width,
+ 			.center_freq_seg0_idx =
+ 				wide_bw_chansw_ie->new_center_freq_seg0,
+-			.center_freq_seg1_idx =
+-				wide_bw_chansw_ie->new_center_freq_seg1,
++			.center_freq_seg1_idx = new_seg1,
+ 			/* .basic_mcs_set doesn't matter */
+ 		};
+-		struct ieee80211_ht_operation ht_oper = {};
++		struct ieee80211_ht_operation ht_oper = {
++			.operation_mode =
++				cpu_to_le16(new_seg1 <<
++					    IEEE80211_HT_OP_MODE_CCFS2_SHIFT),
++		};
+ 
+ 		/* default, for the case of IEEE80211_VHT_CHANWIDTH_USE_HT,
+ 		 * to the previously parsed chandef
 -- 
 2.27.0
 
