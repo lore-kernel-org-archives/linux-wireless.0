@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95617C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE8FC433E9
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61F4664F70
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:06:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F4B164F49
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236046AbhBBQFs (ORCPT
+        id S235938AbhBBQGt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 11:05:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37238 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 11:06:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38282 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234983AbhBBPLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:11:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C862464F6E;
-        Tue,  2 Feb 2021 15:06:37 +0000 (UTC)
+        id S235156AbhBBPJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:09:45 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 39D4264F65;
+        Tue,  2 Feb 2021 15:06:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278398;
-        bh=L3B6ZScRpTteiAHfJ25ES5UssYuyHCpMGNOYLXRSOmg=;
+        s=k20201202; t=1612278396;
+        bh=Mntyyw9pDo73Mx8hzXtsDcqsj83PlObc6cNFP+pQy/A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uHbLj5qhaScCt9dJ4CKkB2Gn3Y71BKtzlIJQcaxAKvb2p6VpcYGE7ey278zxkizhB
-         i6gHJR6mIIDCe+mk9TIIzMc9AH1VrfewUH5aF+6rONq/UERccMzHMuzoOw7/Ih9Q+B
-         NMxSmBmJII6hnB/+7QtGS5QwGBKxkyr5jO/r5N3t+xuVKmNq/4sZaDm74CVB+HX6lN
-         CuBF0FdoGMG98y81x8TtVJlqXkP6awmEX2ORAbR4QB4+kC2eIv2ourH2fqA3ZD3wp2
-         vmkiJ2v1Jioc81tvW847z4VyF44PVed05BpiLuWSdV36hsfhbbPv6syrU0wWzR+xcz
-         8QnBqKrSepovw==
+        b=TsWY0Gl21G85gdRx1av0D/erLGQJQWy4GbMpKZLZAiegZITdmg09DtZUGBRtpg7dp
+         cOFq1LvjL7V0Wihk7jZKey/pCsyBY0fQovm22wX+E8RuzkKoQ986scgxVDCz4diJzG
+         +nryLltoMbwgmNpItCh5k4eYBcSScURI10H724qJoPz9mrv4gaJ2zZSwSOyQIvZjiQ
+         +k9wBMzjlzGnO33QiWuywHnV6Y44U5Cna02BL3SHJb08QjlJCyucl/fsPliVFDV0/Y
+         NDyfqantD402gIPlCompk7pC+ux45QOOdzRZcyCKVZoF4BELBX6NIpmWesUc8urF/G
+         Qs9ry5i0LnDfA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Gregory Greenman <gregory.greenman@intel.com>,
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 17/25] iwlwifi: mvm: invalidate IDs of internal stations at mvm start
-Date:   Tue,  2 Feb 2021 10:06:07 -0500
-Message-Id: <20210202150615.1864175-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 15/25] iwlwifi: pcie: add a NULL check in iwl_pcie_txq_unmap
+Date:   Tue,  2 Feb 2021 10:06:05 -0500
+Message-Id: <20210202150615.1864175-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150615.1864175-1-sashal@kernel.org>
 References: <20210202150615.1864175-1-sashal@kernel.org>
@@ -53,68 +53,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit e223e42aac30bf81f9302c676cdf58cf2bf36950 ]
+[ Upstream commit 98c7d21f957b10d9c07a3a60a3a5a8f326a197e5 ]
 
-Having sta_id not set for aux_sta and snif_sta can potentially lead to a
-hard to debug issue in case remove station is called without an add. In
-this case sta_id 0, an unrelated regular station, will be removed.
+I hit a NULL pointer exception in this function when the
+init flow went really bad.
 
-In fact, we do have a FW assert that occures rarely and from the debug
-data analysis it looks like sta_id 0 is removed by mistake, though it's
-hard to pinpoint the exact flow. The WARN_ON in this patch should help
-to find it.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210122144849.5dc6dd9b22d5.I2add1b5ad24d0d0a221de79d439c09f88fcaf15d@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210115130252.2e8da9f2c132.I0234d4b8ddaf70aaa5028a20c863255e05bc1f84@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 6 ++++++
- 2 files changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 0d1118f66f0d5..cea8e397fe0f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -845,6 +845,10 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (!mvm->scan_cmd)
- 		goto out_free;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 966be5689d63a..ed54d04e43964 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -299,6 +299,11 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_txq *txq = trans->txqs.txq[txq_id];
  
-+	/* invalidate ids to prevent accidental removal of sta_id 0 */
-+	mvm->aux_sta.sta_id = IWL_MVM_INVALID_STA;
-+	mvm->snif_sta.sta_id = IWL_MVM_INVALID_STA;
++	if (!txq) {
++		IWL_ERR(trans, "Trying to free a queue that wasn't allocated?\n");
++		return;
++	}
 +
- 	/* Set EBS as successful as long as not stated otherwise by the FW. */
- 	mvm->last_ebs_successful = true;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 799d8219463cb..a66a5c19474a9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2103,6 +2103,9 @@ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (WARN_ON_ONCE(mvm->snif_sta.sta_id == IWL_MVM_INVALID_STA))
-+		return -EINVAL;
-+
- 	iwl_mvm_disable_txq(mvm, NULL, mvm->snif_queue, IWL_MAX_TID_COUNT, 0);
- 	ret = iwl_mvm_rm_sta_common(mvm, mvm->snif_sta.sta_id);
- 	if (ret)
-@@ -2117,6 +2120,9 @@ int iwl_mvm_rm_aux_sta(struct iwl_mvm *mvm)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (WARN_ON_ONCE(mvm->aux_sta.sta_id == IWL_MVM_INVALID_STA))
-+		return -EINVAL;
-+
- 	iwl_mvm_disable_txq(mvm, NULL, mvm->aux_queue, IWL_MAX_TID_COUNT, 0);
- 	ret = iwl_mvm_rm_sta_common(mvm, mvm->aux_sta.sta_id);
- 	if (ret)
+ 	spin_lock_bh(&txq->lock);
+ 	while (txq->write_ptr != txq->read_ptr) {
+ 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
 -- 
 2.27.0
 
