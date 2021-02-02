@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE8FC433E9
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9D9C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F4B164F49
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0CC364F49
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 16:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235938AbhBBQGt (ORCPT
+        id S236080AbhBBQHs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 11:06:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38282 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 11:07:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38256 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235156AbhBBPJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:09:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 39D4264F65;
-        Tue,  2 Feb 2021 15:06:35 +0000 (UTC)
+        id S235152AbhBBPJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:09:44 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A5D6A64F61;
+        Tue,  2 Feb 2021 15:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278396;
-        bh=Mntyyw9pDo73Mx8hzXtsDcqsj83PlObc6cNFP+pQy/A=;
+        s=k20201202; t=1612278393;
+        bh=H+McNijkMR/bhxDtYibNQd0KYp1YtnL9gfDDcwOMDNk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TsWY0Gl21G85gdRx1av0D/erLGQJQWy4GbMpKZLZAiegZITdmg09DtZUGBRtpg7dp
-         cOFq1LvjL7V0Wihk7jZKey/pCsyBY0fQovm22wX+E8RuzkKoQ986scgxVDCz4diJzG
-         +nryLltoMbwgmNpItCh5k4eYBcSScURI10H724qJoPz9mrv4gaJ2zZSwSOyQIvZjiQ
-         +k9wBMzjlzGnO33QiWuywHnV6Y44U5Cna02BL3SHJb08QjlJCyucl/fsPliVFDV0/Y
-         NDyfqantD402gIPlCompk7pC+ux45QOOdzRZcyCKVZoF4BELBX6NIpmWesUc8urF/G
-         Qs9ry5i0LnDfA==
+        b=WxYJg3fFDFV/+TGYoFDMc20aXJ8PbBcDtOST75fNlQ+z5EhqNVJSxoM1meTbRG5qZ
+         BKVYmhxW2ZBrLgA/M/YxGQPP1Fr5R0cydvlv1+EfZe1n7FLQ+xp7N5vgqARXRunUEI
+         eMZexZgzW02JxmXaY28LNAvyC3iE2wm3xg9qHQKVVaG2rhT2/zLGkANhUFDc/zSsXG
+         9UiQxZfNbmW86nDd+KM1Gn+OKsGVu44EWEzSGy8isVuscyzHfoXE9vra/eY5Wvc/bV
+         uF388cFNxOOh5VVY65Dah1eOgQDzMRHKvFDiO3Y82jex1sSRMkoHEBswANSeKcYXxJ
+         /OoNSzF42nkaQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 15/25] iwlwifi: pcie: add a NULL check in iwl_pcie_txq_unmap
-Date:   Tue,  2 Feb 2021 10:06:05 -0500
-Message-Id: <20210202150615.1864175-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 13/25] iwlwifi: mvm: skip power command when unbinding vif during CSA
+Date:   Tue,  2 Feb 2021 10:06:03 -0500
+Message-Id: <20210202150615.1864175-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150615.1864175-1-sashal@kernel.org>
 References: <20210202150615.1864175-1-sashal@kernel.org>
@@ -53,38 +53,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 98c7d21f957b10d9c07a3a60a3a5a8f326a197e5 ]
+[ Upstream commit bf544e9aa570034e094a8a40d5f9e1e2c4916d18 ]
 
-I hit a NULL pointer exception in this function when the
-init flow went really bad.
+In the new CSA flow, we remain associated during CSA, but
+still do a unbind-bind to the vif. However, sending the power
+command right after when vif is unbound but still associated
+causes FW to assert (0x3400) since it cannot tell the LMAC id.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Just skip this command, we will send it again in a bit, when
+assigning the new context.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.2e8da9f2c132.I0234d4b8ddaf70aaa5028a20c863255e05bc1f84@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210115130252.64a2254ac5c3.Iaa3a9050bf3d7c9cd5beaf561e932e6defc12ec3@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 966be5689d63a..ed54d04e43964 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -299,6 +299,11 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq = trans->txqs.txq[txq_id];
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index b627e7da7ac9d..d42165559df6e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4249,6 +4249,9 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
  
-+	if (!txq) {
-+		IWL_ERR(trans, "Trying to free a queue that wasn't allocated?\n");
+ out:
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD) &&
++	    switching_chanctx)
 +		return;
-+	}
-+
- 	spin_lock_bh(&txq->lock);
- 	while (txq->write_ptr != txq->read_ptr) {
- 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
+ 	mvmvif->phy_ctxt = NULL;
+ 	iwl_mvm_power_update_mac(mvm);
+ }
 -- 
 2.27.0
 
