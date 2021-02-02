@@ -5,33 +5,33 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF059C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:40:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A613FC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B57FD64F65
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:40:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DF2664F6A
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235543AbhBBPkZ (ORCPT
+        id S235649AbhBBPlh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:40:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39462 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:41:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39414 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235269AbhBBPOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:14:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A397364FA2;
-        Tue,  2 Feb 2021 15:07:33 +0000 (UTC)
+        id S235248AbhBBPOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:14:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D5B8E64F94;
+        Tue,  2 Feb 2021 15:07:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278454;
-        bh=joKYNFrfxTJaTY/td3Bgwgy7/4s/D9KzIQu/cAYX05w=;
+        s=k20201202; t=1612278445;
+        bh=a7cpqNj4McTknLDLJ6IE1wMgM7KtFiLedfkTpgs8aEU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Wry5aANPidZILEhKoxb2BIurX7TtgC+mXKW0UBJEuTXcX2Zx2AqEhM9+GsN64mxbt
-         oll8KCqE/aRc/j7QPpzreOJThoLjntpeepHDplBUTnObzBQ55RzVpszFfAh3xTYY4S
-         2TxVlR9hFG5dKL7Vp91cKD1EypE7oEPckbFs2EEBhqTe0PkKfdO4ssWLiB2yzpG2x8
-         GAusHBc52E8qFHVmgigVkExB5UG4wHHpXeiAbRFKqDN8rdTp5HdfvbbAwfv4PtUQI3
-         t5F8CJiWe3kQDiZ12WIU/g0beY4egL0zu8zEHCpjJG1eh7I6EtEdfN2iDG8kH1u51s
-         DsxxhvCYxz/fg==
+        b=O0t3rsm6PpfDl084PTleJLwGbdATM4rGet9BS0BkatyLFMT5zW/FfbM/qpq1XlEsk
+         ce58eBNn5YwxP7m4LvzziNhJFs394DANRKxhxtaqtcpC4O7riJ/n7mZgfJUfZlt5Qm
+         wFckV9F5rgxYZJvYCxs3q4lVDFMxz/4QvHr2WHlsPQ2ipdLIf2brrBFot/Bm29ORat
+         EcIal9mplr+lU/rHSl78FpjoPddMn5+NQ+TLH03nwZpX+Q1enh3jVUeDiCatXOIs9d
+         rTGxzg3SbKZpBdF/B2oVWhHJ03Bi+uNd0DBHxjbHegNzEM+yHg3YksEn3XKo0BqBM5
+         azT4oNvzo4KZw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
@@ -39,12 +39,12 @@ Cc:     Johannes Berg <johannes.berg@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 3/7] iwlwifi: mvm: take mutex for calling iwl_mvm_get_sync_time()
-Date:   Tue,  2 Feb 2021 10:07:25 -0500
-Message-Id: <20210202150730.1864745-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 08/10] iwlwifi: mvm: guard against device removal in reprobe
+Date:   Tue,  2 Feb 2021 10:07:12 -0500
+Message-Id: <20210202150715.1864614-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210202150730.1864745-1-sashal@kernel.org>
-References: <20210202150730.1864745-1-sashal@kernel.org>
+In-Reply-To: <20210202150715.1864614-1-sashal@kernel.org>
+References: <20210202150715.1864614-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,34 +55,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 5c56d862c749669d45c256f581eac4244be00d4d ]
+[ Upstream commit 7a21b1d4a728a483f07c638ccd8610d4b4f12684 ]
 
-We need to take the mutex to call iwl_mvm_get_sync_time(), do it.
+If we get into a problem severe enough to attempt a reprobe,
+we schedule a worker to do that. However, if the problem gets
+more severe and the device is actually destroyed before this
+worker has a chance to run, we use a free device. Bump up the
+reference count of the device until the worker runs to avoid
+this situation.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.4bb5ccf881a6.I62973cbb081e80aa5b0447a5c3b9c3251a65cf6b@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210122144849.871f0892e4b2.I94819e11afd68d875f3e242b98bef724b8236f1e@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 71a01df96f8b0..6db51abb8f4a3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -518,7 +518,10 @@ static ssize_t iwl_dbgfs_os_device_timediff_read(struct file *file,
- 	const size_t bufsz = sizeof(buf);
- 	int pos = 0;
- 
-+	mutex_lock(&mvm->mutex);
- 	iwl_mvm_get_sync_time(mvm, &curr_gp2, &curr_os);
-+	mutex_unlock(&mvm->mutex);
-+
- 	do_div(curr_os, NSEC_PER_USEC);
- 	diff = curr_os - curr_gp2;
- 	pos += scnprintf(buf + pos, bufsz - pos, "diff=%lld\n", diff);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 0e26619fb330b..d932171617e6a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1192,6 +1192,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
+ 	reprobe = container_of(wk, struct iwl_mvm_reprobe, work);
+ 	if (device_reprobe(reprobe->dev))
+ 		dev_err(reprobe->dev, "reprobe failed!\n");
++	put_device(reprobe->dev);
+ 	kfree(reprobe);
+ 	module_put(THIS_MODULE);
+ }
+@@ -1242,7 +1243,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ 			module_put(THIS_MODULE);
+ 			return;
+ 		}
+-		reprobe->dev = mvm->trans->dev;
++		reprobe->dev = get_device(mvm->trans->dev);
+ 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
+ 		schedule_work(&reprobe->work);
+ 	} else if (mvm->fwrt.cur_fw_img == IWL_UCODE_REGULAR &&
 -- 
 2.27.0
 
