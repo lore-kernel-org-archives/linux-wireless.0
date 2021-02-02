@@ -2,93 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8766C433E6
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 14:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5832C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:11:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A73CB64F4D
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 14:44:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C29364F9F
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231927AbhBBOoX (ORCPT
+        id S235167AbhBBPLH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 09:44:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58302 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234580AbhBBOl4 (ORCPT
+        Tue, 2 Feb 2021 10:11:07 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:56786 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234998AbhBBPI4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 09:41:56 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5166BC061573;
-        Tue,  2 Feb 2021 06:41:13 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1l6wrf-00EuM5-L5; Tue, 02 Feb 2021 15:41:11 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2021-02-02
-Date:   Tue,  2 Feb 2021 15:41:05 +0100
-Message-Id: <20210202144106.38207-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Tue, 2 Feb 2021 10:08:56 -0500
+Received: from [192.168.254.6] (unknown [50.34.172.155])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 5973613C2B0
+        for <linux-wireless@vger.kernel.org>; Tue,  2 Feb 2021 07:08:13 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 5973613C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1612278493;
+        bh=mLUYUP2tKewecuBHW4TVfIRrz+lfZgwQdf/WNAanqbQ=;
+        h=Subject:From:To:References:Date:In-Reply-To:From;
+        b=m0GQo8+6+JEIH7uAfmeKFoNM+y+ZQF34JuKYM4Y6T0BDlw4rcBo32q+gir0CG+0jG
+         OmKddECMwzCAltJuE7GyRIMbL+6ecGz/2Xpzyi7tPWS1LKwQ4oJX4HMtuGcRVCXVcE
+         h0qDYINBA2TLYICw2ES2nt9N2x6zEDDN9awJCxcg=
+Subject: Re: ax210: Why no 6E channels valid in regdom?
+From:   Ben Greear <greearb@candelatech.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <3b3b53f6-a974-601f-f136-d685c4841647@candelatech.com>
+ <ee8074e5-dbc9-e70f-1d51-934de9ccdcf1@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <38c196d9-ab41-fe7c-3e2c-d02bf3474117@candelatech.com>
+Date:   Tue, 2 Feb 2021 07:08:13 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
+In-Reply-To: <ee8074e5-dbc9-e70f-1d51-934de9ccdcf1@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Jakub,
+On 1/30/21 9:09 AM, Ben Greear wrote:
+> On 1/29/21 2:31 PM, Ben Greear wrote:
+>> I cannot figure out why my ax210 won't show any 6E channels.  It worked for a bit a few days
+>> ago, but now it does not..and not sure why.  Looks like it uses some internal regdom.
+>>
+>> Any idea from these logs what is going on?
+> 
+> Is that 'mcc' logic actually able to read the cellular network?  I am near enough to Canada
+> that sometimes my mobile phone will pick up those towers...could the ax210 possibly be
+> hearing the same and forcing itself to OO regdom, which would cause it to disable all 6E
+> channels?
 
-And for mac80211-next, I have only locking fixes right now. I'm
-happy that it otherwise seems to be fine though, now no new bugs
-have been reported for a few days.
+Ok, I think I see the pattern now.
 
-I might send some more things your way another day, but wanted
-to get the locking fixes out sooner.
+You have to admin-up the station and start scanning before it will show the
+6E channels in 'iw reg get'.  And that makes the 'band 4' frequencies become
+usable as well, as seen in 'iw phy foo info'.
 
-Please pull and let me know if there's any problem.
+So, a bit confusing for me, but I guess it works as intended.
+
+This is with 5.11-rc5+ kernel and latest ax210 FW that I can find.
 
 Thanks,
-johannes
+Ben
 
-
-
-The following changes since commit d1f3bdd4eaae1222063c2f309625656108815915:
-
-  net: dsa: rtl8366rb: standardize init jam tables (2021-01-27 20:21:20 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2021-02-02
-
-for you to fetch changes up to 40c575d1ec71f7a61c73ba1603a69650c130559c:
-
-  cfg80211: fix netdev registration deadlock (2021-02-01 19:30:54 +0100)
-
-----------------------------------------------------------------
-This time, only RTNL locking reduction fallout.
- - cfg80211_dev_rename() requires RTNL
- - cfg80211_change_iface() and cfg80211_set_encryption()
-   require wiphy mutex (was missing in wireless extensions)
- - cfg80211_destroy_ifaces() requires wiphy mutex
- - netdev registration can fail due to notifiers, and then
-   notifiers are "unrolled", need to handle this properly
-
-----------------------------------------------------------------
-Johannes Berg (5):
-      nl80211: call cfg80211_dev_rename() under RTNL
-      wext: call cfg80211_change_iface() with wiphy lock held
-      wext: call cfg80211_set_encryption() with wiphy lock held
-      cfg80211: call cfg80211_destroy_ifaces() with wiphy lock held
-      cfg80211: fix netdev registration deadlock
-
- include/net/cfg80211.h     |  4 +++-
- net/wireless/core.c        |  7 ++++++-
- net/wireless/nl80211.c     |  2 +-
- net/wireless/wext-compat.c | 14 ++++++++++++--
- 4 files changed, 22 insertions(+), 5 deletions(-)
+> 
+> Thanks,
+> Ben
+> 
+>>
+>>   kernel: iwlwifi 0000:0f:00.0: In iwl-mvm-init-mcc, nvm-type: 1  NVM_EXT: 1
+>>   kernel: iwlwifi 0000:0f:00.0: init-fw-regd: r: 0000000000000000
+>>   kernel: iwlwifi 0000:0f:00.0: Getting regdomain data for ZZ from FW
+>>   kernel: iwlwifi 0000:0f:00.0: send MCC update to FW with 'ZZ' src = 16
+>>   kernel: iwlwifi 0000:0f:00.0: MCC response status: 0x1. new MCC: 0x3030 ('00') n_chans: 110
+>>   kernel: iwlwifi 0000:0f:00.0: MCC update response version: 6
+>>   kernel: iwlwifi 0000:0f:00.0: setting alpha2 from FW to 00 (0x30, 0x30) src=7
+>>   kernel: iwlwifi 0000:0f:00.0: Get current regdom: 000000001caad6b5  mcc-supported: 1
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 2484.000 MHz as custom regd has no rule that fits it
+>> ....
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5955.000 MHz as custom regd has no rule that fits it
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5975.000 MHz as custom regd has no rule that fits it
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 5995.000 MHz as custom regd has no rule that fits it
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6015.000 MHz as custom regd has no rule that fits it
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6035.000 MHz as custom regd has no rule that fits it
+>>   kernel: cfg80211: d8:f8:83:35:e9:f9: Disabling freq 6055.000 MHz as custom regd has no rule that fits it
+>>
+>> Thanks,
+>> Ben
+>>
+> 
 
