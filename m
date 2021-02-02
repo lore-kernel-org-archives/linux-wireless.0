@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A613FC433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C80EC43381
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DF2664F6A
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20FB064F7E
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235649AbhBBPlh (ORCPT
+        id S235668AbhBBPlk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:41:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39414 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:41:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39392 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235248AbhBBPOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S235246AbhBBPOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 2 Feb 2021 10:14:40 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D5B8E64F94;
-        Tue,  2 Feb 2021 15:07:24 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A93564F99;
+        Tue,  2 Feb 2021 15:07:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278445;
-        bh=a7cpqNj4McTknLDLJ6IE1wMgM7KtFiLedfkTpgs8aEU=;
+        s=k20201202; t=1612278443;
+        bh=+m/PQRdwMITWGIWQ0T0cZ1RQNFSvv6kC3lny2aBiI/w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O0t3rsm6PpfDl084PTleJLwGbdATM4rGet9BS0BkatyLFMT5zW/FfbM/qpq1XlEsk
-         ce58eBNn5YwxP7m4LvzziNhJFs394DANRKxhxtaqtcpC4O7riJ/n7mZgfJUfZlt5Qm
-         wFckV9F5rgxYZJvYCxs3q4lVDFMxz/4QvHr2WHlsPQ2ipdLIf2brrBFot/Bm29ORat
-         EcIal9mplr+lU/rHSl78FpjoPddMn5+NQ+TLH03nwZpX+Q1enh3jVUeDiCatXOIs9d
-         rTGxzg3SbKZpBdF/B2oVWhHJ03Bi+uNd0DBHxjbHegNzEM+yHg3YksEn3XKo0BqBM5
-         azT4oNvzo4KZw==
+        b=RJvKoXeCA1UJn5+nODROuR4cRhBgpR2ElncFvEL1SNzwLg+66j0q6iJCPhkW2wZwe
+         mE8LtwS25H1NLvd81OZdfRD27Z4mIG3G1k6rWSo4u16fNIDy3yccX1BMxMjd+Sqkyi
+         zKPA5uj56+G+UUX1jcw40JW4fTG1gPQXA8iB+WPA98RXLe21Vl4pXG/CaDuXnTkvgq
+         zJIC9H43vIVV1IyaTbxazSf5NLwQCPMdOObvuCYPU5O78ppkIxxziV7acQDhmDnF7Q
+         evh5/QvlsJaqtuuND+XIzi7+Wm9uYXKx81v376ClKnJ/CB40V849k+JTb6LE2n8wqz
+         sWeVY3kB80siw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 08/10] iwlwifi: mvm: guard against device removal in reprobe
-Date:   Tue,  2 Feb 2021 10:07:12 -0500
-Message-Id: <20210202150715.1864614-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 06/10] iwlwifi: pcie: add a NULL check in iwl_pcie_txq_unmap
+Date:   Tue,  2 Feb 2021 10:07:10 -0500
+Message-Id: <20210202150715.1864614-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150715.1864614-1-sashal@kernel.org>
 References: <20210202150715.1864614-1-sashal@kernel.org>
@@ -53,47 +53,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 7a21b1d4a728a483f07c638ccd8610d4b4f12684 ]
+[ Upstream commit 98c7d21f957b10d9c07a3a60a3a5a8f326a197e5 ]
 
-If we get into a problem severe enough to attempt a reprobe,
-we schedule a worker to do that. However, if the problem gets
-more severe and the device is actually destroyed before this
-worker has a chance to run, we use a free device. Bump up the
-reference count of the device until the worker runs to avoid
-this situation.
+I hit a NULL pointer exception in this function when the
+init flow went really bad.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210122144849.871f0892e4b2.I94819e11afd68d875f3e242b98bef724b8236f1e@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210115130252.2e8da9f2c132.I0234d4b8ddaf70aaa5028a20c863255e05bc1f84@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 0e26619fb330b..d932171617e6a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1192,6 +1192,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
- 	reprobe = container_of(wk, struct iwl_mvm_reprobe, work);
- 	if (device_reprobe(reprobe->dev))
- 		dev_err(reprobe->dev, "reprobe failed!\n");
-+	put_device(reprobe->dev);
- 	kfree(reprobe);
- 	module_put(THIS_MODULE);
- }
-@@ -1242,7 +1243,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 			module_put(THIS_MODULE);
- 			return;
- 		}
--		reprobe->dev = mvm->trans->dev;
-+		reprobe->dev = get_device(mvm->trans->dev);
- 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
- 		schedule_work(&reprobe->work);
- 	} else if (mvm->fwrt.cur_fw_img == IWL_UCODE_REGULAR &&
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index b73582ec03a08..b1a71539ca3e5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -631,6 +631,11 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
+ 
++	if (!txq) {
++		IWL_ERR(trans, "Trying to free a queue that wasn't allocated?\n");
++		return;
++	}
++
+ 	spin_lock_bh(&txq->lock);
+ 	while (txq->write_ptr != txq->read_ptr) {
+ 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
 -- 
 2.27.0
 
