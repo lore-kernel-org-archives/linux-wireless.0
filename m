@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 261A7C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E98CC433DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:54:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D30EE64E9C
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:52:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F186E64E43
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:54:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235830AbhBBPwx (ORCPT
+        id S235776AbhBBPws (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:52:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39460 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:52:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235019AbhBBPM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:12:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CAFDC64F87;
-        Tue,  2 Feb 2021 15:07:00 +0000 (UTC)
+        id S234938AbhBBPMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:12:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 584D164F88;
+        Tue,  2 Feb 2021 15:07:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278421;
-        bh=FCPfVnRG2CO+xF685n4LNuumA9F5bRF7rvJBReS7buY=;
+        s=k20201202; t=1612278427;
+        bh=Hx9nF1kfvTvNLhr+iXaSP1q1WOzP+lk//ZN0zKVinl8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uOK3CcDA42LBBmhoTX36Zn6rPC6gfYnMJztPb8izS2WEfsrW1pQxSMnh/B7cZVq9o
-         7TQppx9g4G+z5PzDk+gtFFY5qrjW4hMwWjbyrrG6xQ5GblAc3vbBPPBRm1sxt+aT0N
-         GfLcxngYRx9Iz8tfS3maakj2HA4vT4CKxfmcFt/T0Ud5NTGSuGg3Dx2Tct1Qbx1eyC
-         bASWeVug4WUmSaKn5E0p+uES3/UhBcSflLr1tyt/TByyfs40PYUzGc593MXCGGKaqC
-         8KAnfMWZqNWOXRkzwMeb3sdymVkr34ie6FgdR+QP0MJl6u8WfbS1CrlICMUh01Kysj
-         /cnHLmtR+f8LA==
+        b=a7YtFW0DCHvpMSivHfx+eD5SBQ0mOO6rEhX3hhybbgWmUuBmsW8k9Ng0YuRZ8NPbm
+         I0oTPFPypreqXGbaWvrhUhOcctciYTMOez7SRWuy++pSTkl9+mjeaxsT6fUh75tZu2
+         +BzYgQSgfCrtRn+oCxmJf/3Gkb5fdWjkk3Uw5WPk2cD/cWP6zpQPbpOPUHp2SMXjYT
+         thoCnjrrLsG1fLt/gA+w3qHB5SS9Ve2uKBVAIoZfXKtClvtHCFl1t8W7IM3883mAaJ
+         BUvjdvlpveTPH99KFcnxYu5YeWdhevF0hEZE0MONQ0SjqoLny+JnQr3YBQsAvFIOXV
+         7xqk6WgSoCwfQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
+Cc:     Gregory Greenman <gregory.greenman@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 08/17] iwlwifi: mvm: skip power command when unbinding vif during CSA
-Date:   Tue,  2 Feb 2021 10:06:42 -0500
-Message-Id: <20210202150651.1864426-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 12/17] iwlwifi: mvm: invalidate IDs of internal stations at mvm start
+Date:   Tue,  2 Feb 2021 10:06:46 -0500
+Message-Id: <20210202150651.1864426-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
 References: <20210202150651.1864426-1-sashal@kernel.org>
@@ -53,41 +53,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-[ Upstream commit bf544e9aa570034e094a8a40d5f9e1e2c4916d18 ]
+[ Upstream commit e223e42aac30bf81f9302c676cdf58cf2bf36950 ]
 
-In the new CSA flow, we remain associated during CSA, but
-still do a unbind-bind to the vif. However, sending the power
-command right after when vif is unbound but still associated
-causes FW to assert (0x3400) since it cannot tell the LMAC id.
+Having sta_id not set for aux_sta and snif_sta can potentially lead to a
+hard to debug issue in case remove station is called without an add. In
+this case sta_id 0, an unrelated regular station, will be removed.
 
-Just skip this command, we will send it again in a bit, when
-assigning the new context.
+In fact, we do have a FW assert that occures rarely and from the debug
+data analysis it looks like sta_id 0 is removed by mistake, though it's
+hard to pinpoint the exact flow. The WARN_ON in this patch should help
+to find it.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.64a2254ac5c3.Iaa3a9050bf3d7c9cd5beaf561e932e6defc12ec3@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210122144849.5dc6dd9b22d5.I2add1b5ad24d0d0a221de79d439c09f88fcaf15d@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index daae86cd61140..fc6430edd1107 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4169,6 +4169,9 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 	iwl_mvm_binding_remove_vif(mvm, vif);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index b04cc6214bac8..bc25a59807c34 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -838,6 +838,10 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	if (!mvm->scan_cmd)
+ 		goto out_free;
  
- out:
-+	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD) &&
-+	    switching_chanctx)
-+		return;
- 	mvmvif->phy_ctxt = NULL;
- 	iwl_mvm_power_update_mac(mvm);
- }
++	/* invalidate ids to prevent accidental removal of sta_id 0 */
++	mvm->aux_sta.sta_id = IWL_MVM_INVALID_STA;
++	mvm->snif_sta.sta_id = IWL_MVM_INVALID_STA;
++
+ 	/* Set EBS as successful as long as not stated otherwise by the FW. */
+ 	mvm->last_ebs_successful = true;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index a36aa9e85e0b3..40cafcf40ccf0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2070,6 +2070,9 @@ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (WARN_ON_ONCE(mvm->snif_sta.sta_id == IWL_MVM_INVALID_STA))
++		return -EINVAL;
++
+ 	iwl_mvm_disable_txq(mvm, NULL, mvm->snif_queue, IWL_MAX_TID_COUNT, 0);
+ 	ret = iwl_mvm_rm_sta_common(mvm, mvm->snif_sta.sta_id);
+ 	if (ret)
+@@ -2084,6 +2087,9 @@ int iwl_mvm_rm_aux_sta(struct iwl_mvm *mvm)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (WARN_ON_ONCE(mvm->aux_sta.sta_id == IWL_MVM_INVALID_STA))
++		return -EINVAL;
++
+ 	iwl_mvm_disable_txq(mvm, NULL, mvm->aux_queue, IWL_MAX_TID_COUNT, 0);
+ 	ret = iwl_mvm_rm_sta_common(mvm, mvm->aux_sta.sta_id);
+ 	if (ret)
 -- 
 2.27.0
 
