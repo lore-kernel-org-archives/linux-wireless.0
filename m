@@ -4,119 +4,164 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D85C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 07:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAFB4C433E9
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 07:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C944264EE9
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 07:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BA0E64EE9
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 07:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231806AbhBBHhI (ORCPT
+        id S231509AbhBBH7W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 02:37:08 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:39201 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231701AbhBBHhD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 02:37:03 -0500
-Received: from mail-lj1-f197.google.com ([209.85.208.197])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1l6qEX-0007nX-TD
-        for linux-wireless@vger.kernel.org; Tue, 02 Feb 2021 07:36:22 +0000
-Received: by mail-lj1-f197.google.com with SMTP id s18so10862844ljp.7
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2021 23:36:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=LSoMdUbpzG6cQwzLgZZTiGXvRVf2gEXyL2WC99OtW+s=;
-        b=OjviMdTqnyBx1UBIjwWGRJl4Ayea6p1erGCujF0nUSlGEKopGfdkLyhukwi6l1P9q4
-         wWFlWgZfgFRMZRoEoLli8hjcl88YR7UAPQwG8TCDO41GpD18bYtbJB31G6U/7FCSP9d/
-         Sn0YgABAxsdjDJG45WWuepShBdIjlbCx5gofcAxbzO7vJLIy4DnLv1DGIK/aoHjauGJn
-         IrCse3pQ43UUI6IIuINrJi9KA6FUT2cHjItJBusNlO1SzuqWOfGwanPThifjnqYuQs6d
-         nRSX3Iz7Fxoe9hU0ExLGIwtnD318OYawKfTKqz7mC7l0FJ9HTED0/JrOaFVoWyZiyhJg
-         cfDw==
-X-Gm-Message-State: AOAM53367gMwJ6X9epTjjvEz3lgkQChz6wksEa7dUldalCx06H7eUJTI
-        yqofUoLPoZHh97u/lybGYjHm+jXiZGgC9tq7MWi9O9UsfyeDtozqp/B8WUTGJVu5K2Xcxuh1sPE
-        B6rlEko/ZDoNHs0Fb4BxBch+pbRW1Hvxn6s89aMZlg3W5nH8EseeZTGmeLvls
-X-Received: by 2002:a05:6512:b1b:: with SMTP id w27mr10509608lfu.10.1612251381363;
-        Mon, 01 Feb 2021 23:36:21 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJx5dv1Lrlfrr7Ynb6iQgLdZKKxLKhBfVWGXB8B6/fyiUueDPcltK2OaDOeatPA3x15vvGz/Vb5SF9Yn6KsvJL4=
-X-Received: by 2002:a05:6512:b1b:: with SMTP id w27mr10509591lfu.10.1612251381100;
- Mon, 01 Feb 2021 23:36:21 -0800 (PST)
+        Tue, 2 Feb 2021 02:59:22 -0500
+Received: from mga05.intel.com ([192.55.52.43]:2626 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231489AbhBBH7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 02:59:20 -0500
+IronPort-SDR: PwAALA5AXGrRtZX5gw7f7O7mOusDIpLfppOMZyMbgccDV0OZuYDX/ej55x4Adj9ij3XNav783B
+ 69mwJQxFt5kg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9882"; a="265646044"
+X-IronPort-AV: E=Sophos;i="5.79,394,1602572400"; 
+   d="scan'208";a="265646044"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2021 23:58:38 -0800
+IronPort-SDR: xASg+9kGvAERsGLJPhdJTYL7BURX0/Ql5iz0Xgje0gXfBTZ4JtaShtvphUHK93tlVNoyNYmeGz
+ ZeX2ez/AJg6Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,394,1602572400"; 
+   d="scan'208";a="395954224"
+Received: from lkp-server02.sh.intel.com (HELO 625d3a354f04) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 01 Feb 2021 23:58:37 -0800
+Received: from kbuild by 625d3a354f04 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1l6qa4-0009CL-I6; Tue, 02 Feb 2021 07:58:36 +0000
+Date:   Tue, 02 Feb 2021 15:58:08 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [mac80211-next:master] BUILD SUCCESS
+ 40c575d1ec71f7a61c73ba1603a69650c130559c
+Message-ID: <60190610.JQ3hBtnE99UX+Xf4%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-References: <20200805084559.30092-1-kai.heng.feng@canonical.com>
- <c0c336d806584361992d4b52665fbb82@realtek.com> <9330BBA5-158B-49F1-8B7C-C2733F358AC1@canonical.com>
- <CAAd53p6SA5gG8V27eD1Kh1ik932Kt8KzmYjLy33pOkw=QPKgpA@mail.gmail.com>
- <871rdz7zjf.fsf@codeaurora.org> <e4f2fe2b-52a2-7b39-6758-decf22d82eb6@lwfinger.net>
-In-Reply-To: <e4f2fe2b-52a2-7b39-6758-decf22d82eb6@lwfinger.net>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Tue, 2 Feb 2021 15:36:09 +0800
-Message-ID: <CAAd53p5p=Bz-VKLxbajhZ2VeHs1Dczcqc1hgPZtNsMb-Fy6J3w@mail.gmail.com>
-Subject: Re: [PATCH] rtw88: 8821c: Add RFE 2 support
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Tony Chuang <yhchuang@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "open list:REALTEK WIRELESS DRIVER (rtw88)" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Andy Huang <tehuang@realtek.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Feb 2, 2021 at 3:02 PM Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
-> On 2/2/21 12:29 AM, Kalle Valo wrote:
-> > Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
-> >
-> >> On Wed, Aug 5, 2020 at 7:24 PM Kai-Heng Feng
-> >> <kai.heng.feng@canonical.com> wrote:
-> >>>
-> >>> Hi Tony,
-> >>>
-> >>>> On Aug 5, 2020, at 19:18, Tony Chuang <yhchuang@realtek.com> wrote:
-> >>>>
-> >>>>> 8821CE with RFE 2 isn't supported:
-> >>>>> [   12.404834] rtw_8821ce 0000:02:00.0: rfe 2 isn't supported
-> >>>>> [   12.404937] rtw_8821ce 0000:02:00.0: failed to setup chip efuse info
-> >>>>> [   12.404939] rtw_8821ce 0000:02:00.0: failed to setup chip information
-> >>>>>
-> >>>>
-> >>>> NACK
-> >>>>
-> >>>> The RFE type 2 should be working with some additional fixes.
-> >>>> Did you tested connecting to AP with BT paired?
-> >>>
-> >>> No, I only tested WiFi.
-> >>>
-> >>>> The antenna configuration is different with RFE type 0.
-> >>>> I will ask someone else to fix them.
-> >>>> Then the RFE type 2 modules can be supported.
-> >>>
-> >>> Good to know that, I'll be patient and wait for a real fix.
-> >>
-> >> It's been quite some time, is support for RFE type 2 ready now?
-> >
-> > It looks like this patch should add it:
-> >
-> > https://patchwork.kernel.org/project/linux-wireless/patch/20210202055012.8296-4-pkshih@realtek.com/
-> >
-> New firmware (rtw8821c_fw.bin) is also needed. That is available at
-> https://github.com/lwfinger/rtw88.git.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+branch HEAD: 40c575d1ec71f7a61c73ba1603a69650c130559c  cfg80211: fix netdev registration deadlock
 
-Thanks. RFE2 works with the new firmware.
+elapsed time: 726m
 
-Kai-Heng
+configs tested: 95
+configs skipped: 2
 
->
-> Larry
->
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm64                               defconfig
+arm                                 defconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+arm                              allmodconfig
+powerpc                 mpc836x_rdk_defconfig
+ia64                          tiger_defconfig
+m68k                         amcore_defconfig
+powerpc                     kilauea_defconfig
+mips                            ar7_defconfig
+sh                   secureedge5410_defconfig
+powerpc                        fsp2_defconfig
+mips                         mpc30x_defconfig
+xtensa                         virt_defconfig
+arm                      tct_hammer_defconfig
+powerpc                     tqm5200_defconfig
+mips                         db1xxx_defconfig
+powerpc                     tqm8560_defconfig
+mips                      maltaaprp_defconfig
+sh                          rsk7203_defconfig
+arc                      axs103_smp_defconfig
+sh                             sh03_defconfig
+mips                           mtx1_defconfig
+mips                          malta_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a006-20210201
+x86_64               randconfig-a001-20210201
+x86_64               randconfig-a005-20210201
+x86_64               randconfig-a002-20210201
+x86_64               randconfig-a004-20210201
+x86_64               randconfig-a003-20210201
+i386                 randconfig-a001-20210201
+i386                 randconfig-a005-20210201
+i386                 randconfig-a003-20210201
+i386                 randconfig-a006-20210201
+i386                 randconfig-a002-20210201
+i386                 randconfig-a004-20210201
+i386                 randconfig-a013-20210201
+i386                 randconfig-a016-20210201
+i386                 randconfig-a014-20210201
+i386                 randconfig-a012-20210201
+i386                 randconfig-a015-20210201
+i386                 randconfig-a011-20210201
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a013-20210201
+x86_64               randconfig-a014-20210201
+x86_64               randconfig-a015-20210201
+x86_64               randconfig-a016-20210201
+x86_64               randconfig-a011-20210201
+x86_64               randconfig-a012-20210201
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
