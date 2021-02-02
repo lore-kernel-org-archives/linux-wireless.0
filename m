@@ -5,46 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 273FBC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FF04C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:19:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E08E964E2C
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:16:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 324ED64E92
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:19:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235145AbhBBPQ0 (ORCPT
+        id S235434AbhBBPSh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:16:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38280 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:18:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40744 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235223AbhBBPNl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:13:41 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 046F664F98;
-        Tue,  2 Feb 2021 15:07:20 +0000 (UTC)
+        id S235345AbhBBPQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:16:26 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A1BB664FAE;
+        Tue,  2 Feb 2021 15:07:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278441;
-        bh=8zbBwMMZ2sjCt9t0409HVX+AKEniPr73bu/McM7taqY=;
+        s=k20201202; t=1612278473;
+        bh=Hz+J5UmtDXGaKbBwf4cbi2y0bPeNszPDZvo/Tzji9R4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=opbKsybCZJn2pgz+8hMvQRiE25OA90nokSrsMYVocldc0BiGyG6ZObQNurado6ABp
-         hHk/+RjnQj86npjfaHxrJMQpBZVukC/9ScGbF8TgOMPjBuBTJ2o2IVlT9MGW8lTMie
-         0k55ghaMxKtSBpauyuRiqXof0ojZkw659wN2DXjgzT847YzoTJLOSH6dZzmkVwaKmT
-         2JjXnHOpTkWctA3fsGNoR/gcCWoYzfSvnOClFdnDFmjRaPm2MIdbSzHFvMiRBiqO3H
-         jMH8KoMh4WulvO7T22Zszipd0sR0+y0WjLqYayyrK8prcX2AZ6Hq3eD2x/IyFbiniX
-         Aldd17vp6LgAw==
+        b=UEJPgFMRhVRSmMiQz8EQzcUg85vIsTBIap3DC7F9wLZB66ldSvXHJxRwKqtvIgHAz
+         jXeQl9SCQiv0SB7YA6yq/+RvWouk2fOjWvy7nQe4ElCIZf2sSMuXphn7Gtf2oHsBK2
+         BEV4yVLc6O/q9HkLAn4pTmVl6vX2idATLNxDgwfQ9gOxlBrFva64DnMcvlMImZbE7M
+         i0VaPddEc1qt9SqUi3i1PYWILiUiD10gC5dAEPji9v8oq8d4rLsjeX59Q0sjud2qzF
+         MosQvrExa7yb1jvxWsFDZJyD8QMjxRiFoPzopUXI4LlZNA+/DmbbqgtaCkpu0shL0P
+         vrp3doja4QjVw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/10] iwlwifi: mvm: take mutex for calling iwl_mvm_get_sync_time()
-Date:   Tue,  2 Feb 2021 10:07:09 -0500
-Message-Id: <20210202150715.1864614-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 2/5] iwlwifi: pcie: add a NULL check in iwl_pcie_txq_unmap
+Date:   Tue,  2 Feb 2021 10:07:47 -0500
+Message-Id: <20210202150750.1864953-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210202150715.1864614-1-sashal@kernel.org>
-References: <20210202150715.1864614-1-sashal@kernel.org>
+In-Reply-To: <20210202150750.1864953-1-sashal@kernel.org>
+References: <20210202150750.1864953-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,36 +53,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 5c56d862c749669d45c256f581eac4244be00d4d ]
+[ Upstream commit 98c7d21f957b10d9c07a3a60a3a5a8f326a197e5 ]
 
-We need to take the mutex to call iwl_mvm_get_sync_time(), do it.
+I hit a NULL pointer exception in this function when the
+init flow went really bad.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.4bb5ccf881a6.I62973cbb081e80aa5b0447a5c3b9c3251a65cf6b@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210115130252.2e8da9f2c132.I0234d4b8ddaf70aaa5028a20c863255e05bc1f84@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 798605c4f1227..5287f21d7ba63 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -520,7 +520,10 @@ static ssize_t iwl_dbgfs_os_device_timediff_read(struct file *file,
- 	const size_t bufsz = sizeof(buf);
- 	int pos = 0;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 8dfe6b2bc7031..cb03c2855019b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -585,6 +585,11 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
+ 	struct iwl_txq *txq = &trans_pcie->txq[txq_id];
+ 	struct iwl_queue *q = &txq->q;
  
-+	mutex_lock(&mvm->mutex);
- 	iwl_mvm_get_sync_time(mvm, &curr_gp2, &curr_os);
-+	mutex_unlock(&mvm->mutex);
++	if (!txq) {
++		IWL_ERR(trans, "Trying to free a queue that wasn't allocated?\n");
++		return;
++	}
 +
- 	do_div(curr_os, NSEC_PER_USEC);
- 	diff = curr_os - curr_gp2;
- 	pos += scnprintf(buf + pos, bufsz - pos, "diff=%lld\n", diff);
+ 	spin_lock_bh(&txq->lock);
+ 	while (q->write_ptr != q->read_ptr) {
+ 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
 -- 
 2.27.0
 
