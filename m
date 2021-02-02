@@ -5,33 +5,33 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70357C4332D
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 457CEC433E9
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:51:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 474FE64F78
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:41:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BE1560232
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Feb 2021 15:51:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235677AbhBBPlo (ORCPT
+        id S235781AbhBBPvM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Feb 2021 10:41:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39396 "EHLO mail.kernel.org"
+        Tue, 2 Feb 2021 10:51:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39220 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235247AbhBBPOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Feb 2021 10:14:40 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9627A64F97;
-        Tue,  2 Feb 2021 15:07:23 +0000 (UTC)
+        id S235091AbhBBPNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Feb 2021 10:13:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A295664F8B;
+        Tue,  2 Feb 2021 15:07:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278444;
-        bh=jIHY2Onh9Lf4bc+Q7liJg+mnsJDotpo45TN0MWOgu8U=;
+        s=k20201202; t=1612278428;
+        bh=wx1VjmK1ZRT05MnfSOG3AXi4r5wT1JE27/vFg66holI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tJ/qQfMezLQhCnr1a5WYkxVf4B92oqOwTUd/rW6tSTx8wK9bisuoeROfk4rYdjHyA
-         R7NF+NfpDspkqkYHmd9kuV0xEwblmXUEtcxQJHucEgYcm2R3yFeBAAsIeEDTv4jfxZ
-         lR+iLsVtU2DBWxUvoC1XLzerKAepvN5KgqqcVayUjR7zBAGM6uaIUpsQ0SpAJHgdl4
-         /m4aRfqlvOvBAjpd34ou/lW0HqAr9A/vjmwNC+MPBWvYfdCmCIYg8w3ZQ54uCcsJzT
-         LAKZn3JsAx/iBYrrMcom16ymnZFx9bqB7BDCaxfqKgNX42NWZWTTYC2uhQq27u2duL
-         gWk6kVzrfwX8w==
+        b=aCQCmnRuvofayL5FdFLCkb/e75RFcy95jWj5OVDbdKKT/TFE6dThKIH8xDI1B+ePK
+         12+e5iW+iU7Vq6W9bFNa7iLCKVD9UqwKyh7CHiEoej/LuRspyKv2yGydZv+Zig9joU
+         DD3Qrx2LPVPs6ZLfeiM7wdnlGk4KN5KpUAJ8hXag8RLzF0fx9vp/eJsTesnNdoM6U9
+         XfrnfbAjuym8E56AqBwBkZ9+fl027cD56na9/yfcBGFOuBzJx0mjj+pn3G/q5CBpGQ
+         gkoRneXggqu6zalEROcfW/7FZHqVaKmM4QpTortojTJZjkKvvtvtlnZOC394wL7cst
+         gwRtxEONz63pQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
@@ -39,12 +39,12 @@ Cc:     Johannes Berg <johannes.berg@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 07/10] iwlwifi: pcie: fix context info memory leak
-Date:   Tue,  2 Feb 2021 10:07:11 -0500
-Message-Id: <20210202150715.1864614-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 13/17] iwlwifi: mvm: guard against device removal in reprobe
+Date:   Tue,  2 Feb 2021 10:06:47 -0500
+Message-Id: <20210202150651.1864426-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210202150715.1864614-1-sashal@kernel.org>
-References: <20210202150715.1864614-1-sashal@kernel.org>
+In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
+References: <20210202150651.1864426-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,49 +55,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 2d6bc752cc2806366d9a4fd577b3f6c1f7a7e04e ]
+[ Upstream commit 7a21b1d4a728a483f07c638ccd8610d4b4f12684 ]
 
-If the image loader allocation fails, we leak all the previously
-allocated memory. Fix this.
+If we get into a problem severe enough to attempt a reprobe,
+we schedule a worker to do that. However, if the problem gets
+more severe and the device is actually destroyed before this
+worker has a chance to run, we use a free device. Bump up the
+reference count of the device until the worker runs to avoid
+this situation.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210115130252.97172cbaa67c.I3473233d0ad01a71aa9400832fb2b9f494d88a11@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210122144849.871f0892e4b2.I94819e11afd68d875f3e242b98bef724b8236f1e@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 6783b20d9681b..a1cecf4a0e820 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -159,8 +159,10 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 	/* Allocate IML */
- 	iml_img = dma_alloc_coherent(trans->dev, trans->iml_len,
- 				     &trans_pcie->iml_dma_addr, GFP_KERNEL);
--	if (!iml_img)
--		return -ENOMEM;
-+	if (!iml_img) {
-+		ret = -ENOMEM;
-+		goto err_free_ctxt_info;
-+	}
- 
- 	memcpy(iml_img, trans->iml, trans->iml_len);
- 
-@@ -177,6 +179,11 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 
- 	return 0;
- 
-+err_free_ctxt_info:
-+	dma_free_coherent(trans->dev, sizeof(*trans_pcie->ctxt_info_gen3),
-+			  trans_pcie->ctxt_info_gen3,
-+			  trans_pcie->ctxt_info_dma_addr);
-+	trans_pcie->ctxt_info_gen3 = NULL;
- err_free_prph_info:
- 	dma_free_coherent(trans->dev,
- 			  sizeof(*prph_info),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index bc25a59807c34..8b0576cde797e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1242,6 +1242,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
+ 	reprobe = container_of(wk, struct iwl_mvm_reprobe, work);
+ 	if (device_reprobe(reprobe->dev))
+ 		dev_err(reprobe->dev, "reprobe failed!\n");
++	put_device(reprobe->dev);
+ 	kfree(reprobe);
+ 	module_put(THIS_MODULE);
+ }
+@@ -1292,7 +1293,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ 			module_put(THIS_MODULE);
+ 			return;
+ 		}
+-		reprobe->dev = mvm->trans->dev;
++		reprobe->dev = get_device(mvm->trans->dev);
+ 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
+ 		schedule_work(&reprobe->work);
+ 	} else if (test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
 -- 
 2.27.0
 
