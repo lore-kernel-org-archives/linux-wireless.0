@@ -2,78 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6F9C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 10:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 107EDC433DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 15:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0C1A64E0A
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 10:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2CB464F8C
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 15:19:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233629AbhBCKdM (ORCPT
+        id S234345AbhBCPSz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Feb 2021 05:33:12 -0500
-Received: from m12-17.163.com ([220.181.12.17]:53410 "EHLO m12-17.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232865AbhBCKdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Feb 2021 05:33:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=Oa9fJWAe0/0aV9P9p2
-        Zg+Ft1ZwGWfRwM5fVUa4V6GlY=; b=kIStVPWZKAlsZF75zqyOXOmRwHzfoo8vBB
-        nDyZL5IuOhQhwlE0h8d+XCIYYxO4d6AqBM43gJ4GdbJIM4fwxdaKAG3vlPd0q/Qn
-        spZ33oE6JqEzqgBmj0QLw3MtxArMj6zOkimMeh+Rb2X2waBH8p4UTXXLZmaxwFCV
-        THNcltOQU=
-Received: from wengjianfeng.ccdomain.com (unknown [119.137.55.230])
-        by smtp13 (Coremail) with SMTP id EcCowAAX_XTyRBpgXHrGjA--.48279S2;
-        Wed, 03 Feb 2021 14:38:43 +0800 (CST)
-From:   samirweng1979 <samirweng1979@163.com>
-To:     stf_xl@wp.pl, helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+        Wed, 3 Feb 2021 10:18:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37292 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233616AbhBCPRM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Feb 2021 10:17:12 -0500
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E578BC061573;
+        Wed,  3 Feb 2021 07:16:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=SAajQ4klDZN/vt6NlpnQzoD/xUvX9qCtrFSgFE30h/Q=; b=gYP64mmy6qQeXfr2rOcZr7FrVl
+        xB6AEZc5nEKi0NZo2rN5DkM42of/E7mJE3OzvkwnvtK2MdijGc8b9oRbglAGKLxUAh19SH/LEr2rC
+        H0pvDlMkjEIkPxqsoU7G+pmWTvZ7AdNn4CRC4DMfNNWfU/Te3uO54y2Dna3/ud3hJ3ijgfHaI1gg/
+        XGbqP1RgXnn2lLO1YksnpBX0cjyaAyhqijQNqERKrqXhCipMrQ9JsBKiYb7EW3d6JPvZyUYk0Fsys
+        qKelSuJxRcIM1hJ0z/XjXbRufZ9oVWUGtuYz/8XRci1bqygMkwAvMzQ6xHz6++4fZrqExmi6b3W//
+        JRER3oNQ==;
+Received: from [2601:1c0:6280:3f0::2a53]
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1l7JtM-0002Rx-G1; Wed, 03 Feb 2021 15:16:28 +0000
+Subject: Re: [PATCH] rt2x00: remove duplicate word in comment
+To:     samirweng1979 <samirweng1979@163.com>, stf_xl@wp.pl,
+        helmut.schaa@googlemail.com, kvalo@codeaurora.org,
         davem@davemloft.net, kuba@kernel.org
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         wengjianfeng <wengjianfeng@yulong.com>
-Subject: [PATCH] rt2x00: remove duplicate word in comment
-Date:   Wed,  3 Feb 2021 14:38:50 +0800
-Message-Id: <20210203063850.15844-1-samirweng1979@163.com>
-X-Mailer: git-send-email 2.15.0.windows.1
-X-CM-TRANSID: EcCowAAX_XTyRBpgXHrGjA--.48279S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtrW7Cw47ur13tFy7JF1DZFb_yoWDWFX_ur
-        y8Wrs7Z348Jw1YvF4jvFW7Xrya9r93Zr1kGw1jgr9xWry5ZrWUWan3AF4Sqw1jkr40vrnx
-        GF4DJr9Yv3yjvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU5hSdPUUUUU==
-X-Originating-IP: [119.137.55.230]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiERMusV7+2swKlgAAs3
+References: <20210203063850.15844-1-samirweng1979@163.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <6bf90f62-f14e-9c4a-748b-4923fcae9bef@infradead.org>
+Date:   Wed, 3 Feb 2021 07:16:17 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <20210203063850.15844-1-samirweng1979@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: wengjianfeng <wengjianfeng@yulong.com>
+On 2/2/21 10:38 PM, samirweng1979 wrote:
+> From: wengjianfeng <wengjianfeng@yulong.com>
+> 
+> remove duplicate word 'we' in comment
+> 
+> Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c b/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
+> index c861811..7158152 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
+> @@ -179,7 +179,7 @@ void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
+>  	 * Make room for new data. There are 2 possibilities
+>  	 * either the alignment is already present between
+>  	 * the 802.11 header and payload. In that case we
+> -	 * we have to move the header less then the iv_len
+> +	 * have to move the header less then the iv_len
 
-remove duplicate word 'we' in comment
+s/then/than/
 
-Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>  	 * since we can use the already available l2pad bytes
+>  	 * for the iv data.
+>  	 * When the alignment must be added manually we must
+> 
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c b/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
-index c861811..7158152 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00crypto.c
-@@ -179,7 +179,7 @@ void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
- 	 * Make room for new data. There are 2 possibilities
- 	 * either the alignment is already present between
- 	 * the 802.11 header and payload. In that case we
--	 * we have to move the header less then the iv_len
-+	 * have to move the header less then the iv_len
- 	 * since we can use the already available l2pad bytes
- 	 * for the iv data.
- 	 * When the alignment must be added manually we must
+
 -- 
-1.9.1
-
+~Randy
 
