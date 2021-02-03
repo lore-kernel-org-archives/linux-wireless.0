@@ -2,92 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF983C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 09:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAEB2C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 10:19:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98B8C64E24
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 09:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5785164E3E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 10:19:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233117AbhBCJDk (ORCPT
+        id S233598AbhBCKTb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Feb 2021 04:03:40 -0500
-Received: from mx3.wp.pl ([212.77.101.9]:53732 "EHLO mx3.wp.pl"
+        Wed, 3 Feb 2021 05:19:31 -0500
+Received: from m12-14.163.com ([220.181.12.14]:57857 "EHLO m12-14.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232590AbhBCJD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Feb 2021 04:03:27 -0500
-Received: (wp-smtpd smtp.wp.pl 23666 invoked from network); 3 Feb 2021 10:02:25 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
-          t=1612342945; bh=xJEmtkbgnpO4iwxpKMIMG3v2iyfIjI19TW5I9F6WVJ4=;
-          h=From:To:Cc:Subject;
-          b=TQUdRzS4CtMQnjMJjyogZhgeMCLOv4II7mNYhq2dUyimfhgZeXhbA6o+SIWEM3OtW
-           iOWJP3/TurgUb0nhpa7Aq1N4s7cIevDAncb7hmlfFnP3i29OVEyoPWIPHP4WlWwBwL
-           EuorPAvP32/1BxS2JqL1LquygbU9FieZPx0n2vW0=
-Received: from ip4-46-39-164-203.cust.nbox.cz (HELO localhost) (stf_xl@wp.pl@[46.39.164.203])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <mathias.nyman@linux.intel.com>; 3 Feb 2021 10:02:25 +0100
-Date:   Wed, 3 Feb 2021 10:02:24 +0100
-From:   Stanislaw Gruszka <stf_xl@wp.pl>
-To:     Mathias Nyman <mathias.nyman@linux.intel.com>
-Cc:     Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Bernhard <bernhard.gebetsberger@gmx.at>
-Subject: Re: [PATCH] usb, xhci, rt2800usb: do not perform Soft Retry
-Message-ID: <20210203090224.GA155452@wp.pl>
-References: <20210122104342.12451-1-stf_xl@wp.pl>
- <YAq9bt6q9dfk4F+F@kroah.com>
- <20210122132650.GA13029@wp.pl>
- <eb37b28d-5046-f0cd-92ee-55af0e350802@linux.intel.com>
- <20210123101418.GA16688@wp.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210123101418.GA16688@wp.pl>
-X-WP-MailID: 93bb557ca9907e5b670e86f2459fd40b
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [IWPk]                               
+        id S233488AbhBCKT0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Feb 2021 05:19:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=OgKwUMofdoKu/7tnN0
+        0hu/u8x4YRxNderZkLq1lXjs8=; b=GuOEiQJi0au7d+fxj5OKHlcHO/QJQrLta2
+        wzJG8K+R2NqwDZjwRBe/G+VCygDM7OEPR46stpocLHtcRS0RCnC1x7EJ+nCiGaPG
+        huEYRgVCwiREGPvl8qses9XEaPbRROpXlYdzX7FIxL/5f9qw22sItkm8yvjtywA4
+        DptboA3yM=
+Received: from wengjianfeng.ccdomain.com (unknown [119.137.55.230])
+        by smtp10 (Coremail) with SMTP id DsCowABn_EiuPxpgsr6ljA--.2069S2;
+        Wed, 03 Feb 2021 14:16:15 +0800 (CST)
+From:   samirweng1979 <samirweng1979@163.com>
+To:     buytenh@wantstofly.org, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        wengjianfeng <wengjianfeng@yulong.com>
+Subject: [PATCH] mwl8k: assign value when defining variables
+Date:   Wed,  3 Feb 2021 14:16:25 +0800
+Message-Id: <20210203061625.588-1-samirweng1979@163.com>
+X-Mailer: git-send-email 2.15.0.windows.1
+X-CM-TRANSID: DsCowABn_EiuPxpgsr6ljA--.2069S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtrW7KF1rJry3WFy8XrWkJFb_yoWfGFgE9r
+        1IvF1agryxJr1jyr4jka13Z3sYyF15XF1ruwsFqrZxGry8Ja90vwnYkF1ftrZrCF4IvF9r
+        Wrs8J3WYy3W3XjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU5VKZtUUUUU==
+X-Originating-IP: [119.137.55.230]
+X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiERIusV7+2suhNQABs4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Jan 23, 2021 at 11:14:19AM +0100, Stanislaw Gruszka wrote:
-> On Fri, Jan 22, 2021 at 05:00:21PM +0200, Mathias Nyman wrote:
-> > >> Or is this due to the specific host controller device hardware?  Should
-> > >> this be a xhci quirk for a specific pci device instead?
-> > 
-> > Exactly, this should be checked.
-> > Stanislaw, weren't there a few users already that saw this issue?
-> 
-> There are 30+ users cc-ed in the bugzilla report. However I think some
-> of them are not affected by issue originally reported by Bernhard.
-> They just saw "WARN Set TR Deq Ptr cmd failed due to incorrect slot
-> or ep state" message caused by different problem and added comment
-> to this particular bug report.
-> 
-> > Do we know what xHCI controllers they were using?
-> 
-> What I can tell issue was reported mostly on ASMedia and AMD
-> controllers. We can ask for exact vendor and device IDs and
-> just add xhci->quirks flag.
-> 
-> However I'm not entirely sure that xHCI hardware misbehave
-> is actual root cause. I think equally probable is that
-> connected device do not handle soft retry correctly. In that
-> case disabling Soft Retry per device would be actually
-> "lightest hammer" since other devices connected to the
-> xHCI host could benefit from faster recovery.
-> 
-> Is there way to debug/identify which side: host or device
-> hardware misbehave when Soft Retry is performed ?
+From: wengjianfeng <wengjianfeng@yulong.com>
 
-So I think we do not have such possibility. If xhci quirk is
-something that can be accepted I'll precede with such patch.
-I'm going to ask bug reporters about xHCI conntroler PCI-id's ...
+define refilled and then assign value to it, which should do
+that at the same time.
 
-Stanislaw 
+Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+---
+ drivers/net/wireless/marvell/mwl8k.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+index abf3b02..435ef77 100644
+--- a/drivers/net/wireless/marvell/mwl8k.c
++++ b/drivers/net/wireless/marvell/mwl8k.c
+@@ -1208,9 +1208,8 @@ static int rxq_refill(struct ieee80211_hw *hw, int index, int limit)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_rx_queue *rxq = priv->rxq + index;
+-	int refilled;
++	int refilled = 0;
+ 
+-	refilled = 0;
+ 	while (rxq->rxd_count < MWL8K_RX_DESCS && limit--) {
+ 		struct sk_buff *skb;
+ 		dma_addr_t addr;
+-- 
+1.9.1
+
+
