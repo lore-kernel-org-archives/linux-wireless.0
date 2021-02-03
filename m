@@ -2,80 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B13BDC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:29:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB1B5C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 07:34:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D56164F5D
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:29:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7450364E2A
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 07:34:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231628AbhBCG27 (ORCPT
+        id S232024AbhBCHes (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Feb 2021 01:28:59 -0500
-Received: from m12-14.163.com ([220.181.12.14]:58960 "EHLO m12-14.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231186AbhBCG2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Feb 2021 01:28:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=3PjaSyTPIF/0eA0o6d
-        2SeGzWaUYGs51QsvtN6khf1pE=; b=TWPFLVzzzFAqhbfZT/mDeERBmfj4sxWmdC
-        bVYHMwQnbl53pB2vFtnMwoQJN3AZvSEFl/6kzlIa06ys8Nn4YV1r0yvscJO05Iwv
-        UIamMfyXSx2tsWbHcfReVDxxeifdU/vohWwdomjt/UhE1HGHuYF1o7W7B6AJ9ZxP
-        bWfbnvCkI=
-Received: from wengjianfeng.ccdomain.com (unknown [119.137.55.230])
-        by smtp10 (Coremail) with SMTP id DsCowADH3ko6QhpgbEunjA--.285S2;
-        Wed, 03 Feb 2021 14:27:07 +0800 (CST)
-From:   samirweng1979 <samirweng1979@163.com>
-To:     amitkarwar@gmail.com, siva8118@gmail.com, kvalo@codeaurora.org,
-        davem@davemloft.net, kuba@kernel.org
+        Wed, 3 Feb 2021 02:34:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231560AbhBCHeo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Feb 2021 02:34:44 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 250A2C06174A;
+        Tue,  2 Feb 2021 23:33:49 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1l7CfJ-00FKfW-BY; Wed, 03 Feb 2021 08:33:29 +0100
+Message-ID: <9200710b2d9dafea4bfae4bb449a55fb44245d04.camel@sipsolutions.net>
+Subject: Re: [PATCH] wireless: fix typo issue
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     samirweng1979 <samirweng1979@163.com>, davem@davemloft.net,
+        kuba@kernel.org
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         wengjianfeng <wengjianfeng@yulong.com>
-Subject: [PATCH] rsi: remove redundant assignment
-Date:   Wed,  3 Feb 2021 14:27:17 +0800
-Message-Id: <20210203062717.1228-1-samirweng1979@163.com>
-X-Mailer: git-send-email 2.15.0.windows.1
-X-CM-TRANSID: DsCowADH3ko6QhpgbEunjA--.285S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtrWxWF1kZw1xWw1fKF4UJwb_yoW3Krb_ur
-        10qF4fWrWkG3W8Kryj9FW3Zr9Iya4UW3WrGw4qq3yfGryUtrZxAw15Crn3J3yDG34jvr9x
-        Gws7uryIva43ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUe-yCJUUUUU==
-X-Originating-IP: [119.137.55.230]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiRRsusVl91EvVBwAAso
+Date:   Wed, 03 Feb 2021 08:33:23 +0100
+In-Reply-To: <20210203070025.17628-1-samirweng1979@163.com>
+References: <20210203070025.17628-1-samirweng1979@163.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: wengjianfeng <wengjianfeng@yulong.com>
+On Wed, 2021-02-03 at 15:00 +0800, samirweng1979 wrote:
+> From: wengjianfeng <wengjianfeng@yulong.com>
+> 
+> change 'iff' to 'if'.
+> 
+> Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+> ---
+>  net/wireless/chan.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index 285b807..2f17edf 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -1084,7 +1084,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+>   * associated to an AP on the same channel or on the same UNII band
+>   * (assuming that the AP is an authorized master).
+>   * In addition allow operation on a channel on which indoor operation is
+> - * allowed, iff we are currently operating in an indoor environment.
+> + * allowed, if we are currently operating in an indoor environment.
+>   */
 
-INVALID_QUEUE has been used as a return value,it is not necessary to
-assign it to q_num,so just return INVALID_QUEUE.
+I suspect that was intentional, as a common abbreviation for "if and
+only if".
 
-Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 2d49c5b..a48e616 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -193,8 +193,7 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
- 		if (recontend_queue)
- 			goto get_queue_num;
- 
--		q_num = INVALID_QUEUE;
--		return q_num;
-+		return INVALID_QUEUE;
- 	}
- 
- 	common->selected_qnum = q_num;
--- 
-1.9.1
-
+johannes
 
