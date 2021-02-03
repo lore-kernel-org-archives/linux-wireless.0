@@ -2,147 +2,79 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95160C433DB
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:21:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B13BDC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 335C664DF4
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:21:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D56164F5D
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Feb 2021 06:29:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbhBCGV1 (ORCPT
+        id S231628AbhBCG27 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Feb 2021 01:21:27 -0500
-Received: from m12-12.163.com ([220.181.12.12]:57036 "EHLO m12-12.163.com"
+        Wed, 3 Feb 2021 01:28:59 -0500
+Received: from m12-14.163.com ([220.181.12.14]:58960 "EHLO m12-14.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229605AbhBCGV0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Feb 2021 01:21:26 -0500
+        id S231186AbhBCG2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Feb 2021 01:28:55 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=3HDPhqmHgPvzBuo5bl
-        I2uMvrIMia8BZyw9nwfQ+vqKI=; b=AZfLJBqPzBheUnjDXrxqNM4FE+WXMURkdC
-        f/L4DL1PMLW+qgWyb8VaoeQFb3lgTHK8NGcgr6DlfZVuqdFCxnSqAK8y6EtGh9Ez
-        d6/888OzeuviJzYk+evUpMgpT4AwSM8tvizV39Ma/pjmNzvv3yblYsiHWnFx2mUT
-        Ru53embXs=
+        s=s110527; h=From:Subject:Date:Message-Id; bh=3PjaSyTPIF/0eA0o6d
+        2SeGzWaUYGs51QsvtN6khf1pE=; b=TWPFLVzzzFAqhbfZT/mDeERBmfj4sxWmdC
+        bVYHMwQnbl53pB2vFtnMwoQJN3AZvSEFl/6kzlIa06ys8Nn4YV1r0yvscJO05Iwv
+        UIamMfyXSx2tsWbHcfReVDxxeifdU/vohWwdomjt/UhE1HGHuYF1o7W7B6AJ9ZxP
+        bWfbnvCkI=
 Received: from wengjianfeng.ccdomain.com (unknown [119.137.55.230])
-        by smtp8 (Coremail) with SMTP id DMCowAA3Z8+RPBpgAtH1Ow--.718S2;
-        Wed, 03 Feb 2021 14:02:58 +0800 (CST)
+        by smtp10 (Coremail) with SMTP id DsCowADH3ko6QhpgbEunjA--.285S2;
+        Wed, 03 Feb 2021 14:27:07 +0800 (CST)
 From:   samirweng1979 <samirweng1979@163.com>
-To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+To:     amitkarwar@gmail.com, siva8118@gmail.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         wengjianfeng <wengjianfeng@yulong.com>
-Subject: [PATCH] wl1251: cmd: remove redundant assignment
-Date:   Wed,  3 Feb 2021 14:03:06 +0800
-Message-Id: <20210203060306.2832-1-samirweng1979@163.com>
+Subject: [PATCH] rsi: remove redundant assignment
+Date:   Wed,  3 Feb 2021 14:27:17 +0800
+Message-Id: <20210203062717.1228-1-samirweng1979@163.com>
 X-Mailer: git-send-email 2.15.0.windows.1
-X-CM-TRANSID: DMCowAA3Z8+RPBpgAtH1Ow--.718S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJF45uw15ArW5AFW8tF1DKFg_yoW5Jw13pF
-        93u347tr98tr1UXrWrZw4kZa9ag3W8JrW7GrWDu34qqF1ayr4FkrZ0gFy09F98ua9YyrW3
-        tFZ0gF4rWF1DCFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jNUUUUUUUU=
+X-CM-TRANSID: DsCowADH3ko6QhpgbEunjA--.285S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtrWxWF1kZw1xWw1fKF4UJwb_yoW3Krb_ur
+        10qF4fWrWkG3W8Kryj9FW3Zr9Iya4UW3WrGw4qq3yfGryUtrZxAw15Crn3J3yDG34jvr9x
+        Gws7uryIva43ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUe-yCJUUUUU==
 X-Originating-IP: [119.137.55.230]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiERIusV7+2suhNQAAs5
+X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiRRsusVl91EvVBwAAso
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: wengjianfeng <wengjianfeng@yulong.com>
 
--ENOMEM has been used as a return value,it is not necessary to
-assign it, and if kzalloc fail,not need free it,so just return
--ENOMEM when kzalloc fail.
+INVALID_QUEUE has been used as a return value,it is not necessary to
+assign it to q_num,so just return INVALID_QUEUE.
 
 Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
 ---
- drivers/net/wireless/ti/wl1251/cmd.c | 36 ++++++++++++------------------------
- 1 file changed, 12 insertions(+), 24 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-index e1095b8..498c8db 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.c
-+++ b/drivers/net/wireless/ti/wl1251/cmd.c
-@@ -175,10 +175,8 @@ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
- 	wl1251_debug(DEBUG_CMD, "cmd vbm");
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 2d49c5b..a48e616 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -193,8 +193,7 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
+ 		if (recontend_queue)
+ 			goto get_queue_num;
  
- 	vbm = kzalloc(sizeof(*vbm), GFP_KERNEL);
--	if (!vbm) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!vbm)
-+		return -ENOMEM;
+-		q_num = INVALID_QUEUE;
+-		return q_num;
++		return INVALID_QUEUE;
+ 	}
  
- 	/* Count and period will be filled by the target */
- 	vbm->tim.bitmap_ctrl = bitmap_control;
-@@ -213,10 +211,8 @@ int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable)
- 	wl1251_debug(DEBUG_CMD, "cmd data path");
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
--	if (!cmd) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!cmd)
-+		return -ENOMEM;
- 
- 	cmd->channel = channel;
- 
-@@ -279,10 +275,8 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
- 	u8 *bssid;
- 
- 	join = kzalloc(sizeof(*join), GFP_KERNEL);
--	if (!join) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!join)
-+		return -ENOMEM;
- 
- 	wl1251_debug(DEBUG_CMD, "cmd join%s ch %d %d/%d",
- 		     bss_type == BSS_TYPE_IBSS ? " ibss" : "",
-@@ -324,10 +318,8 @@ int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode)
- 	wl1251_debug(DEBUG_CMD, "cmd set ps mode");
- 
- 	ps_params = kzalloc(sizeof(*ps_params), GFP_KERNEL);
--	if (!ps_params) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!ps_params)
-+		return -ENOMEM;
- 
- 	ps_params->ps_mode = ps_mode;
- 	ps_params->send_null_data = 1;
-@@ -356,10 +348,8 @@ int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
- 	wl1251_debug(DEBUG_CMD, "cmd read memory");
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
--	if (!cmd) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!cmd)
-+		return -ENOMEM;
- 
- 	WARN_ON(len > MAX_READ_SIZE);
- 	len = min_t(size_t, len, MAX_READ_SIZE);
-@@ -401,10 +391,8 @@ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
- 	cmd_len = ALIGN(sizeof(*cmd) + buf_len, 4);
- 
- 	cmd = kzalloc(cmd_len, GFP_KERNEL);
--	if (!cmd) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!cmd)
-+		return -ENOMEM;
- 
- 	cmd->size = cpu_to_le16(buf_len);
- 
+ 	common->selected_qnum = q_num;
 -- 
 1.9.1
 
