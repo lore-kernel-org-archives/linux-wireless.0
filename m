@@ -2,72 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E01C433DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Feb 2021 10:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE841C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Feb 2021 13:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1605B64F53
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Feb 2021 10:20:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A1A264D9F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Feb 2021 13:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235331AbhBDKT6 (ORCPT
+        id S236446AbhBDNqV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Feb 2021 05:19:58 -0500
-Received: from mx3.wp.pl ([212.77.101.9]:53022 "EHLO mx3.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233120AbhBDKT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Feb 2021 05:19:57 -0500
-Received: (wp-smtpd smtp.wp.pl 14603 invoked from network); 4 Feb 2021 11:19:03 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
-          t=1612433943; bh=1AXDuFLIt28K1KcSPRA3VeGyYNKSA/hAKMTsttfiZOw=;
-          h=From:To:Subject;
-          b=fjGO6S69SjLEf3AxIOiWJ388n8Mm0jxft45FNQFKxznt0jaG/DB6nwu8F+/7oekvs
-           jvwT0XqVNftve00w8T1WP75T0pWmhA5haHxMoZH2Zzm033+Ei4kaENkvdBLqjKHr78
-           sylirof6xugEC9NjVr7KIt3Kmwk49L/pwPScn28E=
-Received: from ip4-46-39-164-203.cust.nbox.cz (HELO localhost) (stf_xl@wp.pl@[46.39.164.203])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 4 Feb 2021 11:19:03 +0100
-From:   stf_xl@wp.pl
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2800usb: add Sweex LW163V2 id's
-Date:   Thu,  4 Feb 2021 11:19:02 +0100
-Message-Id: <20210204101902.199590-1-stf_xl@wp.pl>
-X-Mailer: git-send-email 2.25.4
+        Thu, 4 Feb 2021 08:46:21 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:43658 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S236440AbhBDNpn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Feb 2021 08:45:43 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1l7ew4-0044Fb-68; Thu, 04 Feb 2021 15:44:40 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu,  4 Feb 2021 15:44:39 +0200
+Message-Id: <iwlwifi.20210204154439.6c884ea7281c.I257278d03b0c1ae0aa6631672cfa48f1a95d5996@changeid>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-WP-MailID: 84aae4159f007565d81a6938e3b5c4d3
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [0VOF]                               
+Subject: [PATCH] cfg80211: initialize reg_rule in __freq_reg_info()
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Add support for Sweex LW163V2 device.
+Sparse started warning on this function because we can potentially
+return an uninitialized value.  The reason is that if the caller
+passes a min_bw value that is higher then the last value in bws[], we
+will not go into the loop and reg_rule will remain initialized.  This
+cannot happen because the only caller of this function uses either 1
+or 20 in min_bw, but the function will be more robust if we
+pre-initialize the value.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-index d08b251ec5a2..36ac18ca8082 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-@@ -988,6 +988,7 @@ static const struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x177f, 0x0313) },
- 	{ USB_DEVICE(0x177f, 0x0323) },
- 	{ USB_DEVICE(0x177f, 0x0324) },
-+	{ USB_DEVICE(0x177f, 0x1163) },
- 	/* U-Media */
- 	{ USB_DEVICE(0x157e, 0x300e) },
- 	{ USB_DEVICE(0x157e, 0x3013) },
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 452b698f42be..21536c48deec 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1629,7 +1629,7 @@ __freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
+ {
+ 	const struct ieee80211_regdomain *regd = reg_get_regdomain(wiphy);
+ 	static const u32 bws[] = {0, 1, 2, 4, 5, 8, 10, 16, 20};
+-	const struct ieee80211_reg_rule *reg_rule;
++	const struct ieee80211_reg_rule *reg_rule = ERR_PTR(-ERANGE);
+ 	int i = ARRAY_SIZE(bws) - 1;
+ 	u32 bw;
+ 
 -- 
-2.25.4
+2.30.0
 
