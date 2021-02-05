@@ -2,80 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D0CC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 19:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9E7C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 21:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9E6064E2E
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 19:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBD3C64FC5
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 21:28:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233493AbhBERjc (ORCPT
+        id S233061AbhBEV2A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 12:39:32 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:39402 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233435AbhBEP5X (ORCPT
+        Fri, 5 Feb 2021 16:28:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55576 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231876AbhBEV1r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 10:57:23 -0500
-Received: from 1.general.cking.uk.vpn ([10.172.193.212])
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1l854C-0003cO-Bn; Fri, 05 Feb 2021 17:38:48 +0000
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-From:   Colin Ian King <colin.king@canonical.com>
-Subject: Potential invalid ~ operator in net/mac80211/cfg.c
-Message-ID: <4bb65f2f-48f9-7d9c-ab2e-15596f15a4d8@canonical.com>
-Date:   Fri, 5 Feb 2021 17:38:47 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        Fri, 5 Feb 2021 16:27:47 -0500
+X-Greylist: delayed 1119 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 05 Feb 2021 13:27:07 PST
+Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26499C0613D6;
+        Fri,  5 Feb 2021 13:27:07 -0800 (PST)
+Received: by bues.ch with esmtpsa (Exim 4.92)
+        (envelope-from <m@bues.ch>)
+        id 1l88Kz-0008Kk-SC; Fri, 05 Feb 2021 22:08:21 +0100
+Date:   Fri, 5 Feb 2021 22:06:44 +0100
+From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ssb: Use true and false for bool variable
+Message-ID: <20210205220644.0d05f5ce@wiggum>
+In-Reply-To: <1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+References: <1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="Sig_/jz6Nx+otOii=QehdirSLbMq";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi there,
+--Sig_/jz6Nx+otOii=QehdirSLbMq
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-while working through a backlog of older static analysis reports from
-Coverity I found an interesting use of the ~ operator that looks
-incorrect to me in function ieee80211_set_bitrate_mask():
+On Fri,  5 Feb 2021 14:56:39 +0800
+Jiapeng Chong <jiapeng.chong@linux.alibaba.com> wrote:
 
-                for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
-                        if (~sdata->rc_rateidx_mcs_mask[i][j]) {
-                                sdata->rc_has_mcs_mask[i] = true;
-                                break;
-                        }
-                }
+> Fix the following coccicheck warnings:
 
-                for (j = 0; j < NL80211_VHT_NSS_MAX; j++) {
-                        if (~sdata->rc_rateidx_vht_mcs_mask[i][j]) {
-                                sdata->rc_has_vht_mcs_mask[i] = true;
-                                break;
-                        }
-                }
+Acked-by: Michael B=C3=BCsch <m@bues.ch>
 
-For the ~ operator in both if stanzas, Coverity reports:
+--=20
+Michael
 
-Logical vs. bitwise operator (CONSTANT_EXPRESSION_RESULT)
-logical_vs_bitwise:
+--Sig_/jz6Nx+otOii=QehdirSLbMq
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-~sdata->rc_rateidx_mcs_mask[i][j] is always 1/true regardless of the
-values of its operand. This occurs as the logical operand of if.
-    Did you intend to use ! rather than ~?
+-----BEGIN PGP SIGNATURE-----
 
-I've checked the results of this and it does seem that ~ is incorrect
-and always returns true for the if expression. So it probably should be
-!, but I'm not sure if I'm missing something deeper here and wondering
-why this has always worked.
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmAds2QACgkQ9TK+HZCN
+iw58hQ//T//CDvkFrpC+zCcZ6qfcfjLrO/d3Wswp1Ta01ZJIVEvpsHKb22VDnrAG
+YBnrcN8ZLSsMm9mcQrj4rzfLPhYEIOnaX4+4z8RtZZqwpK97A/3uVsGhx20U+E1k
+VwcHiIATbtzh7BeoLOrS/GW6f4zvJ+gld9hctJenKSe1vakBIuZ4ygCVSyX5kuiB
+QkWzZmEr4/SnqXAvCRF+CErP9jg3Ks1+uJRLxyj5XbA+MRFEjSajnfZlNiS2No2f
+nZxma6I9MpMIqsMLBFWHOWQkAVQPecFqGR25PPcYAe3kUT6vLbKjt4XTC5mOqA14
+CgwVynDEhBW4BpG2qzxUbS5/ahgmdbeOtF97aqXwX3fWD9PsFRvMAmYAn5SWKeS3
+Mtyvd9X9adDS39DkLtl8BftQ/shHAOS2iTAhfKZ79lnMdl6bcHhP8QvApTVc7mBk
+dx2sCT4Wu5uHZBeds0LyCPQCpqkTQ4AG+AhqhaZJV/RBmRTAwVYcx9dO+jTZSPj7
+XqTxafxJUi2wD7oAUIM7//Uy8fVvNiYVXrH9Zk8EXYRELY/v0NHlO3SBCxfhHaDm
+CfP15YzaNYnzsh8pWFHyTG30hoCzyDNhVezWSTYyWhhrTeB9I/mJ3qMHq27H3J90
+0Bt0xnQUDqp2tYPxm+w293AIoAnL69ZO2F0/r+wNplHtsKbyZMU=
+=h9ND
+-----END PGP SIGNATURE-----
 
-Colin
+--Sig_/jz6Nx+otOii=QehdirSLbMq--
