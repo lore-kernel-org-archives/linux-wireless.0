@@ -7,100 +7,212 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E29CDC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E80C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:13:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94D1764F92
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:04:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E636064EE4
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:13:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233054AbhBEWDd (ORCPT
+        id S232975AbhBEWMf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 17:03:33 -0500
-Received: from mail29.static.mailgun.info ([104.130.122.29]:19956 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232916AbhBEO4f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 09:56:35 -0500
+        Fri, 5 Feb 2021 17:12:35 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:30790 "EHLO so15.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229564AbhBEOlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Feb 2021 09:41:13 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612542901; h=Date: Message-Id: Cc: To: Subject: From:
+ s=smtp; t=1612541979; h=Date: Message-Id: Cc: To: Subject: From:
  Content-Transfer-Encoding: MIME-Version: Content-Type: Sender;
- bh=5DSTHrZK4wM2icaWTMo1JarJaPCtwqgT8lF+/L+De9U=; b=DfYxYYwXe/i6DAAAHrUVxZlGmNUd2sU/VUu4he5pJU0Cmnt2apoyB/nAF1619w/Ug4pkVpxJ
- qteULc6uc8lf0jgCGUsy95D+4GdnU82AwSKtuc38+q9InJ8Unna36fYeNdCGHk0OhyZsub++
- KlfgaSGPoYPMsMyXL4D+eAxpk7k=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ bh=KCP31NAFObJPL56qHeibLtj+NJn3cmYwD3Gxo6rFaWs=; b=kOVPKXQ2wy9IwcY4GKipdmqICX2l8ELXLMYMzER4HMXDvebuImEbDRi00vxKsvqBdhDI4P0c
+ HKr2p/+aNrwHi2trk+sDScw9SMjOqPQwR0/E1yLQVjRLzEPALrAzVHi8gG+3yiXTGAa9eJte
+ wUy/AEx4tESteAbOYQPiF3qC2tE=
+X-Mailgun-Sending-Ip: 198.61.254.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 601d739a0bb8f50fb9948dea (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 05 Feb 2021 16:34:34
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 601d6ff671c26722934de148 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 05 Feb 2021 16:19:02
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 14D94C433ED; Fri,  5 Feb 2021 16:34:34 +0000 (UTC)
+        id C7F83C433ED; Fri,  5 Feb 2021 16:19:01 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19D29C433C6;
-        Fri,  5 Feb 2021 16:34:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 19D29C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 80CE4C433C6;
+        Fri,  5 Feb 2021 16:19:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 80CE4C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 From:   Kalle Valo <kvalo@codeaurora.org>
-Subject: pull-request: wireless-drivers-2021-02-05
+Subject: pull-request: wireless-drivers-next-2021-02-05
 To:     netdev@vger.kernel.org
 Cc:     linux-wireless@vger.kernel.org
-Message-Id: <20210205163434.14D94C433ED@smtp.codeaurora.org>
-Date:   Fri,  5 Feb 2021 16:34:34 +0000 (UTC)
+Message-Id: <20210205161901.C7F83C433ED@smtp.codeaurora.org>
+Date:   Fri,  5 Feb 2021 16:19:01 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hi,
 
-here's a pull request to net tree, more info below. Please let me know if there
-are any problems.
+here's a pull request to net-next tree, more info below. Please let me know if
+there are any problems.
 
 Kalle
 
-The following changes since commit 0acb20a5438c36e0cf2b8bf255f314b59fcca6ef:
+The following changes since commit 73b7a6047971aa6ce4a70fc4901964d14f077171:
 
-  mt7601u: fix kernel crash unplugging the device (2021-01-25 16:02:52 +0200)
+  net: dsa: bcm_sf2: support BCM4908's integrated switch (2021-01-09 19:18:10 -0800)
 
 are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-2021-02-05
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-2021-02-05
 
-for you to fetch changes up to 93a1d4791c10d443bc67044def7efee2991d48b7:
+for you to fetch changes up to 4832bb371c4175ffb506a96accbb08ef2b2466e7:
 
-  mt76: dma: fix a possible memory leak in mt76_add_fragment() (2021-01-28 09:30:37 +0200)
+  iwl4965: do not process non-QOS frames on txq->sched_retry path (2021-01-25 16:43:27 +0200)
 
 ----------------------------------------------------------------
-wireless-drivers fixes for v5.11
+wireless-drivers-next patches for v5.12
 
-Third, and most likely the last, set of fixes for v5.11. Two very
-small fixes.
+First set of patches for v5.12. A smaller pull request this time,
+biggest feature being a better key handling for ath9k. And of course
+the usual fixes and cleanups all over.
+
+Major changes:
 
 ath9k
 
-* fix build regression related to LEDS_CLASS
+* more robust encryption key cache management
 
-mt76
+brcmfmac
 
-* fix a memory leak
+* support BCM4365E with 43666 ChipCommon chip ID
 
 ----------------------------------------------------------------
-Arnd Bergmann (1):
-      ath9k: fix build error with LEDS_CLASS=m
+Aditya Srivastava (5):
+      rtlwifi: rtl_pci: fix bool comparison in expressions
+      rtlwifi: rtl8192c-common: fix bool comparison in expressions
+      rtlwifi: rtl8188ee: fix bool comparison in expressions
+      rtlwifi: rtl8192se: fix bool comparison in expressions
+      rtlwifi: rtl8821ae: fix bool comparison in expressions
 
-Lorenzo Bianconi (1):
-      mt76: dma: fix a possible memory leak in mt76_add_fragment()
+Amey Narkhede (1):
+      qtnfmac_pcie: Use module_pci_driver
 
- drivers/net/wireless/ath/ath9k/Kconfig   | 8 ++------
- drivers/net/wireless/mediatek/mt76/dma.c | 8 +++++---
- net/mac80211/Kconfig                     | 2 +-
- 3 files changed, 8 insertions(+), 10 deletions(-)
+Chin-Yen Lee (2):
+      rtw88: reduce the log level for failure of tx report
+      rtw88: 8723de: adjust the LTR setting
+
+Ching-Te Ku (1):
+      rtw88: coex: set 4 slot TDMA for BT link and WL busy
+
+Colin Ian King (1):
+      wilc1000: fix spelling mistake in Kconfig "devision" -> "division"
+
+Dan Carpenter (1):
+      ath11k: dp: clean up a variable name
+
+Geert Uytterhoeven (1):
+      mwifiex: pcie: Drop bogus __refdata annotation
+
+Jouni Malinen (5):
+      ath: Use safer key clearing with key cache entries
+      ath9k: Clear key cache explicitly on disabling hardware
+      ath: Export ath_hw_keysetmac()
+      ath: Modify ath_key_delete() to not need full key entry
+      ath9k: Postpone key cache entry deletion for TXQ frames reference it
+
+Kalle Valo (2):
+      ath11k: pci: remove unnecessary mask in ath11k_pci_enable_ltssm()
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+
+Lorenzo Bianconi (2):
+      mt7601u: use ieee80211_rx_list to pass frames to the network stack as a batch
+      mt7601u: process tx URBs with status EPROTO properly
+
+Luca Pesce (1):
+      brcmfmac: clear EAP/association status bits on linkdown events
+
+Rafał Miłecki (1):
+      brcmfmac: support BCM4365E with 43666 ChipCommon chip ID
+
+Rakesh Pillai (2):
+      ath10k: Fix error handling in case of CE pipe init failure
+      ath10k: Remove voltage regulator votes during wifi disable
+
+Stanislaw Gruszka (1):
+      iwl4965: do not process non-QOS frames on txq->sched_retry path
+
+Tian Tao (1):
+      wilc1000: use flexible-array member instead of zero-length array
+
+Tony Lindgren (2):
+      wlcore: Downgrade exceeded max RX BA sessions to debug
+      wlcore: Fix command execute failure 19 for wl12xx
+
+Vincent Fann (1):
+      rtw88: 8821c: apply CCK PD level which calculates from dynamic mechanism
+
+Wen Gong (1):
+      ath10k: prevent deinitializing NAPI twice
+
+YANG LI (1):
+      rtw88: Simplify bool comparison
+
+Zheng Yongjun (2):
+      rtw88: Delete useless kfree code
+      brcmfmac: Delete useless kfree code
+
+Zhi Han (2):
+      mt7601u: process URBs in status EPROTO properly
+      mt7601u: check the status of device in calibration
+
+ drivers/net/wireless/ath/ath.h                     |   3 +-
+ drivers/net/wireless/ath/ath10k/ahb.c              |   5 +-
+ drivers/net/wireless/ath/ath10k/core.c             |  25 +++++
+ drivers/net/wireless/ath/ath10k/core.h             |   5 +
+ drivers/net/wireless/ath/ath10k/pci.c              |   7 +-
+ drivers/net/wireless/ath/ath10k/sdio.c             |   5 +-
+ drivers/net/wireless/ath/ath10k/snoc.c             | 103 +++++++++++----------
+ drivers/net/wireless/ath/ath11k/dp_rx.c            |   2 +-
+ drivers/net/wireless/ath/ath11k/pci.c              |   2 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c      |   2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   2 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |   1 +
+ drivers/net/wireless/ath/ath9k/main.c              |  95 ++++++++++++++++++-
+ drivers/net/wireless/ath/key.c                     |  41 ++++----
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   7 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |   1 +
+ .../broadcom/brcm80211/brcmfmac/firmware.c         |  10 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |   1 +
+ .../broadcom/brcm80211/include/brcm_hw_ids.h       |   1 +
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c     |  11 ++-
+ drivers/net/wireless/marvell/mwifiex/pcie.c        |   2 +-
+ drivers/net/wireless/mediatek/mt7601u/dma.c        |  21 ++++-
+ drivers/net/wireless/mediatek/mt7601u/phy.c        |   3 +
+ drivers/net/wireless/microchip/wilc1000/Kconfig    |   2 +-
+ drivers/net/wireless/microchip/wilc1000/fw.h       |   8 +-
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |  13 +--
+ drivers/net/wireless/realtek/rtlwifi/ps.c          |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |   8 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   4 +-
+ .../wireless/realtek/rtlwifi/rtl8192c/dm_common.c  |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |   8 +-
+ drivers/net/wireless/realtek/rtw88/coex.c          |   4 +-
+ drivers/net/wireless/realtek/rtw88/debug.c         |   2 +-
+ drivers/net/wireless/realtek/rtw88/main.c          |   1 -
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c      |   4 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c      |   7 --
+ drivers/net/wireless/realtek/rtw88/tx.c            |   2 +-
+ drivers/net/wireless/ti/wl12xx/main.c              |   3 -
+ drivers/net/wireless/ti/wlcore/main.c              |  17 +---
+ drivers/net/wireless/ti/wlcore/wlcore.h            |   3 -
+ 41 files changed, 283 insertions(+), 170 deletions(-)
