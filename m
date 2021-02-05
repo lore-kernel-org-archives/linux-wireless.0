@@ -2,105 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7731AC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A456BC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E96264F38
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:14:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F38864F3B
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229777AbhBEJNl (ORCPT
+        id S229845AbhBEJVF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 04:13:41 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:43728 "EHLO
+        Fri, 5 Feb 2021 04:21:05 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:43816 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230077AbhBEJHd (ORCPT
+        with ESMTP id S229889AbhBEJSx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 04:07:33 -0500
+        Fri, 5 Feb 2021 04:18:53 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l7x4e-0044i1-K6; Fri, 05 Feb 2021 11:06:45 +0200
+        id 1l7x4o-0044i1-BS; Fri, 05 Feb 2021 11:06:54 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  5 Feb 2021 11:06:30 +0200
-Message-Id: <20210205090642.1553849-1-luca@coelho.fi>
+Date:   Fri,  5 Feb 2021 11:06:41 +0200
+Message-Id: <iwlwifi.20210205110447.20a74526d395.Id24304ec1ae4b3096dbb8112bd146b364920e89e@changeid>
 X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210205090642.1553849-1-luca@coelho.fi>
+References: <20210205090642.1553849-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [RESEND PATCH 00/12]  iwlwifi: updates intended for v5.12 2021-01-31
+Subject: [RESEND PATCH 11/12] iwlwifi: mvm: make iwl_mvm_tt_temp_changed() static
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-(resending because issues with spamcop seem to have prevented the
-patches from reaching patchwork and possibly others)
+This is only needed within tt.c, make it static.
 
-Hi,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c  | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-Here's the third set of patches intended for v5.12.  It's the usual
-development, new features, cleanups and bugfixes.
-
-The changes are:
-
-* One more CSA bug fix, this time in the AP side;
-* Bump fW API support;
-* Support for new So devices and a bit of reorg;
-* Some other clean-ups and small fixes.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: cancel the scan delayed work when scan is aborted
-  iwlwifi: mvm: fix CSA AP side
-
-Ilan Peer (1):
-  iwlwifi: pcie: Disable softirqs during Rx queue init
-
-Johannes Berg (4):
-  iwlwifi: mvm: advertise BIGTK client support if available
-  iwlwifi: fw api: make hdr a zero-size array again
-  iwlwifi: mvm: slightly clean up rs_fw_set_supp_rates()
-  iwlwifi: mvm: make iwl_mvm_tt_temp_changed() static
-
-Luca Coelho (5):
-  iwlwifi: bump FW API to 60 for AX devices
-  iwlwifi: move SnJ and So rules to the new tables
-  iwlwifi: add support for SnJ with Jf devices
-  iwlwifi: mvm: move early time-point before nvm_init in non-unified
-  iwlwifi: pcie: add support for SnJ with Hr1
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  58 ++++++-
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |   7 +-
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   2 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |   4 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  13 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   5 +-
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 116 ++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |   3 +
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  19 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 141 ++++++++++++------
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  36 ++---
- 15 files changed, 325 insertions(+), 95 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 4925792257d1..308ba2e961e7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1906,7 +1906,6 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
+ 
+ /* Thermal management and CT-kill */
+ void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
+-void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp);
+ void iwl_mvm_temp_notif(struct iwl_mvm *mvm,
+ 			struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 9dfe0381cbeb..790bc68a515a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -44,7 +44,7 @@ static void iwl_mvm_exit_ctkill(struct iwl_mvm *mvm)
+ 	iwl_mvm_set_hw_ctkill_state(mvm, false);
+ }
+ 
+-void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp)
++static void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp)
+ {
+ 	/* ignore the notification if we are in test mode */
+ 	if (mvm->temperature_test)
 -- 
 2.30.0
 
