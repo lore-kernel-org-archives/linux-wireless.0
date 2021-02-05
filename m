@@ -2,109 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1517BC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:23:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50FCEC433DB
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:49:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C160B64F9F
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:23:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED0F264FF9
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:49:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbhBEWXE convert rfc822-to-8bit (ORCPT
+        id S233332AbhBEWs2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 17:23:04 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:40368 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231910AbhBEO1w (ORCPT
+        Fri, 5 Feb 2021 17:48:28 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:45030 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232282AbhBEM4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 09:27:52 -0500
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-270-8he-aNJfMmyMpb8HPVFbEw-1; Fri, 05 Feb 2021 15:31:26 +0000
-X-MC-Unique: 8he-aNJfMmyMpb8HPVFbEw-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Fri, 5 Feb 2021 15:31:19 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Fri, 5 Feb 2021 15:31:19 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Arnd Bergmann' <arnd@kernel.org>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-CC:     Arnd Bergmann <arnd@arndb.de>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] carl9170: fix struct alignment conflict
-Thread-Topic: [PATCH] carl9170: fix struct alignment conflict
-Thread-Index: AQHW+xSTHrCr5fMAo0K1NzKrRUoyIapJsAIQ
-Date:   Fri, 5 Feb 2021 15:31:19 +0000
-Message-ID: <8e03db0fb69f4df5ad3cb24695055728@AcuMS.aculab.com>
-References: <20210204162926.3262598-1-arnd@kernel.org>
-In-Reply-To: <20210204162926.3262598-1-arnd@kernel.org>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        Fri, 5 Feb 2021 07:56:51 -0500
+X-UUID: 10d03a1a03dd4528976475067e38c23e-20210205
+X-UUID: 10d03a1a03dd4528976475067e38c23e-20210205
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 527900021; Fri, 05 Feb 2021 20:55:58 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 5 Feb 2021 20:55:57 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 5 Feb 2021 20:55:57 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+CC:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH] mac80211: only schedule TXQ when reasonable airtime reporting
+Date:   Fri, 5 Feb 2021 20:55:54 +0800
+Message-ID: <c48c3555ab2261d6b6674ac7de8203359b80b127.1612529311.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Arnd Bergmann
-> Sent: 04 February 2021 16:29
-> 
-> Multiple structures in the carl9170 driver have alignment
-> impossible alignment constraints that gcc warns about when
-> building with 'make W=1':
-> 
-> drivers/net/wireless/ath/carl9170/fwcmd.h:243:2: warning: alignment 1 of 'union <anonymous>' is less
-> than 4 [-Wpacked-not-aligned]
-> drivers/net/wireless/ath/carl9170/wlan.h:373:1: warning: alignment 1 of 'struct
-> ar9170_rx_frame_single' is less than 2 [-Wpacked-not-aligned]
-> 
-> In the carl9170_cmd structure, multiple members that have an explicit
-> alignment requirement of four bytes are added into a union with explicit
-> byte alignment, but this in turn is part of a structure that also has
-> four-byte alignment.
-> 
-> In the wlan.h header, multiple structures contain a ieee80211_hdr member
-> that is required to be two-byte aligned to avoid alignmnet faults when
-> processing network headers, but all members are forced to be byte-aligned
-> using the __packed tag at the end of the struct definition.
-> 
-> In both cases, leaving out the packing does not change the internal
-> layout of the structure but changes the alignment constraint of the
-> structure itself.
-> 
-> Change all affected structures to only apply packing where it does
-> not violate the alignment requirement of the contained structure.
+For some drivers and hardware may report faulty airtime, which ends up
+with excessive hold time (~0.9s on mt7915 multiclent tests) impacting
+system performance.
 
-I think I'd add compile-time assert that some of these structures
-are exactly the expected size.
-Then look at removing the outer packed/aligned attributes
-and just putting the attribute on the 16/32 bit member(s)
-that themselves might be misaligned.
-Much the way that the 32bit aligned 64bit values are handled
-in the x86 compat code in x86-64.
+Although issue has been fixed in driver, but it make sense to select txqi
+depends on a reasonable airtime reporting to prevent such a case from
+happening again.
 
-	David
+Tested-by: Jiao Bo <jiao.bao@mediatek.com>
+Tested-by: Sujuan Chen <sujuan.chen@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ net/mac80211/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6422da6690f7..0b8a8c3600f4 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3770,6 +3770,10 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
+ 				sta->airtime_weight;
+ 
+ 		if (deficit < 0 || !aql_check) {
++			if (txqi->schedule_round == local->schedule_round[ac])
++				goto out;
++
++			txqi->schedule_round = local->schedule_round[ac];
+ 			list_move_tail(&txqi->schedule_order,
+ 				       &local->active_txqs[txqi->txq.ac]);
+ 			goto begin;
+-- 
+2.18.0
 
