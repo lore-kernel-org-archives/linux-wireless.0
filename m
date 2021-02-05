@@ -4,123 +4,71 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2BFBC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 06:58:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4A6C433DB
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A01E064F3B
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 06:58:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C10864F38
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 09:11:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231199AbhBEG5q (ORCPT
+        id S229841AbhBEJK4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 01:57:46 -0500
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:42143 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231328AbhBEG5i (ORCPT
+        Fri, 5 Feb 2021 04:10:56 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:43776 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230127AbhBEJHu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 01:57:38 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=alimailimapcm10staff010182156082;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0UNwO2eU_1612508200;
-Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0UNwO2eU_1612508200)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 05 Feb 2021 14:56:45 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     m@bues.ch
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH] ssb: Use true and false for bool variable
-Date:   Fri,  5 Feb 2021 14:56:39 +0800
-Message-Id: <1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        Fri, 5 Feb 2021 04:07:50 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1l7x4m-0044i1-HI; Fri, 05 Feb 2021 11:06:52 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri,  5 Feb 2021 11:06:38 +0200
+Message-Id: <iwlwifi.20210205110447.455e59ba3a4c.I49ebb07382e6d11dc8f50e6a58d579681209cb1d@changeid>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210205090642.1553849-1-luca@coelho.fi>
+References: <20210205090642.1553849-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [RESEND PATCH 08/12] iwlwifi: pcie: add support for SnJ with Hr1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix the following coccicheck warnings:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-./include/linux/ssb/ssb_driver_gige.h:89:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_one_dma_at_once' with return type bool.
+Add an entry for SnJ with Hr1.  This device should use the
+tx_with_siso_diversity option, but that doesn't work at the moment.
+So we leave it disabled for now (and use the same struct as Hr2).
 
-./include/linux/ssb/ssb_driver_gige.h:79:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_have_roboswitch' with return type bool.
-
-./include/linux/ssb/ssb_driver_gige.h:182:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_must_flush_posted_writes' with return type bool.
-
-./include/linux/ssb/ssb_driver_gige.h:178:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_one_dma_at_once' with return type bool.
-
-./include/linux/ssb/ssb_driver_gige.h:174:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_have_roboswitch' with return type bool.
-
-./include/linux/ssb/ssb_driver_gige.h:170:8-9: WARNING: return of 0/1 in
-function 'ssb_gige_is_rgmii' with return type bool.
-
-./include/linux/ssb/ssb_driver_gige.h:162:8-9: WARNING: return of 0/1 in
-function 'pdev_is_ssb_gige_core' with return type bool.
-
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ssb/ssb_driver_gige.h | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/include/linux/ssb/ssb_driver_gige.h b/include/linux/ssb/ssb_driver_gige.h
-index 31593b3..15ba0df 100644
---- a/include/linux/ssb/ssb_driver_gige.h
-+++ b/include/linux/ssb/ssb_driver_gige.h
-@@ -76,7 +76,7 @@ static inline bool ssb_gige_have_roboswitch(struct pci_dev *pdev)
- 	if (dev)
- 		return !!(dev->dev->bus->sprom.boardflags_lo &
- 			  SSB_GIGE_BFL_ROBOSWITCH);
--	return 0;
-+	return false;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 462ff6114c69..f0acf7fe59fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -958,6 +958,12 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 		      iwl_cfg_snj_a0_jf_b0, iwl9560_name),
  
- /* Returns whether we can only do one DMA at once. */
-@@ -86,7 +86,7 @@ static inline bool ssb_gige_one_dma_at_once(struct pci_dev *pdev)
- 	if (dev)
- 		return ((dev->dev->bus->chip_id == 0x4785) &&
- 			(dev->dev->bus->chip_rev < 2));
--	return 0;
-+	return false;
- }
- 
- /* Returns whether we must flush posted writes. */
-@@ -159,7 +159,7 @@ static inline void ssb_gige_exit(void)
- 
- static inline bool pdev_is_ssb_gige_core(struct pci_dev *pdev)
- {
--	return 0;
-+	return false;
- }
- static inline struct ssb_gige * pdev_to_ssb_gige(struct pci_dev *pdev)
- {
-@@ -167,19 +167,19 @@ static inline struct ssb_gige * pdev_to_ssb_gige(struct pci_dev *pdev)
- }
- static inline bool ssb_gige_is_rgmii(struct pci_dev *pdev)
- {
--	return 0;
-+	return false;
- }
- static inline bool ssb_gige_have_roboswitch(struct pci_dev *pdev)
- {
--	return 0;
-+	return false;
- }
- static inline bool ssb_gige_one_dma_at_once(struct pci_dev *pdev)
- {
--	return 0;
-+	return false;
- }
- static inline bool ssb_gige_must_flush_posted_writes(struct pci_dev *pdev)
- {
--	return 0;
-+	return false;
- }
- static inline int ssb_gige_get_macaddr(struct pci_dev *pdev, u8 *macaddr)
- {
+ /* SnJ with Hr */
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SNJ, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_HR1, IWL_CFG_ANY,
++		      IWL_CFG_ANY, IWL_CFG_ANY,
++		      iwl_cfg_snj_hr_b0, iwl_ax101_name),
++
+ 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+ 		      IWL_CFG_MAC_TYPE_SNJ, IWL_CFG_ANY,
+ 		      IWL_CFG_RF_TYPE_HR2, IWL_CFG_ANY,
 -- 
-1.8.3.1
+2.30.0
 
