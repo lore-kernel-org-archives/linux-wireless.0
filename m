@@ -2,91 +2,147 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AF77C433DB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5A33C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 02:31:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D58264FFB
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Feb 2021 22:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75EF464E40
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 02:31:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233350AbhBEWsr (ORCPT
+        id S229534AbhBFCa5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 17:48:47 -0500
-Received: from mail.toke.dk ([45.145.95.4]:51631 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229729AbhBENaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 08:30:25 -0500
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1612531761; bh=dmsbQlJ0XheT/EofpoyzXPiARJ/fSUNhNxNGar8huVs=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=Oaiu280JaBF6yYQgA0lDT/mkVsk7l59DQGSfIV2yss0+9ccBduhvodiSKWTEI764f
-         h2hyss/+dpbNwM9scbmxpAq+HrHEcvQMszRynTXCONz7JUx57eOMGTB7hRe6fVFJND
-         WKB8dT51ZlcyP1HXCx7S3WqxZRx/6tiGtDUX9dEIXSuvM3E+43418KJQ4S6SGEe2in
-         G6UTxKTfIj6LszNqmikdE31QXNzWf7pb2cFrAsao7iRMQU8xZ783RVErRCU8s8QlF7
-         +t4hx0LNu+7/CLlivdmLe65U/wjc/6dXUODpDFpG/c+WSkeqbvLx0kEp99X3+TnWIP
-         CDhgAHjRbQ5rQ==
-To:     Ryder Lee <ryder.lee@mediatek.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: Re: [PATCH] mac80211: only schedule TXQ when reasonable airtime
- reporting
-In-Reply-To: <c48c3555ab2261d6b6674ac7de8203359b80b127.1612529311.git.ryder.lee@mediatek.com>
-References: <c48c3555ab2261d6b6674ac7de8203359b80b127.1612529311.git.ryder.lee@mediatek.com>
-Date:   Fri, 05 Feb 2021 14:29:19 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <878s82ve1c.fsf@toke.dk>
+        Fri, 5 Feb 2021 21:30:57 -0500
+Received: from mail-qk1-f199.google.com ([209.85.222.199]:47252 "EHLO
+        mail-qk1-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229529AbhBFCaz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Feb 2021 21:30:55 -0500
+Received: by mail-qk1-f199.google.com with SMTP id v130so7451471qkb.14
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2021 18:30:38 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=k/BHxNQ7qd2sz72tiD4lLbHL6/gf5P11FZOhOOaqDKA=;
+        b=Mzo1q0MzjwFBtjIGqvYLOEhO7v0P2vmqPb7+PtaPmMj+mKa9Gykh0U9yfSg4TyzSsL
+         2APuPU6IoHrwxuNRD7l36JbWF9xZ3xsCeJGfH8y+uaIK7HgM1SzS0JmliLrac9rUWwHv
+         U6yStcPeJE0t7f9vYdysO3PZc2HrBJxl9FkKkipqgyWH9bSlG8Z1uWs6rXHmHeLhZ1oc
+         lfda6iAuN+jtOxQZ5tvpampNY3mw2PyHEsnU8sduUPvUoVxlVs7fyGIRjEeph4r13yVz
+         4QGkkp9HOotKftsH3RONq0E6Ee8HJbCVhTvdGf9DHbhyi0iQ5mEKTEf1N+pe8Xph8gKt
+         8EQw==
+X-Gm-Message-State: AOAM530F5Yn2r9NAXRSU1cxEFOwRjyVJVp9xo6envwvHLfZsthRK2DNT
+        Rz0QZoWd6BoovAraNMlOcDpg+Dk1FePHAHXUp+lzJOXaiLck
+X-Google-Smtp-Source: ABdhPJwdOFBnVKo83ZB4DdRWVey1q8/jHZh+2YsaX0RH9Pbo7VV9KaKdLnAguLfe4eReVq4qZQ1yu5RmW6bcEsjv7K2iZ9rsyvRs
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Received: by 2002:a02:5148:: with SMTP id s69mr7550314jaa.8.1612568424583;
+ Fri, 05 Feb 2021 15:40:24 -0800 (PST)
+Date:   Fri, 05 Feb 2021 15:40:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000001f9bb705ba9f5861@google.com>
+Subject: general protection fault in ieee80211_assign_vif_chanctx
+From:   syzbot <syzbot+bbf402b783eeb6d908db@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ryder Lee <ryder.lee@mediatek.com> writes:
+Hello,
 
-> For some drivers and hardware may report faulty airtime, which ends up
-> with excessive hold time (~0.9s on mt7915 multiclent tests) impacting
-> system performance.
->
-> Although issue has been fixed in driver, but it make sense to select txqi
-> depends on a reasonable airtime reporting to prevent such a case from
-> happening again.
+syzbot found the following issue on:
 
-I think I see what you're trying to do with the patch, but this commit
-message makes no sense. What, exactly, was the error you were seeing
-that this is supposed to fix?
+HEAD commit:    3aaf0a27 Merge tag 'clang-format-for-linux-v5.11-rc7' of g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11dde95f500000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=266a5362c89c8127
+dashboard link: https://syzkaller.appspot.com/bug?extid=bbf402b783eeb6d908db
+compiler:       Debian clang version 11.0.1-2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=11fea674d00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1054d88cd00000
 
-> Tested-by: Jiao Bo <jiao.bao@mediatek.com>
-> Tested-by: Sujuan Chen <sujuan.chen@mediatek.com>
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  net/mac80211/tx.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 6422da6690f7..0b8a8c3600f4 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -3770,6 +3770,10 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
->  				sta->airtime_weight;
->  
->  		if (deficit < 0 || !aql_check) {
-> +			if (txqi->schedule_round == local->schedule_round[ac])
-> +				goto out;
-> +
-> +			txqi->schedule_round = local->schedule_round[ac];
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+bbf402b783eeb6d908db@syzkaller.appspotmail.com
 
-I think this change may be worth making anyway, but for a different
-reason: Without it, a station that fails aql_check will keep getting
-recycled through the list, advancing its deficit. Which could actually
-be the reason AQL breaks airtime fairness; did you observe any
-difference in fairness with this change?
+general protection fault, probably for non-canonical address 0xfbd59c0000000020: 0000 [#1] PREEMPT SMP KASAN
+KASAN: maybe wild-memory-access in range [0xdead000000000100-0xdead000000000107]
+CPU: 0 PID: 10022 Comm: syz-executor445 Not tainted 5.11.0-rc6-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:ieee80211_chanctx_num_assigned net/mac80211/chan.c:22 [inline]
+RIP: 0010:ieee80211_assign_vif_chanctx+0x6a7/0xa80 net/mac80211/chan.c:746
+Code: 08 00 0f 85 96 00 00 00 e9 f7 00 00 00 e8 a1 ce 8a f8 49 83 c6 20 31 db 4c 89 f5 0f 1f 84 00 00 00 00 00 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 fa 34 ce f8 48 8b 6d 00 4c 39 f5
+RSP: 0018:ffffc90007fef670 EFLAGS: 00010a02
+RAX: 1bd5a00000000020 RBX: 0000000000000002 RCX: ffff8880156c1bc0
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: dead000000000100 R08: ffffffff88ecf9e5 R09: fffffbfff1b672de
+R10: fffffbfff1b672de R11: 0000000000000000 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff888013e2b020 R15: ffff88801bff0bc0
+FS:  00007f5557b86700(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f5557b85288 CR3: 0000000024a0d000 CR4: 00000000001506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ __ieee80211_vif_release_channel+0x279/0x540 net/mac80211/chan.c:1619
+ ieee80211_vif_release_channel+0x13e/0x1a0 net/mac80211/chan.c:1833
+ ieee80211_ibss_disconnect+0x6ea/0x870 net/mac80211/ibss.c:735
+ ieee80211_ibss_leave+0x26/0xf0 net/mac80211/ibss.c:1871
+ rdev_leave_ibss net/wireless/rdev-ops.h:545 [inline]
+ __cfg80211_leave_ibss+0x11c/0x200 net/wireless/ibss.c:212
+ cfg80211_leave_ibss+0x5c/0x70 net/wireless/ibss.c:230
+ cfg80211_change_iface+0x428/0xaa0 net/wireless/util.c:1047
+ nl80211_set_interface+0x497/0x7f0 net/wireless/nl80211.c:3839
+ genl_family_rcv_msg_doit net/netlink/genetlink.c:739 [inline]
+ genl_family_rcv_msg net/netlink/genetlink.c:783 [inline]
+ genl_rcv_msg+0xe4e/0x1280 net/netlink/genetlink.c:800
+ netlink_rcv_skb+0x190/0x3a0 net/netlink/af_netlink.c:2494
+ genl_rcv+0x24/0x40 net/netlink/genetlink.c:811
+ netlink_unicast_kernel net/netlink/af_netlink.c:1304 [inline]
+ netlink_unicast+0x786/0x940 net/netlink/af_netlink.c:1330
+ netlink_sendmsg+0x9ae/0xd50 net/netlink/af_netlink.c:1919
+ sock_sendmsg_nosec net/socket.c:652 [inline]
+ sock_sendmsg net/socket.c:672 [inline]
+ ____sys_sendmsg+0x519/0x800 net/socket.c:2345
+ ___sys_sendmsg net/socket.c:2399 [inline]
+ __sys_sendmsg+0x2bf/0x370 net/socket.c:2432
+ do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x446889
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 41 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f5557b862f8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00000000004cb440 RCX: 0000000000446889
+RDX: 0000000000000000 RSI: 0000000020000340 RDI: 0000000000000003
+RBP: 00000000004cb44c R08: 0000000000000003 R09: 0000000000000000
+R10: 0000000000000008 R11: 0000000000000246 R12: 000000000049b254
+R13: 0031313230386c6e R14: 0000000000000000 R15: 00000000004cb448
+Modules linked in:
+---[ end trace 986da0a98b3932dc ]---
+RIP: 0010:ieee80211_chanctx_num_assigned net/mac80211/chan.c:22 [inline]
+RIP: 0010:ieee80211_assign_vif_chanctx+0x6a7/0xa80 net/mac80211/chan.c:746
+Code: 08 00 0f 85 96 00 00 00 e9 f7 00 00 00 e8 a1 ce 8a f8 49 83 c6 20 31 db 4c 89 f5 0f 1f 84 00 00 00 00 00 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 fa 34 ce f8 48 8b 6d 00 4c 39 f5
+RSP: 0018:ffffc90007fef670 EFLAGS: 00010a02
+RAX: 1bd5a00000000020 RBX: 0000000000000002 RCX: ffff8880156c1bc0
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: dead000000000100 R08: ffffffff88ecf9e5 R09: fffffbfff1b672de
+R10: fffffbfff1b672de R11: 0000000000000000 R12: 0000000000000000
+R13: dffffc0000000000 R14: ffff888013e2b020 R15: ffff88801bff0bc0
+FS:  00007f5557b86700(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f5557b43288 CR3: 0000000024a0d000 CR4: 00000000001506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 
--Toke
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
