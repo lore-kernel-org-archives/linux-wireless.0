@@ -2,132 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2680C433DB
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 03:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F88C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 10:36:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A923564FD6
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 03:07:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A90464E7F
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 10:36:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbhBFDHH (ORCPT
+        id S229554AbhBFKgg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Feb 2021 22:07:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41472 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232190AbhBFCzG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Feb 2021 21:55:06 -0500
-Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAAD4C061797
-        for <linux-wireless@vger.kernel.org>; Fri,  5 Feb 2021 14:02:16 -0800 (PST)
-Received: by mail-io1-xd33.google.com with SMTP id x21so8718217iog.10
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2021 14:02:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Gn1oNPUt8nvKg4L8IQuJxo3ItPqw1Pp9dP3UEdFlsnw=;
-        b=KZn95LUJ9txktXDozvtFRm5+TW+2VTONYEJDyg6QieKJl3x34oVwgzLKvT7wNDaJwJ
-         4dag3d62fE59CkIGJx2aw4CLaBC/gAj/r3y9yS6QPqVu388tGzV7Hnpgff9+opScocqL
-         mHZ7CGk0SkZhFmtnrbIDwTI/5jUUaFYApGJ3U=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Gn1oNPUt8nvKg4L8IQuJxo3ItPqw1Pp9dP3UEdFlsnw=;
-        b=NJrQI3kFEqO7Q8wsO3x6m+LPGHWQx8+8sLXG7onqSw2JyplGFyyNBPHKYDVbPdHu/N
-         MCOMVxxaRH3gxqkyUvEH2krZjI3EIjc0axrZFPY3oMtlCEDIsJyQmidqDMo45qjukhPD
-         eK5bKr+afLv+VWp6pw6abp/RZ3HA5d/NS9uYiiJDaIq7nurhs9DwkY1fryO+f5c3rROD
-         KXwihyHehvCZVD/P9F8zD7jqHroHOdnvKltKR5ULEO4mwGzsWyzULXmZgdci7cY1QT05
-         PKONrtoq5OXS6sE/65IwPMjXwoFmu3hQAsjWzoMJIWG4UxFRyUsbGu8sbU2UzOsAtwen
-         NwTw==
-X-Gm-Message-State: AOAM532hy3I0kPLlrOKXBAPC4UTYJVlWeOZrlIQoP0Gp6QDvV+my1gTp
-        gXUix9bzd/tasZBXgkvud/xG8Cl6K1rToMABr+Mciw==
-X-Google-Smtp-Source: ABdhPJzm1U46fzzVZVO4LDJ7oGLxGsIxOuGbM8B5KCv3grFD0fHVbdW8c8ZD7RfP3BSJaecLpRgAkvts/ULuG+Nq7Xk=
-X-Received: by 2002:a02:1649:: with SMTP id a70mr6798927jaa.97.1612562534776;
- Fri, 05 Feb 2021 14:02:14 -0800 (PST)
+        Sat, 6 Feb 2021 05:36:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42946 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229508AbhBFKgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 Feb 2021 05:36:35 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 897BB64E27;
+        Sat,  6 Feb 2021 10:35:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612607755;
+        bh=uso5Vqol3uBYCoKDpXmLbXjJ4mHiriEW3ZbxB15n6H4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=qsGk8xxRpojy8p1tJN1HTPJZ33XNPYeaCUmmyxAdfp6NN66+s+VbnOoTtQWe/Ob48
+         C2dIJUkFtibV6de5Pa1CX5FURdt4RmCtUhlf8e+Gg40NEb81Gf8nMswKZ3G4eUPDvp
+         D0Xy7tTEdy1ctK0Yjep4l5ebYnckeu1F9FWIsQFrG6QQ4PM1jYlyya2QHfEXH25YWV
+         RbstjbQ7nY/jHJBhV1w+psVS9fZhT+pHZn3XFNUtAVqBvY7xu3hp76Me+9DWvFGbe2
+         GfwlouDAlY3njV7J16G52fUEZSWoq/xwwcu14vDi/NBH2k7XtT9yORaJtlSEBSyJUp
+         7CXpYm+tVTRhA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com
+Subject: [PATCH] mt76: mt7921: removed unused definitions in mcu.h
+Date:   Sat,  6 Feb 2021 11:35:41 +0100
+Message-Id: <d65da5d5632d269903f28816e351030bb5b11453.1612607649.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-References: <20201215173021.5884-1-youghand@codeaurora.org>
-In-Reply-To: <20201215173021.5884-1-youghand@codeaurora.org>
-From:   Abhishek Kumar <kuabhs@chromium.org>
-Date:   Fri, 5 Feb 2021 14:02:04 -0800
-Message-ID: <CACTWRwunEexmHm+Un35fJHnqSY_9oUhYcu6eS68H9eQLG3==zA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] cfg80211: Add wiphy flag to trigger STA disconnect
- after hardware restart
-To:     Youghandhar Chintala <youghand@codeaurora.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Rakesh Pillai <pillair@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-LGTM! If no one has any objections, I would be happy to see this
-considered for upstream.
+Get rid of the following definitions in mt7921/mcu.h since they are not
+actually used:
+- MT7921_WTBL_UPDATE_MAX_SIZE
+- MT7921_STA_UPDATE_MAX_SIZE
+- MT7921_WTBL_UPDATE_BA_SIZE
 
-Reviewed-by: Abhishek Kumar <kuabhs@chromium.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ .../net/wireless/mediatek/mt76/mt7921/mcu.h   | 23 -------------------
+ 1 file changed, 23 deletions(-)
 
-Thanks
-Abhishek
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+index 9701392d77db..e4aeb2f99332 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+@@ -234,29 +234,6 @@ enum {
+ 	MT_IBF = BIT(1)		/* implicit beamforming */
+ };
+ 
+-#define MT7921_WTBL_UPDATE_MAX_SIZE	(sizeof(struct wtbl_req_hdr) +	\
+-					 sizeof(struct wtbl_generic) +	\
+-					 sizeof(struct wtbl_rx) +	\
+-					 sizeof(struct wtbl_ht) +	\
+-					 sizeof(struct wtbl_vht) +	\
+-					 sizeof(struct wtbl_hdr_trans) +\
+-					 sizeof(struct wtbl_ba) +	\
+-					 sizeof(struct wtbl_smps))
+-
+-#define MT7921_STA_UPDATE_MAX_SIZE	(sizeof(struct sta_req_hdr) +	\
+-					 sizeof(struct sta_rec_basic) +	\
+-					 sizeof(struct sta_rec_ht) +	\
+-					 sizeof(struct sta_rec_he) +	\
+-					 sizeof(struct sta_rec_ba) +	\
+-					 sizeof(struct sta_rec_vht) +	\
+-					 sizeof(struct sta_rec_uapsd) + \
+-					 sizeof(struct sta_rec_amsdu) +	\
+-					 sizeof(struct tlv) +		\
+-					 MT7921_WTBL_UPDATE_MAX_SIZE)
+-
+-#define MT7921_WTBL_UPDATE_BA_SIZE	(sizeof(struct wtbl_req_hdr) +	\
+-					 sizeof(struct wtbl_ba))
+-
+ #define STA_CAP_WMM			BIT(0)
+ #define STA_CAP_SGI_20			BIT(4)
+ #define STA_CAP_SGI_40			BIT(5)
+-- 
+2.29.2
 
-On Tue, Dec 15, 2020 at 9:30 AM Youghandhar Chintala
-<youghand@codeaurora.org> wrote:
->
-> Many wifi drivers (e.g. ath10k using qualcomm wifi chipsets)
-> support silent target hardware restart/recovery. Out of these
-> drivers which support target hw restart, certain chipsets
-> have the wifi mac sequence number addition for transmitted
-> frames done by the firmware. For such chipsets, a silent
-> target hardware restart breaks the continuity of the wifi
-> mac sequence number, since the wifi mac sequence number
-> restarts from 0 after the restart, which in-turn leads
-> to the peer access point dropping all the frames from device
-> until it receives the frame with the mac sequence which was
-> expected by the AP.
->
-> Add a wiphy flag for the driver to indicate that it needs a
-> trigger for STA disconnect after hardware restart.
->
-> Tested on ath10k using WCN3990, QCA6174.
->
-> Signed-off-by: Youghandhar Chintala <youghand@codeaurora.org>
-> ---
->  include/net/cfg80211.h | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index ab249ca..7fba6f6 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -4311,6 +4311,9 @@ struct cfg80211_ops {
->   * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
->   *     before connection.
->   * @WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK: The device supports bigger kek and kck keys
-> + * @WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART: The device needs a trigger to
-> + *     disconnect STA after target hardware restart. This flag should be
-> + *     exposed by drivers which support target recovery.
->   */
->  enum wiphy_flags {
->         WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK         = BIT(0),
-> @@ -4337,6 +4340,7 @@ enum wiphy_flags {
->         WIPHY_FLAG_SUPPORTS_5_10_MHZ            = BIT(22),
->         WIPHY_FLAG_HAS_CHANNEL_SWITCH           = BIT(23),
->         WIPHY_FLAG_HAS_STATIC_WEP               = BIT(24),
-> +       WIPHY_FLAG_STA_DISCONNECT_ON_HW_RESTART = BIT(25),
->  };
->
->  /**
-> --
-> 2.7.4
->
