@@ -2,38 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 620C4C433E0
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 11:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3596C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 15:06:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F9D164EBE
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 11:52:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9207164DDD
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Feb 2021 15:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229581AbhBFLwH (ORCPT
+        id S229763AbhBFPGA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 6 Feb 2021 06:52:07 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:39653 "EHLO
+        Sat, 6 Feb 2021 10:06:00 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:40845 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbhBFLwF (ORCPT
+        with ESMTP id S229981AbhBFPFd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Feb 2021 06:52:05 -0500
-Received: from legolas.fritz.box (unknown [87.147.51.50])
+        Sat, 6 Feb 2021 10:05:33 -0500
+Received: from isengard.fritz.box (unknown [87.147.51.50])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id C9C96580060;
-        Sat,  6 Feb 2021 12:51:19 +0100 (CET)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 3D20E58005E;
+        Sat,  6 Feb 2021 16:04:40 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Markus Theil <markus.theil@tu-ilmenau.de>,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH v3] mac80211: enable QoS support for nl80211 ctrl port
-Date:   Sat,  6 Feb 2021 12:51:12 +0100
-Message-Id: <20210206115112.567881-1-markus.theil@tu-ilmenau.de>
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH] iw: add option to print human readable event time
+Date:   Sat,  6 Feb 2021 16:04:32 +0100
+Message-Id: <20210206150432.10456-1-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -41,126 +40,112 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch unifies sending control port frames
-over nl80211 and AF_PACKET sockets a little more.
-
-Before this patch, EAPOL frames got QoS prioritization
-only when using AF_PACKET sockets.
-
-__ieee80211_select_queue only selects a QoS-enabled queue
-for control port frames, when the control port protocol
-is set correctly on the skb. For the AF_PACKET path this
-works, but the nl80211 path used ETH_P_802_3.
-
-Another check for injected frames in wme.c then prevented
-the QoS TID to be copied in the frame.
-
-In order to fix this, get rid of the frame injection marking
-for nl80211 ctrl port and set the correct ethernet protocol.
-
-Please note:
-An erlier version of this path tried to prevent
-frame aggregation for control port frames in order to speed up
-the initial connection setup a little. This seemed to cause
-issues on my older Intel dvm-based hardware, and was therefore
-removed again. Future commits which try to reintroduce this
-have to check carefully how hw behaves with aggregated and
-non-aggregated traffic for the same TID.
-My NIC: Intel(R) Centrino(R) Ultimate-N 6300 AGN, REV=0x74
-
-Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
-v3: move queue selection to ieee80211_tx_control_port
-v2: remove aggregation bypass for control port frames
+ event.c | 30 ++++++++++++++++++++++++------
+ iw.h    |  2 +-
+ 2 files changed, 25 insertions(+), 7 deletions(-)
 
- net/mac80211/status.c |  8 ++------
- net/mac80211/tx.c     | 25 +++++++++++++++++++------
- 2 files changed, 21 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 3485610755ef..9baf185ee4c7 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -628,16 +628,12 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
- 		u64 cookie = IEEE80211_SKB_CB(skb)->ack.cookie;
- 		struct ieee80211_sub_if_data *sdata;
- 		struct ieee80211_hdr *hdr = (void *)skb->data;
--		__be16 ethertype = 0;
--
--		if (skb->len >= ETH_HLEN && skb->protocol == cpu_to_be16(ETH_P_802_3))
--			skb_copy_bits(skb, 2 * ETH_ALEN, &ethertype, ETH_TLEN);
+diff --git a/event.c b/event.c
+index 61395f8..8bdbbe9 100644
+--- a/event.c
++++ b/event.c
+@@ -3,6 +3,7 @@
+ #include <net/if.h>
+ #include <errno.h>
+ #include <inttypes.h>
++#include <time.h>
+ #include "iw.h"
  
- 		rcu_read_lock();
- 		sdata = ieee80211_sdata_from_skb(local, skb);
- 		if (sdata) {
--			if (ethertype == sdata->control_port_protocol ||
--			    ethertype == cpu_to_be16(ETH_P_PREAUTH))
-+			if (skb->protocol == sdata->control_port_protocol ||
-+			    skb->protocol == cpu_to_be16(ETH_P_PREAUTH))
- 				cfg80211_control_port_tx_status(&sdata->wdev,
- 								cookie,
- 								skb->data,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d626e6808bef..6ec415f043e1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1182,9 +1182,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 			tx->sta = rcu_dereference(sdata->u.vlan.sta);
- 			if (!tx->sta && sdata->wdev.use_4addr)
- 				return TX_DROP;
--		} else if (info->flags & (IEEE80211_TX_INTFL_NL80211_FRAME_TX |
--					  IEEE80211_TX_CTL_INJECTED) ||
--			   tx->sdata->control_port_protocol == tx->skb->protocol) {
-+		} else if (tx->sdata->control_port_protocol == tx->skb->protocol) {
- 			tx->sta = sta_info_get_bss(sdata, hdr->addr1);
+ static int no_seq_check(struct nl_msg *msg, void *arg)
+@@ -905,12 +906,13 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 	int rem_nst;
+ 	__u16 status;
+ 
+-	if (args->time || args->reltime) {
++	if (args->time || args->reltime || args->ctime) {
+ 		unsigned long long usecs, previous;
+ 
+ 		previous = 1000000ULL * args->ts.tv_sec + args->ts.tv_usec;
+ 		gettimeofday(&args->ts, NULL);
+ 		usecs = 1000000ULL * args->ts.tv_sec + args->ts.tv_usec;
++
+ 		if (args->reltime) {
+ 			if (!args->have_ts) {
+ 				usecs = 0;
+@@ -918,7 +920,16 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 			} else
+ 				usecs -= previous;
  		}
- 		if (!tx->sta && !is_multicast_ether_addr(hdr->addr1))
-@@ -5404,6 +5402,7 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+-		printf("%llu.%06llu: ", usecs/1000000, usecs % 1000000);
++
++		if (args->ctime) {
++			struct tm *tm = localtime(&args->ts.tv_sec);
++			char buf[255];
++
++			memset(buf, 0, 255);
++			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
++			printf("[%s.%06lu]: ", buf, args->ts.tv_usec);
++		} else
++			printf("%llu.%06llu: ", usecs/1000000, usecs % 1000000);
+ 	}
+ 
+ 	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+@@ -1407,6 +1418,7 @@ static int print_events(struct nl80211_state *state,
+ 			enum id_input id)
  {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
- 	struct sk_buff *skb;
- 	struct ethhdr *ehdr;
- 	u32 ctrl_flags = 0;
-@@ -5426,8 +5425,7 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	if (cookie)
- 		ctrl_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 	struct print_event_args args;
++	int num_time_formats = 0;
+ 	int ret;
  
--	flags |= IEEE80211_TX_INTFL_NL80211_FRAME_TX |
--		 IEEE80211_TX_CTL_INJECTED;
-+	flags |= IEEE80211_TX_INTFL_NL80211_FRAME_TX;
+ 	memset(&args, 0, sizeof(args));
+@@ -1417,17 +1429,22 @@ static int print_events(struct nl80211_state *state,
+ 	while (argc > 0) {
+ 		if (strcmp(argv[0], "-f") == 0)
+ 			args.frame = true;
+-		else if (strcmp(argv[0], "-t") == 0)
++		else if (strcmp(argv[0], "-t") == 0) {
++			num_time_formats++;
+ 			args.time = true;
+-		else if (strcmp(argv[0], "-r") == 0)
++		} else if (strcmp(argv[0], "-T") == 0) {
++			num_time_formats++;
++			args.ctime = true;
++		} else if (strcmp(argv[0], "-r") == 0) {
++			num_time_formats++;
+ 			args.reltime = true;
+-		else
++		} else
+ 			return 1;
+ 		argc--;
+ 		argv++;
+ 	}
  
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
- 			    sizeof(struct ethhdr) + len);
-@@ -5444,10 +5442,25 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	ehdr->h_proto = proto;
+-	if (args.time && args.reltime)
++	if (num_time_formats > 1)
+ 		return 1;
  
- 	skb->dev = dev;
--	skb->protocol = htons(ETH_P_802_3);
-+	skb->protocol = proto;
- 	skb_reset_network_header(skb);
- 	skb_reset_mac_header(skb);
+ 	if (argc)
+@@ -1442,5 +1459,6 @@ static int print_events(struct nl80211_state *state,
+ TOPLEVEL(event, "[-t|-r] [-f]", 0, 0, CIB_NONE, print_events,
+ 	"Monitor events from the kernel.\n"
+ 	"-t - print timestamp\n"
++	"-T - print absolute, human-readable timestamp\n"
+ 	"-r - print relative timestamp\n"
+ 	"-f - print full frame for auth/assoc etc.");
+diff --git a/iw.h b/iw.h
+index 807adec..7f7f4fc 100644
+--- a/iw.h
++++ b/iw.h
+@@ -181,7 +181,7 @@ int handle_cmd(struct nl80211_state *state, enum id_input idby,
+ struct print_event_args {
+ 	struct timeval ts; /* internal */
+ 	bool have_ts; /* must be set false */
+-	bool frame, time, reltime;
++	bool frame, time, reltime, ctime;
+ };
  
-+	/* update QoS header to prioritize control port frames if possible,
-+	 * priorization also happens for control port frames send over
-+	 * AF_PACKET
-+	 */
-+	rcu_read_lock();
-+
-+	if (ieee80211_lookup_ra_sta(sdata, skb, &sta) == 0 && !IS_ERR(sta)) {
-+		u16 queue = __ieee80211_select_queue(sdata, sta, skb);
-+
-+		skb_set_queue_mapping(skb, queue);
-+		skb_get_hash(skb);
-+	}
-+
-+	rcu_read_unlock();
-+
- 	/* mutex lock is only needed for incrementing the cookie counter */
- 	mutex_lock(&local->mtx);
- 
+ __u32 listen_events(struct nl80211_state *state,
 -- 
 2.30.0
 
