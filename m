@@ -2,99 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28444C433E9
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 09:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72B0CC433E6
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:14:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2D2D64E9E
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 09:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31BA864E3F
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231303AbhBHJ2u (ORCPT
+        id S231919AbhBHKNm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 04:28:50 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:41160 "EHLO so15.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231475AbhBHJ0d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 04:26:33 -0500
+        Mon, 8 Feb 2021 05:13:42 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:40033 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231301AbhBHKEO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 05:04:14 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612776370; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1612778634; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=6UbTT/qpbzVpb6MGWF8ttHM+x5AnYelfiEB+nEai8GM=; b=uTaHyX0TiPo+IJeE96meTddJ/EAMwGxeSI8+W3ozIOEl9KPAwjB214XT0KWEKkwbV+RfUSQq
- 9cxdGab168Ui26/7ihGOQPQbguyqBiU6g9gjTRc2OVGNRg67vj0YedmAkxMCWMqva76jPFeX
- 0LgijKCsVpqyF7QTJ7ZDAxK4mHo=
-X-Mailgun-Sending-Ip: 198.61.254.15
+ bh=Hm8GS0rOsCfvjICUAxi/K5Puq7MY8iUSmrsfVo7iuKE=; b=bgCe6JLj/xbXGTLztRs+vART8pjxRZDpbLylnqtAR5hSCO+TOUkGuk6AZiuakXAeR7zGmeQL
+ EYI1ZUJHSn9C+yIzDJPBtagah990FDgtf2UxilzJlVtnUZh52T++MCHp4z/6jH7nMxBFn5af
+ JamqG1CA3HerJV4Ug/5kkpWyI/8=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 6021038cf112b7872cf93f27 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 09:25:32
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 60210c703919dfb45571aca2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 10:03:28
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6CF7EC433C6; Mon,  8 Feb 2021 09:25:32 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id 2C2F4C433C6; Mon,  8 Feb 2021 10:03:28 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2426CC433ED;
-        Mon,  8 Feb 2021 09:25:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2426CC433ED
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5AAE9C433CA;
+        Mon,  8 Feb 2021 10:03:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5AAE9C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for v5.11] iwlwifi: add new cards for So and Qu family
-References: <iwlwifi.20210206130110.6f0c1849f7dc.I647b4d22f9468c2f34b777a4bfa445912c6f04f0@changeid>
-        <20210208083006.4C609C43461@smtp.codeaurora.org>
-        <c29802a2acda44fa6368e6703f7dc0c13178ae24.camel@coelho.fi>
-Date:   Mon, 08 Feb 2021 11:25:28 +0200
-In-Reply-To: <c29802a2acda44fa6368e6703f7dc0c13178ae24.camel@coelho.fi> (Luca
-        Coelho's message of "Mon, 08 Feb 2021 10:40:30 +0200")
-Message-ID: <87eehq6hdj.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+To:     Matteo Croce <mcroce@linux.microsoft.com>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH RESEND net-next] cfg80211: remove unused callback
+References: <20210206194747.11086-1-mcroce@linux.microsoft.com>
+Date:   Mon, 08 Feb 2021 12:03:19 +0200
+In-Reply-To: <20210206194747.11086-1-mcroce@linux.microsoft.com> (Matteo
+        Croce's message of "Sat, 6 Feb 2021 20:47:47 +0100")
+Message-ID: <87o8gukhaw.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+Matteo Croce <mcroce@linux.microsoft.com> writes:
 
-> On Mon, 2021-02-08 at 08:30 +0000, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> wrote:
->> 
->> > From: Ihab Zhaika <ihab.zhaika@intel.com>
->> > 
->> > add few PCI ID'S for So with Hr and Qu with Hr in AX family.
->> > 
->> > Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
->> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> 
->> Why the urgency? Linus most likely releases v5.11 next Sunday so I would rather
->> apply this to -next. You could push it to v5.11 via the stable tree.
+> From: Matteo Croce <mcroce@microsoft.com>
 >
-> The urgency was that there are some OEMs with these devices and they
-> wanted the patch in v5.11 asap.  But I can certainly push back and we
-> can send this via -next.  I only promised to *try* to get it in v5.11.
-> ;)
+> The ieee80211 class registers a callback which actually does nothing.
+> Given that the callback is optional, and all its accesses are protected
+> by a NULL check, remove it entirely.
+>
+> Signed-off-by: Matteo Croce <mcroce@microsoft.com>
+> ---
+>  net/wireless/sysfs.c | 7 -------
+>  1 file changed, 7 deletions(-)
 
-If all goes well the merge window will start on Sunday and -next patches
-should be in Linus' tree by end of next week. So I would imagine the
-patch would be in the first stable release.
-
-> I'll add a Cc: stable and apply to iwlwifi-next.
-
-Thanks! BTW, could you also take this patch to your tree:
-
-https://patchwork.kernel.org/project/linux-wireless/patch/20210112132449.22243-3-tiwai@suse.de/
-
-Less conflicts that way. I assigned it to you on patchwork.
+Normally cfg80211 patches go to mac80211-next, not net-next.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
