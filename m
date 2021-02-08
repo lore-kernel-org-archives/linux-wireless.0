@@ -2,97 +2,150 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2E32C4332D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:09:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C9DC433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:13:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA20264E4F
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:09:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE61C64E79
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232622AbhBHLJI (ORCPT
+        id S232654AbhBHLNX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 06:09:08 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:57264 "EHLO so15.mailgun.net"
+        Mon, 8 Feb 2021 06:13:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233042AbhBHLEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 06:04:05 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612782231; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=iIN13FOdpOZzV9CWg91CsLyHiyCdurn89J8zh6JZi7Y=;
- b=nHOd+T39A7MBQrZDgFerwXEm1hCx7DjKaoe/6AmFXCFa7lqEYr+YteBGn+ZBVcZh+cxE5drN
- 5a461+KusO+uWmQNWdcPMwB80EG6nyaSgOI1ZgTBbDklS5c7aZY4SwrECcHRw/FeWbDwpMvh
- sxG/Ju5vBKlreFnO6ex/V+mo6Go=
-X-Mailgun-Sending-Ip: 198.61.254.15
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 60211a72d5a7a3baaed6ca8f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:03:14
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0CB9FC43462; Mon,  8 Feb 2021 11:03:14 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3147BC433CA;
-        Mon,  8 Feb 2021 11:03:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3147BC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        id S232965AbhBHLKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 06:10:34 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A0EEF64E37;
+        Mon,  8 Feb 2021 11:09:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612782576;
+        bh=6H53zMW2E74KBJCGbq23Apj96Kf1NGymx1WwrP/kk8g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=eFQIpE1WO1cjJhr0726KLEUsgw8yYlR3JwYcmpozV98F7+pGcRQ+faSJiOhwymK86
+         DJ7EAC2eJRo/Rhsem/2QjsdBoO5n4tvMPm0Fh/3WkTS/tHPxfXmP9fT1/PsO6Hh+kl
+         2pO+BVu5KzjtiAnVNQ+/61rgLoWclMCFHUdsVmFn7xC6TeJ1Bydelp1aTfkCh7nJaQ
+         naqoCSoglVSEIy6K1fUvu265ESsPo6WT+E6jWMNVFkopaz5BCezam73DPOUXFjBzoZ
+         Iifrb+eZQ32V/CVhYEStfTlsW/85tXyKzaOLH3dM3F6Ek8sBGYeficcyMNigCOr5Ij
+         hQFYYIK8FhRkw==
+Date:   Mon, 8 Feb 2021 12:09:31 +0100
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: mt76 2021-01-29
+Message-ID: <20210208110931.GC2593@lore-desk>
+References: <3eba5570-7cff-f51e-4050-aa0054f98f81@nbd.name>
+ <20210208102728.BBBE3C433CA@smtp.codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] brcmfmac: Add DMI nvram filename quirk for Predia
- Basic
- tablet
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210129171413.139880-1-hdegoede@redhat.com>
-References: <20210129171413.139880-1-hdegoede@redhat.com>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210208110314.0CB9FC43462@smtp.codeaurora.org>
-Date:   Mon,  8 Feb 2021 11:03:14 +0000 (UTC)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="NU0Ex4SbNnrxsi6C"
+Content-Disposition: inline
+In-Reply-To: <20210208102728.BBBE3C433CA@smtp.codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hans de Goede <hdegoede@redhat.com> wrote:
 
-> The Predia Basic tablet contains quite generic names in the sys_vendor and
-> product_name DMI strings, without this patch brcmfmac will try to load:
-> brcmfmac43340-sdio.Insyde-CherryTrail.txt as nvram file which is a bit
-> too generic.
-> 
-> Add a DMI quirk so that a unique and clearly identifiable nvram file name
-> is used on the Predia Basic tablet.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+--NU0Ex4SbNnrxsi6C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-2 patches applied to wireless-drivers-next.git, thanks.
+[...]
+> b8135057988e mt76: mt7915: simplify mt7915_mcu_send_message routine
+> c203dd621780 mt76: mt7915: rework mcu API
+>=20
+> This was not easy to fix. Felix & Lorenzo, please carefully check my reso=
+lution
+> in the pending branch:
 
-af4b3a6f36d6 brcmfmac: Add DMI nvram filename quirk for Predia Basic tablet
-a338c874d3d9 brcmfmac: Add DMI nvram filename quirk for Voyo winpad A15 tablet
+Hi Kalle,
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210129171413.139880-1-hdegoede@redhat.com/
+it is not easy to check a patch of a patch :) one comment inline.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Lorenzo
 
+>=20
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-ne=
+xt.git/commit/?h=3Dpending&id=3Ddfe85c17c7c7183e1d409b948fae9d8e545cb25d
+>=20
+> This is the diff output of my resolution:
+>=20
+> diff --cc drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> index e211a2bd4d3c,0296f2aa7997..000000000000
+> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> @@@ -255,10 -248,10 +248,10 @@@ mt7915_mcu_send_message(struct mt76_de
+>   {
+>         struct mt7915_dev *dev =3D container_of(mdev, struct mt7915_dev, =
+mt76);
+>         struct mt7915_mcu_txd *mcu_txd;
+> -       u8 seq, pkt_fmt, qidx;
+>  -      enum mt76_txq_id txq;
+>  +      enum mt76_mcuq_id qid;
+>         __le32 *txd;
+>         u32 val;
+> +       u8 seq;
+>  =20
+>         /* TODO: make dynamic based on msg type */
+>         mdev->mcu.timeout =3D 20 * HZ;
+> @@@ -267,22 -260,16 +260,16 @@@
+>         if (!seq)
+>                 seq =3D ++dev->mt76.mcu.msg_seq & 0xf;
+>  =20
+> -       if (cmd =3D=3D -MCU_CMD_FW_SCATTER) {
+>  -      if (cmd =3D=3D MCU_CMD(FW_SCATTER)) {
+>  -              txq =3D MT_MCUQ_FWDL;
+> ++      if (cmd =3D=3D MCU_CMD_FW_SCATTER) {
+
+I think it should be MCU_CMD(FW_SCATTER) here instead of MCU_CMD_FW_SCATTER.
+
+>  +              qid =3D MT_MCUQ_FWDL;
+>                 goto exit;
+>         }
+>  =20
+>         mcu_txd =3D (struct mt7915_mcu_txd *)skb_push(skb, sizeof(*mcu_tx=
+d));
+> -=20
+> -       if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state)) {
+> +       if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state))
+>  -              txq =3D MT_MCUQ_WA;
+>  +              qid =3D MT_MCUQ_WA;
+> -               qidx =3D MT_TX_MCU_PORT_RX_Q0;
+> -               pkt_fmt =3D MT_TX_TYPE_CMD;
+> -       } else {
+> +       else
+>  -              txq =3D MT_MCUQ_WM;
+>  +              qid =3D MT_MCUQ_WM;
+> -               qidx =3D MT_TX_MCU_PORT_RX_Q0;
+> -               pkt_fmt =3D MT_TX_TYPE_CMD;
+> -       }
+>  =20
+>         txd =3D mcu_txd->txd;
+>=20
+> --=20
+> https://patchwork.kernel.org/project/linux-wireless/patch/3eba5570-7cff-f=
+51e-4050-aa0054f98f81@nbd.name/
+>=20
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches
+>=20
+
+--NU0Ex4SbNnrxsi6C
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYCEb6QAKCRA6cBh0uS2t
+rM9XAQDQfYz3HqfQPE84D3gzw6iNr3/EVBy1KKhEjVm0ZzCVDAD/ZSGMFOc2gslk
+Bm0mLYYgTDl7fs21UUVwPRX4bBd3EAc=
+=Ad6l
+-----END PGP SIGNATURE-----
+
+--NU0Ex4SbNnrxsi6C--
