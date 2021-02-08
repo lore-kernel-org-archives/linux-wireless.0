@@ -2,115 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A56C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD09C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:25:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEE7A64DDF
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:24:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F02164E30
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233167AbhBHLYH (ORCPT
+        id S232967AbhBHLYQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 06:24:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58606 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232608AbhBHLVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 06:24:16 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:47583 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233101AbhBHLVb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 8 Feb 2021 06:21:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4B3D964E7A;
-        Mon,  8 Feb 2021 11:20:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612783239;
-        bh=MEQ7pYB5mWdi2KmSloHjSHfrmcATwSo6nvkb+hqN+bQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=W4WxzzZb7Tv3fJnYMttKdNcCWvIWQ+Wbp5nv0GZgZkWOM9zo9m6UeCzBiBm9EZAHq
-         2MJIC8s0gw6BmAq2thvIC+7OSiqN6VXQmqnsjUDfei2T8lcklbgEJiLdgPIFaLFdVP
-         Xlp/Sgh7+j9MgyOBD0ctj9X9b5xoNLkkX1dnBnAplSvIIpUDRQdWRNY135o2tdg/0a
-         68eIK+Z6k8gv5rEWVySLr2fqKR0mmY+JEF0J0/o1EcXx2qqX6PbnYvoRGCrUKEpZ8I
-         TpGBiX89Z8arop2JUgqeQMp5hKIbkoikAusbI4IawfhrbiZMzfwLKEplWc20rQqGHw
-         JWEoTV6Vumuag==
-Date:   Mon, 8 Feb 2021 12:20:35 +0100
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, kuba@kernel.org, nbd@nbd.name,
-        lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH wireless-drivers] mt76: dma: do not report truncated
- frames to mac80211
-Message-ID: <20210208112035.GD2593@lore-desk>
-References: <a03166fcc8214644333c68674a781836e0f57576.1612697217.git.lorenzo@kernel.org>
- <87mtwfkr6u.fsf@tynnyri.adurom.net>
- <20210208082516.GB2593@lore-desk>
- <87im735593.fsf@codeaurora.org>
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612783262; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=e8JVt610v7rkS0CWjmrki8Ua+zSTQvfnd2+Ays9O6sk=;
+ b=lTbRjxsqaLG7ADrhYPOvkcWPJTik6mitPN/Vck4LJYDoq68ppmEcLPRm4g30LZEvie1XlOSJ
+ R4W31xHJLUI6Rcn/Nl9rJ53BG8oPbA6R+edqKsQG7YJJMyomOVU0JC82kycyWZUWmj/MMEBX
+ pjNd4ypKoYE/ChIQdSxRZwbaYcY=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 60211e7d830f898bac3c8c6c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:20:29
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id B1E31C43467; Mon,  8 Feb 2021 11:20:29 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 72F37C433CA;
+        Mon,  8 Feb 2021 11:20:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 72F37C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="M38YqGLZlgb6RLPS"
-Content-Disposition: inline
-In-Reply-To: <87im735593.fsf@codeaurora.org>
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] rt2x00: remove duplicate word and fix typo in comment
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210204005119.18060-1-samirweng1979@163.com>
+References: <20210204005119.18060-1-samirweng1979@163.com>
+To:     samirweng1979 <samirweng1979@163.com>
+Cc:     stf_xl@wp.pl, rdunlap@infradead.org, helmut.schaa@googlemail.com,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        wengjianfeng <wengjianfeng@yulong.com>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20210208112029.B1E31C43467@smtp.codeaurora.org>
+Date:   Mon,  8 Feb 2021 11:20:29 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+samirweng1979 <samirweng1979@163.com> wrote:
 
---M38YqGLZlgb6RLPS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> From: wengjianfeng <wengjianfeng@yulong.com>
+> 
+> remove duplicate word 'we' in comment
+> change 'then' to 'than' in comment
+> 
+> Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+> Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
-> Lorenzo Bianconi <lorenzo@kernel.org> writes:
->=20
-> >> Lorenzo Bianconi <lorenzo@kernel.org> writes:
-> >>=20
-> >> > If the fragment is discarded in mt76_add_fragment() since shared_info
-> >> > frag array is full, discard truncated frames and do not forward them=
- to
-> >> > mac80211.
-> >> >
-> >> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> >>=20
-> >> Should there be a Fixes line? I can add it.
-> >
-> > I am not sure it needs a Fixes tag.
->=20
-> I think the commit log should have some kind of description about the
-> background of the issue, for example if this is a recent regression or
-> has been there forever etc.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Agree. Can you please check the commit log below?
+cc1546d6850c rt2x00: remove duplicate word and fix typo in comment
 
-Regards,
-Lorenzo
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20210204005119.18060-1-samirweng1979@163.com/
 
-"
-Commit 'b102f0c522cf6 ("mt76: fix array overflow on receiving too many
-fragments for a packet")' fixes a possible OOB access but it introduces a
-memory leak since the pending frame is not released to page_frag_cache if
-the frag array of skb_shared_info is full.
-Commit '93a1d4791c10 ("mt76: dma: fix a possible memory leak in
-mt76_add_fragment()")' fixes the issue but does not free the truncated skb =
-that
-is forwarded to mac80211 layer. Fix the leftover issue discarding even trun=
-cated
-skbs.
-"
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
->=20
-> --=20
-> https://patchwork.kernel.org/project/linux-wireless/list/
->=20
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
-tches
-
---M38YqGLZlgb6RLPS
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYCEegAAKCRA6cBh0uS2t
-rIACAQCwd+cSlOBOL131ueVvtm5gy62L+CALDu/eW4DXenIxGwEA1yJkyvBql/0X
-kfmyvmneSVsXdNenau4MYtDSjwZ5/AM=
-=MiDi
------END PGP SIGNATURE-----
-
---M38YqGLZlgb6RLPS--
