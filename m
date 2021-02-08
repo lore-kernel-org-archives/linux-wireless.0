@@ -4,64 +4,63 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7FCC433E9
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E6CC433E6
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:30:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9E3564E92
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6CBB64E99
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232935AbhBHL3I (ORCPT
+        id S233166AbhBHL3i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 06:29:08 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:37613 "EHLO so15.mailgun.net"
+        Mon, 8 Feb 2021 06:29:38 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:50923 "EHLO so15.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232932AbhBHLV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 06:21:58 -0500
+        id S233181AbhBHL1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 06:27:16 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612783298; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1612783616; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=VvCPuFMXeq8A5HDmspHBONzCeGU4NBXAY5nIRQj13/s=;
- b=INq47x73LC0jXgrL9JObZ5mOkiLlIHVFLdHXZOrKRQc93ADxLb3/sPaMFvakoxAy/cR3GNXb
- fWlJlPcT/UmC6ezvZwjQ8HuJvjtqdDTtA/fSLhLKLoY6Ld48pZYlSPZAxincf2P21hiLQYgq
- DW4R0rW1SV6iAmwb4C9BAb/7gB0=
+ Content-Type: Sender; bh=5QCI63NH6Wa4pD81iDZmUJs/qJLaqHjMmad3Bk2CwNE=;
+ b=BDcgBfBJ+OSgJwTum8Wn7Xy59jSrDROtst0v76/bOWMBOzq9TMbYk3DS34thw9j5thKNFpGn
+ B/60BAjbNf1f4ZAl02OlnWjeLoZ75YIuh0Oerv0UKvTNwgPDgjCAEaV+Vbb259vw3rL2GBEe
+ 1XkyPUeFMBnMFgqTSCaF7pg+4MU=
 X-Mailgun-Sending-Ip: 198.61.254.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 60211ea4e4842e9128180384 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:21:08
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 60211fe1f112b7872c458818 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:26:25
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 504F1C433C6; Mon,  8 Feb 2021 11:21:07 +0000 (UTC)
+        id 5CA59C433CA; Mon,  8 Feb 2021 11:26:25 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C258BC433CA;
-        Mon,  8 Feb 2021 11:21:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C258BC433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 740CFC43464;
+        Mon,  8 Feb 2021 11:26:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 740CFC43464
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] iwlegacy: 4965-mac: Simplify the calculation of variables
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] ssb: Use true and false for bool variable
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com>
-References: <1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+References: <1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com>
 To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc:     stf_xl@wp.pl, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+Cc:     m@bues.ch, linux-wireless@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210208112107.504F1C433C6@smtp.codeaurora.org>
-Date:   Mon,  8 Feb 2021 11:21:07 +0000 (UTC)
+Message-Id: <20210208112625.5CA59C433CA@smtp.codeaurora.org>
+Date:   Mon,  8 Feb 2021 11:26:25 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -70,19 +69,37 @@ Jiapeng Chong <jiapeng.chong@linux.alibaba.com> wrote:
 
 > Fix the following coccicheck warnings:
 > 
-> ./drivers/net/wireless/intel/iwlegacy/4965-mac.c:2596:54-56: WARNING !A
-> || A && B is equivalent to !A || B.
+> ./include/linux/ssb/ssb_driver_gige.h:89:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_one_dma_at_once' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:79:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_have_roboswitch' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:182:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_must_flush_posted_writes' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:178:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_one_dma_at_once' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:174:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_have_roboswitch' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:170:8-9: WARNING: return of 0/1 in
+> function 'ssb_gige_is_rgmii' with return type bool.
+> 
+> ./include/linux/ssb/ssb_driver_gige.h:162:8-9: WARNING: return of 0/1 in
+> function 'pdev_is_ssb_gige_core' with return type bool.
 > 
 > Reported-by: Abaci Robot <abaci@linux.alibaba.com>
 > Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Acked-by: Michael Büsch <m@bues.ch>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-fcb8f3ca4b5b iwlegacy: 4965-mac: Simplify the calculation of variables
+4331667fa14e ssb: Use true and false for bool variable
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/1612508199-92282-1-git-send-email-jiapeng.chong@linux.alibaba.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
