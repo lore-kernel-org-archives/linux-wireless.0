@@ -2,88 +2,70 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FF7C433E6
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 08:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2355AC433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 08:45:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0C7E64EA1
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 08:35:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E017064E92
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 08:45:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbhBHIfA (ORCPT
+        id S230334AbhBHIpO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 03:35:00 -0500
-Received: from mail29.static.mailgun.info ([104.130.122.29]:32431 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230244AbhBHId4 (ORCPT
+        Mon, 8 Feb 2021 03:45:14 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:44246 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229821AbhBHImF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 03:33:56 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612773199; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=gzpC8yw2jvxibVfQj8bcFwZSjFX2GD556LTiVBMvEl0=; b=GSEIrJEYg9eQHKsF5psG1AsY225IyZXBoSq56/9i3Wxv02eLahfpAQ+GLdCi+bZqg2Dk8stf
- 2TJ48WJo0RSZGYOeKINoaGYmqpveiv0QaQhh8i8cBtBluSQMMAjVTuXnJuScqdf8+TpYW8sh
- 1shEKtjjuf7BjXXSkcjAVU+xK5E=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 6020f72d34db06ef79ee4a9a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 08:32:45
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CEF19C43462; Mon,  8 Feb 2021 08:32:44 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D45B4C433CA;
-        Mon,  8 Feb 2021 08:32:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D45B4C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, kuba@kernel.org, nbd@nbd.name,
-        lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH wireless-drivers] mt76: dma: do not report truncated frames to mac80211
-References: <a03166fcc8214644333c68674a781836e0f57576.1612697217.git.lorenzo@kernel.org>
-        <87mtwfkr6u.fsf@tynnyri.adurom.net> <20210208082516.GB2593@lore-desk>
-Date:   Mon, 08 Feb 2021 10:32:40 +0200
-In-Reply-To: <20210208082516.GB2593@lore-desk> (Lorenzo Bianconi's message of
-        "Mon, 8 Feb 2021 09:25:16 +0100")
-Message-ID: <87im735593.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 8 Feb 2021 03:42:05 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=[192.168.100.69])
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1l925w-00479n-60; Mon, 08 Feb 2021 10:40:32 +0200
+Message-ID: <c29802a2acda44fa6368e6703f7dc0c13178ae24.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Mon, 08 Feb 2021 10:40:30 +0200
+In-Reply-To: <20210208083006.4C609C43461@smtp.codeaurora.org>
+References: <iwlwifi.20210206130110.6f0c1849f7dc.I647b4d22f9468c2f34b777a4bfa445912c6f04f0@changeid>
+         <20210208083006.4C609C43461@smtp.codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.2-1 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH for v5.11] iwlwifi: add new cards for So and Qu family
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo@kernel.org> writes:
+On Mon, 2021-02-08 at 08:30 +0000, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> wrote:
+> 
+> > From: Ihab Zhaika <ihab.zhaika@intel.com>
+> > 
+> > add few PCI ID'S for So with Hr and Qu with Hr in AX family.
+> > 
+> > Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Why the urgency? Linus most likely releases v5.11 next Sunday so I would rather
+> apply this to -next. You could push it to v5.11 via the stable tree.
 
->> Lorenzo Bianconi <lorenzo@kernel.org> writes:
->> 
->> > If the fragment is discarded in mt76_add_fragment() since shared_info
->> > frag array is full, discard truncated frames and do not forward them to
->> > mac80211.
->> >
->> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
->> 
->> Should there be a Fixes line? I can add it.
->
-> I am not sure it needs a Fixes tag.
+The urgency was that there are some OEMs with these devices and they
+wanted the patch in v5.11 asap.  But I can certainly push back and we
+can send this via -next.  I only promised to *try* to get it in v5.11.
+;)
 
-I think the commit log should have some kind of description about the
-background of the issue, for example if this is a recent regression or
-has been there forever etc.
+I'll add a Cc: stable and apply to iwlwifi-next.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+Thanks, Kalle.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--
+Cheers,
+Luca.
+
