@@ -4,92 +4,84 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B82C433E9
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:36:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C7BC433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEEF964E59
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:36:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC8CA64E87
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 10:39:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232511AbhBHKgt (ORCPT
+        id S232662AbhBHKiq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 05:36:49 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:34119 "EHLO so15.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232070AbhBHKef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 05:34:35 -0500
+        Mon, 8 Feb 2021 05:38:46 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:61304 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232512AbhBHKfJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 05:35:09 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612780458; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1612780488; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=if8BgcAyVuu8lFUgsMnxiuvsLOBk24GIfI2rVHMQR9U=;
- b=MWTZISI34xpXAyZebcTqt7M6NW1fA/rKpCjW3F0nnVmmqFW2TIJ+oJ32oDD06DiuxTZdzhax
- oP+mraDBieiVZCQxxsJbMyUhtthd57ecli/eu2C/KTwKllXgQs5A0K62YRROhiQt+/rvNG2b
- jCwNGAnxo4S+EWXHtRuozaJpEh0=
-X-Mailgun-Sending-Ip: 198.61.254.15
+ Content-Type: Sender; bh=nsYYyDQ8SFTkzKHxtSgLpNnRS1loGDDt83SA7JPx+vE=;
+ b=JRvipYLtNCb089Cyz7YYg3ZFuIWtqzLW5/DrA0Xhnwkde7PGAXhthG33fXT1Ak3NQedvsIDy
+ wl/n5E9HgwrpCUrt0p8W3uFuPAB78aZkQLPqz5N2T9wmGfhaRfjco7qBuv2+RarnJFVOHzQj
+ qUZi30KWZKPPt2nyA2A4FrsbjRU=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 6021138334db06ef79402be1 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 10:33:39
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 602113acf112b7872c236a7f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 10:34:20
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B2591C43464; Mon,  8 Feb 2021 10:33:39 +0000 (UTC)
+        id C1FD5C43465; Mon,  8 Feb 2021 10:34:20 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EECF8C433CA;
-        Mon,  8 Feb 2021 10:33:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EECF8C433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 66967C433C6;
+        Mon,  8 Feb 2021 10:34:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 66967C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3] rtlwifi: rtl8192se: Simplify bool comparison
+Subject: Re: [PATCH v2] rtlwifi: rtl8821ae: style: Simplify bool comparison
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1611043150-78723-1-git-send-email-abaci-bugfix@linux.alibaba.com>
-References: <1611043150-78723-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+In-Reply-To: <1611632768-6293-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+References: <1611632768-6293-1-git-send-email-abaci-bugfix@linux.alibaba.com>
 To:     Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
 Cc:     pkshih@realtek.com, davem@davemloft.net, kuba@kernel.org,
-        Larry.Finger@lwfinger.net, chiu@endlessos.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210208103339.B2591C43464@smtp.codeaurora.org>
-Date:   Mon,  8 Feb 2021 10:33:39 +0000 (UTC)
+Message-Id: <20210208103420.C1FD5C43465@smtp.codeaurora.org>
+Date:   Mon,  8 Feb 2021 10:34:20 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Jiapeng Zhong <abaci-bugfix@linux.alibaba.com> wrote:
 
-> Fix the follow coccicheck warnings:
-> 
-> ./drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c:2305:6-27:
-> WARNING: Comparison of 0/1 to bool variable.
-> 
-> ./drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c:1376:5-26:
-> WARNING: Comparison of 0/1 to bool variable.
+> Fix the following coccicheck warning:
+> ./drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:3853:7-17:
+> WARNING: Comparison of 0/1 to bool variable
 > 
 > Reported-by: Abaci Robot <abaci@linux.alibaba.com>
 > Signed-off-by: Jiapeng Zhong <abaci-bugfix@linux.alibaba.com>
 
-Patchwork still gives me Abaci team in the from field. I don't take patches
-from generic team addresses as I'm not sure what the legal implications are.
-[1] Please use your own email address and real name.
+Please use your own email address and real name.
 
 Patch set to Changes Requested.
 
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
-
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1611043150-78723-1-git-send-email-abaci-bugfix@linux.alibaba.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/1611632768-6293-1-git-send-email-abaci-bugfix@linux.alibaba.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
