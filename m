@@ -7,61 +7,62 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA020C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B95CC4332E
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:23:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66B1864E40
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A43164E8B
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:23:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232223AbhBHLVL (ORCPT
+        id S232876AbhBHLXi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 06:21:11 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:31598 "EHLO so15.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233030AbhBHLTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 06:19:24 -0500
+        Mon, 8 Feb 2021 06:23:38 -0500
+Received: from mail29.static.mailgun.info ([104.130.122.29]:58622 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233048AbhBHLUK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 06:20:10 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612783144; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1612783190; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=CjSNkhSZwOHg96R34OlXfiyVg10ciFV0CePHfLR49Ek=;
- b=aaHl4tjBeBgRU18uFhRqHMggCfsR3z/BL6Mcm6zjjiwEkeI9r/zFZkRGf2m2gvW0191bAJmO
- WhYRpmBC9I2gaBD42Nz5nyzX7V4pxZMAVQkhJYcDgK9ob7QUWZwYZdyKuvHCzYXhhaFWGe6Q
- CaEEp4LIyIsiCRy2NTybh2ycG54=
-X-Mailgun-Sending-Ip: 198.61.254.15
+ Content-Type: Sender; bh=ZfPBl6SItvH/px01pEtiPLgUOmFev1HLYNK3j7R8gw8=;
+ b=S0aBdSu4Ji+5K+QDepJyb6uUhqXffU1mRD76TjVVyDDdZkYaYrjatV9hHaewXZgHREPDzYjs
+ BizKHAa21t2TNKIDcq8hC6TdGMokWU74fSBloqzw4hPoEf3sFXHUi7+ANvdW3X61MaHgWu/k
+ Z0g5v/YnUevci2izyWENxd6ESL8=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 60211e0081f6c45dce8a2213 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:18:24
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 60211e3a3919dfb455999bb7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:19:22
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 02B72C433ED; Mon,  8 Feb 2021 11:18:23 +0000 (UTC)
+        id 4E7B0C433CA; Mon,  8 Feb 2021 11:19:21 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 52FC6C433C6;
-        Mon,  8 Feb 2021 11:18:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 52FC6C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8BAC2C433C6;
+        Mon,  8 Feb 2021 11:19:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8BAC2C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wl1251: cmd: remove redundant assignment
+Subject: Re: [PATCH] mwl8k: assign value when defining variables
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210203060306.2832-1-samirweng1979@163.com>
-References: <20210203060306.2832-1-samirweng1979@163.com>
+In-Reply-To: <20210203061625.588-1-samirweng1979@163.com>
+References: <20210203061625.588-1-samirweng1979@163.com>
 To:     samirweng1979 <samirweng1979@163.com>
-Cc:     davem@davemloft.net, kuba@kernel.org,
+Cc:     buytenh@wantstofly.org, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         wengjianfeng <wengjianfeng@yulong.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210208111824.02B72C433ED@smtp.codeaurora.org>
-Date:   Mon,  8 Feb 2021 11:18:24 +0000 (UTC)
+Message-Id: <20210208111921.4E7B0C433CA@smtp.codeaurora.org>
+Date:   Mon,  8 Feb 2021 11:19:21 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -70,18 +71,17 @@ samirweng1979 <samirweng1979@163.com> wrote:
 
 > From: wengjianfeng <wengjianfeng@yulong.com>
 > 
-> -ENOMEM has been used as a return value,it is not necessary to
-> assign it, and if kzalloc fail,not need free it,so just return
-> -ENOMEM when kzalloc fail.
+> define refilled and then assign value to it, which should do
+> that at the same time.
 > 
 > Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-05d7f3307488 wl1251: cmd: remove redundant assignment
+bb779d476ff7 mwl8k: assign value when defining variables
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210203060306.2832-1-samirweng1979@163.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210203061625.588-1-samirweng1979@163.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
