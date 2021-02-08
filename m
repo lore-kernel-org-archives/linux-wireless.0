@@ -2,85 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D838C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7FCC433E9
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:29:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3243B64E8B
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:28:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9E3564E92
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Feb 2021 11:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233360AbhBHL2S (ORCPT
+        id S232935AbhBHL3I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Feb 2021 06:28:18 -0500
-Received: from m12-16.163.com ([220.181.12.16]:54914 "EHLO m12-16.163.com"
+        Mon, 8 Feb 2021 06:29:08 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:37613 "EHLO so15.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230329AbhBHLZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Feb 2021 06:25:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=ZFWMb
-        A8IIRM4Y2Shp9y2AqfBxFZ/llCxBUNcYxvSxTA=; b=Pjl2oCBG+fOIGH7V7Lb92
-        4SukxyrkxChW8Z4GoKiOrNPtYqVph1cBznGFHBWqRDIelLcRjmPNewW1tKII/Jhz
-        0oojKTLMnHsWSkSVGCW/NGGuX4WKxda0oVibPFpZyOzaZ8OnxCWR5puEHwyVpR5h
-        Vv7DbQNPyF7wzfV6FOUgFM=
-Received: from localhost (unknown [119.137.53.134])
-        by smtp12 (Coremail) with SMTP id EMCowADn7VkvGyFgczS4bA--.30517S2;
-        Mon, 08 Feb 2021 19:06:24 +0800 (CST)
-Date:   Mon, 8 Feb 2021 19:06:19 +0800
-From:   wengjianfeng <samirweng1979@163.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     davem@davemloft.net, kuba@kernel.org, lee.jones@linaro.org,
+        id S232932AbhBHLV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Feb 2021 06:21:58 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1612783298; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=VvCPuFMXeq8A5HDmspHBONzCeGU4NBXAY5nIRQj13/s=;
+ b=INq47x73LC0jXgrL9JObZ5mOkiLlIHVFLdHXZOrKRQc93ADxLb3/sPaMFvakoxAy/cR3GNXb
+ fWlJlPcT/UmC6ezvZwjQ8HuJvjtqdDTtA/fSLhLKLoY6Ld48pZYlSPZAxincf2P21hiLQYgq
+ DW4R0rW1SV6iAmwb4C9BAb/7gB0=
+X-Mailgun-Sending-Ip: 198.61.254.15
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 60211ea4e4842e9128180384 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Feb 2021 11:21:08
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 504F1C433C6; Mon,  8 Feb 2021 11:21:07 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C258BC433CA;
+        Mon,  8 Feb 2021 11:21:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C258BC433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] iwlegacy: 4965-mac: Simplify the calculation of variables
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+References: <1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     stf_xl@wp.pl, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        wengjianfeng <wengjianfeng@yulong.com>
-Subject: Re: [PATCH RESEND] wl1251: cmd: remove redundant assignment
-Message-ID: <20210208190619.00006644@163.com>
-In-Reply-To: <20210208105954.1EAD9C433CA@smtp.codeaurora.org>
-References: <20210208022535.17672-1-samirweng1979@163.com>
-        <20210208105954.1EAD9C433CA@smtp.codeaurora.org>
-Organization: yulong
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; i686-w64-mingw32)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: EMCowADn7VkvGyFgczS4bA--.30517S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7GryUXw4fJw4xZFy5GFW7urg_yoW3Cwc_uF
-        4fWF1ruryktF48tFs2kw43XFn5Kr1UGw4kGw1FvryfCw1YgFWj9a1kKr9ayw4xX34Igr1D
-        WFn5trWktryjgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU0fuctUUUUU==
-X-Originating-IP: [119.137.53.134]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiqhUzsVr7sEK95gAAs1
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20210208112107.504F1C433C6@smtp.codeaurora.org>
+Date:   Mon,  8 Feb 2021 11:21:07 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon,  8 Feb 2021 10:59:54 +0000 (UTC)
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Jiapeng Chong <jiapeng.chong@linux.alibaba.com> wrote:
 
-> samirweng1979 <samirweng1979@163.com> wrote:
+> Fix the following coccicheck warnings:
 > 
-> > From: wengjianfeng <wengjianfeng@yulong.com>
-> > 
-> > -ENOMEM has been used as a return value,it is not necessary to
-> > assign it, and if kzalloc fail,not need free it,so just return
-> > -ENOMEM when kzalloc fail.
-> > 
-> > Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+> ./drivers/net/wireless/intel/iwlegacy/4965-mac.c:2596:54-56: WARNING !A
+> || A && B is equivalent to !A || B.
 > 
-> You sent the previous version just five days ago:
-> 
-> https://patchwork.kernel.org/project/linux-wireless/patch/20210203060306.2832-1-samirweng1979@163.com/
-> 
-> We maintainers are busy and usually takes some time to review the
-> patch. So please avoid resending patches in such short intervals.
-> 
-> Patch set to Superseded.
-> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Hi Kalle,
-  I see, thanks your reply.
+Patch applied to wireless-drivers-next.git, thanks.
+
+fcb8f3ca4b5b iwlegacy: 4965-mac: Simplify the calculation of variables
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/1612425608-40450-1-git-send-email-jiapeng.chong@linux.alibaba.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
