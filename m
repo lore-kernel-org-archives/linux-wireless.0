@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 803EDC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6BF2C433E9
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 07:10:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BAF464E77
+	by mail.kernel.org (Postfix) with ESMTP id 8284764E79
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 07:10:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229753AbhBIHKM (ORCPT
+        id S229843AbhBIHKY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Feb 2021 02:10:12 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:35168 "EHLO
+        Tue, 9 Feb 2021 02:10:24 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:35183 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbhBIHKM (ORCPT
+        with ESMTP id S229759AbhBIHKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Feb 2021 02:10:12 -0500
+        Tue, 9 Feb 2021 02:10:22 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 11979QTW0006511, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 11979bXH2006632, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 11979QTW0006511
+        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 11979bXH2006632
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 9 Feb 2021 15:09:26 +0800
+        Tue, 9 Feb 2021 15:09:37 +0800
 Received: from localhost (172.21.69.213) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Tue, 9 Feb 2021
- 15:09:25 +0800
+ 15:09:36 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
-Subject: [PATCH v5 2/8] rtw88: add rts condition
-Date:   Tue, 9 Feb 2021 15:07:49 +0800
-Message-ID: <20210209070755.23019-3-pkshih@realtek.com>
+Subject: [PATCH v5 4/8] rtw88: replace tx tasklet with work queue
+Date:   Tue, 9 Feb 2021 15:07:51 +0800
+Message-ID: <20210209070755.23019-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20210209070755.23019-1-pkshih@realtek.com>
 References: <20210209070755.23019-1-pkshih@realtek.com>
@@ -52,65 +52,115 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Po-Hao Huang <phhuang@realtek.com>
 
-Since we set the IEEE80211_HW_HAS_RATE_CONTROL flag, so use_rts in
-ieee80211_tx_info will never be set in the ieee80211_xmit_fast path.
-Add length check for skb to decide whether rts is needed.
+Replace tasklet so we can do tx scheduling in parallel. Since throughput
+is delay-sensitive in most cases, we allocate a dedicated, high priority
+wq for our needs.
 
 Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Reviewed-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/realtek/rtw88/tx.c | 7 ++++++-
- drivers/net/wireless/realtek/rtw88/tx.h | 4 ++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/main.c     | 5 +++--
+ drivers/net/wireless/realtek/rtw88/main.h     | 4 +++-
+ drivers/net/wireless/realtek/rtw88/tx.c       | 4 ++--
+ drivers/net/wireless/realtek/rtw88/tx.h       | 2 +-
+ 5 files changed, 10 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 1f1b639cd124..2351dfb0d2e2 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -42,7 +42,7 @@ static void rtw_ops_wake_tx_queue(struct ieee80211_hw *hw,
+ 		list_add_tail(&rtwtxq->list, &rtwdev->txqs);
+ 	spin_unlock_bh(&rtwdev->txq_lock);
+ 
+-	tasklet_schedule(&rtwdev->tx_tasklet);
++	queue_work(rtwdev->tx_wq, &rtwdev->tx_work);
+ }
+ 
+ static int rtw_ops_start(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 871496713f98..e6989c0525cc 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1658,7 +1658,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 
+ 	timer_setup(&rtwdev->tx_report.purge_timer,
+ 		    rtw_tx_report_purge_timer, 0);
+-	tasklet_setup(&rtwdev->tx_tasklet, rtw_tx_tasklet);
++	rtwdev->tx_wq = alloc_workqueue("rtw_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
+ 
+ 	INIT_DELAYED_WORK(&rtwdev->watch_dog_work, rtw_watch_dog_work);
+ 	INIT_DELAYED_WORK(&coex->bt_relink_work, rtw_coex_bt_relink_work);
+@@ -1670,6 +1670,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 	INIT_DELAYED_WORK(&coex->bt_multi_link_remain_work,
+ 			  rtw_coex_bt_multi_link_remain_work);
+ 	INIT_DELAYED_WORK(&coex->wl_ccklock_work, rtw_coex_wl_ccklock_work);
++	INIT_WORK(&rtwdev->tx_work, rtw_tx_work);
+ 	INIT_WORK(&rtwdev->c2h_work, rtw_c2h_work);
+ 	INIT_WORK(&rtwdev->fw_recovery_work, rtw_fw_recovery_work);
+ 	INIT_WORK(&rtwdev->ba_work, rtw_txq_ba_work);
+@@ -1736,7 +1737,7 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
+ 	if (wow_fw->firmware)
+ 		release_firmware(wow_fw->firmware);
+ 
+-	tasklet_kill(&rtwdev->tx_tasklet);
++	destroy_workqueue(rtwdev->tx_wq);
+ 	spin_lock_irqsave(&rtwdev->tx_report.q_lock, flags);
+ 	skb_queue_purge(&rtwdev->tx_report.queue);
+ 	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index bc2702f73995..35afea91fd29 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -13,6 +13,7 @@
+ #include <linux/bitfield.h>
+ #include <linux/iopoll.h>
+ #include <linux/interrupt.h>
++#include <linux/workqueue.h>
+ 
+ #include "util.h"
+ 
+@@ -1772,7 +1773,8 @@ struct rtw_dev {
+ 	/* used to protect txqs list */
+ 	spinlock_t txq_lock;
+ 	struct list_head txqs;
+-	struct tasklet_struct tx_tasklet;
++	struct workqueue_struct *tx_wq;
++	struct work_struct tx_work;
+ 	struct work_struct ba_work;
+ 
+ 	struct rtw_tx_report tx_report;
 diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 18ec0088bf41..313b824dca6d 100644
+index 313b824dca6d..0193708fc013 100644
 --- a/drivers/net/wireless/realtek/rtw88/tx.c
 +++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -58,6 +58,10 @@ void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
- 	SET_TX_DESC_SPE_RPT(txdesc, pkt_info->report);
- 	SET_TX_DESC_SW_DEFINE(txdesc, pkt_info->sn);
- 	SET_TX_DESC_USE_RTS(txdesc, pkt_info->rts);
-+	if (pkt_info->rts) {
-+		SET_TX_DESC_RTSRATE(txdesc, DESC_RATE24M);
-+		SET_TX_DESC_DATA_RTS_SHORT(txdesc, 1);
-+	}
- 	SET_TX_DESC_DISQSELSEQ(txdesc, pkt_info->dis_qselseq);
- 	SET_TX_DESC_EN_HWSEQ(txdesc, pkt_info->en_hwseq);
- 	SET_TX_DESC_HW_SSN_SEL(txdesc, pkt_info->hw_ssn_sel);
-@@ -290,6 +294,7 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
+@@ -592,9 +592,9 @@ static void rtw_txq_push(struct rtw_dev *rtwdev,
+ 	rcu_read_unlock();
+ }
+ 
+-void rtw_tx_tasklet(struct tasklet_struct *t)
++void rtw_tx_work(struct work_struct *w)
  {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hw *hw = rtwdev->hw;
- 	struct rtw_sta_info *si;
- 	u16 seq;
- 	u8 ampdu_factor = 0;
-@@ -313,7 +318,7 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
- 		ampdu_density = get_tx_ampdu_density(sta);
- 	}
+-	struct rtw_dev *rtwdev = from_tasklet(rtwdev, t, tx_tasklet);
++	struct rtw_dev *rtwdev = container_of(w, struct rtw_dev, tx_work);
+ 	struct rtw_txq *rtwtxq, *tmp;
  
--	if (info->control.use_rts)
-+	if (info->control.use_rts || skb->len > hw->wiphy->rts_threshold)
- 		pkt_info->rts = true;
- 
- 	if (sta->vht_cap.vht_supported)
+ 	spin_lock_bh(&rtwdev->txq_lock);
 diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
-index 6673dbcaa21c..022288c9b5fc 100644
+index 022288c9b5fc..56371eff9f7f 100644
 --- a/drivers/net/wireless/realtek/rtw88/tx.h
 +++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -37,6 +37,10 @@
- 	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, GENMASK(21, 17))
- #define SET_TX_DESC_USE_RTS(tx_desc, value)                                    \
- 	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(12))
-+#define SET_TX_DESC_RTSRATE(txdesc, value)                                     \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x04, value, GENMASK(28, 24))
-+#define SET_TX_DESC_DATA_RTS_SHORT(txdesc, value)                              \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(12))
- #define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
- 	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, GENMASK(22, 20))
- #define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
+@@ -98,7 +98,7 @@ void rtw_tx(struct rtw_dev *rtwdev,
+ 	    struct sk_buff *skb);
+ void rtw_txq_init(struct rtw_dev *rtwdev, struct ieee80211_txq *txq);
+ void rtw_txq_cleanup(struct rtw_dev *rtwdev, struct ieee80211_txq *txq);
+-void rtw_tx_tasklet(struct tasklet_struct *t);
++void rtw_tx_work(struct work_struct *w);
+ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 			    struct rtw_tx_pkt_info *pkt_info,
+ 			    struct ieee80211_sta *sta,
 -- 
 2.21.0
 
