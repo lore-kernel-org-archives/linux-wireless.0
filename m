@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A89D6C433E9
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 10:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E92C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 11:00:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7717E64DC3
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 10:58:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFE6D64DC3
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Feb 2021 11:00:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232236AbhBIK5o (ORCPT
+        id S232191AbhBIK7z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Feb 2021 05:57:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42810 "EHLO mail.kernel.org"
+        Tue, 9 Feb 2021 05:59:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43306 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232164AbhBIKzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Feb 2021 05:55:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D604164E30;
-        Tue,  9 Feb 2021 10:54:32 +0000 (UTC)
+        id S232239AbhBIK5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Feb 2021 05:57:44 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A603264E50;
+        Tue,  9 Feb 2021 10:54:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612868073;
-        bh=ZPxHDBkx5wOh5HwxUhHGTm0f3SWVwQyBWDKIQdYsB+g=;
+        s=k20201202; t=1612868077;
+        bh=jvJmsvkjXBnY5thcyMdcgLFhIjSb6D2GbwDkba82v7Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gkKQAcfYcb1VwCGKvZFcs0CtbEZKHb2+Dp5P+WnlFCSpz14W/EDhfebWhTobd6phI
-         C/ItXv5qix07JgzaCt7EcJhFBFtMmuRfghT/uwwaAEggqCthSy91GEhcTdY7rXnzMi
-         R3o35Q/5S+3NNyCeODwdNVGyJVBeJaDn7a+no/ohUzkwTu7YToMVgldi2cdPix0TO7
-         ypG7k4/iIR7dJp5uEzbhMCnpaghbjtjTywySzPZPQqaZOGge2rB6UHSVY1cUaYCPB0
-         D3IB4dWtJXBI0TlL6FZnzuckeNBEYUxORnA3O9uWfpi86QWuGanz92HVN08Nihj+B5
-         jqZLTBhd+Wqdg==
+        b=iSkUzIl8OcgXx/gnvxKvTdTYCFZm+v9N1N53hzgvXcRAMuiPxB5tjCHuiMT2DsWjS
+         6kQRKvpDAW8s/BBLBOcVK/F48AGp8azROeIPd8f2MEphOfVbjnJBLlpCsCbfZH7ytH
+         KNDGg1KSpQ6iUTzu34hZnJ3w9dIQfCE6koItse4WGDxABAn0eOJUhI3InybAfFNrKM
+         4rP9vrSWrIuknj8omsKQnpkpk5b1YiorJ+fhny3x6eigTQIZeBq6CxOGyXW55xq31h
+         fGQRItn6RdnZyYEDX10gbXgRbU9+jSiE1mNlatNhWohp+qUBV3W3xLfkdcNhIW+OKk
+         OsQ5DC6SZY0UA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, sean.wang@mediatek.com,
         lorenzo.bianconi@redhat.com
-Subject: [PATCH 4/6] mt76: mt7921: add flush operation
-Date:   Tue,  9 Feb 2021 11:54:05 +0100
-Message-Id: <e88c62ef501ac065897a678a04e133afbaebb31c.1612867656.git.lorenzo@kernel.org>
+Subject: [PATCH 6/6] mt76: connac: update sched_scan cmd usage
+Date:   Tue,  9 Feb 2021 11:54:07 +0100
+Message-Id: <df691353deda63d0315fc122694981c1f7f59995.1612867656.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <cover.1612867656.git.lorenzo@kernel.org>
 References: <cover.1612867656.git.lorenzo@kernel.org>
@@ -50,43 +50,100 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-add flush operation to make sure cfg80211_mlme_deauth is able to flush
-the deauthtication frame into air immediately.
+Update sched_scan command usage according to the current firmware
+submitted into linux-firmware.git.
 
-Co-developed-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Fixes: 80fc1e37c0eb ("mt76: mt7921: rely on mt76_connac_mcu module for sched_scan and hw_scan")
+Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
+Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h |  5 -----
+ drivers/net/wireless/mediatek/mt76/mt76_connac.h   |  5 +++++
+ .../net/wireless/mediatek/mt76/mt76_connac_mcu.c   |  7 +++++--
+ .../net/wireless/mediatek/mt76/mt76_connac_mcu.h   | 14 +++++++++++---
+ 4 files changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 617e48f243f3..e6843c9ff145 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -1120,6 +1120,15 @@ static void mt7921_set_rekey_data(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 491841bc6291..5ef19fbee6bd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -408,11 +408,6 @@ static inline bool is_mt7615(struct mt76_dev *dev)
+ 	return mt76_chip(dev) == 0x7615 || mt76_chip(dev) == 0x7611;
  }
- #endif /* CONFIG_PM */
  
-+static void mt7921_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 u32 queues, bool drop)
+-static inline bool is_mt7663(struct mt76_dev *dev)
+-{
+-	return mt76_chip(dev) == 0x7663;
+-}
+-
+ static inline bool is_mt7611(struct mt76_dev *dev)
+ {
+ 	return mt76_chip(dev) == 0x7611;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+index 0d58606391b0..b811f3c410a1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+@@ -73,6 +73,11 @@ static inline bool is_mt7921(struct mt76_dev *dev)
+ 	return mt76_chip(dev) == 0x7961;
+ }
+ 
++static inline bool is_mt7663(struct mt76_dev *dev)
 +{
-+	struct mt7921_dev *dev = mt7921_hw_dev(hw);
-+
-+	wait_event_timeout(dev->mt76.tx_wait, !mt76_has_tx_pending(&dev->mphy),
-+			   HZ / 2);
++	return mt76_chip(dev) == 0x7663;
 +}
 +
- const struct ieee80211_ops mt7921_ops = {
- 	.tx = mt7921_tx,
- 	.start = mt7921_start,
-@@ -1158,4 +1167,5 @@ const struct ieee80211_ops mt7921_ops = {
- 	.set_wakeup = mt7921_set_wakeup,
- 	.set_rekey_data = mt7921_set_rekey_data,
- #endif /* CONFIG_PM */
-+	.flush = mt7921_flush,
- };
+ int mt76_connac_pm_wake(struct mt76_phy *phy, struct mt76_connac_pm *pm);
+ void mt76_connac_power_save_sched(struct mt76_phy *phy,
+ 				  struct mt76_connac_pm *pm);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 4356bf130dbd..1ee4e627ea00 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1435,10 +1435,13 @@ int mt76_connac_mcu_sched_scan_req(struct mt76_phy *phy,
+ 	req->version = 1;
+ 	req->seq_num = mvif->scan_seq_num | ext_phy << 7;
+ 
+-	if (sreq->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-		get_random_mask_addr(req->random_mac, sreq->mac_addr,
++	if (is_mt7663(phy->dev) &&
++	    (sreq->flags & NL80211_SCAN_FLAG_RANDOM_ADDR)) {
++		get_random_mask_addr(req->mt7663.random_mac, sreq->mac_addr,
+ 				     sreq->mac_addr_mask);
+ 		req->scan_func = 1;
++	} else if (is_mt7921(phy->dev)) {
++		req->mt7921.bss_idx = mvif->idx;
+ 	}
+ 
+ 	req->ssids_num = sreq->n_ssids;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index c1e1df5f7cd7..4dca07e4e8aa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -759,11 +759,19 @@ struct mt76_connac_sched_scan_req {
+ 	u8 channel_type;
+ 	u8 channels_num;
+ 	u8 intervals_num;
+-	u8 scan_func; /* BIT(0) eable random mac address */
++	u8 scan_func; /* MT7663: BIT(0) eable random mac address */
+ 	struct mt76_connac_mcu_scan_channel channels[64];
+ 	__le16 intervals[MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL];
+-	u8 random_mac[ETH_ALEN]; /* valid when BIT(0) in scan_func is set */
+-	u8 pad2[58];
++	union {
++		struct {
++			u8 random_mac[ETH_ALEN];
++			u8 pad2[58];
++		} mt7663;
++		struct {
++			u8 bss_idx;
++			u8 pad2[63];
++		} mt7921;
++	};
+ } __packed;
+ 
+ struct mt76_connac_sched_scan_done {
 -- 
 2.29.2
 
