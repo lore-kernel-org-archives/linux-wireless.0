@@ -5,55 +5,54 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C73AC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72E8AC43381
 	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 08:49:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10AAA64E32
+	by mail.kernel.org (Postfix) with ESMTP id 4EFD364E6C
 	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 08:49:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230487AbhBJIrY (ORCPT
+        id S230494AbhBJIr2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Feb 2021 03:47:24 -0500
-Received: from mail29.static.mailgun.info ([104.130.122.29]:31381 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230219AbhBJIng (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Feb 2021 03:47:28 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:46844 "EHLO so15.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230182AbhBJIng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 10 Feb 2021 03:43:36 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1612946594; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1612946578; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=BBsLnbBmUXR8PDMx9J7saA0GhoiQeq4eDjJpAjxuJ/s=; b=Ns1DaQI2twy+a3x5/MDb0U57mRqXptjUay7uhtgPJj0qtaBt7blEDVpKJRxuehxSyG/GtGRY
- wr8H7IWI4SJV9UeRc7a2umOzSQ3ayp/NYPmDlBzWRMuZCT/4rmHheqOwN/eMFa7VeFNX77A8
- 1cHY2oZ1YP1uiI/ODQfky6sXgyI=
-X-Mailgun-Sending-Ip: 104.130.122.29
+ bh=2TP8qvWrDlpsJ33CkHR3Ln6RM1J+7f5c7dJpOmArdiQ=; b=Vjpox51T6j3fyTpo2no7UWLYyjmT/5kRqJAbxOP7S81nit3edgoQE4dv4rHmIG+M+nZogc+s
+ DIHDmqVPEVfs4fbBT6VQGKoj5UzkDpfYN8Dcdr7xh5j9FT1aKWu08q4N7XI3KrPrpX6V7Wwl
+ b+rIuFe67aC5L/n/4MDtIWHTkRM=
+X-Mailgun-Sending-Ip: 198.61.254.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 60239c86d5a7a3baae3ceea0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 10 Feb 2021 08:42:46
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 60239c7734db06ef79f407b8 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 10 Feb 2021 08:42:31
  GMT
 Sender: akolli=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7DF16C4347D; Wed, 10 Feb 2021 08:42:46 +0000 (UTC)
+        id A5CB4C43462; Wed, 10 Feb 2021 08:42:31 +0000 (UTC)
 Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: akolli)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 77D5BC43468;
-        Wed, 10 Feb 2021 08:42:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 77D5BC43468
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 92FECC433CA;
+        Wed, 10 Feb 2021 08:42:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 92FECC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=akolli@codeaurora.org
 From:   Anilkumar Kolli <akolli@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [PATCH 11/11] ath11k: add qcn9074 pci device support
-Date:   Wed, 10 Feb 2021 14:12:10 +0530
-Message-Id: <1612946530-28504-12-git-send-email-akolli@codeaurora.org>
+Subject: [PATCH 04/11] ath11k: Update memory segment count for qcn9074
+Date:   Wed, 10 Feb 2021 14:12:03 +0530
+Message-Id: <1612946530-28504-5-git-send-email-akolli@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1612946530-28504-1-git-send-email-akolli@codeaurora.org>
 References: <1612946530-28504-1-git-send-email-akolli@codeaurora.org>
@@ -61,85 +60,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-QCN9074 is PCI based 11ax radio.
-	- has 2G/5G/6G variants.
-	- has NSS 2x2 and 4x4 variants.
-
-QCN9074 uses 45MB of HOST DDR memory, target requests host memory in
-segments, each segment is of 2MB size and is physcial contiguous and
-use static window configuration.
-
-Below QMI issues are seen with QCN9074,
-Issue 1:
- ath11k_pci 0000:06:00.0: qmi failed memory request, err = -110
- ath11k_pci 0000:06:00.0: qmi failed to respond fw mem req:-110
-Issue 2:
- ath11k_pci 0000:06:00.0: firmware crashed: MHI_CB_SYS_ERROR
- ath11k_pci 0000:06:00.0: qmi failed set mode request, mode: 0, err = -110
- ath11k_pci 0000:06:00.0: qmi failed to send wlan fw mode:-110
+QCN9074 FW requests three types memory segments during the boot,
+	qmi mem seg type 1 of size 15728640
+	qmi mem seg type 4 of size 3735552
+	qmi mem seg type 3 of size 1048576
+Segment type 3 is for M3 coredump memory.
 
 Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1.r2-00012-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/qmi.c | 2 +-
+ drivers/net/wireless/ath/ath11k/qmi.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 70dcb80475b1..259a39e59a91 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -34,10 +34,12 @@
-  */
- #define ACCESS_ALWAYS_OFF 0xFE0
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 0db623ff4bb9..104eabd8df02 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -1760,7 +1760,7 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
+ 						  &chunk->paddr,
+ 						  GFP_KERNEL);
+ 		if (!chunk->vaddr) {
+-			if (ab->qmi.mem_seg_count <= 2) {
++			if (ab->qmi.mem_seg_count <= ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT) {
+ 				ath11k_dbg(ab, ATH11K_DBG_QMI,
+ 					   "qmi dma allocation failed (%d B type %u), will try later with small size\n",
+ 					    chunk->size,
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
+index 1797c3b59f48..a7d01c295e77 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.h
++++ b/drivers/net/wireless/ath/ath11k/qmi.h
+@@ -26,6 +26,7 @@
+ #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	52
+ #define ATH11K_QMI_CALDB_SIZE			0x480000
+ #define ATH11K_QMI_BDF_EXT_STR_LENGTH		0x20
++#define ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT	3
  
--#define QCA6390_DEVICE_ID		0x1101
-+#define QCA6390_DEVICE_ID              0x1101
-+#define QCN9074_DEVICE_ID              0x1104
+ #define QMI_WLFW_REQUEST_MEM_IND_V01		0x0035
+ #define QMI_WLFW_FW_MEM_READY_IND_V01		0x0037
+@@ -141,6 +142,7 @@ struct ath11k_qmi {
+ #define QMI_IPQ8074_FW_MEM_MODE				0xFF
+ #define HOST_DDR_REGION_TYPE				0x1
+ #define BDF_MEM_REGION_TYPE				0x2
++#define M3_DUMP_REGION_TYPE				0x3
+ #define CALDB_MEM_REGION_TYPE				0x4
  
- static const struct pci_device_id ath11k_pci_id_table[] = {
- 	{ PCI_VDEVICE(QCOM, QCA6390_DEVICE_ID) },
-+	{ PCI_VDEVICE(QCOM, QCN9074_DEVICE_ID) },
- 	{0}
- };
- 
-@@ -61,6 +63,15 @@ static const struct ath11k_msi_config ath11k_msi_config[] = {
- 			{ .name = "DP", .num_vectors = 18, .base_vector = 14 },
- 		},
- 	},
-+	{
-+		.total_vectors = 16,
-+		.total_users = 3,
-+		.users = (struct ath11k_msi_user[]) {
-+			{ .name = "MHI", .num_vectors = 3, .base_vector = 0 },
-+			{ .name = "CE", .num_vectors = 5, .base_vector = 3 },
-+			{ .name = "DP", .num_vectors = 8, .base_vector = 8 },
-+		},
-+	},
- };
- 
- static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
-@@ -1219,6 +1230,12 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
- 			ret = -EOPNOTSUPP;
- 			goto err_pci_free_region;
- 		}
-+		ab_pci->msi_config = &ath11k_msi_config[0];
-+		break;
-+	case QCN9074_DEVICE_ID:
-+		ab_pci->msi_config = &ath11k_msi_config[1];
-+		ab->bus_params.static_window_map = true;
-+		ab->hw_rev = ATH11K_HW_QCN9074_HW10;
- 		break;
- 	default:
- 		dev_err(&pdev->dev, "Unknown PCI device found: 0x%x\n",
-@@ -1227,7 +1244,6 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
- 		goto err_pci_free_region;
- 	}
- 
--	ab_pci->msi_config = &ath11k_msi_config[0];
- 	ret = ath11k_pci_enable_msi(ab_pci);
- 	if (ret) {
- 		ath11k_err(ab, "failed to enable msi: %d\n", ret);
+ struct qmi_wlanfw_host_cap_req_msg_v01 {
 -- 
 2.7.4
 
