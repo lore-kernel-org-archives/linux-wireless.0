@@ -7,108 +7,247 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 202E3C4332E
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0374C433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 093E764E38
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A968564E87
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231841AbhBJPQO (ORCPT
+        id S231629AbhBJPQJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Feb 2021 10:16:14 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:45256 "EHLO
+        Wed, 10 Feb 2021 10:16:09 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:45238 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231650AbhBJPQH (ORCPT
+        with ESMTP id S231193AbhBJPQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Feb 2021 10:16:07 -0500
+        Wed, 10 Feb 2021 10:16:05 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l9rD5-0049kS-7D; Wed, 10 Feb 2021 17:15:19 +0200
+        id 1l9rD3-0049kS-50; Wed, 10 Feb 2021 17:15:17 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 10 Feb 2021 17:15:07 +0200
-Message-Id: <iwlwifi.20210210171218.431f31a86ea0.I9db96647eb9c7142051e26cd5be3f52c5ffc5534@changeid>
+Date:   Wed, 10 Feb 2021 17:15:04 +0200
+Message-Id: <iwlwifi.20210210171218.242bfe368981.Iaccce1e2fa3986b174d0b08942aa4fbf8bb94a95@changeid>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210210151514.416221-1-luca@coelho.fi>
 References: <20210210151514.416221-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/12] iwlwifi: mvm: isolate the get nvm flow
+Subject: [PATCH 02/12] iwlwifi: acpi: add support for DSM RFI
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-This will soon be a bit more complicated. Take it out
-to a function.
+BIOS provides RFI feature enable/disable state via WiFi DSM ACPI
+object. By default the feature should be disabled.
+The GUID for this feature is different from the one driver currently
+uses, so need to provide a set of new definitions.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 37 +++++++++++++-------
- 1 file changed, 25 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 28 ++++++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h | 20 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 41 +++++++++++++++++++-
+ 3 files changed, 75 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index a690f3a67d7c..130e78edd4ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -645,6 +645,28 @@ static const struct iwl_fw_runtime_ops iwl_mvm_fwrt_ops = {
- 	.d3_debug_enable = iwl_mvm_d3_debug_enable,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+index 6aa0dbfa3b6c..82a4f7e8ba54 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -9,9 +9,15 @@
+ #include "acpi.h"
+ #include "fw/runtime.h"
+ 
+-static const guid_t intel_wifi_guid = GUID_INIT(0xF21202BF, 0x8F78, 0x4DC6,
+-						0xA5, 0xB3, 0x1F, 0x73,
+-						0x8E, 0x28, 0x5A, 0xDE);
++const guid_t iwl_guid = GUID_INIT(0xF21202BF, 0x8F78, 0x4DC6,
++				  0xA5, 0xB3, 0x1F, 0x73,
++				  0x8E, 0x28, 0x5A, 0xDE);
++IWL_EXPORT_SYMBOL(iwl_guid);
++
++const guid_t iwl_rfi_guid = GUID_INIT(0x7266172C, 0x220B, 0x4B29,
++				      0x81, 0x4F, 0x75, 0xE4,
++				      0xDD, 0x26, 0xB5, 0xFD);
++IWL_EXPORT_SYMBOL(iwl_rfi_guid);
+ 
+ static int iwl_acpi_get_handle(struct device *dev, acpi_string method,
+ 			       acpi_handle *ret_handle)
+@@ -64,11 +70,12 @@ IWL_EXPORT_SYMBOL(iwl_acpi_get_object);
+  * function.
+  */
+ static void *iwl_acpi_get_dsm_object(struct device *dev, int rev, int func,
+-				     union acpi_object *args)
++				     union acpi_object *args,
++				     const guid_t *guid)
+ {
+ 	union acpi_object *obj;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_wifi_guid, rev, func,
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), guid, rev, func,
+ 				args);
+ 	if (!obj) {
+ 		IWL_DEBUG_DEV_RADIO(dev,
+@@ -87,12 +94,13 @@ static void *iwl_acpi_get_dsm_object(struct device *dev, int rev, int func,
+  * return 0 in success and the appropriate errno otherwise.
+  */
+ static int iwl_acpi_get_dsm_integer(struct device *dev, int rev, int func,
+-				    u64 *value, size_t expected_size)
++				    const guid_t *guid, u64 *value,
++				    size_t expected_size)
+ {
+ 	union acpi_object *obj;
+ 	int ret = 0;
+ 
+-	obj = iwl_acpi_get_dsm_object(dev, rev, func, NULL);
++	obj = iwl_acpi_get_dsm_object(dev, rev, func, NULL, guid);
+ 	if (IS_ERR(obj)) {
+ 		IWL_DEBUG_DEV_RADIO(dev,
+ 				    "Failed to get  DSM object. func= %d\n",
+@@ -137,12 +145,14 @@ static int iwl_acpi_get_dsm_integer(struct device *dev, int rev, int func,
+ /*
+  * Evaluate a DSM with no arguments and a u8 return value,
+  */
+-int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func, u8 *value)
++int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func,
++			const guid_t *guid, u8 *value)
+ {
+ 	int ret;
+ 	u64 val;
+ 
+-	ret = iwl_acpi_get_dsm_integer(dev, rev, func, &val, sizeof(u8));
++	ret = iwl_acpi_get_dsm_integer(dev, rev, func,
++				       guid, &val, sizeof(u8));
+ 
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+index 62665dfee3cb..030c50082568 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -93,13 +93,27 @@ enum iwl_dsm_values_indonesia {
+ 	DSM_VALUE_INDONESIA_MAX
  };
  
-+static int iwl_mvm_start_get_nvm(struct iwl_mvm *mvm)
++/* DSM RFI uses a different GUID, so need separate definitions */
++
++#define DSM_RFI_FUNC_ENABLE 3
++
++enum iwl_dsm_values_rfi {
++	DSM_VALUE_RFI_ENABLE,
++	DSM_VALUE_RFI_DISABLE,
++	DSM_VALUE_RFI_MAX
++};
++
+ #ifdef CONFIG_ACPI
+ 
+ struct iwl_fw_runtime;
+ 
++extern const guid_t iwl_guid;
++extern const guid_t iwl_rfi_guid;
++
+ void *iwl_acpi_get_object(struct device *dev, acpi_string method);
+ 
+-int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func, u8 *value);
++int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func,
++			const guid_t *guid, u8 *value);
+ 
+ union acpi_object *iwl_acpi_get_wifi_pkg(struct device *dev,
+ 					 union acpi_object *data,
+@@ -159,8 +173,8 @@ static inline void *iwl_acpi_get_dsm_object(struct device *dev, int rev,
+ 	return ERR_PTR(-ENOENT);
+ }
+ 
+-static inline
+-int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func, u8 *value)
++static inline int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func,
++				      const guid_t *guid, u8 *value)
+ {
+ 	return -ENOENT;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 20e93a9aff02..4d5def7e2d8c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1141,7 +1141,8 @@ static u8 iwl_mvm_eval_dsm_indonesia_5g2(struct iwl_mvm *mvm)
+ 	u8 value;
+ 
+ 	int ret = iwl_acpi_get_dsm_u8((&mvm->fwrt)->dev, 0,
+-				      DSM_FUNC_ENABLE_INDONESIA_5G2, &value);
++				      DSM_FUNC_ENABLE_INDONESIA_5G2,
++				      &iwl_guid, &value);
+ 
+ 	if (ret < 0)
+ 		IWL_DEBUG_RADIO(mvm,
+@@ -1162,11 +1163,36 @@ static u8 iwl_mvm_eval_dsm_indonesia_5g2(struct iwl_mvm *mvm)
+ 	return DSM_VALUE_INDONESIA_DISABLE;
+ }
+ 
++static u8 iwl_mvm_eval_dsm_rfi(struct iwl_mvm *mvm)
 +{
-+	int ret;
++	u8 value;
++	int ret = iwl_acpi_get_dsm_u8((&mvm->fwrt)->dev, 0, DSM_RFI_FUNC_ENABLE,
++				      &iwl_rfi_guid, &value);
 +
-+	mutex_lock(&mvm->mutex);
++	if (ret < 0) {
++		IWL_DEBUG_RADIO(mvm, "Failed to get DSM RFI, ret=%d\n", ret);
 +
-+	ret = iwl_run_init_mvm_ucode(mvm);
++	} else if (value >= DSM_VALUE_RFI_MAX) {
++		IWL_DEBUG_RADIO(mvm, "DSM RFI got invalid value, ret=%d\n",
++				value);
 +
-+	if (ret && ret != -ERFKILL)
-+		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
++	} else if (value == DSM_VALUE_RFI_ENABLE) {
++		IWL_DEBUG_RADIO(mvm, "DSM RFI is evaluated to enable\n");
++		return DSM_VALUE_RFI_ENABLE;
++	}
 +
-+	if (!iwlmvm_mod_params.init_dbg || !ret)
-+		iwl_mvm_stop_device(mvm);
++	IWL_DEBUG_RADIO(mvm, "DSM RFI is disabled\n");
 +
-+	mutex_unlock(&mvm->mutex);
-+
-+	if (ret < 0)
-+		IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", ret);
-+
-+	return ret;
++	/* default behaviour is disabled */
++	return DSM_VALUE_RFI_DISABLE;
 +}
 +
- static struct iwl_op_mode *
- iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		      const struct iwl_fw *fw, struct dentry *dbgfs_dir)
-@@ -866,20 +888,11 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (err)
- 		goto out_free;
+ static u8 iwl_mvm_eval_dsm_disable_srd(struct iwl_mvm *mvm)
+ {
+ 	u8 value;
+ 	int ret = iwl_acpi_get_dsm_u8((&mvm->fwrt)->dev, 0,
+-				      DSM_FUNC_DISABLE_SRD, &value);
++				      DSM_FUNC_DISABLE_SRD,
++				      &iwl_guid, &value);
  
--	mutex_lock(&mvm->mutex);
--	err = iwl_run_init_mvm_ucode(mvm);
--	if (err && err != -ERFKILL)
--		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
--	if (!iwlmvm_mod_params.init_dbg || !err)
--		iwl_mvm_stop_device(mvm);
--	mutex_unlock(&mvm->mutex);
--	if (err < 0) {
--		IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", err);
--		goto out_free;
--	}
--
- 	scan_size = iwl_mvm_scan_size(mvm);
- 
-+	if (iwl_mvm_start_get_nvm(mvm))
-+		goto out_free;
+ 	if (ret < 0)
+ 		IWL_DEBUG_RADIO(mvm,
+@@ -1267,6 +1293,11 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
+ static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
+ {
+ }
 +
- 	mvm->scan_cmd = kmalloc(scan_size, GFP_KERNEL);
- 	if (!mvm->scan_cmd)
- 		goto out_free;
++static u8 iwl_mvm_eval_dsm_rfi(struct iwl_mvm *mvm)
++{
++	return DSM_VALUE_RFI_DISABLE;
++}
+ #endif /* CONFIG_ACPI */
+ 
+ void iwl_mvm_send_recovery_cmd(struct iwl_mvm *mvm, u32 flags)
+@@ -1603,6 +1634,12 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 
+ 	iwl_mvm_ftm_initiator_smooth_config(mvm);
+ 
++	if (fw_has_capa(&mvm->fw->ucode_capa,
++			IWL_UCODE_TLV_CAPA_RFIM_SUPPORT)) {
++		if (iwl_mvm_eval_dsm_rfi(mvm) == DSM_VALUE_RFI_ENABLE)
++			iwl_rfi_send_config_cmd(mvm, NULL);
++	}
++
+ 	IWL_DEBUG_INFO(mvm, "RT uCode started.\n");
+ 	return 0;
+  error:
 -- 
 2.30.0
 
