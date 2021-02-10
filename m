@@ -7,94 +7,66 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F31C43333
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47024C4332D
 	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4821364E85
+	by mail.kernel.org (Postfix) with ESMTP id 1E29264E7C
 	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231873AbhBJPQS (ORCPT
+        id S231860AbhBJPQR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Feb 2021 10:16:18 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:45280 "EHLO
+        Wed, 10 Feb 2021 10:16:17 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:45268 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231708AbhBJPQL (ORCPT
+        with ESMTP id S230294AbhBJPQJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Feb 2021 10:16:11 -0500
+        Wed, 10 Feb 2021 10:16:09 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1l9rD7-0049kS-MR; Wed, 10 Feb 2021 17:15:22 +0200
+        id 1l9rD6-0049kS-EG; Wed, 10 Feb 2021 17:15:20 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 10 Feb 2021 17:15:11 +0200
-Message-Id: <iwlwifi.20210210171218.ed18d7c8e7b8.Ic3fdf7c8636f332e3d5ee5841b03bf85e3bc4855@changeid>
+Date:   Wed, 10 Feb 2021 17:15:09 +0200
+Message-Id: <iwlwifi.20210210171218.835db8987b8a.Ic6c5d28d744302db1bc6c4314bd3138ba472f834@changeid>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210210151514.416221-1-luca@coelho.fi>
 References: <20210210151514.416221-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: remove max_vht_ampdu_exponent config parameter
+Subject: [PATCH 07/12] iwlwifi: mvm: don't check if CSA event is running before removing
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-This is not (or no longer) used, so remove it.
+We may want to remove it before it started (i.e. before the
+actual switch time).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 58ddd9b6d194 ("iwlwifi: mvm: don't send a CSA command the firmware doesn't know")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    | 3 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 +---
- 2 files changed, 1 insertion(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 605628a67c6a..e8b7b7618a3c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -327,8 +327,6 @@ struct iwl_fw_mon_regs {
-  * @max_tx_agg_size: max TX aggregation size of the ADDBA request/response
-  * @max_ht_ampdu_factor: the exponent of the max length of A-MPDU that the
-  *	station can receive in HT
-- * @max_vht_ampdu_exponent: the exponent of the max length of A-MPDU that the
-- *	station can receive in VHT
-  * @dccm_offset: offset from which DCCM begins
-  * @dccm_len: length of DCCM (including runtime stack CCM)
-  * @dccm2_offset: offset from which the second DCCM begins
-@@ -396,7 +394,6 @@ struct iwl_cfg {
- 	u8 nvm_hw_section_num;
- 	u8 max_tx_agg_size;
- 	u8 max_ht_ampdu_exponent;
--	u8 max_vht_ampdu_exponent;
- 	u8 ucode_api_max;
- 	u8 ucode_api_min;
- 	u16 num_rbds;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index fd3aeb5c0c58..af684f80b0cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -453,8 +453,6 @@ static void iwl_init_vht_hw_capab(struct iwl_trans *trans,
- 	const struct iwl_cfg *cfg = trans->cfg;
- 	int num_rx_ants = num_of_ant(rx_chains);
- 	int num_tx_ants = num_of_ant(tx_chains);
--	unsigned int max_ampdu_exponent = (cfg->max_vht_ampdu_exponent ?:
--					   IEEE80211_VHT_MAX_AMPDU_1024K);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 4e1bdf13e5e7..0b012f8c9eb2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -999,9 +999,6 @@ void iwl_mvm_remove_csa_period(struct iwl_mvm *mvm,
  
- 	vht_cap->vht_supported = true;
+ 	lockdep_assert_held(&mvm->mutex);
  
-@@ -462,7 +460,7 @@ static void iwl_init_vht_hw_capab(struct iwl_trans *trans,
- 		       IEEE80211_VHT_CAP_RXSTBC_1 |
- 		       IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
- 		       3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
--		       max_ampdu_exponent <<
-+		       IEEE80211_VHT_MAX_AMPDU_1024K <<
- 		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
- 
- 	if (data->vht160_supported)
+-	if (!te_data->running)
+-		return;
+-
+ 	spin_lock_bh(&mvm->time_event_lock);
+ 	id = te_data->id;
+ 	spin_unlock_bh(&mvm->time_event_lock);
 -- 
 2.30.0
 
