@@ -2,179 +2,146 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B0CDC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A1A3C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:58:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FE6C64E8C
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:25:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 598ED64D99
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Feb 2021 15:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231810AbhBJPZI (ORCPT
+        id S231950AbhBJP5w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Feb 2021 10:25:08 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:45372 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231768AbhBJPYy (ORCPT
+        Wed, 10 Feb 2021 10:57:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60468 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231803AbhBJP5r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Feb 2021 10:24:54 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1l9rLU-0049nr-Mj; Wed, 10 Feb 2021 17:24:01 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 10 Feb 2021 17:23:54 +0200
-Message-Id: <iwlwifi.20210210172142.7ce41ca91884.Ie234805047df3be84f4235f9dafaf4cdecf0db9a@changeid>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210210152355.419776-1-luca@coelho.fi>
-References: <20210210152355.419776-1-luca@coelho.fi>
+        Wed, 10 Feb 2021 10:57:47 -0500
+Received: from mail-oi1-x229.google.com (mail-oi1-x229.google.com [IPv6:2607:f8b0:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA250C061574
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2021 07:57:06 -0800 (PST)
+Received: by mail-oi1-x229.google.com with SMTP id l3so2538706oii.2
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2021 07:57:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=yBNnyv08MV67kjLVdIyECXp/12nd8XUPVrYdyrWhw80=;
+        b=aFtU6sU+k/QSlSdVczSVRwOa0OQYlIlkXqMs8fmabdtJ2KTico+vi2Tvo6qwHZLnym
+         awEH55Dkft9hl2Cvo8lXT6HbyykMuW5CWx3rLl8p6rZF+ivhmxX+1PIWk5gsP9IszVJ3
+         vGYsSGf8V0ZGchdfQfdsp//KlKjC7PQrLvwQc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=yBNnyv08MV67kjLVdIyECXp/12nd8XUPVrYdyrWhw80=;
+        b=UjPpN73+HT3NvI6rRStsQ5bSdd+yczmFIR2HPG2rDW9GzXGorIDgk4Rl2sPgpID9ao
+         vCVVwaqFESJoCl4vtI3ncuggGYUNZxwuaK/1zt1ofm0xAmBjclbSo57bHZpmjTdT9Mkm
+         8+ZcbuNPVdiaD5OCQ2XF83wTVKyQ+wVXX6hrfqJCJ7X5bMsNax0WTujDtAe/an9a1Xxt
+         A/2eJJuOTjrH1bXWw17tEFrJ22C5Wq0kFnUW4iWPfgK8vR4na+Rsj2GogC+6DB69KdR0
+         dT7dy/GilO1nfCcipHpdWZfUIJh4oYvjPB6DfMRLyQiPLmWIS7LG647j1zZy3wuAKPZy
+         ImZQ==
+X-Gm-Message-State: AOAM530FgGpq+zeNE/buzBWA/ygJ+Gd4N3GOR6NdCQa8ZdZWay3S74z+
+        BJwpOdEGMKPq8CgSMZAgwk5DcA==
+X-Google-Smtp-Source: ABdhPJzXHwwIMWKtGJtYSb8Q3H0yElai/XdDilRjxI2noBBZcfvp6wpRhAliH3x0TRTylvoapvE4PA==
+X-Received: by 2002:a05:6808:10f:: with SMTP id b15mr2584739oie.92.1612972626194;
+        Wed, 10 Feb 2021 07:57:06 -0800 (PST)
+Received: from [192.168.1.112] (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
+        by smtp.gmail.com with ESMTPSA id r13sm435237oot.41.2021.02.10.07.57.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Feb 2021 07:57:05 -0800 (PST)
+Subject: Re: [PATCH 4/5] ath10k: detect conf_mutex held ath10k_drain_tx()
+ calls
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org, Shuah Khan <skhan@linuxfoundation.org>
+References: <cover.1612915444.git.skhan@linuxfoundation.org>
+ <a980abfb143f5240375f3f1046f0f26971c695e6.1612915444.git.skhan@linuxfoundation.org>
+ <87lfbwtjls.fsf@codeaurora.org>
+From:   Shuah Khan <skhan@linuxfoundation.org>
+Message-ID: <d6d8c7b8-f69d-01ef-6d66-8a33ea98920f@linuxfoundation.org>
+Date:   Wed, 10 Feb 2021 08:57:04 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 7/8] iwlwifi: pnvm: implement reading PNVM from UEFI
+In-Reply-To: <87lfbwtjls.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 2/10/21 1:25 AM, Kalle Valo wrote:
+> Shuah Khan <skhan@linuxfoundation.org> writes:
+> 
+>> ath10k_drain_tx() must not be called with conf_mutex held as workers can
+>> use that also. Add check to detect conf_mutex held calls.
+>>
+>> Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
+> 
+> The commit log does not answer to "Why?". How did you find this? What
+> actual problem are you trying to solve?
+> 
 
-We now support fetching the PNVM data from a UEFI variable.  Add the
-code to read this variable first and use it.  If it's not available,
-we fall back to reading the data from the filesystem, as before.
+I came across the comment block above the ath10k_drain_tx() as I was
+reviewing at conf_mutex holds while I was debugging the conf_mutex
+lock assert in ath10k_debug_fw_stats_request().
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 91 +++++++++++++++++++-
- 1 file changed, 90 insertions(+), 1 deletion(-)
+My reasoning is that having this will help detect incorrect usages
+of ath10k_drain_tx() while holding conf_mutex which could lead to
+locking problems when async worker routines try to call this routine.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index d515af8c1686..5c2977b6364b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -10,6 +10,7 @@
- #include "fw/api/commands.h"
- #include "fw/api/nvm-reg.h"
- #include "fw/api/alive.h"
-+#include <linux/efi.h>
- 
- struct iwl_pnvm_section {
- 	__le32 offset;
-@@ -219,6 +220,88 @@ static int iwl_pnvm_parse(struct iwl_trans *trans, const u8 *data,
- 	return -ENOENT;
- }
- 
-+/*
-+ * This is known to be broken on v4.19 and to work on v5.4.  Until we
-+ * figure out why this is the case and how to make it work, simply
-+ * disable the feature in old kernels.
-+ */
-+#if defined(CONFIG_EFI) && LINUX_VERSION_IS_GEQ(5,4,0)
-+
-+#define IWL_EFI_VAR_GUID EFI_GUID(0x92daaf2f, 0xc02b, 0x455b,	\
-+				  0xb2, 0xec, 0xf5, 0xa3,	\
-+				  0x59, 0x4f, 0x4a, 0xea)
-+
-+#define IWL_UEFI_OEM_PNVM_NAME	L"UefiCnvWlanOemSignedPnvm"
-+
-+#define IWL_HARDCODED_PNVM_SIZE 4096
-+
-+struct pnvm_sku_package {
-+	u8 rev;
-+	u8 reserved1[3];
-+	u32 total_size;
-+	u8 n_skus;
-+	u8 reserved2[11];
-+	u8 data[];
-+};
-+
-+static int iwl_pnvm_get_from_efi(struct iwl_trans *trans,
-+				 u8 **data, size_t *len)
-+{
-+	struct efivar_entry *pnvm_efivar;
-+	struct pnvm_sku_package *package;
-+	unsigned long package_size;
-+	int err;
-+
-+	pnvm_efivar = kzalloc(sizeof(*pnvm_efivar), GFP_KERNEL);
-+	if (!pnvm_efivar)
-+		return -ENOMEM;
-+
-+	memcpy(&pnvm_efivar->var.VariableName, IWL_UEFI_OEM_PNVM_NAME,
-+	       sizeof(IWL_UEFI_OEM_PNVM_NAME));
-+	pnvm_efivar->var.VendorGuid = IWL_EFI_VAR_GUID;
-+
-+	/*
-+	 * TODO: we hardcode a maximum length here, because reading
-+	 * from the UEFI is not working.  To implement this properly,
-+	 * we have to call efivar_entry_size().
-+	 */
-+	package_size = IWL_HARDCODED_PNVM_SIZE;
-+
-+	package = kmalloc(package_size, GFP_KERNEL);
-+	if (!package) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	err = efivar_entry_get(pnvm_efivar, NULL, &package_size, package);
-+	if (err) {
-+		IWL_DEBUG_FW(trans,
-+			     "PNVM UEFI variable not found %d (len %zd)\n",
-+			     err, package_size);
-+		goto out;
-+	}
-+
-+	IWL_DEBUG_FW(trans, "Read PNVM fro UEFI with size %zd\n", package_size);
-+
-+	*data = kmemdup(package->data, *len, GFP_KERNEL);
-+	if (!*data)
-+		err = -ENOMEM;
-+	*len = package_size - sizeof(*package);
-+
-+out:
-+	kfree(package);
-+	kfree(pnvm_efivar);
-+
-+	return err;
-+}
-+#else /* CONFIG_EFI */
-+static inline int iwl_pnvm_get_from_efi(struct iwl_trans *trans,
-+					u8 **data, size_t *len)
-+{
-+	return -EOPNOTSUPP;
-+}
-+#endif /* CONFIG_EFI */
-+
- static int iwl_pnvm_get_from_fs(struct iwl_trans *trans, u8 **data, size_t *len)
- {
- 	const struct firmware *pnvm;
-@@ -277,7 +360,12 @@ int iwl_pnvm_load(struct iwl_trans *trans,
- 		goto skip_parse;
- 	}
- 
--	/* Try to load the PNVM from the filesystem */
-+	/* First attempt to get the PNVM from BIOS */
-+	ret = iwl_pnvm_get_from_efi(trans, &data, &len);
-+	if (!ret)
-+		goto parse;
-+
-+	/* If it's not available, try from the filesystem */
- 	ret = iwl_pnvm_get_from_fs(trans, &data, &len);
- 	if (ret) {
- 		/*
-@@ -290,6 +378,7 @@ int iwl_pnvm_load(struct iwl_trans *trans,
- 		goto skip_parse;
- 	}
- 
-+parse:
- 	iwl_pnvm_parse(trans, data, len);
- 
- 	kfree(data);
--- 
-2.30.0
+>> ---
+>>   drivers/net/wireless/ath/ath10k/mac.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 53f92945006f..3545ce7dce0a 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -4566,6 +4566,7 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
+>>   /* Must not be called with conf_mutex held as workers can use that also. */
+>>   void ath10k_drain_tx(struct ath10k *ar)
+>>   {
+>> +	WARN_ON(lockdep_is_held(&ar->conf_mutex));
+> 
+> Empty line after WARN_ON().
+> 
 
+Will do.
+
+> Shouldn't this check debug_locks similarly lockdep_assert_held() does?
+> 
+> #define lockdep_assert_held(l)	do {				\
+> 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+> 	} while (0)
+> 
+> And I suspect you need #ifdef CONFIG_LOCKDEP which should fix the kbuild
+> bot error.
+> 
+
+Yes.
+
+> But honestly I would prefer to have lockdep_assert_not_held() in
+> include/linux/lockdep.h, much cleaner that way. Also
+> i915_gem_object_lookup_rcu() could then use the same macro.
+> 
+
+Right. This is the right way to go. That was first instinct and
+decided to have the discussion evolve in that direction. Now that
+it has, I will combine this change with
+include/linux/lockdep.h and add lockdep_assert_not_held()
+
+I think we might have other places in the kernel that could use
+lockdep_assert_not_held() in addition to i915_gem_object_lookup_rcu()
+
+thanks,
+-- Shuah
