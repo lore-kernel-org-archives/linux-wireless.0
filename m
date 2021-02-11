@@ -2,103 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1688C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Feb 2021 16:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D372C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Feb 2021 18:40:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 642CA64E92
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Feb 2021 16:25:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E95F64DCD
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Feb 2021 18:40:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231941AbhBKQYt (ORCPT
+        id S231927AbhBKS3J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Feb 2021 11:24:49 -0500
-Received: from so15.mailgun.net ([198.61.254.15]:12902 "EHLO so15.mailgun.net"
+        Thu, 11 Feb 2021 13:29:09 -0500
+Received: from so15.mailgun.net ([198.61.254.15]:32638 "EHLO so15.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231879AbhBKQWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Feb 2021 11:22:42 -0500
+        id S231922AbhBKS1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Feb 2021 13:27:38 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613060541; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=rvz/UFuBm7K8XYeVz4DbF3kwxCtTxu51wzKIUanxBOk=; b=g3uu73kaNqE8ThMnxAI+X83YDAsSw9LbEumD0ONIwCi6gEXVimYvyVU/U+DV7fO6pMHC/shV
- DPGS8b9B8SR5unsbUOlGTlNE+bExqO1e7BOuNBfwDV/q7jETgdlaIUay8Uv92Uxu0n5HsfCo
- DVUKg6uE6oXEEYp4KyfyRai+1pc=
+ s=smtp; t=1613068037; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=XQMYp79ftc2CD2w0g/sVHwqX5MSlVZ7BvVff5QTyZow=;
+ b=Hb4G4TJZ+SjYLbrQlwCj3F0a7O/Xb/clNVa7xHeKC+5sr/jDs+HisW+REoWs3iZZg+EdNVNo
+ NQf9kCGCOD8PlOd0tGids/i+MkJ67jol0MpOypzjukJrSMTd8rxofoCVRFePaeHucqjqCLSU
+ 3mkq7UwVyqzJhQXSUNxjPhZDQAs=
 X-Mailgun-Sending-Ip: 198.61.254.15
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 602559a0e4842e912827d14f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 11 Feb 2021 16:21:52
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 602576eb830f898bac351cf6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 11 Feb 2021 18:26:51
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 580FAC433CA; Thu, 11 Feb 2021 16:21:51 +0000 (UTC)
+        id B6B85C433ED; Thu, 11 Feb 2021 18:26:50 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10B50C433CA;
-        Thu, 11 Feb 2021 16:21:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10B50C433CA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 08C17C433C6;
+        Thu, 11 Feb 2021 18:26:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 08C17C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] iwlwifi: pnvm: implement reading PNVM from UEFI
-References: <iwlwifi.20210211015026.289084803334.Ie234805047df3be84f4235f9dafaf4cdecf0db9a@changeid>
-Date:   Thu, 11 Feb 2021 18:21:47 +0200
-In-Reply-To: <iwlwifi.20210211015026.289084803334.Ie234805047df3be84f4235f9dafaf4cdecf0db9a@changeid>
-        (Luca Coelho's message of "Thu, 11 Feb 2021 01:50:41 +0200")
-Message-ID: <87sg62shgk.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] ath10k: hold RCU lock when calling
+ ieee80211_find_sta_by_ifaddr()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210210212107.40373-1-skhan@linuxfoundation.org>
+References: <20210210212107.40373-1-skhan@linuxfoundation.org>
+To:     Shuah Khan <skhan@linuxfoundation.org>
+Cc:     davem@davemloft.net, kuba@kernel.org,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20210211182650.B6B85C433ED@smtp.codeaurora.org>
+Date:   Thu, 11 Feb 2021 18:26:50 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+Shuah Khan <skhan@linuxfoundation.org> wrote:
 
-> From: Luca Coelho <luciano.coelho@intel.com>
->
-> We now support fetching the PNVM data from a UEFI variable.  Add the
-> code to read this variable first and use it.  If it's not available,
-> we fall back to reading the data from the filesystem, as before.
->
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ieee80211_find_sta_by_ifaddr() must be called under the RCU lock and
+> the resulting pointer is only valid under RCU lock as well.
+> 
+> Fix ath10k_wmi_tlv_op_pull_peer_stats_info() to hold RCU lock before it
+> calls ieee80211_find_sta_by_ifaddr() and release it when the resulting
+> pointer is no longer needed.
+> 
+> This problem was found while reviewing code to debug RCU warn from
+> ath10k_wmi_tlv_parse_peer_stats_info().
+> 
+> Link: https://lore.kernel.org/linux-wireless/7230c9e5-2632-b77e-c4f9-10eca557a5bb@linuxfoundation.org/
+> Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-[...]
+Patch applied to ath-next branch of ath.git, thanks.
 
-> --- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-> @@ -10,6 +10,7 @@
->  #include "fw/api/commands.h"
->  #include "fw/api/nvm-reg.h"
->  #include "fw/api/alive.h"
-> +#include <linux/efi.h>
->  
->  struct iwl_pnvm_section {
->  	__le32 offset;
-> @@ -219,6 +220,88 @@ static int iwl_pnvm_parse(struct iwl_trans *trans, const u8 *data,
->  	return -ENOENT;
->  }
->  
-> +/*
-> + * This is known to be broken on v4.19 and to work on v5.4.  Until we
-> + * figure out why this is the case and how to make it work, simply
-> + * disable the feature in old kernels.
-> + */
-> +#if defined(CONFIG_EFI)
-
-The comment doesn't really make sense anymore, can you send a followupb
-patch to remove it? No need to change the tag because of this.
+09078368d516 ath10k: hold RCU lock when calling ieee80211_find_sta_by_ifaddr()
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210210212107.40373-1-skhan@linuxfoundation.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
