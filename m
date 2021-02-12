@@ -2,163 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04EBAC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F96C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 03:45:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D60ED64E44
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:14:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36E0C64E3C
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 03:45:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbhBLCOt (ORCPT
+        id S229499AbhBLDpj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Feb 2021 21:14:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50204 "EHLO
+        Thu, 11 Feb 2021 22:45:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229948AbhBLCOj (ORCPT
+        with ESMTP id S229493AbhBLDpi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Feb 2021 21:14:39 -0500
-Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA649C06178A
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:14 -0800 (PST)
-Received: by mail-io1-xd35.google.com with SMTP id e133so7833313iof.8
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:14 -0800 (PST)
+        Thu, 11 Feb 2021 22:45:38 -0500
+Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FEEDC061574
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 19:44:58 -0800 (PST)
+Received: by mail-ot1-x331.google.com with SMTP id k10so7287906otl.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 19:44:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=DQ4hezKs/564pdp9qVVgnPCiXwargfZBqBE6eVRsn+Q=;
-        b=O2A+7SU0HlH0ayRNJlNnkiPnkN3FroFezBXYoKB5Hkc7SZ/9cCozwuf/rgAhxxotDc
-         jZZ2SfEmVz0popr3/CwyFZoXjjINoGa0PZ/UYHtzqna/btPfYNB21tgjnDSs8Hic/yAl
-         fWSshxDMpyC3mNRSsKIYBWO/HGqK1T8Fre38o=
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=x4SDy/3FUZQaQWYaudQGkVl4Fs4MFq5b1IZKtVmijUM=;
+        b=ei+BFKKaLh6pNi9JSxtd8Tmd06eM+Hpa3ndQ3I73D4xZG2qKWiLSQGGyv1c2cQfbIX
+         piRwV3aUseMXN3EZM05LlmpDmuPqj37/AADgophw7MD7GG4Z84in5XkhTZx2mh1ZUQHl
+         hP6mtQ9dbXVWcvP3cK56EupTnSscpZDZ4hqBg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=DQ4hezKs/564pdp9qVVgnPCiXwargfZBqBE6eVRsn+Q=;
-        b=WhVT9zLPkHr8SnHjMhjfWoWA1H/XnkuAi9vFPBISoIbZjlP3lcU/ubBKkn/NFcaWBx
-         uazpyrt+82otLwVrNbHdqm097bCfLNamm8Klyzo2qb2xvUm3jTZQ2yFC0aOoQkxVYw0c
-         /QO4XJPHqdq/mYujhOS3Ddiow8hWKBqq3jHhvbPRiKtI3P6B8z+SncyHRALKhYaWmP9p
-         UsOtxECysTXEHq5CJB19JX3QKSqnuohFCIjoMlENaabIhRw7zxgzYJtBEL8ch15xkm2f
-         pxJLPmG2iDTTtiBnsnrBFNpWLWxKbtKqyHpyARO7N5MG5LOicB+XOrqPtRNEkfXG+uOl
-         w+kA==
-X-Gm-Message-State: AOAM531f2WMiYQ+GD/lcwAm/iTajz8fLHMC+qWa1Lsjvycbxy9G1XRmA
-        RAq5PkXISpUtNZFbP0RRBWYGWw==
-X-Google-Smtp-Source: ABdhPJwkz20+sR+9d0DlpiYpRe67c8FB0IhGdSj7e4dPSnKAx4BE5wv47oFR2uoK7lzyje/0pFkzrg==
-X-Received: by 2002:a6b:5002:: with SMTP id e2mr528669iob.152.1613095994176;
-        Thu, 11 Feb 2021 18:13:14 -0800 (PST)
-Received: from shuah-t480s.internal (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
-        by smtp.gmail.com with ESMTPSA id c2sm3480594ilk.32.2021.02.11.18.13.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 18:13:13 -0800 (PST)
-From:   Shuah Khan <skhan@linuxfoundation.org>
-To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
-        matthias.bgg@gmail.com
-Cc:     Shuah Khan <skhan@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] mt76: hold RCU lock when calling ieee80211_find_sta_by_ifaddr()
-Date:   Thu, 11 Feb 2021 19:13:06 -0700
-Message-Id: <20210212021312.40486-1-skhan@linuxfoundation.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <1cfa036227cfa9fdd04316c01e1d754f13a70d9e.1613090339.git.skhan@linuxfoundation.org>
-References: <cover.1613090339.git.skhan@linuxfoundation.org>
- <1cfa036227cfa9fdd04316c01e1d754f13a70d9e.1613090339.git.skhan@linuxfoundation.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=x4SDy/3FUZQaQWYaudQGkVl4Fs4MFq5b1IZKtVmijUM=;
+        b=iMLNT9vQRFZDp7JhrhQKj5jF6FS6w2y2p0NFwO9TsaK/Fpg8baPxW0bIJqmPV1Q2I+
+         n4nZkazRRszDioZpcQMj6FR+JEWoDoiX4xfhu64oVUdTdTtEfHpmhp791fnIy2ggcGcY
+         hyeqhpv/+sm+04uHvCUf/oBNiklZe2VVXWAViFTSEgcy8ijHOab1ryIhr6PS5aKn8Ybg
+         c3ebIMXI4RlxU1eEXIGeWzsUwQzenJuq7V0ff4ictyNFGZftUuQAzG8KirqsDb3NfxPf
+         BsUC+UP8RofH2x4bu8osFP/zicxxacIJOjhSYntAUks2bwFU6+DBhA3WWwtIPszfL1Q0
+         7FoQ==
+X-Gm-Message-State: AOAM531HXGXhXUJDUL56yv2fV8cWBRm6G9vWIA5ZfcJF0EmKiZwv09Mz
+        u8Pz54+ctQ43ijDtcdXYyE9Pl4IKKUgq8g==
+X-Google-Smtp-Source: ABdhPJzo+NqmTPDA29vbMpOpmjs2lWCIem7FoByBfDV4/9llKQ7QAp4SbN7RQUNG4SgHG2t15CzyaQ==
+X-Received: by 2002:a05:6830:1f4e:: with SMTP id u14mr761534oth.65.1613101497093;
+        Thu, 11 Feb 2021 19:44:57 -0800 (PST)
+Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com. [209.85.210.51])
+        by smtp.gmail.com with ESMTPSA id l133sm1572126oia.37.2021.02.11.19.44.56
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 Feb 2021 19:44:56 -0800 (PST)
+Received: by mail-ot1-f51.google.com with SMTP id l23so7251306otn.10
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 19:44:56 -0800 (PST)
+X-Received: by 2002:a9d:3d76:: with SMTP id a109mr767748otc.203.1613101495918;
+ Thu, 11 Feb 2021 19:44:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210209070755.23019-1-pkshih@realtek.com> <20210209070755.23019-4-pkshih@realtek.com>
+In-Reply-To: <20210209070755.23019-4-pkshih@realtek.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Thu, 11 Feb 2021 19:44:43 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXN_TgaHvbthz-SqHdjrmRHVpEag9+sQWkGcivNFv94GAA@mail.gmail.com>
+Message-ID: <CA+ASDXN_TgaHvbthz-SqHdjrmRHVpEag9+sQWkGcivNFv94GAA@mail.gmail.com>
+Subject: Re: [PATCH v5 3/8] rtw88: add napi support
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Bernie Huang <phhuang@realtek.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ieee80211_find_sta_by_ifaddr() must be called under the RCU lock and
-the resulting pointer is only valid under RCU lock as well.
+On Mon, Feb 8, 2021 at 11:11 PM Ping-Ke Shih <pkshih@realtek.com> wrote:
+>
+> From: Po-Hao Huang <phhuang@realtek.com>
+>
+> Use napi to reduce overhead on rx interrupts.
+>
+> Driver used to interrupt kernel for every Rx packet, this could
+> affect both system and network performance. NAPI is a mechanism that
+> uses polling when processing huge amount of traffic, by doing this
+> the number of interrupts can be decreased.
+>
+> Network performance can also benefit from this patch. Since TCP
+> connection is bidirectional and acks are required for every several
+> packets. These ack packets occupie the PCI bus bandwidth and could
+> lead to performance degradation.
+>
+> When napi is used, GRO receive is enabled by default in the mac80211
+> stack. So mac80211 won't pass every RX TCP packets to the kernel TCP
+> network stack immediately. Instead an aggregated large length TCP packet
+> will be delivered.
+>
+> This reduces the tx acks sent and gains rx performance. After the patch,
+> the Rx throughput increases about 25Mbps in 11ac.
+>
+> Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Fix mt76_check_sta() to hold RCU read lock before it calls
-ieee80211_find_sta_by_ifaddr() and release it when the resulting
-pointer is no longer needed.
+I think this version handles my review comments and straightens up the
+locking situation:
 
-This problem was found while reviewing code to debug RCU warn from
-ath10k_wmi_tlv_parse_peer_stats_info() and a subsequent manual audit
-of other callers of ieee80211_find_sta_by_ifaddr() that don't hold
-RCU read lock.
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Brian Norris <briannorris@chromium.org>
 
-Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
----
-- Note: This patch is compile tested. I don't have access to
-  hardware.
-
- drivers/net/wireless/mediatek/mt76/mac80211.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index a840396f2c74..3c732da2a53f 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -867,6 +867,9 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
- 	bool ps;
- 
- 	hw = mt76_phy_hw(dev, status->ext_phy);
-+
-+	rcu_read_lock();
-+
- 	if (ieee80211_is_pspoll(hdr->frame_control) && !wcid) {
- 		sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr2, NULL);
- 		if (sta)
-@@ -876,7 +879,7 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
- 	mt76_airtime_check(dev, skb);
- 
- 	if (!wcid || !wcid->sta)
--		return;
-+		goto exit;
- 
- 	sta = container_of((void *)wcid, struct ieee80211_sta, drv_priv);
- 
-@@ -886,17 +889,17 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
- 	wcid->inactive_count = 0;
- 
- 	if (!test_bit(MT_WCID_FLAG_CHECK_PS, &wcid->flags))
--		return;
-+		goto exit;
- 
- 	if (ieee80211_is_pspoll(hdr->frame_control)) {
- 		ieee80211_sta_pspoll(sta);
--		return;
-+		goto exit;
- 	}
- 
- 	if (ieee80211_has_morefrags(hdr->frame_control) ||
- 	    !(ieee80211_is_mgmt(hdr->frame_control) ||
- 	      ieee80211_is_data(hdr->frame_control)))
--		return;
-+		goto exit;
- 
- 	ps = ieee80211_has_pm(hdr->frame_control);
- 
-@@ -905,7 +908,7 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
- 		ieee80211_sta_uapsd_trigger(sta, status->tid);
- 
- 	if (!!test_bit(MT_WCID_FLAG_PS, &wcid->flags) == ps)
--		return;
-+		goto exit;
- 
- 	if (ps)
- 		set_bit(MT_WCID_FLAG_PS, &wcid->flags);
-@@ -914,6 +917,9 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
- 
- 	dev->drv->sta_ps(dev, sta, ps);
- 	ieee80211_sta_ps_transition(sta, ps);
-+
-+exit:
-+	rcu_read_unlock();
- }
- 
- void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
--- 
-2.27.0
-
+Thanks.
