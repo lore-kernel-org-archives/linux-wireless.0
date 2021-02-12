@@ -2,200 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A72C433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 09:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 565D5C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 09:51:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C29E364E38
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 09:48:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C5FA64E38
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 09:51:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230238AbhBLJro (ORCPT
+        id S229928AbhBLJvN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Feb 2021 04:47:44 -0500
-Received: from mga04.intel.com ([192.55.52.120]:58732 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230259AbhBLJrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Feb 2021 04:47:31 -0500
-IronPort-SDR: lAGE3hzQFv1gNmkrg8IvjahZDywu4t2fdGB/PlmK0tTKNXhlK1qSBrggPd6o1ofaB1ooEOMVif
- s/LDVJ6MrLIQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9892"; a="179829325"
-X-IronPort-AV: E=Sophos;i="5.81,173,1610438400"; 
-   d="scan'208";a="179829325"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2021 01:46:50 -0800
-IronPort-SDR: jsuprrSXzjzTMHyR33vqEtiwZuK87iaZ+uy4tcpRDKm2MoaJ1bL7FxAtUhk78YsBuf5ELzoLr9
- adSG1ZteU+MQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.81,173,1610438400"; 
-   d="scan'208";a="490848390"
-Received: from lkp-server02.sh.intel.com (HELO cd560a204411) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 12 Feb 2021 01:46:48 -0800
-Received: from kbuild by cd560a204411 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lAV2G-0004Yf-72; Fri, 12 Feb 2021 09:46:48 +0000
-Date:   Fri, 12 Feb 2021 17:46:19 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:pending] BUILD SUCCESS
- 06432d6642b68e8cc1f0d0201e1d333d8322b8fa
-Message-ID: <60264e6b.Thabv8zZqzrUouDo%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Fri, 12 Feb 2021 04:51:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34762 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229771AbhBLJvM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Feb 2021 04:51:12 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB110C061574
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2021 01:50:31 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lAV5p-001nS2-HL; Fri, 12 Feb 2021 10:50:29 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: add documentation for HT/VHT/HE disable attributes
+Date:   Fri, 12 Feb 2021 10:50:23 +0100
+Message-Id: <20210212105023.895c3389f063.I46dea3bfc64385bc6f600c50d294007510994f8f@changeid>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git pending
-branch HEAD: 06432d6642b68e8cc1f0d0201e1d333d8322b8fa  Merge tag 'iwlwifi-next-for-kalle-2021-02-10' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next into pending
+From: Johannes Berg <johannes.berg@intel.com>
 
-elapsed time: 724m
+These were missed earlier, add the necessary documentation
+and, while at it, clarify it.
 
-configs tested: 129
-configs skipped: 2
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-riscv                    nommu_k210_defconfig
-alpha                            alldefconfig
-arc                     haps_hs_smp_defconfig
-sh                               j2_defconfig
-powerpc                      ppc64e_defconfig
-arm                       netwinder_defconfig
-arm                  colibri_pxa300_defconfig
-powerpc                    ge_imp3a_defconfig
-m68k                          atari_defconfig
-mips                      bmips_stb_defconfig
-powerpc                     stx_gp3_defconfig
-arm                           sunxi_defconfig
-arm                          prima2_defconfig
-sh                ecovec24-romimage_defconfig
-arm                          pcm027_defconfig
-arm                        neponset_defconfig
-sh                           se7780_defconfig
-mips                     cu1830-neo_defconfig
-mips                         tb0219_defconfig
-sh                          rsk7264_defconfig
-arm                            u300_defconfig
-openrisc                            defconfig
-arm                      tct_hammer_defconfig
-arm                       aspeed_g5_defconfig
-arm                         vf610m4_defconfig
-arm                          lpd270_defconfig
-arm                           corgi_defconfig
-um                             i386_defconfig
-arm                             rpc_defconfig
-powerpc                    amigaone_defconfig
-mips                        omega2p_defconfig
-arm                         s5pv210_defconfig
-powerpc                 mpc837x_rdb_defconfig
-powerpc                 mpc836x_rdk_defconfig
-mips                           ip28_defconfig
-sh                                  defconfig
-powerpc                mpc7448_hpc2_defconfig
-powerpc                      pmac32_defconfig
-arm                         shannon_defconfig
-powerpc                      chrp32_defconfig
-arc                        vdk_hs38_defconfig
-sparc                       sparc32_defconfig
-mips                            e55_defconfig
-mips                malta_kvm_guest_defconfig
-arm                           spitz_defconfig
-ia64                      gensparse_defconfig
-arm                              alldefconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                               tinyconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20210209
-x86_64               randconfig-a001-20210209
-x86_64               randconfig-a005-20210209
-x86_64               randconfig-a004-20210209
-x86_64               randconfig-a002-20210209
-x86_64               randconfig-a003-20210209
-i386                 randconfig-a001-20210209
-i386                 randconfig-a005-20210209
-i386                 randconfig-a003-20210209
-i386                 randconfig-a002-20210209
-i386                 randconfig-a006-20210209
-i386                 randconfig-a004-20210209
-i386                 randconfig-a016-20210209
-i386                 randconfig-a013-20210209
-i386                 randconfig-a012-20210209
-i386                 randconfig-a014-20210209
-i386                 randconfig-a011-20210209
-i386                 randconfig-a015-20210209
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a003-20210211
-x86_64               randconfig-a002-20210211
-x86_64               randconfig-a001-20210211
-x86_64               randconfig-a004-20210211
-x86_64               randconfig-a005-20210211
-x86_64               randconfig-a006-20210211
-x86_64               randconfig-a013-20210209
-x86_64               randconfig-a014-20210209
-x86_64               randconfig-a015-20210209
-x86_64               randconfig-a012-20210209
-x86_64               randconfig-a016-20210209
-x86_64               randconfig-a011-20210209
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ include/uapi/linux/nl80211.h | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5188fe581efc..ac78da99fccd 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1963,8 +1963,15 @@ enum nl80211_commands {
+  * @NL80211_ATTR_PROBE_RESP: Probe Response template data. Contains the entire
+  *	probe-response frame. The DA field in the 802.11 header is zero-ed out,
+  *	to be filled by the FW.
+- * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
+- *      this feature.  Currently, only supported in mac80211 drivers.
++ * @NL80211_ATTR_DISABLE_HT: Force HT capable interfaces to disable
++ *      this feature during association. This is a flag attribute.
++ *	Currently only supported in mac80211 drivers.
++ * @NL80211_ATTR_DISABLE_VHT: Force VHT capable interfaces to disable
++ *      this feature during association. This is a flag attribute.
++ *	Currently only supported in mac80211 drivers.
++ * @NL80211_ATTR_DISABLE_HE: Force HE capable interfaces to disable
++ *      this feature during association. This is a flag attribute.
++ *	Currently only supported in mac80211 drivers.
+  * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the
+  *      ATTR_HT_CAPABILITY to which attention should be paid.
+  *      Currently, only mac80211 NICs support this feature.
+-- 
+2.26.2
+
