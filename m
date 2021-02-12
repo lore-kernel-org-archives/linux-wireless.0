@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6CFC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:13:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B826CC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:14:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D22864E39
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:13:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9347664E3D
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 02:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbhBLCNy (ORCPT
+        id S229943AbhBLCOj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Feb 2021 21:13:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50054 "EHLO
+        Thu, 11 Feb 2021 21:14:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbhBLCNx (ORCPT
+        with ESMTP id S229710AbhBLCOe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Feb 2021 21:13:53 -0500
-Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68C44C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:13 -0800 (PST)
-Received: by mail-io1-xd33.google.com with SMTP id e133so7833284iof.8
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:13 -0800 (PST)
+        Thu, 11 Feb 2021 21:14:34 -0500
+Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417ECC061797
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:17 -0800 (PST)
+Received: by mail-io1-xd29.google.com with SMTP id s24so7850986iob.6
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2021 18:13:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linuxfoundation.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=KNCXIuhBf/yLZUR6g/Q3bWrDbjCkAY4sfEfqXAFf6ac=;
-        b=PwLlHkN9fXZfpRWioXDoeeGXdYYWvqi46HIRhejT36qNkWkJyGKc4zk3p0GOfmzgr6
-         Q/r+kYD7SMKLoFSi2dITxN9BC40NtITXEhxpXIFZ7jEQw+fgXpFsRrgxKaxo8EMxO880
-         LfoxXYyzUgNNBgbgBxSnjPtjJfglTE2CrxRr4=
+        bh=b//uXdEXn/IbyWUN9jECjkifnnE9MDyqXLg0odI7qQ8=;
+        b=eXyRVsRfEN70euVgiAtmESC4LEMBc5UdUY6dgr3lsi5tPhEcUNuJKHboVU/N4Z265E
+         g2OYFrPAw/oLLZRyqHCo//ujRwPC/5I0w7ywJ0ZJqi9IrwIo7aFiqcZrgyncJHuYJizB
+         rXHnCfSBrNh4n6qGKt2bOvDMi0tLR4BhXM5w0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KNCXIuhBf/yLZUR6g/Q3bWrDbjCkAY4sfEfqXAFf6ac=;
-        b=t0ivYE8SxPIdeKx2t6UG4/IdhsptLf1l9ev1IQP2pviRUTqEqe8A3z9hBGpKo1PKFT
-         jO9SS5WG9nMhnDuejGM30wbrSqF67/ZLHHGmvV3jomM4ZVs90GW6TEprYAUDzmvoc87j
-         hq4pmyGhqodDSFzHFsG+1lzQKawA50BJRz21AAGm/YSKaNlLxLM3e63YUSqU7lc6IZgI
-         KiPzNebD4rom0FHvy06UTdvc7gtnDwIde6Xil6xgD/rR3eWM/41tvPje7JFTBzXJ2AGu
-         7TJRisRgp3t+54z8c9+sxrOg2PZg8SWNqVvLv2kbDGpmr/T3TPrtH6y3Cqidxo1u5ecL
-         W7PQ==
-X-Gm-Message-State: AOAM53010er1p+ATCKy901PCX/M0YUPN06WLiEfADpHR86fLRPCHdz1b
-        DRDMWcdcEDMZByuBTUbusRj6tA==
-X-Google-Smtp-Source: ABdhPJxHRgQuh8MMHCQ262DBYXeGkeepRITcB4r+KoyS6RHQeVleSejAtUPLHOQGUvq9MZCYHSNzWg==
-X-Received: by 2002:a05:6602:2c4e:: with SMTP id x14mr548974iov.58.1613095992862;
-        Thu, 11 Feb 2021 18:13:12 -0800 (PST)
+        bh=b//uXdEXn/IbyWUN9jECjkifnnE9MDyqXLg0odI7qQ8=;
+        b=BRfq5HK7TASW8kT5jcMcHIUMCwVPm26QnDo8PEhxubE+jycXXgBy6w5MDUfPL41oYM
+         hcmqdkIGoN2928XW+BZh7W9emWlK3rfsST4gzkkDBcjcD0+KL98pNMq213mYM8IfqBhf
+         +MsYWtfNAsM1ZRrzH7+8/GPSi2OcZMG0cp7kN9XPv0iDcUVQB/20q/1tWiTItIYYDPxh
+         vScQOQEJm7dR5wHkZcRLCB1yQntHKVZBCyfIzPwjx5s1b+QIBKqDmT0vxg5czsWj6Zqa
+         Q9Jqgn35JAwWyFikgkpo3/8dy+VkxCkRCmdAacnKyRUUYmSnsleGMUS8BN8kqoHgbK63
+         hPUw==
+X-Gm-Message-State: AOAM530brI1OvHD5GUs20ba1B75NrjW6mJ6HiX/y6GmB3JEly4uS21uy
+        a2k7XyU7Gxkpjq+smnigQ4DHhA==
+X-Google-Smtp-Source: ABdhPJx/RCdCsRX+e5oooz5vMln7HcisejHBH5jilCl4mDg+LF74Is7NKrlK5kw310Vr5GykMGekEA==
+X-Received: by 2002:a6b:5a0f:: with SMTP id o15mr506350iob.49.1613095996797;
+        Thu, 11 Feb 2021 18:13:16 -0800 (PST)
 Received: from shuah-t480s.internal (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
-        by smtp.gmail.com with ESMTPSA id c2sm3480594ilk.32.2021.02.11.18.13.12
+        by smtp.gmail.com with ESMTPSA id c2sm3480594ilk.32.2021.02.11.18.13.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Feb 2021 18:13:12 -0800 (PST)
+        Thu, 11 Feb 2021 18:13:16 -0800 (PST)
 From:   Shuah Khan <skhan@linuxfoundation.org>
 To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     Shuah Khan <skhan@linuxfoundation.org>,
         ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] ath9k: hold RCU lock when calling ieee80211_find_sta_by_ifaddr()
-Date:   Thu, 11 Feb 2021 19:13:05 -0700
-Message-Id: <1cfa036227cfa9fdd04316c01e1d754f13a70d9e.1613090339.git.skhan@linuxfoundation.org>
+Subject: [PATCH 2/2] ath9k: fix ath_tx_process_buffer() potential null ptr dereference
+Date:   Thu, 11 Feb 2021 19:13:08 -0700
+Message-Id: <43ed9abb9e8d7112f3cc168c2f8c489e253635ba.1613090339.git.skhan@linuxfoundation.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <cover.1613090339.git.skhan@linuxfoundation.org>
 References: <cover.1613090339.git.skhan@linuxfoundation.org>
@@ -71,12 +71,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ieee80211_find_sta_by_ifaddr() must be called under the RCU lock and
-the resulting pointer is only valid under RCU lock as well.
-
-Fix ath_tx_process_buffer() to hold RCU read lock before it calls
-ieee80211_find_sta_by_ifaddr() and release it when the resulting
-pointer is no longer needed.
+ath_tx_process_buffer() references ieee80211_find_sta_by_ifaddr()
+return pointer (sta) outside null check. Fix it by moving the code
+block under the null check.
 
 This problem was found while reviewing code to debug RCU warn from
 ath10k_wmi_tlv_parse_peer_stats_info() and a subsequent manual audit
@@ -88,32 +85,50 @@ Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
 - Note: This patch is compile tested. I don't have access to
   hardware.
 
- drivers/net/wireless/ath/ath9k/xmit.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath9k/xmit.c | 28 +++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e60d4737fc6e..1d36aae3f7b6 100644
+index 1d36aae3f7b6..735858144e3a 100644
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -701,6 +701,9 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 					     ts->ts_rateindex);
+@@ -711,20 +711,24 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 		ath_tx_count_airtime(sc, sta, bf, ts, tid->tidno);
+ 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
+ 			tid->clear_ps_filter = true;
+-	}
  
- 	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
-+
-+	rcu_read_lock();
-+
- 	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
- 	if (sta) {
- 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
-@@ -725,6 +728,8 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+-	if (!bf_isampdu(bf)) {
+-		if (!flush) {
+-			info = IEEE80211_SKB_CB(bf->bf_mpdu);
+-			memcpy(info->control.rates, bf->rates,
+-			       sizeof(info->control.rates));
+-			ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
+-			ath_dynack_sample_tx_ts(sc->sc_ah, bf->bf_mpdu, ts,
+-						sta);
++		if (!bf_isampdu(bf)) {
++			if (!flush) {
++				info = IEEE80211_SKB_CB(bf->bf_mpdu);
++				memcpy(info->control.rates, bf->rates,
++				       sizeof(info->control.rates));
++				ath_tx_rc_status(sc, bf, ts, 1,
++						 txok ? 0 : 1, txok);
++				ath_dynack_sample_tx_ts(sc->sc_ah,
++							bf->bf_mpdu, ts, sta);
++			}
++			ath_tx_complete_buf(sc, bf, txq, bf_head, sta,
++					    ts, txok);
++		} else {
++			ath_tx_complete_aggr(sc, txq, bf, bf_head, sta,
++					     tid, ts, txok);
+ 		}
+-		ath_tx_complete_buf(sc, bf, txq, bf_head, sta, ts, txok);
+-	} else
+-		ath_tx_complete_aggr(sc, txq, bf, bf_head, sta, tid, ts, txok);
++	}
  
  	if (!flush)
  		ath_txq_schedule(sc, txq);
-+
-+	rcu_read_unlock();
- }
- 
- static bool ath_lookup_legacy(struct ath_buf *bf)
 -- 
 2.27.0
 
