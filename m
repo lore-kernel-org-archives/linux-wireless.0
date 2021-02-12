@@ -2,69 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B01BC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 11:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BDAEC433E6
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 11:51:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D55764E85
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 11:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A55664E30
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 11:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbhBLLh3 (ORCPT
+        id S229907AbhBLLvz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Feb 2021 06:37:29 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:54049 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230272AbhBLLhP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Feb 2021 06:37:15 -0500
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1lAWkN-0006Xt-LS; Fri, 12 Feb 2021 11:36:27 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] ath11k: debugfs: Fix spelling mistake "Opportunies" -> "Opportunities"
-Date:   Fri, 12 Feb 2021 11:36:27 +0000
-Message-Id: <20210212113627.212787-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.30.0
+        Fri, 12 Feb 2021 06:51:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47280 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229959AbhBLLvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Feb 2021 06:51:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0020764E85;
+        Fri, 12 Feb 2021 11:51:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1613130672;
+        bh=uvpfCLHunoPm0eUM2Xv0PxdIzJSLvY49OggW2BdxaPs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Uo8BC7w4LYDnn9VvL964WZBLHu8NTIW1Ec8jf2uCjEu03f0bZ/9XUY/e0zmYFYT6R
+         TQj1iDDPCpthFRq34q9ci/QbR1RTeBBrwr2BmLyvMIt29wzzuBe3Bylw3TPuXONFFU
+         yW6qThkpEy1XsACSD7c+uO91cmtr8qCReo+LL+hXoE5ymEqo8n05jooUX+3svjGWGv
+         LDnvggZy2EKlPnI0qBvFvswZc1wNOsL7Lfn7Dw6NIHf6XKx9k8GxL+SyIjLjcU/7oT
+         Ml/QLY+atHvlDMz/bEpmr7qpUU+cuXvldUiUU8zrffQlSS/3L+0NyXM30Zpscv6Opg
+         Lbi09eBEWLeWA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, dan.carpenter@oracle.com,
+        lorenzo.bianconi@redhat.com
+Subject: [PATCH] mt76: connac: always check return value from mt76_connac_mcu_alloc_wtbl_req
+Date:   Fri, 12 Feb 2021 12:51:05 +0100
+Message-Id: <d6a2d4791153949ec5ba01f182a5a973bf67a8dd.1613130548.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Even if this is not a real bug since mt76_connac_mcu_alloc_wtbl_req routine
+can fails just if nskb is NULL , always check return value from
+mt76_connac_mcu_alloc_wtbl_req in order to avoid possible future
+mistake.
 
-There is a spelling mistake in some debug text, fix this.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/debugfs_htt_stats.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c      | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_htt_stats.c b/drivers/net/wireless/ath/ath11k/debugfs_htt_stats.c
-index e13684343ec3..ec93f14e6d2a 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs_htt_stats.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_htt_stats.c
-@@ -3851,7 +3851,7 @@ htt_print_pdev_obss_pd_stats_tlv_v(const void *tag_buf,
- 			   htt_stats_buf->num_non_srg_ppdu_tried);
- 	len += HTT_DBG_OUT(buf + len, buf_len - len, "Non-SRG success PPDU = %u\n",
- 			   htt_stats_buf->num_non_srg_ppdu_success);
--	len += HTT_DBG_OUT(buf + len, buf_len - len, "SRG Opportunies = %u\n",
-+	len += HTT_DBG_OUT(buf + len, buf_len - len, "SRG Opportunities = %u\n",
- 			   htt_stats_buf->num_srg_opportunities);
- 	len += HTT_DBG_OUT(buf + len, buf_len - len, "SRG tried PPDU = %u\n",
- 			   htt_stats_buf->num_srg_ppdu_tried);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 7e0046a20143..4e826acd7843 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1032,6 +1032,9 @@ mt7615_mcu_sta_ba(struct mt7615_dev *dev,
+ 
+ 	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
+ 						  WTBL_SET, sta_wtbl, &skb);
++	if (IS_ERR(wtbl_hdr))
++		return PTR_ERR(wtbl_hdr);
++
+ 	mt76_connac_mcu_wtbl_ba_tlv(&dev->mt76, skb, params, enable, tx,
+ 				    sta_wtbl, wtbl_hdr);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 3d139ecff84e..06111ef6f398 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -833,6 +833,9 @@ int mt76_connac_mcu_add_sta_cmd(struct mt76_phy *phy,
+ 	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(dev, wcid,
+ 						  WTBL_RESET_AND_SET,
+ 						  sta_wtbl, &skb);
++	if (IS_ERR(wtbl_hdr))
++		return PTR_ERR(wtbl_hdr);
++
+ 	if (enable) {
+ 		mt76_connac_mcu_wtbl_generic_tlv(dev, skb, vif, sta, sta_wtbl,
+ 						 wtbl_hdr);
 -- 
-2.30.0
+2.29.2
 
