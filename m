@@ -2,127 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CEAC433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 23:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F2DC433DB
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Feb 2021 00:51:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD38264E12
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Feb 2021 23:30:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9019764EA6
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Feb 2021 00:51:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232255AbhBLXaV (ORCPT
+        id S231337AbhBMAu7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Feb 2021 18:30:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40698 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232210AbhBLXaO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Feb 2021 18:30:14 -0500
-Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B80C06178A
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2021 15:28:50 -0800 (PST)
-Received: by mail-il1-x12d.google.com with SMTP id e1so759833ilu.0
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2021 15:28:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1wSxvbwUEoDssegEiDIXApZTFvBALKvAL8rqFJ8yZX4=;
-        b=DFRS+WXDEc4iZ1ShbpQsHajWLBQKVvhfTN3u7g1O6dJyUV896yDZDOQmFgj9e+KLLS
-         34AzYt97lc7Q2hdk4LuOMiCliCRp9ErMbytM4JhkKn2DVY3puRy23XwIdfvFzPlnGIZw
-         vCB8+jHiHVwhkDw6Zkvtt0NYFMf1SYbPk5+04=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1wSxvbwUEoDssegEiDIXApZTFvBALKvAL8rqFJ8yZX4=;
-        b=fvqHYLvb0xhSxdxfNoZBjwFOFcv6OhrPoparnrPrNmQvluzk0cf59nb9jEbZzM4CW8
-         kNaPV+uYUj5fAH+gL32mmmXr/so85YN+anKxsghh42hRUyyeJ0hMl/rLe/pURwzDel0k
-         xUH58tZYhyA1pqVi3bt826ahKb366Z/ymsDiLqCATUkRBn2RPo78u1kKtjM2LKdk1e8N
-         KTbwkLUjmLPxFnX+LDmbJFRXSYOBwvhWL0W/Bm6/C24/Y8JTYaA+j6OCGOmYfoOoaotW
-         PeESqSOmQbOnqjMcy/0SBDTnjZmAFoMGFlShz9fzHz3uj9FaUtBo7vcmPnj0ZzBUi3q3
-         r9pw==
-X-Gm-Message-State: AOAM532hyWUS6k3M3dVN5EiCKlVU/oK9PKjdiyoKXNQoQDbTBPIgccSt
-        G3kowWbhY+pthcF5rv8oKbQzcw==
-X-Google-Smtp-Source: ABdhPJxRKCYNptgNLxveP5apbElOd/18CigXfgCySvTQBKH9f6qS/GXTzMlOyyP5wPkJP62xH336qw==
-X-Received: by 2002:a05:6e02:4c9:: with SMTP id f9mr4232513ils.186.1613172528970;
-        Fri, 12 Feb 2021 15:28:48 -0800 (PST)
-Received: from shuah-t480s.internal (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
-        by smtp.gmail.com with ESMTPSA id i20sm5180328ilc.2.2021.02.12.15.28.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Feb 2021 15:28:48 -0800 (PST)
-From:   Shuah Khan <skhan@linuxfoundation.org>
-To:     peterz@infradead.org, mingo@redhat.com, will@kernel.org,
-        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
-Cc:     Shuah Khan <skhan@linuxfoundation.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] lockdep: add lockdep_assert_not_held()
-Date:   Fri, 12 Feb 2021 16:28:42 -0700
-Message-Id: <37a29c383bff2fb1605241ee6c7c9be3784fb3c6.1613171185.git.skhan@linuxfoundation.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <cover.1613171185.git.skhan@linuxfoundation.org>
-References: <cover.1613171185.git.skhan@linuxfoundation.org>
+        Fri, 12 Feb 2021 19:50:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57260 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229903AbhBMAu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Feb 2021 19:50:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id E071B64E9A;
+        Sat, 13 Feb 2021 00:50:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1613177418;
+        bh=vZaerVAV497LJvbhjqKmiEU8XeG9c9caPc5C78doXL8=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=KGjXRzXebZ7QijqWR3d3+SyOgc7Rk4Y+vCZ/LhS8L0aBAkKxnNnFEwwJd1NW2HQwj
+         /ffOCp7CAgY5qxGwjfTO9EOW4nnrG41KCGebNKtn7cZEIoT/vw/eMCjQRu1i+PeAhV
+         +gFkHvN9wSHaH2e8OFy/uD/xuJnDCIOVDIpnBm9ue0QJ8gyXLkcgTmfu3SqOSZRscU
+         zPrN7K6uPTVCPgiSrLWvypBfJ8aODxW8G8WO7np9M60kgoA/gSnTbWYoQEwlmhpUif
+         02G+AvyPl7Bif4mXlP1SQuyMrIe7vuX+54OS5UUuPbbrAbmsvKfreCBU2bT+2/y76b
+         sgrsa9keQahlg==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-drivers-next-2021-02-12
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <161317741889.7081.17034860236151363021.git-patchwork-notify@kernel.org>
+Date:   Sat, 13 Feb 2021 00:50:18 +0000
+References: <20210212105933.1F8E7C43461@smtp.codeaurora.org>
+In-Reply-To: <20210212105933.1F8E7C43461@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some kernel functions must not be called holding a specific lock. Doing
-so could lead to locking problems. Currently these routines call
-lock_is_held() to check for lock hold followed by WARN_ON.
+Hello:
 
-Adding a common lockdep interface will help reduce the duplication of this
-logic in the rest of the kernel.
+This pull request was applied to netdev/net-next.git (refs/heads/master):
 
-Add lockdep_assert_not_held() to be used in these functions to detect
-incorrect calls while holding a lock.
+On Fri, 12 Feb 2021 10:59:33 +0000 (UTC) you wrote:
+> Hi,
+> 
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
+> 
+> Kalle
+> 
+> [...]
 
-lockdep_assert_not_held() provides the opposite functionality of
-lockdep_assert_held() which is used to assert calls that require
-holding a specific lock.
+Here is the summary with links:
+  - pull-request: wireless-drivers-next-2021-02-12
+    https://git.kernel.org/netdev/net-next/c/79201f358d64
 
-The need for lockdep_assert_not_held() came up in a discussion on
-ath10k patch. ath10k_drain_tx() and i915_vma_pin_ww() are examples
-of functions that can use lockdep_assert_not_held().
+You are awesome, thank you!
+--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-Link: https://lore.kernel.org/linux-wireless/871rdmu9z9.fsf@codeaurora.org/
-Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
----
- include/linux/lockdep.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index b9e9adec73e8..567e3a1a27ce 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -294,6 +294,10 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
- 
- #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
- 
-+#define lockdep_assert_not_held(l)	do {			\
-+		WARN_ON(debug_locks && lockdep_is_held(l));	\
-+	} while (0)
-+
- #define lockdep_assert_held(l)	do {				\
- 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
- 	} while (0)
-@@ -383,8 +387,9 @@ extern int lock_is_held(const void *);
- extern int lockdep_is_held(const void *);
- #define lockdep_is_held_type(l, r)		(1)
- 
-+#define lockdep_assert_not_held(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held(l)			do { (void)(l); } while (0)
--#define lockdep_assert_held_write(l)	do { (void)(l); } while (0)
-+#define lockdep_assert_held_write(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
- 
--- 
-2.27.0
 
