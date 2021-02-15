@@ -2,132 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C85C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:16:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 609F4C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:17:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55BA564DF2
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:16:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27F756024A
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:17:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232129AbhBOQQc (ORCPT
+        id S232168AbhBOQQv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Feb 2021 11:16:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44766 "EHLO
+        Mon, 15 Feb 2021 11:16:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232624AbhBOP7Y (ORCPT
+        with ESMTP id S229888AbhBOQL2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Feb 2021 10:59:24 -0500
-Received: from mail-oo1-xc30.google.com (mail-oo1-xc30.google.com [IPv6:2607:f8b0:4864:20::c30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E3CC0613D6;
-        Mon, 15 Feb 2021 07:58:44 -0800 (PST)
-Received: by mail-oo1-xc30.google.com with SMTP id z36so1634418ooi.6;
-        Mon, 15 Feb 2021 07:58:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=WEACmCkgL/TM4hrtjiINmc1isFYTeQEPw/cMrn0TOb8=;
-        b=pxCnbeanx20AM85pB9UePv+EUKwTcmmMHTq33viceAq5x5Lo3xrjSGaZ1JHgngvSiJ
-         sYbmLHNDHJXxvSpb5aFLVfME/p37XMw/roWLW8VewXfUhFKINStji5A97O+eF1gwTyXU
-         hAGvNx0HtN2RoAx2eT3HqRH6HSKzK2CQgJpSklFNZc+rm194Rk9Rorr+XZl6YlJ1vvmK
-         foIRc6MtNcCOzTRjohd5d9jPNFaJhdA8BCRBIykfV9uf+Z91tla+15R+beP7FmeSwFnc
-         6lrjGB2w9xgfGVIe8Uf3xnkrktdcmj7IcMwXK3ig8FtrJOvjrN0JmXn30Iu/+SPtN1BW
-         vRqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=WEACmCkgL/TM4hrtjiINmc1isFYTeQEPw/cMrn0TOb8=;
-        b=HDHzCja5H5PFpr+8/o+IzkqHYPjLvwuWUGlSir09/RzD72V8xGMS/ULHhmcy74JD9w
-         BPloPy4f+/Hjfg8BE3DuLR7R4QMRqFfOp9T/w85xFuyb6F8ehrjXn0YxjRDCrlWfcS+n
-         nQtkPzzX30+kzf+ohCtq/3/vKfDK3zp+SbVrmLh3YPcL6pnfjVI4Mr87P0V8jyGirvZV
-         dSxAq+SDKO67KjYbr7VP/wXesNzxUemY5kFxnffMGEGYSabW5cwf15jNvqNsIwQPSC0A
-         yzrWeM0tssU65zgA9Je0PPzVDT3qd45XjEDgdVcno3/M/IK/6LGn2EYvYKNssz3dJ/x6
-         fzrg==
-X-Gm-Message-State: AOAM530o8CWuvdh0utl7NgYIxfIth32g5GaLDQvXqaCeggAi/5Hu6wYM
-        Zg6Hl0vgVw4iTG8Y+mEpVUm31mNam4M=
-X-Google-Smtp-Source: ABdhPJyey6pEye22s5MbAnms/IMF/0TE5yuvKM3/n0AGkX9+CrcF435g/f0ANgpkmjk8OgbJ1Ohw2Q==
-X-Received: by 2002:a4a:96b3:: with SMTP id s48mr11234851ooi.11.1613404723229;
-        Mon, 15 Feb 2021 07:58:43 -0800 (PST)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id o98sm3728749ota.0.2021.02.15.07.58.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 15 Feb 2021 07:58:42 -0800 (PST)
-Sender: Larry Finger <larry.finger@gmail.com>
-Subject: Re: [PATCH] b43: N-PHY: Fix the update of coef for the PHY revision
- >= 3case
-To:     Colin King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        "John W . Linville" <linville@tuxdriver.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210215120532.76889-1-colin.king@canonical.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a1f578d8-bfaf-ec92-7874-84a586385495@lwfinger.net>
-Date:   Mon, 15 Feb 2021 09:58:41 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        Mon, 15 Feb 2021 11:11:28 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51A1AC061756;
+        Mon, 15 Feb 2021 08:10:47 -0800 (PST)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lBgSF-003Kql-5a; Mon, 15 Feb 2021 17:10:31 +0100
+Message-ID: <eb819e72fb2d897e603654d44aeda8c6f337453f.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] lockdep: add lockdep_assert_not_held()
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Peter Zijlstra <peterz@infradead.org>
+Cc:     Shuah Khan <skhan@linuxfoundation.org>, mingo@redhat.com,
+        will@kernel.org, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Mon, 15 Feb 2021 17:10:14 +0100
+In-Reply-To: <YCqbehyyeUoL0pPT@hirez.programming.kicks-ass.net>
+References: <cover.1613171185.git.skhan@linuxfoundation.org>
+         <37a29c383bff2fb1605241ee6c7c9be3784fb3c6.1613171185.git.skhan@linuxfoundation.org>
+         <YCljfeNr4m5mZa4N@hirez.programming.kicks-ass.net>
+         <20210215104402.GC4507@worktop.programming.kicks-ass.net>
+         <79aeb83a288051bd3a2a3f15e5ac42e06f154d48.camel@sipsolutions.net>
+         <YCqbehyyeUoL0pPT@hirez.programming.kicks-ass.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5 (3.36.5-2.fc32) 
 MIME-Version: 1.0
-In-Reply-To: <20210215120532.76889-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/15/21 6:05 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On Mon, 2021-02-15 at 17:04 +0100, Peter Zijlstra wrote:
+> On Mon, Feb 15, 2021 at 02:12:30PM +0100, Johannes Berg wrote:
+> > On Mon, 2021-02-15 at 11:44 +0100, Peter Zijlstra wrote:
+> > > I think something like so will work, but please double check.
+> > 
+> > Yeah, that looks better.
+> > 
+> > > +++ b/include/linux/lockdep.h
+> > > @@ -294,11 +294,15 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+> > >  
+> > >  #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
+> > >  
+> > > -#define lockdep_assert_held(l)	do {				\
+> > > -		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+> > > +#define lockdep_assert_held(l)	do {					\
+> > > +		WARN_ON(debug_locks && lockdep_is_held(l) == 0));	\
+> > >  	} while (0)
+> > 
+> > That doesn't really need to change? It's the same.
 > 
-> The documentation for the PHY update [1] states:
-> 
-> Loop 4 times with index i
-> 
->      If PHY Revision >= 3
->          Copy table[i] to coef[i]
->      Otherwise
->          Set coef[i] to 0
-> 
-> the copy of the table to coef is currently implemented the wrong way
-> around, table is being updated from uninitialized values in coeff.
-> Fix this by swapping the assignment around.
-> 
-> [1] https://bcm-v4.sipsolutions.net/802.11/PHY/N/RestoreCal/
-> 
-> Fixes: 2f258b74d13c ("b43: N-PHY: implement restoring general configuration")
-> Addresses-Coverity: ("Uninitialized scalar variable")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-> index b669dff24b6e..665b737fbb0d 100644
-> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
-> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-> @@ -5311,7 +5311,7 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
->   
->   	for (i = 0; i < 4; i++) {
->   		if (dev->phy.rev >= 3)
-> -			table[i] = coef[i];
-> +			coef[i] = table[i];
->   		else
->   			coef[i] = 0;
->   	}
-> 
+> Correct, but I found it more symmetric vs the not implementation below.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Fair enough. One might argue that you should have an
 
-Good catch, thanks.
+enum lockdep_lock_state {
+	LOCK_STATE_NOT_HELD, /* 0 now */
+	LOCK_STATE_HELD, /* 1 now */
+	LOCK_STATE_UNKNOWN, /* -1 with your patch but might as well be 2 */
+};
 
-Larry
+:)
+
+johannes
 
