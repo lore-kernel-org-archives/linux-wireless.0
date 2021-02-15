@@ -2,84 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE99C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 14:36:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E79EC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:12:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1167764DF0
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 14:36:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29FF864DEE
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Feb 2021 16:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbhBOOgS (ORCPT
+        id S230318AbhBOQMN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Feb 2021 09:36:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55062 "EHLO
+        Mon, 15 Feb 2021 11:12:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230178AbhBOOgQ (ORCPT
+        with ESMTP id S232916AbhBOQGc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Feb 2021 09:36:16 -0500
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77B65C061574;
-        Mon, 15 Feb 2021 06:35:36 -0800 (PST)
-Received: by mail-pg1-x52a.google.com with SMTP id o38so4299951pgm.9;
-        Mon, 15 Feb 2021 06:35:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=6y2TjDWm6GiCRVPHYsBwGulwO9kJcdSY7Gz+WazHK7Q=;
-        b=aGDHSlDDZbKZt95gh3ah8dMEA/+GcEgpoPdTL+N0PiBuKG7dHaiOmLB/ZBgKn/kHMR
-         aQwoTHght8CqJdMoPgJNAZZYCCe3v658URzmGp4J7YgOqov5wgf71zBK5+a8/jHpxGqq
-         JEDg9CTsQHITqk8u5bdRh86+vgW7jNLYQs56vxCIe4c+Ga8SsgJ6niDjD/YlHvMI2jQB
-         95/scIu82dy6RyuGsNXSJt7XRP/RrW2RtBkiAPfDdMzgNBDroF9grTIHFqiEM2pVE0pP
-         qyta0R1bS5DRwm5M7gjhAik5AcjtA/LI9LmjeKICG8lV1WTdLLsfmqrqOJGY/W9auQhn
-         5qTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=6y2TjDWm6GiCRVPHYsBwGulwO9kJcdSY7Gz+WazHK7Q=;
-        b=iV5ITGqDUKpC3S4F+nj4ygNl4D13hlLoy7jLiYHuqL1anGSKes9qOXsccjYe/y51rv
-         b7Hs/imii2mRmDzJ3PpiJdBexqvKodHNHh8uyVo+69IvnCR1YCtOwMVt3lDzfEyaglOo
-         WydisMNCT2mDvaQVin91byQVR/DVOcnD6p7QpwfAEcDWlRKAY1rqcAmxT/gEWhzH76b/
-         V1lQpizTeSc0Cj3+46JI4ujC7YKe2oH443JQBDXYRePUq6MWwkaNAU+uHNdI/PRQbo7H
-         RCIQcgXBqQNprpqE3/ak3fK7n4rcVyoQUm2yrksmRQdG92qJe4VG1mq6JBf9x1i4pWLv
-         rLvw==
-X-Gm-Message-State: AOAM532H7NBA/wmrNEUYOOVjueH5qIHfoUtmUfEtyoywIiNBGda6hh+l
-        MtG1srT7CON0h87XhBJrVl9utnPvZ7pW4Nzk58+eeHK6Vr01Oe8Y
-X-Google-Smtp-Source: ABdhPJwY2EqGHBgBjsq4KCFfJqmQEIwzjxAWCQ16mrZpT+kriAPiRr8ZlKT2W1mUfqGgicuynb6kvre6HBKiteoUCfQ=
-X-Received: by 2002:a65:5ac9:: with SMTP id d9mr14884798pgt.74.1613399735737;
- Mon, 15 Feb 2021 06:35:35 -0800 (PST)
+        Mon, 15 Feb 2021 11:06:32 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D427AC0613D6;
+        Mon, 15 Feb 2021 08:04:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ABknkne7Nrn83Z017RdB6TUScjJdC65GnVh/Mnzaro4=; b=OhNLW94ejUS39Nx7GhTuQ7ezdo
+        q5Wb7HXw3WDjDr/XnEMyiKNF5Uxs9VTjZBW+3vEUNADCSPX5PvM77kgXHpbL7bgAujmpCQ5cflRMe
+        tTgMXTJRBXrL7pptc1mjtI4Jb+Qby+L9ULklOfDMW0Dl/q7eIbus7Trt8VNc+I11PIct7CPbs7t8D
+        0PeT8FwhMlogzUvkCLX9hiAhpOezlGe1hVcHmhsWIwL93pymNLCGpOaHgh+7EqwwQL8oYfRkyi1uW
+        igN+zxx/JApi6jslEPnSmi77+yruJVv/f3P68A4EU9er5WeSclCa3/+wZCUuIxe0eSgGCmWJOYPTg
+        L2U9YsRQ==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lBgM7-00Fky1-Ex; Mon, 15 Feb 2021 16:04:20 +0000
+Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 430053007CD;
+        Mon, 15 Feb 2021 17:04:10 +0100 (CET)
+Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 2CD1D20431BC4; Mon, 15 Feb 2021 17:04:10 +0100 (CET)
+Date:   Mon, 15 Feb 2021 17:04:10 +0100
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Shuah Khan <skhan@linuxfoundation.org>, mingo@redhat.com,
+        will@kernel.org, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] lockdep: add lockdep_assert_not_held()
+Message-ID: <YCqbehyyeUoL0pPT@hirez.programming.kicks-ass.net>
+References: <cover.1613171185.git.skhan@linuxfoundation.org>
+ <37a29c383bff2fb1605241ee6c7c9be3784fb3c6.1613171185.git.skhan@linuxfoundation.org>
+ <YCljfeNr4m5mZa4N@hirez.programming.kicks-ass.net>
+ <20210215104402.GC4507@worktop.programming.kicks-ass.net>
+ <79aeb83a288051bd3a2a3f15e5ac42e06f154d48.camel@sipsolutions.net>
 MIME-Version: 1.0
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 15 Feb 2021 16:35:19 +0200
-Message-ID: <CAHp75VecgvsDqRwmyJZb8z0n4XAUjEStrVmXDZ9-knud7_eO3A@mail.gmail.com>
-Subject: commit 0f0aefd733f7 to linux-firmware effectively broke all of the
- setups with old kernels
-To:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     =?UTF-8?Q?=EF=BF=BCPeter_Robinson?= <pbrobinson@gmail.com>,
-        Josh Boyer <jwboyer@kernel.org>, Ferry Toth <fntoth@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <79aeb83a288051bd3a2a3f15e5ac42e06f154d48.camel@sipsolutions.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi!
+On Mon, Feb 15, 2021 at 02:12:30PM +0100, Johannes Berg wrote:
+> On Mon, 2021-02-15 at 11:44 +0100, Peter Zijlstra wrote:
+> > 
+> > I think something like so will work, but please double check.
+> 
+> Yeah, that looks better.
+> 
+> > +++ b/include/linux/lockdep.h
+> > @@ -294,11 +294,15 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+> >  
+> >  #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
+> >  
+> > -#define lockdep_assert_held(l)	do {				\
+> > -		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+> > +#define lockdep_assert_held(l)	do {					\
+> > +		WARN_ON(debug_locks && lockdep_is_held(l) == 0));	\
+> >  	} while (0)
+> 
+> That doesn't really need to change? It's the same.
 
-Seems the commit 0f0aefd733f7 to linux-firmware effectively broke all
-of the setups with the old kernels. Firmware name is an ABI (!) and
-replacing it like this will definitely break systems with older
-kernels. Linux firmware package likely, but unfortunately, should
-carry on both versions as long as it's needed. Alternative solution is
-to provide the links during installation.
+Correct, but I found it more symmetric vs the not implementation below.
 
-Btw, I haven't seen the driver change for that. Care to provide a
-commit ID in upstream?
+> > -#define lockdep_assert_held_write(l)	do {			\
+> > +#define lockdep_assert_not_held(l)	do {				\
+> > +		WARN_ON(debug_locks && lockdep_is_held(l) == 1));	\
+> > +	} while (0)
+> > +
+> > +#define lockdep_assert_held_write(l)	do {				\
+> >  		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
+> >  	} while (0)
+> >  
+> > diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+> > index c1418b47f625..983ba206f7b2 100644
+> > --- a/kernel/locking/lockdep.
+> > +++ b/kernel/locking/lockdep.c
+> > @@ -5467,7 +5467,7 @@ noinstr int lock_is_held_type(const struct lockdep_map *lock, int read)
+> >  	int ret = 0;
+> >  
+> >  	if (unlikely(!lockdep_enabled()))
+> > -		return 1; /* avoid false negative lockdep_assert_held() */
+> > +		return -1; /* avoid false negative lockdep_assert_held() */
+> 
+> Maybe add lockdep_assert_not_held() to the comment, to explain the -1
+> (vs non-zero)?
 
--- 
-With Best Regards,
-Andy Shevchenko
+Yeah, or frob a '*' in there.
