@@ -2,96 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1899C433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 13:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC6CC433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 13:52:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91D1A64D99
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 13:04:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E2B864DEC
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 13:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229895AbhBPNDy (ORCPT
+        id S229910AbhBPNwZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Feb 2021 08:03:54 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:62104 "EHLO m42-2.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229827AbhBPNDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Feb 2021 08:03:53 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613480616; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=ESkbEzqmXn5z8I8Yp1AJat9rRR2p3IPu2OV+xb971Po=; b=VYYyihU+yLKRToEFCZVmmJFwqtIqOKm0g2VGMJOv/VszllhAslJ8qAu0FIwmhhULOXVq7hb4
- TSVvIoXlz5kvoEjDLO928cbWR4QZ+wVcXAqCi+XzdY7khKepBTAMUPxXCyQ/GiOiMuiHAW8n
- ldOVB8EKuA5/M5sfDVg4tUDfRZI=
-X-Mailgun-Sending-Ip: 69.72.42.2
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 602bc26de3b5620c2ec052d3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 16 Feb 2021 13:02:37
- GMT
-Sender: lavaks=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 663ECC433C6; Tue, 16 Feb 2021 13:02:37 +0000 (UTC)
-Received: from lavaks-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: lavaks)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 62379C433CA;
-        Tue, 16 Feb 2021 13:02:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 62379C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=lavaks@codeaurora.org
-From:   Lavanya Suresh <lavaks@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Lavanya Suresh <lavaks@codeaurora.org>
-Subject: [PATCHv2] ath11k: Enable radar detection for 160MHz secondary segment
-Date:   Tue, 16 Feb 2021 18:32:27 +0530
-Message-Id: <1613480547-28810-1-git-send-email-lavaks@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 16 Feb 2021 08:52:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43722 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229713AbhBPNwW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Feb 2021 08:52:22 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84341C06174A
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2021 05:51:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=RSI6oKrtNkOYmjgNvOUbqLJBGmnOq4IwXSdNDvURzeg=; b=cy85HkeVbYWaKc/uRMjNuRRI3M
+        WY/axb/1xIxYMN4YcjWBi80y297DOHPh4lVK1NWjE76kBdnK+x5lrGqfGq86vtaZNM2strM3yeuVN
+        xBDvo5bVDwK9BVFnSvzx78S/nuhV3beTT2jkh+TzTTNtwjOCI6yudHSZeDb1o6XvXZ78=;
+Received: from p4ff13c8d.dip0.t-ipconnect.de ([79.241.60.141] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA1:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1lC0l9-0004IS-Kn; Tue, 16 Feb 2021 14:51:23 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org
+Subject: [PATCH 5.12 2/2] mt76: mt7915: only modify tx buffer list after allocating tx token id
+Date:   Tue, 16 Feb 2021 14:51:19 +0100
+Message-Id: <20210216135119.23809-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210216135119.23809-1-nbd@nbd.name>
+References: <20210216135119.23809-1-nbd@nbd.name>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WMI_CHAN_INFO_DFS_FREQ2 needs to be set in wmi vdev start command chan
-info parameter, to enable radar detection for secondary segment in 160MHz.
+Modifying the tx buffer list too early can leak DMA mappings
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01717-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-v2:
-* Rebased on latest ath.git
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
----
- drivers/net/wireless/ath/ath11k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index b391169..a650d95 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5096,13 +5096,15 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 		arg.channel.chan_radar =
- 			!!(chandef->chan->flags & IEEE80211_CHAN_RADAR);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index eb889f8d6fea..e5a258958ac9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -967,11 +967,6 @@ int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	}
+ 	txp->nbuf = nbuf;
  
-+		arg.channel.freq2_radar =
-+			!!(chandef->chan->flags & IEEE80211_CHAN_RADAR);
+-	/* pass partial skb header to fw */
+-	tx_info->buf[1].len = MT_CT_PARSE_LEN;
+-	tx_info->buf[1].skip_unmap = true;
+-	tx_info->nbuf = MT_CT_DMA_BUF_NUM;
+-
+ 	txp->flags = cpu_to_le16(MT_CT_INFO_APPLY_TXD | MT_CT_INFO_FROM_HOST);
+ 
+ 	if (!key)
+@@ -1009,6 +1004,11 @@ int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 		txp->rept_wds_wcid = cpu_to_le16(0x3ff);
+ 	tx_info->skb = DMA_DUMMY_DATA;
+ 
++	/* pass partial skb header to fw */
++	tx_info->buf[1].len = MT_CT_PARSE_LEN;
++	tx_info->buf[1].skip_unmap = true;
++	tx_info->nbuf = MT_CT_DMA_BUF_NUM;
 +
- 		arg.channel.passive = arg.channel.chan_radar;
+ 	return 0;
+ }
  
- 		spin_lock_bh(&ab->base_lock);
- 		arg.regdomain = ar->ab->dfs_region;
- 		spin_unlock_bh(&ab->base_lock);
- 
--		/* TODO: Notify if secondary 80Mhz also needs radar detection */
- 		if (he_support) {
- 			ret = ath11k_set_he_mu_sounding_mode(ar, arvif);
- 			if (ret) {
 -- 
-2.7.4
+2.28.0
 
