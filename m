@@ -2,92 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A940C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 07:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE24AC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 07:54:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4B1B64DDA
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 07:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F26F64DDA
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Feb 2021 07:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229695AbhBPH0A (ORCPT
+        id S229828AbhBPHyx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Feb 2021 02:26:00 -0500
-Received: from z11.mailgun.us ([104.130.96.11]:10219 "EHLO z11.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229702AbhBPHZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Feb 2021 02:25:58 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613460316; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=sfa4zshTQA5vOm9ovAyQGJXLn6zV4taiMCEtBh2yJB0=; b=dwBa8bnaRcmTFzYqkv1kWACmfEKfbHJx4MeJe/J47UWf5SYto8nYNevgSbVt+ymayY/xarhI
- Hbj8UX9Hq5yDOF+ZMcx0wuViDsdgJYuNHLXq9kPRrwkPgR4ygscwY9vjQK8uRiChbJzQpn7V
- lT1KDiVnUDT0vM4tqxVum37X70E=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 602b733d7bd8735272376a4a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 16 Feb 2021 07:24:45
- GMT
-Sender: lavaks=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 41B42C433ED; Tue, 16 Feb 2021 07:24:45 +0000 (UTC)
-Received: from lavaks-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: lavaks)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6006BC433CA;
-        Tue, 16 Feb 2021 07:24:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6006BC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=lavaks@codeaurora.org
-From:   Lavanya Suresh <lavaks@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Lavanya Suresh <lavaks@codeaurora.org>
-Subject: [PATCH] ath11k: Enable radar detection for 160MHz secondary segment
-Date:   Tue, 16 Feb 2021 12:54:36 +0530
-Message-Id: <1613460276-25469-1-git-send-email-lavaks@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 16 Feb 2021 02:54:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51760 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229764AbhBPHyt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Feb 2021 02:54:49 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6127C061574;
+        Mon, 15 Feb 2021 23:54:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:Subject:From:References:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=Coy/hZCMNVQEd82cbAZp1E9jRuaBjYHERBZbVUjwjEY=; b=qoVgrsfQzp/oEa48rOzTrwyUrW
+        zLaJAwQ3VfbYazue2bz6hLFoBBslfeZpIAuu4rrZ+3gcdbTLsAVg78wDK6g9ii3L86SPtQ0JTtNiO
+        FjMUcAVsneZya2q5iIkOhGKIS/izZU/kPvA5KuHmt2KDY0ie51PrLZP65aUWaZCE6+rQ=;
+Received: from p4ff13c8d.dip0.t-ipconnect.de ([79.241.60.141] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1lBvBB-0002ji-MX; Tue, 16 Feb 2021 08:53:53 +0100
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Shuah Khan <skhan@linuxfoundation.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <43ed9abb9e8d7112f3cc168c2f8c489e253635ba.1613090339.git.skhan@linuxfoundation.org>
+ <20210216070336.D138BC43463@smtp.codeaurora.org>
+From:   Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH 2/2] ath9k: fix ath_tx_process_buffer() potential null ptr
+ dereference
+Message-ID: <0fd9a538-e269-e10e-a7f9-02d4c5848420@nbd.name>
+Date:   Tue, 16 Feb 2021 08:53:51 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
+MIME-Version: 1.0
+In-Reply-To: <20210216070336.D138BC43463@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WMI_CHAN_INFO_DFS_FREQ2 needs to be set in wmi vdev start command chan
-info parameter, to enable radar detection for secondary segment in 160MHz.
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01717-QCAHKSWPL_SILICONZ-1
+On 2021-02-16 08:03, Kalle Valo wrote:
+> Shuah Khan <skhan@linuxfoundation.org> wrote:
+> 
+>> ath_tx_process_buffer() references ieee80211_find_sta_by_ifaddr()
+>> return pointer (sta) outside null check. Fix it by moving the code
+>> block under the null check.
+>> 
+>> This problem was found while reviewing code to debug RCU warn from
+>> ath10k_wmi_tlv_parse_peer_stats_info() and a subsequent manual audit
+>> of other callers of ieee80211_find_sta_by_ifaddr() that don't hold
+>> RCU read lock.
+>> 
+>> Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> 
+> Patch applied to ath-next branch of ath.git, thanks.
+> 
+> a56c14bb21b2 ath9k: fix ath_tx_process_buffer() potential null ptr dereference
+I just took another look at this patch, and it is completely bogus.
+Not only does the stated reason not make any sense (sta is simply passed
+to other functions, not dereferenced without checks), but this also
+introduces a horrible memory leak by skipping buffer completion if sta
+is NULL.
+Please drop it, the code is fine as-is.
 
-Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/mac.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 893d74a..8dae097 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5757,13 +5757,14 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 		arg.channel.chan_radar =
- 			!!(chandef->chan->flags & IEEE80211_CHAN_RADAR);
- 
-+		arg.channel.freq2_radar =
-+			!!(chandef->chan->flags & IEEE80211_CHAN_RADAR);
-+
- 		arg.channel.passive = arg.channel.chan_radar;
- 
- 		spin_lock_bh(&ab->base_lock);
- 		arg.regdomain = ar->ab->dfs_region;
- 		spin_unlock_bh(&ab->base_lock);
--
--		/* TODO: Notify if secondary 80Mhz also needs radar detection */
- 	}
- 
- 	arg.channel.passive |= !!(chandef->chan->flags & IEEE80211_CHAN_NO_IR);
--- 
-2.7.4
-
+- Felix
