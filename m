@@ -2,175 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1E8C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 13:44:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8883C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 14:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7184964DCF
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 13:44:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B039D64E28
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 14:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233056AbhBQNoo (ORCPT
+        id S233630AbhBQO5k (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Feb 2021 08:44:44 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:23833 "EHLO m42-2.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233186AbhBQNon (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Feb 2021 08:44:43 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613569460; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=3CyA+S571AxJykjGmJEqYPdxCJUqFk+N+fLxYUZPVac=; b=uOxYU1xv5vVvkC2lnNZOffdeL1S4q9bu8W5wXVYyCYBGb4hgDf+cF/KdDloEYMnlUZHp08Hm
- +deZSKpkwNXm8x+7S7mvXHbIyyYB44naZ3jthvabLq9ffmO2jhSIfUBtq7vFLQOFYjXClw4k
- uO3VyUR4J5BJp+r+4roaquFrMc0=
-X-Mailgun-Sending-Ip: 69.72.42.2
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 602d1d9298fd902dc2250ac9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Feb 2021 13:43:46
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9BEFDC433C6; Wed, 17 Feb 2021 13:43:45 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3B22DC433ED;
-        Wed, 17 Feb 2021 13:43:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3B22DC433ED
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ath11k: qmi: add more debug messages
-Date:   Wed, 17 Feb 2021 15:43:40 +0200
-Message-Id: <1613569421-14177-1-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Wed, 17 Feb 2021 09:57:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54296 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233622AbhBQO5h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Feb 2021 09:57:37 -0500
+Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 531EEC0613D6
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2021 06:56:57 -0800 (PST)
+Received: by mail-il1-x12f.google.com with SMTP id z18so11489238ile.9
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2021 06:56:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ydHdMTd4ps0AXeryEcGbvz8MsZ78eQIQNAjnZKZ5I+Q=;
+        b=QArniZnH1HDN6XbvShuegQf8ATVhoFhQM5Sx7rfRv8KxefFdxWqqxZXVJJRewt1t9B
+         ui/nmcdNhusE232TDbipsbl7LSrJ2CDBYSH+/tbcHgCtWSljTZ8gAKTsF6RvKJJUI3SV
+         Sz1RjjI5qqmQw+u5ReOCNewVDaMRHDst8qXHo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ydHdMTd4ps0AXeryEcGbvz8MsZ78eQIQNAjnZKZ5I+Q=;
+        b=PDwCc0FcypqUfiF7Nnwt3iOPOe4GyShTf8hh5t5a4JwR3QwUYeFSSro1Avhtftp1E1
+         HAQwED6n6vtMRtHr4tDxYvy5KKbzE0P45z7IE/p0XJ/siU04zDW8jjGL80lQdC7uMH4g
+         89vLjd4qyb5LFhpGHPLDQUGSArugac9Uwb+cnTuYXm3hwrEsEdNtDAN+q3djVFVeDb9Z
+         Y/naqRxZaQQu5vXoMeNGzD6w5YBtsy7QKD6SQsRBKkHzD1V2yBgNibvW83KThWVHaci7
+         aVnJESDPImbN9S1bqUeTq1Hw3YGppZUhPEx5x4v2V2JAPv+Smn5u59aIvJWo9gLJpe8k
+         COnA==
+X-Gm-Message-State: AOAM532EhJni9WSWsaC3d8aPR353WFsTwUWAriK1T/+lLWyl7yDCW/Dq
+        sSFpWMpysBHiKfrnYri7zN4X0g==
+X-Google-Smtp-Source: ABdhPJw5y5a0RH3ydxnaC8AND6fqVq95Foh3kAjnn/EOfAMY55LcXRd2zLwX7KDppkSNGv0xtdzQBA==
+X-Received: by 2002:a92:8557:: with SMTP id f84mr21452757ilh.4.1613573816719;
+        Wed, 17 Feb 2021 06:56:56 -0800 (PST)
+Received: from [192.168.1.112] (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
+        by smtp.gmail.com with ESMTPSA id n23sm1415589iog.3.2021.02.17.06.56.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Feb 2021 06:56:56 -0800 (PST)
+Subject: Re: [PATCH 2/2] ath9k: fix ath_tx_process_buffer() potential null ptr
+ dereference
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, davem@davemloft.net, kuba@kernel.org,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Shuah Khan <skhan@linuxfoundation.org>
+References: <43ed9abb9e8d7112f3cc168c2f8c489e253635ba.1613090339.git.skhan@linuxfoundation.org>
+ <20210216070336.D138BC43463@smtp.codeaurora.org>
+ <0fd9a538-e269-e10e-a7f9-02d4c5848420@nbd.name>
+ <caac2b21-d5de-32ac-0fe0-75af8fb80bbb@linuxfoundation.org>
+ <878s7nqhg0.fsf@codeaurora.org>
+From:   Shuah Khan <skhan@linuxfoundation.org>
+Message-ID: <6bbeb37f-620e-d92d-d042-a507bbb39808@linuxfoundation.org>
+Date:   Wed, 17 Feb 2021 07:56:55 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.1
+MIME-Version: 1.0
+In-Reply-To: <878s7nqhg0.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To make it easier to follow the qmi event flow.
+On 2/17/21 12:30 AM, Kalle Valo wrote:
+> Shuah Khan <skhan@linuxfoundation.org> writes:
+> 
+>> On 2/16/21 12:53 AM, Felix Fietkau wrote:
+>>>
+>>> On 2021-02-16 08:03, Kalle Valo wrote:
+>>>> Shuah Khan <skhan@linuxfoundation.org> wrote:
+>>>>
+>>>>> ath_tx_process_buffer() references ieee80211_find_sta_by_ifaddr()
+>>>>> return pointer (sta) outside null check. Fix it by moving the code
+>>>>> block under the null check.
+>>>>>
+>>>>> This problem was found while reviewing code to debug RCU warn from
+>>>>> ath10k_wmi_tlv_parse_peer_stats_info() and a subsequent manual audit
+>>>>> of other callers of ieee80211_find_sta_by_ifaddr() that don't hold
+>>>>> RCU read lock.
+>>>>>
+>>>>> Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
+>>>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>>>>
+>>>> Patch applied to ath-next branch of ath.git, thanks.
+>>>>
+>>>> a56c14bb21b2 ath9k: fix ath_tx_process_buffer() potential null ptr dereference
+>>> I just took another look at this patch, and it is completely bogus.
+>>> Not only does the stated reason not make any sense (sta is simply passed
+>>> to other functions, not dereferenced without checks), but this also
+>>> introduces a horrible memory leak by skipping buffer completion if sta
+>>> is NULL.
+>>> Please drop it, the code is fine as-is.
+>>
+>> A comment describing what you said here might be a good addition to this
+>> comment block though.
+> 
+> Shuah, can you send a followup patch which reverts your change and adds
+> the comment? I try to avoid rebasing my trees.
+> 
 
-No functional changes, compile tested only.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/qmi.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+I can do that.
 
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index eb1b987c9df2..69eb67a94f47 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -1556,6 +1556,8 @@ static int ath11k_qmi_host_cap_send(struct ath11k_base *ab)
- 		req.nm_modem |= SLEEP_CLOCK_SELECT_INTERNAL_BIT;
- 	}
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi host cap request\n");
-+
- 	ret = qmi_txn_init(&ab->qmi.handle, &txn,
- 			   qmi_wlanfw_host_cap_resp_msg_v01_ei, &resp);
- 	if (ret < 0)
-@@ -1624,6 +1626,8 @@ static int ath11k_qmi_fw_ind_register_send(struct ath11k_base *ab)
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi indication register request\n");
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_IND_REGISTER_REQ_V01,
- 			       QMI_WLANFW_IND_REGISTER_REQ_MSG_V01_MAX_LEN,
-@@ -1699,6 +1703,9 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi respond memory request delayed %i\n",
-+		   delayed);
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_RESPOND_MEM_REQ_V01,
- 			       QMI_WLANFW_RESPOND_MEM_REQ_MSG_V01_MAX_LEN,
-@@ -1843,6 +1850,8 @@ static int ath11k_qmi_request_target_cap(struct ath11k_base *ab)
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi target cap request\n");
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_CAP_REQ_V01,
- 			       QMI_WLANFW_CAP_REQ_MSG_V01_MAX_LEN,
-@@ -2000,6 +2009,9 @@ static int ath11k_qmi_load_bdf_fixed_addr(struct ath11k_base *ab)
- 		if (ret < 0)
- 			goto out_qmi_bdf;
- 
-+		ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi bdf download req fixed addr type %d\n",
-+			   type);
-+
- 		ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 				       QMI_WLANFW_BDF_DOWNLOAD_REQ_V01,
- 				       QMI_WLANFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_LEN,
-@@ -2090,6 +2102,9 @@ static int ath11k_qmi_load_bdf_qmi(struct ath11k_base *ab)
- 		if (ret < 0)
- 			goto out_qmi_bdf;
- 
-+		ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi bdf download request remaining %i\n",
-+			   remaining);
-+
- 		ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 				       QMI_WLANFW_BDF_DOWNLOAD_REQ_V01,
- 				       QMI_WLANFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_LEN,
-@@ -2200,6 +2215,8 @@ static int ath11k_qmi_wlanfw_m3_info_send(struct ath11k_base *ab)
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi m3 info req\n");
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_M3_INFO_REQ_V01,
- 			       QMI_WLANFW_M3_INFO_REQ_MSG_V01_MAX_MSG_LEN,
-@@ -2246,6 +2263,8 @@ static int ath11k_qmi_wlanfw_mode_send(struct ath11k_base *ab,
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi wlan mode req mode %d\n", mode);
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_WLAN_MODE_REQ_V01,
- 			       QMI_WLANFW_WLAN_MODE_REQ_MSG_V01_MAX_LEN,
-@@ -2338,6 +2357,8 @@ static int ath11k_qmi_wlanfw_wlan_cfg_send(struct ath11k_base *ab)
- 	if (ret < 0)
- 		goto out;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi wlan cfg req\n");
-+
- 	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
- 			       QMI_WLANFW_WLAN_CFG_REQ_V01,
- 			       QMI_WLANFW_WLAN_CFG_REQ_MSG_V01_MAX_LEN,
-@@ -2370,6 +2391,8 @@ void ath11k_qmi_firmware_stop(struct ath11k_base *ab)
- {
- 	int ret;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi firmware stop\n");
-+
- 	ret = ath11k_qmi_wlanfw_mode_send(ab, ATH11K_FIRMWARE_MODE_OFF);
- 	if (ret < 0) {
- 		ath11k_warn(ab, "qmi failed to send wlan mode off\n");
-@@ -2382,6 +2405,8 @@ int ath11k_qmi_firmware_start(struct ath11k_base *ab,
- {
- 	int ret;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi firmware start\n");
-+
- 	ret = ath11k_qmi_wlanfw_wlan_cfg_send(ab);
- 	if (ret < 0) {
- 		ath11k_warn(ab, "qmi failed to send wlan cfg:%d\n", ret);
--- 
-2.7.4
-
+thanks,
+-- Shuah
