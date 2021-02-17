@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E5F1C433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 10:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00694C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 10:15:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1451564DCF
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 10:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A107864E28
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Feb 2021 10:15:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232191AbhBQKKY (ORCPT
+        id S232214AbhBQKOg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Feb 2021 05:10:24 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:58708 "EHLO m42-2.mailgun.net"
+        Wed, 17 Feb 2021 05:14:36 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:59051 "EHLO m42-2.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231681AbhBQKKY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Feb 2021 05:10:24 -0500
+        id S232295AbhBQKOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Feb 2021 05:14:04 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613556601; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1613556821; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=jCW7xZ2ylvOaKOBk/URfPytU0nmWAyANZpQ2VOK7Fkg=; b=MkFlTP/QefAFFb50+9CLWUaV/fuDnemsF3cAqwKWWLAxAn6fmM0SHDYOTWnpd9iivV+eN6P8
- TVeqDTOeXYqsZQcSLprFzMkmQZGDWTt4BwT0EH+0pE6rHf54MimOcog94tQuLCbvU1BpcxO3
- LspBnt5s9d1cy1FkAjY94AJegtg=
+ bh=0GnC3gzb6NPfiHDXGrS5DaD4rAkL1uIis8KU0WkuDck=; b=xTVVXoirDOIMtq7zrTkmodPgqXnxhEz0MGqa1M2T9KTVb6qTnRkeAQmjnTnWLBcoGPE5TWPg
+ pb3cQorDzM7C0yrz0t8DHIGhW9MoToj/6bPLBEeSKa6khOVcXAH7JROHOAhuap6wUM5aJzYN
+ F/L97yQhH13cQmNxePFvtV2/N0c=
 X-Mailgun-Sending-Ip: 69.72.42.2
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 602ceb5a1e797edad8c2cbae (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Feb 2021 10:09:30
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 602cec31a294c935b76047d6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Feb 2021 10:13:05
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AFE5AC433CA; Wed, 17 Feb 2021 10:09:30 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id 8D6EEC43462; Wed, 17 Feb 2021 10:13:04 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 51129C433C6;
-        Wed, 17 Feb 2021 10:09:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 51129C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 480F0C433C6;
+        Wed, 17 Feb 2021 10:13:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 480F0C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -57,40 +57,45 @@ Cc:     mostafa.afgani@purelifi.com,
 Subject: Re: [PATCH] [v13] wireless: Initial driver submission for pureLiFi STA devices
 References: <20200928102008.32568-1-srini.raju@purelifi.com>
         <20210212115030.124490-1-srini.raju@purelifi.com>
-Date:   Wed, 17 Feb 2021 12:09:26 +0200
-In-Reply-To: <20210212115030.124490-1-srini.raju@purelifi.com> (Srinivasan
-        Raju's message of "Fri, 12 Feb 2021 17:19:39 +0530")
-Message-ID: <87mtw3ovjd.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        <87v9arovvo.fsf@codeaurora.org>
+Date:   Wed, 17 Feb 2021 12:13:00 +0200
+In-Reply-To: <87v9arovvo.fsf@codeaurora.org> (Kalle Valo's message of "Wed, 17
+        Feb 2021 12:02:03 +0200")
+Message-ID: <87mtw3gfyr.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Srinivasan Raju <srini.raju@purelifi.com> writes:
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-> This introduces the pureLiFi LiFi driver for LiFi-X, LiFi-XC
-> and LiFi-XL USB devices.
+> Srinivasan Raju <srini.raju@purelifi.com> writes:
 >
-> This driver implementation has been based on the zd1211rw driver.
+>> This introduces the pureLiFi LiFi driver for LiFi-X, LiFi-XC
+>> and LiFi-XL USB devices.
+>>
+>> This driver implementation has been based on the zd1211rw driver.
+>>
+>> Driver is based on 802.11 softMAC Architecture and uses
+>> native 802.11 for configuration and management.
+>>
+>> The driver is compiled and tested in ARM, x86 architectures and
+>> compiled in powerpc architecture.
+>>
+>> Signed-off-by: Srinivasan Raju <srini.raju@purelifi.com>
 >
-> Driver is based on 802.11 softMAC Architecture and uses
-> native 802.11 for configuration and management.
->
-> The driver is compiled and tested in ARM, x86 architectures and
-> compiled in powerpc architecture.
->
-> Signed-off-by: Srinivasan Raju <srini.raju@purelifi.com>
+> I pushed this now to the pending branch of wireless-drivers-next for
+> build testing, let's see what kind of results we get.
 
-[...]
+Ah, kbuild bot had already reported few issues:
 
-> +	send_vendor_command(udev, PLF_VNDR_FPGA_STATE_CMD, NULL, 0);
-> +
-> +	msleep(200);
+https://patchwork.kernel.org/project/linux-wireless/patch/20210212115030.124490-1-srini.raju@purelifi.com/
 
-There are multiple msleeps like this, please add a descriptive define
-for value 200.
+Please fix those and I recommend waiting few days in case the bot finds
+more issues. After that you can submitt v14 fixing the comments you got
+in this review round.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
