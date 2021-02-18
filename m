@@ -2,154 +2,174 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF7D9C433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Feb 2021 18:51:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 531D3C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Feb 2021 23:31:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8432664EB4
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Feb 2021 18:51:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D45964EB8
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Feb 2021 23:31:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232904AbhBRSv1 (ORCPT
+        id S229743AbhBRXb5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Feb 2021 13:51:27 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:43011 "EHLO m42-2.mailgun.net"
+        Thu, 18 Feb 2021 18:31:57 -0500
+Received: from mga04.intel.com ([192.55.52.120]:54833 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231965AbhBRS2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Feb 2021 13:28:25 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613672870; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=JNThsiI+WhFDxXYq8dUMlqi3X/vhOrdr+SHYcPBEDJQ=; b=vhwxmB8juS5JklggQVDj4FI+ODWbwt4kxJZdibOV/ShIq2mqkpYM9VPcY5131zu+9FaysoLk
- Hhr+IuAfTeRHcezOxDxq9EzLeE3Z6PGSgO85L/uxD4CcCgIcC6CrRfhmR8UoUh4nDdGKPjKB
- hj3jj5xXPO4tg0Otf6+AKQe8DHY=
-X-Mailgun-Sending-Ip: 69.72.42.2
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 602eb1873bd0a42cc929a021 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 18 Feb 2021 18:27:19
- GMT
-Sender: pradeepc=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CF05CC433CA; Thu, 18 Feb 2021 18:27:18 +0000 (UTC)
-Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D7B61C433C6;
-        Thu, 18 Feb 2021 18:27:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D7B61C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pradeepc@codeaurora.org
-From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH V2] ath11k: fix thermal temperature read
-Date:   Thu, 18 Feb 2021 10:27:08 -0800
-Message-Id: <20210218182708.8844-1-pradeepc@codeaurora.org>
-X-Mailer: git-send-email 2.17.1
+        id S229577AbhBRXb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Feb 2021 18:31:57 -0500
+IronPort-SDR: DqQftanpBUi4M/O/fcfPScpIU3BahZXF3vs0VEUtAkqTWXWXAPJjGCtE+AJfl9mD2P27RrNuw3
+ 4Dc2qd8bnr6w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9899"; a="181120570"
+X-IronPort-AV: E=Sophos;i="5.81,187,1610438400"; 
+   d="scan'208";a="181120570"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2021 15:31:16 -0800
+IronPort-SDR: W9lZ2W3a+8Bikhhx7NggCLZT+9m60q+ZLp7eQw56KIjOJNTzh/sRBztiaPUxAi6Za49OlPrdBj
+ HSWj7oLpjeug==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,187,1610438400"; 
+   d="scan'208";a="581458933"
+Received: from lkp-server02.sh.intel.com (HELO cd560a204411) ([10.239.97.151])
+  by orsmga005.jf.intel.com with ESMTP; 18 Feb 2021 15:31:14 -0800
+Received: from kbuild by cd560a204411 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lCslO-0009yH-0O; Thu, 18 Feb 2021 23:31:14 +0000
+Date:   Fri, 19 Feb 2021 07:30:51 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [wireless-drivers-next:pending] BUILD SUCCESS
+ b8a12d2aca7ce360b32b616844bc1561fce37333
+Message-ID: <602ef8ab.OMFBJGjUua4smIbK%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix dangling pointer in thermal temperature event which causes
-incorrect temperature read.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git pending
+branch HEAD: b8a12d2aca7ce360b32b616844bc1561fce37333  wireless: Initial driver submission for pureLiFi STA devices
 
-Tested-on: IPQ8074 AHB WLAN.HK.2.4.0.1-00041-QCAHKSWPL_SILICONZ-1
+elapsed time: 724m
 
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+configs tested: 103
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         cm_x300_defconfig
+c6x                                 defconfig
+sh                ecovec24-romimage_defconfig
+arm                         lubbock_defconfig
+sh                                  defconfig
+sh                          rsk7264_defconfig
+sh                          rsk7269_defconfig
+mips                        maltaup_defconfig
+powerpc                     sbc8548_defconfig
+arm                          imote2_defconfig
+powerpc                      pasemi_defconfig
+m68k                        m5407c3_defconfig
+mips                          rm200_defconfig
+arm                            dove_defconfig
+arm                        spear3xx_defconfig
+sh                          lboxre2_defconfig
+arm                          pxa3xx_defconfig
+m68k                       m5208evb_defconfig
+mips                      pic32mzda_defconfig
+sparc                       sparc64_defconfig
+powerpc                      katmai_defconfig
+powerpc                      acadia_defconfig
+xtensa                    xip_kc705_defconfig
+m68k                        m5307c3_defconfig
+arm                             rpc_defconfig
+sh                           sh2007_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a005-20210218
+i386                 randconfig-a003-20210218
+i386                 randconfig-a002-20210218
+i386                 randconfig-a004-20210218
+i386                 randconfig-a001-20210218
+i386                 randconfig-a006-20210218
+x86_64               randconfig-a013-20210217
+x86_64               randconfig-a016-20210217
+x86_64               randconfig-a012-20210217
+x86_64               randconfig-a015-20210217
+x86_64               randconfig-a014-20210217
+x86_64               randconfig-a011-20210217
+i386                 randconfig-a016-20210218
+i386                 randconfig-a012-20210218
+i386                 randconfig-a014-20210218
+i386                 randconfig-a013-20210218
+i386                 randconfig-a011-20210218
+i386                 randconfig-a015-20210218
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a003-20210215
+x86_64               randconfig-a002-20210215
+x86_64               randconfig-a001-20210215
+x86_64               randconfig-a004-20210215
+x86_64               randconfig-a005-20210215
+x86_64               randconfig-a006-20210215
+
 ---
-v2: rebased
-
- drivers/net/wireless/ath/ath11k/wmi.c | 53 +++++++++++----------------
- 1 file changed, 21 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index cccfd3bd4d27..ca5cda890d58 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5417,31 +5417,6 @@ int ath11k_wmi_pull_fw_stats(struct ath11k_base *ab, struct sk_buff *skb,
- 	return 0;
- }
- 
--static int
--ath11k_pull_pdev_temp_ev(struct ath11k_base *ab, u8 *evt_buf,
--			 u32 len, const struct wmi_pdev_temperature_event *ev)
--{
--	const void **tb;
--	int ret;
--
--	tb = ath11k_wmi_tlv_parse_alloc(ab, evt_buf, len, GFP_ATOMIC);
--	if (IS_ERR(tb)) {
--		ret = PTR_ERR(tb);
--		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
--		return ret;
--	}
--
--	ev = tb[WMI_TAG_PDEV_TEMPERATURE_EVENT];
--	if (!ev) {
--		ath11k_warn(ab, "failed to fetch pdev temp ev");
--		kfree(tb);
--		return -EPROTO;
--	}
--
--	kfree(tb);
--	return 0;
--}
--
- size_t ath11k_wmi_fw_stats_num_vdevs(struct list_head *head)
- {
- 	struct ath11k_fw_stats_vdev *i;
-@@ -6849,23 +6824,37 @@ ath11k_wmi_pdev_temperature_event(struct ath11k_base *ab,
- 				  struct sk_buff *skb)
- {
- 	struct ath11k *ar;
--	struct wmi_pdev_temperature_event ev = {0};
-+	const void **tb;
-+	const struct wmi_pdev_temperature_event *ev;
-+	int ret;
-+
-+	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ret = PTR_ERR(tb);
-+		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
-+		return;
-+	}
- 
--	if (ath11k_pull_pdev_temp_ev(ab, skb->data, skb->len, &ev) != 0) {
--		ath11k_warn(ab, "failed to extract pdev temperature event");
-+	ev = tb[WMI_TAG_PDEV_TEMPERATURE_EVENT];
-+	if (!ev) {
-+		ath11k_warn(ab, "failed to fetch pdev temp ev");
-+		kfree(tb);
- 		return;
- 	}
- 
- 	ath11k_dbg(ab, ATH11K_DBG_WMI,
--		   "pdev temperature ev temp %d pdev_id %d\n", ev.temp, ev.pdev_id);
-+		   "pdev temperature ev temp %d pdev_id %d\n", ev->temp, ev->pdev_id);
- 
--	ar = ath11k_mac_get_ar_by_pdev_id(ab, ev.pdev_id);
-+	ar = ath11k_mac_get_ar_by_pdev_id(ab, ev->pdev_id);
- 	if (!ar) {
--		ath11k_warn(ab, "invalid pdev id in pdev temperature ev %d", ev.pdev_id);
-+		ath11k_warn(ab, "invalid pdev id in pdev temperature ev %d", ev->pdev_id);
-+		kfree(tb);
- 		return;
- 	}
- 
--	ath11k_thermal_event_temperature(ar, ev.temp);
-+	ath11k_thermal_event_temperature(ar, ev->temp);
-+
-+	kfree(tb);
- }
- 
- static void ath11k_fils_discovery_event(struct ath11k_base *ab,
--- 
-2.17.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
