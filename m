@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB1FC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Feb 2021 17:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2252DC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Feb 2021 17:30:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F3B764D92
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Feb 2021 17:30:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDFB764E67
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Feb 2021 17:30:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbhBSRa1 (ORCPT
+        id S229762AbhBSRaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Feb 2021 12:30:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35790 "EHLO mail.kernel.org"
+        Fri, 19 Feb 2021 12:30:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35826 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229722AbhBSRaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Feb 2021 12:30:25 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 50FF364EB2;
-        Fri, 19 Feb 2021 17:29:18 +0000 (UTC)
+        id S229755AbhBSRa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Feb 2021 12:30:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 406A864EB3;
+        Fri, 19 Feb 2021 17:29:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613755759;
-        bh=jt1x76QyCi4f5xOacMIO6SeyFzATI7+1WP4d5yAPwuc=;
+        s=k20201202; t=1613755769;
+        bh=YTnXJxbp4iMFaJefTnGhcfF8ZD7Kl5z84Qdir6O6OTw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HsGDNdWwjhehLHTy2ZI7jWKIFA7UPTgwzgAS3K4ZzjocQ2DMgol1xRgkorO0JyIrj
-         2XYwo10aYVrIKEza8xEXh7mskQKhheGm1mAMRuM/5kd8Whi5kyMjFu4KURbhZ1Ry54
-         0EWbvRke6WEXc7WPUyTW+w0jwkaLon848XzHRxBHW5e/+82liUNizomwePr9tWJ6eT
-         9pOLVPQUvidP/QgmYudKfIx8gX35wp86eoMdeF0mFHXDAUU6ndx5HDk49cR58uwmH6
-         iAjU8cbE3L31XhumB6IfNNIOtflOuECTA0lJNbSS0xWWxVlkdoNcvqRtojK+fls+13
-         siP+duC3OndUw==
+        b=ieOSH6Ug7jqMoY/bqtGIuUX0PjHBK/FIdwKj4x6LQKReUQNz1/pZrrbePMnCewgWW
+         Qbuyk/z5At5AZeXTPDr0zF8dOuiEzkyscxeBTUy+GwCE5PPJKQhxMpeVmZYaIXPkK1
+         QRtAcZl/cDEiWxsFwI/Kit73Yks1SgMMbu6RuZg4qJoIr+wHHwKw4XGb2zsid4iRf7
+         569dyGsppuInKDnMTBZL74wvNzMGFa+rw+kP+FGz3tkFO6gZo5i27yWHiYMscyCShb
+         0sU05iTU1fMkgdZ8ZdkMW1Kz8Rsih+XZ9wQG3+DgYhdbTauxFKvrtav6GO+AOW4Tv/
+         FYXou51gQCYig==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         sean.wang@mediatek.com
-Subject: [PATCH v2 5/8] mt76: mt7921: fixup rx bitrate statistics
-Date:   Fri, 19 Feb 2021 18:28:48 +0100
-Message-Id: <5ec380a73c2431eb65fdc32d053a3a70c0f0ba79.1613755428.git.lorenzo@kernel.org>
+Subject: [PATCH v2 7/8] mt76: mt7921: fix uninitialized pointer access in mt7921_get_wtbl_info
+Date:   Fri, 19 Feb 2021 18:28:50 +0100
+Message-Id: <1659ffde2cceea2914c1b87b89629bbacf15a62f.1613755428.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <cover.1613755428.git.lorenzo@kernel.org>
 References: <cover.1613755428.git.lorenzo@kernel.org>
@@ -50,234 +50,63 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-Since the related rx bitrate fields have been moved to group3 in Rxv,
-fix rx bitrate statistics in mt7921_mac_fill_rx routine.
+fix possible uninitialized pointer access in mt7921_get_wtbl_info
+routine
 
-Fixes: 163f4d22c118d ("mt76: mt7921: add MAC support")
+[  270.073205] wlp1s0: deauthenticating from 9c:5c:8e:c9:93:14 by local choice (Reason: 3=DEAUTH_LEAVING)
+[  270.094918] 8<--- cut here ---
+[  270.097988] Unable to handle kernel NULL pointer dereference at virtual address 0000000a
+[  270.106120] pgd = 7ac68838
+[  270.108842] [0000000a] *pgd=00000000
+[  270.112426] Internal error: Oops: 805 [#1] SMP ARM
+[  270.117216] Modules linked in: mt7921e mt76_connac_lib mt76
+[  270.122803] CPU: 0 PID: 7 Comm: kworker/u8:0 Tainted: G        W         5.11.0-rc2+ #67
+[  270.130891] Hardware name: Mediatek Cortex-A7 (Device Tree)
+[  270.136459] Workqueue: phy0 mt7921_mac_work [mt7921e]
+[  270.141557] PC is at mt7921_get_wtbl_info+0x224/0x2d8 [mt7921e]
+[  270.147498] LR is at 0x0
+[  270.150026] pc : [<bf030398>]    lr : [<00000000>]    psr: 60000013
+
+...
+
+[  270.317696] 7fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[  270.325869] 7fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[  270.334043] [<bf030398>] (mt7921_get_wtbl_info [mt7921e]) from [<bf02ea9c>] (mt7921_mac_work+0x298/0x2c0 [mt7921e])
+[  270.344529] [<bf02ea9c>] (mt7921_mac_work [mt7921e]) from [<c013cde8>] (process_one_work+0x1f0/0x538)
+[  270.353780] [<c013cde8>] (process_one_work) from [<c013d17c>] (worker_thread+0x4c/0x55c)
+[  270.361874] [<c013d17c>] (worker_thread) from [<c01447a8>] (kthread+0x124/0x150)
+[  270.369275] [<c01447a8>] (kthread) from [<c0100150>] (ret_from_fork+0x14/0x24)
+[  270.376501] Exception stack(0xc19c7fb0 to 0xc19c7ff8)
+[  270.381550] 7fa0:                                     00000000 00000000 00000000 00000000
+[  270.389724] 7fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[  270.397896] 7fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+[  270.404509] Code: e59de012 e1cdc1b6 e1cdc1b8 e59dc016 (e582e00a)
+
+Fixes: 1c099ab44727c ("mt76: mt7921: add MCU support")
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 155 +++++++++---------
- .../net/wireless/mediatek/mt76/mt7921/mac.h   |  10 +-
- 2 files changed, 86 insertions(+), 79 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 8befa8167cde..76d5f194706f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -400,7 +400,9 @@ int mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index d784c75d47bf..58de7f32a625 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -404,11 +404,10 @@ mt7921_mcu_tx_rate_report(struct mt7921_dev *dev, struct sk_buff *skb,
  
- 	/* RXD Group 3 - P-RXV */
- 	if (rxd1 & MT_RXD1_NORMAL_GROUP_3) {
--		u32 v0, v1, v2;
-+		u8 stbc, gi;
-+		u32 v0, v1;
-+		bool cck;
- 
- 		rxv = rxd;
- 		rxd += 2;
-@@ -409,7 +411,6 @@ int mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 
- 		v0 = le32_to_cpu(rxv[0]);
- 		v1 = le32_to_cpu(rxv[1]);
--		v2 = le32_to_cpu(rxv[2]);
- 
- 		if (v0 & MT_PRXV_HT_AD_CODE)
- 			status->enc_flags |= RX_ENC_FLAG_LDPC;
-@@ -429,87 +430,87 @@ int mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 					     status->chain_signal[i]);
- 		}
- 
--		/* RXD Group 5 - C-RXV */
--		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
--			u8 stbc = FIELD_GET(MT_CRXV_HT_STBC, v2);
--			u8 gi = FIELD_GET(MT_CRXV_HT_SHORT_GI, v2);
--			bool cck = false;
-+		stbc = FIELD_GET(MT_PRXV_STBC, v0);
-+		gi = FIELD_GET(MT_PRXV_SGI, v0);
-+		cck = false;
- 
--			rxd += 18;
--			if ((u8 *)rxd - skb->data >= skb->len)
--				return -EINVAL;
-+		idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
-+		mode = FIELD_GET(MT_PRXV_TX_MODE, v0);
- 
--			idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
--			mode = FIELD_GET(MT_CRXV_TX_MODE, v2);
--
--			switch (mode) {
--			case MT_PHY_TYPE_CCK:
--				cck = true;
--				fallthrough;
--			case MT_PHY_TYPE_OFDM:
--				i = mt76_get_rate(&dev->mt76, sband, i, cck);
--				break;
--			case MT_PHY_TYPE_HT_GF:
--			case MT_PHY_TYPE_HT:
--				status->encoding = RX_ENC_HT;
--				if (i > 31)
--					return -EINVAL;
--				break;
--			case MT_PHY_TYPE_VHT:
--				status->nss =
--					FIELD_GET(MT_PRXV_NSTS, v0) + 1;
--				status->encoding = RX_ENC_VHT;
--				if (i > 9)
--					return -EINVAL;
--				break;
--			case MT_PHY_TYPE_HE_MU:
--				status->flag |= RX_FLAG_RADIOTAP_HE_MU;
--				fallthrough;
--			case MT_PHY_TYPE_HE_SU:
--			case MT_PHY_TYPE_HE_EXT_SU:
--			case MT_PHY_TYPE_HE_TB:
--				status->nss =
--					FIELD_GET(MT_PRXV_NSTS, v0) + 1;
--				status->encoding = RX_ENC_HE;
--				status->flag |= RX_FLAG_RADIOTAP_HE;
--				i &= GENMASK(3, 0);
--
--				if (gi <= NL80211_RATE_INFO_HE_GI_3_2)
--					status->he_gi = gi;
--
--				status->he_dcm = !!(idx & MT_PRXV_TX_DCM);
--				break;
--			default:
-+		switch (mode) {
-+		case MT_PHY_TYPE_CCK:
-+			cck = true;
-+			fallthrough;
-+		case MT_PHY_TYPE_OFDM:
-+			i = mt76_get_rate(&dev->mt76, sband, i, cck);
-+			break;
-+		case MT_PHY_TYPE_HT_GF:
-+		case MT_PHY_TYPE_HT:
-+			status->encoding = RX_ENC_HT;
-+			if (i > 31)
- 				return -EINVAL;
--			}
--			status->rate_idx = i;
--
--			switch (FIELD_GET(MT_CRXV_FRAME_MODE, v2)) {
--			case IEEE80211_STA_RX_BW_20:
--				break;
--			case IEEE80211_STA_RX_BW_40:
--				if (mode & MT_PHY_TYPE_HE_EXT_SU &&
--				    (idx & MT_PRXV_TX_ER_SU_106T)) {
--					status->bw = RATE_INFO_BW_HE_RU;
--					status->he_ru =
--						NL80211_RATE_INFO_HE_RU_ALLOC_106;
--				} else {
--					status->bw = RATE_INFO_BW_40;
--				}
--				break;
--			case IEEE80211_STA_RX_BW_80:
--				status->bw = RATE_INFO_BW_80;
--				break;
--			case IEEE80211_STA_RX_BW_160:
--				status->bw = RATE_INFO_BW_160;
--				break;
--			default:
-+			break;
-+		case MT_PHY_TYPE_VHT:
-+			status->nss =
-+				FIELD_GET(MT_PRXV_NSTS, v0) + 1;
-+			status->encoding = RX_ENC_VHT;
-+			if (i > 9)
- 				return -EINVAL;
-+			break;
-+		case MT_PHY_TYPE_HE_MU:
-+			status->flag |= RX_FLAG_RADIOTAP_HE_MU;
-+			fallthrough;
-+		case MT_PHY_TYPE_HE_SU:
-+		case MT_PHY_TYPE_HE_EXT_SU:
-+		case MT_PHY_TYPE_HE_TB:
-+			status->nss =
-+				FIELD_GET(MT_PRXV_NSTS, v0) + 1;
-+			status->encoding = RX_ENC_HE;
-+			status->flag |= RX_FLAG_RADIOTAP_HE;
-+			i &= GENMASK(3, 0);
+ 	if (wlan_idx >= MT76_N_WCIDS)
+ 		return;
 +
-+			if (gi <= NL80211_RATE_INFO_HE_GI_3_2)
-+				status->he_gi = gi;
-+
-+			status->he_dcm = !!(idx & MT_PRXV_TX_DCM);
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+
-+		status->rate_idx = i;
-+
-+		switch (FIELD_GET(MT_PRXV_FRAME_MODE, v0)) {
-+		case IEEE80211_STA_RX_BW_20:
-+			break;
-+		case IEEE80211_STA_RX_BW_40:
-+			if (mode & MT_PHY_TYPE_HE_EXT_SU &&
-+			    (idx & MT_PRXV_TX_ER_SU_106T)) {
-+				status->bw = RATE_INFO_BW_HE_RU;
-+				status->he_ru =
-+					NL80211_RATE_INFO_HE_RU_ALLOC_106;
-+			} else {
-+				status->bw = RATE_INFO_BW_40;
- 			}
-+			break;
-+		case IEEE80211_STA_RX_BW_80:
-+			status->bw = RATE_INFO_BW_80;
-+			break;
-+		case IEEE80211_STA_RX_BW_160:
-+			status->bw = RATE_INFO_BW_160;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+
-+		status->enc_flags |= RX_ENC_FLAG_STBC_MASK * stbc;
-+		if (mode < MT_PHY_TYPE_HE_SU && gi)
-+			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+ 	wcid = rcu_dereference(dev->mt76.wcid[wlan_idx]);
+-	if (!wcid) {
+-		stats->tx_rate = rate;
++	if (!wcid)
+ 		return;
+-	}
  
--			status->enc_flags |= RX_ENC_FLAG_STBC_MASK * stbc;
--			if (mode < MT_PHY_TYPE_HE_SU && gi)
--				status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
-+			rxd += 18;
-+			if ((u8 *)rxd - skb->data >= skb->len)
-+				return -EINVAL;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-index a0c1fa0f20e4..109c8849d106 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-@@ -97,18 +97,24 @@ enum rx_pkt_type {
- #define MT_RXD3_NORMAL_PF_MODE		BIT(29)
- #define MT_RXD3_NORMAL_PF_STS		GENMASK(31, 30)
- 
--/* P-RXV */
-+/* P-RXV DW0 */
- #define MT_PRXV_TX_RATE			GENMASK(6, 0)
- #define MT_PRXV_TX_DCM			BIT(4)
- #define MT_PRXV_TX_ER_SU_106T		BIT(5)
- #define MT_PRXV_NSTS			GENMASK(9, 7)
- #define MT_PRXV_HT_AD_CODE		BIT(11)
-+#define MT_PRXV_FRAME_MODE		GENMASK(14, 12)
-+#define MT_PRXV_SGI			GENMASK(16, 15)
-+#define MT_PRXV_STBC			GENMASK(23, 22)
-+#define MT_PRXV_TX_MODE			GENMASK(27, 24)
- #define MT_PRXV_HE_RU_ALLOC_L		GENMASK(31, 28)
--#define MT_PRXV_HE_RU_ALLOC_H		GENMASK(3, 0)
-+
-+/* P-RXV DW1 */
- #define MT_PRXV_RCPI3			GENMASK(31, 24)
- #define MT_PRXV_RCPI2			GENMASK(23, 16)
- #define MT_PRXV_RCPI1			GENMASK(15, 8)
- #define MT_PRXV_RCPI0			GENMASK(7, 0)
-+#define MT_PRXV_HE_RU_ALLOC_H		GENMASK(3, 0)
- 
- /* C-RXV */
- #define MT_CRXV_HT_STBC			GENMASK(1, 0)
+ 	msta = container_of(wcid, struct mt7921_sta, wcid);
+ 	stats = &msta->stats;
 -- 
 2.29.2
 
