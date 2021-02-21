@@ -2,95 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC8EC433E6
-	for <linux-wireless@archiver.kernel.org>; Sun, 21 Feb 2021 06:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97194C433DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 21 Feb 2021 18:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13B2364F03
-	for <linux-wireless@archiver.kernel.org>; Sun, 21 Feb 2021 06:52:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E49C64E92
+	for <linux-wireless@archiver.kernel.org>; Sun, 21 Feb 2021 18:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229844AbhBUGwL (ORCPT
+        id S230088AbhBUS2o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 21 Feb 2021 01:52:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229661AbhBUGwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Feb 2021 01:52:10 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A5D0F64F02;
-        Sun, 21 Feb 2021 06:51:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613890289;
-        bh=6tU+OEyIZ9Q0azKSBcpf+eNh2D54XEvVY+pvHyOOAHw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ouT1MBHATkEFsCXgb4IX0Df802ldGF4zkZSF3ogUZKPLcOZEIwMODccmEX2pWfMcL
-         Aq8EQozhq7ku6niXNMVwoH8x2OEtIgvijsaEp/EvMMrMN4blFUJbVZ5ySnczEtauiK
-         56REhO/2b8Y8j00dVUziABZV2QudvUw8cGuj+NCXYVT1c7Nla/iJ9Jb4eJbJ1e7Uvt
-         AKG2KxcR1ltY02gkXSmmOdin7fF46t+sOuDpVRTqXFxcqpILUCeXa3t+G27+B84/BQ
-         Ewr4hjU8ZKu4J9ytlPNs9mt1HEKylZSViRZg0OU9TrmkCqwwlDW3EDsZiZOJ632YKR
-         2w0vs2BWfVxDw==
-Date:   Sun, 21 Feb 2021 08:51:25 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Hao Chen <chenhaoa@uniontech.com>
-Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtw88: 8822ce: fix wifi disconnect after S3/S4 on HONOR
- laptop
-Message-ID: <YDIC7RGqq5sFA0pG@unreal>
-References: <20210220084602.22386-1-chenhaoa@uniontech.com>
+        Sun, 21 Feb 2021 13:28:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56838 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229966AbhBUS2k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Feb 2021 13:28:40 -0500
+Received: from laurent.telenet-ops.be (laurent.telenet-ops.be [IPv6:2a02:1800:110:4::f00:19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E97AC06178A
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Feb 2021 10:27:59 -0800 (PST)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:2934:574d:d80c:39f5])
+        by laurent.telenet-ops.be with bizsmtp
+        id XuTw240073eQ4Ry01uTwbv; Sun, 21 Feb 2021 19:27:56 +0100
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1lDtSV-000YhP-P7; Sun, 21 Feb 2021 19:27:55 +0100
+Received: from geert by rox.of.borg with local (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1lDtSV-008gzw-3G; Sun, 21 Feb 2021 19:27:55 +0100
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ath11k: qmi: use %pad to format dma_addr_t
+Date:   Sun, 21 Feb 2021 19:27:54 +0100
+Message-Id: <20210221182754.2071863-1-geert@linux-m68k.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210220084602.22386-1-chenhaoa@uniontech.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Feb 20, 2021 at 04:46:02PM +0800, Hao Chen wrote:
-> When the laptop HONOR MagicBook 14 sleep to S3/S4, the laptop can't
-> resume.
-> The dmesg of kernel report:
-> "[   99.990168] pcieport 0000:00:01.2: can't change power state
-> from D3hot to D0 (config space inaccessible)
-> [   99.993334] rtw_pci 0000:01:00.0: can't change power state
-> from D3hot to D0 (config space inaccessible)
-> [  104.435004] rtw_pci 0000:01:00.0: mac power on failed
-> [  104.435010] rtw_pci 0000:01:00.0: failed to power on mac"
-> When try to pointer the driver.pm to NULL, the problem is fixed.
-> This driver hasn't implemented pm ops yet.It makes the sleep and
-> wake procedure expected when pm's ops not NULL.
->
-> Fixed: commit e3037485c68e ("rtw88: new Realtek 802.11ac driver")
->
-> Signed-off-by: Hao Chen <chenhaoa@uniontech.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/rtw8822ce.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-> index 3845b1333dc3..b4c6762ba7ac 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-> @@ -25,7 +25,7 @@ static struct pci_driver rtw_8822ce_driver = {
->  	.id_table = rtw_8822ce_id_table,
->  	.probe = rtw_pci_probe,
->  	.remove = rtw_pci_remove,
-> -	.driver.pm = &rtw_pm_ops,
-> +	.driver.pm = NULL,
+If CONFIG_ARCH_DMA_ADDR_T_64BIT=n:
 
-The NULL is the default, it is enough to delete ".driver.pm = &rtw_pm_ops," line.
+    drivers/net/wireless/ath/ath11k/qmi.c: In function ‘ath11k_qmi_respond_fw_mem_request’:
+    drivers/net/wireless/ath/ath11k/qmi.c:1690:8: warning: format ‘%llx’ expects argument of type ‘long long unsigned int’, but argument 5 has type ‘dma_addr_t’ {aka ‘unsigned int’} [-Wformat=]
+     1690 |        "qmi req mem_seg[%d] 0x%llx %u %u\n", i,
+	  |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     1691 |         ab->qmi.target_mem[i].paddr,
+	  |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  |                              |
+	  |                              dma_addr_t {aka unsigned int}
+    drivers/net/wireless/ath/ath11k/debug.h:64:30: note: in definition of macro ‘ath11k_dbg’
+       64 |   __ath11k_dbg(ar, dbg_mask, fmt, ##__VA_ARGS__); \
+	  |                              ^~~
+    drivers/net/wireless/ath/ath11k/qmi.c:1690:34: note: format string is defined here
+     1690 |        "qmi req mem_seg[%d] 0x%llx %u %u\n", i,
+	  |                               ~~~^
+	  |                                  |
+	  |                                  long long unsigned int
+	  |                               %x
 
-Thanks
+Fixes: d5395a5486596308 ("ath11k: qmi: add debug message for allocated memory segment addresses and sizes")
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/net/wireless/ath/ath11k/qmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->  	.shutdown = rtw_pci_shutdown,
->  };
->  module_pci_driver(rtw_8822ce_driver);
-> --
-> 2.20.1
->
->
->
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 1aca841cd147cfee..7968fe4eda22a839 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -1687,8 +1687,8 @@ static int ath11k_qmi_respond_fw_mem_request(struct ath11k_base *ab)
+ 			req->mem_seg[i].size = ab->qmi.target_mem[i].size;
+ 			req->mem_seg[i].type = ab->qmi.target_mem[i].type;
+ 			ath11k_dbg(ab, ATH11K_DBG_QMI,
+-				   "qmi req mem_seg[%d] 0x%llx %u %u\n", i,
+-				    ab->qmi.target_mem[i].paddr,
++				   "qmi req mem_seg[%d] %pad %u %u\n", i,
++				    &ab->qmi.target_mem[i].paddr,
+ 				    ab->qmi.target_mem[i].size,
+ 				    ab->qmi.target_mem[i].type);
+ 		}
+-- 
+2.25.1
+
