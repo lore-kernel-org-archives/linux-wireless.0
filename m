@@ -2,185 +2,180 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF1D6C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Feb 2021 10:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A421C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Feb 2021 10:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A64D264E25
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Feb 2021 10:13:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF5E664DFD
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Feb 2021 10:30:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230487AbhBVKNS (ORCPT
+        id S230312AbhBVKaG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Feb 2021 05:13:18 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:37048 "EHLO m42-2.mailgun.net"
+        Mon, 22 Feb 2021 05:30:06 -0500
+Received: from z11.mailgun.us ([104.130.96.11]:49760 "EHLO z11.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231151AbhBVKLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Feb 2021 05:11:00 -0500
+        id S230306AbhBVKaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Feb 2021 05:30:05 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1613988658; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=89rkTqf+msjJaSac/yfv4C+6TeGwRKNJeruzXD+KLWw=; b=iOtg3XlPZgdTrLPPHq6vSF2OpDT5f85Ld5rdt2f/Am+6ZN5nNtBOs5wFhs8gIBJGDHjRLu2B
- xFvkDjWYqN4ih2k1gS4d00Oyhon1O0mvkQHkafr9pb6pw9cXpjZtTbRXQcoNK0wTS57hdylv
- Hm0UP4aOmPsiWygXWzy3LSCVnRY=
-X-Mailgun-Sending-Ip: 69.72.42.2
+ s=smtp; t=1613989786; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=DAA2tKZPWZ8kw7I/CYZgM9BJg4MDa6BL1U7zcmmc11U=; b=J0wBsMpl6InWHlo6chz2CiHSGY4ELkOEtnpFOiQLVSnhQuTPN6xoUI4diKJ1/P58iA7Xgefs
+ g5cZDsZDuALRYjmFO6GGf6ikvCyXmbTBSJ1A7JpAbY29gCAMccKpZpLdhB2BpAYzqut9DkQO
+ MqlnLnzinRxS37yD8pAX83FzXHQ=
+X-Mailgun-Sending-Ip: 104.130.96.11
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 603382e8ad2d186f4b7cc9ca (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 22 Feb 2021 10:09:44
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 6033877b3bd0a42cc9c861ba (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 22 Feb 2021 10:29:15
  GMT
-Sender: mkenna=codeaurora.org@mg.codeaurora.org
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9A16AC43465; Mon, 22 Feb 2021 10:09:43 +0000 (UTC)
-Received: from ssreeela-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id EAFD6C43465; Mon, 22 Feb 2021 10:29:14 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: mkenna)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7FAC6C43461;
-        Mon, 22 Feb 2021 10:09:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7FAC6C43461
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3183EC433C6;
+        Mon, 22 Feb 2021 10:29:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3183EC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=mkenna@codeaurora.org
-From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc:     Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH 1/3] nl80211: Add support for beacon tx mode
-Date:   Mon, 22 Feb 2021 15:39:31 +0530
-Message-Id: <1613988573-10839-2-git-send-email-mkenna@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1613988573-10839-1-git-send-email-mkenna@codeaurora.org>
-References: <1613988573-10839-1-git-send-email-mkenna@codeaurora.org>
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Hao Chen <chenhaoa@uniontech.com>
+Cc:     tony0620emma@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, timlee@realtek.com, arnd@arndb.de,
+        zhanjun@uniontech.com
+Subject: Re: [PATCH v2] rtw88: 8822ce: fix wifi disconnect after S3/S4 on HONOR laptop
+References: <20210222094638.18392-1-chenhaoa@uniontech.com>
+Date:   Mon, 22 Feb 2021 12:29:09 +0200
+In-Reply-To: <20210222094638.18392-1-chenhaoa@uniontech.com> (Hao Chen's
+        message of "Mon, 22 Feb 2021 17:46:38 +0800")
+Message-ID: <87h7m4iefe.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-User can configure the beacon tx mode while bring-up the AP
-or MESH. Hence, added the support in the nl80211/cfg80211
-layer to honour the beacon tx mode configuration and pass
-this value to the driver.
+Hao Chen <chenhaoa@uniontech.com> writes:
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-00630-QCAHKSWPL_SILICONZ-2
+> The laptop's wifi disconnect after the laptop HONOR MagicBook 14
+> sleep to S3/S4 and wake up.
+>
+> The dmesg of kernel report:
+> "[   99.990168] pcieport 0000:00:01.2: can't change power state from D3hot
+> to D0 (config space inaccessible)
+> [   99.990176] ACPI: EC: interrupt unblocked
+> [   99.993334] rtw_pci 0000:01:00.0: can't change power state from D3hot
+> to D0 (config space inaccessible)
+> ......
+> [  102.133500] rtw_pci 0000:01:00.0: mac power on failed
+> [  102.133503] rtw_pci 0000:01:00.0: failed to power on mac
+> [  102.133505] ------------[ cut here ]------------
+> [  102.133506] Hardware became unavailable upon resume. This could be a
+> software issue prior to suspend or a hardware issue.
+> [  102.133569] WARNING: CPU: 4 PID: 5612 at net/mac80211/util.c:2232
+> ieee80211_reconfig+0x9b/0x1490 [mac80211]
+> [  102.133570] Modules linked in: ccm rfcomm uvcvideo videobuf2_vmalloc
+> videobuf2_memops videobuf2_v4l2 videobuf2_common videodev mc cmac bnep 
+> btusb btrtl btbcm btintel edac_mce_amd bluetooth kvm_amd ecdh_generic 
+> ecc kvm nls_iso8859_1 rtwpci rtw88 crct10dif_pclmul crc32_pclmul mac80211 
+> ghash_clmulni_intel aesni_intel snd_hda_codec_realtek crypto_simd huawei_wmi
+> snd_hda_codec_generic cryptd cfg80211 wmi_bmof serio_raw sparse_keymap
+> ledtrig_audio sp5100_tco glue_helper joydev snd_hda_codec_hdmi snd_hda_intel
+> snd_intel_dspcfg wdat_wdt snd_hda_codec snd_hda_core pcspkr snd_hwdep snd_pcm
+> efi_pstore snd_timer libarc4 k10temp snd soundcore snd_pci_acp3x ccp mac_hid
+> binfmt_misc ip_tables x_tables autofs4 amdgpu amd_iommu_v2 gpu_sched 
+> i2c_algo_bit ttm drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
+> usbmouse cec nvme hid_generic i2c_piix4 usbhid nvme_core drm wmi video
+> [  102.133617] CPU: 4 PID: 5612 Comm: kworker/u32:16 Not tainted 5.7.7-amd64-desktop-8822 #3
+> [  102.133618] Hardware name: HUAWEI NBLL-WXX9/NBLL-WXX9-PCB, BIOS 1.06 09/29/2020
+> [  102.133623] Workqueue: events_unbound async_run_entry_fn
+> [  102.133651] RIP: 0010:ieee80211_reconfig+0x9b/0x1490 [mac80211]
+> [  102.133654] Code: 31 db e8 e8 fb 27 c2 41 c6 85 34 05 00 00 00 4c 89 ef e8 38
+> 56 fc ff 89 45 b8 85 c0 74 4c 48 c7 c7 d0 0c 09 c1 e8 01 e0 25 c2 <0f> 0b 4c
+> 89 ef e8 2b d1 ff ff e9 02 03 00 00 80 7d 9f 00 0f 85 1d
+> [  102.133655] RSP: 0018:ffffbe52c059fd08 EFLAGS: 00010286
+> [  102.133657] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000007
+> [  102.133658] RDX: 0000000000000007 RSI: 0000000000000096 RDI: ffff9d573f519cc0
+> [  102.133659] RBP: ffffbe52c059fd80 R08: ffffffffffd96245 R09: 000000000002cb80
+> [  102.133660] R10: 000000016989e54c R11: 000000000002a360 R12: ffff9d5731f50300
+> [  102.133661] R13: ffff9d5731f50800 R14: ffff9d5731f504c8 R15: ffffffff8463fbef
+> [  102.133664] FS:  0000000000000000(0000) GS:ffff9d573f500000(0000) knlGS:0000000000000000
+> [  102.133665] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  102.133666] CR2: 0000000000000000 CR3: 000000033320a000 CR4: 0000000000340ee0
+> [  102.133667] Call Trace:
+> [  102.133673]  ? enqueue_entity+0xe3/0x680
+> [  102.133705]  ieee80211_resume+0x55/0x70 [mac80211]
+> [  102.133729]  wiphy_resume+0x84/0x130 [cfg80211]
+> [  102.133752]  ? addresses_show+0xa0/0xa0 [cfg80211]
+> [  102.133757]  dpm_run_callback+0x5b/0x150
+> [  102.133760]  device_resume+0xad/0x1f0
+> [  102.133762]  async_resume+0x1d/0x30
+> [  102.133764]  async_run_entry_fn+0x3e/0x170
+> [  102.133768]  process_one_work+0x1ab/0x380
+> [  102.133771]  worker_thread+0x37/0x3b0
+> [  102.133774]  kthread+0x120/0x140
+> [  102.133776]  ? create_worker+0x1b0/0x1b0
+> [  102.133778]  ? kthread_park+0x90/0x90
+> [  102.133782]  ret_from_fork+0x22/0x40
+> [  102.133785] ---[ end trace 46229bfd3a4273be ]---
+> [  102.134137] ------------[ cut here ]------------
+> [  102.134141] wlp1s0:  Failed check-sdata-in-driver check, flags: 0x0
+> [  102.134195] WARNING: CPU: 0 PID: 5612 at net/mac80211/driver-ops.h:19
+> drv_remove_interface+0xfe/0x110 [mac80211]"
+>
+> When try to pointer the driver.pm to NULL, the problem is fixed.
+> It makes the sleep and wake procedure expected when pm's ops not NULL.
+>
+> By `git blame` command, I know that the assignment of .driver.pm =
+> RTW_PM_OPS was in commit 44bc17f7f5b3 ("rtw88: support wowlan feature for
+> 8822c"), and another
+> commit 7dc7c41607d1 ("rtw88: avoid unused function warnings")
+> pointed out rtw_pci_resume() and rtw_pci_suspend() are not used at
+> all.
+>
+> So I think it's safe to remove them.
+>
+> Fixes: 7dc7c41607d1 ("rtw88: avoid unused function warnings")
+> Fixes: 44bc17f7f5b3 ("rtw88: support wowlan feature for 8822c")
+>
+> Signed-off-by: Hao Chen <chenhaoa@uniontech.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/rtw8822ce.c | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+> index 3845b1333dc3..4c063192f801 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+> @@ -25,7 +25,6 @@ static struct pci_driver rtw_8822ce_driver = {
+>  	.id_table = rtw_8822ce_id_table,
+>  	.probe = rtw_pci_probe,
+>  	.remove = rtw_pci_remove,
+> -	.driver.pm = &rtw_pm_ops,
 
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
----
- include/net/cfg80211.h       |  4 ++++
- include/uapi/linux/nl80211.h | 15 +++++++++++++++
- net/wireless/nl80211.c       |  9 +++++++++
- 3 files changed, 28 insertions(+)
+Why just 8822ce? Why not remove rtw_pm_ops entirely if it just creates
+problems?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 911fae4..5346569 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1181,6 +1181,7 @@ enum cfg80211_ap_settings_flags {
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-  * @fils_discovery: FILS discovery transmission parameters
-  * @unsol_bcast_probe_resp: Unsolicited broadcast probe response parameters
-+ * @beacon_tx_mode: Beacon Tx Mode setting
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -1213,6 +1214,7 @@ struct cfg80211_ap_settings {
- 	struct cfg80211_he_bss_color he_bss_color;
- 	struct cfg80211_fils_discovery fils_discovery;
- 	struct cfg80211_unsol_bcast_probe_resp unsol_bcast_probe_resp;
-+	enum nl80211_beacon_tx_mode beacon_tx_mode;
- };
- 
- /**
-@@ -2060,6 +2062,7 @@ struct mesh_config {
-  *	to operate on DFS channels.
-  * @control_port_over_nl80211: TRUE if userspace expects to exchange control
-  *	port frames over NL80211 instead of the network interface.
-+ * @beacon_tx_mode: Beacon Tx Mode setting.
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -2083,6 +2086,7 @@ struct mesh_setup {
- 	struct cfg80211_bitrate_mask beacon_rate;
- 	bool userspace_handles_dfs;
- 	bool control_port_over_nl80211;
-+	enum nl80211_beacon_tx_mode beacon_tx_mode;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ac78da9..70a76b9 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2557,6 +2557,10 @@ enum nl80211_commands {
-  *	disassoc events to indicate that an immediate reconnect to the AP
-  *	is desired.
-  *
-+ * @NL80211_ATTR_BEACON_TX_MODE: used to configure the beacon tx mode as
-+ *      staggered mode = 1 or burst mode = 2 in %NL80211_CMD_START_AP or
-+ *      %NL80211_CMD_JOIN_MESH from user-space.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3054,6 +3058,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_DISABLE_HE,
- 
-+	NL80211_ATTR_BEACON_TX_MODE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -7277,4 +7283,13 @@ enum nl80211_sar_specs_attrs {
- 	NL80211_SAR_ATTR_SPECS_MAX = __NL80211_SAR_ATTR_SPECS_LAST - 1,
- };
- 
-+/**
-+ * enum nl80211_beacon_tx_mode - Beacon Tx Mode enum.
-+ *      Used to configure beacon staggered mode or beacon burst mode.
-+ */
-+enum nl80211_beacon_tx_mode {
-+	NL80211_BEACON_STAGGERED_MODE = 1,
-+	NL80211_BEACON_BURST_MODE = 2,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 521d36b..711f2f4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -753,6 +753,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_RECONNECT_REQUESTED] = { .type = NLA_REJECT },
- 	[NL80211_ATTR_SAR_SPEC] = NLA_POLICY_NESTED(sar_policy),
- 	[NL80211_ATTR_DISABLE_HE] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_BEACON_TX_MODE] = NLA_POLICY_RANGE(NLA_U32, 1, 2),
- };
- 
- /* policy for the key attributes */
-@@ -5324,6 +5325,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	params.dtim_period =
- 		nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
- 
-+	if (info->attrs[NL80211_ATTR_BEACON_TX_MODE])
-+		params.beacon_tx_mode =
-+			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_TX_MODE]);
-+
- 	err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr->iftype,
- 					   params.beacon_interval);
- 	if (err)
-@@ -11878,6 +11883,10 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_BEACON_TX_MODE])
-+		setup.beacon_tx_mode =
-+			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_TX_MODE]);
-+
- 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
- 		/* parse additional setup parameters if given */
- 		err = nl80211_parse_mesh_setup(info, &setup);
+drivers/net/wireless/realtek/rtw88/pci.c:SIMPLE_DEV_PM_OPS(rtw_pm_ops, rtw_pci_suspend, rtw_pci_resume);
+drivers/net/wireless/realtek/rtw88/pci.c:EXPORT_SYMBOL(rtw_pm_ops);
+drivers/net/wireless/realtek/rtw88/pci.h:extern const struct dev_pm_ops rtw_pm_ops;
+drivers/net/wireless/realtek/rtw88/rtw8723de.c: .driver.pm = &rtw_pm_ops,
+drivers/net/wireless/realtek/rtw88/rtw8821ce.c: .driver.pm = &rtw_pm_ops,
+drivers/net/wireless/realtek/rtw88/rtw8822be.c: .driver.pm = &rtw_pm_ops,
+drivers/net/wireless/realtek/rtw88/rtw8822ce.c: .driver.pm = &rtw_pm_ops,
+
+
 -- 
-2.7.4
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
