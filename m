@@ -2,153 +2,154 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45BCDC433DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 10:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEDC2C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 12:37:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B94064E4B
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 10:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF44A64DB1
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 12:37:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230512AbhBWKni (ORCPT
+        id S232689AbhBWMhO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Feb 2021 05:43:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59128 "EHLO mail.kernel.org"
+        Tue, 23 Feb 2021 07:37:14 -0500
+Received: from m12-17.163.com ([220.181.12.17]:34151 "EHLO m12-17.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230213AbhBWKnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Feb 2021 05:43:37 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3AB4D64DE8;
-        Tue, 23 Feb 2021 10:42:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614076976;
-        bh=tIpgtBtrQUFxjCMSSM3O2XzC1WXeUKLpyERx7y9GjVQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=QIKyoIGnr5xeWE+sHKjLqu8jVdiWzgRueuWWE9kew/rGPQGSrCwpqB4x5tAsW+Hc+
-         +EAVWoDCStS/dixrvlyFbBPb//2xFlI+QpcIh/tqGKZrb16RbwuosGAv34bSEJBm//
-         cTsGCFxaVj74rx4fLH3Z8BB/aA8sy/d+8+wymRz5wo0sgKNbESccsgKp8x8RSZbmNP
-         SUJ6qjnkh1+hh6srGEmSioLDywiFRuVrsvOK/5qJKyl5OfKqigdqPagAaJoSW41g/q
-         zcV29ZLGpc4R9/J6wE8g4EnpQTdqkPqNm2GA3gXreRAJyeoEagjE1bZweQWivpis0t
-         0unjXM2GqaPzA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, ryder.lee@mediatek.com
-Subject: [PATCH] mt76: mt7615: fix mib stats counter reporting to mac80211
-Date:   Tue, 23 Feb 2021 11:42:49 +0100
-Message-Id: <32f0cb79fd3b95af5cd1dcb0bbf8a4846b7f7c8e.1614076891.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.29.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S232589AbhBWMhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Feb 2021 07:37:09 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=dIDU6J0odxG9RlqAj0
+        JO+hMmJN5ibrBl7SIKeXUpRbI=; b=JD38dWm62FEVyxAELIIIkjEfH+rLQvtUBW
+        xNqE8GX5Ehu+lNYyo7hd5k3s4A8QlP6H5QNXPFMWEbureSr2xDPXDTfzmuGnENpd
+        xQknTtKUUKuhsLDhxQjxKUqRg/fKAX/f8U5VAolv7EPI7z+AI8C0bHJC5QX9uO1P
+        rveTxh/UQ=
+Received: from wengjianfeng.ccdomain.com (unknown [119.137.54.165])
+        by smtp13 (Coremail) with SMTP id EcCowABnbp52pzRgb_LjmQ--.8535S2;
+        Tue, 23 Feb 2021 14:58:01 +0800 (CST)
+From:   samirweng1979 <samirweng1979@163.com>
+To:     imitsyanko@quantenna.com, geomatsi@gmail.com, kvalo@codeaurora.org,
+        kuba@kernel.org, ohannes.berg@intel.com, dlebed@quantenna.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        wengjianfeng <wengjianfeng@yulong.com>
+Subject: [PATCH] qtnfmac: remove meaningless labels
+Date:   Tue, 23 Feb 2021 14:57:54 +0800
+Message-Id: <20210223065754.34392-1-samirweng1979@163.com>
+X-Mailer: git-send-email 2.15.0.windows.1
+X-CM-TRANSID: EcCowABnbp52pzRgb_LjmQ--.8535S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tr18Jr1DWw45KFyxAw48Xrb_yoW5JF1xpr
+        WrXa9Fkay8K3yvqas5ArZ5Zr1Yvw1xKFWxKrW8C3s5u3W0yr1rKa1Yva4YyrZ8JFW8Jryj
+        qFWvqF1Uu3ZY9a7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j8miiUUUUU=
+X-Originating-IP: [119.137.54.165]
+X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiEQM2sV7+2yasZQABsA
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to properly report MIB counters to mac80211, resets stats in
-mt7615_get_stats routine and hold mt76 mutex accessing MIB counters.
-Sum up MIB counters in mt7615_mac_update_mib_stats routine.
+From: wengjianfeng <wengjianfeng@yulong.com>
 
-Fixes: c388d8584bc83 ("mt76: mt7615: add a get_stats() callback")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+some function's label meaningless, the return statement follows
+the goto statement, so just remove it.
+
+Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 26 ++++++-------------
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  6 +++++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    | 10 +++----
- 3 files changed, 19 insertions(+), 23 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 27 +++++------------------
+ 1 file changed, 6 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index f5c6cad23efd..1bbe193db1cf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1830,10 +1830,8 @@ mt7615_mac_update_mib_stats(struct mt7615_phy *phy)
- 	int i, aggr;
- 	u32 val, val2;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 504b4d0..84b15a6 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -680,13 +680,10 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 		eth_zero_addr(vif->bssid);
  
--	memset(mib, 0, sizeof(*mib));
--
--	mib->fcs_err_cnt = mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
--					  MT_MIB_SDR3_FCS_ERR_MASK);
-+	mib->fcs_err_cnt += mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
-+					   MT_MIB_SDR3_FCS_ERR_MASK);
+ 	ret = qtnf_cmd_send_connect(vif, sme);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to connect\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
+-	}
  
- 	val = mt76_get_field(dev, MT_MIB_SDR14(ext_phy),
- 			     MT_MIB_AMPDU_MPDU_COUNT);
-@@ -1846,24 +1844,16 @@ mt7615_mac_update_mib_stats(struct mt7615_phy *phy)
- 	aggr = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
- 	for (i = 0; i < 4; i++) {
- 		val = mt76_rr(dev, MT_MIB_MB_SDR1(ext_phy, i));
--
--		val2 = FIELD_GET(MT_MIB_ACK_FAIL_COUNT_MASK, val);
--		if (val2 > mib->ack_fail_cnt)
--			mib->ack_fail_cnt = val2;
--
--		val2 = FIELD_GET(MT_MIB_BA_MISS_COUNT_MASK, val);
--		if (val2 > mib->ba_miss_cnt)
--			mib->ba_miss_cnt = val2;
-+		mib->ba_miss_cnt += FIELD_GET(MT_MIB_BA_MISS_COUNT_MASK, val);
-+		mib->ack_fail_cnt += FIELD_GET(MT_MIB_ACK_FAIL_COUNT_MASK,
-+					       val);
- 
- 		val = mt76_rr(dev, MT_MIB_MB_SDR0(ext_phy, i));
--		val2 = FIELD_GET(MT_MIB_RTS_RETRIES_COUNT_MASK, val);
--		if (val2 > mib->rts_retries_cnt) {
--			mib->rts_cnt = FIELD_GET(MT_MIB_RTS_COUNT_MASK, val);
--			mib->rts_retries_cnt = val2;
--		}
-+		mib->rts_cnt += FIELD_GET(MT_MIB_RTS_COUNT_MASK, val);
-+		mib->rts_retries_cnt += FIELD_GET(MT_MIB_RTS_RETRIES_COUNT_MASK,
-+						  val);
- 
- 		val = mt76_rr(dev, MT_TX_AGG_CNT(ext_phy, i));
--
- 		dev->mt76.aggr_stats[aggr++] += val & 0xffff;
- 		dev->mt76.aggr_stats[aggr++] += val >> 16;
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 63e98371f863..0500b3bfcf83 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -810,11 +810,17 @@ mt7615_get_stats(struct ieee80211_hw *hw,
- 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
- 	struct mib_stats *mib = &phy->mib;
- 
-+	mt7615_mutex_acquire(phy->dev);
-+
- 	stats->dot11RTSSuccessCount = mib->rts_cnt;
- 	stats->dot11RTSFailureCount = mib->rts_retries_cnt;
- 	stats->dot11FCSErrorCount = mib->fcs_err_cnt;
- 	stats->dot11ACKFailureCount = mib->ack_fail_cnt;
- 
-+	memset(mib, 0, sizeof(*mib));
-+
-+	mt7615_mutex_release(phy->dev);
-+
- 	return 0;
+-out:
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 919242652213..157bec6a1d88 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -133,11 +133,11 @@ struct mt7615_vif {
- };
+@@ -702,13 +699,10 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 		pr_warn("unexpected bssid: %pM", auth->bssid);
  
- struct mib_stats {
--	u16 ack_fail_cnt;
--	u16 fcs_err_cnt;
--	u16 rts_cnt;
--	u16 rts_retries_cnt;
--	u16 ba_miss_cnt;
-+	u32 ack_fail_cnt;
-+	u32 fcs_err_cnt;
-+	u32 rts_cnt;
-+	u32 rts_retries_cnt;
-+	u32 ba_miss_cnt;
- 	unsigned long aggr_per;
- };
+ 	ret = qtnf_cmd_send_external_auth(vif, auth);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to report external auth\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
+-	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -727,8 +721,7 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (vif->wdev.iftype != NL80211_IFTYPE_STATION) {
+-		ret = -EOPNOTSUPP;
+-		goto out;
++		return -EOPNOTSUPP;
+ 	}
+ 
+ 	ret = qtnf_cmd_send_disconnect(vif, reason_code);
+@@ -742,7 +735,6 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 				      NULL, 0, true, GFP_KERNEL);
+ 	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -935,13 +927,10 @@ static int qtnf_update_owe_info(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	ret = qtnf_cmd_send_update_owe(vif, owe_info);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to update owe info\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
+-	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -987,18 +976,14 @@ static int qtnf_resume(struct wiphy *wiphy)
+ 	vif = qtnf_mac_get_base_vif(mac);
+ 	if (!vif) {
+ 		pr_err("MAC%u: primary VIF is not configured\n", mac->macid);
+-		ret = -EFAULT;
+-		goto exit;
++		return -EFAULT;
+ 	}
+ 
+ 	ret = qtnf_cmd_send_wowlan_set(vif, NULL);
+-	if (ret) {
++	if (ret)
+ 		pr_err("MAC%u: failed to reset WoWLAN triggers\n",
+ 		       mac->macid);
+-		goto exit;
+-	}
+ 
+-exit:
+ 	return ret;
+ }
  
 -- 
-2.29.2
+1.9.1
+
 
