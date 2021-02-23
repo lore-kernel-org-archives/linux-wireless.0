@@ -2,87 +2,185 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4CF5C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 07:59:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 633E9C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 08:44:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C86364DAF
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 07:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16AEA64E27
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Feb 2021 08:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231913AbhBWH7g (ORCPT
+        id S232086AbhBWIoD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Feb 2021 02:59:36 -0500
-Received: from m12-11.163.com ([220.181.12.11]:43084 "EHLO m12-11.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229961AbhBWH7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Feb 2021 02:59:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=Cqg2tfDAyG9gUkQICL
-        2EEDUEWWRv38aK2GdMgtbwE7c=; b=guJnL843fWgen70r8LUxLWQrXwvEiMavaC
-        CerXCrmnExhi7Qfeu983DxdG9Z3a17IDpAZ41w9z/R03SZ+nPY0nDh4b1D7r74KY
-        cWelbotCIPccsuX2iCNQVJ161HSHckX98L3vjg/H4pxTaR7XSG7odR8NFxsCd5Vh
-        q6RDCaV6o=
-Received: from wengjianfeng.ccdomain.com (unknown [119.137.54.165])
-        by smtp7 (Coremail) with SMTP id C8CowAB3bJTDtDRglzn_Ow--.63394S2;
-        Tue, 23 Feb 2021 15:54:44 +0800 (CST)
-From:   samirweng1979 <samirweng1979@163.com>
-To:     tony0620emma@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        inux-kernel@vger.kernel.org, wengjianfeng <wengjianfeng@yulong.com>
-Subject: [PATCH] rtw88: remove unnecessary variable
-Date:   Tue, 23 Feb 2021 15:54:38 +0800
-Message-Id: <20210223075438.13676-1-samirweng1979@163.com>
-X-Mailer: git-send-email 2.15.0.windows.1
-X-CM-TRANSID: C8CowAB3bJTDtDRglzn_Ow--.63394S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWrtrWxAFyDurW7CrWrtry7Jrb_yoW8Jr1Dpa
-        yYg345Aay3Kr4UWa15Jan7AFy3Way7JrW2krZYy3y5Z3yxXa4fJFZ0gFyjvrn0gryUCF9I
-        qrs0q3ZrGas8WFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jjD73UUUUU=
-X-Originating-IP: [119.137.54.165]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiEQM2sV7+2yasZQADsC
+        Tue, 23 Feb 2021 03:44:03 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39880 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231152AbhBWIoB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Feb 2021 03:44:01 -0500
+X-UUID: 42ecd92eb13c406f98656b5735e9e7fc-20210223
+X-UUID: 42ecd92eb13c406f98656b5735e9e7fc-20210223
+Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 744885294; Tue, 23 Feb 2021 16:43:16 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 23 Feb 2021 16:43:15 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 23 Feb 2021 16:43:15 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/2] mt76: mt7615: fix TSF configuration
+Date:   Tue, 23 Feb 2021 16:43:11 +0800
+Message-ID: <61d40a20375f888c122ee0e186168fc2db863fc3.1614058187.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: wengjianfeng <wengjianfeng@yulong.com>
+The index of TSF counters should follow HWBSSID.
 
-The variable ret is defined at the beginning and initialized
-to 0 until the function returns ret, and the variable ret is
-not reassigned.Therefore, we do not need to define the variable
-ret, just return 0 directly at the end of the function.
-
-Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+Fixes: cd795267612d ("mt76: mt7615: support 16 interfaces")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c  |  6 +++++-
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c | 16 ++++++++++++++--
+ drivers/net/wireless/mediatek/mt76/mt7615/regs.h |  7 ++++---
+ .../net/wireless/mediatek/mt76/mt7615/usb_sdio.c |  6 +++++-
+ 4 files changed, 28 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index e6989c0..4c7e3e4 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1393,7 +1393,6 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_hal *hal = &rtwdev->hal;
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
--	int ret = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index f2dd56674acb..df2dc77a323a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1005,6 +1005,7 @@ void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
+ 	struct mt7615_dev *dev = phy->dev;
+ 	struct mt7615_rate_desc rd;
+ 	u32 w5, w27, addr;
++	u16 idx = sta->vif->mt76.omac_idx;
  
- 	switch (rtw_hci_type(rtwdev)) {
- 	case RTW_HCI_TYPE_PCIE:
-@@ -1431,7 +1430,7 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
+ 	if (!mt76_is_mmio(&dev->mt76)) {
+ 		mt7615_mac_queue_rate_update(phy, sta, probe_rate, rates);
+@@ -1056,7 +1057,10 @@ void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
  
- 	hal->bfee_sts_cap = 3;
+ 	mt76_wr(dev, addr + 27 * 4, w27);
  
--	return ret;
-+	return 0;
+-	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_MODE); /* TSF read */
++	idx = idx > HW_BSSID_MAX ? HW_BSSID_0 : idx;
++	addr = idx > 1 ? MT_LPON_TCR2(idx): MT_LPON_TCR0(idx);
++
++	mt76_set(dev, addr, MT_LPON_TCR_MODE); /* TSF read */
+ 	sta->rate_set_tsf = mt76_rr(dev, MT_LPON_UTTR0) & ~BIT(0);
+ 	sta->rate_set_tsf |= rd.rateset;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 1cf40f85eb55..68accb37ea28 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -818,15 +818,21 @@ mt7615_get_stats(struct ieee80211_hw *hw,
+ static u64
+ mt7615_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 	union {
+ 		u64 t64;
+ 		u32 t32[2];
+ 	} tsf;
++	u16 idx = mvif->mt76.omac_idx;
++	u32 reg;
++
++	idx = idx > HW_BSSID_MAX ? HW_BSSID_0 : idx;
++	reg = idx > 1 ? MT_LPON_TCR2(idx): MT_LPON_TCR0(idx);
+ 
+ 	mt7615_mutex_acquire(dev);
+ 
+-	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_MODE); /* TSF read */
++	mt76_set(dev, reg, MT_LPON_TCR_MODE); /* TSF read */
+ 	tsf.t32[0] = mt76_rr(dev, MT_LPON_UTTR0);
+ 	tsf.t32[1] = mt76_rr(dev, MT_LPON_UTTR1);
+ 
+@@ -839,18 +845,24 @@ static void
+ mt7615_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	       u64 timestamp)
+ {
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 	union {
+ 		u64 t64;
+ 		u32 t32[2];
+ 	} tsf = { .t64 = timestamp, };
++	u16 idx = mvif->mt76.omac_idx;
++	u32 reg;
++
++	idx = idx > HW_BSSID_MAX ? HW_BSSID_0 : idx;
++	reg = idx > 1 ? MT_LPON_TCR2(idx): MT_LPON_TCR0(idx);
+ 
+ 	mt7615_mutex_acquire(dev);
+ 
+ 	mt76_wr(dev, MT_LPON_UTTR0, tsf.t32[0]);
+ 	mt76_wr(dev, MT_LPON_UTTR1, tsf.t32[1]);
+ 	/* TSF software overwrite */
+-	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_WRITE);
++	mt76_set(dev, reg, MT_LPON_TCR_WRITE);
+ 
+ 	mt7615_mutex_release(dev);
  }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index 1fd7f183629e..190a02670795 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -449,9 +449,10 @@ enum mt7615_reg_base {
  
- static int rtw_chip_efuse_enable(struct rtw_dev *rtwdev)
+ #define MT_LPON(_n)			((dev)->reg_map[MT_LPON_BASE] + (_n))
+ 
+-#define MT_LPON_T0CR			MT_LPON(0x010)
+-#define MT_LPON_T0CR_MODE		GENMASK(1, 0)
+-#define MT_LPON_T0CR_WRITE		BIT(0)
++#define MT_LPON_TCR0(_n)		MT_LPON(0x010 + ((_n) * 4))
++#define MT_LPON_TCR2(_n)		MT_LPON(0x0f8 + ((_n) - 2) * 4)
++#define MT_LPON_TCR_MODE		GENMASK(1, 0)
++#define MT_LPON_TCR_WRITE		BIT(0)
+ 
+ #define MT_LPON_UTTR0			MT_LPON(0x018)
+ #define MT_LPON_UTTR1			MT_LPON(0x01c)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+index 203256862dfd..4a370b9f7a17 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+@@ -67,6 +67,7 @@ static int mt7663_usb_sdio_set_rates(struct mt7615_dev *dev,
+ 	struct mt7615_rate_desc *rate = &wrd->rate;
+ 	struct mt7615_sta *sta = wrd->sta;
+ 	u32 w5, w27, addr, val;
++	u16 idx = sta->vif->mt76.omac_idx;
+ 
+ 	lockdep_assert_held(&dev->mt76.mutex);
+ 
+@@ -118,7 +119,10 @@ static int mt7663_usb_sdio_set_rates(struct mt7615_dev *dev,
+ 
+ 	sta->rate_probe = sta->rateset[rate->rateset].probe_rate.idx != -1;
+ 
+-	mt76_set(dev, MT_LPON_T0CR, MT_LPON_T0CR_MODE); /* TSF read */
++	idx = idx > HW_BSSID_MAX ? HW_BSSID_0 : idx;
++	addr = idx > 1 ? MT_LPON_TCR2(idx): MT_LPON_TCR0(idx);
++
++	mt76_set(dev, addr, MT_LPON_TCR_MODE); /* TSF read */
+ 	val = mt76_rr(dev, MT_LPON_UTTR0);
+ 	sta->rate_set_tsf = (val & ~BIT(0)) | rate->rateset;
+ 
 -- 
-1.9.1
+2.18.0
 
