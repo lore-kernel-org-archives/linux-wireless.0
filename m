@@ -7,45 +7,44 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E50EC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD65C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21EB964E6C
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:36:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80B4564E90
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:38:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235541AbhBXNb3 (ORCPT
+        id S232949AbhBXNfs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 08:31:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50940 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 08:35:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51110 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235227AbhBXMwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 07:52:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D268364F11;
-        Wed, 24 Feb 2021 12:50:57 +0000 (UTC)
+        id S234772AbhBXM5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 07:57:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4C9BD64F3C;
+        Wed, 24 Feb 2021 12:52:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171058;
-        bh=C55yUIEY+idJC3u7aYC0wzE6M5fLtSGNPtLbMb/VWI0=;
+        s=k20201202; t=1614171143;
+        bh=gOJ4KNBRe1gQ0EC8G3x8EkpMv27fqxU7e0yNcEZW3AE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lXz9GGfqfXaV23GrAMej6WCOZueJLq3FtJ4dVTqEzwclLj027zIwXMmuOp7eox5/y
-         JsHg6FxnFyvlALP14NjgqCQiAS2KaIYP938GVUhL39+xgcWhMSRJGAkmiv95vNtwiC
-         MYkAU7syvMzWk54qkBfklNfV7AQLLomg2vQM6Z4ticqa3wiG1J07Yvc/xugBRX7i/b
-         sSyI3CXbOqB5HejanVCDA8iyf/ERA2+i5Kf76UB6rP1qxS8gr1pzd5FUpOx59JSGZ1
-         Hg4FJMuL7oxZfNBy8DlzAd7nyWK1KV8nWqrcjzaKPr/yd8Lql0TdPeeou+tLg2jxlf
-         c8xeklnGepgEw==
+        b=H2O88S4+qn21cakRlKoitMcjaTFYP4WsM7eXWa+xZoquCr/VL4A3LCyW5MrmyyUE+
+         ChA3KFIq8cZmjnKJhO4XPztkDRb6RSBu8Xo8U/lJWbSyZSfpp0g52zJjP02Xq8tgo7
+         Im58/QDxGBw7bMPjlDvWhF7X7LuJSpUVFzQknTVaM8L2jSbPz71/7KXVRcyPfIo60J
+         ZPcjiMPhgIvlZumb6hZQKWAxlp7P0ESnIJckiL7BUTYYDhsxYg9ZQXAOP/Jo5cLxcr
+         r1yQInQNb0Mz3V5ZOEOrVP5zuff2de8ZZoareCjRCU8xYHlVdUKgOc5hVqPBkxy4Y/
+         090KQLSJbhcpw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 23/67] brcmfmac: Add DMI nvram filename quirk for Voyo winpad A15 tablet
-Date:   Wed, 24 Feb 2021 07:49:41 -0500
-Message-Id: <20210224125026.481804-23-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.10 08/56] mt76: mt7615: reset token when mac_reset happens
+Date:   Wed, 24 Feb 2021 07:51:24 -0500
+Message-Id: <20210224125212.482485-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210224125026.481804-1-sashal@kernel.org>
-References: <20210224125026.481804-1-sashal@kernel.org>
+In-Reply-To: <20210224125212.482485-1-sashal@kernel.org>
+References: <20210224125212.482485-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,65 +53,102 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Hans de Goede <hdegoede@redhat.com>
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-[ Upstream commit a338c874d3d9d2463f031e89ae14942929b93db6 ]
+[ Upstream commit a6275e934605646ef81b02d8d1164f21343149c9 ]
 
-The Voyo winpad A15 tablet contains quite generic names in the sys_vendor
-and product_name DMI strings, without this patch brcmfmac will try to load:
-rcmfmac4330-sdio.To be filled by O.E.M.-To be filled by O.E.M..txt
-as nvram file which is a bit too generic.
+Reset token in mt7615_mac_reset_work() to avoid possible leakege.
 
-Add a DMI quirk so that a unique and clearly identifiable nvram file name
-is used on the Voyo winpad A15 tablet.
-
-While preparing a matching linux-firmware update I noticed that the nvram
-is identical to the nvram used on the Prowise-PT301 tablet, so the new DMI
-quirk entry simply points to the already existing Prowise-PT301 nvram file.
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210129171413.139880-2-hdegoede@redhat.com
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/dmi.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   | 20 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
+ .../wireless/mediatek/mt76/mt7615/pci_init.c  | 12 +----------
+ 3 files changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
-index 824a79f243830..6d5188b78f2de 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
-@@ -44,6 +44,14 @@ static const struct brcmf_dmi_data predia_basic_data = {
- 	BRCM_CC_43341_CHIP_ID, 2, "predia-basic"
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 3d62fda067e44..f1f954ff46856 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -2098,6 +2098,23 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(mt7615_dma_reset);
  
-+/* Note the Voyo winpad A15 tablet uses the same Ampak AP6330 module, with the
-+ * exact same nvram file as the Prowise-PT301 tablet. Since the nvram for the
-+ * Prowise-PT301 is already in linux-firmware we just point to that here.
-+ */
-+static const struct brcmf_dmi_data voyo_winpad_a15_data = {
-+	BRCM_CC_4330_CHIP_ID, 4, "Prowise-PT301"
-+};
++void mt7615_tx_token_put(struct mt7615_dev *dev)
++{
++	struct mt76_txwi_cache *txwi;
++	int id;
 +
- static const struct dmi_system_id dmi_platform_data[] = {
- 	{
- 		/* ACEPC T8 Cherry Trail Z8350 mini PC */
-@@ -125,6 +133,16 @@ static const struct dmi_system_id dmi_platform_data[] = {
- 		},
- 		.driver_data = (void *)&predia_basic_data,
- 	},
-+	{
-+		/* Voyo winpad A15 tablet */
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "AMI Corporation"),
-+			DMI_MATCH(DMI_BOARD_NAME, "Aptio CRB"),
-+			/* Above strings are too generic, also match on BIOS date */
-+			DMI_MATCH(DMI_BIOS_DATE, "11/20/2014"),
-+		},
-+		.driver_data = (void *)&voyo_winpad_a15_data,
-+	},
- 	{}
- };
++	spin_lock_bh(&dev->token_lock);
++	idr_for_each_entry(&dev->token, txwi, id) {
++		mt7615_txp_skb_unmap(&dev->mt76, txwi);
++		if (txwi->skb)
++			dev_kfree_skb_any(txwi->skb);
++		mt76_put_txwi(&dev->mt76, txwi);
++	}
++	spin_unlock_bh(&dev->token_lock);
++	idr_destroy(&dev->token);
++}
++EXPORT_SYMBOL_GPL(mt7615_tx_token_put);
++
+ void mt7615_mac_reset_work(struct work_struct *work)
+ {
+ 	struct mt7615_phy *phy2;
+@@ -2141,6 +2158,9 @@ void mt7615_mac_reset_work(struct work_struct *work)
+ 
+ 	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_PDMA_STOPPED);
+ 
++	mt7615_tx_token_put(dev);
++	idr_init(&dev->token);
++
+ 	if (mt7615_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
+ 		mt7615_dma_reset(dev);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 6a9f9187f76ac..5b06294d654aa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -619,7 +619,7 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			  struct mt76_tx_info *tx_info);
+ 
+ void mt7615_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue_entry *e);
+-
++void mt7615_tx_token_put(struct mt7615_dev *dev);
+ void mt7615_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 			 struct sk_buff *skb);
+ void mt7615_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
+index 06a0f8f7bc893..7b81aef3684ed 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
+@@ -153,9 +153,7 @@ int mt7615_register_device(struct mt7615_dev *dev)
+ 
+ void mt7615_unregister_device(struct mt7615_dev *dev)
+ {
+-	struct mt76_txwi_cache *txwi;
+ 	bool mcu_running;
+-	int id;
+ 
+ 	mcu_running = mt7615_wait_for_mcu_init(dev);
+ 
+@@ -165,15 +163,7 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
+ 		mt7615_mcu_exit(dev);
+ 	mt7615_dma_cleanup(dev);
+ 
+-	spin_lock_bh(&dev->token_lock);
+-	idr_for_each_entry(&dev->token, txwi, id) {
+-		mt7615_txp_skb_unmap(&dev->mt76, txwi);
+-		if (txwi->skb)
+-			dev_kfree_skb_any(txwi->skb);
+-		mt76_put_txwi(&dev->mt76, txwi);
+-	}
+-	spin_unlock_bh(&dev->token_lock);
+-	idr_destroy(&dev->token);
++	mt7615_tx_token_put(dev);
+ 
+ 	tasklet_disable(&dev->irq_tasklet);
  
 -- 
 2.27.0
