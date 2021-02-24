@@ -7,46 +7,43 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A473C433E9
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90317C43332
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:54:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4643164F75
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68DEB64F0C
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235245AbhBXMwx (ORCPT
+        id S233946AbhBXMxn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 07:52:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50354 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 07:53:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50150 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235152AbhBXMwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 07:52:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 063C864F06;
-        Wed, 24 Feb 2021 12:50:44 +0000 (UTC)
+        id S235195AbhBXMw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 07:52:27 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C09C64F0F;
+        Wed, 24 Feb 2021 12:50:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171046;
-        bh=eTYfnCxSmQMZPxjA9DkQiqxmEm/ZElvyZd5jBES6lSQ=;
+        s=k20201202; t=1614171060;
+        bh=IGfOMlUG53o63vW+euXyrD0sQKcMORJ1+ERPMlIBnAs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cOwic9UN4f120pdAtwr9IY21CYzIQSpcYRN7SNwjFkP1N5WKRqcNYb6HeEeMpctub
-         7qxJWZrfjPJCyN/yV4fWI5sg2ALIUbtkzP48gnAFHG4YEEoaXVh3C/N+ku6ysAzaIP
-         RHzamOZ+nx9wDjXU/VH8iW0udeIm6WgpxF/U1KIANU5Rvy4Pl/jibTEoMQ4I6A/EK/
-         qoiEw0GOT6YmOnoi4A0Sh1W73ae7YksOLouQO+ouIG2jaM79RIPeh+FxWlwjWUPTwG
-         LYrntQhqDsg0zu/egSI39YACYasOSVMOtt7natUkmbvW1hBUtcQlnO784Km0b6VeEo
-         jN2XjwCa9iWGg==
+        b=DeXft+YRLe2ZQhbrZ3qdb+nlHav9qseKLDKqRKdFyjjtSQBcYm8EHtuSiWJ4Gcg9F
+         iwMgE/38u3Kpz2TOi9TULxPxLdGQMPpv9tl3hNDYWRx5DaHe61zXJyGA0i0QT2agfJ
+         E5iiYyDjPiVVfSLSoh4adjuc9ACgkIFCNUP/mGV2nWb/lpSkZnZIF7xyxCnSLHC/q2
+         0W4ZFXclGyALbSDTxsM7q5KA2vlvNNUwA0jHrS6OFPOHQ1HSC+nqR0J9GOjM8tVni6
+         2X/yqOrx6JzXUN8gzkhfK8ofPIX/kt0MuSvV83cuF7ijMWTldux2amtty4x1RJqnUi
+         Ww7msh51eKCLw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Vsevolod Kozlov <zaba@mm.st>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 14/67] ath10k: fix wmi mgmt tx queue full due to race condition
-Date:   Wed, 24 Feb 2021 07:49:32 -0500
-Message-Id: <20210224125026.481804-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.11 24/67] wilc1000: Fix use of void pointer as a wrong struct type
+Date:   Wed, 24 Feb 2021 07:49:42 -0500
+Message-Id: <20210224125026.481804-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210224125026.481804-1-sashal@kernel.org>
 References: <20210224125026.481804-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -54,88 +51,113 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Vsevolod Kozlov <zaba@mm.st>
 
-[ Upstream commit b55379e343a3472c35f4a1245906db5158cab453 ]
+[ Upstream commit 6fe91b69ceceea832a73d35185df04b3e877f399 ]
 
-Failed to transmit wmi management frames:
+ac_classify() expects a struct sk_buff* as its second argument, which is
+a member of struct tx_complete_data. priv happens to be a pointer to
+struct tx_complete_data, so passing it directly to ac_classify() leads
+to wrong behaviour and occasional panics.
 
-[84977.840894] ath10k_snoc a000000.wifi: wmi mgmt tx queue is full
-[84977.840913] ath10k_snoc a000000.wifi: failed to transmit packet, dropping: -28
-[84977.840924] ath10k_snoc a000000.wifi: failed to submit frame: -28
-[84977.840932] ath10k_snoc a000000.wifi: failed to transmit frame: -28
+Since there is only one caller of wilc_wlan_txq_add_net_pkt and it
+already knows the type behind this pointer, and the structure is already
+in the header file, change the function signature to use the real type
+instead of void* in order to prevent confusion.
 
-This issue is caused by race condition between skb_dequeue and
-__skb_queue_tail. The queue of ‘wmi_mgmt_tx_queue’ is protected by a
-different lock: ar->data_lock vs list->lock, the result is no protection.
-So when ath10k_mgmt_over_wmi_tx_work() and ath10k_mac_tx_wmi_mgmt()
-running concurrently on different CPUs, there appear to be a rare corner
-cases when the queue length is 1,
-
-  CPUx (skb_deuque)			CPUy (__skb_queue_tail)
-					next=list
-					prev=list
-  struct sk_buff *skb = skb_peek(list);	WRITE_ONCE(newsk->next, next);
-  WRITE_ONCE(list->qlen, list->qlen - 1);WRITE_ONCE(newsk->prev, prev);
-  next       = skb->next;		WRITE_ONCE(next->prev, newsk);
-  prev       = skb->prev;		WRITE_ONCE(prev->next, newsk);
-  skb->next  = skb->prev = NULL;	list->qlen++;
-  WRITE_ONCE(next->prev, prev);
-  WRITE_ONCE(prev->next, next);
-
-If the instruction ‘next = skb->next’ is executed before
-‘WRITE_ONCE(prev->next, newsk)’, newsk will be lost, as CPUx get the
-old ‘next’ pointer, but the length is still added by one. The final
-result is the length of the queue will reach the maximum value but
-the queue is empty.
-
-So remove ar->data_lock, and use 'skb_queue_tail' instead of
-'__skb_queue_tail' to prevent the potential race condition. Also switch
-to use skb_queue_len_lockless, in case we queue a few SKBs simultaneously.
-
-Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.1.c2-00033-QCAHLSWMTPLZ-1
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Vsevolod Kozlov <zaba@mm.st>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1608618887-8857-1-git-send-email-miaoqing@codeaurora.org
+Link: https://lore.kernel.org/r/YCQomJ1mO5BLxYOT@Vsevolods-Mini.lan
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/netdev.c |  2 +-
+ drivers/net/wireless/microchip/wilc1000/wlan.c   | 15 ++++++++-------
+ drivers/net/wireless/microchip/wilc1000/wlan.h   |  3 ++-
+ 3 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7d98250380ec5..91b1006ef2a27 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3763,23 +3763,16 @@ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
- static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct sk_buff_head *q = &ar->wmi_mgmt_tx_queue;
--	int ret = 0;
--
--	spin_lock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
+index 2a1fbbdd6a4bd..0c188310919e1 100644
+--- a/drivers/net/wireless/microchip/wilc1000/netdev.c
++++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
+@@ -737,7 +737,7 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
  
--	if (skb_queue_len(q) == ATH10K_MAX_NUM_MGMT_PENDING) {
-+	if (skb_queue_len_lockless(q) >= ATH10K_MAX_NUM_MGMT_PENDING) {
- 		ath10k_warn(ar, "wmi mgmt tx queue is full\n");
--		ret = -ENOSPC;
--		goto unlock;
-+		return -ENOSPC;
- 	}
+ 	vif->netstats.tx_packets++;
+ 	vif->netstats.tx_bytes += tx_data->size;
+-	queue_count = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
++	queue_count = wilc_wlan_txq_add_net_pkt(ndev, tx_data,
+ 						tx_data->buff, tx_data->size,
+ 						wilc_tx_complete);
  
--	__skb_queue_tail(q, skb);
-+	skb_queue_tail(q, skb);
- 	ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
- 
--unlock:
--	spin_unlock_bh(&ar->data_lock);
--
--	return ret;
-+	return 0;
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
+index c12f27be9f790..31d51385ba934 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.c
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -408,7 +408,8 @@ static inline u8 ac_change(struct wilc *wilc, u8 *ac)
+ 	return 1;
  }
  
- static enum ath10k_mac_tx_path
+-int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev,
++			      struct tx_complete_data *tx_data, u8 *buffer,
+ 			      u32 buffer_size,
+ 			      void (*tx_complete_fn)(void *, int))
+ {
+@@ -420,27 +421,27 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	wilc = vif->wilc;
+ 
+ 	if (wilc->quit) {
+-		tx_complete_fn(priv, 0);
++		tx_complete_fn(tx_data, 0);
+ 		return 0;
+ 	}
+ 
+ 	tqe = kmalloc(sizeof(*tqe), GFP_ATOMIC);
+ 
+ 	if (!tqe) {
+-		tx_complete_fn(priv, 0);
++		tx_complete_fn(tx_data, 0);
+ 		return 0;
+ 	}
+ 	tqe->type = WILC_NET_PKT;
+ 	tqe->buffer = buffer;
+ 	tqe->buffer_size = buffer_size;
+ 	tqe->tx_complete_func = tx_complete_fn;
+-	tqe->priv = priv;
++	tqe->priv = tx_data;
+ 	tqe->vif = vif;
+ 
+-	q_num = ac_classify(wilc, priv);
++	q_num = ac_classify(wilc, tx_data->skb);
+ 	tqe->q_num = q_num;
+ 	if (ac_change(wilc, &q_num)) {
+-		tx_complete_fn(priv, 0);
++		tx_complete_fn(tx_data, 0);
+ 		kfree(tqe);
+ 		return 0;
+ 	}
+@@ -451,7 +452,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			tcp_process(dev, tqe);
+ 		wilc_wlan_txq_add_to_tail(dev, q_num, tqe);
+ 	} else {
+-		tx_complete_fn(priv, 0);
++		tx_complete_fn(tx_data, 0);
+ 		kfree(tqe);
+ 	}
+ 
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/wireless/microchip/wilc1000/wlan.h
+index 3d2104f198192..d55eb6b3a12a9 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.h
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
+@@ -399,7 +399,8 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
+ 				u32 buffer_size);
+ int wilc_wlan_start(struct wilc *wilc);
+ int wilc_wlan_stop(struct wilc *wilc, struct wilc_vif *vif);
+-int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev,
++			      struct tx_complete_data *tx_data, u8 *buffer,
+ 			      u32 buffer_size,
+ 			      void (*tx_complete_fn)(void *, int));
+ int wilc_wlan_handle_txq(struct wilc *wl, u32 *txq_count);
 -- 
 2.27.0
 
