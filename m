@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FDB8C43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB4E1C43333
 	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20A83601FB
+	by mail.kernel.org (Postfix) with ESMTP id A2851601FB
 	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237503AbhBXNlZ (ORCPT
+        id S237521AbhBXNl2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 08:41:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59338 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 08:41:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59886 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236095AbhBXNOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 08:14:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 22F7C64F89;
-        Wed, 24 Feb 2021 12:55:45 +0000 (UTC)
+        id S236147AbhBXNOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 08:14:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B273364FB6;
+        Wed, 24 Feb 2021 12:56:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171346;
-        bh=AvGxEQlVkaVhXy7B8PM+q06lMRckKr6YOe0wPY0rFtE=;
+        s=k20201202; t=1614171365;
+        bh=of0eepdm9+FrDbYkKna2bsliE9Iew0nBgP0xTP6hu1o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cQkjrmDDJW+/B/1kbaRYOS1aNC9luceFgVpliVVcd6Sh8xczxFwvMF5E4Z0eDMhYo
-         5ebE+IKjiBsIvn9SGfMVIcxbz8NJ7ce92gxgIEYPouOJjhgGlzvSxmBC+VeGIottD7
-         1s1RfMekTb1Il/PLhn5rxdvgyxYPw+Ch1Ji8e4PwSrWSfwb7soAQjnTSsoyk77pFJa
-         v4kmo+jKS4XpmDxEn2cz4HcQ672df/NkOcDi78E9NwQSOjYAQ51F5RJwfImC0nSOSN
-         ZRMjBBOgRKnuZw7KKOCBytqTnkhP0dj+HjIPsnvdy6C+d7lyB5pz/8Zrix7qyjnJEo
-         QG/RJuUuPY0qA==
+        b=H6h5QQgG5W3mJ2A2KLJGoOm7ggfLa7D31xOHbHsbRFO7WDdgMMPrx0GwvuRxY9VJn
+         146MOu5KP+Wgb9EbaFJCRoixXyhbLsZjF+/Ji4R3ORlpoernBnmspKJETTuB9Rl/IL
+         VZbR9f3dkRGojxpeFyIZ8PrMouCzDfYc6gNI51a9R2M4fJ8FKzMBSky0vwawRAhU9U
+         dMHYuQXnf4/6jKKXCax/wya8TGl0lJjWWx5w1DTg4O+qE5qhWzn0KVnpaO/cRLHbwf
+         9i1wCZV5yq+IslxcxfCpqZyKVPwW/6ksqmm8lTt47yMco5SGg5qrPKsUomatLpqbhN
+         QcZtr/I72B3/w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tony Lindgren <tony@atomide.com>, Raz Bouganim <r-bouganim@ti.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 04/12] wlcore: Fix command execute failure 19 for wl12xx
-Date:   Wed, 24 Feb 2021 07:55:32 -0500
-Message-Id: <20210224125540.484221-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 04/11] wlcore: Fix command execute failure 19 for wl12xx
+Date:   Wed, 24 Feb 2021 07:55:52 -0500
+Message-Id: <20210224125600.484437-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210224125540.484221-1-sashal@kernel.org>
-References: <20210224125540.484221-1-sashal@kernel.org>
+In-Reply-To: <20210224125600.484437-1-sashal@kernel.org>
+References: <20210224125600.484437-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -103,10 +103,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 1 insertion(+), 20 deletions(-)
 
 diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 22009e14a8fc1..9bd635ec7827b 100644
+index af0fe2e171510..e4b28d37046aa 100644
 --- a/drivers/net/wireless/ti/wl12xx/main.c
 +++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -648,7 +648,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+@@ -647,7 +647,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
  		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
  			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
  			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
@@ -114,7 +114,7 @@ index 22009e14a8fc1..9bd635ec7827b 100644
  			      WLCORE_QUIRK_AP_ZERO_SESSION_ID;
  		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
  		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-@@ -672,7 +671,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+@@ -671,7 +670,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
  		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
  			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
  			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
@@ -122,7 +122,7 @@ index 22009e14a8fc1..9bd635ec7827b 100644
  			      WLCORE_QUIRK_AP_ZERO_SESSION_ID;
  		wl->plt_fw_name = WL127X_PLT_FW_NAME;
  		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
-@@ -701,7 +699,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+@@ -700,7 +698,6 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
  		wl->quirks |= WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
  			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
  			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
@@ -131,10 +131,10 @@ index 22009e14a8fc1..9bd635ec7827b 100644
  
  		wlcore_set_min_fw_ver(wl, WL128X_CHIP_VER,
 diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 17d32ce5d16b6..a973dac456be4 100644
+index cc10b72607c69..3f61289ce036e 100644
 --- a/drivers/net/wireless/ti/wlcore/main.c
 +++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2833,21 +2833,8 @@ static int wlcore_join(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+@@ -2889,21 +2889,8 @@ static int wlcore_join(struct wl1271 *wl, struct wl12xx_vif *wlvif)
  
  	if (is_ibss)
  		ret = wl12xx_cmd_role_start_ibss(wl, wlvif);
@@ -158,10 +158,10 @@ index 17d32ce5d16b6..a973dac456be4 100644
  	return ret;
  }
 diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 1827546ba8075..34f0ba17fac92 100644
+index 906be6aa4eb6f..a0647d4384d2b 100644
 --- a/drivers/net/wireless/ti/wlcore/wlcore.h
 +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -557,9 +557,6 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
+@@ -556,9 +556,6 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
  /* Each RX/TX transaction requires an end-of-transaction transfer */
  #define WLCORE_QUIRK_END_OF_TRANSACTION		BIT(0)
  
