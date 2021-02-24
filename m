@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D243C43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1766CC4332B
 	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15477601FB
+	by mail.kernel.org (Postfix) with ESMTP id E58AB64ED4
 	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237393AbhBXNjl (ORCPT
+        id S237432AbhBXNk2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 08:39:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55588 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 08:40:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58410 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235539AbhBXM6l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 07:58:41 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A881364F07;
-        Wed, 24 Feb 2021 12:52:34 +0000 (UTC)
+        id S235677AbhBXNEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 08:04:36 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C51D64F73;
+        Wed, 24 Feb 2021 12:53:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171155;
+        s=k20201202; t=1614171237;
         bh=wSLg7UG1E0Bc3+E/7Mg/ToevwJcWlTFMn4NDpoHxxEA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ONxmHmtsN9ATilgrX9mhjCiQo3eMI0nrBPDCwto5CvIiOw8tN5c2DAuAFoAuwS/DZ
-         2fPbmZZi0vjQkKdZJrNAyIN4IZaqk2JXrrTe24h+/k0cif3V/+HcHk/KxbfZWp9hh8
-         fCv5wTEo+1adHmT8b3m26l+SGqBR46OWkqsFuZmwCU/ROwTbYNrQBVGvPXNV2OIo17
-         piDFrhc89YMP2CwN6Ecyrfu6TZdx7I4NTfRJT9AcjaNibJTA03e4hh7fxjnKa4hlV2
-         lv+OZFE3NiWALgAkPBYxRqa3+pN0WmrmaoHEI7JnzUx+Gu40782bI2nUoprPbk+Rbt
-         pPP3ZT10ZjA6g==
+        b=moBb/ffVIQ2UuTYTiGOeE8WlHHnOEa91fW7h8oBBsFLCH044w8MTn5GE46J5MCWK+
+         WCX+iA6u+z8jBAPjkxU1Yy+TMrtY4SF+QPqE3LsJPSsa7WXvXGT45XHatldCZ2YWKx
+         0z1A7wjEwa6xQug6rGlr9u4TdH0osvwA9ERkwp/QnCrG5XZY7uJ4C1U/sfsemTxlMs
+         VaY2IeazTgr/jnDmcvKqkzGeR6kz1GFvtOwQz8uCQ1CBSWTjo2HG1q1I1PvflrcaOW
+         w75LyHNZLcGSxRT0E0Iu5nKmLAeYwTS/n/qs1Z8DHBwbDQc7iZbn61iT5WqeQj1vNw
+         7AxOFkCdXI08g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hans de Goede <hdegoede@redhat.com>,
@@ -40,12 +40,12 @@ Cc:     Hans de Goede <hdegoede@redhat.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 17/56] brcmfmac: Add DMI nvram filename quirk for Predia Basic tablet
-Date:   Wed, 24 Feb 2021 07:51:33 -0500
-Message-Id: <20210224125212.482485-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 12/40] brcmfmac: Add DMI nvram filename quirk for Predia Basic tablet
+Date:   Wed, 24 Feb 2021 07:53:12 -0500
+Message-Id: <20210224125340.483162-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210224125212.482485-1-sashal@kernel.org>
-References: <20210224125212.482485-1-sashal@kernel.org>
+In-Reply-To: <20210224125340.483162-1-sashal@kernel.org>
+References: <20210224125340.483162-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
