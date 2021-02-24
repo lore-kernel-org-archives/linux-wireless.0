@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF0CC4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25630C433E0
 	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 468B164EEC
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEA4B64E90
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 13:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237511AbhBXNl1 (ORCPT
+        id S237484AbhBXNlQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 08:41:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59904 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 08:41:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234663AbhBXNOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 08:14:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4CA1C64FBB;
-        Wed, 24 Feb 2021 12:56:07 +0000 (UTC)
+        id S236094AbhBXNOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 08:14:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A801764F70;
+        Wed, 24 Feb 2021 12:55:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171368;
-        bh=nxlM2Mb20XDKoSVuF4P+ZrVBhgICX7u2M73ee0gDt7Y=;
+        s=k20201202; t=1614171348;
+        bh=QU7yexYfUTRLPEatwVmCU0ySXJmlqXH1VLn2wY+/vtw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d6F1kF9WLHSSfVTERgRZakLLrE+76IVE6TSPcUpxjd1XM6Be/H5oz7Cw7tRpoKOiD
-         2ENOQvzNKEwh2HKz84Mp2UNW6Q9eaLRL1QjrYqzVZvZSxUh0Xe8W/oYiIg1bQapMgK
-         DqtXQwPn7ap0z0razaqZTzVl2nRAZbj7iMPNc9burqYXtWj5QcNb0HswPhrm5p9o3g
-         PPiB+d8mrqXacb2rttpNGLzbpGh4rgxcwOzY3RAJBMd/FMLtlIrvgikluJppAZxaUo
-         TEvrY8Z+CKkEdN1SuYo0IxKgoeZA7Y7GKF/RuzrDIkD5iEjMKHSHfcoUKCbHYMXh62
-         7rHUXzIQWZ8Qw==
+        b=C8O/rzWEz4cWfJKrKKInFNTwtjZHTVZhXTKqvCAj08lVlSg3GxObnO28tmD+qDY4C
+         dPg/6JqVmNGkaCu2Asa7dxEfsS3eLaDBS5SPD4TtexeTt1gcDV0QItgfXtuzyI+n94
+         2wTvuh/Mya/0IDzUWa34IdQIMg32hc2cA/xJZ8RjxA9pQzH8vo6PTpGvBXx+wqHnB0
+         Yqrhxi+4j/LPEDp4C61VzFDHn3S6HNjnn8YQxTdUJy9uMAoCFmaSBQqJlhsuJJQTFK
+         lLAVdn1TLmjLct63sT0xpKFNRXTHlyjO/qnExDdUYtlh8NUf5m6fs+bsO0T4mBhI3W
+         63LYfLa6ip+rg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
@@ -39,12 +39,12 @@ Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 06/11] ath10k: fix wmi mgmt tx queue full due to race condition
-Date:   Wed, 24 Feb 2021 07:55:54 -0500
-Message-Id: <20210224125600.484437-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 06/12] ath10k: fix wmi mgmt tx queue full due to race condition
+Date:   Wed, 24 Feb 2021 07:55:34 -0500
+Message-Id: <20210224125540.484221-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210224125600.484437-1-sashal@kernel.org>
-References: <20210224125600.484437-1-sashal@kernel.org>
+In-Reply-To: <20210224125540.484221-1-sashal@kernel.org>
+References: <20210224125540.484221-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -105,10 +105,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7fbf2abcfc433..5fad38c3feb14 100644
+index 8b3fe88d1c4e7..564181bb0906a 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3336,23 +3336,16 @@ static bool ath10k_mac_need_offchan_tx_work(struct ath10k *ar)
+@@ -3452,23 +3452,16 @@ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
  static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
  {
  	struct sk_buff_head *q = &ar->wmi_mgmt_tx_queue;
@@ -135,7 +135,7 @@ index 7fbf2abcfc433..5fad38c3feb14 100644
 +	return 0;
  }
  
- static void ath10k_mac_tx(struct ath10k *ar, struct sk_buff *skb)
+ static enum ath10k_mac_tx_path
 -- 
 2.27.0
 
