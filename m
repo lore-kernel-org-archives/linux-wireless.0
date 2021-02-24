@@ -5,43 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9804BC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBCCC433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5831F64F64
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9821264F7B
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Feb 2021 12:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235209AbhBXMwh (ORCPT
+        id S235062AbhBXMxW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Feb 2021 07:52:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50300 "EHLO mail.kernel.org"
+        Wed, 24 Feb 2021 07:53:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50206 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235141AbhBXMwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Feb 2021 07:52:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4E5E064EFA;
-        Wed, 24 Feb 2021 12:50:42 +0000 (UTC)
+        id S234713AbhBXMwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Feb 2021 07:52:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 55DF164F08;
+        Wed, 24 Feb 2021 12:50:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614171043;
-        bh=lG4dW/Kb16R2gTyTICsfrJS0bX4rk3qCMqTnpSbk0yQ=;
+        s=k20201202; t=1614171057;
+        bh=wSLg7UG1E0Bc3+E/7Mg/ToevwJcWlTFMn4NDpoHxxEA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ExjdMgrDt83aU8V1+ggq5LJw8Dpm09qcZ1CdyqMeTpuLVVAmotnqR02tIYMLrLRyp
-         o7fIDxLPns8UAncRiE2f4MFkRtfWIjnjeBpPYZt9bWoqe5/Y2BLKX/jdBTtAgwFzmv
-         eOxsqiuVqrYEEAMi26InaK7KIYVN/zBufN0dO1t7NHkVSsR1LGjYffmp30tlSWuk/4
-         56aZdETQmkKyVIbwszUJQc2gku/watJ6GaqNexFGQzYkTm2PvWTiGJZOx0Cw6elsT9
-         5ZmETNB0/NxzjDJfGaPkop0rMFjFbt3RhV0NRGWfBAKnYwt0arCafeFSLpGAyimi0j
-         73DCZgvgkI47Q==
+        b=r2ia6iCCDWfRKpGroGjbfaRr8YYC2ilUzShMOhQ4bbpi5gD+LDAHXrcOxqtIhNDP/
+         vMPdKqJpoxLNhCm6RDk8mrTDBL9QnuQq8vc1gOkMGS5ojhy099Rj2mtGcWlJ1qBSIk
+         bgwCz7ThcE1oInRneynUpfT3wKuiS6nVw8pNIoxvKqa7lQX7beFPz9gCmxA9jHAdFF
+         x+XeQNkTKxyR3ICriPssnyzDuWQFpj2JuKJpcwCxvWL4l3c8Ufzv9U6wy7XCqQt1BF
+         lO4X+PGzUjpqeNNkLotJpxxw1jmnLrisjEupbL4UmIRnR+bDp3JrGtXf7iUsaYmCc1
+         IxDjogblD8O8g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.11 12/67] mt76: mt7615: reset token when mac_reset happens
-Date:   Wed, 24 Feb 2021 07:49:30 -0500
-Message-Id: <20210224125026.481804-12-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 22/67] brcmfmac: Add DMI nvram filename quirk for Predia Basic tablet
+Date:   Wed, 24 Feb 2021 07:49:40 -0500
+Message-Id: <20210224125026.481804-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210224125026.481804-1-sashal@kernel.org>
 References: <20210224125026.481804-1-sashal@kernel.org>
@@ -53,102 +54,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+From: Hans de Goede <hdegoede@redhat.com>
 
-[ Upstream commit a6275e934605646ef81b02d8d1164f21343149c9 ]
+[ Upstream commit af4b3a6f36d6c2fc5fca026bccf45e0fdcabddd9 ]
 
-Reset token in mt7615_mac_reset_work() to avoid possible leakege.
+The Predia Basic tablet contains quite generic names in the sys_vendor and
+product_name DMI strings, without this patch brcmfmac will try to load:
+brcmfmac43340-sdio.Insyde-CherryTrail.txt as nvram file which is a bit
+too generic.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Add a DMI quirk so that a unique and clearly identifiable nvram file name
+is used on the Predia Basic tablet.
+
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210129171413.139880-1-hdegoede@redhat.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 20 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
- .../wireless/mediatek/mt76/mt7615/pci_init.c  | 12 +----------
- 3 files changed, 22 insertions(+), 12 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/dmi.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 0f360be0b8851..fb10a6497ed05 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -2058,6 +2058,23 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
- }
- EXPORT_SYMBOL_GPL(mt7615_dma_reset);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
+index 4aa2561934d77..824a79f243830 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
+@@ -40,6 +40,10 @@ static const struct brcmf_dmi_data pov_tab_p1006w_data = {
+ 	BRCM_CC_43340_CHIP_ID, 2, "pov-tab-p1006w-data"
+ };
  
-+void mt7615_tx_token_put(struct mt7615_dev *dev)
-+{
-+	struct mt76_txwi_cache *txwi;
-+	int id;
++static const struct brcmf_dmi_data predia_basic_data = {
++	BRCM_CC_43341_CHIP_ID, 2, "predia-basic"
++};
 +
-+	spin_lock_bh(&dev->token_lock);
-+	idr_for_each_entry(&dev->token, txwi, id) {
-+		mt7615_txp_skb_unmap(&dev->mt76, txwi);
-+		if (txwi->skb)
-+			dev_kfree_skb_any(txwi->skb);
-+		mt76_put_txwi(&dev->mt76, txwi);
-+	}
-+	spin_unlock_bh(&dev->token_lock);
-+	idr_destroy(&dev->token);
-+}
-+EXPORT_SYMBOL_GPL(mt7615_tx_token_put);
-+
- void mt7615_mac_reset_work(struct work_struct *work)
- {
- 	struct mt7615_phy *phy2;
-@@ -2101,6 +2118,9 @@ void mt7615_mac_reset_work(struct work_struct *work)
- 
- 	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_PDMA_STOPPED);
- 
-+	mt7615_tx_token_put(dev);
-+	idr_init(&dev->token);
-+
- 	if (mt7615_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
- 		mt7615_dma_reset(dev);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 99b8abdbb08f7..d697ff2ea56e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -583,7 +583,7 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 			  struct mt76_tx_info *tx_info);
- 
- void mt7615_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue_entry *e);
--
-+void mt7615_tx_token_put(struct mt7615_dev *dev);
- void mt7615_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- 			 struct sk_buff *skb);
- void mt7615_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-index 27fcb1374685b..58a0ec1bf8d7b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-@@ -160,9 +160,7 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 
- void mt7615_unregister_device(struct mt7615_dev *dev)
- {
--	struct mt76_txwi_cache *txwi;
- 	bool mcu_running;
--	int id;
- 
- 	mcu_running = mt7615_wait_for_mcu_init(dev);
- 
-@@ -172,15 +170,7 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
- 		mt7615_mcu_exit(dev);
- 	mt7615_dma_cleanup(dev);
- 
--	spin_lock_bh(&dev->token_lock);
--	idr_for_each_entry(&dev->token, txwi, id) {
--		mt7615_txp_skb_unmap(&dev->mt76, txwi);
--		if (txwi->skb)
--			dev_kfree_skb_any(txwi->skb);
--		mt76_put_txwi(&dev->mt76, txwi);
--	}
--	spin_unlock_bh(&dev->token_lock);
--	idr_destroy(&dev->token);
-+	mt7615_tx_token_put(dev);
- 
- 	tasklet_disable(&dev->irq_tasklet);
+ static const struct dmi_system_id dmi_platform_data[] = {
+ 	{
+ 		/* ACEPC T8 Cherry Trail Z8350 mini PC */
+@@ -111,6 +115,16 @@ static const struct dmi_system_id dmi_platform_data[] = {
+ 		},
+ 		.driver_data = (void *)&pov_tab_p1006w_data,
+ 	},
++	{
++		/* Predia Basic tablet (+ with keyboard dock) */
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Insyde"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "CherryTrail"),
++			/* Mx.WT107.KUBNGEA02 with the version-nr dropped */
++			DMI_MATCH(DMI_BIOS_VERSION, "Mx.WT107.KUBNGEA"),
++		},
++		.driver_data = (void *)&predia_basic_data,
++	},
+ 	{}
+ };
  
 -- 
 2.27.0
