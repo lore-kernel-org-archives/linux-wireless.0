@@ -2,118 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A321C433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 11:20:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B633C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:33:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDC3364DF3
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 11:20:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14BDE64F16
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:33:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234851AbhBYLUe (ORCPT
+        id S231787AbhBYOdZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Feb 2021 06:20:34 -0500
-Received: from m12-15.163.com ([220.181.12.15]:33128 "EHLO m12-15.163.com"
+        Thu, 25 Feb 2021 09:33:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56182 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234641AbhBYLU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Feb 2021 06:20:29 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=+rDCj
-        q0m6hwtvTdNVQgL34+Esctp41E0VVnWVS4CZW8=; b=YSdoLxhABbZsTLPMs+meL
-        X6jBw4idCdgl4dqLe7J8PlKUYBmZ+M+ea7xWfQSc2GjtucfGetkWOPCUDPrxct9x
-        ikWYv+ioyikSaJihmeTVxrq/EjHcYBnFR+8rDlSQLnI5FVj+2YXKdq45W0YSCNm6
-        uUJINkxydrujL3lC8LwR68=
-Received: from localhost (unknown [119.137.54.222])
-        by smtp11 (Coremail) with SMTP id D8CowAD3_BBjezdgLaOFCw--.77S2;
-        Thu, 25 Feb 2021 18:26:48 +0800 (CST)
-Date:   Thu, 25 Feb 2021 18:26:42 +0800
-From:   wengjianfeng <samirweng1979@163.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     kernel test robot <lkp@intel.com>, imitsyanko@quantenna.com,
-        geomatsi@gmail.com, davem@davemloft.net, kuba@kernel.org,
-        colin.king@canonical.com, kbuild-all@lists.01.org,
-        clang-built-linux@googlegroups.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wengjianfeng <wengjianfeng@yulong.com>
-Subject: Re: [PATCH] qtnfmac: remove meaningless goto statement and labels
-Message-ID: <20210225182642.00002519@163.com>
-In-Reply-To: <875z2gfnup.fsf@codeaurora.org>
-References: <20210225064842.36952-1-samirweng1979@163.com>
-        <202102251757.V6qESTrL-lkp@intel.com>
-        <875z2gfnup.fsf@codeaurora.org>
-Organization: yulong
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S231248AbhBYOdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Feb 2021 09:33:23 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3605F64EC3;
+        Thu, 25 Feb 2021 14:32:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614263563;
+        bh=TF7d3kZU11RlL3LhvGBRVe0/IJ+uPtdyR01vC/FT4Yg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=KtBrUgSQUgZ9+zFzuHDlo3UHDZmV/rN8FadNXWDIO+eYlzXbRQqgbu+KFui3yY474
+         wrXr/3tUOoJZJVxpxouz9P4cZRjii26iJPqahoUxMfzrySTxknbIeFkGB80uJNF4wf
+         8NCfZkOxKBeOcURlHmgnG1Z5cUSfJTY/cRQguGGz7kk97Y/DoFddKhAKKeWtpdme0q
+         n0dU9PQAElNgHPcrT2H+iaGtT2I6/9c3DI+7IL4+Nt1cMQhZTaq1dq6O6ByjJmZS+W
+         6UpQPJdQYyh+TZQSqZoUi+9cVHZJoMGDN92Kk8qps9LFcAI+brgjxHxKfF6fitFNfl
+         LnJWxlYZvHLxw==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Ihab Zhaika <ihab.zhaika@intel.com>,
+        Matti Gottlieb <matti.gottlieb@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlwifi: fix link error without CONFIG_IWLMVM
+Date:   Thu, 25 Feb 2021 15:30:37 +0100
+Message-Id: <20210225143236.3543360-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: D8CowAD3_BBjezdgLaOFCw--.77S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WrykJF1UGFWDKrWfWFW5GFg_yoW8KF47p3
-        y8Xa15Ka18X3y8AFZ7Kay8ZayFqws5Jr9rGas8Jw1rZa42vr1xtrn2grW5X3srWrs7CFW3
-        ArWUX3sYg3ZxAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jbKsUUUUUU=
-X-Originating-IP: [119.137.54.222]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiRQlEsVl91SaGtgAAse
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 25 Feb 2021 12:22:54 +0200
-Kalle Valo <kvalo@codeaurora.org> wrote:
+From: Arnd Bergmann <arnd@arndb.de>
 
-> kernel test robot <lkp@intel.com> writes:
-> 
-> > Hi samirweng1979,
-> >
-> > Thank you for the patch! Yet something to improve:
-> >
-> > [auto build test ERROR on wireless-drivers-next/master]
-> > [also build test ERROR on wireless-drivers/master sparc-next/master
-> > v5.11 next-20210225] [If your patch is applied to the wrong git
-> > tree, kindly drop us a note. And when submitting patch, we suggest
-> > to use '--base' as documented in
-> > https://git-scm.com/docs/git-format-patch]
-> >
-> > url:
-> > https://github.com/0day-ci/linux/commits/samirweng1979/qtnfmac-remove-meaningless-goto-statement-and-labels/20210225-145714
-> > base:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
-> > master config: x86_64-randconfig-a001-20210225 (attached
-> > as .config) compiler: clang version 13.0.0
-> > (https://github.com/llvm/llvm-project
-> > a921aaf789912d981cbb2036bdc91ad7289e1523) reproduce (this is a W=1
-> > build): wget
-> > https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross
-> > -O ~/bin/make.cross chmod +x ~/bin/make.cross # install x86_64
-> > cross compiling tool for clang build # apt-get install
-> > binutils-x86-64-linux-gnu #
-> > https://github.com/0day-ci/linux/commit/d18bea1fd25dee219ae56343ff9caf9cb6eb1519
-> > git remote add linux-review https://github.com/0day-ci/linux git
-> > fetch --no-tags linux-review
-> > samirweng1979/qtnfmac-remove-meaningless-goto-statement-and-labels/20210225-145714
-> > git checkout d18bea1fd25dee219ae56343ff9caf9cb6eb1519 # save the
-> > attached .config to linux build tree
-> > COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross
-> > ARCH=x86_64 
-> >
-> > If you fix the issue, kindly add following tag as appropriate
-> > Reported-by: kernel test robot <lkp@intel.com>
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> >>> drivers/net/wireless/quantenna/qtnfmac/commands.c:1901:8: error:
-> >>> use of undeclared label 'out'
-> >                    goto out;
-> 
-> Do you compile test your patches? This error implies that not.
-> Compilation test is a hard requirement for patches.
-> 
+A runtime check that was introduced recently failed to
+check for the matching Kconfig symbol:
 
-Hikvalo,
-  I'm sorry for make this mistake, and I will compile success before
-  send patch later. thanks.
+ld.lld: error: undefined symbol: iwl_so_trans_cfg
+>>> referenced by drv.c
+>>>               net/wireless/intel/iwlwifi/pcie/drv.o:(iwl_pci_probe)
 
+Fixes: 930be4e76f26 ("iwlwifi: add support for SnJ with Jf devices")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 314fec4a89ad..a2f5c4fc2324 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1113,7 +1113,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 * here.  But if we detect that the MAC type is actually SnJ,
+ 	 * we should switch to it here to avoid problems later.
+ 	 */
+-	if (CSR_HW_REV_TYPE(iwl_trans->hw_rev) == IWL_CFG_MAC_TYPE_SNJ)
++	if (IS_ENABLED(CONFIG_IWLMVM) &&
++	    CSR_HW_REV_TYPE(iwl_trans->hw_rev) == IWL_CFG_MAC_TYPE_SNJ)
+ 		iwl_trans->trans_cfg = &iwl_so_trans_cfg;
+ 
+ #if IS_ENABLED(CONFIG_IWLMVM)
+-- 
+2.29.2
 
