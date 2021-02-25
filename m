@@ -2,290 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E416FC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB34C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:56:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8610264ED3
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22C4E64EDC
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbhBYGxF (ORCPT
+        id S232982AbhBYG4m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Feb 2021 01:53:05 -0500
-Received: from m12-16.163.com ([220.181.12.16]:53234 "EHLO m12-16.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229561AbhBYGxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Feb 2021 01:53:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=KJ87GDorKAbnOFbMVg
-        2BY4VDOg0JBKdJF+HgB8fHkuY=; b=VjEY4fGLMF5zqskoNG0B9vq7HmUrxofEtt
-        J809Mnr7Isv0o5dF/SGXdDoV3O4IY0ph0/ZnEOkKpVEMVz6r4yT5D0DAvAzu4gUr
-        QgLDpfWy6e3KeCkmZxhdI32j6XiIxpm/s4hHFnxzG3l3ieGuY2vjbrXiponWQcvv
-        wsu/H/BIQ=
-Received: from wengjianfeng.ccdomain.com (unknown [218.17.89.92])
-        by smtp12 (Coremail) with SMTP id EMCowAA3PytMSDdgynBxdg--.3200S2;
-        Thu, 25 Feb 2021 14:48:46 +0800 (CST)
-From:   samirweng1979 <samirweng1979@163.com>
-To:     imitsyanko@quantenna.com, geomatsi@gmail.com, kvalo@codeaurora.org,
-        davem@davemloft.net, kuba@kernel.org, colin.king@canonical.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        wengjianfeng <wengjianfeng@yulong.com>
-Subject: [PATCH] qtnfmac: remove meaningless goto statement and labels
-Date:   Thu, 25 Feb 2021 14:48:42 +0800
-Message-Id: <20210225064842.36952-1-samirweng1979@163.com>
-X-Mailer: git-send-email 2.15.0.windows.1
-X-CM-TRANSID: EMCowAA3PytMSDdgynBxdg--.3200S2
-X-Coremail-Antispam: 1Uf129KBjvfXoWkWrWrtF17GF1UCF17p5X_AFyUtoZ3Zas8J3
-        y8GryUta4xKF4FgFyjyw1kCw43K3yUKrZ0kF4DGF1UWw1UJ3Z8WayFga4S9r45Jryxt34x
-        JayqgFsxn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3AaLaJ3Ub
-        IYCTnIWIevJa73UjIFyTuYvjxUDUUUUUUUU
-X-Originating-IP: [218.17.89.92]
-X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiqg5EsVr7sN-ifgAAsD
+        Thu, 25 Feb 2021 01:56:42 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:36820 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232429AbhBYG4k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Feb 2021 01:56:40 -0500
+X-UUID: cd16b42e45084b0396e63f7a149c83bc-20210225
+X-UUID: cd16b42e45084b0396e63f7a149c83bc-20210225
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1416992479; Thu, 25 Feb 2021 14:55:51 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 25 Feb 2021 14:55:50 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 25 Feb 2021 14:55:50 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7615: add missing capabilities for DBDC
+Date:   Thu, 25 Feb 2021 14:55:48 +0800
+Message-ID: <6db470fc868e6215f969690ce04d50a595d7fe4c.1614235992.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <fe9afbb21ade32aac31f077bb1e741f917bd4596.1614235992.git.ryder.lee@mediatek.com>
+References: <fe9afbb21ade32aac31f077bb1e741f917bd4596.1614235992.git.ryder.lee@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-SNTS-SMTP: B9272D57C3D5D59240B9C754354933433CC29B38BD304882B8575962BEFA927B2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: wengjianfeng <wengjianfeng@yulong.com>
+Same as mt7915, this should improve performance.
 
-some function's label meaningless, the label statement follows
-the goto statement, no other statements, so just remove it.
-
-Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 68 -----------------------
- 1 file changed, 68 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/init.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index f3ccbd2..842bf03 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -379,10 +379,6 @@ int qtnf_cmd_send_stop_ap(struct qtnf_vif *vif)
- 
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -407,10 +403,7 @@ int qtnf_cmd_send_register_mgmt(struct qtnf_vif *vif, u16 frame_type, bool reg)
- 	cmd->do_register = reg;
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -446,10 +439,7 @@ int qtnf_cmd_send_frame(struct qtnf_vif *vif, u32 cookie, u16 flags,
- 		qtnf_cmd_skb_put_buffer(cmd_skb, buf, len);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -477,10 +467,6 @@ int qtnf_cmd_send_mgmt_set_appie(struct qtnf_vif *vif, u8 frame_type,
- 
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1677,10 +1663,7 @@ int qtnf_cmd_send_update_phy_params(struct qtnf_wmac *mac, u32 changed)
- 					 wiphy->retry_short);
- 
- 	ret = qtnf_cmd_send(mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(mac->bus);
- 
- 	return ret;
-@@ -1772,10 +1755,7 @@ int qtnf_cmd_send_add_key(struct qtnf_vif *vif, u8 key_index, bool pairwise,
- 					 params->seq_len);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1807,10 +1787,7 @@ int qtnf_cmd_send_del_key(struct qtnf_vif *vif, u8 key_index, bool pairwise,
- 	cmd->pairwise = pairwise;
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1837,10 +1814,7 @@ int qtnf_cmd_send_set_default_key(struct qtnf_vif *vif, u8 key_index,
- 	cmd->multicast = multicast;
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1864,10 +1838,7 @@ int qtnf_cmd_send_set_default_mgmt_key(struct qtnf_vif *vif, u8 key_index)
- 	cmd->key_index = key_index;
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1931,10 +1902,7 @@ int qtnf_cmd_send_change_sta(struct qtnf_vif *vif, const u8 *mac,
- 	}
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -1966,10 +1934,7 @@ int qtnf_cmd_send_del_sta(struct qtnf_vif *vif,
- 	cmd->reason_code = cpu_to_le16(params->reason_code);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -2189,10 +2154,6 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -2218,10 +2179,6 @@ int qtnf_cmd_send_external_auth(struct qtnf_vif *vif,
- 
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -2245,10 +2202,7 @@ int qtnf_cmd_send_disconnect(struct qtnf_vif *vif, u16 reason_code)
- 	cmd->reason = cpu_to_le16(reason_code);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -2271,10 +2225,6 @@ int qtnf_cmd_send_updown_intf(struct qtnf_vif *vif, bool up)
- 
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 
- 	return ret;
-@@ -2580,10 +2530,6 @@ int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
- 
- 	qtnf_bus_lock(bus);
- 	ret = qtnf_cmd_send(bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(bus);
- 
- 	return ret;
-@@ -2611,10 +2557,6 @@ int qtnf_cmd_set_mac_acl(const struct qtnf_vif *vif,
- 
- 	qtnf_bus_lock(bus);
- 	ret = qtnf_cmd_send(bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(bus);
- 
- 	return ret;
-@@ -2639,10 +2581,7 @@ int qtnf_cmd_send_pm_set(const struct qtnf_vif *vif, u8 pm_mode, int timeout)
- 	qtnf_bus_lock(bus);
- 
- 	ret = qtnf_cmd_send(bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(bus);
- 
- 	return ret;
-@@ -2754,10 +2693,7 @@ int qtnf_cmd_send_wowlan_set(const struct qtnf_vif *vif,
- 	cmd->triggers = cpu_to_le32(triggers);
- 
- 	ret = qtnf_cmd_send(bus, cmd_skb);
--	if (ret)
--		goto out;
- 
--out:
- 	qtnf_bus_unlock(bus);
- 	return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 88a2ee7e7143..fced902d11bc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -368,6 +368,17 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
+ 		hw->max_tx_fragments = MT_TXP_MAX_BUF_NUM;
+ 	else
+ 		hw->max_tx_fragments = MT_HW_TXP_MAX_BUF_NUM;
++
++	if (phy->mt76->cap.has_2ghz)
++		phy->mt76->sband_2g.sband.ht_cap.cap |=
++			IEEE80211_HT_CAP_LDPC_CODING;
++
++	if (phy->mt76->cap.has_5ghz) {
++		phy->mt76->sband_5g.sband.ht_cap.cap |=
++			IEEE80211_HT_CAP_LDPC_CODING;
++		phy->mt76->sband_5g.sband.vht_cap.cap |=
++			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
++	}
  }
-@@ -2821,10 +2757,6 @@ int qtnf_cmd_send_update_owe(struct qtnf_vif *vif,
  
- 	qtnf_bus_lock(vif->mac->bus);
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(vif->mac->bus);
+ static void
+@@ -505,10 +516,6 @@ void mt7615_init_device(struct mt7615_dev *dev)
  
- 	return ret;
+ 	mt7615_init_wiphy(hw);
+ 	dev->pm.idle_timeout = MT7615_PM_TIMEOUT;
+-	dev->mphy.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mphy.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mphy.sband_5g.sband.vht_cap.cap |=
+-			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
+ 	mt7615_cap_dbdc_disable(dev);
+ 	dev->phy.dfs_state = -1;
+ 
 -- 
-1.9.1
-
+2.18.0
 
