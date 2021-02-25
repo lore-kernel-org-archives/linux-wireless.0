@@ -2,158 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B976BC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBC6C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70DDD64F16
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:38:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 895E864E83
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 14:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbhBYOh7 (ORCPT
+        id S231604AbhBYO7f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Feb 2021 09:37:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55338 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229722AbhBYOh5 (ORCPT
+        Thu, 25 Feb 2021 09:59:35 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:39372 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231445AbhBYO73 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Feb 2021 09:37:57 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3E08C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2021 06:37:16 -0800 (PST)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1lFHlS-008T67-2N; Thu, 25 Feb 2021 15:37:14 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wmediumd: fix use-after-free in client removal
-Date:   Thu, 25 Feb 2021 15:37:08 +0100
-Message-Id: <20210225143708.419462-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Thu, 25 Feb 2021 09:59:29 -0500
+X-UUID: dd46eddd189e4798a0836487b2df6ab6-20210225
+X-UUID: dd46eddd189e4798a0836487b2df6ab6-20210225
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 509862757; Thu, 25 Feb 2021 22:58:38 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 25 Feb 2021 22:58:37 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 25 Feb 2021 22:58:37 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v2 2/2] mt76: mt7615: add missing capabilities for DBDC
+Date:   Thu, 25 Feb 2021 22:58:36 +0800
+Message-ID: <7d82c4070c96c32a3fcca07366d1c5183b0c0258.1614239710.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <dd852df70c61ad730f39566ed6fa22c736ce5942.1614239710.git.ryder.lee@mediatek.com>
+References: <dd852df70c61ad730f39566ed6fa22c736ce5942.1614239710.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Same as mt7915, this should improve performance.
 
-If a client dies while we're waiting for an ACK from it, then
-wmediumd_api_handler() will call wmediumd_remove_client() and
-free the client, even while we're still waiting for it to
-respond in wmediumd_wait_for_client_ack(). This leads then to
-wmediumd_wait_for_client_ack() using the data after it was
-already freed, and we also get stuck.
-
-Fix this by deferring the free to the outermost loop, instead
-just setting wait_for_ack=false whenever we find that we have
-to free a client.
-
-All client iterations (that can call back into the loop) then
-must use _safe() in order to not use the 'next' pointer after
-the client was removed (and the pointer poisoned).
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- wmediumd/wmediumd.c | 22 +++++++++++++++++-----
- wmediumd/wmediumd.h |  2 +-
- 2 files changed, 18 insertions(+), 6 deletions(-)
+change since v2 - adjust setup sequence.
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c    | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/wmediumd/wmediumd.c b/wmediumd/wmediumd.c
-index 5304931fbf74..3b4aed35c981 100644
---- a/wmediumd/wmediumd.c
-+++ b/wmediumd/wmediumd.c
-@@ -279,7 +279,7 @@ static void wmediumd_notify_frame_start(struct usfstl_job *job)
- {
- 	struct frame *frame = container_of(job, struct frame, start_job);
- 	struct wmediumd *ctx = job->data;
--	struct client *client;
-+	struct client *client, *tmp;
- 	struct {
- 		struct wmediumd_message_header hdr;
- 		struct wmediumd_tx_start start;
-@@ -292,7 +292,7 @@ static void wmediumd_notify_frame_start(struct usfstl_job *job)
- 	if (ctx->ctrl)
- 		usfstl_sched_ctrl_sync_to(ctx->ctrl);
- 
--	list_for_each_entry(client, &ctx->clients, list) {
-+	list_for_each_entry_safe(client, tmp, &ctx->clients, list) {
- 		if (!(client->flags & WMEDIUMD_CTL_NOTIFY_TX_START))
- 			continue;
- 
-@@ -583,11 +583,12 @@ static void wmediumd_remove_client(struct wmediumd *ctx, struct client *client)
- 
- 	if (!list_empty(&client->list))
- 		list_del(&client->list);
-+	list_add(&client->list, &ctx->clients_to_free);
- 
- 	if (client->flags & WMEDIUMD_CTL_NOTIFY_TX_START)
- 		ctx->need_start_notify--;
- 
--	free(client);
-+	client->wait_for_ack = false;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 88a2ee7e7143..bc908514a510 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -368,6 +368,17 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
+ 		hw->max_tx_fragments = MT_TXP_MAX_BUF_NUM;
+ 	else
+ 		hw->max_tx_fragments = MT_HW_TXP_MAX_BUF_NUM;
++
++	if (phy->mt76->cap.has_2ghz)
++		phy->mt76->sband_2g.sband.ht_cap.cap |=
++			IEEE80211_HT_CAP_LDPC_CODING;
++
++	if (phy->mt76->cap.has_5ghz) {
++		phy->mt76->sband_5g.sband.ht_cap.cap |=
++			IEEE80211_HT_CAP_LDPC_CODING;
++		phy->mt76->sband_5g.sband.vht_cap.cap |=
++			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
++	}
  }
  
- /*
-@@ -638,7 +639,7 @@ static void send_cloned_frame_msg(struct wmediumd *ctx, struct client *src,
- 				  int rate_idx, int signal, int freq,
- 				  uint64_t cookie)
- {
--	struct client *client;
-+	struct client *client, *tmp;
- 	struct nl_msg *msg, *cmsg = NULL;
+ static void
+@@ -424,7 +435,6 @@ int mt7615_register_ext_phy(struct mt7615_dev *dev)
+ 	phy->mt76 = mphy;
+ 	mphy->chainmask = dev->chainmask & ~dev->mphy.chainmask;
+ 	mphy->antenna_mask = BIT(hweight8(mphy->chainmask)) - 1;
+-	mt7615_init_wiphy(mphy->hw);
  
- 	msg = nlmsg_alloc();
-@@ -670,7 +671,7 @@ static void send_cloned_frame_msg(struct wmediumd *ctx, struct client *src,
- 	if (ctx->ctrl)
- 		usfstl_sched_ctrl_sync_to(ctx->ctrl);
+ 	INIT_DELAYED_WORK(&mphy->mac_work, mt7615_mac_work);
+ 	INIT_DELAYED_WORK(&phy->scan_work, mt7615_scan_work);
+@@ -448,6 +458,7 @@ int mt7615_register_ext_phy(struct mt7615_dev *dev)
  
--	list_for_each_entry(client, &ctx->clients, list) {
-+	list_for_each_entry_safe(client, tmp, &ctx->clients, list) {
- 		if (client->flags & WMEDIUMD_CTL_RX_ALL_FRAMES) {
- 			if (src == client && !cmsg) {
- 				struct nlmsghdr *nlh = nlmsg_hdr(msg);
-@@ -1356,6 +1357,7 @@ int main(int argc, char *argv[])
+ 	/* second phy can only handle 5 GHz */
+ 	mphy->cap.has_5ghz = true;
++	mt7615_init_wiphy(mphy->hw);
  
- 	INIT_LIST_HEAD(&ctx.stations);
- 	INIT_LIST_HEAD(&ctx.clients);
-+	INIT_LIST_HEAD(&ctx.clients_to_free);
+ 	/* mt7615 second phy shares the same hw queues with the primary one */
+ 	for (i = 0; i <= MT_TXQ_PSD ; i++)
+@@ -505,10 +516,6 @@ void mt7615_init_device(struct mt7615_dev *dev)
  
- 	if (load_config(&ctx, config_file, per_file))
- 		return EXIT_FAILURE;
-@@ -1415,6 +1417,16 @@ int main(int argc, char *argv[])
- 			if (usfstl_sched_next_pending(&scheduler, NULL))
- 				usfstl_sched_next(&scheduler);
- 		}
-+
-+		while (!list_empty(&ctx.clients_to_free)) {
-+			struct client *client;
-+
-+			client = list_first_entry(&ctx.clients_to_free,
-+						  struct client, list);
-+
-+			list_del(&client->list);
-+			free(client);
-+		}
- 	}
+ 	mt7615_init_wiphy(hw);
+ 	dev->pm.idle_timeout = MT7615_PM_TIMEOUT;
+-	dev->mphy.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mphy.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mphy.sband_5g.sband.vht_cap.cap |=
+-			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
+ 	mt7615_cap_dbdc_disable(dev);
+ 	dev->phy.dfs_state = -1;
  
- 	free(ctx.sock);
-diff --git a/wmediumd/wmediumd.h b/wmediumd/wmediumd.h
-index 8619e28cbe9a..4b7ca6628ce9 100644
---- a/wmediumd/wmediumd.h
-+++ b/wmediumd/wmediumd.h
-@@ -196,7 +196,7 @@ struct wmediumd {
- 
- 	struct usfstl_sched_ctrl *ctrl;
- 
--	struct list_head clients;
-+	struct list_head clients, clients_to_free;
- 	struct client nl_client;
- 
- 	int num_stas;
 -- 
-2.26.2
+2.18.0
 
