@@ -2,120 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44AF0C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD08AC433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 07:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F298F64E85
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 06:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7827464E85
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Feb 2021 07:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233136AbhBYG4j (ORCPT
+        id S232263AbhBYHGV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Feb 2021 01:56:39 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:58283 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230315AbhBYG4i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Feb 2021 01:56:38 -0500
-X-UUID: db4df52e27a54bb4b279e7f862c87c03-20210225
-X-UUID: db4df52e27a54bb4b279e7f862c87c03-20210225
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1392478194; Thu, 25 Feb 2021 14:55:51 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 25 Feb 2021 14:55:49 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 25 Feb 2021 14:55:49 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] mt76: mt7915: add missing capabilities for DBDC
-Date:   Thu, 25 Feb 2021 14:55:47 +0800
-Message-ID: <fe9afbb21ade32aac31f077bb1e741f917bd4596.1614235992.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: CF6DFAB3971B36041B291C99A6850B751C4D956D940F94A63540AE663B25A4902000:8
-X-MTK:  N
+        Thu, 25 Feb 2021 02:06:21 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:21868 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232403AbhBYHFe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Feb 2021 02:05:34 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1614236702; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=jeOdVFlDiszL8H7p1XC0HdBnkmqIUHHc8qG4WUD0lx0=; b=b1XXonNoOPb2mJfYtxtlCg7g4joJ6DEfePMBWNwuCjtK7C3wasywbPJsipa1vON1LSU60s6s
+ tY24Jv4WuB+ieAP5qE4wP+we1o9s8LqajQPuxiqIxhUHAR8u74wDk+D69RF9ZX8l9xrlJ6FJ
+ 7T8biKIBEB2FHUAmX0fj9ID5Prk=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 60374bfbe9080d5ff796c6d2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 25 Feb 2021 07:04:27
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E06BAC43462; Thu, 25 Feb 2021 07:04:26 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C99A3C433C6;
+        Thu, 25 Feb 2021 07:04:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C99A3C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     rdunlap@infradead.org, luciano.coelho@intel.com
+Subject: [PATCH 5.12] iwlwifi: pcie: fix iwl_so_trans_cfg link error when CONFIG_IWLMVM is disabled
+Date:   Thu, 25 Feb 2021 09:04:21 +0200
+Message-Id: <1614236661-20274-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This improves dbdc performance.
+Randy reported an error on his randconfig builds:
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+ERROR: modpost: "iwl_so_trans_cfg" [drivers/net/wireless/intel/iwlwifi/iwlwifi.ko] undefined!
+
+The problem was that when CONFIG_IWLMVM was disabled we were still accessing
+iwl_so_trans_cfg. Fix it by moving IS_ENABLED() check before the access.
+
+Reported-by: Randy Dunlap <rdunlap@infradead.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- .../net/wireless/mediatek/mt76/mt7915/init.c  | 28 +++++++++++--------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index c599b44a728c..3f3312d4c38d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -113,6 +113,20 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 314fec4a89ad..ffaf973dae94 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1106,6 +1106,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
  
- 	hw->max_tx_fragments = 4;
++#if IS_ENABLED(CONFIG_IWLMVM)
 +
-+	if (phy->mt76->cap.has_2ghz)
-+		phy->mt76->sband_2g.sband.ht_cap.cap |=
-+			IEEE80211_HT_CAP_LDPC_CODING |
-+			IEEE80211_HT_CAP_MAX_AMSDU;
-+
-+	if (phy->mt76->cap.has_5ghz) {
-+		phy->mt76->sband_5g.sband.ht_cap.cap |=
-+			IEEE80211_HT_CAP_LDPC_CODING |
-+			IEEE80211_HT_CAP_MAX_AMSDU;
-+		phy->mt76->sband_5g.sband.vht_cap.cap |=
-+			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
-+			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-+	}
- }
+ 	/*
+ 	 * Workaround for problematic SnJ device: sometimes when
+ 	 * certain RF modules are connected to SnJ, the device ID
+@@ -1116,7 +1118,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (CSR_HW_REV_TYPE(iwl_trans->hw_rev) == IWL_CFG_MAC_TYPE_SNJ)
+ 		iwl_trans->trans_cfg = &iwl_so_trans_cfg;
  
- static void
-@@ -253,9 +267,6 @@ static int mt7915_register_ext_phy(struct mt7915_dev *dev)
- 	       ETH_ALEN);
- 	mt76_eeprom_override(mphy);
- 
--	/* The second interface does not get any packets unless it has a vif */
--	ieee80211_hw_set(mphy->hw, WANT_MONITOR_VIF);
--
- 	ret = mt7915_init_tx_queues(phy, MT7915_TXQ_BAND1,
- 				    MT7915_TX_RING_SIZE);
- 	if (ret)
-@@ -637,19 +648,12 @@ int mt7915_register_device(struct mt7915_dev *dev)
- 		return ret;
- 
- 	mt7915_init_wiphy(hw);
--	dev->mphy.sband_2g.sband.ht_cap.cap |=
--			IEEE80211_HT_CAP_LDPC_CODING |
--			IEEE80211_HT_CAP_MAX_AMSDU;
--	dev->mphy.sband_5g.sband.ht_cap.cap |=
--			IEEE80211_HT_CAP_LDPC_CODING |
--			IEEE80211_HT_CAP_MAX_AMSDU;
--	dev->mphy.sband_5g.sband.vht_cap.cap |=
--			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
--			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-+
- 	if (!dev->dbdc_support)
- 		dev->mphy.sband_5g.sband.vht_cap.cap |=
- 			IEEE80211_VHT_CAP_SHORT_GI_160 |
- 			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
-+
- 	dev->mphy.hw->wiphy->available_antennas_rx = dev->mphy.chainmask;
- 	dev->mphy.hw->wiphy->available_antennas_tx = dev->mphy.chainmask;
- 
+-#if IS_ENABLED(CONFIG_IWLMVM)
+ 	/*
+ 	 * special-case 7265D, it has the same PCI IDs.
+ 	 *
 -- 
-2.18.0
+2.7.4
 
