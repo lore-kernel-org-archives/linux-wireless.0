@@ -5,65 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02ABCC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 17:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E81AC433E6
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 17:54:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE95B64F17
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 17:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E19764F1B
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 17:54:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230230AbhBZRxH (ORCPT
+        id S229999AbhBZRyP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Feb 2021 12:53:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38684 "EHLO
+        Fri, 26 Feb 2021 12:54:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230147AbhBZRw7 (ORCPT
+        with ESMTP id S230282AbhBZRxm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Feb 2021 12:52:59 -0500
-Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86ACEC061788
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2021 09:52:19 -0800 (PST)
-Received: by mail-il1-x12c.google.com with SMTP id k2so8724436ili.4
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2021 09:52:19 -0800 (PST)
+        Fri, 26 Feb 2021 12:53:42 -0500
+Received: from mail-io1-xd2b.google.com (mail-io1-xd2b.google.com [IPv6:2607:f8b0:4864:20::d2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3117FC061794
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2021 09:52:21 -0800 (PST)
+Received: by mail-io1-xd2b.google.com with SMTP id n14so10499273iog.3
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2021 09:52:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linuxfoundation.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=KzQ9OBQajFeaiUpGgz5pU1UyInmaQ1PIgYZOHvN7J2s=;
-        b=QmEx6PMwk5EzxsrPZJ6iRfQ/ny2qMbBfnWObiy0RKj7IzCtCtGd2xn3nfRRPTWrMDn
-         8qODazbWCshriSjXgg2GqqfyIxkQxBwY1cmWSxb2GEk7YRApPYA3iYuVChku9DJatqOG
-         Rg8jTRSgD/ztSQ1+1eAYv8ZZWPYSsXyi4jNH0=
+        bh=yytI7x7nMwQqYfkH8zJk8MWsbajZm7+7KB4c/JWojUI=;
+        b=AFIgbIR9M1LUoj6H3z378i+R7QUdBO3CwFoWO44Dx08yOT0wGXel220fIR+hJZ9bC5
+         qhTaPNWmINhWlJDPNGmD3tn2Dy+m2DB4wl7DnYLCKPjmGJBk4X+F7WdaV00KhPSZeVOW
+         4OXK8iZYoHlSc9Z+QLSm0BfI+yujpjqT4QNJU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KzQ9OBQajFeaiUpGgz5pU1UyInmaQ1PIgYZOHvN7J2s=;
-        b=cy81kSAk2BdUemT2M5iV7IyVGMkIJO2vh3ZhXkhLFH9U8ER+D5Uq9d62jBCLMBSHYT
-         b6GP2nAZM6UE6vAgK7L5G0gMoF1rkNfubUGw7hYxZ5kjZkSKBFPxHAChck9h/dWhh+rq
-         z6hBoa/xl17vHMODIHtEhk+DdABbQU/y9VlGWt1yoeyvYQDSgrChxRo7P7jsT3909Ba5
-         Yp9ZhtCO4E3ezFKp8IO2c7mF9U1cGeXGgWdVXv34hFVo2eomqqzyOFIiiNnaPKAmx1Zi
-         HqjdSOnOH/JX1btlzJT5bQKZwek1I4xjtoaxUkC4G0lyPL7pHiabQW1IxFymmVOg57uX
-         KPeQ==
-X-Gm-Message-State: AOAM530hNJlAAbbXUVL7Zj5TOm9sjAt3gFplYDLVOUfQUcR2ZhXn0L7U
-        E2akNm83piyMTT9/dz/Jg0CWHg==
-X-Google-Smtp-Source: ABdhPJzKtNZ9DqshtlkVijD2KykbsioNqaOrCP1Wc05drU0Weq1Yrn5ll6pcxxXm1ey3JQd/0u87WQ==
-X-Received: by 2002:a92:cc49:: with SMTP id t9mr3302848ilq.86.1614361939062;
-        Fri, 26 Feb 2021 09:52:19 -0800 (PST)
+        bh=yytI7x7nMwQqYfkH8zJk8MWsbajZm7+7KB4c/JWojUI=;
+        b=V0krsO5qHRtYLEAD2pWukj6+q/tV8uW2Yccz+QfeNhyAImyWwaw7zHmQGEE43jKlL0
+         ABhPdM+bwuvJNtlR8kqiE7+jK9ceCJ3Xf+3D/m6vhzWB8J5P4wpNDKQKBR0aPWfZ2I7y
+         pYNl3spwxy8imknh+LtCO7QNT6l8sigOfMY2faiI1jpkWMeUOTcQNfpRvI0W/SYQTix3
+         EHcsxmZuVr3fw2j8otOc69X5x9zx67CEc7zyKICbgbJFh8oYs7QZ2rGORYWx3od1TSmc
+         IL2ufFgDDMI5viASkCJe+2PbQPG1iSZZUbZnUtSEcDg9ZmEiJQZNMeImSyLvI3jaeUQn
+         4hig==
+X-Gm-Message-State: AOAM532aCeky0g1jtL9PtTZHZtz6ZyhgP5cNQJ9FaY38tajMbjtdxfId
+        OQzAwYs2Jfx1FNR7PqhQcp+ilA==
+X-Google-Smtp-Source: ABdhPJzDvP35cqoe+MlNhyNJMg/N0vt8re7YhfzdHlkeva41movmV4gDLh1tDN7Jsfz/AJTW9RmZeA==
+X-Received: by 2002:a5e:8f0a:: with SMTP id c10mr3842450iok.192.1614361940631;
+        Fri, 26 Feb 2021 09:52:20 -0800 (PST)
 Received: from shuah-t480s.internal (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
-        by smtp.gmail.com with ESMTPSA id y25sm5594060ioa.5.2021.02.26.09.52.18
+        by smtp.gmail.com with ESMTPSA id y25sm5594060ioa.5.2021.02.26.09.52.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Feb 2021 09:52:18 -0800 (PST)
+        Fri, 26 Feb 2021 09:52:20 -0800 (PST)
 From:   Shuah Khan <skhan@linuxfoundation.org>
 To:     peterz@infradead.org, mingo@redhat.com, will@kernel.org,
         kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
 Cc:     Shuah Khan <skhan@linuxfoundation.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/3] lockdep: add lockdep_assert_not_held()
-Date:   Fri, 26 Feb 2021 10:52:13 -0700
-Message-Id: <a40d18bba5a52662ac8fc556e1fce3752ea08472.1614355914.git.skhan@linuxfoundation.org>
+Subject: [PATCH v2 3/3] ath10k: detect conf_mutex held ath10k_drain_tx() calls
+Date:   Fri, 26 Feb 2021 10:52:15 -0700
+Message-Id: <38eef822d97917db50068eb65eb71ae3b83eb43e.1614355914.git.skhan@linuxfoundation.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <cover.1614355914.git.skhan@linuxfoundation.org>
 References: <cover.1614355914.git.skhan@linuxfoundation.org>
@@ -73,74 +72,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some kernel functions must be called without holding a specific lock.
-Add lockdep_assert_not_held() to be used in these functions to detect
-incorrect calls while holding a lock.
+ath10k_drain_tx() must not be called with conf_mutex held as workers can
+use that also. Add call to lockdep_assert_not_held() on conf_mutex to
+detect if conf_mutex is held by the caller.
 
-lockdep_assert_not_held() provides the opposite functionality of
-lockdep_assert_held() which is used to assert calls that require
-holding a specific lock.
+The idea for this patch stemmed from coming across the comment block
+above the ath10k_drain_tx() while reviewing the conf_mutex holds during
+to debug the conf_mutex lock assert in ath10k_debug_fw_stats_request().
 
-Incorporates suggestions from Peter Zijlstra to avoid misfires when
-lockdep_off() is employed.
-
-The need for lockdep_assert_not_held() came up in a discussion on
-ath10k patch. ath10k_drain_tx() and i915_vma_pin_ww() are examples
-of functions that can use lockdep_assert_not_held().
+Adding detection to assert on conf_mutex hold will help detect incorrect
+usages that could lead to locking problems when async worker routines try
+to call this routine.
 
 Link: https://lore.kernel.org/lkml/37a29c383bff2fb1605241ee6c7c9be3784fb3c6.1613171185.git.skhan@linuxfoundation.org/
 Link: https://lore.kernel.org/linux-wireless/871rdmu9z9.fsf@codeaurora.org/
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Shuah Khan <skhan@linuxfoundation.org>
 ---
- include/linux/lockdep.h  | 11 ++++++++---
- kernel/locking/lockdep.c |  5 ++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index b9e9adec73e8..93eb5f797fc1 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -294,8 +294,12 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
- 
- #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
- 
--#define lockdep_assert_held(l)	do {				\
--		WARN_ON(debug_locks && !lockdep_is_held(l));	\
-+#define lockdep_assert_held(l)	do {					\
-+		WARN_ON(debug_locks && lockdep_is_held(l) == 0);	\
-+	} while (0)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7d98250380ec..a595ff4f0843 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4567,6 +4567,8 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
+ /* Must not be called with conf_mutex held as workers can use that also. */
+ void ath10k_drain_tx(struct ath10k *ar)
+ {
++	lockdep_assert_not_held(&ar->conf_mutex);
 +
-+#define lockdep_assert_not_held(l)	do {				\
-+		WARN_ON(debug_locks && lockdep_is_held(l) == 1);	\
- 	} while (0)
+ 	/* make sure rcu-protected mac80211 tx path itself is drained */
+ 	synchronize_net();
  
- #define lockdep_assert_held_write(l)	do {			\
-@@ -384,7 +388,8 @@ extern int lockdep_is_held(const void *);
- #define lockdep_is_held_type(l, r)		(1)
- 
- #define lockdep_assert_held(l)			do { (void)(l); } while (0)
--#define lockdep_assert_held_write(l)	do { (void)(l); } while (0)
-+#define lockdep_assert_not_held(l)		do { (void)(l); } while (0)
-+#define lockdep_assert_held_write(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
- 
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index bdaf4829098c..d3299fd85c4a 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -5472,7 +5472,10 @@ noinstr int lock_is_held_type(const struct lockdep_map *lock, int read)
- 	int ret = 0;
- 
- 	if (unlikely(!lockdep_enabled()))
--		return 1; /* avoid false negative lockdep_assert_held() */
-+		/* avoid false negative lockdep_assert_not_held()
-+		 * and lockdep_assert_held()
-+		 */
-+		return -1;
- 
- 	raw_local_irq_save(flags);
- 	check_flags(flags);
 -- 
 2.27.0
 
