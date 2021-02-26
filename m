@@ -2,105 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1049C433E6
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 08:24:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A375FC433DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 09:25:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D9EF64DA1
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 08:24:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CD0D64ED5
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 09:25:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229590AbhBZIYS (ORCPT
+        id S230396AbhBZJZC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Feb 2021 03:24:18 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:58307 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229498AbhBZIYR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Feb 2021 03:24:17 -0500
-X-UUID: eafa2bf0c3b24652a05054dc14b88757-20210226
-X-UUID: eafa2bf0c3b24652a05054dc14b88757-20210226
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2037189954; Fri, 26 Feb 2021 16:23:31 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 26 Feb 2021 16:23:29 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 26 Feb 2021 16:23:29 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/2] mt76: mt7921: fix the base of PCIe interrupt
-Date:   Fri, 26 Feb 2021 16:23:26 +0800
-Message-ID: <4ff45223ff7ecff8e20a722ffd2db77fe51fea00.1614327185.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
+        Fri, 26 Feb 2021 04:25:02 -0500
+Received: from z11.mailgun.us ([104.130.96.11]:64826 "EHLO z11.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230367AbhBZJXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Feb 2021 04:23:04 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1614331358; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=WZto6la1xMW9OPXhnH+0FY0I0nURZt4YBbd4cgmNF6k=;
+ b=hzb/WHvjVCHkTCO4+LKd0XowbNEbAsFDDHvA8SAyP79kkG99yboFwk44Bk/3NpHZGrjNiNgU
+ 6KTMkFqPUBCnQbKLhKqL/GHLW2MA04519+N9ulduFy0edZdphKFy1hM0v0QV4Bs0EYEGlJoj
+ C5F6A1bknl4cKFbMpMea9g1kPTg=
+X-Mailgun-Sending-Ip: 104.130.96.11
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6038bdddcc1f7d7e958364b2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Feb 2021 09:22:37
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id AC8BFC43466; Fri, 26 Feb 2021 09:22:37 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DCCB0C433CA;
+        Fri, 26 Feb 2021 09:22:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DCCB0C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 2/2] mt76: mt7921: remove incorrect error handling
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210225145953.404859-2-arnd@kernel.org>
+References: <20210225145953.404859-2-arnd@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20210226092237.AC8BFC43466@smtp.codeaurora.org>
+Date:   Fri, 26 Feb 2021 09:22:37 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Arnd Bergmann <arnd@kernel.org> wrote:
 
-Should use 0x10000 as the base to operate PCIe interrupt according
-to the vendor reference driver.
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Clang points out a mistake in the error handling in
+> mt7921_mcu_tx_rate_report(), which tries to dereference a pointer that
+> cannot be initialized because of the error that is being handled:
+> 
+> drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:409:3: warning: variable 'stats' is uninitialized when used here [-Wuninitialized]
+>                 stats->tx_rate = rate;
+>                 ^~~~~
+> drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:401:32: note: initialize the variable 'stats' to silence this warning
+>         struct mt7921_sta_stats *stats;
+>                                       ^
+> Just remove the obviously incorrect line.
+> 
+> Fixes: 1c099ab44727 ("mt76: mt7921: add MCU support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-Fixes: ffa1bf97425b ("mt76: mt7921: introduce PM support")
-Co-developed-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c  | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7921/regs.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Patch applied to wireless-drivers.git, thanks.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 3e430c04c97e..def8b7816609 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -137,7 +137,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
- 
- 	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
- 
--	mt7921_l1_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
-+	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
- 
- 	ret = devm_request_irq(mdev->dev, pdev->irq, mt7921_irq_handler,
- 			       IRQF_SHARED, KBUILD_MODNAME, dev);
-@@ -248,7 +248,7 @@ static int mt7921_pci_resume(struct pci_dev *pdev)
- 		return 0;
- 
- 	/* enable interrupt */
--	mt7921_l1_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
-+	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
- 	mt7921_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
- 			  MT_INT_MCU_CMD);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-index 419add751980..c4bd31cc81cb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-@@ -391,7 +391,7 @@
- #define MT_HW_CHIPID			0x70010200
- #define MT_HW_REV			0x70010204
- 
--#define MT_PCIE_MAC_BASE		0x74030000
-+#define MT_PCIE_MAC_BASE		0x10000
- #define MT_PCIE_MAC(ofs)		(MT_PCIE_MAC_BASE + (ofs))
- #define MT_PCIE_MAC_INT_ENABLE		MT_PCIE_MAC(0x188)
- 
+fb5fabb192b2 mt76: mt7921: remove incorrect error handling
+
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/patch/20210225145953.404859-2-arnd@kernel.org/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
