@@ -2,90 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D89C433DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 07:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C679AC433E9
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 08:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9416A6148E
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 07:36:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8531864EED
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Feb 2021 08:24:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230099AbhBZHgg (ORCPT
+        id S229886AbhBZIYY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Feb 2021 02:36:36 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:61007 "EHLO m42-2.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230045AbhBZHfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Feb 2021 02:35:40 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1614324915; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Z/vo5LH1reLtjc44fEAk5ZqleLDz9rM8UF/7j8o+yks=;
- b=ECqcBA5NasE3gLA/b8bD/Qn6ECJnKMcYVuz2nLSm2+WjctXemIVU8smSUlxI8eBWtAMV4Dtv
- VpG/ZSC6b/HR6FMFJrmv0ulwOZ5FwBA1udsfJnHXM/zwC28z62u9jYh2BsXfWa30yI7imfxM
- y6/fyBOY9dr3Jwr9YWCJUvJzXIs=
-X-Mailgun-Sending-Ip: 69.72.42.2
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 6038a4adcc1f7d7e954928a1 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Feb 2021 07:35:09
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DBD7FC433C6; Fri, 26 Feb 2021 07:35:08 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2681DC433CA;
-        Fri, 26 Feb 2021 07:35:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2681DC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Fri, 26 Feb 2021 03:24:24 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:58413 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229498AbhBZIYX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Feb 2021 03:24:23 -0500
+X-UUID: 8005b81f9ff04d9cb6a1334597faad20-20210226
+X-UUID: 8005b81f9ff04d9cb6a1334597faad20-20210226
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 738523191; Fri, 26 Feb 2021 16:23:38 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 26 Feb 2021 16:23:30 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 26 Feb 2021 16:23:30 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/2] mt76: mt7921: fix the base of the dynamic remap
+Date:   Fri, 26 Feb 2021 16:23:27 +0800
+Message-ID: <93e133d30b727b1bf5fd7df397bc113d8ea1f108.1614327185.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <4ff45223ff7ecff8e20a722ffd2db77fe51fea00.1614327185.git.objelf@gmail.com>
+References: <4ff45223ff7ecff8e20a722ffd2db77fe51fea00.1614327185.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [5.12] iwlwifi: pcie: fix iwl_so_trans_cfg link error when
- CONFIG_IWLMVM is disabled
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1614236661-20274-1-git-send-email-kvalo@codeaurora.org>
-References: <1614236661-20274-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, rdunlap@infradead.org,
-        luciano.coelho@intel.com
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210226073508.DBD7FC433C6@smtp.codeaurora.org>
-Date:   Fri, 26 Feb 2021 07:35:08 +0000 (UTC)
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 9F1D6F8B1359B400F2310FEAD5BA557555E1D6D73C9965A5B0048A3673D6830B2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+From: Sean Wang <sean.wang@mediatek.com>
 
-> Randy reported an error on his randconfig builds:
-> 
-> ERROR: modpost: "iwl_so_trans_cfg" [drivers/net/wireless/intel/iwlwifi/iwlwifi.ko] undefined!
-> 
-> The problem was that when CONFIG_IWLMVM was disabled we were still accessing
-> iwl_so_trans_cfg. Fix it by moving IS_ENABLED() check before the access.
-> 
-> Reported-by: Randy Dunlap <rdunlap@infradead.org>
-> Fixes: 930be4e76f26 ("iwlwifi: add support for SnJ with Jf devices")
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> Acked-by: Luca Coelho <luciano.coelho@intel.com>
-> Acked-by: Randy Dunlap <rdunlap@infradead.org> # build-tested
+We should change the base for the dynamic remap into another one, because
+the current base (0xe0000) have been the one used to operate the device
+ownership.
 
-Patch applied to wireless-drivers.git, thanks.
+Fixes: 163f4d22c118 ("mt76: mt7921: add MAC support")
+Co-developed-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/regs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-62541e266703 iwlwifi: pcie: fix iwl_so_trans_cfg link error when CONFIG_IWLMVM is disabled
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+index c4bd31cc81cb..f45f05c794cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+@@ -364,11 +364,11 @@
+ #define MT_INFRA_CFG_BASE		0xfe000
+ #define MT_INFRA(ofs)			(MT_INFRA_CFG_BASE + (ofs))
+ 
+-#define MT_HIF_REMAP_L1			MT_INFRA(0x260)
++#define MT_HIF_REMAP_L1			MT_INFRA(0x24c)
+ #define MT_HIF_REMAP_L1_MASK		GENMASK(15, 0)
+ #define MT_HIF_REMAP_L1_OFFSET		GENMASK(15, 0)
+ #define MT_HIF_REMAP_L1_BASE		GENMASK(31, 16)
+-#define MT_HIF_REMAP_BASE_L1		0xe0000
++#define MT_HIF_REMAP_BASE_L1		0x40000
+ 
+ #define MT_SWDEF_BASE			0x41f200
+ #define MT_SWDEF(ofs)			(MT_SWDEF_BASE + (ofs))
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1614236661-20274-1-git-send-email-kvalo@codeaurora.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
