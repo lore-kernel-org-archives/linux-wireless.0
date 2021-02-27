@@ -5,34 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DB7C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63D36C433E0
 	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 07:41:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1059464E24
+	by mail.kernel.org (Postfix) with ESMTP id 292A464DE0
 	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 07:41:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbhB0HlM (ORCPT
+        id S229915AbhB0HlO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Feb 2021 02:41:12 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:58050 "EHLO
+        Sat, 27 Feb 2021 02:41:14 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:58077 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229751AbhB0HlL (ORCPT
+        with ESMTP id S229849AbhB0HlN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Feb 2021 02:41:11 -0500
-X-UUID: 665ba4bed37d44daa98358a3a77d9a30-20210227
-X-UUID: 665ba4bed37d44daa98358a3a77d9a30-20210227
-Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw01.mediatek.com
+        Sat, 27 Feb 2021 02:41:13 -0500
+X-UUID: e4d99241a3a14e83b92c10887fa4eadc-20210227
+X-UUID: e4d99241a3a14e83b92c10887fa4eadc-20210227
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 834555198; Sat, 27 Feb 2021 15:40:25 +0800
+        with ESMTP id 1093846120; Sat, 27 Feb 2021 15:40:31 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 27 Feb 2021 15:40:23 +0800
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 27 Feb 2021 15:40:24 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 27 Feb 2021 15:40:23 +0800
+ Transport; Sat, 27 Feb 2021 15:40:24 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
@@ -40,107 +40,52 @@ CC:     Shayne Chen <shayne.chen@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/5] mt76: mt7615: fix CSA notification for DBDC
-Date:   Sat, 27 Feb 2021 15:39:42 +0800
-Message-ID: <d6f2573790582538e8ba82f87a4c35329692ee32.1614411256.git.ryder.lee@mediatek.com>
+Subject: [PATCH 4/5] mt76: mt7915: stop ext_phy queue when mac reset happens
+Date:   Sat, 27 Feb 2021 15:39:45 +0800
+Message-ID: <20a4b03ba4a347a76df67291680704dfdb7da5d6.1614411256.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <d6f2573790582538e8ba82f87a4c35329692ee32.1614411256.git.ryder.lee@mediatek.com>
+References: <d6f2573790582538e8ba82f87a4c35329692ee32.1614411256.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: EA1C5E3E32218177D76903F4A34CD4015FFB7D72857672C39A62C94C6E93C04B2000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add CSA notification for second phy.
+Stop Tx burst for ext_phy after mac reset.
 
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 24 +++++++++++++++----
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   | 11 ++++++++-
- 2 files changed, 29 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 65c6ab14fe6f..44daee41aa6c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -372,6 +372,22 @@ mt7615_mcu_csa_finish(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 		ieee80211_csa_finish(vif);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 6b6ea33bd320..c653cd01b8d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1607,9 +1607,10 @@ void mt7915_mac_reset_work(struct work_struct *work)
+ 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
+ 	wake_up(&dev->mt76.mcu.wait);
+ 	cancel_delayed_work_sync(&dev->mphy.mac_work);
+-	if (phy2)
++	if (phy2) {
++		set_bit(MT76_RESET, &phy2->mt76->state);
+ 		cancel_delayed_work_sync(&phy2->mt76->mac_work);
+-
++	}
+ 	/* lock/unlock all queues to ensure that no tx is pending */
+ 	mt76_txq_schedule_all(&dev->mphy);
+ 	if (ext_phy)
+@@ -1637,6 +1638,8 @@ void mt7915_mac_reset_work(struct work_struct *work)
  
-+static void
-+mt7615_mcu_rx_csa_notify(struct mt7615_dev *dev, struct sk_buff *skb)
-+{
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	struct mt7615_mcu_csa_notify *c;
-+
-+	c = (struct mt7615_mcu_csa_notify *)skb->data;
-+
-+	if (c->band_idx && dev->mt76.phy2)
-+		mphy = dev->mt76.phy2;
-+
-+	ieee80211_iterate_active_interfaces_atomic(mphy->hw,
-+			IEEE80211_IFACE_ITER_RESUME_ALL,
-+			mt7615_mcu_csa_finish, mphy->hw);
-+}
-+
- static void
- mt7615_mcu_rx_radar_detected(struct mt7615_dev *dev, struct sk_buff *skb)
- {
-@@ -380,7 +396,7 @@ mt7615_mcu_rx_radar_detected(struct mt7615_dev *dev, struct sk_buff *skb)
+ 	clear_bit(MT76_MCU_RESET, &dev->mphy.state);
+ 	clear_bit(MT76_RESET, &dev->mphy.state);
++	if (phy2)
++		clear_bit(MT76_RESET, &phy2->mt76->state);
  
- 	r = (struct mt7615_mcu_rdd_report *)skb->data;
- 
--	if (r->idx && dev->mt76.phy2)
-+	if (r->band_idx && dev->mt76.phy2)
- 		mphy = dev->mt76.phy2;
- 
- 	ieee80211_radar_detected(mphy->hw);
-@@ -419,9 +435,7 @@ mt7615_mcu_rx_ext_event(struct mt7615_dev *dev, struct sk_buff *skb)
- 		mt7615_mcu_rx_radar_detected(dev, skb);
- 		break;
- 	case MCU_EXT_EVENT_CSA_NOTIFY:
--		ieee80211_iterate_active_interfaces_atomic(dev->mt76.hw,
--				IEEE80211_IFACE_ITER_RESUME_ALL,
--				mt7615_mcu_csa_finish, dev);
-+		mt7615_mcu_rx_csa_notify(dev, skb);
- 		break;
- 	case MCU_EXT_EVENT_FW_LOG_2_HOST:
- 		mt7615_mcu_rx_log_message(dev, skb);
-@@ -2176,7 +2190,7 @@ int mt7615_mcu_set_chan_info(struct mt7615_phy *phy, int cmd)
- 		.center_chan2 = ieee80211_frequency_to_channel(freq2),
- 	};
- 
--	if (dev->mt76.hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
-+	if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
- 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
- 	else if ((chandef->chan->flags & IEEE80211_CHAN_RADAR) &&
- 		 chandef->chan->dfs_state != NL80211_DFS_AVAILABLE)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index 411ebb56baef..dbf72b1396c7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -176,10 +176,19 @@ struct mt7615_mcu_rxd {
- 	u8 s2d_index;
- };
- 
-+struct mt7615_mcu_csa_notify {
-+	struct mt7615_mcu_rxd rxd;
-+
-+	u8 omac_idx;
-+	u8 csa_count;
-+	u8 band_idx;
-+	u8 rsv;
-+} __packed;
-+
- struct mt7615_mcu_rdd_report {
- 	struct mt7615_mcu_rxd rxd;
- 
--	u8 idx;
-+	u8 band_idx;
- 	u8 long_detected;
- 	u8 constant_prf_detected;
- 	u8 staggered_prf_detected;
+ 	mt76_worker_enable(&dev->mt76.tx_worker);
+ 	napi_enable(&dev->mt76.tx_napi);
 -- 
 2.18.0
 
