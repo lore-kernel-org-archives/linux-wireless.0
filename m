@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFCBAC433E0
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 17:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22556C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 17:36:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FB6364E29
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 17:35:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA58964E33
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Feb 2021 17:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230188AbhB0Rdr (ORCPT
+        id S230295AbhB0Reh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Feb 2021 12:33:47 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:51358 "EHLO
+        Sat, 27 Feb 2021 12:34:37 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:23958 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230367AbhB0Ra3 (ORCPT
+        with ESMTP id S230234AbhB0Raq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Feb 2021 12:30:29 -0500
+        Sat, 27 Feb 2021 12:30:46 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=wc+RK5tGmY6FeIzTBNgzRNI0oDBWIJRtwAZQIRgUtTQ=;
-        b=s4j60xmYCGwLc/6i/hQzpNbZyuX4fY/6MnLkowrig45AmzRcVoQZFwue5cYcO7aIKZyd
-        rrUB/QhM3xKUoZBoL0Zyw+4K7X2jHf5KhTwwRdDadWb5237h+UmQODVCijC+nxDXYx3lDK
-        WWoW0MMg4NHT2YwVlyn/W4NwjjhWTYji0=
-Received: by filterdrecv-p3mdw1-7745b6f999-7qk4c with SMTP id filterdrecv-p3mdw1-7745b6f999-7qk4c-19-603A816A-12
-        2021-02-27 17:29:14.413766753 +0000 UTC m=+918773.064330579
+        s=sgd; bh=A0nyiQH89foVd5buQULuUX9sSu6emJdGHJKg04xVrkE=;
+        b=cqtFi9Butba+3WHwkSSUYHiYmVtD56+FH2qNwL+f5WJo+RH4cjYYhvxTsznkAb8b/HUk
+        xj/2d7ohugMaHjxdkygj2IXSiavQ9vXXPahPny8T3d58VoWX7OrXouB6rXHbPeBAxtCwtL
+        PQF3FQ67NZLjGVSdrjZh1hvaJCvmQPPHQ=
+Received: by filterdrecv-p3iad2-fdf5ff85d-l7rdf with SMTP id filterdrecv-p3iad2-fdf5ff85d-l7rdf-19-603A8189-3C
+        2021-02-27 17:29:45.765782176 +0000 UTC m=+1536136.654393572
 Received: from pearl.egauge.net (unknown)
-        by ismtpd0019p1las1.sendgrid.net (SG) with ESMTP
-        id kDsSDFThQAS8e12N_MxWqg
-        Sat, 27 Feb 2021 17:29:14.204 +0000 (UTC)
+        by geopod-ismtpd-canary-0 (SG)
+        with ESMTP
+        id o3a_khVITRaV7NCD_YVfgQ
+        Sat, 27 Feb 2021 17:29:45.547 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 6769B7002F9; Sat, 27 Feb 2021 10:29:13 -0700 (MST)
+        id 038BE7002F9; Sat, 27 Feb 2021 10:29:45 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 1/4] wilc1000: Make SPI transfers work at 48MHz
-Date:   Sat, 27 Feb 2021 17:29:14 +0000 (UTC)
-Message-Id: <20210227172818.1711071-1-davidm@egauge.net>
+Subject: [PATCH v2 3/4] wilc1000: Check for errors at end of DMA write
+Date:   Sat, 27 Feb 2021 17:29:46 +0000 (UTC)
+Message-Id: <20210227172818.1711071-3-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210224055135.1509200-1-davidm@egauge.net>
 References: <20210224055135.1509200-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvD28VFlVK=2FSBvakiW?=
- =?us-ascii?Q?BfPEbAns3V3KtrMqegmhFVezLrH+4pyJpEtNe1P?=
- =?us-ascii?Q?1Oy4TLDWmX+NDU7VtOHzOLhfmWB2iCWeNOdGyR5?=
- =?us-ascii?Q?LWVFOAGch8ZTwCksYmgsuYP5v4hJi04ImaQH3ib?=
- =?us-ascii?Q?S3DMI2W1v7sscNV=2FZnf+NHcO8YP0nNflMPR5GKg?=
- =?us-ascii?Q?xFxUF3IlZWkEXGrRCu+iw=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvEXgQBWs9xCipqoFb?=
+ =?us-ascii?Q?ZKGURIzqdaK16w70HkQ4OHG6IpCzbO03ln1Urcf?=
+ =?us-ascii?Q?E6pmuEHQBAd6+TwGP36ZKeSAyb+N=2FBWtx0861Jf?=
+ =?us-ascii?Q?bCexEnDc5tIp5Spk4tUhgtOHRVY5yAhXbQJRmOp?=
+ =?us-ascii?Q?y6tRZyEuKFRtDgH0Dvm+IbhGA+2Jf6ON5p0URp8?=
+ =?us-ascii?Q?VDdDXp=2Fgu0aLOqog8ayBA=3D=3D?=
 To:     linux-wireless@vger.kernel.org
 Cc:     Ajay Singh <ajay.kathat@microchip.com>,
         Claudiu Beznea <claudiu.beznea@microchip.com>,
@@ -62,122 +63,103 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For CMD_SINGLE_READ and CMD_INTERNAL_READ, WILC may insert one or more
-zero bytes between the command response and the DATA Start tag (0xf3).
-This behavior appears to be undocumented in "ATWILC1000 USER GUIDE"
-(https://tinyurl.com/4hhshdts) but we have observed 1-4 zero bytes
-when the SPI bus operates at 48MHz and none when it operates at 1MHz.
+After a DMA write to the WILC chip, check for and report any errors.
 
-This code is derived from the equivalent code of the wilc driver in
-the linux-at91 repository.
+This is based on code from the wilc driver in the linux-at91
+repository.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/spi.c | 42 +++++++++++++------
- 1 file changed, 29 insertions(+), 13 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/spi.c | 62 ++++++++++++++++++-
+ 1 file changed, 61 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wireless/microchip/wilc1000/spi.c
-index be732929322c..d11e365eeee2 100644
+index fca34d1999ec..0be93eabad69 100644
 --- a/drivers/net/wireless/microchip/wilc1000/spi.c
 +++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -11,6 +11,16 @@
- #include "netdev.h"
- #include "cfg80211.h"
+@@ -47,6 +47,17 @@ static const struct wilc_hif_func wilc_hif_spi;
  
-+/*
-+ * For CMD_SINGLE_READ and CMD_INTERNAL_READ, WILC may insert one or
-+ * more zero bytes between the command response and the DATA Start tag
-+ * (0xf3).  This behavior appears to be undocumented in "ATWILC1000
-+ * USER GUIDE" (https://tinyurl.com/4hhshdts) but we have observed 1-4
-+ * zero bytes when the SPI bus operates at 48MHz and none when it
-+ * operates at 1MHz.
-+ */
-+#define WILC_SPI_RSP_HDR_EXTRA_DATA	8
+ #define SPI_ENABLE_VMM_RETRY_LIMIT		2
+ 
++/* SPI response fields (section 11.1.2 in ATWILC1000 User Guide): */
++#define RSP_START_FIELD				GENMASK(7, 4)
++#define RSP_TYPE_FIELD				GENMASK(3, 0)
 +
- struct wilc_spi {
- 	int crc_off;
- };
-@@ -79,16 +89,15 @@ struct wilc_spi_cmd {
- } __packed;
- 
- struct wilc_spi_read_rsp_data {
--	u8 rsp_cmd_type;
--	u8 status;
--	u8 resp_header;
--	u8 resp_data[4];
-+	u8 header;
-+	u8 data[4];
- 	u8 crc[];
- } __packed;
- 
- struct wilc_spi_rsp_data {
- 	u8 rsp_cmd_type;
- 	u8 status;
-+	u8 data[];
- } __packed;
- 
- static int wilc_bus_probe(struct spi_device *spi)
-@@ -359,10 +368,11 @@ static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *b,
- 	struct spi_device *spi = to_spi_device(wilc->dev);
- 	struct wilc_spi *spi_priv = wilc->bus_data;
- 	u8 wb[32], rb[32];
--	int cmd_len, resp_len;
- 	u8 crc[2];
-+	int cmd_len, resp_len, i;
- 	struct wilc_spi_cmd *c;
--	struct wilc_spi_read_rsp_data *r;
-+	struct wilc_spi_read_rsp_data *r_data;
-+	struct wilc_spi_rsp_data *r;
- 
- 	memset(wb, 0x0, sizeof(wb));
- 	memset(rb, 0x0, sizeof(rb));
-@@ -384,7 +394,8 @@ static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *b,
- 	}
- 
- 	cmd_len = offsetof(struct wilc_spi_cmd, u.simple_cmd.crc);
--	resp_len = sizeof(*r);
-+	resp_len = sizeof(*r) + sizeof(*r_data) + WILC_SPI_RSP_HDR_EXTRA_DATA;
++/* SPI response values for the response fields: */
++#define RSP_START_TAG				0xc
++#define RSP_TYPE_FIRST_PACKET			0x1
++#define RSP_TYPE_INNER_PACKET			0x2
++#define RSP_TYPE_LAST_PACKET			0x3
++#define RSP_STATE_NO_ERROR			0x00
 +
- 	if (!spi_priv->crc_off) {
- 		c->u.simple_cmd.crc[0] = wilc_get_crc7(wb, cmd_len);
- 		cmd_len += 1;
-@@ -403,7 +414,7 @@ static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *b,
- 		return -EINVAL;
- 	}
- 
--	r = (struct wilc_spi_read_rsp_data *)&rb[cmd_len];
-+	r = (struct wilc_spi_rsp_data *)&rb[cmd_len];
- 	if (r->rsp_cmd_type != cmd) {
- 		dev_err(&spi->dev,
- 			"Failed cmd response, cmd (%02x), resp (%02x)\n",
-@@ -417,17 +428,22 @@ static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *b,
- 		return -EINVAL;
- 	}
- 
--	if (WILC_GET_RESP_HDR_START(r->resp_header) != 0xf) {
--		dev_err(&spi->dev, "Error, data read response (%02x)\n",
--			r->resp_header);
-+	for (i = 0; i < WILC_SPI_RSP_HDR_EXTRA_DATA; ++i)
-+		if (WILC_GET_RESP_HDR_START(r->data[i]) == 0xf)
-+			break;
-+
-+	if (i >= WILC_SPI_RSP_HDR_EXTRA_DATA) {
-+		dev_err(&spi->dev, "Error, data start missing\n");
- 		return -EINVAL;
- 	}
- 
-+	r_data = (struct wilc_spi_read_rsp_data *)&r->data[i];
-+
- 	if (b)
--		memcpy(b, r->resp_data, 4);
-+		memcpy(b, r_data->data, 4);
- 
- 	if (!spi_priv->crc_off)
--		memcpy(crc, r->crc, 2);
-+		memcpy(crc, r_data->crc, 2);
- 
+ #define PROTOCOL_REG_PKT_SZ_MASK		GENMASK(6, 4)
+ #define PROTOCOL_REG_CRC16_MASK			GENMASK(3, 3)
+ #define PROTOCOL_REG_CRC7_MASK			GENMASK(2, 2)
+@@ -750,6 +761,52 @@ static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
  	return 0;
  }
+ 
++static int spi_data_rsp(struct wilc *wilc, u8 cmd)
++{
++	struct spi_device *spi = to_spi_device(wilc->dev);
++	int result, i;
++	u8 rsp[4];
++
++	/*
++	 * The response to data packets is two bytes long.  For
++	 * efficiency's sake, wilc_spi_write() wisely ignores the
++	 * responses for all packets but the final one.  The downside
++	 * of that optimization is that when the final data packet is
++	 * short, we may receive (part of) the response to the
++	 * second-to-last packet before the one for the final packet.
++	 * To handle this, we always read 4 bytes and then search for
++	 * the last byte that contains the "Response Start" code (0xc
++	 * in the top 4 bits).  We then know that this byte is the
++	 * first response byte of the final data packet.
++	 */
++	result = wilc_spi_rx(wilc, rsp, sizeof(rsp));
++	if (result) {
++		dev_err(&spi->dev, "Failed bus error...\n");
++		return result;
++	}
++
++	for (i = sizeof(rsp) - 2; i >= 0; --i)
++		if (FIELD_GET(RSP_START_FIELD, rsp[i]) == RSP_START_TAG)
++			break;
++
++	if (i < 0) {
++		dev_err(&spi->dev,
++			"Data packet response missing (%02x %02x %02x %02x)\n",
++			rsp[0], rsp[1], rsp[2], rsp[3]);
++		return -1;
++	}
++
++	/* rsp[i] is the last response start byte */
++
++	if (FIELD_GET(RSP_TYPE_FIELD, rsp[i]) != RSP_TYPE_LAST_PACKET
++	    || rsp[i + 1] != RSP_STATE_NO_ERROR) {
++		dev_err(&spi->dev, "Data response error (%02x %02x)\n",
++			rsp[i], rsp[i + 1]);
++		return -1;
++	}
++	return 0;
++}
++
+ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+@@ -777,7 +834,10 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ 		return result;
+ 	}
+ 
+-	return 0;
++	/*
++	 * Data response
++	 */
++	return spi_data_rsp(wilc, CMD_DMA_EXT_WRITE);
+ }
+ 
+ /********************************************
 -- 
 2.25.1
 
