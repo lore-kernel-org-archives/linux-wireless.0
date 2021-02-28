@@ -2,86 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA2FC433DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 12:26:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F2F9C433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 18:24:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12DF864E59
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 12:26:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B45DC64E4A
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 18:24:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230083AbhB1M0Z (ORCPT
+        id S230521AbhB1SYD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 28 Feb 2021 07:26:25 -0500
-Received: from mail.zju.edu.cn ([61.164.42.155]:42754 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229715AbhB1M0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Feb 2021 07:26:24 -0500
-Received: from localhost.localdomain (unknown [10.192.85.18])
-        by mail-app3 (Coremail) with SMTP id cC_KCgCH3tiziztgoifaAQ--.16208S4;
-        Sun, 28 Feb 2021 20:25:26 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
-Cc:     Stanislaw Gruszka <stf_xl@wp.pl>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlegacy: Add missing check in il4965_commit_rxon
-Date:   Sun, 28 Feb 2021 20:25:22 +0800
-Message-Id: <20210228122522.2513-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgCH3tiziztgoifaAQ--.16208S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xw4rXr17ZryfGFWkXF4ruFg_yoWDXFg_C3
-        4Igwn3trykGry093Wq9FZxArW0y3srGw1xua92qryfGw15G39ruFZ8ZF9xurWUXr4Y9Fn3
-        Crn8ZFy8J340qjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbcxFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
-        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
-        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
-        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
-        aVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
-        4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxG
-        rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
-        CI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
-        cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgQGBlZdtSfEeAAZs6
+        Sun, 28 Feb 2021 13:24:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229715AbhB1SYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Feb 2021 13:24:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C564264E83;
+        Sun, 28 Feb 2021 18:23:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614536602;
+        bh=jFyHiIkrp/RHe67eZjWBJEthOvz0V3Gl9Z/K6y2DE9o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=lDl7RtGcLuymDIPv14FBfJdani9rlSHgLz0aVcMUdPdI/MIWK1G/MwPMuh1my1tF0
+         jmmK6B31D4YVrdXiMJjYh94D0rFWXp7micLnQmH7zUQ0PjRL1n+KNSMxPlGQIzfNMO
+         AZuktwxs2561rbLmmBm+vzmZnfLlRr2LxQkqCZ1X8WAbttoRdovPGy0oQjOHjpd4kn
+         65p4jJdp/6esuCWi/yyJBWAWiFLIO531kHzyTwFcWJ9zcL+l2WuzC2HjrxcjQBfQ6t
+         H3U+keQV0XeZYlF5DWSwsopogmbm+iW+uxx7c6YrEr8D7+J9vMRa4PSoD6+/GetJeA
+         5KsAk50iDpjFQ==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     kuba@kernel.org
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt7601u: enable TDLS support
+Date:   Sun, 28 Feb 2021 19:23:09 +0100
+Message-Id: <8f9fd662cdbbb70ba896f1bea80e696b15011d3f.1614536496.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is one il_set_tx_power() call in this function without
-return value check. Print error message and return error code
-on failure just like the other il_set_tx_power() call.
+Notify mac80211 the mt7601u chipset support 802.11 TDLS. The feature has
+been tested with a mt7610u peer.
 
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/intel/iwlegacy/4965.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt7601u/init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965.c b/drivers/net/wireless/intel/iwlegacy/4965.c
-index 9fa556486511..3235b8be1894 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965.c
-@@ -1361,7 +1361,11 @@ il4965_commit_rxon(struct il_priv *il)
- 		 * We do not commit tx power settings while channel changing,
- 		 * do it now if tx power changed.
- 		 */
--		il_set_tx_power(il, il->tx_power_next, false);
-+		ret = il_set_tx_power(il, il->tx_power_next, false);
-+		if (ret) {
-+			IL_ERR("Error sending TX power (%d)\n", ret);
-+			return ret;
-+		}
- 		return 0;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt7601u/init.c b/drivers/net/wireless/mediatek/mt7601u/init.c
+index cada48800928..5d9e952b2966 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/init.c
++++ b/drivers/net/wireless/mediatek/mt7601u/init.c
+@@ -610,6 +610,7 @@ int mt7601u_register_device(struct mt7601u_dev *dev)
+ 
+ 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+ 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++	wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
  
 -- 
-2.17.1
+2.29.2
 
