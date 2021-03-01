@@ -2,166 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9246C4321A
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 17:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 680E6C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCC6764ED6
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Feb 2021 17:13:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E2BC64DF5
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Mar 2021 15:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231343AbhB1RMs (ORCPT
+        id S237365AbhCAPig (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 28 Feb 2021 12:12:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49154 "EHLO
+        Mon, 1 Mar 2021 10:38:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230461AbhB1RMj (ORCPT
+        with ESMTP id S237260AbhCAPi2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Feb 2021 12:12:39 -0500
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10048C06174A;
-        Sun, 28 Feb 2021 09:11:58 -0800 (PST)
-Received: by mail-ej1-x635.google.com with SMTP id g5so23843438ejt.2;
-        Sun, 28 Feb 2021 09:11:57 -0800 (PST)
+        Mon, 1 Mar 2021 10:38:28 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6A2CC061756;
+        Mon,  1 Mar 2021 07:37:45 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id d15so1386816wrv.5;
+        Mon, 01 Mar 2021 07:37:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:subject:message-id:references:mime-version
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=dfQ46OGWItLgoKPUR/Czwfd0qqTUSj25+jf5yrElG/4=;
-        b=GzeA/aDB2UBhnNVhm++I/Jk3Up7Sjll8FWko6UUVrR8GbwUj6tdWvj7U7T3p1JnaWE
-         tuDT5n8KyfWwgonEFcDAlbP9Wnm/lzI5ynLZd5zXrmZLcqy0e5qJFV+Ury6tgPUdhcIC
-         ZnUpySrUVv3A0oExsLsVOkNej6wDTO/NVed1e1lRxfeovoJIixufVCuML3LKRgEXHaK6
-         AQIpA41ncR2vIctG/YIpRBR7PPh4Vs9caRlig7rCLuPUPKUXlteysI6kNYwN/3Yc//ci
-         tD2NQsug/MYd9mQ+dWSVvw0ZV+w1YK/V6hQL8df04yN35+nWGaht76tutf0kiQ1Fxgq5
-         E6Vw==
+        bh=2mjETDS/R3AcrHDxH+eBHTmfWCAT1YYDng8uSVTe0DQ=;
+        b=ZijXwVTP9y+09zH0zD9ZoS6JDGqj/lSjfXbcaqFGfzV9rSL6eZVDHZAW0kSlgtHg15
+         zwQQgWIduKj22O5riA3/wQKzgjWbCcsUTgJrGgdFo4tHxpYgKSErmSv7Bl3QFKUK1mNJ
+         yeevnPS0LmK/KCLrwuWm8JQQvVkkoN68zBP8yCEtzAY/avhw4l+9BZjmF+1gH3otdnip
+         uqovBZ4TOm4bb00bOgcxPTkYyd0DU/3PXoa34WBSE6jK72v0CO2OFhYe3IRbPaZmN4vI
+         Nhscr25Rfao5pxLgOBHh9AFUPv9oUNvWJI+/5wp7+rv2bcXH/Jjg7LOy18A2Lah7zHmS
+         vPHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=dfQ46OGWItLgoKPUR/Czwfd0qqTUSj25+jf5yrElG/4=;
-        b=DFk3PQk4Tg5+x/JyUn1GIB9WRKbs4ZjvCjYZr9JKO8621MT6/JMbxVEVcdDoUwHVL+
-         For3KnKO03QZ25kxJo4JrfZHSkIeuz8ttxAxFkjgF2q6WYdlaegFsyL7pwebxMCJOuh/
-         NrMre9pjnYhb6I4oOeQe6UNOpaC6IPz2m13QnfLeVZ2YZGlmr1DYxmPi+bvVPkKasB7e
-         u9RBjICZzwxg7kg714yWmesb+O+Rtbcpc99VRzJxNj+AhqwCvcU1kFYQqrqosKdGeMu3
-         qv1KRTCKEbd/EDeY1ITs68EsyfQGwPqrqB4AdfJhZ2zoof+PofoZAtTFpktFx3ZcE2nA
-         XTjg==
-X-Gm-Message-State: AOAM5304vRkhWj/qH8naxa3syBxpk1crx5yAp/FsV3b7mRkxQxwuuOcN
-        4SYwXjH8z05UBhk34i8rBvOfdoP18tGg
-X-Google-Smtp-Source: ABdhPJw5sLbCUCcgxkhNvC6IgO3vmNaTgOeasYPBEho60Poa4WNRXoZ/cPiXNkLCHgbgyBJUziViqw==
-X-Received: by 2002:a17:906:acb:: with SMTP id z11mr3855755ejf.193.1614532316774;
-        Sun, 28 Feb 2021 09:11:56 -0800 (PST)
-Received: from localhost.localdomain ([46.53.249.223])
-        by smtp.gmail.com with ESMTPSA id fw3sm6654338ejb.82.2021.02.28.09.11.55
+        bh=2mjETDS/R3AcrHDxH+eBHTmfWCAT1YYDng8uSVTe0DQ=;
+        b=H7z4FaUVUN9ntiJ+h1J3nmmPuT4hYLK3jGESibYBczhDd8HFs2n9m2QIkuWGYLETQx
+         dmtbgXAeoJSWwxV3uJibrVnB5fm9uXRTjoFqgt+dI5oUqgdYXX0atu0XxlsKfbJ67kGN
+         oCuK5ZKV0zk5zdZFsmA0WzCamRQlN2LwMUsm9LTft/3AiDOvOS+Qw6RvWlKFul273FXU
+         Fw5/FJFOpQZN40VKLYQMWRRJVavHUW0K4gSYPZ0c1FtAlJgR7SyFxo6rM1g9DpfPRuE2
+         Y8xrTQ98pQdJZhbjtdQI2AxRDr40bSZxxF0JtMX8l2+m7P9HabS7B9XdV+bXzxiWFqxw
+         Xy/w==
+X-Gm-Message-State: AOAM531HjXPIHuyY1zQghrmlHQplWNOQOZ8kCE3iruX6x8U5tnuLnm6B
+        PbOLE/+WitII+ZeaTueOyEU=
+X-Google-Smtp-Source: ABdhPJwVOsqMcVd+MawWtsgwbNmlYQ/GlTYMnDc8ODM0H4y4vaQ4CERjuc4s6tjZRpm4/l1Xlb2hrw==
+X-Received: by 2002:a5d:424c:: with SMTP id s12mr15556026wrr.161.1614613064575;
+        Mon, 01 Mar 2021 07:37:44 -0800 (PST)
+Received: from ubuntudesktop (205.158.32.217.dyn.plus.net. [217.32.158.205])
+        by smtp.gmail.com with ESMTPSA id n1sm28452749wrx.45.2021.03.01.07.37.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Feb 2021 09:11:56 -0800 (PST)
-Date:   Sun, 28 Feb 2021 20:11:54 +0300
-From:   Alexey Dobriyan <adobriyan@gmail.com>
-To:     torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org, linux-arch@vger.kernel.org
-Subject: [PATCH 12/11] pragma once: scripted treewide conversion
-Message-ID: <YDvO2kmidKZaK26j@localhost.localdomain>
-References: <YDvLYzsGu+l1pQ2y@localhost.localdomain>
+        Mon, 01 Mar 2021 07:37:44 -0800 (PST)
+Date:   Mon, 1 Mar 2021 15:37:42 +0000
+From:   Lee <leegib@gmail.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8192e: Fix possible buffer overflow in
+ _rtl92e_wx_set_scan
+Message-ID: <20210301153742.GA427438@ubuntudesktop>
+References: <20210226114829.316980-1-leegib@gmail.com>
+ <20210226134333.GA2087@kadam>
+ <20210226140526.GG2222@kadam>
+ <20210301132535.GR2087@kadam>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YDvLYzsGu+l1pQ2y@localhost.localdomain>
+In-Reply-To: <20210301132535.GR2087@kadam>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[  Bcc a lot of lists so that people understand what's this is all         ]
-[  about without creating uber-cc-thread.                                  ]
-[  Apologies if I missed your subsystem                                    ]
-[  Please see [PATCH 11/11: pragma once: conversion script (in Python 2)]  ]
-
-Hi, Linus.
-
-Please run the script below from top-level directory, it will convert
-most kernel headers to #pragma once directive advancing them into
-21-st century.
-
-The advantages are:
-
-* less LOC
-
-	18087 files changed, 18878 insertions(+), 99804 deletions(-)
-	= -81 kLOC (give or take)
-
-* less mental tax on developers forced to name things which aren't even
-  real code
-
-* less junk in preprocessor hashtables and editors/IDEs autocompletion
-  lists
-
-There are two bit exceptions: UAPI headers and ACPICA.
-Given ubiquity of #pragma once, I personally think even these subsystems
-should be converted in the future.
-
-Compile tested on alpha, arc, arm, arm64, h8300, ia64, m68k, microblaze,
-mips, nios2, parisc, powerpc, riscv, s390, sh, sparc, um-i386, um-x86_64,
-i386, x86_64, xtensa (allnoconfig, all defconfigs, allmodconfig with or
-without SMP/DEBUG_KERNEL + misc stuff).
-
-Not compile tested on csky, hexagon, nds32, openrisc. 
-
-Love,
-	Alexey
-
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 
 
 
-#!/bin/sh -x
-find . -type f -name '*.h' -print	|\
-LC_ALL=C sort				|\
-sed -e 's#^./##g'			|\
-xargs ./scripts/pragma-once.py
+> This check worked out pretty well.  It's probably 50% bugs?  Unfiltered
+> results below.  The trick of warning for "if (ststr(member, "->ssid")) "
+> and the memcpy length couldn't be verified turned out to be the best.
 
-find . -type d -name 'uapi' | xargs git checkout -f
-git checkout -f arch/alpha/include/asm/cmpxchg.h
-git checkout -f arch/arm/mach-imx/hardware.h
-git checkout -f arch/arm/mach-ixp4xx/include/mach/hardware.h
-git checkout -f arch/arm/mach-sa1100/include/mach/hardware.h
-git checkout -f arch/mips/include/asm/mips-cps.h
-git checkout -f arch/x86/boot/boot.h
-git checkout -f arch/x86/boot/ctype.h
-git checkout -f arch/x86/include/asm/cpufeatures.h
-git checkout -f arch/x86/include/asm/disabled-features.h
-git checkout -f arch/x86/include/asm/required-features.h
-git checkout -f arch/x86/include/asm/vmxfeatures.h
-git checkout -f arch/x86/include/asm/vvar.h
-git checkout -f drivers/acpi/acpica/
-git checkout -f drivers/gpu/drm/amd/pm/inc/vega10_ppsmc.h
-git checkout -f drivers/gpu/drm/amd/pm/powerplay/ppsmc.h
-git checkout -f drivers/input/misc/yealink.h
-git checkout -f drivers/media/usb/dvb-usb-v2/mxl111sf-demod.h
-git checkout -f drivers/media/usb/dvb-usb-v2/mxl111sf-tuner.h
-git checkout -f drivers/pcmcia/yenta_socket.h
-git checkout -f drivers/staging/rtl8723bs/include/hal_com_h2c.h
-git checkout -f include/linux/acpi.h
-git checkout -f include/linux/bitops.h
-git checkout -f include/linux/compiler_types.h
-git checkout -f include/linux/device.h
-git checkout -f include/linux/kbuild.h
-git checkout -f include/linux/libfdt_env.h
-git checkout -f include/linux/local_lock.h
-git checkout -f include/linux/spinlock.h
-git checkout -f include/linux/spinlock_api_smp.h
-git checkout -f include/linux/spinlock_types.h
-git checkout -f include/linux/tracepoint.h
-git checkout -f mm/gup_test.h
-git checkout -f net/batman-adv/main.h
-git checkout -f scripts/dtc/
-git checkout -f tools/include/linux/bitops.h
-git checkout -f tools/include/linux/compiler.h
-git checkout -f tools/testing/selftests/clone3/clone3_selftests.h
-git checkout -f tools/testing/selftests/futex/include/atomic.h
-git checkout -f tools/testing/selftests/futex/include/futextest.h
-git checkout -f tools/testing/selftests/futex/include/logging.h
-git checkout -f tools/testing/selftests/kselftest.h
-git checkout -f tools/testing/selftests/kselftest_harness.h
-git checkout -f tools/testing/selftests/pidfd/pidfd.h
-git checkout -f tools/testing/selftests/x86/helpers.h
+That list looks great. I checked out 2 of those listed at random and 
+they look like valid bugs to me.
+
+> But there are quite a few real bugs as well.  If anyone wants to fix any
+> of these just claim a bug, and I won't send a patch for that warning.
+> :)  Lee, I think you mentioned that you had found a related buffer
+> overflow fix?  Did the check find it?
+
+
+I think I found 2 in these files:
+
+drivers/staging/rtl8712/rtl871x_cmd.c    
+drivers/staging/wfx/hif_tx.c
+
+Regards,
+Lee
+
