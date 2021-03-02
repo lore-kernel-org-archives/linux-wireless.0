@@ -2,88 +2,179 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C610C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 00:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268F5C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 00:46:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DA3064FC6
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 00:46:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB91164FC5
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 00:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238619AbhCCA2J (ORCPT
+        id S238843AbhCCA2g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Mar 2021 19:28:09 -0500
-Received: from z11.mailgun.us ([104.130.96.11]:60276 "EHLO z11.mailgun.us"
+        Tue, 2 Mar 2021 19:28:36 -0500
+Received: from mga02.intel.com ([134.134.136.20]:4401 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1384601AbhCBPWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Mar 2021 10:22:40 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1614698433; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=X/rBB6Mfb3HTFcW5K4H5qHEV4T8XyPF6bjBJnHNM3aY=; b=oE0c5slesIwpaQDLUQiE738KJjqq+Bl/yUwsxdE7hV5FdS0h7JKb6jr6FWMRyjDNsP+jHhN2
- kOxnPUdYvq3O4L5y1Q84nd2tzRdAW7jthxCDhUW/xxzrNul8XDXFX1z5d3PlHUFXr8iPzFXw
- hkCiz6N4JhnZnzZX4ZwKfwOIKYk=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 603e50ce540e11609c9a36fb (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 02 Mar 2021 14:50:54
- GMT
-Sender: vamsin=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 92603C433ED; Tue,  2 Mar 2021 14:50:53 +0000 (UTC)
-Received: from hu-vamsin-hyd.qualcomm.com (unknown [202.46.22.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: vamsin)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1C3AEC433CA;
-        Tue,  2 Mar 2021 14:50:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1C3AEC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=vamsin@codeaurora.org
-From:   Vamsi Krishna <vamsin@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Add interface to indicate TDLS peer's HE capability
-Date:   Tue,  2 Mar 2021 20:20:36 +0530
-Message-Id: <1614696636-30144-1-git-send-email-vamsin@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1581057AbhCBSir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Mar 2021 13:38:47 -0500
+IronPort-SDR: jn+2ZX/hXMAWI6XD1gcBsBZXrAgnfIw3quOw1HsyNLZ5YhoC5Dlbw3LMqCFeDaXu1/cDiKOajj
+ qefrMxSAvvSQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9911"; a="174065368"
+X-IronPort-AV: E=Sophos;i="5.81,217,1610438400"; 
+   d="scan'208";a="174065368"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2021 10:31:19 -0800
+IronPort-SDR: udlla3t/G2tmj3/rSXyD/AD3M+TwFb33raC89KBXpHgOaK4UtESjqD1eNT3HUPj4q4uKgGVDLV
+ Lj0RpbYpTIZg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,217,1610438400"; 
+   d="scan'208";a="373685007"
+Received: from orsmsx606.amr.corp.intel.com ([10.22.229.19])
+  by fmsmga007.fm.intel.com with ESMTP; 02 Mar 2021 10:31:16 -0800
+Received: from orsmsx608.amr.corp.intel.com (10.22.229.21) by
+ ORSMSX606.amr.corp.intel.com (10.22.229.19) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 2 Mar 2021 10:31:15 -0800
+Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
+ ORSMSX608.amr.corp.intel.com (10.22.229.21) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Tue, 2 Mar 2021 10:31:14 -0800
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2
+ via Frontend Transport; Tue, 2 Mar 2021 10:31:14 -0800
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (104.47.36.57) by
+ edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2106.2; Tue, 2 Mar 2021 10:31:14 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CNokBAc7zX2FPhSfqTyqR6NEGhTwz4dVnj0I5OqtlQ0lYU9oENZ2eJuzw2mhwgME9xTFP7hQ3FQkx73RHjMUjUTk+UttrYduN9Ws6Gy+JBhnyGAYGqP6q7x0CrSD5rISYM35ip0TkgmWPjl3fxH+QbKGnjpx40H+FgvwGHp46m9p1W6hWK1/FunrydFQyG1qgN6gpLNwfpaa1VF9Qf99js3KJf2nBepZYuF0qfk1oXbQJsKMLOjpNMk8npQ+6QFQpLofincE7iDNPNVjDumTjNi1NpaSZw+Jk2uhBA7vmmItISeUX7O9Q8jrts/U4EIJVkvp/u3tQ66YxQ4qrPIQtw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hiZ9D6+YcXe28JYtyeICuT9jHmbiaAvIQtdsvYVceCA=;
+ b=PElP5WvKAHhKlBEYfbqMQjlRVrdPJSYvIckAV0Eu+z/QcaHtKlPedn9AldYOjO878cDWDHuhAwr4kBEHWXgQFgBxDgty6pR+c/N3HXiBtheqbmpVzCmuANBkCMDJsnT22cuIXSjOc4iCB8iWy2Vh90b8whQEPM4P1ZLRTaeYCJgEkR0EX+4K0+ZeUGsOi1edEgoJ/a0ME8ez258lKLGrOqLbnMNSDHtfQU1JDpWiIWahRL+4G1SDjC2jm3qPk0VIF6b9bvSvl/lHcDhl4NxjIw7aRjbjSbQqIj7sFOUgNtqayOJ85+rbTYPfPGtnn+KV6NXf/vr2jdRlpOa9maNb5w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hiZ9D6+YcXe28JYtyeICuT9jHmbiaAvIQtdsvYVceCA=;
+ b=Nx1EWV4xquHlYKsGCqHuRoGnY6rTJyUz59H4qs2Px9nVEXp20wpUWqhb22HctFVhVs53BRdzCcUY1Fdjpffw9BqdNirO3Cd6SuZv8KhLCrQB2TElhF0YrsQLIU54L+l7LuEPJLa/gwADb2Ya35v2aPrrXWtaOyRRT9m5yf59lvM=
+Received: from BYAPR11MB3207.namprd11.prod.outlook.com (2603:10b6:a03:7c::14)
+ by SJ0PR11MB5072.namprd11.prod.outlook.com (2603:10b6:a03:2db::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.32; Tue, 2 Mar
+ 2021 18:31:12 +0000
+Received: from BYAPR11MB3207.namprd11.prod.outlook.com
+ ([fe80::c951:3ae4:1aca:9daf]) by BYAPR11MB3207.namprd11.prod.outlook.com
+ ([fe80::c951:3ae4:1aca:9daf%3]) with mapi id 15.20.3890.023; Tue, 2 Mar 2021
+ 18:31:12 +0000
+From:   "Coelho, Luciano" <luciano.coelho@intel.com>
+To:     "nathan@kernel.org" <nathan@kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC:     "gil.adam@intel.com" <gil.adam@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "weiyongjun1@huawei.com" <weiyongjun1@huawei.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "hulkci@huawei.com" <hulkci@huawei.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: mvm: add terminate entry for dmi_system_id
+ tables
+Thread-Topic: [PATCH] iwlwifi: mvm: add terminate entry for dmi_system_id
+ tables
+Thread-Index: AQHXCesNOiAtSHfJpEaaXnkq3FBcxapq8rcAgACgUcSABX2QAA==
+Date:   Tue, 2 Mar 2021 18:31:11 +0000
+Message-ID: <bd1bd942bcccffb9b3453344b611a13876d0e565.camel@intel.com>
+References: <20210223140039.1708534-1-weiyongjun1@huawei.com>
+         <20210226210640.GA21320@MSI.localdomain> <87h7ly9fph.fsf@codeaurora.org>
+In-Reply-To: <87h7ly9fph.fsf@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=intel.com;
+x-originating-ip: [91.156.6.193]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 703bde8d-0640-4b76-eeea-08d8dda95b28
+x-ms-traffictypediagnostic: SJ0PR11MB5072:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SJ0PR11MB507204101696CFFF7A6577B090999@SJ0PR11MB5072.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: zz+npyGgYCbBHkiTsGhTyBXzxekixNxJKsp0ERl9oVelgI39o9bNzPsrMbckkWVq2ZrQPXkCFvLjKIlJ8vRiIQ4/xms6ypd2G8g1TU5bPAvyrK+jiBY1PHLM9kWwqmNhY8r1WXuDQb0iR8BCEUDDYBpPPaqeKurk/2MOxU2dPL9P2J5wrEsvH/SF5m0TRmLwVzSfWeYa01FG6I2bC+zN+UWIht2TP5v3+RQJxJQy5zngTMxE2UHYQCFYthET+a6QFDgCxL1Qs8ChaMZid8IozmAMlq6bffF2WakyfZMKhalkTwyBYDHI0A+KUCmbqvsAuaAsiVnL1rP5x/vEewS9uRr9COcjrOGsEjmBFcm4gzp6KSNgbAOwqSXnVpi0je5LvoNgLwIMvwimS6eQGgrnSNaoezIbyAY/Q/qqX4WwcrpJacm6GchCz4WLcBlxla5RwvfqQfnCH1bHS+VWRqyq5t+4/bcPQHSXw7vO4qG50N0mOBP7voINYwGkDQweuSb7bPdtymqAwtgTeHckdncJjA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR11MB3207.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(376002)(366004)(39860400002)(346002)(396003)(71200400001)(8936002)(316002)(6512007)(478600001)(76116006)(5660300002)(54906003)(4326008)(2616005)(110136005)(91956017)(2906002)(6506007)(66556008)(86362001)(8676002)(66446008)(186003)(66946007)(64756008)(26005)(6486002)(4744005)(36756003)(66476007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?eTRSaGxtdFc1NWF6enRyTm5iRnFIS1hXQmJlQS9XS3B0UnRoS3hlVjJjWXBR?=
+ =?utf-8?B?NmZHTTVHUGhXZkZoTk9seTkxZnNjV1J5K0VTbU5UemFSNU5xRWNoZmNjcTVN?=
+ =?utf-8?B?WW1HamVSN1ltVjFsUTNxZzk0UUdqMDlpYXZsb0lqbjlZcnNVU0ZXOEVWSEVn?=
+ =?utf-8?B?eEN1TDBSMElScHZDNjNyRlhGRCtaQzhoWVZqdjZIZG1ubWNNbmw4ZVovbVBE?=
+ =?utf-8?B?RXgvVStDbUZiMnFBMWFacHRsaVd6Z3lOUlJxNWUyMFBnK1VCUmNWTVdINVR6?=
+ =?utf-8?B?bTF1KzA1blJuVlFha3VQbUJQZ1NvKzc3clFxb0NNY21jVzZHeXZvNXhlek5h?=
+ =?utf-8?B?UG56YW1jRVRJcVE1VDg2QmVNSUNkWGhmSDMxcWN4NzRoMFB5L2F2WWZGTmI3?=
+ =?utf-8?B?bDRtdldVcjRzTVNYTWw3Q0Rvc1BHcXJzQlVwUEplNmFEOWRJZWV1VWV2L0pN?=
+ =?utf-8?B?RkxrYUkzRktDbDVMNHlLRTk4WEhqNFROcWE0MlMza0R0MXp5NTErQXVoTTZG?=
+ =?utf-8?B?MW9hUzRsSnpsNnFHTGpTdUZ1WENjU05sVjRHV2xVQzRzSjlHYXh4NzVGa3lm?=
+ =?utf-8?B?SVJaVGVDOFdibnN0aURRa1dXa2FzTkJybWNOVkpEWWpETmNiWjFKUDZiL0dj?=
+ =?utf-8?B?UmZNKzBXZW9oRksxakpscmFzQkwzdEc1QXhROXFTYkhJRFprdGdZTUlCMEFj?=
+ =?utf-8?B?SGRFcG04NlI4bUNxNEF0R2VZYW8zMjByMG5qSUtldmV3ZkVRWFNzMU54VGFh?=
+ =?utf-8?B?bWxhYWtlSFg5Zmx6MVFTM1FpM3Y5bkRBT20xSzN0Tkd4cWNXc2VkanFWejBa?=
+ =?utf-8?B?WWtGTE9jK0hqaENmZjhsNWhvNmtjclFkenFtNUZsQ2s1RWMzVnQxV0Njck5x?=
+ =?utf-8?B?QmFZMmVEQ1NLVlpHdE5TQWMxemkzTW5zM3dMOVJQa0dYZVBGK1dSN0pmQWVV?=
+ =?utf-8?B?YUlpNVBtVU9sZ1FyNEd0K3hnRjV0Y0xIYjA4YTM4N0ZUbVJ3ZU9ONjQ3ZlU4?=
+ =?utf-8?B?OGh3bVhGSUNrQU1uWnB3ZTRwSXpXMStBK2JyOUlvY3cycmkvTCs1VVBKd2pS?=
+ =?utf-8?B?SDlwa1dRS0t5M1hOLytScnV4dk8vcENNT3NMZnFkc0VySHVVL3JDbkJVVTZY?=
+ =?utf-8?B?TDVWM0R4T2Z5OXJBaGZMdnFaZlc5d05Yd0RmZmVEWEw1Q0J5TDRXand2enZq?=
+ =?utf-8?B?cW5saG5lempoOUZIbTFTeExRbU5jSkNHYmJoZkZzMVZscHNydzZvNGpwQ3dQ?=
+ =?utf-8?B?M2dpRWVncVhzc2ZrckRvTUVJWGZRTHpMSmFpSm5BUFkyRGdQaFBkRmNXUFNa?=
+ =?utf-8?B?d1h1eG1hUnJHL2g3UFF4VXZGTUxkc0FraWM5YmdmNXgzQThKNjR4ZjlUNSt4?=
+ =?utf-8?B?Nm1hYTdzM0RiYWRNeHhZdnVNMFFDUWZwYVZjS0pia0RWT3JEcHg1YU5KdGdQ?=
+ =?utf-8?B?SnZTYzlMMzJ0TTEwOThwRHY5OEJTenF5bHg1Q2xsVytzVm90Y3g5ekphK0JI?=
+ =?utf-8?B?WDgxODFLQUFpcEhQaldBc09nL0xHdlhvczBZaFpid3BIK3BkVWNGQTFMT3lr?=
+ =?utf-8?B?RFJkQTVnQ0lqOHFFbmE3SkJZM1JlZWYxVW5hWCtRZHhaVUZxMjdxa1B0MEZI?=
+ =?utf-8?B?VEZIRi9JSHA4ZFcwaFVnbzhWTnZ2WnlreXpDeDVVOHpweXhIWVpHTFhBMXdr?=
+ =?utf-8?B?MnJJcldmQW91NVRlTzliNjVCYWRSeTBvenF6UTZGeXJJeC9JQnVmamZKSlM2?=
+ =?utf-8?Q?fODtE6vM49/9RYAMZxRmRUhMnmfSvhM1NpxeKII?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4841D4F9A60878439C2C3BDC487E5B3E@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR11MB3207.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 703bde8d-0640-4b76-eeea-08d8dda95b28
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Mar 2021 18:31:12.0566
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 5djDE62nBZ6k4UvxhnUsjFg8jEw76jfcaYrtOIqF8YLYBetjNxP7BhMN/VZgvPLYH9p8QPFIpam/Z33fnLgslDlRYHvyQfq3SzQvW9rPHm0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5072
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Enhance enum nl80211_tdls_peer_capability to configure TDLS peer's
-support for HE mode. Userspace decodes the TDLS setup response frame
-and confugures the HE mode support to driver if the peer has advertized
-HE mode support in TDLS setup response frame. The driver uses this
-information to decide whether to include HE operation IE in TDLS setup
-confirmation frame.
-
-Signed-off-by: Vamsi Krishna <vamsin@codeaurora.org>
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ac78da9..adc890e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -6295,11 +6295,13 @@ struct nl80211_vendor_cmd_info {
-  * @NL80211_TDLS_PEER_HT: TDLS peer is HT capable.
-  * @NL80211_TDLS_PEER_VHT: TDLS peer is VHT capable.
-  * @NL80211_TDLS_PEER_WMM: TDLS peer is WMM capable.
-+ * @NL80211_TDLS_PEER_HE: TDLS peer is HE capable.
-  */
- enum nl80211_tdls_peer_capability {
- 	NL80211_TDLS_PEER_HT = 1<<0,
- 	NL80211_TDLS_PEER_VHT = 1<<1,
- 	NL80211_TDLS_PEER_WMM = 1<<2,
-+	NL80211_TDLS_PEER_HE = 1<<3,
- };
- 
- /**
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
-
+T24gU2F0LCAyMDIxLTAyLTI3IGF0IDA4OjM5ICswMjAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBO
+YXRoYW4gQ2hhbmNlbGxvciA8bmF0aGFuQGtlcm5lbC5vcmc+IHdyaXRlczoNCj4gDQo+ID4gT24g
+VHVlLCBGZWIgMjMsIDIwMjEgYXQgMDI6MDA6MzlQTSArMDAwMCwgV2VpIFlvbmdqdW4gd3JvdGU6
+DQo+ID4gPiBNYWtlIHN1cmUgZG1pX3N5c3RlbV9pZCB0YWJsZXMgYXJlIE5VTEwgdGVybWluYXRl
+ZC4NCj4gPiA+IA0KPiA+ID4gRml4ZXM6IGEyYWMwZjQ4YTA3YyAoIml3bHdpZmk6IG12bTogaW1w
+bGVtZW50IGFwcHJvdmVkIGxpc3QgZm9yIHRoZSBQUEFHIGZlYXR1cmUiKQ0KPiA+ID4gUmVwb3J0
+ZWQtYnk6IEh1bGsgUm9ib3QgPGh1bGtjaUBodWF3ZWkuY29tPg0KPiA+ID4gU2lnbmVkLW9mZi1i
+eTogV2VpIFlvbmdqdW4gPHdlaXlvbmdqdW4xQGh1YXdlaS5jb20+DQo+ID4gDQo+ID4gV2UgcmVj
+ZWl2ZWQgYSByZXBvcnQgYWJvdXQgYSBjcmFzaCBpbiBpd2x3aWZpIHdoZW4gY29tcGlsZWQgd2l0
+aCBMVE8gYW5kDQo+ID4gdGhpcyBmaXggcmVzb2x2ZXMgaXQuDQo+IA0KPiBUaGF0IGluZm9ybWF0
+aW9uIHNob3VsZCBiZSBhZGRlZCB0byB0aGUgY29tbWl0IGxvZy4NCj4gDQo+IEx1Y2EsIHNob3Vs
+ZCBJIHRha2UgdGhpcyB0byB3aXJlbGVzcy1kcml2ZXJzPw0KDQpJIGp1c3Qgc2F3IEplbnMnIHBh
+dGNoIG5vdyBhbmQgSSBkb24ndCByZW1lbWJlciBpZiBJIGFja2VkIHRoaXMgb25lPw0KDQpJbiBh
+bnksIEkgYXNzaWduZWQgaXQgdG8geW91IGluIHBhdGNod29yaywgc28gcGxlYXNlIHRha2UgaXQg
+ZGlyZWN0bHkNCnRvIHctZC4NCg0KVGhhbmtzIQ0KDQpBY2tlZC1ieTogTHVjYSBDb2VsaG8gPGx1
+Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCg0KLS0NCkNoZWVycywNCkx1Y2EuDQo=
