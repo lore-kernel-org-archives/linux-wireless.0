@@ -2,127 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8BFDC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E738CC433E9
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88EC464EF6
+	by mail.kernel.org (Postfix) with ESMTP id BAAF964ECF
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237452AbhCCVRJ (ORCPT
+        id S243270AbhCCVRj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:17:09 -0500
-Received: from z11.mailgun.us ([104.130.96.11]:29600 "EHLO z11.mailgun.us"
+        Wed, 3 Mar 2021 16:17:39 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:55066 "EHLO m42-2.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236726AbhCCP57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Mar 2021 10:57:59 -0500
+        id S1580477AbhCCSeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Mar 2021 13:34:15 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1614787057; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Bk8N7ltWopTTqKsfTNF0yc3K+wDZTbr+CiOMIc1zrJM=;
- b=gNHciC5E0GS10BNo2hmr49TypHZwr14gu2+YWTr6O6woTexAkpob5AYo+LSSSvwn2d0p1i9K
- LU98OrJK0VHNxZVncR+vkfN0reyqkYxjVd2KvaMUdaH2mmcdWJVxCQ58Y/0cxkKv6HSrtlEN
- p0BpJrPh6UeOwtAFrASKEqlxqEM=
-X-Mailgun-Sending-Ip: 104.130.96.11
+ s=smtp; t=1614796437; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=Ac+Gd3GM2hW82Saxrw1wKrEC8rkJjEHWwfXpNzzaSa0=; b=NIG7Lj35GH4alPfPIZPcxuX19S1paG+q43RDihfSpC7RG1jhiXrliX90USsg8Yr8vt7zuPaj
+ wt9MSyaVY5Xai7oW0tDMfLMakVa+MMNJLZ+WV9wWra7AqSatZIk+F4PV8OGKyvAa1m4xmXb6
+ 1BmFDM53uhYUdNhL9wDLsNoYetw=
+X-Mailgun-Sending-Ip: 69.72.42.2
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 603fb1d060050cf4d0e96af9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Mar 2021 15:57:04
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 603fd66b7b648e2436a0677b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Mar 2021 18:33:15
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 917D5C433C6; Wed,  3 Mar 2021 15:57:04 +0000 (UTC)
+        id 2B3D4C433ED; Wed,  3 Mar 2021 18:33:14 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 33CA8C433ED;
-        Wed,  3 Mar 2021 15:56:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 33CA8C433ED
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2EFB5C43462;
+        Wed,  3 Mar 2021 18:33:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2EFB5C43462
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: iwlwifi: mvm: add terminate entry for dmi_system_id tables
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210223140039.1708534-1-weiyongjun1@huawei.com>
-References: <20210223140039.1708534-1-weiyongjun1@huawei.com>
-To:     Wei Yongjun <weiyongjun1@huawei.com>
-Cc:     Hulk Robot <hulkci@huawei.com>,
+To:     Jiri Kosina <jikos@kernel.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-        Gil Adam <gil.adam@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210303155704.917D5C433C6@smtp.codeaurora.org>
-Date:   Wed,  3 Mar 2021 15:57:04 +0000 (UTC)
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] iwlwifi: don't call netif_napi_add() with rxq->lock held (was Re: Lockdep warning in iwl_pcie_rx_handle())
+References: <nycvar.YFH.7.76.2103021134060.12405@cbobk.fhfr.pm>
+        <20210303155941.25521C43463@smtp.codeaurora.org>
+        <nycvar.YFH.7.76.2103031901140.12405@cbobk.fhfr.pm>
+Date:   Wed, 03 Mar 2021 20:33:09 +0200
+In-Reply-To: <nycvar.YFH.7.76.2103031901140.12405@cbobk.fhfr.pm> (Jiri
+        Kosina's message of "Wed, 3 Mar 2021 19:01:45 +0100 (CET)")
+Message-ID: <87y2f46qai.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wei Yongjun <weiyongjun1@huawei.com> wrote:
+Jiri Kosina <jikos@kernel.org> writes:
 
-> Make sure dmi_system_id tables are NULL terminated. This crashed when LTO was enabled:
-> 
-> BUG: KASAN: global-out-of-bounds in dmi_check_system+0x5a/0x70
-> Read of size 1 at addr ffffffffc16af750 by task NetworkManager/1913
-> 
-> CPU: 4 PID: 1913 Comm: NetworkManager Not tainted 5.12.0-rc1+ #10057
-> Hardware name: LENOVO 20THCTO1WW/20THCTO1WW, BIOS N2VET27W (1.12 ) 12/21/2020
-> Call Trace:
->  dump_stack+0x90/0xbe
->  print_address_description.constprop.0+0x1d/0x140
->  ? dmi_check_system+0x5a/0x70
->  ? dmi_check_system+0x5a/0x70
->  kasan_report.cold+0x7b/0xd4
->  ? dmi_check_system+0x5a/0x70
->  __asan_load1+0x4d/0x50
->  dmi_check_system+0x5a/0x70
->  iwl_mvm_up+0x1360/0x1690 [iwlmvm]
->  ? iwl_mvm_send_recovery_cmd+0x270/0x270 [iwlmvm]
->  ? setup_object.isra.0+0x27/0xd0
->  ? kasan_poison+0x20/0x50
->  ? ___slab_alloc.constprop.0+0x483/0x5b0
->  ? mempool_kmalloc+0x17/0x20
->  ? ftrace_graph_ret_addr+0x2a/0xb0
->  ? kasan_poison+0x3c/0x50
->  ? cfg80211_iftype_allowed+0x2e/0x90 [cfg80211]
->  ? __kasan_check_write+0x14/0x20
->  ? mutex_lock+0x86/0xe0
->  ? __mutex_lock_slowpath+0x20/0x20
->  __iwl_mvm_mac_start+0x49/0x290 [iwlmvm]
->  iwl_mvm_mac_start+0x37/0x50 [iwlmvm]
->  drv_start+0x73/0x1b0 [mac80211]
->  ieee80211_do_open+0x53e/0xf10 [mac80211]
->  ? ieee80211_check_concurrent_iface+0x266/0x2e0 [mac80211]
->  ieee80211_open+0xb9/0x100 [mac80211]
->  __dev_open+0x1b8/0x280
-> 
-> Fixes: a2ac0f48a07c ("iwlwifi: mvm: implement approved list for the PPAG feature")
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> Reviewed-by: Nathan Chancellor <nathan@kernel.org>
-> Tested-by: Victor Michel <vic.michel.web@gmail.com>
-> Acked-by: Luca Coelho <luciano.coelho@intel.com>
-> [kvalo@codeaurora.org: improve commit log]
+> On Wed, 3 Mar 2021, Kalle Valo wrote:
+>
+>> Patch applied to wireless-drivers.git, thanks.
+>
+> Thanks, but ...
+>
+>> 295d4cd82b01 iwlwifi: don't call netif_napi_add() with rxq->lock
+>> held (was Re: Lockdep warning in iwl_pcie_rx_handle())
+>
+> ... i believe you want to drop the "(was ...") part from the patch 
+> subject.
 
-Patch applied to wireless-drivers.git, thanks.
-
-a22549f12767 iwlwifi: mvm: add terminate entry for dmi_system_id tables
+Too late now, it's already applied and pull request sent. Why was it
+there in the first place?
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210223140039.1708534-1-weiyongjun1@huawei.com/
+https://patchwork.kernel.org/project/linux-wireless/list/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
