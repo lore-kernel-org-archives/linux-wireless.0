@@ -2,278 +2,183 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A366FC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DAD9C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74A5E600EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01A4764EF6
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233786AbhCCVQi (ORCPT
+        id S235282AbhCCVQu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:16:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40840 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352476AbhCCDt6 (ORCPT
+        Wed, 3 Mar 2021 16:16:50 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:47167 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S234106AbhCCKwe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Mar 2021 22:49:58 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CCC2C06121D
-        for <linux-wireless@vger.kernel.org>; Tue,  2 Mar 2021 19:49:06 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id s16so13274952plr.9
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2021 19:49:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=crpRlTuLsTSBDFZF1sG8XY3lyzjTrYU8f2s0Rmwad8E=;
-        b=hFWyfj3CaV8hJ4u7MmXF0hFuoziy8dw4cf2dba32u2CWwmQyOpRF2xRnw6POnIoIRA
-         dZGJt67sbZVhemUi9P0KnwXz8en0Q2DnBu3ZQxE0JbQ8edtIXrhqG77ccNoxSRi04BiW
-         ZQ8iYyz62GdZIAJkseRO8DREAOWjv9T4QIByjTQdS66S9pQXW2+2uPMt066mVwcYKjoz
-         cVNXFXGf2GLECiGgr2kyVZYewYa65JmrkqLiGWqk8vE+gW3ms+ahPfH+s0qB7z35OcJw
-         Ko5O+5i5R7Z1Ic5sLakbCyRxuWyBq/LF9acJlOmTHXtZATaeQvPMZ6imEAJVylYoimkp
-         R3vQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=crpRlTuLsTSBDFZF1sG8XY3lyzjTrYU8f2s0Rmwad8E=;
-        b=DkY9kO/DRtpga1p/WKBdtON69o9r3MF3NZyEvhW1zEg1/UTZh/LeZVGM71xstd5jq0
-         4fNJdjrvHJmlXtn9coEohdNAqGUusxoOQ0tc3+mnxaPUu5YA44TOBqUs5wFxzutm8P0q
-         vRhCBKw76qaQAztMHYStOMoTqWbzp7+kZTKJmJqK2bi5L69rWH2u/oVwlMiY29d4mYGt
-         KrfKuMBNwQt0GlSUVufnvrWjLRzfZHQb/r+6M0/02YKv//AYrkeYti6FoKHVxNs9wSYS
-         wDs4xcakWM0Y28A1ojza9cCPaLKZYADY8D8OvfrOA7yPlOoekfA0d9pLOC3qxjzAGO9R
-         FuRw==
-X-Gm-Message-State: AOAM533uibm5zldrG6Y+MficF6CBBzaHID7AKPV+Mjs5fv45AWWcF6j5
-        70wZgzr0ioAdggwDRzhw1hkNicVx40pb4w==
-X-Google-Smtp-Source: ABdhPJwUKK3hKO4MDPskjC/TL/jcUD2lNdUvh2EiZ5gVgcCIYL2JOQDbqHRux31h+/PAqQA5ZR8g9A==
-X-Received: by 2002:a17:90a:f302:: with SMTP id ca2mr7828805pjb.233.1614743345940;
-        Tue, 02 Mar 2021 19:49:05 -0800 (PST)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id u9sm21456493pgc.59.2021.03.02.19.49.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Mar 2021 19:49:05 -0800 (PST)
-Subject: Re: [PATCH] iwlwifi: ensure that DMI scan table is properly
- terminated
-To:     "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-References: <0d52ff85-323f-67b8-5fdb-bbf3093b0ccf@kernel.dk>
- <782d5382b0c8c9b33277422c8e41180c49044128.camel@intel.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <3f8e28b1-0c15-7539-ef50-5cfb71a3591f@kernel.dk>
-Date:   Tue, 2 Mar 2021 20:49:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Wed, 3 Mar 2021 05:52:34 -0500
+X-UUID: 007660557151438fb654858e47d4244e-20210303
+X-UUID: 007660557151438fb654858e47d4244e-20210303
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 138093793; Wed, 03 Mar 2021 18:38:06 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 3 Mar 2021 18:38:03 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 3 Mar 2021 18:38:03 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/4] mt76: mt7915: fix rxrate reporting
+Date:   Wed, 3 Mar 2021 18:37:59 +0800
+Message-ID: <a379bb8534b2b8c24e30313b97aa8cfdf79c315b.1614753100.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-In-Reply-To: <782d5382b0c8c9b33277422c8e41180c49044128.camel@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 43E5F3BEE6F3F98E75647AB33B32E3F3AE7269CA5AC11EC62DD68CEED2F3F8FE2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/2/21 11:34 AM, Coelho, Luciano wrote:
-> On Tue, 2021-03-02 at 11:20 -0700, Jens Axboe wrote:
->> My laptop crashes at boot, and I ran the same kernel with KASAN enabled.
->> Turns out the DMI addition for iwlwifi is broken (and untested?), since
->> it doesn't properly terminate the scan table. Ensure that we do so.
->>
->> ==================================================================
->> BUG: KASAN: global-out-of-bounds in dmi_check_system+0x5a/0x70
->> Read of size 1 at addr ffffffffc16af750 by task NetworkManager/1913
->>
->> CPU: 4 PID: 1913 Comm: NetworkManager Not tainted 5.12.0-rc1+ #10057
->> Hardware name: LENOVO 20THCTO1WW/20THCTO1WW, BIOS N2VET27W (1.12 ) 12/21/2020
->> Call Trace:
->>  dump_stack+0x90/0xbe
->>  print_address_description.constprop.0+0x1d/0x140
->>  ? dmi_check_system+0x5a/0x70
->>  ? dmi_check_system+0x5a/0x70
->>  kasan_report.cold+0x7b/0xd4
->>  ? dmi_check_system+0x5a/0x70
->>  __asan_load1+0x4d/0x50
->>  dmi_check_system+0x5a/0x70
->>  iwl_mvm_up+0x1360/0x1690 [iwlmvm]
->>  ? iwl_mvm_send_recovery_cmd+0x270/0x270 [iwlmvm]
->>  ? setup_object.isra.0+0x27/0xd0
->>  ? kasan_poison+0x20/0x50
->>  ? ___slab_alloc.constprop.0+0x483/0x5b0
->>  ? mempool_kmalloc+0x17/0x20
->>  ? ftrace_graph_ret_addr+0x2a/0xb0
->>  ? kasan_poison+0x3c/0x50
->>  ? cfg80211_iftype_allowed+0x2e/0x90 [cfg80211]
->>  ? __kasan_check_write+0x14/0x20
->>  ? mutex_lock+0x86/0xe0
->>  ? __mutex_lock_slowpath+0x20/0x20
->>  __iwl_mvm_mac_start+0x49/0x290 [iwlmvm]
->>  iwl_mvm_mac_start+0x37/0x50 [iwlmvm]
->>  drv_start+0x73/0x1b0 [mac80211]
->>  ieee80211_do_open+0x53e/0xf10 [mac80211]
->>  ? ieee80211_check_concurrent_iface+0x266/0x2e0 [mac80211]
->>  ieee80211_open+0xb9/0x100 [mac80211]
->>  __dev_open+0x1b8/0x280
->>  ? dev_set_rx_mode+0x40/0x40
->>  __dev_change_flags+0x32f/0x3a0
->>  ? dev_set_allmulti+0x20/0x20
->>  ? is_bpf_text_address+0x24/0x30
->>  ? kernel_text_address+0xbb/0xd0
->>  dev_change_flags+0x63/0xc0
->>  do_setlink+0xb59/0x18c0
->>  ? rtnetlink_put_metrics+0x2e0/0x2e0
->>  ? stack_trace_consume_entry+0x90/0x90
->>  ? if6_seq_show+0xb0/0xb0
->>  ? kasan_save_stack+0x42/0x50
->>  ? kasan_save_stack+0x23/0x50
->>  ? kasan_set_track+0x20/0x30
->>  ? kasan_set_free_info+0x24/0x40
->>  ? __kasan_slab_free+0xea/0x120
->>  ? kfree+0x94/0x250
->>  ? memset+0x3c/0x50
->>  ? __nla_validate_parse+0xc1/0x12d0
->>  ? ____sys_sendmsg+0x430/0x450
->>  ? ___sys_sendmsg+0xf2/0x160
->>  ? __sys_sendmsg+0xc8/0x150
->>  ? __x64_sys_sendmsg+0x48/0x50
->>  ? do_syscall_64+0x32/0x80
->>  ? entry_SYSCALL_64_after_hwframe+0x44/0xae
->>  ? nla_get_range_signed+0x1c0/0x1c0
->>  ? nla_put_ifalias+0x86/0xf0
->>  ? __cgroup_bpf_run_filter_skb+0xc1/0x6f0
->>  ? memcpy+0x4e/0x60
->>  ? __kasan_check_read+0x11/0x20
->>  __rtnl_newlink+0x905/0xde0
->>  ? ipv6_dev_get_saddr+0x4c0/0x4c0
->>  ? rtnl_setlink+0x250/0x250
->>  ? ftrace_graph_ret_addr+0x2a/0xb0
->>  ? entry_SYSCALL_64_after_hwframe+0x44/0xae
->>  ? bpf_ksym_find+0x94/0xe0
->>  ? __rcu_read_unlock+0x39/0x60
->>  ? is_bpf_text_address+0x24/0x30
->>  ? kernel_text_address+0xbb/0xd0
->>  ? __kernel_text_address+0x12/0x40
->>  ? unwind_get_return_address+0x36/0x50
->>  ? create_prof_cpu_mask+0x30/0x30
->>  ? arch_stack_walk+0x98/0xf0
->>  ? stack_trace_save+0x94/0xc0
->>  ? stack_trace_consume_entry+0x90/0x90
->>  ? arch_stack_walk+0x98/0xf0
->>  ? __kasan_kmalloc+0x81/0xa0
->>  ? kmem_cache_alloc_trace+0xf4/0x220
->>  rtnl_newlink+0x55/0x80
->>  rtnetlink_rcv_msg+0x22f/0x560
->>  ? __kasan_slab_alloc+0x5f/0x80
->>  ? rtnl_calcit.isra.0+0x1e0/0x1e0
->>  ? __x64_sys_sendmsg+0x48/0x50
->>  ? do_syscall_64+0x32/0x80
->>  ? entry_SYSCALL_64_after_hwframe+0x44/0xae
->>  ? kernel_text_address+0xbb/0xd0
->>  ? __kernel_text_address+0x12/0x40
->>  ? unwind_get_return_address+0x36/0x50
->>  netlink_rcv_skb+0xe7/0x210
->>  ? rtnl_calcit.isra.0+0x1e0/0x1e0
->>  ? netlink_ack+0x580/0x580
->>  ? netlink_deliver_tap+0x68/0x3d0
->>  rtnetlink_rcv+0x15/0x20
->>  netlink_unicast+0x3a8/0x4f0
->>  ? netlink_attachskb+0x430/0x430
->>  ? __alloc_skb+0xd7/0x1e0
->>  netlink_sendmsg+0x3ff/0x710
->>  ? __rcu_read_unlock+0x39/0x60
->>  ? netlink_unicast+0x4f0/0x4f0
->>  ? iovec_from_user+0x6c/0x170
->>  ? __import_iovec+0x137/0x1c0
->>  ? netlink_unicast+0x4f0/0x4f0
->>  sock_sendmsg+0x74/0x80
->>  ____sys_sendmsg+0x430/0x450
->>  ? kernel_sendmsg+0x40/0x40
->>  ? do_recvmmsg+0x440/0x440
->>  ? kasan_save_stack+0x42/0x50
->>  ? kasan_save_stack+0x23/0x50
->>  ? kasan_record_aux_stack+0xac/0xc0
->>  ? call_rcu+0x5a/0x450
->>  ? __fput+0x1d7/0x3d0
->>  ? ____fput+0xe/0x10
->>  ___sys_sendmsg+0xf2/0x160
->>  ? sendmsg_copy_msghdr+0x120/0x120
->>  ? __kasan_check_write+0x14/0x20
->>  ? _raw_spin_lock+0x82/0xd0
->>  ? _raw_read_lock_irq+0x50/0x50
->>  ? __fget_files+0xce/0x110
->>  ? __fget_light+0x72/0x100
->>  ? __fdget+0x13/0x20
->>  __sys_sendmsg+0xc8/0x150
->>  ? __sys_sendmsg_sock+0x20/0x20
->>  ? __kasan_check_read+0x11/0x20
->>  ? fpregs_assert_state_consistent+0x5a/0x70
->>  __x64_sys_sendmsg+0x48/0x50
->>  do_syscall_64+0x32/0x80
->>  entry_SYSCALL_64_after_hwframe+0x44/0xae
->> RIP: 0033:0x7f752cc7312d
->> Code: 28 89 54 24 1c 48 89 74 24 10 89 7c 24 08 e8 ca ee ff ff 8b 54 24 1c 48 8b 74 24 10 41 89 c0 8b 7c 24 08 b8 2e 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 2f 44 89 c7 48 89 44 24 08 e8 fe ee ff ff 48
->> RSP: 002b:00007ffd1962bc70 EFLAGS: 00000293 ORIG_RAX: 000000000000002e
->> RAX: ffffffffffffffda RBX: 000055e6574ba880 RCX: 00007f752cc7312d
->> RDX: 0000000000000000 RSI: 00007ffd1962bcc0 RDI: 000000000000000c
->> RBP: 00007ffd1962bcc0 R08: 0000000000000000 R09: 0000000000000000
->> R10: 0000000000000001 R11: 0000000000000293 R12: 000055e6574ba880
->> R13: 00007ffd1962be78 R14: 00007ffd1962be6c R15: 0000000000000000
->>
->> The buggy address belongs to the variable:
->>  dmi_ppag_approved_list+0x570/0xffffffffffffde20 [iwlmvm]
->>
->> Memory state around the buggy address:
->>  ffffffffc16af600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>  ffffffffc16af680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> ffffffffc16af700: 00 00 00 00 00 00 00 00 f9 f9 f9 f9 00 00 00 01
->>                                                  ^
->>  ffffffffc16af780: f9 f9 f9 f9 00 00 00 00 00 00 02 f9 f9 f9 f9 f9
->>  ffffffffc16af800: 00 00 00 07 f9 f9 f9 f9 00 00 00 00 00 00 00 01
->> ==================================================================
->>
->> Fixes: a2ac0f48a07c ("iwlwifi: mvm: implement approved list for the PPAG feature")
->> Signed-off-by: Jens Axboe <axboe@kernel.dk>
->>
->> ---
->>
->> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
->> index 15e2773ce7e7..71e5306bd695 100644
->> --- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
->> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
->> @@ -1083,6 +1083,7 @@ static const struct dmi_system_id dmi_ppag_approved_list[] = {
->>  			DMI_MATCH(DMI_SYS_VENDOR, "ASUSTek COMPUTER INC."),
->>  		},
->>  	},
->> +	{ },
->>  };
->>  
->>
->>  static int iwl_mvm_ppag_init(struct iwl_mvm *mvm)
->>
-> 
-> Hi Jens,
-> 
-> Thanks for the report and patch! And I'm sorry that we broke your
-> laptop's boot...
-> 
-> We already have a patch to fix this:
-> 
-> https://patchwork.kernel.org/project/linux-wireless/patch/20210223140039.1708534-1-weiyongjun1@huawei.com/
-> 
-> I thought I had already acked it for Kalle to take it directly to
-> wireless-drivers, but apparently I hadn't.
-> 
-> I acked now and assigned it to him.
+Avoid directly updating sinfo->rxrate from firmware since rate_info might
+be overwritten by wrong results even mt7915_mcu_get_rx_rate() fails check.
 
-All good thanks, as long as it gets fixed and goes upstream I don't care
-where it's from :-)
+Add more error handlings accordingly.
 
+Fixes: 11553d88d0b9 ("mt76: mt7915: query station rx rate from firmware")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |  5 +-
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 47 ++++++++++---------
+ 2 files changed, 30 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index cacc9b6933ca..bb49ea9307e0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -839,9 +839,12 @@ static void mt7915_sta_statistics(struct ieee80211_hw *hw,
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
+ 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
+ 	struct mt7915_sta_stats *stats = &msta->stats;
++	struct rate_info rxrate = {};
+ 
+-	if (mt7915_mcu_get_rx_rate(phy, vif, sta, &sinfo->rxrate) == 0)
++	if (!mt7915_mcu_get_rx_rate(phy, vif, sta, &rxrate)) {
++		sinfo->rxrate = rxrate;
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
++	}
+ 
+ 	if (!stats->tx_rate.legacy && !stats->tx_rate.flags)
+ 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index e0c03b7f278d..b204c5dd7914 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -3552,9 +3552,8 @@ int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 	struct ieee80211_supported_band *sband;
+ 	struct mt7915_mcu_phy_rx_info *res;
+ 	struct sk_buff *skb;
+-	u16 flags = 0;
+ 	int ret;
+-	int i;
++	bool cck = false;
+ 
+ 	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(PHY_STAT_INFO),
+ 					&req, sizeof(req), true, &skb);
+@@ -3568,48 +3567,53 @@ int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 
+ 	switch (res->mode) {
+ 	case MT_PHY_TYPE_CCK:
++		cck = true;
++		fallthrough;
+ 	case MT_PHY_TYPE_OFDM:
+ 		if (mphy->chandef.chan->band == NL80211_BAND_5GHZ)
+ 			sband = &mphy->sband_5g.sband;
+ 		else
+ 			sband = &mphy->sband_2g.sband;
+ 
+-		for (i = 0; i < sband->n_bitrates; i++) {
+-			if (rate->mcs != (sband->bitrates[i].hw_value & 0xf))
+-				continue;
+-
+-			rate->legacy = sband->bitrates[i].bitrate;
+-			break;
+-		}
++		rate->mcs = mt76_get_rate(&dev->mt76, sband, rate->mcs, cck);
++		rate->legacy = sband->bitrates[rate->mcs].bitrate;
+ 		break;
+ 	case MT_PHY_TYPE_HT:
+ 	case MT_PHY_TYPE_HT_GF:
+-		if (rate->mcs > 31)
+-			return -EINVAL;
+-
+-		flags |= RATE_INFO_FLAGS_MCS;
++		if (rate->mcs > 31) {
++			ret = -EINVAL;
++			goto out;
++		}
+ 
++		rate->flags = RATE_INFO_FLAGS_MCS;
+ 		if (res->gi)
+-			flags |= RATE_INFO_FLAGS_SHORT_GI;
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_VHT:
+-		flags |= RATE_INFO_FLAGS_VHT_MCS;
++		if (rate->mcs > 9) {
++			ret = -EINVAL;
++			goto out;
++		}
+ 
++		rate->flags = RATE_INFO_FLAGS_VHT_MCS;
+ 		if (res->gi)
+-			flags |= RATE_INFO_FLAGS_SHORT_GI;
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_HE_SU:
+ 	case MT_PHY_TYPE_HE_EXT_SU:
+ 	case MT_PHY_TYPE_HE_TB:
+ 	case MT_PHY_TYPE_HE_MU:
++		if (res->gi > NL80211_RATE_INFO_HE_GI_3_2 || rate->mcs > 11) {
++			ret = -EINVAL;
++			goto out;
++		}
+ 		rate->he_gi = res->gi;
+-
+-		flags |= RATE_INFO_FLAGS_HE_MCS;
++		rate->flags = RATE_INFO_FLAGS_HE_MCS;
+ 		break;
+ 	default:
+-		break;
++		ret = -EINVAL;
++		goto out;
+ 	}
+-	rate->flags = flags;
+ 
+ 	switch (res->bw) {
+ 	case IEEE80211_STA_RX_BW_160:
+@@ -3626,7 +3630,8 @@ int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 		break;
+ 	}
+ 
++out:
+ 	dev_kfree_skb(skb);
+ 
+-	return 0;
++	return ret;
+ }
 -- 
-Jens Axboe
+2.18.0
 
