@@ -3,143 +3,107 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D694C4332E
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF54C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:42:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1508A64ECF
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB18864E21
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:42:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245712AbhCCVR5 (ORCPT
+        id S239567AbhCCVRc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:17:57 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:16628 "EHLO
-        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377280AbhCCTux (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Mar 2021 14:50:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
-        h=from:subject:mime-version:to:cc:content-transfer-encoding:
-        content-type;
-        s=sgd; bh=FigIU+xBn26s32OslZYnIbTwNFgb07dPKzm2P59oAsE=;
-        b=AVh/krKlYhybTYbCGLYhmBAsXR4hYkq7vov3zwIgf+9e7sJqBcVFXl+Yd1vvhHFFGefE
-        CfHCgRVhpvk3UZoGlb50nfNEVuGeODh7yi306OaG8KNZu7v85WSNTlPKcqI7E0Dp32NUWO
-        xrG2zhOxokx+0wJyYbnZKcDIM3vm/JWwI=
-Received: by filterdrecv-p3iad2-fdf5ff85d-l7rdf with SMTP id filterdrecv-p3iad2-fdf5ff85d-l7rdf-19-603FE86F-A
-        2021-03-03 19:50:07.158649079 +0000 UTC m=+1890158.047260485
-Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-1-0 (SG)
-        with ESMTP
-        id xU5Q7yBrRzqdtxTgrcR71w
-        Wed, 03 Mar 2021 19:50:06.922 +0000 (UTC)
-Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 2A679700433; Wed,  3 Mar 2021 12:50:06 -0700 (MST)
-From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH] wilc1000: Bring MAC address setting in line with typical
- Linux behavior
-Date:   Wed, 03 Mar 2021 19:50:07 +0000 (UTC)
-Message-Id: <20210303194846.1823596-1-davidm@egauge.net>
-X-Mailer: git-send-email 2.25.1
+        Wed, 3 Mar 2021 16:17:32 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:34341 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237682AbhCCRkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Mar 2021 12:40:33 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1614793139; h=Date: Message-Id: Cc: To: Subject: From:
+ Content-Transfer-Encoding: MIME-Version: Content-Type: Sender;
+ bh=bB2rbwSDV6ozmbOs+QKeUgClF6zwQgkDjskWDJ/kKp4=; b=olJJx13U/XOcr9EkzBmBGbdcFDqFMlx/RVylfIc+6hQwSGZLmzXKSaRgnlb51m2SQbd8Lj5B
+ jZQYkyWQ6WiqcdiwiW7wL4YfvyyEJybqs63IPVVsgkacbi8FeDPJAU8VqwhDyEAtpTyQG0y9
+ 5gb8Kq181MkI3Hn06KsK0sNuG80=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 603fc6c8c862e1b9fd99d7b1 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Mar 2021 17:26:32
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8B86DC433ED; Wed,  3 Mar 2021 17:26:32 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8D724C433C6;
+        Wed,  3 Mar 2021 17:26:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8D724C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvE6rnK5LA4ARw7Vds?=
- =?us-ascii?Q?1XubTCfb8f+MTo8ZwBcIWSxpwRxP1PfrgUcOmG6?=
- =?us-ascii?Q?iqHNbOwO6qB+tqRts1K0Vv=2F1qAzk0Zc4rt9Q544?=
- =?us-ascii?Q?8skePb9icZvYv3H8qc6mP2G08d5MAPyqqufwBfN?=
- =?us-ascii?Q?gXF3CnCvs3h=2FynZxyhLO84NJESXhA59BVf0la5n?=
- =?us-ascii?Q?Bl8bhlgAcbgeYSXCbkUFA=3D=3D?=
-To:     linux-wireless@vger.kernel.org
-Cc:     Ajay Singh <ajay.kathat@microchip.com>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        davidm@egauge.net
-X-Entity-ID: Xg4JGAcGrJFIz2kDG9eoaQ==
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=us-ascii
+From:   Kalle Valo <kvalo@codeaurora.org>
+Subject: pull-request: wireless-drivers-2021-03-03
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Message-Id: <20210303172632.8B86DC433ED@smtp.codeaurora.org>
+Date:   Wed,  3 Mar 2021 17:26:32 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Linux network drivers normally disallow changing the MAC address when
-the interface is up.  This driver has been different in that it allows
-to change the MAC address *only* when it's up.  This patch brings
-wilc1000 behavior more in line with other network drivers.  We could
-have replaced wilc_set_mac_addr() with eth_mac_addr() but that would
-break existing documentation on how to change the MAC address.
-Likewise, return -EADDRNOTAVAIL (not -EINVAL) when the specified MAC
-address is invalid or unavailable.
+Hi,
 
-Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
----
- .../net/wireless/microchip/wilc1000/netdev.c  | 25 ++++++++++++-------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+here's a pull request to net tree, more info below. Please let me know if there
+are any problems.
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index 1b205e7d97a8..37f40039e4ca 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -575,7 +575,6 @@ static int wilc_mac_open(struct net_device *ndev)
- {
- 	struct wilc_vif *vif = netdev_priv(ndev);
- 	struct wilc *wl = vif->wilc;
--	unsigned char mac_add[ETH_ALEN] = {0};
- 	int ret = 0;
- 	struct mgmt_frame_regs mgmt_regs = {};
- 
-@@ -598,9 +597,12 @@ static int wilc_mac_open(struct net_device *ndev)
- 
- 	wilc_set_operation_mode(vif, wilc_get_vif_idx(vif), vif->iftype,
- 				vif->idx);
--	wilc_get_mac_address(vif, mac_add);
--	netdev_dbg(ndev, "Mac address: %pM\n", mac_add);
--	ether_addr_copy(ndev->dev_addr, mac_add);
-+
-+	if (is_valid_ether_addr(ndev->dev_addr))
-+		wilc_set_mac_address(vif, ndev->dev_addr);
-+	else
-+		wilc_get_mac_address(vif, ndev->dev_addr);
-+	netdev_dbg(ndev, "Mac address: %pM\n", ndev->dev_addr);
- 
- 	if (!is_valid_ether_addr(ndev->dev_addr)) {
- 		netdev_err(ndev, "Wrong MAC address\n");
-@@ -639,7 +641,14 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 	int srcu_idx;
- 
- 	if (!is_valid_ether_addr(addr->sa_data))
--		return -EINVAL;
-+		return -EADDRNOTAVAIL;
-+
-+	if (!vif->mac_opened) {
-+		eth_commit_mac_addr_change(dev, p);
-+		return 0;
-+	}
-+
-+	/* Verify MAC Address is not already in use: */
- 
- 	srcu_idx = srcu_read_lock(&wilc->srcu);
- 	list_for_each_entry_rcu(tmp_vif, &wilc->vif_list, list) {
-@@ -647,7 +656,7 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 		if (ether_addr_equal(addr->sa_data, mac_addr)) {
- 			if (vif != tmp_vif) {
- 				srcu_read_unlock(&wilc->srcu, srcu_idx);
--				return -EINVAL;
-+				return -EADDRNOTAVAIL;
- 			}
- 			srcu_read_unlock(&wilc->srcu, srcu_idx);
- 			return 0;
-@@ -659,9 +668,7 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 	if (result)
- 		return result;
- 
--	ether_addr_copy(vif->bssid, addr->sa_data);
--	ether_addr_copy(vif->ndev->dev_addr, addr->sa_data);
--
-+	eth_commit_mac_addr_change(dev, p);
- 	return result;
- }
- 
--- 
-2.25.1
+Kalle
 
+The following changes since commit c490492f15f656340b35cb9e36b9bfdea3539e19:
+
+  mt76: mt7915: fix unused 'mode' variable (2021-02-26 17:35:15 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-2021-03-03
+
+for you to fetch changes up to 295d4cd82b0181dd36b145fd535c13d623d7a335:
+
+  iwlwifi: don't call netif_napi_add() with rxq->lock held (was Re: Lockdep warning in iwl_pcie_rx_handle()) (2021-03-03 17:59:16 +0200)
+
+----------------------------------------------------------------
+wireless-drivers fixes for v5.12
+
+Second set of fixes for v5.12. Only three iwlwifi fixes this time, the
+crash with MVM being the most important one and reported by multiple
+people.
+
+iwlwifi
+
+* fix kernel crash regression when using LTO with MVM devices
+
+* fix printk format warnings
+
+* fix potential deadlock found by lockdep
+
+----------------------------------------------------------------
+Jiri Kosina (1):
+      iwlwifi: don't call netif_napi_add() with rxq->lock held (was Re: Lockdep warning in iwl_pcie_rx_handle())
+
+Pierre-Louis Bossart (1):
+      iwlwifi: fix ARCH=i386 compilation warnings
+
+Wei Yongjun (1):
+      iwlwifi: mvm: add terminate entry for dmi_system_id tables
+
+ drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 3 ++-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
