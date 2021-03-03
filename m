@@ -2,173 +2,174 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A058DC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4BBC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73AD164EF8
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66B7564ECF
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234322AbhCCVQn (ORCPT
+        id S232954AbhCCVQe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:16:43 -0500
-Received: from mga05.intel.com ([192.55.52.43]:28633 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1355502AbhCCGq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Mar 2021 01:46:56 -0500
-IronPort-SDR: BrIwU/q/mBa1hx8NpnCzy3i+O/ispCKIpZRs6nfaSlxpRepZSgQxef3Pk77NLTYBrui/4Cmi+V
- Rl8Lkuue2Wnw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9911"; a="272117886"
-X-IronPort-AV: E=Sophos;i="5.81,219,1610438400"; 
-   d="scan'208";a="272117886"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2021 22:45:23 -0800
-IronPort-SDR: ip32McM8Q9RoG+UsbHOlBDzkuzonxEmJismZdRAf/8MEOgFH68GY4OE7+mexHkF6bwlaOKbev4
- 6qKm68J0SMFw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.81,219,1610438400"; 
-   d="scan'208";a="383873352"
-Received: from orsmsx604.amr.corp.intel.com ([10.22.229.17])
-  by orsmga002.jf.intel.com with ESMTP; 02 Mar 2021 22:45:22 -0800
-Received: from orsmsx604.amr.corp.intel.com (10.22.229.17) by
- ORSMSX604.amr.corp.intel.com (10.22.229.17) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 2 Mar 2021 22:45:22 -0800
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx604.amr.corp.intel.com (10.22.229.17) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2
- via Frontend Transport; Tue, 2 Mar 2021 22:45:22 -0800
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (104.47.58.177)
- by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2106.2; Tue, 2 Mar 2021 22:45:21 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EiKxCM5MS9LGiwpgybWwKtx2SRxCncnnwBUhXFXTUxkBw74WrH90aB4rTr49P8BTPqXJqu8hlrNjDmM1IJjabrPCvdq1DsL1KtRnKnZgFClb2jsiU0nF0xYOnqy6L6wu+CkoFWjLx9K2lsPT2hqSs3LFXcOwkUBr4R4PC/PBD+SXZ2u5GQdS3yCHtbIHY+UWxrfVZXH2KaRe/I+qTRTSb7BLNDMJGaz37ihJDaIB7brHMIg/8J78c/Tr8EacfUlBBHLpPvcdi1S5chn8Qtc3llA61bE4llvvy0TvQvtoijfIMePGWaOPVQUxwceRg5/pM9m39ALiXbJY03WjN5GHkA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Az+jH9ySaNGWU22u0rCtnBTD+Hs5McdGnN2GV6KtrzI=;
- b=KZAUpyct3wrdn9qhHXzvtKq/NFn6DuHz+FC7yOokGYh3OHeOQnVDp/XLkgCmVB6zYNij7dlfo91Sy52aadqUCt/C9uBYH+rbmmkby7TOlW0YUDThtaykRVjkgmNmZ+TCujqLLcycxCKsBEqTvS5//Z2TdFFfGe1s4zMM6WkwpbLldhqBLMZsy/hDwPbdOZoZxMeyehXcviC4lp+S8sARq+xflhn3a90B8nQoylsv8gxSj0TKly1E9En7LYjKgs6kkb58AIYZq0+GJa6xSOZ7r0anxndg9G9DglEwMVzgETNkOMYZoRiCouRvGObbtZK4gR2QOjzN7WaVej1fL1IAiw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Az+jH9ySaNGWU22u0rCtnBTD+Hs5McdGnN2GV6KtrzI=;
- b=hjWgMjahm1UvhwIHNWMQGNwhx2se/BHIU6DOjk75ZEbATv3i/4Ex+IlbPhcVDZNgX2OrQeZBrpZ28yFRewZiCoOcAWB2z4HQj/vTg7x3ps0sE/+SiXGnev+rMgsmP1AendjEakRE7vlyRW0MERv0ZdCtTcrsespdrBrjuBeDjRk=
-Received: from BYAPR11MB3207.namprd11.prod.outlook.com (2603:10b6:a03:7c::14)
- by BYAPR11MB3158.namprd11.prod.outlook.com (2603:10b6:a03:1c::29) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.25; Wed, 3 Mar
- 2021 06:45:18 +0000
-Received: from BYAPR11MB3207.namprd11.prod.outlook.com
- ([fe80::c951:3ae4:1aca:9daf]) by BYAPR11MB3207.namprd11.prod.outlook.com
- ([fe80::c951:3ae4:1aca:9daf%3]) with mapi id 15.20.3890.030; Wed, 3 Mar 2021
- 06:45:18 +0000
-From:   "Coelho, Luciano" <luciano.coelho@intel.com>
-To:     "kuba@kernel.org" <kuba@kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>
-CC:     "gil.adam@intel.com" <gil.adam@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "weiyongjun1@huawei.com" <weiyongjun1@huawei.com>,
-        "nathan@kernel.org" <nathan@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "hulkci@huawei.com" <hulkci@huawei.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: add terminate entry for dmi_system_id
- tables
-Thread-Topic: [PATCH] iwlwifi: mvm: add terminate entry for dmi_system_id
- tables
-Thread-Index: AQHXCesNOiAtSHfJpEaaXnkq3FBcxapq8rcAgACgUcSABX2QAIAACbuAgAAMi/6AAB8PgIAAl8eA
-Date:   Wed, 3 Mar 2021 06:45:18 +0000
-Message-ID: <0a5140a6158cded895b828d3e209efaff38a56de.camel@intel.com>
-References: <20210223140039.1708534-1-weiyongjun1@huawei.com>
-         <20210226210640.GA21320@MSI.localdomain> <87h7ly9fph.fsf@codeaurora.org>
-         <bd1bd942bcccffb9b3453344b611a13876d0e565.camel@intel.com>
-         <20210302110559.1809ceaf@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-         <877dmp8hdx.fsf@codeaurora.org>
-         <20210302134203.4ee50efe@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <20210302134203.4ee50efe@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=intel.com;
-x-originating-ip: [91.156.6.193]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 31b5141a-ddd7-4301-a5f9-08d8de0fe901
-x-ms-traffictypediagnostic: BYAPR11MB3158:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR11MB315831F1E93DE890A135770790989@BYAPR11MB3158.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: dUFyomF+5b+PAlOCr7pzMcG9c+BIej2tvbvwcH/4GMrTQ125YIkk1vjnuC2zvfA4t0akSOfkTtmmQA4hiej4EhAz1Q8UDrdD+i3t4FLCmB9/j83YkTkD/Y+PiQCG3cYXD/lZPNfE0SDF4yoaFU7X3SBSkvPdJEP+3KyiqvxluyM5Oe4jCpOoC4q0rEPh/qAaFt82Hgw0oo5kpZxWP/DE7MtmbD2/TfdKDX0UyqX9hAq/TBfvqlJC6trILWbEaNS+ATp2ygPdX75xDGHv6qy+usfNWseAamBN1lt7mtBZNK5VoYUo70D8AeqmlBIzNNkQfDJKEpjEzv6JrhgdatWMCmtJ9d6I7WnyZEFh1LX/frJmfPztiO6BSjGGesKh78MXm5oTX0QTLQallerMyzRhinKb7LGemxGNfaDq4PRd/GCDEBFtobdf2KGRRQqbYu4N5/6KAGRQubcX1hMyfmorDMGwCEsfwyQX+Zz+qGZcTyr/v322RYNHbMNcxvewyd1QwVZp/MhVchd7kGoqq+Oq/Q==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR11MB3207.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(39860400002)(366004)(346002)(376002)(186003)(36756003)(107886003)(110136005)(478600001)(2906002)(6506007)(66446008)(86362001)(66556008)(71200400001)(76116006)(2616005)(316002)(26005)(66476007)(6486002)(8936002)(4326008)(64756008)(91956017)(6512007)(4744005)(5660300002)(8676002)(66946007)(54906003)(83380400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?TVoyTXJkd0V3MmwyTVgrUGE5MzZHNE0zL1BGWXgrTlpMaTN6Y3htNG9nQ1lx?=
- =?utf-8?B?b2FBYkNLMTZlZTVaN0o3RG1rR24xSVNGaEJGazBsdFQ4TTVIUU9sRnR2OW5K?=
- =?utf-8?B?ZkFBUGFIREszNE42VzFPd24yY2VrRWxBL1BLRXI1YXIyVGRIYjdJWkFqSmRV?=
- =?utf-8?B?VHliMnhIL3gxMHhqOXZsMUdPRUJWdHVlVjA3V2FvMktNdStKV0EyVHdFeU56?=
- =?utf-8?B?R3JCcVFmeFJDMXNHTzJsb1pKeUFPK3JRSm1WenJIbWlBU0lMeW9pVkZsTXBP?=
- =?utf-8?B?eHZFZElNSUVBZ2ZSeWJDTUF3ODdaNHY5MmJnMHJJSjFQOUFNcm9hQnliSGRC?=
- =?utf-8?B?VGpMdXZTQnBKWFN2U2phbldVdEw1ejc3VkdLanpnS0ZpK1FwWXJCYWlMUUpJ?=
- =?utf-8?B?Y1p4Wk5aMXdFOU54MnAxemZqb20yS20weFZTcnVhOWtKT0hKcEczR3Zoci9J?=
- =?utf-8?B?UGZPTWM0emc5MFAxSlJRbDRjYXV5bmE5TFhrbGVIK0ZPeTBVL1ZINmpzZXQy?=
- =?utf-8?B?ZHE3YUpKYVVreElYV3E1U0pIdk5zQUcvR3djSnU2QWxIWlNIeUZkNllJQjZO?=
- =?utf-8?B?bFRaSVJWeE13ZElXaWlIbVRKcnRDbGU4cXNtaUUxaVRkckROcnFQM2ZOQzk0?=
- =?utf-8?B?NXNzZi9iYVJ3aGwyOUcvZW4vRkRreVBpdFJDek00bTVGN2FYbkp5NWltNnMw?=
- =?utf-8?B?NnRUenVWSjVCejNjaklwdHh3dWR0MHNLend3RjJoUUNpbC9vcWVXRmdxV2dK?=
- =?utf-8?B?cXJnbUtpbFJtcmVFa1gxME1PNFpxdk9WQk83bUY2MDJXNlRxOHUzTS9ZQ1c3?=
- =?utf-8?B?Ym9VYnJqbzNZR3pOTzZmekN6enVoci9kZzMzUHU3QXhJT29USDI0b3o4V0l4?=
- =?utf-8?B?NjFCdjlNOVIwV1NrZVloV28wK2g4N01EenR4cGtxT2RYL2Nub2xFcXFTV3o1?=
- =?utf-8?B?SG50cm13Z1JMSkdHOVVYeEY5ak1WZjJOeW9wNGs2cnJIMGp1STc1STZ4NlVF?=
- =?utf-8?B?ZEhEQlNXSHBMbVlyNnBHU21ZMXRLYklKNHZvd0ppSVdTVTQyUUJqQ3Fnb1JM?=
- =?utf-8?B?Z2pkNWRTdTIyU1VGRWYxL1JTREoxbm9FUGFxZ1gzL25WT3JUMk5XdG1ra2Y2?=
- =?utf-8?B?UkR3TVlCZFU3ZlZJTDdmRHIrUFBwN0JaRFlSYi9OSWZZYjI0eTgzNm9zRVFi?=
- =?utf-8?B?am5vTFRYa2hSSTA2ZUpFMDJsZm9uZ3JXVVdJbXE4ZEhzWi9mUzNSWHJxN3di?=
- =?utf-8?B?VTdxN1RxSVduUXc1Sm10dU5TWUlIelBTMTVXREJRREZ1enZJV2VNZC8vOWMw?=
- =?utf-8?B?b2Nwd1Rtd1Y2S2pmR1QxYVVOeUpoVHU2TXh5cXFLRllrKzZpWkFuRkp3b0pE?=
- =?utf-8?B?d0VaWWFNSzFpOFdxWlhKWmhsT29sL3UvOFZxM0xPb2dxMmgyQmtkVHcyTFcw?=
- =?utf-8?B?bS9HbVFYRGpiREQ5a1NoY0tITUc5VzRVWHpjRUFlcmFxaHQyRytMc3ZvekY4?=
- =?utf-8?B?YjEzRWJkNy9XVXpGbzJGUDBMYmtPVFpmWGdBY0ZLTHJtR2RjM3BCUlNFUjU1?=
- =?utf-8?B?dU8yTnZITERhNFBWc20zbGlKQjRaMVRZMGZHUkJFd1c5bnRYYyt0YWJWR3lo?=
- =?utf-8?B?Si9VWHkxQ1lVWWNKSlVEWktzckxVclJzYTFpZU96cTRpZGJsUU4zKzVkOFJD?=
- =?utf-8?B?SVhIQTMyeElpRElJNnpGUTJhb3pkMFE1c3VLc0pCN1BWZG92aGdPNnpWbmFl?=
- =?utf-8?Q?ce8rFJDfDww2UbbhsQt3pv2qz2O63OEamVIqnD3?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <293C380879E6854B909E119F62A4C929@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        Wed, 3 Mar 2021 16:16:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39728 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343821AbhCCDpT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Mar 2021 22:45:19 -0500
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4730EC061356
+        for <linux-wireless@vger.kernel.org>; Tue,  2 Mar 2021 19:44:00 -0800 (PST)
+Received: by mail-pg1-x52b.google.com with SMTP id h4so15294794pgf.13
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2021 19:44:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cw/C/Hp7HXpJXE9ozrgzF5uT1arcWJuzdAxoWKlNXWo=;
+        b=lqFd5FLdAPXOLXB5MLYLDnNE+fSkq99jG4SIH+8xSXMrmrb5zlhq89PylNTI0vKivu
+         1LyCkzip84PbeEDHhlC55z42T1YDjAYfefvxjq7jH6ZRdJMMHku7S6MrrFyKPgm37P+p
+         kByeEDG09WILgDKclVyO6YbRkiRT89JPb6sIwIEW0B0ALqFGhPcLVOtGFPE9lfumgRV7
+         3S4TcRbYqiHrDrpNIT76MOl1het5MTS9B5QJNA2qq1+yeA1Of5nTix+bD7MNNFYUwDES
+         PiCSU98nGUfM5s2lZB9cvoD6laZkeTybJOX8VJcfFFk/vcZTOpoljpdEWe/YMAcakdgw
+         N1Dw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cw/C/Hp7HXpJXE9ozrgzF5uT1arcWJuzdAxoWKlNXWo=;
+        b=sqZ9iYellrYVZDYOilEfpE7ex+685pbJCYKIrmZ2TUxDpVOBac+PMdQ8e7sethKDzs
+         1MVXlRH121bszRQaCWoKo+C7GH9MRPx4b0YYQewwWGJWsxWDiRR/ZvYEgrSSAz45uYv7
+         nh6bF1Tfcl3sKLmtSG/jK2ViuVGN9n0JKkuub0Cy+5z1FYX3BJozFrep/Du+mtvznUDw
+         uFRu3DcpJh1tJDPqhB4W8GpkN3LG+7HKN3ZSnwR3r5QJtzcr+6KuoacssIx1W3WIaLwP
+         VS9Q+XSCu4KbbL38op3qUyMLarqm+7lwYvQngn++GM9xMsVWCJzWOveSqDOVAfIEU1Og
+         gUCA==
+X-Gm-Message-State: AOAM531SV6IlhW9BxZFsQ8o8HLRaHbTsZlAjTE6ene959cSAYGSj10rB
+        Z5AiODjiIv17U2JVTD+fXaiEfn2OInLnmGdK0yAkjQ==
+X-Google-Smtp-Source: ABdhPJyoQV88wz5yLA12azfLH2/Krg0NW2h0WaEugR+3SKDVT8A8bS547AYyhx3WJgupw8dt7lDDuQ==
+X-Received: by 2002:a63:5ec3:: with SMTP id s186mr20743396pgb.179.1614743039551;
+        Tue, 02 Mar 2021 19:43:59 -0800 (PST)
+Received: from localhost.localdomain ([218.255.1.14])
+        by smtp.gmail.com with ESMTPSA id iq6sm5201646pjb.31.2021.03.02.19.43.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Mar 2021 19:43:59 -0800 (PST)
+From:   "Eric Y.Y. Wong" <eric.wongyeungyan@gmail.com>
+To:     linux-wireless@vger.kernel.org, lorenzo@kernel.org, nbd@nbd.name
+Cc:     ryder.lee@mediatek.com,
+        "Eric Y.Y. Wong" <eric.wongyeungyan@gmail.com>
+Subject: [PATCH v2] mt76: mt76x0u: Add support for TP-Link T2UHP(UN) v1
+Date:   Wed,  3 Mar 2021 11:43:52 +0800
+Message-Id: <20210303034352.25051-1-eric.wongyeungyan@gmail.com>
+X-Mailer: git-send-email 2.30.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR11MB3207.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 31b5141a-ddd7-4301-a5f9-08d8de0fe901
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2021 06:45:18.6760
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ks1kiawbaoxRW89KpDfb/yA6QBrZgSZaGVRgGTuMTpj+ne0lvWDIvnO153RKr+ZkmIb424cLUSLRkOZb26TmsinwQKeDzH7rQRM6SbSd980=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB3158
-X-OriginatorOrg: intel.com
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gVHVlLCAyMDIxLTAzLTAyIGF0IDEzOjQyIC0wODAwLCBKYWt1YiBLaWNpbnNraSB3cm90ZToN
-Cj4gT24gVHVlLCAwMiBNYXIgMjAyMSAyMTo1MDoxOCArMDIwMCBLYWxsZSBWYWxvIHdyb3RlOg0K
-PiA+ID4gaWYgV2VpIGRvZXNuJ3QgcmVzcG9uZCBjb3VsZCB5b3UgcGxlYXNlIHN0ZXAgaW4gdG8g
-bWFrZSBzdXJlIHRoaXMNCj4gPiA+IGZpeCBpcyBwYXJ0IG9mIERhdmUncyBuZXh0IFBSIHRvIExp
-bnVzPyAgDQo+ID4gDQo+ID4gV2lsbCBkby4gUmVsYXRlZCB0byB0aGlzLCB3aGF0J3MgeW91ciBw
-dWxsIHJlcXVlc3Qgc2NoZWR1bGUgdG8gTGludXMNCj4gPiBub3dhZGF5cz8gRG8geW91IHN1Ym1p
-dCBpdCBldmVyeSBUaHVyc2RheT8NCj4gDQo+IEZhaXIgcXVlc3Rpb24gOikgRGF2ZSBpcyBiYWNr
-IGZ1bGwgdGltZSBub3csIHNvIEkgdGhpbmsgaXQgd2lsbCBiZSBtb3JlDQo+IG1lcml0IGJhc2Vk
-IGFnYWluLg0KDQpHcmVhdCB0byBoZWFyISBXZWxjb21lIGJhY2sgRGF2ZSEgOikNCg0KLS0NCkNo
-ZWVycywNCkx1Y2EuDQo=
+There are two variants of TP-Link Archer T2UHP V1, which are US and UN:
+
+https://www.tp-link.com/us/support/download/archer-t2uhp/
+https://www.tp-link.com/hk/support/download/archer-t2uhp/v1/
+
+From the driver source code provided by the vendor:
+
+https://www.tp-link.com/hk/support/download/archer-t2uhp/v1/#Driver
+
+eric@eric-VirtualBox:~/src$ grep -n USB_DEVICE.*0x2357 DPA_mt7610u_wifi_sta_v3004_rev1_20140529/NETIF/common/rtusb_dev_id.c
+45:	{USB_DEVICE(0x2357,0x0105)}, /* T1Uv1 */
+46:	{USB_DEVICE(0x2357,0x010B)}, /* T2UHP_UN_v1 */
+47:	{USB_DEVICE(0x2357,0x0123)}, /* T2UHP_US_v1 */
+
+eric@eric-VirtualBox:~/src$ lsusb -d 2357:
+Bus 001 Device 003: ID 2357:010b TP-Link WiFi
+eric@eric-VirtualBox:~/src$ sudo modprobe mt76x0u
+eric@eric-VirtualBox:~/src$ sudo sh -c "echo 2357 010b > /sys/bus/usb/drivers/mt76x0u/new_id"
+
+[snip]
+
+eric@eric-VirtualBox:~/src$ ifconfig -a
+enp0s3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 08:00:27:74:d9:ee  txqueuelen 1000  (Ethernet)
+        RX packets 78  bytes 16146 (16.1 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 75  bytes 8413 (8.4 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 56  bytes 5496 (5.4 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 56  bytes 5496 (5.4 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+wlx18d6c71b6e3e: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.106  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::21c7:2d90:e47d:ee48  prefixlen 64  scopeid 0x20<link>
+        ether 18:d6:c7:1b:6e:3e  txqueuelen 1000  (Ethernet)
+        RX packets 37  bytes 5345 (5.3 KB)
+        RX errors 0  dropped 7  overruns 0  frame 0
+        TX packets 77  bytes 10513 (10.5 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eric@eric-VirtualBox:~/src$ dmesg | tail -n 30
+               12:51:25.551584 main     Log opened 2021-03-01T12:51:25.551572000Z
+[   46.855763] 12:51:25.551995 main     OS Product: Linux
+[   46.855838] 12:51:25.552075 main     OS Release: 5.4.0-66-generic
+[   46.855897] 12:51:25.552150 main     OS Version: #74-Ubuntu SMP Wed Jan 27 22:54:38 UTC 2021
+[   46.855971] 12:51:25.552207 main     Executable: /opt/VBoxGuestAdditions-6.1.16/sbin/VBoxService
+               12:51:25.552208 main     Process ID: 898
+               12:51:25.552209 main     Package type: LINUX_64BITS_GENERIC
+[   46.858699] 12:51:25.554921 main     6.1.16 r140961 started. Verbose level = 0
+[   46.863116] 12:51:25.559319 main     vbglR3GuestCtrlDetectPeekGetCancelSupport: Supported (#1)
+[  140.687550] usb 1-2: new high-speed USB device number 3 using xhci_hcd
+[  140.838279] usb 1-2: New USB device found, idVendor=2357, idProduct=010b, bcdDevice= 1.00
+[  140.838281] usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  140.838283] usb 1-2: Product: WiFi
+[  140.838284] usb 1-2: Manufacturer: MediaTek
+[  140.838285] usb 1-2: SerialNumber: 1.0
+[  178.374187] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[  178.378370] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[  178.417507] usbcore: registered new interface driver mt76x0u
+[  178.557165] usb 1-2: reset high-speed USB device number 3 using xhci_hcd
+[  178.720436] mt76x0u 1-2:1.0: ASIC revision: 76100002 MAC revision: 76502000
+[  180.156077] mt76x0u 1-2:1.0: EEPROM ver:02 fae:04
+[  181.190558] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+[  181.225560] mt76x0u 1-2:1.0 wlx18d6c71b6e3e: renamed from wlan0
+[  188.660826] wlx18d6c71b6e3e: authenticate with d0:17:c2:e0:d7:9c
+[  189.447781] wlx18d6c71b6e3e: send auth to d0:17:c2:e0:d7:9c (try 1/3)
+[  189.618282] wlx18d6c71b6e3e: authenticated
+[  189.619008] wlx18d6c71b6e3e: associate with d0:17:c2:e0:d7:9c (try 1/3)
+[  189.715268] wlx18d6c71b6e3e: RX AssocResp from d0:17:c2:e0:d7:9c (capab=0x1011 status=0 aid=8)
+[  189.734720] wlx18d6c71b6e3e: associated
+[  190.233239] IPv6: ADDRCONF(NETDEV_CHANGE): wlx18d6c71b6e3e: link becomes ready
+
+Signed-off-by: Eric Y.Y. Wong <eric.wongyeungyan@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index a593a7796d23..f2b2fa733845 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -32,7 +32,8 @@ static struct usb_device_id mt76x0_device_table[] = {
+ 	{ USB_DEVICE(0x20f4, 0x806b) },	/* TRENDnet TEW-806UBH  */
+ 	{ USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
+ 	{ USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
+-	{ USB_DEVICE(0x2357, 0x0123) }, /* TP-LINK T2UHP */
++	{ USB_DEVICE(0x2357, 0x0123) }, /* TP-LINK T2UHP_US_v1 */
++	{ USB_DEVICE(0x2357, 0x010b) }, /* TP-LINK T2UHP_UN_v1 */
+ 	/* TP-LINK Archer T1U */
+ 	{ USB_DEVICE(0x2357, 0x0105), .driver_info = 1, },
+ 	/* MT7630U */
+-- 
+2.30.1
+
