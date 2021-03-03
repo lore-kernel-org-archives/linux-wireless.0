@@ -2,33 +2,33 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1240BC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E382C433DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D644264EF6
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:29:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F249B64ECF
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Mar 2021 21:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235052AbhCCVQr (ORCPT
+        id S235994AbhCCVQw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:16:47 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:44190 "EHLO
+        Wed, 3 Mar 2021 16:16:52 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47279 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1356498AbhCCKrj (ORCPT
+        with ESMTP id S234085AbhCCKwg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Mar 2021 05:47:39 -0500
-X-UUID: 4c81aa0874e4496b99d54a60b8144632-20210303
-X-UUID: 4c81aa0874e4496b99d54a60b8144632-20210303
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        Wed, 3 Mar 2021 05:52:36 -0500
+X-UUID: b637ef33057a47d1a6096b71a48714d4-20210303
+X-UUID: b637ef33057a47d1a6096b71a48714d4-20210303
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 561527874; Wed, 03 Mar 2021 18:38:06 +0800
+        with ESMTP id 1580396949; Wed, 03 Mar 2021 18:38:05 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Wed, 3 Mar 2021 18:38:04 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
@@ -40,9 +40,9 @@ CC:     Shayne Chen <shayne.chen@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 3/4] mt76: mt7915: check mcu returned values in mt7915_ops
-Date:   Wed, 3 Mar 2021 18:38:01 +0800
-Message-ID: <76a1830344d468e229e2b16badaabe707c8756b3.1614753100.git.ryder.lee@mediatek.com>
+Subject: [PATCH 2/4] mt76: mt7915: fix txrate reporting
+Date:   Wed, 3 Mar 2021 18:38:00 +0800
+Message-ID: <a64485b9e1cfb90b9514977f26b83b76236eafe2.1614753100.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <a379bb8534b2b8c24e30313b97aa8cfdf79c315b.1614753100.git.ryder.lee@mediatek.com>
 References: <a379bb8534b2b8c24e30313b97aa8cfdf79c315b.1614753100.git.ryder.lee@mediatek.com>
@@ -53,143 +53,134 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Properly check returned values from mcu utility routines in
-mt7915_ops.
+Properly check rate_info to fix unexpected reporting.
 
+[ 1215.161863] Call trace:
+[ 1215.164307]  cfg80211_calculate_bitrate+0x124/0x200 [cfg80211]
+[ 1215.170139]  ieee80211s_update_metric+0x80/0xc0 [mac80211]
+[ 1215.175624]  ieee80211_tx_status_ext+0x508/0x838 [mac80211]
+[ 1215.181190]  mt7915_mcu_get_rx_rate+0x28c/0x8d0 [mt7915e]
+[ 1215.186580]  mt7915_mac_tx_free+0x324/0x7c0 [mt7915e]
+[ 1215.191623]  mt7915_queue_rx_skb+0xa8/0xd0 [mt7915e]
+[ 1215.196582]  mt76_dma_cleanup+0x7b0/0x11d0 [mt76]
+[ 1215.201276]  __napi_poll+0x38/0xf8
+[ 1215.204668]  napi_workfn+0x40/0x80
+[ 1215.208062]  process_one_work+0x1fc/0x390
+[ 1215.212062]  worker_thread+0x48/0x4d0
+[ 1215.215715]  kthread+0x120/0x128
+[ 1215.218935]  ret_from_fork+0x10/0x1c
+
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
+Fixes: e4c5ead632ff ("mt76: mt7915: rename mt7915_mcu_get_rate_info to mt7915_mcu_get_tx_rate")
+Reported-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/main.c  | 58 ++++++++++++++-----
- 1 file changed, 42 insertions(+), 16 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 38 ++++++++++++-------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index bb49ea9307e0..255f87aa1830 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -25,6 +25,7 @@ static int mt7915_start(struct ieee80211_hw *hw)
- 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
- 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
- 	bool running;
-+	int ret;
- 
- 	flush_work(&dev->init_work);
- 
-@@ -33,21 +34,44 @@ static int mt7915_start(struct ieee80211_hw *hw)
- 	running = mt7915_dev_running(dev);
- 
- 	if (!running) {
--		mt7915_mcu_set_pm(dev, 0, 0);
--		mt7915_mcu_set_mac(dev, 0, true, true);
--		mt7915_mcu_set_scs(dev, 0, true);
-+		ret = mt7915_mcu_set_pm(dev, 0, 0);
-+		if (ret)
-+			goto out;
-+
-+		ret = mt7915_mcu_set_mac(dev, 0, true, true);
-+		if (ret)
-+			goto out;
-+
-+		ret = mt7915_mcu_set_scs(dev, 0, true);
-+		if (ret)
-+			goto out;
-+
- 		mt7915_mac_enable_nf(dev, 0);
- 	}
- 
- 	if (phy != &dev->phy) {
--		mt7915_mcu_set_pm(dev, 1, 0);
--		mt7915_mcu_set_mac(dev, 1, true, true);
--		mt7915_mcu_set_scs(dev, 1, true);
-+		ret = mt7915_mcu_set_pm(dev, 1, 0);
-+		if (ret)
-+			goto out;
-+
-+		ret = mt7915_mcu_set_mac(dev, 1, true, true);
-+		if (ret)
-+			goto out;
-+
-+		ret = mt7915_mcu_set_scs(dev, 1, true);
-+		if (ret)
-+			goto out;
-+
- 		mt7915_mac_enable_nf(dev, 1);
- 	}
- 
--	mt7915_mcu_set_sku_en(phy, true);
--	mt7915_mcu_set_chan_info(phy, MCU_EXT_CMD(SET_RX_PATH));
-+	ret = mt7915_mcu_set_sku_en(phy, true);
-+	if (ret)
-+		goto out;
-+
-+	ret = mt7915_mcu_set_chan_info(phy, MCU_EXT_CMD(SET_RX_PATH));
-+	if (ret)
-+		goto out;
- 
- 	set_bit(MT76_STATE_RUNNING, &phy->mt76->state);
- 
-@@ -58,9 +82,10 @@ static int mt7915_start(struct ieee80211_hw *hw)
- 	if (!running)
- 		mt7915_mac_reset_counters(phy);
- 
-+out:
- 	mutex_unlock(&dev->mt76.mutex);
- 
--	return 0;
-+	return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index b204c5dd7914..edb58f6f2640 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -364,54 +364,62 @@ mt7915_mcu_rx_radar_detected(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	dev->hw_pattern++;
  }
  
- static void mt7915_stop(struct ieee80211_hw *hw)
-@@ -631,12 +656,13 @@ static int mt7915_set_rts_threshold(struct ieee80211_hw *hw, u32 val)
+-static void
++static int
+ mt7915_mcu_tx_rate_parse(struct mt76_phy *mphy, struct mt7915_mcu_ra_info *ra,
+ 			 struct rate_info *rate, u16 r)
  {
- 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
- 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
-+	int ret;
+ 	struct ieee80211_supported_band *sband;
+ 	u16 ru_idx = le16_to_cpu(ra->ru_idx);
+-	u16 flags = 0;
++	bool cck = false;
  
- 	mutex_lock(&dev->mt76.mutex);
--	mt7915_mcu_set_rts_thresh(phy, val);
-+	ret = mt7915_mcu_set_rts_thresh(phy, val);
- 	mutex_unlock(&dev->mt76.mutex);
+ 	rate->mcs = FIELD_GET(MT_RA_RATE_MCS, r);
+ 	rate->nss = FIELD_GET(MT_RA_RATE_NSS, r) + 1;
  
--	return 0;
-+	return ret;
+ 	switch (FIELD_GET(MT_RA_RATE_TX_MODE, r)) {
+ 	case MT_PHY_TYPE_CCK:
++		cck = true;
++		fallthrough;
+ 	case MT_PHY_TYPE_OFDM:
+ 		if (mphy->chandef.chan->band == NL80211_BAND_5GHZ)
+ 			sband = &mphy->sband_5g.sband;
+ 		else
+ 			sband = &mphy->sband_2g.sband;
+ 
++		rate->mcs = mt76_get_rate(mphy->dev, sband, rate->mcs, cck);
+ 		rate->legacy = sband->bitrates[rate->mcs].bitrate;
+ 		break;
+ 	case MT_PHY_TYPE_HT:
+ 	case MT_PHY_TYPE_HT_GF:
+ 		rate->mcs += (rate->nss - 1) * 8;
+-		flags |= RATE_INFO_FLAGS_MCS;
++		if (rate->mcs > 31)
++			return -EINVAL;
+ 
++		rate->flags = RATE_INFO_FLAGS_MCS;
+ 		if (ra->gi)
+-			flags |= RATE_INFO_FLAGS_SHORT_GI;
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_VHT:
+-		flags |= RATE_INFO_FLAGS_VHT_MCS;
++		if (rate->mcs > 9)
++			return -EINVAL;
+ 
++		rate->flags = RATE_INFO_FLAGS_VHT_MCS;
+ 		if (ra->gi)
+-			flags |= RATE_INFO_FLAGS_SHORT_GI;
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_HE_SU:
+ 	case MT_PHY_TYPE_HE_EXT_SU:
+ 	case MT_PHY_TYPE_HE_TB:
+ 	case MT_PHY_TYPE_HE_MU:
++		if (ra->gi > NL80211_RATE_INFO_HE_GI_3_2 || rate->mcs > 11)
++			return -EINVAL;
++
+ 		rate->he_gi = ra->gi;
+ 		rate->he_dcm = FIELD_GET(MT_RA_RATE_DCM_EN, r);
+-
+-		flags |= RATE_INFO_FLAGS_HE_MCS;
++		rate->flags = RATE_INFO_FLAGS_HE_MCS;
+ 		break;
+ 	default:
+-		break;
++		return -EINVAL;
+ 	}
+-	rate->flags = flags;
+ 
+ 	if (ru_idx) {
+ 		switch (ru_idx) {
+@@ -448,6 +456,8 @@ mt7915_mcu_tx_rate_parse(struct mt76_phy *mphy, struct mt7915_mcu_ra_info *ra,
+ 			break;
+ 		}
+ 	}
++
++	return 0;
  }
  
- static int
-@@ -663,22 +689,22 @@ mt7915_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	case IEEE80211_AMPDU_RX_START:
- 		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid, ssn,
- 				   params->buf_size);
--		mt7915_mcu_add_rx_ba(dev, params, true);
-+		ret = mt7915_mcu_add_rx_ba(dev, params, true);
- 		break;
- 	case IEEE80211_AMPDU_RX_STOP:
- 		mt76_rx_aggr_stop(&dev->mt76, &msta->wcid, tid);
--		mt7915_mcu_add_rx_ba(dev, params, false);
-+		ret = mt7915_mcu_add_rx_ba(dev, params, false);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		mtxq->aggr = true;
- 		mtxq->send_bar = false;
--		mt7915_mcu_add_tx_ba(dev, params, true);
-+		ret = mt7915_mcu_add_tx_ba(dev, params, true);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
- 		mtxq->aggr = false;
- 		clear_bit(tid, &msta->ampdu_state);
--		mt7915_mcu_add_tx_ba(dev, params, false);
-+		ret = mt7915_mcu_add_tx_ba(dev, params, false);
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		set_bit(tid, &msta->ampdu_state);
-@@ -687,7 +713,7 @@ mt7915_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	case IEEE80211_AMPDU_TX_STOP_CONT:
- 		mtxq->aggr = false;
- 		clear_bit(tid, &msta->ampdu_state);
--		mt7915_mcu_add_tx_ba(dev, params, false);
-+		ret = mt7915_mcu_add_tx_ba(dev, params, false);
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	}
+ static void
+@@ -478,12 +488,12 @@ mt7915_mcu_tx_rate_report(struct mt7915_dev *dev, struct sk_buff *skb)
+ 		mphy = dev->mt76.phy2;
+ 
+ 	/* current rate */
+-	mt7915_mcu_tx_rate_parse(mphy, ra, &rate, curr);
+-	stats->tx_rate = rate;
++	if(!mt7915_mcu_tx_rate_parse(mphy, ra, &rate, curr))
++		stats->tx_rate = rate;
+ 
+ 	/* probing rate */
+-	mt7915_mcu_tx_rate_parse(mphy, ra, &prob_rate, probe);
+-	stats->prob_rate = prob_rate;
++	if(!mt7915_mcu_tx_rate_parse(mphy, ra, &prob_rate, probe))
++		stats->prob_rate = prob_rate;
+ 
+ 	if (attempts) {
+ 		u16 success = le16_to_cpu(ra->success);
 -- 
 2.18.0
 
