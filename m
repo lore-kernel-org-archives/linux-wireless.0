@@ -2,80 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCCCC433DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Mar 2021 10:15:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBE7BC433DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Mar 2021 13:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9519064F10
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Mar 2021 10:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 918D264EEC
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Mar 2021 13:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238312AbhCDKOz (ORCPT
+        id S238496AbhCDNbb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Mar 2021 05:14:55 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:13431 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238386AbhCDKOk (ORCPT
+        Thu, 4 Mar 2021 08:31:31 -0500
+Received: from mailgw02.mediatek.com ([216.200.240.185]:5139 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241343AbhCDNbQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Mar 2021 05:14:40 -0500
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4Drmrf5c0QzjSYR;
-        Thu,  4 Mar 2021 18:12:34 +0800 (CST)
-Received: from localhost.localdomain (10.175.102.38) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.498.0; Thu, 4 Mar 2021 18:13:48 +0800
-From:   'Wei Yongjun <weiyongjun1@huawei.com>
-To:     <weiyongjun1@huawei.com>, Luca Coelho <luciano.coelho@intel.com>,
-        "Kalle Valo" <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "Gregory Greenman" <gregory.greenman@intel.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH -next] iwlwifi: mvm: fix old-style static const declaration
-Date:   Thu, 4 Mar 2021 10:22:45 +0000
-Message-ID: <20210304102245.274847-1-weiyongjun1@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        Thu, 4 Mar 2021 08:31:16 -0500
+X-Greylist: delayed 306 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Mar 2021 08:31:16 EST
+X-UUID: 03a119481ebd41c2ad5af279ae2259d0-20210304
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=qpt7mK9+6UdB6YiUWW6FGwMifHUQkMCII30VTDrvVg0=;
+        b=Dnb+dehm4UBsp94Bc11tq4mtlM4PV32JZIXbi2T0z8a6UBcc3+2Z88EOellteuvhbgvasJlFjqSx80iX5+NmQ9i0UIfhKbodF+VJDCqsJmQBNind4wwZ39eRf6231ygxGeUsQZg7IgmJ+zWui2PPTWhIXnMNfODX0s4On0SD+K8=;
+X-UUID: 03a119481ebd41c2ad5af279ae2259d0-20210304
+Received: from mtkcas66.mediatek.inc [(172.29.193.44)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 58716149; Thu, 04 Mar 2021 05:25:29 -0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ MTKMBS62N2.mediatek.inc (172.29.193.42) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 4 Mar 2021 05:25:27 -0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 4 Mar 2021 21:25:26 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/3] mt76: mt7663s: make all of packets 4-bytes aligned in sdio tx aggregation
+Date:   Thu, 4 Mar 2021 21:25:22 +0800
+Message-ID: <8f6807d6161efbed6d585a2ca041d4b126b30451.1614863741.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <801a2aa986f5486a0e789065feef7b77c612ea7b.1614863741.git.objelf@gmail.com>
+References: <801a2aa986f5486a0e789065feef7b77c612ea7b.1614863741.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Type:   text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-X-Originating-IP: [10.175.102.38]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
-
-GCC reports warning as follows:
-
-drivers/net/wireless/intel/iwlwifi/mvm/rfi.c:14:1: warning:
- 'static' is not at beginning of declaration [-Wold-style-declaration]
-   14 | const static struct iwl_rfi_lut_entry iwl_rfi_table[IWL_RFI_LUT_SIZE] = {
-      | ^~~~~
-
-Move static to the beginning of declaration.
-
-Fixes: 21254908cbe9 ("iwlwifi: mvm: add RFI-M support")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rfi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-index 873919048143..4d5a99cbcc9d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-@@ -11,7 +11,7 @@
-  * DDR needs frequency in units of 16.666MHz, so provide FW with the
-  * frequency values in the adjusted format.
-  */
--const static struct iwl_rfi_lut_entry iwl_rfi_table[IWL_RFI_LUT_SIZE] = {
-+static const struct iwl_rfi_lut_entry iwl_rfi_table[IWL_RFI_LUT_SIZE] = {
- 	/* LPDDR4 */
- 
- 	/* frequency 3733MHz */
+RnJvbTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KDQpFYWNoIHBhY2tldCBz
+aG91bGQgYmUgcGFkZGVkIHdpdGggdGhlIGFkZGl0aW9uYWwgemVybyB0byBiZWNvbWUgNC1ieXRl
+cw0KYWxpZ25tZW50IGluIHNkaW8gdHggYWdncmVnYXRpb24uDQoNCkZpeGVzOiAxNTIyZmY3MzFm
+ODQgKCJtdDc2OiBtdDc2NjNzOiBpbnRyb2R1Y2Ugc2RpbyB0eCBhZ2dyZWdhdGlvbiIpDQpTaWdu
+ZWQtb2ZmLWJ5OiBTZWFuIFdhbmcgPHNlYW4ud2FuZ0BtZWRpYXRlay5jb20+DQotLS0NCiBkcml2
+ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9zZGlvX3R4cnguYyB8IDcgKysr
+KysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCg0K
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3Nk
+aW9fdHhyeC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvc2Rp
+b190eHJ4LmMNCmluZGV4IDlmYjUwNmYyYWNlNi4uMmQzYjdkMWUyYzkyIDEwMDY0NA0KLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvc2Rpb190eHJ4LmMNCisr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3NkaW9fdHhyeC5j
+DQpAQCAtMjE4LDYgKzIxOCw3IEBAIHN0YXRpYyBpbnQgbXQ3NjYzc190eF9ydW5fcXVldWUoc3Ry
+dWN0IG10NzZfZGV2ICpkZXYsIHN0cnVjdCBtdDc2X3F1ZXVlICpxKQ0KIAlpbnQgcWlkLCBlcnIs
+IG5mcmFtZXMgPSAwLCBsZW4gPSAwLCBwc2Vfc3ogPSAwLCBwbGVfc3ogPSAwOw0KIAlib29sIG1j
+dSA9IHEgPT0gZGV2LT5xX21jdVtNVF9NQ1VRX1dNXTsNCiAJc3RydWN0IG10NzZfc2RpbyAqc2Rp
+byA9ICZkZXYtPnNkaW87DQorCXU4IHBhZDsNCiANCiAJcWlkID0gbWN1ID8gQVJSQVlfU0laRShz
+ZGlvLT54bWl0X2J1ZikgLSAxIDogcS0+cWlkOw0KIAl3aGlsZSAocS0+Zmlyc3QgIT0gcS0+aGVh
+ZCkgew0KQEAgLTIzNCw3ICsyMzUsOCBAQCBzdGF0aWMgaW50IG10NzY2M3NfdHhfcnVuX3F1ZXVl
+KHN0cnVjdCBtdDc2X2RldiAqZGV2LCBzdHJ1Y3QgbXQ3Nl9xdWV1ZSAqcSkNCiAJCQlnb3RvIG5l
+eHQ7DQogCQl9DQogDQotCQlpZiAobGVuICsgZS0+c2tiLT5sZW4gKyA0ID4gTVQ3NlNfWE1JVF9C
+VUZfU1opDQorCQlwYWQgPSByb3VuZHVwKGUtPnNrYi0+bGVuLCA0KSAtIGUtPnNrYi0+bGVuOw0K
+KwkJaWYgKGxlbiArIGUtPnNrYi0+bGVuICsgcGFkICsgNCA+IE1UNzZTX1hNSVRfQlVGX1NaKQ0K
+IAkJCWJyZWFrOw0KIA0KIAkJaWYgKG10NzY2M3NfdHhfcGlja19xdW90YShzZGlvLCBtY3UsIGUt
+PmJ1Zl9zeiwgJnBzZV9zeiwNCkBAIC0yNTIsNiArMjU0LDkgQEAgc3RhdGljIGludCBtdDc2NjNz
+X3R4X3J1bl9xdWV1ZShzdHJ1Y3QgbXQ3Nl9kZXYgKmRldiwgc3RydWN0IG10NzZfcXVldWUgKnEp
+DQogCQkJbGVuICs9IGl0ZXItPmxlbjsNCiAJCQluZnJhbWVzKys7DQogCQl9DQorDQorCQltZW1z
+ZXQoc2Rpby0+eG1pdF9idWZbcWlkXSArIGxlbiwgMCwgcGFkKTsNCisJCWxlbiArPSBwYWQ7DQog
+bmV4dDoNCiAJCXEtPmZpcnN0ID0gKHEtPmZpcnN0ICsgMSkgJSBxLT5uZGVzYzsNCiAJCWUtPmRv
+bmUgPSB0cnVlOw0KLS0gDQoyLjI1LjENCg==
 
