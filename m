@@ -2,72 +2,97 @@ Return-Path: <SRS0=sdWG=IF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F650C433E6
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 12:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC65C433DB
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:00:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40A5E650F8
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 12:30:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3742650E6
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:00:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230202AbhCGM3N (ORCPT
+        id S230111AbhCGR7j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Mar 2021 07:29:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44240 "EHLO mail.kernel.org"
+        Sun, 7 Mar 2021 12:59:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59968 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229662AbhCGM2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Mar 2021 07:28:46 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0CBF965092;
-        Sun,  7 Mar 2021 12:28:44 +0000 (UTC)
+        id S232065AbhCGR7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 7 Mar 2021 12:59:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 26A5F650F5;
+        Sun,  7 Mar 2021 17:59:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615120125;
-        bh=sY1HN2BTEJut9YpU7t00t6v+TXQSn/Gf4U69FgfKcdA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=POrEybZ4F4prA4n+UYe5izD5Imvnkvyrvg84/Wm2SjlPL/UtSYD2BQw7BAgTN2XJ0
-         BsaM2lMocTWp50+LIdiD6vC8JSHyhGEQZlFogbRSj8lLUIGIJullcNSmUmQoy2IIbH
-         NrobhxecgRpV4PN/mLlhSXElykQrjTkA5nktYU2R73k35eeIjrDqHfJcukhlewCVNN
-         Thpak2cAvfNisOG3xxWDTLGQjh8WuTBhM62r7HAMP/CgqeUW5i9bpPI2wnUGnA/Riu
-         2VRTewB1gXn91YhQmf2aBaAWtQmo89BIv5GUSmtmJarZLXr3hGIJ638q3HeFwdj1kD
-         Xkqs62JEf9U0A==
-Date:   Sun, 7 Mar 2021 14:28:40 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc:     davem@davemloft.net, kuba@kernel.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath: ath6kl: fix error return code of
- ath6kl_htc_rx_bundle()
-Message-ID: <YETG+HrMTXs688MN@unreal>
-References: <20210307090757.22617-1-baijiaju1990@gmail.com>
- <YESaSwoGRxGvrggv@unreal>
- <a55172ad-bf40-0110-8ef3-326001ecd13e@gmail.com>
+        s=k20201202; t=1615139954;
+        bh=pkUXhAepp54hgcKyVXZ/4o7VGcce5SlP3XWGz0JIr7s=;
+        h=From:To:Cc:Subject:Date:From;
+        b=EgRL+h1B1zhIbQ9kIa3vg8Z3R/ByoGXXbVmltRzoCepE8Jj835RxwKRpDMo1EFDby
+         sp4xH8LAwMbwJbedB7DVWYvscAKeBznVBt+7DV4yjuYAnQLjr1sv046CXgI6EE/Lvq
+         nd68o+ofj03k/QLJdY8HpPYXhdC0n5iBIxY8QDc0bEV3RcN+fes6WwhD4RRWzePBMo
+         TVbfoZIcSkgVd2SVTMJDwgt0v4kQXirhbKZ2wYsw6PpIBy83tLWQ7fLJ4Z21Y5sIep
+         +TNTVzq2kZ/dcsS+OcAijRi9fy6UKbAFNxxbFNtqSSCUYI1HTFp3fEABL5cTLO/Tl1
+         s/i9A2HPQgWeg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        ryder.lee@mediatek.com
+Subject: [PATCH] mt76: mt7915: simplify mt7915_mac_sta_poll routine
+Date:   Sun,  7 Mar 2021 18:59:08 +0100
+Message-Id: <db48916a553fee715fc9c0c1f83f363a01218dff.1615139832.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a55172ad-bf40-0110-8ef3-326001ecd13e@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Mar 07, 2021 at 05:31:01PM +0800, Jia-Ju Bai wrote:
-> Hi Leon,
->
-> I am quite sorry for my incorrect patches...
-> My static analysis tool reports some possible bugs about error handling
-> code, and thus I write some patches for the bugs that seem to be true in my
-> opinion.
-> Because I am not familiar with many device drivers, some of my reported bugs
-> can be false positives...
+Drop unnecessary lock around sta_poll_list list in mt7915_mac_sta_poll
+routine.
 
-It will be much helpful if instead of writing new static analysis tool,
-you will invest time and improve existing well known tools, like smatch
-and sparse.
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-Right now, you didn't report bugs, but sent bunch of patches that most
-of the time are incorrect. So it is not "some of my reported bugs can
-be false positives...", but "some of my patches can fix real bugs by
-chance".
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index b3168dd3baed..cde98b86e2bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -117,23 +117,15 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 
+ 	rcu_read_lock();
+ 
+-	while (true) {
++	while (!list_empty(&sta_poll_list)) {
+ 		bool clear = false;
+ 		u32 addr;
+-		u16 idx;
+ 
+-		spin_lock_bh(&dev->sta_poll_lock);
+-		if (list_empty(&sta_poll_list)) {
+-			spin_unlock_bh(&dev->sta_poll_lock);
+-			break;
+-		}
+ 		msta = list_first_entry(&sta_poll_list,
+ 					struct mt7915_sta, poll_list);
+ 		list_del_init(&msta->poll_list);
+-		spin_unlock_bh(&dev->sta_poll_lock);
+ 
+-		idx = msta->wcid.idx;
+-		addr = mt7915_mac_wtbl_lmac_addr(dev, idx) + 20 * 4;
++		addr = mt7915_mac_wtbl_lmac_addr(dev, msta->wcid.idx) + 20 * 4;
+ 
+ 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 			u32 tx_last = msta->airtime_ac[i];
+@@ -152,7 +144,7 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 		}
+ 
+ 		if (clear) {
+-			mt7915_mac_wtbl_update(dev, idx,
++			mt7915_mac_wtbl_update(dev, msta->wcid.idx,
+ 					       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+ 			memset(msta->airtime_ac, 0, sizeof(msta->airtime_ac));
+ 		}
+-- 
+2.29.2
 
-Thanks
