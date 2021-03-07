@@ -7,92 +7,86 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC65C433DB
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F51AC433DB
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:21:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3742650E6
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:00:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E402E65186
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Mar 2021 18:21:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230111AbhCGR7j (ORCPT
+        id S231221AbhCGSVM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Mar 2021 12:59:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59968 "EHLO mail.kernel.org"
+        Sun, 7 Mar 2021 13:21:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35592 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232065AbhCGR7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Mar 2021 12:59:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 26A5F650F5;
-        Sun,  7 Mar 2021 17:59:12 +0000 (UTC)
+        id S230522AbhCGSVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 7 Mar 2021 13:21:09 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 285CE6513D;
+        Sun,  7 Mar 2021 18:21:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615139954;
-        bh=pkUXhAepp54hgcKyVXZ/4o7VGcce5SlP3XWGz0JIr7s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EgRL+h1B1zhIbQ9kIa3vg8Z3R/ByoGXXbVmltRzoCepE8Jj835RxwKRpDMo1EFDby
-         sp4xH8LAwMbwJbedB7DVWYvscAKeBznVBt+7DV4yjuYAnQLjr1sv046CXgI6EE/Lvq
-         nd68o+ofj03k/QLJdY8HpPYXhdC0n5iBIxY8QDc0bEV3RcN+fes6WwhD4RRWzePBMo
-         TVbfoZIcSkgVd2SVTMJDwgt0v4kQXirhbKZ2wYsw6PpIBy83tLWQ7fLJ4Z21Y5sIep
-         +TNTVzq2kZ/dcsS+OcAijRi9fy6UKbAFNxxbFNtqSSCUYI1HTFp3fEABL5cTLO/Tl1
-         s/i9A2HPQgWeg==
+        s=k20201202; t=1615141269;
+        bh=Z/yzF1CfY4eiDaVH7PxeV7h9wRb6klGYTWlRQazPEWM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VBpRglsXiXAA6O1QgO6KNWMpPbTalhHmYzwk08kv3/EA73pddLYQRqsKc77gYXcAE
+         /084E9wdcrvz/zUXHVrZK2vYh+ML9rAA0OBHnFIHdllIf9WndHYBXznAuBEzWYVt0I
+         R7tqrZXky4ObmEc99ZAMXp7cuTwcav0nu4Z35pdCYVK6qI5VOwgZaXenX5SBDZVjyA
+         wDUr7q3uq4EGDDu8y4s70voHDj8XkLjJ8hS7MXgJaAjip3+GlfDbMpXk5yvSEMGU87
+         hNakr3oQw+H1kRV5zGzIt2Tc9ek2KucuRLNKW3daORC08zbRd8bN50fKxABoyjrjvY
+         7wbJrTRotcCfw==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        ryder.lee@mediatek.com
-Subject: [PATCH] mt76: mt7915: simplify mt7915_mac_sta_poll routine
-Date:   Sun,  7 Mar 2021 18:59:08 +0100
-Message-Id: <db48916a553fee715fc9c0c1f83f363a01218dff.1615139832.git.lorenzo@kernel.org>
+        sean.wang@mediatek.com
+Subject: [PATCH 2/7] mt76: introduce mcu_reset function pointer in mt76_mcu_ops structure
+Date:   Sun,  7 Mar 2021 19:20:46 +0100
+Message-Id: <7b006e8eb99445b2efcdd7c7b726ba4a1aee0991.1615140875.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <cover.1615140875.git.lorenzo@kernel.org>
+References: <cover.1615140875.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Drop unnecessary lock around sta_poll_list list in mt7915_mac_sta_poll
-routine.
+Introduce mcu_reset function pointer in mt76_mcu_ops structure in order
+to run hw related reset function for the mcu running on the chipset.
+This is a preliminary patch to introduce chip reset for mt7921 devices.
 
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mcu.c  | 4 ++++
+ drivers/net/wireless/mediatek/mt76/mt76.h | 1 +
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index b3168dd3baed..cde98b86e2bb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -117,23 +117,15 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
+index d3a5e2c4f12a..70624cd07449 100644
+--- a/drivers/net/wireless/mediatek/mt76/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mcu.c
+@@ -99,6 +99,10 @@ int mt76_mcu_skb_send_and_get_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 			dev_kfree_skb(skb);
+ 	} while (ret == -EAGAIN);
  
- 	rcu_read_lock();
++	/* notify driver code to reset the mcu */
++	if (ret == -ETIMEDOUT && dev->mcu_ops->mcu_reset)
++		dev->mcu_ops->mcu_reset(dev);
++
+ out:
+ 	mutex_unlock(&dev->mcu.mutex);
  
--	while (true) {
-+	while (!list_empty(&sta_poll_list)) {
- 		bool clear = false;
- 		u32 addr;
--		u16 idx;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 5d3438d86d2a..bbe6a70851c8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -166,6 +166,7 @@ struct mt76_mcu_ops {
+ 	int (*mcu_rd_rp)(struct mt76_dev *dev, u32 base,
+ 			 struct mt76_reg_pair *rp, int len);
+ 	int (*mcu_restart)(struct mt76_dev *dev);
++	void (*mcu_reset)(struct mt76_dev *dev);
+ };
  
--		spin_lock_bh(&dev->sta_poll_lock);
--		if (list_empty(&sta_poll_list)) {
--			spin_unlock_bh(&dev->sta_poll_lock);
--			break;
--		}
- 		msta = list_first_entry(&sta_poll_list,
- 					struct mt7915_sta, poll_list);
- 		list_del_init(&msta->poll_list);
--		spin_unlock_bh(&dev->sta_poll_lock);
- 
--		idx = msta->wcid.idx;
--		addr = mt7915_mac_wtbl_lmac_addr(dev, idx) + 20 * 4;
-+		addr = mt7915_mac_wtbl_lmac_addr(dev, msta->wcid.idx) + 20 * 4;
- 
- 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 			u32 tx_last = msta->airtime_ac[i];
-@@ -152,7 +144,7 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 		}
- 
- 		if (clear) {
--			mt7915_mac_wtbl_update(dev, idx,
-+			mt7915_mac_wtbl_update(dev, msta->wcid.idx,
- 					       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
- 			memset(msta->airtime_ac, 0, sizeof(msta->airtime_ac));
- 		}
+ struct mt76_queue_ops {
 -- 
 2.29.2
 
