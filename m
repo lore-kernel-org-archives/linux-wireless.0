@@ -2,142 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B60C4332D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28000C433DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 10:10:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31CE56527D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F12C065257
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 10:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231124AbhCIIqL (ORCPT
+        id S230140AbhCIKJc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbhCIIph (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Mar 2021 03:45:37 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83949C06174A;
-        Tue,  9 Mar 2021 00:45:37 -0800 (PST)
-Message-Id: <20210309084241.890532921@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279536;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
-        b=NUiBdRmSHOw8Uw7iGVCliq0SkijyDtSQeIlX2ttF5eYOB04ertkM2Uh8QIwMjzxknvM4Oi
-        GRczvMwF4Chxks6EHIdFcxf994wpOVMid6LgETyt8/3xRgaKeoLH3aRoLE9+RzkxtdL95l
-        p/LK6qN1CFSizLi9NxVul4Z4oW9fZhlPZNFfowy+hYy/bvs0/8AmGMrt7JSObaFS2zC75D
-        OBOxtN7SqvtX0InkXzFW/YoC2AIebW82mdvRv82KClxkE3l8y1cRUmjDxOxpUto6ZjvTy6
-        sOul2TdGNELQKcFbwi+hrqP2XMxO/1prGGp3y655xbR4HnXaPbUW0ukOcaLScQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279536;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
-        b=ZlShNnj6ML8G8VM9soMkkHJnBGalF94sWxBHDfAV6jTJiZ89UrK4IDm7BXCH9G1FxgEGHe
-        KVDQyUY1lmDetZBw==
-Date:   Tue, 09 Mar 2021 09:42:09 +0100
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Frederic Weisbecker <frederic@kernel.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        "Ahmed S. Darwish" <a.darwish@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Denis Kirjanov <kda@linux-powerpc.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
-        linux-atm-general@lists.sourceforge.net,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        linux1394-devel@lists.sourceforge.net
-Subject: [patch 06/14] tasklets: Replace spin wait in tasklet_kill()
-References: <20210309084203.995862150@linutronix.de>
+        Tue, 9 Mar 2021 05:09:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37400 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229691AbhCIKJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Mar 2021 05:09:16 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0513765257;
+        Tue,  9 Mar 2021 10:09:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615284556;
+        bh=ExrBKg4inI96baXa7XVTQenb1XjPd1DKTrvHab2xmZU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=q+ULo8fAmC8t46aqt8Q/6dXQjN8J63jFF/teoCf0odzyI3WQ+pjb5EMHTauslLb6p
+         g1meO0lODdBj085IZOiHNPJ4q4KPDmoey4Knxmq5cgWolh16qhzx6iYnYFM/6D2U0Y
+         Xc3SvKIEthX9PjCrWdo+erhjl+pzM1evvucBJIo3ifHdz5wEsjAqyWtUuIrsCztLTO
+         kWSdlxRgbUKmmiWp2FiWptcM3frHLeV0h8JgUq9Z9dycXAKwRCIQx127K4qEY8+sC/
+         4pyBQKN0WqT7kzcJ8duN9j7cYpxjUcdTXojZb0cWm5/MgahsufevriS+LqjSUFW0CW
+         TiNGrkpYSsTDA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        nbd@nbd.name, sean.wang@mediatek.com, leon.yen@mediatek.com
+Subject: [PATCH wireless-drivers] mt76: mt7921: fix airtime reporting
+Date:   Tue,  9 Mar 2021 11:09:03 +0100
+Message-Id: <c05333be0e3e85a50a71bb2de81034fe425e3701.1615284335.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-transfer-encoding: 8-bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+Fix {tx,rx}_airtime reporting for mt7921 driver. Wrong register definitions
+trigger a tx hangs before resetting airtime stats.
 
-tasklet_kill() spin waits for TASKLET_STATE_SCHED to be cleared invoking
-yield() from inside the loop. yield() is an ill defined mechanism and the
-result might still be wasting CPU cycles in a tight loop which is
-especially painful in a guest when the CPU running the tasklet is scheduled
-out.
-
-tasklet_kill() is used in teardown paths and not performance critical at
-all. Replace the spin wait with wait_var_event().
-
-Signed-off-by: Peter Zijlstra <peterz@infradead.org>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Fixes: 163f4d22c118d ("mt76: mt7921: add MAC support")
+Tested-by: Leon Yen <leon.yen@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- kernel/softirq.c |   23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/regs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/kernel/softirq.c
-+++ b/kernel/softirq.c
-@@ -532,6 +532,16 @@ void __tasklet_hi_schedule(struct taskle
- }
- EXPORT_SYMBOL(__tasklet_hi_schedule);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+index 18980bb32dee..6dad7f6ab09d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+@@ -135,10 +135,10 @@
  
-+static inline bool tasklet_clear_sched(struct tasklet_struct *t)
-+{
-+	if (test_and_clear_bit(TASKLET_STATE_SCHED, &t->state)) {
-+		wake_up_var(&t->state);
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static void tasklet_action_common(struct softirq_action *a,
- 				  struct tasklet_head *tl_head,
- 				  unsigned int softirq_nr)
-@@ -551,8 +561,7 @@ static void tasklet_action_common(struct
+ #define MT_WTBLON_TOP_BASE		0x34000
+ #define MT_WTBLON_TOP(ofs)		(MT_WTBLON_TOP_BASE + (ofs))
+-#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x0)
++#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x200)
+ #define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(2, 0)
  
- 		if (tasklet_trylock(t)) {
- 			if (!atomic_read(&t->count)) {
--				if (!test_and_clear_bit(TASKLET_STATE_SCHED,
--							&t->state))
-+				if (!tasklet_clear_sched(t))
- 					BUG();
- 				if (t->use_callback)
- 					t->callback(t);
-@@ -612,13 +621,11 @@ void tasklet_kill(struct tasklet_struct
- 	if (in_interrupt())
- 		pr_notice("Attempt to kill tasklet from interrupt\n");
- 
--	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state)) {
--		do {
--			yield();
--		} while (test_bit(TASKLET_STATE_SCHED, &t->state));
--	}
-+	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state))
-+		wait_var_event(&t->state, !test_bit(TASKLET_STATE_SCHED, &t->state));
-+
- 	tasklet_unlock_wait(t);
--	clear_bit(TASKLET_STATE_SCHED, &t->state);
-+	tasklet_clear_sched(t);
- }
- EXPORT_SYMBOL(tasklet_kill);
- 
+-#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x030)
++#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x230)
+ #define MT_WTBL_UPDATE_WLAN_IDX		GENMASK(9, 0)
+ #define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(12)
+ #define MT_WTBL_UPDATE_BUSY		BIT(31)
+-- 
+2.29.2
 
