@@ -2,49 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C05D2C433E9
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9FF6C43331
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75B3965266
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 973B265285
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230112AbhCIIpg (ORCPT
+        id S230343AbhCIIpj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:45:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40474 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbhCIIpc (ORCPT
+        Tue, 9 Mar 2021 03:45:39 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:51238 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230033AbhCIIpc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 9 Mar 2021 03:45:32 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51E48C06174A;
-        Tue,  9 Mar 2021 00:45:32 -0800 (PST)
-Message-Id: <20210309084203.995862150@linutronix.de>
+Message-Id: <20210309084241.407702697@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279528;
+        s=2020; t=1615279531;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=mZxOEHDPd7/Yp3jcQ6vX00DvouRsaIVMYYEagknQzH4=;
-        b=Pem8P80FNqHdBxpXQLkPBDFYuiHjeDymKfehbwsz/b1kGrF8hxRZHjcB0BhbEi0tYFK3w/
-        BvNAqsOu+EnaeExoSwWbeBeauy2mlnaXuFGPa7JcLx2A9v/k4eCe6RRM+U0+r7S06BNwQx
-        wUsQPMPUp19sXB+xZ121zRjjElwqfff7Z2/PiVvr047M3uP9RlloCoXzjrmHJfqiqW+avM
-        pvX/W6cykYbmm0w34eTR4Df24lH+ibfjDqUFX7etZybTsYGnIuHufnDnv+rQttkR7bqNPb
-        5Z8XsGmKkjpCta/WCKgUVCL2cGyobxfPP4i9UE3C2nlW5Qmi1idzLoQ+AE0/7Q==
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=o2CXUsE59obF5ek4K6XdcmLhe8s7XlVKrpUV1oOhJ6Q=;
+        b=h7x4o9iY4obbnaJ882WU+aDlrLddiyKnz43xPo7oD71f9Laof7rJaWus3NREAv0OzEOZVn
+        TzEN8SlElmh1J6d/y583/7xR7qBEL/68wnsuoLE9msv9t6TU5Z3X+G5dNj9wPuwetcBwBS
+        5aVDGRn1K+u92JjZwDvHbf9z3NdaIjyvg08ORucxA0u2M6g7aMETtnSEGuelWnf3S5vwjH
+        Y3A86H7le/gn0vaGSxPwF9UL0zx0J2dLxXf4MQeUNC1s6Q7anRp/b4BR5igTL39cM+B1v+
+        4j2gu7EsnRjo3PgaEn8eWZ4MgvSTX+IQ8cAFFj8/8cKpWsjYULTSUqDzPrkG8g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279528;
+        s=2020e; t=1615279531;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=mZxOEHDPd7/Yp3jcQ6vX00DvouRsaIVMYYEagknQzH4=;
-        b=NgBOeQII7dm+zP1gHyz4eJT6xN4otLYu1EkP7jvNbsyhCMaNZ4c2OHSt4hh2ZU9hqPBolR
-        Rk7BixzutQhr0UCA==
-Date:   Tue, 09 Mar 2021 09:42:03 +0100
+         content-transfer-encoding:content-transfer-encoding:  references:references;
+        bh=o2CXUsE59obF5ek4K6XdcmLhe8s7XlVKrpUV1oOhJ6Q=;
+        b=pqfi+4r4caBDXjnyu9+vuj+UoZmAX2xcL8obAZ2eLg85vmrLN3CEavkW/Mf27wU8fkmawC
+        zbuw1nn45J3T4ICA==
+Date:   Tue, 09 Mar 2021 09:42:05 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
@@ -67,39 +64,36 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 00/14] tasklets: Replace the spin wait loops and make it RT safe
+Subject: [patch 02/14] tasklets: Use static inlines for stub implementations
+References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-transfer-encoding: 8-bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-VGhpcyBpcyBhIGZvbGxvdyB1cCB0byB0aGUgcmV2aWV3IGNvbW1lbnRzIG9mIHRoZSBzZXJpZXMg
-d2hpY2ggbWFrZXMKc29mdGlycSBwcm9jZXNzaW5nIFBSRUVNUFRfUlQgc2FmZToKCiBodHRwczov
-L2xvcmUua2VybmVsLm9yZy9yLzIwMjAxMjA3MTE0NzQzLkdLMzA0MEBoaXJlei5wcm9ncmFtbWlu
-Zy5raWNrcy1hc3MubmV0CgpQZXRlciBzdWdnZXN0ZWQgdG8gcmVwbGFjZSB0aGUgc3BpbiB3YWl0
-aW5nIGluIHRhc2tsZXRfZGlzYWJsZSgpIGFuZAp0YXNrbGV0X2tpbGwoKSB3aXRoIHdhaXRfZXZl
-bnQoKS4gVGhpcyBhbHNvIGdldHMgcmlkIG9mIHRoZSBpbGwgZGVmaW5lZApzY2hlZF95aWVsZCgp
-IGluIHRhc2tsZXRfa2lsbCgpLgoKQW5hbHl6aW5nIGFsbCB1c2FnZSBzaXRlcyBvZiB0YXNrbGV0
-X2Rpc2FibGUoKSBhbmQgdGFza2xldF91bmxvY2tfd2FpdCgpIHdlCmZvdW5kIHRoYXQgbW9zdCBv
-ZiB0aGVtIGFyZSBzYWZlIHRvIGJlIGNvbnZlcnRlZCB0byBhIHNsZWVwaW5nIHdhaXQuCgpPbmx5
-IGEgZmV3IGluc3RhbmNlcyBpbnZva2UgdGFza2xldF9kaXNhYmxlKCkgZnJvbSBhdG9taWMgY29u
-dGV4dC4gQSBmZXcKYnVncyB3aGljaCBoYXZlIGJlZW4gZm91bmQgaW4gY291cnNlIG9mIHRoaXMg
-YW5hbHlzaXMgaGF2ZSBiZWVuIGFscmVhZHkKYWRkcmVzc2VkIHNlcGVyYXRlbHkuCgpUaGUgZm9s
-bG93aW5nIHNlcmllcyB0YWtlcyB0aGUgZm9sbG93aW5nIGFwcHJvYWNoOgoKICAgIDEpIFByb3Zp
-ZGUgYSB2YXJpYW50IG9mIHRhc2tsZXRfZGlzYWJsZSgpIHdoaWNoIGNhbiBiZSBpbnZva2VkIGZy
-b20KICAgICAgIGF0b21pYyBjb250ZXh0cwoKICAgIDIpIENvbnZlcnQgdGhlIHVzYWdlIHNpdGVz
-IHdoaWNoIGNhbm5vdCBiZSBlYXNpbHkgY2hhbmdlZCB0byBhCiAgICAgICBzbGVlcGFibGUgd2Fp
-dCB0byB1c2UgdGhpcyBuZXcgZnVuY3Rpb24KCiAgICAzKSBSZXBsYWNlIHRoZSBzcGluIHdhaXRz
-IGluIHRhc2tsZXRfZGlzYWJsZSgpIGFuZCB0YXNrbGV0X2tpbGwoKSB3aXRoCiAgICAgICBzbGVl
-cGFibGUgdmFyaWFudHMuCgpJZiB0aGlzIGlzIGFncmVlZCBvbiB0aGVuIHRoZSBtZXJnaW5nIGNh
-biBiZSBlaXRoZXIgZG9uZSBpbiBidWxrIG9yIHRoZQpmaXJzdCA0IHBhdGNoZXMgY291bGQgYmUg
-YXBwbGllZCBvbiB0b3Agb2YgcmMyIGFuZCB0YWdnZWQgZm9yIGNvbnN1bXB0aW9uCmluIHRoZSBy
-ZWxldmFudCBzdWJzeXN0ZW0gdHJlZXMgKG5ldHdvcmtpbmcsIHBjaSwgZmlyZXdpcmUpLiBJbiB0
-aGlzIGNhc2UKdGhlIGxhc3QgcGF0Y2ggd2hpY2ggY2hhbmdlcyB0aGUgaW1wbGVtZW50YXRpb24g
-b2YgdGFza2xldF9kaXNhYmxlKCkgaGFzIHRvCmJlIHBvc3QtcG9uZWQgdW50aWwgYWxsIG90aGVy
-IGNoYW5nZXMgaGF2ZSByZWFjaGVkIG1haW5saW5lLgoKVGhlIHNlcmllcyBpcyBhbHNvIGF2YWls
-YWJsZSBmcm9tIGdpdDoKCiAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJu
-ZWwvZ2l0L3RnbHgvZGV2ZWwuZ2l0IHRhc2tsZXQtMjAyMS0wMy0wOQoKVGhhbmtzLAoKCXRnbHgK
-Cgo=
+Inlines exist for a reason.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ include/linux/interrupt.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -676,9 +676,9 @@ static inline void tasklet_unlock_wait(s
+ 		cpu_relax();
+ }
+ #else
+-#define tasklet_trylock(t) 1
+-#define tasklet_unlock_wait(t) do { } while (0)
+-#define tasklet_unlock(t) do { } while (0)
++static inline int tasklet_trylock(struct tasklet_struct *t) { return 1; }
++static inline void tasklet_unlock(struct tasklet_struct *t) { }
++static inline void tasklet_unlock_wait(struct tasklet_struct *t) { }
+ #endif
+ 
+ extern void __tasklet_schedule(struct tasklet_struct *t);
+
