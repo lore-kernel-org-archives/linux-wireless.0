@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B694BC43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B60C4332D
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73790652AC
+	by mail.kernel.org (Postfix) with ESMTP id 31CE56527D
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230518AbhCIIqJ (ORCPT
+        id S231124AbhCIIqL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40498 "EHLO
+        Tue, 9 Mar 2021 03:46:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230053AbhCIIpf (ORCPT
+        with ESMTP id S230252AbhCIIph (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Mar 2021 03:45:35 -0500
+        Tue, 9 Mar 2021 03:45:37 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 177ADC06174A;
-        Tue,  9 Mar 2021 00:45:35 -0800 (PST)
-Message-Id: <20210309084241.685352806@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83949C06174A;
+        Tue,  9 Mar 2021 00:45:37 -0800 (PST)
+Message-Id: <20210309084241.890532921@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279533;
+        s=2020; t=1615279536;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=fajdk1se+hvPqPoM0Mv211jYRgBOSmzsn3kwBqkLUCE=;
-        b=4C+zwdYSCewZBAvg9JCo756ZwB/xNPomxFH/6ypc4syQiX/vfwjWWZRCTb3DhFc5iC0zzK
-        0m601MJ+7emu2midF95gI8LaS2eqggA1YylfBCY9ggv/oWmh4FQhyJioPgO5nmmUWcoJ3w
-        nYYJwe9vwfQwNNCmRQl7bQhtQf635TbKeG1S4FHSym4Ki7pGKZ8MC5jZ6bZeR+4dhMe80x
-        t39j6CKdwPFNxDteOL1pS9CSOlB9xBibc8HVkkBhJKBUa4kf4y/QAUKGUxMlN1RbJ3E1tf
-        tp/49XzusDQMWSxSkzqgTeFr0/59Tvmfovoycg7shA3I+ADHsvLITw7U7ndRQw==
+        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
+        b=NUiBdRmSHOw8Uw7iGVCliq0SkijyDtSQeIlX2ttF5eYOB04ertkM2Uh8QIwMjzxknvM4Oi
+        GRczvMwF4Chxks6EHIdFcxf994wpOVMid6LgETyt8/3xRgaKeoLH3aRoLE9+RzkxtdL95l
+        p/LK6qN1CFSizLi9NxVul4Z4oW9fZhlPZNFfowy+hYy/bvs0/8AmGMrt7JSObaFS2zC75D
+        OBOxtN7SqvtX0InkXzFW/YoC2AIebW82mdvRv82KClxkE3l8y1cRUmjDxOxpUto6ZjvTy6
+        sOul2TdGNELQKcFbwi+hrqP2XMxO/1prGGp3y655xbR4HnXaPbUW0ukOcaLScQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279533;
+        s=2020e; t=1615279536;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=fajdk1se+hvPqPoM0Mv211jYRgBOSmzsn3kwBqkLUCE=;
-        b=u2ufN0ryTPI6iaS2zSQyW6B292/G/cKQn67hUvgNj6rQWijamDsMf6cfWjVoR7pxDc1GeJ
-        06KPRYx02lf9/1Dg==
-Date:   Tue, 09 Mar 2021 09:42:07 +0100
+        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
+        b=ZlShNnj6ML8G8VM9soMkkHJnBGalF94sWxBHDfAV6jTJiZ89UrK4IDm7BXCH9G1FxgEGHe
+        KVDQyUY1lmDetZBw==
+Date:   Tue, 09 Mar 2021 09:42:09 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
@@ -67,7 +67,7 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 04/14] tasklets: Use spin wait in tasklet_disable() temporarily
+Subject: [patch 06/14] tasklets: Replace spin wait in tasklet_kill()
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -76,24 +76,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To ease the transition use spin waiting in tasklet_disable() until all
-usage sites from atomic context have been cleaned up.
+From: Peter Zijlstra <peterz@infradead.org>
 
+tasklet_kill() spin waits for TASKLET_STATE_SCHED to be cleared invoking
+yield() from inside the loop. yield() is an ill defined mechanism and the
+result might still be wasting CPU cycles in a tight loop which is
+especially painful in a guest when the CPU running the tasklet is scheduled
+out.
+
+tasklet_kill() is used in teardown paths and not performance critical at
+all. Replace the spin wait with wait_var_event().
+
+Signed-off-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/interrupt.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ kernel/softirq.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -728,7 +728,8 @@ static inline void tasklet_disable_in_at
- static inline void tasklet_disable(struct tasklet_struct *t)
- {
- 	tasklet_disable_nosync(t);
--	tasklet_unlock_wait(t);
-+	/* Spin wait until all atomic users are converted */
-+	tasklet_unlock_spin_wait(t);
- 	smp_mb();
+--- a/kernel/softirq.c
++++ b/kernel/softirq.c
+@@ -532,6 +532,16 @@ void __tasklet_hi_schedule(struct taskle
  }
+ EXPORT_SYMBOL(__tasklet_hi_schedule);
+ 
++static inline bool tasklet_clear_sched(struct tasklet_struct *t)
++{
++	if (test_and_clear_bit(TASKLET_STATE_SCHED, &t->state)) {
++		wake_up_var(&t->state);
++		return true;
++	}
++
++	return false;
++}
++
+ static void tasklet_action_common(struct softirq_action *a,
+ 				  struct tasklet_head *tl_head,
+ 				  unsigned int softirq_nr)
+@@ -551,8 +561,7 @@ static void tasklet_action_common(struct
+ 
+ 		if (tasklet_trylock(t)) {
+ 			if (!atomic_read(&t->count)) {
+-				if (!test_and_clear_bit(TASKLET_STATE_SCHED,
+-							&t->state))
++				if (!tasklet_clear_sched(t))
+ 					BUG();
+ 				if (t->use_callback)
+ 					t->callback(t);
+@@ -612,13 +621,11 @@ void tasklet_kill(struct tasklet_struct
+ 	if (in_interrupt())
+ 		pr_notice("Attempt to kill tasklet from interrupt\n");
+ 
+-	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state)) {
+-		do {
+-			yield();
+-		} while (test_bit(TASKLET_STATE_SCHED, &t->state));
+-	}
++	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state))
++		wait_var_event(&t->state, !test_bit(TASKLET_STATE_SCHED, &t->state));
++
+ 	tasklet_unlock_wait(t);
+-	clear_bit(TASKLET_STATE_SCHED, &t->state);
++	tasklet_clear_sched(t);
+ }
+ EXPORT_SYMBOL(tasklet_kill);
  
 
