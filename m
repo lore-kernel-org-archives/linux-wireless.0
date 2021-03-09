@@ -2,90 +2,283 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6522CC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB17C433E0
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 03:55:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 142F765275
+	by mail.kernel.org (Postfix) with ESMTP id 3FA306527B
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 03:55:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229701AbhCIDzQ (ORCPT
+        id S229837AbhCIDzR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Mar 2021 22:55:16 -0500
-Received: from m42-2.mailgun.net ([69.72.42.2]:17967 "EHLO m42-2.mailgun.net"
+        Mon, 8 Mar 2021 22:55:17 -0500
+Received: from z11.mailgun.us ([104.130.96.11]:53357 "EHLO z11.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229582AbhCIDyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Mar 2021 22:54:47 -0500
+        id S229650AbhCIDyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Mar 2021 22:54:54 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1615262087; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=hyggxAjmD34KQNhDhfjaOblMSk91ZNWHWoXKRmB4iiQ=; b=mG4x/lQgHutqUCsRbfRfSCB7729RCG+TvLlzjQnYWS7NoUxkOOlgDlulovPJrMpGxb29RyOp
- 5w8hjX874Urr5f8lNeIM4FqEuL9FS8l0ZIhSOCGgBosgqfo1K8QafA6vywzWhHqTfVLtAAeg
- mHsUfar9rp/r7Nw65dI3lzDUIKs=
-X-Mailgun-Sending-Ip: 69.72.42.2
+ s=smtp; t=1615262094; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=E+KlRghLjYTFB8/sqsrvPuno/lC63+kw6Wo1B5yShA0=; b=iOg8ukAhuOKpI5T1oizTsTPXc4NTxrBxIXOmWHdQ+iLoAe3Nop6luiYsVOppdA2WZ4F3QINM
+ o177e5jphcuYsZqR1BZd6iMx+UIMyeFXXOM4OEmJo859eXnMpJhltIxYuustMESL+kUW33v+
+ ibMw4dol6xPmEZsFzbjZLpx4x/U=
+X-Mailgun-Sending-Ip: 104.130.96.11
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 6046f186f7ec0ea57c7fc74e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Mar 2021 03:54:46
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 6046f18a81003345dc67863d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Mar 2021 03:54:50
  GMT
 Sender: alokad=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E0B78C433ED; Tue,  9 Mar 2021 03:54:45 +0000 (UTC)
+        id 6B3A0C43464; Tue,  9 Mar 2021 03:54:49 +0000 (UTC)
 Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19363C433C6;
-        Tue,  9 Mar 2021 03:54:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 19363C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D12CEC433CA;
+        Tue,  9 Mar 2021 03:54:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D12CEC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=alokad@codeaurora.org
 From:   Aloka Dixit <alokad@codeaurora.org>
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Aloka Dixit <alokad@codeaurora.org>
-Subject: [PATCH v8 0/4] Multiple BSSID support
-Date:   Mon,  8 Mar 2021 19:54:33 -0800
-Message-Id: <20210309035437.6131-1-alokad@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Aloka Dixit <alokad@codeaurora.org>
+Subject: [PATCH v8 2/4] mac80211: add multiple bssid support to interface handling
+Date:   Mon,  8 Mar 2021 19:54:35 -0800
+Message-Id: <20210309035437.6131-3-alokad@codeaurora.org>
 X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20210309035437.6131-1-alokad@codeaurora.org>
+References: <20210309035437.6131-1-alokad@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patchset adds support for multiple BSSID and
-enhanced multi-BSSID advertisements.
+From: John Crispin <john@phrozen.org>
 
-This version has changes only in patch 1/4 (nl80211) which add
-new feature flags NL80211_EXT_FEATURE_MULTIPLE_BSSID_AP and
-NL80211_EXT_FEATURE_EMA_AP along with wiphy parameters
-max_num_vaps and max_profile_periodicity to be used by drivers
+Add a new helper ieee80211_set_multiple_bssid_options() takes propagating
+the cfg80211 data down the stack.
 
-John Crispin (4):
-  nl80211: add basic multiple bssid support
-  mac80211: add multiple bssid support to interface handling
-  mac80211: add multiple bssid/EMA support to beacon handling
-  mac80211: CSA on non-transmitting interfaces
+The patch also makes sure that all members of the bss set will get closed
+when either of them is shutdown.
 
- include/net/cfg80211.h       |  47 ++++++
- include/net/mac80211.h       | 116 ++++++++++++++-
- include/uapi/linux/nl80211.h |  84 +++++++++++
- net/mac80211/cfg.c           | 178 ++++++++++++++++++++--
- net/mac80211/debugfs.c       |   1 +
- net/mac80211/ieee80211_i.h   |   2 +
- net/mac80211/iface.c         |   6 +
- net/mac80211/tx.c            | 189 +++++++++++++++++++++---
- net/wireless/nl80211.c       | 277 ++++++++++++++++++++++++++++++-----
- 9 files changed, 828 insertions(+), 72 deletions(-)
+Signed-off-by: John Crispin <john@phrozen.org>
+Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+v8: No changes from v7
 
+ include/net/mac80211.h | 30 +++++++++++++++++++++++-
+ net/mac80211/cfg.c     | 53 ++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs.c |  1 +
+ net/mac80211/iface.c   |  6 +++++
+ 4 files changed, 89 insertions(+), 1 deletion(-)
 
-base-commit: 38b5133ad607ecdcc8d24906d1ac9cc8df41acd5
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2d1d629e5d14..b9f51515c2e8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -631,6 +631,7 @@ struct ieee80211_fils_discovery {
+  * @s1g: BSS is S1G BSS (affects Association Request format).
+  * @beacon_tx_rate: The configured beacon transmit rate that needs to be passed
+  *	to driver when rate control is offloaded to firmware.
++ * @multiple_bssid: the multiple bssid settings of the AP.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -700,6 +701,7 @@ struct ieee80211_bss_conf {
+ 	u32 unsol_bcast_probe_resp_interval;
+ 	bool s1g;
+ 	struct cfg80211_bitrate_mask beacon_tx_rate;
++	struct cfg80211_multiple_bssid multiple_bssid;
+ };
+ 
+ /**
+@@ -1663,6 +1665,19 @@ enum ieee80211_offload_flags {
+ 	IEEE80211_OFFLOAD_DECAP_ENABLED		= BIT(2),
+ };
+ 
++/**
++ * enum ieee80211_vif_multiple_bssid_flags - virtual interface multiple bssid flags
++ *
++ * @IEEE80211_VIF_MBSS_TRANSMITTING: this BSS is transmitting beacons
++ * @IEEE80211_VIF_MBSS_NON_TRANSMITTING: this BSS is not transmitting beacons
++ * @IEEE80211_VIF_MBSS_EMA_BEACON: beacons should be send out in EMA mode
++ */
++enum ieee80211_vif_multiple_bssid_flags {
++	IEEE80211_VIF_MBSS_TRANSMITTING         = BIT(1),
++	IEEE80211_VIF_MBSS_NON_TRANSMITTING     = BIT(2),
++	IEEE80211_VIF_MBSS_EMA_BEACON           = BIT(3),
++};
++
+ /**
+  * struct ieee80211_vif - per-interface data
+  *
+@@ -1709,6 +1724,11 @@ enum ieee80211_offload_flags {
+  *	protected by fq->lock.
+  * @offload_flags: 802.3 -> 802.11 enapsulation offload flags, see
+  *	&enum ieee80211_offload_flags.
++ *
++ * @multiple_bssid: Multiple BSSID configurations.
++ * @multiple_bssid.parent: Interface index of the transmitted BSS.
++ * @multiple_bssid.flags: multiple bssid flags, see
++ *	enum ieee80211_vif_multiple_bssid_flags.
+  */
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
+@@ -1737,6 +1757,11 @@ struct ieee80211_vif {
+ 
+ 	bool txqs_stopped[IEEE80211_NUM_ACS];
+ 
++	struct {
++		struct ieee80211_vif *parent;
++		u32 flags;
++	} multiple_bssid;
++
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+ };
+@@ -2384,7 +2409,7 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN: Driver does not report accurate A-MPDU
+  *	length in tx status information
+  *
+- * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID
++ * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID in STA mode
+  *
+  * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
+  *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
+@@ -2399,6 +2424,8 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_RX_DECAP_OFFLOAD: Hardware supports rx decapsulation
+  *	offload
+  *
++ * @IEEE80211_HW_SUPPORTS_MULTI_BSSID_AP: Hardware supports multi BSSID in
++ *	AP mode
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2453,6 +2480,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_AMPDU_KEYBORDER_SUPPORT,
+ 	IEEE80211_HW_SUPPORTS_TX_ENCAP_OFFLOAD,
+ 	IEEE80211_HW_SUPPORTS_RX_DECAP_OFFLOAD,
++	IEEE80211_HW_SUPPORTS_MULTI_BSSID_AP,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c4c70e30ad7f..91e659a43f67 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -111,6 +111,39 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++static void ieee80211_set_multiple_bssid_options(struct ieee80211_sub_if_data *sdata,
++						 struct cfg80211_ap_settings *params)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct wiphy *wiphy = local->hw.wiphy;
++	struct net_device *parent;
++	struct ieee80211_sub_if_data *psdata;
++
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_MULTI_BSSID_AP))
++		return;
++
++	if (!params->multiple_bssid.count)
++		return;
++
++	if (params->multiple_bssid.parent) {
++		parent = __dev_get_by_index(wiphy_net(wiphy),
++					    params->multiple_bssid.parent);
++		if (!parent || !parent->ieee80211_ptr)
++			return;
++		psdata = IEEE80211_WDEV_TO_SUB_IF(parent->ieee80211_ptr);
++		if (psdata->vif.multiple_bssid.parent)
++			return;
++		sdata->vif.multiple_bssid.parent = &psdata->vif;
++		sdata->vif.multiple_bssid.flags |= IEEE80211_VIF_MBSS_NON_TRANSMITTING;
++	} else {
++		sdata->vif.multiple_bssid.flags |= IEEE80211_VIF_MBSS_TRANSMITTING;
++	}
++
++	if (params->multiple_bssid.ema)
++		sdata->vif.multiple_bssid.flags |= IEEE80211_VIF_MBSS_EMA_BEACON;
++	sdata->vif.bss_conf.multiple_bssid = params->multiple_bssid;
++}
++
+ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 						const char *name,
+ 						unsigned char name_assign_type,
+@@ -141,6 +174,23 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 
+ static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	if (sdata && sdata->vif.type == NL80211_IFTYPE_AP) {
++		if (sdata->vif.multiple_bssid.flags & IEEE80211_VIF_MBSS_TRANSMITTING) {
++			struct ieee80211_sub_if_data *child;
++
++			rcu_read_lock();
++			list_for_each_entry_rcu(child, &sdata->local->interfaces, list)
++				if (child->vif.multiple_bssid.parent == &sdata->vif)
++					dev_close(child->wdev.netdev);
++			rcu_read_unlock();
++		} else {
++			sdata->vif.multiple_bssid.parent = NULL;
++		}
++	}
++
+ 	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
+ 
+ 	return 0;
+@@ -1078,6 +1128,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 	}
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		ieee80211_set_multiple_bssid_options(sdata, params);
++
+ 	mutex_lock(&local->mtx);
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 5296898875ff..249b8f4e6a54 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -456,6 +456,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(AMPDU_KEYBORDER_SUPPORT),
+ 	FLAG(SUPPORTS_TX_ENCAP_OFFLOAD),
+ 	FLAG(SUPPORTS_RX_DECAP_OFFLOAD),
++	FLAG(SUPPORTS_MULTI_BSSID_AP),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b80c9b016b2b..6bb48bf87aca 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -376,6 +376,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	bool cancel_scan;
+ 	struct cfg80211_nan_func *func;
+ 
++	/* make sure the parent is already down */
++	if (sdata->vif.type == NL80211_IFTYPE_AP &&
++	    sdata->vif.multiple_bssid.parent &&
++	    ieee80211_sdata_running(vif_to_sdata(sdata->vif.multiple_bssid.parent)))
++		dev_close(vif_to_sdata(sdata->vif.multiple_bssid.parent)->wdev.netdev);
++
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+ 	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
 -- 
 2.25.0
 
