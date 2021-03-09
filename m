@@ -4,57 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0658EC43142
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49290C1550B
 	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB9DE652B8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28829652C7
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbhCIIqR (ORCPT
+        id S231352AbhCIIqW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:17 -0500
+        Tue, 9 Mar 2021 03:46:22 -0500
 Received: from Galois.linutronix.de ([193.142.43.55]:51322 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230449AbhCIIpn (ORCPT
+        with ESMTP id S230476AbhCIIpq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Mar 2021 03:45:43 -0500
-Message-Id: <20210309084242.415583839@linutronix.de>
+        Tue, 9 Mar 2021 03:45:46 -0500
+Message-Id: <20210309084242.616379058@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279542;
+        s=2020; t=1615279544;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=QGpDfJMmIlACx05EM2bvuZB38xRW2f8VO628eoWh8rs=;
-        b=ZPPTU832YYY3DB5bNt/1hbd+LTin0b21UuB+bOwFJWUlHhEek9cGKByRTNzYAr7Snrynx8
-        Q3cQeFv1TdHNsWclb9ML6GsTk0XnBu66XRnJx0xKJAa2FsfJgB9aemHbcfMOHByQXJ+5mz
-        pfgIw57fa0RqtWjPq4sbjsTIS9LG23r5sUeQxkSOP9i622HZ7aIyW9FwO+bQXhcOF2Tl2F
-        uM4ewrlYRxcuEJOen8YYySETwpa5AhmuSH/p9pCuxzUGwqryk9YIHkJpFnKwan99X6M6dY
-        tqy+gR5bYO7qMlT8IhX/xBDxEOtIt8+7gkkhMktGDDcLjXmcG0oopYKufm+wSQ==
+        bh=tlyvAn/iLsnm16cCofFKPPKUvuYjwP7bNofYqMtepoU=;
+        b=Qlzwohm0ky1Wc0yoAaFc1u7qAxUQot4tEXPvu5fFgMXwl8en8cJNZqPLoDOXlh+yWNCdyA
+        7CvuQrdNx8rNz1AfWKfp7iu7JJI1fARHIfbiCBh2Y7QoujPJ7jd7/iZILi+8hg/MuJBtQ6
+        sf5gHlbIZy7sEnj16W1LaivwXrHTx2iphw7GtshoGLN+aI4O3nEKodZtfrYcJGpNa4w3Jk
+        tsk7W6FG48rHe17gdBaF1k4TwBMZme3Yvx+GPES6K6c5/jDZ2DuFBthglaOQNKxfvdnaNT
+        iyeBbpnMxyky1tIueNyKNnDmJtLJdAjMJ+LU9+DUS+5LSqiWsRhRbbyjQenOTg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279542;
+        s=2020e; t=1615279544;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=QGpDfJMmIlACx05EM2bvuZB38xRW2f8VO628eoWh8rs=;
-        b=QPBa77aA1llDmSjFe4gs4pYWyd/5xnN8oPYCQFBpl1rPtJDQokKJpFiaqMjegedA/WihG9
-        gtjUJGH5B1Kd6iCQ==
-Date:   Tue, 09 Mar 2021 09:42:14 +0100
+        bh=tlyvAn/iLsnm16cCofFKPPKUvuYjwP7bNofYqMtepoU=;
+        b=4uviCJ31waHDVyHXuUlHnZ6PNw0FIonj8rD9WJzrc5m+wDPM7Ai550CdyaMdzhAP03Jqt1
+        Ixw9TwLF4CvNbACg==
+Date:   Tue, 09 Mar 2021 09:42:16 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>,
-        Chas Williams <3chas3@gmail.com>,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net,
         Peter Zijlstra <peterz@infradead.org>,
         Denis Kirjanov <kda@linux-powerpc.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath9k-devel@qca.qualcomm.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
+        linux-atm-general@lists.sourceforge.net,
         "K. Y. Srinivasan" <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
@@ -62,11 +63,8 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        linux1394-devel@lists.sourceforge.net
-Subject: [patch 11/14] atm: eni: Use tasklet_disable_in_atomic() in the send()
- callback
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [patch 13/14] firewire: ohci: Use tasklet_disable_in_atomic() where required
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -77,33 +75,52 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The atmdev_ops::send callback which calls tasklet_disable() is invoked with
-bottom halfs disabled from net_device_ops::ndo_start_xmit(). All other
-invocations of tasklet_disable() in this driver happen in preemptible
-context.
+tasklet_disable() is invoked in several places. Some of them are in atomic
+context which prevents a conversion of tasklet_disable() to a sleepable
+function.
 
-Change the send() call to use tasklet_disable_in_atomic() which allows
-tasklet_disable() to be made sleepable once the remaining atomic context
-usage sites are cleaned up.
+The atomic callchains are:
+
+ ar_context_tasklet()
+   ohci_cancel_packet()
+     tasklet_disable()
+
+ ...
+   ohci_flush_iso_completions()
+     tasklet_disable()
+
+The invocation of tasklet_disable() from at_context_flush() is always in
+preemptible context.
+
+Use tasklet_disable_in_atomic() for the two invocations in
+ohci_cancel_packet() and ohci_flush_iso_completions().
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Chas Williams <3chas3@gmail.com>
-Cc: linux-atm-general@lists.sourceforge.net
-Cc: netdev@vger.kernel.org
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-devel@lists.sourceforge.net
 ---
- drivers/atm/eni.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/firewire/ohci.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/drivers/atm/eni.c
-+++ b/drivers/atm/eni.c
-@@ -2054,7 +2054,7 @@ static int eni_send(struct atm_vcc *vcc,
- 	}
- 	submitted++;
- 	ATM_SKB(skb)->vcc = vcc;
--	tasklet_disable(&ENI_DEV(vcc->dev)->task);
-+	tasklet_disable_in_atomic(&ENI_DEV(vcc->dev)->task);
- 	res = do_tx(skb);
- 	tasklet_enable(&ENI_DEV(vcc->dev)->task);
- 	if (res == enq_ok) return 0;
+--- a/drivers/firewire/ohci.c
++++ b/drivers/firewire/ohci.c
+@@ -2545,7 +2545,7 @@ static int ohci_cancel_packet(struct fw_
+ 	struct driver_data *driver_data = packet->driver_data;
+ 	int ret = -ENOENT;
+ 
+-	tasklet_disable(&ctx->tasklet);
++	tasklet_disable_in_atomic(&ctx->tasklet);
+ 
+ 	if (packet->ack != 0)
+ 		goto out;
+@@ -3465,7 +3465,7 @@ static int ohci_flush_iso_completions(st
+ 	struct iso_context *ctx = container_of(base, struct iso_context, base);
+ 	int ret = 0;
+ 
+-	tasklet_disable(&ctx->context.tasklet);
++	tasklet_disable_in_atomic(&ctx->context.tasklet);
+ 
+ 	if (!test_and_set_bit_lock(0, &ctx->flushing_completions)) {
+ 		context_tasklet((unsigned long)&ctx->context);
 
