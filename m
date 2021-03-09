@@ -2,55 +2,58 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9BDCC43381
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B694BC43331
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A81186525D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73790652AC
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Mar 2021 08:47:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231195AbhCIIqN (ORCPT
+        id S230518AbhCIIqJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:13 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:51322 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230372AbhCIIpl (ORCPT
+        Tue, 9 Mar 2021 03:46:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40498 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230053AbhCIIpf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Mar 2021 03:45:41 -0500
-Message-Id: <20210309084242.209110861@linutronix.de>
+        Tue, 9 Mar 2021 03:45:35 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 177ADC06174A;
+        Tue,  9 Mar 2021 00:45:35 -0800 (PST)
+Message-Id: <20210309084241.685352806@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279539;
+        s=2020; t=1615279533;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=3OZDZ1PlAIXweh7titVCv+Mhn6QM6oopTZUhKH8n3fI=;
-        b=OHqjpGKzuWjP+ej4hd27e5ZqZrmViqn9gk8mqAOiivIPpzrHwdyFNiFKhb6RX2HyHplghe
-        CAbm1ecdOgYQd4x7YP2MQPb+tH4KPQ6o0MUrzbYxxI8aRRi2i2nPOkWNuvbOyg61rZ1yo0
-        DjJC1WOJiDIRdPk97zbrpQ0bXKnJnOdUu3NaT2ZP+JtjAC/VvVGBFgel3qlOWmrnlVnbgw
-        PSg2351Hv8WRE7GmEVPQST7lNGtgE6boyfuDeMjNk+1HiMXw3q3En3ND4s5vLy+pzB7LfK
-        2CBwAs4jMqqsgXQKIyJYyGPuJUF1PnOPa/paFgILHa/BvyF3xtK0QIhtfteSbQ==
+        bh=fajdk1se+hvPqPoM0Mv211jYRgBOSmzsn3kwBqkLUCE=;
+        b=4C+zwdYSCewZBAvg9JCo756ZwB/xNPomxFH/6ypc4syQiX/vfwjWWZRCTb3DhFc5iC0zzK
+        0m601MJ+7emu2midF95gI8LaS2eqggA1YylfBCY9ggv/oWmh4FQhyJioPgO5nmmUWcoJ3w
+        nYYJwe9vwfQwNNCmRQl7bQhtQf635TbKeG1S4FHSym4Ki7pGKZ8MC5jZ6bZeR+4dhMe80x
+        t39j6CKdwPFNxDteOL1pS9CSOlB9xBibc8HVkkBhJKBUa4kf4y/QAUKGUxMlN1RbJ3E1tf
+        tp/49XzusDQMWSxSkzqgTeFr0/59Tvmfovoycg7shA3I+ADHsvLITw7U7ndRQw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279539;
+        s=2020e; t=1615279533;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=3OZDZ1PlAIXweh7titVCv+Mhn6QM6oopTZUhKH8n3fI=;
-        b=o9tIrGOpSVQUSJ1YQqLXROg6bjTxJYKvkYRgEtPlvtrNy6s6CHuYZDrzd8nr4wFP+zYF0n
-        C0xlpPo2jMwMG+DA==
-Date:   Tue, 09 Mar 2021 09:42:12 +0100
+        bh=fajdk1se+hvPqPoM0Mv211jYRgBOSmzsn3kwBqkLUCE=;
+        b=u2ufN0ryTPI6iaS2zSQyW6B292/G/cKQn67hUvgNj6rQWijamDsMf6cfWjVoR7pxDc1GeJ
+        06KPRYx02lf9/1Dg==
+Date:   Tue, 09 Mar 2021 09:42:07 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
         Denis Kirjanov <kda@linux-powerpc.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
         ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
         linux-atm-general@lists.sourceforge.net,
@@ -64,7 +67,7 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 09/14] net: sundance: Use tasklet_disable_in_atomic().
+Subject: [patch 04/14] tasklets: Use spin wait in tasklet_disable() temporarily
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -73,33 +76,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To ease the transition use spin waiting in tasklet_disable() until all
+usage sites from atomic context have been cleaned up.
 
-tasklet_disable() is used in the timer callback. This might be distangled,
-but without access to the hardware that's a bit risky.
-
-Replace it with tasklet_disable_in_atomic() so tasklet_disable() can be
-changed to a sleep wait once all remaining atomic users are converted.
-
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Denis Kirjanov <kda@linux-powerpc.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: netdev@vger.kernel.org
 ---
- drivers/net/ethernet/dlink/sundance.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/interrupt.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---- a/drivers/net/ethernet/dlink/sundance.c
-+++ b/drivers/net/ethernet/dlink/sundance.c
-@@ -963,7 +963,7 @@ static void tx_timeout(struct net_device
- 	unsigned long flag;
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -728,7 +728,8 @@ static inline void tasklet_disable_in_at
+ static inline void tasklet_disable(struct tasklet_struct *t)
+ {
+ 	tasklet_disable_nosync(t);
+-	tasklet_unlock_wait(t);
++	/* Spin wait until all atomic users are converted */
++	tasklet_unlock_spin_wait(t);
+ 	smp_mb();
+ }
  
- 	netif_stop_queue(dev);
--	tasklet_disable(&np->tx_tasklet);
-+	tasklet_disable_in_atomic(&np->tx_tasklet);
- 	iowrite16(0, ioaddr + IntrEnable);
- 	printk(KERN_WARNING "%s: Transmit timed out, TxStatus %2.2x "
- 		   "TxFrameId %2.2x,"
 
