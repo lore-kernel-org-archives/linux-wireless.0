@@ -2,120 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F18AC433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 14:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB3BC433E9
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 18:27:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57F2F64EB7
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 14:41:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2622B64FC5
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 18:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230341AbhCJOkx (ORCPT
+        id S233130AbhCJS0o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Mar 2021 09:40:53 -0500
-Received: from mx2.freebsd.org ([96.47.72.81]:31442 "EHLO mx2.freebsd.org"
+        Wed, 10 Mar 2021 13:26:44 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:27273 "EHLO m42-2.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232785AbhCJOkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Mar 2021 09:40:31 -0500
-Received: from mx1.freebsd.org (mx1.freebsd.org [96.47.72.80])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits)
-         client-signature RSA-PSS (4096 bits))
-        (Client CN "mx1.freebsd.org", Issuer "R3" (verified OK))
-        by mx2.freebsd.org (Postfix) with ESMTPS id 4D6FF7B69E;
-        Wed, 10 Mar 2021 14:40:28 +0000 (UTC)
-        (envelope-from bz@FreeBSD.ORG)
-Received: from smtp.freebsd.org (smtp.freebsd.org [IPv6:2610:1c1:1:606c::24b:4])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "smtp.freebsd.org", Issuer "R3" (verified OK))
-        by mx1.freebsd.org (Postfix) with ESMTPS id 4DwZW00y6xz3Ntq;
-        Wed, 10 Mar 2021 14:40:28 +0000 (UTC)
-        (envelope-from bz@FreeBSD.ORG)
-Received: from mx1.sbone.de (mx1.sbone.de [IPv6:2a01:4f8:13b:39f::9f:25])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "mx1.sbone.de", Issuer "SBone.DE" (not verified))
-        (Authenticated sender: bz/mail)
-        by smtp.freebsd.org (Postfix) with ESMTPSA id F254F1C3D;
-        Wed, 10 Mar 2021 14:40:27 +0000 (UTC)
-        (envelope-from bz@FreeBSD.ORG)
-Received: from mail.sbone.de (mail.sbone.de [IPv6:fde9:577b:c1a9:31::2013:587])
-        (using TLSv1 with cipher ADH-CAMELLIA256-SHA (256/256 bits))
+        id S231402AbhCJS0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Mar 2021 13:26:20 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615400780; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=vmaofMCHZjMvo5yJQV6di02OCSPfXsz9ET6qgTDhuWc=; b=MqyU7CVmo+O8/8YR/eQH7o2R4lvOVXFT6ZSraGEDAeNnxNsZEHnEVhq64osQmceJ+1RWG7eK
+ o6oCQOLlgceVyPvL2poZShgiM9KoClGWwhk+VYC77bW5qa8PsBAhJYJYezuiKQwJH2m+aIiU
+ pNRoCeAsgl76nQXvP0fPS31lVVo=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 60490f49fa6ebd85e8f1d2e5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 10 Mar 2021 18:26:17
+ GMT
+Sender: alokad=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 9AB20C433C6; Wed, 10 Mar 2021 18:26:17 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.sbone.de (Postfix) with ESMTPS id A80DF8D4A157;
-        Wed, 10 Mar 2021 14:40:25 +0000 (UTC)
-Received: from content-filter.sbone.de (content-filter.sbone.de [IPv6:fde9:577b:c1a9:31::2013:2742])
-        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mail.sbone.de (Postfix) with ESMTPS id 24448E707E0;
-        Wed, 10 Mar 2021 14:40:25 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at sbone.de
-Received: from mail.sbone.de ([IPv6:fde9:577b:c1a9:31::2013:587])
-        by content-filter.sbone.de (content-filter.sbone.de [fde9:577b:c1a9:31::2013:2742]) (amavisd-new, port 10024)
-        with ESMTP id 3zyRjR-U_wTf; Wed, 10 Mar 2021 14:40:23 +0000 (UTC)
-Received: from nv.sbone.de (nv.sbone.de [IPv6:fde9:577b:c1a9:31::2013:138])
-        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mail.sbone.de (Postfix) with ESMTPSA id 8E4FEE707DF;
-        Wed, 10 Mar 2021 14:40:23 +0000 (UTC)
-Date:   Wed, 10 Mar 2021 14:40:23 +0000 (UTC)
-From:   "Bjoern A. Zeeb" <bz@FreeBSD.ORG>
-To:     linux-wireless@vger.kernel.org
-cc:     luciano.coelho@intel.com
-Subject: [PATCH v2 iwlwifi-next] iwlwifi: iwl-eeprom-parse: mostly dvm only
-Message-ID: <alpine.BSF.2.00.2103101358170.72241@ai.fobar.qr>
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DA109C433CA;
+        Wed, 10 Mar 2021 18:26:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DA109C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=alokad@codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Aloka Dixit <alokad@codeaurora.org>
+Subject: [PATCH v9 4/4] mac80211: CSA on non-transmitting interfaces
+Date:   Wed, 10 Mar 2021 10:26:04 -0800
+Message-Id: <20210310182604.8858-5-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20210310182604.8858-1-alokad@codeaurora.org>
+References: <20210310182604.8858-1-alokad@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Most of iwl-eeprom-parse.c is only used for dvm but not for mvm.
-Hide the parts under #if IS_ENABLED(CONFIG_IWLDVM) to reduce size
-and code surface for mvm-only builds.
+From: John Crispin <john@phrozen.org>
 
-Sponsored by:  The FreeBSD Foundation
-Signed-off-by: Bjoern A. Zeeb <bz@FreeBSD.ORG>
+Trigger ieee80211_csa_finish() on the non-transmitting interfaces when
+CSA concludes on the tranmitting interface.
+
+Modify offset in beacon generation to reflect multiple BSSID element
+length.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
 ---
-changes since v1 - reduce diff context
----
-  drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 ++++
-  1 file changed, 4 insertions(+)
+ net/mac80211/cfg.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-index f12b86563728..d7a7835b935c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-@@ -10,6 +10,7 @@
-  #include "iwl-modparams.h"
-  #include "iwl-eeprom-parse.h"
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e72c0a4a26c3..ccafa39f7ad6 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3238,6 +3238,17 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
++	if (sdata->vif.multiple_bssid.flags & IEEE80211_VIF_MBSS_TRANSMITTING) {
++		struct ieee80211_sub_if_data *child;
++
++		rcu_read_lock();
++		list_for_each_entry_rcu(child, &sdata->local->interfaces, list)
++			if (child->vif.multiple_bssid.parent == &sdata->vif)
++				ieee80211_queue_work(&child->local->hw,
++						     &child->csa_finalize_work);
++		rcu_read_unlock();
++	}
++
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->csa_finalize_work);
+ }
+-- 
+2.25.0
 
-+#if IS_ENABLED(CONFIG_IWLDVM)
-  /* EEPROM offset definitions */
-
-  /* indirect access definitions */
-@@ -647,6 +648,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
-
-  	return n_channels;
-  }
-+#endif
-
-  int iwl_init_sband_channels(struct iwl_nvm_data *data,
-  			    struct ieee80211_supported_band *sband,
-@@ -750,6 +752,7 @@ void iwl_init_ht_hw_capab(struct iwl_trans *trans,
-  	}
-  }
-
-+#if IS_ENABLED(CONFIG_IWLDVM)
-  static void iwl_init_sbands(struct iwl_trans *trans, const struct iwl_cfg *cfg,
-  			    struct iwl_nvm_data *data,
-  			    const u8 *eeprom, size_t eeprom_size)
-@@ -873,3 +876,4 @@ iwl_parse_eeprom_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
-  	return NULL;
-  }
-  IWL_EXPORT_SYMBOL(iwl_parse_eeprom_data);
-+#endif
