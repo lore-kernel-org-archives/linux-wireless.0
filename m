@@ -2,128 +2,99 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32DDDC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 21:00:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B34A1C433DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Mar 2021 05:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD9B364FC9
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Mar 2021 21:00:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B41F64FC4
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Mar 2021 05:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231575AbhCJU7k (ORCPT
+        id S229764AbhCKFaM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Mar 2021 15:59:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59804 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231368AbhCJU7g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Mar 2021 15:59:36 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF4E9C061756
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2021 12:59:36 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id s21so2030251pfm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2021 12:59:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=x/rIuUerFp6JubXsUurUxMlwHMqoisLVHa0WvFsQbL8=;
-        b=B0ZLQVDWjn4y7pLVZujCoeaez/tpfcbcE/ZZV1LX2GR1pZ+CTp1UKP7SK+Oit37+N/
-         DFTJl49OL+uiIShO0msVmQQ3lm1KffSqOUfvZijAtqm2gKOalVLaUrbtXc9TZttB7bxL
-         Q4Tebn15gm1KjmCfbbWyyreEdgG/UiwREpZlY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=x/rIuUerFp6JubXsUurUxMlwHMqoisLVHa0WvFsQbL8=;
-        b=FnhgQoBWs/uT7NL1bHGS4m4eidj06ah+h8X2wHMRci+9nRWTbS80qDg8/dCbfdL9rX
-         H2du0eJ9Fu1ZvhpEfBvawiTPgKTOe6jrphL4WWqezBDSA1C/yTTGoCezCVEynTa3RgaQ
-         pNtok3RNcpGr2ZKinH/f/R2qJ0e3FoojRFZH4o7Lw5YgY0wKMGSPZ3iIxe9bswJ/yjBp
-         zdjRmuCbNz4q3jaZtf6yqz/DCkDj01AkgAIOFQSFL28+ExgDjPueW5WSWy8rU3imMXMG
-         LossySU67eCa5gM6bCtZVeRjCeHYRWbrv9er8sCTbX3a+JmFTMHzn1ft6jt3E+HEhvR8
-         RzkA==
-X-Gm-Message-State: AOAM530xyp+6einSwn6VmHh7EcmirPhvSuOC9xlvb8tSHH37YFGgevLy
-        im2PuvHDAIo2qa7OgzaWKGNpPA==
-X-Google-Smtp-Source: ABdhPJyZj3AEQP5Tj4hxNcyzdkEL+doUtUI/QMY/gMP+lqsGJcJ9K8XjGKLaQ03GzBGr7CMyipW4fw==
-X-Received: by 2002:a63:2cc4:: with SMTP id s187mr4239672pgs.438.1615409976136;
-        Wed, 10 Mar 2021 12:59:36 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id fv9sm268554pjb.23.2021.03.10.12.59.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Mar 2021 12:59:35 -0800 (PST)
-Date:   Wed, 10 Mar 2021 12:59:34 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jes Sorensen <jes.sorensen@gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH RESEND][next] rtl8xxxu: Fix fall-through warnings for
- Clang
-Message-ID: <202103101254.1DBEE1082@keescook>
-References: <20210305094850.GA141221@embeddedor>
- <871rct67n2.fsf@codeaurora.org>
- <202103101107.BE8B6AF2@keescook>
- <2e425bd8-2722-b8a8-3745-4a3f77771906@gmail.com>
- <202103101141.92165AE@keescook>
- <90baba5d-53a1-c7b1-495d-5902e9b04a72@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <90baba5d-53a1-c7b1-495d-5902e9b04a72@gmail.com>
+        Thu, 11 Mar 2021 00:30:12 -0500
+Received: from m42-2.mailgun.net ([69.72.42.2]:40594 "EHLO m42-2.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229524AbhCKF3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Mar 2021 00:29:42 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1615440582; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=M868IokOWNxMGskrD6bNWiGJrGemsV9ceLeqP16ql+E=; b=oElcWTGDlIw9PZ+xzu0fk8t1KYrZ+CEe1xR9fBwC+fBalSpCFGM03mdpkL6+6rQEGe6SpmlU
+ 8AZ6PbpZa/krWSjYLqTMMaYkzmRT/hlpNONqSAEzPeIVqF+WZcNpp9Im75GUrU5zFRIv6Vzv
+ RqMpJdUAtB7cOWln71wHvNQydxc=
+X-Mailgun-Sending-Ip: 69.72.42.2
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6049aab2bb6300df75be146b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 11 Mar 2021 05:29:22
+ GMT
+Sender: kathirve=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DE6EDC43463; Thu, 11 Mar 2021 05:29:20 +0000 (UTC)
+Received: from akalaise-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kathirve)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A8A49C433CA;
+        Thu, 11 Mar 2021 05:29:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A8A49C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kathirve@codeaurora.org
+From:   Karthikeyan Kathirvel <kathirve@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Karthikeyan Kathirvel <kathirve@codeaurora.org>
+Subject: [PATCH v2] mac80211: choose first enabled channel for monitor
+Date:   Thu, 11 Mar 2021 10:59:07 +0530
+Message-Id: <1615440547-7661-1-git-send-email-kathirve@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 02:51:24PM -0500, Jes Sorensen wrote:
-> On 3/10/21 2:45 PM, Kees Cook wrote:
-> > On Wed, Mar 10, 2021 at 02:31:57PM -0500, Jes Sorensen wrote:
-> >> On 3/10/21 2:14 PM, Kees Cook wrote:
-> >>> Hm, this conversation looks like a miscommunication, mainly? I see
-> >>> Gustavo, as requested by many others[1], replacing the fallthrough
-> >>> comments with the "fallthrough" statement. (This is more than just a
-> >>> "Clang doesn't parse comments" issue.)
-> >>>
-> >>> This could be a tree-wide patch and not bother you, but Greg KH has
-> >>> generally advised us to send these changes broken out. Anyway, this
-> >>> change still needs to land, so what would be the preferred path? I think
-> >>> Gustavo could just carry it for Linus to merge without bothering you if
-> >>> that'd be preferred?
-> >>
-> >> I'll respond with the same I did last time, fallthrough is not C and
-> >> it's ugly.
-> > 
-> > I understand your point of view, but this is not the consensus[1] of
-> > the community. "fallthrough" is a macro, using the GCC fallthrough
-> > attribute, with the expectation that we can move to the C17/C18
-> > "[[fallthrough]]" statement once it is finalized by the C standards
-> > body.
-> 
-> I don't know who decided on that, but I still disagree. It's an ugly and
-> pointless change that serves little purpose. We shouldn't have allowed
-> the ugly /* fall-through */ comments in either, but at least they didn't
-> mess with the code. I guess when you give someone an inch, they take a mile.
-> 
-> Last time this came up, the discussion was that clang refused to fix
-> their brokenness and therefore this nonsense was being pushed into the
-> kernel. It's still a pointless argument, if clang can't fix it's crap,
-> then stop using it.
-> 
-> As Kalle correctly pointed out, none of the previous comments to this
-> were addressed, the patches were just reposted as fact. Not exactly a
-> nice way to go about it either.
+Though the first channel from sband channel list is invalid
+or disabled still mac80211 is choosing this disabled channel
+as a default channel for monitor interface. This will end-up
+in choosing wrong channel.
 
-Do you mean changing the commit log to re-justify these changes? I
-guess that could be done, but based on the thread, it didn't seem to
-be needed. The change is happening to match the coding style consensus
-reached to give the kernel the flexibility to move from a gcc extension
-to the final C standards committee results without having to do treewide
-commits again (i.e. via the macro).
+Fixed by assigning the first available valid or enabled channel
+to the respective radios.
 
+Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
+---
+
+v2:
+	Addressed review comments on changing the subject
+
+ net/mac80211/main.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4f3f8bb..1f8a5eb 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -973,8 +973,15 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 			continue;
+ 
+ 		if (!dflt_chandef.chan) {
++			/*
++			 * Assigning the first enabled channel to dflt_chandef from the
++			 * list of channels available specific to country
++			 */
++			for (i = 0; i < sband->n_channels; i++)
++				if (!(sband->channels[i].flags & IEEE80211_CHAN_DISABLED))
++					break;
+ 			cfg80211_chandef_create(&dflt_chandef,
+-						&sband->channels[0],
++						&sband->channels[i == sband->n_channels ? 0 : i],
+ 						NL80211_CHAN_NO_HT);
+ 			/* init channel we're on */
+ 			if (!local->use_chanctx && !local->_oper_chandef.chan) {
 -- 
-Kees Cook
+2.7.4
+
