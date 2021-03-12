@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB7C5C4332B
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBCE1C28E80
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90EA064FB2
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB46664FDD
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231355AbhCLAch (ORCPT
+        id S231533AbhCLAcj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:32:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48274 "EHLO
+        Thu, 11 Mar 2021 19:32:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbhCLAcS (ORCPT
+        with ESMTP id S231380AbhCLAcU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Mar 2021 19:32:18 -0500
-Received: from mail-ot1-x32e.google.com (mail-ot1-x32e.google.com [IPv6:2607:f8b0:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188D0C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:18 -0800 (PST)
-Received: by mail-ot1-x32e.google.com with SMTP id p24so2720209ota.11
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:18 -0800 (PST)
+        Thu, 11 Mar 2021 19:32:20 -0500
+Received: from mail-oo1-xc2b.google.com (mail-oo1-xc2b.google.com [IPv6:2607:f8b0:4864:20::c2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 074B8C061763
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:20 -0800 (PST)
+Received: by mail-oo1-xc2b.google.com with SMTP id c13-20020a4ab18d0000b02901b5b67cff5eso1136027ooo.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6yerQKfDnfz7buskmtSzYD6MzcxxmHz36LYzDDWncI4=;
-        b=j4+FEri2ovICTXT2ZO3+c/mLbrKpu5cWHdhqiPqMR0arRsjb8+lFV/4MQOFSL5/bOx
-         CrFy6v67inEGWaL51OH4w4L/9APFRcf/DaO9y7VMbTW5BjWfq3xr27OFA+Y/RuhBj+Vj
-         /QNKDkwP08lPGDIhDndxgwWEtpFdfFFOK7pDL5vILBuVqqdz+2n3hRNHUV6v9Fm2r71B
-         rcAbzQG6UJNvX/NhS+bzREx5gMy2lBu7xjWX6dv2bGVDb6B6ZvevK3wDTW50EjHmWefq
-         gw7+1ua4dhyLZzjjGu9DZkK0QxfWgUcUq8jaucpIvMpJrFt849ju/FB1D8KWwzYLT69+
-         FeZg==
+        bh=vpiFAbc6Uj1QpQm54fJTeQbUXCAmAi96NAe0y5IDSWo=;
+        b=aejdvpsEyC/BPed7zecl+iL1hN5CAvgm1psnCqNP9GrIMZ8BMVzDvgFU+w8FXYOX64
+         NUg3GDnYBpih6KQ6Ijk6GRZQWDYuy4vs9ZYWsEEs+CnkW3n/2j6HInmSz38XOA/kiGTX
+         8Qm0xAX8BLjm5iIzhWV3+VDLuofhsPaAs0JpFiQp1SQZ4CetJflbTwFdvPMivmhRU4Wz
+         Z+mu5XpyN1jVwjdySmLHUxgzu4mbiAGPQQfY46Mm5vcoHYUBva1C7Cx71CO3FsC+Lxhi
+         X88EWICica45qO9eMI92t6h7QV7ujca1Z5WaTB02yrGXXiGvmT3nPEoa68dHO3ysqowX
+         SOKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6yerQKfDnfz7buskmtSzYD6MzcxxmHz36LYzDDWncI4=;
-        b=O8Ox+kZoCRxqDSzZ7kZJrbnfFqDtlxpOHVhXI6OAOJhpusbfoQNTQC3byaBUVnXxP5
-         v6pRmAlPeUOKPtUI+k9gE7CvgzhKzH3YGSctLumX2xO9dloc/tvOCMZm1k1caQPCAvRj
-         qixDl0fVEcVCqgW46RhnpxxfsHUvl6RQ8nVu6WuMsCGOk7uJpBmKVmFYmI67uifQ5IIJ
-         vMPpxGrSV5k+ucWL/uAMaRc9Mso+7ZSqTYNnAFc/y3OvMEffbRYvuGeiPPhL7MRT0M2i
-         6L5tOacc7vodERfkvAjNNo1HbmuN4wR4pLk+7g7cGg1a4f2QaolxFKGC+LRVEQDDfLXD
-         2Z7A==
-X-Gm-Message-State: AOAM533wEuyBvOlUHaqSUIskL5tHvfq19tqpYvIzvUVhXONc5gLtmXbk
-        QMzDH0VNsFK0h+BZtAEGZfz8ag==
-X-Google-Smtp-Source: ABdhPJw71XAFXEC95aShYwX8z3HWOLkEXvyvBx7QSIHTC8+qxdNVlPBNNz+050QfFrq7anbHAYmiaw==
-X-Received: by 2002:a05:6830:1d69:: with SMTP id l9mr1227667oti.369.1615509137518;
-        Thu, 11 Mar 2021 16:32:17 -0800 (PST)
+        bh=vpiFAbc6Uj1QpQm54fJTeQbUXCAmAi96NAe0y5IDSWo=;
+        b=SNmg6HYgigUX/NnSPd0T+jQDCeVhjS/pTYt+Csj5JtwoI56Owcqlo/PaVJedqnZyYv
+         FCy7IApXqwt7jGrfJPfaZ35hTVVEv8ix41Dh3RYQwC6uPQgmYujtSu2oHKKSZVExkKvV
+         VPFb0JBP9lbA4vspKOoM5tjtzrAgSsdKeCl2IgAr20rXnu4P0TtZQ20/ezziKmF5iGCC
+         uWD7nOF8sLsamed/h4x33fxJw22G3SAFJ/gLNyoH/vNQf/ulbUTsVJPbyW0uT3H1tg8G
+         NDdHPwFYxH69hhf0qGQxjFYePcJI8Og7ydAauQPtGbGG+YpMzWsRRdLKX1wUNiC3ldey
+         rnGw==
+X-Gm-Message-State: AOAM533RZWIJMTb9ydbDycXWp7jSBrfem/HcCMmDNBt3Q4R+k0N8jYjc
+        aa3J1YkBhvR+glSvseu7LeREAA==
+X-Google-Smtp-Source: ABdhPJwV3C0wPBRrcozaVMxaPYrDPhOxXN9oLRcsCz24V/4Of+nC2WLxrO3w9bi8byr52Gwhj+9UZA==
+X-Received: by 2002:a4a:e1e4:: with SMTP id u4mr1229682ood.41.1615509139396;
+        Thu, 11 Mar 2021 16:32:19 -0800 (PST)
 Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.16
+        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Mar 2021 16:32:17 -0800 (PST)
+        Thu, 11 Mar 2021 16:32:19 -0800 (PST)
 From:   Bjorn Andersson <bjorn.andersson@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -68,9 +68,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 3/5] soc: qcom: wcnss_ctrl: Introduce local variable "dev"
-Date:   Thu, 11 Mar 2021 16:33:16 -0800
-Message-Id: <20210312003318.3273536-4-bjorn.andersson@linaro.org>
+Subject: [PATCH 5/5] arm64: dts: qcom: msm8916: Enable modem and WiFi
+Date:   Thu, 11 Mar 2021 16:33:18 -0800
+Message-Id: <20210312003318.3273536-6-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
 References: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
@@ -80,56 +80,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce a local variable to carry the struct device *, to reduce the
-line lengths in the next patch.
+Enable the modem and WiFi subsystems and specify msm8916 specific
+firmware path for these and the WCNSS control service.
 
 Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/soc/qcom/wcnss_ctrl.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi | 12 ++++++++++++
+ arch/arm64/boot/dts/qcom/msm8916.dtsi     |  2 +-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/soc/qcom/wcnss_ctrl.c b/drivers/soc/qcom/wcnss_ctrl.c
-index 32bed249f90e..358526b9de06 100644
---- a/drivers/soc/qcom/wcnss_ctrl.c
-+++ b/drivers/soc/qcom/wcnss_ctrl.c
-@@ -199,6 +199,7 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
- {
- 	struct wcnss_download_nv_req *req;
- 	const struct firmware *fw;
-+	struct device *dev = wcnss->dev;
- 	const void *data;
- 	ssize_t left;
- 	int ret;
-@@ -207,9 +208,9 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
- 	if (!req)
- 		return -ENOMEM;
+diff --git a/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi b/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
+index 6aef0c2e4f0a..448e3561ef63 100644
+--- a/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
++++ b/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
+@@ -305,6 +305,12 @@ &mdss {
+ 	status = "okay";
+ };
  
--	ret = request_firmware(&fw, NVBIN_FILE, wcnss->dev);
-+	ret = request_firmware(&fw, NVBIN_FILE, dev);
- 	if (ret < 0) {
--		dev_err(wcnss->dev, "Failed to load nv file %s: %d\n",
-+		dev_err(dev, "Failed to load nv file %s: %d\n",
- 			NVBIN_FILE, ret);
- 		goto free_req;
- 	}
-@@ -235,7 +236,7 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
++&mpss {
++	status = "okay";
++
++	firmware-name = "qcom/msm8916/mba.mbn", "qcom/msm8916/modem.mbn";
++};
++
+ &pm8916_resin {
+ 	status = "okay";
+ 	linux,code = <KEY_VOLUMEDOWN>;
+@@ -312,6 +318,8 @@ &pm8916_resin {
  
- 		ret = rpmsg_send(wcnss->channel, req, req->hdr.len);
- 		if (ret < 0) {
--			dev_err(wcnss->dev, "failed to send smd packet\n");
-+			dev_err(dev, "failed to send smd packet\n");
- 			goto release_fw;
- 		}
+ &pronto {
+ 	status = "okay";
++
++	firmware-name = "qcom/msm8916/wcnss.mbn";
+ };
  
-@@ -248,7 +249,7 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
+ &sdhc_1 {
+@@ -394,6 +402,10 @@ &wcd_codec {
+ 	qcom,mbhc-vthreshold-high = <75 150 237 450 500>;
+ };
  
- 	ret = wait_for_completion_timeout(&wcnss->ack, WCNSS_REQUEST_TIMEOUT);
- 	if (!ret) {
--		dev_err(wcnss->dev, "timeout waiting for nv upload ack\n");
-+		dev_err(dev, "timeout waiting for nv upload ack\n");
- 		ret = -ETIMEDOUT;
- 	} else {
- 		*expect_cbc = wcnss->ack_status == WCNSS_ACK_COLD_BOOTING;
++&wcnss_ctrl {
++	firmware-name = "qcom/msm8916/WCNSS_qcom_wlan_nv.bin";
++};
++
+ /* Enable CoreSight */
+ &cti0 { status = "okay"; };
+ &cti1 { status = "okay"; };
+diff --git a/arch/arm64/boot/dts/qcom/msm8916.dtsi b/arch/arm64/boot/dts/qcom/msm8916.dtsi
+index 5353da521974..1118836c15dd 100644
+--- a/arch/arm64/boot/dts/qcom/msm8916.dtsi
++++ b/arch/arm64/boot/dts/qcom/msm8916.dtsi
+@@ -1738,7 +1738,7 @@ smd-edge {
+ 
+ 				label = "pronto";
+ 
+-				wcnss {
++				wcnss_ctrl: wcnss {
+ 					compatible = "qcom,wcnss";
+ 					qcom,smd-channels = "WCNSS_CTRL";
+ 
 -- 
 2.29.2
 
