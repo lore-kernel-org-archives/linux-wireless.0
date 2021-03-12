@@ -2,98 +2,111 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5055FC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Mar 2021 23:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA6FC4332E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1982164F89
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Mar 2021 23:06:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CF7064F94
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbhCKXGJ (ORCPT
+        id S231278AbhCLAcg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Mar 2021 18:06:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57886 "EHLO
+        Thu, 11 Mar 2021 19:32:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbhCKXFj (ORCPT
+        with ESMTP id S230523AbhCLAcQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Mar 2021 18:05:39 -0500
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04DB6C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 15:05:38 -0800 (PST)
-Received: by mail-pg1-x536.google.com with SMTP id o38so14620939pgm.9
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 15:05:38 -0800 (PST)
+        Thu, 11 Mar 2021 19:32:16 -0500
+Received: from mail-ot1-x32c.google.com (mail-ot1-x32c.google.com [IPv6:2607:f8b0:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F49C061761
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:16 -0800 (PST)
+Received: by mail-ot1-x32c.google.com with SMTP id f73-20020a9d03cf0000b02901b4d889bce0so557766otf.12
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Da9GxoSQk57Tcb2hfIvd8QjmzuEWMdAsPWOiEuCWZOo=;
-        b=Dk9yRwmD88lN0V+KrzYrKTGgaLw/9C2IlSrEk1zk91FlZ6f35dQOObEpBMTxFmz8TS
-         x26TPlGBRkHsQw9k0GDBSAfK045UQVOL3993okO8sWapd4KP1rWl/3gmap0oSm33/ZTU
-         d/UdOt2ZNIZs0SAAmF1Pz7iXbuG+L2SAcqTyjl219laPVkmOpIXOK4nYgyuBaMnug16P
-         vM/6ZGIdIuehf8vkLLYR0ITNv6frTn7oiUrS1lCAScZxxCRWdTdjd+JRDTD83wqvNAxM
-         +CEhfScvjvXP32jSTDZiMNm3NPHLuIKflCAx5CoenQ1HONC/l5yol95V130cRPvjuQ4m
-         FmRA==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=isIJ1maemEvfOxt679u3GZk6zqUs0JdaNZTH1YsiYK4=;
+        b=YICE8gIFE1rd8aHBxZPzOdPTUNe8SYeUQZ6INqHnhetQONW09v0FLQoJdKUMAf0sGF
+         udcFpqMrGNrEWO2RSaH0CEBu+0gOVtC18AlxHX9ePsqZRbJnjM051fbT1IdvnhT7sX+P
+         yp20Qt2f5FawiBFXzcHbdiyWDruxP0ZDvuV8hjHP9kDyYOsbtzaYRAWgTIkpURE8Kan+
+         nqVW0A4ZoMPP8FtwoMmu60CnhN4SgfYePTLNMvdNPi3oojFyU3M7Nim6LDfuBbrdOosO
+         idr9b8VzcYCw/iuEEqge96JiR6nOcJVAaPpfb7+pmDwTwYS4+D2aXERIrvu6xdMNenao
+         hZJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Da9GxoSQk57Tcb2hfIvd8QjmzuEWMdAsPWOiEuCWZOo=;
-        b=sjIbLPFUsSJq/gtAXXYJJeCeQ7nlbeUv7A+UDZpcetWKM6fSI6q4XAJoB4qLZ+DEgs
-         SLT+hQ38rNNDQ9S77b/E1XCxqfAkrpZ78fp6p8yc7TDsFGFbscRKrOE+d1m+nwpE0QUK
-         yoDSF8Uy89CIeFvbk+LI+SRAC3vg6i4H55qb+Yfw7oMVae/X2cN6iRHu5LiEs8jrBVGe
-         q4x+6fpOeDSG0T6RrUmUAPK2vTQgItu8d2zBwhjozo5gzBWe+1NiXCSzQBaiZLv644R3
-         zKUHinVvmkVETSNl6PbrET1nKCkG0iauXPEA/nisGq/oxkBhdXQH/pkVEZuMAYaj7Dxf
-         gnnw==
-X-Gm-Message-State: AOAM530Rwc5sSwHa+UzCJr1eBQWuE42DrFK5UCqqYWb+IFJ1QFcZlTJq
-        bIxUOEwKrjoye2Yu5Zf6/AVcKvbyZxA=
-X-Google-Smtp-Source: ABdhPJy2e6b646GignpEzQWnNEDbaoUPmHpKlsUrWq96cljs1bWcgMLUY9d3w+gIMoPWVPiusadu1g==
-X-Received: by 2002:aa7:9521:0:b029:1f1:b27f:1a43 with SMTP id c1-20020aa795210000b02901f1b27f1a43mr9516256pfp.4.1615503938093;
-        Thu, 11 Mar 2021 15:05:38 -0800 (PST)
-Received: from localhost.localdomain ([50.39.173.103])
-        by smtp.gmail.com with ESMTPSA id a7sm3336061pfo.105.2021.03.11.15.05.37
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=isIJ1maemEvfOxt679u3GZk6zqUs0JdaNZTH1YsiYK4=;
+        b=h2qxervnlz2QYHY3XPKvAihGPH5jA/WMjkbj+8WmMlKa6QKgZvHaJc6L6FHDKEoGeo
+         KpRXmCqlFvyLlmOYPaBeOuyYZK+Yuuw6W7GTBbtGjCA4T7dI8Sa8wKafclXd9qO37/tT
+         Ka9/fTRPWGp8TBNCQ2iEpdnPLRrHLrpsVCnf0zFcA0hP/mT0VPQ7t2HAGrUxGQnDt0yf
+         4f7yVsCogYVwxZP7eLP7AiubsX83YXX6AtOgbydBEknZDrfLj2mkFkET+8FzLr7cehvN
+         ZIPrYN/n1oapFSrmLSb7q1zXu9PJSZRa39S2wklus6ZrR+zUd/1VhsrOpeJWeBXq7tR9
+         9nOQ==
+X-Gm-Message-State: AOAM530pBKaUDis2OayO13hawLILbXInYJxXwVxuq2iEaUwC2OiZC+Nv
+        JqfZ6Dc6Lt+io4TFd1/5ne40mQ==
+X-Google-Smtp-Source: ABdhPJw6wYPH6HVdOaZ7Utjo3z2uqPRCd3muxY5zNCJbEJqOuv/ktIC4UeHTldx+mXF50YGuIPm1+g==
+X-Received: by 2002:a05:6830:1647:: with SMTP id h7mr872436otr.341.1615509135652;
+        Thu, 11 Mar 2021 16:32:15 -0800 (PST)
+Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
+        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Mar 2021 15:05:37 -0800 (PST)
-From:   James Prestwood <prestwoj@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <prestwoj@gmail.com>
-Subject: [PATCH] include: nl80211: better document CMD_ROAM behavior
-Date:   Thu, 11 Mar 2021 15:03:33 -0800
-Message-Id: <20210311230333.103934-1-prestwoj@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        Thu, 11 Mar 2021 16:32:15 -0800 (PST)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/5] dt-bindings: soc: qcom: wcnss: Add firmware-name property
+Date:   Thu, 11 Mar 2021 16:33:14 -0800
+Message-Id: <20210312003318.3273536-2-bjorn.andersson@linaro.org>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
+References: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The docs were very sparse with how exactly CMD_ROAM should be
-used. Specifically related to BSS information normally obtained
-through a user space scan.
+The WCNSS needs firmware which differs between platforms, and possibly
+boards. Add a new property "firmware-name" to allow the DT to specify
+the platform/board specific path to this firmware file.
 
-Signed-off-by: James Prestwood <prestwoj@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- include/uapi/linux/nl80211.h | 3 +++
- 1 file changed, 3 insertions(+)
+ Documentation/devicetree/bindings/soc/qcom/qcom,wcnss.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ac78da99fccd..5e30c7f6c484 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -655,6 +655,9 @@
-  *	When a security association was established on an 802.1X network using
-  *	fast transition, this event should be followed by an
-  *	%NL80211_CMD_PORT_AUTHORIZED event.
-+ *	Following a %NL80211_CMD_ROAM event userspace can issue
-+ *	%NL80211_CMD_GET_SCAN in order to obtain the scan information for the
-+ *	new BSS the card/driver roamed to.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
+diff --git a/Documentation/devicetree/bindings/soc/qcom/qcom,wcnss.txt b/Documentation/devicetree/bindings/soc/qcom/qcom,wcnss.txt
+index 042a2e4159bd..1382b64e1381 100644
+--- a/Documentation/devicetree/bindings/soc/qcom/qcom,wcnss.txt
++++ b/Documentation/devicetree/bindings/soc/qcom/qcom,wcnss.txt
+@@ -24,6 +24,13 @@ block and a BT, WiFi and FM radio block, all using SMD as command channels.
+ 		    "qcom,riva",
+ 		    "qcom,pronto"
+ 
++- firmware-name:
++	Usage: optional
++	Value type: <string>
++	Definition: specifies the relative firmware image path for the WLAN NV
++		    blob. Defaults to "wlan/prima/WCNSS_qcom_wlan_nv.bin" if
++		    not specified.
++
+ = SUBNODES
+ The subnodes of the wcnss node are optional and describe the individual blocks in
+ the WCNSS.
 -- 
-2.26.2
+2.29.2
 
