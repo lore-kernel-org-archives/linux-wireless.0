@@ -2,126 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF81DC4161F
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E030C28E87
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF63864F9A
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45C0164FA6
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231516AbhCLAcj (ORCPT
+        id S229636AbhCLAcf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:32:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48294 "EHLO
+        Thu, 11 Mar 2021 19:32:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231368AbhCLAcT (ORCPT
+        with ESMTP id S230192AbhCLAcQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Mar 2021 19:32:19 -0500
-Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E5F6C061761
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:19 -0800 (PST)
-Received: by mail-oo1-xc29.google.com with SMTP id r17-20020a4acb110000b02901b657f28cdcso1134435ooq.6
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:19 -0800 (PST)
+        Thu, 11 Mar 2021 19:32:16 -0500
+Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68828C061762
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:15 -0800 (PST)
+Received: by mail-oo1-xc2d.google.com with SMTP id x187-20020a4a41c40000b02901b664cf3220so1135436ooa.10
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=6wVekdiQ/YA8nS7fIn/RALJfKdTTK3aVMvAOi2iip9U=;
-        b=pQemKSOE2hWkcq5S0NsPmn6nU08qCVCXLnEJAtAtWJVAePAKnrQyWP9/amyIGzQ+Fc
-         lQrm5qOh0SQC/I5AgFw6fS36FUwIevc62X/V6SMIkPC+yX8PdjEvIhTyA+u3WFppiYNq
-         pUl56X1em620q7eaTmMrb1TC9swVGLqukK04XKHGrGzJbRCUm7jV+NfbuaZHHQrMscXQ
-         VD7Fi9B+lDo+N3rsPL47gWwqqKN/ihGkrR4Zv0/UuYGXzTi3ayyKWM1naKrt0eu5y277
-         iueFGHixkgH+lEJE2c8FEvt3AecU8dGDBAkviowSiVbkzJ0byYMR6keTva6DmHkbnEgU
-         pKcA==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XxSa1u7IyhhucY0ze3n3dBYIqxQ4tI9IFhWrRdx0ULk=;
+        b=zWgt1QAsksXwn37LZRT7NIO21xaLAynJ+w5PvmhbectrWotS+n50h0x+Uo5GlhZGiJ
+         V4ecIoUP/8fA+uao7odaE+Rhx5x+K7qQ1mGlL3Le3aP2dhIFEB1XDJG4UPW0pMIZKQ39
+         2H/RnWfSRrzxf3Shoi0y6i+x3yNXBKQUqLqbjMV/kU2qUb8HxdOVOjLnV50DHurc1fzb
+         504DbhhatvTwPWNfMb8OD0DQRcAsIBvigp9+7bLvl8FfzFX3AbpYyeICSfXiZc+2rYw6
+         ZePy/D6tmeber9lr/OekoFWDUkpLv+DPWDo21xUItVFCbqa778Zh9dnJ/5TQ/KM8rolB
+         K7mA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6wVekdiQ/YA8nS7fIn/RALJfKdTTK3aVMvAOi2iip9U=;
-        b=knvuOgFH2xnqAXg5tDj139LAGR2IVb5rz7a88odLkxqlp2j1a8enhrz6Ms+N9jq3h+
-         5wVO71P2RW7jZ0GabOQxmNXpTHZRgiwGvMMuh/k90wbFeMQqDfqAk8rN77YxDoZCId31
-         AnKke+DGsVcHm6CpF01NYSui2eejaYYVqnPKgXokpin1kaqTmvY+wrYi9N3tzOZwIdaK
-         FWRzEGHEI1pwBQGRZAHJ6PoI6Z3l10vUFX+DQsxsqZJrQHYvXc+PXcPT3et41S/1qS1L
-         J9pjzp0gagntFefyEIfDSh6sqW8cIS/7CnUGG4/JCVdiyyahJtaorfvj/GACkghKGxL6
-         NLjg==
-X-Gm-Message-State: AOAM530i/9LIYpptK1k7KgXvFDs61gBg2e2c8RwQ1wGig0zjceTvWdLb
-        wJlQhe09WLmfZebiy3vu6482WA==
-X-Google-Smtp-Source: ABdhPJz1080lUBbniInnevnVB5hPiBvUGGcsqjokAVA002Q1OJ7/tfAjDImT8qm+F5JURaa+IyZLiw==
-X-Received: by 2002:a4a:96b3:: with SMTP id s48mr1254406ooi.11.1615509138437;
-        Thu, 11 Mar 2021 16:32:18 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XxSa1u7IyhhucY0ze3n3dBYIqxQ4tI9IFhWrRdx0ULk=;
+        b=qIa3YbytOB5XSpS34FKqYdxKOweH+STYYxkMo4lUB3+60Qe5quEp3o3sArRDrjR05R
+         XkXjODWpOilSJBYXxQ0zpr3cYDMI+s4PO+pWYocn0Lzadk6qVomVrcLOJo3PBcoJNDzn
+         KrP1Relt50bJGq54zuV8dda1xMjrB3jECc/Vn74bEmLZBKOJE3Xk2KyB2PIAxDKu7Jqc
+         HaCl4+9EkH1Os8AcAmOdzDZzAoASlilAo+LjtvhSRTDksiMuiejCByf0DfjxhbxYDi8w
+         LMYia8uCS2Mz+/XY6bAYoKAL+iEMXrKrsuaDPbJTpoT5KmG71y9pQjEqsIdGu3+V9/0H
+         n8tQ==
+X-Gm-Message-State: AOAM532SVUVeemjwrWQ1ft7JvZbr7QApFcJDYpNKThuPsM5EbUrduJdr
+        sjW4xKMXuRXL+yVs9+kaOmSo1g==
+X-Google-Smtp-Source: ABdhPJz6UIt7SjxfugwIFCAKdOTG8YHF2em4Ltec3Ma2jacxcarQZOOzmo/0z43hYlYZv20QAiPhkA==
+X-Received: by 2002:a4a:dc51:: with SMTP id q17mr1259347oov.76.1615509134671;
+        Thu, 11 Mar 2021 16:32:14 -0800 (PST)
 Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.17
+        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Mar 2021 16:32:18 -0800 (PST)
+        Thu, 11 Mar 2021 16:32:14 -0800 (PST)
 From:   Bjorn Andersson <bjorn.andersson@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
-        Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 4/5] soc: qcom: wcnss_ctrl: Allow reading firmware-name from DT
-Date:   Thu, 11 Mar 2021 16:33:17 -0800
-Message-Id: <20210312003318.3273536-5-bjorn.andersson@linaro.org>
+Subject: [PATCH 0/5] qcom: wcnss: Allow overriding firmware form DT
+Date:   Thu, 11 Mar 2021 16:33:13 -0800
+Message-Id: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
-References: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The WLAN NV firmware blob differs between platforms, and possibly
-devices, so add support in the wcnss_ctrl driver for reading the path of
-this file from DT in order to allow these files to live in a generic
-file system (or linux-firmware).
+The wireless subsystem found in Qualcomm MSM8974 and MSM8916 among others needs
+platform-, and perhaps even board-, specific firmware. Add support for
+providing this in devicetree.
 
-The new property is optional and the code falls back to the old filename
-if the property isn't specified.
+Bjorn Andersson (5):
+  dt-bindings: soc: qcom: wcnss: Add firmware-name property
+  wcn36xx: Allow firmware name to be overridden by DT
+  soc: qcom: wcnss_ctrl: Introduce local variable "dev"
+  soc: qcom: wcnss_ctrl: Allow reading firmware-name from DT
+  arm64: dts: qcom: msm8916: Enable modem and WiFi
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/soc/qcom/wcnss_ctrl.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ .../devicetree/bindings/soc/qcom/qcom,wcnss.txt   |  7 +++++++
+ arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi         | 12 ++++++++++++
+ arch/arm64/boot/dts/qcom/msm8916.dtsi             |  2 +-
+ drivers/net/wireless/ath/wcn36xx/main.c           |  7 +++++++
+ drivers/net/wireless/ath/wcn36xx/smd.c            |  4 ++--
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h        |  1 +
+ drivers/soc/qcom/wcnss_ctrl.c                     | 15 ++++++++++-----
+ 7 files changed, 40 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/soc/qcom/wcnss_ctrl.c b/drivers/soc/qcom/wcnss_ctrl.c
-index 358526b9de06..2a06d631e415 100644
---- a/drivers/soc/qcom/wcnss_ctrl.c
-+++ b/drivers/soc/qcom/wcnss_ctrl.c
-@@ -200,6 +200,7 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
- 	struct wcnss_download_nv_req *req;
- 	const struct firmware *fw;
- 	struct device *dev = wcnss->dev;
-+	const char *nvbin = NVBIN_FILE;
- 	const void *data;
- 	ssize_t left;
- 	int ret;
-@@ -208,10 +209,13 @@ static int wcnss_download_nv(struct wcnss_ctrl *wcnss, bool *expect_cbc)
- 	if (!req)
- 		return -ENOMEM;
- 
--	ret = request_firmware(&fw, NVBIN_FILE, dev);
-+	ret = of_property_read_string(dev->of_node, "firmware-name", &nvbin);
-+	if (ret < 0 && ret != -EINVAL)
-+		goto free_req;
-+
-+	ret = request_firmware(&fw, nvbin, dev);
- 	if (ret < 0) {
--		dev_err(dev, "Failed to load nv file %s: %d\n",
--			NVBIN_FILE, ret);
-+		dev_err(dev, "Failed to load nv file %s: %d\n", nvbin, ret);
- 		goto free_req;
- 	}
- 
 -- 
 2.29.2
 
