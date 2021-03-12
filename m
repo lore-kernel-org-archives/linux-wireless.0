@@ -2,102 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E030C28E87
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E608C4332B
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 16:38:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45C0164FA6
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 00:33:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5467B6500B
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Mar 2021 16:38:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229636AbhCLAcf (ORCPT
+        id S232506AbhCLQhv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:32:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48242 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230192AbhCLAcQ (ORCPT
+        Fri, 12 Mar 2021 11:37:51 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60942 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232198AbhCLQhZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Mar 2021 19:32:16 -0500
-Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68828C061762
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:15 -0800 (PST)
-Received: by mail-oo1-xc2d.google.com with SMTP id x187-20020a4a41c40000b02901b664cf3220so1135436ooa.10
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2021 16:32:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=XxSa1u7IyhhucY0ze3n3dBYIqxQ4tI9IFhWrRdx0ULk=;
-        b=zWgt1QAsksXwn37LZRT7NIO21xaLAynJ+w5PvmhbectrWotS+n50h0x+Uo5GlhZGiJ
-         V4ecIoUP/8fA+uao7odaE+Rhx5x+K7qQ1mGlL3Le3aP2dhIFEB1XDJG4UPW0pMIZKQ39
-         2H/RnWfSRrzxf3Shoi0y6i+x3yNXBKQUqLqbjMV/kU2qUb8HxdOVOjLnV50DHurc1fzb
-         504DbhhatvTwPWNfMb8OD0DQRcAsIBvigp9+7bLvl8FfzFX3AbpYyeICSfXiZc+2rYw6
-         ZePy/D6tmeber9lr/OekoFWDUkpLv+DPWDo21xUItVFCbqa778Zh9dnJ/5TQ/KM8rolB
-         K7mA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=XxSa1u7IyhhucY0ze3n3dBYIqxQ4tI9IFhWrRdx0ULk=;
-        b=qIa3YbytOB5XSpS34FKqYdxKOweH+STYYxkMo4lUB3+60Qe5quEp3o3sArRDrjR05R
-         XkXjODWpOilSJBYXxQ0zpr3cYDMI+s4PO+pWYocn0Lzadk6qVomVrcLOJo3PBcoJNDzn
-         KrP1Relt50bJGq54zuV8dda1xMjrB3jECc/Vn74bEmLZBKOJE3Xk2KyB2PIAxDKu7Jqc
-         HaCl4+9EkH1Os8AcAmOdzDZzAoASlilAo+LjtvhSRTDksiMuiejCByf0DfjxhbxYDi8w
-         LMYia8uCS2Mz+/XY6bAYoKAL+iEMXrKrsuaDPbJTpoT5KmG71y9pQjEqsIdGu3+V9/0H
-         n8tQ==
-X-Gm-Message-State: AOAM532SVUVeemjwrWQ1ft7JvZbr7QApFcJDYpNKThuPsM5EbUrduJdr
-        sjW4xKMXuRXL+yVs9+kaOmSo1g==
-X-Google-Smtp-Source: ABdhPJz6UIt7SjxfugwIFCAKdOTG8YHF2em4Ltec3Ma2jacxcarQZOOzmo/0z43hYlYZv20QAiPhkA==
-X-Received: by 2002:a4a:dc51:: with SMTP id q17mr1259347oov.76.1615509134671;
-        Thu, 11 Mar 2021 16:32:14 -0800 (PST)
-Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id l190sm670835oig.39.2021.03.11.16.32.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Mar 2021 16:32:14 -0800 (PST)
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Fri, 12 Mar 2021 11:37:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1615567045;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=FnVUzFvzsl3Bp0QFRDBlIHeV43tl8slTgFSG/RNrL70=;
+        b=UdxRWwsvBgtrZ56feaDtqTWoDv35uNfgMy90MWuIZpWlb/EtkdMrUo6BgSLaydcL9YF+bL
+        YpJY6cvIW225smoHLXgx94ajK7P4W/70m4N4Knndvf58yFRSPfuL7F4Eqt76YDH9xYhOIo
+        r3gB4Eavm0WsJv0386YCMFWDVPw8uCU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-540-kF_I14VGMT-R9-CJQ8RLzQ-1; Fri, 12 Mar 2021 11:37:23 -0500
+X-MC-Unique: kF_I14VGMT-R9-CJQ8RLzQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4FF9E192D786;
+        Fri, 12 Mar 2021 16:37:22 +0000 (UTC)
+Received: from f33vm.wilsonet.com.wilsonet.com (dhcp-17-185.bos.redhat.com [10.18.17.185])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 077E8610A8;
+        Fri, 12 Mar 2021 16:37:15 +0000 (UTC)
+From:   Jarod Wilson <jarod@redhat.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Jarod Wilson <jarod@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 0/5] qcom: wcnss: Allow overriding firmware form DT
-Date:   Thu, 11 Mar 2021 16:33:13 -0800
-Message-Id: <20210312003318.3273536-1-bjorn.andersson@linaro.org>
-X-Mailer: git-send-email 2.29.2
+Subject: [PATCH net] wireless/nl80211: fix wdev_id may be used uninitialized
+Date:   Fri, 12 Mar 2021 11:36:51 -0500
+Message-Id: <20210312163651.1398207-1-jarod@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The wireless subsystem found in Qualcomm MSM8974 and MSM8916 among others needs
-platform-, and perhaps even board-, specific firmware. Add support for
-providing this in devicetree.
+Build currently fails with -Werror=maybe-uninitialized set:
 
-Bjorn Andersson (5):
-  dt-bindings: soc: qcom: wcnss: Add firmware-name property
-  wcn36xx: Allow firmware name to be overridden by DT
-  soc: qcom: wcnss_ctrl: Introduce local variable "dev"
-  soc: qcom: wcnss_ctrl: Allow reading firmware-name from DT
-  arm64: dts: qcom: msm8916: Enable modem and WiFi
+net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs':
+net/wireless/nl80211.c:124:44: error: 'wdev_id' may be used
+uninitialized in this function [-Werror=maybe-uninitialized]
 
- .../devicetree/bindings/soc/qcom/qcom,wcnss.txt   |  7 +++++++
- arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi         | 12 ++++++++++++
- arch/arm64/boot/dts/qcom/msm8916.dtsi             |  2 +-
- drivers/net/wireless/ath/wcn36xx/main.c           |  7 +++++++
- drivers/net/wireless/ath/wcn36xx/smd.c            |  4 ++--
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h        |  1 +
- drivers/soc/qcom/wcnss_ctrl.c                     | 15 ++++++++++-----
- 7 files changed, 40 insertions(+), 8 deletions(-)
+Easy fix is to just initialize wdev_id to 0, since it's value doesn't
+otherwise matter unless have_wdev_id is true.
 
+Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Jakub Kicinski <kuba@kernel.org>
+CC: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Signed-off-by: Jarod Wilson <jarod@redhat.com>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 521d36bb0803..a157783760c7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -70,7 +70,7 @@ __cfg80211_wdev_from_attrs(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *result = NULL;
+ 	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
+ 	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
+-	u64 wdev_id;
++	u64 wdev_id = 0;
+ 	int wiphy_idx = -1;
+ 	int ifidx = -1;
+ 
 -- 
 2.29.2
 
