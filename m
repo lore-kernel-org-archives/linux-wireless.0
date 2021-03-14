@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8E2C43619
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 235C7C433E6
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB73964E6B
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:19:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0F8F64EB7
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:19:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234284AbhCNUTA (ORCPT
+        id S234499AbhCNUTb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Mar 2021 16:19:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
+        Sun, 14 Mar 2021 16:19:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234118AbhCNUSs (ORCPT
+        with ESMTP id S234144AbhCNUS5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Mar 2021 16:18:48 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B99CDC061574;
-        Sun, 14 Mar 2021 13:18:47 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id nh23-20020a17090b3657b02900c0d5e235a8so13629052pjb.0;
-        Sun, 14 Mar 2021 13:18:47 -0700 (PDT)
+        Sun, 14 Mar 2021 16:18:57 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ACAAC061574;
+        Sun, 14 Mar 2021 13:18:56 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id kr3-20020a17090b4903b02900c096fc01deso13618064pjb.4;
+        Sun, 14 Mar 2021 13:18:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LMOZ5bqQ3Szyc7EP1T4fNl5+jni0DiT4SGvTYn0pp0Y=;
-        b=Cyu/NbUhH0j5I44WU5uciWYm6U9iYSllJJt+Ku6eJ05wGic8HnHUnNGMSxNLsnONYY
-         NJeWcq9LnLAVpURX+qCJqhnq6bSrGrw+GcPA8OmFEg4DKrzNpY4XmYNEDaCi62RYrsDL
-         Stj0aiEAMaUXZ0cxoE2KDe0oUFsqHOIjZ7NyLEDFZT20OJwz3qlYrCLTr4upjhR0oPJn
-         rT/s0Q2hmPeiihFxE1+B+0HJ7lvWmSzMkE5hK7eFBjZlfe1OA85uoQKRlmAnFB4NQ1jr
-         HhyV6sVTd+wrz2cZvyjKGfAhZep6KZDcmYjEFr0om6szy3KisNPvSFOlo+mGQ1mioLBF
-         wNww==
+        bh=V/KEl6U9B92FjP8yt5NHoQ/3iiQ4uIjsjneLAe8jps8=;
+        b=JsV89PydC1Lu4N93Do3t1o9brmWKOq12cRqkxTBFYQ+m5iCyVlYIZLVNPc5CpZnkMu
+         5yhnETk8jd7caTraGXwOAbhon0P86XKs63RnVLojQ6xzuF7tBarG3G04kyjc0RVFmdSa
+         Jp6AdYQ+S8BGDhRTUwFmDkZN8IL18nCnPlV7uelN/y92G43o6zU3LybINcWRA72bm5Fc
+         hTlmoXnbs6z6GP3jjlVywAC9kK6clreqIzT/kq8nTANU8Q6qrKhAIRqe7N7GkDLLgWUJ
+         bPZBbpdmYYH5FK8XSxp82OWxqVfSuuyPtvAtUw+zzwIdhSCBVF5TxDj67h5aX+4r97G8
+         Ns9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=LMOZ5bqQ3Szyc7EP1T4fNl5+jni0DiT4SGvTYn0pp0Y=;
-        b=MCsta+xGYEm44ERjJywEw9+Sdm2Qst7CX1gZGPgsa7zbflcqLanqC0wAABFtFSlz+9
-         GOfTN8FG/O+1lSKwPnFvRDpQnIpJ13STd7RKvyT5keIG8E+a6+Rzi2Q3T84rFNrzh1K+
-         LDsGOHkIEebNPLo0V9W5S5rN9qUcYyOVehOGpS/zyneskXGSBEZBX464F4edPofdRyNL
-         o+qFt5rdfD2lFSzRxddPvsYtiHvMBi5Tym2Td6f1BDJ+NmnnIiVoQP6tN7UDOxCUf4r8
-         jx6Hw29Tkj572xKH0KZJmjCFmJun1K/7OVxrSFcfQTcBFHHOl7/6oN6Sx8u7jeO3TUwu
-         diMA==
-X-Gm-Message-State: AOAM531HbQPi3XtMaE2SVhfq+RyAQASmHjXyrfddzqwS5ePxOxQ6Mlb7
-        wJhhmcDEDeYIBEtwTZlgC4g=
-X-Google-Smtp-Source: ABdhPJwtOw9V0Yu40j87PGSatoAiFOu24FzdmKgHWEVlV64fg4+fSJYdbekbImh4eOl/QV+8+Xs2pA==
-X-Received: by 2002:a17:90a:5b0b:: with SMTP id o11mr9310975pji.18.1615753127338;
-        Sun, 14 Mar 2021 13:18:47 -0700 (PDT)
+        bh=V/KEl6U9B92FjP8yt5NHoQ/3iiQ4uIjsjneLAe8jps8=;
+        b=qSTExoS//SQilx7urANEjBJDpC0JX13YXM4cUsI+xOf+ahOhNc4cpoYo3Khzwgeg93
+         olMGdF1kqHAscyn+vn1BySpWqc4vwZeS3S7rUFje1pT66w+SvDLX0tNhN8gTgXt93Bxr
+         mZsgxAviSfAbOhvDutDXnCKutEbIK73OQHGsWFx7RPmCP7CZvAdBoRpX2/D2AjZ9PF4i
+         63t8r08rl2W8YImgJJXfOA0f6EgTnowZzGFU3a+NZEUo6QOYeGwO28E0+o22HUj8u44M
+         L3RWkprXwgr+JvL95ImQQ2HuaKxW2cCExjM6DkWdHRaOseX/qWG38QmEc0Loh7JCJOUR
+         OtUQ==
+X-Gm-Message-State: AOAM533ksloGC6AS4nq+kJzbLSnQpZ/3qH38WOnolcoctLj4nkpBPySf
+        A3CtlntIt7O6Eq5M4EQDFwg=
+X-Google-Smtp-Source: ABdhPJzqednKD1bnj8Yn51WS0b3g0e0EJteqOkYBGddmCgLfWEL/bJasLfP7rC4P/FVhQxennVD8yg==
+X-Received: by 2002:a17:902:bd41:b029:e6:933a:f3ef with SMTP id b1-20020a170902bd41b02900e6933af3efmr8168356plx.19.1615753135914;
+        Sun, 14 Mar 2021 13:18:55 -0700 (PDT)
 Received: from localhost.localdomain ([2405:201:600d:a089:acdc:a5a5:c438:c1e3])
-        by smtp.googlemail.com with ESMTPSA id n10sm10943793pgk.91.2021.03.14.13.18.43
+        by smtp.googlemail.com with ESMTPSA id n10sm10943793pgk.91.2021.03.14.13.18.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 14 Mar 2021 13:18:47 -0700 (PDT)
+        Sun, 14 Mar 2021 13:18:55 -0700 (PDT)
 From:   Aditya Srivastava <yashsri421@gmail.com>
 To:     siva8118@gmail.com
 Cc:     yashsri421@gmail.com, lukas.bulwahn@gmail.com,
@@ -64,9 +64,9 @@ Cc:     yashsri421@gmail.com, lukas.bulwahn@gmail.com,
         amitkarwar@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
         kuba@kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 04/10] rsi: rsi_common: fix file header comment syntax
-Date:   Mon, 15 Mar 2021 01:48:12 +0530
-Message-Id: <20210314201818.27380-5-yashsri421@gmail.com>
+Subject: [PATCH 06/10] rsi: rsi_main: fix file header comment syntax
+Date:   Mon, 15 Mar 2021 01:48:14 +0530
+Message-Id: <20210314201818.27380-7-yashsri421@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210314201818.27380-1-yashsri421@gmail.com>
 References: <20210314201818.27380-1-yashsri421@gmail.com>
@@ -77,7 +77,7 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 The opening comment mark '/**' is used for highlighting the beginning of
 kernel-doc comments.
 
-The header comment used in drivers/net/wireless/rsi/rsi_common.h
+The header comment used in drivers/net/wireless/rsi/rsi_main.h
 follows kernel-doc syntax, i.e. starts with '/**'. But the content
 inside the comment does not comply with kernel-doc specifications (i.e.,
 function, struct, etc).
@@ -91,13 +91,13 @@ prevent kernel-doc from parsing it.
 
 Signed-off-by: Aditya Srivastava <yashsri421@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_common.h | 2 +-
+ drivers/net/wireless/rsi/rsi_main.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 60f1f286b030..7aa5124575cf 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 73a19e43106b..a1065e5a92b4 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
 @@ -1,4 +1,4 @@
 -/**
 +/*
