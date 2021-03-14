@@ -2,141 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9234FC4332E
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67733C433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 23:44:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C37564EBD
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 20:22:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2784064E45
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Mar 2021 23:44:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234497AbhCNUWO (ORCPT
+        id S229484AbhCNXnp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Mar 2021 16:22:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36244 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233332AbhCNUVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Mar 2021 16:21:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E22364E6B;
-        Sun, 14 Mar 2021 20:21:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615753297;
-        bh=pSJFZfcj/20gH3g3OCEReCh/lO8yZoCOp9RvZZGBm6g=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gh4ui04mPupsdHAffq6LyHhcZ+zF5FksGpAKCU3UPPqkxLjeYbKFA1yQ3zzFQqPkr
-         1RaQ9WcaeLiWIQc1emS+JxHwjKP1ZEB/TOVuZhFjX1u0WBQWBoNMCDIT5j0JVS1SPs
-         tYfg41rgV64H9OgsWkBi0vT5dCizqPrl2G31czFr51ZvIdMlxhyFFzznyhtoJo7IlZ
-         nWAdyVpL/f1I0Uq1tQsPGiNrKdd+GqpuNJpipyuqLJW19wCsn2Xc6MAErKgcNjiQFJ
-         GsL3xgEHb9H/G1gFCBUcRUWANGKx4vkZbNfRuZ7mauZ716rSEXHwT8NAfZBNe0Ir8P
-         /f+T4pIpsHQsg==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        robh@kernel.org, devicetree@vger.kernel.org,
-        sean.wang@mediatek.com, ryder.lee@mediatek.com,
-        johannes@sipsolutions.net
-Subject: [PATCH v2 1/2] dt-bindings:net:wireless:ieee80211: txt to yaml conversion
-Date:   Sun, 14 Mar 2021 21:21:06 +0100
-Message-Id: <3dca0518c14e3a8e563933c903de0d62429a3667.1615752835.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <cover.1615752835.git.lorenzo@kernel.org>
-References: <cover.1615752835.git.lorenzo@kernel.org>
+        Sun, 14 Mar 2021 19:43:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58642 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229607AbhCNXnQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 14 Mar 2021 19:43:16 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1966AC061763
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Mar 2021 16:43:15 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id p21so54028706lfu.11
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Mar 2021 16:43:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=F+5ScLWA/ADeBe/oMOOUSI5PFgHlHPjBcYld0NBl47Q=;
+        b=mbbr0Gj+pc1thMUzjA1Ykk4g0qVlesZ5yqBWQGQZQ2BMYA0ANKnd1T6YXtXZdx1N/G
+         BfK/HjcmtQCs4xNPI8gBj6iZYPwlfVMNci2z1lqWXYYTgbragAxRXxn3rJ7d2LRczwU1
+         zN43uYH2VSA1XOZQuq/89CLQKVP083Z8667YuHlylKu1JCM0fGeP9h7erm8CvuIMYiN0
+         DZ9OQkJ8MOHgwiV/uRf8kJQiCOZUSjE3OAakapMqvSAVZaTlkbZbvdi2b15l1msSLjog
+         NVJiYuuba2Zi8W7Nmt6Q755DrPAUx8eJGtLiLB4CMaNhU2PbDWuMKiozcoLsWxpd9cCe
+         NMXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=F+5ScLWA/ADeBe/oMOOUSI5PFgHlHPjBcYld0NBl47Q=;
+        b=Y1g+aDcrX2oXzT3Y9vlKbApFP+8s07RMIxTo2gLrc7OtUcllOrdqFE1K41wSg2hkIL
+         Px8jISOJh9ow3DNFN10Yei+v8QRolnk6KED2Ulu3y7i+k9fIeLX2AeXoCiHvGB/lyxOU
+         +lXBL2g8GBk3Fh0RefRNHWNfa5af8iNSEBrF6Yg0qNqX1A0tWatZPF5GLAS1/iCNv1GD
+         4p13DLCtltsbY8epvjp+3w0PuNAmDIgahyH/Pb7uuq8DQDf0jvhlS7/NPNpN0KG23Fsb
+         zoDsRPNb8pZUh5H78Va9GuR/UmoqoWbZ4wl+Uw2Xq6Hhple1jfo1+hYEJkjnBPc9LBXf
+         b9bA==
+X-Gm-Message-State: AOAM533TfGs4xiWWTB1mUA321PiP0cGWh/NL46XnBStnvEuz164ovDlX
+        HUyPooHGSUHdQa8b562eZiDyTFOFmz9CALV7XByUHQ==
+X-Google-Smtp-Source: ABdhPJzerti5+ixXGgGBHTSWzHl1Vc2msbMBqZNpmT3OP2WcE0GvfaNHIVnZGogSqwojo3DvpEfcwtLV+K6K/yYstfw=
+X-Received: by 2002:a05:6512:243:: with SMTP id b3mr6380364lfo.529.1615765392236;
+ Sun, 14 Mar 2021 16:43:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210313215302.4076765-1-linus.walleij@linaro.org> <CAGRGNgU_C6keHC_Ty3iruJc5cwsBGJRRBm8DWH91fHjygPv0fg@mail.gmail.com>
+In-Reply-To: <CAGRGNgU_C6keHC_Ty3iruJc5cwsBGJRRBm8DWH91fHjygPv0fg@mail.gmail.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Mon, 15 Mar 2021 00:43:01 +0100
+Message-ID: <CACRpkdbHfH=+m3EJ9CBGkQ3rh6MGtKy4ixk3fgu15rxEzMg5dw@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: Convert the BCM4329 bindings to YAML and extend
+To:     Julian Calaby <julian.calaby@gmail.com>
+Cc:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Convert generic ieee80211 dts bindings from .txt to .yaml
+On Sun, Mar 14, 2021 at 1:05 AM Julian Calaby <julian.calaby@gmail.com> wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../bindings/net/wireless/ieee80211.txt       | 24 -----------
- .../bindings/net/wireless/ieee80211.yaml      | 41 +++++++++++++++++++
- 2 files changed, 41 insertions(+), 24 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
+> I don't know if this is necessary for SDIO, but should the non-4329
+> compatibles have the 4329 compatible as an alternative?
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-deleted file mode 100644
-index f6442b1397f5..000000000000
---- a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-+++ /dev/null
-@@ -1,24 +0,0 @@
--Common IEEE 802.11 properties
--
--This provides documentation of common properties that are valid for all wireless
--devices.
--
--Optional properties:
-- - ieee80211-freq-limit : list of supported frequency ranges in KHz. This can be
--	used for devices that in a given config support less channels than
--	normally. It may happen chipset supports a wide wireless band but it is
--	limited to some part of it due to used antennas or power amplifier.
--	An example case for this can be tri-band wireless router with two
--	identical chipsets used for two different 5 GHz subbands. Using them
--	incorrectly could not work or decrease performance noticeably.
--
--Example:
--
--pcie@0,0 {
--	reg = <0x0000 0 0 0 0>;
--	wifi@0,0 {
--		reg = <0x0000 0 0 0 0>;
--		ieee80211-freq-limit = <2402000 2482000>,
--				       <5170000 5250000>;
--	};
--};
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml b/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
-new file mode 100644
-index 000000000000..6fb9ae7403c1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
-@@ -0,0 +1,41 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
-+
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/net/wireless/ieee80211.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Common IEEE 802.11 Binding
-+
-+maintainers:
-+  - Johannes Berg <johannes@sipsolutions.net>
-+
-+description: |
-+  This provides documentation of common properties that are valid for
-+  all wireless devices
-+
-+properties:
-+  ieee80211-freq-limit:
-+    description:
-+      List of supported frequency ranges in KHz. This can be used for devices
-+      that in a given config support less channels than normally. It may happen
-+      chipset supports a wide wireless band but it is limited to some part of
-+      it due to used antennas or power amplifier. An example case for this
-+      can be tri-band wireless router with two identical chipsets used for two
-+      different 5 GHz subbands. Using them incorrectly could not work or
-+      decrease performance noticeably
-+
-+additionalProperties: true
-+
-+examples:
-+  - |
-+    pcie0 {
-+      #address-cells = <3>;
-+      #size-cells = <2>;
-+      wifi@0,0 {
-+        reg = <0x0000 0 0 0 0>;
-+        ieee80211-freq-limit = <2402000 2482000>,
-+                               <5170000 5250000>;
-+      };
-+    };
--- 
-2.29.2
+I can, and I guess I should add it, as I grep:ed and saw this:
 
+arch/arm/boot/dts/qcom-msm8974-lge-nexus5-hammerhead.dts
+compatible = "brcm,bcm4339-fmac", "brcm,bcm4329-fmac";
+
+So from more to less specific.
+
+Yours,
+Linus Walleij
