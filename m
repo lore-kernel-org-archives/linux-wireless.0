@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B97C4360C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 505B7C43331
 	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 12:09:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F5EB64EE9
+	by mail.kernel.org (Postfix) with ESMTP id 20AFC64F05
 	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 12:09:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231164AbhCOMIn (ORCPT
+        id S230437AbhCOMIg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Mar 2021 08:08:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48802 "EHLO
+        Mon, 15 Mar 2021 08:08:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230455AbhCOMIR (ORCPT
+        with ESMTP id S230449AbhCOMIL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Mar 2021 08:08:17 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A1BBC061574
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2021 05:08:17 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id v4so5563719wrp.13
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2021 05:08:17 -0700 (PDT)
+        Mon, 15 Mar 2021 08:08:11 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52598C061574
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2021 05:08:11 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id b9so5570511wrt.8
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2021 05:08:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=myI1fQBtftwmddT3Z8jSGa9/PtOPEyQd6+p8HuZB9bg=;
-        b=FaGEdBtCOwGt2P+UfQLoPfJ2euzcbontoAyFJSSt3H5hzLEpRyZVygMuC0Zhp+fhsA
-         6lanCSlEmUgjNaK3Vts/UTVixXpQNLUk1zAs5QK0TZPh0kra+KSjPHs8Qz0JKoi23b0U
-         cdLRSmSxNggMqEI8EoD3AD7pxS11VsXM3fu7uGIA3pheXJTOAyxW8O1niZr4Eo8GGRWA
-         ZNBKwLgvqtY+U10ru+hhgbm3maAB6V1/R1yYfP3mbiQQSwa3eqAuz4L7Wz+pWX2g5mqI
-         r7Q2bk1FJiq/M8swSgXFqxe05kVtDbT2VwF/ytq5FDQfXkeTydEOXmxxPUlGXD9JOe53
-         ZFTQ==
+        bh=jZ3WKCazIuoUxdRWj4Ban4JPE+r27UOCDH/EMw86Dwc=;
+        b=a9K4toRB7jQlVdt6mKJ4d0L0yJ+9ZNwc4VgeWjc8VuYvomYeF+bjJTpSfd1lhb3gLc
+         8veu4Wf339Luv5hxRw7kWFoIVM9L5z7lVLDskBhowx0D1+fmsyFpFkPKm/domr0nwmoq
+         q9HOUoMy06yz+3/EwsKAK7G4lD3in+aqMSHp99TZVtEkkTC+OVybFjDHzTR7CApc28Tb
+         0S5H3lxb89PMQSRLX6vGbsw50cQi8WNztFdDlekKABh8jebfU6uDf1U3lnS/CtDM1Qqd
+         REvxIcUxmaW6jg5CxXROEcpQHtzyir4ny9/UQbZkmOq6dAxawpl3+nMGU7vLjYnaFjq9
+         lrPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=myI1fQBtftwmddT3Z8jSGa9/PtOPEyQd6+p8HuZB9bg=;
-        b=N/mdMp6GEIAZ5/s4002CQt546/0rguSHDwJ6UlYqw1J+rbkTy6NgOghAhXCEkdYTLd
-         1RQ6ZAetCY8K1s38sJrI1JJhWYY/+yygD0i5dqMjm1AtkdDE38rb3Gzt/V1KZPJ/S1uY
-         hnDDHRoGxEIl1MjNY/4cr9a/eLn65WoU2YOWd0SDBfCbD77aDWHcQAS9ixpRhqnpIuwn
-         Jl1NgUi2lz3QxetOreOsJ42fINR3yGZE5D1QTLJt5XHuJDYPhPWh9HfiBRKg0HOZ4YXW
-         S0sOKltNDOGzmxJUxyTC+gJF1h8Xmuc4Liz0M2hPFTsSbS8QgEbNzZP7G3oN1rw2g+7k
-         aXPg==
-X-Gm-Message-State: AOAM532TSyqyZHsyCdp2iWdXGvZX26ItQQI1ojXaAdx21BPgcARt2iGw
-        R32+dhMmxu/kZJSZHpzba6UkvQ==
-X-Google-Smtp-Source: ABdhPJxM+jMIm3p8yKS5pFbG6yoie/9hx81TCpChLQ1rqQMX5pmsrQ08UGwuxCWxO4zh7gF0vrPN1A==
-X-Received: by 2002:adf:e60e:: with SMTP id p14mr27058883wrm.221.1615810096189;
-        Mon, 15 Mar 2021 05:08:16 -0700 (PDT)
+        bh=jZ3WKCazIuoUxdRWj4Ban4JPE+r27UOCDH/EMw86Dwc=;
+        b=W0qMLeMkD8D4ne3G+4tUgg+EK2THyh0jeNYm3YvaLAslYnpW1ZKxqwL0bxGyzbwP7R
+         J+HjrODRoB4ydBzCB8zEaIphFO+YbhgXjS+9W6ieI8kIA/f58q+o6xGyEiBh9IVs58TR
+         Q/x4ItgjJ3acVduy4prTR3/kGKvMFzPXjUXp5MScuhwvJyDYvIndBtM3/OaCks+DSXAf
+         YW4WG7UTf2ai811XtIr9gySdsew2iGTCQlTEx4w8cOly3rTc+uQlu4WPnQr1/rV6UvXd
+         MjB1OsY9l8VJisMio1gCwne8x64219aeqC3zJ7aaaJuVaUmMqa29u/giqkW9O4LVcDpV
+         0FYg==
+X-Gm-Message-State: AOAM5325+U/mEgILYurrEBAOsuGhdNkYhjWGCGzgoxCMoQpYDS5LQtqX
+        VCHO7D3CLy3hd9bWS7F/Gx+k3Q==
+X-Google-Smtp-Source: ABdhPJzwoLtBr4Q4Y23/6vr6QYFijfbt2ww9Bg7l/qkEVbE5dZtNjIaxtA/UCdjWq7MbI6fCn5geNw==
+X-Received: by 2002:a5d:5088:: with SMTP id a8mr27501854wrt.294.1615810090038;
+        Mon, 15 Mar 2021 05:08:10 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id c18sm29239891wmk.0.2021.03.15.05.08.15
+        by smtp.gmail.com with ESMTPSA id c18sm29239891wmk.0.2021.03.15.05.08.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Mar 2021 05:08:15 -0700 (PDT)
+        Mon, 15 Mar 2021 05:08:09 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         benl@squareup.com, loic.poulain@linaro.org,
         bjorn.andersson@linaro.org
-Subject: [PATCH v2 07/12] wcn36xx: Add set_rekey_data callback
-Date:   Mon, 15 Mar 2021 12:09:32 +0000
-Message-Id: <20210315120937.2512341-8-bryan.odonoghue@linaro.org>
+Subject: [PATCH v2 02/12] wcn36xx: Run suspend for the first ieee80211_vif
+Date:   Mon, 15 Mar 2021 12:09:27 +0000
+Message-Id: <20210315120937.2512341-3-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210315120937.2512341-1-bryan.odonoghue@linaro.org>
 References: <20210315120937.2512341-1-bryan.odonoghue@linaro.org>
@@ -75,73 +75,90 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add a callback for Group Temporal Key tracking as provided by the standard
-WiFi ops structure.
+A subsequent set of patches will extend out suspend/resume support in this
+driver, we cannot set the firmware up for multiple ipv4/ipv6 addresses and
+as such we can't iterate through a list of ieee80211_vif.
 
-We track the key to integrate GTK offloading into the WoWLAN suspend path
-later on. Code comes from the Intel iwlwifi driver with minimal name
-changes.
+Constrain the interaction with the firmware to the first ieee80211_vif on
+the suspend/resume/wowlan path.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    | 19 +++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
- 2 files changed, 25 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/main.c | 43 +++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 36cf771d8a20..6b0deed23c5a 100644
+index b361e40697a6..c0c1ea18864f 100644
 --- a/drivers/net/wireless/ath/wcn36xx/main.c
 +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1155,6 +1155,24 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
+@@ -1088,15 +1088,39 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
+ 
+ #ifdef CONFIG_PM
+ 
++struct ieee80211_vif *wcn36xx_get_first_vif(struct wcn36xx *wcn)
++{
++	struct wcn36xx_vif *tmp;
++	struct ieee80211_vif *vif = NULL;
++
++	list_for_each_entry(tmp, &wcn->vif_list, list) {
++		vif = wcn36xx_priv_to_vif(tmp);
++		if (vif)
++			break;
++	}
++	return vif;
++}
++
+ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+-	int ret;
++	struct ieee80211_vif *vif = NULL;
++	struct wcn36xx_vif *vif_priv = NULL;
++	int ret = 0;
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac suspend\n");
+ 
+ 	flush_workqueue(wcn->hal_ind_wq);
+-	ret = wcn36xx_smd_set_power_params(wcn, true);
++	mutex_lock(&wcn->conf_mutex);
++	vif = wcn36xx_get_first_vif(wcn);
++	if (vif) {
++		vif_priv = wcn36xx_vif_to_priv(vif);
++		if (!vif_priv->sta_assoc)
++			goto out;
++		ret = wcn36xx_smd_set_power_params(wcn, true);
++	}
++out:
++	mutex_unlock(&wcn->conf_mutex);
+ 
+ 	return ret;
+ }
+@@ -1104,11 +1128,24 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
+ static int wcn36xx_resume(struct ieee80211_hw *hw)
+ {
+ 	struct wcn36xx *wcn = hw->priv;
++	struct ieee80211_vif *vif = NULL;
++	struct wcn36xx_vif *vif_priv = NULL;
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac resume\n");
+ 
+ 	flush_workqueue(wcn->hal_ind_wq);
+-	wcn36xx_smd_set_power_params(wcn, false);
++	mutex_lock(&wcn->conf_mutex);
++	vif = wcn36xx_get_first_vif(wcn);
++	if (vif) {
++		vif_priv = wcn36xx_vif_to_priv(vif);
++		if (!vif_priv->sta_assoc)
++			goto out;
++
++		wcn36xx_smd_set_power_params(wcn, false);
++	}
++out:
++	mutex_unlock(&wcn->conf_mutex);
++
  	return 0;
  }
  
-+void wcn36xx_set_rekey_data(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif,
-+			    struct cfg80211_gtk_rekey_data *data)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-+
-+	mutex_lock(&wcn->conf_mutex);
-+
-+	memcpy(vif_priv->rekey_data.kek, data->kek, NL80211_KEK_LEN);
-+	memcpy(vif_priv->rekey_data.kck, data->kck, NL80211_KCK_LEN);
-+	vif_priv->rekey_data.replay_ctr =
-+		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
-+	vif_priv->rekey_data.valid = true;
-+
-+	mutex_unlock(&wcn->conf_mutex);
-+}
-+
- #endif
- 
- static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
-@@ -1257,6 +1275,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
- #ifdef CONFIG_PM
- 	.suspend		= wcn36xx_suspend,
- 	.resume			= wcn36xx_resume,
-+	.set_rekey_data		= wcn36xx_set_rekey_data,
- #endif
- 	.config			= wcn36xx_config,
- 	.prepare_multicast	= wcn36xx_prepare_multicast,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 5a5114660b18..6121d8a5641a 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -143,6 +143,12 @@ struct wcn36xx_vif {
- 	unsigned long tentative_addrs[BITS_TO_LONGS(WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX)];
- 	int num_target_ipv6_addrs;
- #endif
-+	/* WoWLAN GTK rekey data */
-+	struct {
-+		u8 kck[NL80211_KCK_LEN], kek[NL80211_KEK_LEN];
-+		__le64 replay_ctr;
-+		bool valid;
-+	} rekey_data;
- 
- 	struct list_head sta_list;
- };
 -- 
 2.30.1
 
