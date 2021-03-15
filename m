@@ -2,114 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDA20C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 16:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD5BEC433DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 17:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9972564F2B
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 16:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9706864E04
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 17:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230280AbhCOQnq (ORCPT
+        id S236071AbhCOR3I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Mar 2021 12:43:46 -0400
-Received: from z11.mailgun.us ([104.130.96.11]:14068 "EHLO z11.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231228AbhCOQnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Mar 2021 12:43:24 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1615826603; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=O3GddaTorDxtMtita3ja9xGI7KqGP0j1IgkbeqTfA2Y=;
- b=MhNPwrRf55/xeuSauxRC1f4XEzPfm7FeFZ7VITgG32S+lHtYc84sGAg91v0LbM29XIkxgVOg
- EfyoJTGGned6B5A54c0+y6rHvQl5AjCL9WXOa8OrbDr8MfRYJfDvFlveKjIPVXSPiQjIkCfd
- qfXdy72pYsTawY+lOoFJEkXOHW4=
-X-Mailgun-Sending-Ip: 104.130.96.11
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 604f8e99e3fca7d0a67fde38 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 15 Mar 2021 16:43:05
- GMT
-Sender: periyasa=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E4723C43462; Mon, 15 Mar 2021 16:43:04 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: periyasa)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 35A8EC433CA;
-        Mon, 15 Mar 2021 16:43:04 +0000 (UTC)
+        Mon, 15 Mar 2021 13:29:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34088 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234455AbhCOR2k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Mar 2021 13:28:40 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D9E4C06174A;
+        Mon, 15 Mar 2021 10:28:40 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id o3so2361737pfh.11;
+        Mon, 15 Mar 2021 10:28:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=5gnEZY9mFGBFMfKq49DrvBCMPyNX5q5pukAl05EuTws=;
+        b=O7d04w+g65wkjQSjN9kSHAW+hdiPAjBi25iwq/uLbh6IS3zxrFqvpnAi/VTkz+CizL
+         rfXV7/1plKzg4JvtsRMv8DGn32fjDN1MFrf/pgOFWvht0nh2KxM0BnxS7ZecU87zvVsK
+         5/Gl67eKcYe4Eo9s6/AgYVkrP1SHoBJHETrmAW92wsWf8eX+eH6W3rcSN3wMJAGInsFW
+         EQlK0GwegHsZvWA8rzmwsEwYo8N6NIC162Ecdby0XzavyBh0gGSB7KX2I34F23qYDcVY
+         wrwhZjNYxnWdsFznV5bZTGO3H5853/Z9czTvnQm3CDnlWgreKBHFMFr6325do7ABhNG3
+         dhnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5gnEZY9mFGBFMfKq49DrvBCMPyNX5q5pukAl05EuTws=;
+        b=VFxMMs9IctzNG9bXOilzS8tuZNqKxhkQ+PLgli+U1Z2QDSrgr6fK/QZwcoefqQ7dMl
+         fk/X8C55Le0oWxKP2r7BAmk3hW19ZHfIstDeAtDuraIVqCt6pQ1UfyF5hQX30bHwPkFz
+         GPt6msvwvaBLbj7VlJli/3hKVLOY6hOoov3Hxzh3dSgF9+kW28jHCruIoDZZCwUYaUu3
+         nIaMTf4rfHqGI4wlXe/y7MEWfDptYwBSz8ygYcBXxk6bYCLOwcjtyUc6qFoRuTAF65cA
+         onJYRqnHPJLmZKMlCCDzT9dehCQ+gtavpMmA2YzVJgkqm/9O3oR6Gl88t9/VyMFdLTFn
+         jGfA==
+X-Gm-Message-State: AOAM532kR/GG3jRAHVrvQzRDBpFJuGh2aXgTjeDFsP1RuKyAzLXn+5ws
+        +tnDPDbzk1dZH3Z+xkxK+75T4ae8CixDMQ==
+X-Google-Smtp-Source: ABdhPJxCyPkvAC/1zsx3cLBzAVQAvVUt6KZS6L9LBmrU/jVzsbM4wwPNP8IatVlzERw24Tf6Vbq2Tg==
+X-Received: by 2002:a63:f70f:: with SMTP id x15mr170946pgh.109.1615829319543;
+        Mon, 15 Mar 2021 10:28:39 -0700 (PDT)
+Received: from ?IPv6:2405:201:600d:a089:d096:1684:81a3:45b7? ([2405:201:600d:a089:d096:1684:81a3:45b7])
+        by smtp.gmail.com with ESMTPSA id c24sm229672pjv.18.2021.03.15.10.28.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Mar 2021 10:28:39 -0700 (PDT)
+Subject: Re: [PATCH 00/10] rsi: fix comment syntax in file headers
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc:     siva8118@gmail.com, linux-kernel-mentees@lists.linuxfoundation.org,
+        amitkarwar@gmail.com, David Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20210314201818.27380-1-yashsri421@gmail.com>
+ <CAKXUXMzH-cUVeuCT6eM_0iHzgKpzvZUPO6pKNpD0yUp2td09Ug@mail.gmail.com>
+ <87a6r4u7ut.fsf@codeaurora.org>
+From:   Aditya <yashsri421@gmail.com>
+Message-ID: <643c93f6-1c01-a18d-6ef6-d4d0fb5304fa@gmail.com>
+Date:   Mon, 15 Mar 2021 22:58:32 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <87a6r4u7ut.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date:   Mon, 15 Mar 2021 22:13:04 +0530
-From:   Karthikeyan periyasamy <periyasa@codeaurora.org>
-To:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Miles Hu <milehu@codeaurora.org>,
-        John Crispin <john@phrozen.org>,
-        pradeepc=codeaurora.org@codeaurora.org
-Subject: Re: [PATCH v7 1/3] ath11k: switch to using ieee80211_tx_status_ext()
-In-Reply-To: <20210305230337.23047-2-pradeepc@codeaurora.org>
-References: <20210305230337.23047-1-pradeepc@codeaurora.org>
- <20210305230337.23047-2-pradeepc@codeaurora.org>
-Message-ID: <65a8f70609a1758611c97205abd205f2@codeaurora.org>
-X-Sender: periyasa@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> --- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-> +++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-> @@ -417,9 +417,12 @@ static void ath11k_dp_tx_complete_msdu(struct 
-> ath11k *ar,
->  				       struct sk_buff *msdu,
->  				       struct hal_tx_status *ts)
->  {
-> +	struct ieee80211_tx_status status = { 0 };
->  	struct ath11k_base *ab = ar->ab;
->  	struct ieee80211_tx_info *info;
->  	struct ath11k_skb_cb *skb_cb;
-> +	struct ath11k_peer *peer;
-> +	struct ath11k_sta *arsta;
+On 15/3/21 2:11 pm, Kalle Valo wrote:
+> Lukas Bulwahn <lukas.bulwahn@gmail.com> writes:
 > 
->  	if (WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM)) {
->  		/* Must not happen */
-> @@ -483,13 +486,22 @@ static void ath11k_dp_tx_complete_msdu(struct 
-> ath11k *ar,
->  		ath11k_dp_tx_cache_peer_stats(ar, msdu, ts);
->  	}
+>> On Sun, Mar 14, 2021 at 9:18 PM Aditya Srivastava <yashsri421@gmail.com> wrote:
+>>>
+>>> The opening comment mark '/**' is used for highlighting the beginning of
+>>> kernel-doc comments.
+>>> There are files in drivers/net/wireless/rsi which follow this syntax in
+>>> their file headers, i.e. start with '/**' like comments, which causes
+>>> unexpected warnings from kernel-doc.
+>>>
+>>> E.g., running scripts/kernel-doc -none on drivers/net/wireless/rsi/rsi_coex.h
+>>> causes this warning:
+>>> "warning: wrong kernel-doc identifier on line:
+>>>  * Copyright (c) 2018 Redpine Signals Inc."
+>>>
+>>> Similarly for other files too.
+>>>
+>>> Provide a simple fix by replacing the kernel-doc like comment syntax with
+>>> general format, i.e. "/*", to prevent kernel-doc from parsing it.
+>>>
+>>
+>> Aditya, thanks for starting to clean up the repository following your
+>> investigation on kernel-doc warnings.
+>>
+>> The changes to all those files look sound.
+>>
+>> However I think these ten patches are really just _one change_, and
+>> hence, all can be put into a single commit.
 > 
-> -	/* NOTE: Tx rate status reporting. Tx completion status does not have
-> -	 * necessary information (for example nss) to build the tx rate.
-> -	 * Might end up reporting it out-of-band from HTT stats.
-> -	 */
-> -
-> -	ieee80211_tx_status(ar->hw, msdu);
-> -
-> +	spin_lock_bh(&ab->base_lock);
-> +	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
-> +	if (peer) {
-> +		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
-> +		status.sta = peer->sta;
-> +		status.skb = msdu;
-> +		status.info = info;
-> +		status.rate = &arsta->last_txrate;
-> +	}
-> +	rcu_read_unlock();
-> +	if (peer)
-> +		ieee80211_tx_status_ext(ar->hw, &status);
-> +	else
-> +		dev_kfree_skb_any(msdu);
-> +	spin_unlock_bh(&ab->base_lock);
+> I agree, this is one logical change to a single driver so one patch will
+> suffice. I think for cleanup changes like this one patch per driver is a
+> good approach.
+> 
 
-Why ieee80211_tx_status_ext() kept under spin_lock?
+Thanks for the feedback Lukas and Kalle. I will be sending the
+modified v2.
 
-Thanks,
-Karthikeyan P
+Thanks
+Aditya
