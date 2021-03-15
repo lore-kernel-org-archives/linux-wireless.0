@@ -2,221 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F7AC433E6
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 21:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9DB8C433E9
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 21:10:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3B1764F26
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 21:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AB6764F38
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Mar 2021 21:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232525AbhCOVD7 (ORCPT
+        id S232911AbhCOVKZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Mar 2021 17:03:59 -0400
-Received: from mga02.intel.com ([134.134.136.20]:26475 "EHLO mga02.intel.com"
+        Mon, 15 Mar 2021 17:10:25 -0400
+Received: from mga06.intel.com ([134.134.136.31]:11014 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232282AbhCOVDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Mar 2021 17:03:50 -0400
-IronPort-SDR: GnNrJq3pbBySQaeJWTu98QTkxHnZ8KIeABkxdLr94tJDnTYyz0yjsOD2g5+qhWEFuBpq3USTqJ
- TWM/p/FglmPQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9924"; a="176286453"
+        id S234094AbhCOVJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Mar 2021 17:09:54 -0400
+IronPort-SDR: fXsgOweZYP95NAO+zFJR/ZlHkZZwV8OeAeCZJ862URrHJAufW7idKaSYpDHO4fJprjS/liQXOe
+ KObCPPVjNPqA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9924"; a="250521755"
 X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
-   d="scan'208";a="176286453"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2021 14:03:49 -0700
-IronPort-SDR: GEC0BrIBJ59+sSIw2NIqHOietQCuVztMILdZsPa3iAjCyuxtU8FPxQ8QlmbQj63/f2IaHETlmW
- TfKq/hzvaa7Q==
+   d="scan'208";a="250521755"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2021 14:09:51 -0700
+IronPort-SDR: QqoGwGyIM0SWmD7Q9R5vG3zx01mNrOXrhviDksM4WCW0VuB8g8mlBMbiH48KGyKc4ek6oMVHt9
+ 3YUhURq5KwEg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
-   d="scan'208";a="378637806"
+   d="scan'208";a="601571804"
 Received: from lkp-server02.sh.intel.com (HELO 1dc5e1a854f4) ([10.239.97.151])
-  by fmsmga007.fm.intel.com with ESMTP; 15 Mar 2021 14:03:48 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 15 Mar 2021 14:09:48 -0700
 Received: from kbuild by 1dc5e1a854f4 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1lLuNQ-0000eM-3F; Mon, 15 Mar 2021 21:03:48 +0000
-Date:   Tue, 16 Mar 2021 05:02:53 +0800
+        id 1lLuTE-0000eY-AL; Mon, 15 Mar 2021 21:09:48 +0000
+Date:   Tue, 16 Mar 2021 05:09:20 +0800
 From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:master] BUILD SUCCESS
- 13ce240a932fe9c809ec6e79ffc5a4d4ecf534ee
-Message-ID: <604fcb7d.5C30/R8nyuwyEPoL%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-mmc@vger.kernel.org
+Subject: [PATCH] wfx: fix irqf_oneshot.cocci warnings
+Message-ID: <20210315210920.GA43634@d108da9836c5>
+References: <20210315132501.441681-25-Jerome.Pouiller@silabs.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210315132501.441681-25-Jerome.Pouiller@silabs.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-branch HEAD: 13ce240a932fe9c809ec6e79ffc5a4d4ecf534ee  rtw88: 8822c: support FW crash dump when FW crash
+From: kernel test robot <lkp@intel.com>
 
-elapsed time: 725m
+drivers/net/wireless/silabs/wfx/bus_sdio.c:134:8-33: ERROR: Threaded IRQ with no primary handler requested without IRQF_ONESHOT
 
-configs tested: 151
-configs skipped: 2
+ Since commit 1c6c69525b40 ("genirq: Reject bogus threaded irq requests")
+ threaded IRQs without a primary handler need to be requested with
+ IRQF_ONESHOT, otherwise the request will fail.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+ So pass the IRQF_ONESHOT flag in this case.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-riscv                            allmodconfig
-sh                                  defconfig
-sh                               alldefconfig
-powerpc                     taishan_defconfig
-riscv             nommu_k210_sdcard_defconfig
-mips                      loongson3_defconfig
-mips                         rt305x_defconfig
-powerpc                     tqm8541_defconfig
-sh                          landisk_defconfig
-nds32                             allnoconfig
-sh                   secureedge5410_defconfig
-nds32                            alldefconfig
-arc                      axs103_smp_defconfig
-mips                      malta_kvm_defconfig
-arm                           u8500_defconfig
-powerpc                      ppc6xx_defconfig
-powerpc                mpc7448_hpc2_defconfig
-m68k                          hp300_defconfig
-mips                     cu1830-neo_defconfig
-mips                        jmr3927_defconfig
-arm                           h5000_defconfig
-arm                          exynos_defconfig
-arm                       mainstone_defconfig
-arm                           omap1_defconfig
-arm                           spitz_defconfig
-arm                       omap2plus_defconfig
-powerpc                    socrates_defconfig
-powerpc                       ebony_defconfig
-sparc                       sparc64_defconfig
-arm                         vf610m4_defconfig
-m68k                        m5272c3_defconfig
-sh                          urquell_defconfig
-xtensa                           alldefconfig
-sh                        sh7757lcr_defconfig
-s390                                defconfig
-sh                           se7206_defconfig
-mips                         mpc30x_defconfig
-mips                  decstation_64_defconfig
-sh                            migor_defconfig
-microblaze                      mmu_defconfig
-xtensa                  cadence_csp_defconfig
-mips                            ar7_defconfig
-arc                        nsim_700_defconfig
-sh                             shx3_defconfig
-powerpc                     kmeter1_defconfig
-mips                        nlm_xlp_defconfig
-arm                         nhk8815_defconfig
-xtensa                generic_kc705_defconfig
-parisc                           alldefconfig
-sh                            titan_defconfig
-arm                         assabet_defconfig
-mips                           ip32_defconfig
-arm                        multi_v7_defconfig
-powerpc                     rainier_defconfig
-parisc                generic-32bit_defconfig
-arm                        mini2440_defconfig
-i386                                defconfig
-h8300                       h8s-sim_defconfig
-sh                          r7785rp_defconfig
-mips                        maltaup_defconfig
-sh                        apsh4ad0a_defconfig
-sh                           se7721_defconfig
-powerpc                 xes_mpc85xx_defconfig
-powerpc                      cm5200_defconfig
-powerpc                    sam440ep_defconfig
-sh                        sh7763rdp_defconfig
-um                             i386_defconfig
-powerpc                     mpc5200_defconfig
-powerpc                      chrp32_defconfig
-powerpc                      ppc40x_defconfig
-sh                          lboxre2_defconfig
-powerpc                      pcm030_defconfig
-mips                            gpr_defconfig
-mips                        bcm63xx_defconfig
-powerpc                   motionpro_defconfig
-arm                           h3600_defconfig
-powerpc                 mpc8313_rdb_defconfig
-powerpc                          g5_defconfig
-arm                         orion5x_defconfig
-powerpc                 mpc837x_rdb_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                               tinyconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a001-20210315
-i386                 randconfig-a005-20210315
-i386                 randconfig-a003-20210315
-i386                 randconfig-a002-20210315
-i386                 randconfig-a004-20210315
-i386                 randconfig-a006-20210315
-i386                 randconfig-a013-20210315
-i386                 randconfig-a016-20210315
-i386                 randconfig-a011-20210315
-i386                 randconfig-a012-20210315
-i386                 randconfig-a014-20210315
-i386                 randconfig-a015-20210315
-x86_64               randconfig-a006-20210315
-x86_64               randconfig-a001-20210315
-x86_64               randconfig-a005-20210315
-x86_64               randconfig-a004-20210315
-x86_64               randconfig-a002-20210315
-x86_64               randconfig-a003-20210315
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+Generated by: scripts/coccinelle/misc/irqf_oneshot.cocci
 
-clang tested configs:
-x86_64               randconfig-a011-20210315
-x86_64               randconfig-a016-20210315
-x86_64               randconfig-a013-20210315
-x86_64               randconfig-a015-20210315
-x86_64               randconfig-a014-20210315
-x86_64               randconfig-a012-20210315
-
+CC: Jérôme Pouiller <jerome.pouiller@silabs.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+
+url:    https://github.com/0day-ci/linux/commits/Jerome-Pouiller/wfx-get-out-from-the-staging-area/20210315-212855
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git b828324bba8f575fde487a91fec07303789dda8a
+
+ bus_sdio.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/silabs/wfx/bus_sdio.c
++++ b/drivers/net/wireless/silabs/wfx/bus_sdio.c
+@@ -132,7 +132,8 @@ static int wfx_sdio_irq_subscribe(void *
+ 		flags = IRQF_TRIGGER_HIGH;
+ 	flags |= IRQF_ONESHOT;
+ 	return devm_request_threaded_irq(&bus->func->dev, bus->of_irq, NULL,
+-					 wfx_sdio_irq_handler_ext, flags,
++					 wfx_sdio_irq_handler_ext,
++					 flags | IRQF_ONESHOT,
+ 					 "wfx", bus);
+ }
+ 
