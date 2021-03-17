@@ -2,127 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94E11C433DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 04:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBFDEC4332B
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 05:14:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DF3864F9E
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 04:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAFE764FC2
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 05:14:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbhCQE1E (ORCPT
+        id S229835AbhCQFNe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Mar 2021 00:27:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36336 "EHLO
+        Wed, 17 Mar 2021 01:13:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbhCQE0l (ORCPT
+        with ESMTP id S229508AbhCQFNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Mar 2021 00:26:41 -0400
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBEA8C06174A;
-        Tue, 16 Mar 2021 21:26:29 -0700 (PDT)
-Received: by mail-qk1-x729.google.com with SMTP id t4so37708831qkp.1;
-        Tue, 16 Mar 2021 21:26:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UAePd2rnygsdnsyXuv6mA0DvkDM4G5iCOPbKYR8KnfA=;
-        b=TUENOgqwp0RcG7cUSv/IoSnbdYmot2EaAPg8f133Gpcjlck9N48TosyQKBN4jhRm6F
-         FshHd++qREzvrRmv2nyqKOP0z6qSK9dJao9Co3hHA9DYPR0Tc8qV08p2hpMyWhH34lgh
-         diOOYdPMeaa+IOI6MmPRb5xoVbIrsiotmBjcw79hzmN2nBiRSP1U+zhdQQovQG9HRfjz
-         g9YMNC3lvtmXNfWAWOwXtbnCrz30WLOQgnlyIMk3Noikxy7IyN+Um0yVXCntmjDktcmE
-         M5FSGvYrXDltyrIFHbg/+Iv7dAlir/YjAg+RdDhCIrCoseamL0F1ReNgtR4xcMG9jDWe
-         Ec7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UAePd2rnygsdnsyXuv6mA0DvkDM4G5iCOPbKYR8KnfA=;
-        b=sbOlSVVLWtX9UIxJYqvTcbeHXH51FCMx/8kxCN6z77nGJs7pAwQw8Iulx5YUAcRlLf
-         CVMOtmPD5NWKtNjv1KS0sVePpcjOeKqdgyDKzmhuj9+o6fV3ZZaVCk3qQJfQwdB1J9Z2
-         f8ey/uEIoOA/5G4NfwRJjmdgOWhDONHptddFer5uoyY8Vuv4Cx62wOZeRkicYxaJJp6w
-         Jdtut+X1mqjGAQzMwtk/82JTW4GShwtZxVzXabzCwrstYD1eoz4DGPigsAFGUeHwJGWg
-         LwLbUgb2rSPz8vPTWMgjf08arg4nlgJZm1PKwTAa1lmHg4Qyo8PTjB1T/yCfMzlLBjtN
-         l8ng==
-X-Gm-Message-State: AOAM530wFMlSOvP0eR75ouO26UOYDtnBrJNGnbJimsmDjDpXYaUoFjo5
-        v76jhT60VKEEiUskC2sPXZA=
-X-Google-Smtp-Source: ABdhPJwcs4m28tAdz0LxicKJZAh82Tqd/a+q2SchpdWvR3KPdyhrgC57f8DlPKPtG7BXqcv/HtLLbQ==
-X-Received: by 2002:a37:a58f:: with SMTP id o137mr2634342qke.482.1615955189003;
-        Tue, 16 Mar 2021 21:26:29 -0700 (PDT)
-Received: from localhost.localdomain ([37.19.198.5])
-        by smtp.gmail.com with ESMTPSA id f136sm17025857qke.24.2021.03.16.21.26.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Mar 2021 21:26:28 -0700 (PDT)
-From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
-To:     luciano.coelho@intel.com, kvalo@codeaurora.org,
+        Wed, 17 Mar 2021 01:13:09 -0400
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1234::107])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B08C06174A;
+        Tue, 16 Mar 2021 22:13:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
+        Reply-To:Cc:Content-ID:Content-Description;
+        bh=cZcEzHgW+4rcNDTh82K71mdBQTkdlVir75xxgpYjdxM=; b=NUiXTAcUBtZH434r5MP4HXE5uK
+        wgEEKaMi9n3Fz1XnBkclBOkO+Sht50u9SJ4Vgr9HoXmMDnpa8xu+hI1CGvdHDJanzRo7H3Fhz8jLG
+        KhKh7yMJr2vxr7r8qDRpCQAV1Eu7sPrHES/aXD6y/wfowsmv972SkrIhxWVGR0AKiCFk2CDxJTbsj
+        n88YyRACAhlzF1JkbBwy0CcWy2RPzZ+9dQtrXdn2WRTX9PDbP9cAwMOVkHBznu/Qks7bN2FfGu1QA
+        6KDZwhlfSX166TIyL+5+OeT4Wiyo1W0JeqMQOi9Jm0CIqrkZT1NFPCL8VLxGTcvndF19Pj00NDbAL
+        HW+VrmGg==;
+Received: from [2601:1c0:6280:3f0::9757]
+        by merlin.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lMOUT-001bTB-6f; Wed, 17 Mar 2021 05:13:05 +0000
+Subject: Re: [PATCH] wireless: intel: iwlwifi: fw: api: Absolute rudimentary
+ typo fixes in the file power.h
+To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>,
+        luciano.coelho@intel.com, kvalo@codeaurora.org,
         davem@davemloft.net, kuba@kernel.org, gil.adam@intel.com,
-        unixbhaskar@gmail.com, johannes.berg@intel.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     rdunlap@infradead.org
-Subject: [PATCH] wireless: intel: iwlwifi: fw: api: Absolute rudimentary typo fixes in the file power.h
-Date:   Wed, 17 Mar 2021 09:55:40 +0530
-Message-Id: <20210317042540.4097078-1-unixbhaskar@gmail.com>
-X-Mailer: git-send-email 2.30.2
+        johannes.berg@intel.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210317042540.4097078-1-unixbhaskar@gmail.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <fd1ac68e-6285-582a-3b05-c11fddf8fd61@infradead.org>
+Date:   Tue, 16 Mar 2021 22:13:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210317042540.4097078-1-unixbhaskar@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 3/16/21 9:25 PM, Bhaskar Chowdhury wrote:
+> 
+> s/folowing/following/
+> s/Celsuis/Celsius/
+> s/temerature/temperature/  ...twice
+> 
+> 
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
 
-s/folowing/following/
-s/Celsuis/Celsius/
-s/temerature/temperature/  ...twice
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+
+> ---
+>  drivers/net/wireless/intel/iwlwifi/fw/api/power.h | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+> index 798417182d54..f7c7852127d3 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+> +++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+> @@ -54,7 +54,7 @@ struct iwl_ltr_config_cmd_v1 {
+>   * @flags: See &enum iwl_ltr_config_flags
+>   * @static_long: static LTR Long register value.
+>   * @static_short: static LTR Short register value.
+> - * @ltr_cfg_values: LTR parameters table values (in usec) in folowing order:
+> + * @ltr_cfg_values: LTR parameters table values (in usec) in following order:
+>   *	TX, RX, Short Idle, Long Idle. Used only if %LTR_CFG_FLAG_UPDATE_VALUES
+>   *	is set.
+>   * @ltr_short_idle_timeout: LTR Short Idle timeout (in usec). Used only if
+> @@ -493,7 +493,7 @@ union iwl_ppag_table_cmd {
+>   *      Roaming Energy Delta Threshold, otherwise use normal Energy Delta
+>   *      Threshold. Typical energy threshold is -72dBm.
+>   * @bf_temp_threshold: This threshold determines the type of temperature
+> - *	filtering (Slow or Fast) that is selected (Units are in Celsuis):
+> + *	filtering (Slow or Fast) that is selected (Units are in Celsius):
+>   *	If the current temperature is above this threshold - Fast filter
+>   *	will be used, If the current temperature is below this threshold -
+>   *	Slow filter will be used.
+> @@ -501,12 +501,12 @@ union iwl_ppag_table_cmd {
+>   *      calculated for this and the last passed beacon is greater than this
+>   *      threshold. Zero value means that the temperature change is ignored for
+>   *      beacon filtering; beacons will not be  forced to be sent to driver
+> - *      regardless of whether its temerature has been changed.
+> + *      regardless of whether its temperature has been changed.
+>   * @bf_temp_slow_filter: Send Beacon to driver if delta in temperature values
+>   *      calculated for this and the last passed beacon is greater than this
+>   *      threshold. Zero value means that the temperature change is ignored for
+>   *      beacon filtering; beacons will not be forced to be sent to driver
+> - *      regardless of whether its temerature has been changed.
+> + *      regardless of whether its temperature has been changed.
+>   * @bf_enable_beacon_filter: 1, beacon filtering is enabled; 0, disabled.
+>   * @bf_debug_flag: beacon filtering debug configuration
+>   * @bf_escape_timer: Send beacons to to driver if no beacons were passed
+> --
 
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/power.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
-index 798417182d54..f7c7852127d3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
-@@ -54,7 +54,7 @@ struct iwl_ltr_config_cmd_v1 {
-  * @flags: See &enum iwl_ltr_config_flags
-  * @static_long: static LTR Long register value.
-  * @static_short: static LTR Short register value.
-- * @ltr_cfg_values: LTR parameters table values (in usec) in folowing order:
-+ * @ltr_cfg_values: LTR parameters table values (in usec) in following order:
-  *	TX, RX, Short Idle, Long Idle. Used only if %LTR_CFG_FLAG_UPDATE_VALUES
-  *	is set.
-  * @ltr_short_idle_timeout: LTR Short Idle timeout (in usec). Used only if
-@@ -493,7 +493,7 @@ union iwl_ppag_table_cmd {
-  *      Roaming Energy Delta Threshold, otherwise use normal Energy Delta
-  *      Threshold. Typical energy threshold is -72dBm.
-  * @bf_temp_threshold: This threshold determines the type of temperature
-- *	filtering (Slow or Fast) that is selected (Units are in Celsuis):
-+ *	filtering (Slow or Fast) that is selected (Units are in Celsius):
-  *	If the current temperature is above this threshold - Fast filter
-  *	will be used, If the current temperature is below this threshold -
-  *	Slow filter will be used.
-@@ -501,12 +501,12 @@ union iwl_ppag_table_cmd {
-  *      calculated for this and the last passed beacon is greater than this
-  *      threshold. Zero value means that the temperature change is ignored for
-  *      beacon filtering; beacons will not be  forced to be sent to driver
-- *      regardless of whether its temerature has been changed.
-+ *      regardless of whether its temperature has been changed.
-  * @bf_temp_slow_filter: Send Beacon to driver if delta in temperature values
-  *      calculated for this and the last passed beacon is greater than this
-  *      threshold. Zero value means that the temperature change is ignored for
-  *      beacon filtering; beacons will not be forced to be sent to driver
-- *      regardless of whether its temerature has been changed.
-+ *      regardless of whether its temperature has been changed.
-  * @bf_enable_beacon_filter: 1, beacon filtering is enabled; 0, disabled.
-  * @bf_debug_flag: beacon filtering debug configuration
-  * @bf_escape_timer: Send beacons to to driver if no beacons were passed
---
-2.30.2
+-- 
+~Randy
 
