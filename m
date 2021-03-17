@@ -2,123 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FC28C4151A
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 00:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1BBC433E6
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 04:27:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13A4D64FFC
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 00:57:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B5AE64F0F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Mar 2021 04:27:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231468AbhCQA5N (ORCPT
+        id S229529AbhCQE0c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Mar 2021 20:57:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34734 "EHLO mail.kernel.org"
+        Wed, 17 Mar 2021 00:26:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59912 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231343AbhCQA44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Mar 2021 20:56:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D67A64F9E;
-        Wed, 17 Mar 2021 00:56:55 +0000 (UTC)
+        id S229469AbhCQEZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Mar 2021 00:25:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 27F3764F9E;
+        Wed, 17 Mar 2021 04:25:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615942616;
-        bh=8r7ZKpUpT54YHKo9ljUDkHxXozt3eNq1dGm1nOVyAfw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=hFo/AoAJzbKRdNX87aC9pO52CXaAteqwDMeWCrhlEHMyj4xHLP8OiQcYSiNxIKFno
-         bk36ifEH6h+k32ZrHihU7HDIp7sIMjSaCFDqZ7rcymlG+0glpgkQV1MNZ2D6vg/hVa
-         5DcryYJxgu1B4ZwS5Ok2IFt3PWXWTvkRLsocWZOvvIIvXeED6KKc5kpW7G8xCCDSO9
-         K9a4Rkq7Kd9CHVg1/xzRa0tjvW3AII3NA/kcme8pPvuUjIzCqeIT2Mv7N6pAdM9eDg
-         czc9DLEavjHc58hFtugQh5U433Sen2l2Xl2Y1sEXloRrHkPnvaR8AcNpnZYGFnnZR8
-         Dcxs/7b1cGhJQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 01/54] mt76: fix tx skb error handling in mt76_dma_tx_queue_skb
-Date:   Tue, 16 Mar 2021 20:56:00 -0400
-Message-Id: <20210317005654.724862-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.1
+        s=k20201202; t=1615955158;
+        bh=b0+guY3uHI/7UugdBIJZaedLb8084zSH7Fj2VTny2X0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZnTO7xz3vXP2Hf3iarFYTkOy0PTS63Wwsd6gQE4Sklk4G9sX/pd5jC78A3wO+QrNo
+         rCOBENUMFbAvxpj2Bdkrls0VFfqJ3FiRzw45r4MCdpzcC0vFkP1fXhlj6N+hod6RhI
+         0caOQfvz+18hHQu6dcxqShjZ0CjLMxgyf1on3dpS7pKxBmpnbDF3PIoro33h5aAdnu
+         iiOJRlTEDqLRVzUN3V4iuKv8Vd6EvxHP82AN3+bG7xP81PHIujuNKe9bWWsBO11ak1
+         0YcZEJDZNUQRdHtCvJDAz+T+800RykOSqCTdtghpS00lMdv1T/OxaLn07ALduFYk0W
+         htpuRlHqcfXhw==
+Date:   Wed, 17 Mar 2021 06:25:54 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-mmc@vger.kernel.org,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v5 03/24] wfx: add Makefile/Kconfig
+Message-ID: <YFGE0t5LQuPp0M5h@unreal>
+References: <20210315132501.441681-1-Jerome.Pouiller@silabs.com>
+ <20210315132501.441681-4-Jerome.Pouiller@silabs.com>
+ <YE95OCx5hWRedi+W@unreal>
+ <1718324.Ee3sdLpQUQ@pc-42>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <1718324.Ee3sdLpQUQ@pc-42>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+On Mon, Mar 15, 2021 at 05:21:35PM +0100, Jérôme Pouiller wrote:
+> Hi Leon,
+>
+> On Monday 15 March 2021 16:11:52 CET Leon Romanovsky wrote:
+> > On Mon, Mar 15, 2021 at 02:24:40PM +0100, Jerome Pouiller wrote:
+> > > From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > >
+> > > Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> > > ---
+> > >  drivers/net/wireless/silabs/wfx/Kconfig  | 12 +++++++++++
+> > >  drivers/net/wireless/silabs/wfx/Makefile | 26 ++++++++++++++++++++++++
+> > >  2 files changed, 38 insertions(+)
+> > >  create mode 100644 drivers/net/wireless/silabs/wfx/Kconfig
+> > >  create mode 100644 drivers/net/wireless/silabs/wfx/Makefile
+> > >
+> > > diff --git a/drivers/net/wireless/silabs/wfx/Kconfig b/drivers/net/wireless/silabs/wfx/Kconfig
+> > > new file mode 100644
+> > > index 000000000000..3be4b1e735e1
+> > > --- /dev/null
+> > > +++ b/drivers/net/wireless/silabs/wfx/Kconfig
+> > > @@ -0,0 +1,12 @@
+> > > +config WFX
+> > > +     tristate "Silicon Labs wireless chips WF200 and further"
+> > > +     depends on MAC80211
+> > > +     depends on MMC || !MMC # do not allow WFX=y if MMC=m
+> > > +     depends on (SPI || MMC)
+> > > +     help
+> > > +       This is a driver for Silicons Labs WFxxx series (WF200 and further)
+> > > +       chipsets. This chip can be found on SPI or SDIO buses.
+> > > +
+> > > +       Silabs does not use a reliable SDIO vendor ID. So, to avoid conflicts,
+> > > +       the driver won't probe the device if it is not also declared in the
+> > > +       Device Tree.
+> > > diff --git a/drivers/net/wireless/silabs/wfx/Makefile b/drivers/net/wireless/silabs/wfx/Makefile
+> > > new file mode 100644
+> > > index 000000000000..f399962c8619
+> > > --- /dev/null
+> > > +++ b/drivers/net/wireless/silabs/wfx/Makefile
+> > > @@ -0,0 +1,26 @@
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +
+> > > +# Necessary for CREATE_TRACE_POINTS
+> > > +CFLAGS_debug.o = -I$(src)
+> >
+> > I wonder if it is still relevant outside of the staging tree.
+>
+> It seems this pattern is common in the main tree. You suggest to relocate
+> trace.h to include/trace/events?
 
-[ Upstream commit ae064fc0e32a4d28389086d9f4b260a0c157cfee ]
+No, leave it as it. Sorry for the noise.
 
-When running out of room in the tx queue after calling drv->tx_prepare_skb,
-the buffer list will already have been modified on MT7615 and newer drivers.
-This can leak a DMA mapping and will show up as swiotlb allocation failures
-on x86.
+Thanks
 
-Fix this by moving the queue length check further up. This is less accurate,
-since it can overestimate the needed room in the queue on MT7615 and newer,
-but the difference is small enough to not matter in practice.
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210216135119.23809-1-nbd@nbd.name
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/dma.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 917617aad8d3..3857761c9619 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -355,7 +355,6 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	};
- 	struct ieee80211_hw *hw;
- 	int len, n = 0, ret = -ENOMEM;
--	struct mt76_queue_entry e;
- 	struct mt76_txwi_cache *t;
- 	struct sk_buff *iter;
- 	dma_addr_t addr;
-@@ -397,6 +396,11 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	}
- 	tx_info.nbuf = n;
- 
-+	if (q->queued + (tx_info.nbuf + 1) / 2 >= q->ndesc - 1) {
-+		ret = -ENOMEM;
-+		goto unmap;
-+	}
-+
- 	dma_sync_single_for_cpu(dev->dev, t->dma_addr, dev->drv->txwi_size,
- 				DMA_TO_DEVICE);
- 	ret = dev->drv->tx_prepare_skb(dev, txwi, qid, wcid, sta, &tx_info);
-@@ -405,11 +409,6 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	if (ret < 0)
- 		goto unmap;
- 
--	if (q->queued + (tx_info.nbuf + 1) / 2 >= q->ndesc - 1) {
--		ret = -ENOMEM;
--		goto unmap;
--	}
--
- 	return mt76_dma_add_buf(dev, q, tx_info.buf, tx_info.nbuf,
- 				tx_info.info, tx_info.skb, t);
- 
-@@ -425,9 +424,7 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 		dev->test.tx_done--;
- #endif
- 
--	e.skb = tx_info.skb;
--	e.txwi = t;
--	dev->drv->tx_complete_skb(dev, &e);
-+	dev_kfree_skb(tx_info.skb);
- 	mt76_put_txwi(dev, t);
- 	return ret;
- }
--- 
-2.30.1
-
+>
+> --
+> Jérôme Pouiller
+>
+>
