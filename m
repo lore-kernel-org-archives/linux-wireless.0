@@ -2,488 +2,188 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDA7C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Mar 2021 22:16:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 679DFC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Mar 2021 22:55:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D03BD64F30
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Mar 2021 22:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BE0D64F11
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Mar 2021 22:55:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231546AbhCRWPo (ORCPT
+        id S230180AbhCRWzV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Mar 2021 18:15:44 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:26373 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230333AbhCRWPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Mar 2021 18:15:11 -0400
-X-Greylist: delayed 301 seconds by postgrey-1.27 at vger.kernel.org; Thu, 18 Mar 2021 18:15:11 EDT
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1616105711; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=52aLQBi4pTxsSaRgMTF2reTfBgzIt+ifJ5UPtdC+HEc=; b=d/tM5jzAl0zAAgNm/O19rWo7CD7edGStdVEb/RKS3/YGB9cW8LsCasiYZDNMKosK8kcF1ARL
- 8w42gnlSw3ysgknqiPC4tH0L/0QKBjRlU7IketC1LyQAZyIuMd57G//V6m77f0+jJfqj5Lyq
- tAzT4MUhmAkbcxeOrUYSOGNMs00=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 6053cfc04db3bb6801966232 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 18 Mar 2021 22:10:08
- GMT
-Sender: pradeepc=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D0ABCC433CA; Thu, 18 Mar 2021 22:10:07 +0000 (UTC)
-Received: from pradeepc-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9756BC433C6;
-        Thu, 18 Mar 2021 22:10:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9756BC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pradeepc@codeaurora.org
-From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Miles Hu <milehu@codeaurora.org>
-Subject: [PATCH V8 2/3] ath11k: decode HE status tlv
-Date:   Thu, 18 Mar 2021 15:09:56 -0700
-Message-Id: <1616105397-1482-3-git-send-email-pradeepc@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1616105397-1482-1-git-send-email-pradeepc@codeaurora.org>
-References: <1616105397-1482-1-git-send-email-pradeepc@codeaurora.org>
+        Thu, 18 Mar 2021 18:55:21 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31222 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232503AbhCRWzK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Mar 2021 18:55:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616108110;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=x7GywKLfURSd+q8sr3UF3ZwITBmk/iv8lpF0KGMPLLY=;
+        b=FyLmQAHZze5Zcncu3ENSijFI/sRuC1RlEgIEh+UE9JVnCiPgot7czSKjoaNvb7zyoA64Yc
+        6V6TUFy7OUj8kcLs1E+ehQUZYlIY+TLjGNswzsdUyn8N7kHjp5gPAyu7KWsgIvbX6uSJF8
+        OEQhuXT2rRtFFG6LHhnHWhvtBsxkVCQ=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-472-aUGUPoFcNlO8n7q3sDyxOg-1; Thu, 18 Mar 2021 18:55:08 -0400
+X-MC-Unique: aUGUPoFcNlO8n7q3sDyxOg-1
+Received: by mail-ed1-f72.google.com with SMTP id q25so7246787eds.16
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2021 15:55:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=x7GywKLfURSd+q8sr3UF3ZwITBmk/iv8lpF0KGMPLLY=;
+        b=i31zncbsk9e/HA+uEtgDgNZOYllbm1Tq9USFf1KeVGQr5q9WxhLBk3PvZ7AYubHWmy
+         6mJrmzi0NDC9BkKHQmOtbg3PsMO+xeZBWAe3qYEDDXrZba14FzK/akfuiIpOvVSFPkuh
+         tfPJWifb0jnbwfnjA07qqsw08ttj0c7Ll7qJBmon0mgQ2hUbg+HpwLWIlBqCFRwwB7pD
+         64btrJwkR4rBfhhbIlKuVpvR0Skm82khtJyeDiLj10g3mqQp3yONyfZd08ODa0dV65/i
+         EjvHsiAGRF/8sFgWEvNx0CNjd17Plvs6bgAubk7E5wAwshZDnikUI3DsMSzfxPTp/mbQ
+         d/pQ==
+X-Gm-Message-State: AOAM5314UzS9Ri6KmJlGtrRcK/Fi1BKp+CLwkeytpVpokJCH8N5ymQAY
+        O7CEXpC4ykMRQlvZwIZz4aFTIaZR+FhfBR2cfiKCYxvlBT/PTCTmjJw7ipMydWbMWEQSudDDjQc
+        pEx8q8O+yj37pH0wSlHim5BJMZ1w=
+X-Received: by 2002:a17:906:8443:: with SMTP id e3mr971332ejy.370.1616108106966;
+        Thu, 18 Mar 2021 15:55:06 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzq6xEhLrhVgTUYYs40P3QPdpXsxEltSN1rRSsoGupVNSEmgJv3//DIKjBDZ0ngO6vxOFJRzA==
+X-Received: by 2002:a17:906:8443:: with SMTP id e3mr971322ejy.370.1616108106801;
+        Thu, 18 Mar 2021 15:55:06 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id u24sm2615175ejr.34.2021.03.18.15.55.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Mar 2021 15:55:06 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id C53CD181F54; Thu, 18 Mar 2021 23:55:05 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>, Yibo Zhao <yiboz@codeaurora.org>
+Subject: Re: [PATCH mac80211-next v6] mac80211: Switch to a virtual
+ time-based airtime scheduler
+In-Reply-To: <a6ca1ab9-29a0-18fe-8097-20abc5f253bd@nbd.name>
+References: <20210318213142.138707-1-toke@redhat.com>
+ <a6ca1ab9-29a0-18fe-8097-20abc5f253bd@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Thu, 18 Mar 2021 23:55:05 +0100
+Message-ID: <87eegcax86.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add new bitmasks and macro definitions required for parsing HE
-status tlvs. Decode HE status tlvs, which will used in dumping
-ppdu stats as well as updating radiotap headers.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Co-developed-by: Miles Hu <milehu@codeaurora.org>
-Signed-off-by: Miles Hu <milehu@codeaurora.org>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/dp_rx.c    |  99 ++++++++++++---
- drivers/net/wireless/ath/ath11k/hal_desc.h |   1 +
- drivers/net/wireless/ath/ath11k/hal_rx.h   | 135 ++++++++++++++++++++-
- 3 files changed, 214 insertions(+), 21 deletions(-)
+> Hi Toke,
+>
+> Thanks for continuing to work on this! I just did a quick reading of the
+> code and haven't tested this yet - I might have some more comments in
+> the next few days.
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 1d9aa1bb6b6e..659e0e68444e 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -2369,7 +2369,7 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
- 	char tid[32];
- 
- 	status = IEEE80211_SKB_RXCB(msdu);
--	if (status->encoding == RX_ENC_HE) {
-+	if (status->encoding == RX_ENC_HE && !(status->flag & RX_FLAG_RADIOTAP_HE)) {
- 		he = skb_push(msdu, sizeof(known));
- 		memcpy(he, &known, sizeof(known));
- 		status->flag |= RX_FLAG_RADIOTAP_HE;
-@@ -4712,7 +4712,6 @@ ath11k_dp_rx_mon_merg_msdus(struct ath11k *ar,
- {
- 	struct ath11k_base *ab = ar->ab;
- 	struct sk_buff *msdu, *mpdu_buf, *prev_buf;
--	u32 wifi_hdr_len;
- 	struct hal_rx_desc *rx_desc;
- 	char *hdr_desc;
- 	u8 *dest, decap_format;
-@@ -4751,38 +4750,27 @@ ath11k_dp_rx_mon_merg_msdus(struct ath11k *ar,
- 
- 		skb_trim(prev_buf, prev_buf->len - HAL_RX_FCS_LEN);
- 	} else if (decap_format == DP_RX_DECAP_TYPE_NATIVE_WIFI) {
--		__le16 qos_field;
- 		u8 qos_pkt = 0;
- 
- 		rx_desc = (struct hal_rx_desc *)head_msdu->data;
- 		hdr_desc = ath11k_dp_rxdesc_get_80211hdr(ab, rx_desc);
- 
- 		/* Base size */
--		wifi_hdr_len = sizeof(struct ieee80211_hdr_3addr);
- 		wh = (struct ieee80211_hdr_3addr *)hdr_desc;
- 
- 		if (ieee80211_is_data_qos(wh->frame_control)) {
--			struct ieee80211_qos_hdr *qwh =
--					(struct ieee80211_qos_hdr *)hdr_desc;
--
--			qos_field = qwh->qos_ctrl;
- 			qos_pkt = 1;
- 		}
- 		msdu = head_msdu;
- 
- 		while (msdu) {
--			rx_desc = (struct hal_rx_desc *)msdu->data;
--			hdr_desc = ath11k_dp_rxdesc_get_80211hdr(ab, rx_desc);
--
-+			ath11k_dp_rx_msdus_set_payload(ar, msdu);
- 			if (qos_pkt) {
- 				dest = skb_push(msdu, sizeof(__le16));
- 				if (!dest)
- 					goto err_merge_fail;
--				memcpy(dest, hdr_desc, wifi_hdr_len);
--				memcpy(dest + wifi_hdr_len,
--				       (u8 *)&qos_field, sizeof(__le16));
-+				memcpy(dest, hdr_desc, sizeof(struct ieee80211_qos_hdr));
- 			}
--			ath11k_dp_rx_msdus_set_payload(ar, msdu);
- 			prev_buf = msdu;
- 			msdu = msdu->next;
- 		}
-@@ -4812,8 +4800,83 @@ ath11k_dp_rx_mon_merg_msdus(struct ath11k *ar,
- 	return NULL;
- }
- 
-+static void
-+ath11k_dp_rx_update_radiotap_he(struct hal_rx_mon_ppdu_info *rx_status,
-+				u8 *rtap_buf)
-+{
-+	u32 rtap_len = 0;
-+
-+	put_unaligned_le16(rx_status->he_data1, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_data2, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_data3, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_data4, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_data5, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_data6, &rtap_buf[rtap_len]);
-+}
-+
-+static void
-+ath11k_dp_rx_update_radiotap_he_mu(struct hal_rx_mon_ppdu_info *rx_status,
-+				   u8 *rtap_buf)
-+{
-+	u32 rtap_len = 0;
-+
-+	put_unaligned_le16(rx_status->he_flags1, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	put_unaligned_le16(rx_status->he_flags2, &rtap_buf[rtap_len]);
-+	rtap_len += 2;
-+
-+	rtap_buf[rtap_len] = rx_status->he_RU[0];
-+	rtap_len += 1;
-+
-+	rtap_buf[rtap_len] = rx_status->he_RU[1];
-+	rtap_len += 1;
-+
-+	rtap_buf[rtap_len] = rx_status->he_RU[2];
-+	rtap_len += 1;
-+
-+	rtap_buf[rtap_len] = rx_status->he_RU[3];
-+}
-+
-+static void ath11k_update_radiotap(struct hal_rx_mon_ppdu_info *ppduinfo,
-+				   struct sk_buff *mon_skb,
-+				   struct ieee80211_rx_status *rxs)
-+{
-+	u8 *ptr = NULL;
-+
-+	if (ppduinfo->he_mu_flags) {
-+		rxs->flag |= RX_FLAG_RADIOTAP_HE_MU;
-+		rxs->encoding = RX_ENC_HE;
-+		ptr = skb_push(mon_skb, sizeof(struct ieee80211_radiotap_he_mu));
-+		ath11k_dp_rx_update_radiotap_he_mu(ppduinfo, ptr);
-+	}
-+	if (ppduinfo->he_flags) {
-+		rxs->flag |= RX_FLAG_RADIOTAP_HE;
-+		rxs->encoding = RX_ENC_HE;
-+		ptr = skb_push(mon_skb, sizeof(struct ieee80211_radiotap_he));
-+		ath11k_dp_rx_update_radiotap_he(ppduinfo, ptr);
-+	}
-+
-+	rxs->flag |= RX_FLAG_MACTIME_START;
-+	rxs->signal = ppduinfo->rssi_comb + ATH11K_DEFAULT_NOISE_FLOOR;
-+	rxs->nss = ppduinfo->nss;
-+
-+	rxs->mactime = ppduinfo->tsft;
-+}
-+
- static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
- 				    struct sk_buff *head_msdu,
-+				    struct hal_rx_mon_ppdu_info *ppduinfo,
- 				    struct sk_buff *tail_msdu,
- 				    struct napi_struct *napi)
- {
-@@ -4843,8 +4906,7 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
- 		} else {
- 			rxs->flag |= RX_FLAG_ALLOW_SAME_PN;
- 		}
--		rxs->flag |= RX_FLAG_ONLY_MONITOR;
--
-+		ath11k_update_radiotap(ppduinfo, mon_skb, rxs);
- 		status = IEEE80211_SKB_RXCB(mon_skb);
- 		*status = *rxs;
- 
-@@ -4920,6 +4982,7 @@ static void ath11k_dp_rx_mon_dest_process(struct ath11k *ar, int mac_id,
- 		}
- 		if (head_msdu && tail_msdu) {
- 			ath11k_dp_rx_mon_deliver(ar, dp->mac_id, head_msdu,
-+						 &pmon->mon_ppdu_info,
- 						 tail_msdu, napi);
- 			rx_mon_stats->dest_mpdu_done++;
- 		}
-@@ -4966,6 +5029,8 @@ static void ath11k_dp_rx_mon_status_process_tlv(struct ath11k *ar,
- 	while (!skb_queue_empty(&pmon->rx_status_q)) {
- 		status_skb = skb_dequeue(&pmon->rx_status_q);
- 
-+		memset(ppdu_info, 0, sizeof(struct hal_rx_mon_ppdu_info));
-+
- 		tlv_status = ath11k_hal_rx_parse_mon_status(ar->ab, ppdu_info,
- 							    status_skb);
- 		if (tlv_status == HAL_TLV_STATUS_PPDU_DONE) {
-diff --git a/drivers/net/wireless/ath/ath11k/hal_desc.h b/drivers/net/wireless/ath/ath11k/hal_desc.h
-index d54ec6aa6281..e661448136eb 100644
---- a/drivers/net/wireless/ath/ath11k/hal_desc.h
-+++ b/drivers/net/wireless/ath/ath11k/hal_desc.h
-@@ -474,6 +474,7 @@ enum hal_tlv_tag {
- 
- #define HAL_TLV_HDR_TAG		GENMASK(9, 1)
- #define HAL_TLV_HDR_LEN		GENMASK(25, 10)
-+#define HAL_TLV_USR_ID		GENMASK(31, 26)
- 
- #define HAL_TLV_ALIGN	4
- 
-diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.h b/drivers/net/wireless/ath/ath11k/hal_rx.h
-index d464a270c049..61afcbdbb55c 100644
---- a/drivers/net/wireless/ath/ath11k/hal_rx.h
-+++ b/drivers/net/wireless/ath/ath11k/hal_rx.h
-@@ -77,6 +77,36 @@ enum hal_rx_mon_status {
- 	HAL_RX_MON_STATUS_BUF_DONE,
- };
- 
-+struct hal_rx_user_status {
-+	u32 mcs:4,
-+	nss:3,
-+	ofdma_info_valid:1,
-+	dl_ofdma_ru_start_index:7,
-+	dl_ofdma_ru_width:7,
-+	dl_ofdma_ru_size:8;
-+	u32 ul_ofdma_user_v0_word0;
-+	u32 ul_ofdma_user_v0_word1;
-+	u32 ast_index;
-+	u32 tid;
-+	u16 tcp_msdu_count;
-+	u16 udp_msdu_count;
-+	u16 other_msdu_count;
-+	u16 frame_control;
-+	u8 frame_control_info_valid;
-+	u8 data_sequence_control_info_valid;
-+	u16 first_data_seq_ctrl;
-+	u32 preamble_type;
-+	u16 ht_flags;
-+	u16 vht_flags;
-+	u16 he_flags;
-+	u8 rs_flags;
-+	u32 mpdu_cnt_fcs_ok;
-+	u32 mpdu_cnt_fcs_err;
-+	u32 mpdu_fcs_ok_bitmap[8];
-+	u32 mpdu_ok_byte_count;
-+	u32 mpdu_err_byte_count;
-+};
-+
- struct hal_rx_mon_ppdu_info {
- 	u32 ppdu_id;
- 	u32 ppdu_ts;
-@@ -93,16 +123,58 @@ struct hal_rx_mon_ppdu_info {
- 	u8 mcs;
- 	u8 nss;
- 	u8 bw;
-+	u8 vht_flag_values1;
-+	u8 vht_flag_values2;
-+	u8 vht_flag_values3[4];
-+	u8 vht_flag_values4;
-+	u8 vht_flag_values5;
-+	u16 vht_flag_values6;
- 	u8 is_stbc;
- 	u8 gi;
- 	u8 ldpc;
- 	u8 beamformed;
- 	u8 rssi_comb;
- 	u8 tid;
-+	u16 ht_flags;
-+	u16 vht_flags;
-+	u16 he_flags;
-+	u16 he_mu_flags;
- 	u8 dcm;
- 	u8 ru_alloc;
- 	u8 reception_type;
-+	u64 tsft;
- 	u64 rx_duration;
-+	u16 frame_control;
-+	u32 ast_index;
-+	u8 rs_fcs_err;
-+	u8 rs_flags;
-+	u8 cck_flag;
-+	u8 ofdm_flag;
-+	u8 ulofdma_flag;
-+	u8 frame_control_info_valid;
-+	u16 he_per_user_1;
-+	u16 he_per_user_2;
-+	u8 he_per_user_position;
-+	u8 he_per_user_known;
-+	u16 he_flags1;
-+	u16 he_flags2;
-+	u8 he_RU[4];
-+	u16 he_data1;
-+	u16 he_data2;
-+	u16 he_data3;
-+	u16 he_data4;
-+	u16 he_data5;
-+	u16 he_data6;
-+	u32 ppdu_len;
-+	u32 prev_ppdu_id;
-+	u32 device_id;
-+	u16 first_data_seq_ctrl;
-+	u8 monitor_direct_used;
-+	u8 data_sequence_control_info_valid;
-+	u8 ltf_size;
-+	u8 rxpcu_filter_pass;
-+	char rssi_chain[8][8];
-+	struct hal_rx_user_status userstats;
- };
- 
- #define HAL_RX_PPDU_START_INFO0_PPDU_ID		GENMASK(15, 0)
-@@ -135,6 +207,9 @@ struct hal_rx_ppdu_start {
- #define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP		GENMASK(15, 0)
- #define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_EOSP_BITMAP	GENMASK(31, 16)
- 
-+#define HAL_RX_PPDU_END_USER_STATS_RSVD2_6_MPDU_OK_BYTE_COUNT	GENMASK(24, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_RSVD2_8_MPDU_ERR_BYTE_COUNT	GENMASK(24, 0)
-+
- struct hal_rx_ppdu_end_user_stats {
- 	__le32 rsvd0[2];
- 	__le32 info0;
-@@ -149,6 +224,16 @@ struct hal_rx_ppdu_end_user_stats {
- 	__le32 rsvd2[11];
- } __packed;
- 
-+struct hal_rx_ppdu_end_user_stats_ext {
-+	u32 info0;
-+	u32 info1;
-+	u32 info2;
-+	u32 info3;
-+	u32 info4;
-+	u32 info5;
-+	u32 info6;
-+} __packed;
-+
- #define HAL_RX_HT_SIG_INFO_INFO0_MCS		GENMASK(6, 0)
- #define HAL_RX_HT_SIG_INFO_INFO0_BW		BIT(7)
- 
-@@ -197,25 +282,62 @@ enum hal_rx_vht_sig_a_gi_setting {
- 	HAL_RX_VHT_SIG_A_SHORT_GI_AMBIGUITY = 3,
- };
- 
-+#define HAL_RX_SU_MU_CODING_LDPC 0x01
-+
-+#define HE_GI_0_8 0
-+#define HE_GI_0_4 1
-+#define HE_GI_1_6 2
-+#define HE_GI_3_2 3
-+
-+#define HE_LTF_1_X 0
-+#define HE_LTF_2_X 1
-+#define HE_LTF_4_X 2
-+#define HE_LTF_UNKNOWN 3
-+
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_MCS	GENMASK(6, 3)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO0_DCM		BIT(7)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_BW	GENMASK(20, 19)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO0_CP_LTF_SIZE	GENMASK(22, 21)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO0_NSTS		GENMASK(25, 23)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_BSS_COLOR		GENMASK(13, 8)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_SPATIAL_REUSE	GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_FORMAT_IND	BIT(0)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_BEAM_CHANGE	BIT(1)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_DL_UL_FLAG	BIT(2)
- 
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXOP_DURATION	GENMASK(6, 0)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO1_CODING		BIT(7)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_LDPC_EXTRA	BIT(8)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO1_STBC		BIT(9)
- #define HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXBF		BIT(10)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_PKT_EXT_FACTOR	GENMASK(12, 11)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_PKT_EXT_PE_DISAM	BIT(13)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_DOPPLER_IND	BIT(15)
- 
- struct hal_rx_he_sig_a_su_info {
- 	__le32 info0;
- 	__le32 info1;
- } __packed;
- 
--#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_TRANSMIT_BW	GENMASK(17, 15)
--#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_CP_LTF_SIZE	GENMASK(24, 23)
--
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_UL_FLAG		BIT(1)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_MCS_OF_SIGB		GENMASK(3, 1)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_DCM_OF_SIGB		BIT(4)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_BSS_COLOR		GENMASK(10, 5)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_SPATIAL_REUSE	GENMASK(14, 11)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_TRANSMIT_BW		GENMASK(17, 15)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_NUM_SIGB_SYMB	GENMASK(21, 18)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_COMP_MODE_SIGB	BIT(22)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_CP_LTF_SIZE		GENMASK(24, 23)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_DOPPLER_INDICATION	BIT(25)
-+
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_TXOP_DURATION	GENMASK(6, 0)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_CODING		BIT(7)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_NUM_LTF_SYMB	GENMASK(10, 8)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_LDPC_EXTRA		BIT(11)
- #define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_STBC		BIT(12)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_TXBF		BIT(10)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_PKT_EXT_FACTOR	GENMASK(14, 13)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_PKT_EXT_PE_DISAM	BIT(15)
- 
- struct hal_rx_he_sig_a_mu_dl_info {
- 	__le32 info0;
-@@ -228,6 +350,7 @@ struct hal_rx_he_sig_b1_mu_info {
- 	__le32 info0;
- } __packed;
- 
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_ID		GENMASK(10, 0)
- #define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_MCS		GENMASK(18, 15)
- #define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_CODING	BIT(20)
- #define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_NSTS		GENMASK(31, 29)
-@@ -236,6 +359,7 @@ struct hal_rx_he_sig_b2_mu_info {
- 	__le32 info0;
- } __packed;
- 
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_ID	GENMASK(10, 0)
- #define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_NSTS	GENMASK(13, 11)
- #define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_TXBF	BIT(19)
- #define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_MCS	GENMASK(18, 15)
-@@ -254,10 +378,13 @@ struct hal_rx_phyrx_rssi_legacy_info {
- } __packed;
- 
- #define HAL_RX_MPDU_INFO_INFO0_PEERID	GENMASK(31, 16)
-+#define HAL_RX_MPDU_INFO_INFO1_MPDU_LEN        GENMASK(13, 0)
- struct hal_rx_mpdu_info {
- 	__le32 rsvd0;
- 	__le32 info0;
--	__le32 rsvd1[21];
-+	__le32 rsvd1[11];
-+	__le32 info1;
-+	__le32 rsvd2[9];
- } __packed;
- 
- #define HAL_RX_PPDU_END_DURATION	GENMASK(23, 0)
--- 
-2.17.1
+Awesome! You're welcome, and thanks for taking a look :)
+
+> On 2021-03-18 22:31, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> This switches the airtime scheduler in mac80211 to use a virtual time-ba=
+sed
+>> scheduler instead of the round-robin scheduler used before. This has a
+>> couple of advantages:
+>>=20
+>> - No need to sync up the round-robin scheduler in firmware/hardware with
+>>   the round-robin airtime scheduler.
+>>=20
+>> - If several stations are eligible for transmission we can schedule both=
+ of
+>>   them; no need to hard-block the scheduling rotation until the head of =
+the
+>>   queue has used up its quantum.
+>>=20
+>> - The check of whether a station is eligible for transmission becomes
+>>   simpler (in ieee80211_txq_may_transmit()).
+>>=20
+>> The drawback is that scheduling becomes slightly more expensive, as we n=
+eed
+>> to maintain an rbtree of TXQs sorted by virtual time. This means that
+>> ieee80211_register_airtime() becomes O(logN) in the number of currently
+>> scheduled TXQs because it can change the order of the scheduled stations.
+>> We mitigate this overhead by only resorting when a station changes posit=
+ion
+>> in the tree, and hopefully N rarely grows too big (it's only TXQs curren=
+tly
+>> backlogged, not all associated stations), so it shouldn't be too big of =
+an
+>> issue.
+>>=20
+>> To prevent divisions in the fast path, we maintain both station sums and
+>> pre-computed reciprocals of the sums. This turns the fast-path operation
+>> into a multiplication, with divisions only happening as the number of
+>> active stations change (to re-compute the current sum of all active stat=
+ion
+>> weights). To prevent this re-computation of the reciprocal from happening
+>> too frequently, we use a time-based notion of station activity, instead =
+of
+>> updating the weight every time a station gets scheduled or de-scheduled.=
+ As
+>> queues can oscillate between empty and occupied quite frequently, this c=
+an
+>> significantly cut down on the number of re-computations. It also has the
+>> added benefit of making the station airtime calculation independent on
+>> whether the queue happened to have drained at the time an airtime value =
+was
+>> accounted.
+>>=20
+>> Co-developed-by: Yibo Zhao <yiboz@codeaurora.org>
+>> Signed-off-by: Yibo Zhao <yiboz@codeaurora.org>
+>> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+>> ---
+>> Respinning this has taken way too long, but assuming anyone actually rem=
+embers
+>> the previous version from a bit over a year ago, here's the changelog:
+>>=20
+>> Changes since v5:
+>>   Rebase on latest mac80211-next.
+>>=20
+>>   Fix issue with scheduling hanging because the schedule position was not
+>>   cleared when starting a new scheduling round.
+>>=20
+>>   Switch the reciprocal calculation to use u32 (split 19/13) for per-sta=
+tion
+>>   weights and a u64 only for the weight sum (to cut down on the number o=
+f 64-bit
+>>   operations performed)
+>>=20
+>>   Introduce the notion of time-based station activity when calculating w=
+eight
+>>   sums. This also gets rid of the need for a "grace time" when catching =
+up
+>>   stations, since we now have a direct notion of when a station has been
+>>   inactive for a while.
+> Not sure if I'm misunderstanding the code, but this does not seem enough
+> to me. From what I can see, you consider a station active if it has been
+> scheduled in the last 100ms. Let's say we keep sending a single small
+> packet to a particular sta every 90ms (thus keeping it active) for a
+> long period of time and then suddenly start a really huge transfer.
+> What keeps it from then taking an unreasonably large share of the
+> airtime for as long as it takes for the virtual time to catch up?
+>
+> Am I missing something or should we maybe use the new notion of
+> time-based activity *and* do a grace time catch up?
+
+Hmm, yeah, I guess you're right? I haven't seen this in practice, but I
+haven't been looking for it either. And I suppose someone who set out to
+trigger this would be able to. So adding back the grace time (but maybe
+with a longer interval?) would probably be best.
+
+I'll wait for your other comments before respinning, though...
+
+-Toke
 
