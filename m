@@ -2,234 +2,138 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CCA5C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Mar 2021 23:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6C6C433DB
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Mar 2021 00:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7C436196D
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Mar 2021 23:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A4A61981
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Mar 2021 00:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbhCSXj0 (ORCPT
+        id S229524AbhCTANy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Mar 2021 19:39:26 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:32868 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbhCSXi6 (ORCPT
+        Fri, 19 Mar 2021 20:13:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30675 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229708AbhCTANk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Mar 2021 19:38:58 -0400
-Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id ACE5A13C2B6;
-        Fri, 19 Mar 2021 16:38:55 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com ACE5A13C2B6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1616197135;
-        bh=H9/92mFXqYzGrgud6h8bpb3j19l3NYziPihWMRS93C0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UIy9BMk6zQECh4bfanUwVqZ0fKIfrGaoT6W1oP7ROO/LYLzILBfiWFbKEeCcLhjQI
-         1zgIKZSa16VeK6244SwA30+5tUNOCy5soTErCACH08cwjeO2GZv2ymse5Kn8ldKUW7
-         hixWVvjeLX38R4opjTiB7X37iAeVpGcEyzq+thns=
-From:   greearb@candelatech.com
-To:     linux-wireless@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/3] mac80211:  Provide per-station stats in debugfs
-Date:   Fri, 19 Mar 2021 16:38:49 -0700
-Message-Id: <20210319233850.2238-2-greearb@candelatech.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210319233850.2238-1-greearb@candelatech.com>
-References: <20210319233850.2238-1-greearb@candelatech.com>
+        Fri, 19 Mar 2021 20:13:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616199220;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=e0in7Kz49NXHesq0ylu3p5N0bWWtmATp5ChZezZpRug=;
+        b=ONJW/Nf3RN2nahvHV4ocEsBFRjfGL6Dx/LL3suz+tDx73Nmo8AYWZdfkcUpLOLdKfctLMK
+        aVVu4ZqHbVn5khOV9Ub6gLI83rYLq9PKDxAUA8YU+09tBeJHC5g7JGduQcci8a+FuND+9r
+        ED41+4h2/JYFkjpma5EEAIEHmhvvlqc=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-405-Y6P2x6MRP9myqLAkFVvkBw-1; Fri, 19 Mar 2021 20:13:38 -0400
+X-MC-Unique: Y6P2x6MRP9myqLAkFVvkBw-1
+Received: by mail-ed1-f72.google.com with SMTP id i6so23814819edq.12
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2021 17:13:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=e0in7Kz49NXHesq0ylu3p5N0bWWtmATp5ChZezZpRug=;
+        b=GMvla+C5lQxlFZZU9VzxJSCUgJ/24xWNGZjojLwSGsMYcIK8eo4CIbvrn0rjw1NyzK
+         sEPNocnwFe0Zz3AywYiWBuf5zUIdZNxeFXZxxAkJKjgDQzyRuM5hjwsRPU0cNRmtg3Gr
+         symtcQ8JjdXzkJbFQPRxUCs6yLh6Q9g6lfkg1/S1VujftRiF4fVrweE8+vXWzlAnyKoZ
+         zNKjlo29aTVzBxCakkbIGX1oX4zhs7d9xbnkRBHFyKBWF0qoYEAiLgdMYqwWUDH++1d9
+         lCfI3CTAXeClqByOLeta517gHfmycSH1BWBWs9PMVDKmonHRnuyCEjuhRUHTjBjuJVGa
+         +8yA==
+X-Gm-Message-State: AOAM530divjo/NREH70cMTqeMIeboof2JV+KS06FaJvm2ymA8aucmxS5
+        kVFXSM5xMOtBQJwPboK3xQaGjVGf81MHHR9niP17Ztl2+T+eBkAuvFSbbQ6fUeFGV/7ns/XZ28Y
+        f4d6L8szgcBy31cNBI65OV1myUzQ=
+X-Received: by 2002:aa7:cc98:: with SMTP id p24mr12604587edt.187.1616199216417;
+        Fri, 19 Mar 2021 17:13:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzwKM++tpMsVik9quHkYPTMO5BhEs9CnCNVJ8lyFcmg7VK3B3Ks03pydsvY4PK2yK731HWnPQ==
+X-Received: by 2002:aa7:cc98:: with SMTP id p24mr12604565edt.187.1616199216077;
+        Fri, 19 Mar 2021 17:13:36 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
+        by smtp.gmail.com with ESMTPSA id p19sm5034148edr.57.2021.03.19.17.13.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Mar 2021 17:13:35 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id D200D181F54; Sat, 20 Mar 2021 01:13:34 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: don't apply flow control on management frames
+In-Reply-To: <20210319232800.0e876c800866.Id2b66eb5a17f3869b776c39b5ca713272ea09d5d@changeid>
+References: <20210319232800.0e876c800866.Id2b66eb5a17f3869b776c39b5ca713272ea09d5d@changeid>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Sat, 20 Mar 2021 01:13:34 +0100
+Message-ID: <87h7l6adht.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Including per tid and per acs stats.
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> In some cases (depending on the driver, but it's true e.g. for
+> iwlwifi) we're using an internal TXQ for management packets,
+> mostly to simplify the code and to have a place to queue them.
+> However, it appears that in certain cases we can confuse the
+> code and management frames are dropped, which is certainly not
+> what we want.
+>
+> Short-circuit the processing of management frames. To keep the
+> impact minimal, only put them on the frags queue and check the
+> tid == management only for doing that and to skip the airtime
+> fairness checks, if applicable.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/tx.c | 18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 5d06de61047a..b2d09acb9fb0 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -5,7 +5,7 @@
+>   * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+>   * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+>   * Copyright 2013-2014  Intel Mobile Communications GmbH
+> - * Copyright (C) 2018-2020 Intel Corporation
+> + * Copyright (C) 2018-2021 Intel Corporation
+>   *
+>   * Transmit and frame generation functions.
+>   */
+> @@ -1388,8 +1388,17 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+>  	ieee80211_set_skb_enqueue_time(skb);
+>  
+>  	spin_lock_bh(&fq->lock);
+> -	fq_tin_enqueue(fq, tin, flow_idx, skb,
+> -		       fq_skb_free_func);
+> +	/*
+> +	 * For management frames, don't really apply codel etc.,
+> +	 * we don't want to apply any shaping or anything we just
+> +	 * want to simplify the driver API by having them on the
+> +	 * txqi.
+> +	 */
+> +	if (unlikely(txqi->txq.tid == IEEE80211_NUM_TIDS))
+> +		__skb_queue_tail(&txqi->frags, skb);
+> +	else
+> +		fq_tin_enqueue(fq, tin, flow_idx, skb,
+> +			       fq_skb_free_func);
 
-Nice for those who like to peer deep into the guts of a system.
+One consequence of this is that we create a strict priority queue for
+management frames. With all the possibilities for badness (such as the
+ability of starving all other queues) that carries with it. I guess
+that's probably fine for management frames, though, right? As in, there
+is some other mechanism that prevents abuse of this?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/mac80211/debugfs_sta.c | 88 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.c    | 33 ++++++++++++++
- net/mac80211/sta_info.h    |  4 ++
- 3 files changed, 125 insertions(+)
-
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 1deacce85177..374db61527a9 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -102,6 +102,93 @@ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
- }
- STA_OPS(flags);
- 
-+static ssize_t sta_stats_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	unsigned int len = 0;
-+	const int buf_len = 8000;
-+	char *buf = kzalloc(buf_len, GFP_KERNEL);
-+	unsigned long sum;
-+	char tmp[60];
-+	int i;
-+	struct ieee80211_sta_rx_stats rx_stats = {0};
-+
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	sta_accum_rx_stats(sta, &rx_stats);
-+
-+#define PRINT_MY_STATS(a, b) do {					\
-+		len += scnprintf(buf + len, buf_len - len, "%30s %18lu\n", a, (unsigned long)(b)); \
-+		if (len >= buf_len) {					\
-+			goto done;					\
-+		}							\
-+	} while (0)
-+
-+#define PRINT_MY_STATS_S(a, b) do {					\
-+		len += scnprintf(buf + len, buf_len - len, "%30s %18ld\n", a, (long)(b)); \
-+		if (len >= buf_len) {					\
-+			goto done;					\
-+		}							\
-+	} while (0)
-+
-+	PRINT_MY_STATS("rx-packets", rx_stats.packets);
-+	PRINT_MY_STATS("rx-bytes", rx_stats.bytes);
-+	PRINT_MY_STATS("rx-dup", rx_stats.num_duplicates);
-+	PRINT_MY_STATS("rx-fragments", rx_stats.fragments);
-+	PRINT_MY_STATS("rx-dropped", rx_stats.dropped);
-+	PRINT_MY_STATS_S("rx-last-signal", rx_stats.last_signal);
-+
-+	for (i = 0; i<IEEE80211_MAX_CHAINS; i++) {
-+		if (rx_stats.chains & (1<<i)) {
-+			sprintf(tmp, "rx-last-signal-chain[%i]", i);
-+			PRINT_MY_STATS_S(tmp, rx_stats.chain_signal_last[i]);
-+		}
-+	}
-+	PRINT_MY_STATS("rx-last-rate-encoded", rx_stats.last_rate);
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+
-+	sum = sta->tx_stats.packets[0] + sta->tx_stats.packets[1]
-+		+ sta->tx_stats.packets[2] + sta->tx_stats.packets[3];
-+	PRINT_MY_STATS("tx-packets", sum);
-+
-+		sum = sta->tx_stats.bytes[0] + sta->tx_stats.bytes[1]
-+		+ sta->tx_stats.bytes[2] + sta->tx_stats.bytes[3];
-+	PRINT_MY_STATS("tx-bytes", sum);
-+
-+	/* per txq stats */
-+	PRINT_MY_STATS("tx-packets-acs[VO]", sta->tx_stats.packets[IEEE80211_AC_VO]);
-+	PRINT_MY_STATS("tx-packets-acs[VI]", sta->tx_stats.packets[IEEE80211_AC_VI]);
-+	PRINT_MY_STATS("tx-packets-acs[BE]", sta->tx_stats.packets[IEEE80211_AC_BE]);
-+	PRINT_MY_STATS("tx-packets-acs[BK]", sta->tx_stats.packets[IEEE80211_AC_BK]);
-+
-+	PRINT_MY_STATS("tx-bytes-acs[VO]", sta->tx_stats.bytes[IEEE80211_AC_VO]);
-+	PRINT_MY_STATS("tx-bytes-acs[VI]", sta->tx_stats.bytes[IEEE80211_AC_VI]);
-+	PRINT_MY_STATS("tx-bytes-acs[BE]", sta->tx_stats.bytes[IEEE80211_AC_BE]);
-+	PRINT_MY_STATS("tx-bytes-acs[BK]", sta->tx_stats.bytes[IEEE80211_AC_BK]);
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	for (i = 0; i<=IEEE80211_NUM_TIDS; i++) {
-+		sprintf(tmp, "tx-msdu-tid[%2i]", i);
-+		PRINT_MY_STATS(tmp, sta->tx_stats.msdu[i]);
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	for (i = 0; i<=IEEE80211_NUM_TIDS; i++) {
-+		sprintf(tmp, "rx-msdu-tid[%2i]", i);
-+		PRINT_MY_STATS(tmp, rx_stats.msdu[i]);
-+	}
-+
-+#undef PRINT_MY_STATS
-+done:
-+	i = simple_read_from_buffer(userbuf, count, ppos, buf, strlen(buf));
-+	kfree(buf);
-+	return i;
-+}
-+STA_OPS(stats);
-+
- static ssize_t sta_num_ps_buf_frames_read(struct file *file,
- 					  char __user *userbuf,
- 					  size_t count, loff_t *ppos)
-@@ -1073,6 +1160,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	sta->debugfs_dir = debugfs_create_dir(mac, stations_dir);
- 
- 	DEBUGFS_ADD(flags);
-+	DEBUGFS_ADD(stats);
- 	DEBUGFS_ADD(aid);
- 	DEBUGFS_ADD(num_ps_buf_frames);
- 	DEBUGFS_ADD(last_seq_ctrl);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b096370b45b1..aa95db547465 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2650,6 +2650,39 @@ static void sta_update_codel_params(struct sta_info *sta, u32 thr)
- 	}
- }
- 
-+void sta_accum_rx_stats(struct sta_info *sta,
-+			struct ieee80211_sta_rx_stats *rx_stats)
-+{
-+	int cpu;
-+	int i;
-+
-+	memcpy(rx_stats, &sta->rx_stats, sizeof(*rx_stats));
-+
-+	if (!sta->pcpu_rx_stats)
-+		return;
-+
-+	for_each_possible_cpu(cpu) {
-+		struct ieee80211_sta_rx_stats *cpurxs;
-+
-+		cpurxs = per_cpu_ptr(sta->pcpu_rx_stats, cpu);
-+		rx_stats->packets += cpurxs->packets;
-+		if (time_after(cpurxs->last_rx, rx_stats->last_rx)) {
-+			rx_stats->last_rx = cpurxs->last_rx;
-+			rx_stats->last_signal = cpurxs->last_signal;
-+			for (i = 0; i<IEEE80211_MAX_CHAINS; i++)
-+				rx_stats->chain_signal_last[i] = cpurxs->chain_signal_last[i];
-+			rx_stats->last_rate = cpurxs->last_rate;
-+		}
-+		rx_stats->num_duplicates += cpurxs->num_duplicates;
-+		rx_stats->fragments += cpurxs->fragments;
-+		rx_stats->dropped += cpurxs->dropped;
-+		rx_stats->bytes += sta_get_stats_bytes(cpurxs);
-+		for (i = 0; i<=IEEE80211_NUM_TIDS; i++) {
-+			rx_stats->msdu[i] += sta_get_tidstats_msdu(cpurxs, i);
-+		}
-+	}
-+}
-+
- void ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
- 					   u32 thr)
- {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 897b4d12103e..a6b13d749ffa 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -422,6 +422,7 @@ struct mesh_sta {
- 
- DECLARE_EWMA(signal, 10, 8)
- 
-+/* Update sta_accum_rx_stats if you change this structure. */
- struct ieee80211_sta_rx_stats {
- 	unsigned long packets;
- 	unsigned long last_rx;
-@@ -907,4 +908,7 @@ static inline u32 sta_stats_encode_rate(struct ieee80211_rx_status *s)
- 	return r;
- }
- 
-+void sta_accum_rx_stats(struct sta_info *sta,
-+			struct ieee80211_sta_rx_stats *rx_stats);
-+
- #endif /* STA_INFO_H */
--- 
-2.20.1
+-Toke
 
