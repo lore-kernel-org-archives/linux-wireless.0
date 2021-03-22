@@ -7,42 +7,43 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5471EC433EA
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2815AC433FC
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39F47619AB
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10703619C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232004AbhCVQGo (ORCPT
+        id S231745AbhCVQEC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:06:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53076 "EHLO mail.kernel.org"
+        Mon, 22 Mar 2021 12:04:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52014 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231894AbhCVQFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:05:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 72908619A9;
-        Mon, 22 Mar 2021 16:05:13 +0000 (UTC)
+        id S231493AbhCVQDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:03:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BA0F66199E;
+        Mon, 22 Mar 2021 16:03:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429118;
-        bh=EPe3bIidXGt1QSXUt8K/T9qB09rG8+BNJJvNG8YjWag=;
+        s=k20201202; t=1616429019;
+        bh=by6x6Rsrr+/5kT7BQ0fn/CIy488q3HO6uAtxXzMMlIk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=odvbczUMlcMOL6OYbdCtO6qt6RZm272nfTphlFLY6klU5CkTn017tx34pnASZGNCF
-         IpTcV7nYkdiHmdTO4YSIbtaihkUG1yjP/yyOdl4AEWNcNqBp3RlBD18ZnYm597BmUn
-         wbL0s1j6ZDhyXNOvtPSEo+IomEmxiiG2PhvFgAApDhn6IwYxk6QphMYP+c26QRueLZ
-         RufWjyGVlIhAtQ1wf9LhLwHYQjNNIjPOnznUa3dYOSsg79XhSsMNd+utp3nEch/2kA
-         G7BxSH7No+IViGt23UWj5mYSj83XwgoEag8qXDcmE/UvDP4IP5Eh1a52oCa4LWy515
-         1pAfWyFQAG1Kg==
+        b=O6Jy+HmUTikJ1x1bJ304Vrp1sBfWbLm1PtId9ZJsKafzCLMEYQU//L/uQ5NyHGzrh
+         RhBcv0KcZohevaQjWtq/m2PyDxHXZ6oO/xPHdEAeZN27qebnzt5Wg4fhtjqGJK48VY
+         UL94XPmfJWp5a2JWF1yBFnnQqkdteTxWc08FTIpJX/wa6/CiiShyqAZe7XpjIeOmzt
+         cO/lp91PJ7K5iDRKpXJ1LzXMgwxLeTNc1hWrW+Oj2cHQ8M1FuYfEUnJHvIMPGvZ3nY
+         pOppyp2fEDOWTHfMFCcVXI+sMo5gidr9nyHaAyqJ/Nlnh1nTbp/etdZKIJcUsxQAJ9
+         FpT/4xvv9xvFg==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        x86@kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>,
         Jani Nikula <jani.nikula@linux.intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Simon Kelley <simon@thekelleys.org.uk>,
+        James Smart <james.smart@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
         Serge Hallyn <serge@hallyn.com>,
         Imre Deak <imre.deak@intel.com>,
@@ -52,13 +53,13 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        Ye Bin <yebin10@huawei.com>
-Subject: [PATCH 09/11] scsi: lpfc: fix gcc -Wstringop-overread warning
-Date:   Mon, 22 Mar 2021 17:02:47 +0100
-Message-Id: <20210322160253.4032422-10-arnd@kernel.org>
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Will Deacon <will@kernel.org>
+Subject: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
+Date:   Mon, 22 Mar 2021 17:02:40 +0100
+Message-Id: <20210322160253.4032422-3-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
@@ -70,44 +71,92 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-gcc-11 warns about an strnlen with a length larger than the size of the
-passed buffer:
+gcc-11 warns about using string operations on pointers that are
+defined at compile time as offsets from a NULL pointer. Unfortunately
+that also happens on the result of fix_to_virt(), which is a
+compile-time constant for a constantn input:
 
-drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_nvme_info_show':
-drivers/scsi/lpfc/lpfc_attr.c:518:25: error: 'strnlen' specified bound 4095 exceeds source size 24 [-Werror=stringop-overread]
-  518 |                         strnlen(LPFC_NVME_INFO_MORE_STR, PAGE_SIZE - 1)
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+arch/x86/kernel/tboot.c: In function 'tboot_probe':
+arch/x86/kernel/tboot.c:70:13: error: '__builtin_memcmp_eq' specified bound 16 exceeds source size 0 [-Werror=stringop-overread]
+   70 |         if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this case, the code is entirely valid, as the string is properly
-terminated, and the size argument is only there out of extra caution
-in case it exceeds a page.
+I hope this can get addressed in gcc-11 before the release.
 
-This cannot really happen here, so just simplify it to a sizeof().
+As a workaround, split up the tboot_probe() function in two halves
+to separate the pointer generation from the usage. This is a bit
+ugly, and hopefully gcc understands that the code is actually correct
+before it learns to peek into the noinline function.
 
-Fixes: afff0d2321ea ("scsi: lpfc: Add Buffer overflow check, when nvme_info larger than PAGE_SIZE")
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/x86/kernel/tboot.c | 44 ++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index bdd9a29f4201..f6d886f9dfb3 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -512,11 +512,9 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 				"6314 Catching potential buffer "
- 				"overflow > PAGE_SIZE = %lu bytes\n",
- 				PAGE_SIZE);
--		strlcpy(buf + PAGE_SIZE - 1 -
--			strnlen(LPFC_NVME_INFO_MORE_STR, PAGE_SIZE - 1),
-+		strlcpy(buf + PAGE_SIZE - 1 - sizeof(LPFC_NVME_INFO_MORE_STR),
- 			LPFC_NVME_INFO_MORE_STR,
--			strnlen(LPFC_NVME_INFO_MORE_STR, PAGE_SIZE - 1)
--			+ 1);
-+			sizeof(LPFC_NVME_INFO_MORE_STR) + 1);
- 	}
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 4c09ba110204..f9af561c3cd4 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -49,6 +49,30 @@ bool tboot_enabled(void)
+ 	return tboot != NULL;
+ }
  
- 	return len;
++/* noinline to prevent gcc from warning about dereferencing constant fixaddr */
++static noinline __init bool check_tboot_version(void)
++{
++	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
++		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
++		return false;
++	}
++
++	if (tboot->version < 5) {
++		pr_warn("tboot version is invalid: %u\n", tboot->version);
++		return false;
++	}
++
++	pr_info("found shared page at phys addr 0x%llx:\n",
++		boot_params.tboot_addr);
++	pr_debug("version: %d\n", tboot->version);
++	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
++	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
++	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
++	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
++
++	return true;
++}
++
+ void __init tboot_probe(void)
+ {
+ 	/* Look for valid page-aligned address for shared page. */
+@@ -66,25 +90,9 @@ void __init tboot_probe(void)
+ 
+ 	/* Map and check for tboot UUID. */
+ 	set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
+-	tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
+-	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+-		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
++	tboot = (void *)fix_to_virt(FIX_TBOOT_BASE);
++	if (!check_tboot_version())
+ 		tboot = NULL;
+-		return;
+-	}
+-	if (tboot->version < 5) {
+-		pr_warn("tboot version is invalid: %u\n", tboot->version);
+-		tboot = NULL;
+-		return;
+-	}
+-
+-	pr_info("found shared page at phys addr 0x%llx:\n",
+-		boot_params.tboot_addr);
+-	pr_debug("version: %d\n", tboot->version);
+-	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
+-	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
+-	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
+-	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
+ }
+ 
+ static pgd_t *tboot_pg_dir;
 -- 
 2.29.2
 
