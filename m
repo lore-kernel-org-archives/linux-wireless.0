@@ -2,198 +2,209 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5AE3C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B8B2C433E1
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D6FC61993
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:30:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 177B861878
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230341AbhCVUaP (ORCPT
+        id S231338AbhCVUmo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 16:30:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231506AbhCVUaD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 16:30:03 -0400
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36B7DC061574;
-        Mon, 22 Mar 2021 13:30:03 -0700 (PDT)
-Received: by mail-ed1-x534.google.com with SMTP id j3so20927381edp.11;
-        Mon, 22 Mar 2021 13:30:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=7QH2qH8OXw7astC9J+hBZNIvd5jFa6HOZzbSlRf+8Ek=;
-        b=T8MfESZQxe3NObZ/7MqvvJi28NxxdFf3ab07gERPhzLT804c2DkkhJkBMdizuiX7N5
-         CHF46uFWWZ0cEHLJOYnXTiyTVv5tLvjO1lmS5Ohg2XPP88nZmWW9F5ARG6cD601rZ5/K
-         zoiBTqPm5H0nLHbAPcra7yZ3RbLdPm8oZKbWma9nQPHRlRk5CMs6B2AjWWGtpKPrvkGd
-         rL5fFWVmWmq+K/IWUKd2YrrT8XNdUQvFpqJ+tfEUQNjkhvUoBFoAG9jEiozLdABWs7F1
-         P6ZC1gmMny9VZsWnwgXXF/Dsydybb92YeAKNqz04oOvYAWJ3XKyrs6O1pidMSVkxvnmE
-         iM1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=7QH2qH8OXw7astC9J+hBZNIvd5jFa6HOZzbSlRf+8Ek=;
-        b=leNPY43U+GP3bVKZwkB+lJg2KyM9KE3J2BFaL8GyBbtK5FxkdvSf+O+fr0RWMe3JBd
-         J7pP+6GAbA+ttwYqzvfe5+RYYtWD1pM01ZARcqk0btY2WCJiNCPFuC0laaXjjVFH09Py
-         ubBTXmpqEEOMZ8KePXTQTSV3vAyBWlsigmNBoEOHhkFE2B8OFPKIE4dl6iUCSj8A8foG
-         G1eG3/aJkkn+TJlbpoZssdMKGsnjJcJTlO9zI2eELfmnhvJdvsKnaXzdbDm3d630n6/T
-         WldJsHY4wqV54f6O95BiFajQOa6pNIMMhqwGcg2vfF+wP8w/6cJxlS00s9lFIe/Eigpc
-         0hQQ==
-X-Gm-Message-State: AOAM532Pysb8L0q7VJmQYDTpgC9fAhOi7Ab3X/7FI4p5/vspOoI7oA7t
-        8M2UPdz24vWHYaXoLgOFcP4=
-X-Google-Smtp-Source: ABdhPJwU1mWLXQUCBk/cr2I4/KV5sNA0QBX6NdJBSPel6aICLgwoK3n4c4u3DzEAz75RN+WAzRwu0Q==
-X-Received: by 2002:aa7:c447:: with SMTP id n7mr1365222edr.171.1616445001869;
-        Mon, 22 Mar 2021 13:30:01 -0700 (PDT)
-Received: from gmail.com (54033286.catv.pool.telekom.hu. [84.3.50.134])
-        by smtp.gmail.com with ESMTPSA id x1sm10321496eji.8.2021.03.22.13.30.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Mar 2021 13:30:01 -0700 (PDT)
-Sender: Ingo Molnar <mingo.kernel.org@gmail.com>
-Date:   Mon, 22 Mar 2021 21:29:58 +0100
-From:   Ingo Molnar <mingo@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Ning Sun <ning.sun@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        x86@kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Will Deacon <will@kernel.org>
-Subject: Re: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
-Message-ID: <20210322202958.GA1955909@gmail.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-3-arnd@kernel.org>
+        Mon, 22 Mar 2021 16:42:44 -0400
+Received: from mga12.intel.com ([192.55.52.136]:48250 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229871AbhCVUmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 16:42:16 -0400
+IronPort-SDR: sj75e1hRToIx2MROU+c51FFfkFbWnr5vmG7S8vMRBFJ0+0uomy9PXI0oA8XZsMhVzMvrlRT7v5
+ 7c0545ett0uA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="169675992"
+X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
+   d="scan'208";a="169675992"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:16 -0700
+IronPort-SDR: OWbghX5DdfW1vhX3IHgzelJfCMo1la/gEKCGsSCRP+BsSf35niRbLBazaBDHKg7jJqgfA8VBM5
+ zv8KM9P7scGg==
+X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
+   d="scan'208";a="407978342"
+Received: from isutskov-mobl.ger.corp.intel.com (HELO egrumbac-mobl1.lan) ([10.251.189.99])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:13 -0700
+From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To:     kvalo@codeaurora.org
+Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        luca@coelho.fi, Alexander Usyskin <alexander.usyskin@intel.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/5] mei: bus: add client dma interface
+Date:   Mon, 22 Mar 2021 22:41:52 +0200
+Message-Id: <20210322204157.102078-3-emmanuel.grumbach@intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
+References: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210322160253.4032422-3-arnd@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Alexander Usyskin <alexander.usyskin@intel.com>
 
-* Arnd Bergmann <arnd@kernel.org> wrote:
+Expose the client dma mapping via mei client bus interface.
+The client dma has to be mapped before the device is enabled,
+therefore we need to create device linking already during mapping
+and we need to unmap after the client is disable hence we need to
+postpone the unlink and flush till unmapping or when
+destroying the device.
 
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> gcc-11 warns about using string operations on pointers that are
-> defined at compile time as offsets from a NULL pointer. Unfortunately
-> that also happens on the result of fix_to_virt(), which is a
-> compile-time constant for a constantn input:
-> 
-> arch/x86/kernel/tboot.c: In function 'tboot_probe':
-> arch/x86/kernel/tboot.c:70:13: error: '__builtin_memcmp_eq' specified bound 16 exceeds source size 0 [-Werror=stringop-overread]
->    70 |         if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
->       |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> I hope this can get addressed in gcc-11 before the release.
-> 
-> As a workaround, split up the tboot_probe() function in two halves
-> to separate the pointer generation from the usage. This is a bit
-> ugly, and hopefully gcc understands that the code is actually correct
-> before it learns to peek into the noinline function.
-> 
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  arch/x86/kernel/tboot.c | 44 ++++++++++++++++++++++++-----------------
->  1 file changed, 26 insertions(+), 18 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
-> index 4c09ba110204..f9af561c3cd4 100644
-> --- a/arch/x86/kernel/tboot.c
-> +++ b/arch/x86/kernel/tboot.c
-> @@ -49,6 +49,30 @@ bool tboot_enabled(void)
->  	return tboot != NULL;
->  }
->  
-> +/* noinline to prevent gcc from warning about dereferencing constant fixaddr */
-> +static noinline __init bool check_tboot_version(void)
-> +{
-> +	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
-> +		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
-> +		return false;
-> +	}
-> +
-> +	if (tboot->version < 5) {
-> +		pr_warn("tboot version is invalid: %u\n", tboot->version);
-> +		return false;
-> +	}
-> +
-> +	pr_info("found shared page at phys addr 0x%llx:\n",
-> +		boot_params.tboot_addr);
-> +	pr_debug("version: %d\n", tboot->version);
-> +	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
-> +	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
-> +	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
-> +	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
-> +
-> +	return true;
-> +}
-> +
->  void __init tboot_probe(void)
->  {
->  	/* Look for valid page-aligned address for shared page. */
-> @@ -66,25 +90,9 @@ void __init tboot_probe(void)
->  
->  	/* Map and check for tboot UUID. */
->  	set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
-> -	tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
-> -	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
-> -		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
-> +	tboot = (void *)fix_to_virt(FIX_TBOOT_BASE);
-> +	if (!check_tboot_version())
->  		tboot = NULL;
-> -		return;
-> -	}
-> -	if (tboot->version < 5) {
-> -		pr_warn("tboot version is invalid: %u\n", tboot->version);
-> -		tboot = NULL;
-> -		return;
-> -	}
-> -
-> -	pr_info("found shared page at phys addr 0x%llx:\n",
-> -		boot_params.tboot_addr);
-> -	pr_debug("version: %d\n", tboot->version);
-> -	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
-> -	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
-> -	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
-> -	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+Co-developed-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/misc/mei/bus.c     | 67 ++++++++++++++++++++++++++++++++++++--
+ drivers/misc/mei/client.c  |  3 ++
+ drivers/misc/mei/hw.h      |  5 +++
+ include/linux/mei_cl_bus.h |  3 ++
+ 4 files changed, 75 insertions(+), 3 deletions(-)
 
-This is indeed rather ugly - and the other patch that removes a debug 
-check seems counterproductive as well.
+diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
+index 935acc6bbf3c..7a325572ad1d 100644
+--- a/drivers/misc/mei/bus.c
++++ b/drivers/misc/mei/bus.c
+@@ -643,6 +643,64 @@ static void mei_cl_bus_vtag_free(struct mei_cl_device *cldev)
+ 	kfree(cl_vtag);
+ }
+ 
++void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size)
++{
++	struct mei_device *bus;
++	struct mei_cl *cl;
++	int ret;
++
++	if (!cldev || !buffer_id || !size)
++		return ERR_PTR(-EINVAL);
++
++	if (!IS_ALIGNED(size, MEI_FW_PAGE_SIZE)) {
++		dev_err(&cldev->dev, "Map size should be aligned to %lu\n",
++			MEI_FW_PAGE_SIZE);
++		return ERR_PTR(-EINVAL);
++	}
++
++	cl = cldev->cl;
++	bus = cldev->bus;
++
++	mutex_lock(&bus->device_lock);
++	if (cl->state == MEI_FILE_UNINITIALIZED) {
++		ret = mei_cl_link(cl);
++		if (ret)
++			goto out;
++		/* update pointers */
++		cl->cldev = cldev;
++	}
++
++	ret = mei_cl_dma_alloc_and_map(cl, NULL, buffer_id, size);
++out:
++	mutex_unlock(&bus->device_lock);
++	if (ret)
++		return ERR_PTR(ret);
++	return cl->dma.vaddr;
++}
++EXPORT_SYMBOL_GPL(mei_cldev_dma_map);
++
++int mei_cldev_dma_unmap(struct mei_cl_device *cldev)
++{
++	struct mei_device *bus;
++	struct mei_cl *cl;
++	int ret;
++
++	if (!cldev)
++		return -EINVAL;
++
++	cl = cldev->cl;
++	bus = cldev->bus;
++
++	mutex_lock(&bus->device_lock);
++	ret = mei_cl_dma_unmap(cl, NULL);
++
++	mei_cl_flush_queues(cl, NULL);
++	mei_cl_unlink(cl);
++	mutex_unlock(&bus->device_lock);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(mei_cldev_dma_unmap);
++
+ /**
+  * mei_cldev_enable - enable me client device
+  *     create connection with me client
+@@ -753,9 +811,11 @@ int mei_cldev_disable(struct mei_cl_device *cldev)
+ 		dev_err(bus->dev, "Could not disconnect from the ME client\n");
+ 
+ out:
+-	/* Flush queues and remove any pending read */
+-	mei_cl_flush_queues(cl, NULL);
+-	mei_cl_unlink(cl);
++	/* Flush queues and remove any pending read unless we have mapped DMA */
++	if (!cl->dma_mapped) {
++		mei_cl_flush_queues(cl, NULL);
++		mei_cl_unlink(cl);
++	}
+ 
+ 	mutex_unlock(&bus->device_lock);
+ 	return err;
+@@ -1054,6 +1114,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
+ 	if (!cldev)
+ 		return;
+ 
++	mei_cl_flush_queues(cldev->cl, NULL);
+ 	mei_me_cl_put(cldev->me_cl);
+ 	mei_dev_bus_put(cldev->bus);
+ 	mei_cl_unlink(cldev->cl);
+diff --git a/drivers/misc/mei/client.c b/drivers/misc/mei/client.c
+index 2cc370adb238..5e71f455db35 100644
+--- a/drivers/misc/mei/client.c
++++ b/drivers/misc/mei/client.c
+@@ -700,6 +700,9 @@ int mei_cl_unlink(struct mei_cl *cl)
+ 
+ 	cl_dbg(dev, cl, "unlink client");
+ 
++	if (cl->state == MEI_FILE_UNINITIALIZED)
++		return 0;
++
+ 	if (dev->open_handle_count > 0)
+ 		dev->open_handle_count--;
+ 
+diff --git a/drivers/misc/mei/hw.h b/drivers/misc/mei/hw.h
+index b10606550613..bc240b88abf1 100644
+--- a/drivers/misc/mei/hw.h
++++ b/drivers/misc/mei/hw.h
+@@ -22,6 +22,11 @@
+ #define MEI_D0I3_TIMEOUT            5  /* D0i3 set/unset max response time */
+ #define MEI_HBM_TIMEOUT             1  /* 1 second */
+ 
++/*
++ * FW page size for DMA allocations
++ */
++#define MEI_FW_PAGE_SIZE 4096UL
++
+ /*
+  * MEI Version
+  */
+diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
+index 07f5ef8fc456..8c8d46ba33bf 100644
+--- a/include/linux/mei_cl_bus.h
++++ b/include/linux/mei_cl_bus.h
+@@ -116,4 +116,7 @@ int mei_cldev_enable(struct mei_cl_device *cldev);
+ int mei_cldev_disable(struct mei_cl_device *cldev);
+ bool mei_cldev_enabled(struct mei_cl_device *cldev);
+ 
++void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size);
++int mei_cldev_dma_unmap(struct mei_cl_device *cldev);
++
+ #endif /* _LINUX_MEI_CL_BUS_H */
+-- 
+2.25.1
 
-Do we know how many genuine bugs -Wstringop-overread-warning has 
-caught or is about to catch?
-
-I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
-until GCC-11 gets fixed?
-
-Thanks,
-
-	Ingo
