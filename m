@@ -5,41 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF72C433EA
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:03:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2C3C433E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B1A0619C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:03:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15055619BD
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231721AbhCVQDj (ORCPT
+        id S231824AbhCVQFF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:03:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51740 "EHLO mail.kernel.org"
+        Mon, 22 Mar 2021 12:05:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52394 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231684AbhCVQDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:03:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C5EBC61992;
-        Mon, 22 Mar 2021 16:03:15 +0000 (UTC)
+        id S231815AbhCVQEQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:04:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 60C55619A7;
+        Mon, 22 Mar 2021 16:04:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429000;
-        bh=3vH1tW/3dz/29rKeu66QIybhctPu7u2aaTt+yHw+ixQ=;
+        s=k20201202; t=1616429056;
+        bh=n4YjjyF/BQX1oLI53brWrn/ZFErJefAlbdz/B6a/LhI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VRbsfgY+z8kWvWs+txugnu/XzSTF1os4UBObTbMaVvuShG2tPdw5ChRNTsdoitI1c
-         Os5gXEmTV19Hh0dH4sglqm/fSEpSE1o+cdD5mtmVZ292EJ017mpHo8q2zl1C63RDvy
-         9IP52tHZwWSskub+gnvqqJxnuA90avLg12n2yst/hTpywQNyH7pGS5SlpLOCg1l1zv
-         SC2S1tGwIlfSqI7YXPTsk7il0mAFtLumFo7AO2H+payHYwT3xe1jEFpNJbjQ5KEMrV
-         fL6MEJv6J7008Lwon/8167XZUtB/IGdDaiFW7a3KldjWew3Xisi5j0MtsrpiR6liOq
-         jy3MXhpKCZK+w==
+        b=PJL0qpPDqSs2z7UPLYK5QVJo9sc76O7NWlWo5JPHSsPqGyDVDF4pF7hWXIkB1JA75
+         QpQt35+7BgO8L8Mn3URqgy3oEgZ8mXFVdUTizaV6t4aX9h9ExQGoEX/rwcyz2jamB2
+         scTuPUkDJISJZufdWGtFTIeZztxCxD3lXQOLujQyrS4sySOSS+Y/vZY+qg8LWnqJQL
+         I/Aimz84KOYue+E+Dz/GzEJ2kjYrLgh/PeozYrKn1GELVG7ePD4iEbNB0WU3el9Rvz
+         crDXO284w80Ehtcr/BjQheDrwVIVIOc3LE73CNZdbBcsVLFqijc8sIiXIjFKbmSQwm
+         LtmW3NkvnLTfA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        x86@kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>, Ning Sun <ning.sun@intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
+        Ning Sun <ning.sun@intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
         Simon Kelley <simon@thekelleys.org.uk>,
         James Smart <james.smart@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -52,15 +52,21 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Ning Sun <ning.sun@intel.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>, Kees Cook <keescook@chromium.org>
-Subject: [PATCH 01/11] x86: compressed: avoid gcc-11 -Wstringop-overread warning
-Date:   Mon, 22 Mar 2021 17:02:39 +0100
-Message-Id: <20210322160253.4032422-2-arnd@kernel.org>
+        Carl Huang <cjhuang@codeaurora.org>,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ritesh Singh <ritesi@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Aloka Dixit <alokad@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 04/11] ath11: Wstringop-overread warning
+Date:   Mon, 22 Mar 2021 17:02:42 +0100
+Message-Id: <20210322160253.4032422-5-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -68,45 +74,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-gcc gets confused by the comparison of a pointer to an integer listeral,
-with the assumption that this is an offset from a NULL pointer and that
-dereferencing it is invalid:
+gcc-11 with the kernel address sanitizer prints a warning for this
+driver:
 
-In file included from arch/x86/boot/compressed/misc.c:18:
-In function ‘parse_elf’,
-    inlined from ‘extract_kernel’ at arch/x86/boot/compressed/misc.c:442:2:
-arch/x86/boot/compressed/../string.h:15:23: error: ‘__builtin_memcpy’ reading 64 bytes from a region of size 0 [-Werror=stringop-overread]
-   15 | #define memcpy(d,s,l) __builtin_memcpy(d,s,l)
-      |                       ^~~~~~~~~~~~~~~~~~~~~~~
-arch/x86/boot/compressed/misc.c:283:9: note: in expansion of macro ‘memcpy’
-  283 |         memcpy(&ehdr, output, sizeof(ehdr));
-      |         ^~~~~~
+In function 'ath11k_peer_assoc_h_vht',
+    inlined from 'ath11k_peer_assoc_prepare' at drivers/net/wireless/ath/ath11k/mac.c:1632:2:
+drivers/net/wireless/ath/ath11k/mac.c:1164:13: error: 'ath11k_peer_assoc_h_vht_masked' reading 16 bytes from a region of size 4 [-Werror=stringop-overread]
+ 1164 |         if (ath11k_peer_assoc_h_vht_masked(vht_mcs_mask))
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/ath/ath11k/mac.c: In function 'ath11k_peer_assoc_prepare':
+drivers/net/wireless/ath/ath11k/mac.c:1164:13: note: referencing argument 1 of type 'const u16 *' {aka 'const short unsigned int *'}
+drivers/net/wireless/ath/ath11k/mac.c:969:1: note: in a call to function 'ath11k_peer_assoc_h_vht_masked'
+  969 | ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-I could not find any good workaround for this, but as this is only
-a warning for a failure during early boot, removing the line entirely
-works around the warning.
+According to analysis from gcc developers, this is a glitch in the
+way gcc tracks the size of struct members. This should really get
+fixed in gcc, but it's also easy to work around this instance
+by changing the function prototype to no include the length of
+the array.
 
-This should probably get addressed in gcc instead, before 11.1 gets
-released.
-
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99673
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/boot/compressed/misc.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/boot/compressed/misc.c b/arch/x86/boot/compressed/misc.c
-index 3a214cc3239f..9ada64e66cb7 100644
---- a/arch/x86/boot/compressed/misc.c
-+++ b/arch/x86/boot/compressed/misc.c
-@@ -430,8 +430,6 @@ asmlinkage __visible void *extract_kernel(void *rmode, memptr heap,
- 		error("Destination address too large");
- #endif
- #ifndef CONFIG_RELOCATABLE
--	if ((unsigned long)output != LOAD_PHYSICAL_ADDR)
--		error("Destination address does not match LOAD_PHYSICAL_ADDR");
- 	if (virt_addr != LOAD_PHYSICAL_ADDR)
- 		error("Destination virtual address changed when not relocatable");
- #endif
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index b391169576e2..5cb7ed53f3c4 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -966,7 +966,7 @@ ath11k_peer_assoc_h_ht_masked(const u8 ht_mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
+ }
+ 
+ static bool
+-ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
++ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[])
+ {
+ 	int nss;
+ 
 -- 
 2.29.2
 
