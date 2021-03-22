@@ -2,41 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D9AEC433E2
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83265C433E4
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:35:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01867619BD
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:08:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45117619A5
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:35:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231764AbhCVQEE (ORCPT
+        id S231962AbhCVQcH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:04:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52134 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231759AbhCVQD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:03:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4428761998;
-        Mon, 22 Mar 2021 16:03:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429036;
-        bh=yFqEt0Vza9xx1ZEH6vpmadF/s9WD+9cr+PvfYFx1jTs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DnY2VvcIHWNR00CmYsS8o9sdpXW8IfqlUTn3pfDogyHxX/SIITlr8SG6GxkT3eSRZ
-         a7K8jLXsPna4Mm190+MpWcuBICb/n+i193Sgx5UJVnr/NQaks4zNGBOOkdJN7kk+Zx
-         IrtL2gHR1/fBjD9NvgLiYwkQqQ/EKWhfodExGrNMHcxDZouSH1dybJZC/EbBnOcXm9
-         XQLG8dt1bjMaDOofLpAx013Fhy9k111G7DuVnc/32l3avRksgUDzsBf0x12znYeUYk
-         RAdBhG+/y/EhxEsBwjpyhm77vbHfFV6Wbj7ETM5qbIRB/4/X2e34tKnfe8hgDnqlGY
-         gToo1OwJ8lpqg==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
+        Mon, 22 Mar 2021 12:32:07 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:57332 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230101AbhCVQbg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:31:36 -0400
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1lONSm-0008Gw-T8; Mon, 22 Mar 2021 16:31:33 +0000
+Date:   Mon, 22 Mar 2021 17:31:31 +0100
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
         Serge Hallyn <serge@hallyn.com>,
-        James Morris <jmorris@namei.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
+        James Morris <jmorris@namei.org>,
+        Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
         Jani Nikula <jani.nikula@linux.intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -52,57 +48,42 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
         "Eric W. Biederman" <ebiederm@xmission.com>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
         Kees Cook <keescook@chromium.org>,
         Miklos Szeredi <mszeredi@redhat.com>,
         Tycho Andersen <tycho@tycho.pizza>
-Subject: [PATCH 03/11] security: commoncap: fix -Wstringop-overread warning
-Date:   Mon, 22 Mar 2021 17:02:41 +0100
-Message-Id: <20210322160253.4032422-4-arnd@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
+Subject: Re: [PATCH 03/11] security: commoncap: fix -Wstringop-overread
+ warning
+Message-ID: <20210322163131.yaovowes2raydgyg@wittgenstein>
 References: <20210322160253.4032422-1-arnd@kernel.org>
+ <20210322160253.4032422-4-arnd@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210322160253.4032422-4-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Mon, Mar 22, 2021 at 05:02:41PM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> gcc-11 introdces a harmless warning for cap_inode_getsecurity:
+> 
+> security/commoncap.c: In function ‘cap_inode_getsecurity’:
+> security/commoncap.c:440:33: error: ‘memcpy’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
+>   440 |                                 memcpy(&nscap->data, &cap->data, sizeof(__le32) * 2 * VFS_CAP_U32);
+>       |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> The problem here is that tmpbuf is initialized to NULL, so gcc assumes
+> it is not accessible unless it gets set by vfs_getxattr_alloc().  This is
+> a legitimate warning as far as I can tell, but the code is correct since
+> it correctly handles the error when that function fails.
+> 
+> Add a separate NULL check to tell gcc about it as well.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-gcc-11 introdces a harmless warning for cap_inode_getsecurity:
-
-security/commoncap.c: In function ‘cap_inode_getsecurity’:
-security/commoncap.c:440:33: error: ‘memcpy’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
-  440 |                                 memcpy(&nscap->data, &cap->data, sizeof(__le32) * 2 * VFS_CAP_U32);
-      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The problem here is that tmpbuf is initialized to NULL, so gcc assumes
-it is not accessible unless it gets set by vfs_getxattr_alloc().  This is
-a legitimate warning as far as I can tell, but the code is correct since
-it correctly handles the error when that function fails.
-
-Add a separate NULL check to tell gcc about it as well.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- security/commoncap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/security/commoncap.c b/security/commoncap.c
-index 28f4d25480df..9a36ed6dd737 100644
---- a/security/commoncap.c
-+++ b/security/commoncap.c
-@@ -400,7 +400,7 @@ int cap_inode_getsecurity(struct user_namespace *mnt_userns,
- 				      &tmpbuf, size, GFP_NOFS);
- 	dput(dentry);
- 
--	if (ret < 0)
-+	if (ret < 0 || !tmpbuf)
- 		return ret;
- 
- 	fs_ns = inode->i_sb->s_user_ns;
--- 
-2.29.2
-
+Seems reasonable,
+Acked-by: Christian Brauner <christian.brauner@ubuntu.com>
