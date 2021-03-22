@@ -2,209 +2,159 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B8B2C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E48C6C433DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 177B861878
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2DD861878
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231338AbhCVUmo (ORCPT
+        id S229647AbhCVUmh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 16:42:44 -0400
+        Mon, 22 Mar 2021 16:42:37 -0400
 Received: from mga12.intel.com ([192.55.52.136]:48250 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229871AbhCVUmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 16:42:16 -0400
-IronPort-SDR: sj75e1hRToIx2MROU+c51FFfkFbWnr5vmG7S8vMRBFJ0+0uomy9PXI0oA8XZsMhVzMvrlRT7v5
- 7c0545ett0uA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="169675992"
+        id S229508AbhCVUmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 16:42:12 -0400
+IronPort-SDR: akcaIaEEvYRM0Dlc6nvzbJRm6fY+xKJZ6R+Sw4wz//4sGaXxxvu2P/GXI3BShqSBVpxqheTdFk
+ XhbCJCXWSMYQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="169675982"
 X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="169675992"
+   d="scan'208";a="169675982"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:16 -0700
-IronPort-SDR: OWbghX5DdfW1vhX3IHgzelJfCMo1la/gEKCGsSCRP+BsSf35niRbLBazaBDHKg7jJqgfA8VBM5
- zv8KM9P7scGg==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:11 -0700
+IronPort-SDR: k3iMo1FwPLxJnXms+oHPU6ySxYxJfjQMSm5r7g68oyVezjVdpvDcscYqPtg4mnhOdZXDCIc0/g
+ 0OaljXJg7yVQ==
 X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="407978342"
+   d="scan'208";a="407978305"
 Received: from isutskov-mobl.ger.corp.intel.com (HELO egrumbac-mobl1.lan) ([10.251.189.99])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:13 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:08 -0700
 From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To:     kvalo@codeaurora.org
 Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        luca@coelho.fi, Alexander Usyskin <alexander.usyskin@intel.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/5] mei: bus: add client dma interface
-Date:   Mon, 22 Mar 2021 22:41:52 +0200
-Message-Id: <20210322204157.102078-3-emmanuel.grumbach@intel.com>
+        luca@coelho.fi, Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 0/5] Add support for AMT over WLAN
+Date:   Mon, 22 Mar 2021 22:41:50 +0200
+Message-Id: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
-References: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alexander Usyskin <alexander.usyskin@intel.com>
+This patch series adds support for AMT over WLAN.
+Information about Intel Active Management Technology is
+available on the net, but in a nutshell, it is an application
+running on an embedded CPU in the chipset. This application
+can provide remote control to the system even when no OS is,
+present or not even installed. By control, we mean, KVM,
+the possibility to attach a remote driver, power up / down
+/ reset the machine and other options.
 
-Expose the client dma mapping via mei client bus interface.
-The client dma has to be mapped before the device is enabled,
-therefore we need to create device linking already during mapping
-and we need to unmap after the client is disable hence we need to
-postpone the unlink and flush till unmapping or when
-destroying the device.
+When the host uses wireless, the embedded CPU can't access
+the wireless device and hence, the traffic for AMT must be
+routed through the host. The AMT <-> WLAN driver interface
+is explained at lengh inside the patches. Basically, there
+is a memory region that is mapped to a PCI devices that can
+read / write to that memory and sends the data to the embedded
+CPU. The driver for this PCI device is mei. We needed to add
+code for that driver, those patches are in this series and
+need to be routed through wireless-drivers tree as requested
+by Greg KH.
+There is also a cfg80211 patch that I should have sent earlier
+to Johannes. I include this here. Hopefully, it'll not cause
+trouble.
 
-Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
-Co-developed-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/misc/mei/bus.c     | 67 ++++++++++++++++++++++++++++++++++++--
- drivers/misc/mei/client.c  |  3 ++
- drivers/misc/mei/hw.h      |  5 +++
- include/linux/mei_cl_bus.h |  3 ++
- 4 files changed, 75 insertions(+), 3 deletions(-)
+Note about how to use this new feature:
+In order to fully use this new feature, we need to add a few
+vendor commands that are not included in this series. The
+upstream process for those commands will take some more time
+but it is definitely planned. The motivation to use vendor
+commands as opposed to regular nl80211 APIs is that we do not
+expect any other vendor to need similar APIs. We had no control
+on the AMT APIs and this is why we needed to add vendor commands
+for flows that differ just a tiny bit from the regular flow. For
+example, AMT needs to know when we are associated, but it
+requires to know whether we are associated in WPA or in WPA2.
+This is not known to the kernel, so we, unfortunately, had
+to add a vendor command for this. This is just an example.
 
-diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
-index 935acc6bbf3c..7a325572ad1d 100644
---- a/drivers/misc/mei/bus.c
-+++ b/drivers/misc/mei/bus.c
-@@ -643,6 +643,64 @@ static void mei_cl_bus_vtag_free(struct mei_cl_device *cldev)
- 	kfree(cl_vtag);
- }
- 
-+void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size)
-+{
-+	struct mei_device *bus;
-+	struct mei_cl *cl;
-+	int ret;
-+
-+	if (!cldev || !buffer_id || !size)
-+		return ERR_PTR(-EINVAL);
-+
-+	if (!IS_ALIGNED(size, MEI_FW_PAGE_SIZE)) {
-+		dev_err(&cldev->dev, "Map size should be aligned to %lu\n",
-+			MEI_FW_PAGE_SIZE);
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	cl = cldev->cl;
-+	bus = cldev->bus;
-+
-+	mutex_lock(&bus->device_lock);
-+	if (cl->state == MEI_FILE_UNINITIALIZED) {
-+		ret = mei_cl_link(cl);
-+		if (ret)
-+			goto out;
-+		/* update pointers */
-+		cl->cldev = cldev;
-+	}
-+
-+	ret = mei_cl_dma_alloc_and_map(cl, NULL, buffer_id, size);
-+out:
-+	mutex_unlock(&bus->device_lock);
-+	if (ret)
-+		return ERR_PTR(ret);
-+	return cl->dma.vaddr;
-+}
-+EXPORT_SYMBOL_GPL(mei_cldev_dma_map);
-+
-+int mei_cldev_dma_unmap(struct mei_cl_device *cldev)
-+{
-+	struct mei_device *bus;
-+	struct mei_cl *cl;
-+	int ret;
-+
-+	if (!cldev)
-+		return -EINVAL;
-+
-+	cl = cldev->cl;
-+	bus = cldev->bus;
-+
-+	mutex_lock(&bus->device_lock);
-+	ret = mei_cl_dma_unmap(cl, NULL);
-+
-+	mei_cl_flush_queues(cl, NULL);
-+	mei_cl_unlink(cl);
-+	mutex_unlock(&bus->device_lock);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mei_cldev_dma_unmap);
-+
- /**
-  * mei_cldev_enable - enable me client device
-  *     create connection with me client
-@@ -753,9 +811,11 @@ int mei_cldev_disable(struct mei_cl_device *cldev)
- 		dev_err(bus->dev, "Could not disconnect from the ME client\n");
- 
- out:
--	/* Flush queues and remove any pending read */
--	mei_cl_flush_queues(cl, NULL);
--	mei_cl_unlink(cl);
-+	/* Flush queues and remove any pending read unless we have mapped DMA */
-+	if (!cl->dma_mapped) {
-+		mei_cl_flush_queues(cl, NULL);
-+		mei_cl_unlink(cl);
-+	}
- 
- 	mutex_unlock(&bus->device_lock);
- 	return err;
-@@ -1054,6 +1114,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
- 	if (!cldev)
- 		return;
- 
-+	mei_cl_flush_queues(cldev->cl, NULL);
- 	mei_me_cl_put(cldev->me_cl);
- 	mei_dev_bus_put(cldev->bus);
- 	mei_cl_unlink(cldev->cl);
-diff --git a/drivers/misc/mei/client.c b/drivers/misc/mei/client.c
-index 2cc370adb238..5e71f455db35 100644
---- a/drivers/misc/mei/client.c
-+++ b/drivers/misc/mei/client.c
-@@ -700,6 +700,9 @@ int mei_cl_unlink(struct mei_cl *cl)
- 
- 	cl_dbg(dev, cl, "unlink client");
- 
-+	if (cl->state == MEI_FILE_UNINITIALIZED)
-+		return 0;
-+
- 	if (dev->open_handle_count > 0)
- 		dev->open_handle_count--;
- 
-diff --git a/drivers/misc/mei/hw.h b/drivers/misc/mei/hw.h
-index b10606550613..bc240b88abf1 100644
---- a/drivers/misc/mei/hw.h
-+++ b/drivers/misc/mei/hw.h
-@@ -22,6 +22,11 @@
- #define MEI_D0I3_TIMEOUT            5  /* D0i3 set/unset max response time */
- #define MEI_HBM_TIMEOUT             1  /* 1 second */
- 
-+/*
-+ * FW page size for DMA allocations
-+ */
-+#define MEI_FW_PAGE_SIZE 4096UL
-+
- /*
-  * MEI Version
-  */
-diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
-index 07f5ef8fc456..8c8d46ba33bf 100644
---- a/include/linux/mei_cl_bus.h
-+++ b/include/linux/mei_cl_bus.h
-@@ -116,4 +116,7 @@ int mei_cldev_enable(struct mei_cl_device *cldev);
- int mei_cldev_disable(struct mei_cl_device *cldev);
- bool mei_cldev_enabled(struct mei_cl_device *cldev);
- 
-+void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size);
-+int mei_cldev_dma_unmap(struct mei_cl_device *cldev);
-+
- #endif /* _LINUX_MEI_CL_BUS_H */
+Integration with the connection manager is required to be able
+to use this new feature.
+In case the device is controlled by AMT and is actively used
+by AMT, AMT will not release the device. To properly reflect
+this state, we report hardware RF-Kill to the stack, but we
+add a reason saying that we do not own the device. The
+connection manager can then check what AP AMT is connected to
+and signal to AMT that it can ensure the connetion to that
+same AP can be kept. AMT will then release the device allowing
+the host to connect to that AP. Doing this transition fast
+enough will allow not to break the TCP connections that AMT
+maintains.
+
+I worked with Ayala Beker on the iwlwifi part of this feature.
+
+Please do not apply those patches, they'll be part of a regular
+pull request from Luca.
+
+Johannes, feel free to pick the cfg80211 patch although then, it
+will require to merge mac80211-next into wireless-drivers-next so
+maybe it's better to route it through Kalle as well?
+
+Alexander Usyskin (1):
+  mei: bus: add client dma interface
+
+Emmanuel Grumbach (3):
+  cfg80211: allow to specifying a reason for hw_rfkill
+  iwlwifi: mei: add the driver to allow cooperation with CSME
+  iwlwifi: integrate with iwlmei
+
+Tomas Winkler (1):
+  mei: allow map and unmap of client dma buffer only for disconnected
+    client
+
+ drivers/misc/mei/bus.c                        |   67 +-
+ drivers/misc/mei/client.c                     |   20 +-
+ drivers/misc/mei/hw.h                         |    5 +
+ drivers/net/wireless/intel/iwlwifi/Kconfig    |   13 +
+ drivers/net/wireless/intel/iwlwifi/Makefile   |    2 +
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |   61 +
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.h    |   11 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |    2 +
+ .../net/wireless/intel/iwlwifi/mei/Makefile   |    8 +
+ .../net/wireless/intel/iwlwifi/mei/internal.h |   20 +
+ .../net/wireless/intel/iwlwifi/mei/iwl-mei.h  |  440 ++++
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 2026 +++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mei/net.c  |  409 ++++
+ drivers/net/wireless/intel/iwlwifi/mei/sap.h  |  736 ++++++
+ .../wireless/intel/iwlwifi/mei/trace-data.h   |   69 +
+ .../net/wireless/intel/iwlwifi/mei/trace.c    |   15 +
+ .../net/wireless/intel/iwlwifi/mei/trace.h    |   62 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |    3 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   42 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   70 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  208 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |    7 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |   25 +
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |   16 +-
+ include/linux/mei_cl_bus.h                    |    3 +
+ include/net/cfg80211.h                        |   11 +-
+ net/wireless/core.c                           |    7 +-
+ 27 files changed, 4322 insertions(+), 36 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/Makefile
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/internal.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/main.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/net.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/sap.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/trace.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mei/trace.h
+
 -- 
 2.25.1
 
