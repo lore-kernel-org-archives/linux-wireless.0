@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE85C433E2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4997C433E3
 	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49A4261878
+	by mail.kernel.org (Postfix) with ESMTP id 7D31B61998
 	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 20:43:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231565AbhCVUmq (ORCPT
+        id S231709AbhCVUmt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 16:42:46 -0400
+        Mon, 22 Mar 2021 16:42:49 -0400
 Received: from mga12.intel.com ([192.55.52.136]:48250 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230205AbhCVUmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 16:42:21 -0400
-IronPort-SDR: ELuwW2B545UsncQ7d70/gZI4Rac347wVT7R0r5j2+ant6mlQHHdFw5ZSzLfx0jjN3JIid2nA/v
- F5YtJlDaULFA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="169675996"
+        id S229692AbhCVUm0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 16:42:26 -0400
+IronPort-SDR: gs7NLhheOmf/Ri27FexvxcYz55jn882geeQJ5XI5vv4yC+8B38flw7M7nX120LVXwkUDlXiN7f
+ OTfYGcRg+krw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="169676009"
 X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="169675996"
+   d="scan'208";a="169676009"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:21 -0700
-IronPort-SDR: fBuVVoGWmvL7f1UnfR716w/cRKJztfIBWbxaSxlbgMbFf7Yv3zxHmC1a6NEWMBmyHsaK0b5kzJ
- kDEWzhIv9wtg==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:25 -0700
+IronPort-SDR: rRhENhJmgJe9hIQnEVcvj2AnDrXDkoI4OrDyfFGBuv+cmR6nBYTQO8MggPUh+WJKSmWTSSp9Mo
+ EIWfh6Yvs7kA==
 X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="407978368"
+   d="scan'208";a="407978395"
 Received: from isutskov-mobl.ger.corp.intel.com (HELO egrumbac-mobl1.lan) ([10.251.189.99])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:18 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 13:42:23 -0700
 From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To:     kvalo@codeaurora.org
 Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        luca@coelho.fi, Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/4] iwlwifi: mei: add the driver to allow cooperation with CSME
-Date:   Mon, 22 Mar 2021 22:41:54 +0200
-Message-Id: <20210322204157.102078-5-emmanuel.grumbach@intel.com>
+        luca@coelho.fi, Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Ayala Beker <ayala.beker@intel.com>
+Subject: [PATCH 4/5] iwlwifi: mei: add the driver to allow cooperation with CSME
+Date:   Mon, 22 Mar 2021 22:41:56 +0200
+Message-Id: <20210322204157.102078-7-emmanuel.grumbach@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
 References: <20210322204157.102078-1-emmanuel.grumbach@intel.com>
@@ -53,9 +54,7 @@ iwlmei is a driver that handles the communication with the
 Wireless driver of the CSME firmware.
 More details in the documentation included in this patch.
 
-type=feature
-ticket=none
-
+Co-Developed-by: Ayala Beker <ayala.beker@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
  drivers/net/wireless/intel/iwlwifi/Kconfig    |   13 +
