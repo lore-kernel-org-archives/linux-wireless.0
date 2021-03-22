@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66449C433EC
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F47C433E6
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27D3C619B4
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:05:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70648619B5
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Mar 2021 16:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230159AbhCVQFG (ORCPT
+        id S230154AbhCVQFq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:05:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52588 "EHLO mail.kernel.org"
+        Mon, 22 Mar 2021 12:05:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52810 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231455AbhCVQEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:04:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DD9F06199F;
-        Mon, 22 Mar 2021 16:04:31 +0000 (UTC)
+        id S231801AbhCVQFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:05:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2816A619AD;
+        Mon, 22 Mar 2021 16:05:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429077;
-        bh=yAy/I3E6cDxsmlVnV0YJAH5ZEQIRtNmu4zak4TbdMtM=;
+        s=k20201202; t=1616429107;
+        bh=hZ+CAtng3yIYZIb+ah3e8qtw8iX8HVHsX0ExOcLMkVU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UB5shkw7Yd4R5EAaTaJbKCgGMQHdzM6i80uoGxhNLAKr58/Z+hb/X02iDZFbFM5q7
-         ohBr0mnuKE2zD2dZIPp5mGV/8upXxQjJIfPGJp9PdMs6uae5VNAC7zYBRMfKWnHX2T
-         dVcWKQocYTTmbDcT2P/QpYMSgUNzpEBC5mOFpZCLPDNYvMuLPWfLzgAFpKC9vWx2UV
-         WcW6Gm/cjDbzo+bVOJsKrlf8DWJ6XKsV5KO6yCyvx8yAazXnd03HJIpEKsAL1WBIyL
-         rctKK7FEjfv0XP7F/8O3bxyOq6H75TM+jdZPPW1bjsoXOWVbf0YQRUVNLoyOj2UQzP
-         uTGmECN+tjDoA==
+        b=dwkY1GeSKE6uqnx1AxEi3VFdRhYPg81cUVXGmS7VFECNmiWnHG9H8Xs03DE5r5UkI
+         2VYRrKWZEbiYE/8Go+UBgggdeU5IHX8PCQyERsMz4uhXvD8S/WDGEhcAqel5lYAhxx
+         GH5OrCzsuWJ7MemQavOxq36ZBrGw8QsN0rHVPucenBu12gisEUNifGSz6+0j2xJ9ZZ
+         bEVaUqft+/YBHP8/oDZqfcdvztMrcHT8BJQ3udH192n6G7X4gUnHIGCuLP1ptF/QU4
+         TnlXa1Qe8PUzWprVm8njgDc/yGpNfz20AWAFmYDGGOfZtOuyJUs4ZC7Fgr12Ezshk/
+         OxLRDx1pnNY1A==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
+        Simon Kelley <simon@thekelleys.org.uk>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         Ning Sun <ning.sun@intel.com>,
         Jani Nikula <jani.nikula@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
         James Smart <james.smart@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>,
+        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
         Serge Hallyn <serge@hallyn.com>,
         Imre Deak <imre.deak@intel.com>,
         linux-arm-kernel@lists.infradead.org,
@@ -52,20 +52,17 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
         linux-security-module@vger.kernel.org,
-        Roman Gushchin <guro@fb.com>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Andrii Nakryiko <andriin@fb.com>, Odin Ugedal <odin@uged.al>,
-        Cong Wang <xiyou.wangcong@gmail.com>,
-        =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-        Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Subject: [PATCH 06/11] cgroup: fix -Wzero-length-bounds warnings
-Date:   Mon, 22 Mar 2021 17:02:44 +0100
-Message-Id: <20210322160253.4032422-7-arnd@kernel.org>
+        Lee Jones <lee.jones@linaro.org>,
+        Pascal Terjan <pterjan@google.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH 08/11] atmel: avoid gcc -Wstringop-overflow warning
+Date:   Mon, 22 Mar 2021 17:02:46 +0100
+Message-Id: <20210322160253.4032422-9-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -73,98 +70,74 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-When cgroups are enabled, but every single subsystem is turned off,
-CGROUP_SUBSYS_COUNT is zero, and the cgrp->subsys[] array has no
-members.
+gcc-11 notices that the fields as defined in the ass_req_format
+structure do not match the actual use of that structure:
 
-gcc-11 points out that this leads to an invalid access in any function
-that might access this array:
+cc1: error: writing 4 bytes into a region of size between 18446744073709551613 and 2 [-Werror=stringop-overflow=]
+drivers/net/wireless/atmel/atmel.c:2884:20: note: at offset [4, 6] into destination object ‘ap’ of size 6
+ 2884 |                 u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+      |                    ^~
+drivers/net/wireless/atmel/atmel.c:2885:20: note: at offset [4, 6] into destination object ‘ssid_el_id’ of size 1
+ 2885 |                 u8 ssid_el_id;
+      |                    ^~~~~~~~~~
 
-kernel/cgroup/cgroup.c: In function 'cgroup_addrm_files':
-kernel/cgroup/cgroup.c:460:58: warning: array subscript '<unknown>' is outside the bounds of an interior zero-length array 'struct cgroup_subsys_state *[0]' [-Wzero-length-bounds]
-kernel/cgroup/cgroup.c:460:24: note: in expansion of macro 'rcu_dereference_check'
-  460 |                 return rcu_dereference_check(cgrp->subsys[ss->id],
-      |                        ^~~~~~~~~~~~~~~~~~~~~
-In file included from include/linux/cgroup.h:28,
-                 from kernel/cgroup/cgroup-internal.h:5,
-                 from kernel/cgroup/cgroup.c:31:
-include/linux/cgroup-defs.h:422:43: note: while referencing 'subsys'
-  422 |         struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
-
-I'm not sure what is expected to happen for such a configuration,
-presumably these functions are never calls in that case. Adding a
-sanity check in each function we get the warning for manages to shut
-up the warnings and do nothing instead.
+This is expected here because the actual structure layout is variable.
+As the code does not actually access the individual fields, replace
+them with a comment and fixed-length array so prevent gcc from
+complaining about it.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-I'm grouping this together with the -Wstringop-overread warnings,
-since the underlying logic in gcc seems to be the same.
----
- kernel/cgroup/cgroup.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ drivers/net/wireless/atmel/atmel.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5cc6..3477f1dc7872 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -456,7 +456,7 @@ static u16 cgroup_ss_mask(struct cgroup *cgrp)
- static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
- 					      struct cgroup_subsys *ss)
- {
--	if (ss)
-+	if (ss && (CGROUP_SUBSYS_COUNT > 0))
- 		return rcu_dereference_check(cgrp->subsys[ss->id],
- 					lockdep_is_held(&cgroup_mutex));
- 	else
-@@ -534,6 +534,9 @@ struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
- {
- 	struct cgroup_subsys_state *css;
+diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+index 707fe66727f8..ff9152d600e1 100644
+--- a/drivers/net/wireless/atmel/atmel.c
++++ b/drivers/net/wireless/atmel/atmel.c
+@@ -2881,13 +2881,18 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
+ 	struct ass_req_format {
+ 		__le16 capability;
+ 		__le16 listen_interval;
+-		u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+-		u8 ssid_el_id;
+-		u8 ssid_len;
+-		u8 ssid[MAX_SSID_LENGTH];
+-		u8 sup_rates_el_id;
+-		u8 sup_rates_len;
+-		u8 rates[4];
++		u8 ssid_el[ETH_ALEN + 2 + MAX_SSID_LENGTH + 2 + 4];
++		/*
++		 * nothing after here directly accessible:
++		 *
++		 * u8 ap[ETH_ALEN];
++		 * u8 ssid_el_id;
++		 * u8 ssid_len;
++		 * u8 ssid[MAX_SSID_LENGTH];
++		 * u8 sup_rates_el_id;
++		 * u8 sup_rates_len;
++		 * u8 rates[4];
++		 */
+ 	} body;
  
-+	if (CGROUP_SUBSYS_COUNT == 0)
-+		return NULL;
-+
- 	do {
- 		css = cgroup_css(cgrp, ss);
+ 	header.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+@@ -2907,13 +2912,13 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
  
-@@ -561,6 +564,9 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
- {
- 	struct cgroup_subsys_state *css;
+ 	body.listen_interval = cpu_to_le16(priv->listen_interval * priv->beacon_period);
  
-+	if (CGROUP_SUBSYS_COUNT == 0)
-+		return NULL;
-+
- 	rcu_read_lock();
++	ssid_el_p = body.ssid_el;
+ 	/* current AP address - only in reassoc frame */
+ 	if (is_reassoc) {
+-		memcpy(body.ap, priv->CurrentBSSID, ETH_ALEN);
+-		ssid_el_p = &body.ssid_el_id;
++		memcpy(ssid_el_p, priv->CurrentBSSID, ETH_ALEN);
++		ssid_el_p += ETH_ALEN;
+ 		bodysize = 18 + priv->SSID_size;
+ 	} else {
+-		ssid_el_p = &body.ap[0];
+ 		bodysize = 12 + priv->SSID_size;
+ 	}
  
- 	do {
-@@ -630,7 +636,7 @@ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- 	 * the matching css from the cgroup's subsys table is guaranteed to
- 	 * be and stay valid until the enclosing operation is complete.
- 	 */
--	if (cft->ss)
-+	if (cft->ss && CGROUP_SUBSYS_COUNT > 0)
- 		return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
- 	else
- 		return &cgrp->self;
-@@ -2343,6 +2349,9 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
- 	struct css_set *cset = tset->cur_cset;
- 	struct task_struct *task = tset->cur_task;
- 
-+	if (CGROUP_SUBSYS_COUNT == 0)
-+		return NULL;
-+
- 	while (&cset->mg_node != tset->csets) {
- 		if (!task)
- 			task = list_first_entry(&cset->mg_tasks,
-@@ -4523,7 +4532,7 @@ void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
- 	it->ss = css->ss;
- 	it->flags = flags;
- 
--	if (it->ss)
-+	if (it->ss && CGROUP_SUBSYS_COUNT > 0)
- 		it->cset_pos = &css->cgroup->e_csets[css->ss->id];
- 	else
- 		it->cset_pos = &css->cgroup->cset_links;
 -- 
 2.29.2
 
