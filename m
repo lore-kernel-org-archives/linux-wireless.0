@@ -7,63 +7,68 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E89C433E4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 801F1C433E2
 	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 751A0619C9
+	by mail.kernel.org (Postfix) with ESMTP id 5C8E761A2D
 	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230138AbhCZK5w (ORCPT
+        id S230095AbhCZK5u (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Mar 2021 06:57:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43384 "EHLO
+        Fri, 26 Mar 2021 06:57:50 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43372 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230051AbhCZK52 (ORCPT
+        with ESMTP id S229528AbhCZK51 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Mar 2021 06:57:28 -0400
+        Fri, 26 Mar 2021 06:57:27 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lPk9d-0003Gc-WF; Fri, 26 Mar 2021 12:57:27 +0200
+        id 1lPk9c-0003Gc-Cb; Fri, 26 Mar 2021 12:57:25 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 26 Mar 2021 12:57:19 +0200
-Message-Id: <iwlwifi.20210326125611.30b622037714.Id9fd709cf1c8261c097bbfd7453f6476077dcafc@changeid>
+Date:   Fri, 26 Mar 2021 12:57:17 +0200
+Message-Id: <iwlwifi.20210326125611.6d28516b59cd.Id0248d5e4662695254f49ce37b0268834ed52918@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210326105723.211843-1-luca@coelho.fi>
 References: <20210326105723.211843-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 for v5.12 3/7] iwlwifi: add support for Qu with AX201 device
+Subject: [PATCH v2 for v5.12 1/7] iwlwifi: fix 11ax disabled bit in the regulatory capability flags
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Matt Chen <matt.chen@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Add this specific Samsung AX201 sku to driver so it can be
-detected and initialized successfully.
+When version 2 of the regulatory capability flags API was implemented,
+the flag to disable 11ax was defined as bit 13, but this was later
+changed and the bit remained as bit 10, like in version 1.  This was
+never changed in the driver, so we were checking for the wrong bit in
+newer devices.  Fix it.
 
-Signed-off-by: Matt Chen <matt.chen@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: e27c506a985c ("iwlwifi: regulatory: regulatory capabilities api change")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index ffaf973dae94..4e2219b46db2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -592,6 +592,7 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 	IWL_DEV_INFO(0x4DF0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0, NULL),
- 	IWL_DEV_INFO(0x4DF0, 0x2074, iwl_ax201_cfg_qu_hr, NULL),
- 	IWL_DEV_INFO(0x4DF0, 0x4070, iwl_ax201_cfg_qu_hr, NULL),
-+	IWL_DEV_INFO(0x4DF0, 0x6074, iwl_ax201_cfg_qu_hr, NULL),
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index af684f80b0cc..c5a1e84dc1ab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -232,7 +232,7 @@ enum iwl_reg_capa_flags_v2 {
+ 	REG_CAPA_V2_MCS_9_ALLOWED	= BIT(6),
+ 	REG_CAPA_V2_WEATHER_DISABLED	= BIT(7),
+ 	REG_CAPA_V2_40MHZ_ALLOWED	= BIT(8),
+-	REG_CAPA_V2_11AX_DISABLED	= BIT(13),
++	REG_CAPA_V2_11AX_DISABLED	= BIT(10),
+ };
  
- 	/* So with HR */
- 	IWL_DEV_INFO(0x2725, 0x0090, iwlax211_2ax_cfg_so_gf_a0, NULL),
+ /*
 -- 
 2.31.0
 
