@@ -7,68 +7,100 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 801F1C433E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16675C433EA
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C8E761A2D
+	by mail.kernel.org (Postfix) with ESMTP id D18A361A38
 	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230095AbhCZK5u (ORCPT
+        id S230192AbhCZK5z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Mar 2021 06:57:50 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43372 "EHLO
+        Fri, 26 Mar 2021 06:57:55 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43390 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229528AbhCZK51 (ORCPT
+        with ESMTP id S230056AbhCZK53 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Mar 2021 06:57:27 -0400
+        Fri, 26 Mar 2021 06:57:29 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lPk9c-0003Gc-Cb; Fri, 26 Mar 2021 12:57:25 +0200
+        id 1lPk9e-0003Gc-N2; Fri, 26 Mar 2021 12:57:28 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 26 Mar 2021 12:57:17 +0200
-Message-Id: <iwlwifi.20210326125611.6d28516b59cd.Id0248d5e4662695254f49ce37b0268834ed52918@changeid>
+Date:   Fri, 26 Mar 2021 12:57:20 +0200
+Message-Id: <iwlwifi.20210326125611.c3b2e3d6b58b.Ic56f351d04674df70567bab0269cba91bdbc853c@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210326105723.211843-1-luca@coelho.fi>
 References: <20210326105723.211843-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 for v5.12 1/7] iwlwifi: fix 11ax disabled bit in the regulatory capability flags
+Subject: [PATCH v2 for v5.12 4/7] iwlwifi: fw: fix notification wait locking
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When version 2 of the regulatory capability flags API was implemented,
-the flag to disable 11ax was defined as bit 13, but this was later
-changed and the bit remained as bit 10, like in version 1.  This was
-never changed in the driver, so we were checking for the wrong bit in
-newer devices.  Fix it.
+Since we now call iwl_notification_wait_notify() from the
+NAPI poll in soft-IRQ, we get a (valid) lockdep complaint
+that we could get a deadlock by taking the spinlock from
+sleeping context and then getting the soft-IRQ that also
+tries to take it (in NAPI polling).
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Fixes: e27c506a985c ("iwlwifi: regulatory: regulatory capabilities api change")
+Fix this by disabling soft-IRQs for this lock.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 25edc8f259c7 ("iwlwifi: pcie: properly implement NAPI")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index af684f80b0cc..c5a1e84dc1ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -232,7 +232,7 @@ enum iwl_reg_capa_flags_v2 {
- 	REG_CAPA_V2_MCS_9_ALLOWED	= BIT(6),
- 	REG_CAPA_V2_WEATHER_DISABLED	= BIT(7),
- 	REG_CAPA_V2_40MHZ_ALLOWED	= BIT(8),
--	REG_CAPA_V2_11AX_DISABLED	= BIT(13),
-+	REG_CAPA_V2_11AX_DISABLED	= BIT(10),
- };
- 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+index 3dbc6f3f92cc..231d2517f398 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
+- * Copyright (C) 2005-2014 Intel Corporation
++ * Copyright (C) 2005-2014, 2021 Intel Corporation
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+ #include <linux/sched.h>
+@@ -26,7 +26,7 @@ bool iwl_notification_wait(struct iwl_notif_wait_data *notif_wait,
+ 	if (!list_empty(&notif_wait->notif_waits)) {
+ 		struct iwl_notification_wait *w;
+ 
+-		spin_lock(&notif_wait->notif_wait_lock);
++		spin_lock_bh(&notif_wait->notif_wait_lock);
+ 		list_for_each_entry(w, &notif_wait->notif_waits, list) {
+ 			int i;
+ 			bool found = false;
+@@ -59,7 +59,7 @@ bool iwl_notification_wait(struct iwl_notif_wait_data *notif_wait,
+ 				triggered = true;
+ 			}
+ 		}
+-		spin_unlock(&notif_wait->notif_wait_lock);
++		spin_unlock_bh(&notif_wait->notif_wait_lock);
+ 	}
+ 
+ 	return triggered;
+@@ -70,10 +70,10 @@ void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_wait)
+ {
+ 	struct iwl_notification_wait *wait_entry;
+ 
+-	spin_lock(&notif_wait->notif_wait_lock);
++	spin_lock_bh(&notif_wait->notif_wait_lock);
+ 	list_for_each_entry(wait_entry, &notif_wait->notif_waits, list)
+ 		wait_entry->aborted = true;
+-	spin_unlock(&notif_wait->notif_wait_lock);
++	spin_unlock_bh(&notif_wait->notif_wait_lock);
+ 
+ 	wake_up_all(&notif_wait->notif_waitq);
+ }
 -- 
 2.31.0
 
