@@ -2,92 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FF80C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E89C433E4
 	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12E6E619C9
+	by mail.kernel.org (Postfix) with ESMTP id 751A0619C9
 	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230003AbhCZK5t (ORCPT
+        id S230138AbhCZK5w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Mar 2021 06:57:49 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43366 "EHLO
+        Fri, 26 Mar 2021 06:57:52 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43384 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230041AbhCZK50 (ORCPT
+        with ESMTP id S230051AbhCZK52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Mar 2021 06:57:26 -0400
+        Fri, 26 Mar 2021 06:57:28 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lPk9b-0003Gc-JV; Fri, 26 Mar 2021 12:57:25 +0200
+        id 1lPk9d-0003Gc-WF; Fri, 26 Mar 2021 12:57:27 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 26 Mar 2021 12:57:16 +0200
-Message-Id: <20210326105723.211843-1-luca@coelho.fi>
+Date:   Fri, 26 Mar 2021 12:57:19 +0200
+Message-Id: <iwlwifi.20210326125611.30b622037714.Id9fd709cf1c8261c097bbfd7453f6476077dcafc@changeid>
 X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20210326105723.211843-1-luca@coelho.fi>
+References: <20210326105723.211843-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 for v5.12 0/7] iwlwifi: fixes intended for v5.12 2021-03-26 v2
+Subject: [PATCH v2 for v5.12 3/7] iwlwifi: add support for Qu with AX201 device
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Matt Chen <matt.chen@intel.com>
 
-Hi,
+Add this specific Samsung AX201 sku to driver so it can be
+detected and initialized successfully.
 
-This is the v2 of the first patchset with fixes for v5.12.  This new version
-removes the Change-Id tags that mistakenly got out.
+Signed-off-by: Matt Chen <matt.chen@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-The changes are:
-
-* A few locking fixes;
-* Fix a workaround for devices of the 22000 family;
-* Fix the position of a bit in the regulatory capabilities;
-* Add support to some devices that were missing.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot.  And
-since these are fixes for the rc series, please take them directly to
-wireless-drivers.git, as we agreed.  I'll assign them to you.
-
-Cheers,
-Luca.
-
-
-Gregory Greenman (1):
-  mvm: rfi: don't lock mvm->mutex when sending config command
-
-Johannes Berg (3):
-  iwlwifi: pcie: properly set LTR workarounds on 22000 devices
-  iwlwifi: fw: fix notification wait locking
-  iwlwifi: mvm: fix beacon protection checks
-
-Luca Coelho (2):
-  iwlwifi: fix 11ax disabled bit in the regulatory capability flags
-  iwlwifi: pcie: add support for So-F devices
-
-Matt Chen (1):
-  iwlwifi: add support for Qu with AX201 device
-
- .../wireless/intel/iwlwifi/fw/notif-wait.c    | 10 +++---
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  2 +-
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  7 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rfi.c  |  6 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 17 ++++++---
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 31 +---------------
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |  3 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 27 +++++++++++++-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 35 +++++++++++++++++++
- 10 files changed, 90 insertions(+), 49 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index ffaf973dae94..4e2219b46db2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -592,6 +592,7 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x4DF0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0, NULL),
+ 	IWL_DEV_INFO(0x4DF0, 0x2074, iwl_ax201_cfg_qu_hr, NULL),
+ 	IWL_DEV_INFO(0x4DF0, 0x4070, iwl_ax201_cfg_qu_hr, NULL),
++	IWL_DEV_INFO(0x4DF0, 0x6074, iwl_ax201_cfg_qu_hr, NULL),
+ 
+ 	/* So with HR */
+ 	IWL_DEV_INFO(0x2725, 0x0090, iwlax211_2ax_cfg_so_gf_a0, NULL),
 -- 
 2.31.0
 
