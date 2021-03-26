@@ -7,136 +7,101 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A99C433E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 09:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C273C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:31:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 380D161A49
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 09:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5D5861A48
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:31:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230106AbhCZJWP (ORCPT
+        id S229580AbhCZKan (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Mar 2021 05:22:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:54391 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230163AbhCZJWC (ORCPT
+        Fri, 26 Mar 2021 06:30:43 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43316 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230105AbhCZKam (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Mar 2021 05:22:02 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 12Q9LsXoA032609, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmbs04.realtek.com.tw[172.21.6.97])
-        by rtits2.realtek.com.tw (8.15.2/2.70/5.88) with ESMTPS id 12Q9LsXoA032609
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 26 Mar 2021 17:21:54 +0800
-Received: from localhost (172.21.69.146) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 26 Mar
- 2021 17:21:54 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
-Subject: [PATCH] rtw88: update statistics to fw for fine-tuning performance
-Date:   Fri, 26 Mar 2021 17:21:47 +0800
-Message-ID: <20210326092147.30252-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.21.0
+        Fri, 26 Mar 2021 06:30:42 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <luca@coelho.fi>)
+        id 1lPjjj-0003EY-3B; Fri, 26 Mar 2021 12:30:40 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 26 Mar 2021 12:30:32 +0200
+Message-Id: <20210326103035.206088-5-luca@coelho.fi>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20210326103035.206088-1-luca@coelho.fi>
+References: <20210326103035.206088-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.146]
-X-ClientProxiedBy: RTEXMBS03.realtek.com.tw (172.21.6.96) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH for v5.12 4/7] iwlwifi: fw: fix notification wait locking
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Since firmware can't have proper statistics, driver update the statistics
-periodically to firmware to assist in tuning performance.
+Since we now call iwl_notification_wait_notify() from the
+NAPI poll in soft-IRQ, we get a (valid) lockdep complaint
+that we could get a deadlock by taking the spinlock from
+sleeping context and then getting the soft-IRQ that also
+tries to take it (in NAPI polling).
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Fix this by disabling soft-IRQs for this lock.
+
+Change-Id: Ic56f351d04674df70567bab0269cba91bdbc853c
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 25edc8f259c7 ("iwlwifi: pcie: properly implement NAPI")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c  | 15 +++++++++++++++
- drivers/net/wireless/realtek/rtw88/fw.h  | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/phy.c |  1 +
- 3 files changed, 29 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 76c43830dfc2..ea2cd4db1d3c 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -512,6 +512,21 @@ void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool connect)
- 	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+index 3dbc6f3f92cc..231d2517f398 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2005-2014 Intel Corporation
++ * Copyright (C) 2005-2014, 2021 Intel Corporation
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+ #include <linux/sched.h>
+@@ -26,7 +26,7 @@ bool iwl_notification_wait(struct iwl_notif_wait_data *notif_wait,
+ 	if (!list_empty(&notif_wait->notif_waits)) {
+ 		struct iwl_notification_wait *w;
  
-+void rtw_fw_update_wl_phy_info(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_traffic_stats *stats = &rtwdev->stats;
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_WL_PHY_INFO);
-+	SET_WL_PHY_INFO_TX_TP(h2c_pkt, stats->tx_throughput);
-+	SET_WL_PHY_INFO_RX_TP(h2c_pkt, stats->rx_throughput);
-+	SET_WL_PHY_INFO_TX_RATE_DESC(h2c_pkt, dm_info->tx_rate);
-+	SET_WL_PHY_INFO_RX_RATE_DESC(h2c_pkt, dm_info->curr_rx_rate);
-+	SET_WL_PHY_INFO_RX_EVM(h2c_pkt, dm_info->rx_evm_dbm[RF_PATH_A]);
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
- void rtw_fw_set_pwr_mode(struct rtw_dev *rtwdev)
+-		spin_lock(&notif_wait->notif_wait_lock);
++		spin_lock_bh(&notif_wait->notif_wait_lock);
+ 		list_for_each_entry(w, &notif_wait->notif_waits, list) {
+ 			int i;
+ 			bool found = false;
+@@ -59,7 +59,7 @@ bool iwl_notification_wait(struct iwl_notif_wait_data *notif_wait,
+ 				triggered = true;
+ 			}
+ 		}
+-		spin_unlock(&notif_wait->notif_wait_lock);
++		spin_unlock_bh(&notif_wait->notif_wait_lock);
+ 	}
+ 
+ 	return triggered;
+@@ -70,10 +70,10 @@ void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_wait)
  {
- 	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index c3d4c83dd5df..7c5b1d75e26f 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -345,6 +345,7 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- #define H2C_CMD_LPS_PG_INFO		0x2b
- #define H2C_CMD_RA_INFO			0x40
- #define H2C_CMD_RSSI_MONITOR		0x42
-+#define H2C_CMD_WL_PHY_INFO		0x58
+ 	struct iwl_notification_wait *wait_entry;
  
- #define H2C_CMD_COEX_TDMA_TYPE		0x60
- #define H2C_CMD_QUERY_BT_INFO		0x61
-@@ -370,6 +371,17 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- #define MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, value)                             \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
+-	spin_lock(&notif_wait->notif_wait_lock);
++	spin_lock_bh(&notif_wait->notif_wait_lock);
+ 	list_for_each_entry(wait_entry, &notif_wait->notif_waits, list)
+ 		wait_entry->aborted = true;
+-	spin_unlock(&notif_wait->notif_wait_lock);
++	spin_unlock_bh(&notif_wait->notif_wait_lock);
  
-+#define SET_WL_PHY_INFO_TX_TP(h2c_pkt, value)				       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(17, 8))
-+#define SET_WL_PHY_INFO_RX_TP(h2c_pkt, value)				       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(27, 18))
-+#define SET_WL_PHY_INFO_TX_RATE_DESC(h2c_pkt, value)			       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(7, 0))
-+#define SET_WL_PHY_INFO_RX_RATE_DESC(h2c_pkt, value)			       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 8))
-+#define SET_WL_PHY_INFO_RX_EVM(h2c_pkt, value)				       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(23, 16))
-+
- #define SET_PWR_MODE_SET_MODE(h2c_pkt, value)                                  \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(14, 8))
- #define SET_PWR_MODE_SET_RLBM(h2c_pkt, value)                                  \
-@@ -564,6 +576,7 @@ void rtw_fw_bt_wifi_control(struct rtw_dev *rtwdev, u8 op_code, u8 *data);
- void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
- void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
- void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
-+void rtw_fw_update_wl_phy_info(struct rtw_dev *rtwdev);
- int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 				u8 *buf, u32 size);
- void rtw_remove_rsvd_page(struct rtw_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index fac89d644305..7f0318f80038 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -683,6 +683,7 @@ static void rtw_phy_pwr_track(struct rtw_dev *rtwdev)
- 
- static void rtw_phy_ra_track(struct rtw_dev *rtwdev)
- {
-+	rtw_fw_update_wl_phy_info(rtwdev);
- 	rtw_phy_ra_info_update(rtwdev);
- 	rtw_phy_rrsr_update(rtwdev);
+ 	wake_up_all(&notif_wait->notif_waitq);
  }
 -- 
-2.21.0
+2.31.0
 
