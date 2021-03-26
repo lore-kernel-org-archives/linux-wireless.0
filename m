@@ -7,192 +7,103 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D94ECC433E8
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95DD8C433F2
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBAB961A2D
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D7E461A36
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Mar 2021 10:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229986AbhCZK5y (ORCPT
+        id S230210AbhCZK55 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Mar 2021 06:57:54 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43378 "EHLO
+        Fri, 26 Mar 2021 06:57:57 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43402 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229779AbhCZK52 (ORCPT
+        with ESMTP id S230059AbhCZK5b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Mar 2021 06:57:28 -0400
+        Fri, 26 Mar 2021 06:57:31 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lPk9d-0003Gc-2S; Fri, 26 Mar 2021 12:57:26 +0200
+        id 1lPk9g-0003Gc-Dj; Fri, 26 Mar 2021 12:57:30 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 26 Mar 2021 12:57:18 +0200
-Message-Id: <iwlwifi.20210326125611.675486178ed1.Ib61463aba6920645059e366dcdca4c4c77f0ff58@changeid>
+Date:   Fri, 26 Mar 2021 12:57:22 +0200
+Message-Id: <iwlwifi.20210326125611.703288ea058d.I82a0312389032d07c3b478bef3e938e06bfa7df6@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210326105723.211843-1-luca@coelho.fi>
 References: <20210326105723.211843-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 for v5.12 2/7] iwlwifi: pcie: properly set LTR workarounds on 22000 devices
+Subject: [PATCH v2 for v5.12 6/7] mvm: rfi: don't lock mvm->mutex when sending config command
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-As the context info gen3 code is only called for >=AX210 devices
-(from iwl_trans_pcie_gen2_start_fw()) the code there to set LTR
-on 22000 devices cannot actually do anything (22000 < AX210).
+The mutex is already locked in iwl_mvm_mac_start.
 
-Fix this by moving the LTR code to iwl_trans_pcie_gen2_start_fw()
-where it can handle both devices. This then requires that we kick
-the firmware only after that rather than doing it from the context
-info code.
-
-Note that this again had a dead branch in gen3 code, which I've
-removed here.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Fixes: ed0022da8bd9 ("iwlwifi: pcie: set LTR on more devices")
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Fixes: 21254908cbe9 ("iwlwifi: mvm: add RFI-M support")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 31 +---------------
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |  3 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 35 +++++++++++++++++++
- 3 files changed, 37 insertions(+), 32 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 7 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rfi.c     | 6 +++---
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 8fba190e84cf..cecc32e7dbe8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 130760572262..34ddef97b099 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1786,10 +1786,13 @@ static ssize_t iwl_dbgfs_rfi_freq_table_write(struct iwl_mvm *mvm, char *buf,
+ 		return -EINVAL;
+ 
+ 	/* value zero triggers re-sending the default table to the device */
+-	if (!op_id)
++	if (!op_id) {
++		mutex_lock(&mvm->mutex);
+ 		ret = iwl_rfi_send_config_cmd(mvm, NULL);
+-	else
++		mutex_unlock(&mvm->mutex);
++	} else {
+ 		ret = -EOPNOTSUPP; /* in the future a new table will be added */
++	}
+ 
+ 	return ret ?: count;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
+index 873919048143..0b818067067c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
 @@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-- * Copyright (C) 2018-2020 Intel Corporation
-+ * Copyright (C) 2018-2021 Intel Corporation
+- * Copyright (C) 2020 Intel Corporation
++ * Copyright (C) 2020 - 2021 Intel Corporation
   */
- #include "iwl-trans.h"
- #include "iwl-fh.h"
-@@ -75,15 +75,6 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 				 const struct fw_img *fw)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	u32 ltr_val = CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ |
--		      u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
--				      CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE) |
--		      u32_encode_bits(250,
--				      CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL) |
--		      CSR_LTR_LONG_VAL_AD_SNOOP_REQ |
--		      u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
--				      CSR_LTR_LONG_VAL_AD_SNOOP_SCALE) |
--		      u32_encode_bits(250, CSR_LTR_LONG_VAL_AD_SNOOP_VAL);
- 	struct iwl_context_info_gen3 *ctxt_info_gen3;
- 	struct iwl_prph_scratch *prph_scratch;
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl;
-@@ -217,26 +208,6 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 	iwl_set_bit(trans, CSR_CTXT_INFO_BOOT_CTRL,
- 		    CSR_AUTO_FUNC_BOOT_ENA);
  
--	/*
--	 * To workaround hardware latency issues during the boot process,
--	 * initialize the LTR to ~250 usec (see ltr_val above).
--	 * The firmware initializes this again later (to a smaller value).
--	 */
--	if ((trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_AX210 ||
--	     trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000) &&
--	    !trans->trans_cfg->integrated) {
--		iwl_write32(trans, CSR_LTR_LONG_VAL_AD, ltr_val);
--	} else if (trans->trans_cfg->integrated &&
--		   trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000) {
--		iwl_write_prph(trans, HPM_MAC_LTR_CSR, HPM_MAC_LRT_ENABLE_ALL);
--		iwl_write_prph(trans, HPM_UMAC_LTR, ltr_val);
--	}
--
--	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
--		iwl_write_umac_prph(trans, UREG_CPU_INIT_RUN, 1);
--	else
--		iwl_set_bit(trans, CSR_GP_CNTRL, CSR_AUTO_FUNC_INIT);
--
- 	return 0;
+ #include "mvm.h"
+@@ -66,6 +66,8 @@ int iwl_rfi_send_config_cmd(struct iwl_mvm *mvm, struct iwl_rfi_lut_entry *rfi_t
+ 	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_RFIM_SUPPORT))
+ 		return -EOPNOTSUPP;
  
- err_free_ctxt_info:
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index d1bb273d6b6d..74ce31fdf45e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-  * Copyright (C) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2020 Intel Corporation
-+ * Copyright (C) 2018-2021 Intel Corporation
-  */
- #include "iwl-trans.h"
- #include "iwl-fh.h"
-@@ -240,7 +240,6 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
- 
- 	/* kick FW self load */
- 	iwl_write64(trans, CSR_CTXT_INFO_BA, trans_pcie->ctxt_info_dma_addr);
--	iwl_write_prph(trans, UREG_CPU_INIT_RUN, 1);
- 
- 	/* Context info will be released upon alive or failure to get one */
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 497ef3405da3..94ffc1ae484d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -266,6 +266,34 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- 	mutex_unlock(&trans_pcie->mutex);
- }
- 
-+static void iwl_pcie_set_ltr(struct iwl_trans *trans)
-+{
-+	u32 ltr_val = CSR_LTR_LONG_VAL_AD_NO_SNOOP_REQ |
-+		      u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+				      CSR_LTR_LONG_VAL_AD_NO_SNOOP_SCALE) |
-+		      u32_encode_bits(250,
-+				      CSR_LTR_LONG_VAL_AD_NO_SNOOP_VAL) |
-+		      CSR_LTR_LONG_VAL_AD_SNOOP_REQ |
-+		      u32_encode_bits(CSR_LTR_LONG_VAL_AD_SCALE_USEC,
-+				      CSR_LTR_LONG_VAL_AD_SNOOP_SCALE) |
-+		      u32_encode_bits(250, CSR_LTR_LONG_VAL_AD_SNOOP_VAL);
++	lockdep_assert_held(&mvm->mutex);
 +
-+	/*
-+	 * To workaround hardware latency issues during the boot process,
-+	 * initialize the LTR to ~250 usec (see ltr_val above).
-+	 * The firmware initializes this again later (to a smaller value).
-+	 */
-+	if ((trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_AX210 ||
-+	     trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000) &&
-+	    !trans->trans_cfg->integrated) {
-+		iwl_write32(trans, CSR_LTR_LONG_VAL_AD, ltr_val);
-+	} else if (trans->trans_cfg->integrated &&
-+		   trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000) {
-+		iwl_write_prph(trans, HPM_MAC_LTR_CSR, HPM_MAC_LRT_ENABLE_ALL);
-+		iwl_write_prph(trans, HPM_UMAC_LTR, ltr_val);
-+	}
-+}
-+
- int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
- 				 const struct fw_img *fw, bool run_in_rfkill)
- {
-@@ -332,6 +360,13 @@ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
+ 	/* in case no table is passed, use the default one */
+ 	if (!rfi_table) {
+ 		memcpy(cmd.table, iwl_rfi_table, sizeof(cmd.table));
+@@ -75,9 +77,7 @@ int iwl_rfi_send_config_cmd(struct iwl_mvm *mvm, struct iwl_rfi_lut_entry *rfi_t
+ 		cmd.oem = 1;
+ 	}
+ 
+-	mutex_lock(&mvm->mutex);
+ 	ret = iwl_mvm_send_cmd(mvm, &hcmd);
+-	mutex_unlock(&mvm->mutex);
+ 
  	if (ret)
- 		goto out;
- 
-+	iwl_pcie_set_ltr(trans);
-+
-+	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
-+		iwl_write_umac_prph(trans, UREG_CPU_INIT_RUN, 1);
-+	else
-+		iwl_write_prph(trans, UREG_CPU_INIT_RUN, 1);
-+
- 	/* re-check RF-Kill state since we may have missed the interrupt */
- 	hw_rfkill = iwl_pcie_check_hw_rf_kill(trans);
- 	if (hw_rfkill && !run_in_rfkill)
+ 		IWL_ERR(mvm, "Failed to send RFI config cmd %d\n", ret);
 -- 
 2.31.0
 
