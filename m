@@ -2,194 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2B2EC433E1
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 10:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5C3C433C1
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 10:12:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A119619FF
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 10:01:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 103BF619C9
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 10:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231267AbhC0KBN (ORCPT
+        id S230350AbhC0KMy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Mar 2021 06:01:13 -0400
-Received: from m12-12.163.com ([220.181.12.12]:54957 "EHLO m12-12.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231468AbhC0KBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Mar 2021 06:01:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=/BhxQ
-        Uwk2txft5OcNY5/+TGgju86XAdEU+w3D9UUn18=; b=Tb5KMjFkEX9ortqdiNHNb
-        b+atZuiYgbU184k3bQ3N58oP9f5jI5ymermN9LK1b4nAlW0JMPGoC5Ri1bO6tfv3
-        dQZC0uC8USyKxFVR8LCvkFGjNHBrfME0QOKXJ19G37yd28uLSA6PzBZtDlhJp80y
-        gHMWr5txVmF2O8wd2JCCNc=
-Received: from yangjunlin.ccdomain.com (unknown [218.17.89.92])
-        by smtp8 (Coremail) with SMTP id DMCowABnb48EAl9gqMu5Wg--.45769S2;
-        Sat, 27 Mar 2021 17:59:34 +0800 (CST)
-From:   angkery <angkery@163.com>
-To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org,
-        matthias.bgg@gmail.com, shayne.chen@mediatek.com,
-        yiwei.chung@mediatek.com, ap420073@gmail.com,
-        sean.wang@mediatek.com, Soul.Huang@mediatek.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Junlin Yang <yangjunlin@yulong.com>
-Subject: [PATCH] mt76: Convert to DEFINE_SHOW_ATTRIBUTE
-Date:   Sat, 27 Mar 2021 17:56:17 +0800
-Message-Id: <20210327095617.1222-1-angkery@163.com>
-X-Mailer: git-send-email 2.24.0.windows.2
+        Sat, 27 Mar 2021 06:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50920 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhC0KMy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Mar 2021 06:12:54 -0400
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7288DC0613B1
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Mar 2021 03:12:52 -0700 (PDT)
+Received: by mail-il1-x136.google.com with SMTP id 19so7180246ilj.2
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Mar 2021 03:12:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=Khb50nVWzVB65AHyk94DSVniLT5CUCxvJJA1TeAX1/U=;
+        b=MzeV1axlp+KDRssrIaT/oUOBRP6fd69cDFlS6qIZKO1DGQc+bHPavjaJhyv8gPSLGp
+         a5o+b1uHFILx1RKq2K3QNxwn3uDdbC2M8Vdlhxv5rp9RPKw2MjW7xPXTIAh9Gl9ZAwWL
+         qwNrtWfRD/jUmlKMKOfUbmpuqpmuk7OWDkAnmfkAqtdYpoO5dS0wcIpUK9dpX9JqktWK
+         WAG4pBYygqUtq1h79ptIUoPA1f+RVxttNFrIwTz6S3BLU0qNBgOlMp7NTwh0a80gk157
+         cJn3icjv6oKdu1Eh+ireTkPb9ReNnpM+h0fHZXpBXz79rdjjq5Uw/tX3YWTP3hC4R5R/
+         VbQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=Khb50nVWzVB65AHyk94DSVniLT5CUCxvJJA1TeAX1/U=;
+        b=mRUrDSuCTP4DhbXW/4MNG4fzRakRrveW9eHV7pxbGScl4AfySfOgVt7xoVXZ4v4g9U
+         ohebCUvBksNHV3Pj+dYRd9stfIiGME1e0+0YboNnFcVbW7NpmaHt6ZA21sB0qrgBpM90
+         G/DET88uF4kHoHJ3x7m+xASCaRX/79TJZSb0hhb9DiqKa/I5vu4CT/nUTQB/ntsnD1ZL
+         DkmgZCRb7SUcqJHzkQEs0D9qY/0yQUG2JHG5/WGqCPH7N9bJbRxkwxya5Ar+Tykawu+G
+         U7U9K8CLgCiw1EAJYQOCyPisj40qY0KGDXN4WQkaWc3BrYfWWFqax57OYIeSueYcHEF2
+         dZtw==
+X-Gm-Message-State: AOAM533AvSPjf9dQVAfW9xz8ER7dNZzuZW9JTdp8CJtcFigGsswBhzua
+        7wV9lHOAYVtpFfrXlc6T4N1Ha4Sf6O16lekLAJtMpz01S5zLgQ==
+X-Google-Smtp-Source: ABdhPJx/D38m2jbBqPKfPaqGIEaGFdkGtC7iPPzsz91b8+KHMwjNAD+mi35w/cQyULx32E5RecqcdGQou4zKEDJkceM=
+X-Received: by 2002:a92:444e:: with SMTP id a14mr13897956ilm.215.1616839971767;
+ Sat, 27 Mar 2021 03:12:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DMCowABnb48EAl9gqMu5Wg--.45769S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAr43tr17ury8Zr18Cr1UGFg_yoWrKw1xpa
-        95uayUAr48Jr1kKFWkAFWUZa4Skanaq347Zr92934ruF1ktrnYyF4UKFWSvrW0k3y8Cw1U
-        Xa1Yyry7GrWYvr7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jLWrXUUUUU=
-X-Originating-IP: [218.17.89.92]
-X-CM-SenderInfo: 5dqjyvlu16il2tof0z/xtbBRgZiI13l-C9qnQAAsd
+References: <20210326105723.211843-1-luca@coelho.fi>
+In-Reply-To: <20210326105723.211843-1-luca@coelho.fi>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Sat, 27 Mar 2021 11:12:15 +0100
+Message-ID: <CA+icZUW51Z4=EfnJ1o0p6RE6y++aMTvON2k_yh1z8sT5KVv_Cw@mail.gmail.com>
+Subject: Re: [PATCH v2 for v5.12 0/7] iwlwifi: fixes intended for v5.12
+ 2021-03-26 v2
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Junlin Yang <yangjunlin@yulong.com>
+On Fri, Mar 26, 2021 at 11:58 AM Luca Coelho <luca@coelho.fi> wrote:
+>
+> From: Luca Coelho <luciano.coelho@intel.com>
+>
+> Hi,
+>
+> This is the v2 of the first patchset with fixes for v5.12.  This new version
+> removes the Change-Id tags that mistakenly got out.
+>
+> The changes are:
+>
+> * A few locking fixes;
+> * Fix a workaround for devices of the 22000 family;
+> * Fix the position of a bit in the regulatory capabilities;
+> * Add support to some devices that were missing.
+>
+> As usual, I'm pushing this to a pending branch, for kbuild bot.  And
+> since these are fixes for the rc series, please take them directly to
+> wireless-drivers.git, as we agreed.  I'll assign them to you.
+>
 
-Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+Thanks for the updated patchset v2.
 
-Signed-off-by: Junlin Yang <yangjunlin@yulong.com>
----
- .../net/wireless/mediatek/mt76/mt7915/debugfs.c    | 36 ++++------------------
- .../net/wireless/mediatek/mt76/mt7921/debugfs.c    | 18 ++---------
- 2 files changed, 9 insertions(+), 45 deletions(-)
+Is it possible to have v2 in <iwlwifi.git#iwlwifi-fixes> without the
+by-accident-added "Change-Id:" tags as in [1].
+For easy fetching.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 77dcd71..7bef36f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -192,7 +192,7 @@ static int mt7915_ser_trigger_set(void *data, u64 val)
- }
- 
- static int
--mt7915_tx_stats_read(struct seq_file *file, void *data)
-+mt7915_tx_stats_show(struct seq_file *file, void *data)
- {
- 	struct mt7915_dev *dev = file->private;
- 	int stat[8], i, n;
-@@ -222,19 +222,7 @@ static int mt7915_ser_trigger_set(void *data, u64 val)
- 	return 0;
- }
- 
--static int
--mt7915_tx_stats_open(struct inode *inode, struct file *f)
--{
--	return single_open(f, mt7915_tx_stats_read, inode->i_private);
--}
--
--static const struct file_operations fops_tx_stats = {
--	.open = mt7915_tx_stats_open,
--	.read = seq_read,
--	.llseek = seq_lseek,
--	.release = single_release,
--	.owner = THIS_MODULE,
--};
-+DEFINE_SHOW_ATTRIBUTE(mt7915_tx_stats);
- 
- static int mt7915_read_temperature(struct seq_file *s, void *data)
- {
-@@ -379,7 +367,7 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
- 				    mt7915_queues_read);
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "acq", dir,
- 				    mt7915_queues_acq);
--	debugfs_create_file("tx_stats", 0400, dir, dev, &fops_tx_stats);
-+	debugfs_create_file("tx_stats", 0400, dir, dev, &mt7915_tx_stats_fops);
- 	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
- 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
- 			    &fops_implicit_txbf);
-@@ -412,7 +400,7 @@ static int mt7915_sta_fixed_rate_set(void *data, u64 rate)
- 			 mt7915_sta_fixed_rate_set, "%llx\n");
- 
- static int
--mt7915_sta_stats_read(struct seq_file *s, void *data)
-+mt7915_sta_stats_show(struct seq_file *s, void *data)
- {
- 	struct ieee80211_sta *sta = s->private;
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-@@ -455,24 +443,12 @@ static int mt7915_sta_fixed_rate_set(void *data, u64 rate)
- 	return 0;
- }
- 
--static int
--mt7915_sta_stats_open(struct inode *inode, struct file *f)
--{
--	return single_open(f, mt7915_sta_stats_read, inode->i_private);
--}
--
--static const struct file_operations fops_sta_stats = {
--	.open = mt7915_sta_stats_open,
--	.read = seq_read,
--	.llseek = seq_lseek,
--	.release = single_release,
--	.owner = THIS_MODULE,
--};
-+DEFINE_SHOW_ATTRIBUTE(mt7915_sta_stats);
- 
- void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
- 	debugfs_create_file("fixed_rate", 0600, dir, sta, &fops_fixed_rate);
--	debugfs_create_file("stats", 0400, dir, sta, &fops_sta_stats);
-+	debugfs_create_file("stats", 0400, dir, sta, &mt7915_sta_stats_fops);
- }
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-index 0dc8e25..c1a64ff 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-@@ -62,7 +62,7 @@
- }
- 
- static int
--mt7921_tx_stats_read(struct seq_file *file, void *data)
-+mt7921_tx_stats_show(struct seq_file *file, void *data)
- {
- 	struct mt7921_dev *dev = file->private;
- 	int stat[8], i, n;
-@@ -88,19 +88,7 @@
- 	return 0;
- }
- 
--static int
--mt7921_tx_stats_open(struct inode *inode, struct file *f)
--{
--	return single_open(f, mt7921_tx_stats_read, inode->i_private);
--}
--
--static const struct file_operations fops_tx_stats = {
--	.open = mt7921_tx_stats_open,
--	.read = seq_read,
--	.llseek = seq_lseek,
--	.release = single_release,
--	.owner = THIS_MODULE,
--};
-+DEFINE_SHOW_ATTRIBUTE(mt7921_tx_stats);
- 
- static int
- mt7921_queues_acq(struct seq_file *s, void *data)
-@@ -239,7 +227,7 @@ int mt7921_init_debugfs(struct mt7921_dev *dev)
- 				    mt7921_queues_read);
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "acq", dir,
- 				    mt7921_queues_acq);
--	debugfs_create_file("tx_stats", 0400, dir, dev, &fops_tx_stats);
-+	debugfs_create_file("tx_stats", 0400, dir, dev, &mt7921_tx_stats_fops);
- 	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
- 	debugfs_create_file("runtime-pm", 0600, dir, dev, &fops_pm);
- 	debugfs_create_file("idle-timeout", 0600, dir, dev,
--- 
-1.9.1
+Thanks.
 
+- Sedat -
 
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/log/?h=iwlwifi-sent-for-review-2021-03-26
+
+>
+>
+> Gregory Greenman (1):
+>   mvm: rfi: don't lock mvm->mutex when sending config command
+>
+> Johannes Berg (3):
+>   iwlwifi: pcie: properly set LTR workarounds on 22000 devices
+>   iwlwifi: fw: fix notification wait locking
+>   iwlwifi: mvm: fix beacon protection checks
+>
+> Luca Coelho (2):
+>   iwlwifi: fix 11ax disabled bit in the regulatory capability flags
+>   iwlwifi: pcie: add support for So-F devices
+>
+> Matt Chen (1):
+>   iwlwifi: add support for Qu with AX201 device
+>
+>  .../wireless/intel/iwlwifi/fw/notif-wait.c    | 10 +++---
+>  .../net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
+>  .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  2 +-
+>  .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  7 ++--
+>  drivers/net/wireless/intel/iwlwifi/mvm/rfi.c  |  6 ++--
+>  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 17 ++++++---
+>  .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 31 +---------------
+>  .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |  3 +-
+>  drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 27 +++++++++++++-
+>  .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 35 +++++++++++++++++++
+>  10 files changed, 90 insertions(+), 49 deletions(-)
+>
+> --
+> 2.31.0
+>
