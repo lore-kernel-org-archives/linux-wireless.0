@@ -2,113 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CF0DC433C1
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 09:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC33FC433DB
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 09:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEF0D6196D
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 09:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A42D0619FF
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Mar 2021 09:57:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230415AbhC0JK5 (ORCPT
+        id S231352AbhC0J44 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Mar 2021 05:10:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230427AbhC0JK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Mar 2021 05:10:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 192E5619C9;
-        Sat, 27 Mar 2021 09:10:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616836229;
-        bh=jpGfudS3XIaY1+wnBRLaZ63cR4rZ0792GRG0qOc/tsE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=D2suNFkDKfuYPi9f4sgL0QejJpnak5RUoAmiAkuRomyjhXoEWMMyVVKH3qzG0o8+j
-         ePTTADBtJkVUq8EOmRhrW1ozI2oE42m/vAfxoMD4KSq1SoXeIwb92C/+5I5AgXn2t3
-         3u0H2sZQ1sI/BerUgaxOsKvrFujVLld3jDQWXOVWsx0qkI7HVePRAP4uFwJwZ8Bwjc
-         OnfQ0tSh53rf6bUpkQ+4VrDKlozrEq57Ky/Q89dgGFGd2owpqzkMs25HQWwyufZOEv
-         fCDVs5AISrkS6/FxG3Ctk042C0/nNdqzMYkU4/NB08C5FQbKZxCGaaefelLx4vlFZ2
-         gCEQ+Oi0Y33LA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com
-Subject: [PATCH] mt76: mt7921: fix key set/delete issue
-Date:   Sat, 27 Mar 2021 10:10:14 +0100
-Message-Id: <03ae98875c71f593e6290c7e87a41fea7e374465.1616836088.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.30.2
+        Sat, 27 Mar 2021 05:56:56 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:15074 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231420AbhC0J4k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Mar 2021 05:56:40 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F6vMJ4QHWz1BH6C;
+        Sat, 27 Mar 2021 17:54:36 +0800 (CST)
+Received: from mdc.localdomain (10.175.104.57) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.498.0; Sat, 27 Mar 2021 17:56:28 +0800
+From:   Huang Guobin <huangguobin4@huawei.com>
+To:     <huangguobin4@huawei.com>, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Jakub Kicinski" <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        "Markus Elfring" <elfring@users.sourceforge.net>,
+        "David S. Miller" <davem@davemloft.net>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH net-next] mt76: mt7615: remove redundant dev_err call in mt7622_wmac_probe()
+Date:   Sat, 27 Mar 2021 17:56:18 +0800
+Message-ID: <1616838978-6420-1-git-send-email-huangguobin4@huawei.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.175.104.57]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Similar to the mt7915 driver, deleting a key with the previous key index
-deletes the current key. Rework the code to better keep track of
-multiple keys and check for the key index before deleting the current
-key
+From: Guobin Huang <huangguobin4@huawei.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+There is a error message within devm_ioremap_resource
+already, so remove the dev_err call to avoid redundant
+error message.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Guobin Huang <huangguobin4@huawei.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 25 +++++++++++++------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/soc.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 92775f98a80c..c0ebb6077fa8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -418,7 +418,8 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	struct mt7921_sta *msta = sta ? (struct mt7921_sta *)sta->drv_priv :
- 				  &mvif->sta;
- 	struct mt76_wcid *wcid = &msta->wcid;
--	int idx = key->keyidx;
-+	u8 *wcid_keyidx = &wcid->hw_key_idx;
-+	int idx = key->keyidx, err = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/soc.c b/drivers/net/wireless/mediatek/mt76/mt7615/soc.c
+index 9aa5183c7a56..be9a69fe1b38 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/soc.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/soc.c
+@@ -40,10 +40,8 @@ static int mt7622_wmac_probe(struct platform_device *pdev)
+ 		return irq;
  
- 	/* The hardware does not support per-STA RX GTK, fallback
- 	 * to software mode for these.
-@@ -434,6 +435,7 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
-+		wcid_keyidx = &wcid->hw_key_idx2;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 	case WLAN_CIPHER_SUITE_CCMP:
-@@ -448,16 +450,23 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (cmd == SET_KEY) {
--		key->hw_key_idx = wcid->idx;
--		wcid->hw_key_idx = idx;
--	} else if (idx == wcid->hw_key_idx) {
--		wcid->hw_key_idx = -1;
+ 	mem_base = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(mem_base)) {
+-		dev_err(&pdev->dev, "Failed to get memory resource\n");
++	if (IS_ERR(mem_base))
+ 		return PTR_ERR(mem_base);
 -	}
-+	mt7921_mutex_acquire(dev);
-+
-+	if (cmd == SET_KEY)
-+		*wcid_keyidx = idx;
-+	else if (idx == *wcid_keyidx)
-+		*wcid_keyidx = -1;
-+	else
-+		goto out;
-+
- 	mt76_wcid_key_setup(&dev->mt76, wcid,
- 			    cmd == SET_KEY ? key : NULL);
  
--	return mt7921_mcu_add_key(dev, vif, msta, key, cmd);
-+	err = mt7921_mcu_add_key(dev, vif, msta, key, cmd);
-+out:
-+	mt7921_mutex_release(dev);
-+
-+	return err;
+ 	return mt7615_mmio_probe(&pdev->dev, mem_base, irq, mt7615e_reg_map);
  }
- 
- static int mt7921_config(struct ieee80211_hw *hw, u32 changed)
--- 
-2.30.2
 
