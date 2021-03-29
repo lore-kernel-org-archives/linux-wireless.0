@@ -2,87 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B61C433E4
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 08:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36C1EC433C1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 11:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9608261581
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 08:55:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06CE461938
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 11:01:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235803AbhC2IzU (ORCPT
+        id S231653AbhC2LAu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Mar 2021 04:55:20 -0400
-Received: from spam.zju.edu.cn ([61.164.42.155]:19808 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236382AbhC2Ix3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Mar 2021 04:53:29 -0400
-Received: from localhost.localdomain (unknown [10.192.140.4])
-        by mail-app3 (Coremail) with SMTP id cC_KCgA3P5dmlWFgxK5pAA--.51681S4;
-        Mon, 29 Mar 2021 16:53:00 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
-Cc:     Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Leon Romanovsky <leon@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] hostap: Fix memleak in prism2_config
-Date:   Mon, 29 Mar 2021 16:52:43 +0800
-Message-Id: <20210329085246.24586-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgA3P5dmlWFgxK5pAA--.51681S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jw1kCw4rZrW5AF15Cr18Grg_yoWfAFX_Cr
-        W2vFn5XrykA3409r1UCFsxZFyIyF1DZa48ZF1ktF95JryUXrZ7t34fZr1ay3s3Cw4q9ry3
-        Cr4qqF1Ikas0gjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbskFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
-        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
-        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26rxl6s0DM28EF7xvwVC2z280
-        aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07
-        x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18
-        McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr4
-        1lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7MxAIw28IcxkI
-        7VAKI48JMxAIw28IcVCjz48v1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
-        C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
-        wI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjx
-        v20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2
-        z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73Uj
-        IFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAg4HBlZdtSzMkgBNsM
+        Mon, 29 Mar 2021 07:00:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55590 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232580AbhC2LAj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Mar 2021 07:00:39 -0400
+Received: from ustc.edu.cn (email6.ustc.edu.cn [IPv6:2001:da8:d800::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B287BC061574;
+        Mon, 29 Mar 2021 04:00:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mail.ustc.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
+        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=6WGqTp8LlJ
+        59ua+GVPvEnMczMwTS+/11WKeKOjgGhoM=; b=Shxtg7AXlGvy+aTBuQuhlIRvat
+        EmNogThRBfqgGDUw848aj+v8AtTHJJ58E88tQrIV7DF/Wy4nEU2yCYNJlH4czxse
+        2kiMDZqbP5EX/uZSMDWCg7rpKQGr/J1GKEkvHsdP2J6jvcArWSZvCehi1flnBkgz
+        nEYtfV+lt7azcc+mc=
+Received: from ubuntu.localdomain (unknown [202.38.69.14])
+        by newmailweb.ustc.edu.cn (Coremail) with SMTP id LkAmygD3_39Hs2Fgv+xmAA--.569S4;
+        Mon, 29 Mar 2021 19:00:23 +0800 (CST)
+From:   Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+To:     j@w1.fi, kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+Subject: [PATCH] wireless: hostap: Fix a use after free in hostap_80211_rx
+Date:   Mon, 29 Mar 2021 04:00:21 -0700
+Message-Id: <20210329110021.7497-1-lyl2019@mail.ustc.edu.cn>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: LkAmygD3_39Hs2Fgv+xmAA--.569S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7ur17Ww4UZry5ZrWDWrWrAFb_yoW8XFyfpF
+        Z5Cay3Krn8JF1UA34xXF1xCFyrXa1UJas3WFyUC3WF9Fn8XFn5K3sY9FyUKF15W39Yk3Wf
+        JFs8tw47AasxG37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+        4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+        648v4I1lc2xSY4AK67AK6r4kMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r
+        4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF
+        67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2I
+        x0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAI
+        cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+        nxnUUI43ZEXa7VUbU5r5UUUUU==
+X-CM-SenderInfo: ho1ojiyrz6zt1loo32lwfovvfxof0/
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When prism2_hw_config() fails, we just return an error code
-without any resource release, which may lead to memleak.
+Function hostap_80211_rx() calls prism2_rx_80211(..,skb,..). In
+prism2_rx_80211, i found that the skb could be freed by dev_kfree_skb_any(skb)
+and return 0. Also could be freed by netif_rx(skb) when netif_rx return
+NET_RX_DROP.
 
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+But after called the prism2_rx_80211(..,skb,..), the skb is used by skb->len.
+
+As the new skb->len is returned by prism2_rx_80211(), my patch uses a variable
+len to repalce skb->len. According to another useage of prism2_rx_80211 in
+monitor_rx().
+
+Signed-off-by: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
 ---
- drivers/net/wireless/intersil/hostap/hostap_cs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intersil/hostap/hostap_80211_rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_cs.c b/drivers/net/wireless/intersil/hostap/hostap_cs.c
-index ec7db2badc40..7dc16ab50ad6 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_cs.c
-@@ -536,10 +536,10 @@ static int prism2_config(struct pcmcia_device *link)
- 	sandisk_enable_wireless(dev);
- 
- 	ret = prism2_hw_config(dev, 1);
--	if (!ret)
--		ret = hostap_hw_ready(dev);
-+	if (ret)
-+		goto failed;
- 
--	return ret;
-+	return hostap_hw_ready(dev);;
- 
-  failed:
- 	kfree(hw_priv);
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c b/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
+index 61be822f90b5..a45ee7b35533 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
+@@ -1016,10 +1016,10 @@ void hostap_80211_rx(struct net_device *dev, struct sk_buff *skb,
+ 			if (local->hostapd && local->apdev) {
+ 				/* Send IEEE 802.1X frames to the user
+ 				 * space daemon for processing */
+-				prism2_rx_80211(local->apdev, skb, rx_stats,
++				int len = prism2_rx_80211(local->apdev, skb, rx_stats,
+ 						PRISM2_RX_MGMT);
+ 				local->apdevstats.rx_packets++;
+-				local->apdevstats.rx_bytes += skb->len;
++				local->apdevstats.rx_bytes += len;
+ 				goto rx_exit;
+ 			}
+ 		} else if (!frame_authorized) {
 -- 
-2.17.1
+2.25.1
+
 
