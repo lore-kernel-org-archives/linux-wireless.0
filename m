@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22626C433E8
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FC3C433EA
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E77F4619DC
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 511A06196E
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:27:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232901AbhC2WZM (ORCPT
+        id S232420AbhC2W0w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Mar 2021 18:25:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48398 "EHLO mail.kernel.org"
+        Mon, 29 Mar 2021 18:26:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47708 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232501AbhC2WXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Mar 2021 18:23:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 76A3E619B6;
-        Mon, 29 Mar 2021 22:23:13 +0000 (UTC)
+        id S232743AbhC2WYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Mar 2021 18:24:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A80B9619BB;
+        Mon, 29 Mar 2021 22:23:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617056594;
-        bh=0TsPTSANZqKpZW8o4F5/wrMizTfDv3i7R2iIANb4Yrs=;
+        s=k20201202; t=1617056615;
+        bh=ESaG5xY99YlSyH/jJMtYspYTLm0ub+JFq0HjG/Ioor0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YcI2NWFFRHyi8LLW+zBY8eX4xVqFgH8cG5h+X421d9cflq3jVqoF1AoznJ8d+PTiv
-         CyKpM5cquuFUWjg9+MHZKv3rSeR7r+7uQBTwHUJO8P7C3JHShBlAxUELw70Kh3hjeH
-         LyWOG8dmEpUVAEL+TkmYL3u5IGaKw52whzB188s0/4nyMR20V++D2IcTzrAWSX4Sct
-         L2anl2gI44jm+MGO2/Dq3jC2qFT3b39ZC5DdhI6P383EZRCv5KrI9WQnNX2Sw086FI
-         HPxwYimDLKOE9cXZbx3ZSGi4jSPq+Z5HXhBJh8ODjbsSWh8h+XCGIFErOqqGX4LOru
-         hpgSQ70BvOcEQ==
+        b=XQLfA5spiUC/2dkDDenxHKQLIweZk8RKNx56h1UsdynKyjy1giBI46fJkKa6C4b1e
+         OfB7w+9g1zQq1uG7AmXb0JzS0L54rQVF/JSY1zjrTLV9HbrssuKSfXKNhB2S7quTcc
+         tcuTZvukERNigWcs9qcPlyif15iVU8OkpJ1KlFJ+4WfC/SC/NKoFHB0Jf2u1G24gfX
+         tF/Jz11BS6AR/9EMdWLFmGUbCMIUsOejR4jdh2Pkl5m2crTxusq3i1zwYe0/+b3J9P
+         1nyZwDeHKrIkKdBxYySjW2XeTTslekr1taAz49Xudg6LLeur9P/Tz2CgWWLwkMIJwY
+         K9VC9Hh8IqT+A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Karthikeyan Kathirvel <kathirve@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 09/19] mac80211: choose first enabled channel for monitor
-Date:   Mon, 29 Mar 2021 18:22:52 -0400
-Message-Id: <20210329222303.2383319-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 07/15] mac80211: choose first enabled channel for monitor
+Date:   Mon, 29 Mar 2021 18:23:18 -0400
+Message-Id: <20210329222327.2383533-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210329222303.2383319-1-sashal@kernel.org>
-References: <20210329222303.2383319-1-sashal@kernel.org>
+In-Reply-To: <20210329222327.2383533-1-sashal@kernel.org>
+References: <20210329222327.2383533-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 3e8561c3b0e7..5b3189a37680 100644
+index 68db2a356443..f44d00f35fe7 100644
 --- a/net/mac80211/main.c
 +++ b/net/mac80211/main.c
-@@ -954,8 +954,19 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+@@ -931,8 +931,19 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
  			continue;
  
  		if (!dflt_chandef.chan) {
