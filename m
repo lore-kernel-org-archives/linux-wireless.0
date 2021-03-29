@@ -2,68 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACC95C433DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 18:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC82C433F1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:22:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78E5D6192E
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 18:58:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 201A2619BC
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:22:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbhC2S6Y (ORCPT
+        id S232002AbhC2WWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Mar 2021 14:58:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52094 "EHLO mail.kernel.org"
+        Mon, 29 Mar 2021 18:22:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45902 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231468AbhC2S6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Mar 2021 14:58:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C95E76191B;
-        Mon, 29 Mar 2021 18:58:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1617044284;
-        bh=c/s9VChyW+PWZcaM8NTQh/9X1+6v/QSeKT0dp32MvX4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RdSoptfqmS51C5yohMF4Ery+8npmlpIBFPKOsRYfVGQGmjFOt7iAsGNaONA/rytjU
-         48sJiJzE4sFKwDHQFNHwoRoxLf8Yn83gGOYrdatSSScHKQlfgZPAX9McuarcwJ/sCi
-         bgRTB6kFartuSl2ozV7UPbQ5rpBeO/fzFLAbfyO8=
-Date:   Mon, 29 Mar 2021 20:58:01 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Alaa Emad <alaaemadhossney.ae@gmail.com>
-Cc:     johannes@sipsolutions.net, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzkaller <syzkaller@googlegroups.com>,
-        syzbot+72b99dcf4607e8c770f3@syzkaller.appspotmail.com
-Subject: Re: [PATCH] wireless/nl80211.c: fix uninitialized variable
-Message-ID: <YGIjOZauy9kPwINV@kroah.com>
-References: <20210329163036.135761-1-alaaemadhossney.ae@gmail.com>
- <YGIaaezqxNmhVcmn@kroah.com>
- <CAM1DhOgA9DDaGSGFxKgXBONopoo4rLJZheK2jzW_BK-mJrNZKQ@mail.gmail.com>
+        id S231933AbhC2WVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Mar 2021 18:21:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DE1B361989;
+        Mon, 29 Mar 2021 22:21:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617056512;
+        bh=9dZ7igudTV9weAVtKaJoWZF1q0M8xiZt7lrw3zitF9Y=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=EIjWJttfezpwJlQsOkTjo7mnWw7k7Xc8MT2WAzeARj6hp4jT1Ww4s2M1qc4wh1IFV
+         UXUZ8U+abIvUsbbw6w1OLQUMFeEHqjM6dpl+ti/wPUbguzR3uZl+FJBlIB1vdRlHIZ
+         5K4Hg2RQCxpURGeVhvXKhlO8jSZDjWj7v23derlklQRW4Vb6Brimg8sRfjzz8t0do8
+         SUdb901zcx3VxzFNu3OnSjf2h0N1NsyUy8uZDOkdl1ZJlRHPr4+Ha8rtjaLX/jIBaI
+         DLbRlUdzijEuTWArWfmuX1GP4gMHhk7EcdEvaKDJ/OhQoqUIoHxju/Yzjx2Gte8FoT
+         GqVPmt96FNkAw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Karthikeyan Kathirvel <kathirve@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 15/38] mac80211: choose first enabled channel for monitor
+Date:   Mon, 29 Mar 2021 18:21:10 -0400
+Message-Id: <20210329222133.2382393-15-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210329222133.2382393-1-sashal@kernel.org>
+References: <20210329222133.2382393-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAM1DhOgA9DDaGSGFxKgXBONopoo4rLJZheK2jzW_BK-mJrNZKQ@mail.gmail.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Mar 29, 2021 at 08:41:38PM +0200, Alaa Emad wrote:
-> On Mon, 29 Mar 2021 at 20:20, Greg KH <gregkh@linuxfoundation.org> wrote:
-> 
-> > On Mon, Mar 29, 2021 at 06:30:36PM +0200, Alaa Emad wrote:
-> > > Reported-by: syzbot+72b99dcf4607e8c770f3@syzkaller.appspotmail.com
-> > > Signed-off-by: Alaa Emad <alaaemadhossney.ae@gmail.com>
-> >
-> > You need to provide some changelog text here, I know I can not take
-> > patches without that, maybe the wireless maintainer is more flexible :)
-> >
->  you mean explain what i did , right?
+From: Karthikeyan Kathirvel <kathirve@codeaurora.org>
 
-Yes, explain why this change is needed.
+[ Upstream commit 041c881a0ba8a75f71118bd9766b78f04beed469 ]
 
-thanks,
+Even if the first channel from sband channel list is invalid
+or disabled mac80211 ends up choosing it as the default channel
+for monitor interfaces, making them not usable.
 
-greg k-h
+Fix this by assigning the first available valid or enabled
+channel instead.
+
+Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
+Link: https://lore.kernel.org/r/1615440547-7661-1-git-send-email-kathirve@codeaurora.org
+[reword commit message, comment, code cleanups]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/main.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index dee88ec566ad..d1023188ef37 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -970,8 +970,19 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 			continue;
+ 
+ 		if (!dflt_chandef.chan) {
++			/*
++			 * Assign the first enabled channel to dflt_chandef
++			 * from the list of channels
++			 */
++			for (i = 0; i < sband->n_channels; i++)
++				if (!(sband->channels[i].flags &
++						IEEE80211_CHAN_DISABLED))
++					break;
++			/* if none found then use the first anyway */
++			if (i == sband->n_channels)
++				i = 0;
+ 			cfg80211_chandef_create(&dflt_chandef,
+-						&sband->channels[0],
++						&sband->channels[i],
+ 						NL80211_CHAN_NO_HT);
+ 			/* init channel we're on */
+ 			if (!local->use_chanctx && !local->_oper_chandef.chan) {
+-- 
+2.30.1
+
