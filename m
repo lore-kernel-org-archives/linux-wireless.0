@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E106C433E1
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F7CDC433C1
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DFB561989
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:27:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EC4F601FC
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Mar 2021 22:28:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232105AbhC2W13 (ORCPT
+        id S232317AbhC2W2P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Mar 2021 18:27:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49550 "EHLO mail.kernel.org"
+        Mon, 29 Mar 2021 18:28:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47158 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232744AbhC2WYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Mar 2021 18:24:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 718CF619B5;
-        Mon, 29 Mar 2021 22:23:33 +0000 (UTC)
+        id S232139AbhC2WZy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Mar 2021 18:25:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 643EB619A6;
+        Mon, 29 Mar 2021 22:23:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617056614;
-        bh=wr1kZ79QxsRd59D8OKxICgc9aTlAjvNLpPyNm7bddsk=;
+        s=k20201202; t=1617056631;
+        bh=VzBHAojO7dMbSRKmWz0PQLP69cOs8DCC79N4rIKRH2k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Aw4EN1DfJQFuUiGmtVgEFAL1RVNsvznaDryWAN/CgNYWXXghwIYjp9FFZcUl2OYjj
-         40T796oeYZlhEhrHWsMtEGPeH2HzmbFUKCmlBzu9e5AD4VBoXKyWJuRtCeksvwoapK
-         tAiNFNp1En+j/nPdzkCoKzDfno6AAr2C4ws7sbUvUxDjz/aRWpI37X7plwuhsL/jBr
-         OuvNQ8wCqtbmktmePxsRTp0F5Fkl5rq3HUDfAvOcu4tkCjul+vNQ89Z91bZ0jxjgCC
-         0zfh+pfMauYU/S2KBpGMupq+W23OKD0Fy2n8ywGYov3JvuCBrnHRP4Xe+wdz74Oc8Y
-         2H7PiKjPjxM/Q==
+        b=Dbk7pUsN1dpZM5WrNUlwxK5RXPaeZIl7/LpIaRknG9fr+1SXRzO60IGOuwWcud3S9
+         HWVE36O9C15E3fYs0gIBXvcs0ScL0ZFHVY3P02DMQYgVx/dcg7YDVlVSWEhyrtIsl0
+         4NNs7teunatLnKRr4nG0l+d29AdHvbHsrgeklPoZBJw3j78ghikbP4Oi+zUOX7nibu
+         XoK5hmqsIuRqD6WTGLtuTXQV/bIjEmflXMS/Iy0cJ8NLYwL34jmBU/VKKIaHOT1o3s
+         enYxsFO2lzZDD92RWW6tGJuXv14J+GNv4fnaPh17pCXugASNjaVECJ+cEJIOjD3JTc
+         ap06yxLtEVBUw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
@@ -39,12 +39,12 @@ Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/15] mac80211: fix double free in ibss_leave
-Date:   Mon, 29 Mar 2021 18:23:17 -0400
-Message-Id: <20210329222327.2383533-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/12] mac80211: fix double free in ibss_leave
+Date:   Mon, 29 Mar 2021 18:23:37 -0400
+Message-Id: <20210329222345.2383777-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210329222327.2383533-1-sashal@kernel.org>
-References: <20210329222327.2383533-1-sashal@kernel.org>
+In-Reply-To: <20210329222345.2383777-1-sashal@kernel.org>
+References: <20210329222345.2383777-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -109,7 +109,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f0f5fedb8caa..fa13eef25f2c 100644
+index 3d0d12fbd8dd..e550154b12df 100644
 --- a/net/mac80211/ibss.c
 +++ b/net/mac80211/ibss.c
 @@ -1861,6 +1861,8 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
