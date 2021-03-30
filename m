@@ -2,146 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7111C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 12:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D425C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 13:25:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3316619C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 12:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C3BD619C1
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 13:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231992AbhC3Msh (ORCPT
+        id S231803AbhC3NZI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Mar 2021 08:48:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51686 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231919AbhC3Msa (ORCPT
+        Tue, 30 Mar 2021 09:25:08 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43588 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231966AbhC3NZG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Mar 2021 08:48:30 -0400
-Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5A84C061574;
-        Tue, 30 Mar 2021 05:48:29 -0700 (PDT)
-Received: by mail-lj1-x22b.google.com with SMTP id s17so19735738ljc.5;
-        Tue, 30 Mar 2021 05:48:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=C/SEHAMdttQjA7hTIweXyWliIsCysW2EFbhutxpfmc8=;
-        b=TWscK29HM7I/ddYkmtOgngIPWJTO1qpM0RVwB79bRr9h/HZtVMEDWtNB7g+t5nHJnw
-         1eKHgE05+y4tqg4uEM/JQ6/Lf2LOR1F7EfqPbDjp2oOgAEDRdg0SBZ0AhYLWCv8DyUZK
-         0vs1q9JCtsw2D+2yQkYayxcofjRTmOtraV86dndLMm86Hl5v45xIuuD6EKVEDcBwREPr
-         UL8fwSaDMOlk4sytfubMIV5iStzNgJ3YA4MqDWZQau0mcgayOizgl6TYEWiFXl+FsY8x
-         uUOjNo4TrrNov1jnPfF2RfVnwhOjTCs4vrYsXbKUSWWOv4hbmA2xKaxWZcbBL1GXMhCm
-         gXfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=C/SEHAMdttQjA7hTIweXyWliIsCysW2EFbhutxpfmc8=;
-        b=eLjYofkWaUcjp3KdLZemqWEf3A42aevrHYVWKoN6yvVjYhoi4bxbAYx3schhmfbKJy
-         aFpkwoE8sHsbozGc9/7pmlo8PHkhL7mXobUXgrCVYb3LP14+hzen20ClADBMT5qrk2Hu
-         zYf7Une1YBWLRNI9DRuNaer9Kp2RK2FnsC/a6PF8wny/39CIvVuMRuoSdT5Ti5gmm0qF
-         9HieYaZE5Or8cg4E8rXtXg1RDbiTjc1KYX2BUZBfScW1BX/o/Ine93nvRBoKUXjmxEg/
-         ta+IHhWYMDINbyJkoSoOVxkN2JiLrVYykXFcPd38IC93K3eDPJfujJiqDYZ3WfQ1qoKa
-         qFHw==
-X-Gm-Message-State: AOAM5317NSV+5LU6YCEPAbb+s3TYR9fOWL1fhu8NV0IJaB7lZLI+KZaV
-        EBFfKrKnaRz0RarqqjuY7EA=
-X-Google-Smtp-Source: ABdhPJyX9Npm/QMJKR4GWGM6FPXPKELHcT0PzZlOHr7Xeb4lumVtKBsLPYD35g2ae2eWqtXumI9xSw==
-X-Received: by 2002:a2e:b5cd:: with SMTP id g13mr20825946ljn.372.1617108508345;
-        Tue, 30 Mar 2021 05:48:28 -0700 (PDT)
-Received: from [192.168.1.11] ([94.103.229.149])
-        by smtp.gmail.com with ESMTPSA id x29sm2267266lfn.60.2021.03.30.05.48.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Mar 2021 05:48:27 -0700 (PDT)
-Message-ID: <302c485c2209d54b88b54daa189589c76b4a66d0.camel@gmail.com>
-Subject: Re: [PATCH] wireless/nl80211.c: fix uninitialized variable
-From:   Pavel Skripkin <paskripkin@gmail.com>
-To:     Alaa Emad <alaaemadhossney.ae@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-Cc:     johannes@sipsolutions.net, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzkaller <syzkaller@googlegroups.com>,
-        syzbot+72b99dcf4607e8c770f3@syzkaller.appspotmail.com
-Date:   Tue, 30 Mar 2021 15:48:24 +0300
-In-Reply-To: <CAM1DhOjWgN_0GVBeX+pf+9mk_ysaN9pF4agAFUNEkzhxpFR4=w@mail.gmail.com>
-References: <20210329163036.135761-1-alaaemadhossney.ae@gmail.com>
-         <YGIaaezqxNmhVcmn@kroah.com>
-         <CAM1DhOgA9DDaGSGFxKgXBONopoo4rLJZheK2jzW_BK-mJrNZKQ@mail.gmail.com>
-         <YGIjOZauy9kPwINV@kroah.com>
-         <CAM1DhOjWgN_0GVBeX+pf+9mk_ysaN9pF4agAFUNEkzhxpFR4=w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 
+        Tue, 30 Mar 2021 09:25:06 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <luca@coelho.fi>)
+        id 1lREMe-0007fg-UX; Tue, 30 Mar 2021 16:25:02 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 30 Mar 2021 16:24:49 +0300
+Message-Id: <iwlwifi.20210330162204.eb4f2ff1b863.Ib16238106b33d58b2b7688dc6297018b915ecef4@changeid>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20210330132500.468321-1-luca@coelho.fi>
+References: <20210330132500.468321-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: [PATCH 01/12] iwlwifi: mvm: enable TX on new CSA channel before disconnecting
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi!
+From: Sara Sharon <sara.sharon@intel.com>
 
-On Tue, 2021-03-30 at 14:42 +0200, Alaa Emad wrote:
-> 
-> 
-> On Mon, 29 Mar 2021 at 20:58, Greg KH <gregkh@linuxfoundation.org>
-> wrote:
-> > On Mon, Mar 29, 2021 at 08:41:38PM +0200, Alaa Emad wrote:
-> > > On Mon, 29 Mar 2021 at 20:20, Greg KH <gregkh@linuxfoundation.org>
-> > wrote:
-> > > 
-> > > > On Mon, Mar 29, 2021 at 06:30:36PM +0200, Alaa Emad wrote:
-> > > > > Reported-by:
-> > syzbot+72b99dcf4607e8c770f3@syzkaller.appspotmail.com
-> > > > > Signed-off-by: Alaa Emad <alaaemadhossney.ae@gmail.com>
-> > > > 
-> > > > You need to provide some changelog text here, I know I can not
-> > take
-> > > > patches without that, maybe the wireless maintainer is more
-> > flexible :)
-> > > > 
-> > >   you mean explain what i did , right?
-> > 
-> > Yes, explain why this change is needed.
-> > 
-> 
-> 
->   
->   This change fix  KMSAN uninit-value in net/wireless/nl80211.c:225 ,
-> That because of `fixedlen` variable uninitialized. 
->    So I initialized it by zero because the code assigned value to it
-> after that and doesn't depend on any stored value in it . 
+When moving to the new channel, we block TX until we hear the
+first beacon. if it is not heard, we proceed to disconnect.
+Since TX is blocked (without mac80211 being aware of it) the frame
+is stuck, resulting with queue hang.
 
-You should add this message to the patch, not just write it to
-maintainer.
+Instead, reenable TX before reporting on the connection loss.
+As we are on the new channel, there is no problem with that,
+even if the original CSA had quiet mode.
 
-I think, this link might be
-useful https://www.kernel.org/doc/html/v4.17/process/submitting-patches.html
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> 
-> 
-> 
-> Thanks ,
-> Alaa
-> -- 
-> You received this message because you are subscribed to the Google
-> Groups "syzkaller" group.
-> To unsubscribe from this group and stop receiving emails from it, send
-> an email to syzkaller+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit
-> https://groups.google.com/d/msgid/syzkaller/CAM1DhOjWgN_0GVBeX%2Bpf%2B9mk_ysaN9pF4agAFUNEkzhxpFR4%3Dw%40mail.gmail.com
-> .
-
-With regards,
-Pavel Skripkin
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 0b012f8c9eb2..1418a6438635 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -151,6 +151,16 @@ static bool iwl_mvm_te_check_disconnect(struct iwl_mvm *mvm,
+ 	if (errmsg)
+ 		IWL_ERR(mvm, "%s\n", errmsg);
+ 
++	if (mvmvif->csa_bcn_pending) {
++		struct iwl_mvm_sta *mvmsta;
++
++		rcu_read_lock();
++		mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, mvmvif->ap_sta_id);
++		if (!WARN_ON(!mvmsta))
++			iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
++		rcu_read_unlock();
++	}
++
+ 	iwl_mvm_connection_loss(mvm, vif, errmsg);
+ 	return true;
+ }
+-- 
+2.31.0
 
