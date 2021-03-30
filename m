@@ -2,83 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 843B2C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F09C433E3
 	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 13:26:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51687619C1
+	by mail.kernel.org (Postfix) with ESMTP id 61F8F619C5
 	for <linux-wireless@archiver.kernel.org>; Tue, 30 Mar 2021 13:26:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232174AbhC3NZs (ORCPT
+        id S232169AbhC3NZr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Mar 2021 09:25:48 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43606 "EHLO
+        Tue, 30 Mar 2021 09:25:47 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43582 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232017AbhC3NZI (ORCPT
+        with ESMTP id S231968AbhC3NZI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 30 Mar 2021 09:25:08 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lREMh-0007fg-FC; Tue, 30 Mar 2021 16:25:05 +0300
+        id 1lREMe-0007fg-3a; Tue, 30 Mar 2021 16:25:01 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 30 Mar 2021 16:24:52 +0300
-Message-Id: <iwlwifi.20210330162204.9adaedeb59e4.Idaad6aaf3f9759d023b8e00b10064915c0db9aa3@changeid>
+Date:   Tue, 30 Mar 2021 16:24:48 +0300
+Message-Id: <20210330132500.468321-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20210330132500.468321-1-luca@coelho.fi>
-References: <20210330132500.468321-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: mvm: don't allow CSA if we haven't been fully associated
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.13 2021-03-30
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-"Fully associated" means that we heard a beacon with the DTIM
-information and the firmware is configured to track the beacons.
-Since the firmware needs to track the beacons for the CSA, we
-can't configure the firmware for CSA before it knows when the
-beacons are expected otherwise we'd get ASSERT 301D.
-If we are required to start CSA before we told the firmware
-when the beacons are expected to arrive, just report a
-failure and let mac80211 disconnect.
+Hi,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Here's the first set of patches intended for v5.13.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index baf7404c137d..9ed6e2783cc4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4610,6 +4610,16 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+		/*
-+		 * We haven't configured the firmware to be associated yet since
-+		 * we don't know the dtim period. In this case, the firmware can't
-+		 * track the beacons.
-+		 */
-+		if (!vif->bss_conf.assoc || !vif->bss_conf.dtim_period) {
-+			ret = -EBUSY;
-+			goto out_unlock;
-+		}
-+
- 		if (chsw->delay > IWL_MAX_CSA_BLOCK_TX)
- 			schedule_delayed_work(&mvmvif->csa_work, 0);
- 
+The changes are:
+
+* Add support for new FTM FW APIs;
+* Some CSA fixes;
+* Support for new HW family and other HW detection fixes;
+* Robustness improvement in the HW detection code;
+* Some other small fixes, clean-ups and improvements.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (2):
+  iwlwifi: mvm: support range request command version 12
+  iwlwifi: mvm: responder: support responder config command version 8
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: don't allow CSA if we haven't been fully associated
+
+Johannes Berg (3):
+  iwlwifi: pcie: avoid unnecessarily taking spinlock
+  iwlwifi: pcie: normally grab NIC access for inflight-hcmd
+  iwlwifi: pcie: make cfg vs. trans_cfg more robust
+
+Matti Gottlieb (1):
+  iwlwifi: pcie: Add support for Bz Family
+
+Mordechay Goodstein (1):
+  iwlwifi: pcie: clear only FH bits handle in the interrupt
+
+Sara Sharon (1):
+  iwlwifi: mvm: enable TX on new CSA channel before disconnecting
+
+ybaruch (3):
+  iwlwifi: change step in so-gf struct
+  iwlwifi: change name to AX 211 and 411 family
+  iwlwifi: add 160Mhz to killer 1550 name
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  64 ++++++-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |   2 +-
+ .../wireless/intel/iwlwifi/fw/api/location.h  | 173 +++++++++++++++++-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |   8 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |   3 +
+ .../wireless/intel/iwlwifi/mvm/constants.h    |   9 +
+ .../intel/iwlwifi/mvm/ftm-initiator.c         |  76 +++++++-
+ .../intel/iwlwifi/mvm/ftm-responder.c         |  27 ++-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  10 +
+ .../wireless/intel/iwlwifi/mvm/time-event.c   |  10 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  63 ++++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |   9 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  69 +++----
+ 13 files changed, 456 insertions(+), 67 deletions(-)
+
 -- 
 2.31.0
 
