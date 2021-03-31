@@ -4,26 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15480C433E5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44913C433E9
 	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 02:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6A38619D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 02:40:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3258C619DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 02:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233406AbhCaCjy (ORCPT
+        id S233316AbhCaCjs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Mar 2021 22:39:54 -0400
-Received: from mail-m17637.qiye.163.com ([59.111.176.37]:53488 "EHLO
+        Tue, 30 Mar 2021 22:39:48 -0400
+Received: from mail-m17637.qiye.163.com ([59.111.176.37]:52174 "EHLO
         mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233291AbhCaCjg (ORCPT
+        with ESMTP id S233258AbhCaCjS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Mar 2021 22:39:36 -0400
+        Tue, 30 Mar 2021 22:39:18 -0400
 Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
-        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id 9F893980218;
-        Wed, 31 Mar 2021 10:39:33 +0800 (CST)
+        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id 4F287980282;
+        Wed, 31 Mar 2021 10:39:14 +0800 (CST)
 From:   Wan Jiabing <wanjiabing@vivo.com>
 To:     Giuseppe Cavallaro <peppe.cavallaro@st.com>,
         Alexandre Torgue <alexandre.torgue@foss.st.com>,
@@ -48,45 +48,45 @@ To:     Giuseppe Cavallaro <peppe.cavallaro@st.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com
 Cc:     kael_w@yeah.net
-Subject: [PATCH 4/4] net: ethernet: stmicro: Remove duplicate struct declaration
-Date:   Wed, 31 Mar 2021 10:35:53 +0800
-Message-Id: <20210331023557.2804128-5-wanjiabing@vivo.com>
+Subject: [PATCH 1/4] net: wireless: broadcom: Remove duplicate struct declaration
+Date:   Wed, 31 Mar 2021 10:35:50 +0800
+Message-Id: <20210331023557.2804128-2-wanjiabing@vivo.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210331023557.2804128-1-wanjiabing@vivo.com>
 References: <20210331023557.2804128-1-wanjiabing@vivo.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
-        oVCBIfWUFZQhpNGU9IS0sfQkNMVkpNSkxKTkNITE9IS0NVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        oVCBIfWUFZHUsZQx4ZH0MaGU1LVkpNSkxKTkNITk9CSE1VEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
         FZT0tIVUpKS0hKTFVLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6ME06OTo6DD8OQzYDCzguDjZN
-        EE4KCjVVSlVKTUpMSk5DSExPTUJKVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
-        TVVKTklVSk9OVUpDSVlXWQgBWUFIT0lMNwY+
-X-HM-Tid: 0a7886268371d992kuws9f893980218
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PDo6Lhw*Pz8JQzYhCz8vDxEw
+        EDwKCjJVSlVKTUpMSk5DSE5OSU9LVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
+        TVVKTklVSk9OVUpDSVlXWQgBWUFIT01CNwY+
+X-HM-Tid: 0a78862637d8d992kuws4f287980282
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-struct stmmac_safety_stats is declared twice. One has been
-declared at 29th line. Remove the duplicate.
+struct brcmf_bus is declared twice. One has been declared
+at 37th line. Remove the duplicate.
 
 Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
 ---
- drivers/net/ethernet/stmicro/stmmac/hwif.h | 1 -
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/stmicro/stmmac/hwif.h b/drivers/net/ethernet/stmicro/stmmac/hwif.h
-index 979ac9fca23c..9139bbcc06c0 100644
---- a/drivers/net/ethernet/stmicro/stmmac/hwif.h
-+++ b/drivers/net/ethernet/stmicro/stmmac/hwif.h
-@@ -280,7 +280,6 @@ struct stmmac_dma_ops {
- struct mac_device_info;
- struct net_device;
- struct rgmii_adv;
--struct stmmac_safety_stats;
- struct stmmac_tc_entry;
- struct stmmac_pps_cfg;
- struct stmmac_rss;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 4146faeed344..44ba6f389fa9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -112,7 +112,6 @@ do {									\
+ 
+ extern int brcmf_msg_level;
+ 
+-struct brcmf_bus;
+ struct brcmf_pub;
+ #ifdef DEBUG
+ struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
 -- 
 2.25.1
 
