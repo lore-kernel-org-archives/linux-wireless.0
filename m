@@ -2,91 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44913C433E9
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 02:40:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10F85C433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 06:29:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3258C619DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 02:40:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0470619AA
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Mar 2021 06:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233316AbhCaCjs (ORCPT
+        id S231315AbhCaG2d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Mar 2021 22:39:48 -0400
-Received: from mail-m17637.qiye.163.com ([59.111.176.37]:52174 "EHLO
-        mail-m17637.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233258AbhCaCjS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Mar 2021 22:39:18 -0400
-Received: from wanjb-virtual-machine.localdomain (unknown [36.152.145.182])
-        by mail-m17637.qiye.163.com (Hmail) with ESMTPA id 4F287980282;
-        Wed, 31 Mar 2021 10:39:14 +0800 (CST)
-From:   Wan Jiabing <wanjiabing@vivo.com>
-To:     Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@foss.st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ajay Singh <ajay.kathat@microchip.com>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Wan Jiabing <wanjiabing@vivo.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Cc:     kael_w@yeah.net
-Subject: [PATCH 1/4] net: wireless: broadcom: Remove duplicate struct declaration
-Date:   Wed, 31 Mar 2021 10:35:50 +0800
-Message-Id: <20210331023557.2804128-2-wanjiabing@vivo.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210331023557.2804128-1-wanjiabing@vivo.com>
-References: <20210331023557.2804128-1-wanjiabing@vivo.com>
+        Wed, 31 Mar 2021 02:28:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57834 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233813AbhCaG2S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Mar 2021 02:28:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D5ADB619B1;
+        Wed, 31 Mar 2021 06:28:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1617172098;
+        bh=5uxPRQ9GoiYbpBHn54+wtuQFW30M/xjIPiCOTwrMBSQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=noJoS3xCXbQxkZIoxlhtm2lqBSeAbmRg3OjfCbmdDLvut9dUqUW0Ue7GPo+nFa9Sj
+         H+vQ8ADEdWmtri/15hr21P3RFLDJlyV9BbNLQa7TzP6/WVzr7MikpjiLrwMAoaCQw3
+         razPCSoEQR/nelUYjPyjNyJc0MD8M+2yLnyaVqV0=
+Date:   Wed, 31 Mar 2021 08:28:15 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Pavel Skripkin <paskripkin@gmail.com>
+Cc:     brookebasile@gmail.com, ath9k-devel@qca.qualcomm.com,
+        davem@davemloft.net, kuba@kernel.org, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com,
+        syzkaller-bugs@googlegroups.com
+Subject: Re: Memory leak in ath9k_hif_usb_dealloc_tx_urbs()
+Message-ID: <YGQWf1lP4ZOUFiG5@kroah.com>
+References: <20200911071427.32354-1-brookebasile@gmail.com>
+ <20210330193652.10642-1-paskripkin@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
-        oVCBIfWUFZHUsZQx4ZH0MaGU1LVkpNSkxKTkNITk9CSE1VEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
-        FZT0tIVUpKS0hKTFVLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PDo6Lhw*Pz8JQzYhCz8vDxEw
-        EDwKCjJVSlVKTUpMSk5DSE5OSU9LVTMWGhIXVQwaFRESGhkSFRw7DRINFFUYFBZFWVdZEgtZQVlI
-        TVVKTklVSk9OVUpDSVlXWQgBWUFIT01CNwY+
-X-HM-Tid: 0a78862637d8d992kuws4f287980282
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210330193652.10642-1-paskripkin@gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-struct brcmf_bus is declared twice. One has been declared
-at 37th line. Remove the duplicate.
+On Tue, Mar 30, 2021 at 10:36:52PM +0300, Pavel Skripkin wrote:
+> Hi!
+> 
+> I did some debugging on this
+> https://syzkaller.appspot.com/bug?id=3ea507fb3c47426497b52bd82b8ef0dd5b6cc7ee
+> and, I believe, I recognized the problem. The problem appears in case of
+> ath9k_htc_hw_init() fail. In case of this fail all tx_buf->urb krefs will be
+> initialized to 1, but in free function:
+> 
+> static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+> 
+> ....
+> 
+> static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+> {
+>     ...
+> 	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
+> 				 &hif_dev->tx.tx_buf, list) {
+> 		usb_get_urb(tx_buf->urb);
+> 		...
+> 		usb_free_urb(tx_buf->urb);
+> 		...
+> 		}
+> 
+> Krefs are incremented and then decremented, that means urbs won't be freed.
+> I found your patch and I can't properly understand why You added usb_get_urb(tx_buf->urb).
+> Can You explain please, I believe this will help me or somebody to fix this ussue :)
 
-Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 1 -
- 1 file changed, 1 deletion(-)
+I think almost everyone who has looked into this has given up due to the
+mess of twisty-passages here with almost no real-world benefits for
+unwinding them :)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 4146faeed344..44ba6f389fa9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -112,7 +112,6 @@ do {									\
- 
- extern int brcmf_msg_level;
- 
--struct brcmf_bus;
- struct brcmf_pub;
- #ifdef DEBUG
- struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
--- 
-2.25.1
+Good luck!
 
+greg k-h
