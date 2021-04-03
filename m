@@ -2,102 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2E8C43470
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 05:48:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C216C43461
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 12:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 261C9611EE
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 05:48:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 474B561249
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 12:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236035AbhDCFsP (ORCPT
+        id S236660AbhDCM0w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Apr 2021 01:48:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46094 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232140AbhDCFsM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Apr 2021 01:48:12 -0400
-Received: from ustc.edu.cn (email6.ustc.edu.cn [IPv6:2001:da8:d800::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07DD1C0613E6;
-        Fri,  2 Apr 2021 22:48:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mail.ustc.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=U6U25Q7oy9
-        Cp9XMB8iKbrDhc9wIxlBHGI4NY2S+Os98=; b=U8CrhRfyTFuI/N2i210hz7LFRp
-        EBcK228pAUWoawWMEA8f10AQ8nguQS+uaSUPwQqGbp0/61GolkNHUruCibz0CTe5
-        fKFKXDG2wzlec0qRT7ds6vkxet5MBFmdrbPmHHFQkBY3Hnu3t/+2/9z5P83OrNCG
-        hT6mXCxXL8yEJ7KRM=
-Received: from ubuntu.localdomain (unknown [202.38.69.14])
-        by newmailweb.ustc.edu.cn (Coremail) with SMTP id LkAmygAXHKSNAWhgflqPAA--.209S4;
-        Sat, 03 Apr 2021 13:47:57 +0800 (CST)
-From:   Lv Yunlong <lyl2019@mail.ustc.edu.cn>
-To:     luciano.coelho@intel.com, kvalo@codeaurora.org,
-        davem@davemloft.net, kuba@kernel.org,
-        mordechay.goodstein@intel.com, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Lv Yunlong <lyl2019@mail.ustc.edu.cn>
-Subject: [PATCH] wireless: iwlwifi: Fix a double free in iwl_txq_dyn_alloc_dma
-Date:   Fri,  2 Apr 2021 22:47:55 -0700
-Message-Id: <20210403054755.4781-1-lyl2019@mail.ustc.edu.cn>
-X-Mailer: git-send-email 2.25.1
+        Sat, 3 Apr 2021 08:26:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230409AbhDCM0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 3 Apr 2021 08:26:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F23F66121F;
+        Sat,  3 Apr 2021 12:26:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617452809;
+        bh=3HVBp8VXqO9PK5lY2wfx+RMG+EikDPQaOSPTvIZmmfc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Ha+m9fP8SYsGzZc+N6BVqI/jVXer3FdpSHPms55n9dByaZ0S5zIMSR8BOMKWRpEnQ
+         PWWjxVaMT7f0oxo7UvAPhZLaTARkDlNFn+DxYzzZ+i9afJuvwNZpCvtI7lBIFPXU60
+         9dL+9TEI5NHyYLJttY09pM/kXqpYAelrLaFLI2nLfZvzfIqec6tKHtkqcn8t3hfPW9
+         XhbgInuRrd5VXc/Dz2cesvqHbT77eYfUqjVRhOX83PvWeE+gzU5rrcr5aOThhXSMTV
+         AhKz+VoAEzT0az3ocSk4oSSeoCQleSy0El8VvQtSQNtaKLIZEhnND3vAa0E3lrHVYg
+         MjRqGnIGp5fzQ==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, leon.yen@mediatek.com
+Subject: [PATCH] mt76: mt7921: always wake the device in mt7921_remove_interface
+Date:   Sat,  3 Apr 2021 14:26:39 +0200
+Message-Id: <934f570b49be460fd4702f3dec172b6d09eeb0f8.1617452694.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: LkAmygAXHKSNAWhgflqPAA--.209S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Gry7Zw43uw4UJF17ZF48Crg_yoW8Jr4rpF
-        4DCr12kFZ8Xa1DZ34kAF4SgFnxJa1Uua93Ka4jyw1fu343Ars5K3WkuFyjqry8JF4rZr1S
-        9F1YkF45GF98XFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUB014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-        0_GcWlnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-        4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
-        648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc2xSY4AK67AK6r4rMxAIw28IcxkI7VAKI4
-        8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
-        wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
-        v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20E
-        Y4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-        0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYkucDUUUU
-X-CM-SenderInfo: ho1ojiyrz6zt1loo32lwfovvfxof0/
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In iwl_txq_dyn_alloc_dma, txq->tfds is freed at first time by:
-iwl_txq_alloc()->goto err_free_tfds->dma_free_coherent(). But
-it forgot to set txq->tfds to NULL.
+Make sure the mcu is not in sleep mode before sending mcu messages in
+mt7921_remove_interface routine.
 
-Then the txq->tfds is freed again in iwl_txq_dyn_alloc_dma by:
-goto error->iwl_txq_gen2_free_memory()->dma_free_coherent().
-
-My patch sets txq->tfds to NULL after the first free to avoid the
-double free.
-
-Fixes: 0cd1ad2d7fd41 ("iwlwifi: move all bus-independent TX functions to common code")
-Signed-off-by: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+Fixes: 1d8efc741df80 ("mt76: mt7921: introduce Runtime PM support")
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Co-developed-by: Leon Yen <leon.yen@mediatek.com>
+Signed-off-by: Leon Yen <leon.yen@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-index 833f43d1ca7a..99c8e473031a 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-@@ -1101,6 +1101,7 @@ int iwl_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq, int slots_num,
- 	return 0;
- err_free_tfds:
- 	dma_free_coherent(trans->dev, tfd_sz, txq->tfds, txq->dma_addr);
-+	txq->tfds = NULL;
- error:
- 	if (txq->entries && cmd_queue)
- 		for (i = 0; i < slots_num; i++)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index c0ebb6077fa8..dc157d5f926d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -360,12 +360,12 @@ static void mt7921_remove_interface(struct ieee80211_hw *hw,
+ 	if (vif == phy->monitor_vif)
+ 		phy->monitor_vif = NULL;
+ 
++	mt7921_mutex_acquire(dev);
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, &msta->wcid);
+ 	mt76_connac_mcu_uni_add_dev(&dev->mphy, vif, &mvif->sta.wcid, false);
+ 
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
+ 
+-	mt7921_mutex_acquire(dev);
+ 	dev->mt76.vif_mask &= ~BIT(mvif->mt76.idx);
+ 	phy->omac_mask &= ~BIT_ULL(mvif->mt76.omac_idx);
+ 	mt7921_mutex_release(dev);
 -- 
-2.25.1
-
+2.30.2
 
