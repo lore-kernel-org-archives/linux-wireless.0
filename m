@@ -2,76 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 390BEC433ED
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 17:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EB35C433B4
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 07:48:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDEC761287
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Apr 2021 17:40:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0D86610CE
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 07:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236920AbhDCRkJ (ORCPT
+        id S229578AbhDDHsm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Apr 2021 13:40:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45678 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236819AbhDCRkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Apr 2021 13:40:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0D1C56124C;
-        Sat,  3 Apr 2021 17:40:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617471606;
-        bh=S4dM6+RPKZXERZx50L1tMJIGxsk27JygKtyfxh/aVAc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=W2o6jCal5Z/Amau22F71QnzZiO5L3kPJ9DmU+MnVySkaCNi3Rpo6wo9pyelagLiMr
-         rlQ8MJuPhBWP0MeK+5ezpHnaGOsEjLtM4H/e7/v6cTmvbu8mHeE+/s5ABWyy0v3gIS
-         ih/hKgicKmPAUmkBdtsAWL3xiTGVySAbpbHHJuyXjDPrhvpXf9eNW5XRPrnxaRRqNK
-         igVxhhkAhHrOV1Wxj91OD/57W72aD6cQbrYo4G1esh39TeBimojjGl5I6s09xnjskD
-         Uk7RMKCulxAcxUPD+jIazVNDc3OPcDPxEo6wgsiO0RmBp7V6NvU5prW8Qhmq5NnBIz
-         SiRmw1BzVx8eQ==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        ryder.lee@mediatek.com
-Subject: [PATCH] mt76: mt7615: always wake the device in mt7615_remove_interface
-Date:   Sat,  3 Apr 2021 19:39:58 +0200
-Message-Id: <aec7c9b0d76fda57703eaa11d35542060dfff60c.1617471501.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.30.2
+        Sun, 4 Apr 2021 03:48:42 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:34594 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229550AbhDDHsl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 4 Apr 2021 03:48:41 -0400
+X-UUID: ab7b507e141743619df071ff6bdfcba8-20210404
+X-UUID: ab7b507e141743619df071ff6bdfcba8-20210404
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 469943707; Sun, 04 Apr 2021 15:48:33 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sun, 4 Apr 2021 15:48:31 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sun, 4 Apr 2021 15:48:31 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7915: fix mt7915_mcu_add_beacon
+Date:   Sun, 4 Apr 2021 15:48:24 +0800
+Message-ID: <c55cfe46b687902fccef4c5428b516614ca16645.1617522253.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <e4f7df8a29d59656cff1c24dce0c2b695436e9f9.1617522253.git.ryder.lee@mediatek.com>
+References: <e4f7df8a29d59656cff1c24dce0c2b695436e9f9.1617522253.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 5D5E0432BA407BD1CD2D454D980094F6B26B7C043BB9E18AF3E8580CFB86F1482000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Similar to mt7921 driver, make sure the mcu is not in sleep mode before
-sending mcu messages in mt7615_remove_interface routine.
+ieee80211_beacon_get_template() returns NULL when beacon state is disabled.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 22 ++++++++++---------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 740c9a45e21b..57567e35f71d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -257,11 +257,11 @@ static void mt7615_remove_interface(struct ieee80211_hw *hw,
- 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
- 	int idx = msta->wcid.idx;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 2d2bae93133b..d2e5306b153c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2451,6 +2451,17 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
+ 	struct bss_info_bcn *bcn;
+ 	int len = MT7915_BEACON_UPDATE_SIZE + MAX_BEACON_SIZE;
  
-+	mt7615_mutex_acquire(dev);
++	rskb = mt7915_mcu_alloc_sta_req(dev, mvif, NULL, len);
++	if (IS_ERR(rskb))
++		return PTR_ERR(rskb);
 +
- 	mt7615_mcu_add_bss_info(phy, vif, NULL, false);
- 	mt7615_mcu_sta_add(phy, vif, NULL, false);
++	tlv = mt7915_mcu_add_tlv(rskb, BSS_INFO_OFFLOAD, sizeof(*bcn));
++	bcn = (struct bss_info_bcn *)tlv;
++	bcn->enable = en;
++
++	if (!en)
++		goto out;
++
+ 	skb = ieee80211_beacon_get_template(hw, vif, &offs);
+ 	if (!skb)
+ 		return -EINVAL;
+@@ -2461,16 +2472,6 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
+ 		return -EINVAL;
+ 	}
  
--	mt7615_mutex_acquire(dev);
+-	rskb = mt7915_mcu_alloc_sta_req(dev, mvif, NULL, len);
+-	if (IS_ERR(rskb)) {
+-		dev_kfree_skb(skb);
+-		return PTR_ERR(rskb);
+-	}
 -
- 	mt76_testmode_reset(phy->mt76, true);
- 	if (vif == phy->monitor_vif)
- 	    phy->monitor_vif = NULL;
+-	tlv = mt7915_mcu_add_tlv(rskb, BSS_INFO_OFFLOAD, sizeof(*bcn));
+-	bcn = (struct bss_info_bcn *)tlv;
+-	bcn->enable = en;
+-
+ 	if (mvif->band_idx) {
+ 		info = IEEE80211_SKB_CB(skb);
+ 		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
+@@ -2481,6 +2482,7 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
+ 	mt7915_mcu_beacon_cont(dev, rskb, skb, bcn, &offs);
+ 	dev_kfree_skb(skb);
+ 
++out:
+ 	return mt76_mcu_skb_send_msg(&phy->dev->mt76, rskb,
+ 				     MCU_EXT_CMD(BSS_INFO_UPDATE), true);
+ }
 -- 
-2.30.2
+2.18.0
 
