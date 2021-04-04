@@ -2,115 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23043C433ED
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 07:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 610F5C433B4
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 11:37:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF6D661359
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 07:48:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26CC961388
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Apr 2021 11:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbhDDHsm (ORCPT
+        id S230446AbhDDLhL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Apr 2021 03:48:42 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:36456 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229569AbhDDHsl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Apr 2021 03:48:41 -0400
-X-UUID: f16c3bb2a3f546859d5678e291bf383f-20210404
-X-UUID: f16c3bb2a3f546859d5678e291bf383f-20210404
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2119883454; Sun, 04 Apr 2021 15:48:33 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sun, 4 Apr 2021 15:48:30 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 4 Apr 2021 15:48:25 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] mt76: mt7615: fix .add_beacon_offload()
-Date:   Sun, 4 Apr 2021 15:48:23 +0800
-Message-ID: <e4f7df8a29d59656cff1c24dce0c2b695436e9f9.1617522253.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Sun, 4 Apr 2021 07:37:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60612 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230435AbhDDLhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 4 Apr 2021 07:37:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4624D61386;
+        Sun,  4 Apr 2021 11:37:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617536226;
+        bh=oVK8wSHdW1TalBk7gcvkKj0NQmVPxBgJ0v+ho/i0ie0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=r37sYybTq1KUX1TXZDobG3k9jtYSC09ENYCj7TkE3K9BXu3FeRsZvQRFO80TQh/SF
+         Tv8HDwk89L4RiMIJONuvQBB8tBdumasJuiF1UZWxC3zVfBcVAGOL0YtzFekbtgNfGj
+         w3jVwsUjhbzD6rqt+vumBFMrZG/TeQFXjojfNEBdoM3sVmvYE2Tpo/keyUsgkglruf
+         brMwOLLX7/C1OF4gAB3FlyO93LlDiCQKegwmH1SrOdPoyc578K8hJR/ROuRpfxtf8U
+         MlXWqteo+Y2//OhFV90M1e/OcOeyZN8D2kHji56X8SIpuk38TK2tmqGeW+zpYLzjbb
+         ZcaOIR9LH5FKg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com
+Subject: [PATCH] mt76: mt7921: introduce MT_WFDMA_DUMMY_CR definition
+Date:   Sun,  4 Apr 2021 13:36:57 +0200
+Message-Id: <5ddfd1ea6169b5c96f23bee50196c013269aface.1617536164.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 107E1DE47BFFE049BF3324AC3A36DE74FC65B65B725E15F0D9C5F58DFB9999A92000:8
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ieee80211_beacon_get_template() returns NULL when beacon state is disabled,
-so beacon_offload cannot be disabled for some devices.
+Introduce MT_WFDMA_DUMMY_CR definition and remove magic numbers
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/dma.c  | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c  | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/regs.h | 6 ++++++
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 04b21ec611bb..3274d079bd11 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -702,6 +702,9 @@ mt7615_mcu_add_beacon_offload(struct mt7615_dev *dev,
- 	};
- 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+index 60de29a921a8..992faf82ad09 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+@@ -323,7 +323,7 @@ int mt7921_dma_init(struct mt7921_dev *dev)
+ 	mt76_set(dev, MT_WFDMA0_GLO_CFG,
+ 		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
  
-+	if (!enable)
-+		goto out;
+-	mt76_set(dev, 0x54000120, BIT(1));
++	mt76_set(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
+ 
+ 	/* enable interrupts for TX/RX rings */
+ 	mt7921_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index c4a9ac7da5f4..858273470a7c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -1272,7 +1272,7 @@ mt7921_dma_reset(struct mt7921_dev *dev)
+ 	mt76_set(dev, MT_WFDMA0_GLO_CFG,
+ 		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
+ 
+-	mt76_set(dev, 0x54000120, BIT(1));
++	mt76_set(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
+ 
+ 	/* enable interrupts for TX/RX rings */
+ 	mt7921_irq_enable(dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+index 13097ef94e02..391cbefe0f82 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+@@ -391,6 +391,12 @@
+ #define MT_TOP_MISC			MT_TOP(0xf0)
+ #define MT_TOP_MISC_FW_STATE		GENMASK(2, 0)
+ 
++#define MT_MCU_WPDMA0_BASE		0x54000000
++#define MT_MCU_WPDMA0(ofs)		(MT_MCU_WPDMA0_BASE + (ofs))
 +
- 	skb = ieee80211_beacon_get_template(hw, vif, &offs);
- 	if (!skb)
- 		return -EINVAL;
-@@ -731,6 +734,7 @@ mt7615_mcu_add_beacon_offload(struct mt7615_dev *dev,
- 	}
- 	dev_kfree_skb(skb);
- 
-+out:
- 	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_BCN_OFFLOAD, &req,
- 				 sizeof(req), true);
- }
-@@ -1165,8 +1169,8 @@ mt7615_mcu_uni_add_beacon_offload(struct mt7615_dev *dev,
- 			__le16 tim_ie_pos;
- 			__le16 csa_ie_pos;
- 			__le16 bcc_ie_pos;
--			/* 0: enable beacon offload
--			 * 1: disable beacon offload
-+			/* 0: disable beacon offload
-+			 * 1: enable beacon offload
- 			 * 2: update probe respond offload
- 			 */
- 			u8 enable;
-@@ -1189,6 +1193,9 @@ mt7615_mcu_uni_add_beacon_offload(struct mt7615_dev *dev,
- 	};
- 	struct sk_buff *skb;
- 
-+	if (!enable)
-+		goto out;
++#define MT_WFDMA_DUMMY_CR		MT_MCU_WPDMA0(0x120)
++#define MT_WFDMA_NEED_REINIT		BIT(1)
 +
- 	skb = ieee80211_beacon_get_template(mt76_hw(dev), vif, &offs);
- 	if (!skb)
- 		return -EINVAL;
-@@ -1213,6 +1220,7 @@ mt7615_mcu_uni_add_beacon_offload(struct mt7615_dev *dev,
- 	}
- 	dev_kfree_skb(skb);
- 
-+out:
- 	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_BSS_INFO_UPDATE,
- 				 &req, sizeof(req), true);
- }
+ #define MT_HW_BOUND			0x70010020
+ #define MT_HW_CHIPID			0x70010200
+ #define MT_HW_REV			0x70010204
 -- 
-2.18.0
+2.30.2
 
