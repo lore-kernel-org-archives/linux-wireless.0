@@ -2,121 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8487C43462
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Apr 2021 09:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0A2C433B4
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Apr 2021 12:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82ED0613A0
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Apr 2021 09:10:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C495613A7
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Apr 2021 12:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238728AbhDEJKx (ORCPT
+        id S235539AbhDEMks (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Apr 2021 05:10:53 -0400
-Received: from smtp13.smtpout.orange.fr ([80.12.242.135]:35756 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239056AbhDEJJ0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Apr 2021 05:09:26 -0400
-Received: from localhost.localdomain ([90.126.11.170])
-        by mwinf5d73 with ME
-        id ox9G2400A3g7mfN03x9HB9; Mon, 05 Apr 2021 11:09:18 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Mon, 05 Apr 2021 11:09:18 +0200
-X-ME-IP: 90.126.11.170
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     Jes.Sorensen@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] rtl8xxxu: Simplify locking of a skb list accesses
-Date:   Mon,  5 Apr 2021 11:09:14 +0200
-Message-Id: <8bcec6429615aeb498482dc7e1955ce09b456585.1617613700.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.27.0
+        Mon, 5 Apr 2021 08:40:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43640 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235289AbhDEMkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Apr 2021 08:40:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 430126138A;
+        Mon,  5 Apr 2021 12:40:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617626441;
+        bh=VGwKEMRXscHQF4KuqMR3R4gFsUkrKP1ak8FE4OoKZUc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=fDbYnkoepUhsjxGFvpnTC1Nhxna+OSSNCiNNXnJ+dnGvz9r5JnuakqUSOOjeA0MUk
+         HomfxNi/fMPnioWbMruHCHTJMvZHzyn7ZaYLErvKr8cZc17XhXXzzjOHytMXWje7rT
+         /uRoQalwYUXDNS3ElMt3U48IFBsCQmbfxBdEsdiUT5dhhH0YRN9+5EyIjQsjHooT6+
+         vt/O6FVWbvwbMs//A8Ns47Fpbh+R4GQha/HHOP/+NpNaMP793TPcHBKVWZCBVFPhCc
+         Muhwfljm1A/8dYIc6Kq/rObMhNs4d1wIH1VekAxSjRWpICGKR1snHHzWTbgU1t0uMU
+         FhjUksjvjjvTw==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, ryder.lee@mediatek.com,
+        shayne.chen@mediatek.com, devicetree@vger.kernel.org,
+        robh@kernel.org
+Subject: [PATCH 0/8] introduce single-sku support for mt7663/mt7921 drivers
+Date:   Mon,  5 Apr 2021 14:40:24 +0200
+Message-Id: <cover.1617625912.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The 'c2hcmd_lock' spinlock is only used to protect some __skb_queue_tail()
-and __skb_dequeue() calls.
-Use the lock provided in the skb itself and call skb_queue_tail() and
-skb_dequeue(). These functions already include the correct locking.
+Add per-rate power limitations for 802.11n/802.11ac/802.11ax rates to
+mt7663/mt7921 drivers.
+Introduce per-rate power limit dts parsing/binding.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  1 -
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 ++---------
- 2 files changed, 2 insertions(+), 10 deletions(-)
+Felix Fietkau (2):
+  mt76: add functions for parsing rate power limits from DT
+  mt76: mt7615: implement support for using DT rate power limits
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index d6d1be4169e5..d1a566cc0c9e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1391,7 +1391,6 @@ struct rtl8xxxu_priv {
- 	struct delayed_work ra_watchdog;
- 	struct work_struct c2hcmd_work;
- 	struct sk_buff_head c2hcmd_queue;
--	spinlock_t c2hcmd_lock;
- 	struct rtl8xxxu_btcoex bt_coex;
- 	struct rtl8xxxu_ra_report ra_report;
- };
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 5cd7ef3625c5..0eba42f2a66c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5423,7 +5423,6 @@ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
- 	struct rtl8xxxu_priv *priv;
- 	struct rtl8723bu_c2h *c2h;
- 	struct sk_buff *skb = NULL;
--	unsigned long flags;
- 	u8 bt_info = 0;
- 	struct rtl8xxxu_btcoex *btcoex;
- 	struct rtl8xxxu_ra_report *rarpt;
-@@ -5439,9 +5438,7 @@ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
- 		goto out;
- 
- 	while (!skb_queue_empty(&priv->c2hcmd_queue)) {
--		spin_lock_irqsave(&priv->c2hcmd_lock, flags);
--		skb = __skb_dequeue(&priv->c2hcmd_queue);
--		spin_unlock_irqrestore(&priv->c2hcmd_lock, flags);
-+		skb = skb_dequeue(&priv->c2hcmd_queue);
- 
- 		c2h = (struct rtl8723bu_c2h *)skb->data;
- 
-@@ -5499,7 +5496,6 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
- 	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
- 	struct device *dev = &priv->udev->dev;
- 	int len;
--	unsigned long flags;
- 
- 	len = skb->len - 2;
- 
-@@ -5538,9 +5534,7 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
- 		break;
- 	}
- 
--	spin_lock_irqsave(&priv->c2hcmd_lock, flags);
--	__skb_queue_tail(&priv->c2hcmd_queue, skb);
--	spin_unlock_irqrestore(&priv->c2hcmd_lock, flags);
-+	skb_queue_tail(&priv->c2hcmd_queue, skb);
- 
- 	schedule_work(&priv->c2hcmd_work);
- }
-@@ -6606,7 +6600,6 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 	spin_lock_init(&priv->rx_urb_lock);
- 	INIT_WORK(&priv->rx_urb_wq, rtl8xxxu_rx_urb_work);
- 	INIT_DELAYED_WORK(&priv->ra_watchdog, rtl8xxxu_watchdog_callback);
--	spin_lock_init(&priv->c2hcmd_lock);
- 	INIT_WORK(&priv->c2hcmd_work, rtl8xxxu_c2hcmd_callback);
- 	skb_queue_head_init(&priv->c2hcmd_queue);
- 
+Lorenzo Bianconi (4):
+  dt-bindings:net:wireless:ieee80211: introduce regdomain property
+  dt-bindings:net:wireless:mediatek,mt76: introduce power-limits node
+  mt76: mt7615: do not use mt7615 single-sku values for mt7663
+  mt76: introduce single-sku support for mt7663/mt7921
+
+Sean Wang (1):
+  mt76: mt7921: add dumping Tx power table
+
+Shayne Chen (1):
+  mt76: extend DT rate power limits to support 11ax devices
+
+ .../bindings/net/wireless/ieee80211.yaml      |   9 +
+ .../bindings/net/wireless/mediatek,mt76.yaml  |  79 +++++++
+ drivers/net/wireless/mediatek/mt76/eeprom.c   | 219 ++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  13 ++
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  15 +-
+ .../net/wireless/mediatek/mt76/mt7615/main.c  |   4 +
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  66 +++++-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 133 +++++++++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  24 ++
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |  79 +++++++
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |   2 +
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |   4 +
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  23 ++
+ .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  17 ++
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  31 +++
+ 15 files changed, 715 insertions(+), 3 deletions(-)
+
 -- 
-2.27.0
+2.30.2
 
