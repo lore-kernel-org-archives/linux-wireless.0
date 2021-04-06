@@ -2,133 +2,155 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70765C433B4
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3176C433ED
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:37:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50D2C610A0
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:34:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A19DD610A6
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:37:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243532AbhDFDez (ORCPT
+        id S239413AbhDFDhZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Apr 2021 23:34:55 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:48682 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239413AbhDFDey (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Apr 2021 23:34:54 -0400
-X-UUID: cfa7a33e6f744afba678dac0cf8a8b9f-20210406
-X-UUID: cfa7a33e6f744afba678dac0cf8a8b9f-20210406
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 742298244; Tue, 06 Apr 2021 11:34:43 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 6 Apr 2021 11:34:41 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 6 Apr 2021 11:34:41 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 4/6] mt76: mt7921: fix the insmod hangs
-Date:   Tue, 6 Apr 2021 11:34:37 +0800
-Message-ID: <7d78e01bfbdaa0041c6c88a6fc190989a20b1ec3.1617679693.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <4c5666ad0683e467f11ca4a4abb5be335be25696.1617679693.git.objelf@gmail.com>
-References: <4c5666ad0683e467f11ca4a4abb5be335be25696.1617679693.git.objelf@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 7D29E990F5B94B61EFA1C5145FB1283C5C91741CFE307F9DBDDF2401A3B0881A2000:8
-X-MTK:  N
+        Mon, 5 Apr 2021 23:37:25 -0400
+Received: from m12-13.163.com ([220.181.12.13]:60041 "EHLO m12-13.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233556AbhDFDhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Apr 2021 23:37:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=dIDU6J0odxG9RlqAj0
+        JO+hMmJN5ibrBl7SIKeXUpRbI=; b=BbpHXbiBYlVZuatcxDhEvf8w3qMWjvFtUL
+        WnsD7JteofleAHEdcNHlfar9OM71fDlOi389DR03Re1bsfERT07qXa0/gxGZLONQ
+        6E/xjNTI+9gRJEfaL7nIK9n/XW9HgS0ObQH9RgswO3GbsZs/E+tYfqfQtk/qmzsC
+        UoOvHvPXM=
+Received: from wengjianfeng.ccdomain.com (unknown [218.17.89.92])
+        by smtp9 (Coremail) with SMTP id DcCowABXbrkUzGtgTKGNEg--.53507S2;
+        Tue, 06 Apr 2021 10:48:54 +0800 (CST)
+From:   samirweng1979 <samirweng1979@163.com>
+To:     imitsyanko@quantenna.com, geomatsi@gmail.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org, johannes.berg@intel.com,
+        arend.vanspriel@broadcom.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        wengjianfeng <wengjianfeng@yulong.com>
+Subject: [PATCH RESEND] qtnfmac: remove meaningless labels
+Date:   Tue,  6 Apr 2021 10:48:47 +0800
+Message-Id: <20210406024847.27620-1-samirweng1979@163.com>
+X-Mailer: git-send-email 2.15.0.windows.1
+X-CM-TRANSID: DcCowABXbrkUzGtgTKGNEg--.53507S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tr18Jr1DWw45KFyxAw48Xrb_yoW5JF1xpr
+        WrXa9Fkay8K3yvqas5ArZ5Zr1Yvw1xKFWxKrW8C3s5u3W0yr1rKa1Yva4YyrZ8JFW8Jryj
+        qFWvqF1Uu3ZY9a7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jlbyAUUUUU=
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: pvdpx25zhqwiqzxzqiywtou0bp/1tbiLxZssVUMX1zr4QAAs0
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+From: wengjianfeng <wengjianfeng@yulong.com>
 
-Fix the second insert module causing the device hangs after remove module.
+some function's label meaningless, the return statement follows
+the goto statement, so just remove it.
 
-Fixes: 1c099ab44727 ("mt76: mt7921: add MCU support")
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: wengjianfeng <wengjianfeng@yulong.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/init.c   |  2 --
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c    |  3 +--
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c    | 13 +------------
- drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h |  1 +
- 4 files changed, 3 insertions(+), 16 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 27 +++++------------------
+ 1 file changed, 6 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 262c9d150bf0..9046bbfc0690 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -273,8 +273,6 @@ void mt7921_unregister_device(struct mt7921_dev *dev)
- {
- 	mt76_unregister_device(&dev->mt76);
- 	mt7921_mcu_exit(dev);
--	mt7921_dma_cleanup(dev);
--
- 	mt7921_tx_token_put(dev);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 504b4d0..84b15a6 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -680,13 +680,10 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 		eth_zero_addr(vif->bssid);
  
- 	tasklet_disable(&dev->irq_tasklet);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 6f13eef96078..94f178e28e20 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1207,8 +1207,7 @@ void mt7921_update_channel(struct mt76_dev *mdev)
- 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
- }
- 
--static int
--mt7921_wfsys_reset(struct mt7921_dev *dev)
-+int mt7921_wfsys_reset(struct mt7921_dev *dev)
- {
- 	mt76_set(dev, 0x70002600, BIT(0));
- 	msleep(200);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 353877f1c762..b233b12860ef 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -960,18 +960,7 @@ int mt7921_mcu_init(struct mt7921_dev *dev)
- 
- void mt7921_mcu_exit(struct mt7921_dev *dev)
- {
--	u32 reg = mt7921_reg_map_l1(dev, MT_TOP_MISC);
--
--	__mt76_mcu_restart(&dev->mt76);
--	if (!mt76_poll_msec(dev, reg, MT_TOP_MISC_FW_STATE,
--			    FIELD_PREP(MT_TOP_MISC_FW_STATE,
--				       FW_STATE_FW_DOWNLOAD), 1000)) {
--		dev_err(dev->mt76.dev, "Failed to exit mcu\n");
--		return;
+ 	ret = qtnf_cmd_send_connect(vif, sme);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to connect\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
 -	}
--
--	reg = mt7921_reg_map_l1(dev, MT_TOP_LPCR_HOST_BAND0);
--	mt76_wr(dev, reg, MT_TOP_LPCR_HOST_FW_OWN);
-+	mt7921_wfsys_reset(dev);
- 	skb_queue_purge(&dev->mt76.mcu.res_q);
+ 
+-out:
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index ebe51017dd55..e4211b049040 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -351,4 +351,5 @@ void mt7921_coredump_work(struct work_struct *work);
- int mt7921_mcu_update_arp_filter(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *info);
-+int mt7921_wfsys_reset(struct mt7921_dev *dev);
- #endif
+@@ -702,13 +699,10 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 		pr_warn("unexpected bssid: %pM", auth->bssid);
+ 
+ 	ret = qtnf_cmd_send_external_auth(vif, auth);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to report external auth\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
+-	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -727,8 +721,7 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (vif->wdev.iftype != NL80211_IFTYPE_STATION) {
+-		ret = -EOPNOTSUPP;
+-		goto out;
++		return -EOPNOTSUPP;
+ 	}
+ 
+ 	ret = qtnf_cmd_send_disconnect(vif, reason_code);
+@@ -742,7 +735,6 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
+ 				      NULL, 0, true, GFP_KERNEL);
+ 	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -935,13 +927,10 @@ static int qtnf_update_owe_info(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	ret = qtnf_cmd_send_update_owe(vif, owe_info);
+-	if (ret) {
++	if (ret)
+ 		pr_err("VIF%u.%u: failed to update owe info\n",
+ 		       vif->mac->macid, vif->vifid);
+-		goto out;
+-	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -987,18 +976,14 @@ static int qtnf_resume(struct wiphy *wiphy)
+ 	vif = qtnf_mac_get_base_vif(mac);
+ 	if (!vif) {
+ 		pr_err("MAC%u: primary VIF is not configured\n", mac->macid);
+-		ret = -EFAULT;
+-		goto exit;
++		return -EFAULT;
+ 	}
+ 
+ 	ret = qtnf_cmd_send_wowlan_set(vif, NULL);
+-	if (ret) {
++	if (ret)
+ 		pr_err("MAC%u: failed to reset WoWLAN triggers\n",
+ 		       mac->macid);
+-		goto exit;
+-	}
+ 
+-exit:
+ 	return ret;
+ }
+ 
 -- 
-2.25.1
+1.9.1
+
 
