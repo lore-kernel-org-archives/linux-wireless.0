@@ -2,73 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81222C433B4
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:21:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09FD0C433B4
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:34:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BF3F613B3
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:21:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C096A610A0
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Apr 2021 03:34:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233575AbhDFDVZ (ORCPT
+        id S242354AbhDFDew (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Apr 2021 23:21:25 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:16342 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230364AbhDFDVY (ORCPT
+        Mon, 5 Apr 2021 23:34:52 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:44126 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S242346AbhDFDew (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Apr 2021 23:21:24 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FDt6K1yfgz9wdL;
-        Tue,  6 Apr 2021 11:19:05 +0800 (CST)
-Received: from DESKTOP-EFRLNPK.china.huawei.com (10.174.176.196) by
- DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 6 Apr 2021 11:21:05 +0800
-From:   Qiheng Lin <linqiheng@huawei.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi83@gmail.com>,
-        <ryder.lee@mediatek.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <matthias.bgg@gmail.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Qiheng Lin <linqiheng@huawei.com>
-Subject: [PATCH net-next] mt76: mt7921: remove unneeded semicolon
-Date:   Tue, 6 Apr 2021 11:20:51 +0800
-Message-ID: <20210406032051.7750-1-linqiheng@huawei.com>
-X-Mailer: git-send-email 2.31.1
+        Mon, 5 Apr 2021 23:34:52 -0400
+X-UUID: b81f6b809ea74e84a475e984bfd4336f-20210406
+X-UUID: b81f6b809ea74e84a475e984bfd4336f-20210406
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 299513238; Tue, 06 Apr 2021 11:34:43 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 6 Apr 2021 11:34:40 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 6 Apr 2021 11:34:40 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/6] mt76: mt7921: fix the dwell time control
+Date:   Tue, 6 Apr 2021 11:34:35 +0800
+Message-ID: <0ee99f09802ba608a9cbe497d595d512fbfbb18a.1617679693.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <4c5666ad0683e467f11ca4a4abb5be335be25696.1617679693.git.objelf@gmail.com>
+References: <4c5666ad0683e467f11ca4a4abb5be335be25696.1617679693.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Content-Type: text/plain
-X-Originating-IP: [10.174.176.196]
-X-CFilter-Loop: Reflected
+X-TM-SNTS-SMTP: 3C5F4B45EA8BD74DD8D5DC3947EA110845E79ED3E06B53D3FD60C7AF156285E22000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Eliminate the following coccicheck warning:
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c:1402:2-3: Unneeded semicolon
+From: Sean Wang <sean.wang@mediatek.com>
 
-Signed-off-by: Qiheng Lin <linqiheng@huawei.com>
+dwell time for the scan is not configurable according to the current
+firmware submitted into linux-firmware.git, so leave the dwell time 0 to
+indicate the dwell time always determined by the firmware.
+
+Fixes: 399090ef9605 ("mt76: mt76_connac: move hw_scan and sched_scan routine in mt76_connac_mcu module")
+Suggested-by: Soul Huang <Soul.Huang@mediatek.com>
+Co-developed-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 3f9097481a5e..e56cde3a19ec 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1399,7 +1399,7 @@ void mt7921_mac_work(struct work_struct *work)
- 	if (++phy->sta_work_count == 10) {
- 		phy->sta_work_count = 0;
- 		mt7921_mac_sta_stats_work(phy);
--	};
-+	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index bafe95210807..1bd6294042b6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1332,7 +1332,7 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ {
+ 	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
+ 	struct cfg80211_scan_request *sreq = &scan_req->req;
+-	int n_ssids = 0, err, i, duration = MT76_CONNAC_SCAN_CHANNEL_TIME;
++	int n_ssids = 0, err, i, duration;
+ 	int ext_channels_num = max_t(int, sreq->n_channels - 32, 0);
+ 	struct ieee80211_channel **scan_list = sreq->channels;
+ 	struct mt76_dev *mdev = phy->dev;
+@@ -1369,6 +1369,7 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 	req->ssid_type_ext = n_ssids ? BIT(0) : 0;
+ 	req->ssids_num = n_ssids;
  
- 	mt7921_mutex_release(phy->dev);
- 
++	duration = is_mt7921(phy->dev) ? 0 : MT76_CONNAC_SCAN_CHANNEL_TIME;
+ 	/* increase channel time for passive scan */
+ 	if (!sreq->n_ssids)
+ 		duration *= 2;
 -- 
-2.31.1
+2.25.1
 
