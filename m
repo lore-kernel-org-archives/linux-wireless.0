@@ -2,116 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32FA9C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Apr 2021 14:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1238AC433B4
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Apr 2021 16:36:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 017DE610F8
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Apr 2021 14:45:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4C62610D1
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Apr 2021 16:36:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231712AbhDHOpz (ORCPT
+        id S231961AbhDHQhD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Apr 2021 10:45:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55782 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231480AbhDHOpz (ORCPT
+        Thu, 8 Apr 2021 12:37:03 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:38889 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231893AbhDHQhC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Apr 2021 10:45:55 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04DF5C061760;
-        Thu,  8 Apr 2021 07:45:44 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1lUVug-0092nJ-B3; Thu, 08 Apr 2021 16:45:42 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2021-04-08.2
-Date:   Thu,  8 Apr 2021 16:45:34 +0200
-Message-Id: <20210408144535.56577-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.30.2
+        Thu, 8 Apr 2021 12:37:02 -0400
+X-UUID: ca23bf4aaade45cdb14da8fdb11a1fc4-20210409
+X-UUID: ca23bf4aaade45cdb14da8fdb11a1fc4-20210409
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 572301884; Fri, 09 Apr 2021 00:36:48 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 9 Apr 2021 00:36:46 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 9 Apr 2021 00:36:46 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7615: add missing SPDX tag in mmio.c
+Date:   Fri, 9 Apr 2021 00:36:32 +0800
+Message-ID: <793cbca48b9a25365097461c0bbe20cdf29250fb.1617845351.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <da0e79891df201e9c0240aa8bfd023039a97448f.1617845351.git.ryder.lee@mediatek.com>
+References: <da0e79891df201e9c0240aa8bfd023039a97448f.1617845351.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 86006D544C16B025E2368AB190402C3A1D8B64DD05708DF3BC8D3282C750E1982000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Resolve the following checkpatch.pl script warning:
 
-Yes, I'm late with this, sorry about that. I've mostly restricted this
-to the most necessary fixes, though the virt_wifi one isn't but since
-that's not used a lot, it's harmless and included since it's obvious.
-This updated version includes another netlink buffer overrun fix, as
-reported by syzbot.
+WARNING: Missing or malformed SPDX-License-Identifier tag in line 1
 
-The only thing that's bigger is the rfkill thing, but that's just since
-it adds a new version of the struct for userspace to use, since the
-change to the existing struct caused various breakage all around.
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/mmio.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 8a12f8836145ffe37e9c8733dce18c22fb668b66:
-
-  net: hso: fix null-ptr-deref during tty device unregistration (2021-04-07 15:18:15 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2021-04-08.2
-
-for you to fetch changes up to 9a6847ba1747858ccac53c5aba3e25c54fbdf846:
-
-  nl80211: fix beacon head validation (2021-04-08 16:43:05 +0200)
-
-----------------------------------------------------------------
-Various small fixes:
- * S1G beacon validation
- * potential leak in nl80211
- * fast-RX confusion with 4-addr mode
- * erroneous WARN_ON that userspace can trigger
- * wrong time units in virt_wifi
- * rfkill userspace API breakage
- * TXQ AC confusing that led to traffic stopped forever
- * connection monitoring time after/before confusion
- * netlink beacon head validation buffer overrun
-
-----------------------------------------------------------------
-A. Cody Schuffelen (1):
-      virt_wifi: Return micros for BSS TSF values
-
-Ben Greear (1):
-      mac80211: fix time-is-after bug in mlme
-
-Du Cheng (1):
-      cfg80211: remove WARN_ON() in cfg80211_sme_connect
-
-Johannes Berg (5):
-      rfkill: revert back to old userspace API by default
-      mac80211: fix TXQ AC confusion
-      cfg80211: check S1G beacon compat element length
-      nl80211: fix potential leak of ACL params
-      nl80211: fix beacon head validation
-
-Seevalamuthu Mariappan (1):
-      mac80211: clear sta->fast_rx when STA removed from 4-addr VLAN
-
- drivers/net/wireless/virt_wifi.c |  5 ++-
- include/uapi/linux/rfkill.h      | 80 ++++++++++++++++++++++++++++++++++------
- net/mac80211/cfg.c               |  4 +-
- net/mac80211/mlme.c              |  5 ++-
- net/mac80211/tx.c                |  2 +-
- net/rfkill/core.c                |  7 ++--
- net/wireless/nl80211.c           | 10 +++--
- net/wireless/scan.c              | 14 ++++---
- net/wireless/sme.c               |  2 +-
- 9 files changed, 99 insertions(+), 30 deletions(-)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
+index a7f92fa0488f..eaa22752e7cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
+@@ -1,3 +1,6 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2020 MediaTek Inc. */
++
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+-- 
+2.18.0
 
