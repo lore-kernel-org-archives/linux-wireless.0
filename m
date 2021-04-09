@@ -2,60 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A26C433ED
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 09:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2619CC001E1
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDA43611C9
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 09:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7AE6611BE
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233597AbhDIJ4e (ORCPT
+        id S232990AbhDIKHN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Apr 2021 05:56:34 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44292 "EHLO
+        Fri, 9 Apr 2021 06:07:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44296 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233599AbhDIJ4I (ORCPT
+        with ESMTP id S233445AbhDIKDg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Apr 2021 05:56:08 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=[192.168.100.150])
+        Fri, 9 Apr 2021 06:03:36 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lUnrk-000EV4-Ii; Fri, 09 Apr 2021 12:55:54 +0300
-Message-ID: <68c974fc5f329180cf73f47f9547ee64c4755890.camel@coelho.fi>
+        id 1lUnd1-000ELR-IK; Fri, 09 Apr 2021 12:40:41 +0300
 From:   Luca Coelho <luca@coelho.fi>
-To:     Johannes Berg <johannes@sipsolutions.net>
+To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 09 Apr 2021 12:55:52 +0300
-In-Reply-To: <a808b3c0e5acbc9658e80223b5278c78a62d2024.camel@sipsolutions.net>
+Date:   Fri,  9 Apr 2021 12:40:26 +0300
+Message-Id: <iwlwifi.20210409123755.d2588ebb1974.I9424c8ade13c4c938cb9999d8ce99d0d4c1cc198@changeid>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20210409094028.356611-1-luca@coelho.fi>
 References: <20210409094028.356611-1-luca@coelho.fi>
-         <iwlwifi.20210409123755.2e0ef3e0cf37.I78e0a780ce466a23833cc101143ad45cb1c387e5@changeid>
-         <a808b3c0e5acbc9658e80223b5278c78a62d2024.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.3-1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 08/15] cfg80211: allow to specifying a reason for
- hw_rfkill
+Subject: [PATCH 13/15] ieee80211: add the values of ranging parameters max LTF total field
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2021-04-09 at 11:47 +0200, Johannes Berg wrote:
-> On Fri, 2021-04-09 at 12:40 +0300, Luca Coelho wrote:
-> > 
-> > ---
-> >  backport-include/net/cfg80211.h | 17 +++++++++++++++++
-> 
-> Umm :)
+From: Avraham Stern <avraham.stern@intel.com>
 
-Ooops, sorry.  I usually cut them off, but since this was a new file, I
-missed it.  Wonder what people would say if they suddenly saw a new
-directory at the root of the tree! 8-|
+Add an enum with the values of the ranging parameters max LTF total
+field, as defined in IEEE802.11az_D2.6, table Table 9-322h23fc.
 
---
-Luca.
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/linux/ieee80211.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 63252fba3f90..2967437f1b11 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -3859,4 +3859,11 @@ struct ieee80211_neighbor_ap_info {
+        u8 channel;
+ } __packed;
+ 
++enum ieee80211_range_params_max_total_ltf {
++	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_4 = 0,
++	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_8,
++	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_16,
++	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_UNSPECIFIED,
++};
++
+ #endif /* LINUX_IEEE80211_H */
+-- 
+2.31.0
 
