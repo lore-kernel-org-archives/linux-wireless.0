@@ -7,67 +7,73 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2619CC001E1
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 361E4C43600
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7AE6611BE
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01A4B611F2
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232990AbhDIKHN (ORCPT
+        id S233663AbhDIKHP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Apr 2021 06:07:13 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44296 "EHLO
+        Fri, 9 Apr 2021 06:07:15 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44300 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233445AbhDIKDg (ORCPT
+        with ESMTP id S234197AbhDIKFK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Apr 2021 06:03:36 -0400
+        Fri, 9 Apr 2021 06:05:10 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lUnd1-000ELR-IK; Fri, 09 Apr 2021 12:40:41 +0300
+        id 1lUncz-000ELR-2a; Fri, 09 Apr 2021 12:40:38 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  9 Apr 2021 12:40:26 +0300
-Message-Id: <iwlwifi.20210409123755.d2588ebb1974.I9424c8ade13c4c938cb9999d8ce99d0d4c1cc198@changeid>
+Date:   Fri,  9 Apr 2021 12:40:23 +0300
+Message-Id: <iwlwifi.20210409123755.381cfb3f1dc1.I6b7f5790fa0958ed8049cf02ac2a535c61e9bc96@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210409094028.356611-1-luca@coelho.fi>
 References: <20210409094028.356611-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/15] ieee80211: add the values of ranging parameters max LTF total field
+Subject: [PATCH 10/15] mac80211: bail out if cipher schemes are invalid
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add an enum with the values of the ranging parameters max LTF total
-field, as defined in IEEE802.11az_D2.6, table Table 9-322h23fc.
+If any of the cipher schemes specified by the driver are invalid, bail
+out and fail the registration rather than just warning.  Otherwise, we
+might later crash when we try to use the invalid cipher scheme, e.g.
+if the hdr_len is (significantly) less than the pn_offs + pn_len, we'd
+have an out-of-bounds access in RX validation.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Fixes: 2475b1cc0d52 ("mac80211: add generic cipher scheme support")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ net/mac80211/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 63252fba3f90..2967437f1b11 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -3859,4 +3859,11 @@ struct ieee80211_neighbor_ap_info {
-        u8 channel;
- } __packed;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f27aed37ed2b..ba624cb250b3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1137,8 +1137,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.wiphy->max_scan_ie_len)
+ 		local->hw.wiphy->max_scan_ie_len -= local->scan_ies_len;
  
-+enum ieee80211_range_params_max_total_ltf {
-+	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_4 = 0,
-+	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_8,
-+	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_16,
-+	IEEE80211_RANGE_PARAMS_MAX_TOTAL_LTF_UNSPECIFIED,
-+};
-+
- #endif /* LINUX_IEEE80211_H */
+-	WARN_ON(!ieee80211_cs_list_valid(local->hw.cipher_schemes,
+-					 local->hw.n_cipher_schemes));
++	if (WARN_ON(!ieee80211_cs_list_valid(local->hw.cipher_schemes,
++					     local->hw.n_cipher_schemes))) {
++		result = -EINVAL;
++		goto fail_workqueue;
++	}
+ 
+ 	result = ieee80211_init_cipher_suites(local);
+ 	if (result < 0)
 -- 
 2.31.0
 
