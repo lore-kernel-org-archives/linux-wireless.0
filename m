@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38652C433B4
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 19:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C461C433ED
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 19:31:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0847861042
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 19:28:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 019CB61042
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 19:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234999AbhDIT2w (ORCPT
+        id S234761AbhDITbh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Apr 2021 15:28:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38148 "EHLO
+        Fri, 9 Apr 2021 15:31:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234909AbhDIT2o (ORCPT
+        with ESMTP id S234507AbhDITbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Apr 2021 15:28:44 -0400
+        Fri, 9 Apr 2021 15:31:36 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65C8CC061763
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Apr 2021 12:28:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72A00C061762
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Apr 2021 12:31:22 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lUwnq-009aPy-Ud; Fri, 09 Apr 2021 21:28:27 +0200
-Message-ID: <c39d5ac8ce9e1a8079e8ed83c1a05c3abbf54254.camel@sipsolutions.net>
-Subject: Re: [PATCH v9 0/4] Multiple BSSID support
+        id 1lUwqd-009aTJ-Ow; Fri, 09 Apr 2021 21:31:19 +0200
+Message-ID: <82a7c6c9bcbe923906276e8aa26a9a783598a0d7.camel@sipsolutions.net>
+Subject: Re: Memory leak in ieee80211_rx_napi()
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Aloka Dixit <alokad@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 09 Apr 2021 21:28:26 +0200
-In-Reply-To: <2427e22bdd9e34aec0667a78dd8d6537@codeaurora.org>
-References: <20210310182604.8858-1-alokad@codeaurora.org>
-         (sfid-20210310_192727_681722_4BC25758) <cb1325ad538c3bf385b5bdadf03cfbf9f4afa390.camel@sipsolutions.net>
-         <2427e22bdd9e34aec0667a78dd8d6537@codeaurora.org>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>
+Date:   Fri, 09 Apr 2021 21:31:19 +0200
+In-Reply-To: <ad9bee4f-ef24-1fe0-5e63-e2e840ac0449@lwfinger.net> (sfid-20210409_172345_954618_8D29770B)
+References: <ad9bee4f-ef24-1fe0-5e63-e2e840ac0449@lwfinger.net>
+         (sfid-20210409_172345_954618_8D29770B)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
 MIME-Version: 1.0
@@ -46,18 +46,21 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2021-04-09 at 11:31 -0700, Aloka Dixit wrote:
-> 
-> BTW, do you see value in replacing all occurrences
-> of *_multiple_bssid_* with *_mbssid_* (also in new
-> nl80211 attributes).
-> Most lines needed to be split because of 80 character
-> boundary, so this replacement will make that code
-> look cleaner. I have avoided it till now to reduce
-> number of changes between versions.
+Hi Larry,
 
-Might be nicer, but I can live with the longer identifiers too. I don't
-really mind if you do it between versions though, so feel free.
+> What setting or lack of, would cause ieee80211_rx_napi() to leak the skb that it 
+> is given? The documentation states that once this call is made, mac80211 owns 
+> this buffer. Does this mean that it will also be freed?
+
+Eventually, yes. But it might go onto a NAPI GRO list, etc. Perhaps it
+might even look like it's leaked if it's on such a list if you didn't
+implement NAPI properly as polling, but just call ieee80211_rx_napi()
+with a non-NULL napi struct pointer.
+
+That said, of course there might be bugs in mac80211 where it actually
+leaks the skb.
+
+How are you determining that it's being leaked?
 
 johannes
 
