@@ -7,80 +7,132 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28630C433ED
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B193C43462
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E09461182
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31AA961182
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Apr 2021 10:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233758AbhDIKHP (ORCPT
+        id S233129AbhDIKHT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Apr 2021 06:07:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44304 "EHLO
+        Fri, 9 Apr 2021 06:07:19 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44308 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234412AbhDIKGT (ORCPT
+        with ESMTP id S234541AbhDIKGv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Apr 2021 06:06:19 -0400
+        Fri, 9 Apr 2021 06:06:51 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lUnd2-000ELR-DR; Fri, 09 Apr 2021 12:40:41 +0300
+        id 1lUncz-000ELR-Pc; Fri, 09 Apr 2021 12:40:39 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  9 Apr 2021 12:40:27 +0300
-Message-Id: <iwlwifi.20210409123755.ef6c8e3dfaa6.I465afb55ca2c7d59f7bf610c6046a1fd732b4c28@changeid>
+Date:   Fri,  9 Apr 2021 12:40:24 +0300
+Message-Id: <iwlwifi.20210409123755.9e6ff1af1181.If6868bc6902ccd9a95c74c78f716c4b41473ef14@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210409094028.356611-1-luca@coelho.fi>
 References: <20210409094028.356611-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/15] mac80211: clear the beacon's CRC after channel switch
+Subject: [PATCH 11/15] wireless: fix spelling of A-MSDU in HE capabilities
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-After channel switch, we should consider any beacon with a
-CSA IE as a new switch. If the CSA IE is a leftover from
-before the switch that the AP forgot to remove, we'll get
-a CSA-to-Self.
+In the HE capabilities, spell A-MSDU correctly, not "A-MDSU".
 
-This caused issues in iwlwifi where the firmware saw a beacon
-with a CSA-to-Self with mode = 1 on the new channel after a
-switch. The firmware considered this a new switch and closed
-its queues. Since the beacon didn't change between before and
-after the switch, we wouldn't handle it (the CRC is the same)
-and we wouldn't let the firmware open its queues again or
-disconnect if the CSA IE stays for too long.
-
-Clear the CRC valid state after we switch to make sure that
-we handle the beacon and handle the CSA IE as required.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 +-
+ drivers/net/wireless/mac80211_hwsim.c              | 8 ++++----
+ include/linux/ieee80211.h                          | 2 +-
+ net/mac80211/debugfs_sta.c                         | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9b85adbf2cc2..792a92feeaeb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1295,6 +1295,11 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index d2058cdcb0d8..c7ea5b35f9f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -552,7 +552,7 @@ static const struct ieee80211_sband_iftype_data iwl_he_capa[] = {
+ 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
+ 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_2,
+ 				.mac_cap_info[4] =
+-					IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU |
++					IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU |
+ 					IEEE80211_HE_MAC_CAP4_MULTI_TID_AGG_TX_QOS_B39,
+ 				.mac_cap_info[5] =
+ 					IEEE80211_HE_MAC_CAP5_MULTI_TID_AGG_TX_QOS_B40 |
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 3039baa43f4c..f85a879d738b 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2796,7 +2796,7 @@ static const struct ieee80211_sband_iftype_data he_capa_2ghz[] = {
+ 				.mac_cap_info[3] =
+ 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
+ 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
+-				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
+ 				.phy_cap_info[1] =
+ 					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
+ 					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
+@@ -2840,7 +2840,7 @@ static const struct ieee80211_sband_iftype_data he_capa_2ghz[] = {
+ 				.mac_cap_info[3] =
+ 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
+ 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
+-				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
+ 				.phy_cap_info[1] =
+ 					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
+ 					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
+@@ -2886,7 +2886,7 @@ static const struct ieee80211_sband_iftype_data he_capa_5ghz[] = {
+ 				.mac_cap_info[3] =
+ 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
+ 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
+-				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
+ 				.phy_cap_info[0] =
+ 					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
+ 					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
+@@ -2934,7 +2934,7 @@ static const struct ieee80211_sband_iftype_data he_capa_5ghz[] = {
+ 				.mac_cap_info[3] =
+ 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
+ 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
+-				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
+ 				.phy_cap_info[0] =
+ 					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
+ 					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 9aa6a6c02100..63252fba3f90 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2021,7 +2021,7 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
+ #define IEEE80211_HE_MAC_CAP4_PSR_RESP				0x08
+ #define IEEE80211_HE_MAC_CAP4_NDP_FB_REP			0x10
+ #define IEEE80211_HE_MAC_CAP4_OPS				0x20
+-#define IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU			0x40
++#define IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU			0x40
+ /* Multi TID agg TX is split between byte #4 and #5
+  * The value is a combination of B39,B40,B41
+  */
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 25b3d4822aed..936c9dfa86c8 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -735,7 +735,7 @@ static ssize_t sta_he_capa_read(struct file *file, char __user *userbuf,
+ 	PFLAG(MAC, 4, PSR_RESP, "PSR-RESP");
+ 	PFLAG(MAC, 4, NDP_FB_REP, "NDP-FB-REP");
+ 	PFLAG(MAC, 4, OPS, "OPS");
+-	PFLAG(MAC, 4, AMDSU_IN_AMPDU, "AMSDU-IN-AMPDU");
++	PFLAG(MAC, 4, AMSDU_IN_AMPDU, "AMSDU-IN-AMPDU");
  
- 	sdata->vif.csa_active = false;
- 	ifmgd->csa_waiting_bcn = false;
-+	/*
-+	 * If the CSA IE is still present on the beacon after the switch,
-+	 * we need to consider it as a new CSA (possibly to self).
-+	 */
-+	ifmgd->beacon_crc_valid = false;
+ 	PRINT("MULTI-TID-AGG-TX-QOS-%d", ((cap[5] << 1) | (cap[4] >> 7)) & 0x7);
  
- 	ret = drv_post_channel_switch(sdata);
- 	if (ret) {
 -- 
 2.31.0
 
