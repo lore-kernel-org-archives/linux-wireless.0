@@ -7,98 +7,119 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 216F6C433ED
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA73FC433ED
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 004B860FD8
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2D7361206
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235372AbhDKJrb (ORCPT
+        id S235381AbhDKJrc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 05:47:31 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44456 "EHLO
+        Sun, 11 Apr 2021 05:47:32 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44468 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235267AbhDKJr0 (ORCPT
+        with ESMTP id S235368AbhDKJr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 05:47:26 -0400
+        Sun, 11 Apr 2021 05:47:27 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfs-000Jkq-Re; Sun, 11 Apr 2021 12:46:38 +0300
+        id 1lVWfu-000Jkq-HY; Sun, 11 Apr 2021 12:46:40 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:25 +0300
-Message-Id: <iwlwifi.20210411124417.4d27bd36e10e.I1fd8e8fe442c41a5deaa560452b598ed7a60ada5@changeid>
+Date:   Sun, 11 Apr 2021 12:46:27 +0300
+Message-Id: <iwlwifi.20210411124417.306e2e56d3e8.I72e2977abbb1fddf23b8476bedf6a183fe969ff5@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
 References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/12] iwlwifi: mvm: don't lock mutex in RCU critical section
+Subject: [PATCH 09/12] iwlwifi: pcie: add ISR debug info for msix debug
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-We cannot lock a mutex while we're in an RCU critical section. At
-the same time, we're accessing data structures that are protected
-by the mvm->mutex anyway, so just move the entire locking here to
-use only that.
+The debug prints help in case we get timeout on waiting for
+hw.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 16 +++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  5 +++++
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 130760572262..c3be03027aed 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -1210,10 +1210,10 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
- 			IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index e4607f943ac3..fb8491412be4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1023,6 +1023,9 @@ static int iwl_pcie_napi_poll(struct napi_struct *napi, int budget)
  
--	rcu_read_lock();
-+	mutex_lock(&mvm->mutex);
+ 	ret = iwl_pcie_rx_handle(trans, rxq->id, budget);
  
- 	for (i = 0; i < NUM_MAC_INDEX_DRIVER; i++) {
--		vif = iwl_mvm_rcu_dereference_vif_id(mvm, i, true);
-+		vif = iwl_mvm_rcu_dereference_vif_id(mvm, i, false);
- 		if (!vif)
- 			continue;
++	IWL_DEBUG_ISR(trans, "[%d] handled %d, budget %d\n",
++		      rxq->id, ret, budget);
++
+ 	if (ret < budget) {
+ 		spin_lock(&trans_pcie->irq_lock);
+ 		if (test_bit(STATUS_INT_ENABLED, &trans->status))
+@@ -1636,10 +1639,13 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
+ 	if (WARN_ON(entry->entry >= trans->num_rx_queues))
+ 		return IRQ_NONE;
  
-@@ -1253,18 +1253,16 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
- 				 &beacon_cmd.tim_size,
- 				 beacon->data, beacon->len);
+-	if (WARN_ONCE(!rxq, "Got MSI-X interrupt before we have Rx queues"))
++	if (WARN_ONCE(!rxq,
++		      "[%d] Got MSI-X interrupt before we have Rx queues",
++		      entry->entry))
+ 		return IRQ_NONE;
  
--	mutex_lock(&mvm->mutex);
- 	iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
- 					 sizeof(beacon_cmd));
- 	mutex_unlock(&mvm->mutex);
+ 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
++	IWL_DEBUG_ISR(trans, "[%d] Got interrupt\n", entry->entry);
  
- 	dev_kfree_skb(beacon);
+ 	local_bh_disable();
+ 	if (napi_schedule_prep(&rxq->napi))
+@@ -2203,8 +2209,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
  
--	rcu_read_unlock();
- 	return 0;
+ 	if (iwl_have_debug_level(IWL_DL_ISR)) {
+ 		IWL_DEBUG_ISR(trans,
+-			      "ISR inta_fh 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
+-			      inta_fh, trans_pcie->fh_mask,
++			      "ISR[%d] inta_fh 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
++			      entry->entry, inta_fh, trans_pcie->fh_mask,
+ 			      iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD));
+ 		if (inta_fh & ~trans_pcie->fh_mask)
+ 			IWL_DEBUG_ISR(trans,
+@@ -2259,8 +2265,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 	/* After checking FH register check HW register */
+ 	if (iwl_have_debug_level(IWL_DL_ISR)) {
+ 		IWL_DEBUG_ISR(trans,
+-			      "ISR inta_hw 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
+-			      inta_hw, trans_pcie->hw_mask,
++			      "ISR[%d] inta_hw 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
++			      entry->entry, inta_hw, trans_pcie->hw_mask,
+ 			      iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD));
+ 		if (inta_hw & ~trans_pcie->hw_mask)
+ 			IWL_DEBUG_ISR(trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 1bf4c37fe960..861dbc03d183 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1604,6 +1604,11 @@ iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
+ 	} else {
+ 		trans_pcie->trans->num_rx_queues = num_irqs - 1;
+ 	}
++
++	IWL_DEBUG_INFO(trans,
++		       "MSI-X enabled with rx queues %d, vec mask 0x%x\n",
++		       trans_pcie->trans->num_rx_queues, trans_pcie->shared_vec_mask);
++
+ 	WARN_ON(trans_pcie->trans->num_rx_queues > IWL_MAX_RX_HW_QUEUES);
  
- out_err:
--	rcu_read_unlock();
-+	mutex_unlock(&mvm->mutex);
- 	return -EINVAL;
- }
- 
+ 	trans_pcie->alloc_vecs = num_irqs;
 -- 
 2.31.0
 
