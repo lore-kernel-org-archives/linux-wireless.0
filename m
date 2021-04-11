@@ -7,89 +7,62 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BAEC433B4
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 10:25:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E14D0C43460
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 10:25:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B67386103D
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 10:25:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7F186108F
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 10:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235233AbhDKK0F (ORCPT
+        id S235358AbhDKK0G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 06:26:05 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44500 "EHLO
+        Sun, 11 Apr 2021 06:26:06 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44510 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231356AbhDKK0E (ORCPT
+        with ESMTP id S235299AbhDKK0G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 06:26:04 -0400
+        Sun, 11 Apr 2021 06:26:06 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVXHm-000K0H-1g; Sun, 11 Apr 2021 13:25:47 +0300
+        id 1lVXHn-000K0H-K3; Sun, 11 Apr 2021 13:25:49 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 13:25:38 +0300
-Message-Id: <iwlwifi.20210411132130.3d710091a0bd.I37a161ffdfb099a10080fbdc3b70a4deb76952e2@changeid>
+Date:   Sun, 11 Apr 2021 13:25:40 +0300
+Message-Id: <iwlwifi.20210411132130.a588a9dacd98.Ie4f96b8988c2cbd5f096ee64d0eb0f4829d55aee@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411102545.438654-1-luca@coelho.fi>
 References: <20210411102545.438654-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 1/8] iwlwifi: mvm: don't disconnect immediately if we don't hear beacons after CSA
+Subject: [PATCH 3/8] iwlwifi: bump FW API to 63 for AX devices
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-When we switch channel, we may miss a few beacons on the
-new channel. Don't disconnect if the time event for the
-switch ends before we hear the beacons.
+Start supporting API version 63 for AX devices.
 
-Note that this is relevant only for old devices that still
-use the TIME_EVENT firmware API for channel switch.
-
-The check that we hear a beacon before the time event
-ends was meant to be used for the association time event
-and not for the channel switch time event.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 1418a6438635..76c36f5cf9a3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2017 Intel Deutschland GmbH
-  */
-@@ -294,6 +294,17 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
- 			iwl_mvm_roc_finished(mvm);
- 			break;
- 		case NL80211_IFTYPE_STATION:
-+			/*
-+			 * If we are switching channel, don't disconnect
-+			 * if the time event is already done. Beacons can
-+			 * be delayed a bit after the switch.
-+			 */
-+			if (te_data->id == TE_CHANNEL_SWITCH_PERIOD) {
-+				IWL_DEBUG_TE(mvm,
-+					     "No beacon heard and the CS time event is over, don't disconnect\n");
-+				break;
-+			}
-+
- 			/*
- 			 * By now, we should have finished association
- 			 * and know the dtim period.
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index d775cd9c1394..44735a6d1d39 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -9,7 +9,7 @@
+ #include "iwl-prph.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	62
++#define IWL_22000_UCODE_API_MAX	63
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_22000_UCODE_API_MIN	39
 -- 
 2.31.0
 
