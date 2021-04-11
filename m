@@ -2,107 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A647C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D770C433ED
 	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:46:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F104F60FD8
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:46:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3478A61205
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:46:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235211AbhDKJqu (ORCPT
+        id S235269AbhDKJqv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 05:46:50 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44414 "EHLO
+        Sun, 11 Apr 2021 05:46:51 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44420 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229804AbhDKJqu (ORCPT
+        with ESMTP id S235005AbhDKJqu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 11 Apr 2021 05:46:50 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfm-000Jkq-Ni; Sun, 11 Apr 2021 12:46:32 +0300
+        id 1lVWfn-000Jkq-JX; Sun, 11 Apr 2021 12:46:33 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:18 +0300
-Message-Id: <20210411094630.431873-1-luca@coelho.fi>
+Date:   Sun, 11 Apr 2021 12:46:19 +0300
+Message-Id: <iwlwifi.20210411124417.b6560a5de0cd.I5dac9c60faed7f48b06d352aa2d65bcf8142c2dc@changeid>
 X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
+References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/12] iwlwifi: updates intended for v5.13 2021-04-11
+Subject: [PATCH 01/12] iwlwifi: remove TCM events
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Hi,
+Nobody uses that in the user space.
 
-Here's the third set of patches intended for v5.13.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 18 ++----------------
+ 2 files changed, 2 insertions(+), 17 deletions(-)
 
-The changes are:
-
-* Support for a new FW API command version;
-* Some locking fixes;
-* Some other small fixes, clean-ups and improvements.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (2):
-  iwlwifi: remove TCM events
-  iwlwifi: don't warn if we can't wait for empty tx queues
-
-Johannes Berg (3):
-  iwlwifi: remove remaining software checksum code
-  iwlwifi: mvm: don't lock mutex in RCU critical section
-  iwlwifi: warn on SKB free w/o op-mode
-
-Miri Korenblit (1):
-  iwlwifi: mvm: add support for version 3 of LARI_CONFIG_CHANGE command.
-
-Mordechay Goodstein (5):
-  iwlwifi: queue: avoid memory leak in reset flow
-  iwlwifi: mvm: remove PS from lower rates.
-  iwlwifi: pcie: merge napi_poll_msix functions
-  iwlwifi: pcie: add ISR debug info for msix debug
-  iwlwifi: rs-fw: don't support stbc for HE 160
-
-Roee Goldfiner (1):
-  iwlwifi: mvm: umac error table mismatch
-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 10 +---
- .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 17 +++++-
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |  5 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  4 +-
- .../net/wireless/intel/iwlwifi/iwl-op-mode.h  |  4 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  5 +-
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 10 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 23 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 20 +++----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  6 +-
- .../net/wireless/intel/iwlwifi/mvm/utils.c    | 18 +-----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 59 +++++++------------
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  4 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  5 ++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 11 +---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 41 +++----------
- drivers/net/wireless/intel/iwlwifi/queue/tx.h |  3 +-
- 18 files changed, 100 insertions(+), 146 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index e2a37ac7c4b1..4d9d4d6892fc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -591,7 +591,6 @@ struct iwl_mvm_tcm {
+ 		enum iwl_mvm_traffic_load global_load;
+ 		bool low_latency[NUM_MAC_INDEX_DRIVER];
+ 		bool change[NUM_MAC_INDEX_DRIVER];
+-		bool global_change;
+ 	} result;
+ };
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index b6b481ff1518..c566be99a4c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1030,15 +1030,9 @@ iwl_mvm_tcm_load(struct iwl_mvm *mvm, u32 airtime, unsigned long elapsed)
+ 	return IWL_MVM_TRAFFIC_LOW;
+ }
+ 
+-struct iwl_mvm_tcm_iter_data {
+-	struct iwl_mvm *mvm;
+-	bool any_sent;
+-};
+-
+ static void iwl_mvm_tcm_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
+ {
+-	struct iwl_mvm_tcm_iter_data *data = _data;
+-	struct iwl_mvm *mvm = data->mvm;
++	struct iwl_mvm *mvm = _data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	bool low_latency, prev = mvmvif->low_latency & LOW_LATENCY_TRAFFIC;
+ 
+@@ -1060,22 +1054,15 @@ static void iwl_mvm_tcm_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
+ 	} else {
+ 		iwl_mvm_update_quotas(mvm, false, NULL);
+ 	}
+-
+-	data->any_sent = true;
+ }
+ 
+ static void iwl_mvm_tcm_results(struct iwl_mvm *mvm)
+ {
+-	struct iwl_mvm_tcm_iter_data data = {
+-		.mvm = mvm,
+-		.any_sent = false,
+-	};
+-
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	ieee80211_iterate_active_interfaces(
+ 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+-		iwl_mvm_tcm_iter, &data);
++		iwl_mvm_tcm_iter, mvm);
+ 
+ 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN))
+ 		iwl_mvm_config_scan(mvm);
+@@ -1257,7 +1244,6 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	load = iwl_mvm_tcm_load(mvm, total_airtime, elapsed);
+-	mvm->tcm.result.global_change = load != mvm->tcm.result.global_load;
+ 	mvm->tcm.result.global_load = load;
+ 
+ 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
 -- 
 2.31.0
 
