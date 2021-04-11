@@ -2,153 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_SUBJ_WIPE_DEBT,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66EA6C433B4
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD76C43461
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 427E260FD8
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 629C160FD8
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235214AbhDKJr1 (ORCPT
+        id S235369AbhDKJra (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 05:47:27 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44438 "EHLO
+        Sun, 11 Apr 2021 05:47:30 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44450 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235306AbhDKJqy (ORCPT
+        with ESMTP id S235331AbhDKJrZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 05:46:54 -0400
+        Sun, 11 Apr 2021 05:47:25 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfq-000Jkq-Ex; Sun, 11 Apr 2021 12:46:36 +0300
+        id 1lVWfs-000Jkq-8D; Sun, 11 Apr 2021 12:46:37 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:22 +0300
-Message-Id: <iwlwifi.20210411124417.c72d2f0355c4.Ia3baff633b9b9109f88ab379ef0303aa152c16bf@changeid>
+Date:   Sun, 11 Apr 2021 12:46:24 +0300
+Message-Id: <iwlwifi.20210411124417.2a2fb9f9c25e.I7c7bbcfbdc1d35d2c3338778fb397dd5b08ea0e8@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
 References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: queue: avoid memory leak in reset flow
+Subject: [PATCH 06/12] iwlwifi: mvm: remove PS from lower rates.
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-In case the device is stopped any usage of hw queues needs to be
-reallocated in fw due to fw reset after device stop, so all driver
-internal queue should also be freed, and if we don't free the next usage
-would leak the old memory and get in recover flows
-"iwlwifi 0000:00:03.0: dma_pool_destroy iwlwifi:bc" warning.
-
-Also warn about trying to reuse an internal allocated queue.
+Power save (PS) should only be enabled when we reach the max phy rate.
+Before we reach it (MCS_9) for VHT, we should keep trying to improve the
+throughput.
 
 Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  4 +--
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 30 ++++---------------
- drivers/net/wireless/intel/iwlwifi/queue/tx.h |  3 +-
- 3 files changed, 9 insertions(+), 28 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 73894793ed4f..a86300350df8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 91b6541d579f..b97708cb869d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
 @@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-  * Copyright (C) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2020 Intel Corporation
-+ * Copyright (C) 2018-2021 Intel Corporation
-  */
- #include "iwl-trans.h"
- #include "iwl-prph.h"
-@@ -143,7 +143,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
- 	if (test_and_clear_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
- 		IWL_DEBUG_INFO(trans,
- 			       "DEVICE_ENABLED bit was set and is now cleared\n");
--		iwl_txq_gen2_tx_stop(trans);
-+		iwl_txq_gen2_tx_free(trans);
- 		iwl_pcie_rx_stop(trans);
- 	}
+ // SPDX-License-Identifier: GPL-2.0-only
+ /******************************************************************************
+  *
+- * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
++ * Copyright(c) 2005 - 2014, 2018 - 2021 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+@@ -1926,9 +1926,7 @@ static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (is_ht(rate))
+ 		return index == IWL_RATE_MCS_7_INDEX;
+ 	if (is_vht(rate))
+-		return index == IWL_RATE_MCS_7_INDEX ||
+-		       index == IWL_RATE_MCS_8_INDEX ||
+-		       index == IWL_RATE_MCS_9_INDEX;
++		return index == IWL_RATE_MCS_9_INDEX;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-index 494f9dbf92d6..451b06069350 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-@@ -13,30 +13,6 @@
- #include "iwl-scd.h"
- #include <linux/dmapool.h>
- 
--/*
-- * iwl_txq_gen2_tx_stop - Stop all Tx DMA channels
-- */
--void iwl_txq_gen2_tx_stop(struct iwl_trans *trans)
--{
--	int txq_id;
--
--	/*
--	 * This function can be called before the op_mode disabled the
--	 * queues. This happens when we have an rfkill interrupt.
--	 * Since we stop Tx altogether - mark the queues as stopped.
--	 */
--	memset(trans->txqs.queue_stopped, 0,
--	       sizeof(trans->txqs.queue_stopped));
--	memset(trans->txqs.queue_used, 0, sizeof(trans->txqs.queue_used));
--
--	/* Unmap DMA from host system and free skb's */
--	for (txq_id = 0; txq_id < ARRAY_SIZE(trans->txqs.txq); txq_id++) {
--		if (!trans->txqs.txq[txq_id])
--			continue;
--		iwl_txq_gen2_unmap(trans, txq_id);
--	}
--}
--
- /*
-  * iwl_txq_update_byte_tbl - Set up entry in Tx byte-count array
-  */
-@@ -1184,6 +1160,12 @@ static int iwl_txq_alloc_response(struct iwl_trans *trans, struct iwl_txq *txq,
- 		goto error_free_resp;
- 	}
- 
-+	if (WARN_ONCE(trans->txqs.txq[qid],
-+		      "queue %d already allocated\n", qid)) {
-+		ret = -EIO;
-+		goto error_free_resp;
-+	}
-+
- 	txq->id = qid;
- 	trans->txqs.txq[qid] = txq;
- 	wr_ptr &= (trans->trans_cfg->base_params->max_tfd_queue_size - 1);
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.h b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
-index af1dbdf5617a..20efc62acf13 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2020 Intel Corporation
-+ * Copyright (C) 2020-2021 Intel Corporation
-  */
- #ifndef __iwl_trans_queue_tx_h__
- #define __iwl_trans_queue_tx_h__
-@@ -123,7 +123,6 @@ int iwl_txq_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- void iwl_txq_dyn_free(struct iwl_trans *trans, int queue);
- void iwl_txq_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq);
- void iwl_txq_inc_wr_ptr(struct iwl_trans *trans, struct iwl_txq *txq);
--void iwl_txq_gen2_tx_stop(struct iwl_trans *trans);
- void iwl_txq_gen2_tx_free(struct iwl_trans *trans);
- int iwl_txq_init(struct iwl_trans *trans, struct iwl_txq *txq, int slots_num,
- 		 bool cmd_queue);
+ 	WARN_ON_ONCE(1);
+ 	return false;
 -- 
 2.31.0
 
