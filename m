@@ -7,119 +7,73 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA73FC433ED
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF77C433ED
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:51:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2D7361206
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 912D7611C9
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235381AbhDKJrc (ORCPT
+        id S235365AbhDKJwH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 05:47:32 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44468 "EHLO
+        Sun, 11 Apr 2021 05:52:07 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44478 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235368AbhDKJr1 (ORCPT
+        with ESMTP id S229804AbhDKJwH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 05:47:27 -0400
+        Sun, 11 Apr 2021 05:52:07 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfu-000Jkq-HY; Sun, 11 Apr 2021 12:46:40 +0300
+        id 1lVWfw-000Jkq-B9; Sun, 11 Apr 2021 12:46:41 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:27 +0300
-Message-Id: <iwlwifi.20210411124417.306e2e56d3e8.I72e2977abbb1fddf23b8476bedf6a183fe969ff5@changeid>
+Date:   Sun, 11 Apr 2021 12:46:29 +0300
+Message-Id: <iwlwifi.20210411124418.a18b7443dc55.Ia29836738acf14a55af5504aba90c6fea9fff785@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
 References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: pcie: add ISR debug info for msix debug
+Subject: [PATCH 11/12] iwlwifi: warn on SKB free w/o op-mode
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The debug prints help in case we get timeout on waiting for
-hw.
+If this ever happens, and it looks like some code in PCIe is
+a bit broken and might lead to this, we want to know without
+crashing, so add a WARN_ON_ONCE().
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 16 +++++++++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  5 +++++
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index e4607f943ac3..fb8491412be4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1023,6 +1023,9 @@ static int iwl_pcie_napi_poll(struct napi_struct *napi, int budget)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
+index e6d2e0994317..cf9c64090014 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2005-2014, 2018-2020 Intel Corporation
++ * Copyright (C) 2005-2014, 2018-2021 Intel Corporation
+  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015 Intel Deutschland GmbH
+  */
+@@ -176,6 +176,8 @@ iwl_op_mode_hw_rf_kill(struct iwl_op_mode *op_mode, bool state)
+ static inline void iwl_op_mode_free_skb(struct iwl_op_mode *op_mode,
+ 					struct sk_buff *skb)
+ {
++	if (WARN_ON_ONCE(!op_mode))
++		return;
+ 	op_mode->ops->free_skb(op_mode, skb);
+ }
  
- 	ret = iwl_pcie_rx_handle(trans, rxq->id, budget);
- 
-+	IWL_DEBUG_ISR(trans, "[%d] handled %d, budget %d\n",
-+		      rxq->id, ret, budget);
-+
- 	if (ret < budget) {
- 		spin_lock(&trans_pcie->irq_lock);
- 		if (test_bit(STATUS_INT_ENABLED, &trans->status))
-@@ -1636,10 +1639,13 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
- 	if (WARN_ON(entry->entry >= trans->num_rx_queues))
- 		return IRQ_NONE;
- 
--	if (WARN_ONCE(!rxq, "Got MSI-X interrupt before we have Rx queues"))
-+	if (WARN_ONCE(!rxq,
-+		      "[%d] Got MSI-X interrupt before we have Rx queues",
-+		      entry->entry))
- 		return IRQ_NONE;
- 
- 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
-+	IWL_DEBUG_ISR(trans, "[%d] Got interrupt\n", entry->entry);
- 
- 	local_bh_disable();
- 	if (napi_schedule_prep(&rxq->napi))
-@@ -2203,8 +2209,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 
- 	if (iwl_have_debug_level(IWL_DL_ISR)) {
- 		IWL_DEBUG_ISR(trans,
--			      "ISR inta_fh 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
--			      inta_fh, trans_pcie->fh_mask,
-+			      "ISR[%d] inta_fh 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
-+			      entry->entry, inta_fh, trans_pcie->fh_mask,
- 			      iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD));
- 		if (inta_fh & ~trans_pcie->fh_mask)
- 			IWL_DEBUG_ISR(trans,
-@@ -2259,8 +2265,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 	/* After checking FH register check HW register */
- 	if (iwl_have_debug_level(IWL_DL_ISR)) {
- 		IWL_DEBUG_ISR(trans,
--			      "ISR inta_hw 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
--			      inta_hw, trans_pcie->hw_mask,
-+			      "ISR[%d] inta_hw 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
-+			      entry->entry, inta_hw, trans_pcie->hw_mask,
- 			      iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD));
- 		if (inta_hw & ~trans_pcie->hw_mask)
- 			IWL_DEBUG_ISR(trans,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 1bf4c37fe960..861dbc03d183 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1604,6 +1604,11 @@ iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 	} else {
- 		trans_pcie->trans->num_rx_queues = num_irqs - 1;
- 	}
-+
-+	IWL_DEBUG_INFO(trans,
-+		       "MSI-X enabled with rx queues %d, vec mask 0x%x\n",
-+		       trans_pcie->trans->num_rx_queues, trans_pcie->shared_vec_mask);
-+
- 	WARN_ON(trans_pcie->trans->num_rx_queues > IWL_MAX_RX_HW_QUEUES);
- 
- 	trans_pcie->alloc_vecs = num_irqs;
 -- 
 2.31.0
 
