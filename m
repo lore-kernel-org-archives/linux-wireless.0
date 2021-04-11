@@ -7,101 +7,57 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C4F7C43460
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 216F6C433ED
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE67260FD8
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 004B860FD8
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235366AbhDKJr3 (ORCPT
+        id S235372AbhDKJrb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 05:47:29 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44444 "EHLO
+        Sun, 11 Apr 2021 05:47:31 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44456 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235319AbhDKJqz (ORCPT
+        with ESMTP id S235267AbhDKJr0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 05:46:55 -0400
+        Sun, 11 Apr 2021 05:47:26 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfr-000Jkq-Ct; Sun, 11 Apr 2021 12:46:37 +0300
+        id 1lVWfs-000Jkq-Re; Sun, 11 Apr 2021 12:46:38 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:23 +0300
-Message-Id: <iwlwifi.20210411124417.179fee442115.Ib6eabe86cfda0b6044f07c07448c366b6e07e53d@changeid>
+Date:   Sun, 11 Apr 2021 12:46:25 +0300
+Message-Id: <iwlwifi.20210411124417.4d27bd36e10e.I1fd8e8fe442c41a5deaa560452b598ed7a60ada5@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
 References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/12] iwlwifi: mvm: umac error table mismatch
+Subject: [PATCH 07/12] iwlwifi: mvm: don't lock mutex in RCU critical section
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Roee Goldfiner <roee.h.goldfiner@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-umac_error_table In TLV address was read using mask on MSB
-but on the same table in alive message it was without which
-caused mismatch in devices with different memory region MSB
+We cannot lock a mutex while we're in an RCU critical section. At
+the same time, we're accessing data structures that are protected
+by the mvm->mutex anyway, so just move the entire locking here to
+use only that.
 
-Signed-off-by: Roee Goldfiner <roee.h.goldfiner@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/img.h  | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 4 +---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 5 +++--
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index 1dee4714e505..153a3529e77a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2021 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016 Intel Deutschland GmbH
-  */
-@@ -116,6 +116,9 @@ struct fw_img {
- #define PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS	0
- #define PAGING_TLV_SECURE_MASK 1
- 
-+/* FW MSB Mask for regions/cache_control */
-+#define FW_ADDR_CACHE_CONTROL 0xC0000000UL
-+
- /**
-  * struct iwl_fw_paging
-  * @fw_paging_phys: page phy pointer
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index eb168dc535d4..884750bf7840 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2005-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2021 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -550,8 +550,6 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
- 	return 0;
- }
- 
--#define FW_ADDR_CACHE_CONTROL 0xC0000000
--
- static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 				const struct firmware *ucode_raw,
- 				struct iwl_firmware_pieces *pieces,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index be831dd2c05c..9a3981f43050 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 130760572262..c3be03027aed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
 @@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
@@ -110,16 +66,39 @@ index be831dd2c05c..9a3981f43050 100644
   * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
   * Copyright (C) 2016-2017 Intel Deutschland GmbH
   */
-@@ -186,7 +186,8 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 		mvm->trans->dbg.lmac_error_event_table[1] =
- 			le32_to_cpu(lmac2->dbg_ptrs.error_event_table_ptr);
+@@ -1210,10 +1210,10 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
+ 			IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
+ 		return -EINVAL;
  
--	umac_error_table = le32_to_cpu(umac->dbg_ptrs.error_info_addr);
-+	umac_error_table = le32_to_cpu(umac->dbg_ptrs.error_info_addr) &
-+							~FW_ADDR_CACHE_CONTROL;
+-	rcu_read_lock();
++	mutex_lock(&mvm->mutex);
  
- 	if (umac_error_table) {
- 		if (umac_error_table >=
+ 	for (i = 0; i < NUM_MAC_INDEX_DRIVER; i++) {
+-		vif = iwl_mvm_rcu_dereference_vif_id(mvm, i, true);
++		vif = iwl_mvm_rcu_dereference_vif_id(mvm, i, false);
+ 		if (!vif)
+ 			continue;
+ 
+@@ -1253,18 +1253,16 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
+ 				 &beacon_cmd.tim_size,
+ 				 beacon->data, beacon->len);
+ 
+-	mutex_lock(&mvm->mutex);
+ 	iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
+ 					 sizeof(beacon_cmd));
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	dev_kfree_skb(beacon);
+ 
+-	rcu_read_unlock();
+ 	return 0;
+ 
+ out_err:
+-	rcu_read_unlock();
++	mutex_unlock(&mvm->mutex);
+ 	return -EINVAL;
+ }
+ 
 -- 
 2.31.0
 
