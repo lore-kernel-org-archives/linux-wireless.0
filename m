@@ -2,81 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_SUBJ_WIPE_DEBT,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD76C43461
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC90C43462
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 629C160FD8
+	by mail.kernel.org (Postfix) with ESMTP id F2E1560FD8
 	for <linux-wireless@archiver.kernel.org>; Sun, 11 Apr 2021 09:47:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235369AbhDKJra (ORCPT
+        id S235331AbhDKJra (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sun, 11 Apr 2021 05:47:30 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44450 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:44462 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235331AbhDKJrZ (ORCPT
+        with ESMTP id S235365AbhDKJr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 05:47:25 -0400
+        Sun, 11 Apr 2021 05:47:27 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVWfs-000Jkq-8D; Sun, 11 Apr 2021 12:46:37 +0300
+        id 1lVWft-000Jkq-M2; Sun, 11 Apr 2021 12:46:39 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 11 Apr 2021 12:46:24 +0300
-Message-Id: <iwlwifi.20210411124417.2a2fb9f9c25e.I7c7bbcfbdc1d35d2c3338778fb397dd5b08ea0e8@changeid>
+Date:   Sun, 11 Apr 2021 12:46:26 +0300
+Message-Id: <iwlwifi.20210411124417.9d1b61ef53a5.I60b33d5379cf7c12f1de30fc3fd4cefc38220141@changeid>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20210411094630.431873-1-luca@coelho.fi>
 References: <20210411094630.431873-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: mvm: remove PS from lower rates.
+Subject: [PATCH 08/12] iwlwifi: pcie: merge napi_poll_msix functions
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Power save (PS) should only be enabled when we reach the max phy rate.
-Before we reach it (MCS_9) for VHT, we should keep trying to improve the
-throughput.
+The only difference between iwl_pcie_napi_poll_msix_shared() and
+iwl_pcie_napi_poll_msix() is when we have a shared queue and nothing
+in the rx queue.  This case doesn't affect CPU performance, so we can
+merge the two functions.
 
 Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 43 +++++---------------
+ 1 file changed, 10 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 91b6541d579f..b97708cb869d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /******************************************************************************
-  *
-- * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2014, 2018 - 2021 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-@@ -1926,9 +1926,7 @@ static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (is_ht(rate))
- 		return index == IWL_RATE_MCS_7_INDEX;
- 	if (is_vht(rate))
--		return index == IWL_RATE_MCS_7_INDEX ||
--		       index == IWL_RATE_MCS_8_INDEX ||
--		       index == IWL_RATE_MCS_9_INDEX;
-+		return index == IWL_RATE_MCS_9_INDEX;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 0cbc79949982..e4607f943ac3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2003-2014, 2018-2020 Intel Corporation
++ * Copyright (C) 2003-2014, 2018-2021 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -1046,33 +1046,19 @@ static int iwl_pcie_napi_poll_msix(struct napi_struct *napi, int budget)
+ 	trans = trans_pcie->trans;
  
- 	WARN_ON_ONCE(1);
- 	return false;
+ 	ret = iwl_pcie_rx_handle(trans, rxq->id, budget);
++	IWL_DEBUG_ISR(trans, "[%d] handled %d, budget %d\n", rxq->id, ret,
++		      budget);
+ 
+ 	if (ret < budget) {
+-		spin_lock(&trans_pcie->irq_lock);
+-		iwl_pcie_clear_irq(trans, rxq->id);
+-		spin_unlock(&trans_pcie->irq_lock);
+-
+-		napi_complete_done(&rxq->napi, ret);
+-	}
+-
+-	return ret;
+-}
+-
+-static int iwl_pcie_napi_poll_msix_shared(struct napi_struct *napi, int budget)
+-{
+-	struct iwl_rxq *rxq = container_of(napi, struct iwl_rxq, napi);
+-	struct iwl_trans_pcie *trans_pcie;
+-	struct iwl_trans *trans;
+-	int ret;
++		int irq_line = rxq->id;
+ 
+-	trans_pcie = container_of(napi->dev, struct iwl_trans_pcie, napi_dev);
+-	trans = trans_pcie->trans;
++		/* FIRST_RSS is shared with line 0 */
++		if (trans_pcie->shared_vec_mask & IWL_SHARED_IRQ_FIRST_RSS &&
++		    rxq->id == 1)
++			irq_line = 0;
+ 
+-	ret = iwl_pcie_rx_handle(trans, rxq->id, budget);
+-
+-	if (ret < budget) {
+ 		spin_lock(&trans_pcie->irq_lock);
+-		iwl_pcie_clear_irq(trans, 0);
++		iwl_pcie_clear_irq(trans, irq_line);
+ 		spin_unlock(&trans_pcie->irq_lock);
+ 
+ 		napi_complete_done(&rxq->napi, ret);
+@@ -1134,18 +1120,9 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 		if (!rxq->napi.poll) {
+ 			int (*poll)(struct napi_struct *, int) = iwl_pcie_napi_poll;
+ 
+-			if (trans_pcie->msix_enabled) {
++			if (trans_pcie->msix_enabled)
+ 				poll = iwl_pcie_napi_poll_msix;
+ 
+-				if (trans_pcie->shared_vec_mask & IWL_SHARED_IRQ_NON_RX &&
+-				    i == 0)
+-					poll = iwl_pcie_napi_poll_msix_shared;
+-
+-				if (trans_pcie->shared_vec_mask & IWL_SHARED_IRQ_FIRST_RSS &&
+-				    i == 1)
+-					poll = iwl_pcie_napi_poll_msix_shared;
+-			}
+-
+ 			netif_napi_add(&trans_pcie->napi_dev, &rxq->napi,
+ 				       poll, NAPI_POLL_WEIGHT);
+ 			napi_enable(&rxq->napi);
 -- 
 2.31.0
 
