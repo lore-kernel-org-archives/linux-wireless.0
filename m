@@ -4,34 +4,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5464EC433B4
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:32:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 857CFC433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31B7461287
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:32:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60DB361025
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243558AbhDLQdJ (ORCPT
+        id S245555AbhDLQlb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:33:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57952 "EHLO mail.kernel.org"
+        Mon, 12 Apr 2021 12:41:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35580 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245169AbhDLQ3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Apr 2021 12:29:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D269F61367;
-        Mon, 12 Apr 2021 16:25:49 +0000 (UTC)
+        id S244861AbhDLQdZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:33:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D17D3613A0;
+        Mon, 12 Apr 2021 16:26:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618244750;
-        bh=5NC2qNXQM3ZVmp92frznr+LLpoktVmKDMw9BJCQNNSU=;
+        s=k20201202; t=1618244789;
+        bh=XmCEre1kvvN7vGtm74bd0GsZhcgfBHLDP5wchb7qFzU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IrUXfFNUdoSZsXNVLkOwDtz69QkrNG5ljYnPW4UPE5wppnudL4CymUO8S3nuISX/r
-         VkO6FFDAB9L3HAorKfg6v+7k/8f8nMd2E7ZwtlNSgnfVO/JDi4dDBdH1Fnd0h9+c93
-         gnTWgvIS5H72mfVVpPO/giZWVqqBKnG2U3PW5F9TPCyUFH+SZeh4KxHjZaH90YlR0a
-         BKxQNjMnkVnmaXXf5WNKrxITnSRuVmqTcXcPfXE7LC1XSRyUPYkIRyN3IISoCzgsh+
-         u6r0Fr3x7nulPD6C+joHwyBoOpoRNKboQIFgpJ8EQmFA+jWd1PdVPK8HOG3+w3OAqN
-         PKx+wPvlhfScQ==
+        b=QBe/QiHgHdHh7Ru9YTbmr3mTwDU5Ry2bpQhVDQpShn+F1k3JKsWvJOskaqyU+AB6O
+         OgQ1JdLKo9hguO2pgXGlk78Kmw7Jjuge6OUGVNIi554pbgPRRhS4Iu+m7hgWd5Umzx
+         pS5ygMjSXBGJRdwBpz1lfsS9QviDV23PlHERPp46YhG+DI/eCu6na6KbQnI0DVWa1y
+         oGInTeNqpjBSjMKKI72TjjLRymrrnvSmlaIvVsZAvoELimDiHOyEkG8fZS3B1/Y3mu
+         FParOQt3BnNh6XzqDFHMSL/q8UBDxquS1ivo6ZIj2ftK1hVtfcaOPKCDqGg2ylYljk
+         hb+Nom2KoZMWg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Du Cheng <ducheng2@gmail.com>,
@@ -39,12 +39,12 @@ Cc:     Du Cheng <ducheng2@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 38/39] cfg80211: remove WARN_ON() in cfg80211_sme_connect
-Date:   Mon, 12 Apr 2021 12:25:00 -0400
-Message-Id: <20210412162502.314854-38-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 28/28] cfg80211: remove WARN_ON() in cfg80211_sme_connect
+Date:   Mon, 12 Apr 2021 12:25:53 -0400
+Message-Id: <20210412162553.315227-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210412162502.314854-1-sashal@kernel.org>
-References: <20210412162502.314854-1-sashal@kernel.org>
+In-Reply-To: <20210412162553.315227-1-sashal@kernel.org>
+References: <20210412162553.315227-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,7 +74,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index d32a2ec4d96a..63f89687a018 100644
+index f455b9af6815..9d8b106deb0b 100644
 --- a/net/wireless/sme.c
 +++ b/net/wireless/sme.c
 @@ -530,7 +530,7 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
