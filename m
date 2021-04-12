@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB12C43461
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEDB7C43460
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F83161042
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D284461042
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:41:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245646AbhDLQlf (ORCPT
+        id S245686AbhDLQli (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:41:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35568 "EHLO mail.kernel.org"
+        Mon, 12 Apr 2021 12:41:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37274 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244700AbhDLQdZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Apr 2021 12:33:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F17161356;
-        Mon, 12 Apr 2021 16:26:27 +0000 (UTC)
+        id S1343640AbhDLQfi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:35:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 61202613D5;
+        Mon, 12 Apr 2021 16:27:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618244788;
-        bh=U28tPSBWMKJgHr9sUYtb6gXw4ST79fKEpwdQdM52yio=;
+        s=k20201202; t=1618244822;
+        bh=v2Bmv9jEbQZ9fm48hYxIBF/tzoR3B/lZaoJW5MiTlNs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OSpM2nzdYnuaqsSBTBfXO9tWc6jSysqOsEIvXCEE6Xxwo6E6/HLmTLNZBFtz1VbWc
-         /c/3zeM5ZVpRX5tSYy2GZcL3HvxmCTNRrfzHsv9AeWtGDAT/W73W+rUIXkp0hLJF6O
-         RXUrQsdJglcsHTdT266/N9q0+3sfqRNbhu41Sq4lC/ByJF8Vny89DUE3lEnx/kgn4k
-         tESozmffqQbFNMJaeUqwGwtWXNw9bgxyhWxm6lv+h11YsZFN6hLp7hDSoLb/ZWBg2s
-         VX2/LLEFo3Gx/3eu3Y3e7q80GzspCdzIgSklplOU95pe40UzWSlBjKtJ0C/nJSR1Wg
-         x6ouepugiNV/Q==
+        b=q1zf/2/OEs88RfRniID64UqEXI3L7xYYXjO9HlJb1hZDsYwa+A+QnVjSjAuJmGDkM
+         Jac61QvQxk/QzNRuSqxf63TLrDOMLe5HdgV9lfjP0ZvxX87r60Lea7M7R03bsHEIJu
+         ZJ2Sc0EDjHrH9N2lfoPmDV8u3Pizt2BhW4LMyOVaBODyfbnpsZR2n/Pdzq+ZUPxBxv
+         xgMcgEpyi0jB69F4TkgcC4+o0P/XYIq146tKBQSx57zU6tm1+EzCjEG4RvnXmQK4nz
+         ukFXyjIaEo3Q7GNhErEBwwAs49EyESZ/RHNPYn32ZkdyH2hkprP530x1opU/OL11eU
+         bfOEKmN9GJWOQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Seevalamuthu Mariappan <seevalam@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 27/28] mac80211: clear sta->fast_rx when STA removed from 4-addr VLAN
-Date:   Mon, 12 Apr 2021 12:25:52 -0400
-Message-Id: <20210412162553.315227-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 24/25] mac80211: clear sta->fast_rx when STA removed from 4-addr VLAN
+Date:   Mon, 12 Apr 2021 12:26:29 -0400
+Message-Id: <20210412162630.315526-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210412162553.315227-1-sashal@kernel.org>
-References: <20210412162553.315227-1-sashal@kernel.org>
+In-Reply-To: <20210412162630.315526-1-sashal@kernel.org>
+References: <20210412162630.315526-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -99,10 +99,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f484f9fc62ca..6804cdd43bef 100644
+index 0563bde0c285..3b3ed96c19e5 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1548,8 +1548,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+@@ -1536,8 +1536,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
  		}
  
  		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
