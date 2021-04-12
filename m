@@ -2,132 +2,111 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743B9C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 01:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B563C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 05:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FD5061001
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 01:25:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B702A610C7
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 05:40:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236521AbhDLBZx (ORCPT
+        id S230082AbhDLFk5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Apr 2021 21:25:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52810 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236329AbhDLBZx (ORCPT
+        Mon, 12 Apr 2021 01:40:57 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:55386 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229448AbhDLFk4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Apr 2021 21:25:53 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88E7DC06138C
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2021 18:25:36 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id b17so8143521pgh.7
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2021 18:25:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6UWOIGtqeOeXuUvHOjCb1jTlJLlUgyBDQUb3NqK9hjs=;
-        b=SzSdZEYQrxdEvWA2xFeyuX4kQNz4i53+4NSl/wYOSiZbjIXKqWbUS8Xa1zenkUCxsf
-         h5tNXMbgXWvIvWD5/jGXoRJCDJqqBoKlsNftMJdWNeL8inpJIKBBKuIeTJOXzdfOHsRW
-         a8LxX1o3yiNFyV0r7++xO3pSrtcQd9GBOA7iThaiPngO5gDi94SGiVnj5Cfu72xEdonk
-         t+BL5+EwUt3MFZtFbpNPD5Bw44ThjDg4gKNMBznERTvYX0tqyX76rBv7suQ9Ai3Gaw7D
-         uqeFM/WjhHUZAZ0esBNsNwuJgoRjzZCUhEmjCFEi0XACSEaVrxq1dyC6m1Z0u2SgKVB4
-         /3dQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=6UWOIGtqeOeXuUvHOjCb1jTlJLlUgyBDQUb3NqK9hjs=;
-        b=frfvT7t++NImsEibueJuAu0YWGy/3X3CPUWScNr/bensw54vlYzkrxnepo11oNNPGV
-         6q2xkMFQ935b6pbKZkS0llI9paAZ2bxD2wZGD6p67U1egr+cMFt4Ax6jLufs/YOXMi3y
-         OUMZ/NCElrUfEkPIw1NLBu8bmqFr6Ok2RddN7uQOX6yyjPK1M0r/obaojHnOw8BiWHCK
-         QOvCEaFKzQwsGxVt4ePjk5sBo6KhO2hRpSA39963UNAky8lQwpjitp09IsoRSlw9XcLZ
-         /ScCZEWuBr/dCiGTjDlKAiHaY3ZLPDr4Sz4wMwYPqiMXN6SpaCWXI+6PRwfkVdsDXgKE
-         Mr8g==
-X-Gm-Message-State: AOAM532C+WltsR4qXZ+q0fveiqD2x1nPZaRgNxorf39hgIzBL060elfv
-        lUlJGqY5T/5xV5aPbN1nkHcpS37O+1yyGJ50
-X-Google-Smtp-Source: ABdhPJwVFHx91KywmuwrpjzYzCKCdiKF1p0NVsF6qcvxMQKRlCa6GXmZyyt9m1W2cMVjEagDhzweVA==
-X-Received: by 2002:a05:6a00:1c67:b029:215:6f93:d220 with SMTP id s39-20020a056a001c67b02902156f93d220mr21655362pfw.36.1618190736003;
-        Sun, 11 Apr 2021 18:25:36 -0700 (PDT)
-Received: from dragon (80.251.214.228.16clouds.com. [80.251.214.228])
-        by smtp.gmail.com with ESMTPSA id g21sm9050908pjl.28.2021.04.11.18.25.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 11 Apr 2021 18:25:35 -0700 (PDT)
-Date:   Mon, 12 Apr 2021 09:25:29 +0800
-From:   Shawn Guo <shawn.guo@linaro.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Subject: Re: [PATCH 1/2] dt-binding: bcm43xx-fmac: add optional brcm,ccode-map
-Message-ID: <20210412012528.GB15093@dragon>
-References: <20210408113022.18180-1-shawn.guo@linaro.org>
- <20210408113022.18180-2-shawn.guo@linaro.org>
- <87k0p9mewt.fsf@codeaurora.org>
+        Mon, 12 Apr 2021 01:40:56 -0400
+X-UUID: e7fab72f9f4e40188f4890a67e492898-20210412
+X-UUID: e7fab72f9f4e40188f4890a67e492898-20210412
+Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 90478055; Mon, 12 Apr 2021 13:40:35 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 12 Apr 2021 13:40:34 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 12 Apr 2021 13:40:33 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 2/3] mt76: mt7915: rework mt7915_tm_set_tx_len()
+Date:   Mon, 12 Apr 2021 13:39:53 +0800
+Message-ID: <20210412053954.23544-2-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210412053954.23544-1-shayne.chen@mediatek.com>
+References: <20210412053954.23544-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87k0p9mewt.fsf@codeaurora.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Apr 11, 2021 at 10:57:54AM +0300, Kalle Valo wrote:
-> Shawn Guo <shawn.guo@linaro.org> writes:
-> 
-> > Add optional brcm,ccode-map property to support translation from ISO3166
-> > country code to brcmfmac firmware country code and revision.
-> >
-> > Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> > ---
-> >  .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > index cffb2d6876e3..a65ac4384c04 100644
-> > --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > @@ -15,6 +15,12 @@ Optional properties:
-> >  	When not specified the device will use in-band SDIO interrupts.
-> >   - interrupt-names : name of the out-of-band interrupt, which must be set
-> >  	to "host-wake".
-> > + - brcm,ccode-map : multiple strings for translating ISO3166 country code to
-> > +	brcmfmac firmware country code and revision.  Each string must be in
-> > +	format "AA-BB-num" where:
-> > +	  AA is the ISO3166 country code which must be 2 characters.
-> > +	  BB is the firmware country code which must be 2 characters.
-> > +	  num is the revision number which must fit into signed integer.
-> >  
-> >  Example:
-> >  
-> > @@ -34,5 +40,6 @@ mmc3: mmc@1c12000 {
-> >  		interrupt-parent = <&pio>;
-> >  		interrupts = <10 8>; /* PH10 / EINT10 */
-> >  		interrupt-names = "host-wake";
-> > +		brcm,ccode-map = "JP-JP-78", "US-Q2-86";
-> 
-> The commit log does not answer "Why?". Why this needs to be in device
-> tree and, for example, not hard coded in the driver?
+Rework mt7915_tm_set_tx_len() with mt76_testmode_alloc_skb() to support
+larger packet based on a longer tx_time.
 
-Thanks for the comment, Kalle.  Actually, this is something I need some
-input from driver maintainers.  I can see this country code mapping
-table is chipset specific, and can be hard coded in driver per chip id
-and revision.  But on the other hand, it makes some sense to have this
-table in device tree, as the country code that need to be supported
-could be a device specific configuration.
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt7915/testmode.c  | 22 +++++--------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-Shawn
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+index bd798df..f9d81e3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
+@@ -257,13 +257,13 @@ mt7915_tm_set_tx_len(struct mt7915_phy *phy, u32 tx_time)
+ {
+ 	struct mt76_phy *mphy = phy->mt76;
+ 	struct mt76_testmode_data *td = &mphy->test;
+-	struct sk_buff *old = td->tx_skb, *new;
+ 	struct ieee80211_supported_band *sband;
+ 	struct rate_info rate = {};
+ 	u16 flags = 0, tx_len;
+ 	u32 bitrate;
++	int ret;
+ 
+-	if (!tx_time || !old)
++	if (!tx_time)
+ 		return 0;
+ 
+ 	rate.mcs = td->tx_rate_idx;
+@@ -323,21 +323,9 @@ mt7915_tm_set_tx_len(struct mt7915_phy *phy, u32 tx_time)
+ 	bitrate = cfg80211_calculate_bitrate(&rate);
+ 	tx_len = bitrate * tx_time / 10 / 8;
+ 
+-	if (tx_len < sizeof(struct ieee80211_hdr))
+-		tx_len = sizeof(struct ieee80211_hdr);
+-	else if (tx_len > IEEE80211_MAX_FRAME_LEN)
+-		tx_len = IEEE80211_MAX_FRAME_LEN;
+-
+-	new = alloc_skb(tx_len, GFP_KERNEL);
+-	if (!new)
+-		return -ENOMEM;
+-
+-	skb_copy_header(new, old);
+-	__skb_put_zero(new, tx_len);
+-	memcpy(new->data, old->data, sizeof(struct ieee80211_hdr));
+-
+-	dev_kfree_skb(old);
+-	td->tx_skb = new;
++	ret = mt76_testmode_alloc_skb(phy->mt76, tx_len);
++	if (ret)
++		return ret;
+ 
+ 	return 0;
+ }
+-- 
+2.18.0
+
