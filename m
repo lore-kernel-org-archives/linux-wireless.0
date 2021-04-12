@@ -6,65 +6,62 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BF1C43460
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 10:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D9DAC433B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 10:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 239696121E
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 10:24:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BB286121E
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 10:26:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239189AbhDLKYf (ORCPT
+        id S238067AbhDLK0j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Apr 2021 06:24:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44594 "EHLO
+        Mon, 12 Apr 2021 06:26:39 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44600 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S238685AbhDLKYd (ORCPT
+        with ESMTP id S237753AbhDLK0j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Apr 2021 06:24:33 -0400
+        Mon, 12 Apr 2021 06:26:39 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lVtjp-000KwB-2t; Mon, 12 Apr 2021 13:24:14 +0300
+        id 1lVtlr-000KwM-4n; Mon, 12 Apr 2021 13:26:20 +0300
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 From:   Luca Coelho <luca@coelho.fi>
-In-Reply-To: <iwlwifi.20210331121101.d11c9bcdb4aa.I0772171dbaec87433a11513e9586d98b5d920b5f@changeid>
-References: <iwlwifi.20210331121101.d11c9bcdb4aa.I0772171dbaec87433a11513e9586d98b5d920b5f@changeid>
+In-Reply-To: <iwlwifi.20210411124417.b6560a5de0cd.I5dac9c60faed7f48b06d352aa2d65bcf8142c2dc@changeid>
+References: <iwlwifi.20210411124417.b6560a5de0cd.I5dac9c60faed7f48b06d352aa2d65bcf8142c2dc@changeid>
 To:     Luca Coelho <luca@coelho.fi>
 Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.9.2
-Message-Id: <E1lVtjp-000KwB-2t@farmhouse.coelho.fi>
-Date:   Mon, 12 Apr 2021 13:24:14 +0300
-Subject: Re: [PATCH 01/12] iwlwifi: mvm: write queue_sync_state only for sync
+Message-Id: <E1lVtlr-000KwM-4n@farmhouse.coelho.fi>
+Date:   Mon, 12 Apr 2021 13:26:20 +0300
+Subject: Re: [PATCH 01/12] iwlwifi: remove TCM events
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Luca Coelho <luca@coelho.fi> wrote:
 
-> From: Johannes Berg <johannes.berg@intel.com>
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > 
-> We use mvm->queue_sync_state to wait for synchronous queue sync
-> messages, but if an async one happens inbetween we shouldn't
-> clear mvm->queue_sync_state after sending the async one, that
-> can run concurrently (at least from the CPU POV) with another
-> synchronous queue sync.
+> Nobody uses that in the user space.
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-11 patches applied to iwlwifi-next.git, thanks.
+12 patches applied to iwlwifi-next.git, thanks.
 
-ac2d58b34dc9 iwlwifi: mvm: write queue_sync_state only for sync
-d96fbcbb5040 iwlwifi: mvm: clean up queue sync implementation
-35d261a2d9fa iwlwifi: mvm: when associated with PMF, use protected NDP ranging negotiation
-920484e82ea5 iwlwifi: add ax201 killer device
-f05a69e2c7d7 iwlwifi: mvm: Add support for 6GHz passive scan
-7143a6771d2c iwlwifi: mvm: enable PPAG in China
-4eedace3b6d6 iwlwifi: add new so-gf device
-c3e599ec1757 iwlwifi: move iwl_configure_rxq to be used by other op_modes
-bc0411c5b1f8 iwlwifi: mvm: support BIOS enable/disable for 11ax in Ukraine
-d4eb23d659d3 iwlwifi: mvm: refactor ACPI DSM evaluation function
-86817a2ea413 iwlwifi: mvm: Use IWL_INFO in fw_reset_handshake()
+8244069894aa iwlwifi: remove TCM events
+01bc923760e3 iwlwifi: remove remaining software checksum code
+0923ac03cba9 iwlwifi: don't warn if we can't wait for empty tx queues
+c6ad19352b1e iwlwifi: queue: avoid memory leak in reset flow
+816a94733982 iwlwifi: mvm: umac error table mismatch
+ed4698185bda iwlwifi: mvm: remove PS from lower rates.
+1b5b54d5b003 iwlwifi: mvm: don't lock mutex in RCU critical section
+19a979a0bfb7 iwlwifi: pcie: merge napi_poll_msix functions
+50a8bc609b07 iwlwifi: pcie: add ISR debug info for msix debug
+5ed4a2ae4fdc iwlwifi: mvm: add support for version 3 of LARI_CONFIG_CHANGE command.
+be6c1c10b43d iwlwifi: warn on SKB free w/o op-mode
+5f8432c8f45d iwlwifi: rs-fw: don't support stbc for HE 160
 
