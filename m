@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFBCC43470
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C84E6C43470
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3150B6135F
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:26:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9A0361405
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Apr 2021 16:28:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244556AbhDLQ0b (ORCPT
+        id S244772AbhDLQ2d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Apr 2021 12:26:31 -0400
+        Mon, 12 Apr 2021 12:28:33 -0400
 Received: from mail.kernel.org ([198.145.29.99]:57952 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243509AbhDLQYy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Apr 2021 12:24:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4AC466135F;
-        Mon, 12 Apr 2021 16:24:30 +0000 (UTC)
+        id S243546AbhDLQ0a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:26:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 33EF961379;
+        Mon, 12 Apr 2021 16:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618244671;
-        bh=OBNez7pe5st2L7+wrpz8FhsHh9EY6cWit9Q/8CozrB0=;
+        s=k20201202; t=1618244698;
+        bh=ZlYDUGOp6vu9r2PonruhRKU3ed5UEZlWik0Tk17Umgo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EehWKkbcscUNLN6gzgtHCorQre4mV8OdPuOYCRcIKNABPZvX7dfZ4JoQ7Zcm/hntE
-         DoSLt6wcjRG/uSitrNkApVOab7twpziEvUt7ZLv2+8TY5EIT3JB04kiARSeeA/VHN2
-         5ElKowH2NbIf1rgI5u5Xlrq+VTM7dc8dpSchv3fP/oeuf6mdfaVUSyESe17APBsFkI
-         587vof2QTY7g2Qy4wjtCmzl9ilDqeya5B3/qHQebD8jBo2tCSaDuBQh+i1HWd4XZ99
-         jZfzmj1XyAcPQPNjD40tp8MHZzsS4wLm+7z+WjP8guidf8Rud8KTE3CyVGK8+Chg+C
-         o1TjHakaB/BtQ==
+        b=CKsx5UexC3pN0tmuSA/pIJUxHrGTffDO84S/wGLbCZVATBAIkMrI6SfNGr8s563mP
+         UsSWbFINR3+c2RqRT/yly7tTVFqlBM71ftGgPUJxDhCI7IGKwOBu0qRXLEmU7IpeWo
+         NVE18yZnQKnNSdCc3vcKsRCSA/HjxJDn8XtByhANaBtet5usUgLdnrOAeW9LY7rMav
+         JYFQ+p7QfTOX5Q8VVEJMGQSnU6lZ+dWSzbPKpvoqctS5gXj6cWVJjL57KQttpx7Ekt
+         dgy1wNK6Dt8DkfOn7nVB7uvElkRsOWneKq8IEn8l0iaU+UoyVoxUkbLdcOb/bBoH5j
+         D3Mc9aU63w0ww==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Matt Chen <matt.chen@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Du Cheng <ducheng2@gmail.com>,
+        syzbot+5f9392825de654244975@syzkaller.appspotmail.com,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 23/46] iwlwifi: add support for Qu with AX201 device
-Date:   Mon, 12 Apr 2021 12:23:38 -0400
-Message-Id: <20210412162401.314035-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 44/46] cfg80211: remove WARN_ON() in cfg80211_sme_connect
+Date:   Mon, 12 Apr 2021 12:23:59 -0400
+Message-Id: <20210412162401.314035-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210412162401.314035-1-sashal@kernel.org>
 References: <20210412162401.314035-1-sashal@kernel.org>
@@ -53,34 +53,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Matt Chen <matt.chen@intel.com>
+From: Du Cheng <ducheng2@gmail.com>
 
-[ Upstream commit 97195d3cad852063208a1cd4f4d073459547a415 ]
+[ Upstream commit 1b5ab825d9acc0f27d2f25c6252f3526832a9626 ]
 
-Add this specific Samsung AX201 sku to driver so it can be
-detected and initialized successfully.
+A WARN_ON(wdev->conn) would trigger in cfg80211_sme_connect(), if multiple
+send_msg(NL80211_CMD_CONNECT) system calls are made from the userland, which
+should be anticipated and handled by the wireless driver. Remove this WARN_ON()
+to prevent kernel panic if kernel is configured to "panic_on_warn".
 
-Signed-off-by: Matt Chen <matt.chen@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/iwlwifi.20210326125611.30b622037714.Id9fd709cf1c8261c097bbfd7453f6476077dcafc@changeid
+Bug reported by syzbot.
+
+Reported-by: syzbot+5f9392825de654244975@syzkaller.appspotmail.com
+Signed-off-by: Du Cheng <ducheng2@gmail.com>
+Link: https://lore.kernel.org/r/20210407162756.6101-1-ducheng2@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/sme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index fa32f9045c0c..500fdb0b6c42 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -684,6 +684,7 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 	IWL_DEV_INFO(0x4DF0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0, NULL),
- 	IWL_DEV_INFO(0x4DF0, 0x2074, iwl_ax201_cfg_qu_hr, NULL),
- 	IWL_DEV_INFO(0x4DF0, 0x4070, iwl_ax201_cfg_qu_hr, NULL),
-+	IWL_DEV_INFO(0x4DF0, 0x6074, iwl_ax201_cfg_qu_hr, NULL),
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 38df713f2e2e..060e365c8259 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -530,7 +530,7 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
+ 		cfg80211_sme_free(wdev);
+ 	}
  
- 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
- 		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_ANY,
+-	if (WARN_ON(wdev->conn))
++	if (wdev->conn)
+ 		return -EINPROGRESS;
+ 
+ 	wdev->conn = kzalloc(sizeof(*wdev->conn), GFP_KERNEL);
 -- 
 2.30.2
 
