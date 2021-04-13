@@ -2,316 +2,70 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C65C8C43460
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 09:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6FCC433B4
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 09:27:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6465613B2
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 09:09:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A30D261222
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 09:27:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244765AbhDMJJi (ORCPT
+        id S238218AbhDMJ1Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Apr 2021 05:09:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44598 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237040AbhDMJJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Apr 2021 05:09:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 43EDE613B2;
-        Tue, 13 Apr 2021 09:09:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618304946;
-        bh=PAXBzfBndjV0ZQWa/TUzbkaiuUpRIr2YL/WTsKU+hJw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jywPRalwyUHMf69CN82QGqn1TfrmCWhGqb3liKQYwrY8d8oWwS3NNhFQysf9mATXL
-         IOF1SxITcoux+qdOg5A5VpsQIfZxC+IeCaSL+b5oKh/7yW77kHgWUhf0KGbyY3rql3
-         qVhAb7pxTBq6NxsOAW2gfTNwLOAVZhGVPloUaEHv/Qs29HDWoaCYgMaSR6NkQHoBtU
-         scjmfBLKtKEu/13l/YFOCiYNTtDwvCjQpTXvmPzfXBqOXCN94NB205KIftzsih7Ce/
-         NrNp/mDKZprzoG0LsS7VY0rnfbjRoZI3FlBnxDXJ8lI1e+q/WntwgX3fAusEL0lI+G
-         +4yGKcP+5Vukw==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
+        Tue, 13 Apr 2021 05:27:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48842 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230209AbhDMJ1Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Apr 2021 05:27:24 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E22EC061574
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2021 02:27:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=OtgCHsWYPlJuex0DZzLsQBEBTnQ/M9pwex4ouMB0c4U=; b=nabzFeHMoowN+GY2yxjsIMn+xo
+        22EidAR3XgUrpAl0R9r9jpStv0fZ2Zbor1X8/4a5AwRdqTz4Agy6SEg8CUcloewE4RblPt37l54bq
+        6YrgWThNIM3Va+5fhN/SVL+qzJ2xIAmMK9FnV8gAck5S0WnCh1X0Fg9G02lovHoMRx5E=;
+Received: from p4ff13c8d.dip0.t-ipconnect.de ([79.241.60.141] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1lWFJw-0003SL-PW; Tue, 13 Apr 2021 11:26:56 +0200
+Subject: Re: [PATCH] mt76: mt7921: add mt7921_dma_cleanup in
+ mt7921_unregister_device
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, ryder.lee@mediatek.com,
-        shayne.chen@mediatek.com, devicetree@vger.kernel.org,
-        robh@kernel.org
-Subject: [PATCH v3 6/7] mt76: introduce single-sku support for mt7663/mt7921
-Date:   Tue, 13 Apr 2021 11:08:40 +0200
-Message-Id: <e2da2076b6ffc0a91224f1c582cf34971d3f0036.1618304559.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <cover.1618304559.git.lorenzo@kernel.org>
-References: <cover.1618304559.git.lorenzo@kernel.org>
+        sean.wang@mediatek.com
+References: <e78ac49fa2e22c034b934f4ee433b5476e22706c.1618302972.git.lorenzo@kernel.org>
+From:   Felix Fietkau <nbd@nbd.name>
+Message-ID: <9041dd42-8bc8-621c-171e-ef3efbde86bc@nbd.name>
+Date:   Tue, 13 Apr 2021 11:26:55 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.16; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <e78ac49fa2e22c034b934f4ee433b5476e22706c.1618302972.git.lorenzo@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce support for rate-txpower compensation for mt7663/mt7921 chipsets.
-Rate-txpower limit is specified through dts
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7615/init.c  |   5 +-
- .../net/wireless/mediatek/mt76/mt7615/main.c  |   4 +
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 133 ++++++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  23 +++
- .../net/wireless/mediatek/mt76/mt7921/init.c  |   2 +
- .../net/wireless/mediatek/mt76/mt7921/main.c  |   4 +
- 6 files changed, 170 insertions(+), 1 deletion(-)
+On 2021-04-13 10:40, Lorenzo Bianconi wrote:
+> In order to avoid memory leaks, clean the dma engine unloading the
+> module
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Now it is accessing DMA registers after mt7921_mcu_exit has already
+called mt7921_wfsys_reset.
+Please move the mt7921_mcu_exit call further down.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index e58f46d6a85b..d84662fb0304 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -323,8 +323,11 @@ mt7615_regd_notifier(struct wiphy *wiphy,
- 
- 	if (chandef->chan->flags & IEEE80211_CHAN_RADAR)
- 		mt7615_dfs_init_radar_detector(phy);
--	if (mt7615_firmware_offload(phy->dev))
-+
-+	if (mt7615_firmware_offload(phy->dev)) {
- 		mt76_connac_mcu_set_channel_domain(mphy);
-+		mt76_connac_mcu_set_rate_txpower(mphy);
-+	}
- 
- 	mt7615_mutex_release(dev);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index e30b256784e0..62d9df47a1f6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -66,6 +66,10 @@ static int mt7615_start(struct ieee80211_hw *hw)
- 		ret = mt76_connac_mcu_set_channel_domain(phy->mt76);
- 		if (ret)
- 			goto out;
-+
-+		ret = mt76_connac_mcu_set_rate_txpower(phy->mt76);
-+		if (ret)
-+			goto out;
- 	}
- 
- 	ret = mt7615_mcu_set_chan_info(phy, MCU_EXT_CMD_SET_RX_PATH);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 4892728ad9bb..fdc64993e531 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -1564,6 +1564,139 @@ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
- }
- EXPORT_SYMBOL_GPL(mt76_connac_mcu_coredump_event);
- 
-+static void
-+mt76_connac_mcu_build_sku(struct mt76_dev *dev, s8 *sku,
-+			  struct mt76_power_limits *limits,
-+			  enum nl80211_band band)
-+{
-+	int max_power = is_mt7921(dev) ? 127 : 63;
-+	int i, offset = sizeof(limits->cck);
-+
-+	memset(sku, max_power, MT_SKU_POWER_LIMIT);
-+
-+	if (band == NL80211_BAND_2GHZ) {
-+		/* cck */
-+		memcpy(sku, limits->cck, sizeof(limits->cck));
-+	}
-+
-+	/* ofdm */
-+	memcpy(&sku[offset], limits->ofdm, sizeof(limits->ofdm));
-+	offset += sizeof(limits->ofdm);
-+
-+	/* ht */
-+	for (i = 0; i < 2; i++) {
-+		memcpy(&sku[offset], limits->mcs[i], 8);
-+		offset += 8;
-+	}
-+	sku[offset++] = limits->mcs[0][0];
-+
-+	/* vht */
-+	for (i = 0; i < ARRAY_SIZE(limits->mcs); i++) {
-+		memcpy(&sku[offset], limits->mcs[i],
-+		       ARRAY_SIZE(limits->mcs[i]));
-+		offset += 12;
-+	}
-+
-+	if (!is_mt7921(dev))
-+		return;
-+
-+	/* he */
-+	for (i = 0; i < ARRAY_SIZE(limits->ru); i++) {
-+		memcpy(&sku[offset], limits->ru[i], ARRAY_SIZE(limits->ru[i]));
-+		offset += ARRAY_SIZE(limits->ru[i]);
-+	}
-+}
-+
-+static int
-+mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
-+				  enum nl80211_band band)
-+{
-+	struct mt76_dev *dev = phy->dev;
-+	int sku_len, batch_len = is_mt7921(dev) ? 8 : 16;
-+	static const u8 chan_list_2ghz[] = {
-+		1, 2,  3,  4,  5,  6,  7,
-+		8, 9, 10, 11, 12, 13, 14
-+	};
-+	static const u8 chan_list_5ghz[] = {
-+		 36,  38,  40,  42,  44,  46,  48,
-+		 50,  52,  54,  56,  58,  60,  62,
-+		 64, 100, 102, 104, 106, 108, 110,
-+		112, 114, 116, 118, 120, 122, 124,
-+		126, 128, 132, 134, 136, 138, 140,
-+		142, 144, 149, 151, 153, 155, 157,
-+		159, 161, 165
-+	};
-+	struct mt76_connac_sku_tlv sku_tlbv;
-+	int i, n_chan, batch_size, idx = 0;
-+	struct mt76_power_limits limits;
-+	const u8 *ch_list;
-+
-+	sku_len = is_mt7921(dev) ? sizeof(sku_tlbv) : sizeof(sku_tlbv) - 92;
-+
-+	if (band == NL80211_BAND_2GHZ) {
-+		n_chan = ARRAY_SIZE(chan_list_2ghz);
-+		ch_list = chan_list_2ghz;
-+	} else {
-+		n_chan = ARRAY_SIZE(chan_list_5ghz);
-+		ch_list = chan_list_5ghz;
-+	}
-+	batch_size = DIV_ROUND_UP(n_chan, batch_len);
-+
-+	for (i = 0; i < batch_size; i++) {
-+		bool last_msg = i == batch_size - 1;
-+		int num_ch = last_msg ? n_chan % batch_len : batch_len;
-+		struct mt76_connac_tx_power_limit_tlv tx_power_tlv = {
-+			.band = band == NL80211_BAND_2GHZ ? 1 : 2,
-+			.n_chan = num_ch,
-+			.last_msg = last_msg,
-+		};
-+		struct sk_buff *skb;
-+		int j, err, msg_len;
-+
-+		msg_len = sizeof(tx_power_tlv) + num_ch * sizeof(sku_tlbv);
-+		skb = mt76_mcu_msg_alloc(dev, NULL, msg_len);
-+		if (!skb)
-+			return -ENOMEM;
-+
-+		BUILD_BUG_ON(sizeof(dev->alpha2) > sizeof(tx_power_tlv.alpha2));
-+		memcpy(tx_power_tlv.alpha2, dev->alpha2, sizeof(dev->alpha2));
-+
-+		skb_put_data(skb, &tx_power_tlv, sizeof(tx_power_tlv));
-+		for (j = 0; j < num_ch; j++, idx++) {
-+			struct ieee80211_channel chan = {
-+				.hw_value = ch_list[idx],
-+				.band = band,
-+			};
-+
-+			mt76_get_rate_power_limits(phy, &chan, &limits, 127);
-+
-+			sku_tlbv.channel = ch_list[idx];
-+			mt76_connac_mcu_build_sku(dev, sku_tlbv.pwr_limit,
-+						  &limits, band);
-+			skb_put_data(skb, &sku_tlbv, sku_len);
-+		}
-+
-+		err = mt76_mcu_skb_send_msg(dev, skb,
-+					    MCU_CMD_SET_RATE_TX_POWER, false);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	return 0;
-+}
-+
-+int mt76_connac_mcu_set_rate_txpower(struct mt76_phy *phy)
-+{
-+	int err;
-+
-+	err = mt76_connac_mcu_rate_txpower_band(phy, NL80211_BAND_2GHZ);
-+	if (err < 0)
-+		return err;
-+
-+	return mt76_connac_mcu_rate_txpower_band(phy, NL80211_BAND_5GHZ);
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac_mcu_set_rate_txpower);
-+
- #ifdef CONFIG_PM
- 
- const struct wiphy_wowlan_support mt76_connac_wowlan_support = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 6f9b7807305a..01c458e14dc7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -895,6 +895,28 @@ struct mt76_sta_cmd_info {
- 	u8 rcpi;
- };
- 
-+#define MT_SKU_POWER_LIMIT	161
-+
-+struct mt76_connac_sku_tlv {
-+	u8 channel;
-+	s8 pwr_limit[MT_SKU_POWER_LIMIT];
-+} __packed;
-+
-+struct mt76_connac_tx_power_limit_tlv {
-+	/* DW0 - common info*/
-+	u8 ver;
-+	u8 pad0;
-+	__le16 len;
-+	/* DW1 - cmd hint */
-+	u8 n_chan; /* # channel */
-+	u8 band; /* 2.4GHz - 5GHz */
-+	u8 last_msg;
-+	u8 pad1;
-+	/* DW3 */
-+	u8 alpha2[4]; /* regulatory_request.alpha2 */
-+	u8 pad2[32];
-+} __packed;
-+
- #define to_wcid_lo(id)		FIELD_GET(GENMASK(7, 0), (u16)id)
- #define to_wcid_hi(id)		FIELD_GET(GENMASK(9, 8), (u16)id)
- 
-@@ -997,4 +1019,5 @@ void mt76_connac_mcu_set_suspend_iter(void *priv, u8 *mac,
- int mt76_connac_mcu_chip_config(struct mt76_dev *dev);
- void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
- 				    struct mt76_connac_coredump *coredump);
-+int mt76_connac_mcu_set_rate_txpower(struct mt76_phy *phy);
- #endif /* __MT76_CONNAC_MCU_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 7344cdfb5e47..6dc96dd4651c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -58,12 +58,14 @@ mt7921_regd_notifier(struct wiphy *wiphy,
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
-+	struct mt7921_phy *phy = mt7921_hw_phy(hw);
- 
- 	memcpy(dev->mt76.alpha2, request->alpha2, sizeof(dev->mt76.alpha2));
- 	dev->mt76.region = request->dfs_region;
- 
- 	mt7921_mutex_acquire(dev);
- 	mt76_connac_mcu_set_channel_domain(hw->priv);
-+	mt76_connac_mcu_set_rate_txpower(phy->mt76);
- 	mt7921_mutex_release(dev);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index d9ec7d9bb1c4..8e1891da5c6a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -182,6 +182,10 @@ int __mt7921_start(struct mt7921_phy *phy)
- 	if (err)
- 		return err;
- 
-+	err = mt76_connac_mcu_set_rate_txpower(phy->mt76);
-+	if (err)
-+		return err;
-+
- 	mt7921_mac_reset_counters(phy);
- 	set_bit(MT76_STATE_RUNNING, &mphy->state);
- 
--- 
-2.30.2
-
+- Felix
