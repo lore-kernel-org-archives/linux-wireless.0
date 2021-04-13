@@ -2,74 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF480C433B4
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 06:01:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B361C433B4
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 07:26:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BAEF60200
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 06:01:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 395536054E
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 07:26:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243954AbhDMGCJ (ORCPT
+        id S238878AbhDMH07 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Apr 2021 02:02:09 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44720 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S243829AbhDMGCJ (ORCPT
+        Tue, 13 Apr 2021 03:26:59 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:49424 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230446AbhDMH0x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Apr 2021 02:02:09 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <luca@coelho.fi>)
-        id 1lWC7P-000LPJ-5p; Tue, 13 Apr 2021 09:01:48 +0300
-Content-Type: text/plain; charset="utf-8"
+        Tue, 13 Apr 2021 03:26:53 -0400
+X-UUID: dc8304c882da4c8ba8b66eb16e0725ad-20210413
+X-UUID: dc8304c882da4c8ba8b66eb16e0725ad-20210413
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1425415315; Tue, 13 Apr 2021 15:26:27 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 13 Apr 2021 15:26:25 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 13 Apr 2021 15:26:25 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7915: only free skbs after mt7915_dma_reset() when reset happens
+Date:   Tue, 13 Apr 2021 15:26:20 +0800
+Message-ID: <6f531ab347f2c95ccc979b905e1882811dbf88fe.1618297567.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <1fc26bda42fcd85b4bcebc8520601c70b882aa34.1618297567.git.ryder.lee@mediatek.com>
+References: <1fc26bda42fcd85b4bcebc8520601c70b882aa34.1618297567.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-From:   Luca Coelho <luca@coelho.fi>
-In-Reply-To: <iwlwifi.20210411124417.b6560a5de0cd.I5dac9c60faed7f48b06d352aa2d65bcf8142c2dc@changeid>
-References: <iwlwifi.20210411124417.b6560a5de0cd.I5dac9c60faed7f48b06d352aa2d65bcf8142c2dc@changeid>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.9.2
-Message-Id: <E1lWC7P-000LPJ-5p@farmhouse.coelho.fi>
-Date:   Tue, 13 Apr 2021 09:01:48 +0300
-Subject: Re: [PATCH 01/12] iwlwifi: remove TCM events
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 0FBF8B1C5867ACE187B03BCE64CBA3125AD649F31450D63B2D80902F88F920552000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> wrote:
+In mt7915_mac_reset_work(), make sure freeing skbs after mt7915_dma_reset().
 
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> Nobody uses that in the user space.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-19 patches applied to iwlwifi-next.git, thanks.
-
-e0dd86f0bd69 iwlwifi: remove TCM events
-3b3f8821c4c9 iwlwifi: remove remaining software checksum code
-026551c60e8e iwlwifi: don't warn if we can't wait for empty tx queues
-223ebf2ebf6a iwlwifi: queue: avoid memory leak in reset flow
-9bda8492febf iwlwifi: mvm: umac error table mismatch
-3e34b44d849d iwlwifi: mvm: remove PS from lower rates.
-06c0cf9da5f2 iwlwifi: mvm: don't lock mutex in RCU critical section
-9ff251354ce9 iwlwifi: pcie: merge napi_poll_msix functions
-00b553eb054c iwlwifi: pcie: add ISR debug info for msix debug
-f3e8147496ce iwlwifi: mvm: add support for version 3 of LARI_CONFIG_CHANGE command.
-ad68eb03d7af iwlwifi: warn on SKB free w/o op-mode
-f133d1cf5a79 iwlwifi: rs-fw: don't support stbc for HE 160
-79470344e77d iwlwifi: mvm: don't disconnect immediately if we don't hear beacons after CSA
-9c6e322ff5ff iwlwifi: mvm: don't WARN if we can't remove a time event
-0fc56a04f96b iwlwifi: bump FW API to 63 for AX devices
-6cd6b59b4af3 iwlwifi: trans/pcie: defer transport initialisation
-2684e13a1069 iwlwifi: fw: print out trigger delay when collecting data
-e8b94b7ede60 iwlwifi: pcie: Change ma product string name
-daa13ebd0481 iwlwifi: dbg: disable ini debug in 9000 family and below
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index e61dfe966f0a..423f1b9202ce 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1627,12 +1627,12 @@ void mt7915_mac_reset_work(struct work_struct *work)
+ 
+ 	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_DMA_STOPPED);
+ 
+-	mt7915_tx_token_put(dev);
+-	idr_init(&dev->token);
+-
+ 	if (mt7915_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
+ 		mt7915_dma_reset(dev);
+ 
++		mt7915_tx_token_put(dev);
++		idr_init(&dev->token);
++
+ 		mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_DMA_INIT);
+ 		mt7915_wait_reset_state(dev, MT_MCU_CMD_RECOVERY_DONE);
+ 	}
+-- 
+2.18.0
 
