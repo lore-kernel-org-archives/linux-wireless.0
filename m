@@ -2,116 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7CE1C433ED
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 21:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB39FC433B4
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 22:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9175661027
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 21:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D02261249
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 22:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348511AbhDMVwN (ORCPT
+        id S1348550AbhDMWAj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Apr 2021 17:52:13 -0400
-Received: from gateway30.websitewelcome.com ([192.185.145.3]:32131 "EHLO
-        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1348510AbhDMVwN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Apr 2021 17:52:13 -0400
-Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
-        by gateway30.websitewelcome.com (Postfix) with ESMTP id 51D4513F2E
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2021 16:27:43 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id WQZTlsGHiMGeEWQZTlLlVB; Tue, 13 Apr 2021 16:27:43 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=TfokYtkeeoGp29/7KUX5x78tAWhkf7xQAs5zdzU8auA=; b=NoT3yarjF9YYL8WIsWkPmrhAGs
-        7IbzngQxKKDl26S1M1tscWsoZAXI64kXoRNRQs1oNLr1+6+XzCokT0ewHesrqWbMcvU/LyaLmMh8Y
-        7UU45KM5BwrqBSEe5ku5ej77R70rjDtfLaXw2C84fBNz3DgwhJ5lw9vOGwMSP8/OmhKtH1FBRLE50
-        RVaQkoqaH54Ltb9nU08om2CdMdAL3iQqpP28eT34pPGLewc1Ssal5av3sPSsOkTCYmKAN0x1tuTb9
-        X7haz0w6++MAkqfTMVXszHCMv/goHWeidsX5uFswpMlLogqSR7HafmIXFVFvVxBEFhHnB4OxmqMo/
-        Ph8OAGUg==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:50214 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1lWQZP-003KVE-RB; Tue, 13 Apr 2021 16:27:39 -0500
-Subject: Re: [PATCH v2 0/2][next] wl3501_cs: Fix out-of-bounds warnings
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-kernel@vger.kernel.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
-References: <cover.1617226663.git.gustavoars@kernel.org>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <9e0972ef-4d42-3896-d92b-01113c445775@embeddedor.com>
-Date:   Tue, 13 Apr 2021 16:27:49 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        Tue, 13 Apr 2021 18:00:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51962 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1347015AbhDMWAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Apr 2021 18:00:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id E5A35613A9;
+        Tue, 13 Apr 2021 22:00:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618351212;
+        bh=9YmO728e2XUmt2k8g14yvQq2gJSiym7VXJsZZsbeEnA=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=HYh3r4lRTy05IluZtxAJx41dZ+mSFHQ1bEqers9WQPwUeH7i5cd11wJTf5SIhh0M2
+         hndebissoFqxy7zMUplLNGrip1Q4B6X8hpEV4gwrGoHu4jOtMkxcw6JiB57/bQ/YrX
+         o5G5M98fxI+luBYcC7MFGwN7n+5PtZXRm7gD+o+jm/55shRepCWYydR1+aihYwmcl3
+         DpeMAXUAF3CQbJ0ZtQCU/p+ZVbN1gIA2SrMeQl1Jd1+CPMtw8l+3e5Jk8zKaJGDwur
+         x2Ho99Sj6vM5fffaCoLMKZLkn1tEevArbel3HvNFIamFZYSv4RYBWrXhFakBv5K1U6
+         +VhdZ6kSP0+JA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <cover.1617226663.git.gustavoars@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1lWQZP-003KVE-RB
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:50214
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 15
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] rsi: remove unused including <linux/version.h>
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <161835121189.27588.8142881264651148953.git-patchwork-notify@kernel.org>
+Date:   Tue, 13 Apr 2021 22:00:11 +0000
+References: <1618307172-70927-1-git-send-email-yang.lee@linux.alibaba.com>
+In-Reply-To: <1618307172-70927-1-git-send-email-yang.lee@linux.alibaba.com>
+To:     Yang Li <yang.lee@linux.alibaba.com>
+Cc:     amitkarwar@gmail.com, siva8118@gmail.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+Hello:
 
-Friendly ping: could somebody give us some feedback or take
-this series, please?
+This patch was applied to netdev/net-next.git (refs/heads/master):
 
-Thanks
+On Tue, 13 Apr 2021 17:46:12 +0800 you wrote:
+> Fix the following versioncheck warning:
+> ./drivers/net/wireless/rsi/rsi_91x_ps.c: 19 linux/version.h not needed.
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+> ---
+>  drivers/net/wireless/rsi/rsi_91x_ps.c | 1 -
+>  1 file changed, 1 deletion(-)
+
+Here is the summary with links:
+  - rsi: remove unused including <linux/version.h>
+    https://git.kernel.org/netdev/net-next/c/46568170036d
+
+You are awesome, thank you!
 --
-Gustavo
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-On 3/31/21 16:43, Gustavo A. R. Silva wrote:
-> Fix the a couple of  out-of-bounds warnings by making the code
-> a bit more structured.
-> 
-> This helps with the ongoing efforts to enable -Warray-bounds and
-> avoid confusing the compiler.
-> 
-> Link: https://github.com/KSPP/linux/issues/109
-> 
-> Changes in v2:
->  - Update changelog text in patch 1/2.
->  - Replace a couple of magic numbers with new variable sig_addr_len.
-> 
-> Gustavo A. R. Silva (2):
->   wl3501_cs: Fix out-of-bounds warning in wl3501_send_pkt
->   wl3501_cs: Fix out-of-bounds warning in wl3501_mgmt_join
-> 
->  drivers/net/wireless/wl3501.h    | 28 ++++++++++++++++------------
->  drivers/net/wireless/wl3501_cs.c | 11 ++++++-----
->  2 files changed, 22 insertions(+), 17 deletions(-)
-> 
+
