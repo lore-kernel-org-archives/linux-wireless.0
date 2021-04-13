@@ -2,208 +2,214 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 600E2C433ED
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 20:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A4EC433B4
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 21:39:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2ADB86128E
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 20:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56AAB61222
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Apr 2021 21:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231173AbhDMUzw (ORCPT
+        id S1345512AbhDMVja (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Apr 2021 16:55:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:57930 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230373AbhDMUzv (ORCPT
+        Tue, 13 Apr 2021 17:39:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40088 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346291AbhDMVjZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Apr 2021 16:55:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618347331;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=0nQR8hBxDiYu6SuSaHFor3P+PM7Sv/mwgakJo4vQ6xg=;
-        b=M810WxCujl/V17h+7hpid5xtYPfIx6zfhsnhZu0b5iTJnmmuGBRfWGmp7V98iVM0Bdm/NH
-        CbYGZ9PLBVzVmSuigncjucBdg32hh1DGsCKZs7NpwCLpbcqHV5tXqedSYWJqYSV61LRyEK
-        Sxr6Zt9GODRsawan4L4yIxgV11cRBNI=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-295-TDSkw9JiMDmtkkIdnxR8HQ-1; Tue, 13 Apr 2021 16:55:29 -0400
-X-MC-Unique: TDSkw9JiMDmtkkIdnxR8HQ-1
-Received: by mail-ej1-f72.google.com with SMTP id gj5so4822911ejb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2021 13:55:29 -0700 (PDT)
+        Tue, 13 Apr 2021 17:39:25 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5B5C061574
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2021 14:39:04 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id c15so8898632wro.13
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2021 14:39:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=pCtYDJ5/Vnxm2TkVG51PBSFJSYQygxAVNtfSdkAAEAU=;
+        b=uCqCkqO9SBudsnWyJb8AEX2KIfinWrX2T/h4zHxIMQZwh1105+Aj4sVqgkhsM2kPRF
+         OrjgeJDTaxtHAdP/gQzL8hUx6cudTFp2izdq8yy2tSSeYp8LRyv8Wz5t6rCe/tqH0dCd
+         M3Wrf2AkeumE9DSNbRwn43j83+9IZB0V9r849JLua4nZxZxOf210iFNsRxeUQ81z+Q5e
+         G3AlmAee5pOTz6piKN3a1+1R4KFhoV+g96ZaDoKU0O9RR6eFi+CJZTuiHIkG/ctG5JFM
+         A1dBT3sWbR1BYHZaUCtzx9X3bZdoLTIe8qwK0i2EvsrMJWTZGNuHTVZYD1syeueCb8rb
+         d/2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=0nQR8hBxDiYu6SuSaHFor3P+PM7Sv/mwgakJo4vQ6xg=;
-        b=p3SiEA7GnJmOcuuN2R1uVvftX8wPz2ewXGc8N/tA6VIkm9OfzWxKf6lPieaBaGyDLh
-         xNPI+PCp7gCPG9so2YaRAikZbd2uM3L7OsOaS6shRxfTmMAK1A4i0cMnrgEtule1UJfx
-         YydattNPTRL/8z5JZeT1Qve/9sCUyKM2SB3wHUSvjrh3juCyDuWhErNqpnqX/iztZhP1
-         fzJxUNc4Ou5FbuL26+919ybuE3rx/s2YjkqLuZt0HcjKBilf4ioE7BIsZHxr2OdRWGfw
-         72FD7ehLMSGdSuJpQTrXOHquoZiHNiiT6YbY2eUfi1i+69npj1Rh+7q4RV9HxjhysRE4
-         kJHQ==
-X-Gm-Message-State: AOAM533oppSKx5Jhl6c3TMrpzhARdozKxvWoODikpGVCPOIgWbFNlKs0
-        qJUzttckXseOryepMIPIcWWn+u0I7cqGCHOAHiBHp+Ux5WPVU20q4azCV/IWseyZnb6V47Gv5Nr
-        h4Nfkbqjsl3/mc60lusS7U4hODNk50B9+ckHgsdu94+T7AF4VvuYJcMeIXSHjS6qBYWsgS4Xwcd
-        cARYs=
-X-Received: by 2002:a05:6402:1857:: with SMTP id v23mr36475405edy.362.1618347328494;
-        Tue, 13 Apr 2021 13:55:28 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxZtu714YWalGOfGfWgiCNkVrth5/c08tzusOoJZrIKemxKGmFpwFzjVy8YnrOkj4IgvgqBZg==
-X-Received: by 2002:a05:6402:1857:: with SMTP id v23mr36475391edy.362.1618347328307;
-        Tue, 13 Apr 2021 13:55:28 -0700 (PDT)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
-        by smtp.gmail.com with ESMTPSA id e12sm10178507edv.11.2021.04.13.13.55.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Apr 2021 13:55:27 -0700 (PDT)
-To:     Luca Coelho <luciano.coelho@intel.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-From:   Hans de Goede <hdegoede@redhat.com>
-Subject: iwlwifi Lockdep warning with 5.12-rc4 on 8086:02f0 (Comet Lake PCH-LP
- CNVi WiFi)
-Message-ID: <9fafe866-6ff6-d1c4-0a04-493d863bc9db@redhat.com>
-Date:   Tue, 13 Apr 2021 22:55:27 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=pCtYDJ5/Vnxm2TkVG51PBSFJSYQygxAVNtfSdkAAEAU=;
+        b=nhLu2JivTfYt6DOdE1dXI0r9BvivFTZY0vYA4IktEUxFDv+Mk3X9Cz2lIEFaGt8HK7
+         Tb6Dn60EtQfwphqBnbKAr9nbYRtmhNVhCp7viMVvQD65Niis2n09LpjzSAQwMQIvjNgY
+         pR+poTfwEYVJWGH/tVoqjqBxaZvfRTJ2H38qZuIZTxrIuT+TWpnzTClEEEXbHHQXSECN
+         m9ito6nhv7g2UVw2YBq9K0aMGmz3AUEFfEs5N8yY76ZOIEjAsW4E+HWKW7ifylaPUYFd
+         y/r2sT3Nqh/2/pcqnnC+gXhQIdwC5C8pwXB0ZaEG74qDzJ3U3WojncCgg1GvwZoPLs96
+         cLYg==
+X-Gm-Message-State: AOAM530OcDW/LHxTSOIlIYEeHC6+/IQmJD90+qEffbLW7jpg4cW3tUXC
+        TfmBiLcaPEdCp4GjKZ68/LQLZxSVsu3NWaMvO5BMmg==
+X-Google-Smtp-Source: ABdhPJzLiJzws9fQyZNqpEqi0NWS08WzWkPju/ZVdUf9+/gs562N2c0Tm/CtZFA5UcyRq+RnTkw0cs0wkxqaclsCLyQ=
+X-Received: by 2002:adf:f506:: with SMTP id q6mr13864452wro.65.1618349943137;
+ Tue, 13 Apr 2021 14:39:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: base64
+References: <9fafe866-6ff6-d1c4-0a04-493d863bc9db@redhat.com>
+In-Reply-To: <9fafe866-6ff6-d1c4-0a04-493d863bc9db@redhat.com>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Tue, 13 Apr 2021 15:38:47 -0600
+Message-ID: <CAJCQCtRFqmioneenXeNEoBXnjGCrOeU-SthZKT60bQoMD84K2w@mail.gmail.com>
+Subject: Re: iwlwifi Lockdep warning with 5.12-rc4 on 8086:02f0 (Comet Lake
+ PCH-LP CNVi WiFi)
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGkgQWxsLA0KDQpJJ20gc2VlaW5nIHRoZSBmb2xsb3dpbmcgbG9ja2RlcCB3YXJuaW5nIHdp
-dGggNS4xMi1yYzQgb24gODA4NjowMmYwIChDb21ldCBMYWtlIFBDSC1MUCBDTlZpIFdpRmkp
-Og0KDQpbICAgMjkuOTIzODExXSBCbHVldG9vdGg6IGhjaTA6IFdhaXRpbmcgZm9yIGZpcm13
-YXJlIGRvd25sb2FkIHRvIGNvbXBsZXRlDQpbICAgMjkuOTI1MDY4XSBCbHVldG9vdGg6IGhj
-aTA6IEZpcm13YXJlIGxvYWRlZCBpbiAxOTEyNjEzIHVzZWNzDQpbICAgMjkuOTI1MzI2XSBC
-bHVldG9vdGg6IGhjaTA6IFdhaXRpbmcgZm9yIGRldmljZSB0byBib290DQpbICAgMjkuOTQw
-Njk4XSBCbHVldG9vdGg6IGhjaTA6IERldmljZSBib290ZWQgaW4gMTUyNTggdXNlY3MNClsg
-ICAyOS45NDM1MTddIEJsdWV0b290aDogaGNpMDogRm91bmQgSW50ZWwgRERDIHBhcmFtZXRl
-cnM6IGludGVsL2lidC0xOS0wLTQuZGRjDQpbICAgMjkuOTQ1NjgxXSBCbHVldG9vdGg6IGhj
-aTA6IEFwcGx5aW5nIEludGVsIEREQyBwYXJhbWV0ZXJzIGNvbXBsZXRlZA0KWyAgIDI5Ljk0
-ODY4NF0gQmx1ZXRvb3RoOiBoY2kwOiBGaXJtd2FyZSByZXZpc2lvbiAwLjAgYnVpbGQgMTIx
-IHdlZWsgNyAyMDIxDQpbICAgMzAuMDA4NjQwXSBCbHVldG9vdGg6IGhjaTA6IE1TRlQgZmls
-dGVyX2VuYWJsZSBpcyBhbHJlYWR5IG9uDQpbICAgMzAuMDg3MzM4XSAtLS0tLS0tLS0tLS1b
-IGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NClsgICAzMC4wODczNTZdIFdBUk5JTkc6IENQVTog
-NSBQSUQ6IDE0ODEgYXQga2VybmVsL3NvZnRpcnEuYzoxNzggX19sb2NhbF9iaF9lbmFibGVf
-aXArMHg5Ny8weGQwDQpbICAgMzAuMDg3MzYwXSBNb2R1bGVzIGxpbmtlZCBpbjogY21hYyBi
-bmVwIHNuZF9jdGxfbGVkIHNuZF9zb2Nfc2tsX2hkYV9kc3AoRSkgc25kX3NvY19oZGFjX2hk
-bWkoRSkgc25kX3NvY19kbWljKEUpIHNuZF9oZGFfY29kZWNfaGRtaSBzbmRfaGRhX2NvZGVj
-X3JlYWx0ZWsgc25kX2hkYV9jb2RlY19nZW5lcmljIHNuZF9zb2ZfcGNpX2ludGVsX2NubCBz
-bmRfc29mX2ludGVsX2hkYV9jb21tb24gdmZhdCBmYXQgaVRDT193ZHQgbWVpX3dkdCBzbmRf
-c29jX2hkYWNfaGRhKEUpIG1laV9oZGNwIGludGVsX3BtY19ieHQgc291bmR3aXJlX2ludGVs
-IGlUQ09fdmVuZG9yX3N1cHBvcnQgc291bmR3aXJlX2dlbmVyaWNfYWxsb2NhdGlvbiBzb3Vu
-ZHdpcmVfY2FkZW5jZSBzbmRfc29mX2ludGVsX2hkYSBzbmRfc29mX3BjaSBzbmRfc29mIGlu
-dGVsX3JhcGxfbXNyIHg4Nl9wa2dfdGVtcF90aGVybWFsIGludGVsX3Bvd2VyY2xhbXAgY29y
-ZXRlbXAgc25kX3NvZl94dGVuc2FfZHNwIHNuZF9zb2Nfc2tsIGt2bV9pbnRlbCBzbmRfc29j
-X3NzdF9pcGMoRSkgc25kX3NvY19zc3RfZHNwKEUpIHNuZF9oZGFfZXh0X2NvcmUoRSkgc25k
-X3NvY19hY3BpX2ludGVsX21hdGNoKEUpIHNuZF9zb2NfYWNwaSBrdm0gc25kX3NvY19jb3Jl
-IGNkY19ldGhlciBpcnFieXBhc3MgdXNibmV0IHNuZF9jb21wcmVzcyByYXBsIHI4MTUyIGFj
-OTdfYnVzIGludGVsX2NzdGF0ZSBzbmRfcGNtX2RtYWVuZ2luZSBtaWkgc25kX2hkYV9pbnRl
-bCBpbnRlbF91bmNvcmUgc25kX2ludGVsX2RzcGNmZyhFKSBzbmRfaW50ZWxfc2R3X2FjcGko
-RSkgc25kX2hkYV9jb2RlYyBzbmRfdXNiX2F1ZGlvIHNuZF9oZGFfY29yZShFKSBzbmRfdXNi
-bWlkaV9saWIgc25kX2h3ZGVwIGl3bG12bSBzbmRfcmF3bWlkaSBzbmRfc2VxIHBjc3BrciBz
-bmRfc2VxX2RldmljZSBtYWM4MDIxMSBzbmRfcGNtIHdtaV9ibW9mIGkyY19pODAxIHV2Y3Zp
-ZGVvIGludGVsX3dtaV90aHVuZGVyYm9sdCBlMTAwMGUgaTJjX3NtYnVzDQpbICAgMzAuMDg3
-NDM2XSAgYnR1c2Igc25kX3RpbWVyIHZpZGVvYnVmMl92bWFsbG9jIGJ0cnRsIHRodW5kZXJi
-b2x0IHZpZGVvYnVmMl9tZW1vcHMgbGliYXJjNCBidGJjbSBidGludGVsIHZpZGVvYnVmMl92
-NGwyIGJsdWV0b290aCB2aWRlb2J1ZjJfY29tbW9uIGl3bHdpZmkgdmlkZW9kZXYgbWVpX21l
-IHByb2Nlc3Nvcl90aGVybWFsX2RldmljZSBwcm9jZXNzb3JfdGhlcm1hbF9yZmltIGVjZGhf
-Z2VuZXJpYyBqb3lkZXYgbWMgbWVpIHByb2Nlc3Nvcl90aGVybWFsX21ib3ggZWNjIHByb2Nl
-c3Nvcl90aGVybWFsX3JhcGwgY2ZnODAyMTEgaWRtYTY0IGludGVsX3JhcGxfY29tbW9uIHVj
-c2lfYWNwaSBpbnRlbF9wY2hfdGhlcm1hbCBpbnRlbF9zb2NfZHRzX2lvc2YgbnhwX25jaV9p
-MmMgdHlwZWNfdWNzaSBueHBfbmNpIG5jaSByb2xlcyB0eXBlYyBuZmMgaW50MzQwM190aGVy
-bWFsIGludDM0MHhfdGhlcm1hbF96b25lIHNvY19idXR0b25fYXJyYXkgaW50ZWxfaGlkIGlu
-dDM0MDBfdGhlcm1hbCBhY3BpX3RoZXJtYWxfcmVsIHNwYXJzZV9rZXltYXAgYWNwaV9wYWQg
-YmluZm10X21pc2MgenJhbSBpcF90YWJsZXMgZG1fY3J5cHQgdHJ1c3RlZCBoaWRfbG9naXRl
-Y2hfaGlkcHAgaGlkX2xvZ2l0ZWNoX2RqIHVhcyB1c2Jfc3RvcmFnZSBjcmN0MTBkaWZfcGNs
-bXVsIGNyYzMyX3BjbG11bCBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCBpOTE1
-IHNlcmlvX3JhdyBudm1lIGkyY19hbGdvX2JpdCBudm1lX2NvcmUgZHJtX2ttc19oZWxwZXIg
-Y2VjIGhpZF9tdWx0aXRvdWNoIGRybSB3bWkgaTJjX2hpZF9hY3BpIGkyY19oaWQgdGhpbmtw
-YWRfYWNwaSBsZWR0cmlnX2F1ZGlvIHBsYXRmb3JtX3Byb2ZpbGUgc25kIHNvdW5kY29yZSBy
-ZmtpbGwgZHJtX3ByaXZhY3lfc2NyZWVuX2hlbHBlciB2aWRlbyBwaW5jdHJsX2Nhbm5vbmxh
-a2UgaTJjX2RldiBmdXNlDQpbICAgMzAuMDg3NTA5XSBDUFU6IDUgUElEOiAxNDgxIENvbW06
-IE5ldHdvcmtNYW5hZ2VyIFRhaW50ZWQ6IEcgICAgICAgICAgICBFICAgICA1LjEyLjAtcmM0
-KyAjMjcyDQpbICAgMzAuMDg3NTExXSBIYXJkd2FyZSBuYW1lOiBMRU5PVk8gMjBVOTBTSVQx
-OS8yMFU5MFNJVDE5LCBCSU9TIE4yV0VUMjRXICgxLjE0ICkgMTAvMTUvMjAyMA0KWyAgIDMw
-LjA4NzUxMl0gUklQOiAwMDEwOl9fbG9jYWxfYmhfZW5hYmxlX2lwKzB4OTcvMHhkMA0KWyAg
-IDMwLjA4NzUxNF0gQ29kZTogZjIgNDUgYTkgMDAgZmYgZmYgMDAgNzQgMzYgNjUgZmYgMGQg
-MzMgZDcgZjIgNDUgZTggMmUgMmMgMTMgMDAgZmIgNjYgMGYgMWYgNDQgMDAgMDAgNWIgNWQg
-YzMgNjUgOGIgMDUgNTkgZGYgZjIgNDUgODUgYzAgNzUgOWMgPDBmPiAwYiBlYiA5OCBlOCA1
-MCAyYiAxMyAwMCBlYiBhNyA0OCA4OSBlZiBlOCA3NiAyOCAwNyAwMCBlYiBiMCA2NQ0KWyAg
-IDMwLjA4NzUxNl0gUlNQOiAwMDE4OmZmZmZiYzEyNDBlNDcxYjAgRUZMQUdTOiAwMDAxMDA0
-Ng0KWyAgIDMwLjA4NzUxOF0gUkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAw
-MDAwMDIwMSBSQ1g6IDAwMDAwMDAwMDAwMDAwMDANClsgICAzMC4wODc1MjBdIFJEWDogMDAw
-MDAwMDAwMDAwMDAwMyBSU0k6IDAwMDAwMDAwMDAwMDAyMDEgUkRJOiBmZmZmZmZmZmMwYmQ1
-NGRiDQpbICAgMzAuMDg3NTIxXSBSQlA6IGZmZmZmZmZmYzBiZDU0ZGIgUjA4OiAwMDAwMDAw
-MDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMQ0KWyAgIDMwLjA4NzUyMl0gUjEwOiBm
-ZmZmYmMxMjQwZTQ3MGEwIFIxMTogMDAwMDAwMDAwMDAwMDAwMSBSMTI6IGZmZmY5ODE3YzU3
-OGFjMTANClsgICAzMC4wODc1MjNdIFIxMzogMDAwMDAwMDAwMDAwMDAwMCBSMTQ6IDAwMDAw
-MDAwODAwMDAwMDAgUjE1OiAwMDAwMDAwMDAwMDAwMDAwDQpbICAgMzAuMDg3NTI1XSBGUzog
-IDAwMDA3ZjMwOGRiYmRiYzAoMDAwMCkgR1M6ZmZmZjk4MWIxYTU0MDAwMCgwMDAwKSBrbmxH
-UzowMDAwMDAwMDAwMDAwMDAwDQpbICAgMzAuMDg3NTI2XSBDUzogIDAwMTAgRFM6IDAwMDAg
-RVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQpbICAgMzAuMDg3NTI4XSBDUjI6IDAw
-MDA3ZjY1OWMwMTMwMzggQ1IzOiAwMDAwMDAwMTQyMGJjMDAyIENSNDogMDAwMDAwMDAwMDM3
-MDZlMA0KWyAgIDMwLjA4NzUyOV0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAw
-MDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDANClsgICAzMC4wODc1MzBdIERSMzog
-MDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZmZTBmZjAgRFI3OiAwMDAwMDAwMDAw
-MDAwNDAwDQpbICAgMzAuMDg3NTMxXSBDYWxsIFRyYWNlOg0KWyAgIDMwLjA4NzUzNF0gIGl3
-bF9wY2llX2dlbjJfZW5xdWV1ZV9oY21kKzB4NTZiLzB4OGMwIFtpd2x3aWZpXQ0KWyAgIDMw
-LjA4NzU1MV0gIGl3bF90cmFuc190eHFfc2VuZF9oY21kKzB4NTkvMHg0NzAgW2l3bHdpZmld
-DQpbICAgMzAuMDg3NTY0XSAgaXdsX3RyYW5zX3NlbmRfY21kKzB4ODEvMHgxODAgW2l3bHdp
-ZmldDQpbICAgMzAuMDg3NTcyXSAgPyBsb2NrX2FjcXVpcmUrMHhlMi8weDNiMA0KWyAgIDMw
-LjA4NzU3Nl0gIGl3bF9tdm1fc2VuZF9jbWQrMHgyOC8weDgwIFtpd2xtdm1dDQpbICAgMzAu
-MDg3NTg3XSAgaXdsX212bV9sZWRfc2V0KzB4OWMvMHhjMCBbaXdsbXZtXQ0KWyAgIDMwLjA4
-NzYwMF0gID8gX3Jhd19yZWFkX2xvY2tfaXJxc2F2ZSsweDdmLzB4YTANClsgICAzMC4wODc2
-MDJdICA/IF9yYXdfcmVhZF9sb2NrX2lycXNhdmUrMHg4OC8weGEwDQpbICAgMzAuMDg3NjA1
-XSAgbGVkX3RyaWdnZXJfZXZlbnQrMHg0Ni8weDcwDQpbICAgMzAuMDg3NjA5XSAgaWVlZTgw
-MjExX2RvX29wZW4rMHg0YzIvMHhhNzAgW21hYzgwMjExXQ0KWyAgIDMwLjA4NzY0Ml0gIGll
-ZWU4MDIxMV9vcGVuKzB4NjkvMHg5MCBbbWFjODAyMTFdDQpbICAgMzAuMDg3NjY2XSAgX19k
-ZXZfb3BlbisweGU1LzB4MWIwDQpbICAgMzAuMDg3NjcwXSAgX19kZXZfY2hhbmdlX2ZsYWdz
-KzB4MWM4LzB4MjQwDQpbICAgMzAuMDg3Njc2XSAgZGV2X2NoYW5nZV9mbGFncysweDIxLzB4
-NjANClsgICAzMC4wODc2ODJdICBkb19zZXRsaW5rKzB4MmE5LzB4MTI5MA0KWyAgIDMwLjA4
-NzY5MF0gID8gX19sb2NrX2FjcXVpcmUrMHgzODkvMHgxZTEwDQpbICAgMzAuMDg3NzA3XSAg
-PyBsb2NrX2lzX2hlbGRfdHlwZSsweGE1LzB4MTIwDQpbICAgMzAuMDg3NzEzXSAgX19ydG5s
-X25ld2xpbmsrMHg2NmQvMHhhMjANClsgICAzMC4wODc3NTNdICBydG5sX25ld2xpbmsrMHg0
-NC8weDcwDQpbICAgMzAuMDg3NzU2XSAgcnRuZXRsaW5rX3Jjdl9tc2crMHgxODEvMHg0YjAN
-ClsgICAzMC4wODc3NjFdICA/IHJ0bmV0bGlua19wdXRfbWV0cmljcysweDFlMC8weDFlMA0K
-WyAgIDMwLjA4Nzc2M10gIG5ldGxpbmtfcmN2X3NrYisweDViLzB4MTAwDQpbICAgMzAuMDg3
-NzY5XSAgbmV0bGlua191bmljYXN0KzB4MTc1LzB4MjQwDQpbICAgMzAuMDg3NzczXSAgbmV0
-bGlua19zZW5kbXNnKzB4MjRkLzB4NDgwDQpbICAgMzAuMDg3Nzc5XSAgc29ja19zZW5kbXNn
-KzB4NWUvMHg2MA0KWyAgIDMwLjA4Nzc4Ml0gIF9fX19zeXNfc2VuZG1zZysweDI1Yi8weDJh
-MA0KWyAgIDMwLjA4Nzc4NF0gID8gaW1wb3J0X2lvdmVjKzB4MTcvMHgyMA0KWyAgIDMwLjA4
-Nzc5MF0gIF9fX3N5c19zZW5kbXNnKzB4YTMvMHhmMA0KWyAgIDMwLjA4NzgwNF0gIF9fc3lz
-X3NlbmRtc2crMHg3My8weGIwDQpbICAgMzAuMDg3ODExXSAgZG9fc3lzY2FsbF82NCsweDMz
-LzB4NDANClsgICAzMC4wODc4MTVdICBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJhbWUr
-MHg0NC8weGFlDQpbICAgMzAuMDg3ODE3XSBSSVA6IDAwMzM6MHg3ZjMwOGVjYTk2ZmQNClsg
-ICAzMC4wODc4MTldIENvZGU6IDI4IDg5IDU0IDI0IDFjIDQ4IDg5IDc0IDI0IDEwIDg5IDdj
-IDI0IDA4IGU4IGZhIGVlIGZmIGZmIDhiIDU0IDI0IDFjIDQ4IDhiIDc0IDI0IDEwIDQxIDg5
-IGMwIDhiIDdjIDI0IDA4IGI4IDJlIDAwIDAwIDAwIDBmIDA1IDw0OD4gM2QgMDAgZjAgZmYg
-ZmYgNzcgMzMgNDQgODkgYzcgNDggODkgNDQgMjQgMDggZTggNGUgZWYgZmYgZmYgNDgNClsg
-ICAzMC4wODc4MjBdIFJTUDogMDAyYjowMDAwN2ZmZjcwYjRhZjQwIEVGTEFHUzogMDAwMDAy
-OTMgT1JJR19SQVg6IDAwMDAwMDAwMDAwMDAwMmUNClsgICAzMC4wODc4MjNdIFJBWDogZmZm
-ZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDAwMDAwMDAwMDAwMTQgUkNYOiAwMDAwN2YzMDhlY2E5
-NmZkDQpbICAgMzAuMDg3ODI0XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwN2Zm
-ZjcwYjRhZjgwIFJESTogMDAwMDAwMDAwMDAwMDAwYw0KWyAgIDMwLjA4NzgyNV0gUkJQOiAw
-MDAwNTY1NTM1YWZlMDMwIFIwODogMDAwMDAwMDAwMDAwMDAwMCBSMDk6IDAwMDAwMDAwMDAw
-MDAwMDANClsgICAzMC4wODc4MjZdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAw
-MDAwMDAwMDAyOTMgUjEyOiAwMDAwMDAwMDAwMDAwMDAwDQpbICAgMzAuMDg3ODI3XSBSMTM6
-IDAwMDA3ZmZmNzBiNGIwZTAgUjE0OiAwMDAwN2ZmZjcwYjRiMGRjIFIxNTogMDAwMDAwMDAw
-MDAwMDAwMA0KWyAgIDMwLjA4NzgzNV0gaXJxIGV2ZW50IHN0YW1wOiAyNDIxNTMNClsgICAz
-MC4wODc4MzZdIGhhcmRpcnFzIGxhc3QgIGVuYWJsZWQgYXQgKDI0MjE1MSk6IFs8ZmZmZmZm
-ZmZiYTBlYTY5Mj5dIF9fbG9jYWxfYmhfZW5hYmxlX2lwKzB4ODIvMHhkMA0KWyAgIDMwLjA4
-NzgzOF0gaGFyZGlycXMgbGFzdCBkaXNhYmxlZCBhdCAoMjQyMTUyKTogWzxmZmZmZmZmZmJh
-ZDNmNzk0Pl0gX3Jhd19yZWFkX2xvY2tfaXJxc2F2ZSsweDk0LzB4YTANClsgICAzMC4wODc4
-NDBdIHNvZnRpcnFzIGxhc3QgIGVuYWJsZWQgYXQgKDI0MjE1MCk6IFs8ZmZmZmZmZmZjMGJk
-NTRkYj5dIGl3bF9wY2llX2dlbjJfZW5xdWV1ZV9oY21kKzB4NTZiLzB4OGMwIFtpd2x3aWZp
-XQ0KWyAgIDMwLjA4Nzg1MF0gc29mdGlycXMgbGFzdCBkaXNhYmxlZCBhdCAoMjQyMTUzKTog
-WzxmZmZmZmZmZmMwYmQ1MDViPl0gaXdsX3BjaWVfZ2VuMl9lbnF1ZXVlX2hjbWQrMHhlYi8w
-eDhjMCBbaXdsd2lmaV0NClsgICAzMC4wODc4NTddIC0tLVsgZW5kIHRyYWNlIGFhMGIxNzFi
-NDQxNWExZmUgXS0tLQ0KDQpSZWdhcmRzLA0KDQpIYW5zDQo=
+On Tue, Apr 13, 2021 at 2:55 PM Hans de Goede <hdegoede@redhat.com> wrote:
+>
+> Hi All,
+>
+> I'm seeing the following lockdep warning with 5.12-rc4 on 8086:02f0 (Come=
+t Lake PCH-LP CNVi WiFi):
+>
+> [   29.923811] Bluetooth: hci0: Waiting for firmware download to complete
+> [   29.925068] Bluetooth: hci0: Firmware loaded in 1912613 usecs
+> [   29.925326] Bluetooth: hci0: Waiting for device to boot
+> [   29.940698] Bluetooth: hci0: Device booted in 15258 usecs
+> [   29.943517] Bluetooth: hci0: Found Intel DDC parameters: intel/ibt-19-=
+0-4.ddc
+> [   29.945681] Bluetooth: hci0: Applying Intel DDC parameters completed
+> [   29.948684] Bluetooth: hci0: Firmware revision 0.0 build 121 week 7 20=
+21
+> [   30.008640] Bluetooth: hci0: MSFT filter_enable is already on
+> [   30.087338] ------------[ cut here ]------------
+> [   30.087356] WARNING: CPU: 5 PID: 1481 at kernel/softirq.c:178 __local_=
+bh_enable_ip+0x97/0xd0
+> [   30.087360] Modules linked in: cmac bnep snd_ctl_led snd_soc_skl_hda_d=
+sp(E) snd_soc_hdac_hdmi(E) snd_soc_dmic(E) snd_hda_codec_hdmi snd_hda_codec=
+_realtek snd_hda_codec_generic snd_sof_pci_intel_cnl snd_sof_intel_hda_comm=
+on vfat fat iTCO_wdt mei_wdt snd_soc_hdac_hda(E) mei_hdcp intel_pmc_bxt sou=
+ndwire_intel iTCO_vendor_support soundwire_generic_allocation soundwire_cad=
+ence snd_sof_intel_hda snd_sof_pci snd_sof intel_rapl_msr x86_pkg_temp_ther=
+mal intel_powerclamp coretemp snd_sof_xtensa_dsp snd_soc_skl kvm_intel snd_=
+soc_sst_ipc(E) snd_soc_sst_dsp(E) snd_hda_ext_core(E) snd_soc_acpi_intel_ma=
+tch(E) snd_soc_acpi kvm snd_soc_core cdc_ether irqbypass usbnet snd_compres=
+s rapl r8152 ac97_bus intel_cstate snd_pcm_dmaengine mii snd_hda_intel inte=
+l_uncore snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hda_codec snd_usb_au=
+dio snd_hda_core(E) snd_usbmidi_lib snd_hwdep iwlmvm snd_rawmidi snd_seq pc=
+spkr snd_seq_device mac80211 snd_pcm wmi_bmof i2c_i801 uvcvideo intel_wmi_t=
+hunderbolt e1000e i2c_smbus
+> [   30.087436]  btusb snd_timer videobuf2_vmalloc btrtl thunderbolt video=
+buf2_memops libarc4 btbcm btintel videobuf2_v4l2 bluetooth videobuf2_common=
+ iwlwifi videodev mei_me processor_thermal_device processor_thermal_rfim ec=
+dh_generic joydev mc mei processor_thermal_mbox ecc processor_thermal_rapl =
+cfg80211 idma64 intel_rapl_common ucsi_acpi intel_pch_thermal intel_soc_dts=
+_iosf nxp_nci_i2c typec_ucsi nxp_nci nci roles typec nfc int3403_thermal in=
+t340x_thermal_zone soc_button_array intel_hid int3400_thermal acpi_thermal_=
+rel sparse_keymap acpi_pad binfmt_misc zram ip_tables dm_crypt trusted hid_=
+logitech_hidpp hid_logitech_dj uas usb_storage crct10dif_pclmul crc32_pclmu=
+l crc32c_intel ghash_clmulni_intel i915 serio_raw nvme i2c_algo_bit nvme_co=
+re drm_kms_helper cec hid_multitouch drm wmi i2c_hid_acpi i2c_hid thinkpad_=
+acpi ledtrig_audio platform_profile snd soundcore rfkill drm_privacy_screen=
+_helper video pinctrl_cannonlake i2c_dev fuse
+> [   30.087509] CPU: 5 PID: 1481 Comm: NetworkManager Tainted: G          =
+  E     5.12.0-rc4+ #272
+> [   30.087511] Hardware name: LENOVO 20U90SIT19/20U90SIT19, BIOS N2WET24W=
+ (1.14 ) 10/15/2020
+> [   30.087512] RIP: 0010:__local_bh_enable_ip+0x97/0xd0
+> [   30.087514] Code: f2 45 a9 00 ff ff 00 74 36 65 ff 0d 33 d7 f2 45 e8 2=
+e 2c 13 00 fb 66 0f 1f 44 00 00 5b 5d c3 65 8b 05 59 df f2 45 85 c0 75 9c <=
+0f> 0b eb 98 e8 50 2b 13 00 eb a7 48 89 ef e8 76 28 07 00 eb b0 65
+> [   30.087516] RSP: 0018:ffffbc1240e471b0 EFLAGS: 00010046
+> [   30.087518] RAX: 0000000000000000 RBX: 0000000000000201 RCX: 000000000=
+0000000
+> [   30.087520] RDX: 0000000000000003 RSI: 0000000000000201 RDI: ffffffffc=
+0bd54db
+> [   30.087521] RBP: ffffffffc0bd54db R08: 0000000000000000 R09: 000000000=
+0000001
+> [   30.087522] R10: ffffbc1240e470a0 R11: 0000000000000001 R12: ffff9817c=
+578ac10
+> [   30.087523] R13: 0000000000000000 R14: 0000000080000000 R15: 000000000=
+0000000
+> [   30.087525] FS:  00007f308dbbdbc0(0000) GS:ffff981b1a540000(0000) knlG=
+S:0000000000000000
+> [   30.087526] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   30.087528] CR2: 00007f659c013038 CR3: 00000001420bc002 CR4: 000000000=
+03706e0
+> [   30.087529] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000=
+0000000
+> [   30.087530] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 000000000=
+0000400
+> [   30.087531] Call Trace:
+> [   30.087534]  iwl_pcie_gen2_enqueue_hcmd+0x56b/0x8c0 [iwlwifi]
+> [   30.087551]  iwl_trans_txq_send_hcmd+0x59/0x470 [iwlwifi]
+> [   30.087564]  iwl_trans_send_cmd+0x81/0x180 [iwlwifi]
+> [   30.087572]  ? lock_acquire+0xe2/0x3b0
+> [   30.087576]  iwl_mvm_send_cmd+0x28/0x80 [iwlmvm]
+> [   30.087587]  iwl_mvm_led_set+0x9c/0xc0 [iwlmvm]
+> [   30.087600]  ? _raw_read_lock_irqsave+0x7f/0xa0
+> [   30.087602]  ? _raw_read_lock_irqsave+0x88/0xa0
+> [   30.087605]  led_trigger_event+0x46/0x70
+> [   30.087609]  ieee80211_do_open+0x4c2/0xa70 [mac80211]
+> [   30.087642]  ieee80211_open+0x69/0x90 [mac80211]
+> [   30.087666]  __dev_open+0xe5/0x1b0
+> [   30.087670]  __dev_change_flags+0x1c8/0x240
+> [   30.087676]  dev_change_flags+0x21/0x60
+> [   30.087682]  do_setlink+0x2a9/0x1290
+> [   30.087690]  ? __lock_acquire+0x389/0x1e10
+> [   30.087707]  ? lock_is_held_type+0xa5/0x120
+> [   30.087713]  __rtnl_newlink+0x66d/0xa20
+> [   30.087753]  rtnl_newlink+0x44/0x70
+> [   30.087756]  rtnetlink_rcv_msg+0x181/0x4b0
+> [   30.087761]  ? rtnetlink_put_metrics+0x1e0/0x1e0
+> [   30.087763]  netlink_rcv_skb+0x5b/0x100
+> [   30.087769]  netlink_unicast+0x175/0x240
+> [   30.087773]  netlink_sendmsg+0x24d/0x480
+> [   30.087779]  sock_sendmsg+0x5e/0x60
+> [   30.087782]  ____sys_sendmsg+0x25b/0x2a0
+> [   30.087784]  ? import_iovec+0x17/0x20
+> [   30.087790]  ___sys_sendmsg+0xa3/0xf0
+> [   30.087804]  __sys_sendmsg+0x73/0xb0
+> [   30.087811]  do_syscall_64+0x33/0x40
+> [   30.087815]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   30.087817] RIP: 0033:0x7f308eca96fd
+> [   30.087819] Code: 28 89 54 24 1c 48 89 74 24 10 89 7c 24 08 e8 fa ee f=
+f ff 8b 54 24 1c 48 8b 74 24 10 41 89 c0 8b 7c 24 08 b8 2e 00 00 00 0f 05 <=
+48> 3d 00 f0 ff ff 77 33 44 89 c7 48 89 44 24 08 e8 4e ef ff ff 48
+> [   30.087820] RSP: 002b:00007fff70b4af40 EFLAGS: 00000293 ORIG_RAX: 0000=
+00000000002e
+> [   30.087823] RAX: ffffffffffffffda RBX: 0000000000000014 RCX: 00007f308=
+eca96fd
+> [   30.087824] RDX: 0000000000000000 RSI: 00007fff70b4af80 RDI: 000000000=
+000000c
+> [   30.087825] RBP: 0000565535afe030 R08: 0000000000000000 R09: 000000000=
+0000000
+> [   30.087826] R10: 0000000000000000 R11: 0000000000000293 R12: 000000000=
+0000000
+> [   30.087827] R13: 00007fff70b4b0e0 R14: 00007fff70b4b0dc R15: 000000000=
+0000000
+> [   30.087835] irq event stamp: 242153
+> [   30.087836] hardirqs last  enabled at (242151): [<ffffffffba0ea692>] _=
+_local_bh_enable_ip+0x82/0xd0
+> [   30.087838] hardirqs last disabled at (242152): [<ffffffffbad3f794>] _=
+raw_read_lock_irqsave+0x94/0xa0
+> [   30.087840] softirqs last  enabled at (242150): [<ffffffffc0bd54db>] i=
+wl_pcie_gen2_enqueue_hcmd+0x56b/0x8c0 [iwlwifi]
+> [   30.087850] softirqs last disabled at (242153): [<ffffffffc0bd505b>] i=
+wl_pcie_gen2_enqueue_hcmd+0xeb/0x8c0 [iwlwifi]
+> [   30.087857] ---[ end trace aa0b171b4415a1fe ]---
+>
 
+
+Looks like this:
+https://lore.kernel.org/linux-wireless/nycvar.YFH.7.76.2103021125430.12405@=
+cbobk.fhfr.pm/
+
+I tested that patch on rc6 and it worked so far.
+
+--=20
+Chris Murphy
