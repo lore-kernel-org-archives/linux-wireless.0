@@ -2,47 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5773DC433B4
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 08:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A18C43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 08:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3726C611F1
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 08:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C42A611CD
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 08:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231398AbhDOIrs (ORCPT
+        id S231678AbhDOIrv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Apr 2021 04:47:48 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:52856 "EHLO
+        Thu, 15 Apr 2021 04:47:51 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:52862 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231143AbhDOIrr (ORCPT
+        with ESMTP id S231534AbhDOIru (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Apr 2021 04:47:47 -0400
+        Thu, 15 Apr 2021 04:47:50 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 13F8lGafD022663, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 13F8lKkaD022671, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 13F8lGafD022663
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 13F8lKkaD022671
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 15 Apr 2021 16:47:16 +0800
+        Thu, 15 Apr 2021 16:47:20 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 15 Apr 2021 16:47:15 +0800
+ 15.1.2106.2; Thu, 15 Apr 2021 16:47:20 +0800
 Received: from localhost (172.21.69.146) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Thu, 15 Apr
- 2021 16:47:15 +0800
+ 2021 16:47:19 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <vincent_fann@realtek.com>,
         <phhuang@realtek.com>, <steventing@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH 0/3] rtw88: fix some TX/RX bugs
-Date:   Thu, 15 Apr 2021 16:47:00 +0800
-Message-ID: <20210415084703.27255-1-pkshih@realtek.com>
+Subject: [PATCH 1/3] rtw88: 8821c: Don't set RX_FLAG_DECRYPTED if packet has no encryption
+Date:   Thu, 15 Apr 2021 16:47:01 +0800
+Message-ID: <20210415084703.27255-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20210415084703.27255-1-pkshih@realtek.com>
+References: <20210415084703.27255-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -107,27 +110,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patchset fix bugs happened during TX/RX performance test.
-First is 88221c doesn't set proper RX_FLAG_DECRYPTED. Second is to fix
-count of available TX queue, and then it can wake ieee80211 queue
-correctly; otherwise, it can't tx anymore. Third patch is to refine
-NAPI deinit flow to safely stop PCI; without this fix, system spin while
-it is going to down. 
+From: Guo-Feng Fan <vincent_fann@realtek.com>
 
-Guo-Feng Fan (1):
-  rtw88: 8821c: Don't set RX_FLAG_DECRYPTED if packet has no encryption
+The value of GET_RX_DESC_SWDEC() indicates that if this RX
+packet requires software decryption or not. And software
+decryption is required when the packet was encrypted and the
+hardware failed to decrypt it.
 
-Po-Hao Huang (1):
-  rtw88: refine napi deinit flow
+So, GET_RX_DESC_SWDEC() is negative does not mean that this
+packet is decrypted, it might just have no encryption at all.
+To actually see if the packet is decrypted, driver needs to
+further check if the hardware has successfully decrypted it,
+with a specific type of encryption algorithm.
 
-Yu-Yen Ting (1):
-  rtw88: Fix potential unrecoverable tx queue stop
+Signed-off-by: Guo-Feng Fan <vincent_fann@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/realtek/rtw88/pci.c      | 29 ++++++++++++++-----
- drivers/net/wireless/realtek/rtw88/pci.h      |  1 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +-
- 3 files changed, 25 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 33c6cf1206c8..785b8181513f 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -581,7 +581,8 @@ static void rtw8821c_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
+ 	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
+ 	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
+ 	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
+-	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc);
++	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc) &&
++			      GET_RX_DESC_ENC_TYPE(rx_desc) != RX_DESC_ENC_NONE;
+ 	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
+ 	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
+ 	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
 -- 
 2.21.0
 
