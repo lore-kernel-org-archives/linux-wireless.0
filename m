@@ -2,159 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38135C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 19:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F70C433B4
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 21:34:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00623610CB
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 19:58:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 341FF6108E
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 21:34:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235150AbhDOT6f (ORCPT
+        id S236037AbhDOVed (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Apr 2021 15:58:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54256 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234654AbhDOT6e (ORCPT
+        Thu, 15 Apr 2021 17:34:33 -0400
+Received: from mail-oi1-f171.google.com ([209.85.167.171]:44566 "EHLO
+        mail-oi1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235046AbhDOVec (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Apr 2021 15:58:34 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47DF8C061756
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2021 12:58:10 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id x21-20020a17090a5315b029012c4a622e4aso13316758pjh.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2021 12:58:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=sXhSKr29wpd6a6qt/mh96odcNcbPE2aK/Q6BgI+4t6E=;
-        b=XK3D3dRhy2wdHg/aLihejMVK1Jpk1OaBdYzJasCCqg0zFBlARjGV0nVO9m5LE5hDBx
-         15tN0CoyPl0n4NfcgPD9Vm5bQmJIpMtYXqYr26Rcl0+RpjAK/dvrP4vV2aNKJtW99SaE
-         jauyFE7jIvcYQhahEsj4A+rQJTL2nVQ8nq0NM=
+        Thu, 15 Apr 2021 17:34:32 -0400
+Received: by mail-oi1-f171.google.com with SMTP id e66so10470237oif.11;
+        Thu, 15 Apr 2021 14:34:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=sXhSKr29wpd6a6qt/mh96odcNcbPE2aK/Q6BgI+4t6E=;
-        b=ctvGY8vPzk3Z8k08dBIgAC1F+Yj3AoFaiPHwCliH+B9B8rEY8SlEjMawUcHRZSMWM1
-         Bnn4VqvLSD3SBxs+Tgi+1lF2s1VAly12dWU41LaTSCkaZLEU9bYXomlcFXFiWQMpd5pd
-         UBnPLbUVHYj6p6luzvNGbiRrS8sv2IfzJnGaP/UFOS1WGmNUKIf2Lai67bI3Z/16aDRa
-         byDedSB7P0gsn87C0b7QM1fqw3ggvMadcdG3zwMbZKjqE6PFIHdqpE+RdyuhR1l3uEFc
-         TAvbVCPyjDQuvVqLCXcUft5z00/fL03jbaZPuqJwFL6RBATxYwmj+mm54vE5KnZ9vl+m
-         d+yw==
-X-Gm-Message-State: AOAM533ggspyJRRWYzMRkzicaLz2HM3U4gfaJz4IPcE+ZRWl08MPozq2
-        2IQXUgO0eDBqkcC4uRsavIIHDlaM6t2m/Q==
-X-Google-Smtp-Source: ABdhPJwcUdlJJtXYWk8IbTEMfWRkjKZmaPrvDax7npIZsC0vXr9zpHNelJm+tfVS3fQY6P4lxEBpJQ==
-X-Received: by 2002:a17:902:9b97:b029:eb:7a1b:5b88 with SMTP id y23-20020a1709029b97b02900eb7a1b5b88mr4516835plp.77.1618516690371;
-        Thu, 15 Apr 2021 12:58:10 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id k15sm2936028pfi.0.2021.04.15.12.58.09
+        bh=kq7mT824FIfH8P0v4e9lP9ngle/tsiNGQv3sPJt/w+s=;
+        b=ZrKb2WiB6MTuJq8O++hHqZKDHptH5SUGTB2/E8MZnK9TbKOI6GkgOl5PEmLem+2iIe
+         HuId8C1KAR80iCad0RYLbhkPK/QaZU1E8DDjwS93qaOwVWfFXa0kkcvtNxEhrWcwfEhw
+         NB9IV75/LSsnOepNhF0yqd8ldrCVq0tPfavDkhaa+KPwIz/XBSnbt+r3niQFmphg/PfF
+         7iymqZKnfc+ZHAz72kYNY2YQkXySM49SgyUMvfz/rR6NDkPCL/NhqijZ3cIIxvU6N+aM
+         CGLjQcOmMV7Us/B44sj7+fUTSk+i9KvHc8omcQQSHy09cFHWUl5EBDfC/JiYGMxOz+rD
+         jVhw==
+X-Gm-Message-State: AOAM531Os3saK/f/CVLRDGZmWeTaaG8zLwWNiW5i5xsKCxX0UokrDIcx
+        tZvShW7fb2onKl2PCy68Cg==
+X-Google-Smtp-Source: ABdhPJzWwJ5zn3ccsPLLFQ5VcvsaZirz0DmrqQFPT8bDCdt8imAzheOAl1gpqVMmxyJZd6NPHzO0Lg==
+X-Received: by 2002:a54:488f:: with SMTP id r15mr1215200oic.132.1618522448415;
+        Thu, 15 Apr 2021 14:34:08 -0700 (PDT)
+Received: from robh.at.kernel.org (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id 88sm768525otx.2.2021.04.15.14.34.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Apr 2021 12:58:09 -0700 (PDT)
-Date:   Thu, 15 Apr 2021 12:58:07 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        Thu, 15 Apr 2021 14:34:07 -0700 (PDT)
+Received: (nullmailer pid 1919784 invoked by uid 1000);
+        Thu, 15 Apr 2021 21:34:06 -0000
+Date:   Thu, 15 Apr 2021 16:34:06 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Shawn Guo <shawn.guo@linaro.org>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] wl3501_cs: Fix out-of-bounds warnings in
- wl3501_mgmt_join
-Message-ID: <202104151257.DC4DA20@keescook>
-References: <cover.1618442265.git.gustavoars@kernel.org>
- <1fbaf516da763b50edac47d792a9145aa4482e29.1618442265.git.gustavoars@kernel.org>
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com
+Subject: Re: [PATCH v2 0/2] brcmfmac: support parse country code map from DT
+Message-ID: <20210415213406.GA1912098@robh.at.kernel.org>
+References: <20210415104728.8471-1-shawn.guo@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1fbaf516da763b50edac47d792a9145aa4482e29.1618442265.git.gustavoars@kernel.org>
+In-Reply-To: <20210415104728.8471-1-shawn.guo@linaro.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Apr 14, 2021 at 06:45:15PM -0500, Gustavo A. R. Silva wrote:
-> Fix the following out-of-bounds warnings by adding a new structure
-> wl3501_req instead of duplicating the same members in structure
-> wl3501_join_req and wl3501_scan_confirm:
+On Thu, Apr 15, 2021 at 06:47:26PM +0800, Shawn Guo wrote:
+> This is a couple of patches adding optional brcm,ccode-map bindings for
+> brcmfmac driver to parse country code map from DT.
 > 
-> arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [39, 108] from the object at 'sig' is out of the bounds of referenced subobject 'beacon_period' with type 'short unsigned int' at offset 36 [-Warray-bounds]
-> arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [25, 95] from the object at 'sig' is out of the bounds of referenced subobject 'beacon_period' with type 'short unsigned int' at offset 22 [-Warray-bounds]
+> Changes for v2:
+>  - Rebase bindings patch on top of yaml conversion patch [1].
+>  - Improve commit log with Arend's explanation on why this data could
+>    be put in device tree.
+>  - Use pattern to define mapping string as suggested by Rob.
+>  - Use brcmf_err() instead of dev_warn() and print error code.
+>  - Use sscanf() to validate mapping string.
+>  - Use brcmf_dbg(INFO, ...) to print country code entry.
+>  - Separate BRCMF_BUSTYPE_SDIO bus_type check from general DT validation.
 > 
-> Refactor the code, accordingly:
-> 
-> $ pahole -C wl3501_req drivers/net/wireless/wl3501_cs.o
-> struct wl3501_req {
->         u16                        beacon_period;        /*     0     2 */
->         u16                        dtim_period;          /*     2     2 */
->         u16                        cap_info;             /*     4     2 */
->         u8                         bss_type;             /*     6     1 */
->         u8                         bssid[6];             /*     7     6 */
->         struct iw_mgmt_essid_pset  ssid;                 /*    13    34 */
->         struct iw_mgmt_ds_pset     ds_pset;              /*    47     3 */
->         struct iw_mgmt_cf_pset     cf_pset;              /*    50     8 */
->         struct iw_mgmt_ibss_pset   ibss_pset;            /*    58     4 */
->         struct iw_mgmt_data_rset   bss_basic_rset;       /*    62    10 */
-> 
->         /* size: 72, cachelines: 2, members: 10 */
->         /* last cacheline: 8 bytes */
-> };
-> 
-> $ pahole -C wl3501_join_req drivers/net/wireless/wl3501_cs.o
-> struct wl3501_join_req {
->         u16                        next_blk;             /*     0     2 */
->         u8                         sig_id;               /*     2     1 */
->         u8                         reserved;             /*     3     1 */
->         struct iw_mgmt_data_rset   operational_rset;     /*     4    10 */
->         u16                        reserved2;            /*    14     2 */
->         u16                        timeout;              /*    16     2 */
->         u16                        probe_delay;          /*    18     2 */
->         u8                         timestamp[8];         /*    20     8 */
->         u8                         local_time[8];        /*    28     8 */
->         struct wl3501_req          req;                  /*    36    72 */
-> 
->         /* size: 108, cachelines: 2, members: 10 */
->         /* last cacheline: 44 bytes */
-> };
-> 
-> $ pahole -C wl3501_scan_confirm drivers/net/wireless/wl3501_cs.o
-> struct wl3501_scan_confirm {
->         u16                        next_blk;             /*     0     2 */
->         u8                         sig_id;               /*     2     1 */
->         u8                         reserved;             /*     3     1 */
->         u16                        status;               /*     4     2 */
->         char                       timestamp[8];         /*     6     8 */
->         char                       localtime[8];         /*    14     8 */
->         struct wl3501_req          req;                  /*    22    72 */
->         /* --- cacheline 1 boundary (64 bytes) was 30 bytes ago --- */
->         u8                         rssi;                 /*    94     1 */
-> 
->         /* size: 96, cachelines: 2, members: 8 */
->         /* padding: 1 */
->         /* last cacheline: 32 bytes */
-> };
-> 
-> The problem is that the original code is trying to copy data into a
-> bunch of struct members adjacent to each other in a single call to
-> memcpy(). Now that a new struct wl3501_req enclosing all those adjacent
-> members is introduced, memcpy() doesn't overrun the length of
-> &sig.beacon_period and &this->bss_set[i].beacon_period, because the
-> address of the new struct object _req_ is used as the destination,
-> instead.
-> 
-> This helps with the ongoing efforts to globally enable -Warray-bounds
-> and get us closer to being able to tighten the FORTIFY_SOURCE routines
-> on memcpy().
-> 
-> Link: https://github.com/KSPP/linux/issues/109
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> [1] https://patchwork.kernel.org/project/linux-wireless/patch/20210315105911.138553-1-linus.walleij@linaro.org/
 
-Awesome! Thank you for this solution.
+As that's in my tree, I'm applying patch 1. Patch 2 should go via the 
+wireless tree.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
-
--- 
-Kees Cook
+Rob
