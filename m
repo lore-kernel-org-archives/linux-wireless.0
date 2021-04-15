@@ -2,97 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC077C43461
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 10:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29872C43462
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 10:47:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5CDA61139
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 10:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FFC261139
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 10:47:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232342AbhDOKru (ORCPT
+        id S232514AbhDOKsH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Apr 2021 06:47:50 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:50637 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230056AbhDOKru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Apr 2021 06:47:50 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1618483647; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=mQQJUPxZs7yfFkf2/bSTHoSyrWyZL7nJGUBXycQz390=; b=FkaYfJPyw8x+QuT3bn49jFQ0P1cjod8anPIoIjx6sKOEQxBApKcsSy/yFveU5mIlfBmg5Zw9
- wUoXONAbrhH7EjrgfuVOhbOauksZQQKhhXPYO0GfaRZsG4GdGYR6DQfIbvlMq1UBxir8bT7k
- f/O1bOL4BTHMrkHpPoAfbnSFvZk=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 607819b68166b7eff7da9af8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 15 Apr 2021 10:47:18
- GMT
-Sender: akalaise=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E891AC433ED; Thu, 15 Apr 2021 10:47:17 +0000 (UTC)
-Received: from akalaise-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: akalaise)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2C60CC433CA;
-        Thu, 15 Apr 2021 10:47:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2C60CC433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=akalaise@codeaurora.org
-From:   Abinaya Kalaiselvan <akalaise@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Abinaya Kalaiselvan <akalaise@codeaurora.org>
-Subject: [PATCHv2] mac80211: fix NULL ptr dereference during mesh peer connection for non HE devices
-Date:   Thu, 15 Apr 2021 16:17:05 +0530
-Message-Id: <1618483625-31097-1-git-send-email-akalaise@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Thu, 15 Apr 2021 06:48:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45992 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232465AbhDOKsF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Apr 2021 06:48:05 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D498CC06175F
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2021 03:47:42 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id x21-20020a17090a5315b029012c4a622e4aso12463928pjh.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2021 03:47:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=jZDSWVTMlAMb2GC5FLf9Wr+xeqh7iVHbgBuOpIuXmgM=;
+        b=NampagNzPrn6NSKjQijinEcRmJ+6VjtD0femYHPPlCRPWwAi9YpHUbts3GmziV4e0T
+         ev9UQcH5gJuTNiSr5NBZ30+KHwlpPiDC07hJEVMggSrBLQrsGtFFfTwNlQFV4//lUt5E
+         p3BjI3Bu+4wQJCHxmo//e1BuYYPt60Bca+AOl9vDgS0DiEM3NIsp69qiIQVvs8BXFUr4
+         MhFALAr4S4P2YUECtsnJlquCNt2uNVchZjD3AYJeeEuCQEdKyeXqY7E1KwI3AH4M4++3
+         juOky+zdxOjVkSYGXNpSueM0ZY8hS+KqqVWxB24ZxKqvVPOz39WdnDJrGsdni8LSToGI
+         eHPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=jZDSWVTMlAMb2GC5FLf9Wr+xeqh7iVHbgBuOpIuXmgM=;
+        b=JH7o7jcHOIZlyTYZspJywZFllFKa9fwyKddGxLlQ0SWZrQ8LuF2pPSog8xMkBK8zqy
+         gkodJpiZKSlTlJoBeiqgQDSK/Nfu69ZK6SVUjy3WLWkM9S+fBM/jFnEyQiuONUiKfTwH
+         1+M+EKgOrcMJ1GY1+x7I4QVq+8UPQL5KR/3aCpCV3kUXl+1GVxyW8MsB2AG9GJftY3AS
+         PhHCqV8oAUDM99GujQemfc/hdNAWllhf00e1hj7DtB3rCu9+Bmv+URl76SHt/1ywRRi5
+         lN/rK2U9sVYGVxhqefgbI9qf0o2d28ontv7zF330QaWyq/di0eUNvQwc5iWCJEHmacOS
+         Si9Q==
+X-Gm-Message-State: AOAM532VmCkMqVQkJ88fdWye5pwGA4M90G6OGlg3igSxobB+UTP2IfDF
+        LZUi0g5XPfb2LYzPxX//8F84rg==
+X-Google-Smtp-Source: ABdhPJy+pmq8JLU/ek1cCoTJ2vGhGprFa2FPymMVG3bBW9n0OHjDvrYzdFm67XV/33rUpYEEszwGew==
+X-Received: by 2002:a17:90b:1d88:: with SMTP id pf8mr3178517pjb.114.1618483662489;
+        Thu, 15 Apr 2021 03:47:42 -0700 (PDT)
+Received: from localhost.localdomain (80.251.214.228.16clouds.com. [80.251.214.228])
+        by smtp.gmail.com with ESMTPSA id f65sm2130672pgc.19.2021.04.15.03.47.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Apr 2021 03:47:41 -0700 (PDT)
+From:   Shawn Guo <shawn.guo@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v2 1/2] dt-bindings: bcm4329-fmac: add optional brcm,ccode-map
+Date:   Thu, 15 Apr 2021 18:47:27 +0800
+Message-Id: <20210415104728.8471-2-shawn.guo@linaro.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210415104728.8471-1-shawn.guo@linaro.org>
+References: <20210415104728.8471-1-shawn.guo@linaro.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"sband->iftype_data" is not assigned with any value for non HE supported
-devices, which causes NULL pointer access during mesh peer connection
-in those devices. Fix this by accessing the pointer after HE
-capabilities condition check.
+Add optional brcm,ccode-map property to support translation from ISO3166
+country code to brcmfmac firmware country code and revision.
 
-Fixes: 7f7aa94bcaf0 (mac80211: reduce peer HE MCS/NSS to own capabilities)
-Signed-off-by: Abinaya Kalaiselvan <akalaise@codeaurora.org>
+The country revision is needed because the RF parameters that provide
+regulatory compliance are tweaked per platform/customer.  So depending
+on the RF path tight to the chip, certain country revision needs to be
+specified.  As such they could be seen as device specific calibration
+data which is a good fit into device tree.
+
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-v2:
-* ieee80211_sta_he_cap structure instance is initialized.
+ .../bindings/net/wireless/brcm,bcm4329-fmac.yaml          | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- net/mac80211/he.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 0c0b970..96a47b0 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -111,7 +111,7 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 				  struct sta_info *sta)
- {
- 	struct ieee80211_sta_he_cap *he_cap = &sta->sta.he_cap;
--	struct ieee80211_sta_he_cap own_he_cap = sband->iftype_data->he_cap;
-+	struct ieee80211_sta_he_cap own_he_cap = {0};
- 	struct ieee80211_he_cap_elem *he_cap_ie_elem = (void *)he_cap_ie;
- 	u8 he_ppe_size;
- 	u8 mcs_nss_size;
-@@ -123,6 +123,8 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 	if (!he_cap_ie || !ieee80211_get_he_sta_cap(sband))
- 		return;
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+index b5fcc73ce6be..c11f23b20c4c 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+@@ -68,6 +68,13 @@ properties:
+     description: A GPIO line connected to the WL_RST line, if present
+       this shall be flagged as active low.
  
-+	 own_he_cap = sband->iftype_data->he_cap;
++  brcm,ccode-map:
++    $ref: /schemas/types.yaml#/definitions/string-array
++    description: Multiple strings for translating ISO3166 country code to
++      brcmfmac firmware country code and revision.
++    items:
++      pattern: '^[A-Z][A-Z]-[A-Z][0-9A-Z]-[0-9]+$'
 +
- 	/* Make sure size is OK */
- 	mcs_nss_size = ieee80211_he_mcs_nss_size(he_cap_ie_elem);
- 	he_ppe_size =
+ required:
+   - compatible
+   - reg
+@@ -97,5 +104,6 @@ examples:
+         interrupts = <24 IRQ_TYPE_EDGE_FALLING>;
+         interrupt-names = "host-wake";
+         reset-gpios = <&gpio 23 GPIO_ACTIVE_LOW>;
++        brcm,ccode-map = "JP-JP-78", "US-Q2-86";
+       };
+     };
 -- 
-2.7.4
+2.17.1
 
