@@ -2,119 +2,218 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F587C43460
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 15:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26164C43460
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 18:47:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F9D460FF1
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 15:30:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02DB46137D
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 18:47:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343674AbhDPPbJ (ORCPT
+        id S245163AbhDPSru (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Apr 2021 11:31:09 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:35315 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1343694AbhDPPbH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Apr 2021 11:31:07 -0400
-X-UUID: d859b297ecc5411b96d00c906075a929-20210416
-X-UUID: d859b297ecc5411b96d00c906075a929-20210416
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2110974663; Fri, 16 Apr 2021 23:30:40 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 16 Apr 2021 23:30:37 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 16 Apr 2021 23:30:37 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v2 1/2] mt76: mt7921: add wifisys reset support in debugfs
-Date:   Fri, 16 Apr 2021 23:30:35 +0800
-Message-ID: <1618587036-17143-1-git-send-email-sean.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 84D286E04426F2F02A4F9A502085D6E3F0D8BF0ABEFDFD84E245B3A78CAD577F2000:8
-X-MTK:  N
+        Fri, 16 Apr 2021 14:47:50 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:64956 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S245116AbhDPSrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Apr 2021 14:47:49 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1618598844; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=yTL51vP4I8DlfmVuqLvxyNkWqtWu8S6OS4xbflwDpZo=; b=LhwLXoAAJEqNuNQOAWK4bBxGGuvzGTnG4bHLOzLXD+ER2oJKZeo0H14XwDwwe1sk6V+uf6sO
+ bCcUndjVnGET3FdchJq0EWSJ+FF1m1TkgUycaU64l9blmAMoETdxvbYBJ0l7IYlan2pScn6p
+ If3xl3Jd9U0H6/MNtpqJ5Necx6Q=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 6079dbb62cbba88980699212 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 16 Apr 2021 18:47:18
+ GMT
+Sender: bbhatt=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6CCD9C43462; Fri, 16 Apr 2021 18:47:17 +0000 (UTC)
+Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bbhatt)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 58E26C433C6;
+        Fri, 16 Apr 2021 18:47:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 58E26C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
+From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
+To:     manivannan.sadhasivam@linaro.org
+Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
+        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
+        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org, ath11k@lists.infradead.org,
+        Bhaumik Bhatt <bbhatt@codeaurora.org>
+Subject: [PATCH v1 1/6] bus: mhi: core: Set BHI/BHIe offsets on power up preparation
+Date:   Fri, 16 Apr 2021 11:47:00 -0700
+Message-Id: <1618598825-18629-2-git-send-email-bbhatt@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1618598825-18629-1-git-send-email-bbhatt@codeaurora.org>
+References: <1618598825-18629-1-git-send-email-bbhatt@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Set the BHI and/or BHIe offsets in mhi_prepare_for_power_up(),
+rearrange the function, and remove the equivalent from
+mhi_async_power_up(). This helps consolidate multiple checks
+in different parts of the driver and can help MHI fail early on
+before power up begins if the offsets are not read correctly.
 
-Introduce chip_reset knob in mt7921 debugfs to export a way to users
-able to trigger wifi reset, and group the similar operations
-previously defined in chip_config in the same knob.
-
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
 ---
-v2: reuse the same knob previously defined in chip_config
----
- .../wireless/mediatek/mt76/mt7921/debugfs.c   | 25 +++++++++++++------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/bus/mhi/core/init.c | 42 +++++++++++++++++++++++-------------------
+ drivers/bus/mhi/core/pm.c   | 28 ++++------------------------
+ 2 files changed, 27 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-index 024524173115..7ced843b30b0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-@@ -288,19 +288,28 @@ mt7921_pm_idle_timeout_get(void *data, u64 *val)
- DEFINE_DEBUGFS_ATTRIBUTE(fops_pm_idle_timeout, mt7921_pm_idle_timeout_get,
- 			 mt7921_pm_idle_timeout_set, "%lld\n");
- 
--static int mt7921_config(void *data, u64 val)
-+static int mt7921_chip_reset(void *data, u64 val)
+diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
+index c81b377..11c7a3d 100644
+--- a/drivers/bus/mhi/core/init.c
++++ b/drivers/bus/mhi/core/init.c
+@@ -1063,7 +1063,7 @@ EXPORT_SYMBOL_GPL(mhi_free_controller);
+ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
  {
- 	struct mt7921_dev *dev = data;
--	int ret;
--
--	mt7921_mutex_acquire(dev);
--	ret = mt76_connac_mcu_chip_config(&dev->mt76);
--	mt7921_mutex_release(dev);
-+	int ret = 0;
-+
-+	switch (val) {
-+	case 1:
-+		/* Reset wifisys directly. */
-+		mt7921_reset(&dev->mt76);
-+		break;
-+	default:
-+		/* Collect the core dump before reset wifisys. */
-+		mt7921_mutex_acquire(dev);
-+		ret = mt76_connac_mcu_chip_config(&dev->mt76);
-+		mt7921_mutex_release(dev);
-+		break;
+ 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+-	u32 bhie_off;
++	u32 bhi_off, bhie_off;
+ 	int ret;
+ 
+ 	mutex_lock(&mhi_cntrl->pm_mutex);
+@@ -1072,29 +1072,36 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (ret)
+ 		goto error_dev_ctxt;
+ 
+-	/*
+-	 * Allocate RDDM table if specified, this table is for debugging purpose
+-	 */
+-	if (mhi_cntrl->rddm_size) {
+-		mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
+-				     mhi_cntrl->rddm_size);
++	ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIOFF, &bhi_off);
++	if (ret) {
++		dev_err(dev, "Error getting BHI offset\n");
++		goto error_reg_offset;
 +	}
++	mhi_cntrl->bhi = mhi_cntrl->regs + bhi_off;
  
- 	return ret;
- }
- 
--DEFINE_DEBUGFS_ATTRIBUTE(fops_config, NULL, mt7921_config, "%lld\n");
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_reset, NULL, mt7921_chip_reset, "%lld\n");
- 
- int mt7921_init_debugfs(struct mt7921_dev *dev)
- {
-@@ -321,7 +330,7 @@ int mt7921_init_debugfs(struct mt7921_dev *dev)
- 	debugfs_create_file("runtime-pm", 0600, dir, dev, &fops_pm);
- 	debugfs_create_file("idle-timeout", 0600, dir, dev,
- 			    &fops_pm_idle_timeout);
--	debugfs_create_file("chip_config", 0600, dir, dev, &fops_config);
-+	debugfs_create_file("chip_reset", 0600, dir, dev, &fops_reset);
+-		/*
+-		 * This controller supports RDDM, so we need to manually clear
+-		 * BHIE RX registers since POR values are undefined.
+-		 */
++	if (mhi_cntrl->fbc_download || mhi_cntrl->rddm_size) {
+ 		ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIEOFF,
+ 				   &bhie_off);
+ 		if (ret) {
+ 			dev_err(dev, "Error getting BHIE offset\n");
+-			goto bhie_error;
++			goto error_reg_offset;
+ 		}
+-
+ 		mhi_cntrl->bhie = mhi_cntrl->regs + bhie_off;
++	}
++
++	if (mhi_cntrl->rddm_size) {
++		/*
++		 * This controller supports RDDM, so we need to manually clear
++		 * BHIE RX registers since POR values are undefined.
++		 */
+ 		memset_io(mhi_cntrl->bhie + BHIE_RXVECADDR_LOW_OFFS,
+ 			  0, BHIE_RXVECSTATUS_OFFS - BHIE_RXVECADDR_LOW_OFFS +
+ 			  4);
+-
++		/*
++		 * Allocate RDDM table for debugging purpose if specified
++		 */
++		mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
++				     mhi_cntrl->rddm_size);
+ 		if (mhi_cntrl->rddm_image)
+ 			mhi_rddm_prepare(mhi_cntrl, mhi_cntrl->rddm_image);
+ 	}
+@@ -1103,11 +1110,8 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
  
  	return 0;
- }
+ 
+-bhie_error:
+-	if (mhi_cntrl->rddm_image) {
+-		mhi_free_bhie_table(mhi_cntrl, mhi_cntrl->rddm_image);
+-		mhi_cntrl->rddm_image = NULL;
+-	}
++error_reg_offset:
++	mhi_deinit_dev_ctxt(mhi_cntrl);
+ 
+ error_dev_ctxt:
+ 	mutex_unlock(&mhi_cntrl->pm_mutex);
+diff --git a/drivers/bus/mhi/core/pm.c b/drivers/bus/mhi/core/pm.c
+index e2e59a3..adf426c 100644
+--- a/drivers/bus/mhi/core/pm.c
++++ b/drivers/bus/mhi/core/pm.c
+@@ -1066,28 +1066,8 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (ret)
+ 		goto error_setup_irq;
+ 
+-	/* Setup BHI offset & INTVEC */
++	/* Setup BHI INTVEC */
+ 	write_lock_irq(&mhi_cntrl->pm_lock);
+-	ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIOFF, &val);
+-	if (ret) {
+-		write_unlock_irq(&mhi_cntrl->pm_lock);
+-		goto error_bhi_offset;
+-	}
+-
+-	mhi_cntrl->bhi = mhi_cntrl->regs + val;
+-
+-	/* Setup BHIE offset */
+-	if (mhi_cntrl->fbc_download) {
+-		ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIEOFF, &val);
+-		if (ret) {
+-			write_unlock_irq(&mhi_cntrl->pm_lock);
+-			dev_err(dev, "Error reading BHIE offset\n");
+-			goto error_bhi_offset;
+-		}
+-
+-		mhi_cntrl->bhie = mhi_cntrl->regs + val;
+-	}
+-
+ 	mhi_write_reg(mhi_cntrl, mhi_cntrl->bhi, BHI_INTVEC, 0);
+ 	mhi_cntrl->pm_state = MHI_PM_POR;
+ 	mhi_cntrl->ee = MHI_EE_MAX;
+@@ -1098,7 +1078,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (!MHI_IN_PBL(current_ee) && current_ee != MHI_EE_AMSS) {
+ 		dev_err(dev, "Not a valid EE for power on\n");
+ 		ret = -EIO;
+-		goto error_bhi_offset;
++		goto error_async_power_up;
+ 	}
+ 
+ 	state = mhi_get_mhi_state(mhi_cntrl);
+@@ -1117,7 +1097,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 		if (!ret) {
+ 			ret = -EIO;
+ 			dev_info(dev, "Failed to reset MHI due to syserr state\n");
+-			goto error_bhi_offset;
++			goto error_async_power_up;
+ 		}
+ 
+ 		/*
+@@ -1139,7 +1119,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 
+ 	return 0;
+ 
+-error_bhi_offset:
++error_async_power_up:
+ 	mhi_deinit_free_irq(mhi_cntrl);
+ 
+ error_setup_irq:
 -- 
-2.25.1
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
