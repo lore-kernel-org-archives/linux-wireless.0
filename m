@@ -2,71 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 604DFC433ED
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 07:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3513BC43461
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 08:27:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CDD961107
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 07:42:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16D89610CE
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 08:27:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239151AbhDPHmy (ORCPT
+        id S240367AbhDPI2R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Apr 2021 03:42:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37378 "EHLO
+        Fri, 16 Apr 2021 04:28:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239124AbhDPHmr (ORCPT
+        with ESMTP id S239778AbhDPI2Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Apr 2021 03:42:47 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AE2FC061574
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2021 00:42:22 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1lXJ7K-00CT45-NT; Fri, 16 Apr 2021 09:42:18 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
+        Fri, 16 Apr 2021 04:28:16 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DF2FC061756
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2021 01:27:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=H9NqjfY/ZznsdCuLt/3n0t60lEs59HN/314iPv4Hto0=; b=J71PEJjr/WeP96/4/FLszSinb0
+        AHwMZUVDC3kAM0voyJzqX8M5W1gxZJqx7dK9yM8hI6jPBuj0RNIcFPpQckHJ5Ak8iRciRHEZV3v+2
+        GbzCkdRvRVnY62mdhGikIg8DufustDPM8QZVtTqynVSwSK/fIzt2EYrEAbnTmS18ItMI=;
+Received: from p4ff13c8d.dip0.t-ipconnect.de ([79.241.60.141] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1lXJpM-0003tx-Uy
+        for linux-wireless@vger.kernel.org; Fri, 16 Apr 2021 10:27:49 +0200
+From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] cfg80211: scan: drop entry from hidden_list on overflow
-Date:   Fri, 16 Apr 2021 09:42:14 +0200
-Message-Id: <20210416094212.5de7d1676ad7.Ied283b0bc5f504845e7d6ab90626bdfa68bb3dc0@changeid>
-X-Mailer: git-send-email 2.30.2
+Subject: [PATCH 2/3] mt76: mt7615: fix entering driver-own state on mt7663
+Date:   Fri, 16 Apr 2021 10:27:45 +0200
+Message-Id: <20210416082746.21825-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210416082746.21825-1-nbd@nbd.name>
+References: <20210416082746.21825-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Fixes hardware wakeup issues
 
-If we overflow the maximum number of BSS entries and free the
-new entry, drop it from any hidden_list that it may have been
-added to in the code above or in cfg80211_combine_bsses().
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/wireless/scan.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 758eb7d2a706..caa8eafbd583 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1751,6 +1751,8 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index eab490d07255..5f37255476e3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -292,12 +292,20 @@ static int mt7615_mcu_drv_pmctrl(struct mt7615_dev *dev)
+ 	u32 addr;
+ 	int err;
  
- 		if (rdev->bss_entries >= bss_entries_limit &&
- 		    !cfg80211_bss_expire_oldest(rdev)) {
-+			if (!list_empty(&new->hidden_list))
-+				list_del(&new->hidden_list);
- 			kfree(new);
- 			goto drop;
- 		}
+-	addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
++	if (is_mt7663(mdev)) {
++		/* Clear firmware own via N9 eint */
++		mt76_wr(dev, MT_PCIE_DOORBELL_PUSH, MT_CFG_LPCR_HOST_DRV_OWN);
++		mt76_poll(dev, MT_CONN_ON_MISC, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000);
++
++		addr = MT_CONN_HIF_ON_LPCTL;
++	} else {
++		addr = MT_CFG_LPCR_HOST;
++	}
++
+ 	mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
+ 
+ 	mt7622_trigger_hif_int(dev, true);
+ 
+-	addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
+ 	err = !mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000);
+ 
+ 	mt7622_trigger_hif_int(dev, false);
 -- 
-2.30.2
+2.30.1
 
