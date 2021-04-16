@@ -2,228 +2,521 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E992C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 22:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76287C433B4
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 03:09:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28E6161131
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Apr 2021 22:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 462FA6113D
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 03:09:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235613AbhDOWWo (ORCPT
+        id S235937AbhDPDJp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Apr 2021 18:22:44 -0400
-Received: from mga12.intel.com ([192.55.52.136]:60998 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236585AbhDOWWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Apr 2021 18:22:43 -0400
-IronPort-SDR: TVw3UQVaY4dAGGn1H7EU53FlpJuzN3I+Xfk+Amwx9oLZOlTPyAYG90oa8O969MofiCbCMqF4k0
- CsbALFyo1XDA==
-X-IronPort-AV: E=McAfee;i="6200,9189,9955"; a="174447715"
-X-IronPort-AV: E=Sophos;i="5.82,226,1613462400"; 
-   d="scan'208";a="174447715"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2021 15:22:02 -0700
-IronPort-SDR: b+hUUlN9w038pfZo5z+ayxg1RQNa77I7zuXnAxC3ZXt8shsToP94xvrNhk1qK6u2oiZw1niIdS
- AhmdKLP3kWnA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,225,1613462400"; 
-   d="scan'208";a="522524478"
-Received: from lkp-server02.sh.intel.com (HELO fa9c8fcc3464) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 15 Apr 2021 15:22:01 -0700
-Received: from kbuild by fa9c8fcc3464 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lXAN7-000196-1e; Thu, 15 Apr 2021 22:22:01 +0000
-Date:   Fri, 16 Apr 2021 06:21:46 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:pending] BUILD SUCCESS
- a6c34cb6110dfe978d2336bd34448e85d4896180
-Message-ID: <6078bc7a.HlLbdBB9VSb2L5gm%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Thu, 15 Apr 2021 23:09:45 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:58984 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234903AbhDPDJo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Apr 2021 23:09:44 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 13G39C6L0005780, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 13G39C6L0005780
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 16 Apr 2021 11:09:12 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Fri, 16 Apr 2021 11:09:11 +0800
+Received: from localhost (172.21.69.146) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 16 Apr
+ 2021 11:09:10 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
+Subject: [PATCH v3] rtw88: 8822c: add CFO tracking
+Date:   Fri, 16 Apr 2021 11:09:01 +0800
+Message-ID: <20210416030901.7099-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.146]
+X-ClientProxiedBy: RTEXMBS03.realtek.com.tw (172.21.6.96) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzQvMTYgpFekyCAxMjo0MDowMA==?=
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 04/16/2021 02:50:33
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 10
+X-KSE-AntiSpam-Info: Lua profiles 163156 [Apr 16 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 442 442 b985cb57763b61d2a20abb585d5d4cc10c315b09
+X-KSE-AntiSpam-Info: {Prob_from_in_msgid}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: realtek.com:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: {Track_Chinese_Simplified, headers_charset}
+X-KSE-AntiSpam-Info: Rate: 10
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/16/2021 02:52:00
+X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 04/16/2021 02:54:35
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 10
+X-KSE-AntiSpam-Info: Lua profiles 163156 [Apr 16 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 442 442 b985cb57763b61d2a20abb585d5d4cc10c315b09
+X-KSE-AntiSpam-Info: {Prob_from_in_msgid}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;realtek.com:7.1.1
+X-KSE-AntiSpam-Info: Rate: 10
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/16/2021 02:57:00
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git pending
-branch HEAD: a6c34cb6110dfe978d2336bd34448e85d4896180  Merge tag 'iwlwifi-next-for-kalle-2021-04-12-v2' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next into pending
+From: Po-Hao Huang <phhuang@realtek.com>
 
-elapsed time: 721m
+Add CFO tracking, which stands for central frequency offset tracking, to
+adjust oscillator to align central frequency of connected AP. Then, it can
+yield better performance.
 
-configs tested: 157
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-x86_64                           allyesconfig
-riscv                            allmodconfig
-i386                             allyesconfig
-riscv                            allyesconfig
-arm                       aspeed_g4_defconfig
-xtensa                         virt_defconfig
-arm                          gemini_defconfig
-h8300                            alldefconfig
-arm                         socfpga_defconfig
-powerpc                 mpc8272_ads_defconfig
-arm                           sama5_defconfig
-riscv                               defconfig
-m68k                             alldefconfig
-arc                         haps_hs_defconfig
-powerpc                      ppc64e_defconfig
-powerpc                 mpc834x_mds_defconfig
-powerpc                      makalu_defconfig
-sh                          rsk7269_defconfig
-arm                        realview_defconfig
-mips                      maltaaprp_defconfig
-h8300                     edosk2674_defconfig
-powerpc                     tqm5200_defconfig
-powerpc                    klondike_defconfig
-mips                     cu1000-neo_defconfig
-powerpc                 mpc832x_mds_defconfig
-sparc64                          alldefconfig
-arm                         shannon_defconfig
-arm                         lpc32xx_defconfig
-m68k                           sun3_defconfig
-powerpc                      ppc44x_defconfig
-arm                           corgi_defconfig
-powerpc                     ep8248e_defconfig
-arm                       netwinder_defconfig
-powerpc                      katmai_defconfig
-arm                       multi_v4t_defconfig
-powerpc                 mpc832x_rdb_defconfig
-powerpc                       ebony_defconfig
-mips                            ar7_defconfig
-m68k                        m5272c3_defconfig
-powerpc                     tqm8560_defconfig
-powerpc                     redwood_defconfig
-powerpc                        fsp2_defconfig
-arm                       versatile_defconfig
-mips                           ci20_defconfig
-sh                          lboxre2_defconfig
-sh                           se7705_defconfig
-mips                        maltaup_defconfig
-ia64                         bigsur_defconfig
-um                               alldefconfig
-arm                       mainstone_defconfig
-sh                          sdk7786_defconfig
-arm                        neponset_defconfig
-arm                      integrator_defconfig
-arm                        multi_v7_defconfig
-powerpc                  mpc885_ads_defconfig
-powerpc                 xes_mpc85xx_defconfig
-powerpc                      arches_defconfig
-powerpc                        icon_defconfig
-arm                          moxart_defconfig
-sh                            titan_defconfig
-arm                        magician_defconfig
-powerpc                     skiroot_defconfig
-sh                        sh7757lcr_defconfig
-powerpc                    sam440ep_defconfig
-mips                           ip32_defconfig
-mips                  decstation_64_defconfig
-powerpc                        cell_defconfig
-sh                     sh7710voipgw_defconfig
-powerpc               mpc834x_itxgp_defconfig
-mips                        nlm_xlr_defconfig
-arm                  colibri_pxa270_defconfig
-arm                      jornada720_defconfig
-arc                        vdk_hs38_defconfig
-powerpc                    mvme5100_defconfig
-mips                       capcella_defconfig
-arm                          ixp4xx_defconfig
-sh                        edosk7705_defconfig
-powerpc                   motionpro_defconfig
-powerpc                 mpc834x_itx_defconfig
-mips                         db1xxx_defconfig
-sh                   rts7751r2dplus_defconfig
-sh                           se7751_defconfig
-arm                          pcm027_defconfig
-powerpc                     kilauea_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a003-20210415
-x86_64               randconfig-a002-20210415
-x86_64               randconfig-a005-20210415
-x86_64               randconfig-a001-20210415
-x86_64               randconfig-a006-20210415
-x86_64               randconfig-a004-20210415
-i386                 randconfig-a003-20210415
-i386                 randconfig-a006-20210415
-i386                 randconfig-a001-20210415
-i386                 randconfig-a005-20210415
-i386                 randconfig-a004-20210415
-i386                 randconfig-a002-20210415
-i386                 randconfig-a015-20210415
-i386                 randconfig-a014-20210415
-i386                 randconfig-a013-20210415
-i386                 randconfig-a012-20210415
-i386                 randconfig-a016-20210415
-i386                 randconfig-a011-20210415
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                          rv32_defconfig
-um                               allmodconfig
-um                                allnoconfig
-um                               allyesconfig
-um                                  defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a014-20210415
-x86_64               randconfig-a015-20210415
-x86_64               randconfig-a011-20210415
-x86_64               randconfig-a013-20210415
-x86_64               randconfig-a012-20210415
-x86_64               randconfig-a016-20210415
-
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+v2:
+   - explain CFO in commit message
+   - v1 is part of a patchset, namely "[PATCH 6/7] rtw88: 8822c: add CFO tracking"
+v3:
+   - use tab instead of space to align definition in reg.h
+     (don't change logic at all)
+---
+ drivers/net/wireless/realtek/rtw88/coex.h     |   8 ++
+ drivers/net/wireless/realtek/rtw88/debug.h    |   1 +
+ drivers/net/wireless/realtek/rtw88/main.h     |  13 ++
+ drivers/net/wireless/realtek/rtw88/phy.c      |  66 +++++++++
+ drivers/net/wireless/realtek/rtw88/phy.h      |   2 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 129 +++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |   5 +
+ 8 files changed, 224 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wireless/realtek/rtw88/coex.h
+index 57018700ac39..fc61a0cab3e4 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.h
++++ b/drivers/net/wireless/realtek/rtw88/coex.h
+@@ -406,4 +406,12 @@ void rtw_coex_switchband_notify(struct rtw_dev *rtwdev, u8 type);
+ void rtw_coex_wl_status_change_notify(struct rtw_dev *rtwdev, u32 type);
+ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m);
+ 
++static inline bool rtw_coex_disabled(struct rtw_dev *rtwdev)
++{
++	struct rtw_coex *coex = &rtwdev->coex;
++	struct rtw_coex_stat *coex_stat = &coex->stat;
++
++	return coex_stat->bt_disabled;
++}
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
+index e16e0da26e77..c8efd1900a34 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.h
++++ b/drivers/net/wireless/realtek/rtw88/debug.h
+@@ -19,6 +19,7 @@ enum rtw_debug_mask {
+ 	RTW_DBG_PS		= 0x00000400,
+ 	RTW_DBG_BF		= 0x00000800,
+ 	RTW_DBG_WOW		= 0x00001000,
++	RTW_DBG_CFO		= 0x00002000,
+ 
+ 	RTW_DBG_ALL		= 0xffffffff
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 4be1c8b3b83c..ef77b9cb3e21 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -626,6 +626,7 @@ struct rtw_rx_pkt_stat {
+ 
+ 	struct rtw_sta_info *si;
+ 	struct ieee80211_vif *vif;
++	struct ieee80211_hdr *hdr;
+ };
+ 
+ DECLARE_EWMA(tp, 10, 2);
+@@ -839,6 +840,8 @@ struct rtw_chip_ops {
+ 			      struct ieee80211_bss_conf *conf);
+ 	void (*cfg_csi_rate)(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
+ 			     u8 fixrate_en, u8 *new_rate);
++	void (*cfo_init)(struct rtw_dev *rtwdev);
++	void (*cfo_track)(struct rtw_dev *rtwdev);
+ 
+ 	/* for coex */
+ 	void (*coex_set_init)(struct rtw_dev *rtwdev);
+@@ -1500,6 +1503,15 @@ struct rtw_iqk_info {
+ 	} result;
+ };
+ 
++struct rtw_cfo_track {
++	bool is_adjust;
++	u8 crystal_cap;
++	s32 cfo_tail[RTW_RF_PATH_MAX];
++	s32 cfo_cnt[RTW_RF_PATH_MAX];
++	u32 packet_count;
++	u32 packet_count_pre;
++};
++
+ #define RRSR_INIT_2G 0x15f
+ #define RRSR_INIT_5G 0x150
+ 
+@@ -1553,6 +1565,7 @@ struct rtw_dm_info {
+ 	u8 dack_dck[RTW_RF_PATH_MAX][2][DACK_DCK_BACKUP_NUM];
+ 
+ 	struct rtw_dpk_info dpk_info;
++	struct rtw_cfo_track cfo_track;
+ 
+ 	/* [bandwidth 0:20M/1:40M][number of path] */
+ 	u8 cck_pd_lv[2][RTW_RF_PATH_MAX];
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index b3c0a38771a7..fac89d644305 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -119,6 +119,14 @@ static void rtw_phy_cck_pd_init(struct rtw_dev *rtwdev)
+ 	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
+ }
+ 
++static void rtw_phy_cfo_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	if (chip->ops->cfo_init)
++		chip->ops->cfo_init(rtwdev);
++}
++
+ void rtw_phy_init(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+@@ -140,6 +148,7 @@ void rtw_phy_init(struct rtw_dev *rtwdev)
+ 	rtw_phy_cck_pd_init(rtwdev);
+ 
+ 	dm_info->iqk.done = false;
++	rtw_phy_cfo_init(rtwdev);
+ }
+ EXPORT_SYMBOL(rtw_phy_init);
+ 
+@@ -528,6 +537,62 @@ static void rtw_phy_dpk_track(struct rtw_dev *rtwdev)
+ 		chip->ops->dpk_track(rtwdev);
+ }
+ 
++struct rtw_rx_addr_match_data {
++	struct rtw_dev *rtwdev;
++	struct ieee80211_hdr *hdr;
++	struct rtw_rx_pkt_stat *pkt_stat;
++	u8 *bssid;
++};
++
++static void rtw_phy_parsing_cfo_iter(void *data, u8 *mac,
++				     struct ieee80211_vif *vif)
++{
++	struct rtw_rx_addr_match_data *iter_data = data;
++	struct rtw_dev *rtwdev = iter_data->rtwdev;
++	struct rtw_rx_pkt_stat *pkt_stat = iter_data->pkt_stat;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++	u8 *bssid = iter_data->bssid;
++	u8 i;
++
++	if (!ether_addr_equal(vif->bss_conf.bssid, bssid))
++		return;
++
++	for (i = 0; i < rtwdev->hal.rf_path_num; i++) {
++		cfo->cfo_tail[i] += pkt_stat->cfo_tail[i];
++		cfo->cfo_cnt[i]++;
++	}
++
++	cfo->packet_count++;
++}
++
++void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
++			 struct rtw_rx_pkt_stat *pkt_stat)
++{
++	struct ieee80211_hdr *hdr = pkt_stat->hdr;
++	struct rtw_rx_addr_match_data data = {};
++
++	if (pkt_stat->crc_err || pkt_stat->icv_err || !pkt_stat->phy_status ||
++	    ieee80211_is_ctl(hdr->frame_control))
++		return;
++
++	data.rtwdev = rtwdev;
++	data.hdr = hdr;
++	data.pkt_stat = pkt_stat;
++	data.bssid = get_hdr_bssid(hdr);
++
++	rtw_iterate_vifs_atomic(rtwdev, rtw_phy_parsing_cfo_iter, &data);
++}
++EXPORT_SYMBOL(rtw_phy_parsing_cfo);
++
++static void rtw_phy_cfo_track(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	if (chip->ops->cfo_track)
++		chip->ops->cfo_track(rtwdev);
++}
++
+ #define CCK_PD_FA_LV1_MIN	1000
+ #define CCK_PD_FA_LV0_MAX	500
+ 
+@@ -629,6 +694,7 @@ void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
+ 	rtw_phy_dig(rtwdev);
+ 	rtw_phy_cck_pd(rtwdev);
+ 	rtw_phy_ra_track(rtwdev);
++	rtw_phy_cfo_track(rtwdev);
+ 	rtw_phy_dpk_track(rtwdev);
+ 	rtw_phy_pwr_track(rtwdev);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index a0742a69446d..0b6f2fc8193c 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -59,6 +59,8 @@ bool rtw_phy_pwrtrack_need_lck(struct rtw_dev *rtwdev);
+ bool rtw_phy_pwrtrack_need_iqk(struct rtw_dev *rtwdev);
+ void rtw_phy_config_swing_table(struct rtw_dev *rtwdev,
+ 				struct rtw_swing_table *swing_table);
++void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
++			 struct rtw_rx_pkt_stat *pkt_stat);
+ 
+ struct rtw_txpwr_lmt_cfg_pair {
+ 	u8 regd;
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index a85fe29f13f7..95d29f522e27 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -516,6 +516,7 @@
+ #define BIT_RFE_BUF_EN		BIT(3)
+ 
+ #define REG_ANAPAR_XTAL_0	0x1040
++#define BIT_XCAP_0		GENMASK(23, 10)
+ #define REG_CPU_DMEM_CON	0x1080
+ #define BIT_WL_PLATFORM_RST	BIT(16)
+ #define BIT_WL_SECURITY_CLK	BIT(15)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 07ff0d442e5b..9f05c60c8a03 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -17,6 +17,7 @@
+ #include "util.h"
+ #include "bf.h"
+ #include "efuse.h"
++#include "coex.h"
+ 
+ #define IQK_DONE_8822C 0xaa
+ 
+@@ -39,7 +40,7 @@ static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 
+ 	efuse->rfe_option = map->rfe_option;
+ 	efuse->rf_board_option = map->rf_board_option;
+-	efuse->crystal_cap = map->xtal_k;
++	efuse->crystal_cap = map->xtal_k & XCAP_MASK;
+ 	efuse->channel_plan = map->channel_plan;
+ 	efuse->country_code[0] = map->country_code[0];
+ 	efuse->country_code[1] = map->country_code[1];
+@@ -1866,6 +1867,7 @@ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
+ 		}
+ 		dm_info->rx_evm_dbm[path] = evm_dbm;
+ 	}
++	rtw_phy_parsing_cfo(rtwdev, pkt_stat);
+ }
+ 
+ static void query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
+@@ -1921,6 +1923,7 @@ static void rtw8822c_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
+ 
+ 	hdr = (struct ieee80211_hdr *)(rx_desc + desc_sz + pkt_stat->shift +
+ 				       pkt_stat->drv_info_sz);
++	pkt_stat->hdr = hdr;
+ 	if (pkt_stat->phy_status) {
+ 		phy_status = rx_desc + desc_sz + pkt_stat->shift;
+ 		query_phy_status(rtwdev, phy_status, pkt_stat);
+@@ -3436,6 +3439,128 @@ static void rtw8822c_dpk_track(struct rtw_dev *rtwdev)
+ 	}
+ }
+ 
++#define XCAP_EXTEND(val) ({typeof(val) _v = (val); _v | _v << 7; })
++static void rtw8822c_set_crystal_cap_reg(struct rtw_dev *rtwdev, u8 crystal_cap)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++	u32 val = 0;
++
++	val = XCAP_EXTEND(crystal_cap);
++	cfo->crystal_cap = crystal_cap;
++	rtw_write32_mask(rtwdev, REG_ANAPAR_XTAL_0, BIT_XCAP_0, val);
++}
++
++static void rtw8822c_set_crystal_cap(struct rtw_dev *rtwdev, u8 crystal_cap)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++
++	if (cfo->crystal_cap == crystal_cap)
++		return;
++
++	rtw8822c_set_crystal_cap_reg(rtwdev, crystal_cap);
++}
++
++static void rtw8822c_cfo_tracking_reset(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++
++	cfo->is_adjust = true;
++
++	if (cfo->crystal_cap > rtwdev->efuse.crystal_cap)
++		rtw8822c_set_crystal_cap(rtwdev, cfo->crystal_cap - 1);
++	else if (cfo->crystal_cap < rtwdev->efuse.crystal_cap)
++		rtw8822c_set_crystal_cap(rtwdev, cfo->crystal_cap + 1);
++}
++
++static void rtw8822c_cfo_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++
++	cfo->crystal_cap = rtwdev->efuse.crystal_cap;
++	cfo->is_adjust = true;
++}
++
++#define REPORT_TO_KHZ(val) ({typeof(val) _v = (val); (_v << 1) + (_v >> 1); })
++static s32 rtw8822c_cfo_calc_avg(struct rtw_dev *rtwdev, u8 path_num)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++	s32 cfo_avg, cfo_path_sum = 0, cfo_rpt_sum;
++	u8 i;
++
++	for (i = 0; i < path_num; i++) {
++		cfo_rpt_sum = REPORT_TO_KHZ(cfo->cfo_tail[i]);
++
++		if (cfo->cfo_cnt[i])
++			cfo_avg = cfo_rpt_sum / cfo->cfo_cnt[i];
++		else
++			cfo_avg = 0;
++
++		cfo_path_sum += cfo_avg;
++	}
++
++	for (i = 0; i < path_num; i++) {
++		cfo->cfo_tail[i] = 0;
++		cfo->cfo_cnt[i] = 0;
++	}
++
++	return cfo_path_sum / path_num;
++}
++
++static void rtw8822c_cfo_need_adjust(struct rtw_dev *rtwdev, s32 cfo_avg)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++
++	if (!cfo->is_adjust) {
++		if (abs(cfo_avg) > CFO_TRK_ENABLE_TH)
++			cfo->is_adjust = true;
++	} else {
++		if (abs(cfo_avg) <= CFO_TRK_STOP_TH)
++			cfo->is_adjust = false;
++	}
++
++	if (!rtw_coex_disabled(rtwdev)) {
++		cfo->is_adjust = false;
++		rtw8822c_set_crystal_cap(rtwdev, rtwdev->efuse.crystal_cap);
++	}
++}
++
++static void rtw8822c_cfo_track(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_cfo_track *cfo = &dm_info->cfo_track;
++	u8 path_num = rtwdev->hal.rf_path_num;
++	s8 crystal_cap = cfo->crystal_cap;
++	s32 cfo_avg = 0;
++
++	if (rtwdev->sta_cnt != 1) {
++		rtw8822c_cfo_tracking_reset(rtwdev);
++		return;
++	}
++
++	if (cfo->packet_count == cfo->packet_count_pre)
++		return;
++
++	cfo->packet_count_pre = cfo->packet_count;
++	cfo_avg = rtw8822c_cfo_calc_avg(rtwdev, path_num);
++	rtw8822c_cfo_need_adjust(rtwdev, cfo_avg);
++
++	if (cfo->is_adjust) {
++		if (cfo_avg > CFO_TRK_ADJ_TH)
++			crystal_cap++;
++		else if (cfo_avg < -CFO_TRK_ADJ_TH)
++			crystal_cap--;
++
++		crystal_cap = clamp_t(s8, crystal_cap, 0, XCAP_MASK);
++		rtw8822c_set_crystal_cap(rtwdev, (u8)crystal_cap);
++	}
++}
++
+ static const struct rtw_phy_cck_pd_reg
+ rtw8822c_cck_pd_reg[RTW_CHANNEL_WIDTH_40 + 1][RTW_RF_PATH_MAX] = {
+ 	{
+@@ -4016,6 +4141,8 @@ static struct rtw_chip_ops rtw8822c_ops = {
+ 	.config_bfee		= rtw8822c_bf_config_bfee,
+ 	.set_gid_table		= rtw_bf_set_gid_table,
+ 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
++	.cfo_init		= rtw8822c_cfo_init,
++	.cfo_track		= rtw8822c_cfo_track,
+ 
+ 	.coex_set_init		= rtw8822c_coex_cfg_init,
+ 	.coex_set_ant_switch	= NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index bb2495b8609e..e2b134ce0b3f 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -165,6 +165,11 @@ const struct rtw_table name ## _tbl = {			\
+ #define REG_ANAPARLDO_POW_MAC	0x0029
+ #define BIT_LDOE25_PON		BIT(0)
+ 
++#define XCAP_MASK		GENMASK(6, 0)
++#define CFO_TRK_ENABLE_TH	20
++#define CFO_TRK_STOP_TH		10
++#define CFO_TRK_ADJ_TH		10
++
+ #define REG_TXDFIR0	0x808
+ #define REG_DFIRBW	0x810
+ #define REG_ANTMAP0	0x820
+-- 
+2.21.0
+
