@@ -2,91 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DED83C43603
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 18:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE14C433ED
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 21:35:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C14D3613B7
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 18:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 604BD61057
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Apr 2021 21:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245325AbhDPSsB (ORCPT
+        id S242841AbhDPVgF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Apr 2021 14:48:01 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:38308 "EHLO
+        Fri, 16 Apr 2021 17:36:05 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:35219 "EHLO
         so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245178AbhDPSr4 (ORCPT
+        with ESMTP id S235540AbhDPVgE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Apr 2021 14:47:56 -0400
+        Fri, 16 Apr 2021 17:36:04 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1618598850; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=tnS0tbzynertHhT6L+tHzRoeMC4W+zpjr81Jq14lIA4=; b=ux1SrNQCwRe/98lTOi1W5KxL87ArdsvgGVGfSMSYn/boLVPb8GZtyqCy+wCHgKtSF9Isc3xq
- M0Ta3YVgaDSSuwwTb12x2papCxVfXY9uLn/RQFNdQ7MxXEAlrLoS/WA1nUc+anOqi2VO1iCc
- uL5cbfGRfJ9OdCxsiT7Wv9ffOko=
+ s=smtp; t=1618608939; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=VuuXgRVi2I9t45HaEUdXxLnuHFSkVUfzl+EjC/badf4=;
+ b=RGUuiVXkDsA5N/dyFo995qGCxy/odwtFX+Z4kCTLFol+KPf3dvVETsccatdJqvhh4UJEulzr
+ cHpOnzUl1HVOJridNe+VQYuz5P9xsU3xJlP9S0ab81BFPFIik4zhFJ6Uyr44LUGlA3xJAvFM
+ exgsPq7Pqo2a311yHRG2KwALdvA=
 X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 6079dbb9c39407c327e5092d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 16 Apr 2021 18:47:21
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 607a032a2cc44d3aea87a4c0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 16 Apr 2021 21:35:38
  GMT
-Sender: bbhatt=codeaurora.org@mg.codeaurora.org
+Sender: alokad=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5A2DCC433CA; Fri, 16 Apr 2021 18:47:20 +0000 (UTC)
-Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id CB947C43461; Fri, 16 Apr 2021 21:35:38 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: bbhatt)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 34F73C43462;
-        Fri, 16 Apr 2021 18:47:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 34F73C43462
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
-From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
-        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
-        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, ath11k@lists.infradead.org,
-        Bhaumik Bhatt <bbhatt@codeaurora.org>
-Subject: [PATCH v1 5/6] bus: mhi: pci_generic: Set register access length for MHI driver
-Date:   Fri, 16 Apr 2021 11:47:04 -0700
-Message-Id: <1618598825-18629-6-git-send-email-bbhatt@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1618598825-18629-1-git-send-email-bbhatt@codeaurora.org>
-References: <1618598825-18629-1-git-send-email-bbhatt@codeaurora.org>
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1602FC433CA;
+        Fri, 16 Apr 2021 21:35:38 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Fri, 16 Apr 2021 14:35:38 -0700
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>
+Subject: Re: [PATCH v9 2/4] mac80211: add multiple bssid support to interface
+ handling
+In-Reply-To: <7f6f0a8c151746e8bb44ad50daf75259a0fac829.camel@sipsolutions.net>
+References: <20210310182604.8858-1-alokad@codeaurora.org>
+ <20210310182604.8858-3-alokad@codeaurora.org>
+ (sfid-20210310_192729_241525_2DF37B20)
+ <7f6f0a8c151746e8bb44ad50daf75259a0fac829.camel@sipsolutions.net>
+Message-ID: <494efc64a803693324dee5b7a03cfda0@codeaurora.org>
+X-Sender: alokad@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-MHI driver requires register space length to add range checks and
-prevent memory region accesses outside of that for MMIO space.
-Set it from the PCI generic controller driver before registering
-the MHI controller.
+On 2021-04-08 05:06, Johannes Berg wrote:
+> On Wed, 2021-03-10 at 10:26 -0800, Aloka Dixit wrote:
+>> From: John Crispin <john@phrozen.org>
+>> 
+>> Add a new helper ieee80211_set_multiple_bssid_options() takes 
+>> propagating
+>> the cfg80211 data down the stack.
+>> 
+>> The patch also makes sure that all members of the bss set will get 
+>> closed
+>> when either of them is shutdown.
+> 
+> s/either/any/
+>> 
+>>  static int ieee80211_del_iface(struct wiphy *wiphy, struct 
+>> wireless_dev *wdev)
+>>  {
+>> +	struct ieee80211_sub_if_data *sdata;
+>> +
+>> +	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+> 
+> can be one line
+> 
 
-Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
----
- drivers/bus/mhi/pci_generic.c | 1 +
- 1 file changed, 1 insertion(+)
+Okay
 
-diff --git a/drivers/bus/mhi/pci_generic.c b/drivers/bus/mhi/pci_generic.c
-index 7c810f0..fb7889f 100644
---- a/drivers/bus/mhi/pci_generic.c
-+++ b/drivers/bus/mhi/pci_generic.c
-@@ -463,6 +463,7 @@ static int mhi_pci_claim(struct mhi_controller *mhi_cntrl,
- 		return err;
- 	}
- 	mhi_cntrl->regs = pcim_iomap_table(pdev)[bar_num];
-+	mhi_cntrl->reg_len = pci_resource_len(pdev, bar_num);
- 
- 	err = pci_set_dma_mask(pdev, dma_mask);
- 	if (err) {
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+>> +	if (sdata && sdata->vif.type == NL80211_IFTYPE_AP) {
+>> +		if (sdata->vif.multiple_bssid.flags & 
+>> IEEE80211_VIF_MBSS_TRANSMITTING) {
+>> +			struct ieee80211_sub_if_data *child;
+>> +
+>> +			rcu_read_lock();
+>> +			list_for_each_entry_rcu(child, &sdata->local->interfaces, list)
+>> +				if (child->vif.multiple_bssid.parent == &sdata->vif)
+>> +					dev_close(child->wdev.netdev);
+>> +			rcu_read_unlock();
+> 
+> You never tested this properly, this is wrong.
+> 
+> johannes
 
+This was added for graceful shutdown of non-transmitting interfaces 
+whenever the transmitting one is being brought down. But I see that 
+dev_close() is happening twice now.
+
+Inclining towards removing this and just return error to application if 
+it tries to remove transmitting before all non-transmitting are deleted.
+However, currently the "parent" pointer to indicate the transmitting 
+interface is maintained in mac80211, nothing in cfg80211.
+
+Which option would be better,
+(1) Add new function to mac80211_config_ops to return yes/no to whether 
+cfg80211 can delete a particular interface when MBSSID is in use.
+(2) Add a new pointer in struct wireless_dev to track the transmitting 
+interface of the set. Then the yes/no decision can be taken in cfg80211 
+itself.
+
+Thanks.
