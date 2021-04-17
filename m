@@ -7,80 +7,84 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B4DC433ED
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Apr 2021 17:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 881DFC43460
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Apr 2021 17:54:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E88D2606A5
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Apr 2021 17:54:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B58761245
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Apr 2021 17:54:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236802AbhDQRyg (ORCPT
+        id S236878AbhDQRzZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Apr 2021 13:54:36 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:22079 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236759AbhDQRyf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Apr 2021 13:54:35 -0400
+        Sat, 17 Apr 2021 13:55:25 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:19663 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236760AbhDQRzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Apr 2021 13:55:24 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1618682049; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1618682098; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=WdPueMETllMURIOix1ZcNxcr/xst331JFouT0N99A6U=;
- b=KEo7+gfOV3IU4FjsupnbFt1HGcC+CxF6JcUMgfyzA8P01Lds5kc37BxvZ23XCQNso/GCtwJi
- WDoY6UHi+kWyWn3ChJY8OWR2m3mYiDk0jRRFALlS7T4awC4BrlyQsXwMqkGwKbOK9ukgvXyv
- i37r9AUxT0i9npQ+i7yY2JNRHUI=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ Content-Type: Sender; bh=//tt+92mj+eYFVIm05nfExvtVOpazpB/GHsyCOcGeeg=;
+ b=lzdhiobvTIatAimp7mQFeuWaOKPVYHwUVUYGN6AarJHMiECClTYoTtKoTyEuDhZOPiaGRRLw
+ jIcYJyxJGD7nPaCFo37Ql6edEPqiL4XfZB0qMnNZyfFxU21GRMPZYoR78Qyfks2mbtGBqV/u
+ 0OjF3lgPzr8IR4usEkag7YKF8bw=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 607b20c0f34440a9d42a53a9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 17 Apr 2021 17:54:08
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 607b20ebe0e9c9a6b6c81a4a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 17 Apr 2021 17:54:51
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C53CBC433D3; Sat, 17 Apr 2021 17:54:08 +0000 (UTC)
+        id 9D342C433D3; Sat, 17 Apr 2021 17:54:51 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D29D7C433F1;
-        Sat, 17 Apr 2021 17:54:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D29D7C433F1
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C08B1C433F1;
+        Sat, 17 Apr 2021 17:54:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C08B1C433F1
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] mwifiex: Remove unneeded variable: "ret"
+Subject: Re: [PATCH] wilc1000: fix a loop timeout condition
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210317063353.1055-1-zuoqilin1@163.com>
-References: <20210317063353.1055-1-zuoqilin1@163.com>
-To:     zuoqilin1@163.com
-Cc:     amitkarwar@gmail.com, ganapathi017@gmail.com,
-        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, zuoqilin <zuoqilin@yulong.com>
+In-Reply-To: <YFS5gx/gi70zlIaO@mwanda>
+References: <YFS5gx/gi70zlIaO@mwanda>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Ajay Singh <ajay.kathat@microchip.com>,
+        Claudiu Beznea <claudiu.beznea@microchip.com>,
+        David Mosberger-Tang <davidm@egauge.net>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20210417175408.C53CBC433D3@smtp.codeaurora.org>
-Date:   Sat, 17 Apr 2021 17:54:08 +0000 (UTC)
+Message-Id: <20210417175451.9D342C433D3@smtp.codeaurora.org>
+Date:   Sat, 17 Apr 2021 17:54:51 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-zuoqilin1@163.com wrote:
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> From: zuoqilin <zuoqilin@yulong.com>
+> If the loop fails, the "while(trials--) {" loop will exit with "trials"
+> set to -1.  The test for that expects it to end with "trials" set to 0
+> so the warning message will not be printed.
 > 
-> Remove unneeded variable: "ret"
+> Fix this by changing from a post-op to a pre-op.  This does mean that
+> we only make 99 attempts instead of 100 but that's okay.
 > 
-> Signed-off-by: zuoqilin <zuoqilin@yulong.com>
+> Fixes: f135a1571a05 ("wilc1000: Support chip sleep over SPI")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Ajay Singh <ajay.kathat@microchip.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-c81852a48e13 mwifiex: Remove unneeded variable: "ret"
+2f51061edab9 wilc1000: fix a loop timeout condition
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210317063353.1055-1-zuoqilin1@163.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/YFS5gx/gi70zlIaO@mwanda/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
