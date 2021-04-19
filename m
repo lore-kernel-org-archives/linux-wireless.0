@@ -2,227 +2,161 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8873BC433B4
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Apr 2021 21:26:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F16C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 00:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64E85610CB
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Apr 2021 21:26:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7FE760E0B
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 00:32:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233525AbhDRV0u (ORCPT
+        id S232973AbhDSAdW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Apr 2021 17:26:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:38972 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232480AbhDRV0t (ORCPT
+        Sun, 18 Apr 2021 20:33:22 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:54170 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231860AbhDSAdW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Apr 2021 17:26:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618781179;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TPcs5TB0ONhcFVAEw0E0MCP+R2+YREZ08wBbXd6m+0c=;
-        b=g9zj+ZYlbXEFv6SnC6bV0n2uTv8/uUDyI5a33HORnYPU8mhP1VFhtwer6IrZLU010MTVmv
-        5WNb2+2FaYhPFyXdhkOu0WHljT+xmDL9T1I9yO0NQvtpvTt5+K/BdsN0FX8bUjUMj+TkGk
-        Y0uJBj5mqsMjLOvWsc7Wuo0Ki+3tIOE=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-53-IQzulNDvNT24AxU4rPgW5g-1; Sun, 18 Apr 2021 17:26:17 -0400
-X-MC-Unique: IQzulNDvNT24AxU4rPgW5g-1
-Received: by mail-ed1-f72.google.com with SMTP id f1-20020a0564021941b02903850806bb32so4101580edz.9
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Apr 2021 14:26:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=TPcs5TB0ONhcFVAEw0E0MCP+R2+YREZ08wBbXd6m+0c=;
-        b=ZtThR7Y45zeSXEed8gHzRFbhinhqyXDiQ5qfC4jr4tRPQCjbrFDjg7M8FVJbXagp9i
-         eUFn3wk+bTTm76YCy2OzOLnHbaZlAMJfLEy+pV94D7c+jPxF/eSL4qKRtauir0CBzUkk
-         1shQ+9QYmmhOYbaUnTETULUQ8j7gTsCgrkLNCXqQ2nHmprsv8ejXRDrwyNQD3nrIONOf
-         ylZdn1tAZyeFGyGSY7SleJEJg+p3d6SyIMZz3dpx/MXGZ1OFCYMETnKdNku+E9wrJtqr
-         oIaopA+D1sKJpBFtX+phC9vGPKZNZJMapc3ELoNT+wzsfDqh5rb4Fyvsi4ZBhgPv9SdH
-         75yQ==
-X-Gm-Message-State: AOAM530v0jLEVK0NjulTexjWbRM9hhJUQ1wuLK/aOCR97qgywPryKPOA
-        ixuB9OurWFhBVvWRra8GIAf4IDkzMu0yIP0NAlX6fIoHNzHhfIdPNdZ6dBC0Ku/6bczx/x5cY4B
-        nA9W5cakVWGkamnW5ujENV3OwWEA=
-X-Received: by 2002:a17:906:3e54:: with SMTP id t20mr18905027eji.53.1618781176568;
-        Sun, 18 Apr 2021 14:26:16 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzBKJZIgQlc9hQywL+WtI+KLt35fb6/JZtjFfLmtl/EiX87D0fiTdVmmH6NDI4Gb6cbNDZ6cQ==
-X-Received: by 2002:a17:906:3e54:: with SMTP id t20mr18905020eji.53.1618781176413;
-        Sun, 18 Apr 2021 14:26:16 -0700 (PDT)
-Received: from localhost ([151.66.28.185])
-        by smtp.gmail.com with ESMTPSA id s20sm11194233edu.93.2021.04.18.14.26.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Apr 2021 14:26:15 -0700 (PDT)
-Date:   Sun, 18 Apr 2021 23:26:12 +0200
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Ryder Lee <ryder.lee@mediatek.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 1/2] mt76: mt7915: add thermal sensor device support
-Message-ID: <YHyj9H52zgoDXWbN@lore-desk>
-References: <b51d79d257e150a09d51029e3465e2ce925d6cfe.1618691395.git.ryder.lee@mediatek.com>
+        Sun, 18 Apr 2021 20:33:22 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 13J0WOkH4013071, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 13J0WOkH4013071
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 19 Apr 2021 08:32:24 +0800
+Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
+ RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 19 Apr 2021 08:32:24 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 19 Apr 2021 08:32:23 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::1d8:ba7d:61ca:bd74]) by
+ RTEXMBS04.realtek.com.tw ([fe80::1d8:ba7d:61ca:bd74%5]) with mapi id
+ 15.01.2106.013; Mon, 19 Apr 2021 08:32:23 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: RE: rtlwifi/rtl8192cu AP mode broken with PS STA
+Thread-Topic: rtlwifi/rtl8192cu AP mode broken with PS STA
+Thread-Index: AQHXKt1YTEWAFQOqV0euMAbEDkc/GKqnJvGAgACuHgCAABntAIABFTKAgAEERdCAAG/QgIAOFRAAgAKClyA=
+Date:   Mon, 19 Apr 2021 00:32:23 +0000
+Message-ID: <35249c6028f645a79c4186c9689ba8aa@realtek.com>
+References: <e2924d81-0e30-2dd0-292b-428fea199484@maciej.szmigiero.name>
+ <846f6166-c570-01fc-6bbc-3e3b44e51327@maciej.szmigiero.name>
+ <87r1jnohq6.fsf@codeaurora.org>
+ <8e0434eb-d15f-065d-2ba7-b50c67877112@maciej.szmigiero.name>
+ <a2003668-5108-27b9-95cd-9e1d5d1aa94d@lwfinger.net>
+ <1617763692.9857.7.camel@realtek.com>
+ <1dc7e487-b97b-8584-47f7-37f3385c7bf9@lwfinger.net>
+ <15737dcf-95ac-1ce6-a681-94ff5db968e4@maciej.szmigiero.name>
+ <c5556a207c5c40ac849c6a0e1919baca@realtek.com>
+ <220c4fe4-c9e1-347a-8cef-cd91d31c56df@maciej.szmigiero.name>
+ <cfcc2988-3f20-3588-2f76-f04d09043811@maciej.szmigiero.name>
+In-Reply-To: <cfcc2988-3f20-3588-2f76-f04d09043811@maciej.szmigiero.name>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.146]
+x-kse-serverinfo: RTEXMBS03.realtek.com.tw, 9
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzQvMTgg5LiL5Y2IIDA0OjA0OjAw?=
+x-kse-attachment-filter-triggered-rules: Clean
+x-kse-attachment-filter-triggered-filters: Clean
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="TFPJU7dGCv8470U4"
-Content-Disposition: inline
-In-Reply-To: <b51d79d257e150a09d51029e3465e2ce925d6cfe.1618691395.git.ryder.lee@mediatek.com>
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 04/19/2021 00:13:47
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 163189 [Apr 18 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 442 442 b985cb57763b61d2a20abb585d5d4cc10c315b09
+X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;realtek.com:7.1.1
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/19/2021 00:15:00
+X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 04/19/2021 00:21:51
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 163189 [Apr 18 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 442 442 b985cb57763b61d2a20abb585d5d4cc10c315b09
+X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;realtek.com:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/19/2021 00:25:00
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
---TFPJU7dGCv8470U4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-[...]
-> =20
-> +static ssize_t mt7915_thermal_show_temp(struct device *dev,
-> +					struct device_attribute *attr,
-> +					char *buf)
-> +{
-> +	struct mt7915_phy *phy =3D dev_get_drvdata(dev);
-> +	int temperature;
-> +
-> +	mutex_lock(&phy->dev->mt76.mutex);
-> +	temperature =3D mt7915_mcu_get_temperature(phy);
-> +	mutex_unlock(&phy->dev->mt76.mutex);
-
-I guess we do not need this lock here since mcu already has its own lock (m=
-cu
-mutex) and mt7915 does not support runtime-pm.
-
-Regards,
-Lorenzo
-
-> +
-> +	if (temperature < 0)
-> +		return temperature;
-> +
-> +	/* display in millidegree celcius */
-> +	return sprintf(buf, "%u\n", temperature * 1000);
-> +}
-> +
-> +static SENSOR_DEVICE_ATTR(temp1_input, 0444, mt7915_thermal_show_temp,
-> +			  NULL, 0);
-> +
-> +static struct attribute *mt7915_hwmon_attrs[] =3D {
-> +	&sensor_dev_attr_temp1_input.dev_attr.attr,
-> +	NULL,
-> +};
-> +ATTRIBUTE_GROUPS(mt7915_hwmon);
-> +
-> +static int mt7915_thermal_init(struct mt7915_phy *phy)
-> +{
-> +	struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
-> +	struct device *hwmon;
-> +
-> +	/* TODO: add cooling device for throttling */
-> +
-> +	if (!IS_REACHABLE(CONFIG_HWMON))
-> +		return 0;
-> +
-> +	hwmon =3D devm_hwmon_device_register_with_groups(&wiphy->dev,
-> +						       wiphy_name(wiphy), phy,
-> +						       mt7915_hwmon_groups);
-> +	if (IS_ERR(hwmon))
-> +		return PTR_ERR(hwmon);
-> +
-> +	return 0;
-> +}
-> +
->  static void
->  mt7915_init_txpower(struct mt7915_dev *dev,
->  		    struct ieee80211_supported_band *sband)
-> @@ -286,6 +334,10 @@ static int mt7915_register_ext_phy(struct mt7915_dev=
- *dev)
->  	if (ret)
->  		goto error;
-> =20
-> +	ret =3D mt7915_thermal_init(phy);
-> +	if (ret)
-> +		goto error;
-> +
->  	return 0;
-> =20
->  error:
-> @@ -739,6 +791,10 @@ int mt7915_register_device(struct mt7915_dev *dev)
->  	if (ret)
->  		return ret;
-> =20
-> +	ret =3D mt7915_thermal_init(&dev->phy);
-> +	if (ret)
-> +		return ret;
-> +
->  	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
-> =20
->  	ret =3D mt7915_register_ext_phy(dev);
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7915/mcu.c
-> index 559ad230eabe..17a617df6dba 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-> @@ -3469,16 +3469,17 @@ int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *ph=
-y)
->  	return 0;
->  }
-> =20
-> -int mt7915_mcu_get_temperature(struct mt7915_dev *dev, int index)
-> +int mt7915_mcu_get_temperature(struct mt7915_phy *phy)
->  {
-> +	struct mt7915_dev *dev =3D phy->dev;
->  	struct {
->  		u8 ctrl_id;
->  		u8 action;
-> -		u8 band;
-> +		u8 dbdc_idx;
->  		u8 rsv[5];
->  	} req =3D {
->  		.ctrl_id =3D THERMAL_SENSOR_TEMP_QUERY,
-> -		.action =3D index,
-> +		.dbdc_idx =3D phy !=3D &dev->phy,
->  	};
-> =20
->  	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD(THERMAL_CTRL), &req,
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers=
-/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> index 80eb35231a1a..d5296e2d481b 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> @@ -357,7 +357,7 @@ int mt7915_mcu_set_radar_th(struct mt7915_dev *dev, i=
-nt index,
->  			    const struct mt7915_dfs_pattern *pattern);
->  int mt7915_mcu_apply_group_cal(struct mt7915_dev *dev);
->  int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy);
-> -int mt7915_mcu_get_temperature(struct mt7915_dev *dev, int index);
-> +int mt7915_mcu_get_temperature(struct mt7915_phy *phy);
->  int mt7915_mcu_get_tx_rate(struct mt7915_dev *dev, u32 cmd, u16 wlan_idx=
-);
->  int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif =
-*vif,
->  			   struct ieee80211_sta *sta, struct rate_info *rate);
-> --=20
-> 2.18.0
->=20
-
---TFPJU7dGCv8470U4
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYHyj8gAKCRA6cBh0uS2t
-rFc1AP0TzFM9UeSoGdkc3dw0YHYpaI+eTfh5nH0oLez6fUqLYgEAmuffVpsIXLN9
-vSsV+rGBbRwtmHzZoNXIQqCWZRrHdg8=
-=5nH8
------END PGP SIGNATURE-----
-
---TFPJU7dGCv8470U4--
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IE1hY2llaiBTLiBTem1pZ2ll
+cm8gW21haWx0bzptYWlsQG1hY2llai5zem1pZ2llcm8ubmFtZV0NCj4gU2VudDogU3VuZGF5LCBB
+cHJpbCAxOCwgMjAyMSAyOjA4IEFNDQo+IFRvOiBQa3NoaWgNCj4gQ2M6IGxpbnV4LXdpcmVsZXNz
+QHZnZXIua2VybmVsLm9yZzsgbmV0ZGV2QHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsNCj4gam9oYW5uZXNAc2lwc29sdXRpb25zLm5ldDsga3ZhbG9AY29kZWF1
+cm9yYS5vcmc7IExhcnJ5IEZpbmdlcg0KPiBTdWJqZWN0OiBSZTogcnRsd2lmaS9ydGw4MTkyY3Ug
+QVAgbW9kZSBicm9rZW4gd2l0aCBQUyBTVEENCj4gDQo+IE9uIDA4LjA0LjIwMjEgMjE6MDQsIE1h
+Y2llaiBTLiBTem1pZ2llcm8gd3JvdGU6DQo+ID4gT24gMDguMDQuMjAyMSAwNjo0MiwgUGtzaGlo
+IHdyb3RlOg0KPiA+Pj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4+IEZyb206IE1h
+Y2llaiBTLiBTem1pZ2llcm8gW21haWx0bzptYWlsQG1hY2llai5zem1pZ2llcm8ubmFtZV0NCj4g
+Pj4+IFNlbnQ6IFRodXJzZGF5LCBBcHJpbCAwOCwgMjAyMSA0OjUzIEFNDQo+ID4+PiBUbzogTGFy
+cnkgRmluZ2VyOyBQa3NoaWgNCj4gPj4+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7
+DQo+ID4+PiBqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0OyBrdmFsb0Bjb2RlYXVyb3JhLm9yZw0K
+PiA+Pj4gU3ViamVjdDogUmU6IHJ0bHdpZmkvcnRsODE5MmN1IEFQIG1vZGUgYnJva2VuIHdpdGgg
+UFMgU1RBDQo+ID4+Pg0KPiA+ICguLi4pDQo+ID4+Pj4gTWFjZWlqLA0KPiA+Pj4+DQo+ID4+Pj4g
+RG9lcyB0aGlzIHBhdGNoIGZpeCB0aGUgcHJvYmxlbT8NCj4gPj4+DQo+ID4+PiBUaGUgYmVhY29u
+IHNlZW1zIHRvIGJlIHVwZGF0aW5nIG5vdyBhbmQgU1RBcyBubyBsb25nZXIgZ2V0IHN0dWNrIGlu
+IFBTDQo+ID4+PiBtb2RlLg0KPiA+Pj4gQWx0aG91Z2ggc29tZXRpbWVzIChldmVyeSAyLTMgbWlu
+dXRlcyB3aXRoIGNvbnRpbnVvdXMgMXMgaW50ZXJ2YWwgcGluZ3MpDQo+ID4+PiB0aGVyZSBpcyBh
+cm91bmQgNXMgZGVsYXkgaW4gdXBkYXRpbmcgdGhlIHRyYW5zbWl0dGVkIGJlYWNvbiAtIGRvbid0
+IGtub3cNCj4gPj4+IHdoeSwgbWF5YmUgdGhlIE5JQyBoYXJkd2FyZSBzdGlsbCBoYXMgdGhlIG9s
+ZCB2ZXJzaW9uIGluIHF1ZXVlPw0KPiA+Pg0KPiA+PiBTaW5jZSBVU0IgZGV2aWNlIGRvZXNuJ3Qg
+dXBkYXRlIGV2ZXJ5IGJlYWNvbiwgZHRpbV9jb3VudCBpc24ndCB1cGRhdGVkIG5laXRoZXIuDQo+
+ID4+IEl0IGxlYWRzIFNUQSBkb2Vzbid0IGF3YWtlIHByb3Blcmx5LiBQbGVhc2UgdHJ5IHRvIGZp
+eCBkdGltX3BlcmlvZD0xIGluDQo+ID4+IGhvc3RhcGQuY29uZiwgd2hpY2ggdGVsbHMgU1RBIGF3
+YWtlcyBldmVyeSBiZWFjb24gaW50ZXJ2YWwuDQo+ID4NCj4gPiBUaGUgc2l0dWF0aW9uIGlzIHRo
+ZSBzYW1lIHdpdGggZHRpbV9wZXJpb2Q9MS4NCj4gPg0KPiAoLi4uKQ0KPiANCj4gUGluZy1LZSwN
+Cj4gYXJlIHlvdSBnb2luZyB0byBzdWJtaXQgeW91ciBzZXRfdGltKCkgcGF0Y2ggc28gYXQgbGVh
+c3QgdGhlIEFQIG1vZGUgaXMNCj4gdXNhYmxlIHdpdGggUFMgU1RBcyBvciBhcmUgeW91IHdhaXRp
+bmcgZm9yIGEgc29sdXRpb24gdG8gdGhlIGRlbGF5ZWQNCj4gYmVhY29uIHVwZGF0ZSBpc3N1ZT8N
+Cj4gDQoNCkknbSBzdGlsbCB0cnlpbmcgdG8gZ2V0IGEgODE5MmN1LCBhbmQgdGhlbiBJIGNhbiBy
+ZXByb2R1Y2UgdGhlIHN5bXB0b20geW91DQptZXQuIEhvd2V2ZXIsIEknbSBidXN5IG5vdzsgbWF5
+YmUgSSBoYXZlIGZyZWUgdGltZSB0d28gd2Vla3MgbGF0ZXIuDQoNCkRvIHlvdSB0aGluayBJIHN1
+Ym1pdCB0aGUgc2V0X3RpbSgpIHBhdGNoIHdpdGggeW91ciBSZXBvcnRlZC1ieSBhbmQgVGVzdGVk
+LWJ5IGZpcnN0Pw0KDQpUaGFua3MgDQpQaW5nLUtlDQoNCg==
