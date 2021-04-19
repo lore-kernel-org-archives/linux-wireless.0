@@ -2,233 +2,109 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E855C43461
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 14:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6DA7C433B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 14:58:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B70C61090
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 14:21:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE21F61284
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 14:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239080AbhDSOVl (ORCPT
+        id S239292AbhDSO7Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Apr 2021 10:21:41 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54674 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239050AbhDSOVj (ORCPT
+        Mon, 19 Apr 2021 10:59:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52976 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238544AbhDSO7Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Apr 2021 10:21:39 -0400
-X-UUID: 927164bb07034f22b162b68cc5a75d08-20210419
-X-UUID: 927164bb07034f22b162b68cc5a75d08-20210419
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1902725450; Mon, 19 Apr 2021 22:21:06 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 19 Apr 2021 22:21:00 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 19 Apr 2021 22:21:00 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
-        <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
-        <posh.sun@mediatek.com>, <Eric.Liang@mediatek.com>,
-        <Stella.Chang@mediatek.com>, <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH v2 3/6] mt76: mt7921: introduce mt7921_dma_{enable,disable} utilities
-Date:   Mon, 19 Apr 2021 22:20:56 +0800
-Message-ID: <1618842059-8192-4-git-send-email-sean.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <1618842059-8192-1-git-send-email-sean.wang@mediatek.com>
-References: <1618842059-8192-1-git-send-email-sean.wang@mediatek.com>
+        Mon, 19 Apr 2021 10:59:24 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C352AC06174A;
+        Mon, 19 Apr 2021 07:58:54 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id s15so41111131edd.4;
+        Mon, 19 Apr 2021 07:58:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=WlmAetOa+5HxYf4TDISXX8Ux6wlKUWMqhMG/15ITEcw=;
+        b=rj5ZewnpyD6W7aY3RDAuVO+SqM/hZvLXofs/Q0qLua1KnTiDz7qncKFueri2n8gxkq
+         yGi8DNm2qLymf707ZT8rbH8KEpHMUTjEpxwyTp+QiVIZNRdwD4LimUNybiLZNu0EUImY
+         r+15ue+FrTSD/DGhGBudKaxHLWB+nreqGSueRcgynLEUVex6+HLRGCu2Y6kLtqD5dW4V
+         wt8LouLgpxGbodrtRAB08oiHavXTrjuK+7UQ4OJ8k8+8cX67PJjKz7dVT/z0Hu9eawdB
+         TCihriwcM0nJxvjnHoxMmISUarwK+lcS/+91ZkWJN48JGdMQDc/4HhwU1svEeqAlTiye
+         Rfhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=WlmAetOa+5HxYf4TDISXX8Ux6wlKUWMqhMG/15ITEcw=;
+        b=FZiwVR9EygWpYQOSjJhm9S1dNUExQ2MSd1aKEQ0lbjCfvpDJpREjc3DLE30SXfllSL
+         +vWwdbiY/7ypwAFSgSfjDGJN5q6jODVaWEEmyrHYg6OAmKc8Cq7VvyBbiEO4xDWHS0A+
+         tR5LZTv/AQJFZpGgNLjopHAjT2pH7JrEG/cxUDGXlUcfAbHKOf+dyqyzm8jlHg/tyY4X
+         JJavZPqQpgXfTHBE8fbw+bIl4hkCkI/NXLrgpP9tWFnMYDZoq7ffh8BpdqO11lDsYe/L
+         zrUY3mwkEx5XkgGI8u2q2+HbHyNebzAYukiC+4jH0llgDP9zXYRahS+qhF7M9cbjxsqi
+         eE4Q==
+X-Gm-Message-State: AOAM531dON848FKBhphxqBXRgVzPn8+vSkDTuERRHBRsf78Toj/k/j26
+        HyO/JTKt0xKIK4U8sL6ArSk=
+X-Google-Smtp-Source: ABdhPJwDY2Exw6txlnSA9y+hQTpW93E8rqswX/sRBG4MQC5YRxy+oQ462t2AuOt8oxT9+p1KoYwZNA==
+X-Received: by 2002:aa7:c391:: with SMTP id k17mr8156426edq.153.1618844333512;
+        Mon, 19 Apr 2021 07:58:53 -0700 (PDT)
+Received: from ubuntudesktop.lan (210.53.7.51.dyn.plus.net. [51.7.53.210])
+        by smtp.gmail.com with ESMTPSA id l14sm1529578edc.0.2021.04.19.07.58.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Apr 2021 07:58:52 -0700 (PDT)
+From:   Lee Gibson <leegib@gmail.com>
+To:     kvalo@codeaurora.org
+Cc:     imitsyanko@quantenna.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lee Gibson <leegib@gmail.com>
+Subject: [PATCH v2] qtnfmac: Fix possible buffer overflow in qtnf_event_handle_external_auth
+Date:   Mon, 19 Apr 2021 15:58:42 +0100
+Message-Id: <20210419145842.345787-1-leegib@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210317121706.389058-1-leegib@gmail.com>
+References: <20210317121706.389058-1-leegib@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: D313CF67F8EEFB128D56CE4EEE4ECAE5CBE9FEB55ED205ACA51F34D28659EEE02000:8
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+Function qtnf_event_handle_external_auth calls memcpy without
+checking the length.
+A user could control that length and trigger a buffer overflow.
+Fix by checking the length is within the maximum allowed size.
 
-Introduce mt7921_dma_enable and mt7921_dma_disable utilities routine in
-order for code reusing between mt7921_dma_reset and mt7921_dma_init.
-This is a preliminary patch to reset dma during device driver_own
-request.
-
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lee Gibson <leegib@gmail.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/dma.c   | 108 ++++++------------
- 1 file changed, 35 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-index af4b6cf38929..fb7f98d92377 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-@@ -221,18 +221,8 @@ static u32 mt7921_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
- 	return dev->bus_ops->rmw(mdev, addr, mask, val);
- }
+v2: use clamp_val() instead of min_t()
+
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index c775c177933b..8dc80574d08d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -570,8 +570,10 @@ qtnf_event_handle_external_auth(struct qtnf_vif *vif,
+ 		return 0;
  
--static int mt7921_dmashdl_disabled(struct mt7921_dev *dev)
-+static int mt7921_dma_disable(struct mt7921_dev *dev, bool force)
- {
--	mt76_clear(dev, MT_WFDMA0_GLO_CFG_EXT0, MT_WFDMA0_CSR_TX_DMASHDL_ENABLE);
--	mt76_set(dev, MT_DMASHDL_SW_CONTROL, MT_DMASHDL_DMASHDL_BYPASS);
--
--	return 0;
--}
--
--static int mt7921_dma_reset(struct mt7921_dev *dev, bool force)
--{
--	int i;
--
- 	if (force) {
- 		/* reset */
- 		mt76_clear(dev, MT_WFDMA0_RST,
-@@ -244,6 +234,11 @@ static int mt7921_dma_reset(struct mt7921_dev *dev, bool force)
- 			 MT_WFDMA0_RST_LOGIC_RST);
+ 	if (ev->ssid_len) {
+-		memcpy(auth.ssid.ssid, ev->ssid, ev->ssid_len);
+-		auth.ssid.ssid_len = ev->ssid_len;
++		int len = clamp_val(ev->ssid_len, 0, IEEE80211_MAX_SSID_LEN);
++
++		memcpy(auth.ssid.ssid, ev->ssid, len);
++		auth.ssid.ssid_len = len;
  	}
  
-+	/* disable dmashdl */
-+	mt76_clear(dev, MT_WFDMA0_GLO_CFG_EXT0,
-+		   MT_WFDMA0_CSR_TX_DMASHDL_ENABLE);
-+	mt76_set(dev, MT_DMASHDL_SW_CONTROL, MT_DMASHDL_DMASHDL_BYPASS);
-+
- 	/* disable WFDMA0 */
- 	mt76_clear(dev, MT_WFDMA0_GLO_CFG,
- 		   MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN |
-@@ -257,18 +252,11 @@ static int mt7921_dma_reset(struct mt7921_dev *dev, bool force)
- 		       MT_WFDMA0_GLO_CFG_RX_DMA_BUSY, 0, 1000))
- 		return -ETIMEDOUT;
- 
--	/* reset hw queues */
--	for (i = 0; i < __MT_TXQ_MAX; i++)
--		mt76_queue_reset(dev, dev->mphy.q_tx[i]);
--
--	for (i = 0; i < __MT_MCUQ_MAX; i++)
--		mt76_queue_reset(dev, dev->mt76.q_mcu[i]);
--
--	mt76_for_each_q_rx(&dev->mt76, i)
--		mt76_queue_reset(dev, &dev->mt76.q_rx[i]);
--
--	mt76_tx_status_check(&dev->mt76, NULL, true);
-+	return 0;
-+}
- 
-+static int mt7921_dma_enable(struct mt7921_dev *dev)
-+{
- 	/* configure perfetch settings */
- 	mt7921_dma_prefetch(dev);
- 
-@@ -300,6 +288,29 @@ static int mt7921_dma_reset(struct mt7921_dev *dev, bool force)
- 	return 0;
- }
- 
-+static int mt7921_dma_reset(struct mt7921_dev *dev, bool force)
-+{
-+	int i, err;
-+
-+	err = mt7921_dma_disable(dev, force);
-+	if (err)
-+		return err;
-+
-+	/* reset hw queues */
-+	for (i = 0; i < __MT_TXQ_MAX; i++)
-+		mt76_queue_reset(dev, dev->mphy.q_tx[i]);
-+
-+	for (i = 0; i < __MT_MCUQ_MAX; i++)
-+		mt76_queue_reset(dev, dev->mt76.q_mcu[i]);
-+
-+	mt76_for_each_q_rx(&dev->mt76, i)
-+		mt76_queue_reset(dev, &dev->mt76.q_rx[i]);
-+
-+	mt76_tx_status_check(&dev->mt76, NULL, true);
-+
-+	return mt7921_dma_enable(dev);
-+}
-+
- int mt7921_wfsys_reset(struct mt7921_dev *dev)
- {
- 	mt76_set(dev, 0x70002600, BIT(0));
-@@ -362,32 +373,10 @@ int mt7921_dma_init(struct mt7921_dev *dev)
- 
- 	mt76_dma_attach(&dev->mt76);
- 
--	/* reset */
--	mt76_clear(dev, MT_WFDMA0_RST,
--		   MT_WFDMA0_RST_DMASHDL_ALL_RST |
--		   MT_WFDMA0_RST_LOGIC_RST);
--
--	mt76_set(dev, MT_WFDMA0_RST,
--		 MT_WFDMA0_RST_DMASHDL_ALL_RST |
--		 MT_WFDMA0_RST_LOGIC_RST);
--
--	ret = mt7921_dmashdl_disabled(dev);
-+	ret = mt7921_dma_disable(dev, true);
- 	if (ret)
- 		return ret;
- 
--	/* disable WFDMA0 */
--	mt76_clear(dev, MT_WFDMA0_GLO_CFG,
--		   MT_WFDMA0_GLO_CFG_TX_DMA_EN |
--		   MT_WFDMA0_GLO_CFG_RX_DMA_EN |
--		   MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN |
--		   MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
--		   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO |
--		   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
--
--	mt76_poll(dev, MT_WFDMA0_GLO_CFG,
--		  MT_WFDMA0_GLO_CFG_TX_DMA_BUSY |
--		  MT_WFDMA0_GLO_CFG_RX_DMA_BUSY, 0, 1000);
--
- 	/* init tx queue */
- 	ret = mt7921_init_tx_queues(&dev->phy, MT7921_TXQ_BAND0,
- 				    MT7921_TX_RING_SIZE);
-@@ -439,34 +428,7 @@ int mt7921_dma_init(struct mt7921_dev *dev)
- 			  mt7921_poll_tx, NAPI_POLL_WEIGHT);
- 	napi_enable(&dev->mt76.tx_napi);
- 
--	/* configure perfetch settings */
--	mt7921_dma_prefetch(dev);
--
--	/* reset dma idx */
--	mt76_wr(dev, MT_WFDMA0_RST_DTX_PTR, ~0);
--
--	/* configure delay interrupt */
--	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0, 0);
--
--	mt76_set(dev, MT_WFDMA0_GLO_CFG,
--		 MT_WFDMA0_GLO_CFG_TX_WB_DDONE |
--		 MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN |
--		 MT_WFDMA0_GLO_CFG_CLK_GAT_DIS |
--		 MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
--		 MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN |
--		 MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
--
--	mt76_set(dev, MT_WFDMA0_GLO_CFG,
--		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
--
--	mt76_set(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
--
--	/* enable interrupts for TX/RX rings */
--	mt7921_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
--			  MT_INT_MCU_CMD);
--	mt76_set(dev, MT_MCU2HOST_SW_INT_ENA, MT_MCU_CMD_WAKE_RX_PCIE);
--
--	return 0;
-+	return mt7921_dma_enable(dev);
- }
- 
- void mt7921_dma_cleanup(struct mt7921_dev *dev)
+ 	auth.key_mgmt_suite = le32_to_cpu(ev->akm_suite);
 -- 
 2.25.1
 
