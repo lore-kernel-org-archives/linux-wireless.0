@@ -2,73 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBBF3C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 19:35:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE255C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 22:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A56D161369
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 19:35:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB52D61363
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Apr 2021 22:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241742AbhDSTfx (ORCPT
+        id S229999AbhDSWat (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Apr 2021 15:35:53 -0400
-Received: from smtp13.smtpout.orange.fr ([80.12.242.135]:47253 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239355AbhDSTfx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Apr 2021 15:35:53 -0400
-Received: from localhost.localdomain ([86.243.172.93])
-        by mwinf5d74 with ME
-        id ujbK2400121Fzsu03jbKZD; Mon, 19 Apr 2021 21:35:21 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Mon, 19 Apr 2021 21:35:21 +0200
-X-ME-IP: 86.243.172.93
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     aspriel@gmail.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@infineon.com,
-        wright.feng@infineon.com, chung-hsien.hsu@infineon.com,
-        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] brcmfmac: Avoid GFP_ATOMIC when GFP_KERNEL is enough
-Date:   Mon, 19 Apr 2021 21:35:17 +0200
-Message-Id: <b6e619415db4ee5de95389280d7195bb56e45f77.1618860716.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.27.0
+        Mon, 19 Apr 2021 18:30:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53322 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229652AbhDSWaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Apr 2021 18:30:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 76B35613B4;
+        Mon, 19 Apr 2021 22:30:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618871416;
+        bh=vXNRLnvkhcCJ/GZMMOpnokBh5X5WFoe4zwOROidHXVE=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=c8Wj8LjvZrzdodWaSMYtadf/bTwR3NdNZG9KiUDsXHGVmKONY/6yDLFnCXIhdXDJI
+         P9xg8QDeDiyEK7X9aYwyOlMGn5avXnVsbhXTTYr8IXsNp0H+6di5FdBgrXc9acvLxS
+         nyY9Z2Gi10MDh3kRezxhUDYgPeNy/rUUCBEK6qvu128LG8itaVKcYCw1pmBlEywYQU
+         SG5TGOE+/6laddfVrt5xEG0uiOYT/djY5L2aHl7KxvsKvJGhfgsRrY7qV3iKrNGnoI
+         VK8b9tp9WYLjkndhPT7+wbocwdAUa4BWODi8dd3ZzdhsfyAGGswhSmGtgP3dX3Leah
+         U+2N5OKYAU3WA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-drivers-next-2021-04-18
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <161887141643.15331.4135144000327887554.git-patchwork-notify@kernel.org>
+Date:   Mon, 19 Apr 2021 22:30:16 +0000
+References: <20210418082614.7DC5DC433F1@smtp.codeaurora.org>
+In-Reply-To: <20210418082614.7DC5DC433F1@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A workqueue is not atomic, so constraints can be relaxed here.
-GFP_KERNEL can be used instead of GFP_ATOMIC.
+Hello:
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This pull request was applied to netdev/net-next.git (refs/heads/master):
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index ea78fe527c5d..838b09b23abf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -151,7 +151,7 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	/* Send down the multicast list first. */
- 	cnt = netdev_mc_count(ndev);
- 	buflen = sizeof(cnt) + (cnt * ETH_ALEN);
--	buf = kmalloc(buflen, GFP_ATOMIC);
-+	buf = kmalloc(buflen, GFP_KERNEL);
- 	if (!buf)
- 		return;
- 	bufp = buf;
--- 
-2.27.0
+On Sun, 18 Apr 2021 08:26:14 +0000 (UTC) you wrote:
+> Hi,
+> 
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
+> 
+> Kalle
+> 
+> [...]
+
+Here is the summary with links:
+  - pull-request: wireless-drivers-next-2021-04-18
+    https://git.kernel.org/netdev/net-next/c/56aa7b21a5a7
+
+You are awesome, thank you!
+--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
