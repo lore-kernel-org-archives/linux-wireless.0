@@ -2,81 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF37C433ED
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Apr 2021 23:48:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA2CC433ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Apr 2021 23:50:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A0D3613FA
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Apr 2021 23:48:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AE9461405
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Apr 2021 23:50:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234447AbhDTXsw (ORCPT
+        id S234414AbhDTXus (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Apr 2021 19:48:52 -0400
-Received: from shards.monkeyblade.net ([23.128.96.9]:34124 "EHLO
-        mail.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234186AbhDTXsw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Apr 2021 19:48:52 -0400
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        by mail.monkeyblade.net (Postfix) with ESMTPSA id D874F4D2540BB;
-        Tue, 20 Apr 2021 16:48:02 -0700 (PDT)
-Date:   Tue, 20 Apr 2021 16:48:02 -0700 (PDT)
-Message-Id: <20210420.164802.229687091665923532.davem@davemloft.net>
-To:     m.chetan.kumar@intel.com
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        johannes@sipsolutions.net, krishna.c.sudi@intel.com,
-        linuxwwan@intel.com
-Subject: Re: [PATCH V2 02/16] net: iosm: irq handling
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20210420161310.16189-3-m.chetan.kumar@intel.com>
-References: <20210420161310.16189-1-m.chetan.kumar@intel.com>
-        <20210420161310.16189-3-m.chetan.kumar@intel.com>
-X-Mailer: Mew version 6.8 on Emacs 27.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (mail.monkeyblade.net [0.0.0.0]); Tue, 20 Apr 2021 16:48:03 -0700 (PDT)
+        Tue, 20 Apr 2021 19:50:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52592 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233992AbhDTXup (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Apr 2021 19:50:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id C1DC161405;
+        Tue, 20 Apr 2021 23:50:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618962612;
+        bh=3I4pUI7rCMOG3Da0kV2d/f8WaZp3liBd8EYbJlzZkH4=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=VVLevUqaKSq4GkfwfDPCxI/tya9ps2hTExfMhLpXovX7eQaIS/1NnJFE8Cu0dz9of
+         rC4+UKiCRFx1Jx5REW93YL/zRoIu7t9Q724RwJoWmJOovMED7VLLJkFphIowpecZWg
+         Z8Pu7GNg+1JRaypp7ltb5DSlP2F3TPzMVrmlU35o+1vZqUH/7mj4xpWjJCXWd5vmXw
+         hX3CDTzX9AYbVTMe3UXTk6gmw3bK63J2y4h/MGh89wZ/j3RjrT82HzVaosjgXeTGIO
+         w9AUMbJfpVqtW1iZFwBou7h/+u3W+KGAYCHpubiXHEld0maySVaYdMosIQV/broHKC
+         zWwKGC2anfjkw==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: mac80211-next 2021-04-20
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <161896261275.30983.14370375251925432162.git-patchwork-notify@kernel.org>
+Date:   Tue, 20 Apr 2021 23:50:12 +0000
+References: <20210420150031.24514-1-johannes@sipsolutions.net>
+In-Reply-To: <20210420150031.24514-1-johannes@sipsolutions.net>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: M Chetan Kumar <m.chetan.kumar@intel.com>
-Date: Tue, 20 Apr 2021 21:42:56 +0530
+Hello:
 
-> 1) Request interrupt vector, frees allocated resource.
-> 2) Registers IRQ handler.
+This pull request was applied to netdev/net-next.git (refs/heads/master):
+
+On Tue, 20 Apr 2021 17:00:30 +0200 you wrote:
+> Hi,
 > 
-> Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
-> ---
-> v2: Streamline multiple returns using goto.
-> ---
->  drivers/net/wwan/iosm/iosm_ipc_irq.c | 91 ++++++++++++++++++++++++++++
->  drivers/net/wwan/iosm/iosm_ipc_irq.h | 33 ++++++++++
->  2 files changed, 124 insertions(+)
->  create mode 100644 drivers/net/wwan/iosm/iosm_ipc_irq.c
->  create mode 100644 drivers/net/wwan/iosm/iosm_ipc_irq.h
+> We have a bunch more things for next, now that we got another
+> week "for free" ;-) Pretty much all over the map, see the tag
+> description and shortlog below.
 > 
-> diff --git a/drivers/net/wwan/iosm/iosm_ipc_irq.c b/drivers/net/wwan/iosm/iosm_ipc_irq.c
-> new file mode 100644
-> index 000000000000..a3e017604fa4
-> --- /dev/null
-> +++ b/drivers/net/wwan/iosm/iosm_ipc_irq.c
-> @@ -0,0 +1,91 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Copyright (C) 2020-21 Intel Corporation.
-> + */
-> +
-> +#include "iosm_ipc_pcie.h"
-> +#include "iosm_ipc_protocol.h"
-> +
-> +static inline void write_dbell_reg(struct iosm_pcie *ipc_pcie, int irq_n,
-> +				   u32 data)
+> Please pull and let me know if there's any problem.
+> 
+> [...]
 
-Please do not use inline in foo.c files, let the compiler decide.
+Here is the summary with links:
+  - pull-request: mac80211-next 2021-04-20
+    https://git.kernel.org/netdev/net-next/c/08322284c162
 
-Thank you.
+You are awesome, thank you!
+--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
