@@ -2,76 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C89A9C433B4
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 10:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEC2CC433B4
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94D6461450
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 10:44:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B43CF6144C
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235133AbhDUKoj (ORCPT
+        id S241212AbhDUNTv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Apr 2021 06:44:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42416 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235065AbhDUKoj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Apr 2021 06:44:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3EBA56144F;
-        Wed, 21 Apr 2021 10:44:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619001846;
-        bh=3i8i+YuxFykd/N2sZYPpwKkoKgZ1UmdF2KcGhGOEZHQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=K9yaMuGBb8bHT78iMcOvDMhSiFJ26K/uDKsr2oKVgLPBLY164TwXXzEc1j5ZoJhDW
-         FQb2LglLQqwTU/9Gn+kcKeIT/jIlRFieUORBPrBn4PT5p3jIu3xSZsAjtMeTtZ2Rev
-         UrKKIEbIIRI+AYJ7fHVByQ6H/7fksP1GXbMEzo5j4h39drAztBR6v+dBLdYKt96v/Y
-         mLiOg9+DQVrtlBm8fQyAuHGid9yzRkcEUXqXLg2UP7M7Y82gUx4VOYguSp0wOeO1Fz
-         CpzO4PGmVTIPwuM7OqUoIoKOdmEr8i+fdb4yEsJlr1jOQJkY7r0G1tHGbkZf++E7hX
-         iHCrrsU8z2rIA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com
-Subject: [PATCH 4/4] mt76: mt7921: mt7921_stop should put device in fw_own state
-Date:   Wed, 21 Apr 2021 12:43:51 +0200
-Message-Id: <ee77bffb4abf0c84b2e04c9c76c484acd2622c61.1619001617.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <cover.1619001617.git.lorenzo@kernel.org>
-References: <cover.1619001617.git.lorenzo@kernel.org>
+        Wed, 21 Apr 2021 09:19:51 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:53276 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240953AbhDUNSY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Apr 2021 09:18:24 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13LD9pJ4157315;
+        Wed, 21 Apr 2021 13:17:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=meF497oFUEUVOCM41KHiP9Z6G2djfW/D09lrDw/FHh8=;
+ b=OEbj3ivKGEHo2xata6oRKs96yxKp/N75VC2ZewBB6DL/Wm0tu0uzr31wlSYZ+KMvD4Ok
+ Pjc/VymR/gkAVTOoZGG/mGf1xXISknsiWSZiQMbwogZt8FdPd0+ujGpnQnFRdzGqjVAB
+ /Uc7+i5rayIZp9xbX2SyCnKl9Me5Lm4QtLuscpDXxY16tg1rFMiOoI3xrUKh4b5JjcWz
+ iSaLgkTWgb/8Y5OZn/ckC7qErO0fOGFYpWDmO6uo6k2IVXG+AWqYsP6xoeC5QDa3TGCS
+ dUtfhqOdB3LelMyx3a8ZZOmHv4V72Gl0Q0vudPsXmVmXSmDS1qxLVw+iteef/3vSkX/v bw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 37yn6caake-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 21 Apr 2021 13:17:39 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13LDC5IW144525;
+        Wed, 21 Apr 2021 13:17:39 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3020.oracle.com with ESMTP id 3809eu8twa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 21 Apr 2021 13:17:39 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 13LDE2TJ151465;
+        Wed, 21 Apr 2021 13:17:38 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 3809eu8tw1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 21 Apr 2021 13:17:38 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 13LDHb6s017703;
+        Wed, 21 Apr 2021 13:17:38 GMT
+Received: from mwanda (/102.36.221.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 21 Apr 2021 06:17:37 -0700
+Date:   Wed, 21 Apr 2021 16:17:31 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     ryder.lee@mediatek.com
+Cc:     linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: [bug report] mt76: mt7615: fix TSF configuration
+Message-ID: <YIAl62mky03Byme+@mwanda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-GUID: RDazDupxIhTdpc8Iq3vzY78uVZucxBhq
+X-Proofpoint-ORIG-GUID: RDazDupxIhTdpc8Iq3vzY78uVZucxBhq
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9961 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 priorityscore=1501
+ bulkscore=0 suspectscore=0 impostorscore=0 mlxscore=0 lowpriorityscore=0
+ clxscore=1015 spamscore=0 mlxlogscore=774 adultscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
+ definitions=main-2104210102
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Hello Ryder Lee,
 
-mt7921_stop should put device in fw_own state to reduce
-power consumption.
+This is a semi-automatic email about new static checker warnings.
 
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The patch a4a5a430b076: "mt76: mt7615: fix TSF configuration" from 
+Feb 23, 2021, leads to the following Smatch complaint:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index b32f26c1f8b3..6f180c92d413 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -37,7 +37,7 @@ void mt76_connac_power_save_sched(struct mt76_phy *phy,
- 	if (!mt76_is_mmio(dev))
- 		return;
- 
--	if (!pm->enable || !test_bit(MT76_STATE_RUNNING, &phy->state))
-+	if (!pm->enable)
- 		return;
- 
- 	pm->last_activity = jiffies;
--- 
-2.30.2
+    drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c:74 mt7663_usb_sdio_set_rates()
+    warn: variable dereferenced before check 'sta' (see line 70)
 
+drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+    69		u32 w5, w27, addr, val;
+    70		u16 idx = sta->vif->mt76.omac_idx;
+                          ^^^^^^^^^^^^^^
+The patch adds a new dereference
+
+    71	
+    72		lockdep_assert_held(&dev->mt76.mutex);
+    73	
+    74		if (!sta)
+                     ^^^
+The old code checks for NULL
+
+    75			return -EINVAL;
+    76	
+
+regards,
+dan carpenter
