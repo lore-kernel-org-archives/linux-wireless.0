@@ -2,105 +2,60 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 765BBC433B4
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:27:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45BF7C433B4
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:29:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFAAB6144B
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:27:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 199446144B
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Apr 2021 13:29:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241443AbhDUN1u (ORCPT
+        id S242306AbhDUNaY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Apr 2021 09:27:50 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:54476 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238455AbhDUN1t (ORCPT
+        Wed, 21 Apr 2021 09:30:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44176 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242084AbhDUNaW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Apr 2021 09:27:49 -0400
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13LDCEw9005847;
-        Wed, 21 Apr 2021 13:15:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=FlzphcOCSgX+2k3rUk5ygmbE2dHWikxsYFYPqUAoI5A=;
- b=vDAk9jhA93QJm/tDNOkTo9apIGr5dShybhB+BrCKFXqBJL86F6Gl+N9stG+JyVEMDCOi
- sKmqXkx9QnkYcWXMLJ/5sBCOCoOU6FVdx8tKPOUuXDH1M/vnd/S4r3NmRIexi6SVpqwL
- XYbwAucWPfh66eyIPDbZz//gmFF6pJdVIoYWBiToKA4IleZ+tthQwPDOStg6pGgJ75Mg
- E2eA6tCy010xvN3MwyvfZ7nFXPtEtgL+Bd+SmKGD9mPx1wUdfkf6oejeBODEbYU/4tOB
- +hWTurCU2xa6xeDdRachcbvTmWhU5r+h5Ll03v8SlyCU/NSXaTjO9/dq68lqd5Pb83nK gw== 
-Received: from oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 381bjn8pra-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Apr 2021 13:15:02 +0000
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 13LDF26f098309;
-        Wed, 21 Apr 2021 13:15:02 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3030.oracle.com with ESMTP id 38098rqhhq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Apr 2021 13:15:02 +0000
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 13LDF1uk098159;
-        Wed, 21 Apr 2021 13:15:01 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 38098rqhdt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Apr 2021 13:15:01 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 13LDEqlP015391;
-        Wed, 21 Apr 2021 13:14:52 GMT
-Received: from mwanda (/102.36.221.92)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 21 Apr 2021 06:14:52 -0700
-Date:   Wed, 21 Apr 2021 16:14:40 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Felix Fietkau <nbd@nbd.name>
+        Wed, 21 Apr 2021 09:30:22 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFE6BC06174A;
+        Wed, 21 Apr 2021 06:29:49 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lZCv7-00Ekoe-FR; Wed, 21 Apr 2021 15:29:33 +0200
+Message-ID: <87ecf5b648ea6d42994abbef8d9cde7e15a0a837.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/3] mt76: mt7915: fix a precision vs width bug in printk
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Felix Fietkau <nbd@nbd.name>
 Cc:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Ryder Lee <ryder.lee@mediatek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        Sean Wang <objelf@gmail.com>,
-        Soul Huang <Soul.Huang@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
         linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
         kernel-janitors@vger.kernel.org
-Subject: [PATCH 1/3] mt76: mt7615: fix a precision vs width bug in printk
-Message-ID: <YIAlQKR3IpfKW5Sx@mwanda>
+Date:   Wed, 21 Apr 2021 15:29:31 +0200
+In-Reply-To: <YIAlYknkd0SoD6SY@mwanda> (sfid-20210421_152704_097013_473EB75F)
+References: <YIAlYknkd0SoD6SY@mwanda> (sfid-20210421_152704_097013_473EB75F)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-GUID: IN-xhjViv_z8hvaYiIkNq2YIg1Cs348v
-X-Proofpoint-ORIG-GUID: IN-xhjViv_z8hvaYiIkNq2YIg1Cs348v
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Precision "%.*s" was intended instead of width "%*s".  The original code
-will print garbage from beyond the end of the skb->data.
+On Wed, 2021-04-21 at 16:15 +0300, Dan Carpenter wrote:
+> Precision %.*s was intended instead of width %.*s.
+> 
 
-Fixes: d76d6c3ba2b0 ("mt76: mt7615: limit firmware log message printk to buffer length")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+typo there, the second instance should say "width %*s" :-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 9b9f8d88e9bb..00b1b657cb21 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -424,7 +424,7 @@ mt7615_mcu_rx_log_message(struct mt7615_dev *dev, struct sk_buff *skb)
- 		break;
- 	}
- 
--	wiphy_info(mt76_hw(dev)->wiphy, "%s: %*s", type,
-+	wiphy_info(mt76_hw(dev)->wiphy, "%s: %.*s", type,
- 		   (int)(skb->len - sizeof(*rxd)), data);
- }
- 
--- 
-2.30.2
+johannes
 
