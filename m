@@ -2,101 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84855C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Apr 2021 18:52:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F75C433ED
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Apr 2021 20:00:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5537261405
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Apr 2021 18:52:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69FFD61437
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Apr 2021 20:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236796AbhDVSwo (ORCPT
+        id S239066AbhDVUAq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Apr 2021 14:52:44 -0400
-Received: from gateway30.websitewelcome.com ([192.185.152.11]:11716 "EHLO
-        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236058AbhDVSwo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Apr 2021 14:52:44 -0400
-X-Greylist: delayed 1314 seconds by postgrey-1.27 at vger.kernel.org; Thu, 22 Apr 2021 14:52:43 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway30.websitewelcome.com (Postfix) with ESMTP id 8101D1545A
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2021 13:30:13 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id Ze5dlSUx9b8LyZe5dlSOHy; Thu, 22 Apr 2021 13:30:13 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Gj4ZzlY1opy7V2GETXx3MyvWl67CzzjHj9tWMTMO6zc=; b=MEpJteWQLmz2N2caWwYhuetppY
-        8mI9RWs7QeTbds9avFafYF5jaaoNj1g2xEPqyBWIn7ik7FxdR5/ah6neRNInuoUEB8qjvaoH69VDT
-        1bsOKe7fv/hV7x0aSxvL4Il6FQ4FKMlykaGgeaPcBeM5++zkC4z5jO13leZKf0fYFFlhaWqhKASeh
-        m7PnmDco9IvjDq6UXXxn0mQ4v3zgo0T7JhBzEsqplAcWS1rA6g6c9HPuATRn0AvIbrnaN9b5t6lRc
-        9XZSgK+xdZSZqAeLlfLVxjazVmHFQeUhr8znCTPPlTIS+4ba8EuxALHZ1Io7/fkhb4MXNNx56Ru9V
-        D9GybQaw==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:57122 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1lZe5Z-001KxQ-Rm; Thu, 22 Apr 2021 13:30:09 -0500
-Subject: Re: [PATCH v3 1/2] wl3501_cs: Fix out-of-bounds warnings in
- wl3501_send_pkt
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     linux-kernel@vger.kernel.org,
+        Thu, 22 Apr 2021 16:00:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236058AbhDVUAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Apr 2021 16:00:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 12E126100B;
+        Thu, 22 Apr 2021 20:00:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1619121609;
+        bh=f/P+1/0wMQTXhtxadIAI7KmLHWPPdlXhjk/DweX0UbQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=rfEbGF7maHCbOROn8ePxnwH8t94xIoe2A4oyzoJbeH0JXeGokZScZ8S757OVSfzSh
+         PXMRAoY9tvwBe1iYHxaSJ7q3Djs0dQcg9jZXZJXRnSwSUvJ/QVru7y2CfIIRxN8htR
+         SXpT1GUtxaq12aPNUFqCSW8Ir75dGE0GRatucZpYP97bhAQX1LlInV7bs04O/+9ipT
+         p7U0caxepGRb7pZTJJqdXEDii5FuVrYRX75WC+Rvqlm0KAb2WIrWt+dgz2jg7VCgRM
+         4DG+88NKuFqQ9w3ssbrBh1vu6Cu5ksApx44vHTzq4juYvV2WmuuOj9ds14di6ipf9S
+         DpfU9PLAiluqQ==
+Date:   Thu, 22 Apr 2021 15:00:32 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Johannes Berg <johannes@sipsolutions.net>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
-References: <d260fe56aed7112bff2be5b4d152d03ad7b78e78.1618442265.git.gustavoars@kernel.org>
- <20210422143910.C8B5CC4338A@smtp.codeaurora.org>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <83e2efc6-2bdf-ddfb-8322-3b9536fc1644@embeddedor.com>
-Date:   Thu, 22 Apr 2021 13:30:28 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+Subject: [PATCH v2][next] wireless: wext-spy: Fix out-of-bounds warning
+Message-ID: <20210422200032.GA168995@embeddedor>
 MIME-Version: 1.0
-In-Reply-To: <20210422143910.C8B5CC4338A@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1lZe5Z-001KxQ-Rm
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:57122
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 6
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Fix the following out-of-bounds warning:
 
+net/wireless/wext-spy.c:178:2: warning: 'memcpy' offset [25, 28] from the object at 'threshold' is out of the bounds of referenced subobject 'low' with type 'struct iw_quality' at offset 20 [-Warray-bounds]
 
-On 4/22/21 09:39, Kalle Valo wrote:
-> 2 patches applied to wireless-drivers-next.git, thanks.
-> 
-> 820aa37638a2 wl3501_cs: Fix out-of-bounds warnings in wl3501_send_pkt
-> bb43e5718d8f wl3501_cs: Fix out-of-bounds warnings in wl3501_mgmt_join
+The problem is that the original code is trying to copy data into a
+couple of struct members adjacent to each other in a single call to
+memcpy(). This causes a legitimate compiler warning because memcpy()
+overruns the length of &threshold.low and &spydata->spy_thr_low. As
+these are just a couple of struct members, fix this by using direct
+assignments, instead of memcpy().
 
-Thanks, Kalle.
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
 
---
-Gustavo
+Link: https://github.com/KSPP/linux/issues/109
+Reported-by: kernel test robot <lkp@intel.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+Changes in v2:
+ - Use direct struct assignments instead of memcpy().
+ - Fix one more instance of this same issue in function
+   iw_handler_get_thrspy().
+ - Update changelog text.
+ - Add Kees' RB tag. 
+
+ net/wireless/wext-spy.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/net/wireless/wext-spy.c b/net/wireless/wext-spy.c
+index 33bef22e44e9..b379a0371653 100644
+--- a/net/wireless/wext-spy.c
++++ b/net/wireless/wext-spy.c
+@@ -120,8 +120,8 @@ int iw_handler_set_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Just do it */
+-	memcpy(&(spydata->spy_thr_low), &(threshold->low),
+-	       2 * sizeof(struct iw_quality));
++	spydata->spy_thr_low = threshold->low;
++	spydata->spy_thr_high = threshold->high;
+ 
+ 	/* Clear flag */
+ 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
+@@ -147,8 +147,8 @@ int iw_handler_get_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Just do it */
+-	memcpy(&(threshold->low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold->low = spydata->spy_thr_low;
++	threshold->high = spydata->spy_thr_high;
+ 
+ 	return 0;
+ }
+@@ -173,10 +173,10 @@ static void iw_send_thrspy_event(struct net_device *	dev,
+ 	memcpy(threshold.addr.sa_data, address, ETH_ALEN);
+ 	threshold.addr.sa_family = ARPHRD_ETHER;
+ 	/* Copy stats */
+-	memcpy(&(threshold.qual), wstats, sizeof(struct iw_quality));
++	threshold.qual = *wstats;
+ 	/* Copy also thresholds */
+-	memcpy(&(threshold.low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold.low = spydata->spy_thr_low;
++	threshold.high = spydata->spy_thr_high;
+ 
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
+-- 
+2.27.0
+
