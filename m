@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8405DC433B4
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Apr 2021 18:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51212C43460
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Apr 2021 18:29:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D2EC61458
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Apr 2021 18:29:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21D4E61458
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Apr 2021 18:29:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231400AbhDWSaa (ORCPT
+        id S243756AbhDWSab (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Apr 2021 14:30:30 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:62525 "EHLO
+        Fri, 23 Apr 2021 14:30:31 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:3592 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243716AbhDWSa1 (ORCPT
+        with ESMTP id S243453AbhDWSa2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Apr 2021 14:30:27 -0400
+        Fri, 23 Apr 2021 14:30:28 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1619202590; x=1650738590;
+  t=1619202592; x=1650738592;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=S3RycHLprh9FaSb6TfjD9tdJys04/BnUJd0/swp8ae0=;
-  b=ylo1JmgMO0QYvwFKjZmLavM1Na4JJ4lNs7bfQrO/qp/ipaUV5XPsckv4
-   rkR0Rau9B3tAoAT0xPA15G9EsdHpcbkbY5iJnZRX4AkwfZ1zXLr/iaDNp
-   d2XRjSdQzO6E2oo9Oekkoszml/qjqNPD7UWBf9I9ZFVPzzn3E6J7daXrx
-   CIkiaQn2Q2cbIaoyzIReaqi91v2w9E/m+tzVbPL1EnL4duZN/AJVo5wwG
-   AZICE9hLGLDbBlJzNdory1ber3D4IDb321Kqj0Ctwf1hPv6lhIlXLwRmM
-   nLpuKbCgX69Xl4/S0ZxTgu+QLKFeNmE+M2S7YVE5lJKiaRwJi5uKhmEXI
-   g==;
-IronPort-SDR: ND5Ke5BW32lwcMhCmftiNaBA8gUt0brjpzUjpEmenyGll3kE0vSZBEzjpgyxaOxZmx/sc7IejP
- O1xdJ6UoSBZ4bsSP9C3Agh5QpcyDMvOelYW47979kXkkwpdsJBXjHevEzkwVildz5RITfkpMDX
- jhmZEfr7j4Uv8CqO94JzwYXi+RkceMc5hcOshOrTgarRix4ZAS7wxtXRXDrWQy6GCDr7AwbCH7
- 1k17cbYLcKPu/1twpVnq8OWxdD48+16vBKPmV+aC8FuaVxj3/Pf84J2nmW253C6HwYujtBWCqd
- dBs=
+  bh=S6AULILydVprhZ60aAOxzuDKn+3RyO50Oe2MNAOm5Bw=;
+  b=TEzDqOriFXeSAZT2VT+PwrZZhkfY7iycsJNaQ5TkOQ67Xy9oyDxFTXoB
+   lpdv/3er3LB4M8SfwBnUDJm6hQZ6cto5UnvBPA3BBUrLpeJ/XeSW929Xx
+   Mcq0qq5JvS4ZNXGmGWAfHL9tXx9TThYDrI0++RLVVObWWyIe+ZR0jA63a
+   j+Jm/J+qxqTjT8epLxitpLHeDlciB3Bp73q9wqyklySW8Mtc2P7fDOqOW
+   h+TWRuKLZRxw3T2QlDBKOhjy+UAEI0+4nb6c0ocUBDPP0ryp+2yA3WgJP
+   5QM0RpZytuRUX2JRys567sx/oV76KnT02zwVm66H/AY+5vTMwhznpeiS3
+   A==;
+IronPort-SDR: 8seebXZvxjaTIKb4ZtudqDIdzXSI8Iama+J9BalBlySkQqKhBBBtTTAOGee+k1i4a5sRqkDVLt
+ CDjR7WCShRfq9X30v9KQV8wwsgJdXXYUdBy6SfKI2Rf4aDaY+QEsH7EergGpM9FkGI6Dwymyqo
+ EQH/+9l6cgivJQXEtDYCqBVtZjX+l9IurnPn5azt4Ex2yQV/4OgZwjqXyXysPdpPzDvwp2B343
+ 2RiCbhR4poB2c2SOvvPwOThhHOBD8dNYe1Y4rAttRW1eizlD27btq6Jm0Ceccs5RKDxgw08fZL
+ F5M=
 X-IronPort-AV: E=Sophos;i="5.82,246,1613458800"; 
-   d="scan'208";a="52310243"
+   d="scan'208";a="118174646"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Apr 2021 11:29:50 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Apr 2021 11:29:49 -0700
 Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 23 Apr 2021 11:29:50 -0700
+ 15.1.2176.2; Fri, 23 Apr 2021 11:29:48 -0700
 Received: from NAM02-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2 via Frontend
- Transport; Fri, 23 Apr 2021 11:29:49 -0700
+ Transport; Fri, 23 Apr 2021 11:29:48 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DKpJQCqJ6gWMOMKlXAu76lmi/qqtClG7ENdjzpBnAC3T6O/EwVVuo/AGNkhGxV4UAZ5ci4p98dsVimvgg2f/qJ623gy9SGzjDUrhJLRm2fiLkOPxGTAMnpGmeYeJnsn+mhw0JK4yt4qTDaHa15W6p3MW10qoO15IKwLhGemaevLRpov6Nc5YjREi9LrlwzZKNfPOsPYPEuZMBwJf0Se0EZ1kfvZh/Zjoc7ZVw37Fdm3fRWRs4Vneyct3GxqhVDvW8kTKMlIWs1yldTymmo8d0rrhebSoFErPInWPeFqIbc7rG+1cf8ZKWDMlDLmeOa5ugLX0gfXYi/yiG4zG+exEpg==
+ b=l8yibjxErIMxGz/sfzDhJsco4U7g71RNvqi8fAfOnuDrVeO5Q5XjsNqp/FfunZw5gVTAaEfQWGnZr1bUBgxUlPSm6DpByf2IUH0ut56jqkZcU3o5tBCWTrH4rYyCGWr/yrsO833jd6U/ZGcAqna+nzc9sRaK2gFXnZgdXNEt0qc0hdNJc6uh++DHh+JxkUgzIMJhd9jXlSwAJA1eMlRPURvA2ksDGa3el7yXswnm7wxyA7K32yMsJJDGwRbQdJKrchm6ER2X69CsebT3nklPe/T+zrIn5/wHf5BjJNduTwzpxt7vTp02oTzPA734W69Ii1zTO5Wfta8X4NBsI5PTkg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LXi3MkM6u13qPwJ/yDY/0n8D1DDqoxW+fknlF6NVNgQ=;
- b=RzN9Utwqr7EF9+wjlI8eHf8ZUbNso6GVZa0vEMrCV4drjxMmlf71b8RdpRd8hKv9bDRdaiQPbvuVkux1c+XSB+bmZJmeXLKn9pDOIVXFdgWluFtS8XFskN3EZXnNEWHtDu9qT7cXGqX9PKloZetV7bdM0M6oFSPAGd36Ln2r0P13ZD0bzGqZk5vuEH9o8dfXF9frWEZOoKnYHxVdWAmHpMrR8TOeKQgL+htlKqiLBDLk2wDz7Cq/Bw1VzKlIRM0M8X+v2uwbekhDO6qoushICfxp7ryOIlLCBFhHYPfmx1lWmdl9RpGeEsLilWvgEc+wz4nnfz7JPMQn/hDtP/lKlA==
+ bh=PmnVUDB5J2sOnmpgt1ij2uwNxGcIBPaz72bn9NM93kA=;
+ b=TqzAQ9xjMiJtNbcQUL2T/vU4vFgF+PnmCwRkphbW+crKLNGKK780yFgG+hVbCJidXtrIGRAOJ7S1YDKHFEgpJaVA/ir12bP19qZVKJ52Ldcj9Rd8huweqBmI4IjYQvPbdmxOn334N8+P3Ontimh7dgUxH4Amf56rhFzdW25+DEc36vzfSa7hiGEXTkJi+s9an/KTeKEkv3iz5h+mPs0pINSAUUMDAFHF4Kzch2xiUjyNE+k4S7tpNvgM9fqRvytWFJB6d5uiMPIvr0wrrhQmsfkq7tycwHeKWPyoQs+lGU5tyHmXQE+DsF7Xp4iaWwhA4KCZqDAmqStcfftyfZu4cA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -65,27 +65,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LXi3MkM6u13qPwJ/yDY/0n8D1DDqoxW+fknlF6NVNgQ=;
- b=Tvdh7Y+GbJu9qlB/XJ9mLb0297g9gt4wLBYrVnBCDTOkkiP0d9O+hsXVDi3VNpgMsl6hQf1trJtOAcJXctfjHNNLuFNutLidbKZhB/gcQ2TKiMCh+I+b0DHUs4kkMGkqPfV0XkdR5HSddB/6ftTXh9GyeQK458heFgO+YtZn8oA=
+ bh=PmnVUDB5J2sOnmpgt1ij2uwNxGcIBPaz72bn9NM93kA=;
+ b=UDZdtETp3Eaiq1hHJdCov0gg7QBUgk12POqjUMswB0g0JNm0uoCMO0QjOqQBprHsRecB8GhBo6RprJJxRih2npskF+876pfkHacIzOgJSvru7V1sXOIDZ6b8jUHIgwBpyjICVLtz0lCKK//JLNJkeeNBuUcVsQQCAqTThSOj/1M=
 Received: from SJ0PR11MB4943.namprd11.prod.outlook.com (2603:10b6:a03:2ad::17)
  by BYAPR11MB3318.namprd11.prod.outlook.com (2603:10b6:a03:7d::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.21; Fri, 23 Apr
- 2021 18:29:49 +0000
+ 2021 18:29:47 +0000
 Received: from SJ0PR11MB4943.namprd11.prod.outlook.com
  ([fe80::5da7:92e6:d6c9:64b3]) by SJ0PR11MB4943.namprd11.prod.outlook.com
  ([fe80::5da7:92e6:d6c9:64b3%7]) with mapi id 15.20.4065.024; Fri, 23 Apr 2021
- 18:29:49 +0000
+ 18:29:47 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <Claudiu.Beznea@microchip.com>, <Ajay.Kathat@microchip.com>
-Subject: [PATCH 10/12] wilc1000: added initialized variable check before
- processing
-Thread-Topic: [PATCH 10/12] wilc1000: added initialized variable check before
- processing
-Thread-Index: AQHXOG6ks1bGRrdwpU+UhuTVuozaMw==
-Date:   Fri, 23 Apr 2021 18:29:49 +0000
-Message-ID: <20210423182925.5865-11-ajay.kathat@microchip.com>
+Subject: [PATCH 08/12] wilc1000: invoke chip reset register while FW download
+Thread-Topic: [PATCH 08/12] wilc1000: invoke chip reset register while FW
+ download
+Thread-Index: AQHXOG6jlLzEUJ2GxEOXwEu7VmPRmA==
+Date:   Fri, 23 Apr 2021 18:29:47 +0000
+Message-ID: <20210423182925.5865-9-ajay.kathat@microchip.com>
 References: <20210423182925.5865-1-ajay.kathat@microchip.com>
 In-Reply-To: <20210423182925.5865-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -98,51 +97,51 @@ authentication-results: vger.kernel.org; dkim=none (message not signed)
  header.from=microchip.com;
 x-originating-ip: [106.51.107.119]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 713272d6-e293-46de-028d-08d90685c753
+x-ms-office365-filtering-correlation-id: 8106f16c-ef96-4523-2fc0-08d90685c658
 x-ms-traffictypediagnostic: BYAPR11MB3318:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR11MB3318BA542C0BB33DBE4353FAE3459@BYAPR11MB3318.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:1247;
+x-microsoft-antispam-prvs: <BYAPR11MB33181B6B5FDD4B2534FB0BF2E3459@BYAPR11MB3318.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:529;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 0WGS20Gjy04VOnuLzioxjj3/iKU4H5W2+oQImGebmXYD+Y9fjTf8d494vxynDyPHrtS2IWCoN3Lrr/OXuYbm6qbhoJGYOmHoKoJiBBlx2pBLOh+fyYNMTI2OiyjpVeFoL44Sgk7Qytg6PBMTfpff12FWdab/uLA8GqICv1tcU26uQPC//Agn7kYIee4E88Vi0Tbv3zjhYwivr8nkwisvgzj+e9pDHL1YJn8WHbNCfsRYBrYlHpVjDT1b9cdb+rjtW5ZLPWeAdbU+Je6Y2MF/BYK7q0cBoKuKa4ma9x4xwGgAW18/wKUZZDpG8sm0QxXrRrMeGoPS600wGs+O9HFhuSws6j0YHCnqtW9NLtBPGpjl+FkrWZYl5WmI45CziCaD8NdjHbcnIGmoIXm99IXiLpvuAO2xrHaESPfshZyfiwm/+y2qyaV8HCoeKQWw9YBJwtmU5n8nB+45Ryul/qVYU1bVwDWQjrJkOcImxJMetO/OypL/wxybKgdBJ/0yhCL3sMwg9Z7nfJQprzbAwkPTH3GlZWY9dch3WE0XyEMeqONzSiUuEmvART6fPjYBLcRTxBgopqQ8v38sJHrU5uSIyWsmi3/abYdQZuUvUU+VgFA=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB4943.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(136003)(39860400002)(346002)(366004)(8676002)(478600001)(55236004)(5660300002)(54906003)(6506007)(71200400001)(1076003)(4326008)(2616005)(6486002)(86362001)(316002)(107886003)(6916009)(66476007)(66446008)(186003)(66946007)(36756003)(122000001)(26005)(66556008)(91956017)(38100700002)(8936002)(64756008)(76116006)(6512007)(2906002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?iso-8859-1?Q?LC/VNrLXsEFo+1p8heQ7tvBPT5UVDF6gKWePsZaMr/8uETAp0KgVMO1/TW?=
- =?iso-8859-1?Q?8aKHWdZM8dXpJOAK6MfpmxcPH1FeE2hqTgrZzP8dJKSqAJpYMJFveGhUq9?=
- =?iso-8859-1?Q?0nyhpXOCQx+iWfUIDV8OqGoUpfMYmBk2qnJCSM/osUK8dihxeqXwmX99h3?=
- =?iso-8859-1?Q?ru360R+Mv8stCBsJ7rGs3D4+IVUATjD3rwUa1PT4xX7sxN1zGjEN0iaNAo?=
- =?iso-8859-1?Q?ZljSei14Fg+P7CrMy3ug2EdVsPsSvHeJEbvbCTxxzGLd5aaKvshNhU/RYW?=
- =?iso-8859-1?Q?9qVcPjGL34wnnxROAWoX861blvCUwR5ftXLBpSp5RF7sg8KDwVxnF1IfJZ?=
- =?iso-8859-1?Q?78coTH5tdV1UReW0gXw5vtGYRMHuLVwe/qPUPdKzgceKm3JgI+ibsNsPYj?=
- =?iso-8859-1?Q?fKaVUcebswa69K4jICVuSO7Rf962HEvli7jSaSsWsYeRMjiK99p+lLvK4N?=
- =?iso-8859-1?Q?97bi7LBsquOQwo5TKnPqJghjJqw15L4eXTJ2vKKjL0ss8dkCZozb3dQ86q?=
- =?iso-8859-1?Q?otgMGsr9MlqNP4KnU/NnfGjRnnkgq8pwdHoqr0X91PdMBG6K1noFqjY8pt?=
- =?iso-8859-1?Q?ir1tEfcyUDbpJsk65WMPEPUpy8HeFojjBfAE8XBOyUCM4TFfOORLTB3Uyn?=
- =?iso-8859-1?Q?8QbbVQjG08quElgCnPZAAA7jF0uu0DXk0NQzN0QYELOijftFMBmqtsFg+q?=
- =?iso-8859-1?Q?cVcC5ZiKUkbA9BSy0BLgwrKL+5vMQzPAO9tMfQgJG1h/Pzb1yQdq/AdaIY?=
- =?iso-8859-1?Q?lYTrrXvnxwc5G7w6k4H1fAKF71cjgC7JjG7XpI8ZY2uVrihZpE/jUj+00y?=
- =?iso-8859-1?Q?nHbe4xOr/PReVTwS6Ai6BXcyaAjyFdfJ85LCJzZQqXCOqSfHKnIK4io6sS?=
- =?iso-8859-1?Q?3iy7wzopcff/WsJnaEArUatEs/MK1HfnvcLxrbF5rDtAEmO86d/RlznibG?=
- =?iso-8859-1?Q?4GXBQtQ51OrSXce8wWrw90h5ZO5twIOmIC6jS9A+r4RfNZScNAJDK2IUvN?=
- =?iso-8859-1?Q?A9xiI6VpHs63YrnlR/xIkhjfgd7OBv25hwSNgq+NGM0WOHK4A44lBkq0i4?=
- =?iso-8859-1?Q?4gz8UyReSHemSsDtaNsFI4DIL1aH1JzQjO8kBp/asPnzqvlshucj8Eylj4?=
- =?iso-8859-1?Q?BSLTMlkJUpQMrdScbO3m8B7H0vf8jt/HBRsKzbk5avAG9wlkQYha58f9KB?=
- =?iso-8859-1?Q?uR8Q9L/x33ZgD/ArW7AelGmnT11ER0Dhtm2CVoakg13/GNKudA/w4OVLyH?=
- =?iso-8859-1?Q?QZgyiuhmGvVvtVQ5Ph+dEjVgU2uXz/MlX7/IS7qlkDOMj2GakopW7m9cq2?=
- =?iso-8859-1?Q?WekHjrm5NnDJmtDavGbPZMLitlW74M2/yEkbdT76l/57bHgXHOMtnSDvio?=
- =?iso-8859-1?Q?zbN2AMRty/gdH+8MiiaCjGSvLB714sNA=3D=3D?=
+x-microsoft-antispam-message-info: /E8MChLCU/XG3d1Lso3J6l1tdt6iE9P7HcN1pe83H+wQxViHHHnb2jHd8EQeY9uSaSb3JfcFduMLvtTZRoLkfH2RDyuzNEoPZNQl5t1mgAqbEykYVFBL06ohcq2bnNqyaCGwfdCjRGRzaVH6GWVBuu75wTwX6TDf66BMdT7Ps6NP2J9CiH136hq+CSxdktKtyRkewaRVS9fvgX37FwWw3jqGLqO2x+QfUTpJLw1I16CvHfqVnteeq1NT/pgeDiYlaMb9iNNnoJBVt3A3VRrZWZ/5Mb08X90zRbOEKMq4/c/+fdc6pbup/omIgcA4PH/9uX9tM8KWglzbFLeM1jhpQt/GtcZVKs4pkZAYQfYfeHTlBLt61N729Oz7JnuIMqlwYocDJNUEpp9TDk1tH+6U7gSE9oLs3wwq5IFM5czf3HBeXTNg7zO4x9qIHhq3UCFdpXBC2h6cTavP2ICi05GyMrorW075H+UmTkVVIab50yiR9Fgz2BJXkuf5r85NUYTpDmVvg0x8Us1KhPM4430P1Rsqy3HZF2rssX5GZCZMaLBH6V/a1FeZOj77SFJlDHZdi6DIDMb8rZpWXJ7iq8pIDEV/ZCptOrmkFnbg9JlU3zE=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB4943.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(136003)(39860400002)(346002)(366004)(8676002)(478600001)(55236004)(5660300002)(54906003)(6506007)(71200400001)(1076003)(4326008)(2616005)(6486002)(86362001)(316002)(107886003)(6916009)(66476007)(66446008)(186003)(66946007)(36756003)(122000001)(26005)(66556008)(91956017)(83380400001)(38100700002)(8936002)(64756008)(76116006)(6512007)(2906002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?iso-8859-1?Q?WrW22ydweTfsAf3yaetrcpMRFFfBZCxzpoeV/IC7iHKmDkC13XLCMECbJX?=
+ =?iso-8859-1?Q?7YNbia475c/UQkNn/ldSX535WFxsfu5r1j2qnu+JGe8USR2jGRQRQV7q+j?=
+ =?iso-8859-1?Q?jFxgV5ct2W9A9+cBLO3RUaOV4IT3Uo0fe6Alpwi2IBt5N5UFYIw91EOfwE?=
+ =?iso-8859-1?Q?u61mjjUfkp5rzC2W9hzw7ehdtNS3kTtDaxtur1flOoMFbUxAVlZeckVr0O?=
+ =?iso-8859-1?Q?LOKxY1fcn2b6kP1Sfd2fX04o/7ozgWBnls0Ok+WR9zE2GGpcQl5hRrHdHr?=
+ =?iso-8859-1?Q?N212X/xYjty+fEYDxr2FVj+Q4loqubwXJIBkC6jX0J4gUeYSHKgoDWluiv?=
+ =?iso-8859-1?Q?VblIiG1t0tvcuatgk+rQYoIVYfOAJ4PErDM8tIWu5CnvZ4Bv7iBgR6oty7?=
+ =?iso-8859-1?Q?j8tSir1bDJOQ1B1dEg0GT58M7Hf/du8n8b0c4gTx07UYmSwT4AzYB9LpbE?=
+ =?iso-8859-1?Q?NoeY7BdN1BcrG9nOKvK3QAH7RNwaNcX/jroSHylV0qnrLrEMAfeeh3gQ3V?=
+ =?iso-8859-1?Q?VPzmkgZ2gg0hodNm8WfMCupnyLp3NQ52W5dg8a9lLqj5xdVasox0apAU+c?=
+ =?iso-8859-1?Q?v7YWGhasascJFCvyXYiLfVGI5WetXQjNeW4y//76wUSdUFECCbzt0rcZyp?=
+ =?iso-8859-1?Q?M0vqcZdcljm+xAhPYWSIlvM2gSgp62VtAE2ccfGWUriXxDN9WFw5o90WgW?=
+ =?iso-8859-1?Q?DYjAgrDFcPvd/hJR3nRFD3yv4IQwaR76QG3c2C6YHJ1VnpjHQbxxQ/luRD?=
+ =?iso-8859-1?Q?G2RRz6r8wk6HKT7Y6bA5BNtbC2C66e1KME7u8kOWh0gG9RKBiOtqZ3WwR9?=
+ =?iso-8859-1?Q?VctthWJ67V2Kgr+Mn8k/XKotCd7R0dLV6cjIVg/n4kMBb1Bnrvl/NEj+vm?=
+ =?iso-8859-1?Q?wjZgM75n2nGDlB0bc09SeMHeNAKasLwj2boJkzLHGYx3VjCLwcqjFc4cyl?=
+ =?iso-8859-1?Q?yIDY0OdETwn425cbIEn65lTsOUl4BVrkNj44QOSpB0ub2GcrXHIWwTo2Mh?=
+ =?iso-8859-1?Q?90OG7acpJCgfF8l4h0liluKukmb68b08tUN/wrUHNMpB2J0B5le7edV2KL?=
+ =?iso-8859-1?Q?beDYkn0Buut+Mdt9ysCNqGFjzdcQrXSnCMK9Cchk/FJKp1XJntwmrX3aKR?=
+ =?iso-8859-1?Q?dA854olxQ42HuVdvyx1fovl4HVPLvKHhqJI72gHmsp9JyyN6WahjSGVDtE?=
+ =?iso-8859-1?Q?ki7CecJbYSEIDX2jptITRmzaOPSV0SilAiG4SM1gg8stmL2N5nE/QjZdMC?=
+ =?iso-8859-1?Q?xJXa8I08yZ5Fa+MzQSiZjAheiYwwUXf33NBj9v6EhjZnbZxOV15/BXTpP/?=
+ =?iso-8859-1?Q?7jna4E/uLri73xcREPwZbDemk6F+p0RaKTbTJOG6rIxeua7b7NksxJuEok?=
+ =?iso-8859-1?Q?LLXx5SSkQBKAsjTe2dD0B0AspZTsIuSg=3D=3D?=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB4943.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 713272d6-e293-46de-028d-08d90685c753
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Apr 2021 18:29:49.3292
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8106f16c-ef96-4523-2fc0-08d90685c658
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Apr 2021 18:29:47.6566
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: f3IBu8NIU6VZnLNRg1sGn91DcKpkexHJL769Tr3jypNSd4D3S/csC0EnEEm6bjZ4QdbK6tSGUtl0CTgwTXWjYSG+KYon7to3xeI17jiyQgc=
+X-MS-Exchange-CrossTenant-userprincipalname: dWrmlRPWeEhi1a1EX36tAK+CtQWERBpFpAr3k8nBza+SmLgfooXjCcRstaQt6rWPqRwwDa3xdn3SgLJbzIsDXubpNyffCqO396geY5iqUf0=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB3318
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -150,68 +149,70 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Added initialization success check before adding net/mgmt packet to Tx
-queue and processing wilc_get_statistics() command to FW.
+Added chip-reset command before firmware download to initialize the
+chip. Also configure chip in wake state, ready to accept the FW
+binary.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 4 ++++
- drivers/net/wireless/microchip/wilc1000/wlan.c     | 9 +++++++++
- 2 files changed, 13 insertions(+)
+ .../net/wireless/microchip/wilc1000/wlan.c    | 22 ++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/n=
-et/wireless/microchip/wilc1000/cfg80211.c
-index 91a471f3b1c8..dc4bfe7be378 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -728,6 +728,7 @@ static int get_station(struct wiphy *wiphy, struct net_=
-device *dev,
- {
- 	struct wilc_vif *vif =3D netdev_priv(dev);
- 	struct wilc_priv *priv =3D &vif->priv;
-+	struct wilc *wilc =3D vif->wilc;
- 	u32 i =3D 0;
- 	u32 associatedsta =3D ~0;
- 	u32 inactive_time =3D 0;
-@@ -754,6 +755,9 @@ static int get_station(struct wiphy *wiphy, struct net_=
-device *dev,
- 	} else if (vif->iftype =3D=3D WILC_STATION_MODE) {
- 		struct rf_info stats;
-=20
-+		if (!wilc->initialized)
-+			return -EBUSY;
-+
- 		wilc_get_statistics(vif, &stats);
-=20
- 		sinfo->filled |=3D BIT_ULL(NL80211_STA_INFO_SIGNAL) |
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
 ireless/microchip/wilc1000/wlan.c
-index 6ae5d82c6f99..0e059b889fbd 100644
+index 9f0bb876975a..24e016a0dfa8 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -427,6 +427,11 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev,
- 		return 0;
- 	}
+@@ -1080,6 +1080,7 @@ int wilc_wlan_firmware_download(struct wilc *wilc, co=
+nst u8 *buffer,
+ 	u32 addr, size, size2, blksz;
+ 	u8 *dma_buffer;
+ 	int ret =3D 0;
++	u32 reg =3D 0;
 =20
-+	if (!wilc->initialized) {
-+		tx_complete_fn(tx_data, 0);
-+		return 0;
-+	}
+ 	blksz =3D BIT(12);
+=20
+@@ -1088,10 +1089,22 @@ int wilc_wlan_firmware_download(struct wilc *wilc, =
+const u8 *buffer,
+ 		return -EIO;
+=20
+ 	offset =3D 0;
++	pr_info("%s: Downloading firmware size =3D %d\n", __func__, buffer_size);
 +
- 	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	reg &=3D ~BIT(10);
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	if (reg & BIT(10))
++		pr_err("%s: Failed to reset\n", __func__);
++
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
+ 	do {
+ 		addr =3D get_unaligned_le32(&buffer[offset]);
+ 		size =3D get_unaligned_le32(&buffer[offset + 4]);
+-		acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++		acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
+ 		offset +=3D 8;
+ 		while (((int)size) && (offset < buffer_size)) {
+ 			if (size <=3D blksz)
+@@ -1109,10 +1122,13 @@ int wilc_wlan_firmware_download(struct wilc *wilc, =
+const u8 *buffer,
+ 			offset +=3D size2;
+ 			size -=3D size2;
+ 		}
+-		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
 =20
- 	if (!tqe) {
-@@ -476,6 +481,10 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev,=
- void *priv, u8 *buffer,
- 		return 0;
- 	}
+-		if (ret)
++		if (ret) {
++			pr_err("%s Bus error\n", __func__);
+ 			goto fail;
++		}
++		pr_info("%s Offset =3D %d\n", __func__, offset);
+ 	} while (offset < buffer_size);
 =20
-+	if (!wilc->initialized) {
-+		tx_complete_fn(priv, 0);
-+		return 0;
-+	}
- 	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
-=20
- 	if (!tqe) {
+ fail:
 --=20
 2.24.0
