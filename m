@@ -2,124 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2D5C433B4
-	for <linux-wireless@archiver.kernel.org>; Sun, 25 Apr 2021 11:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DE3EC433ED
+	for <linux-wireless@archiver.kernel.org>; Sun, 25 Apr 2021 16:10:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D85761154
-	for <linux-wireless@archiver.kernel.org>; Sun, 25 Apr 2021 11:02:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4492261210
+	for <linux-wireless@archiver.kernel.org>; Sun, 25 Apr 2021 16:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229997AbhDYLC4 (ORCPT
+        id S230465AbhDYQLX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 25 Apr 2021 07:02:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53744 "EHLO
+        Sun, 25 Apr 2021 12:11:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229659AbhDYLC4 (ORCPT
+        with ESMTP id S230293AbhDYQLW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Apr 2021 07:02:56 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D2F0C061574
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Apr 2021 04:02:12 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id y22-20020a17090a8b16b0290150ae1a6d2bso3674121pjn.0
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Apr 2021 04:02:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=RZKR8ck1KX2HeGx+2oK1RAn3RiTZ1YTGQyJAx9GZEnI=;
-        b=eI1slnRP0b9nAS71fudHoITMbsdH1FtZrqWcIhDw6ZVScwWGRNxt9YyeDiOwmQSKuF
-         5Y+dGzWIwONOXZtjhBgQD4rbyDvAgBW2AmKBThruM+CDMdKMwQOwnW6i452H5dFZrYqb
-         IKX+KkxIwfaTxrAKHfUjvgNjm2bfoPg1I/EAwr0yvvy2ZZ/coWmjjwvSyd5AH+GG+Oz8
-         AFkO44xZWNIOb4FdmuuaK1S4dfe3ZCQip6QqYj5R3DyFwmAJ7nGx45iEZYXXEGHjYhP4
-         aT27nykRGvTfIVRJj0M0160hjBrmMXOSZmhrp1O/nBLh/nixDbzD3tWiRASJTrtH67ct
-         4G/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=RZKR8ck1KX2HeGx+2oK1RAn3RiTZ1YTGQyJAx9GZEnI=;
-        b=RNL4xEjDz0il+sHDWdAVAJJG60I9gJPHDplLHJTQU7wk3wEgeBorISETua5D3zVvI3
-         xWx02cXTgGqXIaqQ6NDJ6FkJjDguQW76zV6ErkRwG1jXXMorxvrJbp0MSMlHWXwpMHOk
-         2CmrR6AovvWYIPT6Km9PRIGmXeSBsSMvZgb+ujlm1I+LYulEumsQvLwFiwc3Yie/sgIN
-         E414kyK5FcoqCY5EVr7DH1Mvv8HquYGwiU/7UK7l+E9Q7otprRBSlGG3TT9GKuxOWJKT
-         UgdAEAZhDYH0TuzVNgtBv5VILOZZ/E+yoWJVAhNoEUagihyD//S4PxM9pqh+RamQcWNH
-         BtyQ==
-X-Gm-Message-State: AOAM533OGaSn/L9k1Be13JwUgwO4B6rTtSysEqRm6nK1jniI7vmGCOUD
-        ljpwXp83K7kj9qzkIC6STsrLcA==
-X-Google-Smtp-Source: ABdhPJxwsmKYfTpwBg5m/3CapXl2HSdzZPvK9p8vUYBYwfw64aWilPMIw33q9Hrr+GqWWWtNWywnkg==
-X-Received: by 2002:a17:90b:1bc1:: with SMTP id oa1mr13972865pjb.46.1619348532126;
-        Sun, 25 Apr 2021 04:02:12 -0700 (PDT)
-Received: from localhost.localdomain (80.251.214.228.16clouds.com. [80.251.214.228])
-        by smtp.gmail.com with ESMTPSA id o5sm8728629pgq.58.2021.04.25.04.02.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Apr 2021 04:02:11 -0700 (PDT)
-From:   Shawn Guo <shawn.guo@linaro.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH] brcmfmac: use ISO3166 country code and 0 rev as fallback
-Date:   Sun, 25 Apr 2021 19:02:00 +0800
-Message-Id: <20210425110200.3050-1-shawn.guo@linaro.org>
-X-Mailer: git-send-email 2.17.1
+        Sun, 25 Apr 2021 12:11:22 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C536CC061574;
+        Sun, 25 Apr 2021 09:10:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=l80BjQUd5fz5uENdDASp0UI526pBs9py8R3eB8Lkiqg=; b=BUW+IkJKvLhYYgAQXhetbzkmsE
+        NZCjeq0MMzEy1dlKu0veAYZCaNz9KWlTbxbtzt2kDFnOp7qFCWp0NnM/LNgSoYoouiLI5OYhT2kH+
+        pkojDtc/lvov2Q44QjSRi63cUxp0qyYVu2cgkI6i36RYoLc4/S4a0GLJBOUt/5mMGxbtO2V7bV5fU
+        LaSsLakXiMn5tniI3fzjHIzLErno4MfbWYUsGuyrr9MnsHgG8XcGTFpJbps/Z+PwSuAWA8PJt09GZ
+        gryvdXZLTMlKEYewCT6Z4ydMCqszNd/qXaWYUFHpTz42uhuDfT9GwqmV3YawJ7/xox0NLMPsuAZ0r
+        /QpiDozQ==;
+Received: from [2601:1c0:6280:3f0::df68]
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lahKk-004Sdd-D4; Sun, 25 Apr 2021 16:10:21 +0000
+Subject: Re: [PATCH v2] ipw2x00: Minor documentation update
+To:     Souptick Joarder <jrdr.linux@gmail.com>, stas.yakovlev@gmail.com,
+        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1619348088-6887-1-git-send-email-jrdr.linux@gmail.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <78f132c8-35f2-de23-ccd3-4f6a0ffe1052@infradead.org>
+Date:   Sun, 25 Apr 2021 09:10:07 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
+MIME-Version: 1.0
+In-Reply-To: <1619348088-6887-1-git-send-email-jrdr.linux@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Instead of aborting country code setup in firmware, use ISO3166 country
-code and 0 rev as fallback, when country_codes mapping table is not
-configured.  This fallback saves the country_codes table setup for recent
-brcmfmac chipsets/firmwares, which just use ISO3166 code and require no
-revision number.
+On 4/25/21 3:54 AM, Souptick Joarder wrote:
+> Kernel test robot throws below warning ->
+> 
+> drivers/net/wireless/intel/ipw2x00/ipw2100.c:5359: warning: This comment
+> starts with '/**', but isn't a kernel-doc comment. Refer
+> Documentation/doc-guide/kernel-doc.rst
+> 
+> Minor update in documentation.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> Cc: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c      | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index f4405d7861b6..6cb09c7c37b6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -7442,18 +7442,23 @@ static s32 brcmf_translate_country_code(struct brcmf_pub *drvr, char alpha2[2],
- 	s32 found_index;
- 	int i;
- 
--	country_codes = drvr->settings->country_codes;
--	if (!country_codes) {
--		brcmf_dbg(TRACE, "No country codes configured for device\n");
--		return -EINVAL;
--	}
--
- 	if ((alpha2[0] == ccreq->country_abbrev[0]) &&
- 	    (alpha2[1] == ccreq->country_abbrev[1])) {
- 		brcmf_dbg(TRACE, "Country code already set\n");
- 		return -EAGAIN;
- 	}
- 
-+	country_codes = drvr->settings->country_codes;
-+	if (!country_codes) {
-+		brcmf_dbg(TRACE, "No country codes configured for device, using ISO3166 code and 0 rev\n");
-+		memset(ccreq, 0, sizeof(*ccreq));
-+		ccreq->country_abbrev[0] = alpha2[0];
-+		ccreq->country_abbrev[1] = alpha2[1];
-+		ccreq->ccode[0] = alpha2[0];
-+		ccreq->ccode[1] = alpha2[1];
-+		return 0;
-+	}
-+
- 	found_index = -1;
- 	for (i = 0; i < country_codes->table_size; i++) {
- 		cc = &country_codes->table[i];
+Thanks.
+
+> ---
+> v2:
+> 	Updated docs.
+> 
+>  drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+> index 23fbddd..eeac9e3 100644
+> --- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+> +++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+> @@ -5356,7 +5356,7 @@ struct ipw2100_wep_key {
+>  #define WEP_STR_128(x) x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10]
+>  
+>  /**
+> - * Set a the wep key
+> + * ipw2100_set_key() - Set the wep key
+>   *
+>   * @priv: struct to work on
+>   * @idx: index of the key we want to set
+> 
+
+
 -- 
-2.17.1
+~Randy
 
