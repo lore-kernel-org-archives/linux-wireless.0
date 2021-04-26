@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E55F3C433B4
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 19:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 463B4C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 19:29:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B87C7611C1
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 19:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09B8B60FD9
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 19:29:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240304AbhDZTaK (ORCPT
+        id S240365AbhDZTaV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Apr 2021 15:30:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57870 "EHLO
+        Mon, 26 Apr 2021 15:30:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236653AbhDZTaK (ORCPT
+        with ESMTP id S240340AbhDZTaR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Apr 2021 15:30:10 -0400
+        Mon, 26 Apr 2021 15:30:17 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E9ADC061574
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2021 12:29:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 303A5C061574
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2021 12:29:34 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lb6v8-000MXK-Hv; Mon, 26 Apr 2021 21:29:26 +0200
+        id 1lb6vE-000MXn-GP; Mon, 26 Apr 2021 21:29:32 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Harald Arnesen <harald@skogtun.org>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH] wil6210: remove erroneous wiphy locking
-Date:   Mon, 26 Apr 2021 21:29:24 +0200
-Message-Id: <20210426212922.83f1de07c2cd.I630a2a00eff185ba0452324b3d3f645e01128a95@changeid>
+Subject: [PATCH] wil6210: remove erroneous wiphy locking
+Date:   Mon, 26 Apr 2021 21:29:30 +0200
+Message-Id: <20210426212929.83f1de07c2cd.I630a2a00eff185ba0452324b3d3f645e01128a95@changeid>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
