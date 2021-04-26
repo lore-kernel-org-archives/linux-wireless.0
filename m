@@ -2,126 +2,329 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3904C43461
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE63DC433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACFBF60724
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:45:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABC6861153
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238608AbhDZSpt (ORCPT
+        id S239417AbhDZS64 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Apr 2021 14:45:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:46666 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238542AbhDZSn7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Apr 2021 14:43:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619462595;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vpl+KXiHDK1EJ+33Ee24302pVNahtFcpm54ZwUGrx7A=;
-        b=DMwYROtgLrNyWbyyP/6EvjyxTfgiG0AzsatNtZEywOqaBYeoY/oNIIW++ck8R4m1xSeF7b
-        4Zqh9erDg9LM4Sz4XhL4+BQLqAFOxBtE9iPH+m4t4xeLD88brJb4E5QyW1lt5CsCfrWaC4
-        GSrC+jq1f+nO4sbuBXzWYCsCJKN5irI=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-184-f6xasQm8OiaecvKLglEQqQ-1; Mon, 26 Apr 2021 14:43:12 -0400
-X-MC-Unique: f6xasQm8OiaecvKLglEQqQ-1
-Received: by mail-ed1-f70.google.com with SMTP id bf25-20020a0564021a59b0290385169cebf8so16202955edb.8
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2021 11:43:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=vpl+KXiHDK1EJ+33Ee24302pVNahtFcpm54ZwUGrx7A=;
-        b=JvlkG8uOeslTTcmyr/ZtoYwOkKz9k3viQ6KiH9GNFL6u7P9WBLfIcf1YZPeaPZrmGO
-         ZzxA2PF+l5o3Bjm5J9OH39dAL892g1ikNnZh96bwoKHKSek5QxaYojp4e24hKiRcThhG
-         xc6qLlDoSsY1dSLAYUHOwBJIW28h13jPusLh6cK23kr7d2chd/ECysNMOoPGEUsNHkNG
-         ME7XRVduwdm+ET8JO55IyEdyIqKOTy5ni4bN2Tf7rtN3sPow3bVED0JXVGKqi2+8EXBu
-         /xI+6fCI5sT36ZYyMf6IrDom/5wt7vNilj2URSl97WW90D184wU1/uLwOcLSiD1zgRHV
-         dMuw==
-X-Gm-Message-State: AOAM530H7Xucj6UkdOivVbop4v8FGuNwkG4xSTAdzugyMxt403y6dsZ4
-        0+FyJrKjtNecuo0wNTmm60IftY5Af0IiUjeHr81IeJsdKyC1vHp+Qqzwmy+EiUXS5uldis3V+W0
-        QCXRRjtq1jmHYoOcDkg6cBgwm6yE=
-X-Received: by 2002:a17:906:9342:: with SMTP id p2mr12932872ejw.311.1619462591218;
-        Mon, 26 Apr 2021 11:43:11 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzxnw+gVLGW0SwTs5ulyQam8MiKyXti4sUFy/7n9hakQKeb+GEg83FWuQ5Kyobmu3AVDJmIKw==
-X-Received: by 2002:a17:906:9342:: with SMTP id p2mr12932866ejw.311.1619462591082;
-        Mon, 26 Apr 2021 11:43:11 -0700 (PDT)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
-        by smtp.gmail.com with ESMTPSA id bu8sm485055edb.77.2021.04.26.11.43.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Apr 2021 11:43:10 -0700 (PDT)
-Subject: Re: [PATCH 1/1] staging: rtl8723bs: Move wiphy setup to after reading
- the regulatory settings from the chip
-To:     youling257 <youling257@gmail.com>
-Cc:     gregkh@linuxfoundation.org, johannes.berg@intel.com,
-        linux-wireless@vger.kernel.org, ross.schm.dev@gmail.com
-References: <20210201152956.370186-2-hdegoede@redhat.com>
- <20210426183406.13055-1-youling257@gmail.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <6dd2cb8b-5540-a410-92d8-f329be98327b@redhat.com>
-Date:   Mon, 26 Apr 2021 20:43:10 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        Mon, 26 Apr 2021 14:58:56 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:37081 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239353AbhDZS6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Apr 2021 14:58:55 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1619463493; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=QPqcADw635hcdQyOQNqmZC+V4GOyaA0yK1j/7Ko4pzg=; b=D0IFqPQ4C04fNGL3vhkR+fwRDTwQY6I2NGJkKj/i0bEvoOKWkV1XiVPEC1RCKNb3UdDUfJsc
+ oQQtXdF1469/ey85SysPTrXK0SeFHBgg6Cp+DGSISUZK/KFICmwF6W6+rDf8WF2sIXbNnb9z
+ Y+18jHAugmgz0OdsSOHRBxe5NRg=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 60870d4474f773a664044ec0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 26 Apr 2021 18:58:12
+ GMT
+Sender: alokad=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DA868C43460; Mon, 26 Apr 2021 18:58:11 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2AD43C433D3;
+        Mon, 26 Apr 2021 18:58:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2AD43C433D3
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=alokad@codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Aloka Dixit <alokad@codeaurora.org>
+Subject: [PATCH 2/4] mac80211: multiple bssid support in interface handling
+Date:   Mon, 26 Apr 2021 11:57:54 -0700
+Message-Id: <20210426185756.10924-3-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210426185756.10924-1-alokad@codeaurora.org>
+References: <20210426185756.10924-1-alokad@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20210426183406.13055-1-youling257@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Youling,
+From: John Crispin <john@phrozen.org>
 
-On 4/26/21 8:34 PM, youling257 wrote:
-> Hello, "cfg80211: Save the regulatory domain when setting custom
-> regulatory" "cfg80211: Save the regulatory domain with a lock" cause
-> rtl8723bs not work problem.
-> I see upstream rtl8723bs driver "staging: rtl8723bs: Move wiphy setup
-> to after reading the regulatory" "staging: rtl8723bs: fix wireless
-> regulatory API misuse" fix problem.
-> 
-> I use rtl8723bs v5.2.17.1_26955.20180307_COEX20180201-6f52 driver, no
-> the "rtw_wdev_alloc(padapter, dvobj_to_dev(dvobj));"
-> 
-> https://github.com/youling257/rockchip_wlan/blob/v5.2.17.1/rtl8723bs/os_dep/linux/ioctl_cfg80211.h#L234
-> int rtw_wdev_alloc(_adapter *padapter, struct wiphy *wiphy);
-> 
-> https://github.com/torvalds/linux/blob/master/drivers/staging/rtl8723bs/include/ioctl_cfg80211.h#L91
-> int rtw_wdev_alloc(struct adapter *padapter, struct device *dev);
-> 
-> https://github.com/torvalds/linux/blob/master/drivers/staging/rtl8723bs/os_dep/sdio_intf.c#L333
-> https://github.com/youling257/rockchip_wlan/blob/v5.2.17.1/rtl8723bs/os_dep/linux/sdio_intf.c#L645
-> 
-> I want to fix rtl8723bs v5.2.17 not work problem, can you help me?
+This change adds a new helper function ieee80211_set_mbssid_options()
+to set multiple BSSID and enhanced multi-BSSID advertisement (EMA)
+configuration in mac80211.
 
-I'm not sure what your problem exactly is. If your kernel contains the
+New flags are set per interface to indicate transmitting/non-transmitting
+and EMA enabled/disabled configurations. Value 0 indicates that the AP does
+not support multiple BSSID advertisements.
 
-51d62f2f2c50 ("cfg80211: Save the regulatory domain with a lock")
+For non-transmitting profiles, a parent pointer points to the transmitting
+interface from the global list of interfaces per wiphy.
 
-Commit then you also need to backport (in the listed order):
+When ieee80211_do_stop() is called for a non-transmitting interface,
+it first brings down the transmitting interface.
 
-81f153faacd0 ("staging: rtl8723bs: fix wireless regulatory API misuse")
-50af06d43eab ("taging: rtl8723bs: Move wiphy setup to after reading the regulatory settings from the chip")
+When ieee80211_del_iface() is called for the transmitting interface,
+it first brings down all the non-transmitting interfaces.
 
-Which you seem to have already figured out ?
+Signed-off-by: John Crispin <john@phrozen.org>
+Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+v10: Released wiphy->mtx before dev_close().
+     New flag for IEEE80211_HW_SUPPORTS_EMA_AP.
+     ieee80211_set_mbssid_options() returns int instead of void.
+     
+     
+ include/net/mac80211.h | 34 ++++++++++++++++++-
+ net/mac80211/cfg.c     | 74 ++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs.c |  2 ++
+ net/mac80211/iface.c   | 12 +++++++
+ 4 files changed, 121 insertions(+), 1 deletion(-)
 
-To keep the rtk8723bs driver working your kernel should either contain all 3 mentioned commits,
-or it should contain none of them.
-
-Regards,
-
-Hans
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 445b66c6eb7e..ca83bfe14355 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -631,6 +631,7 @@ struct ieee80211_fils_discovery {
+  * @s1g: BSS is S1G BSS (affects Association Request format).
+  * @beacon_tx_rate: The configured beacon transmit rate that needs to be passed
+  *	to driver when rate control is offloaded to firmware.
++ * @mbssid: Multiple bssid settings for AP mode
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -700,6 +701,7 @@ struct ieee80211_bss_conf {
+ 	u32 unsol_bcast_probe_resp_interval;
+ 	bool s1g;
+ 	struct cfg80211_bitrate_mask beacon_tx_rate;
++	struct cfg80211_mbssid_config mbssid;
+ };
+ 
+ /**
+@@ -1663,6 +1665,20 @@ enum ieee80211_offload_flags {
+ 	IEEE80211_OFFLOAD_DECAP_ENABLED		= BIT(2),
+ };
+ 
++/**
++ * enum ieee80211_vif_mbssid_flags - virtual interface multiple bssid flags
++ *
++ * @IEEE80211_VIF_MBSSID_TX: Set for the transmitting profile.
++ * @IEEE80211_VIF_MBSSID_NON_TX: Set for non-transmitting profiles.
++ * @IEEE80211_VIF_MBSSID_EMA: Set when enhanced multi-BSS advertisements
++ *	are enabled.
++ */
++enum ieee80211_vif_mbssid_flags {
++	IEEE80211_VIF_MBSSID_TX     = BIT(1),
++	IEEE80211_VIF_MBSSID_NON_TX = BIT(2),
++	IEEE80211_VIF_MBSSID_EMA    = BIT(3),
++};
++
+ /**
+  * struct ieee80211_vif - per-interface data
+  *
+@@ -1709,6 +1725,10 @@ enum ieee80211_offload_flags {
+  *	protected by fq->lock.
+  * @offload_flags: 802.3 -> 802.11 enapsulation offload flags, see
+  *	&enum ieee80211_offload_flags.
++ *
++ * @mbssid: Multiple BSSID configurations.
++ * @mbssid.parent: Interface index of the transmitted BSS.
++ * @mbssid.flags: multiple bssid flags, see enum ieee80211_vif_mbssid_flags.
+  */
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
+@@ -1737,6 +1757,11 @@ struct ieee80211_vif {
+ 
+ 	bool txqs_stopped[IEEE80211_NUM_ACS];
+ 
++	struct {
++		struct ieee80211_vif *parent;
++		u32 flags;
++	} mbssid;
++
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+ };
+@@ -2381,7 +2406,7 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN: Driver does not report accurate A-MPDU
+  *	length in tx status information
+  *
+- * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID
++ * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID in STA mode
+  *
+  * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
+  *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
+@@ -2402,6 +2427,11 @@ struct ieee80211_txq {
+  *	usage and 802.11 frames with %RX_FLAG_ONLY_MONITOR set for monitor to
+  *	the stack.
+  *
++ * @IEEE80211_HW_SUPPORTS_MBSSID_AP: Hardware supports multiple BSSID
++ *	advertisements in AP mode.
++ * @IEEE80211_HW_SUPPORTS_EMA_AP: Hardware supports enhanced multiple BSSID
++ *	advertisements in AP mode.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2457,6 +2487,8 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_TX_ENCAP_OFFLOAD,
+ 	IEEE80211_HW_SUPPORTS_RX_DECAP_OFFLOAD,
+ 	IEEE80211_HW_SUPPORTS_CONC_MON_RX_DECAP,
++	IEEE80211_HW_SUPPORTS_MBSSID_AP,
++	IEEE80211_HW_SUPPORTS_EMA_AP,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7a99892e5aba..d1a965897b9d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -111,6 +111,44 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_mbssid_options(struct ieee80211_sub_if_data *sdata,
++					struct cfg80211_mbssid_config params)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct wiphy *wiphy = local->hw.wiphy;
++	struct net_device *parent;
++	struct ieee80211_sub_if_data *psdata;
++
++	if (!params.count || sdata->vif.type != NL80211_IFTYPE_AP ||
++	    !ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP))
++		return -EINVAL;
++
++	sdata->vif.mbssid.parent = NULL;
++	sdata->vif.mbssid.flags = IEEE80211_VIF_MBSSID_TX;
++	if (params.parent) {
++		parent = __dev_get_by_index(wiphy_net(wiphy), params.parent);
++		if (!parent || !parent->ieee80211_ptr)
++			return -EINVAL;
++
++		psdata = IEEE80211_WDEV_TO_SUB_IF(parent->ieee80211_ptr);
++		if (psdata != sdata) {
++			if (psdata->vif.mbssid.parent)
++				return -EINVAL;
++			sdata->vif.mbssid.parent = &psdata->vif;
++			sdata->vif.mbssid.flags = IEEE80211_VIF_MBSSID_NON_TX;
++		}
++	}
++
++	if (params.ema) {
++		if (!ieee80211_hw_check(&local->hw, SUPPORTS_EMA_AP))
++			return -EINVAL;
++		sdata->vif.mbssid.flags |= IEEE80211_VIF_MBSSID_EMA;
++	}
++
++	sdata->vif.bss_conf.mbssid = params;
++	return 0;
++}
++
+ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 						const char *name,
+ 						unsigned char name_assign_type,
+@@ -141,6 +179,36 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 
+ static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	struct ieee80211_local *local;
++	struct ieee80211_vif *vif;
++
++	if (!sdata)
++		return 0;
++
++	local = sdata->local;
++	vif = &sdata->vif;
++	if (vif->type == NL80211_IFTYPE_AP &&
++	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP)) {
++		if (vif->mbssid.flags & IEEE80211_VIF_MBSSID_TX) {
++			struct ieee80211_sub_if_data *child, *tmpsdata;
++
++			wiphy_unlock(local->hw.wiphy);
++			mutex_lock(&local->iflist_mtx);
++			list_for_each_entry_safe(child, tmpsdata,
++						 &local->interfaces, list) {
++				if (child->vif.mbssid.parent == vif &&
++				    ieee80211_sdata_running(child))
++					dev_close(child->wdev.netdev);
++			}
++			mutex_unlock(&local->iflist_mtx);
++			wiphy_lock(local->hw.wiphy);
++		} else {
++			vif->mbssid.parent = NULL;
++			vif->mbssid.flags = 0;
++		}
++	}
++
+ 	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
+ 
+ 	return 0;
+@@ -1078,6 +1146,12 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 	}
+ 
++	if (params->mbssid.count) {
++		err = ieee80211_set_mbssid_options(sdata, params->mbssid);
++		if (err)
++			return err;
++	}
++
+ 	mutex_lock(&local->mtx);
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 9245c0421bda..00e5089a4a6c 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -457,6 +457,8 @@ static const char *hw_flag_names[] = {
+ 	FLAG(SUPPORTS_TX_ENCAP_OFFLOAD),
+ 	FLAG(SUPPORTS_RX_DECAP_OFFLOAD),
+ 	FLAG(SUPPORTS_CONC_MON_RX_DECAP),
++	FLAG(SUPPORTS_MBSSID_AP),
++	FLAG(SUPPORTS_EMA_AP),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b1c170939e44..1ab75d464569 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -375,6 +375,18 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	struct cfg80211_chan_def chandef;
+ 	bool cancel_scan;
+ 	struct cfg80211_nan_func *func;
++	struct ieee80211_sub_if_data *parent;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP &&
++	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP) &&
++	    sdata->vif.mbssid.flags & IEEE80211_VIF_MBSSID_NON_TX) {
++		parent = vif_to_sdata(sdata->vif.mbssid.parent);
++		if (parent && ieee80211_sdata_running(parent)) {
++			wiphy_unlock(local->hw.wiphy);
++			dev_close(parent->wdev.netdev);
++			wiphy_lock(local->hw.wiphy);
++		}
++	}
+ 
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+-- 
+2.31.1
 
