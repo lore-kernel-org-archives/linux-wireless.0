@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE63DC433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 884A3C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABC6861153
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6484261078
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Apr 2021 18:58:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239417AbhDZS64 (ORCPT
+        id S239827AbhDZS7B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Apr 2021 14:58:56 -0400
+        Mon, 26 Apr 2021 14:59:01 -0400
 Received: from m43-7.mailgun.net ([69.72.43.7]:37081 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239353AbhDZS6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Apr 2021 14:58:55 -0400
+        id S239454AbhDZS67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Apr 2021 14:58:59 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1619463493; h=Content-Transfer-Encoding: MIME-Version:
+ s=smtp; t=1619463497; h=Content-Transfer-Encoding: MIME-Version:
  References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=QPqcADw635hcdQyOQNqmZC+V4GOyaA0yK1j/7Ko4pzg=; b=D0IFqPQ4C04fNGL3vhkR+fwRDTwQY6I2NGJkKj/i0bEvoOKWkV1XiVPEC1RCKNb3UdDUfJsc
- oQQtXdF1469/ey85SysPTrXK0SeFHBgg6Cp+DGSISUZK/KFICmwF6W6+rDf8WF2sIXbNnb9z
- Y+18jHAugmgz0OdsSOHRBxe5NRg=
+ Sender; bh=iPDSFuKc5Tfrz/NQSjCNOIONCtgxmE1s+TK9MwRkbVQ=; b=FutBtggv2nUwoWRgQp2bjJyAnfWZiVD37sSHQpB+OEz5NfWPMn0jaeeygy9SEbRHtDTertqR
+ L/Fi3mJNzWhl0ER0V3IixK6n6KydoY1r1DSx0JhpwiWowt0zRf87AbVk8e3WcUZLNH6PVoGE
+ DRDX6h9cukrJP8HMysWYrHkHc3s=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 60870d4474f773a664044ec0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 26 Apr 2021 18:58:12
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 60870d45853c0a2c462df442 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 26 Apr 2021 18:58:13
  GMT
 Sender: alokad=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DA868C43460; Mon, 26 Apr 2021 18:58:11 +0000 (UTC)
+        id 8F114C4338A; Mon, 26 Apr 2021 18:58:12 +0000 (UTC)
 Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2AD43C433D3;
-        Mon, 26 Apr 2021 18:58:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2AD43C433D3
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 71BC6C433F1;
+        Mon, 26 Apr 2021 18:58:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 71BC6C433F1
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=alokad@codeaurora.org
 From:   Aloka Dixit <alokad@codeaurora.org>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
         Aloka Dixit <alokad@codeaurora.org>
-Subject: [PATCH 2/4] mac80211: multiple bssid support in interface handling
-Date:   Mon, 26 Apr 2021 11:57:54 -0700
-Message-Id: <20210426185756.10924-3-alokad@codeaurora.org>
+Subject: [PATCH 4/4] mac80211: CSA on non-transmitting interfaces
+Date:   Mon, 26 Apr 2021 11:57:56 -0700
+Message-Id: <20210426185756.10924-5-alokad@codeaurora.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210426185756.10924-1-alokad@codeaurora.org>
 References: <20210426185756.10924-1-alokad@codeaurora.org>
@@ -64,266 +64,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: John Crispin <john@phrozen.org>
 
-This change adds a new helper function ieee80211_set_mbssid_options()
-to set multiple BSSID and enhanced multi-BSSID advertisement (EMA)
-configuration in mac80211.
+Trigger ieee80211_csa_finish() on the non-transmitting interfaces
+when channel switch concludes on the transmitting interface.
 
-New flags are set per interface to indicate transmitting/non-transmitting
-and EMA enabled/disabled configurations. Value 0 indicates that the AP does
-not support multiple BSSID advertisements.
-
-For non-transmitting profiles, a parent pointer points to the transmitting
-interface from the global list of interfaces per wiphy.
-
-When ieee80211_do_stop() is called for a non-transmitting interface,
-it first brings down the transmitting interface.
-
-When ieee80211_del_iface() is called for the transmitting interface,
-it first brings down all the non-transmitting interfaces.
+The mutex wiphy->mtx is released before locking sdata->local->iflist_mtx
+to avoid deadlock with any other code path which may be using the same
+mutexes in opposite order.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
 Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
 ---
-v10: Released wiphy->mtx before dev_close().
-     New flag for IEEE80211_HW_SUPPORTS_EMA_AP.
-     ieee80211_set_mbssid_options() returns int instead of void.
-     
-     
- include/net/mac80211.h | 34 ++++++++++++++++++-
- net/mac80211/cfg.c     | 74 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/debugfs.c |  2 ++
- net/mac80211/iface.c   | 12 +++++++
- 4 files changed, 121 insertions(+), 1 deletion(-)
+v10: Used iflist_mtx instead of rcu_read_lock() as most other accesses
+     to sdata->local->interfaces do so.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 445b66c6eb7e..ca83bfe14355 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -631,6 +631,7 @@ struct ieee80211_fils_discovery {
-  * @s1g: BSS is S1G BSS (affects Association Request format).
-  * @beacon_tx_rate: The configured beacon transmit rate that needs to be passed
-  *	to driver when rate control is offloaded to firmware.
-+ * @mbssid: Multiple bssid settings for AP mode
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -700,6 +701,7 @@ struct ieee80211_bss_conf {
- 	u32 unsol_bcast_probe_resp_interval;
- 	bool s1g;
- 	struct cfg80211_bitrate_mask beacon_tx_rate;
-+	struct cfg80211_mbssid_config mbssid;
- };
- 
- /**
-@@ -1663,6 +1665,20 @@ enum ieee80211_offload_flags {
- 	IEEE80211_OFFLOAD_DECAP_ENABLED		= BIT(2),
- };
- 
-+/**
-+ * enum ieee80211_vif_mbssid_flags - virtual interface multiple bssid flags
-+ *
-+ * @IEEE80211_VIF_MBSSID_TX: Set for the transmitting profile.
-+ * @IEEE80211_VIF_MBSSID_NON_TX: Set for non-transmitting profiles.
-+ * @IEEE80211_VIF_MBSSID_EMA: Set when enhanced multi-BSS advertisements
-+ *	are enabled.
-+ */
-+enum ieee80211_vif_mbssid_flags {
-+	IEEE80211_VIF_MBSSID_TX     = BIT(1),
-+	IEEE80211_VIF_MBSSID_NON_TX = BIT(2),
-+	IEEE80211_VIF_MBSSID_EMA    = BIT(3),
-+};
-+
- /**
-  * struct ieee80211_vif - per-interface data
-  *
-@@ -1709,6 +1725,10 @@ enum ieee80211_offload_flags {
-  *	protected by fq->lock.
-  * @offload_flags: 802.3 -> 802.11 enapsulation offload flags, see
-  *	&enum ieee80211_offload_flags.
-+ *
-+ * @mbssid: Multiple BSSID configurations.
-+ * @mbssid.parent: Interface index of the transmitted BSS.
-+ * @mbssid.flags: multiple bssid flags, see enum ieee80211_vif_mbssid_flags.
-  */
- struct ieee80211_vif {
- 	enum nl80211_iftype type;
-@@ -1737,6 +1757,11 @@ struct ieee80211_vif {
- 
- 	bool txqs_stopped[IEEE80211_NUM_ACS];
- 
-+	struct {
-+		struct ieee80211_vif *parent;
-+		u32 flags;
-+	} mbssid;
-+
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-@@ -2381,7 +2406,7 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN: Driver does not report accurate A-MPDU
-  *	length in tx status information
-  *
-- * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID
-+ * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID in STA mode
-  *
-  * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
-  *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
-@@ -2402,6 +2427,11 @@ struct ieee80211_txq {
-  *	usage and 802.11 frames with %RX_FLAG_ONLY_MONITOR set for monitor to
-  *	the stack.
-  *
-+ * @IEEE80211_HW_SUPPORTS_MBSSID_AP: Hardware supports multiple BSSID
-+ *	advertisements in AP mode.
-+ * @IEEE80211_HW_SUPPORTS_EMA_AP: Hardware supports enhanced multiple BSSID
-+ *	advertisements in AP mode.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2457,6 +2487,8 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_TX_ENCAP_OFFLOAD,
- 	IEEE80211_HW_SUPPORTS_RX_DECAP_OFFLOAD,
- 	IEEE80211_HW_SUPPORTS_CONC_MON_RX_DECAP,
-+	IEEE80211_HW_SUPPORTS_MBSSID_AP,
-+	IEEE80211_HW_SUPPORTS_EMA_AP,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
+ net/mac80211/cfg.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7a99892e5aba..d1a965897b9d 100644
+index db21e1a621b1..5ca75a23d54c 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -111,6 +111,44 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+static int ieee80211_set_mbssid_options(struct ieee80211_sub_if_data *sdata,
-+					struct cfg80211_mbssid_config params)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct wiphy *wiphy = local->hw.wiphy;
-+	struct net_device *parent;
-+	struct ieee80211_sub_if_data *psdata;
-+
-+	if (!params.count || sdata->vif.type != NL80211_IFTYPE_AP ||
-+	    !ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP))
-+		return -EINVAL;
-+
-+	sdata->vif.mbssid.parent = NULL;
-+	sdata->vif.mbssid.flags = IEEE80211_VIF_MBSSID_TX;
-+	if (params.parent) {
-+		parent = __dev_get_by_index(wiphy_net(wiphy), params.parent);
-+		if (!parent || !parent->ieee80211_ptr)
-+			return -EINVAL;
-+
-+		psdata = IEEE80211_WDEV_TO_SUB_IF(parent->ieee80211_ptr);
-+		if (psdata != sdata) {
-+			if (psdata->vif.mbssid.parent)
-+				return -EINVAL;
-+			sdata->vif.mbssid.parent = &psdata->vif;
-+			sdata->vif.mbssid.flags = IEEE80211_VIF_MBSSID_NON_TX;
-+		}
-+	}
-+
-+	if (params.ema) {
-+		if (!ieee80211_hw_check(&local->hw, SUPPORTS_EMA_AP))
-+			return -EINVAL;
-+		sdata->vif.mbssid.flags |= IEEE80211_VIF_MBSSID_EMA;
-+	}
-+
-+	sdata->vif.bss_conf.mbssid = params;
-+	return 0;
-+}
-+
- static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 						const char *name,
- 						unsigned char name_assign_type,
-@@ -141,6 +179,36 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 
- static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+@@ -3254,8 +3254,21 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
  {
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	struct ieee80211_local *local;
-+	struct ieee80211_vif *vif;
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	ieee80211_queue_work(&sdata->local->hw,
+-			     &sdata->csa_finalize_work);
++	if (sdata->vif.mbssid.flags & IEEE80211_VIF_MBSSID_TX) {
++		struct ieee80211_sub_if_data *child;
 +
-+	if (!sdata)
-+		return 0;
-+
-+	local = sdata->local;
-+	vif = &sdata->vif;
-+	if (vif->type == NL80211_IFTYPE_AP &&
-+	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP)) {
-+		if (vif->mbssid.flags & IEEE80211_VIF_MBSSID_TX) {
-+			struct ieee80211_sub_if_data *child, *tmpsdata;
-+
-+			wiphy_unlock(local->hw.wiphy);
-+			mutex_lock(&local->iflist_mtx);
-+			list_for_each_entry_safe(child, tmpsdata,
-+						 &local->interfaces, list) {
-+				if (child->vif.mbssid.parent == vif &&
-+				    ieee80211_sdata_running(child))
-+					dev_close(child->wdev.netdev);
-+			}
-+			mutex_unlock(&local->iflist_mtx);
-+			wiphy_lock(local->hw.wiphy);
-+		} else {
-+			vif->mbssid.parent = NULL;
-+			vif->mbssid.flags = 0;
-+		}
++		wiphy_unlock(sdata->local->hw.wiphy);
++		mutex_lock(&sdata->local->iflist_mtx);
++		list_for_each_entry(child, &sdata->local->interfaces, list)
++			if (child->vif.mbssid.parent == vif &&
++			    ieee80211_sdata_running(child))
++				ieee80211_queue_work(&child->local->hw,
++						     &child->csa_finalize_work);
++		mutex_unlock(&sdata->local->iflist_mtx);
++		wiphy_lock(sdata->local->hw.wiphy);
 +	}
 +
- 	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
- 
- 	return 0;
-@@ -1078,6 +1146,12 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			changed |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
- 
-+	if (params->mbssid.count) {
-+		err = ieee80211_set_mbssid_options(sdata, params->mbssid);
-+		if (err)
-+			return err;
-+	}
-+
- 	mutex_lock(&local->mtx);
- 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
- 					IEEE80211_CHANCTX_SHARED);
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 9245c0421bda..00e5089a4a6c 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -457,6 +457,8 @@ static const char *hw_flag_names[] = {
- 	FLAG(SUPPORTS_TX_ENCAP_OFFLOAD),
- 	FLAG(SUPPORTS_RX_DECAP_OFFLOAD),
- 	FLAG(SUPPORTS_CONC_MON_RX_DECAP),
-+	FLAG(SUPPORTS_MBSSID_AP),
-+	FLAG(SUPPORTS_EMA_AP),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b1c170939e44..1ab75d464569 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -375,6 +375,18 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 	struct cfg80211_chan_def chandef;
- 	bool cancel_scan;
- 	struct cfg80211_nan_func *func;
-+	struct ieee80211_sub_if_data *parent;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP) &&
-+	    sdata->vif.mbssid.flags & IEEE80211_VIF_MBSSID_NON_TX) {
-+		parent = vif_to_sdata(sdata->vif.mbssid.parent);
-+		if (parent && ieee80211_sdata_running(parent)) {
-+			wiphy_unlock(local->hw.wiphy);
-+			dev_close(parent->wdev.netdev);
-+			wiphy_lock(local->hw.wiphy);
-+		}
-+	}
- 
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
++	ieee80211_queue_work(&sdata->local->hw, &sdata->csa_finalize_work);
+ }
+ EXPORT_SYMBOL(ieee80211_csa_finish);
  
 -- 
 2.31.1
