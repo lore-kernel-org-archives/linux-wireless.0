@@ -7,56 +7,54 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD25EC433ED
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Apr 2021 15:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29653C43461
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Apr 2021 15:19:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BA3361434
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Apr 2021 15:19:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E924361434
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Apr 2021 15:19:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237174AbhD1PUh (ORCPT
+        id S229805AbhD1PUk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Apr 2021 11:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45102 "EHLO
+        Wed, 28 Apr 2021 11:20:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229805AbhD1PUh (ORCPT
+        with ESMTP id S239851AbhD1PUj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Apr 2021 11:20:37 -0400
-X-Greylist: delayed 1934 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 28 Apr 2021 08:19:52 PDT
+        Wed, 28 Apr 2021 11:20:39 -0400
 Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 602A5C061573;
-        Wed, 28 Apr 2021 08:19:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19C92C061573;
+        Wed, 28 Apr 2021 08:19:53 -0700 (PDT)
 Received: by bues.ch with esmtpsa (Exim 4.92)
         (envelope-from <m@bues.ch>)
-        id 1lblTS-0007jW-ED; Wed, 28 Apr 2021 16:47:34 +0200
-Date:   Wed, 28 Apr 2021 16:46:45 +0200
+        id 1lblTS-0007jW-4c; Wed, 28 Apr 2021 16:47:34 +0200
+Date:   Wed, 28 Apr 2021 16:41:17 +0200
 From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
 To:     Shubhankar Kuranagatti <shubhankarvk@gmail.com>
 Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sanjanasrinidhi1810@gmail.com
-Subject: Re: [PATCH] drivers: ssb: driver_gpio.c: Fix alignment of comment
-Message-ID: <20210428164645.39559ed3@wiggum>
-In-Reply-To: <20210428083020.gt6ea2guhfp75pan@kewl-virtual-machine>
-References: <20210428083020.gt6ea2guhfp75pan@kewl-virtual-machine>
+        sanjanasrinidhi1810@gmail.com, shubhankar.vk@gmail.com
+Subject: Re: [PATCH] drivers: ssb: main.c: Fix indentation of comment
+Message-ID: <20210428164117.5d9d36a2@wiggum>
+In-Reply-To: <20210428072453.obrjwxus3u2ytpgn@kewl-virtual-machine>
+References: <20210428072453.obrjwxus3u2ytpgn@kewl-virtual-machine>
 X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/CK_k+jLTsDph9zu/18x_P=.";
+Content-Type: multipart/signed; boundary="Sig_/9dv.WcsY/Y+AIANTyP1/i6v";
  protocol="application/pgp-signature"; micalg=pgp-sha512
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/CK_k+jLTsDph9zu/18x_P=.
+--Sig_/9dv.WcsY/Y+AIANTyP1/i6v
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 28 Apr 2021 14:00:20 +0530
+On Wed, 28 Apr 2021 12:54:53 +0530
 Shubhankar Kuranagatti <shubhankarvk@gmail.com> wrote:
 
-> The closing */ has been shifted to a new line
+> Shifted the closing */ to the next line
 > This is done to maintain code uniformity.
 >=20
 > Signed-off-by: Shubhankar Kuranagatti <shubhankarvk@gmail.com>
-
 
 Acked-by: Michael B=C3=BCsch <m@bues.ch>
 
@@ -64,25 +62,25 @@ Acked-by: Michael B=C3=BCsch <m@bues.ch>
 --=20
 Michael
 
---Sig_/CK_k+jLTsDph9zu/18x_P=.
+--Sig_/9dv.WcsY/Y+AIANTyP1/i6v
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmCJdVUACgkQ9TK+HZCN
-iw69Dw//XtghbaJTr8uQ5t5U+qHplAR3ZqAsj8TgiQciTw969R78gz+NpeC65TZ6
-zTgZMZKDLW/NUSgVb+y5VJMOb9Ia6nVXoExJlqR2qOndFcVH0hLdeB9SioK4oVZL
-eHvv+S3EYJ6Un/ipgpc+/i5q1WKx90RfbkC1M0tAR/5b+Em3A81n4V3yi52wwzO2
-gZ5WTSspmmYArYwpZBzi04E2yNtdO/SSjRhKj+C7+eg0Uyfrq6GiDUEZghv7rNxj
-cvKUmKeNbU+cUdUhhvCc/vsjCgvwYfoRqBaVXhqj3dMqFrehbt99xPHjlZgVuZnT
-crcvAWUFOpL+o5TKET2NGvkdC8GJm89stldla2lrqkbgun10LKQ53Ayu6lf78Wbn
-2mGLeocjc1C8TYz49chkbq9GdpixuTewoLjPzPHL1Nm76fstm0j/Q5V7SLOXo+E0
-bH0PCIPKR6Ju8rDBzuuFeai4hc7d0k43apNd2oO0PnE5gkhzRixSqmwTB2cEyEsb
-wu3onZv7vAaj1r9IWU1ucHSkj9qdC8uUCmmraXBRxELl7MwwCS41rhziY0rS248N
-BekkNCAKV/FkAG2IzvRhoegU8sNn7emSBSqa5xo7EjcLpa2oVKauf+G0ZaIDSrV+
-f0TzqvxAIzMQyb/q9Zob7CqkPTi5jmtZ7jNMgoRimOH9R1vCqvY=
-=adWp
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmCJdA4ACgkQ9TK+HZCN
+iw5vWhAAoy9hIBG2YSeiEhBk+OEJHlwSDVbVM7+GRAQyyzJEDFYoyXYXGCtnGbw6
+mmsbsH4NkAdmIzuq/ab4ZHKiodpXLg7/0d4sPO5UjdGR9yi07D+pgJMfE/6//0eH
+WFjvuJrXikJP38lBVCwGR9rEkuikXUwbI+wIxC3Onj6lxwHT5yzMypGI7nLaJ9iC
+ibo455+PbSgXZOGfyBD1UO1auns5OFfIJI46TiyzfVs8Pls461K/rqP1UEp7eUa6
+IAUj9IQ18Wtx/y3a8YYa/nSdm75fySg2PF9k9lxaVjZ7LihpbXs8NoeUlx1F1ckb
+VbXS6xMb/ON43KplqYUzOXzxt9jC5TXV1ZWPdeMV9Dc7JqqooXT6+ulxhSHte76R
+Z/byw3znRnv261ZPc2M2SWj3McCrxNcgBmO7LvfPnSIp4uvQXigDgMfdzzblE7PG
+fvt2UMWO2m/hQFpkTBU2dgAUtYI/M0NjsTd9lJod8s7GrrjzrS/1jKiv5z3AwrQm
+YYeyuuBSP/SGGOSafdTDTNBursIg4FLMSWNuj16YWOLDwvedH7NVeyP9XuoEomol
+8gQtyo3h8RqfPydZKubZhACDHDT1ppWHXAudWPzrowxwIFd2qnwK0wUgc/4WK/LF
+gnHCO/VlFf95lBlxuQiB9IAefNtR0VG6cySMe3/ticfmSPWTMU4=
+=4JUh
 -----END PGP SIGNATURE-----
 
---Sig_/CK_k+jLTsDph9zu/18x_P=.--
+--Sig_/9dv.WcsY/Y+AIANTyP1/i6v--
