@@ -2,120 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FFB2C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Apr 2021 09:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B8C8C43461
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Apr 2021 09:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAF1F6144E
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Apr 2021 09:18:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDE9C61449
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Apr 2021 09:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231501AbhD2JTK (ORCPT
+        id S237417AbhD2JZ2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Apr 2021 05:19:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57808 "EHLO mail.kernel.org"
+        Thu, 29 Apr 2021 05:25:28 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33476 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237366AbhD2JTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Apr 2021 05:19:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 594E961445;
-        Thu, 29 Apr 2021 09:18:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619687903;
-        bh=K/egRLl1LkQqfLlp8hnE6ni3Yg7KzMgI7I/EHWxqgCQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JEvEo7I1CelKSoRuzK4bSb1CAkakaQttdp9Jz1/23oI1hFl4iUcVZJdGtyVmRa3RK
-         gZUZlfwZ8RLjvZG4ukfwsp/NAGVnbQTD9Rot9ukpQaRA6sH1mt3ccXExetGgKm06u5
-         143o4TlqACRM8/IgNH+ONdB4MWbqaMtIi8rfp/u+myG2TZ+6z7BONfG2ZgwEtSv4d0
-         0m7647ktLSDLLGGmfGEgFpefZArMaPm1lFjt566MEcmwnc+3riyc5ledBu5DBXtMYh
-         ftrW475/fqCftxS+6cYgq2s4luSRs3D1bKEUfnBiu9CqDMGhc1buXRiqfIN0rcVcZv
-         u3ngG8fzzzE/Q==
-Date:   Thu, 29 Apr 2021 11:18:18 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH] mt76: move mt76_rates in mt76 module
-Message-ID: <YIp52gS+gumkHDLY@lore-desk>
-References: <a8da66822d9dbfd7afbebcd915f1c4e1bb59d41f.1619685085.git.lorenzo@kernel.org>
- <3d5251c8-dfad-7b46-4603-3df3f50c5770@nbd.name>
+        id S235125AbhD2JZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Apr 2021 05:25:27 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1619688280; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sFsswHYzmnsCtIuWtaEE2puDhfR/SZTmIoW2PDCisco=;
+        b=YHGyFKkt5FLMqBLrnT2gKXkMJrFdXxGIaYTsZwHTkZl/aJrBSyIWADryXxu0HwVHPiX68g
+        rmN+DZf1OlhdUd4aI/utae5zRHaqzTu9b+gp/ClXNvy1rzfYl9xTXY70yup6WHBLQUELlu
+        NxxbuOjqbhatlpjTgDyq0oNC5djBdXE=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id EB95FAFDC;
+        Thu, 29 Apr 2021 09:24:39 +0000 (UTC)
+Date:   Thu, 29 Apr 2021 11:24:39 +0200
+From:   Petr Mladek <pmladek@suse.com>
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     Jia He <justin.he@arm.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Linux Documentation List <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>, linux-s390@vger.kernel.org
+Subject: Re: [PATCH 2/4] lib/vsprintf.c: Make %p{D,d} mean as much components
+ as possible
+Message-ID: <YIp7VxzE5MspQ0UX@alley>
+References: <20210428135929.27011-1-justin.he@arm.com>
+ <20210428135929.27011-2-justin.he@arm.com>
+ <YIpyZmi1Reh7iXeI@alley>
+ <CAHp75Vfa3ATc+-Luka9vJTwoCLAPVm38cciYyBYnWxzNQ1DPrg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="nQHsL+kKFsiv7XqR"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3d5251c8-dfad-7b46-4603-3df3f50c5770@nbd.name>
+In-Reply-To: <CAHp75Vfa3ATc+-Luka9vJTwoCLAPVm38cciYyBYnWxzNQ1DPrg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Thu 2021-04-29 11:52:49, Andy Shevchenko wrote:
+> On Thu, Apr 29, 2021 at 11:47 AM Petr Mladek <pmladek@suse.com> wrote:
+> >
+> > On Wed 2021-04-28 21:59:27, Jia He wrote:
+> > > From: Linus Torvalds <torvalds@linux-foundation.org>
+> > >
+> > > We have '%pD'(no digit following) for printing a filename. It may not be
+> > > perfect (by default it only prints one component.
+> > >
+> > > %pD4 should be more than good enough, but we should make plain "%pD" mean
+> > > "as much of the path that is reasonable" rather than "as few components as
+> > > possible" (ie 1).
+> >
+> > Could you please provide link to the discussion where this idea was
+> > came from?
+> 
+> https://lore.kernel.org/lkml/20210427025805.GD3122264@magnolia/
 
---nQHsL+kKFsiv7XqR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for the link. I see that it was not clear whether the patch
+was good for %pd behavior.
 
->=20
-> On 2021-04-29 10:32, Lorenzo Bianconi wrote:
-> > Move mt76_rates array in mt76 module and remove duplicated code since it
-> > is shared by all drivers
-> >=20
-> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > ---
-> >  drivers/net/wireless/mediatek/mt76/mac80211.c | 16 +++++++++
-> >  drivers/net/wireless/mediatek/mt76/mt76.h     | 15 ++++++++
-> >  .../net/wireless/mediatek/mt76/mt7603/init.c  | 13 -------
-> >  .../net/wireless/mediatek/mt76/mt7615/init.c  | 33 ++---------------
-> >  .../wireless/mediatek/mt76/mt7615/pci_init.c  |  4 +--
-> >  .../wireless/mediatek/mt76/mt7615/usb_sdio.c  |  4 +--
-> >  .../net/wireless/mediatek/mt76/mt76x02_util.c | 16 +++------
-> >  .../net/wireless/mediatek/mt76/mt7915/init.c  | 36 +++----------------
-> >  .../net/wireless/mediatek/mt76/mt7921/init.c  | 32 ++---------------
-> >  9 files changed, 48 insertions(+), 121 deletions(-)
-> >=20
-> > index e1b2cfa56074..b46097ea334a 100644
-> > --- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-> > +++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-> > @@ -304,19 +304,6 @@ mt7603_init_hardware(struct mt7603_dev *dev)
-> >  	return 0;
-> >  }
-> > =20
-> > -#define CCK_RATE(_idx, _rate) {					\
-> > -	.bitrate =3D _rate,					\
-> > -	.flags =3D IEEE80211_RATE_SHORT_PREAMBLE,			\
-> > -	.hw_value =3D (MT_PHY_TYPE_CCK << 8) | (_idx),		\
-> > -	.hw_value_short =3D (MT_PHY_TYPE_CCK << 8) | (4 + _idx),	\
-> > -}
-> > -
-> > -#define OFDM_RATE(_idx, _rate) {				\
-> > -	.bitrate =3D _rate,					\
-> > -	.hw_value =3D (MT_PHY_TYPE_OFDM << 8) | (_idx),		\
-> > -	.hw_value_short =3D (MT_PHY_TYPE_OFDM << 8) | (_idx),	\
-> > -}
-> > -
-> >  static struct ieee80211_rate mt7603_rates[] =3D {
-> >  	CCK_RATE(0, 10),
-> >  	CCK_RATE(1, 20),
-> I think you can drop mt7603_rates as well and replace it with
-> mt76_rates. The rest looks good to me.
+Linus actually suggests to keep %pd behavior as it was before, see
+https://lore.kernel.org/lkml/CAHk-=wimsMqGdzik187YWLb-ru+iktb4MYbMQG1rnZ81dXYFVg@mail.gmail.com/
 
-it was in my plan but I forgot it, I will fix it in v2, thanks.
+Well, I think that this is up to the file system developers to decide.
+I am not sure if the path would do more harm than good,
+or vice versa, for dentry names.
 
-Regards,
-Lorenzo
-
->=20
-> - Felix
-
---nQHsL+kKFsiv7XqR
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYIp52AAKCRA6cBh0uS2t
-rCEiAP9SLdlTCKuxoO9KvhH9gJUlWkpvw1DjhRFlloX2xsVE9gD8CdIHRguM5LNh
-bvFrNY5Q3HPrBKA5481Ct8KkuDDl6wU=
-=vjKY
------END PGP SIGNATURE-----
-
---nQHsL+kKFsiv7XqR--
+Best Regards,
+Petr
