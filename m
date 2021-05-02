@@ -2,140 +2,210 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B41C433B4
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 May 2021 14:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2591C433ED
+	for <linux-wireless@archiver.kernel.org>; Sun,  2 May 2021 03:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 412A261490
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 May 2021 14:34:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E865613D8
+	for <linux-wireless@archiver.kernel.org>; Sun,  2 May 2021 03:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231432AbhEAOfT (ORCPT
+        id S231593AbhEBDVM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 1 May 2021 10:35:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50038 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231415AbhEAOfS (ORCPT
+        Sat, 1 May 2021 23:21:12 -0400
+Received: from dispatchb-us1.ppe-hosted.com ([148.163.129.53]:58490 "EHLO
+        dispatchb-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230409AbhEBDVL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 May 2021 10:35:18 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433B6C06138C
-        for <linux-wireless@vger.kernel.org>; Sat,  1 May 2021 07:34:28 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id l4so1337046ejc.10
-        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2021 07:34:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=P7wlVldFzAa9KGTsX4/sCHUDDDcScVbS5pBQOENVnF4=;
-        b=VeobQzwvAaKEKB6sxRptTZt/D5zIrnn4dhfQaPD4KkXkB8zK3+ppDR2EcRlqFHXnyq
-         z9LX4IZoGkyuQypHRLo4vw7krU8J6s7h/NPP8h48jb/J0nYYrEOsX4gOOCzGH9AgkelQ
-         vxnAurV8B5bZ7q2BPhDu/+zKD/wGPlOhoAeUCT5LksuBjHXEqMeHA4bVC3tzfOToIGMH
-         3vlzFwiJHazGquHEN7zAMRgppAJ2hwJbPvjHBsZYqXB6UdgAK+FY/rfCe08c3/1i9V/T
-         mR9AksIpd0b2TKLcVI6zsxz+IgGbCJbrWPSjCeC7MQlV6wgEyyt2RkJ7qzp1HM3wSshH
-         wS/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=P7wlVldFzAa9KGTsX4/sCHUDDDcScVbS5pBQOENVnF4=;
-        b=HDJKzQSx/4Sj0/Vb4MDFmovQlqHFgv6iwOwi6aurOZKtxTBdfzCrVOK7lqay5/PHCN
-         kes2Y7BzNVQBcJfAyT0DS68ZxfennEuaJN9jQQm1/TLsEueFOU9yIJQVbZ8QSU4P5u4F
-         kJC2A0EdKvQRgtlJBH8HlKw6TJjDbQlGdUOTlycOsMDv3g7sUl23KmV0Yb2ZU44rfYTJ
-         rUqyfBnog/taG2sf7BFgHEZ+KJrVvr/efcHqGc0KMoaV818WpYzFope1i/G9wMyRv1+/
-         FkB5/UghmD9V12TsilCHe5Oj9rKBT+wG0TEo9baELx/KSOWBpnbhJJQgLqh7SU6ad+SP
-         ivqA==
-X-Gm-Message-State: AOAM532hq2CZbk1esFCfrGrHDdusGLG9/B1qnJmhhyl4+6ZFkvTylXnf
-        fSdxMh0LwfJqPRoeGmPmFirO/EddPGD2yJtUFeETDl1kvcWGnA==
-X-Google-Smtp-Source: ABdhPJxFtwXifIVA+0x1mncQQTBc469M9vGVr82gVOGw3lloMDiZVveIB6esV10P/Rj/lds0K3KooOp7a5zqVf9iz5M=
-X-Received: by 2002:a17:906:168d:: with SMTP id s13mr9006579ejd.81.1619879666741;
- Sat, 01 May 2021 07:34:26 -0700 (PDT)
+        Sat, 1 May 2021 23:21:11 -0400
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.122])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id E775F1A0062
+        for <linux-wireless@vger.kernel.org>; Sun,  2 May 2021 03:20:19 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id BA55040061
+        for <linux-wireless@vger.kernel.org>; Sun,  2 May 2021 03:20:19 +0000 (UTC)
+Received: from [192.168.254.6] (unknown [50.34.172.155])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id F26F413C2B1
+        for <linux-wireless@vger.kernel.org>; Sat,  1 May 2021 20:20:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com F26F413C2B1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1619925619;
+        bh=JLJjUXPXi86w7lS9fn4V/siXWNj1TESROaU0QrNAyJI=;
+        h=To:From:Subject:Date:From;
+        b=C8d/WysibX3Nsi6kWqOU5QXDxPK1lAwhuiDXkfOYQlMnDA6Y5Ti4JLXSBElsGfhkF
+         8XWeptZMYb5uWaL4tJtZD3bIAnBVREvyM1yRffwjP+sGnkS0CxZYjkYQC1vYT9tapC
+         Tf3A4h2GvhRDGC0yGsXvZot+sdBAoVtGBacAgFZE=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: iwlwifi firmware crash and kernel crash.
+Organization: Candela Technologies
+Message-ID: <e6885c76-3853-4472-a8b4-18cde518adf4@candelatech.com>
+Date:   Sat, 1 May 2021 20:20:18 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-From:   Turritopsis Dohrnii Teo En Ming <ceo.teo.en.ming@gmail.com>
-Date:   Sat, 1 May 2021 22:34:18 +0800
-Message-ID: <CAMEJMGHaiEUKkGPXXz=xJNxfpATXnmrVSg4Yp1rSuWBF7XgTDg@mail.gmail.com>
-Subject: Huawei E3276s-920 4G LTE USB Modem works on Fortigate 60D firewall
- firmware 6.0.10 but not on Sophos SG 115 rev 2 firewall UTM 9.703-3
-To:     linux-wireless@vger.kernel.org
-Cc:     ceo@teo-en-ming-corp.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
+X-MDID: 1619925620-CzMQdI98I_no
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Subject: Huawei E3276s-920 4G LTE USB Modem works on Fortigate 60D
-firewall firmware 6.0.10 but not on Sophos SG 115 rev 2 firewall UTM
-9.703-3
+This is a 5.11-ish kernel, with a lot of 5.12-ish iwlwifi backported, and lots of hacks
+of my own...
 
-Good day from Singapore,
+Curious if anyone has seen similar problems or have suggestions to try?
 
-I subscribed to TPG Mobile 100 GB SIM Only Plan (SGD$10 per month) and
-collected my TPG Mobile SIM card at Besk Denki, Bedok Mall, Singapore
-on 30 April 2021, all on the same day.
+I'll build a KASAN kernel and see if I can reproduce under that...
 
-After collecting my TPG Mobile SIM card, I went to Sim Lim Square,
-Singapore to purchase Huawei E3276s-920 4G LTE USB modem for SGD$75 on
-30 April 2021, also on the same day.
+iwlwifi 0000:0c:00.0: Microcode SW error detected. Restarting 0x0.
+iwlwifi 0000:0c:00.0: Start IWL Error Log Dump:
+iwlwifi 0000:0c:00.0: Status: 0x00000040, count: 6
+iwlwifi 0000:0c:00.0: Loaded firmware version: 62.49eeb572.0 ty-a0-gf-a0-62.ucode
+iwlwifi 0000:0c:00.0: 0x00000942 | ADVANCED_SYSASSERT
+iwlwifi 0000:0c:00.0: 0x000002F0 | trm_hw_status0
+iwlwifi 0000:0c:00.0: 0x00000000 | trm_hw_status1
+iwlwifi 0000:0c:00.0: 0x004DA02C | branchlink2
+iwlwifi 0000:0c:00.0: 0x00001592 | interruptlink1
+iwlwifi 0000:0c:00.0: 0x00001592 | interruptlink2
+iwlwifi 0000:0c:00.0: 0x0004FFF5 | data1
+iwlwifi 0000:0c:00.0: 0x2A010200 | data2
+iwlwifi 0000:0c:00.0: 0x020C0606 | data3
+iwlwifi 0000:0c:00.0: 0x098131BA | beacon time
+iwlwifi 0000:0c:00.0: 0x9A39FE56 | tsf low
+iwlwifi 0000:0c:00.0: 0x00000013 | tsf hi
+iwlwifi 0000:0c:00.0: 0x00000000 | time gp1
+iwlwifi 0000:0c:00.0: 0x06ADA48B | time gp2
+iwlwifi 0000:0c:00.0: 0x00000001 | uCode revision type
+iwlwifi 0000:0c:00.0: 0x0000003E | uCode version major
+iwlwifi 0000:0c:00.0: 0x49EEB572 | uCode version minor
+iwlwifi 0000:0c:00.0: 0x00000420 | hw version
+iwlwifi 0000:0c:00.0: 0x00C89002 | board version
+iwlwifi 0000:0c:00.0: 0x8062FD27 | hcmd
+iwlwifi 0000:0c:00.0: 0x80121010 | isr0
+iwlwifi 0000:0c:00.0: 0x00400000 | isr1
+iwlwifi 0000:0c:00.0: 0x48F0000A | isr2
+iwlwifi 0000:0c:00.0: 0x04C315DC | isr3
+iwlwifi 0000:0c:00.0: 0x00200000 | isr4
+iwlwifi 0000:0c:00.0: 0x02F3001C | last cmd Id
+iwlwifi 0000:0c:00.0: 0x004D6718 | wait_event
+iwlwifi 0000:0c:00.0: 0x00000024 | l2p_control
+iwlwifi 0000:0c:00.0: 0x00000000 | l2p_duration
+iwlwifi 0000:0c:00.0: 0x0000000F | l2p_mhvalid
+iwlwifi 0000:0c:00.0: 0x08001888 | l2p_addr_match
+iwlwifi 0000:0c:00.0: 0x00000009 | lmpm_pmg_sel
+iwlwifi 0000:0c:00.0: 0x00000000 | timestamp
+iwlwifi 0000:0c:00.0: 0x00000808 | flow_handler
+iwlwifi 0000:0c:00.0: Start IWL Error Log Dump:
+iwlwifi 0000:0c:00.0: Status: 0x00000040, count: 7
+iwlwifi 0000:0c:00.0: 0x20000070 | NMI_INTERRUPT_LMAC_FATAL
+iwlwifi 0000:0c:00.0: 0x00000000 | umac branchlink1
+iwlwifi 0000:0c:00.0: 0x8045C7E4 | umac branchlink2
+iwlwifi 0000:0c:00.0: 0x8047E400 | umac interruptlink1
+iwlwifi 0000:0c:00.0: 0x8047E400 | umac interruptlink2
+iwlwifi 0000:0c:00.0: 0x00000002 | umac data1
+iwlwifi 0000:0c:00.0: 0x8047E400 | umac data2
+iwlwifi 0000:0c:00.0: 0x00000000 | umac data3
+iwlwifi 0000:0c:00.0: 0x0000003E | umac major
+iwlwifi 0000:0c:00.0: 0x49EEB572 | umac minor
+iwlwifi 0000:0c:00.0: 0x06ADA9BB | frame pointer
+iwlwifi 0000:0c:00.0: 0xC0886264 | stack pointer
+iwlwifi 0000:0c:00.0: 0x0043010C | last host cmd
+iwlwifi 0000:0c:00.0: 0x00000000 | isr status reg
+iwlwifi 0000:0c:00.0: IML/ROM dump:
+iwlwifi 0000:0c:00.0: 0x00000B03 | IML/ROM error/state
+iwlwifi 0000:0c:00.0: 0x00007EE9 | IML/ROM data1
+iwlwifi 0000:0c:00.0: 0x00000080 | IML/ROM WFPM_AUTH_KEY_0
+iwlwifi 0000:0c:00.0: Fseq Registers:
+iwlwifi 0000:0c:00.0: 0x60000000 | FSEQ_ERROR_CODE
+iwlwifi 0000:0c:00.0: 0x80440002 | FSEQ_TOP_INIT_VERSION
+iwlwifi 0000:0c:00.0: 0x00070008 | FSEQ_CNVIO_INIT_VERSION
+iwlwifi 0000:0c:00.0: 0x0000A652 | FSEQ_OTP_VERSION
+iwlwifi 0000:0c:00.0: 0x00000002 | FSEQ_TOP_CONTENT_VERSION
+iwlwifi 0000:0c:00.0: 0x4552414E | FSEQ_ALIVE_TOKEN
+iwlwifi 0000:0c:00.0: 0x00400410 | FSEQ_CNVI_ID
+iwlwifi 0000:0c:00.0: 0x00400410 | FSEQ_CNVR_ID
+iwlwifi 0000:0c:00.0: 0x00400410 | CNVI_AUX_MISC_CHIP
+iwlwifi 0000:0c:00.0: 0x00400410 | CNVR_AUX_MISC_CHIP
+iwlwifi 0000:0c:00.0: 0x00009061 | CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM
+iwlwifi 0000:0c:00.0: 0x00000061 | CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR
+BUG: kernel NULL pointer dereference, address: 0000000000000084
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 0 P4D 0
+Oops: 0000 [#1] PREEMPT SMP
+CPU: 6 PID: 1142 Comm: irq/236-iwlwifi Not tainted 5.11.10+ #29
+Hardware name: Default string Default string/SKYBAY, BIOS 5.12 08/04/2020
+RIP: 0010:rb_next+0x1d/0x50
+Code: 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 8b 0f 48 39 cf 74 39 48 8b 47 08 48 85 c0 74 22 48 8b 50 10 48 85 d2 74 0c 48 89 d0 <48> 8b 50 10 48 85 d2 75 f4 
+c3 48 3b 79 08 75 17
+RSP: 0018:ffffc9000021cde0 EFLAGS: 00010206
+RAX: 0000000000000074 RBX: ffff88811d5388c0 RCX: ffff8881124ae200
+RDX: 0000000000000074 RSI: ffff888117f0c600 RDI: ffff888117f0c600
+RBP: 0000000000000000 R08: 000000000000df88 R09: 0000000000000023
+R10: ffffc9000021cf28 R11: 00000000000065d0 R12: ffffffff8280aec0
+R13: ffff888117f0c600 R14: ffff888157475600 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88846dd80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000084 CR3: 000000000260f001 CR4: 00000000003706e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+  <IRQ>
+  tcp_enter_loss+0xbf/0x350
+  tcp_retransmit_timer+0x35a/0x970
+  ? netif_receive_skb_list_internal+0x1a6/0x2a0
+  tcp_write_timer_handler+0x87/0x1d0
+  tcp_write_timer+0x91/0xd0
+  ? tcp_write_timer_handler+0x1d0/0x1d0
+  ? tcp_write_timer_handler+0x1d0/0x1d0
+  call_timer_fn+0x22/0x120
+  run_timer_softirq+0x1e2/0x410
+  ? net_rx_action+0x224/0x2a0
+  __do_softirq+0xc6/0x2bb
+  ? irq_finalize_oneshot.part.49+0xd0/0xd0
+  asm_call_irq_on_stack+0xf/0x20
+  </IRQ>
 
-After extensive testing on my firewall appliances, I am very glad to
-announce that Huawei E3276s-920 4G LTE USB modem works on Fortigate
-60D firewall with firmware 6.0.10.
+(gdb) l *(tcp_enter_loss+0xbf)
+0xffffffff81a3862f is in tcp_enter_loss (/home2/greearb/git/linux-5.11.dev.y/net/ipv4/tcp_input.c:2081).
+2076		} else if (tcp_is_reno(tp)) {
+2077			tcp_reset_reno_sack(tp);
+2078		}
+2079	
+2080		skb = head;
+2081		skb_rbtree_walk_from(skb) {
+2082			if (is_reneg)
+2083				TCP_SKB_CB(skb)->sacked &= ~TCPCB_SACKED_ACKED;
+2084			else if (tcp_is_rack(sk) && skb != head &&
+2085				 tcp_rack_skb_timeout(tp, skb, 0) > 0)
+(gdb)
 
-These are the minimum CLI commands required to get Huawei E3276s-920
-4G LTE USB modem working on Fortigate 60D firewall with firmware
-6.0.10.
-
-config system lte-modem
-set status enable
-set apn "TPG"
-set modem-port 2
-
-However, I am disheartened to find out that Huawei E3276s-920 4G LTE
-USB modem does not work on Sophos SG-115 rev 2 firewall with UTM
-9.703-3. My Sophos SG-115 rev 2 firewall with UTM 9.703-3 cannot
-detect the Huawei E3276s-920 4G LTE USB modem at all. This is the
-guide that I followed but did not work.
-
-Article: Sophos UTM: How to create a 3G/UMTS interface
-Link: https://support.sophos.com/support/s/article/KB-000034757?language=en_US
-
-There was a Fortigate OR Sophos technical support engineer (I can't
-remember who) who said that if you can get a 4G LTE USB modem to work
-on a Linux operating system/distro, it should also work on Fortigate
-OR Sophos firewalls. This is because Fortigate and Sophos firewalls
-are based on Linux.
-
-Mr. Turritopsis Dohrnii Teo En Ming, 43 years old as of 1st May 2021,
-is a TARGETED INDIVIDUAL living in Singapore. He is an IT Consultant
-with a System Integrator (SI)/computer firm in Singapore. He is an IT
-enthusiast.
+(gdb) l *(rb_next+0x1d)
+0xffffffff815d16bd is in rb_next (/home2/greearb/git/linux-5.11.dev.y/lib/rbtree.c:503).
+498	
+499		/*
+500		 * If we have a right-hand child, go down and then left as far
+501		 * as we can.
+502		 */
+503		if (node->rb_right) {
+504			node = node->rb_right;
+505			while (node->rb_left)
+506				node = node->rb_left;
+507			return (struct rb_node *)node;
+(gdb)
 
 
+Thanks,
+Ben
 
-
-
------BEGIN EMAIL SIGNATURE-----
-
-The Gospel for all Targeted Individuals (TIs):
-
-[The New York Times] Microwave Weapons Are Prime Suspect in Ills of
-U.S. Embassy Workers
-
-Link:
-https://www.nytimes.com/2018/09/01/science/sonic-attack-cuba-microwave.html
-
-********************************************************************************************
-
-Singaporean Targeted Individual Mr. Turritopsis Dohrnii Teo En Ming's
-Academic Qualifications as at 14 Feb 2019 and refugee seeking attempts
-at the United Nations Refugee Agency Bangkok (21 Mar 2017), in Taiwan
-(5 Aug 2019) and Australia (25 Dec 2019 to 9 Jan 2020):
-
-[1] https://tdtemcerts.wordpress.com/
-
-[2] https://tdtemcerts.blogspot.sg/
-
-[3] https://www.scribd.com/user/270125049/Teo-En-Ming
-
------END EMAIL SIGNATURE-----
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
