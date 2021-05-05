@@ -7,40 +7,43 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D6BC433B4
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:34:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD1E9C433B4
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:35:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34CD561876
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:34:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF091616ED
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234890AbhEEQfr (ORCPT
+        id S234692AbhEEQgN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 12:35:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53474 "EHLO mail.kernel.org"
+        Wed, 5 May 2021 12:36:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53704 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234565AbhEEQdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 12:33:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5DDF36142C;
-        Wed,  5 May 2021 16:32:33 +0000 (UTC)
+        id S234689AbhEEQeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 12:34:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 11F4E61411;
+        Wed,  5 May 2021 16:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620232354;
-        bh=RYJFBR3GQ8Xd0J8jaYkkYHAiFJ08CpgfGIi/7L2F32k=;
+        s=k20201202; t=1620232364;
+        bh=4vldGFku7LwfIJmSZA2/UFDmjoW0JxY2jQPXpMy7jIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ku/vWOyEDZ2Bg3wgzuVzogZxCDucvzUkQ6d96YQ0y+jsZUFqD6titHD4oGxNWsZtT
-         +bJRgYo2vUDvhQTeH7p4PIVc5DzxcSGQi/Gh+Nr8R+dEFvQS/rifhXej9k1suaTTO0
-         wRII6B6PcVFcCj7OW9X2hXmxNysIm2+pQ6KQgcSrfwJ+tsFQFBdoy0UwypFs0/Dh1p
-         fq75ms0+m2zvAFgUhguIpstpBFWzA3V7R5pQGTV6UUtbiI1VaA1goZUOy1M1p8Fm1G
-         T0yOZXV43mz9pw1ayLuc/cjjG8wrqFUr+3eIN00WdykgvqHaLkCsrW6xUtH4aCC7u8
-         Mpx0hhtWp3oKA==
+        b=HkwUGybAl+27ZYg3NjrD64Rkd0pY/Q2CyVCOmY3sUx3TXpp3elGcl0BACkP8OUa8W
+         EKXC/xdIA4jV7A88J0lrYF9iTn+WB2jbEVMDOl3arm9CiJtVYzq4ExV4DX+Tc37huG
+         yQCJIrIiPYV7RStYrxoofVwzNdwpwgdVNPhAi5oT5nD8sU7PXgatYWNZaHn1gTJcRY
+         mf/YWUwhd+xxiVNE1s8M1LcjRDk8tHwZmaMHa/7zn1+L6INyDesUfrAt7Cdrw4sKVd
+         EizrUTn/E4XRkErKdYYAlnKctfMGLpo1Cm7py2EacoJBlbwhxOvt4dYkIFGZkllYqc
+         koOfDvhjmFGvw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 050/116] mac80211: clear the beacon's CRC after channel switch
-Date:   Wed,  5 May 2021 12:30:18 -0400
-Message-Id: <20210505163125.3460440-50-sashal@kernel.org>
+Cc:     Sander Vanheule <sander@svanheule.net>,
+        Georgi Vlaev <georgi.vlaev@konsulko.com>,
+        Stijn Segers <foss@volatilesystems.org>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.12 057/116] mt76: mt7615: support loading EEPROM for MT7613BE
+Date:   Wed,  5 May 2021 12:30:25 -0400
+Message-Id: <20210505163125.3460440-57-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210505163125.3460440-1-sashal@kernel.org>
 References: <20210505163125.3460440-1-sashal@kernel.org>
@@ -52,50 +55,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sander Vanheule <sander@svanheule.net>
 
-[ Upstream commit d6843d1ee283137723b4a8c76244607ce6db1951 ]
+[ Upstream commit 858ebf446bee7d5077bd99488aae617908c3f4fe ]
 
-After channel switch, we should consider any beacon with a
-CSA IE as a new switch. If the CSA IE is a leftover from
-before the switch that the AP forgot to remove, we'll get
-a CSA-to-Self.
+EEPROM blobs for MT7613BE radios start with (little endian) 0x7663,
+which is also the PCI device ID for this device. The EEPROM is required
+for the radio to work at useful power levels, otherwise only the lowest
+power level is available.
 
-This caused issues in iwlwifi where the firmware saw a beacon
-with a CSA-to-Self with mode = 1 on the new channel after a
-switch. The firmware considered this a new switch and closed
-its queues. Since the beacon didn't change between before and
-after the switch, we wouldn't handle it (the CRC is the same)
-and we wouldn't let the firmware open its queues again or
-disconnect if the CSA IE stays for too long.
-
-Clear the CRC valid state after we switch to make sure that
-we handle the beacon and handle the CSA IE as required.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://lore.kernel.org/r/20210408143124.b9e68aa98304.I465afb55ca2c7d59f7bf610c6046a1fd732b4c28@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Suggested-by: Georgi Vlaev <georgi.vlaev@konsulko.com>
+Tested-by: Stijn Segers <foss@volatilesystems.org>
+Signed-off-by: Sander Vanheule <sander@svanheule.net>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 96f487fc0071..4a8f1b8ce768 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1295,6 +1295,11 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
- 
- 	sdata->vif.csa_active = false;
- 	ifmgd->csa_waiting_bcn = false;
-+	/*
-+	 * If the CSA IE is still present on the beacon after the switch,
-+	 * we need to consider it as a new CSA (possibly to self).
-+	 */
-+	ifmgd->beacon_crc_valid = false;
- 
- 	ret = drv_post_channel_switch(sdata);
- 	if (ret) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 2eab23898c77..6dbaaf95ee38 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -86,6 +86,7 @@ static int mt7615_check_eeprom(struct mt76_dev *dev)
+ 	switch (val) {
+ 	case 0x7615:
+ 	case 0x7622:
++	case 0x7663:
+ 		return 0;
+ 	default:
+ 		return -EINVAL;
 -- 
 2.30.2
 
