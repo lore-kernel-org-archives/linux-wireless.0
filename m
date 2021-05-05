@@ -2,197 +2,219 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1E3C43461
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:12:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F85C43462
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:12:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C808613F1
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:12:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B2266101B
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238606AbhEERNV (ORCPT
+        id S238734AbhEERNb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 13:13:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38980 "EHLO mail.kernel.org"
+        Wed, 5 May 2021 13:13:31 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:17781 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238383AbhEERFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 13:05:52 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A7A961C39;
-        Wed,  5 May 2021 16:42:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620232946;
-        bh=7bw4t0LEX/sHxx+81N60RuQUiB0Yu7mtFnY/N3vxgEY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e+TuTVKUX9egspeDPaLJR6UEBlwWzSBCJhT8GHwt+oVhnWJf0+xRUhIAl8D3+b4QB
-         qGJiCcYViE7wTIXDJzpQPezSEDKoZG7+lRk5Cdo1e9sLZDml5JRRzSyH1NImgJOwON
-         Km1il4S1BrqOwfsrGWemPplQo9/u+Wtijrr3zLwx5IRppnfuRO4SxltAdGXULsM2Tn
-         Oa4q3dg8m4JtmF/24BX9sc4U9V8g7q77Hs3MFMLz7w935LennTtmjKpA7Ej2vXiZzJ
-         Xh2JkzTYQPuiz9uDq7APS/uKD0xiRJcuQ10SfmtDifIZUgIx5cJ3OSEk4vU66EobfA
-         YfPO6egwrte6A==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        kernel test robot <lkp@intel.com>,
-        Kees Cook <keescook@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 17/19] wl3501_cs: Fix out-of-bounds warnings in wl3501_send_pkt
-Date:   Wed,  5 May 2021 12:42:00 -0400
-Message-Id: <20210505164203.3464510-17-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210505164203.3464510-1-sashal@kernel.org>
-References: <20210505164203.3464510-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        id S238761AbhEERJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 13:09:43 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1620234527; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=5e/tbwNkfkugiVJDIguOA87ufd5rW7DOYlbqfJEesRc=; b=aa6jkosskl88RBOUxx6aSQhdxA1uVwtrZq6o/CjFE++jpyMySS4F+RiWIt0DF5kU0tErj/js
+ lFzsLZ+Mq1MI6FAj3OS74tNJZNZCoH4q+jCNN5OSgV/UWiMhcc8DGSlWFLQbkfc81yB5cuNu
+ K5S4bmo2GLA12f9kjdUEgbxtw5Y=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 6092d11b9a9ff96d958d6d11 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 05 May 2021 17:08:43
+ GMT
+Sender: bbhatt=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 5914FC43144; Wed,  5 May 2021 17:08:43 +0000 (UTC)
+Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bbhatt)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 509BFC43143;
+        Wed,  5 May 2021 17:08:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 509BFC43143
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
+From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
+To:     manivannan.sadhasivam@linaro.org
+Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
+        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
+        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org, ath11k@lists.infradead.org,
+        Bhaumik Bhatt <bbhatt@codeaurora.org>
+Subject: [PATCH v3 1/6] bus: mhi: core: Set BHI/BHIe offsets on power up preparation
+Date:   Wed,  5 May 2021 10:08:16 -0700
+Message-Id: <1620234501-30461-2-git-send-email-bbhatt@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1620234501-30461-1-git-send-email-bbhatt@codeaurora.org>
+References: <1620234501-30461-1-git-send-email-bbhatt@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Set the BHI and/or BHIe offsets in mhi_prepare_for_power_up(),
+rearrange the function, and remove the equivalent from
+mhi_async_power_up(). This helps consolidate multiple checks
+in different parts of the driver and can help MHI fail early on
+before power up begins if the offsets are not read correctly.
 
-[ Upstream commit 820aa37638a252b57967bdf4038a514b1ab85d45 ]
-
-Fix the following out-of-bounds warnings by enclosing structure members
-daddr and saddr into new struct addr, in structures wl3501_md_req and
-wl3501_md_ind:
-
-arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [18, 23] from the object at 'sig' is out of the bounds of referenced subobject 'daddr' with type 'u8[6]' {aka 'unsigned char[6]'} at offset 11 [-Warray-bounds]
-arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [18, 23] from the object at 'sig' is out of the bounds of referenced subobject 'daddr' with type 'u8[6]' {aka 'unsigned char[6]'} at offset 11 [-Warray-bounds]
-
-Refactor the code, accordingly:
-
-$ pahole -C wl3501_md_req drivers/net/wireless/wl3501_cs.o
-struct wl3501_md_req {
-	u16                        next_blk;             /*     0     2 */
-	u8                         sig_id;               /*     2     1 */
-	u8                         routing;              /*     3     1 */
-	u16                        data;                 /*     4     2 */
-	u16                        size;                 /*     6     2 */
-	u8                         pri;                  /*     8     1 */
-	u8                         service_class;        /*     9     1 */
-	struct {
-		u8                 daddr[6];             /*    10     6 */
-		u8                 saddr[6];             /*    16     6 */
-	} addr;                                          /*    10    12 */
-
-	/* size: 22, cachelines: 1, members: 8 */
-	/* last cacheline: 22 bytes */
-};
-
-$ pahole -C wl3501_md_ind drivers/net/wireless/wl3501_cs.o
-struct wl3501_md_ind {
-	u16                        next_blk;             /*     0     2 */
-	u8                         sig_id;               /*     2     1 */
-	u8                         routing;              /*     3     1 */
-	u16                        data;                 /*     4     2 */
-	u16                        size;                 /*     6     2 */
-	u8                         reception;            /*     8     1 */
-	u8                         pri;                  /*     9     1 */
-	u8                         service_class;        /*    10     1 */
-	struct {
-		u8                 daddr[6];             /*    11     6 */
-		u8                 saddr[6];             /*    17     6 */
-	} addr;                                          /*    11    12 */
-
-	/* size: 24, cachelines: 1, members: 9 */
-	/* padding: 1 */
-	/* last cacheline: 24 bytes */
-};
-
-The problem is that the original code is trying to copy data into a
-couple of arrays adjacent to each other in a single call to memcpy().
-Now that a new struct _addr_ enclosing those two adjacent arrays
-is introduced, memcpy() doesn't overrun the length of &sig.daddr[0]
-and &sig.daddr, because the address of the new struct object _addr_
-is used, instead.
-
-This helps with the ongoing efforts to globally enable -Warray-bounds
-and get us closer to being able to tighten the FORTIFY_SOURCE routines
-on memcpy().
-
-Link: https://github.com/KSPP/linux/issues/109
-Reported-by: kernel test robot <lkp@intel.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/d260fe56aed7112bff2be5b4d152d03ad7b78e78.1618442265.git.gustavoars@kernel.org
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
+Reviewed-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
 ---
- drivers/net/wireless/wl3501.h    | 12 ++++++++----
- drivers/net/wireless/wl3501_cs.c | 10 ++++++----
- 2 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/bus/mhi/core/init.c | 42 +++++++++++++++++++++++-------------------
+ drivers/bus/mhi/core/pm.c   | 28 ++++------------------------
+ 2 files changed, 27 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/wl3501.h b/drivers/net/wireless/wl3501.h
-index 3fbfd19818f1..ba2a36cfb1c8 100644
---- a/drivers/net/wireless/wl3501.h
-+++ b/drivers/net/wireless/wl3501.h
-@@ -470,8 +470,10 @@ struct wl3501_md_req {
- 	u16	size;
- 	u8	pri;
- 	u8	service_class;
--	u8	daddr[ETH_ALEN];
--	u8	saddr[ETH_ALEN];
-+	struct {
-+		u8	daddr[ETH_ALEN];
-+		u8	saddr[ETH_ALEN];
-+	} addr;
- };
+diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
+index c81b377..11c7a3d 100644
+--- a/drivers/bus/mhi/core/init.c
++++ b/drivers/bus/mhi/core/init.c
+@@ -1063,7 +1063,7 @@ EXPORT_SYMBOL_GPL(mhi_free_controller);
+ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
+ {
+ 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+-	u32 bhie_off;
++	u32 bhi_off, bhie_off;
+ 	int ret;
  
- struct wl3501_md_ind {
-@@ -483,8 +485,10 @@ struct wl3501_md_ind {
- 	u8	reception;
- 	u8	pri;
- 	u8	service_class;
--	u8	daddr[ETH_ALEN];
--	u8	saddr[ETH_ALEN];
-+	struct {
-+		u8	daddr[ETH_ALEN];
-+		u8	saddr[ETH_ALEN];
-+	} addr;
- };
+ 	mutex_lock(&mhi_cntrl->pm_mutex);
+@@ -1072,29 +1072,36 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (ret)
+ 		goto error_dev_ctxt;
  
- struct wl3501_md_confirm {
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index d5c371d77ddf..15613f4761f4 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -457,6 +457,7 @@ static int wl3501_send_pkt(struct wl3501_card *this, u8 *data, u16 len)
- 	struct wl3501_md_req sig = {
- 		.sig_id = WL3501_SIG_MD_REQ,
- 	};
-+	size_t sig_addr_len = sizeof(sig.addr);
- 	u8 *pdata = (char *)data;
- 	int rc = -EIO;
+-	/*
+-	 * Allocate RDDM table if specified, this table is for debugging purpose
+-	 */
+-	if (mhi_cntrl->rddm_size) {
+-		mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
+-				     mhi_cntrl->rddm_size);
++	ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIOFF, &bhi_off);
++	if (ret) {
++		dev_err(dev, "Error getting BHI offset\n");
++		goto error_reg_offset;
++	}
++	mhi_cntrl->bhi = mhi_cntrl->regs + bhi_off;
  
-@@ -472,9 +473,9 @@ static int wl3501_send_pkt(struct wl3501_card *this, u8 *data, u16 len)
- 			goto out;
+-		/*
+-		 * This controller supports RDDM, so we need to manually clear
+-		 * BHIE RX registers since POR values are undefined.
+-		 */
++	if (mhi_cntrl->fbc_download || mhi_cntrl->rddm_size) {
+ 		ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIEOFF,
+ 				   &bhie_off);
+ 		if (ret) {
+ 			dev_err(dev, "Error getting BHIE offset\n");
+-			goto bhie_error;
++			goto error_reg_offset;
  		}
- 		rc = 0;
--		memcpy(&sig.daddr[0], pdata, 12);
--		pktlen = len - 12;
--		pdata += 12;
-+		memcpy(&sig.addr, pdata, sig_addr_len);
-+		pktlen = len - sig_addr_len;
-+		pdata += sig_addr_len;
- 		sig.data = bf;
- 		if (((*pdata) * 256 + (*(pdata + 1))) > 1500) {
- 			u8 addr4[ETH_ALEN] = {
-@@ -968,7 +969,8 @@ static inline void wl3501_md_ind_interrupt(struct net_device *dev,
- 	} else {
- 		skb->dev = dev;
- 		skb_reserve(skb, 2); /* IP headers on 16 bytes boundaries */
--		skb_copy_to_linear_data(skb, (unsigned char *)&sig.daddr, 12);
-+		skb_copy_to_linear_data(skb, (unsigned char *)&sig.addr,
-+					sizeof(sig.addr));
- 		wl3501_receive(this, skb->data, pkt_len);
- 		skb_put(skb, pkt_len);
- 		skb->protocol	= eth_type_trans(skb, dev);
+-
+ 		mhi_cntrl->bhie = mhi_cntrl->regs + bhie_off;
++	}
++
++	if (mhi_cntrl->rddm_size) {
++		/*
++		 * This controller supports RDDM, so we need to manually clear
++		 * BHIE RX registers since POR values are undefined.
++		 */
+ 		memset_io(mhi_cntrl->bhie + BHIE_RXVECADDR_LOW_OFFS,
+ 			  0, BHIE_RXVECSTATUS_OFFS - BHIE_RXVECADDR_LOW_OFFS +
+ 			  4);
+-
++		/*
++		 * Allocate RDDM table for debugging purpose if specified
++		 */
++		mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
++				     mhi_cntrl->rddm_size);
+ 		if (mhi_cntrl->rddm_image)
+ 			mhi_rddm_prepare(mhi_cntrl, mhi_cntrl->rddm_image);
+ 	}
+@@ -1103,11 +1110,8 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
+ 
+ 	return 0;
+ 
+-bhie_error:
+-	if (mhi_cntrl->rddm_image) {
+-		mhi_free_bhie_table(mhi_cntrl, mhi_cntrl->rddm_image);
+-		mhi_cntrl->rddm_image = NULL;
+-	}
++error_reg_offset:
++	mhi_deinit_dev_ctxt(mhi_cntrl);
+ 
+ error_dev_ctxt:
+ 	mutex_unlock(&mhi_cntrl->pm_mutex);
+diff --git a/drivers/bus/mhi/core/pm.c b/drivers/bus/mhi/core/pm.c
+index e2e59a3..adf426c 100644
+--- a/drivers/bus/mhi/core/pm.c
++++ b/drivers/bus/mhi/core/pm.c
+@@ -1066,28 +1066,8 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (ret)
+ 		goto error_setup_irq;
+ 
+-	/* Setup BHI offset & INTVEC */
++	/* Setup BHI INTVEC */
+ 	write_lock_irq(&mhi_cntrl->pm_lock);
+-	ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIOFF, &val);
+-	if (ret) {
+-		write_unlock_irq(&mhi_cntrl->pm_lock);
+-		goto error_bhi_offset;
+-	}
+-
+-	mhi_cntrl->bhi = mhi_cntrl->regs + val;
+-
+-	/* Setup BHIE offset */
+-	if (mhi_cntrl->fbc_download) {
+-		ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, BHIEOFF, &val);
+-		if (ret) {
+-			write_unlock_irq(&mhi_cntrl->pm_lock);
+-			dev_err(dev, "Error reading BHIE offset\n");
+-			goto error_bhi_offset;
+-		}
+-
+-		mhi_cntrl->bhie = mhi_cntrl->regs + val;
+-	}
+-
+ 	mhi_write_reg(mhi_cntrl, mhi_cntrl->bhi, BHI_INTVEC, 0);
+ 	mhi_cntrl->pm_state = MHI_PM_POR;
+ 	mhi_cntrl->ee = MHI_EE_MAX;
+@@ -1098,7 +1078,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 	if (!MHI_IN_PBL(current_ee) && current_ee != MHI_EE_AMSS) {
+ 		dev_err(dev, "Not a valid EE for power on\n");
+ 		ret = -EIO;
+-		goto error_bhi_offset;
++		goto error_async_power_up;
+ 	}
+ 
+ 	state = mhi_get_mhi_state(mhi_cntrl);
+@@ -1117,7 +1097,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 		if (!ret) {
+ 			ret = -EIO;
+ 			dev_info(dev, "Failed to reset MHI due to syserr state\n");
+-			goto error_bhi_offset;
++			goto error_async_power_up;
+ 		}
+ 
+ 		/*
+@@ -1139,7 +1119,7 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ 
+ 	return 0;
+ 
+-error_bhi_offset:
++error_async_power_up:
+ 	mhi_deinit_free_irq(mhi_cntrl);
+ 
+ error_setup_irq:
 -- 
-2.30.2
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
