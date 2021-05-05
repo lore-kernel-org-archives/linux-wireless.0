@@ -2,45 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-24.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D97C43619
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:39:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE283C433ED
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CD55619C6
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:39:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A409619B3
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234166AbhEEQkt (ORCPT
+        id S234820AbhEEQkw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 12:40:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53402 "EHLO mail.kernel.org"
+        Wed, 5 May 2021 12:40:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38504 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234547AbhEEQhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 12:37:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E38EC61442;
-        Wed,  5 May 2021 16:33:28 +0000 (UTC)
+        id S234503AbhEEQio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 12:38:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D5885614A7;
+        Wed,  5 May 2021 16:33:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620232409;
-        bh=3cGMjJNrm/8gkL5HPAi2bxb+Bqm/8WeEaYkUYtNekV8=;
+        s=k20201202; t=1620232426;
+        bh=m1IdrTc0PJlieHqOWMV/T/izml7M7PVd/a0+jw4+KsI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FXFlmlNGTKYL3hpBl/RcnlCM/7TWE4P4eu4mVJ97R4YknAgkrAx+4B912zjPGrFdN
-         oiB19AMq7Elyw9e0+LAfkNsK8ojKBPp0xUQbnb1jsuthS3imsmEzX7vzC3aFvWC3pg
-         E4yzaxG7StG6LwjxsKbKUGRbbeIrfnvKqOTKthEV/nPByzqvxC4NuzYlp6ETBMa2Pc
-         iQQEbUtDomj3QWvb+gFjhGvEmY9BXpuAJ32+SmowhWpRM9IdVb0U1D6+FoOyZWKpjy
-         FbrVNvxA/Eg3SNCjHqH51eHARdUmeZjibCI8juHAQB26t2pZTFEPw6Cj6nuz/x0gh4
-         unULgB3uSmY6g==
+        b=KhEWvuj4EYkt1qJZLTLSmOFIyxqh4fwx/Ilm4Y+GmrJszJgJiogPY0kmvNoR2v+0L
+         K5diLQvPyXVqSSaebI3p2MB342UcEq0iE1oSAAkWDksjZHZPmgKz7b68vG4Au0JBtM
+         PaV01veUgiR6qsPLcNoQ1JXqYuysp6Dmsl0o5y+n9ekQbbMhoDTdDiAa5QqaOONB3M
+         dBLauH7sLQ3l2wbzMbEMUP/b9LZNx858ctEtX9quCoDb65Q1O3+9ZrjBSotIfHJoHa
+         5wXJYXcMq/IPIpMY3n77rMj95mttoa4fZxHbA7+79GsZK6oG9wLpRFraVDxfNDRRlY
+         T1WVqtaQ2EzEQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     David Mosberger-Tang <davidm@egauge.net>,
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        kernel test robot <lkp@intel.com>,
+        Kees Cook <keescook@chromium.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 088/116] wilc1000: Bring MAC address setting in line with typical Linux behavior
-Date:   Wed,  5 May 2021 12:30:56 -0400
-Message-Id: <20210505163125.3460440-88-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 100/116] wl3501_cs: Fix out-of-bounds warnings in wl3501_send_pkt
+Date:   Wed,  5 May 2021 12:31:08 -0400
+Message-Id: <20210505163125.3460440-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210505163125.3460440-1-sashal@kernel.org>
 References: <20210505163125.3460440-1-sashal@kernel.org>
@@ -52,91 +54,145 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: David Mosberger-Tang <davidm@egauge.net>
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-[ Upstream commit a381b78a1598dde34a6e40dae2842024308a6ef2 ]
+[ Upstream commit 820aa37638a252b57967bdf4038a514b1ab85d45 ]
 
-Linux network drivers normally disallow changing the MAC address when
-the interface is up.  This driver has been different in that it allows
-to change the MAC address *only* when it's up.  This patch brings
-wilc1000 behavior more in line with other network drivers.  We could
-have replaced wilc_set_mac_addr() with eth_mac_addr() but that would
-break existing documentation on how to change the MAC address.
-Likewise, return -EADDRNOTAVAIL (not -EINVAL) when the specified MAC
-address is invalid or unavailable.
+Fix the following out-of-bounds warnings by enclosing structure members
+daddr and saddr into new struct addr, in structures wl3501_md_req and
+wl3501_md_ind:
 
-Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
+arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [18, 23] from the object at 'sig' is out of the bounds of referenced subobject 'daddr' with type 'u8[6]' {aka 'unsigned char[6]'} at offset 11 [-Warray-bounds]
+arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [18, 23] from the object at 'sig' is out of the bounds of referenced subobject 'daddr' with type 'u8[6]' {aka 'unsigned char[6]'} at offset 11 [-Warray-bounds]
+
+Refactor the code, accordingly:
+
+$ pahole -C wl3501_md_req drivers/net/wireless/wl3501_cs.o
+struct wl3501_md_req {
+	u16                        next_blk;             /*     0     2 */
+	u8                         sig_id;               /*     2     1 */
+	u8                         routing;              /*     3     1 */
+	u16                        data;                 /*     4     2 */
+	u16                        size;                 /*     6     2 */
+	u8                         pri;                  /*     8     1 */
+	u8                         service_class;        /*     9     1 */
+	struct {
+		u8                 daddr[6];             /*    10     6 */
+		u8                 saddr[6];             /*    16     6 */
+	} addr;                                          /*    10    12 */
+
+	/* size: 22, cachelines: 1, members: 8 */
+	/* last cacheline: 22 bytes */
+};
+
+$ pahole -C wl3501_md_ind drivers/net/wireless/wl3501_cs.o
+struct wl3501_md_ind {
+	u16                        next_blk;             /*     0     2 */
+	u8                         sig_id;               /*     2     1 */
+	u8                         routing;              /*     3     1 */
+	u16                        data;                 /*     4     2 */
+	u16                        size;                 /*     6     2 */
+	u8                         reception;            /*     8     1 */
+	u8                         pri;                  /*     9     1 */
+	u8                         service_class;        /*    10     1 */
+	struct {
+		u8                 daddr[6];             /*    11     6 */
+		u8                 saddr[6];             /*    17     6 */
+	} addr;                                          /*    11    12 */
+
+	/* size: 24, cachelines: 1, members: 9 */
+	/* padding: 1 */
+	/* last cacheline: 24 bytes */
+};
+
+The problem is that the original code is trying to copy data into a
+couple of arrays adjacent to each other in a single call to memcpy().
+Now that a new struct _addr_ enclosing those two adjacent arrays
+is introduced, memcpy() doesn't overrun the length of &sig.daddr[0]
+and &sig.daddr, because the address of the new struct object _addr_
+is used, instead.
+
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
+
+Link: https://github.com/KSPP/linux/issues/109
+Reported-by: kernel test robot <lkp@intel.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210303194846.1823596-1-davidm@egauge.net
+Link: https://lore.kernel.org/r/d260fe56aed7112bff2be5b4d152d03ad7b78e78.1618442265.git.gustavoars@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/microchip/wilc1000/netdev.c  | 25 ++++++++++++-------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+ drivers/net/wireless/wl3501.h    | 12 ++++++++----
+ drivers/net/wireless/wl3501_cs.c | 10 ++++++----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index 1b205e7d97a8..37f40039e4ca 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -575,7 +575,6 @@ static int wilc_mac_open(struct net_device *ndev)
- {
- 	struct wilc_vif *vif = netdev_priv(ndev);
- 	struct wilc *wl = vif->wilc;
--	unsigned char mac_add[ETH_ALEN] = {0};
- 	int ret = 0;
- 	struct mgmt_frame_regs mgmt_regs = {};
+diff --git a/drivers/net/wireless/wl3501.h b/drivers/net/wireless/wl3501.h
+index e98e04ee9a2c..aa8222cbea68 100644
+--- a/drivers/net/wireless/wl3501.h
++++ b/drivers/net/wireless/wl3501.h
+@@ -471,8 +471,10 @@ struct wl3501_md_req {
+ 	u16	size;
+ 	u8	pri;
+ 	u8	service_class;
+-	u8	daddr[ETH_ALEN];
+-	u8	saddr[ETH_ALEN];
++	struct {
++		u8	daddr[ETH_ALEN];
++		u8	saddr[ETH_ALEN];
++	} addr;
+ };
  
-@@ -598,9 +597,12 @@ static int wilc_mac_open(struct net_device *ndev)
+ struct wl3501_md_ind {
+@@ -484,8 +486,10 @@ struct wl3501_md_ind {
+ 	u8	reception;
+ 	u8	pri;
+ 	u8	service_class;
+-	u8	daddr[ETH_ALEN];
+-	u8	saddr[ETH_ALEN];
++	struct {
++		u8	daddr[ETH_ALEN];
++		u8	saddr[ETH_ALEN];
++	} addr;
+ };
  
- 	wilc_set_operation_mode(vif, wilc_get_vif_idx(vif), vif->iftype,
- 				vif->idx);
--	wilc_get_mac_address(vif, mac_add);
--	netdev_dbg(ndev, "Mac address: %pM\n", mac_add);
--	ether_addr_copy(ndev->dev_addr, mac_add);
-+
-+	if (is_valid_ether_addr(ndev->dev_addr))
-+		wilc_set_mac_address(vif, ndev->dev_addr);
-+	else
-+		wilc_get_mac_address(vif, ndev->dev_addr);
-+	netdev_dbg(ndev, "Mac address: %pM\n", ndev->dev_addr);
+ struct wl3501_md_confirm {
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index 8ca5789c7b37..70307308635f 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -469,6 +469,7 @@ static int wl3501_send_pkt(struct wl3501_card *this, u8 *data, u16 len)
+ 	struct wl3501_md_req sig = {
+ 		.sig_id = WL3501_SIG_MD_REQ,
+ 	};
++	size_t sig_addr_len = sizeof(sig.addr);
+ 	u8 *pdata = (char *)data;
+ 	int rc = -EIO;
  
- 	if (!is_valid_ether_addr(ndev->dev_addr)) {
- 		netdev_err(ndev, "Wrong MAC address\n");
-@@ -639,7 +641,14 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 	int srcu_idx;
- 
- 	if (!is_valid_ether_addr(addr->sa_data))
--		return -EINVAL;
-+		return -EADDRNOTAVAIL;
-+
-+	if (!vif->mac_opened) {
-+		eth_commit_mac_addr_change(dev, p);
-+		return 0;
-+	}
-+
-+	/* Verify MAC Address is not already in use: */
- 
- 	srcu_idx = srcu_read_lock(&wilc->srcu);
- 	list_for_each_entry_rcu(tmp_vif, &wilc->vif_list, list) {
-@@ -647,7 +656,7 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 		if (ether_addr_equal(addr->sa_data, mac_addr)) {
- 			if (vif != tmp_vif) {
- 				srcu_read_unlock(&wilc->srcu, srcu_idx);
--				return -EINVAL;
-+				return -EADDRNOTAVAIL;
- 			}
- 			srcu_read_unlock(&wilc->srcu, srcu_idx);
- 			return 0;
-@@ -659,9 +668,7 @@ static int wilc_set_mac_addr(struct net_device *dev, void *p)
- 	if (result)
- 		return result;
- 
--	ether_addr_copy(vif->bssid, addr->sa_data);
--	ether_addr_copy(vif->ndev->dev_addr, addr->sa_data);
--
-+	eth_commit_mac_addr_change(dev, p);
- 	return result;
- }
- 
+@@ -484,9 +485,9 @@ static int wl3501_send_pkt(struct wl3501_card *this, u8 *data, u16 len)
+ 			goto out;
+ 		}
+ 		rc = 0;
+-		memcpy(&sig.daddr[0], pdata, 12);
+-		pktlen = len - 12;
+-		pdata += 12;
++		memcpy(&sig.addr, pdata, sig_addr_len);
++		pktlen = len - sig_addr_len;
++		pdata += sig_addr_len;
+ 		sig.data = bf;
+ 		if (((*pdata) * 256 + (*(pdata + 1))) > 1500) {
+ 			u8 addr4[ETH_ALEN] = {
+@@ -980,7 +981,8 @@ static inline void wl3501_md_ind_interrupt(struct net_device *dev,
+ 	} else {
+ 		skb->dev = dev;
+ 		skb_reserve(skb, 2); /* IP headers on 16 bytes boundaries */
+-		skb_copy_to_linear_data(skb, (unsigned char *)&sig.daddr, 12);
++		skb_copy_to_linear_data(skb, (unsigned char *)&sig.addr,
++					sizeof(sig.addr));
+ 		wl3501_receive(this, skb->data, pkt_len);
+ 		skb_put(skb, pkt_len);
+ 		skb->protocol	= eth_type_trans(skb, dev);
 -- 
 2.30.2
 
