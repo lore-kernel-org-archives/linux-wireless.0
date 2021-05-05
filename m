@@ -2,93 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF265C433ED
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 May 2021 23:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF43C433ED
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 04:50:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7702613E2
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 May 2021 23:38:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3159611CB
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 04:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231664AbhEDXjf (ORCPT
+        id S231636AbhEEEvo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 May 2021 19:39:35 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:62240 "EHLO m43-7.mailgun.net"
+        Wed, 5 May 2021 00:51:44 -0400
+Received: from mx3.wp.pl ([212.77.101.10]:38029 "EHLO mx3.wp.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231697AbhEDXj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 May 2021 19:39:27 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1620171511; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=AIgbbr+JH32/l8eSPcxi2yZ//+qpxf14riHFPLDdtgw=; b=wNwk5TgXEwcuXrw84agInp715BSFSE+cvv85yKPnpurdjr1y0tuix1P2TDEgn//qf/7rtM/l
- /0Tf/fwYV9dcx1i+DXcmQbgPlrS5n6xQEtlu1+ybhsz9nJdvBgghX8ULal46sn5itZBYtb3w
- F1yUOc9mSvJctUECQrMBntTPTZw=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 6091dae02cbba88980c9ab25 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 04 May 2021 23:38:08
- GMT
-Sender: bbhatt=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CFB5CC43143; Tue,  4 May 2021 23:38:07 +0000 (UTC)
-Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bbhatt)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AB8B2C433F1;
-        Tue,  4 May 2021 23:38:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AB8B2C433F1
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
-From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
-        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
-        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, ath11k@lists.infradead.org,
-        Bhaumik Bhatt <bbhatt@codeaurora.org>
-Subject: [PATCH v2 2/6] bus: mhi: core: Set BHI and BHIe pointers to NULL in clean-up
-Date:   Tue,  4 May 2021 16:37:54 -0700
-Message-Id: <1620171478-35679-3-git-send-email-bbhatt@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1620171478-35679-1-git-send-email-bbhatt@codeaurora.org>
-References: <1620171478-35679-1-git-send-email-bbhatt@codeaurora.org>
+        id S229895AbhEEEvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 00:51:44 -0400
+Received: (wp-smtpd smtp.wp.pl 12743 invoked from network); 5 May 2021 06:50:45 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
+          t=1620190245; bh=eea2FzFifVuQf4y/aTsiEfdYXepf4D9/qCcKFc4XwQ8=;
+          h=From:To:Cc:Subject;
+          b=p3dqO3QsqJjHwEVMW1seUCAGZmIzu3gUb+w2P3pr8uTDzNzvTxJ1RFAxBGBAVfrSo
+           K4kaAk1SA4vOPep0RulrA4knDZJZTzaumtNJ+0AqD8d29dH3pfc7Fy76+Fr6Rzb6Wf
+           gbytcRsFa1mQ8esuqzdzYIh9Un1jWzYR9vCI8Xew=
+Received: from 89-64-4-144.dynamic.chello.pl (HELO localhost) (stf_xl@wp.pl@[89.64.4.144])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
+          for <rsalvaterra@gmail.com>; 5 May 2021 06:50:45 +0200
+Date:   Wed, 5 May 2021 06:50:44 +0200
+From:   Stanislaw Gruszka <stf_xl@wp.pl>
+To:     Rui Salvaterra <rsalvaterra@gmail.com>
+Cc:     lorenzo@kernel.org, kuba@kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] mt7601u: make the driver work again
+Message-ID: <20210505045044.GA735251@wp.pl>
+References: <20210504212828.815-1-rsalvaterra@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210504212828.815-1-rsalvaterra@gmail.com>
+X-WP-MailID: 5a53c093045847177a7d3f42443eb4b1
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000002 [cSGx]                               
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set the BHI and BHIe pointers to NULL as part of clean-up. This
-makes sure that stale pointers are not accessed after powering
-MHI down.
+On Tue, May 04, 2021 at 10:28:28PM +0100, Rui Salvaterra wrote:
+> This is a tentative fix for a long-standing issue [1] with MT7601U devices. In
+> my case, this is what I see in the dmesg when I plug the device in:
+> 
+> [  660.810386] usb 1-7: new high-speed USB device number 119 using ehci-pci
+> [  661.031390] usb 1-7: New USB device found, idVendor=148f,
+> idProduct=7601, bcdDevice= 0.00
+> [  661.031400] usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> [  661.031404] usb 1-7: Product: 802.11 n WLAN
+> [  661.031408] usb 1-7: Manufacturer: MediaTek
+> [  661.031411] usb 1-7: SerialNumber: 1.0
+> [  661.200379] usb 1-7: reset high-speed USB device number 119 using ehci-pci
+> [  661.403137] mt7601u 1-7:1.0: ASIC revision: 76010001 MAC revision: 76010500
+> [  661.404566] mt7601u 1-7:1.0: Firmware Version: 0.1.00 Build: 7640
+> Build time: 201302052146____
+> [  661.828765] mt7601u 1-7:1.0: EEPROM ver:0d fae:00
+> [  662.005518] mt7601u 1-7:1.0: Error: MCU resp urb failed:-71
+> [  662.005525] mt7601u 1-7:1.0: Error: MCU resp evt:0 seq:5-4!
+> [  662.010015] mt7601u 1-7:1.0: Error: MCU resp urb failed:-71
+> [  662.010020] mt7601u 1-7:1.0: Error: MCU resp evt:0 seq:5-4!
+> [  662.014269] mt7601u 1-7:1.0: Error: MCU resp urb failed:-71
+> [  662.014275] mt7601u 1-7:1.0: Error: MCU resp evt:0 seq:5-4!
+> [  662.018516] mt7601u 1-7:1.0: Error: MCU resp urb failed:-71
+> [  662.018521] mt7601u 1-7:1.0: Error: MCU resp evt:0 seq:5-4!
+> [  662.022768] mt7601u 1-7:1.0: Error: MCU resp urb failed:-71
+> [  662.022775] mt7601u 1-7:1.0: Error: MCU resp evt:0 seq:5-4!
+> [  662.022779] mt7601u 1-7:1.0: Error: mt7601u_mcu_wait_resp timed out
+> [  662.350350] mt7601u 1-7:1.0: Vendor request req:07 off:0080 failed:-71
+> [  662.650344] mt7601u 1-7:1.0: Vendor request req:02 off:0080 failed:-71
+> [  662.950339] mt7601u 1-7:1.0: Vendor request req:02 off:0080 failed:-71
+> [  662.950389] mt7601u: probe of 1-7:1.0 failed with error -110
+> [  662.950850] usb 1-7: USB disconnect, device number 119
 
-Suggested-by: Hemant Kumar <hemantk@codeaurora.org>
-Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
-Reviewed-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
----
- drivers/bus/mhi/core/init.c | 3 +++
- 1 file changed, 3 insertions(+)
+> 
+> This loops continuously. The device never comes up.
+> Turns out, this issue has been narrowed down to a possible calibration
+> problem [2]. Stanislaw repeatedly asked if disabling DPD calibration only
+> (keeping the RXIQ calibration) would fix the problem, but nobody seems to have
+> paid attention. :) Additionally, he asked for contents of
+> /sys/kernel/debug/ieee80211/phy0/mt7601u/eeprom_param, so here they are:
+> 
+> RF freq offset: 5f
+> RSSI offset: 0 0
+> Reference temp: f9
+> LNA gain: 0
+> Reg channels: 1-14
+> Per rate power:
+> 	 raw:05 bw20:05 bw40:05
+> 	 raw:05 bw20:05 bw40:05
+> 	 raw:03 bw20:03 bw40:03
+> 	 raw:03 bw20:03 bw40:03
+> 	 raw:04 bw20:04 bw40:04
+> 	 raw:00 bw20:00 bw40:00
+> 	 raw:00 bw20:00 bw40:00
+> 	 raw:00 bw20:00 bw40:00
+> 	 raw:02 bw20:02 bw40:02
+> 	 raw:00 bw20:00 bw40:00
+> Per channel power:
+> 	 tx_power  ch1:0c ch2:0c
+> 	 tx_power  ch3:0b ch4:0b
+> 	 tx_power  ch5:0a ch6:0a
+> 	 tx_power  ch7:0a ch8:0a
+> 	 tx_power  ch9:0a ch10:0a
+> 	 tx_power  ch11:0a ch12:0a
+> 	 tx_power  ch13:0a ch14:0a
+> 
+> The attached patch fixes the driver for me. Sending as RFC because this will
+> probably warrant some kind of quirk to be fixed correctly. Besides, there's an
+> additional DPD calibration in mt7601u_temp_comp, which I haven't touched, since
+> it seems a bit more convoluted. The driver works for me regardless (I've sent
+> this email through one of my MT7601U adapters).
 
-diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
-index 11c7a3d..1cc2f22 100644
---- a/drivers/bus/mhi/core/init.c
-+++ b/drivers/bus/mhi/core/init.c
-@@ -1132,6 +1132,9 @@ void mhi_unprepare_after_power_down(struct mhi_controller *mhi_cntrl)
- 		mhi_cntrl->rddm_image = NULL;
- 	}
- 
-+	mhi_cntrl->bhi = NULL;
-+	mhi_cntrl->bhie = NULL;
-+
- 	mhi_deinit_dev_ctxt(mhi_cntrl);
- }
- EXPORT_SYMBOL_GPL(mhi_unprepare_after_power_down);
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+I'm not sure if DPD calibration is needed. Maybe is ok to disable it for
+all MT7601U devices. However safer fix would be doing it only for
+devices that know to need it for work. For example: add dev->no_dpd_cal
+variable, set it based on USB ID (using usb_device_id->driver_info) and
+do not perfrom calibration when it's set.
 
+Also please clarify "work again" in the topic. Have your device ever
+worked with mt7601u driver in some older kernel version? 
+
+Stanislaw
