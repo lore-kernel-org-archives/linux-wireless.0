@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_NONE,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BDEC43611
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26707C433ED
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:56:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CCC76142D
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:56:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3DD6613FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:56:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236581AbhEEQ4w (ORCPT
+        id S237084AbhEEQ5C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 12:56:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60392 "EHLO mail.kernel.org"
+        Wed, 5 May 2021 12:57:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60436 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236415AbhEEQyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 12:54:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6DB8D61461;
-        Wed,  5 May 2021 16:38:29 +0000 (UTC)
+        id S236510AbhEEQyU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 12:54:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A44476143E;
+        Wed,  5 May 2021 16:38:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620232710;
-        bh=VWFWm5cUN1jSxsItT/U9HhoMnGvxh07KV69SrLyK5ns=;
+        s=k20201202; t=1620232716;
+        bh=lmCl/8+UbLLfBdAII2ABQDwTMsu3Sc1/051k2dkBo2w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=f8LuGWZ0CFj/j9LrHALciQam79aHAsxzB46F5Zd+SozCbu61OLfawa3NqI4nGC9vc
-         uO/fjc3WFz8z1p/ui/kiXc1LIWmlvdXUkDsAGCHSEFVQTCN9wYZgJw0dLThgsmOFpB
-         HRNIo5MXFVNX8Z+bfkcQc0yRfYpWYBWmI9tvLkJx6358qnA8G+sYmDWG11db2pViYQ
-         1/GQc/1UkMp9nTwhVGwbmDIiIMkpOXk11UOQ7m55Iofw4vPCe+MiqkLeUex2CP+qkb
-         Lc26wgxXCzxoXUN1FzXA/mzNwBU8i64JP0DxAHgmyds6GrNT+/RlHLKZfJKmSO/ern
-         VpobiP70NR+hg==
+        b=cVPw82pjtGaIXGdygZYHFS/0sD+jQuuovVe1Be1cRphgIHK8GjVqvjXjp/Xx3CaaA
+         uSKv7cijR0UwoIWmRDDsKenabiuOg7wNuWXMniyLdPmQqe1M4ozDti5ZjELVCqm1uh
+         9Cgr/Dnm/ZhtRF/0S/5VYwZ681pDTg2QCEnSk2/Zmu6DNZifQjcM4aStXNvnj45b0f
+         Csaoo5m/1WsP+aaK3ujz+KE5zfOAMiM8QLV8OS1588GGNuxs2v2javdUzrn4PYQXy0
+         lPq7igiUJGDqrQoqJhvRJOc0lt1pNuUdKn0A6Ak4Wt8L3z4gNva47DMP+co2SG/haE
+         059Bzg2nOxcwA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 69/85] mt76: mt7615: fix entering driver-own state on mt7663
-Date:   Wed,  5 May 2021 12:36:32 -0400
-Message-Id: <20210505163648.3462507-69-sashal@kernel.org>
+Cc:     Lee Gibson <leegib@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 73/85] qtnfmac: Fix possible buffer overflow in qtnf_event_handle_external_auth
+Date:   Wed,  5 May 2021 12:36:36 -0400
+Message-Id: <20210505163648.3462507-73-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210505163648.3462507-1-sashal@kernel.org>
 References: <20210505163648.3462507-1-sashal@kernel.org>
@@ -52,45 +51,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Lee Gibson <leegib@gmail.com>
 
-[ Upstream commit 5c7d374444afdeb9dd534a37c4f6c13af032da0c ]
+[ Upstream commit 130f634da1af649205f4a3dd86cbe5c126b57914 ]
 
-Fixes hardware wakeup issues
+Function qtnf_event_handle_external_auth calls memcpy without
+checking the length.
+A user could control that length and trigger a buffer overflow.
+Fix by checking the length is within the maximum allowed size.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Lee Gibson <leegib@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210419145842.345787-1-leegib@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index c31036f57aef..62a971660da7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -341,12 +341,20 @@ static int mt7615_mcu_drv_pmctrl(struct mt7615_dev *dev)
- 	u32 addr;
- 	int err;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index c775c177933b..8dc80574d08d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -570,8 +570,10 @@ qtnf_event_handle_external_auth(struct qtnf_vif *vif,
+ 		return 0;
  
--	addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
-+	if (is_mt7663(mdev)) {
-+		/* Clear firmware own via N9 eint */
-+		mt76_wr(dev, MT_PCIE_DOORBELL_PUSH, MT_CFG_LPCR_HOST_DRV_OWN);
-+		mt76_poll(dev, MT_CONN_ON_MISC, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000);
+ 	if (ev->ssid_len) {
+-		memcpy(auth.ssid.ssid, ev->ssid, ev->ssid_len);
+-		auth.ssid.ssid_len = ev->ssid_len;
++		int len = clamp_val(ev->ssid_len, 0, IEEE80211_MAX_SSID_LEN);
 +
-+		addr = MT_CONN_HIF_ON_LPCTL;
-+	} else {
-+		addr = MT_CFG_LPCR_HOST;
-+	}
-+
- 	mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
++		memcpy(auth.ssid.ssid, ev->ssid, len);
++		auth.ssid.ssid_len = len;
+ 	}
  
- 	mt7622_trigger_hif_int(dev, true);
- 
--	addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
- 	err = !mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000);
- 
- 	mt7622_trigger_hif_int(dev, false);
+ 	auth.key_mgmt_suite = le32_to_cpu(ev->akm_suite);
 -- 
 2.30.2
 
