@@ -2,66 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E36AC433B4
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3099C433B4
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 20:29:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08839608FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:31:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82FA8613C9
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 20:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235370AbhEERcI (ORCPT
+        id S234655AbhEEUaC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 13:32:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48044 "EHLO
+        Wed, 5 May 2021 16:30:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240495AbhEERVN (ORCPT
+        with ESMTP id S234276AbhEEUaB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 13:21:13 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFD6CC0611A9
-        for <linux-wireless@vger.kernel.org>; Wed,  5 May 2021 09:48:42 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1leKhT-004ZgZ-BU; Wed, 05 May 2021 18:48:39 +0200
-Message-ID: <333ba6b138390ca1f45b8ac2aab1152397c41bd7.camel@sipsolutions.net>
-Subject: Re: Possible bug in iwlwifi
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Michael Yartys <michael.yartys@protonmail.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Wed, 05 May 2021 18:48:38 +0200
-In-Reply-To: <0IuWBg5tqXtBE836_CvCmwVzEXWDOGZ4dyETg5_WBWUC8bMDR9vFORGkgY6_WBqSi61GYW07WwH6aVzkc2-zhqWYp5JugyjWU_Bg1leD0vk=@protonmail.com> (sfid-20210505_150701_630699_48CDE0E4)
-References: <qnvkj7tfHuYKasegaKViuXD0K4KlchNwXkLn4NUZu_KWsp7nEBa4LyQm7SNRm27eQLALJTyi1-xIYXMChMeuZAKS5F_q-rhb0DVVGqv0oUc=@protonmail.com>
-         <7a5d0173cbfdef24b1e74c0bfc8f7410ff044817.camel@sipsolutions.net>
-         <_p2InUu49ZKWc_249MDFWW8bre6iNHIJDvsoV6Rsb3oLyWj7wat48aLpnqIDVeKZKwSq-uZ1Fy_wlDwHMYJ5-JacdxF75NL5fLvpWrNCUO8=@protonmail.com>
-         <E3bg7aVzJHQEHxAd21kjOlTrLqG0U3Jt7iBCDDTVCI4FYSdGROu-UKmRuM05cl8pxTBlo4pjeoYkTtKFFFYiezrdXVybrKs-6qBCAkZJ-sU=@protonmail.com>
-         <0IuWBg5tqXtBE836_CvCmwVzEXWDOGZ4dyETg5_WBWUC8bMDR9vFORGkgY6_WBqSi61GYW07WwH6aVzkc2-zhqWYp5JugyjWU_Bg1leD0vk=@protonmail.com>
-         (sfid-20210505_150701_630699_48CDE0E4)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+        Wed, 5 May 2021 16:30:01 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A90DDC061574
+        for <linux-wireless@vger.kernel.org>; Wed,  5 May 2021 13:29:04 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id c21so2614663pgg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2021 13:29:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RnOnXYlWQVQ/48O6Xp4pLMx8uey0QJZqz7prGw8IU0I=;
+        b=NdRsPw/lJJ4AudrLS+tIIGQrtHQweV/wjml3AIJT154GKFvNNfIdPhvYUho9Z8Vv/r
+         ERiBOEr8jR/TuiW7yhMbNmXJ7LCLFT8ohVQBLHPEFIssB0G1Gzsq/YIPuUioiDCd3aIH
+         lGQzzPaB8P79IxBoX1aBNJQwX6I5z2UWdcoX4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RnOnXYlWQVQ/48O6Xp4pLMx8uey0QJZqz7prGw8IU0I=;
+        b=lCOhyCkYWnrX8/C8SGXqAUP50vcOlswLl+KsbMxeomrwwEugyihZMs4AfwYowLEkR/
+         ya9pTcy2Wp4k1jsrC4fXPsMHXXquoa6Dtu9bIKeOKWj7Nm/u3x9MLqwHZWsq1Jd37w+j
+         11PLX9jo7ZTcYGsCq8HPDQA823HlWEdthv+qJyMpL1cJNCwGByq+eenzicW2sv2klM+T
+         ES7oobPLMBy8drASwfSb98fnkhYndKia17JXYwb4YG2/Pu2BCAhT0gD8YLU/xlORPt7t
+         lr9j9/Hsfg4/6j5UnrC77noo/nF5NeToYR5cG3+ZvGNKWmmy2mjy0XJ1P68RIHGRYTE9
+         PrnQ==
+X-Gm-Message-State: AOAM533ACF5MwQmPHS8jrMPEYr068T5xNe/dgMVcyDxCii4LtI1/OUQD
+        yao3I2hVNCGqW8VmAwe2hFPwXg==
+X-Google-Smtp-Source: ABdhPJy1CKKT05qEe7l7Oluawo5yFjZuQqggR9VtzYj5bvhv8F1WLVgg24e/lxUpj2v5tHuVsunUiA==
+X-Received: by 2002:a05:6a00:2b5:b029:28e:9c4b:b8b4 with SMTP id q21-20020a056a0002b5b029028e9c4bb8b4mr606236pfs.22.1620246544250;
+        Wed, 05 May 2021 13:29:04 -0700 (PDT)
+Received: from smtp.gmail.com ([2620:15c:202:201:2dd5:7bcf:c8e4:5147])
+        by smtp.gmail.com with ESMTPSA id b7sm104003pfi.42.2021.05.05.13.29.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 May 2021 13:29:03 -0700 (PDT)
+From:   Brian Norris <briannorris@chromium.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] mac80211: correct ieee80211_iterate_active_interfaces_mtx() locking comments
+Date:   Wed,  5 May 2021 13:28:29 -0700
+Message-Id: <20210505202829.1039400-1-briannorris@chromium.org>
+X-Mailer: git-send-email 2.31.1.527.g47e6f16901-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2021-05-05 at 13:06 +0000, Michael Yartys wrote:
-> Sorry for being a bit spammy here, but I forgot that I could simply
-> run "iw scan" on one of my two routers to see how it sees the network
-> on the other router:
-> 
-> $ iw dev wlan1 scan -u
-> BSS redacted(on wlan1)
+Commit a05829a7222e ("cfg80211: avoid holding the RTNL when calling the
+driver") dropped usage of RTNL here and replaced it with
+hw->wiphy->mutex. But we didn't update the comments.
 
-Hm. That looks fine.
+Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ include/net/mac80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Can you do it again with --debug? But then it's hard to redact things,
-so maybe send it to me in private.
-
-Thanks,
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 445b66c6eb7e..e7c59b4e2c44 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5537,7 +5537,7 @@ void ieee80211_iterate_active_interfaces_atomic(struct ieee80211_hw *hw,
+  *
+  * This function iterates over the interfaces associated with a given
+  * hardware that are currently active and calls the callback for them.
+- * This version can only be used while holding the RTNL.
++ * This version can only be used while holding the wiphy mutex.
+  *
+  * @hw: the hardware struct of which the interfaces should be iterated over
+  * @iter_flags: iteration flags, see &enum ieee80211_interface_iteration_flags
+-- 
+2.31.1.527.g47e6f16901-goog
 
