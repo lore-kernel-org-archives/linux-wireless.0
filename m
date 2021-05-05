@@ -2,122 +2,66 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA71FC43619
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E36AC433B4
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:31:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C40B610FB
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:15:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08839608FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 17:31:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237482AbhEEROB (ORCPT
+        id S235370AbhEERcI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 13:14:01 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:58048 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239040AbhEERKg (ORCPT
+        Wed, 5 May 2021 13:32:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48044 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240495AbhEERVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 13:10:36 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1620234579; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=2NJ2FCJ5eygsO7NmVQKBkrCnohRdJRzGE0EKHDhDgYA=; b=eVO2dj3NjJNlHQR73Rav4QC+tr0hdXzH9YlEzoRHV8t9ltQMxKVLK5ccMrni2EtPHf7UWgt3
- YsmECZRgL3XsZqapqNsx7odo4alXZihxrGskmHrB8UXUAFMlED5FNR6omtimXi2jk9M6q4sL
- Z5OiP3sHCknur06s7byaC6kbkkM=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 6092d1398807bcde1d132856 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 05 May 2021 17:09:13
- GMT
-Sender: bbhatt=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 567ABC00A28; Wed,  5 May 2021 17:09:13 +0000 (UTC)
-Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bbhatt)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A7CD9C43143;
-        Wed,  5 May 2021 17:08:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A7CD9C43143
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
-From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
-        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
-        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, ath11k@lists.infradead.org,
-        Bhaumik Bhatt <bbhatt@codeaurora.org>
-Subject: [PATCH v3 6/6] bus: mhi: core: Add range checks for BHI and BHIe
-Date:   Wed,  5 May 2021 10:08:21 -0700
-Message-Id: <1620234501-30461-7-git-send-email-bbhatt@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1620234501-30461-1-git-send-email-bbhatt@codeaurora.org>
-References: <1620234501-30461-1-git-send-email-bbhatt@codeaurora.org>
+        Wed, 5 May 2021 13:21:13 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFD6CC0611A9
+        for <linux-wireless@vger.kernel.org>; Wed,  5 May 2021 09:48:42 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1leKhT-004ZgZ-BU; Wed, 05 May 2021 18:48:39 +0200
+Message-ID: <333ba6b138390ca1f45b8ac2aab1152397c41bd7.camel@sipsolutions.net>
+Subject: Re: Possible bug in iwlwifi
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Michael Yartys <michael.yartys@protonmail.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Wed, 05 May 2021 18:48:38 +0200
+In-Reply-To: <0IuWBg5tqXtBE836_CvCmwVzEXWDOGZ4dyETg5_WBWUC8bMDR9vFORGkgY6_WBqSi61GYW07WwH6aVzkc2-zhqWYp5JugyjWU_Bg1leD0vk=@protonmail.com> (sfid-20210505_150701_630699_48CDE0E4)
+References: <qnvkj7tfHuYKasegaKViuXD0K4KlchNwXkLn4NUZu_KWsp7nEBa4LyQm7SNRm27eQLALJTyi1-xIYXMChMeuZAKS5F_q-rhb0DVVGqv0oUc=@protonmail.com>
+         <7a5d0173cbfdef24b1e74c0bfc8f7410ff044817.camel@sipsolutions.net>
+         <_p2InUu49ZKWc_249MDFWW8bre6iNHIJDvsoV6Rsb3oLyWj7wat48aLpnqIDVeKZKwSq-uZ1Fy_wlDwHMYJ5-JacdxF75NL5fLvpWrNCUO8=@protonmail.com>
+         <E3bg7aVzJHQEHxAd21kjOlTrLqG0U3Jt7iBCDDTVCI4FYSdGROu-UKmRuM05cl8pxTBlo4pjeoYkTtKFFFYiezrdXVybrKs-6qBCAkZJ-sU=@protonmail.com>
+         <0IuWBg5tqXtBE836_CvCmwVzEXWDOGZ4dyETg5_WBWUC8bMDR9vFORGkgY6_WBqSi61GYW07WwH6aVzkc2-zhqWYp5JugyjWU_Bg1leD0vk=@protonmail.com>
+         (sfid-20210505_150701_630699_48CDE0E4)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When obtaining the BHI or BHIe offsets during the power up
-preparation phase, range checks are missing. These can help
-controller drivers avoid accessing any address outside of the
-MMIO region. Ensure that mhi_cntrl->reg_len is set before MHI
-registration as it is a required field and range checks will
-fail without it.
+On Wed, 2021-05-05 at 13:06 +0000, Michael Yartys wrote:
+> Sorry for being a bit spammy here, but I forgot that I could simply
+> run "iw scan" on one of my two routers to see how it sees the network
+> on the other router:
+> 
+> $ iw dev wlan1 scan -u
+> BSS redacted(on wlan1)
 
-Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
-Reviewed-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
----
- drivers/bus/mhi/core/init.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+Hm. That looks fine.
 
-diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
-index 1cc2f22..86ad06e 100644
---- a/drivers/bus/mhi/core/init.c
-+++ b/drivers/bus/mhi/core/init.c
-@@ -885,7 +885,8 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
- 	if (!mhi_cntrl || !mhi_cntrl->cntrl_dev || !mhi_cntrl->regs ||
- 	    !mhi_cntrl->runtime_get || !mhi_cntrl->runtime_put ||
- 	    !mhi_cntrl->status_cb || !mhi_cntrl->read_reg ||
--	    !mhi_cntrl->write_reg || !mhi_cntrl->nr_irqs || !mhi_cntrl->irq)
-+	    !mhi_cntrl->write_reg || !mhi_cntrl->nr_irqs ||
-+	    !mhi_cntrl->irq || !mhi_cntrl->reg_len)
- 		return -EINVAL;
- 
- 	ret = parse_config(mhi_cntrl, config);
-@@ -1077,6 +1078,12 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
- 		dev_err(dev, "Error getting BHI offset\n");
- 		goto error_reg_offset;
- 	}
-+
-+	if (bhi_off >= mhi_cntrl->reg_len) {
-+		dev_err(dev, "BHI offset is out of range\n");
-+		ret = -EINVAL;
-+		goto error_reg_offset;
-+	}
- 	mhi_cntrl->bhi = mhi_cntrl->regs + bhi_off;
- 
- 	if (mhi_cntrl->fbc_download || mhi_cntrl->rddm_size) {
-@@ -1086,6 +1093,12 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
- 			dev_err(dev, "Error getting BHIE offset\n");
- 			goto error_reg_offset;
- 		}
-+
-+		if (bhie_off >= mhi_cntrl->reg_len) {
-+			dev_err(dev, "BHIe offset is out of range\n");
-+			ret = -EINVAL;
-+			goto error_reg_offset;
-+		}
- 		mhi_cntrl->bhie = mhi_cntrl->regs + bhie_off;
- 	}
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Can you do it again with --debug? But then it's hard to redact things,
+so maybe send it to me in private.
+
+Thanks,
+johannes
 
