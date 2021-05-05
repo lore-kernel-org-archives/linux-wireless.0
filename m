@@ -2,45 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-24.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9BDDC433ED
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E16E8C433B4
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:55:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDEC36140F
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:55:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB85D613FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 May 2021 16:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236126AbhEEQ4g (ORCPT
+        id S236336AbhEEQ4m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 May 2021 12:56:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36278 "EHLO mail.kernel.org"
+        Wed, 5 May 2021 12:56:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60420 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235336AbhEEQvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 May 2021 12:51:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 82C5661978;
-        Wed,  5 May 2021 16:37:56 +0000 (UTC)
+        id S236477AbhEEQyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 May 2021 12:54:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 15C5B61985;
+        Wed,  5 May 2021 16:38:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620232677;
-        bh=oXOp+bGdugSKtD/RSmqGci0envmsKva3cXEibDMONN0=;
+        s=k20201202; t=1620232715;
+        bh=Vn1HiekubIk/EzfIet9Yx1ESzeBwA3HRm5fVjRpv3qs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kX1AeV48534Cegl3NYH7FmtbXLyxTgwn4nAQLJZcE4xzlDxSYCQFTTTwLSjhjSSVe
-         az2UJylXMaiAnaD6zFn4h/xinVGUeGDIiYW0NQbqAwpaEt1n1J7xVGuN83Y1dlrKX2
-         rMkOu9FvtkBRHLQ4s9eyOk8VHZkr+RuCTrnj3gE54mpQ69T968re2tNth4NX7Kf+ZU
-         i7GoUIgGWsjFvTciBmWtRoHoR4Tahd1LJtKZab4Q9X5hPAyG0owk1ocbtJojowHTfm
-         PbiVrr3OJ3wQpEWe7BqPSe/s2z4KMUfDDq/S8Dr5uE0mztIsV9bPHYcrbN9t9NANUI
-         4mW3Ignk8t7Sw==
+        b=DljD4uxiukreW06I7/wPaIpNtNFmepIGLwo4qrFWyg7B6tS9bTChIjgYf+RstR9cS
+         QicIyi+EUg4lXF1c0lQT98HcPJuJtjCgPZnaYYZ0Ma2d/2HGf6VN+GEuz9Yea0afd/
+         IJvKpgXg93nshsLm/gypBvTu7CB1lJ5WP3jgmB/hPaJRCMo9nJoZuNeixTaN88wl1T
+         HZJAm0bHA4rJ6PXTzeLItSq5tpfJ/4HUR/84/ohsXdyHU8y7Mqt0OfQPXfzarzNb7Y
+         pckjELNhWxM1CArUvmQWs2k+9kuI9klQkYJ2JvbuT0g4WfNP+IgdPxCjydkMNZ20oQ
+         AG3k2ezTQAuoA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        kernel test robot <lkp@intel.com>,
+        Kees Cook <keescook@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 47/85] iwlwifi: pcie: make cfg vs. trans_cfg more robust
-Date:   Wed,  5 May 2021 12:36:10 -0400
-Message-Id: <20210505163648.3462507-47-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 72/85] wl3501_cs: Fix out-of-bounds warnings in wl3501_mgmt_join
+Date:   Wed,  5 May 2021 12:36:35 -0400
+Message-Id: <20210505163648.3462507-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210505163648.3462507-1-sashal@kernel.org>
 References: <20210505163648.3462507-1-sashal@kernel.org>
@@ -52,112 +54,284 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-[ Upstream commit 48a5494d6a4cb5812f0640d9515f1876ffc7a013 ]
+[ Upstream commit bb43e5718d8f1b46e7a77e7b39be3c691f293050 ]
 
-If we (for example) have a trans_cfg entry in the PCI IDs table,
-but then don't find a full cfg entry for it in the info table,
-we fall through to the code that treats the PCI ID table entry
-as a full cfg entry. This obviously causes crashes later, e.g.
-when trying to build the firmware name string.
+Fix the following out-of-bounds warnings by adding a new structure
+wl3501_req instead of duplicating the same members in structure
+wl3501_join_req and wl3501_scan_confirm:
 
-Avoid such crashes by using the low bit of the pointer as a tag
-for trans_cfg entries (automatically using a macro that checks
-the type when assigning) and then checking that before trying to
-use the data as a full entry - if it's just a partial entry at
-that point, fail.
+arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [39, 108] from the object at 'sig' is out of the bounds of referenced subobject 'beacon_period' with type 'short unsigned int' at offset 36 [-Warray-bounds]
+arch/x86/include/asm/string_32.h:182:25: warning: '__builtin_memcpy' offset [25, 95] from the object at 'sig' is out of the bounds of referenced subobject 'beacon_period' with type 'short unsigned int' at offset 22 [-Warray-bounds]
 
-Since we're adding some macro magic, also check that the type is
-in fact either struct iwl_cfg_trans_params or struct iwl_cfg,
-failing compilation ("initializer element is not constant") if
-it isn't.
+Refactor the code, accordingly:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210330162204.6f69fe6e4128.I921d4ae20ef5276716baeeeda0b001cf25b9b968@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+$ pahole -C wl3501_req drivers/net/wireless/wl3501_cs.o
+struct wl3501_req {
+        u16                        beacon_period;        /*     0     2 */
+        u16                        dtim_period;          /*     2     2 */
+        u16                        cap_info;             /*     4     2 */
+        u8                         bss_type;             /*     6     1 */
+        u8                         bssid[6];             /*     7     6 */
+        struct iw_mgmt_essid_pset  ssid;                 /*    13    34 */
+        struct iw_mgmt_ds_pset     ds_pset;              /*    47     3 */
+        struct iw_mgmt_cf_pset     cf_pset;              /*    50     8 */
+        struct iw_mgmt_ibss_pset   ibss_pset;            /*    58     4 */
+        struct iw_mgmt_data_rset   bss_basic_rset;       /*    62    10 */
+
+        /* size: 72, cachelines: 2, members: 10 */
+        /* last cacheline: 8 bytes */
+};
+
+$ pahole -C wl3501_join_req drivers/net/wireless/wl3501_cs.o
+struct wl3501_join_req {
+        u16                        next_blk;             /*     0     2 */
+        u8                         sig_id;               /*     2     1 */
+        u8                         reserved;             /*     3     1 */
+        struct iw_mgmt_data_rset   operational_rset;     /*     4    10 */
+        u16                        reserved2;            /*    14     2 */
+        u16                        timeout;              /*    16     2 */
+        u16                        probe_delay;          /*    18     2 */
+        u8                         timestamp[8];         /*    20     8 */
+        u8                         local_time[8];        /*    28     8 */
+        struct wl3501_req          req;                  /*    36    72 */
+
+        /* size: 108, cachelines: 2, members: 10 */
+        /* last cacheline: 44 bytes */
+};
+
+$ pahole -C wl3501_scan_confirm drivers/net/wireless/wl3501_cs.o
+struct wl3501_scan_confirm {
+        u16                        next_blk;             /*     0     2 */
+        u8                         sig_id;               /*     2     1 */
+        u8                         reserved;             /*     3     1 */
+        u16                        status;               /*     4     2 */
+        char                       timestamp[8];         /*     6     8 */
+        char                       localtime[8];         /*    14     8 */
+        struct wl3501_req          req;                  /*    22    72 */
+        /* --- cacheline 1 boundary (64 bytes) was 30 bytes ago --- */
+        u8                         rssi;                 /*    94     1 */
+
+        /* size: 96, cachelines: 2, members: 8 */
+        /* padding: 1 */
+        /* last cacheline: 32 bytes */
+};
+
+The problem is that the original code is trying to copy data into a
+bunch of struct members adjacent to each other in a single call to
+memcpy(). Now that a new struct wl3501_req enclosing all those adjacent
+members is introduced, memcpy() doesn't overrun the length of
+&sig.beacon_period and &this->bss_set[i].beacon_period, because the
+address of the new struct object _req_ is used as the destination,
+instead.
+
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
+
+Link: https://github.com/KSPP/linux/issues/109
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1fbaf516da763b50edac47d792a9145aa4482e29.1618442265.git.gustavoars@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 35 +++++++++++++++----
- 1 file changed, 28 insertions(+), 7 deletions(-)
+ drivers/net/wireless/wl3501.h    | 35 +++++++++++--------------
+ drivers/net/wireless/wl3501_cs.c | 44 +++++++++++++++++---------------
+ 2 files changed, 38 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 500fdb0b6c42..eeb70560b746 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -73,10 +73,20 @@
- #include "iwl-prph.h"
- #include "internal.h"
+diff --git a/drivers/net/wireless/wl3501.h b/drivers/net/wireless/wl3501.h
+index 31ebef3e7ed4..87195c1dadf2 100644
+--- a/drivers/net/wireless/wl3501.h
++++ b/drivers/net/wireless/wl3501.h
+@@ -379,16 +379,7 @@ struct wl3501_get_confirm {
+ 	u8	mib_value[100];
+ };
  
-+#define TRANS_CFG_MARKER BIT(0)
-+#define _IS_A(cfg, _struct) __builtin_types_compatible_p(typeof(cfg),	\
-+							 struct _struct)
-+extern int _invalid_type;
-+#define _TRANS_CFG_MARKER(cfg)						\
-+	(__builtin_choose_expr(_IS_A(cfg, iwl_cfg_trans_params),	\
-+			       TRANS_CFG_MARKER,			\
-+	 __builtin_choose_expr(_IS_A(cfg, iwl_cfg), 0, _invalid_type)))
-+#define _ASSIGN_CFG(cfg) (_TRANS_CFG_MARKER(cfg) + (kernel_ulong_t)&(cfg))
+-struct wl3501_join_req {
+-	u16			    next_blk;
+-	u8			    sig_id;
+-	u8			    reserved;
+-	struct iw_mgmt_data_rset    operational_rset;
+-	u16			    reserved2;
+-	u16			    timeout;
+-	u16			    probe_delay;
+-	u8			    timestamp[8];
+-	u8			    local_time[8];
++struct wl3501_req {
+ 	u16			    beacon_period;
+ 	u16			    dtim_period;
+ 	u16			    cap_info;
+@@ -401,6 +392,19 @@ struct wl3501_join_req {
+ 	struct iw_mgmt_data_rset    bss_basic_rset;
+ };
+ 
++struct wl3501_join_req {
++	u16			    next_blk;
++	u8			    sig_id;
++	u8			    reserved;
++	struct iw_mgmt_data_rset    operational_rset;
++	u16			    reserved2;
++	u16			    timeout;
++	u16			    probe_delay;
++	u8			    timestamp[8];
++	u8			    local_time[8];
++	struct wl3501_req	    req;
++};
 +
- #define IWL_PCI_DEVICE(dev, subdev, cfg) \
- 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = (subdev), \
--	.driver_data = (kernel_ulong_t)&(cfg)
-+	.driver_data = _ASSIGN_CFG(cfg)
+ struct wl3501_join_confirm {
+ 	u16	next_blk;
+ 	u8	sig_id;
+@@ -443,16 +447,7 @@ struct wl3501_scan_confirm {
+ 	u16			    status;
+ 	char			    timestamp[8];
+ 	char			    localtime[8];
+-	u16			    beacon_period;
+-	u16			    dtim_period;
+-	u16			    cap_info;
+-	u8			    bss_type;
+-	u8			    bssid[ETH_ALEN];
+-	struct iw_mgmt_essid_pset   ssid;
+-	struct iw_mgmt_ds_pset	    ds_pset;
+-	struct iw_mgmt_cf_pset	    cf_pset;
+-	struct iw_mgmt_ibss_pset    ibss_pset;
+-	struct iw_mgmt_data_rset    bss_basic_rset;
++	struct wl3501_req	    req;
+ 	u8			    rssi;
+ };
  
- /* Hardware specific file defines the PCI IDs table for that hardware module */
- static const struct pci_device_id iwl_hw_card_ids[] = {
-@@ -1018,20 +1028,23 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index c3c859c4b2c7..ff1701adbb17 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -592,7 +592,7 @@ static int wl3501_mgmt_join(struct wl3501_card *this, u16 stas)
+ 	struct wl3501_join_req sig = {
+ 		.sig_id		  = WL3501_SIG_JOIN_REQ,
+ 		.timeout	  = 10,
+-		.ds_pset = {
++		.req.ds_pset = {
+ 			.el = {
+ 				.id  = IW_MGMT_INFO_ELEMENT_DS_PARAMETER_SET,
+ 				.len = 1,
+@@ -601,7 +601,7 @@ static int wl3501_mgmt_join(struct wl3501_card *this, u16 stas)
+ 		},
+ 	};
  
- static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
--	const struct iwl_cfg_trans_params *trans =
--		(struct iwl_cfg_trans_params *)(ent->driver_data);
-+	const struct iwl_cfg_trans_params *trans;
- 	const struct iwl_cfg *cfg_7265d __maybe_unused = NULL;
- 	struct iwl_trans *iwl_trans;
- 	struct iwl_trans_pcie *trans_pcie;
- 	unsigned long flags;
- 	int i, ret;
-+	const struct iwl_cfg *cfg;
-+
-+	trans = (void *)(ent->driver_data & ~TRANS_CFG_MARKER);
-+
- 	/*
- 	 * This is needed for backwards compatibility with the old
- 	 * tables, so we don't need to change all the config structs
- 	 * at the same time.  The cfg is used to compare with the old
- 	 * full cfg structs.
- 	 */
--	const struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
-+	cfg = (void *)(ent->driver_data & ~TRANS_CFG_MARKER);
+-	memcpy(&sig.beacon_period, &this->bss_set[stas].beacon_period, 72);
++	memcpy(&sig.req, &this->bss_set[stas].req, sizeof(sig.req));
+ 	return wl3501_esbq_exec(this, &sig, sizeof(sig));
+ }
  
- 	/* make sure trans is the first element in iwl_cfg */
- 	BUILD_BUG_ON(offsetof(struct iwl_cfg, trans));
-@@ -1133,11 +1146,19 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -669,35 +669,37 @@ static void wl3501_mgmt_scan_confirm(struct wl3501_card *this, u16 addr)
+ 	if (sig.status == WL3501_STATUS_SUCCESS) {
+ 		pr_debug("success");
+ 		if ((this->net_type == IW_MODE_INFRA &&
+-		     (sig.cap_info & WL3501_MGMT_CAPABILITY_ESS)) ||
++		     (sig.req.cap_info & WL3501_MGMT_CAPABILITY_ESS)) ||
+ 		    (this->net_type == IW_MODE_ADHOC &&
+-		     (sig.cap_info & WL3501_MGMT_CAPABILITY_IBSS)) ||
++		     (sig.req.cap_info & WL3501_MGMT_CAPABILITY_IBSS)) ||
+ 		    this->net_type == IW_MODE_AUTO) {
+ 			if (!this->essid.el.len)
+ 				matchflag = 1;
+ 			else if (this->essid.el.len == 3 &&
+ 				 !memcmp(this->essid.essid, "ANY", 3))
+ 				matchflag = 1;
+-			else if (this->essid.el.len != sig.ssid.el.len)
++			else if (this->essid.el.len != sig.req.ssid.el.len)
+ 				matchflag = 0;
+-			else if (memcmp(this->essid.essid, sig.ssid.essid,
++			else if (memcmp(this->essid.essid, sig.req.ssid.essid,
+ 					this->essid.el.len))
+ 				matchflag = 0;
+ 			else
+ 				matchflag = 1;
+ 			if (matchflag) {
+ 				for (i = 0; i < this->bss_cnt; i++) {
+-					if (ether_addr_equal_unaligned(this->bss_set[i].bssid, sig.bssid)) {
++					if (ether_addr_equal_unaligned(this->bss_set[i].req.bssid,
++								       sig.req.bssid)) {
+ 						matchflag = 0;
+ 						break;
+ 					}
+ 				}
+ 			}
+ 			if (matchflag && (i < 20)) {
+-				memcpy(&this->bss_set[i].beacon_period,
+-				       &sig.beacon_period, 73);
++				memcpy(&this->bss_set[i].req,
++				       &sig.req, sizeof(sig.req));
+ 				this->bss_cnt++;
+ 				this->rssi = sig.rssi;
++				this->bss_set[i].rssi = sig.rssi;
+ 			}
+ 		}
+ 	} else if (sig.status == WL3501_STATUS_TIMEOUT) {
+@@ -889,19 +891,19 @@ static void wl3501_mgmt_join_confirm(struct net_device *dev, u16 addr)
+ 			if (this->join_sta_bss < this->bss_cnt) {
+ 				const int i = this->join_sta_bss;
+ 				memcpy(this->bssid,
+-				       this->bss_set[i].bssid, ETH_ALEN);
+-				this->chan = this->bss_set[i].ds_pset.chan;
++				       this->bss_set[i].req.bssid, ETH_ALEN);
++				this->chan = this->bss_set[i].req.ds_pset.chan;
+ 				iw_copy_mgmt_info_element(&this->keep_essid.el,
+-						     &this->bss_set[i].ssid.el);
++						     &this->bss_set[i].req.ssid.el);
+ 				wl3501_mgmt_auth(this);
+ 			}
+ 		} else {
+ 			const int i = this->join_sta_bss;
  
- #endif
- 	/*
--	 * If we didn't set the cfg yet, assume the trans is actually
--	 * a full cfg from the old tables.
-+	 * If we didn't set the cfg yet, the PCI ID table entry should have
-+	 * been a full config - if yes, use it, otherwise fail.
- 	 */
--	if (!iwl_trans->cfg)
-+	if (!iwl_trans->cfg) {
-+		if (ent->driver_data & TRANS_CFG_MARKER) {
-+			pr_err("No config found for PCI dev %04x/%04x, rev=0x%x, rfid=0x%x\n",
-+			       pdev->device, pdev->subsystem_device,
-+			       iwl_trans->hw_rev, iwl_trans->hw_rf_id);
-+			ret = -EINVAL;
-+			goto out_free_trans;
-+		}
- 		iwl_trans->cfg = cfg;
-+	}
- 
- 	/* if we don't have a name yet, copy name from the old cfg */
- 	if (!iwl_trans->name)
+-			memcpy(&this->bssid, &this->bss_set[i].bssid, ETH_ALEN);
+-			this->chan = this->bss_set[i].ds_pset.chan;
++			memcpy(&this->bssid, &this->bss_set[i].req.bssid, ETH_ALEN);
++			this->chan = this->bss_set[i].req.ds_pset.chan;
+ 			iw_copy_mgmt_info_element(&this->keep_essid.el,
+-						  &this->bss_set[i].ssid.el);
++						  &this->bss_set[i].req.ssid.el);
+ 			wl3501_online(dev);
+ 		}
+ 	} else {
+@@ -1575,30 +1577,30 @@ static int wl3501_get_scan(struct net_device *dev, struct iw_request_info *info,
+ 	for (i = 0; i < this->bss_cnt; ++i) {
+ 		iwe.cmd			= SIOCGIWAP;
+ 		iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
+-		memcpy(iwe.u.ap_addr.sa_data, this->bss_set[i].bssid, ETH_ALEN);
++		memcpy(iwe.u.ap_addr.sa_data, this->bss_set[i].req.bssid, ETH_ALEN);
+ 		current_ev = iwe_stream_add_event(info, current_ev,
+ 						  extra + IW_SCAN_MAX_DATA,
+ 						  &iwe, IW_EV_ADDR_LEN);
+ 		iwe.cmd		  = SIOCGIWESSID;
+ 		iwe.u.data.flags  = 1;
+-		iwe.u.data.length = this->bss_set[i].ssid.el.len;
++		iwe.u.data.length = this->bss_set[i].req.ssid.el.len;
+ 		current_ev = iwe_stream_add_point(info, current_ev,
+ 						  extra + IW_SCAN_MAX_DATA,
+ 						  &iwe,
+-						  this->bss_set[i].ssid.essid);
++						  this->bss_set[i].req.ssid.essid);
+ 		iwe.cmd	   = SIOCGIWMODE;
+-		iwe.u.mode = this->bss_set[i].bss_type;
++		iwe.u.mode = this->bss_set[i].req.bss_type;
+ 		current_ev = iwe_stream_add_event(info, current_ev,
+ 						  extra + IW_SCAN_MAX_DATA,
+ 						  &iwe, IW_EV_UINT_LEN);
+ 		iwe.cmd = SIOCGIWFREQ;
+-		iwe.u.freq.m = this->bss_set[i].ds_pset.chan;
++		iwe.u.freq.m = this->bss_set[i].req.ds_pset.chan;
+ 		iwe.u.freq.e = 0;
+ 		current_ev = iwe_stream_add_event(info, current_ev,
+ 						  extra + IW_SCAN_MAX_DATA,
+ 						  &iwe, IW_EV_FREQ_LEN);
+ 		iwe.cmd = SIOCGIWENCODE;
+-		if (this->bss_set[i].cap_info & WL3501_MGMT_CAPABILITY_PRIVACY)
++		if (this->bss_set[i].req.cap_info & WL3501_MGMT_CAPABILITY_PRIVACY)
+ 			iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
+ 		else
+ 			iwe.u.data.flags = IW_ENCODE_DISABLED;
 -- 
 2.30.2
 
