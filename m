@@ -5,45 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E234DC433B4
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 May 2021 19:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 694B5C43462
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 May 2021 19:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C601A61157
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 May 2021 19:52:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E703613EB
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 May 2021 19:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231500AbhEFTxH (ORCPT
+        id S232796AbhEFTxL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 May 2021 15:53:07 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:13233 "EHLO m43-7.mailgun.net"
+        Thu, 6 May 2021 15:53:11 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:44899 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230296AbhEFTxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 May 2021 15:53:04 -0400
+        id S231484AbhEFTxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 May 2021 15:53:09 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1620330725; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1620330730; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=5EWbP4cF4qtvzoOaQVhrwlcLOish+2IcuKyeGnBVZQU=; b=XZYi465DJD1FhEX/zo8f+XLfD0Uq/CLiq1rxRQk2jNLyk7YSYapbIusk/aY3bDohZi5Z9Eh3
- I51othvcN/G9x9wDkFh2ZEG/hYgzxNOHVqVzfORoaOHLc3KCVKcWS0p7amqWR0//MR/mbbRm
- piWJJRIq8yuEg6pKqXXvEV5O4/Y=
+ bh=ItwsbAsGGeAoPenFRnoVdj2HHxWtIBa7MxEhEsYvNdw=; b=rOoce5ZEBpdZdTCrSBEOjvOkDkeB8DhCewyl/5A8ZGwqWuUl+7/iUmPms+rWYB0UySKCLLpH
+ wt/4RVbJ/4BkN1uCQ/ZJyHPKWlveYPKB6hQIPcm2AhEX9uavURLCT3HSnfmVFQ9Nlf+dQy1H
+ krixr+7wrWVymsEIytSk2TRgI6A=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 609448dd8166b7eff7f875d0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 06 May 2021 19:51:57
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 609448dc87ce1fbb567aa6cc (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 06 May 2021 19:51:56
  GMT
 Sender: bbhatt=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7B688C43147; Thu,  6 May 2021 19:51:56 +0000 (UTC)
+        id 2F0F2C43151; Thu,  6 May 2021 19:51:56 +0000 (UTC)
 Received: from malabar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: bbhatt)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9E4A5C4338A;
-        Thu,  6 May 2021 19:51:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9E4A5C4338A
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 33C07C433D3;
+        Thu,  6 May 2021 19:51:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 33C07C433D3
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=bbhatt@codeaurora.org
 From:   Bhaumik Bhatt <bbhatt@codeaurora.org>
@@ -53,9 +53,9 @@ Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
         loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
         kvalo@codeaurora.org, ath11k@lists.infradead.org,
         Bhaumik Bhatt <bbhatt@codeaurora.org>
-Subject: [PATCH v4 4/6] ath11k: set register access length for MHI driver
-Date:   Thu,  6 May 2021 12:51:43 -0700
-Message-Id: <1620330705-40192-5-git-send-email-bbhatt@codeaurora.org>
+Subject: [PATCH v4 2/6] bus: mhi: core: Set BHI and BHIe pointers to NULL in clean-up
+Date:   Thu,  6 May 2021 12:51:41 -0700
+Message-Id: <1620330705-40192-3-git-send-email-bbhatt@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1620330705-40192-1-git-send-email-bbhatt@codeaurora.org>
 References: <1620330705-40192-1-git-send-email-bbhatt@codeaurora.org>
@@ -63,28 +63,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-MHI driver requires register space length to add range checks and
-prevent memory region accesses outside of that for MMIO space.
-Set it before registering the MHI controller.
+Set the BHI and BHIe pointers to NULL as part of clean-up. This
+makes sure that stale pointers are not accessed after powering
+MHI down.
 
+Suggested-by: Hemant Kumar <hemantk@codeaurora.org>
 Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
+Reviewed-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
 Reviewed-by: Hemant Kumar <hemantk@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mhi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/bus/mhi/core/init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index 09858e5..c0f013c 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -235,6 +235,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
- 	mhi_ctrl->cntrl_dev = ab->dev;
- 	mhi_ctrl->fw_image = ab_pci->amss_path;
- 	mhi_ctrl->regs = ab->mem;
-+	mhi_ctrl->reg_len = ab->mem_len;
+diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
+index 11c7a3d..1cc2f22 100644
+--- a/drivers/bus/mhi/core/init.c
++++ b/drivers/bus/mhi/core/init.c
+@@ -1132,6 +1132,9 @@ void mhi_unprepare_after_power_down(struct mhi_controller *mhi_cntrl)
+ 		mhi_cntrl->rddm_image = NULL;
+ 	}
  
- 	ret = ath11k_mhi_get_msi(ab_pci);
- 	if (ret) {
++	mhi_cntrl->bhi = NULL;
++	mhi_cntrl->bhie = NULL;
++
+ 	mhi_deinit_dev_ctxt(mhi_cntrl);
+ }
+ EXPORT_SYMBOL_GPL(mhi_unprepare_after_power_down);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
