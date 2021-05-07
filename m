@@ -2,79 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C866C433ED
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 May 2021 10:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F8DC433ED
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 May 2021 10:26:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 742936141E
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 May 2021 10:02:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A12A861456
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 May 2021 10:26:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235135AbhEGKDT (ORCPT
+        id S236170AbhEGK1P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 May 2021 06:03:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53846 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbhEGKDS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 May 2021 06:03:18 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF8D9C061574
-        for <linux-wireless@vger.kernel.org>; Fri,  7 May 2021 03:02:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-Id
-        :Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=pEYSZCtp1pexN3zVGuYjlw45M7QM495sfzfFTV84aY8=; b=g1B60RdcKSiFExrms6oOPC1mbp
-        EXaiUVYyk5wLhnUPl1BnyDbgSPjARuFR3NxYU15WYN/6ZcE/ItGAczM6gC2VaQ5j6dEybx6F27QlH
-        3jJnj7JL6HC/Bmzs53sMhzP41KAjaoU79Dd2H56QHO97mpefJ5ex2PGKzEzUy7gpx414=;
-Received: from p4ff13bc6.dip0.t-ipconnect.de ([79.241.59.198] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1lexJH-0003bF-Sp; Fri, 07 May 2021 12:02:15 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org, Jayden Kuo <Jayden.Kuo@mediatek.com>
-Subject: [PATCH 5.13 1/2] mt76: connac: fix HT A-MPDU setting field in STA_REC_PHY
-Date:   Fri,  7 May 2021 12:02:10 +0200
-Message-Id: <20210507100211.15709-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.30.1
+        Fri, 7 May 2021 06:27:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47658 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234400AbhEGK1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 May 2021 06:27:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6BB366145D;
+        Fri,  7 May 2021 10:26:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620383175;
+        bh=Mbw+8owFLWs4xmIu7qzgT/jhkef9dYDarAtMd5JrW2o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oLRToiZB59kqEV3KXpAoHLDzhQdy2cuRcUX+3GGLX4jqjBWTF/2sv5My4xZu7eTgw
+         hoX0BzZRdcGB/pWIdZdDUuTQ/hK2gwnEIe8NpuQ9rYzvYxzfwJr6uDpRHRbc0N3zDI
+         okXJIwgRhGUTULgKzOiSzldWAmLiawa7KOYab6T+7TT4HEqh2pg/O/4KeBnZgkvXEE
+         8GGfUC6Fc2kfgoLEXPBbgrfCepGes+Wej6PdS5tZL6lWzwm9rihvcgnhBErP8SAP01
+         qF9QddZ+N4mz66H9dVhm+jmAeOXOl5VgZrAwOCqN3RFbLWIqxXFquMEmLSql7K2Mrx
+         GyYkYfTMe7law==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: [PATCH] mt76: mt76x0: use dev_debug instead of dev_err for hw_rf_ctrl
+Date:   Fri,  7 May 2021 12:26:11 +0200
+Message-Id: <8b311203e353d7415c4cff568201309fcb3b48e6.1620382900.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The MT7921 firmware needs this to enable tx A-MPDU properly
+BIT(0) in MT_EE_NIC_CONF_1 is use to notify the driver if the radio RF
+switch is controlled through a gpio. Use dev_debug instead of dev_err
+to log this info.
 
-Reported-by: Jayden Kuo (郭育辰) <Jayden.Kuo@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index fe0ab5e5ff81..619561606f96 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -721,6 +721,10 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
- 	phy->phy_type = mt76_connac_get_phy_mode_v2(mphy, vif, band, sta);
- 	phy->basic_rate = cpu_to_le16((u16)vif->bss_conf.basic_rates);
- 	phy->rcpi = rcpi;
-+	phy->ampdu = FIELD_PREP(IEEE80211_HT_AMPDU_PARM_FACTOR,
-+				sta->ht_cap.ampdu_factor) |
-+		     FIELD_PREP(IEEE80211_HT_AMPDU_PARM_DENSITY,
-+				sta->ht_cap.ampdu_density);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+index dd66fd12a2e6..cea24213186c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+@@ -68,7 +68,7 @@ static void mt76x0_set_chip_cap(struct mt76x02_dev *dev)
+ 		nic_conf1 &= 0xff00;
  
- 	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_RA, sizeof(*ra_info));
- 	ra_info = (struct sta_rec_ra_info *)tlv;
+ 	if (nic_conf1 & MT_EE_NIC_CONF_1_HW_RF_CTRL)
+-		dev_err(dev->mt76.dev,
++		dev_dbg(dev->mt76.dev,
+ 			"driver does not support HW RF ctrl\n");
+ 
+ 	if (!mt76x02_field_valid(nic_conf0 >> 8))
 -- 
-2.30.1
+2.30.2
 
