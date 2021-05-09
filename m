@@ -2,141 +2,128 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,
+	DKIM_ADSP_CUSTOM_MED,DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F13C433B4
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 May 2021 22:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6F1C433ED
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 May 2021 23:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B11406101B
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 May 2021 22:46:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A51E61396
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 May 2021 23:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229964AbhEIWnk (ORCPT
+        id S230014AbhEIXbX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 May 2021 18:43:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52224 "EHLO
+        Sun, 9 May 2021 19:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229950AbhEIWnk (ORCPT
+        with ESMTP id S229882AbhEIXbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 May 2021 18:43:40 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 049C3C061573
-        for <linux-wireless@vger.kernel.org>; Sun,  9 May 2021 15:42:35 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id y9so18488366ljn.6
-        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2021 15:42:35 -0700 (PDT)
+        Sun, 9 May 2021 19:31:21 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA850C061573;
+        Sun,  9 May 2021 16:30:17 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id p12so18591304ljg.1;
+        Sun, 09 May 2021 16:30:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=IwL6My/mFtFWZcll0pHCPGHD51NxptuT9Qe2aLO/Puw=;
-        b=P8X64JDSbpUd8wi/1Vd54I0r8iVpNHHtaTIrS2pE4KNTuLS00TWmMLQ9Z5IL+2R3h/
-         T67p/PyTqdSujKl51ZCkSfCjS0/zYdwxLqzmtNhJTFLvpisnqGe6eD62esuHkgMcj+Ls
-         qTdOeyoCwbQKRSYVUjz8H8jSiomGZ3N+8izGhg27UdkCj/ffZRlt7gI1PEf6vNDkXa0i
-         SOp7AuGHAzsap6ZJ0CQ8k8TgODb5JcRlxZbbvMkzevIG46KYE0wyd+29sodpyvoPka2i
-         59kOHktnRWhZZDb/+xOuzqkinhB6Mh/rhy9BEsMHQRpVymMadhFxsUanuOtw9ZSbiRtO
-         eFww==
+        bh=RedzcwQXnK2JFK7yvp/MkYUU1m35sxE8mjp3sZ0+O08=;
+        b=bf2wa3vSWP5/spJ155BDp7+NNLyEm3nLBuGGZ8UXInKbvzavBx6VswOFlTQ+igmYiH
+         S2npdP3+4cf3fbhpZBBwopAu6R1rZ+dDXvEL2837vqDSSSTCtbPBPiKbTreqh7B7Drdl
+         ma0n2qjrat8zDonEXBMOHDJORfVg7HdlTYj93Aq0wdYleZGQSokIH5NoLtCOT9kZhDp2
+         mhMQMY7wgtK1IRhtGCfNzE0+USfBjY40M2syIpUl/yeO/GIqLivPceFbhBqp84DKDj6B
+         1a0f199+NyIR06RQCXgTreHTHYoaAW8EmUmCys/rt3MpFGeVIxMQOV/DuZlQG+6oJtFH
+         T+Cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=IwL6My/mFtFWZcll0pHCPGHD51NxptuT9Qe2aLO/Puw=;
-        b=XWsM52F5IFdGLiO5A4J7XZawLRXb5yIsivr3oBcQc0W+Lnc66H7MeipnCF8OmMDoAX
-         E2Dz37vCPKLzdsp7O4Bx3u3wkmFJYhH5hHYzEcryyNH/FKcegIXsVpD+vij/mxv+WlpY
-         crWcRC22PlT2t9x6vk4VBvSOZsheHa6apW7C3jhUoPzHWRkUm0BoXMK5vpcMkbahTdTe
-         jnr5b4Qw5Z2WpyZjvNa1WRJbxkWgjVawpH8UbJJHR/KC0qxEyyC+sUDuPFND3HfzMndh
-         K3/QJIkvU84pFwP3LJPO5h6jQ5sUS9SeITkQEuJo34co1gSELGwbzmK6YuBwo5LCI+4l
-         XwAQ==
-X-Gm-Message-State: AOAM5331yh4aBB0+vwsotnRM0+U9jJ85qHPa3TDw3eIBYElwkL7o5IQs
-        33Dk8oxsJIP78+kfJyHY9Wk7gGvxenPSKg==
-X-Google-Smtp-Source: ABdhPJxTxXTg8Eki1uL2q4mdBYFgj92AR6YJCSx39RsPUD+Q7QoXRJ1DFUI9FDmTHI3YrpIZjjbEYg==
-X-Received: by 2002:a2e:814d:: with SMTP id t13mr17117957ljg.467.1620600154364;
-        Sun, 09 May 2021 15:42:34 -0700 (PDT)
-Received: from localhost.localdomain (c-fdcc225c.014-348-6c756e10.bbcust.telenor.se. [92.34.204.253])
-        by smtp.gmail.com with ESMTPSA id r25sm2018545lfm.145.2021.05.09.15.42.33
+        bh=RedzcwQXnK2JFK7yvp/MkYUU1m35sxE8mjp3sZ0+O08=;
+        b=gGC5+oEyudYTsi0O+1PebYek4JTGOhsjjlKaf1sR1+K3dY15Wb2JbbN4ds6RVCIurG
+         3HiaHEViQxWMBSIsefx6T6GLzExCoMGEEWkpG8B8FZTyC9XONV0y7SGSWAj29/A3SFKz
+         jq5V2KjInMgh9iZUbZUYCrtjx6BmQpwr0cd195St/DLQEWCi2PAvuPZLUBP38JNZMjH8
+         IsKiUoHwMKrf1v9W8elp+BqumsePrb/pfWg/CgKrcNvhdRWLJh8p+D/9JewaoI6qxr7g
+         l3lk5yChVb37sQrxwGaPyVvBRQ3JqYZRaBWID9n4/Kq33IJN2MiQGVay28WMp9WJ32fY
+         cR/A==
+X-Gm-Message-State: AOAM5310Ji9/VkjBKHlsThF+7hFgggPP973k25QWo4rzLVYSq7SZd6e5
+        pLwPpt2lrw3ENF7ob4DnjFs=
+X-Google-Smtp-Source: ABdhPJxeBOTcgVB8iviTLkqcQ6LzrND82y+6Q7o6gwzKv1TOGNGqjhBu0nzNbflGPrx9KowMoXxTVg==
+X-Received: by 2002:a2e:a593:: with SMTP id m19mr869291ljp.103.1620603016249;
+        Sun, 09 May 2021 16:30:16 -0700 (PDT)
+Received: from localhost ([85.249.34.38])
+        by smtp.gmail.com with ESMTPSA id q127sm3015291ljq.88.2021.05.09.16.30.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 May 2021 15:42:34 -0700 (PDT)
-From:   Linus Walleij <linus.walleij@linaro.org>
-To:     Arend van Spriel <aspriel@gmail.com>,
+        Sun, 09 May 2021 16:30:16 -0700 (PDT)
+From:   Mikhail Rudenko <mike.rudenko@gmail.com>
+Cc:     Mikhail Rudenko <mike.rudenko@gmail.com>,
+        Arend van Spriel <aspriel@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-hsien Lin <chi-hsien.lin@infineon.com>,
         Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: Obtain reset GPIO
-Date:   Mon, 10 May 2021 00:42:26 +0200
-Message-Id: <20210509224226.348127-1-linus.walleij@linaro.org>
-X-Mailer: git-send-email 2.30.2
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Dmitry Osipenko <digetx@gmail.com>,
+        Double Lo <double.lo@cypress.com>,
+        Remi Depommier <rde@setrix.com>,
+        Amar Shankar <amsr@cypress.com>,
+        Saravanan Shanmugham <saravanan.shanmugham@cypress.com>,
+        Frank Kao <frank.kao@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: use separate firmware for 43430 revision 2
+Date:   Mon, 10 May 2021 02:30:08 +0300
+Message-Id: <20210509233010.2477973-1-mike.rudenko@gmail.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This grabs the reset GPIO and holds it de-asserted, if available.
-Asserting this signal will make the SDIO card re-enumerate.
+A separate firmware is needed for Broadcom 43430 revision 2.  This
+chip can be found in e.g. certain revisions of Ampak AP6212 wireless
+IC. Original firmware file from IC vendor is named
+'fw_bcm43436b0.bin', but brcmfmac and also btbcm drivers report chip
+id 43430, so requested firmware file name is
+'brcmfmac43430b0-sdio.bin' in line with other 43430 revisions.
 
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Mikhail Rudenko <mike.rudenko@gmail.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/common.c  | 10 ++++++++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/common.h  |  4 ++++
- 2 files changed, 14 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index e3758bd86acf..40e18ebfe1ea 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -446,6 +446,16 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
- 		brcmf_dmi_probe(settings, chip, chiprev);
- 		brcmf_of_probe(dev, bus_type, settings);
- 	}
-+	/* Fetch WL_RESET GPIO and de-assert it, if available */
-+	settings->reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
-+	if (settings->reset) {
-+		/*
-+		 * If we found a reset GPIO, we may have just de-asserted it
-+		 * so wait some 8 ms for PLLs to lock, se figure 32, WLAN
-+		 * boot-up sequence in the manual.
-+		 */
-+		usleep_range(8000, 10000);
-+	}
- 	return settings;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index 8b5f49997c8b..4209e71ebcdd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -7,6 +7,7 @@
- 
- #include <linux/platform_device.h>
- #include <linux/platform_data/brcmfmac.h>
-+#include <linux/gpio/consumer.h>
- #include "fwil_types.h"
- 
- #define BRCMF_FW_ALTPATH_LEN			256
-@@ -39,6 +40,8 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
-  * @roamoff: Firmware roaming off?
-  * @ignore_probe_fail: Ignore probe failure.
-  * @country_codes: If available, pointer to struct for translating country codes
-+ * @board_type: String with the board type name
-+ * @reset: GPIO descriptor for the RESET line
-  * @bus: Bus specific platform data. Only SDIO at the mmoment.
-  */
- struct brcmf_mp_device {
-@@ -50,6 +53,7 @@ struct brcmf_mp_device {
- 	bool		ignore_probe_fail;
- 	struct brcmfmac_pd_cc *country_codes;
- 	const char	*board_type;
-+	struct gpio_desc *reset;
- 	union {
- 		struct brcmfmac_sdio_pd sdio;
- 	} bus;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 16ed325795a8..f0c22b5bb57c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -617,6 +617,7 @@ BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
+ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
+ /* Note the names are not postfixed with a1 for backward compatibility */
+ BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
++BRCMF_FW_DEF(43430B0, "brcmfmac43430b0-sdio");
+ BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
+ BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+ BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+@@ -643,7 +644,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+-	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
++	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000002, 43430A1),
++	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000004, 43430B0),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
 -- 
-2.30.2
+2.31.1
 
