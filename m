@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C9DC433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 861CDC433B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:17:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB34961139
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:17:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6643E61139
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234041AbhEJPSO (ORCPT
+        id S234204AbhEJPSU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 May 2021 11:18:14 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:56330 "EHLO
+        Mon, 10 May 2021 11:18:20 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:56336 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S241770AbhEJPQg (ORCPT
+        with ESMTP id S241775AbhEJPQg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 10 May 2021 11:16:36 -0400
-X-UUID: 17bf50ce860e4fe5a83cbb1ad7f46f44-20210510
-X-UUID: 17bf50ce860e4fe5a83cbb1ad7f46f44-20210510
+X-UUID: 49d4b55531e54163bc562105144275fb-20210510
+X-UUID: 49d4b55531e54163bc562105144275fb-20210510
 Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1801878924; Mon, 10 May 2021 23:15:22 +0800
+        with ESMTP id 1352332503; Mon, 10 May 2021 23:15:22 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
  mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 10 May 2021 23:14:59 +0800
+ 15.0.1497.2; Mon, 10 May 2021 23:14:58 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 10 May 2021 23:14:59 +0800
+ Transport; Mon, 10 May 2021 23:14:58 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -44,15 +44,15 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <jemele@google.com>, <yenlinlai@google.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 7/9] mt76: mt7921: consider the invalid value for to_rssi
-Date:   Mon, 10 May 2021 23:14:55 +0800
-Message-ID: <1620659697-12048-7-git-send-email-sean.wang@mediatek.com>
+Subject: [PATCH 2/9] mt76: mt7921: Don't alter Rx path classifier
+Date:   Mon, 10 May 2021 23:14:50 +0800
+Message-ID: <1620659697-12048-2-git-send-email-sean.wang@mediatek.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
 References: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 3C9240EF2573B67657F9ED857479D90467E4CC8D7E534F832002A2DEABEF7E0B2000:8
+X-TM-SNTS-SMTP: 3886F8F6554AC4F76625E046C0B15BE9936678AC567C95A67B719FE920DD7D132000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -60,46 +60,51 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-It is possible the RCPI from the certain antenna is an invalid value,
-especially packets are receiving while the system is frequently entering
-deep sleep mode, so consider calculating RSSI with the reasonable upper
-bound to avoid report the wrong value to the mac80211 layer.
+Keep Rx path classifier the mt7921 firmware prefers to allow frames pass
+through MCU.
 
-Fixes: 163f4d22c118 ("mt76: mt7921: add MAC support")
+Fixes: 5c14a5f944b9 ("mt76: mt7921: introduce mt7921e support")
 Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7921/init.c   | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 44b8918db95b..89a09381cfe4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -461,16 +461,19 @@ int mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 		status->chain_signal[1] = to_rssi(MT_PRXV_RCPI1, v1);
- 		status->chain_signal[2] = to_rssi(MT_PRXV_RCPI2, v1);
- 		status->chain_signal[3] = to_rssi(MT_PRXV_RCPI3, v1);
--		status->signal = status->chain_signal[0];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 1d4ba5d0166a..6947d98287c0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -118,30 +118,12 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
+ static void
+ mt7921_mac_init_band(struct mt7921_dev *dev, u8 band)
+ {
+-	u32 mask, set;
 -
--		for (i = 1; i < hweight8(mphy->antenna_mask); i++) {
--			if (!(status->chains & BIT(i)))
-+		status->signal = -128;
-+		for (i = 0; i < hweight8(mphy->antenna_mask); i++) {
-+			if (!(status->chains & BIT(i)) ||
-+			    status->chain_signal[i] >= 0)
- 				continue;
+ 	mt76_rmw_field(dev, MT_TMAC_CTCR0(band),
+ 		       MT_TMAC_CTCR0_INS_DDLMT_REFTIME, 0x3f);
+ 	mt76_set(dev, MT_TMAC_CTCR0(band),
+ 		 MT_TMAC_CTCR0_INS_DDLMT_VHT_SMPDU_EN |
+ 		 MT_TMAC_CTCR0_INS_DDLMT_EN);
  
- 			status->signal = max(status->signal,
- 					     status->chain_signal[i]);
- 		}
+-	mask = MT_MDP_RCFR0_MCU_RX_MGMT |
+-	       MT_MDP_RCFR0_MCU_RX_CTL_NON_BAR |
+-	       MT_MDP_RCFR0_MCU_RX_CTL_BAR;
+-	set = FIELD_PREP(MT_MDP_RCFR0_MCU_RX_MGMT, MT_MDP_TO_HIF) |
+-	      FIELD_PREP(MT_MDP_RCFR0_MCU_RX_CTL_NON_BAR, MT_MDP_TO_HIF) |
+-	      FIELD_PREP(MT_MDP_RCFR0_MCU_RX_CTL_BAR, MT_MDP_TO_HIF);
+-	mt76_rmw(dev, MT_MDP_BNRCFR0(band), mask, set);
+-
+-	mask = MT_MDP_RCFR1_MCU_RX_BYPASS |
+-	       MT_MDP_RCFR1_RX_DROPPED_UCAST |
+-	       MT_MDP_RCFR1_RX_DROPPED_MCAST;
+-	set = FIELD_PREP(MT_MDP_RCFR1_MCU_RX_BYPASS, MT_MDP_TO_HIF) |
+-	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_UCAST, MT_MDP_TO_HIF) |
+-	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_TO_HIF);
+-	mt76_rmw(dev, MT_MDP_BNRCFR1(band), mask, set);
+-
+ 	mt76_set(dev, MT_WF_RMAC_MIB_TIME0(band), MT_WF_RMAC_MIB_RXTIME_EN);
+ 	mt76_set(dev, MT_WF_RMAC_MIB_AIRTIME0(band), MT_WF_RMAC_MIB_RXTIME_EN);
  
-+		if (status->signal == -128)
-+			status->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+
- 		stbc = FIELD_GET(MT_PRXV_STBC, v0);
- 		gi = FIELD_GET(MT_PRXV_SGI, v0);
- 		cck = false;
 -- 
 2.25.1
 
