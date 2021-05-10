@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2FCAC433B4
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2B9C43460
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A46E961139
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:18:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF2D36101B
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235224AbhEJPTA (ORCPT
+        id S232605AbhEJPUN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 May 2021 11:19:00 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:58505 "EHLO
+        Mon, 10 May 2021 11:20:13 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:58495 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S240785AbhEJPQu (ORCPT
+        with ESMTP id S234302AbhEJPSu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 May 2021 11:16:50 -0400
-X-UUID: 54c13996d2734fc5b53fdf81cfbba77e-20210510
-X-UUID: 54c13996d2734fc5b53fdf81cfbba77e-20210510
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
+        Mon, 10 May 2021 11:18:50 -0400
+X-UUID: 4089e40365ae45598466a19bc2a598f5-20210510
+X-UUID: 4089e40365ae45598466a19bc2a598f5-20210510
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2021363846; Mon, 10 May 2021 23:15:01 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1153437198; Mon, 10 May 2021 23:15:00 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 10 May 2021 23:15:00 +0800
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 10 May 2021 23:14:58 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 10 May 2021 23:14:59 +0800
+ Transport; Mon, 10 May 2021 23:14:58 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -43,12 +43,10 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
         <jemele@google.com>, <yenlinlai@google.com>,
         <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Deren Wu <deren.wu@mediatek.com>,
-        YN Chen <yn.chen@mediatek.com>
-Subject: [PATCH 9/9] mt76: mt7921: add back connection monitor support
-Date:   Mon, 10 May 2021 23:14:57 +0800
-Message-ID: <1620659697-12048-9-git-send-email-sean.wang@mediatek.com>
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 4/9] mt76: mt7921: enable deep sleep at runtime
+Date:   Mon, 10 May 2021 23:14:52 +0800
+Message-ID: <1620659697-12048-4-git-send-email-sean.wang@mediatek.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
 References: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
@@ -61,118 +59,130 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-Hw beacon cmd to the mt7921 firmware doesn't only filter out the beacon,
-but also performs its own connection monitoring, including periodic
-keep-alives to the AP and probing the AP on beacon loss. Will indicate
-the host with the event when the firmware detects the connection is lost.
+Enable the deep sleep mode with that firmware is able to trap into
+the doze state at runtime to reduce the power consumption further.
 
-Fixes: 1d8efc741df8 ("mt76: mt7921: introduce Runtime PM support")
+The deep sleep mode is not allowed in the STA state transition with
+the firmware to have the fast connection experience as we've done in
+the full power mode
+
 Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: YN Chen <yn.chen@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  4 +++
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 32 +++++++++++++------
- 2 files changed, 27 insertions(+), 9 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 20 +++++++++++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  3 ++
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  6 +++-
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 28 +++++++++++++++++--
+ 4 files changed, 54 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 7b8f8e6f431d..542d7d9f1f52 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1596,6 +1596,26 @@ int mt76_connac_mcu_set_deep_sleep(struct mt76_dev *dev, bool enable)
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_set_deep_sleep);
+ 
++int mt76_connac_sta_state_dp(struct mt76_dev *dev,
++			     enum ieee80211_sta_state old_state,
++			     enum ieee80211_sta_state new_state)
++{
++	if ((old_state == IEEE80211_STA_ASSOC &&
++	     new_state == IEEE80211_STA_AUTHORIZED) ||
++	    (old_state == IEEE80211_STA_NONE &&
++	     new_state == IEEE80211_STA_NOTEXIST))
++		mt76_connac_mcu_set_deep_sleep(dev, true);
++
++	if ((old_state == IEEE80211_STA_NOTEXIST &&
++	     new_state == IEEE80211_STA_NONE) ||
++	    (old_state == IEEE80211_STA_AUTHORIZED &&
++	     new_state == IEEE80211_STA_ASSOC))
++		mt76_connac_mcu_set_deep_sleep(dev, false);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mt76_connac_sta_state_dp);
++
+ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
+ 				    struct mt76_connac_coredump *coredump)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 01fc9f2c2f4a..3ed2fb5e1389 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1032,6 +1032,9 @@ int mt76_connac_mcu_update_gtk_rekey(struct ieee80211_hw *hw,
+ int mt76_connac_mcu_set_hif_suspend(struct mt76_dev *dev, bool suspend);
+ void mt76_connac_mcu_set_suspend_iter(void *priv, u8 *mac,
+ 				      struct ieee80211_vif *vif);
++int mt76_connac_sta_state_dp(struct mt76_dev *dev,
++			     enum ieee80211_sta_state old_state,
++			     enum ieee80211_sta_state new_state);
+ int mt76_connac_mcu_chip_config(struct mt76_dev *dev);
+ int mt76_connac_mcu_set_deep_sleep(struct mt76_dev *dev, bool enable);
+ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index cd68721314fa..cbb1d432a591 100644
+index 6947d98287c0..cd68721314fa 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -73,6 +73,7 @@ static void
- mt7921_init_wiphy(struct ieee80211_hw *hw)
- {
- 	struct mt7921_phy *phy = mt7921_hw_phy(hw);
-+	struct mt7921_dev *dev = phy->dev;
- 	struct wiphy *wiphy = hw->wiphy;
+@@ -250,7 +250,11 @@ int mt7921_register_device(struct mt7921_dev *dev)
+ 	if (ret)
+ 		return ret;
  
- 	hw->queues = 4;
-@@ -112,6 +113,9 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, SUPPORTS_PS);
- 	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
- 
-+	if (dev->pm.enable)
-+		ieee80211_hw_set(hw, CONNECTION_MONITOR);
+-	return mt7921_init_debugfs(dev);
++	ret = mt7921_init_debugfs(dev);
++	if (ret)
++		return ret;
 +
- 	hw->max_tx_fragments = 4;
++	return mt76_connac_mcu_set_deep_sleep(&dev->mt76, dev->pm.enable);
  }
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 67dc4b4cc094..7c68182cad55 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -450,22 +450,33 @@ mt7921_mcu_scan_event(struct mt7921_dev *dev, struct sk_buff *skb)
+ void mt7921_unregister_device(struct mt7921_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 39b3e769925e..5dbccbefe047 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -848,6 +848,31 @@ mt7921_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			      IEEE80211_STA_NOTEXIST);
  }
  
- static void
--mt7921_mcu_beacon_loss_event(struct mt7921_dev *dev, struct sk_buff *skb)
-+mt7921_mcu_connection_loss_iter(void *priv, u8 *mac,
-+				struct ieee80211_vif *vif)
++static int mt7921_sta_state(struct ieee80211_hw *hw,
++			    struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta,
++			    enum ieee80211_sta_state old_state,
++			    enum ieee80211_sta_state new_state)
 +{
-+	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
-+	struct mt76_connac_beacon_loss_event *event = priv;
++	struct mt7921_dev *dev = mt7921_hw_dev(hw);
 +
-+	if (mvif->idx != event->bss_idx)
-+		return;
++	if (dev->pm.enable) {
++		mt7921_mutex_acquire(dev);
++		mt76_connac_sta_state_dp(&dev->mt76, old_state, new_state);
++		mt7921_mutex_release(dev);
++	}
 +
-+	if (!(vif->driver_flags & IEEE80211_VIF_BEACON_FILTER))
-+		return;
++	if (old_state == IEEE80211_STA_AUTH &&
++	    new_state == IEEE80211_STA_ASSOC) {
++		return mt7921_sta_add(hw, vif, sta);
++	} else if (old_state == IEEE80211_STA_ASSOC &&
++		   new_state == IEEE80211_STA_AUTH) {
++		return mt7921_sta_remove(hw, vif, sta);
++	}
 +
-+	ieee80211_connection_loss(vif);
++	return 0;
 +}
 +
-+static void
-+mt7921_mcu_connection_loss_event(struct mt7921_dev *dev, struct sk_buff *skb)
- {
- 	struct mt76_connac_beacon_loss_event *event;
--	struct mt76_phy *mphy;
--	u8 band_idx = 0; /* DBDC support */
-+	struct mt76_phy *mphy = &dev->mt76.phy;
- 
- 	skb_pull(skb, sizeof(struct mt7921_mcu_rxd));
- 	event = (struct mt76_connac_beacon_loss_event *)skb->data;
--	if (band_idx && dev->mt76.phy2)
--		mphy = dev->mt76.phy2;
--	else
--		mphy = &dev->mt76.phy;
- 
- 	ieee80211_iterate_active_interfaces_atomic(mphy->hw,
- 					IEEE80211_IFACE_ITER_RESUME_ALL,
--					mt76_connac_mcu_beacon_loss_iter, event);
-+					mt7921_mcu_connection_loss_iter, event);
- }
- 
- static void
-@@ -530,7 +541,7 @@ mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 
- 	switch (rxd->eid) {
- 	case MCU_EVENT_BSS_BEACON_LOSS:
--		mt7921_mcu_beacon_loss_event(dev, skb);
-+		mt7921_mcu_connection_loss_event(dev, skb);
- 		break;
- 	case MCU_EVENT_SCHED_SCAN_DONE:
- 	case MCU_EVENT_SCAN_DONE:
-@@ -1368,6 +1379,7 @@ mt7921_pm_interface_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- {
- 	struct mt7921_phy *phy = priv;
- 	struct mt7921_dev *dev = phy->dev;
-+	struct ieee80211_hw *hw = mt76_hw(dev);
- 	int ret;
- 
- 	if (dev->pm.enable)
-@@ -1380,9 +1392,11 @@ mt7921_pm_interface_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 
- 	if (dev->pm.enable) {
- 		vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
-+		ieee80211_hw_set(hw, CONNECTION_MONITOR);
- 		mt76_set(dev, MT_WF_RFCR(0), MT_WF_RFCR_DROP_OTHER_BEACON);
- 	} else {
- 		vif->driver_flags &= ~IEEE80211_VIF_BEACON_FILTER;
-+		__clear_bit(IEEE80211_HW_CONNECTION_MONITOR, hw->flags);
- 		mt76_clear(dev, MT_WF_RFCR(0), MT_WF_RFCR_DROP_OTHER_BEACON);
- 	}
- }
+ static int
+ mt7921_get_stats(struct ieee80211_hw *hw,
+ 		 struct ieee80211_low_level_stats *stats)
+@@ -1191,8 +1216,7 @@ const struct ieee80211_ops mt7921_ops = {
+ 	.conf_tx = mt7921_conf_tx,
+ 	.configure_filter = mt7921_configure_filter,
+ 	.bss_info_changed = mt7921_bss_info_changed,
+-	.sta_add = mt7921_sta_add,
+-	.sta_remove = mt7921_sta_remove,
++	.sta_state = mt7921_sta_state,
+ 	.sta_pre_rcu_remove = mt76_sta_pre_rcu_remove,
+ 	.set_key = mt7921_set_key,
+ 	.sta_set_decap_offload = mt7921_sta_set_decap_offload,
 -- 
 2.25.1
 
