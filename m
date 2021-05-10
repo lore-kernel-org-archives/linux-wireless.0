@@ -5,34 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AD5C433B4
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9944C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:16:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E1896023E
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:16:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94DBC6120D
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 15:16:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241602AbhEJPRO (ORCPT
+        id S236890AbhEJPRT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 May 2021 11:17:14 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:56336 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S237277AbhEJPQJ (ORCPT
+        Mon, 10 May 2021 11:17:19 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:58505 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S238956AbhEJPQK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 May 2021 11:16:09 -0400
-X-UUID: 2aae4b1b1ea94b9180be372c5e267ece-20210510
-X-UUID: 2aae4b1b1ea94b9180be372c5e267ece-20210510
-Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw02.mediatek.com
+        Mon, 10 May 2021 11:16:10 -0400
+X-UUID: 006f526ac05e428982fbd65242d0c1a4-20210510
+X-UUID: 006f526ac05e428982fbd65242d0c1a4-20210510
+Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1958911763; Mon, 10 May 2021 23:14:59 +0800
+        with ESMTP id 1293285783; Mon, 10 May 2021 23:15:00 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 10 May 2021 23:14:59 +0800
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 10 May 2021 23:14:58 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 10 May 2021 23:14:59 +0800
+ Transport; Mon, 10 May 2021 23:14:58 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -43,11 +43,10 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
         <jemele@google.com>, <yenlinlai@google.com>,
         <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        YN Chen <yn.chen@mediatek.com>
-Subject: [PATCH 6/9] mt76: connac: fix WoW with disconnetion and bitmap pattern
-Date:   Mon, 10 May 2021 23:14:54 +0800
-Message-ID: <1620659697-12048-6-git-send-email-sean.wang@mediatek.com>
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 3/9] mt76: connac: fw_own rely on all packet memory all being free
+Date:   Mon, 10 May 2021 23:14:51 +0800
+Message-ID: <1620659697-12048-3-git-send-email-sean.wang@mediatek.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
 References: <1620659697-12048-1-git-send-email-sean.wang@mediatek.com>
@@ -58,73 +57,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YN Chen <yn.chen@mediatek.com>
+From: Sean Wang <sean.wang@mediatek.com>
 
-Update MCU command usage to fix WoW configuration with disconnection
-and bitmap pattern and to avoid magic number.
+If the device is MMIO-based, we must ensure all TxD/TxP on the host
+memory all being consumed by the device prior to safely switching to
+fw_own state.
 
-Fixes: ffa1bf97425 ("mt76: mt7921: introduce PM support")
+Fixes: ec7bd7b4a9c0 ("mt76: connac: check wake refcount in mcu_fw_pmctrl")
 Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: YN Chen <yn.chen@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 11 +++++++----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h |  8 ++++++++
- 2 files changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 542d7d9f1f52..6ffe4b91d567 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -1999,7 +1999,7 @@ mt76_connac_mcu_set_wow_pattern(struct mt76_dev *dev,
- 	ptlv->index = index;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+index 2b1150bf8d3d..a588d2c39870 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+@@ -133,8 +133,12 @@ mt76_connac_pm_unref(struct mt76_connac_pm *pm)
+ static inline bool
+ mt76_connac_skip_fw_pmctrl(struct mt76_phy *phy, struct mt76_connac_pm *pm)
+ {
++	struct mt76_dev *dev = phy->dev;
+ 	bool ret;
  
- 	memcpy(ptlv->pattern, pattern->pattern, pattern->pattern_len);
--	memcpy(ptlv->mask, pattern->mask, pattern->pattern_len / 8);
-+	memcpy(ptlv->mask, pattern->mask, DIV_ROUND_UP(pattern->pattern_len, 8));
- 
- 	return mt76_mcu_skb_send_msg(dev, skb, MCU_UNI_CMD_SUSPEND, true);
- }
-@@ -2034,14 +2034,17 @@ mt76_connac_mcu_set_wow_ctrl(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 	};
- 
- 	if (wowlan->magic_pkt)
--		req.wow_ctrl_tlv.trigger |= BIT(0);
-+		req.wow_ctrl_tlv.trigger |= UNI_WOW_DETECT_TYPE_MAGIC;
- 	if (wowlan->disconnect)
--		req.wow_ctrl_tlv.trigger |= BIT(2);
-+		req.wow_ctrl_tlv.trigger |= (UNI_WOW_DETECT_TYPE_DISCONNECT |
-+					     UNI_WOW_DETECT_TYPE_BCN_LOST);
- 	if (wowlan->nd_config) {
- 		mt76_connac_mcu_sched_scan_req(phy, vif, wowlan->nd_config);
--		req.wow_ctrl_tlv.trigger |= BIT(5);
-+		req.wow_ctrl_tlv.trigger |= UNI_WOW_DETECT_TYPE_SCH_SCAN_HIT;
- 		mt76_connac_mcu_sched_scan_enable(phy, vif, suspend);
- 	}
-+	if (wowlan->n_patterns)
-+		req.wow_ctrl_tlv.trigger |= UNI_WOW_DETECT_TYPE_BITMAP;
- 
- 	if (mt76_is_mmio(dev))
- 		req.wow_ctrl_tlv.wakeup_hif = WOW_PCIE;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 3ed2fb5e1389..8f4d85b148fb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -590,6 +590,14 @@ enum {
- 	UNI_OFFLOAD_OFFLOAD_BMC_RPY_DETECT,
- };
- 
-+#define UNI_WOW_DETECT_TYPE_MAGIC		BIT(0)
-+#define UNI_WOW_DETECT_TYPE_ANY			BIT(1)
-+#define UNI_WOW_DETECT_TYPE_DISCONNECT		BIT(2)
-+#define UNI_WOW_DETECT_TYPE_GTK_REKEY_FAIL	BIT(3)
-+#define UNI_WOW_DETECT_TYPE_BCN_LOST		BIT(4)
-+#define UNI_WOW_DETECT_TYPE_SCH_SCAN_HIT	BIT(5)
-+#define UNI_WOW_DETECT_TYPE_BITMAP		BIT(6)
++	if (dev->token_count)
++		return true;
 +
- enum {
- 	UNI_SUSPEND_MODE_SETTING,
- 	UNI_SUSPEND_WOW_CTRL,
+ 	spin_lock_bh(&pm->wake.lock);
+ 	ret = pm->wake.count || test_and_set_bit(MT76_STATE_PM, &phy->state);
+ 	spin_unlock_bh(&pm->wake.lock);
 -- 
 2.25.1
 
