@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0C4C43617
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBE26C4361B
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E1D461625
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 870D861628
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231693AbhEKSEZ (ORCPT
+        id S231949AbhEKSE0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 May 2021 14:04:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41156 "EHLO
+        Tue, 11 May 2021 14:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231561AbhEKSEV (ORCPT
+        with ESMTP id S231777AbhEKSEW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 May 2021 14:04:21 -0400
+        Tue, 11 May 2021 14:04:22 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D055CC06175F;
-        Tue, 11 May 2021 11:03:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188E5C061763;
+        Tue, 11 May 2021 11:03:12 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lgWir-007aAS-9o; Tue, 11 May 2021 20:03:09 +0200
+        id 1lgWir-007aAS-S1; Tue, 11 May 2021 20:03:09 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>, stable@vger.kernel.org
-Subject: [PATCH 03/18] mac80211: properly handle A-MSDUs that start with an RFC 1042 header
-Date:   Tue, 11 May 2021 20:02:44 +0200
-Message-Id: <20210511200110.0b2b886492f0.I23dd5d685fe16d3b0ec8106e8f01b59f499dffed@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org
+Subject: [PATCH 05/18] mac80211: drop A-MSDUs on old ciphers
+Date:   Tue, 11 May 2021 20:02:46 +0200
+Message-Id: <20210511200110.076543300172.I548e6e71f1ee9cad4b9a37bf212ae7db723587aa@changeid>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210511180259.159598-1-johannes@sipsolutions.net>
 References: <20210511180259.159598-1-johannes@sipsolutions.net>
@@ -43,79 +43,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Properly parse A-MSDUs whose first 6 bytes happen to equal a rfc1042
-header. This can occur in practice when the destination MAC address
-equals AA:AA:03:00:00:00. More importantly, this simplifies the next
-patch to mitigate A-MSDU injection attacks.
+With old ciphers (WEP and TKIP) we shouldn't be using A-MSDUs
+since A-MSDUs are only supported if we know that they are, and
+the only practical way for that is HT support which doesn't
+support old ciphers.
+
+However, we would normally accept them anyway. Since we check
+the MMIC before deaggregating A-MSDUs, and the A-MSDU bit in
+the QoS header is not protected in TKIP (or WEP), this enables
+attacks similar to CVE-2020-24588. To prevent that, drop A-MSDUs
+completely with old ciphers.
 
 Cc: stable@vger.kernel.org
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 4 ++--
- net/mac80211/rx.c      | 2 +-
- net/wireless/util.c    | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/rx.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5224f885a99a..58c2cd417e89 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5760,7 +5760,7 @@ unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr);
-  */
- int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- 				  const u8 *addr, enum nl80211_iftype iftype,
--				  u8 data_offset);
-+				  u8 data_offset, bool is_amsdu);
- 
- /**
-  * ieee80211_data_to_8023 - convert an 802.11 data frame to 802.3
-@@ -5772,7 +5772,7 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- static inline int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 					 enum nl80211_iftype iftype)
- {
--	return ieee80211_data_to_8023_exthdr(skb, NULL, addr, iftype, 0);
-+	return ieee80211_data_to_8023_exthdr(skb, NULL, addr, iftype, 0, false);
- }
- 
- /**
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 531232b91bc4..f14d32a5001d 100644
+index f14d32a5001d..8a72d48ad6e0 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2682,7 +2682,7 @@ __ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx, u8 data_offset)
- 	if (ieee80211_data_to_8023_exthdr(skb, &ethhdr,
- 					  rx->sdata->vif.addr,
- 					  rx->sdata->vif.type,
--					  data_offset))
-+					  data_offset, true))
+@@ -6,7 +6,7 @@
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2020 Intel Corporation
++ * Copyright (C) 2018-2021 Intel Corporation
+  */
+ 
+ #include <linux/jiffies.h>
+@@ -2739,6 +2739,23 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	if (is_multicast_ether_addr(hdr->addr1))
  		return RX_DROP_UNUSABLE;
  
- 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 382c5262d997..39966a873e40 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -542,7 +542,7 @@ EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
++	if (rx->key) {
++		/*
++		 * We should not receive A-MSDUs on pre-HT connections,
++		 * and HT connections cannot use old ciphers. Thus drop
++		 * them, as in those cases we couldn't even have SPP
++		 * A-MSDUs or such.
++		 */
++		switch (rx->key->conf.cipher) {
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++		case WLAN_CIPHER_SUITE_TKIP:
++			return RX_DROP_UNUSABLE;
++		default:
++			break;
++		}
++	}
++
+ 	return __ieee80211_rx_h_amsdu(rx, 0);
+ }
  
- int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- 				  const u8 *addr, enum nl80211_iftype iftype,
--				  u8 data_offset)
-+				  u8 data_offset, bool is_amsdu)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct {
-@@ -629,7 +629,7 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- 	skb_copy_bits(skb, hdrlen, &payload, sizeof(payload));
- 	tmp.h_proto = payload.proto;
- 
--	if (likely((ether_addr_equal(payload.hdr, rfc1042_header) &&
-+	if (likely((!is_amsdu && ether_addr_equal(payload.hdr, rfc1042_header) &&
- 		    tmp.h_proto != htons(ETH_P_AARP) &&
- 		    tmp.h_proto != htons(ETH_P_IPX)) ||
- 		   ether_addr_equal(payload.hdr, bridge_tunnel_header)))
 -- 
 2.30.2
 
