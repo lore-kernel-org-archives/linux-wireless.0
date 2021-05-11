@@ -7,33 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AE9C43618
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8477C43462
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0C4E61625
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8B07616ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231939AbhEKSE0 (ORCPT
+        id S231955AbhEKSE1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 May 2021 14:04:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41160 "EHLO
+        Tue, 11 May 2021 14:04:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231645AbhEKSEV (ORCPT
+        with ESMTP id S231792AbhEKSEW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 May 2021 14:04:21 -0400
+        Tue, 11 May 2021 14:04:22 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBA6EC061761;
-        Tue, 11 May 2021 11:03:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C53FCC06138A;
+        Tue, 11 May 2021 11:03:12 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lgWir-007aAS-I9; Tue, 11 May 2021 20:03:09 +0200
+        id 1lgWit-007aAS-18; Tue, 11 May 2021 20:03:11 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>, stable@vger.kernel.org
-Subject: [PATCH 04/18] cfg80211: mitigate A-MSDU aggregation attacks
-Date:   Tue, 11 May 2021 20:02:45 +0200
-Message-Id: <20210511200110.25d93176ddaf.I9e265b597f2cd23eb44573f35b625947b386a9de@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 09/18] mac80211: do not accept/forward invalid EAPOL frames
+Date:   Tue, 11 May 2021 20:02:50 +0200
+Message-Id: <20210511200110.cb327ed0cabe.Ib7dcffa2a31f0913d660de65ba3c8aca75b1d10f@changeid>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210511180259.159598-1-johannes@sipsolutions.net>
 References: <20210511180259.159598-1-johannes@sipsolutions.net>
@@ -43,48 +44,102 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Mitigate A-MSDU injection attacks (CVE-2020-24588) by detecting if the
-destination address of a subframe equals an RFC1042 (i.e., LLC/SNAP)
-header, and if so dropping the complete A-MSDU frame. This mitigates
-known attacks, although new (unknown) aggregation-based attacks may
-remain possible.
+EAPOL frames are used for authentication and key management between the
+AP and each individual STA associated in the BSS. Those frames are not
+supposed to be sent by one associated STA to another associated STA
+(either unicast for broadcast/multicast).
 
-This defense works because in A-MSDU aggregation injection attacks, a
-normal encrypted Wi-Fi frame is turned into an A-MSDU frame. This means
-the first 6 bytes of the first A-MSDU subframe correspond to an RFC1042
-header. In other words, the destination MAC address of the first A-MSDU
-subframe contains the start of an RFC1042 header during an aggregation
-attack. We can detect this and thereby prevent this specific attack.
-For details, see Section 7.2 of "Fragment and Forge: Breaking Wi-Fi
-Through Frame Aggregation and Fragmentation".
+Similarly, in 802.11 they're supposed to be sent to the authenticator
+(AP) address.
 
-Note that for kernel 4.9 and above this patch depends on "mac80211:
-properly handle A-MSDUs that start with a rfc1042 header". Otherwise
-this patch has no impact and attacks will remain possible.
+Since it is possible for unexpected EAPOL frames to result in misbehavior
+in supplicant implementations, it is better for the AP to not allow such
+cases to be forwarded to other clients either directly, or indirectly if
+the AP interface is part of a bridge.
+
+Accept EAPOL (control port) frames only if they're transmitted to the
+own address, or, due to interoperability concerns, to the PAE group
+address.
+
+Disable forwarding of EAPOL (or well, the configured control port
+protocol) frames back to wireless medium in all cases. Previously, these
+frames were accepted from fully authenticated and authorized stations
+and also from unauthenticated stations for one of the cases.
+
+Additionally, to avoid forwarding by the bridge, rewrite the PAE group
+address case to the local MAC address.
 
 Cc: stable@vger.kernel.org
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Co-developed-by: Jouni Malinen <jouni@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/util.c | 3 +++
- 1 file changed, 3 insertions(+)
+ net/mac80211/rx.c | 33 +++++++++++++++++++++++++++------
+ 1 file changed, 27 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 39966a873e40..7ec021a610ae 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -771,6 +771,9 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 		remaining = skb->len - offset;
- 		if (subframe_len > remaining)
- 			goto purge;
-+		/* mitigate A-MSDU aggregation injection attacks */
-+		if (ether_addr_equal(eth.h_dest, rfc1042_header))
-+			goto purge;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 4454ec47283f..22a925899a9e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2531,13 +2531,13 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
  
- 		offset += sizeof(struct ethhdr);
- 		last = remaining <= subframe_len + padding;
+ 	/*
+-	 * Allow EAPOL frames to us/the PAE group address regardless
+-	 * of whether the frame was encrypted or not.
++	 * Allow EAPOL frames to us/the PAE group address regardless of
++	 * whether the frame was encrypted or not, and always disallow
++	 * all other destination addresses for them.
+ 	 */
+-	if (ehdr->h_proto == rx->sdata->control_port_protocol &&
+-	    (ether_addr_equal(ehdr->h_dest, rx->sdata->vif.addr) ||
+-	     ether_addr_equal(ehdr->h_dest, pae_group_addr)))
+-		return true;
++	if (unlikely(ehdr->h_proto == rx->sdata->control_port_protocol))
++		return ether_addr_equal(ehdr->h_dest, rx->sdata->vif.addr) ||
++		       ether_addr_equal(ehdr->h_dest, pae_group_addr);
+ 
+ 	if (ieee80211_802_1x_port_control(rx) ||
+ 	    ieee80211_drop_unencrypted(rx, fc))
+@@ -2562,8 +2562,28 @@ static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
+ 		cfg80211_rx_control_port(dev, skb, noencrypt);
+ 		dev_kfree_skb(skb);
+ 	} else {
++		struct ethhdr *ehdr = (void *)skb_mac_header(skb);
++
+ 		memset(skb->cb, 0, sizeof(skb->cb));
+ 
++		/*
++		 * 802.1X over 802.11 requires that the authenticator address
++		 * be used for EAPOL frames. However, 802.1X allows the use of
++		 * the PAE group address instead. If the interface is part of
++		 * a bridge and we pass the frame with the PAE group address,
++		 * then the bridge will forward it to the network (even if the
++		 * client was not associated yet), which isn't supposed to
++		 * happen.
++		 * To avoid that, rewrite the destination address to our own
++		 * address, so that the authenticator (e.g. hostapd) will see
++		 * the frame, but bridge won't forward it anywhere else. Note
++		 * that due to earlier filtering, the only other address can
++		 * be the PAE group address.
++		 */
++		if (unlikely(skb->protocol == sdata->control_port_protocol &&
++			     !ether_addr_equal(ehdr->h_dest, sdata->vif.addr)))
++			ether_addr_copy(ehdr->h_dest, sdata->vif.addr);
++
+ 		/* deliver to local stack */
+ 		if (rx->list)
+ 			list_add_tail(&skb->list, rx->list);
+@@ -2603,6 +2623,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 	if ((sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+ 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
++	    ehdr->h_proto != rx->sdata->control_port_protocol &&
+ 	    (sdata->vif.type != NL80211_IFTYPE_AP_VLAN || !sdata->u.vlan.sta)) {
+ 		if (is_multicast_ether_addr(ehdr->h_dest) &&
+ 		    ieee80211_vif_get_num_mcast_if(sdata) != 0) {
 -- 
 2.30.2
 
